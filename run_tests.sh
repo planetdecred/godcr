@@ -11,17 +11,7 @@ function build_and_test() {
 }
 
 function lint() {
-    golangci-lint run --deadline=10m \
-      --disable-all \
-      --enable govet \
-      --enable staticcheck \
-      --enable gosimple \
-      --enable unconvert \
-      --enable ineffassign \
-      --enable structcheck \
-      --enable goimports \
-      --enable misspell \
-      --enable unparam
+    golangci-lint run --deadline=10m
 }
 
 option=$1
