@@ -13,4 +13,5 @@ require (
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
 )
 
+// TODO: Remove and use an actual release of dcrlibwallet
 replace github.com/raedahgroup/dcrlibwallet/spv => github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c
