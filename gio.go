@@ -41,7 +41,7 @@ const (
 	navSectionHeight = 70
 )
 
-func LaunchUserInterface(appDisplayName, appDataDir, netType string) {
+func launchUserInterface(appDisplayName, appDataDir, netType string) {
 	logger, err := dcrlibwallet.RegisterLogger("GIOL")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Launch error - cannot register logger: %v", err)

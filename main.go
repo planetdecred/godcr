@@ -9,5 +9,5 @@ const appDisplayName = "GoDCR"
 var defaultAppDataDir = dcrutil.AppDataDir("godcr", false)
 
 func main() {
-	LaunchUserInterface(appDisplayName, defaultAppDataDir, "testnet3")
+	launchUserInterface(appDisplayName, defaultAppDataDir, "testnet3")
 }

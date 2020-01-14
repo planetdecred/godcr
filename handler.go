@@ -74,7 +74,7 @@ type notImplementedNavPageHandler struct {
 	pageTitle string
 }
 
-func (_ *notImplementedNavPageHandler) BeforeRender(_ *common.Syncer, _ *helper.MultiWallet) {
+func (p *notImplementedNavPageHandler) BeforeRender(_ *common.Syncer, _ *helper.MultiWallet) {
 
 }
 
