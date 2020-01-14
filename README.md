@@ -1,4 +1,4 @@
 # godcr-gio
 
-A decred cross-platform wallet built with [gio](https://gioui.org/)
+A cross-platform [SPV](https://docs.decred.org/wallets/spv/) wallet for [decred](https://decred.org/) built with [gio](https://gioui.org/).
 
