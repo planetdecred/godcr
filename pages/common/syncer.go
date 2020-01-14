@@ -30,7 +30,7 @@ type widgetItems struct {
 }
 
 type Syncer struct {
-	err error
+	// err error
 	//report             []string
 	showDetails    bool
 	wallet         *helper.MultiWallet

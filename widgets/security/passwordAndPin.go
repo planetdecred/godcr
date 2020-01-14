@@ -23,7 +23,7 @@ type (
 	pinTab struct {
 		pinInput        *editor.Input
 		confirmPinInput *editor.Input
-		pinStrength     int
+		//	pinStrength     int
 	}
 
 	PinAndPasswordWidget struct {

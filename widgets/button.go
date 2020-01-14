@@ -36,10 +36,10 @@ type (
 
 	Icon struct {
 		imgSize int
-		img     image.Image
-		src     []byte
-		color   color.RGBA
-		op      paint.ImageOp
+		// img     image.Image
+		src   []byte
+		color color.RGBA
+		op    paint.ImageOp
 		material.Icon
 	}
 )
@@ -266,9 +266,9 @@ func (ic *Icon) image(sz int) paint.ImageOp {
 
 	m.Palette[0] = ic.color
 	//color.RGBA{A: 0xff, R: 0xff, G: 0xff, B: 0xff}
-	iconvg.Decode(&ico, ic.src, &iconvg.DecodeOptions{
-		Palette: &m.Palette,
-	})
+	// iconvg.Decode(&ico, ic.src, &iconvg.DecodeOptions{
+	// 	Palette: &m.Palette,
+	// })
 	ic.op = paint.NewImageOp(img)
 	ic.imgSize = sz
 	return ic.op

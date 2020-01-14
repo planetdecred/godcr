@@ -64,7 +64,7 @@ func launchUserInterface(appDisplayName, appDataDir, netType string) {
 		return
 	}
 
-	multiWallet, shouldCreateOrRestoreWallet, shouldPromptForPass, err := helper.LoadWallet(appDataDir, netType)
+	multiWallet, shouldCreateOrRestoreWallet, _, err := helper.LoadWallet(appDataDir, netType)
 	if err != nil {
 		// todo show error in UI
 		giolog.Log.Errorf(err.Error())
@@ -74,13 +74,17 @@ func launchUserInterface(appDisplayName, appDataDir, netType string) {
 	app.multiWallet = multiWallet
 	if shouldCreateOrRestoreWallet {
 		app.currentPage = "welcome"
-	} else if shouldPromptForPass {
-		//app.currentPage = "passphrase"
-		// TODO prompt for passphrase
 	}
+	// } else if shouldPromptForPass {
+	// 	//app.currentPage = "passphrase"
+	// 	// TODO prompt for passphrase
+	// }
 
 	app.syncer = common.NewSyncer(app.multiWallet, app.refreshWindow)
-	app.multiWallet.AddSyncProgressListener(app.syncer, app.appDisplayName)
+	err = app.multiWallet.AddSyncProgressListener(app.syncer, app.appDisplayName)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	app.prepareHandlers()
 	go func() {
