@@ -33,14 +33,14 @@ func LoadWallet(appDataDir, netType string) (*MultiWallet, bool, bool, error) {
 		return mw, true, false, nil
 	}
 
-	var pubPass []byte
-	if multiWallet.ReadBoolConfigValueForKey(dcrlibwallet.IsStartupSecuritySetConfigKey, true) {
-		// prompt user for public passphrase and assign to `pubPass`
-		//return mw, false, true, nil
-		pubPass = []byte("public")
-	}
+	// var pubPass []byte
+	// if multiWallet.ReadBoolConfigValueForKey(dcrlibwallet.IsStartupSecuritySetConfigKey, true) {
+	// 	// prompt user for public passphrase and assign to `pubPass`
+	// 	//return mw, false, true, nil
+	// 	pubPass = []byte("public")
+	// }
 
-	err = multiWallet.OpenWallets(pubPass)
+	err = multiWallet.OpenWallets(nil)
 	if err != nil {
 		return mw, false, false, fmt.Errorf("Error opening wallet db: %v", err)
 	}
