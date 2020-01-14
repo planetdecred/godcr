@@ -11,15 +11,15 @@ import (
 )
 
 const (
-	logoPath              = "../../gio/assets/decred.png"
-	logoSymbolPath        = "../../gio/assets/decred_symbol.png"
-	overviewImagePath     = "../../gio/assets/overview.png"
-	transactionsImagePath = "../../gio/assets/history.png"
-	walletsImagePath      = "../../gio/assets/account.png"
-	moreImagePath         = "../../gio/assets/more.png"
-	sendImagePath         = "../../gio/assets/send.png"
-	receiveImagePath      = "../../gio/assets/receive.png"
-	infoImagePath         = "../../gio/assets/info.png"
+	logoPath              = "./assets/decred.png"
+	logoSymbolPath        = "./assets/decred_symbol.png"
+	overviewImagePath     = "./assets/overview.png"
+	transactionsImagePath = "./assets/history.png"
+	walletsImagePath      = "./assets/account.png"
+	moreImagePath         = "./assets/more.png"
+	sendImagePath         = "./assets/send.png"
+	receiveImagePath      = "./assets/receive.png"
+	infoImagePath         = "./assets/info.png"
 
 	StandaloneScreenPadding = 20
 )
