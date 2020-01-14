@@ -68,7 +68,7 @@ func (w *CreateWalletPage) create() {
 		defer func() {
 			doneChan <- true
 		}()
-		wallet, err := w.multiWallet.CreateNewWallet("public", w.pinAndPasswordWidget.Value(), 0)
+		wallet, err := w.multiWallet.CreateNewWallet(w.pinAndPasswordWidget.Value(), 0)
 		if err != nil {
 			w.err = err
 			return

@@ -85,7 +85,7 @@ func (w *RestoreWalletPage) create() {
 
 		password := w.pinAndPasswordWidget.Value()
 
-		wallet, err := w.multiWallet.RestoreWallet("public", seed, password, 0)
+		wallet, err := w.multiWallet.RestoreWallet(seed, password, 0)
 		if err != nil {
 			w.err = err
 			return
