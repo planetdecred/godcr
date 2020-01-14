@@ -80,7 +80,6 @@ func (c *Checkbox) Draw(ctx *layout.Context) {
 	vmin := ctx.Constraints.Height.Min
 	layout.Stack{Alignment: layout.Center}.Layout(ctx,
 		layout.Expanded(func() {
-			//ctx.Constraints.Width.Min = ctx.Constraints.Width.Max
 			ctx.Constraints.Height.Min = ctx.Constraints.Width.Min
 			size := float32(ctx.Constraints.Width.Min)
 			rr := float32(size) * .5
@@ -124,7 +123,7 @@ func (c *Checkbox) Draw(ctx *layout.Context) {
 						ico := c.icon.image(size)
 						ico.Add(ctx.Ops)
 						paint.PaintOp{
-							Rect: f32.Rectangle{Max: toPointF(ico.Size())}, //toRectF(ico.Bounds()),
+							Rect: f32.Rectangle{Max: toPointF(ico.Size())},
 						}.Add(ctx.Ops)
 					}
 					ctx.Dimensions = layout.Dimensions{

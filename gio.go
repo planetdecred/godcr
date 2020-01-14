@@ -75,10 +75,6 @@ func launchUserInterface(appDisplayName, appDataDir, netType string) {
 	if shouldCreateOrRestoreWallet {
 		app.currentPage = "welcome"
 	}
-	// } else if shouldPromptForPass {
-	// 	//app.currentPage = "passphrase"
-	// 	// TODO prompt for passphrase
-	// }
 
 	app.syncer = common.NewSyncer(app.multiWallet, app.refreshWindow)
 	err = app.multiWallet.AddSyncProgressListener(app.syncer, app.appDisplayName)

@@ -23,7 +23,6 @@ type (
 	}
 
 	seedScreen struct {
-		// err                    error
 		wordsString            string
 		words                  []string
 		wordColumns            [][]string
