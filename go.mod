@@ -8,12 +8,7 @@ require (
 	github.com/decred/dcrd/hdkeychain v1.1.1
 	github.com/decred/dcrwallet/walletseed v1.0.1
 	github.com/decred/slog v1.0.0
-	github.com/raedahgroup/dcrlibwallet v1.1.0
+	github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200114193807-310b336c169c
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
 )
-
-// TODO: Remove and use an actual release of dcrlibwallet
-replace github.com/raedahgroup/dcrlibwallet => github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200113081741-39a55988f78c
-
-replace github.com/raedahgroup/dcrlibwallet/spv => github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c
