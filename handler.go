@@ -1,4 +1,4 @@
-package gio
+package main
 
 import (
 	"gioui.org/layout"
