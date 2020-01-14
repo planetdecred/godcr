@@ -36,10 +36,9 @@ type (
 
 	Icon struct {
 		imgSize int
-		// img     image.Image
-		src   []byte
-		color color.RGBA
-		op    paint.ImageOp
+		src     []byte
+		color   color.RGBA
+		op      paint.ImageOp
 		material.Icon
 	}
 )

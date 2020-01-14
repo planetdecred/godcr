@@ -19,8 +19,7 @@ type (
 		seedPage          *SeedPage
 		seed              string
 		isShowingSeedPage bool
-		// isCreating        bool
-		err error
+		err               error
 	}
 )
 
@@ -61,7 +60,6 @@ func (w *CreateWalletPage) cancel() {
 }
 
 func (w *CreateWalletPage) create() {
-	//	w.pinAndPasswordWidget.IsCreating = true
 
 	doneChan := make(chan bool)
 	go func() {
@@ -78,6 +76,5 @@ func (w *CreateWalletPage) create() {
 	}()
 
 	<-doneChan
-	//	w.pinAndPasswordWidget.IsCreating = false
 	w.isShowingSeedPage = true
 }
