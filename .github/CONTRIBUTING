@@ -46,7 +46,7 @@ Only submit a PR once the intended edits are either done or nearing completion. 
 
 ### Suggested Toolkit
 
-- Go language distribution - latest release or latest-1 (e.g. 1.8.3 and 1.9). [download](https://golang.org/doc/install)
+- Go language distribution - latest release or latest-1 (must be >=1.12). [download](https://golang.org/doc/install)
 - git client with command line support. [download](https://git-scm.com/downloads)
 - [GitHub](https://github.com/) account
 - Visual Studio Code with Go extension plus `golangci-lint`
@@ -100,7 +100,7 @@ git commit # type a good commit message
 
 6. Bring master up-to-date and rebase
 
-Since the Decred repo may have changes that you do not have locally, you'll want to pull in any changes and rebase.
+Since the GoDCR repo may have changes that you do not have locally, you'll want to pull in any changes and rebase.
 Read [this](https://www.atlassian.com/git/tutorials/rewriting-history/git-rebase) if you need a primer on rebasing.
 
 ```sh

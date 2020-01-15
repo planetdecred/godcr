@@ -29,9 +29,6 @@ Steps to reproduce the behavior:
 
 [ ] Windows
 
-[ ] iOS
-
-[ ] Andriod
 
 ### Relevant screenshots or logs
 *If applicable, add screenshots or log entries to help explain your problem.*
