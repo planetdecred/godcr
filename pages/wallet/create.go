@@ -19,7 +19,6 @@ type (
 		seedPage          *SeedPage
 		seed              string
 		isShowingSeedPage bool
-		isCreating        bool
 		err               error
 	}
 )
@@ -61,14 +60,13 @@ func (w *CreateWalletPage) cancel() {
 }
 
 func (w *CreateWalletPage) create() {
-	w.pinAndPasswordWidget.IsCreating = true
 
 	doneChan := make(chan bool)
 	go func() {
 		defer func() {
 			doneChan <- true
 		}()
-		wallet, err := w.multiWallet.CreateNewWallet("public", w.pinAndPasswordWidget.Value(), 0)
+		wallet, err := w.multiWallet.CreateNewWallet(w.pinAndPasswordWidget.Value(), 0)
 		if err != nil {
 			w.err = err
 			return
@@ -78,6 +76,5 @@ func (w *CreateWalletPage) create() {
 	}()
 
 	<-doneChan
-	w.pinAndPasswordWidget.IsCreating = false
 	w.isShowingSeedPage = true
 }

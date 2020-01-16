@@ -205,17 +205,6 @@ func getTextAlignment(alignment Alignment) text.Alignment {
 	}
 }
 
-func getLayoutAlignment(alignment Alignment) layout.Alignment {
-	switch alignment {
-	case AlignMiddle:
-		return layout.Middle
-	case AlignRight:
-		return layout.End
-	default:
-		return layout.Start
-	}
-}
-
 func getLabelWithSize(txt string, size int) material.Label {
 	theme := helper.GetTheme()
 

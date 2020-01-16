@@ -80,12 +80,3 @@ func (t *TabContainer) drawNavSection(ctx *layout.Context) {
 		}),
 	)
 }
-
-func (t *TabContainer) drawContentSection(ctx *layout.Context, renderFuncs []func(*layout.Context)) {
-	inset := layout.Inset{
-		Top: unit.Dp(25),
-	}
-	inset.Layout(ctx, func() {
-
-	})
-}
