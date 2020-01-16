@@ -1,26 +1,21 @@
 name: Build
 on: [push]
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
 
-    - name: Set up Go 1.13
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13
-      id: go
+      - name: Libraries for gio
+        run: apt install libwayland-dev libx11-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
-    
-    - name: Build, run tests and vet
-      run:  |
-        go build
-        go test
-        go vet
-      env:
-        GO111MODULE: "on"
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
 
+      - name: Build
+        run: go build
