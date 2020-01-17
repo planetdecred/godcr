@@ -13,30 +13,52 @@ import (
 // It should only be should shown if the app launches
 // and cannot find any wallets
 type Landing struct {
-	Heading       material.Label
-	CreateWallet  material.Button
-	RestoreWallet material.Button
-	createBtn     *widget.Button
-	gtk           *layout.Context
+	inset   layout.Inset
+	stack   layout.Stack
+	heading material.Label
+
+	restoreBtn material.Button
+	restoreWdg *widget.Button
+	createBtn  material.Button
+	createWdg  *widget.Button
+	gtk        *layout.Context
 }
 
 // Init adds a heading and two buttons
 func (page *Landing) Init(theme *material.Theme, gtk *layout.Context) {
-	heading := theme.Label(units.Label, "Welcome to decred")
-	heading.Alignment = text.Middle
+	page.heading = theme.Label(units.Label, "Welcome to decred")
+	page.heading.Alignment = text.Middle
 
-	create := theme.Button("Create Wallet")
-	cbtn := new(widget.Button)
+	page.createBtn = theme.Button("Create Wallet")
+	page.createWdg = new(widget.Button)
 
-	page.createBtn = cbtn
-	page.CreateWallet = create
+	page.restoreBtn = theme.Button("Restore Wallet")
+	page.restoreWdg = new(widget.Button)
+
+	page.inset = layout.UniformInset(units.FlexInset)
+
+	page.stack.Alignment = layout.W
 
 	page.gtk = gtk
-	page.Heading = heading
 }
 
 // Draw adds all the widgets to the stored layout context
 func (page *Landing) Draw() {
-	page.Heading.Layout(page.gtk)
-	page.CreateWallet.Layout(page.gtk, page.createBtn)
+	page.stack.Layout(page.gtk,
+		layout.Stacked(func() {
+			page.inset.Layout(page.gtk, func() {
+				page.heading.Layout(page.gtk)
+			})
+		}),
+		layout.Stacked(func() {
+			page.inset.Layout(page.gtk, func() {
+				page.createBtn.Layout(page.gtk, page.createWdg)
+			})
+		}),
+		layout.Stacked(func() {
+			page.inset.Layout(page.gtk, func() {
+				page.restoreBtn.Layout(page.gtk, page.restoreWdg)
+			})
+		}),
+	)
 }

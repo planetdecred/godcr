@@ -5,5 +5,10 @@ import (
 	"gioui.org/unit"
 )
 
-// Label is the unit for the app labels
-var Label = unit.Dp(50)
+var (
+	// Label is the unit for the app labels
+	Label = unit.Dp(50)
+
+	// FlexInset is the unit for flex insets
+	FlexInset = unit.Dp(50)
+)

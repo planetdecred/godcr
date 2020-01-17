@@ -12,7 +12,8 @@ func main() {
 	gofont.Register()
 	win, err := createWindow(landingPage)
 	if err != nil {
-		fmt.Printf("Could not initialize window: %s", err)
+		fmt.Printf("Could not initialize window: %s\ns", err)
+		return
 	}
 	go func(win *window) {
 		win.loop()

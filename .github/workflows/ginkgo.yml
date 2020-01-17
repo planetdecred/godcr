@@ -15,4 +15,5 @@ jobs:
             go get -v github.com/onsi/gomega
             
         - name: Run ginkgo suite
-          run: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2
+        #   run: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2
+          run: go test
