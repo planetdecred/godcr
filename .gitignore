@@ -1,1 +1,4 @@
 godcr-gio*
+_*
+*.dll
+.vscode

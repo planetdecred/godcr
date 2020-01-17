@@ -2,13 +2,21 @@ package main
 
 import (
 	"fmt"
+
+	app "gioui.org/app"
+
+	"gioui.org/font/gofont"
 )
 
-// Version returns the version number (semver)
-func Version() string {
-	return "0.0.0"
-}
-
 func main() {
-	fmt.Println("Hello world")
+	gofont.Register()
+	win, err := createWindow(landingPage)
+	if err != nil {
+		fmt.Printf("Could not initialize window: %s", err)
+	}
+	go func(win *window) {
+		win.loop()
+	}(win)
+
+	app.Main()
 }
