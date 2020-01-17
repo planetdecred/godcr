@@ -1,19 +1,38 @@
-name: ginkgo
+name: Tests
 
 on: [push, pull_request]
 
 jobs:
-    build:
-        name: Tests
+  build:
+    name: Tests
 
-        runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-        steps:
-        - name: Install ginkgo
-          run: |
-            go get -v github.com/onsi/ginkgo/ginkgo
-            go get -v github.com/onsi/gomega
-            
-        - name: Run ginkgo suite
+    steps:
+      - name: Install ginkgo
+        run: |
+          go get -v github.com/onsi/ginkgo/ginkgo
+          go get -v github.com/onsi/
+
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Cache (dependencies)
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: go mod download
+
+      - name: Run ginkgo suite
         #   run: ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2
-          run: go test
+        run: go test
