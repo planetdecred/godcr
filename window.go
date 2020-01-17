@@ -47,10 +47,8 @@ func createWindow(start string) (*window, error) {
 func (win *window) loop() {
 	for {
 		e := <-win.window.Events()
-		fmt.Println(e)
 		switch e := e.(type) {
 		case system.DestroyEvent:
-			fmt.Println(e.Err)
 			return
 		case system.FrameEvent:
 			win.gtk.Reset(e.Config, e.Size)
