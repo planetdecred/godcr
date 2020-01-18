@@ -2,17 +2,14 @@ package wallet_test
 
 import (
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	//. "github.com/onsi/gomega"
 	. "github.com/raedahgroup/godcr-gio/wallet"
 )
 
-var _ = Describe("LoadWallets(a, b)", func() {
-	When(`a is "" and b is ""`, func() {
-		It("should return an error", func() {
-			wal, loaded, err := LoadWallets("", "")
-			Expect(err).ToNot(BeNil())
-			Expect(wal).To(BeNil())
-			Expect(loaded).To(Equal(0))
-		})
+var _ = Describe("Sync", func() {
+	It(`works with a zero wallet`, func() {
+		wal := new(Wallet)
+		wal.Sync()
+		// just checking that this doesn't panic
 	})
 })

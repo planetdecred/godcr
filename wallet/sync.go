@@ -11,6 +11,7 @@ func (wal *Wallet) Sync() {
 		wal.SendChan <- err
 		return
 	}
+	defer wal.multi.Shutdown()
 
 	wal.SendChan <- event.Loaded{
 		WalletsLoadedCount: loaded,
