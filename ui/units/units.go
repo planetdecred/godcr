@@ -1,4 +1,4 @@
-// Package units provides unit values used across the app
+// Package units provides unit values used across the app.
 package units
 
 import (

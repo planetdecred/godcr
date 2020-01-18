@@ -23,7 +23,6 @@ func main() {
 	cfg, err := loadConfig()
 
 	if err != nil {
-		fmt.Printf("%+v\n", err)
 		return
 	}
 	_, atleastone, err := wallet.LoadWallets(cfg.HomeDir, cfg.Network)
