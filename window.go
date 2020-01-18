@@ -15,6 +15,7 @@ const (
 	landingPage = "landing"
 )
 
+// window represents the app window. There should only be one.
 type window struct {
 	window  *app.Window
 	theme   *material.Theme
