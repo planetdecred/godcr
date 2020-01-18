@@ -23,6 +23,9 @@ jobs:
           go-version: 1.13
         id: go
 
+      - name: Libraries for gio
+        run: sudo apt install libwayland-dev libx11-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev
+
       - name: Cache (dependencies)
         uses: actions/cache@v1
         id: cache
