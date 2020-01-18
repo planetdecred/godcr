@@ -9,10 +9,10 @@ import (
 var _ = Describe("LoadWallets(a, b)", func() {
 	When(`a is "" and b is ""`, func() {
 		It("should return an error", func() {
-			wal, onewallet, err := LoadWallets("", "")
+			wal, loaded, err := LoadWallets("", "")
 			Expect(err).ToNot(BeNil())
 			Expect(wal).To(BeNil())
-			Expect(onewallet).To(Equal(false))
+			Expect(loaded).To(Equal(0))
 		})
 	})
 })

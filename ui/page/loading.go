@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget/material"
 
+	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 )
 
@@ -17,7 +18,7 @@ type Loading struct {
 }
 
 // Init initializies the page with a label.
-func (pg *Loading) Init(theme *material.Theme, gtx *layout.Context) {
+func (pg *Loading) Init(theme *material.Theme, gtx *layout.Context, _ chan event.Event) {
 	pg.gtx = gtx
 	pg.label = theme.Label(units.Label, "LOADING")
 }

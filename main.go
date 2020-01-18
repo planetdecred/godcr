@@ -6,6 +6,7 @@ import (
 	app "gioui.org/app"
 	"gioui.org/font/gofont"
 
+	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
@@ -16,24 +17,20 @@ func main() {
 		fmt.Printf("Error %s\n", err)
 		return
 	}
-	syncChan := make(chan int)
-	go func(c chan int) {
-		_, atleastone, err := wallet.LoadWallets(cfg.HomeDir, cfg.Network)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		sig := 0
-		if atleastone {
-			sig = 1
-		}
-		c <- sig
-		close(c)
-	}(syncChan)
+	walrecieve := make(chan event.Event) // chan the wallet recieves from
+	walsend := make(chan event.Event)    // chan the wallet sends events to
+	wal := &wallet.Wallet{
+		Root:        cfg.HomeDir,
+		Network:     cfg.Network,
+		SendChan:    walsend,
+		ReceiveChan: walrecieve,
+	}
+
+	go wal.Sync()
 
 	gofont.Register() // IMPORTANT
 
-	win, err := createWindow(page.LoadingID, syncChan)
+	win, err := createWindow(page.LoadingID, walsend, walrecieve)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return

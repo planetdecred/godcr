@@ -49,5 +49,7 @@ func loadConfig() (*config, error) {
 		}
 	}
 
+	// TODO: Actually parse the file
+
 	return &cfg, nil
 }

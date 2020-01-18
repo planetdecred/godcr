@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 )
 
@@ -26,11 +27,11 @@ type Landing struct {
 	restoreWdg *widget.Button
 	createBtn  material.Button
 	createWdg  *widget.Button
-	gtx        *layout.Context
+	page
 }
 
 // Init adds a heading and two buttons.
-func (pg *Landing) Init(theme *material.Theme, gtx *layout.Context) {
+func (pg *Landing) Init(theme *material.Theme, gtx *layout.Context, evt chan event.Event) {
 	pg.heading = theme.Label(units.Label, "Welcome to decred")
 	pg.heading.Alignment = text.Middle
 
@@ -43,6 +44,7 @@ func (pg *Landing) Init(theme *material.Theme, gtx *layout.Context) {
 	pg.inset = layout.UniformInset(units.FlexInset)
 
 	pg.gtx = gtx
+	pg.event = evt
 }
 
 // Draw adds all the widgets to the stored layout context.
@@ -58,6 +60,10 @@ func (pg *Landing) Draw() {
 				pg.inset.Layout(pg.gtx, func() {
 					if pg.createWdg.Clicked(pg.gtx) {
 						fmt.Println("ButtonClicked")
+						// pg.event <- event.Nav {
+						// 	Current: LandingID,
+						// 	Next: CreateID
+						// }
 					}
 					pg.createBtn.Layout(pg.gtx, pg.createWdg)
 				})

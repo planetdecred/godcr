@@ -6,18 +6,28 @@ import (
 	"fmt"
 
 	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/raedahgroup/godcr-gio/event"
 )
 
-// LoadWallets loads the wallets for network in the rootdir and returns the wallet
-// a boolean representing if there is at least one wallet loaded and an error if
-// it occurs.
-func LoadWallets(rootdir, network string) (*dcrlibwallet.MultiWallet, bool, error) {
-	if rootdir == "" || network == "" {
-		return nil, false, fmt.Errorf(`root directory or network cannot be ""`)
+// Wallet represents the wallet back end of the app
+type Wallet struct {
+	multi       *dcrlibwallet.MultiWallet
+	Root        string // root directory for all wallet data
+	Network     string
+	SendChan    chan event.Event // chan the wallet sends events to
+	ReceiveChan chan event.Event // chan the wallet recieves commands from
+}
+
+// loadWallets loads the wallets for network in the rootdir and returns the wallet,
+// the number of wallets loaded or an error if it occurs.
+func (wal *Wallet) loadWallets() (int32, error) {
+	if wal.Root == "" || wal.Network == "" { // This should really be handled by dcrlibwallet
+		return 0, fmt.Errorf(`root directory or network cannot be ""`)
 	}
-	wal, err := dcrlibwallet.NewMultiWallet(rootdir, "", network)
+	multiWal, err := dcrlibwallet.NewMultiWallet(wal.Root, "", wal.Network)
 	if err != nil {
-		return nil, false, err
+		return 0, err
 	}
-	return wal, wal.LoadedWalletsCount() > 0, err
+	wal.multi = multiWal
+	return multiWal.LoadedWalletsCount(), err
 }
