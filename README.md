@@ -13,6 +13,4 @@ Then `go build`.
 
 ## Contributing
 
-<!-- TODO: Replace with master link -->
-
 See [CONTRIBUTING.md](https://github.com/raedahgroup/godcr-gio/blob/master/.github/CONTRIBUTING.md)

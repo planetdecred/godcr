@@ -19,3 +19,9 @@ type Page interface {
 	Init(*material.Theme, *layout.Context)
 	Draw()
 }
+
+// page encapsulates the base structure needed for
+// a Page implementation.
+type page struct {
+	gtx *layout.Context
+}
