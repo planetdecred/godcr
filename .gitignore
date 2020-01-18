@@ -2,3 +2,4 @@ godcr-gio*
 _*
 *.dll
 .vscode
+*.coverprofile
