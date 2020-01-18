@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
       - name: Install ginkgo
         run: |
           go get -v github.com/onsi/ginkgo/ginkgo
