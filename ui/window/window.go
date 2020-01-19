@@ -30,7 +30,7 @@ type Window struct {
 // than once.
 func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
 	win := new(Window)
-	win.window = app.NewWindow()
+	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
 	win.theme = material.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 

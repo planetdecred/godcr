@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	defaultHomeDir    = dcrutil.AppDataDir("godcr", false)
+	defaultHomeDir    = dcrutil.AppDataDir("godcr", false) // Consider using gio's DataDir
 	defaultConfigFile = filepath.Join(defaultHomeDir, defaultConfigFileName)
 )
 
