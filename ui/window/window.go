@@ -1,4 +1,4 @@
-package main
+package window
 
 import (
 	"fmt"
@@ -12,37 +12,37 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/page"
 )
 
-// window represents the app window (and UI in general). There should only be one.
-type window struct {
+// Window represents the app window (and UI in general). There should only be one.
+type Window struct {
 	window     *app.Window
 	theme      *material.Theme
 	gtx        *layout.Context
 	pages      map[string]page.Page
 	current    string
-	walletSync chan event.Event
-	walletCmd  chan event.Event
-	uiEvt      chan event.Event
+	walletSync event.Duplex
+	pageEvt    chan event.Event
 }
 
-// createWindow creates and initializes a new window.
+// CreateWindow creates and initializes a new window with start
+// as the first page displayed.
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func createWindow(start string, walletSync, walletCmd chan event.Event) (*window, error) {
-	win := new(window)
+func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
+	win := new(Window)
 	win.window = app.NewWindow()
 	win.theme = material.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 
 	pages := make(map[string]page.Page, 1)
 
-	win.uiEvt = make(chan event.Event)
+	win.pageEvt = make(chan event.Event, 2) // Buffered so Loop can send and receive in the goroutine
 
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
 
 	for _, p := range pages {
-		p.Init(win.theme, win.gtx, win.uiEvt)
+		p.Init(win.theme)
 	}
 
 	if _, ok := pages[start]; !ok {
@@ -51,35 +51,39 @@ func createWindow(start string, walletSync, walletCmd chan event.Event) (*window
 	win.current = start
 	win.pages = pages
 	win.walletSync = walletSync
-	win.walletCmd = walletCmd
 	return win, nil
 }
 
-// loop is the main event loop
-func (win *window) loop() {
+// Loop runs main event handling and page rendering loop
+func (win *Window) Loop() {
 	for {
 		select {
-		case e := <-win.uiEvt:
-			switch e.(type) {
+		case e := <-win.pageEvt:
+			switch evt := e.(type) {
 			case event.Nav:
-				//win.current =
+				win.current = evt.Next
+			case error:
+				// TODO: display error
 			}
-		case e := <-win.walletSync:
-			switch e.(type) {
+		case e := <-win.walletSync.Receive:
+			switch evt := e.(type) {
 			case event.Loaded:
-				if e.(event.Loaded).WalletsLoadedCount == 0 {
+				if evt.WalletsLoadedCount == 0 {
 					win.current = page.LandingID
 				}
-
 			}
 		case e := <-win.window.Events():
-			switch e := e.(type) {
+			switch evt := e.(type) {
 			case system.DestroyEvent:
 				return
 			case system.FrameEvent:
-				win.gtx.Reset(e.Config, e.Size)
-				win.pages[win.current].Draw()
-				e.Frame(win.gtx.Ops)
+				win.gtx.Reset(evt.Config, evt.Size)
+				// TODO: send events
+				if pageEvt := win.pages[win.current].Draw(win.gtx, nil); pageEvt != nil {
+					win.pageEvt <- pageEvt
+				}
+
+				evt.Frame(win.gtx.Ops)
 			}
 		}
 	}

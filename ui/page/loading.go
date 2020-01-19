@@ -13,17 +13,17 @@ const LoadingID = "loading"
 
 // Loading represents the loading page of the app.
 type Loading struct {
-	page
 	label material.Label
 }
 
 // Init initializies the page with a label.
-func (pg *Loading) Init(theme *material.Theme, gtx *layout.Context, _ chan event.Event) {
-	pg.gtx = gtx
+func (pg *Loading) Init(theme *material.Theme) {
 	pg.label = theme.Label(units.Label, "LOADING")
 }
 
 // Draw renders the page widgets.
-func (pg *Loading) Draw() {
-	pg.label.Layout(pg.gtx)
+// It does not react to nor does it generate any event.
+func (pg *Loading) Draw(gtx *layout.Context, _ event.Event) event.Event {
+	pg.label.Layout(gtx)
+	return nil
 }

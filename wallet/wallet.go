@@ -11,11 +11,10 @@ import (
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
-	multi       *dcrlibwallet.MultiWallet
-	Root        string // root directory for all wallet data
-	Network     string
-	SendChan    chan event.Event // chan the wallet sends events to
-	ReceiveChan chan event.Event // chan the wallet recieves commands from
+	multi   *dcrlibwallet.MultiWallet
+	Root    string // root directory for all wallet data
+	Network string
+	event.Duplex
 }
 
 // loadWallets loads the wallets for network in the rootdir and returns the wallet,

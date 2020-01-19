@@ -12,7 +12,9 @@ var _ = Describe("Wallet", func() {
 		It(`passes an error to SendChan when Sync is called`, func() {
 			send := make(chan event.Event)
 			wal := &Wallet{
-				SendChan: send,
+				Duplex: event.Duplex{
+					Send: send,
+				},
 			}
 			go wal.Sync()
 

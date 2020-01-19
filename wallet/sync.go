@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"fmt"
+
 	"github.com/raedahgroup/godcr-gio/event"
 )
 
@@ -8,13 +10,24 @@ import (
 func (wal *Wallet) Sync() {
 	loaded, err := wal.loadWallets()
 	if err != nil {
-		wal.SendChan <- err
+		wal.Send <- err
 		return
 	}
 	defer wal.multi.Shutdown()
 
-	wal.SendChan <- event.Loaded{
+	wal.Send <- event.Loaded{
 		WalletsLoadedCount: loaded,
 	}
-	close(wal.SendChan)
+
+	for {
+		e := <-wal.Receive
+		if cmd, ok := e.(event.WalletCmd); ok {
+			switch cmd.Cmd {
+			case event.ShutdownCmd:
+				return
+			}
+		} else {
+			fmt.Printf("Not a wallet command %+v\n", e)
+		}
+	}
 }

@@ -11,20 +11,15 @@ import (
 
 // Page represents a single page of the app.
 //
-// Init creates widgets with the given theme and
-// layout context.
-// Implementations must store the layout context and event channel.
+// Init creates widgets with the given theme.
+// Implementations can store the event Duplex for
+// communication with the window
 //
-// Draw adds the implementation's widgets to the stored
-// layout context
+// Draw draws the implementation's widgets to the given
+// layout context reacting to the given event if needed
+// and returns any generated user event.
+// Draw is only called once per frame for the active page.
 type Page interface {
-	Init(*material.Theme, *layout.Context, chan event.Event)
-	Draw()
-}
-
-// page encapsulates the base structure needed for
-// a Page implementation.
-type page struct {
-	event chan event.Event
-	gtx   *layout.Context
+	Init(*material.Theme)
+	Draw(*layout.Context, event.Event) event.Event
 }

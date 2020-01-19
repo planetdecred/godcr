@@ -27,11 +27,10 @@ type Landing struct {
 	restoreWdg *widget.Button
 	createBtn  material.Button
 	createWdg  *widget.Button
-	page
 }
 
 // Init adds a heading and two buttons.
-func (pg *Landing) Init(theme *material.Theme, gtx *layout.Context, evt chan event.Event) {
+func (pg *Landing) Init(theme *material.Theme) {
 	pg.heading = theme.Label(units.Label, "Welcome to decred")
 	pg.heading.Alignment = text.Middle
 
@@ -42,36 +41,35 @@ func (pg *Landing) Init(theme *material.Theme, gtx *layout.Context, evt chan eve
 	pg.restoreWdg = new(widget.Button)
 
 	pg.inset = layout.UniformInset(units.FlexInset)
-
-	pg.gtx = gtx
-	pg.event = evt
 }
 
-// Draw adds all the widgets to the stored layout context.
-func (pg *Landing) Draw() {
-	pg.container.Layout(pg.gtx, 3,
+// Draw draws the page's to the given layout context.
+// Does not react to any event but can return a Nav event.
+func (pg *Landing) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
+	pg.container.Layout(gtx, 3,
 		layout.ListElement(func(i int) {
 			switch i {
-			case 1:
-				pg.inset.Layout(pg.gtx, func() {
-					pg.heading.Layout(pg.gtx)
+			case 0:
+				pg.inset.Layout(gtx, func() {
+					pg.heading.Layout(gtx)
 				})
-			case 2:
-				pg.inset.Layout(pg.gtx, func() {
-					if pg.createWdg.Clicked(pg.gtx) {
+			case 1:
+				pg.inset.Layout(gtx, func() {
+					if pg.createWdg.Clicked(gtx) {
 						fmt.Println("ButtonClicked")
-						// pg.event <- event.Nav {
+						//evt = event.Nav {
 						// 	Current: LandingID,
 						// 	Next: CreateID
 						// }
 					}
-					pg.createBtn.Layout(pg.gtx, pg.createWdg)
+					pg.createBtn.Layout(gtx, pg.createWdg)
 				})
 			default:
-				pg.inset.Layout(pg.gtx, func() {
-					pg.restoreBtn.Layout(pg.gtx, pg.restoreWdg)
+				pg.inset.Layout(gtx, func() {
+					pg.restoreBtn.Layout(gtx, pg.restoreWdg)
 				})
 			}
 		}),
 	)
+	return
 }

@@ -33,7 +33,6 @@ var defaultConfig = config{
 // loadConfig loads the configration file stored in the defaultHomeDir
 func loadConfig() (*config, error) {
 	cfg := defaultConfig
-	_ = flags.NewParser(&cfg, flags.Default)
 
 	var configFile *os.File
 	// if the config file does not exist, create it
@@ -43,13 +42,14 @@ func loadConfig() (*config, error) {
 			return nil, err
 		}
 		configFile, err = os.Create(cfg.ConfigFile)
-		defer configFile.Close()
 		if err != nil {
 			return nil, err
 		}
+		configFile.Close()
 	}
 
-	// TODO: Actually parse the file
+	// TODO: parse command line options as well
+	err := flags.IniParse(cfg.ConfigFile, &cfg)
 
-	return &cfg, nil
+	return &cfg, err
 }
