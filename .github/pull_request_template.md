@@ -1,11 +1,15 @@
 ### Resolves
+
 Issue #
 
 ### What's new
-*A detailed decription of what this pull reuest adds*
+
+_A detailed description of what this pull request adds_
 
 ### Relevant screenshots or logs
-*If applicable, add screenshots or log entries to help explain your problem.*
+
+_If applicable, add screenshots or log entries to help explain your problem._
 
 ### Additional context
-*Add any other context about the problem here.*
+
+_Add any other context about the problem here._
