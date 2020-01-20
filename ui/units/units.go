@@ -7,3 +7,5 @@ import (
 
 // Label is the unit for the app labels
 var Label = unit.Dp(50)
+var Padding = unit.Dp(20)
+

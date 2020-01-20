@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	landingPage = "landing"
+	landingPage  = "landing"
+	overviewPage = "overview"
 )
 
 type window struct {
@@ -31,6 +32,7 @@ func createWindow(start string) (*window, error) {
 	pages := make(map[string]page.Page, 1)
 
 	pages[landingPage] = new(page.Landing)
+	pages[overviewPage] = new(page.Overview)
 
 	for _, p := range pages {
 		p.Init(win.theme, win.gtk)
@@ -47,13 +49,13 @@ func createWindow(start string) (*window, error) {
 func (win *window) loop() {
 	for {
 		e := <-win.window.Events()
-		fmt.Println(e)
 		switch e := e.(type) {
 		case system.DestroyEvent:
 			fmt.Println(e.Err)
 			return
 		case system.FrameEvent:
 			win.gtk.Reset(e.Config, e.Size)
+			win.current = overviewPage
 			win.pages[win.current].Draw()
 			e.Frame(win.gtk.Ops)
 		}
