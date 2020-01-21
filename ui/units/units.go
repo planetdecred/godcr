@@ -7,5 +7,15 @@ import (
 
 // Label is the unit for the app labels
 var Label = unit.Dp(50)
+
+// FlexInset is the unit for flex insets
+var FlexInset = unit.Dp(50)
+
+// Uniform Padding for overview page
 var Padding = unit.Dp(20)
+
+// EntireSpace is the value for the weight of a FlexChild
+var EntireSpace = float32(1)
+
+
 
