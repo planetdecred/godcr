@@ -21,6 +21,8 @@ type Overview struct {
 	syncStatus   material.Label
 	onlineStatus material.Label
 	syncButton   material.Button
+	progressPercentage material.Label
+	timeLeft material.Label
 
 	column layout.Flex
 	row    layout.Flex
@@ -38,13 +40,15 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.syncButtonWidget = new(widget.Button)
 	page.syncButton = theme.Button("Cancel")
 	page.progressBar = widgets.NewProgressBar()
+	page.progressPercentage = theme.Caption("25%")
+	page.timeLeft = theme.Caption("6 min left")
 }
 
 // Draw adds all the widgets to the stored layout context
 func (page *Overview) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
-			layout.UniformInset(units.Padding).Layout(gtx, func() {
+			layout.UniformInset(units.ContainerPadding).Layout(gtx, func() {
 				page.content(gtx)
 			})
 		}),
@@ -78,6 +82,9 @@ func (page *Overview) syncStatusColumn(gtx *layout.Context) {
 			}),
 			layout.Rigid(func() {
 				page.progressBarRow(gtx, uniform)
+			}),
+			layout.Rigid(func() {
+				page.progressStatusRow(gtx, uniform)
 			}),
 		)
 	})
@@ -115,6 +122,21 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 
 func (page *Overview) progressBarRow(gtx *layout.Context, inset layout.Inset) {
 	inset.Layout(gtx, func() {
-		page.progressBar.Layout(gtx, 50)
+		page.progressBar.Layout(gtx, 25)
+	})
+}
+
+func (page *Overview) progressStatusRow(gtx *layout.Context, inset layout.Inset) {
+	inset.Layout(gtx, func() {
+		page.row.Layout(gtx,
+			layout.Rigid(func() {
+				page.progressPercentage.Layout(gtx)
+			}),
+			layout.Flexed(values.EntireSpace, func() {
+				layout.Align(layout.E).Layout(gtx, func() {
+					page.timeLeft.Layout(gtx)
+				})
+			}),
+		)
 	})
 }

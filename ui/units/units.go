@@ -11,8 +11,11 @@ var Label = unit.Dp(50)
 // FlexInset is the unit for flex insets
 var FlexInset = unit.Dp(50)
 
-// Uniform Padding for overview page
+// Padding is the unit for uniform padding for widgets in a column
 var Padding = unit.Dp(5)
+
+// ContainerPadding is the unit for uniform padding for content in a container
+var ContainerPadding = unit.Dp(20)
 
 
 
