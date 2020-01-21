@@ -12,3 +12,5 @@ var (
 	// White is the RGBA value for white color
 	White = color.RGBA{255, 255, 255, 255}
 )
+var Gray = color.RGBA{128, 128, 128, 255}
+var Green = color.RGBA{227, 98, 9, 255}

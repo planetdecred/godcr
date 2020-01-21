@@ -12,10 +12,7 @@ var Label = unit.Dp(50)
 var FlexInset = unit.Dp(50)
 
 // Uniform Padding for overview page
-var Padding = unit.Dp(20)
-
-// EntireSpace is the value for the weight of a FlexChild
-var EntireSpace = float32(1)
+var Padding = unit.Dp(5)
 
 
 

@@ -4,8 +4,9 @@ import (
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
-	"github.com/raedahgroup/godcr-gio/ui/units"
 	"image/color"
+
+	"github.com/raedahgroup/godcr-gio/ui/values"
 )
 
 type (
@@ -14,10 +15,6 @@ type (
 		backgroundColor color.RGBA
 		progressColor   color.RGBA
 	}
-)
-
-const (
-	defaultProgressBarHeight = 20
 )
 
 // paintArea creates an overlay of two rectangles to make a progress bar.
@@ -43,7 +40,7 @@ func paintArea(ctx *layout.Context, color color.RGBA, x int, y int) {
 		SE: borderRadius,
 		SW: borderRadius,
 	}.Op(ctx.Ops).Add(ctx.Ops)
-	fill(ctx, units.Gray, x, y)
+	fill(ctx, values.Gray, x, y)
 
 	innerWidth := x - borderWidth
 	innerHeight := y - borderWidth
@@ -84,18 +81,18 @@ func (p *ProgressBar) SetProgressColor(col color.RGBA) *ProgressBar {
 
 func NewProgressBar() *ProgressBar {
 	return &ProgressBar{
-		height:          defaultProgressBarHeight,
-		backgroundColor: units.Gray,
-		progressColor:   units.Green,
+		height:          values.DefaultProgressBarHeight,
+		backgroundColor: values.Gray,
+		progressColor:   values.Green,
 	}
 }
 
-func (p *ProgressBar) Draw(ctx *layout.Context, progress *float64) {
+func (p *ProgressBar) Layout(ctx *layout.Context, progress float64) {
 	layout.Stack{}.Layout(ctx,
 		layout.Stacked(func() {
 			paintArea(ctx, p.backgroundColor, ctx.Constraints.Width.Max, p.height)
 			// calculate width of indicator with respects to progress bar width
-			indicatorWidth := float64(*progress) / float64(100) * float64(ctx.Constraints.Width.Max)
+			indicatorWidth := progress / float64(100) * float64(ctx.Constraints.Width.Max)
 
 			if indicatorWidth > float64(ctx.Constraints.Width.Max) {
 				indicatorWidth = float64(ctx.Constraints.Width.Max)
