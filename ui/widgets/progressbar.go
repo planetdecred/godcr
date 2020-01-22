@@ -40,7 +40,7 @@ func paintArea(ctx *layout.Context, color color.RGBA, x int, y int) {
 		SE: borderRadius,
 		SW: borderRadius,
 	}.Op(ctx.Ops).Add(ctx.Ops)
-	fill(ctx, values.Gray, x, y)
+	drawShape(ctx, values.Gray, x, y)
 
 	innerWidth := x - borderWidth
 	innerHeight := y - borderWidth
@@ -61,7 +61,7 @@ func paintArea(ctx *layout.Context, color color.RGBA, x int, y int) {
 		SE: borderRadius,
 		SW: borderRadius,
 	}.Op(ctx.Ops).Add(ctx.Ops)
-	fill(ctx, color, innerWidth, innerHeight)
+	drawShape(ctx, color, innerWidth, innerHeight)
 }
 
 func (p *ProgressBar) SetHeight(height int) *ProgressBar {

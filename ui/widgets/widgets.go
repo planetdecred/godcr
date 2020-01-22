@@ -8,7 +8,7 @@ import (
 	"image/color"
 )
 
-func fill(ctx *layout.Context, col color.RGBA, x, y int) {
+func drawShape(ctx *layout.Context, col color.RGBA, x, y int) {
 	d := image.Point{X: x, Y: y}
 	dr := f32.Rectangle{
 		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},

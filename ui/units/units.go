@@ -17,5 +17,8 @@ var Padding = unit.Dp(5)
 // ContainerPadding is the unit for uniform padding for content in a container
 var ContainerPadding = unit.Dp(20)
 
+// ColumnMargin is the unit for top margins of columns of the overview page
+var ColumnMargin = unit.Dp(30)
 
+var TransactionsRowMargin = unit.Dp(10)
 
