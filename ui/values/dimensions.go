@@ -8,3 +8,6 @@ var (
 	// EntireSpace is the value for the weight of a FlexChild
     EntireSpace = float32(1)
 )
+
+var SyncBoxWidthMin = 500
+var SyncBoxWidthMax = 550

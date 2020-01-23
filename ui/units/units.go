@@ -20,5 +20,10 @@ var ContainerPadding = unit.Dp(20)
 // ColumnMargin is the unit for top margins of columns of the overview page
 var ColumnMargin = unit.Dp(30)
 
+// TransactionsRowMargin is the unit for uniform spacing between widgets in a recent transaction row
 var TransactionsRowMargin = unit.Dp(10)
+
+// SyncBoxPadding is the unit for uniform padding of sync wallet boxes
+var SyncBoxPadding = unit.Dp(10)
+
 

@@ -4,7 +4,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
@@ -17,26 +16,41 @@ type Overview struct {
 	syncButtonWidget *widget.Button
 	progressBar      *widgets.ProgressBar
 
-	balance                material.Label
-	statusTitle            material.Label
-	syncStatus             material.Label
-	onlineStatus           material.Label
-	syncButton             material.Button
-	progressPercentage     material.Label
-	timeLeft               material.Label
-	syncSteps 			   material.Label
+	balance             material.Label
+	statusTitle         material.Label
+	syncStatus          material.Label
+	onlineStatus        material.Label
+	syncButton          material.Button
+	progressPercentage  material.Label
+	timeLeft            material.Label
+	syncSteps           material.Label
+	headersFetched      material.Label
+	connectedPeersTitle material.Label
+	connectedPeers      material.Label
 
-	transactionColmunTitle material.Label
+	walletHeaderFetchedTitle   material.Label
+	walletSyncingProgressTitle material.Label
+	walletSyncDetails walletSyncDetails
+
+	transactionColumnTitle material.Label
 	transactionIcon        material.Label
 	transactionAmount      material.Label
 	transactionWallet      material.Label
 	transactionStatus      material.Label
 	transactionDate        material.Label
 
-	column       layout.Flex
-	columnMargin layout.Inset
-	row          layout.Flex
-	list         layout.List
+	column         layout.Flex
+	columnMargin   layout.Inset
+	row            layout.Flex
+	list           layout.List
+	walletSyncList layout.List
+}
+
+type walletSyncDetails struct {
+	name               material.Label
+	status             material.Label
+	blockHeaderFetched material.Label
+	syncingProgress       material.Label
 }
 
 // Init initializes all widgets to be used on the page
@@ -45,6 +59,7 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.column = layout.Flex{Axis: layout.Vertical}
 	page.columnMargin = layout.Inset{Top: units.ColumnMargin}
 	page.list = layout.List{Axis: layout.Vertical}
+	page.walletSyncList = layout.List{Axis: layout.Horizontal}
 
 	page.balance = theme.H5("154.0928281 DCR")
 	page.statusTitle = theme.Caption("Wallet Status")
@@ -55,12 +70,26 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.progressBar = widgets.NewProgressBar()
 	page.progressPercentage = theme.Caption("25%")
 	page.timeLeft = theme.Caption("6 min left")
-	page.transactionColmunTitle = theme.Caption("Recent Transactions")
+	page.syncStatus = theme.H5("Syncing...")
+	page.syncSteps = theme.Caption("Step 1/3")
+	page.headersFetched = theme.Caption("Fetching block headers. 89%")
+	page.connectedPeersTitle = theme.Caption("Connected peers count")
+	page.connectedPeers = theme.Caption("16")
+	page.walletHeaderFetchedTitle = theme.Caption("Block header fetched")
+	page.walletSyncingProgressTitle = theme.Caption("SyncingProgress")
+	page.transactionColumnTitle = theme.Caption("Recent Transactions")
 	page.transactionIcon = theme.Caption("icon")
 	page.transactionAmount = theme.Caption("34.17458878 DCR")
 	page.transactionWallet = theme.Caption("Default")
 	page.transactionDate = theme.Caption("01/12/2020")
 	page.transactionStatus = theme.Caption("Pending")
+
+	page.walletSyncDetails = walletSyncDetails{
+		name:               theme.Caption("wallet-1"),
+		status:             theme.Caption("Syncing..."),
+		blockHeaderFetched: theme.Caption("100 of 164864"),
+		syncingProgress:    theme.Caption("320 days behind"),
+	}
 }
 
 // Draw adds all the widgets to the stored layout context
@@ -93,7 +122,7 @@ func (page *Overview) content(gtx *layout.Context) {
 // recentTransactionsColumn lays out the list of recent transactions
 func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 	var transactionRows []func()
-	for i:=0; i<5; i++ {
+	for i := 0; i < 5; i++ {
 		transactionRows = append(transactionRows, func() {
 			page.recentTransactionRow(gtx)
 		})
@@ -102,7 +131,7 @@ func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 	page.columnMargin.Layout(gtx, func() {
 		page.column.Layout(gtx,
 			layout.Rigid(func() {
-				page.transactionColmunTitle.Layout(gtx)
+				page.transactionColumnTitle.Layout(gtx)
 			}),
 			layout.Rigid(func() {
 				page.list.Layout(gtx, len(transactionRows), func(i int) {
@@ -163,6 +192,24 @@ func (page *Overview) syncStatusColumn(gtx *layout.Context) {
 			layout.Rigid(func() {
 				page.progressStatusRow(gtx, uniform)
 			}),
+			layout.Rigid(func() {
+				page.syncDetailsColumn(gtx, uniform)
+			}),
+		)
+	})
+}
+
+func (page *Overview) endToEndRow(gtx *layout.Context, inset layout.Inset, leftLabel, rightLabel material.Label) {
+	inset.Layout(gtx, func() {
+		page.row.Layout(gtx,
+			layout.Rigid(func() {
+				leftLabel.Layout(gtx)
+			}),
+			layout.Flexed(values.EntireSpace, func() {
+				layout.Align(layout.E).Layout(gtx, func() {
+					rightLabel.Layout(gtx)
+				})
+			}),
 		)
 	})
 }
@@ -201,27 +248,50 @@ func (page *Overview) progressStatusRow(gtx *layout.Context, inset layout.Inset)
 }
 
 func (page *Overview) syncDetailsColumn(gtx *layout.Context, inset layout.Inset) {
-	uniform := layout.UniformInset(units.Padding)
+	syncBoxes := []func(){
+		func() {
+			page.walletSyncBox(gtx, inset, page.walletSyncDetails)
+		},
+		func() {
+			page.walletSyncBox(gtx, inset, page.walletSyncDetails)
+		},
+		func() {
+			page.walletSyncBox(gtx, inset, page.walletSyncDetails)
+		},
+	}
 	page.columnMargin.Layout(gtx, func() {
 		page.column.Layout(gtx,
 			layout.Rigid(func() {
-				page.syncBoxTitleRow(gtx, uniform)
+				page.endToEndRow(gtx, inset, page.syncSteps, page.headersFetched)
+			}),
+			layout.Rigid(func() {
+				page.endToEndRow(gtx, inset, page.connectedPeersTitle, page.connectedPeers)
+			}),
+			layout.Rigid(func() {
+				page.walletSyncList.Layout(gtx, len(syncBoxes), func(i int) {
+					layout.Inset{Left: units.ColumnMargin}.Layout(gtx, syncBoxes[i])
+				})
 			}),
 		)
 	})
 }
 
-func (page *Overview) endToEndRow(gtx *layout.Context, inset layout.Inset, leftLabel, rightLabel material.Label) {
-	inset.Layout(gtx, func() {
-		page.row.Layout(gtx,
-			layout.Rigid(func() {
-				leftLabel.Layout(gtx)
-			}),
-			layout.Flexed(values.EntireSpace, func() {
-				layout.Align(layout.E).Layout(gtx, func() {
-					rightLabel.Layout(gtx)
-				})
-			}),
-		)
+func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, details walletSyncDetails) {
+	page.columnMargin.Layout(gtx, func() {
+		uniform := layout.UniformInset(units.SyncBoxPadding)
+		uniform.Layout(gtx, func() {
+			gtx.Constraints.Width = layout.Constraint{Max: values.SyncBoxWidthMax, Min: values.SyncBoxWidthMin}
+			page.column.Layout(gtx,
+				layout.Rigid(func() {
+					page.endToEndRow(gtx, inset, details.name, details.status)
+				}),
+				layout.Rigid(func() {
+					page.endToEndRow(gtx, inset, page.walletHeaderFetchedTitle, details.blockHeaderFetched)
+				}),
+				layout.Rigid(func() {
+					page.endToEndRow(gtx, inset, page.walletSyncingProgressTitle, details.syncingProgress)
+				}),
+			)
+		})
 	})
 }
