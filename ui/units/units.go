@@ -26,4 +26,20 @@ var TransactionsRowMargin = unit.Dp(10)
 // SyncBoxPadding is the unit for uniform padding of sync wallet boxes
 var SyncBoxPadding = unit.Dp(10)
 
+// NoPadding is the unit for applying zero padding for widgets in a list layout
+var NoPadding = unit.Dp(0)
+
+// WalletSyncBoxWidthMin is the unit for the minimum width of a sync wallet box
+var WalletSyncBoxWidthMin = unit.Dp(300)
+
+// WalletSyncBoxHeightMin is the unit for the minimum height of a sync wallet box
+var WalletSyncBoxHeightMin = unit.Dp(90)
+
+// WalletSyncBoxContentWidth is the unit for the maximum and minimum width of the
+// contents of a wallet sync box
+var WalletSyncBoxContentWidth = unit.Dp(280)
+
+
+
+
 

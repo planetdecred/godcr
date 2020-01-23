@@ -9,5 +9,3 @@ var (
     EntireSpace = float32(1)
 )
 
-var SyncBoxWidthMin = 500
-var SyncBoxWidthMax = 550

@@ -4,6 +4,8 @@ import (
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
+	"gioui.org/op/paint"
+	"image"
 	"image/color"
 
 	"github.com/raedahgroup/godcr-gio/ui/values"
@@ -40,7 +42,7 @@ func paintArea(ctx *layout.Context, color color.RGBA, x int, y int) {
 		SE: borderRadius,
 		SW: borderRadius,
 	}.Op(ctx.Ops).Add(ctx.Ops)
-	drawShape(ctx, values.Gray, x, y)
+	fillProgressBar(ctx, values.ProgressBarGray, x, y)
 
 	innerWidth := x - borderWidth
 	innerHeight := y - borderWidth
@@ -61,7 +63,7 @@ func paintArea(ctx *layout.Context, color color.RGBA, x int, y int) {
 		SE: borderRadius,
 		SW: borderRadius,
 	}.Op(ctx.Ops).Add(ctx.Ops)
-	drawShape(ctx, color, innerWidth, innerHeight)
+	fillProgressBar(ctx, color, innerWidth, innerHeight)
 }
 
 func (p *ProgressBar) SetHeight(height int) *ProgressBar {
@@ -82,8 +84,8 @@ func (p *ProgressBar) SetProgressColor(col color.RGBA) *ProgressBar {
 func NewProgressBar() *ProgressBar {
 	return &ProgressBar{
 		height:          values.DefaultProgressBarHeight,
-		backgroundColor: values.Gray,
-		progressColor:   values.Green,
+		backgroundColor: values.ProgressBarGray,
+		progressColor:   values.ProgressBarGreen,
 	}
 }
 
@@ -101,4 +103,14 @@ func (p *ProgressBar) Layout(ctx *layout.Context, progress float64) {
 			paintArea(ctx, p.progressColor, int(indicatorWidth), p.height)
 		}),
 	)
+}
+
+func fillProgressBar(ctx *layout.Context, col color.RGBA, x, y int) {
+	d := image.Point{X: x, Y: y}
+	dr := f32.Rectangle{
+		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
+	}
+	paint.ColorOp{Color: col}.Add(ctx.Ops)
+	paint.PaintOp{Rect: dr}.Add(ctx.Ops)
+	ctx.Dimensions = layout.Dimensions{Size: d}
 }
