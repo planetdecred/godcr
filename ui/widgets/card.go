@@ -3,8 +3,9 @@ package widgets
 import (
 	"gioui.org/f32"
 	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/values"
 	"image/color"
+
+	"github.com/raedahgroup/godcr-gio/ui/values"
 )
 
 // Card is a widget that uses a rectangle as flat colored background

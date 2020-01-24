@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
@@ -33,7 +34,7 @@ type Overview struct {
 	walletHeaderFetchedTitle   material.Label
 	walletSyncingProgressTitle material.Label
 	walletSyncDetails          walletSyncDetails
-	walletSyncCard			   *widgets.Card
+	walletSyncCard             *widgets.Card
 
 	transactionColumnTitle material.Label
 	transactionIcon        material.Label
@@ -104,7 +105,8 @@ func (page *Overview) Init(theme *material.Theme) {
 func (page *Overview) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
-			layout.UniformInset(units.ContainerPadding).Layout(gtx, func() {
+			container := layout.Inset{Left: units.ContainerPadding, Right: units.ContainerPadding}
+			container.Layout(gtx, func() {
 				page.content(gtx)
 			})
 		}),
@@ -116,13 +118,17 @@ func (page *Overview) Draw(gtx *layout.Context, _ event.Event) (evt event.Event)
 func (page *Overview) content(gtx *layout.Context) {
 	pageContent := []func(){
 		func() {
-			page.balance.Layout(gtx)
+			layout.Inset{Top: units.ContainerPadding}.Layout(gtx, func() {
+				page.balance.Layout(gtx)
+			})
 		},
 		func() {
 			page.recentTransactionsColumn(gtx)
 		},
 		func() {
-			page.syncStatusColumn(gtx)
+			layout.Inset{Bottom: units.ContainerPadding}.Layout(gtx, func() {
+				page.syncStatusColumn(gtx)
+			})
 		},
 	}
 	page.listContainer.Layout(gtx, len(pageContent), func(i int) {
@@ -302,7 +308,7 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 			layout.Stacked(func() {
 				uniform := layout.UniformInset(units.SyncBoxPadding)
 				uniform.Layout(gtx, func() {
-					gtx.Constraints.Width.Min =  gtx.Px(units.WalletSyncBoxContentWidth)
+					gtx.Constraints.Width.Min = gtx.Px(units.WalletSyncBoxContentWidth)
 					gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
 					page.column.Layout(gtx,
 						layout.Rigid(func() {
