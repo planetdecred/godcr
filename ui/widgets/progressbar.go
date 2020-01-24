@@ -4,8 +4,6 @@ import (
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
-	"gioui.org/op/paint"
-	"image"
 	"image/color"
 
 	"github.com/raedahgroup/godcr-gio/ui/values"
@@ -33,33 +31,42 @@ func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
 	borderedRectangle(gtx, p.progressColor, int(width), p.height)
 }
 
-// fillProgressBar draws the rectangle and adds color to it.
-func fillProgressBar(ctx *layout.Context, col color.RGBA, x, y int) {
-	d := image.Point{X: x, Y: y}
-	dr := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-	}
-	paint.ColorOp{Color: col}.Add(ctx.Ops)
-	paint.PaintOp{Rect: dr}.Add(ctx.Ops)
-	ctx.Dimensions = layout.Dimensions{Size: d}
-}
-
 // borderedRectangle defines the dimensions of the rectangle.
+//func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
+//	borderRadius := float32(y / 5)
+//	clip.Rect{
+//		Rect: f32.Rectangle{
+//			Max: f32.Point{
+//				X: float32(x),
+//				Y: float32(y),
+//			},
+//		},
+//		NE: borderRadius,
+//		NW: borderRadius,
+//		SE: borderRadius,
+//		SW: borderRadius,
+//	}.Op(gtx.Ops).Add(gtx.Ops)
+//
+//	Fill(gtx, color, x, y)
+//}
+
 func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
 	borderRadius := float32(y / 5)
-	clip.Rect{
-		Rect: f32.Rectangle{
-			Max: f32.Point{
-				X: float32(x),
-				Y: float32(y),
-			},
+	rect := f32.Rectangle{
+		Max: f32.Point{
+			X: float32(x),
+			Y: float32(y),
 		},
+	}
+	clip.Rect{
+		Rect: rect,
 		NE: borderRadius,
 		NW: borderRadius,
 		SE: borderRadius,
 		SW: borderRadius,
 	}.Op(gtx.Ops).Add(gtx.Ops)
-	fillProgressBar(gtx, color, x, y)
+
+	Fill(gtx, color, rect)
 }
 
 // SetHeight sets the height of the progress bar

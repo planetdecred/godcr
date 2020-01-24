@@ -1,14 +1,9 @@
 package page
 
 import (
-	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op/paint"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"image"
-	"image/color"
-
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
@@ -38,6 +33,7 @@ type Overview struct {
 	walletHeaderFetchedTitle   material.Label
 	walletSyncingProgressTitle material.Label
 	walletSyncDetails          walletSyncDetails
+	walletSyncCard			   *widgets.Card
 
 	transactionColumnTitle material.Label
 	transactionIcon        material.Label
@@ -88,6 +84,7 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.connectedPeers = theme.Caption("16")
 	page.walletHeaderFetchedTitle = theme.Caption("Block header fetched")
 	page.walletSyncingProgressTitle = theme.Caption("SyncingProgress")
+	page.walletSyncCard = widgets.NewCard()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
 	page.transactionIcon = theme.Caption("icon")
 	page.transactionAmount = theme.Caption("34.17458878 DCR")
@@ -298,9 +295,9 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 	page.columnMargin.Layout(gtx, func() {
 		layout.Stack{}.Layout(gtx,
 			layout.Stacked(func() {
-				gtx.Constraints.Width.Min = gtx.Px(units.WalletSyncBoxWidthMin)
-				gtx.Constraints.Height.Min = gtx.Px(units.WalletSyncBoxHeightMin)
-				fillWalletSyncBox(gtx, values.WalletSyncBoxGray)
+				page.walletSyncCard.SetWidth(gtx.Px(units.WalletSyncBoxWidthMin))
+				page.walletSyncCard.SetHeight(gtx.Px(units.WalletSyncBoxHeightMin))
+				page.walletSyncCard.Layout(gtx)
 			}),
 			layout.Stacked(func() {
 				uniform := layout.UniformInset(units.SyncBoxPadding)
@@ -322,16 +319,4 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 			}),
 		)
 	})
-}
-
-// fillWalletSyncBox adds a coloured rectangle as a background to walletSyncBoxes
-func fillWalletSyncBox(gtx *layout.Context, color color.RGBA) {
-	cs := gtx.Constraints
-	d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
-	dr := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-	}
-	paint.ColorOp{Color: color}.Add(gtx.Ops)
-	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{Size: d}
 }
