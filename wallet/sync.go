@@ -26,8 +26,11 @@ func (wal *Wallet) Sync(wg *sync.WaitGroup) {
 		if cmd, ok := e.(event.WalletCmd); ok {
 			switch cmd.Cmd {
 			case event.LoadedWalletsCmd:
-				wal.Send <- event.Loaded{
-					WalletsLoadedCount: wal.multi.LoadedWalletsCount(),
+				wal.Send <- event.WalletResponse{
+					Resp: event.LoadedWalletsResp,
+					Results: &event.ArgumentQueue{
+						Queue: []interface{}{wal.multi.LoadedWalletsCount()},
+					},
 				}
 			case event.ShutdownCmd:
 				return
@@ -54,5 +57,5 @@ func (listener progressListener) Debug(info *dcrlibwallet.DebugInfo) {
 }
 
 func (listener progressListener) OnSyncStarted() {
-	listener.send <- event.SyncEvent{Event: event.SyncStart}
+	//listener.send <- event.SyncEvent{Event: event.SyncStart}
 }

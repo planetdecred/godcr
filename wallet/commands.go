@@ -26,11 +26,41 @@ func createCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 	}
 
 	wall, err := wal.multi.CreateNewWallet(passphrase, int32(passtype))
+	if err != nil {
+		return err
+	}
 	wal.Send <- event.WalletResponse{
 		Resp: event.CreatedResp,
 		Results: &event.ArgumentQueue{
 			Queue: []interface{}{wall.Seed},
 		},
 	}
-	return err
+	return nil
+}
+
+func restoreCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
+	seed, err := arguments.PopString()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+
+	passphrase, err := arguments.PopString()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+	passtype, err := arguments.PopInt()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+
+	_, err = wal.multi.RestoreWallet(seed, passphrase, int32(passtype))
+	if err != nil {
+		return err
+	}
+
+	wal.Send <- event.WalletResponse{
+		Resp: event.RestoredResp,
+	}
+
+	return nil
 }
