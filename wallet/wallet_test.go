@@ -49,9 +49,9 @@ var _ = Describe("Wallet", func() {
 			}
 			wg.Wait()
 			close(done)
-		}, 3.0)
+		}, 10.0)
 
-		FIt("can create a new wallet", func(done Done) {
+		It("can create a new wallet", func(done Done) {
 			var wg sync.WaitGroup
 			wg.Add(1)
 			go wal.Sync(&wg)
@@ -80,6 +80,6 @@ var _ = Describe("Wallet", func() {
 			}
 			wg.Wait()
 			close(done)
-		}, 10.0)
+		}, 20.0)
 	})
 })
