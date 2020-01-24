@@ -3,3 +3,4 @@ _*
 *.dll
 .vscode
 *.coverprofile
+**/.godcr

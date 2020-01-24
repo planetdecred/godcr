@@ -12,21 +12,35 @@ import (
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi   *dcrlibwallet.MultiWallet
-	Root    string // root directory for all wallet data
-	Network string
+	root    string // root directory for all wallet data
+	retwork string
 	event.Duplex
+}
+
+// New loads a new wallet instance
+func New(rootdir string, network string) (*Wallet, event.DuplexBase, error) {
+	wal := new(Wallet)
+	duplexB := event.NewDuplexBase()
+
+	err := wal.loadWallets(rootdir, network)
+	if err != nil {
+		return nil, duplexB, err
+	}
+
+	wal.Duplex = duplexB.Duplex()
+	return wal, duplexB, nil
 }
 
 // loadWallets loads the wallets for network in the rootdir and returns the wallet,
 // the number of wallets loaded or an error if it occurs.
-func (wal *Wallet) loadWallets() (int32, error) {
-	if wal.Root == "" || wal.Network == "" { // This should really be handled by dcrlibwallet
-		return 0, fmt.Errorf(`root directory or network cannot be ""`)
+func (wal *Wallet) loadWallets(root string, net string) error {
+	if root == "" || net == "" { // This should really be handled by dcrlibwallet
+		return fmt.Errorf(`root directory or network cannot be ""`)
 	}
-	multiWal, err := dcrlibwallet.NewMultiWallet(wal.Root, "", wal.Network)
+	multiWal, err := dcrlibwallet.NewMultiWallet(root, "bdb", net)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	wal.multi = multiWal
-	return multiWal.LoadedWalletsCount(), err
+	return err
 }
