@@ -50,8 +50,8 @@ type Overview struct {
 	columnMargin   layout.Inset
 	row            layout.Flex
 	list           layout.List
+	listContainer  layout.List
 	walletSyncList layout.List
-	syncStatusList layout.List
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -70,7 +70,7 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.columnMargin = layout.Inset{Top: units.ColumnMargin}
 	page.list = layout.List{Axis: layout.Vertical}
 	page.walletSyncList = layout.List{Axis: layout.Horizontal}
-	page.syncStatusList = layout.List{Axis: layout.Vertical}
+	page.listContainer = layout.List{Axis: layout.Vertical}
 
 	page.balance = theme.H5("154.0928281 DCR")
 	page.statusTitle = theme.Caption("Wallet Status")
@@ -117,17 +117,20 @@ func (page *Overview) Draw(gtx *layout.Context, _ event.Event) (evt event.Event)
 
 // content lays out the entire content for overview page.
 func (page *Overview) content(gtx *layout.Context) {
-	page.column.Layout(gtx,
-		layout.Rigid(func() {
+	pageContent := []func(){
+		func() {
 			page.balance.Layout(gtx)
-		}),
-		layout.Rigid(func() {
+		},
+		func() {
 			page.recentTransactionsColumn(gtx)
-		}),
-		layout.Rigid(func() {
+		},
+		func() {
 			page.syncStatusColumn(gtx)
-		}),
-	)
+		},
+	}
+	page.listContainer.Layout(gtx, len(pageContent), func(i int) {
+		layout.UniformInset(units.NoPadding).Layout(gtx, pageContent[i])
+	})
 }
 
 // recentTransactionsColumn lays out the list of recent transactions.
@@ -190,27 +193,24 @@ func (page *Overview) recentTransactionRow(gtx *layout.Context) {
 // syncStatusColumn lays out content for displaying sync status.
 func (page *Overview) syncStatusColumn(gtx *layout.Context) {
 	uniform := layout.UniformInset(units.Padding)
-	syncStatusWidgets := []func(){
-		func() {
-			page.syncBoxTitleRow(gtx, uniform)
-		},
-		func() {
-			page.syncStatusTextRow(gtx, uniform)
-		},
-		func() {
-			page.progressBarRow(gtx, uniform)
-		},
-		func() {
-			page.progressStatusRow(gtx, uniform)
-		},
-		func() {
-			page.walletSyncRow(gtx, uniform)
-		},
-	}
 	page.columnMargin.Layout(gtx, func() {
-		page.syncStatusList.Layout(gtx, len(syncStatusWidgets), func(i int) {
-			layout.UniformInset(units.NoPadding).Layout(gtx, syncStatusWidgets[i])
-		})
+		page.column.Layout(gtx,
+			layout.Rigid(func() {
+				page.syncBoxTitleRow(gtx, uniform)
+			}),
+			layout.Rigid(func() {
+				page.syncStatusTextRow(gtx, uniform)
+			}),
+			layout.Rigid(func() {
+				page.progressBarRow(gtx, uniform)
+			}),
+			layout.Rigid(func() {
+				page.progressStatusRow(gtx, uniform)
+			}),
+			layout.Rigid(func() {
+				page.walletSyncRow(gtx, uniform)
+			}),
+		)
 	})
 }
 
