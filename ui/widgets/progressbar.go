@@ -19,17 +19,34 @@ type (
 	}
 )
 
-// paintArea creates an overlay of two rectangles to make a progress bar.
-// The first indicates the progress to be completed, the second indicates
-// the level of progress
-func paintArea(ctx *layout.Context, color color.RGBA, x int, y int) {
-	borderRadius := float32(6)
-	borderWidth := 1
-	if y < 21 {
-		borderRadius = float32(4)
-		borderWidth = 0
-	}
+// tracks lays out a rectangle to represent the level of progress yet to be completed.
+func (p *ProgressBar) track(gtx *layout.Context) {
+	borderedRectangle(gtx, values.ProgressBarGray, gtx.Constraints.Width.Max, p.height)
+}
 
+// values lays out a rectangle to represent the level of progress that has been completed.
+func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
+	width := progress / 100 * float64(gtx.Constraints.Width.Max)
+	if width > float64(gtx.Constraints.Width.Max) {
+		width = float64(gtx.Constraints.Width.Max)
+	}
+	borderedRectangle(gtx, p.progressColor, int(width), p.height)
+}
+
+// fillProgressBar draws the rectangle and adds color to it.
+func fillProgressBar(ctx *layout.Context, col color.RGBA, x, y int) {
+	d := image.Point{X: x, Y: y}
+	dr := f32.Rectangle{
+		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
+	}
+	paint.ColorOp{Color: col}.Add(ctx.Ops)
+	paint.PaintOp{Rect: dr}.Add(ctx.Ops)
+	ctx.Dimensions = layout.Dimensions{Size: d}
+}
+
+// borderedRectangle defines the dimensions of the rectangle.
+func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
+	borderRadius := float32(y / 5)
 	clip.Rect{
 		Rect: f32.Rectangle{
 			Max: f32.Point{
@@ -41,76 +58,43 @@ func paintArea(ctx *layout.Context, color color.RGBA, x int, y int) {
 		NW: borderRadius,
 		SE: borderRadius,
 		SW: borderRadius,
-	}.Op(ctx.Ops).Add(ctx.Ops)
-	fillProgressBar(ctx, values.ProgressBarGray, x, y)
-
-	innerWidth := x - borderWidth
-	innerHeight := y - borderWidth
-
-	clip.Rect{
-		Rect: f32.Rectangle{
-			Max: f32.Point{
-				X: float32(innerWidth),
-				Y: float32(innerHeight),
-			},
-			Min: f32.Point{
-				X: float32(borderWidth),
-				Y: float32(borderWidth),
-			},
-		},
-		NE: borderRadius,
-		NW: borderRadius,
-		SE: borderRadius,
-		SW: borderRadius,
-	}.Op(ctx.Ops).Add(ctx.Ops)
-	fillProgressBar(ctx, color, innerWidth, innerHeight)
+	}.Op(gtx.Ops).Add(gtx.Ops)
+	fillProgressBar(gtx, color, x, y)
 }
 
+// SetHeight sets the height of the progress bar
 func (p *ProgressBar) SetHeight(height int) *ProgressBar {
 	p.height = height
 	return p
 }
 
+// SetBackgroundColor sets the color of track of the progress bar
 func (p *ProgressBar) SetBackgroundColor(col color.RGBA) *ProgressBar {
 	p.backgroundColor = col
 	return p
 }
 
+// SetProgressColor sets the color of the level of progress that has been completed.
 func (p *ProgressBar) SetProgressColor(col color.RGBA) *ProgressBar {
 	p.progressColor = col
 	return p
 }
 
+// Layout lays out the track and level of progress on each other.
+func (p *ProgressBar) Layout(gtx *layout.Context, progress float64) {
+	layout.Stack{}.Layout(gtx,
+		layout.Stacked(func() {
+			p.track(gtx)
+			p.value(gtx, progress)
+		}),
+	)
+}
+
+// NewProgressBar creates a new ProgressBar object.
 func NewProgressBar() *ProgressBar {
 	return &ProgressBar{
 		height:          values.DefaultProgressBarHeight,
 		backgroundColor: values.ProgressBarGray,
 		progressColor:   values.ProgressBarGreen,
 	}
-}
-
-func (p *ProgressBar) Layout(ctx *layout.Context, progress float64) {
-	layout.Stack{}.Layout(ctx,
-		layout.Stacked(func() {
-			paintArea(ctx, p.backgroundColor, ctx.Constraints.Width.Max, p.height)
-			// calculate width of indicator with respects to progress bar width
-			indicatorWidth := progress / float64(100) * float64(ctx.Constraints.Width.Max)
-
-			if indicatorWidth > float64(ctx.Constraints.Width.Max) {
-				indicatorWidth = float64(ctx.Constraints.Width.Max)
-			}
-
-			paintArea(ctx, p.progressColor, int(indicatorWidth), p.height)
-		}),
-	)
-}
-
-func fillProgressBar(ctx *layout.Context, col color.RGBA, x, y int) {
-	d := image.Point{X: x, Y: y}
-	dr := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-	}
-	paint.ColorOp{Color: col}.Add(ctx.Ops)
-	paint.PaintOp{Rect: dr}.Add(ctx.Ops)
-	ctx.Dimensions = layout.Dimensions{Size: d}
 }
