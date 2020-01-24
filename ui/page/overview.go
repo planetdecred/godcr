@@ -6,12 +6,13 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"image"
+	"image/color"
+
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
-	"image"
-	"image/color"
 )
 
 const OverviewID = "overview"
