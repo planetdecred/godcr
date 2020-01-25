@@ -67,8 +67,8 @@ func (win *Window) Loop() {
 			}
 		case e := <-win.walletSync.Receive:
 			switch evt := e.(type) {
-			case event.Loaded:
-				if evt.WalletsLoadedCount == 0 {
+			case event.WalletResponse:
+				if evt.Resp == event.LoadedWalletsResp {
 					win.current = page.LandingID
 				}
 			}

@@ -12,8 +12,6 @@ import (
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi   *dcrlibwallet.MultiWallet
-	root    string // root directory for all wallet data
-	retwork string
 	wallets []*dcrlibwallet.Wallet
 	event.Duplex
 }
