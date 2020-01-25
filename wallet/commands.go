@@ -72,12 +72,12 @@ func restoreCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 }
 
 func infoCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
-	err := wal.reloadWallets()
+	wallets, err := wal.wallets()
 	if err != nil {
 		return err
 	}
 	var completeTotal int64
-	for _, wall := range wal.wallets {
+	for _, wall := range wallets {
 		iter, err := wall.AccountsIterator(2) // Placeholder
 		if err != nil {
 			return err
@@ -87,7 +87,7 @@ func infoCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 		}
 	}
 	wal.Send <- event.WalletInfo{
-		LoadedWallets: len(wal.wallets),
+		LoadedWallets: len(wallets),
 		TotalBalance:  completeTotal,
 		//BestBlock:     wal.multi.GetBestBlock(),
 	}

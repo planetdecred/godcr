@@ -11,8 +11,7 @@ import (
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
-	multi   *dcrlibwallet.MultiWallet
-	wallets []*dcrlibwallet.Wallet
+	multi *dcrlibwallet.MultiWallet
 	event.Duplex
 }
 
@@ -55,9 +54,9 @@ func (wal *Wallet) loadWallets(root string, net string) error {
 	return err
 }
 
-func (wal *Wallet) reloadWallets() error {
+func (wal *Wallet) wallets() ([]*dcrlibwallet.Wallet, error) {
 	if wal.multi == nil {
-		return &InternalWalletError{
+		return nil, &InternalWalletError{
 			Message: "No MultiWallet loaded",
 		}
 	}
@@ -68,13 +67,11 @@ func (wal *Wallet) reloadWallets() error {
 	for i, j := range wal.multi.OpenedWalletIDsRaw() {
 		w := wal.multi.WalletWithID(j)
 		if w == nil {
-			return &InternalWalletError{
+			return nil, &InternalWalletError{
 				Message: "Invalid Wallet ID",
 			}
 		}
 		wallets[i] = w
 	}
-
-	wal.wallets = wallets
-	return nil
+	return wallets, nil
 }
