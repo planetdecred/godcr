@@ -15,6 +15,12 @@ var (
 	ErrNotFound = errors.New("Command not found or not implemented")
 )
 
+var cmdMap = map[string]func(*Wallet, *event.ArgumentQueue) error{
+	event.CreateCmd:  createCmd,
+	event.RestoreCmd: restoreCmd,
+	event.InfoCmd:    infoCmd,
+}
+
 func createCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 	passphrase, err := arguments.PopString()
 	if err != nil {
@@ -62,5 +68,28 @@ func restoreCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 		Resp: event.RestoredResp,
 	}
 
+	return nil
+}
+
+func infoCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
+	err := wal.reloadWallets()
+	if err != nil {
+		return err
+	}
+	var completeTotal int64
+	for _, wall := range wal.wallets {
+		iter, err := wall.AccountsIterator(2) // Placeholder
+		if err != nil {
+			return err
+		}
+		for acct := iter.Next(); acct != nil; acct = iter.Next() {
+			completeTotal += acct.TotalBalance
+		}
+	}
+	wal.Send <- event.WalletInfo{
+		LoadedWallets: len(wal.wallets),
+		TotalBalance:  completeTotal,
+		//BestBlock:     wal.multi.GetBestBlock(),
+	}
 	return nil
 }

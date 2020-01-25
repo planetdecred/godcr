@@ -8,9 +8,7 @@ import (
 	"github.com/raedahgroup/godcr-gio/event"
 )
 
-var cmdMap = map[string]func(*Wallet, *event.ArgumentQueue) error{
-	event.CreateCmd: createCmd,
-}
+const syncID = "godcr"
 
 // Sync is the main wallet sync loop
 func (wal *Wallet) Sync(wg *sync.WaitGroup) {
@@ -21,16 +19,16 @@ func (wal *Wallet) Sync(wg *sync.WaitGroup) {
 
 	defer wal.multi.Shutdown()
 
+	wal.multi.AddSyncProgressListener(&progressListener{
+		Send: wal.Send,
+	}, syncID)
 	for {
 		e := <-wal.Receive
 		if cmd, ok := e.(event.WalletCmd); ok {
 			switch cmd.Cmd {
-			case event.LoadedWalletsCmd:
-				wal.Send <- event.WalletResponse{
-					Resp: event.LoadedWalletsResp,
-					Results: &event.ArgumentQueue{
-						Queue: []interface{}{wal.multi.LoadedWalletsCount()},
-					},
+			case event.StartSyncCmd:
+				if !wal.multi.IsSyncing() {
+					go wal.multi.SpvSync()
 				}
 			case event.ShutdownCmd:
 				return
@@ -49,13 +47,41 @@ func (wal *Wallet) Sync(wg *sync.WaitGroup) {
 }
 
 type progressListener struct {
-	send chan<- event.Event
+	Send chan<- event.Event
 }
 
-func (listener progressListener) Debug(info *dcrlibwallet.DebugInfo) {
+func (listener *progressListener) Debug(info *dcrlibwallet.DebugInfo) {
 
 }
 
-func (listener progressListener) OnSyncStarted() {
-	//listener.send <- event.SyncEvent{Event: event.SyncStart}
+func (listener *progressListener) OnSyncStarted() {
+	listener.Send <- event.Sync{Event: event.SyncStart}
+}
+
+func (listener *progressListener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
+
+}
+
+func (listener *progressListener) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.HeadersFetchProgressReport) {
+
+}
+
+func (listener *progressListener) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
+
+}
+
+func (listener *progressListener) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.HeadersRescanProgressReport) {
+
+}
+
+func (listener *progressListener) OnSyncCompleted() {
+	listener.Send <- event.Sync{Event: event.SyncEnd}
+}
+
+func (listener *progressListener) OnSyncCanceled(willRestart bool) {
+
+}
+
+func (listener *progressListener) OnSyncEndedWithError(err error) {
+
 }

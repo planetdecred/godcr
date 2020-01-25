@@ -14,7 +14,19 @@ type Wallet struct {
 	multi   *dcrlibwallet.MultiWallet
 	root    string // root directory for all wallet data
 	retwork string
+	wallets []*dcrlibwallet.Wallet
 	event.Duplex
+}
+
+// InternalWalletError represents errors generated during the handling of the multiwallet
+// and connected wallets
+type InternalWalletError struct {
+	Message         string
+	AffectedWallets []int
+}
+
+func (err *InternalWalletError) Error() string {
+	return err.Message
 }
 
 // New loads a new wallet instance
@@ -43,4 +55,28 @@ func (wal *Wallet) loadWallets(root string, net string) error {
 	}
 	wal.multi = multiWal
 	return err
+}
+
+func (wal *Wallet) reloadWallets() error {
+	if wal.multi == nil {
+		return &InternalWalletError{
+			Message: "No MultiWallet loaded",
+		}
+	}
+
+	count := int(wal.multi.LoadedWalletsCount())
+	wallets := make([]*dcrlibwallet.Wallet, count)
+
+	for i, j := range wal.multi.OpenedWalletIDsRaw() {
+		w := wal.multi.WalletWithID(j)
+		if w == nil {
+			return &InternalWalletError{
+				Message: "Invalid Wallet ID",
+			}
+		}
+		wallets[i] = w
+	}
+
+	wal.wallets = wallets
+	return nil
 }
