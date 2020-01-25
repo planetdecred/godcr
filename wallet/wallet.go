@@ -40,8 +40,8 @@ func New(rootdir string, network string) (*Wallet, event.DuplexBase, error) {
 	return wal, duplexB, nil
 }
 
-// loadWallets loads the wallets for network in the rootdir and returns the wallet,
-// the number of wallets loaded or an error if it occurs.
+// loadWallets loads the wallets for network in the root directory and returns
+// an error if it occurs.
 func (wal *Wallet) loadWallets(root string, net string) error {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
 		return fmt.Errorf(`root directory or network cannot be ""`)

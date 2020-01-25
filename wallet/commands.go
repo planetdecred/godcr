@@ -71,7 +71,7 @@ func restoreCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 	return nil
 }
 
-func infoCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
+func infoCmd(wal *Wallet, _ *event.ArgumentQueue) error {
 	wallets, err := wal.wallets()
 	if err != nil {
 		return err

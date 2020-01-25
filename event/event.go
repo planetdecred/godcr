@@ -10,7 +10,7 @@ import (
 // An error can also be passed as an Event.
 type Event interface{}
 
-// Duplex is a stucture for constraning event communication to two
+// Duplex is a structure for constraning event communication to two
 // directionally-constrained channels so as to reduce the possibility
 // of a deadlock
 type Duplex struct {

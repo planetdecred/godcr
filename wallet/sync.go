@@ -19,16 +19,24 @@ func (wal *Wallet) Sync(wg *sync.WaitGroup) {
 
 	defer wal.multi.Shutdown()
 
-	wal.multi.AddSyncProgressListener(&progressListener{
+	err := wal.multi.AddSyncProgressListener(&progressListener{
 		Send: wal.Send,
 	}, syncID)
+	if err != nil {
+		wal.Send <- err
+	}
 	for {
 		e := <-wal.Receive
 		if cmd, ok := e.(event.WalletCmd); ok {
 			switch cmd.Cmd {
 			case event.StartSyncCmd:
 				if !wal.multi.IsSyncing() {
-					go wal.multi.SpvSync()
+					go func(c chan<- event.Event) {
+						err := wal.multi.SpvSync()
+						if err != nil {
+							c <- err
+						}
+					}(wal.Send)
 				}
 			case event.ShutdownCmd:
 				return
