@@ -5,7 +5,12 @@ import (
 	"sync"
 
 	app "gioui.org/app"
+	"gioui.org/font"
 	"gioui.org/font/gofont"
+	"gioui.org/font/opentype"
+	"gioui.org/text"
+
+	"github.com/markbates/pkger"
 
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/page"
@@ -24,7 +29,25 @@ func main() {
 	var wg sync.WaitGroup
 
 	dup := event.NewDuplexBase()
-	gofont.Register() // IMPORTANT
+
+	source, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
+	if err != nil {
+		fmt.Println("Failed to load font")
+		gofont.Register()
+	} else {
+		stat, err := source.Stat()
+		if err != nil {
+			fmt.Println(err)
+		}
+		bytes := make([]byte, stat.Size())
+		source.Read(bytes)
+		fnt, err := opentype.Parse(bytes)
+		if err != nil {
+			fmt.Println(err)
+		}
+		font.Register(text.Font{}, fnt)
+	}
+
 	win, err := window.CreateWindow(page.LoadingID, dup.Reverse())
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)

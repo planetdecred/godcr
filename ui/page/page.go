@@ -4,7 +4,7 @@ package page
 
 import (
 	"gioui.org/layout"
-	"gioui.org/widget/material"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 
 	"github.com/raedahgroup/godcr-gio/event"
 )
@@ -20,6 +20,6 @@ import (
 // and returns any generated user event.
 // Draw is only called once per frame for the active page.
 type Page interface {
-	Init(*material.Theme)
+	Init(*materialplus.Theme)
 	Draw(*layout.Context, event.Event) event.Event
 }
