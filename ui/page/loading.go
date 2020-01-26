@@ -3,8 +3,8 @@ package page
 import (
 	"gioui.org/layout"
 	"gioui.org/widget/material"
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )

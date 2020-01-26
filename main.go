@@ -9,7 +9,6 @@ import (
 	"gioui.org/font/gofont"
 	"gioui.org/font/opentype"
 	"gioui.org/text"
-
 	"github.com/markbates/pkger"
 
 	"github.com/raedahgroup/dcrlibwallet"

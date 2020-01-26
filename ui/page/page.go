@@ -4,9 +4,9 @@ package page
 
 import (
 	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 
 	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 )
 
 // Page represents a single page of the app.
