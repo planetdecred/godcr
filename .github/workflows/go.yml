@@ -35,9 +35,12 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: go mod download
 
-      - name: Build
-        run: go build
-    #   - name: Lint
-    #     run: |
-    #       export PATH=$PATH:~/go/bin
-    #       golangci-lint
+      - name: Lint
+        run: |
+          export PATH=$PATH:~/go/bin
+          golangci-lint run --deadline=10m \
+            --disable-all --enable govet \
+            --enable staticcheck --enable gosimple \
+            --enable unconvert --enable ineffassign \
+            --enable structcheck --enable goimports \
+            --enable misspell --enable unparam
