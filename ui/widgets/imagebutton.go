@@ -122,13 +122,13 @@ func drawInk(gtx *layout.Context, c widget.Click) {
 
 	clip.Rect{
 		Rect: f32.Rectangle{Max: f32.Point{
-			X: float32(size),
-			Y: float32(size),
+			X: size,
+			Y: size,
 		}},
 		NE: rr, NW: rr, SE: rr, SW: rr,
 	}.Op(gtx.Ops).Add(gtx.Ops)
 
-	paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(size), Y: float32(size)}}}.Add(gtx.Ops)
+	paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: size, Y: size}}}.Add(gtx.Ops)
 	stack.Pop()
 	op.InvalidateOp{}.Add(gtx.Ops)
 }

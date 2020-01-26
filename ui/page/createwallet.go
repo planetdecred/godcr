@@ -37,6 +37,7 @@ type CreateAndRestore struct {
 
 // Init adds a heading and two buttons.
 func (pg *CreateAndRestore) Init(theme *material.Theme) {
+	// ToDo should show error page if icons aren't rendered properly.
 	file, err := os.Open("./assets/decred.png")
 	fmt.Println(os.UserHomeDir())
 	if err != nil {
@@ -55,6 +56,9 @@ func (pg *CreateAndRestore) Init(theme *material.Theme) {
 		log.Fatalln(err)
 	}
 	image, err = png.Decode(file)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	pg.addIcon = theme.Image(paint.NewImageOp(image))
 
 	file, err = os.Open("./assets/restore.png")
@@ -62,6 +66,9 @@ func (pg *CreateAndRestore) Init(theme *material.Theme) {
 		log.Fatalln(err)
 	}
 	image, err = png.Decode(file)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	pg.restoreIcon = theme.Image(paint.NewImageOp(image))
 
 	pg.container = &layout.List{
