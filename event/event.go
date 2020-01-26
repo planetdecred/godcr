@@ -49,9 +49,9 @@ func (dup DuplexBase) Reverse() Duplex {
 
 var (
 	// ErrQueueUnderflow is returned when ArgumentQueue is empty and a Pop is requested
-	ErrQueueUnderflow = errors.New("No more arguments")
+	ErrQueueUnderflow = errors.New("no more arguments")
 	// ErrInvalidPop is returned when the current ArgumentQueue item is not of the type requested
-	ErrInvalidPop = errors.New("Current argument cannot be asserted to requested type")
+	ErrInvalidPop = errors.New("current argument cannot be asserted to requested type")
 )
 
 // ArgumentQueue is a structure for handling data passed through events

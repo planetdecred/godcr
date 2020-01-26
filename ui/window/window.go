@@ -49,7 +49,7 @@ func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
 	}
 
 	if _, ok := pages[start]; !ok {
-		return nil, fmt.Errorf("No such page")
+		return nil, fmt.Errorf("no such page")
 	}
 	win.current = start
 	win.pages = pages

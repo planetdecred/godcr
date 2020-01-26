@@ -8,11 +8,11 @@ import (
 
 var (
 	// ErrInvalidArguments is returned when a wallet command is send with invalid arguments.
-	ErrInvalidArguments = errors.New("Invalid command arguments")
+	ErrInvalidArguments = errors.New("invalid command arguments")
 
 	// ErrNotFound is returned when a wallet command is given that does not exist or is not
 	// implemented.
-	ErrNotFound = errors.New("Command not found or not implemented")
+	ErrNotFound = errors.New("command not found or not implemented")
 )
 
 var cmdMap = map[string]func(*Wallet, *event.ArgumentQueue) error{
