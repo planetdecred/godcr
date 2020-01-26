@@ -43,20 +43,20 @@ type InfoShort struct {
 	Name             string
 	Balance          string
 	Accounts         []Account
+	TotalBalance     string
+	SpendableBalance int64
 	BestBlockHeight  int32
 	BlockTimestamp   int64
 	DaysBehind       string
 	Status           string
 	IsWaiting        bool
-	TotalBalance     int64
-	SpendableBalance int64
 }
 
 // Account represents information about a wallet's account
 type Account struct {
 	Number           int32
 	Name             string
-	SpendableBalance string
+	SpendableBalance int64
 	Keys             struct {
 		Internal, External, Imported string
 	}
@@ -124,8 +124,25 @@ type SyncStatus struct {
 	CurrentBlockHeight       int32
 }
 
+<<<<<<< HEAD
 // Signature is sent in response to Wallet.SignMessage
 type Signature struct {
 	Signature string
 	Err       error
+}
+
+// TxHash is sent when the Wallet successfully broadcasts a transaction
+type TxHash struct {
+	Hash string
+}
+
+type TxAuthor struct {
+	TxAuthor int
+	Err      error
+}
+
+// Broadcast is sent when the Wallet  broadcasts a transaction
+type Broadcast struct {
+	TxHash string
+	Err    error
 }

@@ -161,6 +161,11 @@ func toMax(gtx *layout.Context) {
 	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
 }
 
+func modalDims(gtx *layout.Context) {
+	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max - 150
+}
+
 func (win *Window) Err() {
 	if win.err != "" {
 		win.outputs.err.Text = win.err

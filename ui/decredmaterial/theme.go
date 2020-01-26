@@ -121,6 +121,31 @@ func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
 	)
 }
 
+func (t *Theme) Modal(gtx *layout.Context, w layout.Widget) {
+	overlayColor := t.Color.Black
+	overlayColor.A = 200
+
+	layout.Stack{}.Layout(gtx,
+		layout.Expanded(func() {
+			fillMax(gtx, overlayColor)
+		}),
+		layout.Stacked(func() {
+			inset := layout.Inset{
+				Top: unit.Dp(50),
+			}
+			inset.Layout(gtx, func() {
+				fillMax(gtx, t.Color.Surface)
+				inset := layout.Inset{
+					Top:   unit.Dp(7),
+					Left:  unit.Dp(25),
+					Right: unit.Dp(25),
+				}
+				inset.Layout(gtx, w)
+			})
+		}),
+	)
+}
+
 func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.Center,

@@ -114,12 +114,6 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 			return
 		}
 
-		if walletID > len(wallets) || walletID < 0 {
-			resp.Err = err
-			wal.Send <- resp
-			return
-		}
-
 		if _, err := wallets[walletID].GetAccount(accountID, wal.confirms); err != nil {
 			resp.Err = err
 			wal.Send <- resp
@@ -146,6 +140,37 @@ func transactionStatus(bestBlockHeight, txnBlockHeight int32) (string, int32) {
 		return "confirmed", confirmations
 	}
 	return "pending", confirmations
+}
+
+// BroadcastTransaction broadcasts the transaction built with txAuthor to the network.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) BroadcastTransaction(txAuthor *dcrlibwallet.TxAuthor, passphrase []byte) {
+	go func() {
+		var resp Response
+
+		txHash, err := txAuthor.Broadcast(passphrase)
+		if err != nil {
+			resp.Resp = &Broadcast{
+				Err: err,
+			}
+			wal.Send <- resp
+			return
+		}
+
+		hash, err := chainhash.NewHash(txHash)
+		if err != nil {
+			resp.Resp = &Broadcast{
+				Err: fmt.Errorf("error parsing successful transaction hash: %s", err.Error()),
+			}
+			wal.Send <- resp
+			return
+		}
+
+		resp.Resp = &Broadcast{
+			TxHash: hash.String(),
+		}
+		wal.Send <- resp
+	}()
 }
 
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
@@ -277,8 +302,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				wal.Send <- resp
 				return
 			}
-
-			var acctBalance int64
+			var acctBalance, spendableBalance int64
 			accts := make([]Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
 				var addr string
@@ -289,12 +313,11 @@ func (wal *Wallet) GetMultiWalletInfo() {
 						log.Error("Could not get current address for wallet ", id, "account", acct.Number)
 					}
 				}
-
 				accts = append(accts, Account{
 					Number:           acct.Number,
 					Name:             acct.Name,
 					TotalBalance:     dcrutil.Amount(acct.TotalBalance).String(),
-					SpendableBalance: dcrutil.Amount(acct.Balance.Spendable).String(),
+					SpendableBalance: acct.Balance.Spendable,
 					Keys: struct {
 						Internal, External, Imported string
 					}{
@@ -306,18 +329,20 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					CurrentAddress: addr,
 				})
 				acctBalance += acct.TotalBalance
+				spendableBalance += acct.Balance.Spendable
 			}
 			completeTotal += acctBalance
 
 			infos[i] = InfoShort{
-				ID:              wall.ID,
-				Name:            wall.Name,
-				Balance:         dcrutil.Amount(acctBalance).String(),
-				Accounts:        accts,
-				BestBlockHeight: wall.GetBestBlock(),
-				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
-				DaysBehind:      fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
-				Status:          walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
+				ID:               wall.ID,
+				Name:             wall.Name,
+				Balance:          dcrutil.Amount(acctBalance).String(),
+				SpendableBalance: spendableBalance,
+				Accounts:         accts,
+				BestBlockHeight:  wall.GetBestBlock(),
+				BlockTimestamp:   wall.GetBestBlockTimeStamp(),
+				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
+				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 			}
 			i++
 		}

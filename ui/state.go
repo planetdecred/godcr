@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 )
@@ -49,6 +50,10 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.dialog = false
 	case *wallet.Signature:
 		win.signatureResult = update.(*wallet.Signature)
+	case *dcrlibwallet.TxAuthor:
+		win.txAuthor = update.(*dcrlibwallet.TxAuthor)
+	case *wallet.Broadcast:
+		win.broadcastResult = update.(*wallet.Broadcast)
 	}
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
