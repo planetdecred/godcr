@@ -45,7 +45,8 @@ const (
 
 // WalletInfo represents bulk information about the wallets returned by the wallet backend
 type WalletInfo struct {
-	LoadedWallets int
-	TotalBalance  int64
-	BestBlock     int
+	LoadedWallets   int
+	TotalBalance    int64
+	BestBlockHeight int32
+	BestBlockTime   int64
 }

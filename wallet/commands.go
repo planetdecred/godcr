@@ -86,10 +86,13 @@ func infoCmd(wal *Wallet, _ *event.ArgumentQueue) error {
 			completeTotal += acct.TotalBalance
 		}
 	}
+	best := wal.multi.GetBestBlock()
+
 	wal.Send <- event.WalletInfo{
-		LoadedWallets: len(wallets),
-		TotalBalance:  completeTotal,
-		//BestBlock:     wal.multi.GetBestBlock(),
+		LoadedWallets:   len(wallets),
+		TotalBalance:    completeTotal,
+		BestBlockHeight: best.Height,
+		BestBlockTime:   best.Timestamp,
 	}
 	return nil
 }

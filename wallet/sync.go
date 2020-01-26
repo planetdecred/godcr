@@ -13,17 +13,29 @@ const syncID = "godcr"
 // Sync is the main wallet sync loop
 func (wal *Wallet) Sync(wg *sync.WaitGroup) {
 	defer wg.Done()
-	if wal.multi == nil {
+
+	err := wal.loadWallets(wal.root, wal.net)
+	if err != nil {
+		wal.Send <- err
 		return
+	}
+
+	//fmt.Println("Sending loaded event")
+	wal.Send <- event.WalletResponse{
+		Resp: event.LoadedWalletsResp,
+		Results: &event.ArgumentQueue{
+			Queue: []interface{}{int(wal.multi.LoadedWalletsCount())},
+		},
 	}
 
 	defer wal.multi.Shutdown()
 
-	err := wal.multi.AddSyncProgressListener(&progressListener{
+	err = wal.multi.AddSyncProgressListener(&progressListener{
 		Send: wal.Send,
 	}, syncID)
 	if err != nil {
 		wal.Send <- err
+		return
 	}
 	for {
 		e := <-wal.Receive

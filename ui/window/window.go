@@ -20,7 +20,8 @@ type Window struct {
 	pages      map[string]page.Page
 	current    string
 	walletSync event.Duplex
-	pageEvt    chan event.Event
+	pageStates map[string]event.Event
+	uiEvents   chan event.Event
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -36,13 +37,15 @@ func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
 
 	pages := make(map[string]page.Page, 1)
 
-	win.pageEvt = make(chan event.Event, 2) // Buffered so Loop can send and receive in the goroutine
+	win.uiEvents = make(chan event.Event, 1) // Buffered so Loop can send and receive in the goroutine
+	win.pageStates = make(map[string]event.Event)
 
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
 
-	for _, p := range pages {
+	for key, p := range pages {
 		p.Init(win.theme)
+		win.pageStates[key] = nil
 	}
 
 	if _, ok := pages[start]; !ok {
@@ -57,33 +60,57 @@ func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
 // Loop runs main event handling and page rendering loop
 func (win *Window) Loop() {
 	for {
+	eventSelect:
 		select {
-		case e := <-win.pageEvt:
+		case e := <-win.uiEvents:
 			switch evt := e.(type) {
 			case event.Nav:
 				win.current = evt.Next
 			case error:
 				// TODO: display error
 			}
+
 		case e := <-win.walletSync.Receive:
 			switch evt := e.(type) {
 			case event.WalletResponse:
-				if evt.Resp == event.LoadedWalletsResp {
-					win.current = page.LandingID
+				switch evt.Resp {
+				case event.LoadedWalletsResp:
+					loaded, err := evt.Results.PopInt()
+					if err != nil {
+						// Log or display error
+						break eventSelect
+					}
+					if loaded == 0 {
+						win.uiEvents <- event.Nav{
+							Next: page.LandingID,
+						}
+					} // else overview
+
+				default:
+					// Unhandled Response
 				}
+			case error:
+				// TODO: display error
+			default:
+				// How tho?
 			}
+
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
+				win.walletSync.Send <- event.WalletCmd{
+					Cmd: event.ShutdownCmd,
+				}
 				return
 			case system.FrameEvent:
+				fmt.Println("Frame")
 				win.gtx.Reset(evt.Config, evt.Size)
-				// TODO: send events
-				if pageEvt := win.pages[win.current].Draw(win.gtx, nil); pageEvt != nil {
-					win.pageEvt <- pageEvt
-				}
-
+				win.uiEvents <- win.pages[win.current].Draw(win.gtx, win.pageStates[win.current])
 				evt.Frame(win.gtx.Ops)
+			case nil:
+				// Ignore
+			default:
+				fmt.Printf("Unhandled window event %+v\n", e)
 			}
 		}
 	}

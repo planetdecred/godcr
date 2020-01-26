@@ -11,7 +11,8 @@ import (
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
-	multi *dcrlibwallet.MultiWallet
+	multi     *dcrlibwallet.MultiWallet
+	root, net string
 	event.Duplex
 }
 
@@ -26,18 +27,13 @@ func (err *InternalWalletError) Error() string {
 	return err.Message
 }
 
-// New loads a new wallet instance
-func New(rootdir string, network string) (*Wallet, event.DuplexBase, error) {
+// NewWallet creates a new wallet instance
+func NewWallet(rootdir string, network string, duplex event.Duplex) *Wallet {
 	wal := new(Wallet)
-	duplexB := event.NewDuplexBase()
-
-	err := wal.loadWallets(rootdir, network)
-	if err != nil {
-		return nil, duplexB, err
-	}
-
-	wal.Duplex = duplexB.Duplex()
-	return wal, duplexB, nil
+	wal.root = rootdir
+	wal.net = network
+	wal.Duplex = duplex
+	return wal
 }
 
 // loadWallets loads the wallets for network in the root directory and returns

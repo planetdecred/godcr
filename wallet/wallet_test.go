@@ -18,21 +18,15 @@ const (
 )
 
 var _ = Describe("Wallet", func() {
-	Context(`New`, func() {
-		It(`fails with invalid arguments`, func() {
-			_, _, err := New("", "")
-			Expect(err).ToNot(BeNil())
-		})
-	})
 	Context(`with new multi wallet`, func() {
 		var wal *Wallet
 		var duplex event.Duplex
 		BeforeEach(func() {
 			Expect(os.RemoveAll(testroot)).To(BeNil())
-			walb, dupb, err := New(testroot, testnet)
-			Expect(err).To(BeNil())
+			dup := event.NewDuplexBase()
+			walb := NewWallet(testroot, testnet, dup.Duplex())
 			wal = walb
-			duplex = dupb.Reverse()
+			duplex = dup.Reverse()
 		})
 
 		AfterEach(func() {
@@ -44,6 +38,7 @@ var _ = Describe("Wallet", func() {
 			wg.Add(1)
 			go wal.Sync(&wg)
 
+			<-duplex.Receive
 			duplex.Send <- event.WalletCmd{
 				Cmd: event.ShutdownCmd,
 			}
@@ -55,6 +50,8 @@ var _ = Describe("Wallet", func() {
 			var wg sync.WaitGroup
 			wg.Add(1)
 			go wal.Sync(&wg)
+
+			<-duplex.Receive
 
 			duplex.Send <- event.WalletCmd{
 				Cmd: event.CreateCmd,
@@ -87,15 +84,16 @@ var _ = Describe("Wallet", func() {
 		var wal *Wallet
 		var duplex event.Duplex
 		var wg sync.WaitGroup
-		BeforeEach(func() {
+		BeforeEach(func(done Done) {
 			Expect(os.RemoveAll(testroot)).To(BeNil())
-			walb, dupb, err := New(testroot, testnet)
-			Expect(err).To(BeNil())
+			dup := event.NewDuplexBase()
+			walb := NewWallet(testroot, testnet, dup.Duplex())
 			wal = walb
-			duplex = dupb.Reverse()
+			duplex = dup.Reverse()
 
 			wg.Add(1)
 			go wal.Sync(&wg)
+			<-duplex.Receive
 
 			duplex.Send <- event.WalletCmd{
 				Cmd: event.CreateCmd,
@@ -107,6 +105,7 @@ var _ = Describe("Wallet", func() {
 			e := <-duplex.Receive
 			_, ok := e.(event.WalletResponse)
 			Expect(ok).To(Equal(true))
+			close(done)
 
 			// seed, err := resp.Results.PopString()
 
@@ -116,15 +115,16 @@ var _ = Describe("Wallet", func() {
 			// fmt.Printf("Seed words: %+v\n", words)
 			// Expect(len(words)).To(Equal(33))
 
-		})
+		}, 5.0)
 
-		AfterEach(func() {
+		AfterEach(func(done Done) {
 			duplex.Send <- event.WalletCmd{
 				Cmd: event.ShutdownCmd,
 			}
 			wg.Wait()
 			Expect(os.RemoveAll(testroot)).To(BeNil())
-		})
+			close(done)
+		}, 5.0)
 
 		It("returns 0 for total balance", func() {
 			duplex.Send <- event.WalletCmd{
