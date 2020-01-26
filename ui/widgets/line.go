@@ -7,9 +7,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
-
-	"github.com/raedahgroup/godcr-gio/ui/helper"
-
+	"github.com/raedahgroup/godcr-gio/ui"
 )
 
 type (
@@ -22,7 +20,7 @@ type (
 
 // NewLine returns a line widget instance
 func NewLine() *Line {
-	col := helper.GrayColor
+	col := ui.GrayColor
 	col.A = 150
 
 	return &Line{

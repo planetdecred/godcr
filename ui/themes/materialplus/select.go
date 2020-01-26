@@ -15,18 +15,16 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui"
 )
 
-// SelectItem represents a select option
-// the key is the option value. the text is the text to be displayed
-type SelectItem struct {
-	Key  int
-	Text string
+type selectItem struct {
+	key string
+	val string
 
-	button *widget.Button
+	clicker helper.Clicker
 }
 
 // Select represents a combo widget
 type Select struct {
-	items         []SelectItem
+	items         []selectItem
 	selectedIndex int
 	isOpen        bool
 	textSize      float32
@@ -34,46 +32,53 @@ type Select struct {
 }
 
 // Select returns an instance of the select widget
-func (t *Theme) Select(items []SelectItem) *Select {
+func (t *Theme) Select(items map[string]string) *Select {
 	s := &Select{
 		isOpen:   false,
-		items:    make([]SelectItem, len(items)+1),
+		items:    make([]selectItem, len(items)+1),
 		textSize: t.TextSize.V,
 		shaper:   t.Shaper,
 	}
 
 	if len(items) > 0 {
-		// init option buttons
-		for i := range items {
-			items[i].button = new(widget.Button)
-			s.items[i+1] = items[i]
+		counter := 0
+		for key, val := range items {
+			// the item at the zeroeth index is the trigger
+			if counter == 0 {
+				s.items[0] = selectItem{
+					key:     key,
+					val:     val,
+					clicker: helper.NewClicker(),
+				}
+			}
+			s.items[counter+1] = selectItem{
+				key:     key,
+				val:     val,
+				clicker: helper.NewClicker(),
+			}
+			counter++
 		}
-
-		// set the current selected option to be the first option
-		s.items[0] = items[0]
-		s.items[0].button = new(widget.Button)
 	}
 
 	return s
 }
 
-// Layout renders the select instance on screen
-func (s *Select) Layout(gtx *layout.Context) {
+// Draw renders the select instance on screen
+func (s *Select) Draw(gtx *layout.Context) {
 	gtx.Constraints.Width.Min = 100
 
 	container := layout.List{Axis: layout.Vertical}
 	container.Layout(gtx, len(s.items), func(i int) {
 		if s.isOpen || i == 0 {
 			layout.UniformInset(unit.Dp(0)).Layout(gtx, func() {
-				for s.items[i].button.Clicked(gtx) {
+				for s.items[i].clicker.Clicked(gtx) {
 					if i != 0 {
 						s.setSelected(i)
 					}
-
 					s.isOpen = !s.isOpen
 				}
 
-				s.layoutItem(gtx, &s.items[i])
+				s.drawItem(gtx, &s.items[i])
 			})
 		}
 	})
@@ -81,11 +86,10 @@ func (s *Select) Layout(gtx *layout.Context) {
 
 func (s *Select) setSelected(itemIndex int) {
 	s.selectedIndex = itemIndex
-	s.items[0].Key = s.items[itemIndex].Key
-	s.items[0].Text = s.items[itemIndex].Text
+	s.items[0].key = s.items[itemIndex].key
 }
 
-func (s *Select) layoutItem(gtx *layout.Context, item *SelectItem) {
+func (s *Select) drawItem(gtx *layout.Context, item *selectItem) {
 	col := ui.BlackColor
 	bgcol := ui.LightGrayColor
 	vmin := gtx.Constraints.Height.Min
@@ -118,16 +122,11 @@ func (s *Select) layoutItem(gtx *layout.Context, item *SelectItem) {
 			layout.Align(layout.Start).Layout(gtx, func() {
 				layout.UniformInset(unit.Dp(8)).Layout(gtx, func() {
 					paint.ColorOp{Color: col}.Add(gtx.Ops)
-					widget.Label{}.Layout(gtx, s.shaper, font, item.Text)
+					widget.Label{}.Layout(gtx, s.shaper, font, item.key)
 				})
 			})
 			pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
-			item.button.Layout(gtx)
+			item.clicker.Register(gtx)
 		}),
 	)
-}
-
-// GetSelected returns the currently selected item
-func (s *Select) GetSelected() SelectItem {
-	return s.items[s.selectedIndex]
 }

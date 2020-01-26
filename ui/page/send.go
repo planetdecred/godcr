@@ -10,17 +10,16 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 
 	"github.com/raedahgroup/godcr-gio/event"
-	"github.com/raedahgroup/godcr-gio/ui/helper"
+	"github.com/raedahgroup/godcr-gio/ui"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
-	"github.com/raedahgroup/godcr-gio/ui/widgets"
-
 )
 
 // SendID is the id of the send page
 const SendID = "send"
 
 type modalWidgets struct {
-	line       *widgets.Line
+	line       *materialplus.Line
 	sendButton *widget.Button
 
 	confirmLabel       material.Label
@@ -38,39 +37,35 @@ type validationWidgets struct {
 // It should only be accessible if the app finds
 // at least one wallet.
 type Send struct {
-	theme     *material.Theme
+	theme     *materialplus.Theme
 	container layout.List
 
 	isShowingConfirmationModal bool
 
-	headerLabel               material.Label
-	fromLabel                 material.Label
-	toLabel                   material.Label
-	amountLabel               material.Label
-	amountValueLabel          material.Label
-	txFeeLabel                material.Label
-	txFeeValueLabel           material.Label
-	totalCostLabel            material.Label
-	totalCostValueLabel       material.Label
-	remainingBalanceLabel     material.Label
-	remainingBalanceValeLabel material.Label
-	destinationAddressEditor  *widget.Editor
-	destinationAddressInput   material.Editor
-	amountEditor              *widget.Editor
-	amountInput               material.Editor
-	nextButton                *widget.Button
-	nextButtonMaterial        material.Button
-	accountSelector           *widgets.Select
+	headerLabel              material.Label
+	fromLabel                material.Label
+	toLabel                  material.Label
+	amountLabel              material.Label
+	txFeeLabel               material.Label
+	txFeeValueLabel          material.Label
+	totalCostLabel           material.Label
+	totalCostValueLabel      material.Label
+	remainingBalanceLabel    material.Label
+	destinationAddressEditor *widget.Editor
+	destinationAddressInput  material.Editor
+	amountEditor             *widget.Editor
+	amountInput              material.Editor
+	nextButton               *widget.Button
+	accountSelector          *materialplus.Select
 
 	modalWidgets      *modalWidgets
 	validationWidgets *validationWidgets
 
 	transactionFee int64 // should be calculated by wallet backend
-	totalCost      int64 // should be calculated by wallet backend
 }
 
 // Init initializes this page's widgets
-func (pg *Send) Init(theme *material.Theme) {
+func (pg *Send) Init(theme *materialplus.Theme) {
 	pg.theme = theme
 
 	pg.container.Axis = layout.Vertical
@@ -95,7 +90,7 @@ func (pg *Send) Init(theme *material.Theme) {
 		"wallet-1": "100 DCR",
 		"wallet-2": "7.645664DCR",
 	}
-	pg.accountSelector = widgets.NewSelect(dummyAccountsMap)
+	pg.accountSelector = theme.Select(dummyAccountsMap)
 
 	// init modal widgets
 	pg.initModalWidgets(theme)
@@ -111,9 +106,9 @@ func (pg *Send) Init(theme *material.Theme) {
 
 }
 
-func (pg *Send) initModalWidgets(theme *material.Theme) {
+func (pg *Send) initModalWidgets(theme *materialplus.Theme) {
 	pg.modalWidgets = &modalWidgets{
-		line:               widgets.NewLine(),
+		line:               theme.Line(),
 		confirmLabel:       theme.Body1("Confirm to send"),
 		sendingFromLabel:   theme.Body1("Sending from Default (wallet-2)"),
 		toDestinationLabel: theme.Body2("To destination address"),
@@ -122,12 +117,12 @@ func (pg *Send) initModalWidgets(theme *material.Theme) {
 	}
 }
 
-func (pg *Send) initValidationWidgets(theme *material.Theme) {
+func (pg *Send) initValidationWidgets(theme *materialplus.Theme) {
 	destinationAddressLabel := theme.Body2("")
-	destinationAddressLabel.Color = helper.DangerColor
+	destinationAddressLabel.Color = ui.DangerColor
 
 	amountLabel := theme.Body2("")
-	amountLabel.Color = helper.DangerColor
+	amountLabel.Color = ui.DangerColor
 
 	pg.validationWidgets = &validationWidgets{
 		destinationAddressLabel: destinationAddressLabel,
@@ -151,7 +146,7 @@ func (pg *Send) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 				inset.Layout(gtx, func() {
 					layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func() {
-							pg.accountSelector.Draw(gtx, pg.theme)
+							pg.accountSelector.Draw(gtx)
 						}),
 						layout.Flexed(1, func() {
 							layout.Stack{Alignment: layout.NE}.Layout(gtx,
@@ -272,9 +267,9 @@ func (pg *Send) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 			}
 			nextBtn := pg.theme.Button("Next")
 			if pg.validate(false) {
-				nextBtn.Background = helper.LightBlueColor
+				nextBtn.Background = ui.LightBlueColor
 			} else {
-				nextBtn.Background = helper.GrayColor
+				nextBtn.Background = ui.GrayColor
 			}
 			nextBtn.Layout(gtx, pg.nextButton)
 		},
@@ -398,7 +393,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 					layout.Flexed(1, func() {
 						layout.Stack{Alignment: layout.NE}.Layout(gtx,
 							layout.Stacked(func() {
-								pg.theme.Body2("0.0000251 DCR").Layout(gtx)
+								pg.theme.Body1(dcrutil.Amount(pg.transactionFee).String()).Layout(gtx)
 							}),
 						)
 					}),
@@ -417,7 +412,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 					layout.Flexed(1, func() {
 						layout.Stack{Alignment: layout.NE}.Layout(gtx,
 							layout.Stacked(func() {
-								pg.theme.Body2("0.0000251 DCR").Layout(gtx)
+								pg.totalCostValueLabel.Layout(gtx)
 							}),
 						)
 					}),
@@ -436,7 +431,9 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 					layout.Flexed(1, func() {
 						layout.Stack{Alignment: layout.NE}.Layout(gtx,
 							layout.Stacked(func() {
-								pg.theme.Body2("0.0000251 DCR").Layout(gtx)
+								// TODO get this value from wallet balance
+								// i.e wallet balance - total cost
+								pg.theme.Body2("4.37280441 DCR").Layout(gtx)
 							}),
 						)
 					}),
@@ -473,7 +470,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 		Left: unit.Dp(0),
 	}
 	inset.Layout(gtx, func() {
-		widgets.NewModal().Draw(gtx, pg.theme, func() {
+		pg.theme.Modal(gtx, func() {
 			list := layout.List{Axis: layout.Vertical}
 			list.Layout(gtx, len(modalWidgetFuncs), func(i int) {
 				layout.UniformInset(unit.Dp(0)).Layout(gtx, modalWidgetFuncs[i])
