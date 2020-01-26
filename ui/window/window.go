@@ -6,16 +6,16 @@ import (
 	"gioui.org/app"
 	"gioui.org/io/system"
 	"gioui.org/layout"
-	"gioui.org/widget/material"
 
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/page"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 )
 
 // Window represents the app window (and UI in general). There should only be one.
 type Window struct {
 	window     *app.Window
-	theme      *material.Theme
+	theme      *materialplus.Theme
 	gtx        *layout.Context
 	pages      map[string]page.Page
 	current    string
@@ -32,7 +32,7 @@ type Window struct {
 func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
 	win := new(Window)
 	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
-	win.theme = material.NewTheme()
+	win.theme = materialplus.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 
 	pages := make(map[string]page.Page, 1)

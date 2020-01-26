@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 )
 
@@ -30,7 +31,7 @@ type Landing struct {
 }
 
 // Init adds a heading and two buttons.
-func (pg *Landing) Init(theme *material.Theme) {
+func (pg *Landing) Init(theme *materialplus.Theme) {
 	pg.heading = theme.Label(units.Label, "Welcome to decred")
 	pg.heading.Alignment = text.Middle
 
