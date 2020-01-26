@@ -1,0 +1,6 @@
+godcr-gio*
+_*
+*.dll
+.vscode
+*.coverprofile
+**/.godcr_test*

@@ -14,4 +14,9 @@ RUN go get -v github.com/onsi/ginkgo/ginkgo
 
 RUN go get -v github.com/onsi/gomega
 
-ENTRYPOINT [ "go", "version"]
+COPY . /src
+
+WORKDIR /src
+
+RUN go mod download
+# ENTRYPOINT [ "go", "test"]

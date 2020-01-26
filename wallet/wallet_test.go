@@ -30,7 +30,8 @@ func getTestDir() string {
 		_, err = os.Stat(testDir)
 		i++
 	}
-	os.Mkdir(testDir, os.ModePerm)
+	err = os.Mkdir(testDir, os.ModePerm)
+	Expect(err).To(BeNil())
 	return testDir
 }
 
@@ -61,13 +62,12 @@ var _ = Describe("Completely new Wallet", func() {
 		Expect(err).To(BeNil())
 	})
 
-	AfterEach(func(done Done) {
+	AfterEach(func() {
 		writer.Flush()
 		info.Close()
-		close(done)
-	}, 2.0)
+	})
 
-	It("shuts down properly", func(done Done) {
+	It("shuts down properly", func() {
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go wal.Sync(&wg)
@@ -77,10 +77,9 @@ var _ = Describe("Completely new Wallet", func() {
 			Cmd: event.ShutdownCmd,
 		}
 		wg.Wait()
-		close(done)
-	}, 10.0)
+	})
 
-	It("can create a new wallet", func(done Done) {
+	It("can create a new wallet", func() {
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go wal.Sync(&wg)
@@ -106,8 +105,7 @@ var _ = Describe("Completely new Wallet", func() {
 			Cmd: event.ShutdownCmd,
 		}
 		wg.Wait()
-		close(done)
-	}, 10.0)
+	})
 })
 
 var _ = Describe("Wallet with one newly created wallet", func() {
@@ -119,7 +117,7 @@ var _ = Describe("Wallet with one newly created wallet", func() {
 		info    *os.File
 		writer  *bufio.Writer
 	)
-	BeforeEach(func(done Done) {
+	BeforeEach(func() {
 		dup := event.NewDuplexBase()
 		testDir = getTestDir()
 		wal = NewWallet(testDir, testnet, dup.Duplex())
@@ -157,18 +155,16 @@ var _ = Describe("Wallet with one newly created wallet", func() {
 		_, err = writer.WriteString("Seed words: " + seed + "\n")
 		Expect(err).To(BeNil())
 
-		close(done)
-	}, 10.0)
+	})
 
-	AfterEach(func(done Done) {
+	AfterEach(func() {
 		duplex.Send <- event.WalletCmd{
 			Cmd: event.ShutdownCmd,
 		}
 		wg.Wait()
 		writer.Flush()
 		info.Close()
-		close(done)
-	}, 10.0)
+	})
 
 	It("returns 0 for total balance", func() {
 		duplex.Send <- event.WalletCmd{
