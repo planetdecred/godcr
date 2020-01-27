@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"strings"
 
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/units"
@@ -19,7 +20,9 @@ type Overview struct {
 	syncButtonWidget *widget.Button
 	progressBar      *widgets.ProgressBar
 
-	balance             material.Label
+	balanceTitle        material.Label
+	mainBalance         material.Label
+	subBalance          material.Label
 	statusTitle         material.Label
 	syncStatus          material.Label
 	onlineStatus        material.Label
@@ -49,6 +52,8 @@ type Overview struct {
 	list           layout.List
 	listContainer  layout.List
 	walletSyncList layout.List
+
+	balance string
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -69,7 +74,10 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.walletSyncList = layout.List{Axis: layout.Horizontal}
 	page.listContainer = layout.List{Axis: layout.Vertical}
 
-	page.balance = theme.H5("154.0928281 DCR")
+	page.balanceTitle = theme.Caption("Current Total Balance")
+	page.balance = "315.08193725 DCR"
+	page.mainBalance = theme.H4("")
+	page.subBalance = theme.H6("")
 	page.statusTitle = theme.Caption("Wallet Status")
 	page.syncStatus = theme.H6("Syncing...")
 	page.onlineStatus = theme.Caption("Online")
@@ -90,7 +98,7 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.transactionIcon = theme.Caption("icon")
 	page.transactionAmount = theme.Caption("34.17458878 DCR")
 	page.transactionWallet = theme.Caption("Default")
-	page.transactionDate = theme.Caption("01/12/2020")
+	page.transactionDate = theme.Caption("11 Jan 2020, 13:24")
 	page.transactionStatus = theme.Caption("Pending")
 
 	page.walletSyncDetails = walletSyncDetails{
@@ -118,8 +126,16 @@ func (page *Overview) Draw(gtx *layout.Context, _ event.Event) (evt event.Event)
 func (page *Overview) content(gtx *layout.Context) {
 	pageContent := []func(){
 		func() {
-			layout.Inset{Top: units.ContainerPadding}.Layout(gtx, func() {
-				page.balance.Layout(gtx)
+			layout.Inset{Top: units.PageMarginTop}.Layout(gtx, func() {
+				page.column.Layout(gtx,
+					layout.Rigid(func() {
+						page.layoutBalance(gtx, page.mainBalance, page.subBalance)
+					}),
+					layout.Rigid(func() {
+						page.balanceTitle.Layout(gtx)
+					}),
+				)
+
 			})
 		},
 		func() {
@@ -173,21 +189,25 @@ func (page *Overview) recentTransactionRow(gtx *layout.Context) {
 				page.transactionAmount.Layout(gtx)
 			})
 		}),
-		layout.Rigid(func() {
-			margin.Layout(gtx, func() {
-				page.transactionWallet.Layout(gtx)
-			})
-		}),
-		layout.Rigid(func() {
-			margin.Layout(gtx, func() {
-				page.transactionDate.Layout(gtx)
-			})
-		}),
 		layout.Flexed(1, func() {
 			layout.Align(layout.E).Layout(gtx, func() {
-				margin.Layout(gtx, func() {
-					page.transactionStatus.Layout(gtx)
-				})
+				page.row.Layout(gtx,
+					layout.Rigid(func() {
+						margin.Layout(gtx, func() {
+							page.transactionWallet.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func() {
+						margin.Layout(gtx, func() {
+							page.transactionDate.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func() {
+						margin.Layout(gtx, func() {
+							page.transactionStatus.Layout(gtx)
+						})
+					}),
+				)
 			})
 		}),
 	)
@@ -289,7 +309,11 @@ func (page *Overview) walletSyncRow(gtx *layout.Context, inset layout.Inset) {
 			}),
 			layout.Rigid(func() {
 				page.walletSyncList.Layout(gtx, len(syncBoxes), func(i int) {
-					layout.Inset{Left: units.ColumnMargin}.Layout(gtx, syncBoxes[i])
+					if i == 0 {
+						layout.UniformInset(units.NoPadding).Layout(gtx, syncBoxes[i])
+					} else {
+						layout.Inset{Left: units.ColumnMargin}.Layout(gtx, syncBoxes[i])
+					}
 				})
 			}),
 		)
@@ -325,4 +349,33 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 			}),
 		)
 	})
+}
+
+// breakBalance takes the balance string and returns it in two slices
+func breakBalance(balance string) (b1, b2 string) {
+	balanceParts := strings.Split(balance, ".")
+	if len(balanceParts) == 1 {
+		return balanceParts[0], ""
+	}
+	b1 = balanceParts[0]
+	b2 = balanceParts[1]
+	b1 = b1 + "." + b2[:2]
+	b2 = b2[2:]
+	return
+}
+
+// layoutBalance aligns the two parts of a dcr balance horizontally, putting the sub
+// balance at the baseline of the row.
+func (page *Overview) layoutBalance(gtx *layout.Context, main, sub material.Label) {
+	mainText, subText := breakBalance(page.balance)
+	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
+		layout.Rigid(func() {
+			main.Text = mainText
+			main.Layout(gtx)
+		}),
+		layout.Rigid(func() {
+			sub.Text = subText
+			sub.Layout(gtx)
+		}),
+	)
 }
