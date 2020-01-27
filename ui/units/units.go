@@ -24,6 +24,12 @@ var (
 	// ColumnMargin is the unit for top margins of columns of the overview page
 	ColumnMargin = unit.Dp(30)
 
+	// TransactionBalanceMain is the unit for the main balance text size on a transaction row
+	TransactionBalanceMain = unit.Dp(14)
+
+	// TransactionBalanceMain is the unit for the main balance text size on a transaction row
+	TransactionBalanceSub = unit.Dp(10)
+
 	// TransactionsRowMargin is the unit for uniform spacing between widgets in a recent transaction row
 	TransactionsRowMargin = unit.Dp(10)
 

@@ -41,7 +41,8 @@ type Overview struct {
 
 	transactionColumnTitle material.Label
 	transactionIcon        material.Label
-	transactionAmount      material.Label
+	transactionMainAmount  material.Label
+	transactionSubAmount   material.Label
 	transactionWallet      material.Label
 	transactionStatus      material.Label
 	transactionDate        material.Label
@@ -53,7 +54,8 @@ type Overview struct {
 	listContainer  layout.List
 	walletSyncList layout.List
 
-	balance string
+	transactionAmount string
+	balance           string
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -96,7 +98,9 @@ func (page *Overview) Init(theme *material.Theme) {
 	page.walletSyncCard = widgets.NewCard()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
 	page.transactionIcon = theme.Caption("icon")
-	page.transactionAmount = theme.Caption("34.17458878 DCR")
+	page.transactionAmount = "34.17458878 DCR"
+	page.transactionMainAmount = theme.Label(units.TransactionBalanceMain, "")
+	page.transactionSubAmount = theme.Label(units.TransactionBalanceSub, "")
 	page.transactionWallet = theme.Caption("Default")
 	page.transactionDate = theme.Caption("11 Jan 2020, 13:24")
 	page.transactionStatus = theme.Caption("Pending")
@@ -129,7 +133,7 @@ func (page *Overview) content(gtx *layout.Context) {
 			layout.Inset{Top: units.PageMarginTop}.Layout(gtx, func() {
 				page.column.Layout(gtx,
 					layout.Rigid(func() {
-						page.layoutBalance(gtx, page.mainBalance, page.subBalance)
+						layoutBalance(gtx, page.balance, page.mainBalance, page.subBalance)
 					}),
 					layout.Rigid(func() {
 						page.balanceTitle.Layout(gtx)
@@ -186,7 +190,7 @@ func (page *Overview) recentTransactionRow(gtx *layout.Context) {
 		}),
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
-				page.transactionAmount.Layout(gtx)
+				layoutBalance(gtx, page.transactionAmount, page.transactionMainAmount, page.transactionSubAmount)
 			})
 		}),
 		layout.Flexed(1, func() {
@@ -364,10 +368,10 @@ func breakBalance(balance string) (b1, b2 string) {
 	return
 }
 
-// layoutBalance aligns the two parts of a dcr balance horizontally, putting the sub
+// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func (page *Overview) layoutBalance(gtx *layout.Context, main, sub material.Label) {
-	mainText, subText := breakBalance(page.balance)
+func layoutBalance(gtx *layout.Context, balance string, main, sub material.Label) {
+	mainText, subText := breakBalance(balance)
 	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func() {
 			main.Text = mainText
