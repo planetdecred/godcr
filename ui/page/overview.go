@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"strings"
 
 	"github.com/raedahgroup/godcr-gio/event"
@@ -68,7 +69,7 @@ type walletSyncDetails struct {
 }
 
 // Init initializes all widgets to be used on the overview page.
-func (page *Overview) Init(theme *material.Theme) {
+func (page *Overview) Init(theme *materialplus.Theme) {
 	page.row = layout.Flex{Axis: layout.Horizontal}
 	page.column = layout.Flex{Axis: layout.Vertical}
 	page.columnMargin = layout.Inset{Top: units.ColumnMargin}
