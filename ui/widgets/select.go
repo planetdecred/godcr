@@ -11,15 +11,16 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
-	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/helper"
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+
 )
 
 type selectItem struct {
-	key string
-	val string
+	key       string
+	val       string
+	isTrigger bool
 
 	clicker helper.Clicker
 }
@@ -62,7 +63,7 @@ func NewSelect(items map[string]string) *Select {
 }
 
 // Draw renders the select instance on screen
-func (s *Select) Draw(gtx *layout.Context, theme *materialplus.Theme) {
+func (s *Select) Draw(gtx *layout.Context, theme *material.Theme) {
 	gtx.Constraints.Width.Min = 100
 
 	container := layout.List{Axis: layout.Vertical}
@@ -87,9 +88,9 @@ func (s *Select) setSelected(itemIndex int) {
 	s.items[0].key = s.items[itemIndex].key
 }
 
-func (s *Select) drawItem(gtx *layout.Context, theme *materialplus.Theme, item *selectItem) {
-	col := ui.BlackColor
-	bgcol := ui.LightGrayColor
+func (s *Select) drawItem(gtx *layout.Context, theme *material.Theme, item *selectItem) {
+	col := helper.BlackColor
+	bgcol := helper.LightGrayColor
 	vmin := gtx.Constraints.Height.Min
 
 	font := text.Font{

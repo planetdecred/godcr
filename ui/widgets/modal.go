@@ -5,10 +5,10 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/unit"
+	"gioui.org/widget/material"
 
-	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/helper"
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+
 )
 
 // Modal represents a popup widget with a background overlay
@@ -19,7 +19,7 @@ type Modal struct {
 
 // NewModal returns a new Modal instance
 func NewModal() *Modal {
-	overlayColor := ui.BlackColor
+	overlayColor := helper.BlackColor
 	overlayColor.A = 200
 
 	return &Modal{
@@ -29,7 +29,7 @@ func NewModal() *Modal {
 }
 
 // Draw renders the modal instamce to screen
-func (m *Modal) Draw(gtx *layout.Context, theme *materialplus.Theme, renderFunc func()) {
+func (m *Modal) Draw(gtx *layout.Context, theme *material.Theme, renderFunc func()) {
 	helper.PaintArea(gtx, m.overlayColor, helper.WindowWidth, helper.WindowHeight)
 
 	layout.Stack{}.Layout(gtx,
@@ -41,7 +41,7 @@ func (m *Modal) Draw(gtx *layout.Context, theme *materialplus.Theme, renderFunc 
 				Top: unit.Dp(50),
 			}
 			inset.Layout(gtx, func() {
-				helper.PaintArea(gtx, ui.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
+				helper.PaintArea(gtx, helper.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
 				inset := layout.Inset{
 					Top:   unit.Dp(7),
 					Left:  unit.Dp(25),

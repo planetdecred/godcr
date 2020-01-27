@@ -9,10 +9,10 @@ import (
 	"gioui.org/widget/material"
 	"github.com/decred/dcrd/dcrutil"
 
-	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // SendID is the id of the send page
@@ -65,7 +65,7 @@ type Send struct {
 }
 
 // Init initializes this page's widgets
-func (pg *Send) Init(theme *materialplus.Theme) {
+func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet) {
 	pg.theme = theme
 
 	pg.container.Axis = layout.Vertical
@@ -131,7 +131,7 @@ func (pg *Send) initValidationWidgets(theme *materialplus.Theme) {
 }
 
 // Draw renders all of this page's widgets
-func (pg *Send) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
+func (pg *Send) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
 	widgetFuncs := []func(){
 		func() {
 			pg.headerLabel.Layout(gtx)
@@ -283,7 +283,7 @@ func (pg *Send) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 		pg.drawConfirmationModal(gtx)
 	}
 
-	return
+	return nil
 }
 
 func (pg *Send) validate(setMessages bool) bool {
