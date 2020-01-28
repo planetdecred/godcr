@@ -39,6 +39,9 @@ var (
 	// NoPadding is the unit for applying zero padding for widgets in a list layout
 	NoPadding = unit.Dp(0)
 
+	// Padding1 is a unit value of one
+	Padding1 = unit.Dp(1)
+
 	// WalletSyncBoxWidthMin is the unit for the minimum width of a sync wallet box
 	WalletSyncBoxWidthMin = unit.Dp(300)
 
@@ -48,4 +51,10 @@ var (
 	// WalletSyncBoxContentWidth is the unit for the maximum and minimum width of the
 	// contents of a wallet sync box
 	WalletSyncBoxContentWidth = unit.Dp(280)
+
+	// SyncButtonTextSize is the unit for the text size of sync button
+	SyncButtonTextSize = unit.Dp(10)
+
+	// DefaultButtonRadius is the unit for corner radius of material buttons
+	DefaultButtonRadius = unit.Dp(4)
 )

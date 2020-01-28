@@ -4,10 +4,10 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"strings"
 
 	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
@@ -28,17 +28,19 @@ type Overview struct {
 	syncStatus          material.Label
 	onlineStatus        material.Label
 	syncButton          material.Button
+	syncButtonCard      widgets.Card
 	progressPercentage  material.Label
 	timeLeft            material.Label
 	syncSteps           material.Label
 	headersFetched      material.Label
 	connectedPeersTitle material.Label
 	connectedPeers      material.Label
+	test                material.Label
 
 	walletHeaderFetchedTitle   material.Label
 	walletSyncingProgressTitle material.Label
 	walletSyncDetails          walletSyncDetails
-	walletSyncCard             *widgets.Card
+	walletSyncCard             widgets.Card
 
 	transactionColumnTitle material.Label
 	transactionIcon        material.Label
@@ -105,6 +107,8 @@ func (page *Overview) Init(theme *materialplus.Theme) {
 	page.transactionWallet = theme.Caption("Default")
 	page.transactionDate = theme.Caption("11 Jan 2020, 13:24")
 	page.transactionStatus = theme.Caption("Pending")
+	page.test = theme.Caption("t")
+	page.syncButtonCard = widgets.NewCard()
 
 	page.walletSyncDetails = walletSyncDetails{
 		name:               theme.Caption("wallet-1"),
@@ -186,6 +190,16 @@ func (page *Overview) recentTransactionRow(gtx *layout.Context) {
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
+				//sz := gtx.Constraints.Width.Min
+				//if u.avatarOp.Size().X != sz {
+				//	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: sz}})
+				//	draw.ApproxBiLinear.Scale(img, img.Bounds(), u.avatar, u.avatar.Bounds(), draw.Src, nil)
+				//	u.avatarOp = paint.NewImageOp(img)
+				//}
+				//img := theme.Image(u.avatarOp)
+				//img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+				//img.Layout(gtx)
+				// icons.RenderIcon(icons.Receive, 128)
 				page.transactionIcon.Layout(gtx)
 			})
 		}),
@@ -271,8 +285,26 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 				page.syncStatus.Layout(gtx)
 			}),
 			layout.Flexed(values.EntireSpace, func() {
+				// stack a button on a card widget to produce a transparent button.
 				layout.Align(layout.E).Layout(gtx, func() {
-					page.syncButton.Layout(gtx, page.syncButtonWidget)
+					layout.Stack{}.Layout(gtx,
+						layout.Stacked(func() {
+							page.syncButtonCard.SetColor(values.ButtonGray)
+							page.syncButtonCard.SetWidth(values.CancelButtonWidth)
+							page.syncButtonCard.SetHeight(values.CancelButtonHeight)
+							page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+						}),
+						layout.Stacked(func() {
+							gtx.Constraints.Width.Max = values.CancelButtonWidth - values.CancelButtonBorderWidth
+							gtx.Constraints.Height.Max = values.CancelButtonHeight - values.CancelButtonBorderWidth
+							layout.Inset{Top: units.Padding1, Left: units.Padding1}.Layout(gtx, func() {
+								page.syncButton.Font.Size = units.SyncButtonTextSize
+								page.syncButton.Color = values.ButtonGray
+								page.syncButton.Background = values.White
+								page.syncButton.Layout(gtx, page.syncButtonWidget)
+							})
+						}),
+					)
 				})
 			}),
 		)
@@ -332,7 +364,7 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 			layout.Stacked(func() {
 				page.walletSyncCard.SetWidth(gtx.Px(units.WalletSyncBoxWidthMin))
 				page.walletSyncCard.SetHeight(gtx.Px(units.WalletSyncBoxHeightMin))
-				page.walletSyncCard.Layout(gtx)
+				page.walletSyncCard.Layout(gtx, 0)
 			}),
 			layout.Stacked(func() {
 				uniform := layout.UniformInset(units.SyncBoxPadding)

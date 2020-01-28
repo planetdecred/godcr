@@ -34,7 +34,7 @@ func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
 // borderedRectangle defines the dimensions of the rectangle.
 //func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
 func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
-	borderRadius := float32(y / 5)
+	br := float32(y / 5)
 	rect := f32.Rectangle{
 		Max: f32.Point{
 			X: float32(x),
@@ -43,10 +43,7 @@ func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
 	}
 	clip.Rect{
 		Rect: rect,
-		NE: borderRadius,
-		NW: borderRadius,
-		SE: borderRadius,
-		SW: borderRadius,
+		NE:   br, NW: br, SE: br, SW: br,
 	}.Op(gtx.Ops).Add(gtx.Ops)
 
 	Fill(gtx, color, rect)

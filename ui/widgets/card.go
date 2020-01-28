@@ -3,6 +3,7 @@ package widgets
 import (
 	"gioui.org/f32"
 	"gioui.org/layout"
+	"gioui.org/op/clip"
 	"image/color"
 
 	"github.com/raedahgroup/godcr-gio/ui/values"
@@ -32,7 +33,8 @@ func (c *Card) SetWidth(width int) {
 
 // Layout defines the rectangle with dimensions, fills it with a color
 // and draws it.
-func (c *Card) Layout(gtx *layout.Context) {
+func (c *Card) Layout(gtx *layout.Context, borderRadius float32) {
+	br := borderRadius
 	if c.width == 0 {
 		c.width = gtx.Constraints.Width.Max
 	}
@@ -46,12 +48,19 @@ func (c *Card) Layout(gtx *layout.Context) {
 			Y: float32(c.height),
 		},
 	}
+	if br > 0 {
+		clip.Rect{
+			Rect: rect,
+			NE:   br, NW: br, SE: br, SW: br,
+		}.Op(gtx.Ops).Add(gtx.Ops)
+	}
+
 	Fill(gtx, c.color, rect)
 }
 
 // NewCard creates a new card object
-func NewCard() *Card {
-	return &Card{
+func NewCard() Card {
+	return Card{
 		color: values.DefaultCardGray,
 	}
 }
