@@ -290,13 +290,13 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 					layout.Stack{}.Layout(gtx,
 						layout.Stacked(func() {
 							page.syncButtonCard.SetColor(values.ButtonGray)
-							page.syncButtonCard.SetWidth(values.CancelButtonWidth)
-							page.syncButtonCard.SetHeight(values.CancelButtonHeight)
+							page.syncButtonCard.SetWidth(values.SyncButtonWidth)
+							page.syncButtonCard.SetHeight(values.SyncButtonHeight)
 							page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 						}),
 						layout.Stacked(func() {
-							gtx.Constraints.Width.Max = values.CancelButtonWidth - values.CancelButtonBorderWidth
-							gtx.Constraints.Height.Max = values.CancelButtonHeight - values.CancelButtonBorderWidth
+							gtx.Constraints.Width.Max = values.SyncButtonWidth - values.SyncButtonBorderWidth
+							gtx.Constraints.Height.Max = values.SyncButtonHeight - values.SyncButtonBorderWidth
 							layout.Inset{Top: units.Padding1, Left: units.Padding1}.Layout(gtx, func() {
 								page.syncButton.Font.Size = units.SyncButtonTextSize
 								page.syncButton.Color = values.ButtonGray
