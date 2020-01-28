@@ -16,9 +16,10 @@ var (
 )
 
 var cmdMap = map[string]func(*Wallet, *event.ArgumentQueue) error{
-	event.CreateCmd:  createCmd,
-	event.RestoreCmd: restoreCmd,
-	event.InfoCmd:    infoCmd,
+	event.CreateCmd:   createCmd,
+	event.RestoreCmd:  restoreCmd,
+	event.InfoCmd:     infoCmd,
+	event.CreateTxCmd: createTxCmd,
 }
 
 func createCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
@@ -71,6 +72,58 @@ func restoreCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 	return nil
 }
 
+func createTxCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
+	wallets, err := wal.wallets()
+	if err != nil {
+		return err
+	}
+
+	walletID, err := arguments.PopInt()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+
+	acct, err := arguments.PopInt() // Verify account
+	if err != nil {
+		return ErrInvalidArguments
+	}
+
+	confirms, err := arguments.PopInt()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+
+	address, err := arguments.PopString()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+
+	amount, err := arguments.PopInt()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+
+	if walletID > len(wallets) {
+		return err // make a proper err
+	}
+
+	txAuthor := wallets[walletID].NewUnsignedTx(int32(acct), int32(confirms))
+	if txAuthor == nil {
+		return err // make a proper err
+	}
+
+	txAuthor.AddSendDestination(address, int64(amount), true) // change amount to actual int64
+
+	wal.Send <- &event.WalletResponse{
+		Resp: event.CreatedTxResp,
+		Results: &event.ArgumentQueue{
+			Queue: []interface{}{txAuthor},
+		},
+	}
+
+	return nil
+}
+
 func infoCmd(wal *Wallet, _ *event.ArgumentQueue) error {
 	wallets, err := wal.wallets()
 	if err != nil {
@@ -88,11 +141,12 @@ func infoCmd(wal *Wallet, _ *event.ArgumentQueue) error {
 	}
 	best := wal.multi.GetBestBlock()
 
-	wal.Send <- event.WalletInfo{
+	wal.Send <- &event.WalletInfo{
 		LoadedWallets:   len(wallets),
 		TotalBalance:    completeTotal,
 		BestBlockHeight: best.Height,
 		BestBlockTime:   best.Timestamp,
+		Synced:          wal.multi.IsSynced(),
 	}
 	return nil
 }

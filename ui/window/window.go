@@ -22,6 +22,7 @@ type Window struct {
 	walletSync event.Duplex
 	pageStates map[string]event.Event
 	uiEvents   chan event.Event
+	walletInfo *event.WalletInfo
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -85,10 +86,11 @@ func (win *Window) Loop() {
 							Next: page.LandingID,
 						}
 					} // else overview
-
 				default:
 					// Unhandled Response
 				}
+			case *event.WalletInfo:
+				win.walletInfo = evt
 			case error:
 				// TODO: display error
 			default:

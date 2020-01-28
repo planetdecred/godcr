@@ -71,7 +71,7 @@ type progressListener struct {
 }
 
 func (listener *progressListener) Debug(info *dcrlibwallet.DebugInfo) {
-
+	// Log Traces
 }
 
 func (listener *progressListener) OnSyncStarted() {
@@ -82,16 +82,25 @@ func (listener *progressListener) OnPeerConnectedOrDisconnected(numberOfConnecte
 
 }
 
-func (listener *progressListener) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.HeadersFetchProgressReport) {
-
+func (listener *progressListener) OnHeadersFetchProgress(progress *dcrlibwallet.HeadersFetchProgressReport) {
+	listener.Send <- event.Sync{
+		Event:   event.SyncProgress,
+		Payload: progress,
+	}
 }
 
-func (listener *progressListener) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
-
+func (listener *progressListener) OnAddressDiscoveryProgress(progress *dcrlibwallet.AddressDiscoveryProgressReport) {
+	listener.Send <- event.Sync{
+		Event:   event.SyncProgress,
+		Payload: progress,
+	}
 }
 
-func (listener *progressListener) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.HeadersRescanProgressReport) {
-
+func (listener *progressListener) OnHeadersRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
+	listener.Send <- event.Sync{
+		Event:   event.SyncProgress,
+		Payload: progress,
+	}
 }
 
 func (listener *progressListener) OnSyncCompleted() {
@@ -99,9 +108,15 @@ func (listener *progressListener) OnSyncCompleted() {
 }
 
 func (listener *progressListener) OnSyncCanceled(willRestart bool) {
-
+	listener.Send <- event.Sync{
+		Event:   event.SyncCanceled,
+		Payload: willRestart,
+	}
 }
 
 func (listener *progressListener) OnSyncEndedWithError(err error) {
-
+	listener.Send <- event.Sync{
+		Event:   event.SyncError,
+		Payload: err,
+	}
 }
