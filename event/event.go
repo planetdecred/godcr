@@ -129,3 +129,13 @@ func (queue *ArgumentQueue) PopInt32() (int32, error) {
 	}
 	return in, nil
 }
+
+// PopInterface pops a interface{} from the queue.
+// It returns an error when the queue is empty
+func (queue *ArgumentQueue) PopInterface() (interface{}, error) {
+	in, err := queue.pop()
+	if err != nil {
+		return nil, err
+	}
+	return in, nil
+}

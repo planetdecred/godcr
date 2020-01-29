@@ -3,6 +3,7 @@ package wallet
 import (
 	"errors"
 
+	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/event"
 )
 
@@ -25,10 +26,11 @@ var (
 )
 
 var cmdMap = map[string]func(*Wallet, *event.ArgumentQueue) error{
-	event.CreateCmd:   createCmd,
-	event.RestoreCmd:  restoreCmd,
-	event.InfoCmd:     infoCmd,
-	event.CreateTxCmd: createTxCmd,
+	event.CreateCmd:          createCmd,
+	event.RestoreCmd:         restoreCmd,
+	event.InfoCmd:            infoCmd,
+	event.CreateTxCmd:        createTxCmd,
+	event.GetTransactionsCmd: getTxsCmd,
 }
 
 func createCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
@@ -96,21 +98,21 @@ func createTxCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 		return ErrNoSuchWallet
 	}
 
-	acct, err := arguments.PopInt()
+	acct, err := arguments.PopInt32()
 	if err != nil {
 		return ErrInvalidArguments
 	}
 
-	confirms, err := arguments.PopInt()
+	confirms, err := arguments.PopInt32()
 	if err != nil {
 		return ErrInvalidArguments
 	}
 
-	if _, err := wallets[walletID].GetAccount(int32(acct), int32(confirms)); err != nil {
+	if _, err := wallets[walletID].GetAccount(acct, confirms); err != nil {
 		return ErrNoSuchAcct
 	}
 
-	txAuthor := wallets[walletID].NewUnsignedTx(int32(acct), int32(confirms))
+	txAuthor := wallets[walletID].NewUnsignedTx(acct, confirms)
 	if txAuthor == nil {
 		return ErrCreateTx
 	}
@@ -125,14 +127,54 @@ func createTxCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 	return nil
 }
 
-func infoCmd(wal *Wallet, _ *event.ArgumentQueue) error {
+func getTxsCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
+	offset, err := arguments.PopInt32()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+	limit, err := arguments.PopInt32()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+	txfilter, err := arguments.PopInt32()
+	if err != nil {
+		return ErrInvalidArguments
+	}
+	wallets, err := wal.wallets()
+	if err != nil {
+		return err
+	}
+	alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
+	for i, wall := range wallets {
+		txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
+		if err != nil {
+			return err
+		}
+		alltxs[i] = txs
+	}
+
+	wal.Send <- &event.WalletResponse{
+		Resp: event.TransactionsResp,
+		Results: &event.ArgumentQueue{
+			Queue: []interface{}{alltxs},
+		},
+	}
+
+	return nil
+}
+
+func infoCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
+	confirms, err := arguments.PopInt32()
+	if err != nil {
+		return ErrInvalidArguments
+	}
 	wallets, err := wal.wallets()
 	if err != nil {
 		return err
 	}
 	var completeTotal int64
 	for _, wall := range wallets {
-		iter, err := wall.AccountsIterator(2) // Placeholder
+		iter, err := wall.AccountsIterator(confirms)
 		if err != nil {
 			return err
 		}
