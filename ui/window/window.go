@@ -22,6 +22,7 @@ type Window struct {
 	walletSync event.Duplex
 	pageStates map[string]event.Event
 	uiEvents   chan event.Event
+	walletInfo *event.WalletInfo
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -35,9 +36,9 @@ func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
 	win.theme = materialplus.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 
-	pages := make(map[string]page.Page, 1)
+	pages := make(map[string]page.Page)
 
-	win.uiEvents = make(chan event.Event, 1) // Buffered so Loop can send and receive in the goroutine
+	win.uiEvents = make(chan event.Event, 2) // Buffered so Loop can send and receive in the goroutine
 	win.pageStates = make(map[string]event.Event)
 
 	pages[page.LandingID] = new(page.Landing)
@@ -85,10 +86,11 @@ func (win *Window) Loop() {
 							Next: page.LandingID,
 						}
 					} // else overview
-
 				default:
 					// Unhandled Response
 				}
+			case *event.WalletInfo:
+				win.walletInfo = evt
 			case error:
 				// TODO: display error
 			default:
