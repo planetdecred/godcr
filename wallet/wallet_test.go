@@ -172,7 +172,7 @@ var _ = Describe("Wallet with one newly created wallet", func() {
 		}
 
 		e := <-duplex.Receive
-		info, ok := e.(event.WalletInfo)
+		info, ok := e.(*event.WalletInfo)
 		By("returning a WalletInfo")
 		Expect(ok).To(Equal(true), fmt.Sprintf("Actual val: %+v", e))
 

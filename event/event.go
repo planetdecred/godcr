@@ -26,8 +26,8 @@ type DuplexBase struct {
 // NewDuplexBase creates a new DuplexBase
 func NewDuplexBase() DuplexBase {
 	return DuplexBase{
-		A: make(chan Event),
-		B: make(chan Event),
+		A: make(chan Event, 2),
+		B: make(chan Event, 2),
 	}
 }
 
@@ -85,7 +85,7 @@ func (queue *ArgumentQueue) PopString() (string, error) {
 	return str, nil
 }
 
-// PopInt pops a string from the queue.
+// PopInt pops a int from the queue.
 // It returns an error when the queue is empty and
 // when the current item is not an int
 func (queue *ArgumentQueue) PopInt() (int, error) {
@@ -94,6 +94,21 @@ func (queue *ArgumentQueue) PopInt() (int, error) {
 		return 0, err
 	}
 	in, ok := i.(int)
+	if !ok {
+		return 0, ErrInvalidPop
+	}
+	return in, nil
+}
+
+// PopInt64 pops a int64 from the queue.
+// It returns an error when the queue is empty and
+// when the current item is not an int
+func (queue *ArgumentQueue) PopInt64() (int64, error) {
+	i, err := queue.pop()
+	if err != nil {
+		return 0, err
+	}
+	in, ok := i.(int64)
 	if !ok {
 		return 0, ErrInvalidPop
 	}

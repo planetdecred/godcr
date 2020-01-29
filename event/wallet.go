@@ -26,9 +26,11 @@ const (
 	// RestoreCmd tells the back end to restore the a wallet from the Payload string
 	RestoreCmd = "restore"
 	// InfoCmd tells the wallet to send back bulk info about the wallets
-	InfoCmd = "info"
+	InfoCmd = "infocmd"
 	// StartSyncCmd tells the wallet to start the sync process
 	StartSyncCmd = "startsync"
+	// CreateTxCmd tells the wallet to create a new transaction
+	CreateTxCmd = "createtx"
 
 	// LoadedWalletsResp is the response for LoadedWalletsCmd
 	LoadedWalletsResp = "loaded"
@@ -36,11 +38,21 @@ const (
 	CreatedResp = "created"
 	// RestoredResp is the response returned when a wallet has been restored successfully
 	RestoredResp = "restored"
+	// CreatedTxResp is the response returned when a new transaction has been created
+	CreatedTxResp = "createdTx"
 
 	// SyncStart is the sync event sent when sync starts
 	SyncStart = "syncstart"
 	// SyncEnd is the sync event sent when sync ends
 	SyncEnd = "syncend"
+	// SyncProgress is the sync event sent when the wallet makes any sync progress
+	SyncProgress = "syncprogress"
+	// SyncCanceled is the sync event sent when the sync is canceled
+	SyncCanceled = "synccanceled"
+	// SyncError is the sync event sent when the sync ends with an error
+	SyncError = "syncerror"
+	// SyncPairsChanged is the sync event sent when peers are connected or disconnected
+	SyncPairsChanged = "syncpairs"
 )
 
 // WalletInfo represents bulk information about the wallets returned by the wallet backend
@@ -49,4 +61,5 @@ type WalletInfo struct {
 	TotalBalance    int64
 	BestBlockHeight int32
 	BestBlockTime   int64
+	Synced          bool
 }
