@@ -26,8 +26,8 @@ type DuplexBase struct {
 // NewDuplexBase creates a new DuplexBase
 func NewDuplexBase() DuplexBase {
 	return DuplexBase{
-		A: make(chan Event),
-		B: make(chan Event),
+		A: make(chan Event, 2),
+		B: make(chan Event, 2),
 	}
 }
 
