@@ -51,6 +51,8 @@ const (
 	SyncCanceled = "synccanceled"
 	// SyncError is the sync event sent when the sync ends with an error
 	SyncError = "syncerror"
+	// SyncPairsChanged is the sync event sent when peers are connected or disconnected
+	SyncPairsChanged = "syncpairs"
 )
 
 // WalletInfo represents bulk information about the wallets returned by the wallet backend

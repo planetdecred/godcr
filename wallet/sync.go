@@ -79,7 +79,10 @@ func (listener *progressListener) OnSyncStarted() {
 }
 
 func (listener *progressListener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
-
+	listener.Send <- event.Sync{
+		Event:   event.SyncPairsChanged,
+		Payload: numberOfConnectedPeers,
+	}
 }
 
 func (listener *progressListener) OnHeadersFetchProgress(progress *dcrlibwallet.HeadersFetchProgressReport) {
