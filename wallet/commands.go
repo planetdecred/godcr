@@ -13,6 +13,15 @@ var (
 	// ErrNotFound is returned when a wallet command is given that does not exist or is not
 	// implemented.
 	ErrNotFound = errors.New("command not found or not implemented")
+
+	// ErrNoSuchWallet is returned with the wallet requested by the given id does not exist
+	ErrNoSuchWallet = errors.New("no such wallet with id")
+
+	// ErrNoSuchAcct is returned when the given account number cannot be found
+	ErrNoSuchAcct = errors.New("no such account")
+
+	// ErrCreateTx is returned when a tx author cannot be created
+	ErrCreateTx = errors.New("can not create transaction")
 )
 
 var cmdMap = map[string]func(*Wallet, *event.ArgumentQueue) error{
@@ -83,7 +92,11 @@ func createTxCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 		return ErrInvalidArguments
 	}
 
-	acct, err := arguments.PopInt() // Verify account
+	if walletID > len(wallets) || walletID < 0 {
+		return ErrNoSuchWallet
+	}
+
+	acct, err := arguments.PopInt()
 	if err != nil {
 		return ErrInvalidArguments
 	}
@@ -93,26 +106,14 @@ func createTxCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
 		return ErrInvalidArguments
 	}
 
-	address, err := arguments.PopString()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	amount, err := arguments.PopInt()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	if walletID > len(wallets) {
-		return err // make a proper err
+	if _, err := wallets[walletID].GetAccount(int32(acct), int32(confirms)); err != nil {
+		return ErrNoSuchAcct
 	}
 
 	txAuthor := wallets[walletID].NewUnsignedTx(int32(acct), int32(confirms))
 	if txAuthor == nil {
-		return err // make a proper err
+		return ErrCreateTx
 	}
-
-	txAuthor.AddSendDestination(address, int64(amount), true) // change amount to actual int64
 
 	wal.Send <- &event.WalletResponse{
 		Resp: event.CreatedTxResp,
