@@ -12,9 +12,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/raedahgroup/godcr-gio/ui/widgets"
 
 	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/widgets"
 )
 
 // LandingID is the id of the landing page.
@@ -36,7 +37,7 @@ type CreateAndRestore struct {
 }
 
 // Init adds a heading and two buttons.
-func (pg *CreateAndRestore) Init(theme *material.Theme) {
+func (pg *CreateAndRestore) Init(theme *materialplus.Theme) {
 	// ToDo should show error page if icons aren't rendered properly.
 	file, err := os.Open("./assets/decred.png")
 	fmt.Println(os.UserHomeDir())
@@ -104,30 +105,19 @@ func (pg *CreateAndRestore) Draw(gtx *layout.Context, _ event.Event) (evt event.
 		},
 
 		func() {
-			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(312))
-			gtx.Constraints.Width.Max = gtx.Px(unit.Dp(312))
-			gtx.Constraints.Height.Min = gtx.Px(unit.Dp(56))
-			gtx.Constraints.Height.Max = gtx.Px(unit.Dp(56))
-
 			imgBt := widgets.NewImageButton(&pg.addIcon, "Create a new wallet")
 			imgBt.Axis = layout.Horizontal
 			imgBt.Background = color.RGBA{41, 112, 255, 255}
-			imgBt.Padding = unit.Dp(20)
+			imgBt.VPadding = unit.Dp(20)
 
 			imgBt.Layout(gtx, pg.createButton, 20)
 		},
 
 		func() {
-			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(312))
-			gtx.Constraints.Width.Max = gtx.Px(unit.Dp(312))
-			gtx.Constraints.Height.Min = gtx.Px(unit.Dp(56))
-			gtx.Constraints.Height.Max = gtx.Px(unit.Dp(56))
-
-			//fmt.Println(img)
 			imgBt := widgets.NewImageButton(&pg.restoreIcon, "Restore an existing wallet")
 			imgBt.Axis = layout.Horizontal
 			imgBt.Background = color.RGBA{45, 216, 163, 255}
-			imgBt.Padding = unit.Dp(20)
+			imgBt.VPadding = unit.Dp(20)
 
 			imgBt.Layout(gtx, pg.restoreButton, 20)
 		},

@@ -7,6 +7,7 @@ import (
 	"gioui.org/app"
 	"gioui.org/io/system"
 	"gioui.org/layout"
+	"gioui.org/unit"
 
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
@@ -33,7 +34,7 @@ type Window struct {
 // than once.
 func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win := new(Window)
-	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
+	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"), app.Size(unit.Dp(360), unit.Dp(640)))
 	win.theme = materialplus.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 

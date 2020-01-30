@@ -4,9 +4,10 @@ import (
 	"image"
 	"image/color"
 
+	"gioui.org/io/pointer"
+
 	"gioui.org/f32"
 	"gioui.org/font"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -18,14 +19,13 @@ import (
 )
 
 type ImageButton struct {
-	Text         string
-	Font         gioText.Font
-	Color        color.RGBA
-	Background   color.RGBA
-	Size         unit.Value
-	Padding      unit.Value
-	CornerRadius unit.Value
-	shaper       gioText.Shaper
+	Text       string
+	Font       gioText.Font
+	Color      color.RGBA
+	Background color.RGBA
+	HPadding   unit.Value
+	VPadding   unit.Value
+	shaper     gioText.Shaper
 
 	alignment layout.Alignment
 	Axis      layout.Axis
@@ -44,13 +44,16 @@ func NewImageButton(img *material.Image, text string) ImageButton {
 		alignment:  layout.Middle,
 		Axis:       layout.Horizontal,
 
-		Src:     img,
-		Size:    unit.Dp(56),
-		Padding: unit.Dp(16),
+		Src:      img,
+		VPadding: unit.Dp(16),
+		HPadding: unit.Dp(16),
 	}
 }
 
 func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTextSpace float32) {
+	hmin := gtx.Constraints.Width.Min
+	vmin := gtx.Constraints.Height.Min
+
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
 			rr := float32(gtx.Px(unit.Dp(8)))
@@ -70,16 +73,18 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 
 		layout.Stacked(func() {
 			iconAndLabel := layout.Flex{Axis: b.Axis, Alignment: layout.Middle}
+			gtx.Constraints.Width.Min = hmin
+			gtx.Constraints.Height.Min = vmin
 
 			icon := layout.Rigid(func() {
-				layout.Inset{Top: b.Padding, Left: b.Padding, Bottom: b.Padding, Right: unit.Dp(buttonTextSpace / 2)}.Layout(gtx, func() {
+				layout.Inset{Top: b.VPadding, Left: b.HPadding, Bottom: b.VPadding, Right: unit.Dp(buttonTextSpace / 2)}.Layout(gtx, func() {
 					b.Src.Scale = 0.2
 					b.Src.Layout(gtx)
 				})
 			})
 
 			label := layout.Rigid(func() {
-				layout.Inset{Top: b.Padding, Right: b.Padding, Bottom: b.Padding, Left: unit.Dp(buttonTextSpace / 2)}.Layout(gtx, func() {
+				layout.Inset{Top: b.VPadding, Right: b.HPadding, Bottom: b.VPadding, Left: unit.Dp(buttonTextSpace / 2)}.Layout(gtx, func() {
 					paint.ColorOp{Color: b.Color}.Add(gtx.Ops)
 					widget.Label{Alignment: gioText.Start}.Layout(gtx, b.shaper, b.Font, b.Text)
 				})
