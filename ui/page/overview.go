@@ -190,21 +190,6 @@ func (page *Overview) recentTransactionRow(gtx *layout.Context) {
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
-				//sz := gtx.Constraints.Width.Min
-				//if u.avatarOp.Size().X != sz {
-				//	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: sz}})
-				//	draw.ApproxBiLinear.Scale(img, img.Bounds(), u.avatar, u.avatar.Bounds(), draw.Src, nil)
-				//	u.avatarOp = paint.NewImageOp(img)
-				//}
-				//img := theme.Image(u.avatarOp)
-				//img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-				//img.Layout(gtx)
-				// icons.RenderIcon(icons.Receive, 128)
-				page.transactionIcon.Layout(gtx)
-			})
-		}),
-		layout.Rigid(func() {
-			margin.Layout(gtx, func() {
 				layoutBalance(gtx, page.transactionAmount, page.transactionMainAmount, page.transactionSubAmount)
 			})
 		}),
