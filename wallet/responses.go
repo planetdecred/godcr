@@ -13,22 +13,20 @@ type MultiWalletInfo struct {
 	Synced          bool
 }
 
+// LoadedWallets is sent when then the Wallet is done loading wallets
 type LoadedWallets struct {
 	Count int32
 }
 
+// Restored is sent when the Wallet is done restoring a wallet
 type Restored struct{}
 
+// CreatedSeed is sent when the Wallet is done creating a wallet
 type CreatedSeed struct {
 	Seed string
 }
 
+// Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
 	Txs [][]dcrlibwallet.Transaction
-}
-
-// SyncEvent represents sync events
-type SyncEvent struct {
-	Event   string
-	Payload interface{}
 }

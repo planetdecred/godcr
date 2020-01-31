@@ -56,6 +56,7 @@ func (wal *Wallet) LoadWallets() {
 	}(wal.Send, wal)
 }
 
+// wallets returns an up-to-date slice of loaded wallets
 func (wal *Wallet) wallets() ([]*dcrlibwallet.Wallet, error) {
 	if wal.multi == nil {
 		return nil, &InternalWalletError{
@@ -78,6 +79,7 @@ func (wal *Wallet) wallets() ([]*dcrlibwallet.Wallet, error) {
 	return wallets, nil
 }
 
+// Shutdown shutsdown the multiwallet
 func (wal *Wallet) Shutdown() {
 	wal.multi.Shutdown()
 }

@@ -24,6 +24,8 @@ var (
 	ErrCreateTx = errors.New("can not create transaction")
 )
 
+// CreateWallet creates a new wallet with the given parameters.
+// It is non-blocking and sends its result to wal.Send chan.
 func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
 	go func(send chan<- interface{}, passphrase string, passtype int32) {
 
@@ -38,6 +40,8 @@ func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
 	}(wal.Send, passphrase, passtype)
 }
 
+// RestoreWallet restores a wallet with the given parameters.
+// It is non-blocking and sends its result to wal.Send chan.
 func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
 	go func(send chan<- interface{}, seed, passpassphrase string, paspasstype int32) {
 
@@ -51,6 +55,9 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
 	}(wal.Send, seed, passphrase, passtype)
 }
 
+// CreateTransaction creates a TxAuthor with the given parameters.
+// The created TxAuthor will have to have a destination added before broadcasting.
+// It is non-blocking and sends its result to wal.Send chan.
 func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
 	go func(send chan<- interface{}, walletID int, acct, confims int32) {
 		wallets, err := wal.wallets()
@@ -79,8 +86,10 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
 	}(wal.Send, walletID, accountID, confirms)
 }
 
-func (wal *Wallet) GetTransactions(walletID int, offset, limit, txfilter int32) {
-	go func(send chan<- interface{}, walletID int, offset, limit, txfilter int32) {
+// GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
+// It is non-blocking and sends its result to wal.Send chan.
+func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
+	go func(send chan<- interface{}, offset, limit, txfilter int32) {
 		wallets, err := wal.wallets()
 		if err != nil {
 			send <- err
@@ -99,9 +108,13 @@ func (wal *Wallet) GetTransactions(walletID int, offset, limit, txfilter int32) 
 		send <- &Transactions{
 			Txs: alltxs,
 		}
-	}(wal.Send, walletID, offset, limit, txfilter)
+	}(wal.Send, offset, limit, txfilter)
 }
 
+// GetMultiWalletInfo gets bulk information about the loaded wallets.
+// Information regarding transactions is collected with respect to confirms as the
+// number of required confirmations for said transactions.
+// It is non-blocking and sends its result to wal.Send chan.
 func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 	go func(send chan<- interface{}, confims int32) {
 		wallets, err := wal.wallets()

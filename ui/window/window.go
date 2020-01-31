@@ -71,10 +71,8 @@ func (win *Window) Loop() {
 			}
 
 		case e := <-win.wallet.Send:
-			fmt.Printf("Recieved wallet resp: %+v\n", e)
 			switch evt := e.(type) {
 			case *wallet.LoadedWallets:
-				fmt.Println("go loaded wallets")
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				}
@@ -89,6 +87,7 @@ func (win *Window) Loop() {
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
+				win.wallet.Shutdown()
 				return
 			case system.FrameEvent:
 				fmt.Println("Frame")
