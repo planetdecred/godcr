@@ -6,22 +6,23 @@ import (
 	"gioui.org/app"
 	"gioui.org/io/system"
 	"gioui.org/layout"
-	"gioui.org/widget/material"
 
-	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/page"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // Window represents the app window (and UI in general). There should only be one.
 type Window struct {
 	window     *app.Window
-	theme      *material.Theme
+	theme      *materialplus.Theme
 	gtx        *layout.Context
 	pages      map[string]page.Page
 	current    string
-	walletSync event.Duplex
-	pageStates map[string]event.Event
-	uiEvents   chan event.Event
+	wallet     *wallet.Wallet
+	pageStates map[string][]interface{}
+	uiEvents   chan interface{}
+	walletInfo *wallet.MultiWalletInfo
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -29,70 +30,57 @@ type Window struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
+func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win := new(Window)
 	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
-	win.theme = material.NewTheme()
+	win.theme = materialplus.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 
-	pages := make(map[string]page.Page, 1)
+	pages := make(map[string]page.Page)
 
-	win.uiEvents = make(chan event.Event, 1) // Buffered so Loop can send and receive in the goroutine
-	win.pageStates = make(map[string]event.Event)
+	win.uiEvents = make(chan interface{}, 2) // Buffered so Loop can send and receive in the goroutine
+	win.pageStates = make(map[string][]interface{})
 
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
 	pages[page.RestoreID] = new(page.Restore)
 
+	win.walletInfo = new(wallet.MultiWalletInfo)
 	for key, p := range pages {
-		p.Init(win.theme)
-		win.pageStates[key] = nil
+		p.Init(win.theme, wal)
+		win.pageStates[key] = []interface{}{win.walletInfo}
 	}
 
 	if _, ok := pages[start]; !ok {
 		return nil, fmt.Errorf("no such page")
 	}
+
 	win.current = start
 	win.pages = pages
-	win.walletSync = walletSync
+	win.wallet = wal
 	return win, nil
 }
 
 // Loop runs main event handling and page rendering loop
-func (win *Window) Loop() {
+func (win *Window) Loop(shutdown chan int) {
 	for {
-	eventSelect:
 		select {
 		case e := <-win.uiEvents:
 			switch evt := e.(type) {
-			case event.Nav:
+			case page.EventNav:
 				win.current = evt.Next
 			case error:
 				// TODO: display error
 			}
 
-		case e := <-win.walletSync.Receive:
+		case e := <-win.wallet.Send:
 			switch evt := e.(type) {
-			case event.WalletResponse:
-				switch evt.Resp {
-				case event.LoadedWalletsResp:
-					loaded, err := evt.Results.PopInt()
-					if err != nil {
-						// Log or display error
-						break eventSelect
-					}
-					if loaded == 0 {
-						win.uiEvents <- event.Nav{
-							Next: page.LandingID,
-						}
-					} // else overview
-
-					win.uiEvents <- event.Nav{
-						Next: page.LandingID,
-					}
-				default:
-					// Unhandled Response
+			case *wallet.LoadedWallets:
+				if evt.Count == 0 {
+					win.current = page.LandingID
 				}
+			case *wallet.MultiWalletInfo:
+				*win.walletInfo = *evt
 			case error:
 				// TODO: display error
 			default:
@@ -102,14 +90,14 @@ func (win *Window) Loop() {
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
-				win.walletSync.Send <- event.WalletCmd{
-					Cmd: event.ShutdownCmd,
-				}
+				close(shutdown)
 				return
 			case system.FrameEvent:
 				fmt.Println("Frame")
 				win.gtx.Reset(evt.Config, evt.Size)
-				win.uiEvents <- win.pages[win.current].Draw(win.gtx, win.pageStates[win.current])
+				if pageEvt := win.pages[win.current].Draw(win.gtx, win.pageStates[win.current]...); pageEvt != nil {
+					win.uiEvents <- pageEvt
+				}
 				evt.Frame(win.gtx.Ops)
 			case nil:
 				// Ignore

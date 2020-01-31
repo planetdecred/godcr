@@ -8,8 +8,9 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // LandingID is the id of the landing page.
@@ -30,7 +31,7 @@ type Landing struct {
 }
 
 // Init adds a heading and two buttons.
-func (pg *Landing) Init(theme *material.Theme) {
+func (pg *Landing) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	pg.heading = theme.Label(units.Label, "Welcome to decred")
 	pg.heading.Alignment = text.Middle
 
@@ -45,7 +46,7 @@ func (pg *Landing) Init(theme *material.Theme) {
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *Landing) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
+func (pg *Landing) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
 	pg.container.Layout(gtx, 3,
 		layout.ListElement(func(i int) {
 			switch i {
@@ -57,9 +58,9 @@ func (pg *Landing) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 				pg.inset.Layout(gtx, func() {
 					if pg.createWdg.Clicked(gtx) {
 						fmt.Println("ButtonClicked")
-						//evt = event.Nav {
+						// return EventNav {
 						// 	Current: LandingID,
-						// 	Next: CreateID
+						// 	Next: CreateID,
 						// }
 					}
 					pg.createBtn.Layout(gtx, pg.createWdg)
@@ -78,5 +79,5 @@ func (pg *Landing) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 			}
 		}),
 	)
-	return
+	return nil
 }

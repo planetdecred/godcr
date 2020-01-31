@@ -6,14 +6,15 @@ import (
 	"fmt"
 
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/event"
 )
+
+const syncID = "godcr"
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi     *dcrlibwallet.MultiWallet
 	root, net string
-	event.Duplex
+	Send      chan interface{}
 }
 
 // InternalWalletError represents errors generated during the handling of the multiwallet
@@ -27,29 +28,42 @@ func (err *InternalWalletError) Error() string {
 	return err.Message
 }
 
-// NewWallet creates a new wallet instance
-func NewWallet(rootdir string, network string, duplex event.Duplex) *Wallet {
-	wal := new(Wallet)
-	wal.root = rootdir
-	wal.net = network
-	wal.Duplex = duplex
-	return wal
-}
-
-// loadWallets loads the wallets for network in the root directory and returns
-// an error if it occurs.
-func (wal *Wallet) loadWallets(root string, net string) error {
+// NewWallet initializies an new Wallet instance.
+// The Wallet is not loaded until LoadWallets is called.
+func NewWallet(root string, net string, send chan interface{}) (*Wallet, error) {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
-		return fmt.Errorf(`root directory or network cannot be ""`)
+		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
-	multiWal, err := dcrlibwallet.NewMultiWallet(root, "bdb", net)
-	if err != nil {
-		return err
+	wal := &Wallet{
+		root: root,
+		net:  net,
+		Send: send,
 	}
-	wal.multi = multiWal
-	return err
+
+	return wal, nil
 }
 
+// LoadWallets loads the wallets for network in the root directory.
+// It adds a SyncProgressListener to the multiwallet.
+// It is non-blocking and sends its result or any erro to wal.Send.
+func (wal *Wallet) LoadWallets() {
+	go func(send chan<- interface{}, wal *Wallet) {
+		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.net)
+		if err != nil {
+			send <- err
+			return
+		}
+		wal.multi = multiWal
+		wal.multi.AddSyncProgressListener(&progressListener{
+			Send: wal.Send,
+		}, syncID)
+		send <- &LoadedWallets{
+			Count: wal.multi.LoadedWalletsCount(),
+		}
+	}(wal.Send, wal)
+}
+
+// wallets returns an up-to-date slice of loaded wallets
 func (wal *Wallet) wallets() ([]*dcrlibwallet.Wallet, error) {
 	if wal.multi == nil {
 		return nil, &InternalWalletError{
@@ -70,4 +84,9 @@ func (wal *Wallet) wallets() ([]*dcrlibwallet.Wallet, error) {
 		wallets[i] = w
 	}
 	return wallets, nil
+}
+
+// Shutdown shutsdown the multiwallet
+func (wal *Wallet) Shutdown() {
+	wal.multi.Shutdown()
 }
