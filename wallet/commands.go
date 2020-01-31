@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/event"
 )
 
 var (
@@ -25,171 +24,110 @@ var (
 	ErrCreateTx = errors.New("can not create transaction")
 )
 
-var cmdMap = map[string]func(*Wallet, *event.ArgumentQueue) error{
-	event.CreateCmd:          createCmd,
-	event.RestoreCmd:         restoreCmd,
-	event.InfoCmd:            infoCmd,
-	event.CreateTxCmd:        createTxCmd,
-	event.GetTransactionsCmd: getTxsCmd,
-}
+func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
+	go func(send chan<- interface{}, passphrase string, passtype int32) {
 
-func createCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
-	passphrase, err := arguments.PopString()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-	passtype, err := arguments.PopInt()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	wall, err := wal.multi.CreateNewWallet(passphrase, int32(passtype))
-	if err != nil {
-		return err
-	}
-	wal.Send <- event.WalletResponse{
-		Resp: event.CreatedResp,
-		Results: &event.ArgumentQueue{
-			Queue: []interface{}{wall.Seed},
-		},
-	}
-	return nil
-}
-
-func restoreCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
-	seed, err := arguments.PopString()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	passphrase, err := arguments.PopString()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-	passtype, err := arguments.PopInt()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	_, err = wal.multi.RestoreWallet(seed, passphrase, int32(passtype))
-	if err != nil {
-		return err
-	}
-
-	wal.Send <- event.WalletResponse{
-		Resp: event.RestoredResp,
-	}
-
-	return nil
-}
-
-func createTxCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
-	wallets, err := wal.wallets()
-	if err != nil {
-		return err
-	}
-
-	walletID, err := arguments.PopInt()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	if walletID > len(wallets) || walletID < 0 {
-		return ErrNoSuchWallet
-	}
-
-	acct, err := arguments.PopInt32()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	confirms, err := arguments.PopInt32()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-
-	if _, err := wallets[walletID].GetAccount(acct, confirms); err != nil {
-		return ErrNoSuchAcct
-	}
-
-	txAuthor := wallets[walletID].NewUnsignedTx(acct, confirms)
-	if txAuthor == nil {
-		return ErrCreateTx
-	}
-
-	wal.Send <- &event.WalletResponse{
-		Resp: event.CreatedTxResp,
-		Results: &event.ArgumentQueue{
-			Queue: []interface{}{txAuthor},
-		},
-	}
-
-	return nil
-}
-
-func getTxsCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
-	offset, err := arguments.PopInt32()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-	limit, err := arguments.PopInt32()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-	txfilter, err := arguments.PopInt32()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-	wallets, err := wal.wallets()
-	if err != nil {
-		return err
-	}
-	alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
-	for i, wall := range wallets {
-		txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
+		wall, err := wal.multi.CreateNewWallet(passphrase, int32(passtype))
 		if err != nil {
-			return err
+			send <- err
+			return
 		}
-		alltxs[i] = txs
-	}
-
-	wal.Send <- &event.WalletResponse{
-		Resp: event.TransactionsResp,
-		Results: &event.ArgumentQueue{
-			Queue: []interface{}{alltxs},
-		},
-	}
-
-	return nil
+		send <- &CreatedSeed{
+			Seed: wall.Seed,
+		}
+	}(wal.Send, passphrase, passtype)
 }
 
-func infoCmd(wal *Wallet, arguments *event.ArgumentQueue) error {
-	confirms, err := arguments.PopInt32()
-	if err != nil {
-		return ErrInvalidArguments
-	}
-	wallets, err := wal.wallets()
-	if err != nil {
-		return err
-	}
-	var completeTotal int64
-	for _, wall := range wallets {
-		iter, err := wall.AccountsIterator(confirms)
-		if err != nil {
-			return err
-		}
-		for acct := iter.Next(); acct != nil; acct = iter.Next() {
-			completeTotal += acct.TotalBalance
-		}
-	}
-	best := wal.multi.GetBestBlock()
+func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
+	go func(send chan<- interface{}, seed, passpassphrase string, paspasstype int32) {
 
-	wal.Send <- &event.WalletInfo{
-		LoadedWallets:   len(wallets),
-		TotalBalance:    completeTotal,
-		BestBlockHeight: best.Height,
-		BestBlockTime:   best.Timestamp,
-		Synced:          wal.multi.IsSynced(),
-	}
-	return nil
+		_, err := wal.multi.RestoreWallet(seed, passphrase, int32(passtype))
+		if err != nil {
+			send <- err
+			return
+		}
+
+		send <- &Restored{}
+	}(wal.Send, seed, passphrase, passtype)
+}
+
+func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
+	go func(send chan<- interface{}, walletID int, acct, confims int32) {
+		wallets, err := wal.wallets()
+		if err != nil {
+			send <- err
+			return
+		}
+
+		if walletID > len(wallets) || walletID < 0 {
+			send <- err
+			return
+		}
+
+		if _, err := wallets[walletID].GetAccount(acct, confirms); err != nil {
+			send <- err
+			return
+		}
+
+		txAuthor := wallets[walletID].NewUnsignedTx(acct, confirms)
+		if txAuthor == nil {
+			send <- err
+			return
+		}
+
+		send <- txAuthor
+	}(wal.Send, walletID, accountID, confirms)
+}
+
+func (wal *Wallet) GetTransactions(walletID int, offset, limit, txfilter int32) {
+	go func(send chan<- interface{}, walletID int, offset, limit, txfilter int32) {
+		wallets, err := wal.wallets()
+		if err != nil {
+			send <- err
+			return
+		}
+		alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
+		for i, wall := range wallets {
+			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
+			if err != nil {
+				send <- err
+				return
+			}
+			alltxs[i] = txs
+		}
+
+		send <- &Transactions{
+			Txs: alltxs,
+		}
+	}(wal.Send, walletID, offset, limit, txfilter)
+}
+
+func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
+	go func(send chan<- interface{}, confims int32) {
+		wallets, err := wal.wallets()
+		if err != nil {
+			send <- err
+			return
+		}
+		var completeTotal int64
+		for _, wall := range wallets {
+			iter, err := wall.AccountsIterator(confirms)
+			if err != nil {
+				send <- err
+				return
+			}
+			for acct := iter.Next(); acct != nil; acct = iter.Next() {
+				completeTotal += acct.TotalBalance
+			}
+		}
+		best := wal.multi.GetBestBlock()
+
+		send <- &MultiWalletInfo{
+			LoadedWallets:   len(wallets),
+			TotalBalance:    completeTotal,
+			BestBlockHeight: best.Height,
+			BestBlockTime:   best.Timestamp,
+			Synced:          wal.multi.IsSynced(),
+		}
+	}(wal.Send, confirms)
 }

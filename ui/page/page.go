@@ -6,7 +6,7 @@ import (
 	"gioui.org/layout"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 
-	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // Page represents a single page of the app.
@@ -20,6 +20,6 @@ import (
 // and returns any generated user event.
 // Draw is only called once per frame for the active page.
 type Page interface {
-	Init(*materialplus.Theme)
-	Draw(*layout.Context, event.Event) event.Event
+	Init(*materialplus.Theme, *wallet.Wallet)
+	Draw(*layout.Context, ...interface{}) interface{}
 }
