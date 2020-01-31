@@ -89,7 +89,6 @@ func (win *Window) Loop() {
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
-				win.wallet.Shutdown()
 				return
 			case system.FrameEvent:
 				fmt.Println("Frame")

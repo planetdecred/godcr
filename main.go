@@ -55,4 +55,5 @@ func main() {
 	go win.Loop()
 
 	app.Main()
+	wal.Shutdown()
 }
