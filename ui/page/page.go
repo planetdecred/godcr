@@ -16,10 +16,12 @@ import (
 // communication with the window
 //
 // Draw draws the implementation's widgets to the given
-// layout context reacting to the given event if needed
-// and returns any generated user event.
+// layout context with regards to the given states.
+// The given states must have a wallet.MultiWalletInfo as the first
+// element.
+// Draw returns any window event not handled by page itself.
 // Draw is only called once per frame for the active page.
 type Page interface {
 	Init(*materialplus.Theme, *wallet.Wallet)
-	Draw(*layout.Context, ...interface{}) interface{}
+	Draw(gtx *layout.Context, states ...interface{}) interface{}
 }

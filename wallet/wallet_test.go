@@ -51,5 +51,6 @@ var _ = Describe("Wallet", func() {
 		inf := info.(*MultiWalletInfo)
 		Expect(inf.LoadedWallets).To(BeEquivalentTo(1))
 		Expect(inf.TotalBalance).To(BeEquivalentTo(0))
+		Expect(inf.Synced).To(Equal(false))
 	})
 })
