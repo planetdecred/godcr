@@ -12,7 +12,6 @@ import (
 
 	"github.com/markbates/pkger"
 
-	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/ui/window"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -25,10 +24,6 @@ func main() {
 		return
 	}
 	fmt.Printf("godcr v%s\n", Version())
-
-	var wg sync.WaitGroup
-
-	dup := event.NewDuplexBase()
 
 	source, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
 	if err != nil {
@@ -48,22 +43,27 @@ func main() {
 		font.Register(text.Font{}, fnt)
 	}
 
-	win, err := window.CreateWindow(page.LoadingID, dup.Reverse())
+	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan interface{}))
+	wal.LoadWallets()
+
+	var wg sync.WaitGroup
+	shutdown := make(chan int)
+	wg.Add(1)
+	go func(wg *sync.WaitGroup, sd chan int, wal *wallet.Wallet) {
+		<-sd
+		wal.Shutdown()
+		wg.Done()
+	}(&wg, shutdown, wal)
+
+	win, err := window.CreateWindow(page.LoadingID, wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
 	}
 	// Start the ui frontend
 	// Does not need to be added to the WaitGroup, app.Main() handles that
-	go win.Loop()
-
-	wal := wallet.NewWallet(cfg.HomeDir, cfg.Network, dup.Duplex())
-
-	// Start up the wallet backend
-	wg.Add(1)
-	go wal.Sync(&wg)
+	go win.Loop(shutdown)
 
 	app.Main()
-
 	wg.Wait()
 }
