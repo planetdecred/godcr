@@ -1,10 +1,11 @@
 package widgets
 
 import (
+	"image/color"
+
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
-	"image/color"
 
 	"github.com/raedahgroup/godcr-gio/ui/values"
 )
