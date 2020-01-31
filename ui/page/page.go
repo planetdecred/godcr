@@ -6,7 +6,7 @@ import (
 	"gioui.org/layout"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 
-	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // Page represents a single page of the app.
@@ -16,10 +16,12 @@ import (
 // communication with the window
 //
 // Draw draws the implementation's widgets to the given
-// layout context reacting to the given event if needed
-// and returns any generated user event.
+// layout context with regards to the given states.
+// The given states must have a *wallet.MultiWalletInfo as the first
+// element.
+// Draw returns any window event not handled by page itself.
 // Draw is only called once per frame for the active page.
 type Page interface {
-	Init(*materialplus.Theme)
-	Draw(*layout.Context, event.Event) event.Event
+	Init(*materialplus.Theme, *wallet.Wallet)
+	Draw(gtx *layout.Context, states ...interface{}) interface{}
 }
