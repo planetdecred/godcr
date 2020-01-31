@@ -8,6 +8,8 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
+const syncID = "godcr"
+
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi     *dcrlibwallet.MultiWallet
@@ -26,22 +28,24 @@ func (err *InternalWalletError) Error() string {
 	return err.Message
 }
 
-// NewWallet initializies an new wallet instance
+// NewWallet initializies an new Wallet instance.
+// The Wallet is not loaded until LoadWallets is called.
 func NewWallet(root string, net string, send chan interface{}) (*Wallet, error) {
+	if root == "" || net == "" { // This should really be handled by dcrlibwallet
+		return nil, fmt.Errorf(`root directory or network cannot be ""`)
+	}
 	wal := &Wallet{
 		root: root,
 		net:  net,
 		Send: send,
 	}
-	if root == "" || net == "" { // This should really be handled by dcrlibwallet
-		return nil, fmt.Errorf(`root directory or network cannot be ""`)
-	}
 
 	return wal, nil
 }
 
-// LoadWallets loads the wallets for network in the root directory and returns
-// an error if it occurs.
+// LoadWallets loads the wallets for network in the root directory.
+// It adds a SyncProgressListener to the multiwallet.
+// It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) LoadWallets() {
 	go func(send chan<- interface{}, wal *Wallet) {
 		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.net)
@@ -50,6 +54,9 @@ func (wal *Wallet) LoadWallets() {
 			return
 		}
 		wal.multi = multiWal
+		wal.multi.AddSyncProgressListener(&progressListener{
+			Send: wal.Send,
+		}, syncID)
 		send <- &LoadedWallets{
 			Count: wal.multi.LoadedWalletsCount(),
 		}
