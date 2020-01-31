@@ -47,7 +47,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	for key, p := range pages {
 		p.Init(win.theme, wal)
-		win.pageStates[key] = []interface{}{*win.walletInfo}
+		win.pageStates[key] = []interface{}{win.walletInfo}
 	}
 
 	if _, ok := pages[start]; !ok {
@@ -79,7 +79,7 @@ func (win *Window) Loop() {
 					win.current = page.LandingID
 				}
 			case *wallet.MultiWalletInfo:
-				win.walletInfo = evt
+				*win.walletInfo = *evt
 			case error:
 				// TODO: display error
 			default:

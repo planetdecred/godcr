@@ -17,7 +17,7 @@ import (
 //
 // Draw draws the implementation's widgets to the given
 // layout context with regards to the given states.
-// The given states must have a wallet.MultiWalletInfo as the first
+// The given states must have a *wallet.MultiWalletInfo as the first
 // element.
 // Draw returns any window event not handled by page itself.
 // Draw is only called once per frame for the active page.
