@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	app "gioui.org/app"
 	"gioui.org/font"
@@ -45,6 +46,15 @@ func main() {
 	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan interface{}))
 	wal.LoadWallets()
 
+	var wg sync.WaitGroup
+	shutdown := make(chan int)
+	wg.Add(1)
+	go func(wg *sync.WaitGroup, sd chan int, wal *wallet.Wallet) {
+		<-sd
+		wal.Shutdown()
+		wg.Done()
+	}(&wg, shutdown, wal)
+
 	win, err := window.CreateWindow(page.LoadingID, wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
@@ -52,8 +62,8 @@ func main() {
 	}
 	// Start the ui frontend
 	// Does not need to be added to the WaitGroup, app.Main() handles that
-	go win.Loop()
+	go win.Loop(shutdown)
 
 	app.Main()
-	wal.Shutdown()
+	wg.Wait()
 }

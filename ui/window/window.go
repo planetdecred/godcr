@@ -61,7 +61,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 }
 
 // Loop runs main event handling and page rendering loop
-func (win *Window) Loop() {
+func (win *Window) Loop(shutdown chan int) {
 	for {
 		select {
 		case e := <-win.uiEvents:
@@ -89,6 +89,7 @@ func (win *Window) Loop() {
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
+				close(shutdown)
 				return
 			case system.FrameEvent:
 				fmt.Println("Frame")
