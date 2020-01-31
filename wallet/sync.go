@@ -24,7 +24,7 @@ type SyncCanceled struct {
 	WillRestart bool
 }
 
-// SyncPeersChanged is sent when the ammount of connected peers changes during sync
+// SyncPeersChanged is sent when the amount of connected peers changes during sync
 type SyncPeersChanged struct {
 	ConnectedPeers int32
 }

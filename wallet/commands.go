@@ -29,7 +29,7 @@ var (
 func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
 	go func(send chan<- interface{}, passphrase string, passtype int32) {
 
-		wall, err := wal.multi.CreateNewWallet(passphrase, int32(passtype))
+		wall, err := wal.multi.CreateNewWallet(passphrase, passtype)
 		if err != nil {
 			send <- err
 			return
@@ -43,14 +43,12 @@ func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
 // RestoreWallet restores a wallet with the given parameters.
 // It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
-	go func(send chan<- interface{}, seed, passpassphrase string, paspasstype int32) {
-
-		_, err := wal.multi.RestoreWallet(seed, passphrase, int32(passtype))
+	go func(send chan<- interface{}, seed, passphrase string, passtype int32) {
+		_, err := wal.multi.RestoreWallet(seed, passphrase, passtype)
 		if err != nil {
 			send <- err
 			return
 		}
-
 		send <- &Restored{}
 	}(wal.Send, seed, passphrase, passtype)
 }
@@ -59,7 +57,7 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
 // The created TxAuthor will have to have a destination added before broadcasting.
 // It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
-	go func(send chan<- interface{}, walletID int, acct, confims int32) {
+	go func(send chan<- interface{}, walletID int, acct, confirms int32) {
 		wallets, err := wal.wallets()
 		if err != nil {
 			send <- err
@@ -116,7 +114,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 // number of required confirmations for said transactions.
 // It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
-	go func(send chan<- interface{}, confims int32) {
+	go func(send chan<- interface{}, confirms int32) {
 		wallets, err := wal.wallets()
 		if err != nil {
 			send <- err
