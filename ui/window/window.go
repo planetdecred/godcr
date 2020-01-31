@@ -43,6 +43,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
+	pages[page.RestoreID] = new(page.Restore)
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	for key, p := range pages {
