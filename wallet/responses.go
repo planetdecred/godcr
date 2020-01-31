@@ -8,6 +8,7 @@ import (
 type MultiWalletInfo struct {
 	LoadedWallets   int
 	TotalBalance    int64
+	Balances        []int64
 	BestBlockHeight int32
 	BestBlockTime   int64
 	Synced          bool

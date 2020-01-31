@@ -121,15 +121,19 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 			return
 		}
 		var completeTotal int64
-		for _, wall := range wallets {
+		balances := make([]int64, len(wallets))
+		for i, wall := range wallets {
 			iter, err := wall.AccountsIterator(confirms)
 			if err != nil {
 				send <- err
 				return
 			}
+			var acctBalance int64
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
-				completeTotal += acct.TotalBalance
+				acctBalance += acct.TotalBalance
 			}
+			completeTotal += acctBalance
+			balances[i] = acctBalance
 		}
 		best := wal.multi.GetBestBlock()
 
@@ -138,6 +142,7 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 			TotalBalance:    completeTotal,
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
+			Balances:        balances,
 			Synced:          wal.multi.IsSynced(),
 		}
 	}(wal.Send, confirms)
