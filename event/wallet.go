@@ -31,6 +31,8 @@ const (
 	StartSyncCmd = "startsync"
 	// CreateTxCmd tells the wallet to create a new transaction
 	CreateTxCmd = "createtx"
+	// GetTransactionsCmd tells the wallet to get specific transactions
+	GetTransactionsCmd = "gettxs"
 
 	// LoadedWalletsResp is the response for LoadedWalletsCmd
 	LoadedWalletsResp = "loaded"
@@ -40,6 +42,8 @@ const (
 	RestoredResp = "restored"
 	// CreatedTxResp is the response returned when a new transaction has been created
 	CreatedTxResp = "createdTx"
+	// TransactionsResp is returned in response to a GetTransactionsCmd
+	TransactionsResp = "transactions"
 
 	// SyncStart is the sync event sent when sync starts
 	SyncStart = "syncstart"
