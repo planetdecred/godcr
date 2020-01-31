@@ -16,4 +16,4 @@ jobs:
         run: docker build -t devenv .
 
       - name: Run the image
-        run: docker run devenv ginkgo -r -p --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2 --skipPackage=wallet
+        run: docker run devenv ginkgo -r -p --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2

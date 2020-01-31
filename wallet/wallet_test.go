@@ -43,6 +43,10 @@ var _ = BeforeSuite(func() {
 	Expect(<-wal.Send).To(BeAssignableToTypeOf(&CreatedSeed{}))
 })
 
+var _ = AfterSuite(func() {
+	wal.Shutdown()
+})
+
 var _ = Describe("Wallet", func() {
 	It("can get the multi wallet info", func() {
 		wal.GetMultiWalletInfo(1)
