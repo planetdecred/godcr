@@ -67,6 +67,13 @@ func (pg *Landing) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 			default:
 				pg.inset.Layout(gtx, func() {
 					pg.restoreBtn.Layout(gtx, pg.restoreWdg)
+					if pg.restoreWdg.Clicked(gtx) {
+						fmt.Println("ButtonClicked")
+						evt = event.Nav{
+							Current: LandingID,
+							Next:    RestoreID,
+						}
+					}
 				})
 			}
 		}),

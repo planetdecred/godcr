@@ -42,6 +42,7 @@ func CreateWindow(start string, walletSync event.Duplex) (*Window, error) {
 
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
+	pages[page.RestoreID] = new(page.Restore)
 
 	for key, p := range pages {
 		p.Init(win.theme)
@@ -86,6 +87,9 @@ func (win *Window) Loop() {
 						}
 					} // else overview
 
+					win.uiEvents <- event.Nav{
+						Next: page.LandingID,
+					}
 				default:
 					// Unhandled Response
 				}
@@ -110,7 +114,7 @@ func (win *Window) Loop() {
 			case nil:
 				// Ignore
 			default:
-				fmt.Printf("Unhandled window event %+v\n", e)
+				// fmt.Printf("Unhandled window event %+v\n", e)
 			}
 		}
 	}
