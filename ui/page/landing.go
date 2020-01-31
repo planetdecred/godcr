@@ -5,6 +5,9 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
+	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget/material"
 
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
@@ -52,8 +55,11 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.createBtn = theme.Button("Create Wallet")
 	pg.createWdg = new(widget.Button)
 
-	pg.restoreBtn = theme.Button("Restore Wallet")
-	pg.restoreWdg = new(widget.Button)
+	pg.testnetLabel = theme.Label(unit.Dp(16), "testnet")
+	pg.testnetLabel.Font.Weight = text.Bold
+	pg.testnetLabel.Font.Size = unit.Px(50)
+	pg.testnetLabel.Alignment = text.Middle
+	pg.testnetLabel.Font.Weight = text.Bold
 
 	pg.walletsBtn = theme.Button("Back to Wallets")
 	pg.walletsWdg = new(widget.Button)
