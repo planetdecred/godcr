@@ -12,8 +12,9 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // RestoreID is the id of the restore page.
@@ -38,7 +39,7 @@ type Restore struct {
 }
 
 // Init adds a heading and two buttons.
-func (pg *Restore) Init(theme *material.Theme) {
+func (pg *Restore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	pg.heading = theme.Label(units.Label, "Restore from seed phrase")
 	pg.heading.Alignment = text.Middle
 
@@ -65,7 +66,7 @@ func (pg *Restore) Init(theme *material.Theme) {
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *Restore) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
+func (pg *Restore) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
 	pg.container.Layout(gtx,
 		layout.Rigid(func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
@@ -117,7 +118,7 @@ func (pg *Restore) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
 			})
 		}),
 	)
-	return
+	return nil
 }
 
 func rgb(c uint32) color.RGBA {

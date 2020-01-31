@@ -102,7 +102,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case nil:
 				// Ignore
 			default:
-				// fmt.Printf("Unhandled window event %+v\n", e)
+				fmt.Printf("Unhandled window event %+v\n", e)
 			}
 		}
 	}
