@@ -102,7 +102,7 @@ func (queue *ArgumentQueue) PopInt() (int, error) {
 
 // PopInt64 pops a int64 from the queue.
 // It returns an error when the queue is empty and
-// when the current item is not an int
+// when the current item is not an int64
 func (queue *ArgumentQueue) PopInt64() (int64, error) {
 	i, err := queue.pop()
 	if err != nil {
@@ -111,6 +111,31 @@ func (queue *ArgumentQueue) PopInt64() (int64, error) {
 	in, ok := i.(int64)
 	if !ok {
 		return 0, ErrInvalidPop
+	}
+	return in, nil
+}
+
+// PopInt32 pops a int32 from the queue.
+// It returns an error when the queue is empty and
+// when the current item is not an int32
+func (queue *ArgumentQueue) PopInt32() (int32, error) {
+	i, err := queue.pop()
+	if err != nil {
+		return 0, err
+	}
+	in, ok := i.(int32)
+	if !ok {
+		return 0, ErrInvalidPop
+	}
+	return in, nil
+}
+
+// PopInterface pops a interface{} from the queue.
+// It returns an error when the queue is empty
+func (queue *ArgumentQueue) PopInterface() (interface{}, error) {
+	in, err := queue.pop()
+	if err != nil {
+		return nil, err
 	}
 	return in, nil
 }
