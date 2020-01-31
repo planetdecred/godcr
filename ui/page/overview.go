@@ -1,10 +1,11 @@
 package page
 
 import (
+	"strings"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"strings"
 
 	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
