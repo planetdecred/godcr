@@ -140,6 +140,13 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 		}
 		best := wal.multi.GetBestBlock()
 
+		if best == nil {
+			wal.Send <- InternalWalletError{
+				Message: "Could not get load best block",
+			}
+			return
+		}
+
 		wal.Send <- &MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    completeTotal,

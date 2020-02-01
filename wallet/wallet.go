@@ -54,10 +54,16 @@ func (wal *Wallet) LoadWallets() {
 			send <- err
 			return
 		}
+
 		wal.multi = multiWal
-		wal.multi.AddSyncProgressListener(&progressListener{
+		err = wal.multi.AddSyncProgressListener(&progressListener{
 			Send: wal.Send,
 		}, syncID)
+		if err != nil {
+			send <- err
+			return
+		}
+
 		startupPassSet := wal.multi.IsStartupSecuritySet()
 		if !startupPassSet {
 			err = wal.multi.OpenWallets(nil)

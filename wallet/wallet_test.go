@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	testroot = ".godcr"
-	testnet  = "testnet3"
+	testnet = "testnet3"
 )
 
 func getTestDir() string {
