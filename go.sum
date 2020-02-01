@@ -329,6 +329,8 @@ github.com/raedahgroup/dcrlibwallet v1.1.0 h1:UeOqLi3h9oQGUlhwwmCspJlEAPD2IfrHdu
 github.com/raedahgroup/dcrlibwallet v1.1.0/go.mod h1:szxgNhCQ/GRyFpmkfYi3T3ZkXPx9Hm9j0EnjaBfJK/o=
 github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200112073453-40a403ab6f3a h1:55GNv8weGxJXYh/O7o5GC9s8ykhxPsU4vWkrNwf7qxo=
 github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200112073453-40a403ab6f3a/go.mod h1:uZ0GF6QhFtNd2lP5dyZlsR5YXHF4Zt38nrxMCPgh8x8=
+github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05 h1:Z3CtKHODy+9V+jr+2uTjWcwHh9INC322Q7pApggRhj8=
+github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05/go.mod h1:xBEq2Lb5A1Ia6sLuZ9NZrwKm4Ob+G8OJopKRo74NgUg=
 github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c h1:b9p7k6aEKx7VVjvp+PWhc1GDWCjq8LWcm7eiCS1fFz0=
 github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c/go.mod h1:ZBnPwcopuDqDbJ1sb2D+2rMs2oRbbpisCRHKUZ/KJQI=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

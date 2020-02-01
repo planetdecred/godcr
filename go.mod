@@ -9,7 +9,7 @@ require (
 	github.com/markbates/pkger v0.14.0
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
-	github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200112073453-40a403ab6f3a
+	github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05
 )
 
 // TODO: Remove and use an actual release of dcrlibwallet
