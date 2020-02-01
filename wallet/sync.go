@@ -9,7 +9,9 @@ type progressListener struct {
 }
 
 // SyncStarted is sent when sync starts
-type SyncStarted struct{}
+type SyncStarted struct {
+	WasRestarted bool
+}
 
 // SyncCompleted is sent when the sync is completed
 type SyncCompleted struct{}
@@ -48,8 +50,10 @@ func (listener *progressListener) Debug(info *dcrlibwallet.DebugInfo) {
 	// Log Traces
 }
 
-func (listener *progressListener) OnSyncStarted() {
-	listener.Send <- SyncStarted{}
+func (listener *progressListener) OnSyncStarted(restarted bool) {
+	listener.Send <- SyncStarted{
+		WasRestarted: restarted,
+	}
 }
 
 func (listener *progressListener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
