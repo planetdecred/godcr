@@ -8,15 +8,22 @@ import (
 type MultiWalletInfo struct {
 	LoadedWallets   int
 	TotalBalance    int64
-	Balances        []int64
+	Wallets         []InfoShort
 	BestBlockHeight int32
 	BestBlockTime   int64
 	Synced          bool
 }
 
+// InfoShort represents basic information about a wallet
+type InfoShort struct {
+	Name    string
+	Balance int64
+}
+
 // LoadedWallets is sent when then the Wallet is done loading wallets
 type LoadedWallets struct {
-	Count int32
+	Count              int32
+	StartUpSecuritySet bool
 }
 
 // Restored is sent when the Wallet is done restoring a wallet

@@ -114,18 +114,18 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 // number of required confirmations for said transactions.
 // It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
-	go func(send chan<- interface{}, confirms int32) {
+	go func(wal *Wallet, confirms int32) {
 		wallets, err := wal.wallets()
 		if err != nil {
-			send <- err
+			wal.Send <- err
 			return
 		}
 		var completeTotal int64
-		balances := make([]int64, len(wallets))
+		infos := make([]InfoShort, len(wallets))
 		for i, wall := range wallets {
 			iter, err := wall.AccountsIterator(confirms)
 			if err != nil {
-				send <- err
+				wal.Send <- err
 				return
 			}
 			var acctBalance int64
@@ -133,17 +133,27 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 				acctBalance += acct.TotalBalance
 			}
 			completeTotal += acctBalance
-			balances[i] = acctBalance
+			infos[i] = InfoShort{
+				Name:    wall.Name,
+				Balance: acctBalance,
+			}
 		}
 		best := wal.multi.GetBestBlock()
 
-		send <- &MultiWalletInfo{
+		if best == nil {
+			wal.Send <- InternalWalletError{
+				Message: "Could not get load best block",
+			}
+			return
+		}
+
+		wal.Send <- &MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    completeTotal,
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
-			Balances:        balances,
+			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
 		}
-	}(wal.Send, confirms)
+	}(wal, confirms)
 }

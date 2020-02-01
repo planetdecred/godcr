@@ -28,6 +28,8 @@ type Landing struct {
 	restoreWdg *widget.Button
 	createBtn  material.Button
 	createWdg  *widget.Button
+	walletsBtn material.Button
+	walletsWdg *widget.Button
 }
 
 // Init adds a heading and two buttons.
@@ -41,36 +43,56 @@ func (pg *Landing) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	pg.restoreBtn = theme.Button("Restore Wallet")
 	pg.restoreWdg = new(widget.Button)
 
+	pg.walletsBtn = theme.Button("Back to Wallets")
+	pg.walletsWdg = new(widget.Button)
+
 	pg.inset = layout.UniformInset(units.FlexInset)
+	pg.container = layout.List{Axis: layout.Vertical}
 }
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *Landing) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
-	pg.container.Layout(gtx, 3,
-		layout.ListElement(func(i int) {
-			switch i {
-			case 0:
-				pg.inset.Layout(gtx, func() {
-					pg.heading.Layout(gtx)
-				})
-			case 1:
-				pg.inset.Layout(gtx, func() {
-					if pg.createWdg.Clicked(gtx) {
-						fmt.Println("ButtonClicked")
-						// return EventNav {
-						// 	Current: LandingID,
-						// 	Next: CreateID,
-						// }
-					}
-					pg.createBtn.Layout(gtx, pg.createWdg)
-				})
-			default:
-				pg.inset.Layout(gtx, func() {
-					pg.restoreBtn.Layout(gtx, pg.restoreWdg)
-				})
+func (pg *Landing) Draw(gtx *layout.Context, states ...interface{}) (res interface{}) {
+	walletInfo := states[0].(*wallet.MultiWalletInfo)
+	widgets := []func(){
+		func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			pg.heading.Layout(gtx)
+		},
+		func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			if pg.createWdg.Clicked(gtx) {
+				fmt.Println("ButtonClicked")
+				// res = EventNav {
+				// 	Current: LandingID,
+				// 	Next: CreateID,
+				// }
 			}
+			pg.createBtn.Layout(gtx, pg.createWdg)
+		},
+		func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			pg.restoreBtn.Layout(gtx, pg.restoreWdg)
+		},
+		func() {
+			if walletInfo.LoadedWallets != 0 {
+				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+				if pg.walletsWdg.Clicked(gtx) {
+					res = EventNav{
+						Current: LandingID,
+						Next:    WalletsID,
+					}
+				}
+				pg.walletsBtn.Layout(gtx, pg.walletsWdg)
+
+			}
+		},
+	}
+
+	pg.container.Layout(gtx, len(widgets),
+		layout.ListElement(func(i int) {
+			layout.UniformInset(units.FlexInset).Layout(gtx, widgets[i])
 		}),
 	)
-	return nil
+	return
 }
