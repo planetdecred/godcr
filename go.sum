@@ -335,6 +335,7 @@ github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05 h1:Z3Ct
 github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05/go.mod h1:xBEq2Lb5A1Ia6sLuZ9NZrwKm4Ob+G8OJopKRo74NgUg=
 github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c h1:b9p7k6aEKx7VVjvp+PWhc1GDWCjq8LWcm7eiCS1fFz0=
 github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c/go.mod h1:ZBnPwcopuDqDbJ1sb2D+2rMs2oRbbpisCRHKUZ/KJQI=
+github.com/raedahgroup/godcr v0.0.0-20200113191321-d41651a66ae3 h1:yNBPxPoo6XTQGxxFmpV12zxVTg2HvDE+VbH0qZ/83xY=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
