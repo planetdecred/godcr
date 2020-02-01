@@ -3,6 +3,7 @@ package page
 import (
 	"fmt"
 	"gioui.org/layout"
+
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -15,6 +16,7 @@ import (
 // WalletsID is the id of the wallets page
 const WalletsID = "wallets"
 
+// Wallets contains the Wallet, Theme and various widgets
 type Wallets struct {
 	wal   *wallet.Wallet
 	theme *materialplus.Theme
@@ -24,6 +26,7 @@ type Wallets struct {
 	addWalletWdg material.Button
 }
 
+// Init stores the theme and Wallet
 func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet) {
 	pg.wal = wal
 	pg.theme = theme
@@ -34,6 +37,7 @@ func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet) {
 	pg.addWalletWdg = theme.Button("Add Wallet")
 }
 
+// Draw layouts out the widgets on the given context
 func (pg *Wallets) Draw(gtx *layout.Context, states ...interface{}) interface{} {
 	walletInfo := states[0].(*wallet.MultiWalletInfo)
 	if len(walletInfo.Wallets) == 0 {
