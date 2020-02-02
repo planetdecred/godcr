@@ -44,6 +44,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
 	pages[page.WalletsID] = new(page.Wallets)
+	pages[page.UITestID] = new(page.UITest)
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	for key, p := range pages {
@@ -78,11 +79,13 @@ func (win *Window) Loop(shutdown chan int) {
 			switch evt := e.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo(2)
-				if evt.Count == 0 {
+				win.current = page.UITestID
+
+				/**if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
 					win.current = page.WalletsID
-				}
+				}**/
 
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
@@ -98,7 +101,7 @@ func (win *Window) Loop(shutdown chan int) {
 				close(shutdown)
 				return
 			case system.FrameEvent:
-				fmt.Println("Frame")
+				//fmt.Println("Frame")
 				win.gtx.Reset(evt.Config, evt.Size)
 				if pageEvt := win.pages[win.current].Draw(win.gtx, win.pageStates[win.current]...); pageEvt != nil {
 					win.uiEvents <- pageEvt
