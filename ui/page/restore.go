@@ -21,8 +21,6 @@ import (
 const RestoreID = "restore"
 
 // Restore represents the restore page of the app.
-// It should only be should shown if the app launches
-// and cannot find any wallets.
 type Restore struct {
 	inset     layout.Inset
 	container layout.Flex
@@ -38,7 +36,7 @@ type Restore struct {
 	editors             []*widget.Editor
 }
 
-// Init adds a heading and two buttons.
+// Init initializes restore page with heading, 33 inputs and button
 func (pg *Restore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	pg.heading = theme.Label(units.Label, "Restore from seed phrase")
 	pg.heading.Alignment = text.Middle
@@ -48,11 +46,11 @@ func (pg *Restore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 
 	pg.inputGroupHeader = theme.Label(unit.Dp(16), "Enter your seed phrase in the correct order")
 	pg.inputGroupHeader.Alignment = text.Middle
-	pg.inputGroupHeader.Color = rgb(0x666666)
+	pg.inputGroupHeader.Color = color.RGBA{102, 102, 102, 255}
 	pg.inputGroupContainer.Axis = layout.Vertical
 
 	pg.restoreBtn = theme.Button("Restore")
-	pg.restoreBtn.Background = rgb(0xc4cbd2)
+	pg.restoreBtn.Background = color.RGBA{196, 203, 210, 255}
 	pg.restoreWdg = new(widget.Button)
 
 	for i := 0; i <= 32; i++ {
@@ -64,8 +62,7 @@ func (pg *Restore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	}
 }
 
-// Draw draws the page's to the given layout context.
-// Does not react to any event but can return a Nav event.
+// Draw renders the page widgets
 func (pg *Restore) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
 	pg.container.Layout(gtx,
 		layout.Rigid(func() {
@@ -110,21 +107,9 @@ func (pg *Restore) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
 					fmt.Println("ButtonClicked #15")
 					txt := pg.editors[1].Text()
 					fmt.Println(txt)
-					// evt = event.Nav{
-					// 	Current: RestoreID,
-					// 	Next:    RestoreID,
-					// }
 				}
 			})
 		}),
 	)
 	return nil
-}
-
-func rgb(c uint32) color.RGBA {
-	return argb((0xff << 24) | c)
-}
-
-func argb(c uint32) color.RGBA {
-	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
 }
