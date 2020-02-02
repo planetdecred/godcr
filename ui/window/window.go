@@ -44,6 +44,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
 	pages[page.RestoreID] = new(page.Restore)
+	pages[page.WalletsID] = new(page.Wallets)
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	for key, p := range pages {
@@ -69,16 +70,21 @@ func (win *Window) Loop(shutdown chan int) {
 			switch evt := e.(type) {
 			case page.EventNav:
 				win.current = evt.Next
+
 			case error:
 				// TODO: display error
 			}
-
+			win.window.Invalidate()
 		case e := <-win.wallet.Send:
 			switch evt := e.(type) {
 			case *wallet.LoadedWallets:
+				win.wallet.GetMultiWalletInfo(2)
 				if evt.Count == 0 {
 					win.current = page.LandingID
+				} else {
+					win.current = page.WalletsID
 				}
+
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
 			case error:
@@ -86,7 +92,7 @@ func (win *Window) Loop(shutdown chan int) {
 			default:
 				// How tho?
 			}
-
+			win.window.Invalidate()
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
@@ -102,7 +108,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case nil:
 				// Ignore
 			default:
-				fmt.Printf("Unhandled window event %+v\n", e)
+				//fmt.Printf("Unhandled window event %+v\n", e)
 			}
 		}
 	}
