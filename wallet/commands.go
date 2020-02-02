@@ -25,7 +25,7 @@ var (
 )
 
 // CreateWallet creates a new wallet with the given parameters.
-// It is non-blocking and sends its result or any erro to wal.Send.
+// It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
 	go func(send chan<- interface{}, passphrase string, passtype int32) {
 
@@ -41,7 +41,7 @@ func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
 }
 
 // RestoreWallet restores a wallet with the given parameters.
-// It is non-blocking and sends its result or any erro to wal.Send.
+// It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
 	go func(send chan<- interface{}, seed, passphrase string, passtype int32) {
 		_, err := wal.multi.RestoreWallet(seed, passphrase, passtype)
@@ -55,7 +55,7 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
 
 // CreateTransaction creates a TxAuthor with the given parameters.
 // The created TxAuthor will have to have a destination added before broadcasting.
-// It is non-blocking and sends its result or any erro to wal.Send.
+// It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
 	go func(send chan<- interface{}, walletID int, acct, confirms int32) {
 		wallets, err := wal.wallets()
@@ -85,7 +85,7 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
 }
 
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
-// It is non-blocking and sends its result or any erro to wal.Send.
+// It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 	go func(send chan<- interface{}, offset, limit, txfilter int32) {
 		wallets, err := wal.wallets()
@@ -112,9 +112,9 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 // GetMultiWalletInfo gets bulk information about the loaded wallets.
 // Information regarding transactions is collected with respect to confirms as the
 // number of required confirmations for said transactions.
-// It is non-blocking and sends its result or any erro to wal.Send.
+// It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
-	go func(wal *Wallet, confirms int32) {
+	go func() {
 		wallets, err := wal.wallets()
 		if err != nil {
 			wal.Send <- err
@@ -155,5 +155,39 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
 		}
-	}(wal, confirms)
+	}()
+}
+
+// RenameWallet renames the wallet identified by walletID.
+func (wal *Wallet) RenameWallet(walletID int, name string) error {
+	return wal.multi.RenameWallet(walletID, name)
+}
+
+// CurrentAddress returns the next address for the specified wallet account.
+func (wal *Wallet) CurrentAddress(walletID int, accountID int32) (string, error) {
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
+		return "", ErrNoSuchWallet
+	}
+	return wall.CurrentAddress(accountID)
+}
+
+// NextAddress returns the next address for the specified wallet account.
+func (wal *Wallet) NextAddress(walletID int, accountID int32) (string, error) {
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
+		return "", ErrNoSuchWallet
+	}
+	return wall.NextAddress(accountID)
+}
+
+// IsAddressValid checks is the given address is valid for the multiwallet network
+func (wal *Wallet) IsAddressValid(address string) (bool, error) {
+	wall := wal.multi.FirstOrDefaultWallet()
+	if wall == nil {
+		return false, &InternalWalletError{
+			Message: "No wallet loaded",
+		}
+	}
+	return wall.IsAddressValid(address), nil
 }
