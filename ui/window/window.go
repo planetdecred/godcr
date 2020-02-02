@@ -79,14 +79,11 @@ func (win *Window) Loop(shutdown chan int) {
 			switch evt := e.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo(2)
-				win.current = page.UITestID
-
-				/**if evt.Count == 0 {
+				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
 					win.current = page.WalletsID
-				}**/
-
+				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
 			case error:
