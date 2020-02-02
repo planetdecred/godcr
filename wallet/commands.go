@@ -181,7 +181,7 @@ func (wal *Wallet) NextAddress(walletID int, accountID int32) (string, error) {
 	return wall.NextAddress(accountID)
 }
 
-// IsAddressValid checks is the given address is valid for the multiwallet network
+// IsAddressValid checks if the given address is valid for the multiwallet network
 func (wal *Wallet) IsAddressValid(address string) (bool, error) {
 	wall := wal.multi.FirstOrDefaultWallet()
 	if wall == nil {
