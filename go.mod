@@ -5,6 +5,7 @@ go 1.13
 require (
 	gioui.org v0.0.0-20200116122050-18cddc030077
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
+	github.com/decred/dcrwallet/wallet/v3 v3.0.5
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/markbates/pkger v0.14.0
 	github.com/onsi/ginkgo v1.11.0
