@@ -44,6 +44,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win.states = make(map[string]interface{})
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
+	pages[page.OverviewID] = new(page.Overview)
 	pages[page.WalletsID] = new(page.Wallets)
 	pages[page.UITestID] = new(page.UITest)
 
@@ -82,7 +83,7 @@ func (win *Window) Loop(shutdown chan int) {
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
-					win.current = page.WalletsID
+					win.current = page.OverviewID
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
@@ -111,7 +112,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case nil:
 				// Ignore
 			default:
-				log.Tracef("Unhandled window event %+v\n", e)
+				//fmt.Printf("Unhandled window event %+v\n", e)
 			}
 		}
 	}

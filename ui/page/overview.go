@@ -1,17 +1,16 @@
 package page
 
 import (
-	"strings"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
-	"github.com/raedahgroup/godcr-gio/event"
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
+	"github.com/raedahgroup/godcr-gio/wallet"
+	"strings"
 )
 
 const OverviewID = "overview"
@@ -60,6 +59,7 @@ type Overview struct {
 
 	transactionAmount string
 	balance           string
+	walletInfo 		*wallet.MultiWalletInfo
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -72,7 +72,7 @@ type walletSyncDetails struct {
 }
 
 // Init initializes all widgets to be used on the overview page.
-func (page *Overview) Init(theme *materialplus.Theme) {
+func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet) {
 	page.row = layout.Flex{Axis: layout.Horizontal}
 	page.column = layout.Flex{Axis: layout.Vertical}
 	page.columnMargin = layout.Inset{Top: units.ColumnMargin}
@@ -117,10 +117,13 @@ func (page *Overview) Init(theme *materialplus.Theme) {
 		blockHeaderFetched: theme.Caption("100 of 164864"),
 		syncingProgress:    theme.Caption("320 days behind"),
 	}
+
 }
 
 // Draw adds all the widgets to the stored layout context.
-func (page *Overview) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
+func (page *Overview) Draw(gtx *layout.Context, states ...interface{}) interface {} {
+	page.walletInfo = states[0].(*wallet.MultiWalletInfo)
+	page.update()
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
 			container := layout.Inset{Left: units.ContainerPadding, Right: units.ContainerPadding}
@@ -129,7 +132,30 @@ func (page *Overview) Draw(gtx *layout.Context, _ event.Event) (evt event.Event)
 			})
 		}),
 	)
-	return
+	return nil
+}
+
+func (page *Overview) update() {
+	page.updateBalance()
+	page.updateSyncData()
+}
+
+// updatePage updates the state of the overview page
+func (page *Overview) updateBalance() {
+	page.balance = dcrutil.Amount(page.walletInfo.TotalBalance).String()
+}
+
+func (page *Overview) updateSyncData() {
+	if page.walletInfo.Synced {
+		page.syncButton.Text = "Disconnect"
+		page.syncStatus.Text = "Synced"
+	} else if page.walletInfo.Syncing {
+		page.syncButton.Text = "Cancel"
+		page.syncStatus.Text = "Syncing..."
+	} else {
+		page.syncStatus.Text = "Not synced"
+		page.syncButton.Text = "Reconnect"
+	}
 }
 
 // content lays out the entire content for overview page.
