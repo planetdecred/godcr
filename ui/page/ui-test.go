@@ -18,7 +18,6 @@ const UITestID = "ui-test"
 type selectWidget struct {
 	label         material.Label
 	widget        *materialplus.Select
-	options       []materialplus.SelectItem
 	selectedKey   material.Label
 	selectedValue material.Label
 }
