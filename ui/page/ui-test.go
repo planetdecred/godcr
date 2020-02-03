@@ -18,7 +18,6 @@ const UITestID = "ui-test"
 type selectWidget struct {
 	label         material.Label
 	widget        *materialplus.Select
-	options       []materialplus.SelectItem
 	selectedKey   material.Label
 	selectedValue material.Label
 }
@@ -30,10 +29,12 @@ type UITest struct {
 
 	loadMainUIButton         *widget.Button
 	loadMainUIButtonMaterial material.Button
+
+	states map[string]interface{}
 }
 
 // Init initializes all available custom widgets
-func (pg *UITest) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
+func (pg *UITest) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[string]interface{}) {
 	selectOptions := []materialplus.SelectItem{
 		{
 			Key:  10,
@@ -58,10 +59,12 @@ func (pg *UITest) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 
 	pg.loadMainUIButton = new(widget.Button)
 	pg.loadMainUIButtonMaterial = theme.Button("Load Main UI")
+
+	pg.states = states
 }
 
 // Draw renders the widgets to screen
-func (pg *UITest) Draw(gtx *layout.Context, states ...interface{}) (res interface{}) {
+func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 	widgets := []func(){
 		func() {
 			pg.selectWidget.label.Layout(gtx)
@@ -103,7 +106,7 @@ func (pg *UITest) Draw(gtx *layout.Context, states ...interface{}) (res interfac
 		},
 		func() {
 			for pg.loadMainUIButton.Clicked(gtx) {
-				walletInfo := states[0].(*wallet.MultiWalletInfo)
+				walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 				ev := EventNav{
 					Current: UITestID,
 				}
