@@ -9,11 +9,6 @@ import (
 	"gioui.org/op/paint"
 )
 
-const (
-	WindowHeight = 500
-	WindowWidth  = 500
-)
-
 // PaintArea paints an area with the given color and dimensions
 func PaintArea(gtx *layout.Context, col color.RGBA, x, y int) {
 	dim := image.Point{
@@ -33,7 +28,7 @@ func PaintArea(gtx *layout.Context, col color.RGBA, x, y int) {
 	gtx.Dimensions = layout.Dimensions{Size: dim}
 }
 
-// Fill paints an area
+// Fill paints an area completely
 func Fill(gtx *layout.Context, col color.RGBA) {
 	PaintArea(gtx, col, gtx.Constraints.Width.Min, gtx.Constraints.Height.Min)
 }
