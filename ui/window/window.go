@@ -20,7 +20,7 @@ type Window struct {
 	pages      map[string]page.Page
 	current    string
 	wallet     *wallet.Wallet
-	pageStates map[string][]interface{}
+	states     map[string]interface{}
 	uiEvents   chan interface{}
 	walletInfo *wallet.MultiWalletInfo
 }
@@ -39,17 +39,16 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	pages := make(map[string]page.Page)
 
 	win.uiEvents = make(chan interface{}, 2) // Buffered so Loop can send and receive in the goroutine
-	win.pageStates = make(map[string][]interface{})
 
+	win.states = make(map[string]interface{})
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
 	pages[page.WalletsID] = new(page.Wallets)
-	pages[page.UITestID] = new(page.UITest)
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
-	for key, p := range pages {
-		p.Init(win.theme, wal)
-		win.pageStates[key] = []interface{}{win.walletInfo}
+	win.states[page.StateWalletInfo] = win.walletInfo
+	for _, p := range pages {
+		p.Init(win.theme, wal, win.states)
 	}
 
 	if _, ok := pages[start]; !ok {
@@ -100,7 +99,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case system.FrameEvent:
 				//fmt.Println("Frame")
 				win.gtx.Reset(evt.Config, evt.Size)
-				if pageEvt := win.pages[win.current].Draw(win.gtx, win.pageStates[win.current]...); pageEvt != nil {
+				if pageEvt := win.pages[win.current].Draw(win.gtx); pageEvt != nil {
 					win.uiEvents <- pageEvt
 				}
 				evt.Frame(win.gtx.Ops)

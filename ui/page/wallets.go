@@ -24,10 +24,12 @@ type Wallets struct {
 	list         layout.List
 	addWalletBtn *widget.Button
 	addWalletWdg material.Button
+
+	states map[string]interface{}
 }
 
 // Init stores the theme and Wallet
-func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet) {
+func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[string]interface{}) {
 	pg.wal = wal
 	pg.theme = theme
 
@@ -35,11 +37,13 @@ func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet) {
 
 	pg.addWalletBtn = new(widget.Button)
 	pg.addWalletWdg = theme.Button("Add Wallet")
+
+	pg.states = states
 }
 
 // Draw layouts out the widgets on the given context
-func (pg *Wallets) Draw(gtx *layout.Context, states ...interface{}) interface{} {
-	walletInfo := states[0].(*wallet.MultiWalletInfo)
+func (pg *Wallets) Draw(gtx *layout.Context) interface{} {
+	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	if len(walletInfo.Wallets) == 0 {
 		pg.theme.Label(units.Label, "Retrieving Wallet Info").Layout(gtx)
 		return nil
