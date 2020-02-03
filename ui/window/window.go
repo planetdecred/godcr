@@ -44,7 +44,6 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
 	pages[page.WalletsID] = new(page.Wallets)
-	pages[page.UITestID] = new(page.UITest)
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	win.states[page.StateWalletInfo] = win.walletInfo
