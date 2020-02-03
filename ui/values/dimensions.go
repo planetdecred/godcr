@@ -9,11 +9,8 @@ var (
 	DefaultProgressBarHeight = 20
 
 	// SyncButtonHeight is the height for the button used to trigger sync actions
-	SyncButtonHeight = 67
+	SyncButtonHeight = 70
 
 	// SyncButtonWidth is the height for the button used to trigger sync actions
-	SyncButtonWidth = 108
-
-	// SyncButtonWidth is the thickness of the button borders.
-	SyncButtonBorderWidth = 2
+	SyncButtonWidth = 142
 )

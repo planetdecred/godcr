@@ -1,6 +1,7 @@
 package page
 
 import (
+	"fmt"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -59,6 +60,7 @@ type Overview struct {
 
 	transactionAmount string
 	balance           string
+	states 			map[string]interface{}
 	walletInfo 		*wallet.MultiWalletInfo
 }
 
@@ -72,7 +74,8 @@ type walletSyncDetails struct {
 }
 
 // Init initializes all widgets to be used on the overview page.
-func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet) {
+func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states map[string]interface{}) {
+	page.states = states
 	page.row = layout.Flex{Axis: layout.Horizontal}
 	page.column = layout.Flex{Axis: layout.Vertical}
 	page.columnMargin = layout.Inset{Top: units.ColumnMargin}
@@ -121,8 +124,8 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet) {
 }
 
 // Draw adds all the widgets to the stored layout context.
-func (page *Overview) Draw(gtx *layout.Context, states ...interface{}) interface {} {
-	page.walletInfo = states[0].(*wallet.MultiWalletInfo)
+func (page *Overview) Draw(gtx *layout.Context) interface {} {
+	page.walletInfo = page.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	page.update()
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
@@ -307,14 +310,28 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 							page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 						}),
 						layout.Stacked(func() {
-							gtx.Constraints.Width.Max = values.SyncButtonWidth - values.SyncButtonBorderWidth
-							gtx.Constraints.Height.Max = values.SyncButtonHeight - values.SyncButtonBorderWidth
-							layout.Inset{Top: units.Padding1, Left: units.Padding1}.Layout(gtx, func() {
-								page.syncButton.Font.Size = units.SyncButtonTextSize
-								page.syncButton.Color = values.ButtonGray
-								page.syncButton.Background = values.White
-								page.syncButton.Layout(gtx, page.syncButtonWidget)
-							})
+							gtx.Constraints.Width.Max = values.SyncButtonWidth
+							gtx.Constraints.Height.Max = values.SyncButtonHeight
+							layout.Flex{Axis:layout.Vertical}.Layout(gtx,
+								layout.Flexed(1, func() {
+									layout.Align(layout.Center).Layout(gtx, func() {
+										layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+											layout.Flexed(1, func() {
+												layout.Align(layout.Center).Layout(gtx, func() {
+													page.syncButton.Font.Size = units.SyncButtonTextSize
+													page.syncButton.Color = values.ButtonGray
+													page.syncButton.Background = values.White
+													page.syncButton.Layout(gtx, page.syncButtonWidget)
+													for page.syncButtonWidget.Clicked(gtx) {
+														fmt.Printf("clicked sync button! \n")
+														page.triggerSync()
+													}
+												})
+											}),
+										)
+									})
+								}),
+							)
 						}),
 					)
 				})
@@ -323,6 +340,15 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 	})
 }
 
+func (page *Overview) triggerSync() {
+	if page.walletInfo.Syncing {
+		page.walletInfo.Syncing = false
+	} else if page.walletInfo.Synced {
+		page.walletInfo.Synced = false
+	} else {
+
+	}
+}
 // syncBoxTitleRow lays out the progress bar.
 func (page *Overview) progressBarRow(gtx *layout.Context, inset layout.Inset) {
 	inset.Layout(gtx, func() {
