@@ -42,12 +42,6 @@ func (wal *Wallet) CreateWallet(passphrase string) {
 	}()
 }
 
-func (wal *Wallet) GetWallets() [[]Wallet, error] {
-	go func() {
-
-	}()
-}
-
 // RestoreWallet restores a wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) RestoreWallet(seed, passphrase string) {
