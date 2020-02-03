@@ -7,6 +7,7 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 )
 
 // LoadingID is the id of the loading page.
