@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"gioui.org/unit"
-
 	"gioui.org/app"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -89,6 +87,7 @@ func (win *Window) Loop(shutdown chan int) {
 				} else {
 					win.current = page.OverviewID
 				}
+				win.window.Invalidate()
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
 			default:

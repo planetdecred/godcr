@@ -7,13 +7,14 @@ import (
 	"log"
 	"os"
 
+	"github.com/raedahgroup/godcr-gio/wallet"
+
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"github.com/raedahgroup/godcr-gio/event"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
 )
@@ -37,7 +38,7 @@ type CreateAndRestore struct {
 }
 
 // Init adds a heading and two buttons.
-func (pg *CreateAndRestore) Init(theme *materialplus.Theme) {
+func (pg *CreateAndRestore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	// ToDo should show error page if icons aren't rendered properly.
 	file, err := os.Open("./assets/decred.png")
 	fmt.Println(os.UserHomeDir())
@@ -79,7 +80,7 @@ func (pg *CreateAndRestore) Init(theme *materialplus.Theme) {
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *CreateAndRestore) Draw(gtx *layout.Context, _ event.Event) (evt event.Event) {
+func (pg *CreateAndRestore) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
 	widgets := []func(){
 		func() {
 			//bb.Layout(gtx, unit.Dp(32))
@@ -127,5 +128,5 @@ func (pg *CreateAndRestore) Draw(gtx *layout.Context, _ event.Event) (evt event.
 		layout.Inset{Top: unit.Dp(8), Left: unit.Dp(24), Right: unit.Dp(24), Bottom: unit.Dp(8)}.Layout(gtx, widgets[i])
 	})
 
-	return
+	return nil
 }

@@ -4,8 +4,8 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget/material"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
-
 	"github.com/raedahgroup/godcr-gio/ui/units"
+
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -14,7 +14,10 @@ const LoadingID = "loading"
 
 // Loading represents the loading page of the app.
 type Loading struct {
-	label material.Label
+	container    *layout.List
+	loadingLabel material.Label
+	icon         material.Image
+	testnetLabel material.Label
 }
 
 // Init initializies the page with a label.
