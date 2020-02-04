@@ -12,6 +12,7 @@ import (
 
 	"github.com/markbates/pkger"
 
+	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/ui/window"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -23,22 +24,22 @@ func main() {
 		fmt.Printf("Error: %s\n", err.Error())
 		return
 	}
-	fmt.Printf("godcr v%s\n", Version())
 
+	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
 	source, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
 	if err != nil {
-		fmt.Println("Failed to load font")
+		log.Warn("Failed to load font")
 		gofont.Register()
 	} else {
 		stat, err := source.Stat()
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 		bytes := make([]byte, stat.Size())
 		source.Read(bytes)
 		fnt, err := opentype.Parse(bytes)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 		font.Register(text.Font{}, fnt)
 	}
