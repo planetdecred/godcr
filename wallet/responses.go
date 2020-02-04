@@ -12,6 +12,7 @@ type MultiWalletInfo struct {
 	BestBlockHeight int32
 	BestBlockTime   int64
 	Synced          bool
+	Syncing		    bool
 }
 
 // InfoShort represents basic information about a wallet
