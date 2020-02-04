@@ -5,7 +5,7 @@ import (
 )
 
 type progressListener struct {
-	Send chan<- interface{}
+	Send chan<- Response
 }
 
 // SyncStarted is sent when sync starts
@@ -51,46 +51,63 @@ func (listener *progressListener) Debug(info *dcrlibwallet.DebugInfo) {
 }
 
 func (listener *progressListener) OnSyncStarted(restarted bool) {
-	listener.Send <- SyncStarted{
-		WasRestarted: restarted,
+	listener.Send <- Response{
+		Resp: SyncStarted{
+			WasRestarted: restarted,
+		},
 	}
 }
 
 func (listener *progressListener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
-	listener.Send <- SyncPeersChanged{
-		ConnectedPeers: numberOfConnectedPeers,
+	listener.Send <- Response{
+		Resp: SyncPeersChanged{
+			ConnectedPeers: numberOfConnectedPeers,
+		},
 	}
 }
 
 func (listener *progressListener) OnHeadersFetchProgress(progress *dcrlibwallet.HeadersFetchProgressReport) {
-	listener.Send <- SyncHeadersFetchProgress{
-		Progress: progress,
+	listener.Send <- Response{
+		Resp: SyncHeadersFetchProgress{
+			Progress: progress,
+		},
 	}
 }
 func (listener *progressListener) OnAddressDiscoveryProgress(progress *dcrlibwallet.AddressDiscoveryProgressReport) {
-	listener.Send <- SyncAddressDiscoveryProgress{
-		Progress: progress,
+	listener.Send <- Response{
+		Resp: SyncAddressDiscoveryProgress{
+			Progress: progress,
+		},
 	}
 }
 
 func (listener *progressListener) OnHeadersRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
-	listener.Send <- SyncHeadersRescanProgress{
-		Progress: progress,
+	listener.Send <- Response{
+		Resp: SyncHeadersRescanProgress{
+			Progress: progress,
+		},
 	}
 }
 
 func (listener *progressListener) OnSyncCompleted() {
-	listener.Send <- SyncCompleted{}
+	listener.Send <- Response{
+		Resp: SyncCompleted{},
+	}
 }
 
 func (listener *progressListener) OnSyncCanceled(willRestart bool) {
-	listener.Send <- SyncCanceled{
-		WillRestart: willRestart,
+	listener.Send <- Response{
+		Resp: SyncCanceled{
+			WillRestart: willRestart,
+		},
 	}
 }
 
 func (listener *progressListener) OnSyncEndedWithError(err error) {
-	listener.Send <- SyncEndedWithError{
-		Error: err,
+	// todo: create custom sync error
+	listener.Send <- Response{
+		Resp: SyncEndedWithError{
+			Error: err,
+		},
 	}
 }
