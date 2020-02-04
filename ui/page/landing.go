@@ -30,10 +30,12 @@ type Landing struct {
 	createWdg  *widget.Button
 	walletsBtn material.Button
 	walletsWdg *widget.Button
+
+	states map[string]interface{}
 }
 
 // Init adds a heading and two buttons.
-func (pg *Landing) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
+func (pg *Landing) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[string]interface{}) {
 	pg.heading = theme.Label(units.Label, "Welcome to decred")
 	pg.heading.Alignment = text.Middle
 
@@ -48,12 +50,13 @@ func (pg *Landing) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 
 	pg.inset = layout.UniformInset(units.FlexInset)
 	pg.container = layout.List{Axis: layout.Vertical}
+	pg.states = states
 }
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *Landing) Draw(gtx *layout.Context, states ...interface{}) (res interface{}) {
-	walletInfo := states[0].(*wallet.MultiWalletInfo)
+func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
+	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
 		func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max

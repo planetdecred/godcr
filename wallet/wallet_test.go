@@ -56,4 +56,21 @@ var _ = Describe("Wallet", func() {
 		Expect(inf.TotalBalance).To(BeEquivalentTo(0))
 		Expect(inf.Synced).To(Equal(false))
 	})
+	It("can rename a wallet", func() {
+		err := wal.RenameWallet(1, "random")
+		Expect(err).To(BeNil())
+	})
+	It("can get the current address", func() {
+		addr, err := wal.CurrentAddress(1, 0)
+		Expect(err).To(BeNil())
+		Expect(wal.IsAddressValid(addr)).To(Equal(true))
+		addr2, err := wal.CurrentAddress(1, 0)
+		Expect(err).To(BeNil())
+		Expect(addr).To(Equal(addr2))
+	})
+	It("can create a new address", func() {
+		addr, err := wal.NextAddress(1, 0)
+		Expect(err).To(BeNil())
+		Expect(wal.IsAddressValid(addr)).To(Equal(true))
+	})
 })
