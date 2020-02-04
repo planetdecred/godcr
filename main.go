@@ -26,22 +26,27 @@ func main() {
 	}
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
-	source, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
+	sans, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
 	if err != nil {
-		log.Warn("Failed to load font")
+		log.Warn("Failed to load font Source Sans Pro. Using gofont")
 		gofont.Register()
 	} else {
-		stat, err := source.Stat()
+		stat, err := sans.Stat()
 		if err != nil {
-			log.Error(err)
+			log.Warn(err)
 		}
 		bytes := make([]byte, stat.Size())
-		source.Read(bytes)
+		sans.Read(bytes)
 		fnt, err := opentype.Parse(bytes)
 		if err != nil {
-			log.Error(err)
+			log.Warn(err)
 		}
-		font.Register(text.Font{}, fnt)
+		if fnt != nil {
+			font.Register(text.Font{}, fnt)
+		} else {
+			log.Warn("Failed to load font Source Sans Pro. Using gofont")
+			gofont.Register()
+		}
 	}
 
 	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan interface{}))
@@ -61,6 +66,7 @@ func main() {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
 	}
+
 	// Start the ui frontend
 	// Does not need to be added to the WaitGroup, app.Main() handles that
 	go win.Loop(shutdown)
