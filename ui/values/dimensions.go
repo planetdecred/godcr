@@ -13,4 +13,7 @@ var (
 
 	// SyncButtonWidth is the height for the button used to trigger sync actions
 	SyncButtonWidth = 142
+
+	// SyncButtonBorder is the border width for the sync trigger button
+	SyncButtonBorder = 4
 )
