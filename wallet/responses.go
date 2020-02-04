@@ -4,6 +4,12 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
+// Response represents the structure of data that the Send channel receives
+type Response struct {
+	Resp interface{}
+	Err  error
+}
+
 // MultiWalletInfo represents bulk information about the wallets returned by the wallet backend
 type MultiWalletInfo struct {
 	LoadedWallets   int
@@ -12,7 +18,7 @@ type MultiWalletInfo struct {
 	BestBlockHeight int32
 	BestBlockTime   int64
 	Synced          bool
-	Syncing		    bool
+	Syncing         bool
 }
 
 // InfoShort represents basic information about a wallet

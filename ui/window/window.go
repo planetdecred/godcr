@@ -75,7 +75,7 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 			win.window.Invalidate()
 		case e := <-win.wallet.Send:
-			switch evt := e.(type) {
+			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo(2)
 				if evt.Count == 0 {
@@ -85,8 +85,6 @@ func (win *Window) Loop(shutdown chan int) {
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
-			case error:
-				// TODO: display error
 			default:
 				win.updateState(e)
 			}

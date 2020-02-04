@@ -43,7 +43,7 @@ func main() {
 		font.Register(text.Font{}, fnt)
 	}
 
-	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan interface{}))
+	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response))
 	wal.LoadWallets()
 
 	var wg sync.WaitGroup
