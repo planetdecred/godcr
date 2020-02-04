@@ -18,8 +18,8 @@ const OverviewID = "overview"
 // Overview represents the overview page of the app.
 // It is the first page the user sees on launch when a wallet exists.
 type Overview struct {
-	syncButtonWidget *widget.Button
-	progressBar      *widgets.ProgressBar
+	syncButtonWidget    *widget.Button
+	progressBar         *materialplus.ProgressBar
 	balanceTitle        material.Label
 	mainBalance         material.Label
 	subBalance          material.Label
@@ -58,9 +58,9 @@ type Overview struct {
 
 	transactionAmount string
 	balance           string
-	states 			map[string]interface{}
-	wallet   		*wallet.Wallet
-	walletInfo 		*wallet.MultiWalletInfo
+	states            map[string]interface{}
+	wallet            *wallet.Wallet
+	walletInfo        *wallet.MultiWalletInfo
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -92,7 +92,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.onlineStatus = theme.Caption("Online")
 	page.syncButtonWidget = new(widget.Button)
 	page.syncButton = theme.Button("Cancel")
-	page.progressBar = widgets.NewProgressBar()
+	page.progressBar = theme.ProgressBar()
 	page.progressPercentage = theme.Caption("25%")
 	page.timeLeft = theme.Caption("6 min left")
 	page.syncStatus = theme.H5("Syncing...")
@@ -124,7 +124,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 }
 
 // Draw adds all the widgets to the stored layout context.
-func (page *Overview) Draw(gtx *layout.Context) interface {} {
+func (page *Overview) Draw(gtx *layout.Context) interface{} {
 	page.walletInfo = page.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	page.update()
 	layout.Stack{}.Layout(gtx,
@@ -312,7 +312,7 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 						layout.Expanded(func() {
 							gtx.Constraints.Width.Max = values.SyncButtonWidth
 							gtx.Constraints.Height.Max = values.SyncButtonHeight
-							layout.Flex{Axis:layout.Horizontal}.Layout(gtx,
+							layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 								layout.Flexed(1, func() {
 									layout.Align(layout.Center).Layout(gtx, func() {
 										layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -347,6 +347,7 @@ func (page *Overview) triggerSync() {
 		page.wallet.StartSync()
 	}
 }
+
 // syncBoxTitleRow lays out the progress bar.
 func (page *Overview) progressBarRow(gtx *layout.Context, inset layout.Inset) {
 	inset.Layout(gtx, func() {
