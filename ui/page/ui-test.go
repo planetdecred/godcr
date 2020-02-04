@@ -29,7 +29,7 @@ type UITest struct {
 
 	loadMainUIButton         *widget.Button
 	loadMainUIButtonMaterial material.Button
-
+	progressBar     		 *materialplus.ProgressBar
 	states map[string]interface{}
 }
 
@@ -59,6 +59,7 @@ func (pg *UITest) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[s
 
 	pg.loadMainUIButton = new(widget.Button)
 	pg.loadMainUIButtonMaterial = theme.Button("Load Main UI")
+	pg.progressBar = theme.ProgressBar()
 
 	pg.states = states
 }
@@ -120,6 +121,9 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 				res = ev
 			}
 			pg.loadMainUIButtonMaterial.Layout(gtx, pg.loadMainUIButton)
+		},
+		func() {
+			pg.progressBar.Layout(gtx, 25)
 		},
 	}
 
