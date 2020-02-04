@@ -27,35 +27,35 @@ var (
 // CreateWallet creates a new wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
-	go func(send chan<- Response, passphrase string, passtype int32) {
+	go func() {
 		var resp Response
 		wall, err := wal.multi.CreateNewWallet(passphrase, passtype)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 		resp.Resp = &CreatedSeed{
 			Seed: wall.Seed,
 		}
-		send <- resp
-	}(wal.Send, passphrase, passtype)
+		wal.Send <- resp
+	}()
 }
 
 // RestoreWallet restores a wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
-	go func(send chan<- Response, seed, passphrase string, passtype int32) {
+	go func() {
 		var resp Response
 		_, err := wal.multi.RestoreWallet(seed, passphrase, passtype)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 		resp.Resp = &Restored{}
-		send <- resp
-	}(wal.Send, seed, passphrase, passtype)
+		wal.Send <- resp
+	}()
 }
 
 // CreateTransaction creates a TxAuthor with the given parameters.
@@ -98,12 +98,12 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
-	go func(send chan<- Response, offset, limit, txfilter int32) {
+	go func() {
 		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 		alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
@@ -111,7 +111,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
 			if err != nil {
 				resp.Err = err
-				send <- resp
+				wal.Send <- resp
 				return
 			}
 			alltxs[i] = txs
@@ -120,8 +120,8 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		resp.Resp = &Transactions{
 			Txs: alltxs,
 		}
-		send <- resp
-	}(wal.Send, offset, limit, txfilter)
+		wal.Send <- resp
+	}()
 }
 
 // GetMultiWalletInfo gets bulk information about the loaded wallets.

@@ -49,11 +49,11 @@ func main() {
 	var wg sync.WaitGroup
 	shutdown := make(chan int)
 	wg.Add(1)
-	go func(wg *sync.WaitGroup, sd chan int, wal *wallet.Wallet) {
-		<-sd
+	go func() {
+		<-shutdown
 		wal.Shutdown()
 		wg.Done()
-	}(&wg, shutdown, wal)
+	}()
 
 	win, err := window.CreateWindow(page.LoadingID, wal)
 	if err != nil {
