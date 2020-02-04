@@ -27,86 +27,101 @@ var (
 // CreateWallet creates a new wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
-	go func(send chan<- interface{}, passphrase string, passtype int32) {
-
+	go func() {
+		var resp Response
 		wall, err := wal.multi.CreateNewWallet(passphrase, passtype)
 		if err != nil {
-			send <- err
+			resp.Err = err
+			wal.Send <- resp
 			return
 		}
-		send <- &CreatedSeed{
+		resp.Resp = &CreatedSeed{
 			Seed: wall.Seed,
 		}
-	}(wal.Send, passphrase, passtype)
+		wal.Send <- resp
+	}()
 }
 
 // RestoreWallet restores a wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
-	go func(send chan<- interface{}, seed, passphrase string, passtype int32) {
+	go func() {
+		var resp Response
 		_, err := wal.multi.RestoreWallet(seed, passphrase, passtype)
 		if err != nil {
-			send <- err
+			resp.Err = err
+			wal.Send <- resp
 			return
 		}
-		send <- &Restored{}
-	}(wal.Send, seed, passphrase, passtype)
+		resp.Resp = &Restored{}
+		wal.Send <- resp
+	}()
 }
 
 // CreateTransaction creates a TxAuthor with the given parameters.
 // The created TxAuthor will have to have a destination added before broadcasting.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
-	go func(send chan<- interface{}, walletID int, acct, confirms int32) {
+	go func(send chan<- Response, walletID int, acct, confirms int32) {
+		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {
-			send <- err
+			resp.Err = err
+			send <- resp
 			return
 		}
 
 		if walletID > len(wallets) || walletID < 0 {
-			send <- err
+			resp.Err = err
+			send <- resp
 			return
 		}
 
 		if _, err := wallets[walletID].GetAccount(acct, confirms); err != nil {
-			send <- err
+			resp.Err = err
+			send <- resp
 			return
 		}
 
 		txAuthor := wallets[walletID].NewUnsignedTx(acct, confirms)
 		if txAuthor == nil {
-			send <- err
+			resp.Err = err
+			send <- resp
 			return
 		}
 
-		send <- txAuthor
+		resp.Resp = txAuthor
+		send <- resp
 	}(wal.Send, walletID, accountID, confirms)
 }
 
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
-	go func(send chan<- interface{}, offset, limit, txfilter int32) {
+	go func() {
+		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {
-			send <- err
+			resp.Err = err
+			wal.Send <- resp
 			return
 		}
 		alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
 		for i, wall := range wallets {
 			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
 			if err != nil {
-				send <- err
+				resp.Err = err
+				wal.Send <- resp
 				return
 			}
 			alltxs[i] = txs
 		}
 
-		send <- &Transactions{
+		resp.Resp = &Transactions{
 			Txs: alltxs,
 		}
-	}(wal.Send, offset, limit, txfilter)
+		wal.Send <- resp
+	}()
 }
 
 // GetMultiWalletInfo gets bulk information about the loaded wallets.
@@ -115,9 +130,11 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 	go func() {
+		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {
-			wal.Send <- err
+			resp.Err = err
+			wal.Send <- resp
 			return
 		}
 		var completeTotal int64
@@ -125,7 +142,8 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 		for i, wall := range wallets {
 			iter, err := wall.AccountsIterator(confirms)
 			if err != nil {
-				wal.Send <- err
+				resp.Err = err
+				wal.Send <- resp
 				return
 			}
 			var acctBalance int64
@@ -141,13 +159,14 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 		best := wal.multi.GetBestBlock()
 
 		if best == nil {
-			wal.Send <- InternalWalletError{
+			resp.Err = InternalWalletError{
 				Message: "Could not get load best block",
 			}
+			wal.Send <- resp
 			return
 		}
 
-		wal.Send <- &MultiWalletInfo{
+		resp.Resp = &MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    completeTotal,
 			BestBlockHeight: best.Height,
@@ -155,6 +174,7 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
 		}
+		wal.Send <- resp
 	}()
 }
 

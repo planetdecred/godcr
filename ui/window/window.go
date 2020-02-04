@@ -75,7 +75,7 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 			win.window.Invalidate()
 		case e := <-win.wallet.Send:
-			switch evt := e.(type) {
+			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo(2)
 				if evt.Count == 0 {
@@ -85,10 +85,8 @@ func (win *Window) Loop(shutdown chan int) {
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
-			case error:
-				// TODO: display error
 			default:
-				// How tho?
+				win.updateState(e)
 			}
 			win.window.Invalidate()
 		case e := <-win.window.Events():
@@ -110,4 +108,23 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 		}
 	}
+}
+
+// updateState checks for the event type that is passed as an argument and updates its
+// respective state.
+func (win *Window) updateState(t interface{}) {
+	switch t.(type) {
+	case wallet.SyncStarted:
+		win.updateSyncStatus(true, false)
+	case wallet.SyncCanceled:
+		win.updateSyncStatus(false, false)
+	case wallet.SyncCompleted:
+		win.updateSyncStatus(false, true)
+	}
+}
+
+// updateSyncStatus updates the sync status in the walletInfo state.
+func (win Window) updateSyncStatus(syncing, synced bool) {
+	win.walletInfo.Syncing = syncing
+	win.walletInfo.Synced = synced
 }
