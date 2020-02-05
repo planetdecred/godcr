@@ -49,6 +49,12 @@ type Transactions struct {
 
 // SyncStatus is sent when a wallet progress event is triggered.
 type SyncStatus struct {
-	Progress      int32
-	RemainingTime int64
+	Progress                 int32
+	HeadersFetchProgress     int32
+	RescanHeadersProgress    int32
+	AddressDiscoveryProgress int32
+	RemainingTime            int64
+	ConnectedPeers           int32
+	Steps                    int32
+	TotalSteps               int32
 }

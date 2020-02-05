@@ -101,10 +101,10 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.progressPercentage = theme.Caption("0%")
 	page.timeLeft = theme.Caption("0s left")
 	page.syncStatus = theme.H5("Syncing...")
-	page.syncSteps = theme.Caption("Step 1/3")
-	page.headersFetched = theme.Caption("Fetching block headers. 89%")
+	page.syncSteps = theme.Caption("Step 0/0")
+	page.headersFetched = theme.Caption("Fetching block headers. 0%")
 	page.connectedPeersTitle = theme.Caption("Connected peers count")
-	page.connectedPeers = theme.Caption("16")
+	page.connectedPeers = theme.Caption("0")
 	page.walletHeaderFetchedTitle = theme.Caption("Block header fetched")
 	page.walletSyncingProgressTitle = theme.Caption("SyncingProgress")
 	page.walletSyncCard = widgets.NewCard()
@@ -184,6 +184,9 @@ func (page *Overview) updateSyncProgressData() {
 		page.progress = float64(page.syncStatusState.Progress)
 		page.progressPercentage.Text = fmt.Sprintf("%v%%", page.progress)
 		page.timeLeft.Text = fmt.Sprintf("%v left", helper.RemainingSyncTime(page.syncStatusState.RemainingTime))
+		page.headersFetched.Text = fmt.Sprintf("Fetching block headers. %v%%", page.syncStatusState.HeadersFetchProgress)
+		page.connectedPeers.Text = fmt.Sprintf("%d", page.syncStatusState.ConnectedPeers)
+		page.syncSteps.Text = fmt.Sprintf("Step %d/%d", page.syncStatusState.Steps, page.syncStatusState.TotalSteps)
 	}
 }
 

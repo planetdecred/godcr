@@ -129,6 +129,13 @@ func (win *Window) updateState(t interface{}) {
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
 	case wallet.SyncHeadersFetchProgress:
+		win.updateHeaderFetchProgress(t)
+	case wallet.SyncPeersChanged:
+		win.updateConnectedPeers(t)
+	case wallet.SyncHeadersRescanProgress:
+		win.updateRescanHeaderProgress(t)
+	case wallet.SyncAddressDiscoveryProgress:
+		// todo
 		win.updateSyncProgress(t)
 		win.updateSyncProgress(t.(wallet.SyncHeadersFetchProgress))
 	case *wallet.CreatedSeed:
@@ -158,9 +165,39 @@ func (win Window) updateSyncStatus(syncing, synced bool) {
 }
 
 // updateSyncProgress updates the sync progress in the SyncStatus state
-func (win Window) updateSyncProgress(resp wallet.SyncHeadersFetchProgress) {
+func (win Window) updateHeaderFetchProgress(resp wallet.SyncHeadersFetchProgress) {
 	state := win.stateObject(page.StateSyncStatus)
 	syncState := state.(*wallet.SyncStatus)
 	syncState.Progress = resp.Progress.TotalSyncProgress
 	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
+	syncState.HeadersFetchProgress = resp.Progress.HeadersFetchProgress
+	syncState.TotalSteps = wallet.TotalSyncSteps
+	syncState.Steps = wallet.FetchHeadersStep
+}
+
+func (win Window) updateRescanHeaderProgress(resp wallet.SyncHeadersRescanProgress) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.Progress = resp.Progress.TotalSyncProgress
+	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
+	syncState.RescanHeadersProgress = resp.Progress.RescanProgress
+	syncState.TotalSteps = wallet.TotalSyncSteps
+	syncState.Steps = wallet.RescanHeadersStep
+}
+
+func (win Window) updateAddressDiscoveryProgress(resp wallet.SyncAddressDiscoveryProgress) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.Progress = resp.Progress.TotalSyncProgress
+	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
+	syncState.RescanHeadersProgress = resp.Progress.AddressDiscoveryProgress
+	syncState.TotalSteps = wallet.TotalSyncSteps
+	syncState.Steps = wallet.AddressDiscoveryStep
+}
+
+// updateConnectedPeers updates connected peers in the SyncStatus state
+func (win Window) updateConnectedPeers(resp wallet.SyncPeersChanged) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.ConnectedPeers = resp.ConnectedPeers
 }
