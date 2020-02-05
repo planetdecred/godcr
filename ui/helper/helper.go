@@ -89,7 +89,7 @@ func WalletSyncStatus(info wallet.InfoShort, bestBlockHeight int32) string {
 		return "waiting for other wallets"
 	}
 	if info.BestBlockHeight < bestBlockHeight {
-		return "syncing"
+		return "syncing.."
 	}
 
 	return "synced"

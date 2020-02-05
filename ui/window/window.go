@@ -135,6 +135,7 @@ func (win *Window) updateState(t interface{}) {
 	case wallet.SyncHeadersRescanProgress:
 		win.updateRescanHeaderProgress(t)
 	case wallet.SyncAddressDiscoveryProgress:
+		win.updateAddressDiscoveryProgress(t)
 		// todo
 		win.updateSyncProgress(t)
 		win.updateSyncProgress(t.(wallet.SyncHeadersFetchProgress))
@@ -164,34 +165,36 @@ func (win Window) updateSyncStatus(syncing, synced bool) {
 	win.walletInfo.Synced = synced
 }
 
-// updateSyncProgress updates the sync progress in the SyncStatus state
+// updateSyncProgress updates the headers fetched in the SyncStatus state
 func (win Window) updateHeaderFetchProgress(resp wallet.SyncHeadersFetchProgress) {
 	state := win.stateObject(page.StateSyncStatus)
 	syncState := state.(*wallet.SyncStatus)
-	syncState.Progress = resp.Progress.TotalSyncProgress
-	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
 	syncState.HeadersFetchProgress = resp.Progress.HeadersFetchProgress
 	syncState.HeadersToFetch = resp.Progress.TotalHeadersToFetch
+	syncState.Progress = resp.Progress.TotalSyncProgress
+	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
 	syncState.TotalSteps = wallet.TotalSyncSteps
 	syncState.Steps = wallet.FetchHeadersStep
 }
 
+// updateSyncProgress updates escan Header Progress in the SyncStatus state
 func (win Window) updateRescanHeaderProgress(resp wallet.SyncHeadersRescanProgress) {
 	state := win.stateObject(page.StateSyncStatus)
 	syncState := state.(*wallet.SyncStatus)
+	syncState.RescanHeadersProgress = resp.Progress.RescanProgress
 	syncState.Progress = resp.Progress.TotalSyncProgress
 	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
-	syncState.RescanHeadersProgress = resp.Progress.RescanProgress
 	syncState.TotalSteps = wallet.TotalSyncSteps
 	syncState.Steps = wallet.RescanHeadersStep
 }
 
+// updateSyncProgress updates Address Discovery Progress in the SyncStatus state
 func (win Window) updateAddressDiscoveryProgress(resp wallet.SyncAddressDiscoveryProgress) {
 	state := win.stateObject(page.StateSyncStatus)
 	syncState := state.(*wallet.SyncStatus)
+	syncState.RescanHeadersProgress = resp.Progress.AddressDiscoveryProgress
 	syncState.Progress = resp.Progress.TotalSyncProgress
 	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
-	syncState.RescanHeadersProgress = resp.Progress.AddressDiscoveryProgress
 	syncState.TotalSteps = wallet.TotalSyncSteps
 	syncState.Steps = wallet.AddressDiscoveryStep
 }

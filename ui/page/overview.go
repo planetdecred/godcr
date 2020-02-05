@@ -21,7 +21,7 @@ const OverviewID = "overview"
 // Overview represents the overview page of the app.
 // It is the first page the user sees on launch when a wallet exists.
 type Overview struct {
-	theme 				*materialplus.Theme
+	theme *materialplus.Theme
 
 	syncButtonWidget    *widget.Button
 	progressBar         *materialplus.ProgressBar
@@ -45,6 +45,7 @@ type Overview struct {
 	walletSyncingProgressTitle material.Label
 	walletSyncDetails          walletSyncDetails
 	walletSyncCard             widgets.Card
+	walletSyncBoxes            []func()
 
 	transactionColumnTitle material.Label
 	transactionIcon        material.Label
@@ -139,10 +140,11 @@ func (page *Overview) syncDetail(name, status, headersFetched, progress string) 
 		syncingProgress:    theme.Caption(progress),
 	}
 }
+
 // Draw adds all the widgets to the stored layout context.
 func (page *Overview) Draw(gtx *layout.Context) interface{} {
 	page.walletInfo = page.states[StateWalletInfo].(*wallet.MultiWalletInfo)
-	page.update()
+	page.update(gtx)
 
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
@@ -162,10 +164,11 @@ func (page *Overview) checkState(state string) bool {
 	return false
 }
 
-func (page *Overview) update() {
+func (page *Overview) update(gtx *layout.Context) {
 	page.updateBalance()
 	page.updateSyncData()
 	page.updateSyncProgressData()
+	page.updateWalletSyncBox(gtx)
 }
 
 // updatePage updates the state of the overview page
@@ -198,6 +201,31 @@ func (page *Overview) updateSyncProgressData() {
 		page.headersFetched.Text = fmt.Sprintf("Fetching block headers. %v%%", page.syncStatusState.HeadersFetchProgress)
 		page.connectedPeers.Text = fmt.Sprintf("%d", page.syncStatusState.ConnectedPeers)
 		page.syncSteps.Text = fmt.Sprintf("Step %d/%d", page.syncStatusState.Steps, page.syncStatusState.TotalSteps)
+	}
+}
+
+func (page *Overview) updateWalletSyncBox(gtx *layout.Context) {
+	var overallBlockHeight int32
+
+	page.walletSyncBoxes = []func(){}
+	if page.checkState(StateSyncStatus) {
+		overallBlockHeight = page.syncStatusState.HeadersToFetch
+	}
+
+	for i := 0; i < len(page.walletInfo.Wallets); i++ {
+		w := page.walletInfo.Wallets[i]
+		if w.BestBlockHeight > overallBlockHeight {
+			overallBlockHeight = w.BestBlockHeight
+		}
+		blockHeightProgress := fmt.Sprintf("%v of %v", w.BestBlockHeight, overallBlockHeight)
+		status := helper.WalletSyncStatus(w, overallBlockHeight)
+		progress := helper.WalletSyncProgressTime(w.BlockTimestamp)
+		details := page.syncDetail(w.Name, status, blockHeightProgress, progress)
+		uniform := layout.UniformInset(units.Padding)
+		page.walletSyncBoxes = append(page.walletSyncBoxes,
+			func() {
+				page.walletSyncBox(gtx, uniform, details)
+			})
 	}
 }
 
@@ -402,24 +430,6 @@ func (page *Overview) progressStatusRow(gtx *layout.Context, inset layout.Inset)
 
 //	walletSyncRow layouts a list of wallet sync boxes horizontally.
 func (page *Overview) walletSyncRow(gtx *layout.Context, inset layout.Inset) {
-	var syncBoxes []func()
-	var overallBlockHeight int32
-
-	if page.checkState(StateSyncStatus) {
-		overallBlockHeight = page.syncStatusState.HeadersToFetch
-	}
-	for i:=0; i < len(page.walletInfo.Wallets); i++ {
-		w := page.walletInfo.Wallets[i]
-		blockHeightProgress := fmt.Sprintf("%v of %v", w.BestBlockHeight, overallBlockHeight)
-		status := helper.WalletSyncStatus(w, overallBlockHeight)
-		progress := helper.WalletSyncProgressTime(w.BlockTimestamp)
-		details := page.syncDetail(w.Name, status, blockHeightProgress, progress)
-		syncBoxes = append(syncBoxes,
-			func() {
-				page.walletSyncBox(gtx, inset, details)
-			})
-	}
-
 	page.columnMargin.Layout(gtx, func() {
 		page.column.Layout(gtx,
 			layout.Rigid(func() {
@@ -429,11 +439,11 @@ func (page *Overview) walletSyncRow(gtx *layout.Context, inset layout.Inset) {
 				page.endToEndRow(gtx, inset, page.connectedPeersTitle, page.connectedPeers)
 			}),
 			layout.Rigid(func() {
-				page.walletSyncList.Layout(gtx, len(syncBoxes), func(i int) {
+				page.walletSyncList.Layout(gtx, len(page.walletSyncBoxes), func(i int) {
 					if i == 0 {
-						layout.UniformInset(units.NoPadding).Layout(gtx, syncBoxes[i])
+						layout.UniformInset(units.NoPadding).Layout(gtx, page.walletSyncBoxes[i])
 					} else {
-						layout.Inset{Left: units.ColumnMargin}.Layout(gtx, syncBoxes[i])
+						layout.Inset{Left: units.ColumnMargin}.Layout(gtx, page.walletSyncBoxes[i])
 					}
 				})
 			}),
