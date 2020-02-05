@@ -1,11 +1,12 @@
 package materialplus
 
 import (
+	"image"
+	"image/color"
+
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"image"
-	"image/color"
 )
 
 // Fill draws the rectangle and adds color to it.

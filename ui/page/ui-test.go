@@ -29,8 +29,8 @@ type UITest struct {
 
 	loadMainUIButton         *widget.Button
 	loadMainUIButtonMaterial material.Button
-	progressBar     		 *materialplus.ProgressBar
-	states map[string]interface{}
+	progressBar              *materialplus.ProgressBar
+	states                   map[string]interface{}
 }
 
 // Init initializes all available custom widgets
@@ -106,6 +106,9 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 
 		},
 		func() {
+			pg.progressBar.Layout(gtx, 25)
+		},
+		func() {
 			for pg.loadMainUIButton.Clicked(gtx) {
 				walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 				ev := EventNav{
@@ -121,9 +124,6 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 				res = ev
 			}
 			pg.loadMainUIButtonMaterial.Layout(gtx, pg.loadMainUIButton)
-		},
-		func() {
-			pg.progressBar.Layout(gtx, 25)
 		},
 	}
 
