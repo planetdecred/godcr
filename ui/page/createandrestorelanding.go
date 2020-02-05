@@ -5,14 +5,13 @@ import (
 	"image/png"
 	"log"
 
-	"github.com/markbates/pkger"
-
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/markbates/pkger"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -43,6 +42,9 @@ func (pg *CreateAndRestoreLanding) Init(theme *materialplus.Theme, _ *wallet.Wal
 		log.Println(err)
 	}
 	image, err := png.Decode(file)
+	if err != nil {
+		log.Println(err)
+	}
 	pg.image = theme.Image(paint.NewImageOp(image))
 
 	pg.welcomeLabel = theme.Label(unit.Sp(24), "Welcome to\nDecred desktop wallet")
