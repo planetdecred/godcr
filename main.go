@@ -67,8 +67,7 @@ func main() {
 		wg.Done()
 	}()
 
-	win, err := ui.CreateWindow(wal)
-	if err != nil {
+	win, err := ui.CreateWindow(wal)	if err != nil {
 		fmt.Printf("%+v\n", err)
 		return
 	}
