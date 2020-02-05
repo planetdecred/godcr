@@ -2,10 +2,12 @@ package page
 
 import (
 	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/decred/dcrd/dcrutil"
+
 	"github.com/raedahgroup/godcr-gio/ui/helper"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"

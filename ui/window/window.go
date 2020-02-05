@@ -121,7 +121,7 @@ func (win *Window) Loop(shutdown chan int) {
 // updateState checks for the event type that is passed as an argument and updates its
 // respective state.
 func (win *Window) updateState(t interface{}) {
-	switch t.(type) {
+	switch t := t.(type) {
 	case wallet.SyncStarted:
 		win.updateSyncStatus(true, false)
 	case wallet.SyncCanceled:
@@ -129,6 +129,7 @@ func (win *Window) updateState(t interface{}) {
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
 	case wallet.SyncHeadersFetchProgress:
+		win.updateSyncProgress(t)
 		win.updateSyncProgress(t.(wallet.SyncHeadersFetchProgress))
 	case *wallet.CreatedSeed:
 		win.wallet.GetMultiWalletInfo()
