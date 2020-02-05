@@ -86,7 +86,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
 			default:
-				win.updateState(e)
+				win.updateState(e.Resp)
 			}
 			win.window.Invalidate()
 		case e := <-win.window.Events():
