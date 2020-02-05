@@ -7,8 +7,10 @@ import (
 	"gioui.org/widget"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
+
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -85,8 +87,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
 		func() {
-			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-			pg.heading.Layout(gtx)
+			gtx.Dimensions.Size.Y = 264
 		},
 		func() {
 			topInset := float32(0)

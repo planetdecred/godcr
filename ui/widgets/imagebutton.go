@@ -4,10 +4,11 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/io/pointer"
+	"github.com/raedahgroup/godcr-gio/ui/helper"
 
 	"gioui.org/f32"
 	"gioui.org/font"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -38,8 +39,8 @@ func NewImageButton(img *material.Image, text string) ImageButton {
 		Font: gioText.Font{
 			Size: unit.Sp(16).Scale(14.0 / 16.0),
 		},
-		Color:      rgb(0xffffff),
-		Background: rgb(0x3f51b5),
+		Color:      helper.RGB(0xffffff),
+		Background: helper.RGB(0x3f51b5),
 		shaper:     font.Default(),
 		alignment:  layout.Middle,
 		Axis:       layout.Horizontal,
@@ -65,7 +66,7 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 				NE: rr, NW: rr, SE: rr, SW: rr,
 			}.Op(gtx.Ops).Add(gtx.Ops)
 
-			fill(gtx, b.Background)
+			helper.Fill(gtx, b.Background)
 			for _, c := range button.History() {
 				drawInk(gtx, c)
 			}
@@ -136,23 +137,4 @@ func drawInk(gtx *layout.Context, c widget.Click) {
 	paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: size, Y: size}}}.Add(gtx.Ops)
 	stack.Pop()
 	op.InvalidateOp{}.Add(gtx.Ops)
-}
-
-func fill(gtx *layout.Context, col color.RGBA) {
-	cs := gtx.Constraints
-	d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
-	dr := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-	}
-	paint.ColorOp{Color: col}.Add(gtx.Ops)
-	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{Size: d}
-}
-
-func rgb(c uint32) color.RGBA {
-	return argb(0xff000000 | c)
-}
-
-func argb(c uint32) color.RGBA {
-	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
 }

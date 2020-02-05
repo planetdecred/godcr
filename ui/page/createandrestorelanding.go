@@ -37,8 +37,7 @@ type CreateAndRestoreLanding struct {
 }
 
 // Init adds a heading and two buttons.
-func (pg *CreateAndRestoreLanding) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
-	// ToDo should show error page if icons aren't rendered properly.
+func (pg *CreateAndRestoreLanding) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[string]interface{}) {
 	file, err := pkger.Open("/assets/icons/decred.png")
 	if err != nil {
 		log.Println(err)
@@ -78,7 +77,7 @@ func (pg *CreateAndRestoreLanding) Init(theme *materialplus.Theme, _ *wallet.Wal
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *CreateAndRestoreLanding) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
+func (pg *CreateAndRestoreLanding) Draw(gtx *layout.Context) (res interface{}) {
 	widgets := []func(){
 		func() {
 			//bb.Layout(gtx, unit.Dp(32))
