@@ -163,22 +163,18 @@ func (pg *Restore) Draw(gtx *layout.Context) interface{} {
 		}
 	}
 
-	if pg.restoreWdg.Clicked(gtx) {
-		if pg.validateWords() {
-			pg.showModal = true
-		}
+	if pg.restoreWdg.Clicked(gtx) && pg.validateWords() {
+		pg.showModal = true
 	}
 
 	if pg.cancelWdg.Clicked(gtx) {
 		pg.showModal = false
 	}
 
-	if pg.submitWdg.Clicked(gtx) {
-		if pg.validatePwdAndPIN() {
-			return EventNav{
-				Current: RestoreID,
-				Next:    WalletsID,
-			}
+	if pg.submitWdg.Clicked(gtx) && pg.validatePwdAndPIN() {
+		return EventNav{
+			Current: RestoreID,
+			Next:    WalletsID,
 		}
 	}
 
