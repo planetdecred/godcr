@@ -9,18 +9,15 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
-// LandingID is the id of the landing page.
-const LandingID = "landing"
+// LoadingID is the id of the loading page.
+const LandingID = "loading"
 
-// Landing represents the landing page of the app.
-// It should only be should shown if the app launches
-// and cannot find any wallets.
+// Loading represents the loading page of the app.
 type Landing struct {
 	inset            layout.Inset
 	container        layout.List

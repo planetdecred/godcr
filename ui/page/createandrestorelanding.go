@@ -1,13 +1,11 @@
 package page
 
 import (
-	"fmt"
 	"image/color"
 	"image/png"
 	"log"
-	"os"
 
-	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/markbates/pkger"
 
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -17,15 +15,16 @@ import (
 
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // LandingID is the id of the landing page.
-const Create = "Create"
+const CreateAndRestoreLandingID = "Create"
 
 // Landing represents the landing page of the app.
 // It should only be should shown if the app launches
 // and cannot find any wallets.
-type CreateAndRestore struct {
+type CreateAndRestoreLanding struct {
 	container    *layout.List
 	image        material.Image
 	welcomeLabel material.Label
@@ -38,12 +37,11 @@ type CreateAndRestore struct {
 }
 
 // Init adds a heading and two buttons.
-func (pg *CreateAndRestore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
+func (pg *CreateAndRestoreLanding) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	// ToDo should show error page if icons aren't rendered properly.
-	file, err := os.Open("./assets/decred.png")
-	fmt.Println(os.UserHomeDir())
+	file, err := pkger.Open("/assets/icons/decred.png")
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	image, err := png.Decode(file)
 	pg.image = theme.Image(paint.NewImageOp(image))
@@ -53,23 +51,23 @@ func (pg *CreateAndRestore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 	pg.createButton = new(widget.Button)
 	pg.restoreButton = new(widget.Button)
 
-	file, err = os.Open("./assets/add.png")
+	file, err = pkger.Open("/assets/icons/add.png")
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	image, err = png.Decode(file)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	pg.addIcon = theme.Image(paint.NewImageOp(image))
 
-	file, err = os.Open("./assets/restore.png")
+	file, err = pkger.Open("/assets/icons/restore.png")
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	image, err = png.Decode(file)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	pg.restoreIcon = theme.Image(paint.NewImageOp(image))
 
@@ -80,7 +78,7 @@ func (pg *CreateAndRestore) Init(theme *materialplus.Theme, _ *wallet.Wallet) {
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *CreateAndRestore) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
+func (pg *CreateAndRestoreLanding) Draw(gtx *layout.Context, _ ...interface{}) interface{} {
 	widgets := []func(){
 		func() {
 			//bb.Layout(gtx, unit.Dp(32))
