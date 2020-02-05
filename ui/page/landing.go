@@ -76,12 +76,6 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 		func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 			pg.restoreBtn.Layout(gtx, pg.restoreWdg)
-      if pg.restoreWdg.Clicked(gtx) {
-				res = EventNav{
-					Current: LandingID,
-					Next:    RestoreID,
-				}
-			}
 		},
 		func() {
 			if walletInfo.LoadedWallets != 0 {
