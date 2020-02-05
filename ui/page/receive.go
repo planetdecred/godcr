@@ -91,6 +91,7 @@ type Receive struct {
 	accountSelectorButtons map[string]*widget.Button
 
 	theme          *materialplus.Theme
+
 	listContainer  layout.List
 	receiveAddress string
 	states         map[string]interface{}
