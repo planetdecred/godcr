@@ -34,12 +34,14 @@ var (
 )
 var _ = BeforeSuite(func() {
 	var err error
-	wal, err = NewWallet(getTestDir(), testnet, make(chan interface{}))
+	wal, err = NewWallet(getTestDir(), testnet, make(chan Response))
 	Expect(err).To(BeNil())
 	wal.LoadWallets()
-	Expect(<-wal.Send).To(BeAssignableToTypeOf(&LoadedWallets{}))
+	resp := <-wal.Send
+	Expect(resp.Resp).To(BeAssignableToTypeOf(&LoadedWallets{}))
 	wal.CreateWallet("password", 1)
-	Expect(<-wal.Send).To(BeAssignableToTypeOf(&CreatedSeed{}))
+	resp = <-wal.Send
+	Expect(resp.Resp).To(BeAssignableToTypeOf(&CreatedSeed{}))
 })
 
 var _ = AfterSuite(func() {
@@ -50,8 +52,8 @@ var _ = Describe("Wallet", func() {
 	It("can get the multi wallet info", func() {
 		wal.GetMultiWalletInfo(1)
 		info := <-wal.Send
-		Expect(info).To(BeAssignableToTypeOf(&MultiWalletInfo{}))
-		inf := info.(*MultiWalletInfo)
+		Expect(info.Resp).To(BeAssignableToTypeOf(&MultiWalletInfo{}))
+		inf := info.Resp.(*MultiWalletInfo)
 		Expect(inf.LoadedWallets).To(BeEquivalentTo(1))
 		Expect(inf.TotalBalance).To(BeEquivalentTo(0))
 		Expect(inf.Synced).To(Equal(false))

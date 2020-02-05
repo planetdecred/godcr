@@ -14,7 +14,7 @@ const syncID = "godcr"
 type Wallet struct {
 	multi     *dcrlibwallet.MultiWallet
 	root, net string
-	Send      chan interface{}
+	Send      chan Response
 }
 
 // InternalWalletError represents errors generated during the handling of the multiwallet
@@ -24,13 +24,13 @@ type InternalWalletError struct {
 	AffectedWallets []int
 }
 
-func (err *InternalWalletError) Error() string {
+func (err InternalWalletError) Error() string {
 	return err.Message
 }
 
 // NewWallet initializies an new Wallet instance.
 // The Wallet is not loaded until LoadWallets is called.
-func NewWallet(root string, net string, send chan interface{}) (*Wallet, error) {
+func NewWallet(root string, net string, send chan Response) (*Wallet, error) {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
 		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
@@ -48,10 +48,12 @@ func NewWallet(root string, net string, send chan interface{}) (*Wallet, error) 
 // startup passphrase was set.
 // It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) LoadWallets() {
-	go func(send chan<- interface{}, wal *Wallet) {
+	go func(send chan<- Response, wal *Wallet) {
+		var resp Response
 		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.net)
 		if err != nil {
-			send <- err
+			resp.Err = err
+			send <- resp
 			return
 		}
 
@@ -60,7 +62,8 @@ func (wal *Wallet) LoadWallets() {
 			Send: wal.Send,
 		}, syncID)
 		if err != nil {
-			send <- err
+			resp.Err = err
+			send <- resp
 			return
 		}
 
@@ -68,15 +71,17 @@ func (wal *Wallet) LoadWallets() {
 		if !startupPassSet {
 			err = wal.multi.OpenWallets(nil)
 			if err != nil {
-				send <- err
+				resp.Err = err
+				send <- resp
 				return
 			}
 		}
 
-		send <- &LoadedWallets{
+		resp.Resp = &LoadedWallets{
 			Count:              wal.multi.LoadedWalletsCount(),
 			StartUpSecuritySet: startupPassSet,
 		}
+		send <- resp
 	}(wal.Send, wal)
 }
 
