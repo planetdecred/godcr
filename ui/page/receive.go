@@ -80,7 +80,12 @@ type Receive struct {
 
 	accountSelectorButtons map[string]*widget.Button
 
+<<<<<<< HEAD
 	theme *materialplus.Theme
+=======
+	theme          *materialplus.Theme
+
+>>>>>>> fixed receive page and implemented new ui features
 	listContainer  layout.List
 	receiveAddress string
 	states         map[string]interface{}
