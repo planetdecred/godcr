@@ -128,14 +128,38 @@ func (win *Window) updateState(t interface{}) {
 		win.updateSyncStatus(false, false)
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
+	case wallet.SyncHeadersFetchProgress:
+		win.updateSyncProgress(t.(wallet.SyncHeadersFetchProgress))
 	case *wallet.CreatedSeed:
 		win.wallet.GetMultiWalletInfo()
 		win.states[page.StateWalletCreated] = t
 	}
 }
 
+// stateObject fetches and returns the state if it already exists in the state map.
+// Otherwise, it creates a new state object and returns a pointer of that state.
+func (win Window) stateObject(key string) interface{} {
+	if state, ok := win.states[page.StateSyncStatus]; ok {
+		return state
+	}
+	switch key {
+	case page.StateSyncStatus:
+		win.states[key] = new(wallet.SyncStatus)
+		return win.states[key]
+	}
+	return nil
+}
+
 // updateSyncStatus updates the sync status in the walletInfo state.
 func (win Window) updateSyncStatus(syncing, synced bool) {
 	win.walletInfo.Syncing = syncing
 	win.walletInfo.Synced = synced
+}
+
+// updateSyncProgress updates the sync progress in the SyncStatus state
+func (win Window) updateSyncProgress(resp wallet.SyncHeadersFetchProgress) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.Progress = resp.Progress.TotalSyncProgress
+	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
 }

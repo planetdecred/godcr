@@ -1,16 +1,17 @@
 package page
 
 import (
+	"fmt"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/decred/dcrd/dcrutil"
+	"github.com/raedahgroup/godcr-gio/ui/helper"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
 	"github.com/raedahgroup/godcr-gio/wallet"
-	"strings"
 )
 
 const OverviewID = "overview"
@@ -58,9 +59,11 @@ type Overview struct {
 
 	transactionAmount string
 	balance           string
+	progress          float64
 	states            map[string]interface{}
 	wallet            *wallet.Wallet
 	walletInfo        *wallet.MultiWalletInfo
+	syncStatusState   *wallet.SyncStatus
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -93,8 +96,8 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.syncButtonWidget = new(widget.Button)
 	page.syncButton = theme.Button("Cancel")
 	page.progressBar = theme.ProgressBar()
-	page.progressPercentage = theme.Caption("25%")
-	page.timeLeft = theme.Caption("6 min left")
+	page.progressPercentage = theme.Caption("0%")
+	page.timeLeft = theme.Caption("0s left")
 	page.syncStatus = theme.H5("Syncing...")
 	page.syncSteps = theme.Caption("Step 1/3")
 	page.headersFetched = theme.Caption("Fetching block headers. 89%")
@@ -127,6 +130,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 func (page *Overview) Draw(gtx *layout.Context) interface{} {
 	page.walletInfo = page.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	page.update()
+
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
 			container := layout.Inset{Left: units.ContainerPadding, Right: units.ContainerPadding}
@@ -138,9 +142,17 @@ func (page *Overview) Draw(gtx *layout.Context) interface{} {
 	return nil
 }
 
+func (page *Overview) checkState(state string) bool {
+	if _, ok := page.states[state]; ok {
+		return true
+	}
+	return false
+}
+
 func (page *Overview) update() {
 	page.updateBalance()
 	page.updateSyncData()
+	page.updateSyncProgressData()
 }
 
 // updatePage updates the state of the overview page
@@ -152,12 +164,24 @@ func (page *Overview) updateSyncData() {
 	if page.walletInfo.Synced {
 		page.syncButton.Text = "Disconnect"
 		page.syncStatus.Text = "Synced"
+		page.onlineStatus.Text = "Online"
 	} else if page.walletInfo.Syncing {
 		page.syncButton.Text = "Cancel"
 		page.syncStatus.Text = "Syncing..."
+		page.onlineStatus.Text = "Online"
 	} else {
 		page.syncStatus.Text = "Not synced"
 		page.syncButton.Text = "Reconnect"
+		page.onlineStatus.Text = "Offline"
+	}
+}
+
+func (page *Overview) updateSyncProgressData() {
+	if page.checkState(StateSyncStatus) {
+		page.syncStatusState = page.states[StateSyncStatus].(*wallet.SyncStatus)
+		page.progress = float64(page.syncStatusState.Progress)
+		page.progressPercentage.Text = fmt.Sprintf("%v%%", page.progress)
+		page.timeLeft.Text = fmt.Sprintf("%v left", helper.RemainingSyncTime(page.syncStatusState.RemainingTime))
 	}
 }
 
@@ -351,7 +375,7 @@ func (page *Overview) triggerSync() {
 // syncBoxTitleRow lays out the progress bar.
 func (page *Overview) progressBarRow(gtx *layout.Context, inset layout.Inset) {
 	inset.Layout(gtx, func() {
-		page.progressBar.Layout(gtx, 25)
+		page.progressBar.Layout(gtx, page.progress)
 	})
 }
 
@@ -425,23 +449,10 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 	})
 }
 
-// breakBalance takes the balance string and returns it in two slices
-func breakBalance(balance string) (b1, b2 string) {
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		return balanceParts[0], ""
-	}
-	b1 = balanceParts[0]
-	b2 = balanceParts[1]
-	b1 = b1 + "." + b2[:2]
-	b2 = b2[2:]
-	return
-}
-
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
 func layoutBalance(gtx *layout.Context, balance string, main, sub material.Label) {
-	mainText, subText := breakBalance(balance)
+	mainText, subText := helper.BreakBalance(balance)
 	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func() {
 			main.Text = mainText

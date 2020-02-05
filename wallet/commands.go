@@ -176,7 +176,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			BestBlockTime:   best.Timestamp,
 			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
-			Syncing:		 wal.multi.IsSyncing(),
+			Syncing:         wal.multi.IsSyncing(),
 		}
 		wal.Send <- resp
 	}()

@@ -46,3 +46,9 @@ type CreatedSeed struct {
 type Transactions struct {
 	Txs [][]dcrlibwallet.Transaction
 }
+
+// SyncStatus is sent when a wallet progress event is triggered.
+type SyncStatus struct {
+	Progress      int32
+	RemainingTime int64
+}
