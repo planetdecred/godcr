@@ -21,6 +21,8 @@ const OverviewID = "overview"
 // Overview represents the overview page of the app.
 // It is the first page the user sees on launch when a wallet exists.
 type Overview struct {
+	theme 				*materialplus.Theme
+
 	syncButtonWidget    *widget.Button
 	progressBar         *materialplus.ProgressBar
 	balanceTitle        material.Label
@@ -79,6 +81,7 @@ type walletSyncDetails struct {
 
 // Init initializes all widgets to be used on the overview page.
 func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states map[string]interface{}) {
+	page.theme = theme
 	page.states = states
 	page.wallet = w
 	page.row = layout.Flex{Axis: layout.Horizontal}
@@ -125,9 +128,17 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 		blockHeaderFetched: theme.Caption("100 of 164864"),
 		syncingProgress:    theme.Caption("320 days behind"),
 	}
-
 }
 
+func (page *Overview) syncDetail(name, status, headersFetched, progress string) walletSyncDetails {
+	theme := page.theme
+	return walletSyncDetails{
+		name:               theme.Caption(name),
+		status:             theme.Caption(status),
+		blockHeaderFetched: theme.Caption(headersFetched),
+		syncingProgress:    theme.Caption(progress),
+	}
+}
 // Draw adds all the widgets to the stored layout context.
 func (page *Overview) Draw(gtx *layout.Context) interface{} {
 	page.walletInfo = page.states[StateWalletInfo].(*wallet.MultiWalletInfo)
@@ -370,7 +381,7 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 }
 
 func (page *Overview) triggerSync() {
-	if page.walletInfo.Syncing {
+	if page.walletInfo.Syncing || page.walletInfo.Synced {
 		page.wallet.CancelSync()
 	} else {
 		page.wallet.StartSync()
@@ -391,17 +402,24 @@ func (page *Overview) progressStatusRow(gtx *layout.Context, inset layout.Inset)
 
 //	walletSyncRow layouts a list of wallet sync boxes horizontally.
 func (page *Overview) walletSyncRow(gtx *layout.Context, inset layout.Inset) {
-	syncBoxes := []func(){
-		func() {
-			page.walletSyncBox(gtx, inset, page.walletSyncDetails)
-		},
-		func() {
-			page.walletSyncBox(gtx, inset, page.walletSyncDetails)
-		},
-		func() {
-			page.walletSyncBox(gtx, inset, page.walletSyncDetails)
-		},
+	var syncBoxes []func()
+	var overallBlockHeight int32
+
+	if page.checkState(StateSyncStatus) {
+		overallBlockHeight = page.syncStatusState.HeadersToFetch
 	}
+	for i:=0; i < len(page.walletInfo.Wallets); i++ {
+		w := page.walletInfo.Wallets[i]
+		blockHeightProgress := fmt.Sprintf("%v of %v", w.BestBlockHeight, overallBlockHeight)
+		status := helper.WalletSyncStatus(w, overallBlockHeight)
+		progress := helper.WalletSyncProgressTime(w.BlockTimestamp)
+		details := page.syncDetail(w.Name, status, blockHeightProgress, progress)
+		syncBoxes = append(syncBoxes,
+			func() {
+				page.walletSyncBox(gtx, inset, details)
+			})
+	}
+
 	page.columnMargin.Layout(gtx, func() {
 		page.column.Layout(gtx,
 			layout.Rigid(func() {

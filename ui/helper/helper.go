@@ -7,6 +7,9 @@ import (
 	"image/color"
 	"strings"
 
+	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/raedahgroup/godcr-gio/wallet"
+
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -79,4 +82,19 @@ func RemainingSyncTime(totalTimeLeft int64) string {
 		return fmt.Sprintf("%d"+"m"+"%d"+"s", minutes, seconds)
 	}
 	return fmt.Sprintf("%d"+"s", seconds)
+}
+
+func WalletSyncStatus(info wallet.InfoShort, bestBlockHeight int32) string {
+	if info.IsWaiting {
+		return "waiting for other wallets"
+	}
+	if info.BestBlockHeight < bestBlockHeight {
+		return "syncing"
+	}
+
+	return "synced"
+}
+
+func WalletSyncProgressTime(timestamp int64) string {
+	return fmt.Sprintf("%s behind", dcrlibwallet.CalculateDaysBehind(timestamp))
 }

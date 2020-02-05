@@ -157,6 +157,9 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				Name:     wall.Name,
 				Balance:  acctBalance,
 				Accounts: accts,
+				BestBlockHeight: wall.GetBestBlock(),
+				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
+				IsWaiting:		 wall.IsWaiting(),
 			}
 		}
 		best := wal.multi.GetBestBlock()

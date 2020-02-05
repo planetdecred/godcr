@@ -171,6 +171,7 @@ func (win Window) updateHeaderFetchProgress(resp wallet.SyncHeadersFetchProgress
 	syncState.Progress = resp.Progress.TotalSyncProgress
 	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
 	syncState.HeadersFetchProgress = resp.Progress.HeadersFetchProgress
+	syncState.HeadersToFetch = resp.Progress.TotalHeadersToFetch
 	syncState.TotalSteps = wallet.TotalSyncSteps
 	syncState.Steps = wallet.FetchHeadersStep
 }

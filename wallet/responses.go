@@ -26,6 +26,9 @@ type InfoShort struct {
 	Name     string
 	Balance  int64
 	Accounts []int32
+	BestBlockHeight int32
+	BlockTimestamp	int64
+	IsWaiting 		bool
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets
@@ -51,6 +54,7 @@ type Transactions struct {
 type SyncStatus struct {
 	Progress                 int32
 	HeadersFetchProgress     int32
+	HeadersToFetch 			 int32
 	RescanHeadersProgress    int32
 	AddressDiscoveryProgress int32
 	RemainingTime            int64
