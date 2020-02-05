@@ -55,7 +55,7 @@ type modal struct {
 	confirmErrorMsg       material.Label
 }
 
-// Init initializes restore page with heading, 33 inputs and button
+// Init initializes restore page with heading, 33 inputs and two buttons
 func (pg *Restore) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[string]interface{}) {
 	pg.heading = theme.Label(units.Label, "Restore from seed phrase")
 	pg.heading.Alignment = text.Middle
@@ -107,7 +107,7 @@ func (pg *modal) initModal(theme *materialplus.Theme) {
 	pg.submitWdg = new(widget.Button)
 }
 
-// Draw renders the page widgets
+// Draw layouts out the widgets on the given context
 func (pg *Restore) Draw(gtx *layout.Context) interface{} {
 	layout.UniformInset(units.FlexInset).Layout(gtx, func() {
 		pg.container.Layout(gtx,
