@@ -21,11 +21,21 @@ type MultiWalletInfo struct {
 	Syncing         bool
 }
 
+// Account represents information about an account in a wallet
+type Account struct {
+	Number           int32
+	Name             string
+	TotalBalance     int64
+	SpendableBalance int64
+}
+
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
-	Name     string
-	Balance  int64
-	Accounts []int32
+	ID               int
+	Name             string
+	TotalBalance     int64
+	SpendableBalance int64
+	Accounts         []Account
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets

@@ -46,6 +46,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	pages[page.LoadingID] = new(page.Loading)
 	pages[page.WalletsID] = new(page.Wallets)
 	pages[page.UITestID] = new(page.UITest)
+	pages[page.SendID] = new(page.Send)
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	win.states[page.StateWalletInfo] = win.walletInfo
@@ -76,7 +77,6 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 			win.window.Invalidate()
 		case e := <-win.wallet.Send:
-<<<<<<< HEAD
 			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo()
@@ -84,29 +84,6 @@ func (win *Window) Loop(shutdown chan int) {
 					win.current = page.LandingID
 				} else {
 					win.current = page.WalletsID
-=======
-			switch evt := e.(type) {
-			case event.WalletResponse:
-				switch evt.Resp {
-				case event.LoadedWalletsResp:
-					loaded, err := evt.Results.PopInt()
-					if err != nil {
-						// Log or display error
-						break eventSelect
-					}
-					if loaded == 0 {
-						win.uiEvents <- event.Nav{
-							Next: page.LandingID,
-						}
-					} else {
-						win.uiEvents <- event.Nav{
-							Next: page.SendID,
-						}
-					}
-
-				default:
-					// Unhandled Response
->>>>>>> 2749518... hardcode values
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt

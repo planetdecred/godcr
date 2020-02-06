@@ -146,17 +146,29 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				wal.Send <- resp
 				return
 			}
-			var acctBalance int64
-			accts := make([]int32, 0)
+
+			walletAccounts := []Account{}
+			var totalWalletBalance, spendableWalletBalance int64
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
-				accts = append(accts, acct.Number)
-				acctBalance += acct.TotalBalance
+				totalWalletBalance += acct.TotalBalance
+				spendableWalletBalance += acct.Balance.Spendable
+
+				account := Account{
+					Number:           acct.Number,
+					Name:             acct.Name,
+					TotalBalance:     acct.Balance.Total,
+					SpendableBalance: acct.Balance.Spendable,
+				}
+				walletAccounts = append(walletAccounts, account)
 			}
-			completeTotal += acctBalance
+
+			completeTotal += totalWalletBalance
 			infos[i] = InfoShort{
-				Name:     wall.Name,
-				Balance:  acctBalance,
-				Accounts: accts,
+				ID:               wall.ID,
+				Name:             wall.Name,
+				TotalBalance:     totalWalletBalance,
+				SpendableBalance: spendableWalletBalance,
+				Accounts:         walletAccounts,
 			}
 		}
 		best := wal.multi.GetBestBlock()

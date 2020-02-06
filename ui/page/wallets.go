@@ -74,7 +74,7 @@ func (pg *Wallets) Draw(gtx *layout.Context) interface{} {
 				Axis: layout.Vertical,
 			}).Layout(gtx, len(walletInfo.Wallets), func(i int) {
 				info := walletInfo.Wallets[i]
-				pg.theme.Label(unit.Dp(18), fmt.Sprintf("%d\t|\t%s\t|\t%d atoms", i, info.Name, info.Balance)).Layout(gtx)
+				pg.theme.Label(unit.Dp(18), fmt.Sprintf("%d\t|\t%s\t|\t%d atoms", i, info.Name, info.TotalBalance)).Layout(gtx)
 			})
 		},
 		func() {

@@ -42,11 +42,6 @@ type config struct {
 	SpendUnconfirmed bool   `long:"spendunconfirmed" description:"Allow the multiwallet to use transactions that have not been confirmed"`
 }
 
-var (
-	defaultHomeDir    = dcrutil.AppDataDir("godcr", false) // Consider using gio's DataDir
-	defaultConfigFile = filepath.Join(defaultHomeDir, defaultConfigFileName)
-)
-
 var defaultConfig = config{
 	Network:    defaultNetwork,
 	HomeDir:    defaultHomeDir,
@@ -334,28 +329,4 @@ func cleanAndExpandPath(path string) string {
 	}
 
 	return filepath.Join(homeDir, path)
-}
-
-// loadConfig loads the configration file stored in the defaultHomeDir
-func loadConfig() (*config, error) {
-	cfg := defaultConfig
-
-	var configFile *os.File
-	// if the config file does not exist, create it
-	if _, err := os.Stat(cfg.ConfigFile); os.IsNotExist(err) {
-		err = os.MkdirAll(cfg.HomeDir, os.ModePerm)
-		if err != nil {
-			return nil, err
-		}
-		configFile, err = os.Create(cfg.ConfigFile)
-		if err != nil {
-			return nil, err
-		}
-		configFile.Close()
-	}
-
-	// TODO: parse command line options as well
-	err := flags.IniParse(cfg.ConfigFile, &cfg)
-
-	return &cfg, err
 }

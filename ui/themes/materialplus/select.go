@@ -37,10 +37,18 @@ type Select struct {
 func (t *Theme) Select(items []SelectItem) *Select {
 	s := &Select{
 		isOpen:   false,
-		items:    make([]SelectItem, len(items)+1),
 		textSize: t.TextSize.V,
 		shaper:   t.Shaper,
 	}
+
+	s.SetOptions(items)
+
+	return s
+}
+
+// SetOptions sets the select options
+func (s *Select) SetOptions(items []SelectItem) {
+	s.items = make([]SelectItem, len(items)+1)
 
 	if len(items) > 0 {
 		// init option buttons
@@ -53,8 +61,19 @@ func (t *Theme) Select(items []SelectItem) *Select {
 		s.items[0] = items[0]
 		s.items[0].button = new(widget.Button)
 	}
+}
 
-	return s
+// UpdateOptions updates already set options
+func (s *Select) UpdateOptions(items []SelectItem) {
+	if len(items) > 0 {
+		s.items[0].Key = items[0].Key
+		s.items[0].Text = items[0].Text
+
+		for i := range items {
+			s.items[i+1].Key = items[i].Key
+			s.items[i+1].Text = items[i].Text
+		}
+	}
 }
 
 // Layout renders the select instance on screen
@@ -63,7 +82,7 @@ func (s *Select) Layout(gtx *layout.Context) {
 
 	container := layout.List{Axis: layout.Vertical}
 	container.Layout(gtx, len(s.items), func(i int) {
-		if s.isOpen || i == 0 {
+		if s.isOpen || i == 0 && s.items[i].button != nil {
 			layout.UniformInset(unit.Dp(0)).Layout(gtx, func() {
 				for s.items[i].button.Clicked(gtx) {
 					if i != 0 {
@@ -128,6 +147,6 @@ func (s *Select) layoutItem(gtx *layout.Context, item *SelectItem) {
 }
 
 // GetSelected returns the currently selected item
-func (s *Select) GetSelected() SelectItem {
-	return s.items[s.selectedIndex]
+func (s *Select) GetSelected() *SelectItem {
+	return &s.items[s.selectedIndex]
 }
