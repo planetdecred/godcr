@@ -1,7 +1,10 @@
 package page
 
 import (
+	"image/png"
+
 	"gioui.org/layout"
+	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -9,17 +12,21 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
+	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/markbates/pkger"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
-// LoadingID is the id of the loading page.
-const LandingID = "loading"
+// LandingID is the id of the landing page.
+const LandingID = "landing"
 
-// Loading represents the loading page of the app.
+// Landing represents the landing page of the app.
+// It should only be should shown if the app launches
+// and cannot find any wallets.
 type Landing struct {
 	inset            layout.Inset
 	container        layout.List
@@ -54,11 +61,15 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.createBtn = theme.Button("Create Wallet")
 	pg.createWdg = new(widget.Button)
 
-	pg.testnetLabel = theme.Label(unit.Dp(16), "testnet")
-	pg.testnetLabel.Font.Weight = text.Bold
-	pg.testnetLabel.Font.Size = unit.Px(50)
-	pg.testnetLabel.Alignment = text.Middle
-	pg.testnetLabel.Font.Weight = text.Bold
+	file, err = pkger.Open("/assets/icons/add.png")
+	if err != nil {
+		log.Println(err)
+	}
+	image, err = png.Decode(file)
+	if err != nil {
+		log.Println(err)
+	}
+	pg.addIcon = theme.Image(paint.NewImageOp(image))
 
 	pg.walletsBtn = theme.Button("Back to Wallets")
 	pg.walletsWdg = new(widget.Button)
@@ -87,8 +98,9 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
 		func() {
-			gtx.Dimensions.Size.Y = 264
+			gtx.Dimensions.Size.Y = 24
 		},
+
 		func() {
 			topInset := float32(0)
 
@@ -110,6 +122,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 				pg.createBtn.Layout(gtx, pg.createWdg)
 			})
 		},
+
 		func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 			if pg.restoreWdg.Clicked(gtx) {
@@ -121,6 +134,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 			}
 			pg.restoreBtn.Layout(gtx, pg.restoreWdg)
 		},
+
 		func() {
 			if walletInfo.LoadedWallets != 0 {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max

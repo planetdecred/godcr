@@ -90,7 +90,6 @@ func (wal *Wallet) LoadWallets() {
 		resp.Resp = &LoadedWallets{
 			Count:              wal.multi.LoadedWalletsCount(),
 			StartUpSecuritySet: startupPassSet,
-			WalletLoaded:       true,
 		}
 		send <- resp
 	}(wal.Send, wal)

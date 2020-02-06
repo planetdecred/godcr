@@ -84,12 +84,9 @@ func (win *Window) Loop(shutdown chan int) {
 				win.wallet.GetAllTransactions(0, 10, 0)
 				if evt.Count == 0 {
 					win.current = page.LandingID
-				} else if evt.Count == 0 {
-					win.current = page.CreateAndRestoreLandingID
 				} else {
 					win.current = page.OverviewID
 				}
-				win.window.Invalidate()
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
 			default:

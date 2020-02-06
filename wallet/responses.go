@@ -36,7 +36,6 @@ type InfoShort struct {
 type LoadedWallets struct {
 	Count              int32
 	StartUpSecuritySet bool
-	WalletLoaded       bool
 }
 
 // Restored is sent when the Wallet is done restoring a wallet

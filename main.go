@@ -67,7 +67,7 @@ func main() {
 		wg.Done()
 	}()
 
-	win, err := window.CreateWindow(page.LandingID, wal)
+	win, err := window.CreateWindow(page.LoadingID, wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
