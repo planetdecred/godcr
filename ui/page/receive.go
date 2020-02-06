@@ -379,6 +379,11 @@ func (pg *Receive) drawInfoModal(gtx *layout.Context) {
 				pg.infoModalWidgets.infoLabel.Layout(gtx)
 			})
 		},
+		// func() {
+		// 	layout.Align(layout.Center).Layout(gtx, func() {
+		// 		pg.receiveAddressLabel
+		// 	})
+		// },
 		func() {
 			inset := layout.Inset{
 				Left: unit.Dp(190),
