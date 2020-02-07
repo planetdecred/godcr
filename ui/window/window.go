@@ -85,7 +85,7 @@ func (win *Window) Loop(shutdown chan int) {
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
-					win.current = page.OverviewID
+					win.current = page.ReceivingID
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
