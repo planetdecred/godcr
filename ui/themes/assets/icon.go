@@ -1,4 +1,4 @@
-package themes
+package assets
 
 import (
 	"image/color"

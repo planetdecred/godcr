@@ -22,6 +22,7 @@ import (
 // ReceivingID is the id of the receiving page.
 const ReceivingID = "receive"
 
+<<<<<<< HEAD
 var (
 	ReceivePageInfo   = "Each time you request a payment, a \nnew address is created to protect \nyour privacy."
 	accountModalTitle = "Select an Account"
