@@ -22,7 +22,6 @@ import (
 // ReceivingID is the id of the receiving page.
 const ReceivingID = "receive"
 
-<<<<<<< HEAD
 var (
 	ReceivePageInfo   = "Each time you request a payment, a \nnew address is created to protect \nyour privacy."
 	accountModalTitle = "Select an Account"
@@ -81,12 +80,7 @@ type Receive struct {
 
 	accountSelectorButtons map[string]*widget.Button
 
-<<<<<<< HEAD
 	theme *materialplus.Theme
-=======
-	theme          *materialplus.Theme
-
->>>>>>> fixed receive page and implemented new ui features
 	listContainer  layout.List
 	receiveAddress string
 	states         map[string]interface{}
@@ -219,6 +213,7 @@ func (pg *Receive) ReceivePageContents(gtx *layout.Context) {
 	pg.listContainer.Layout(gtx, len(ReceivePageContent), func(i int) {
 		layout.UniformInset(unit.Dp(10)).Layout(gtx, ReceivePageContent[i])
 	})
+
 	if pg.isGenerateNewAddBtnModal {
 		pg.drawMoreModal(gtx)
 	}
@@ -380,11 +375,6 @@ func (pg *Receive) drawInfoModal(gtx *layout.Context) {
 				pg.infoModalWidgets.infoLabel.Layout(gtx)
 			})
 		},
-		// func() {
-		// 	layout.Align(layout.Center).Layout(gtx, func() {
-		// 		pg.receiveAddressLabel
-		// 	})
-		// },
 		func() {
 			inset := layout.Inset{
 				Left: unit.Dp(190),
