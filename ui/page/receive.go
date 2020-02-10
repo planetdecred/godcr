@@ -80,7 +80,18 @@ type Receive struct {
 
 	accountSelectorButtons map[string]*widget.Button
 
+<<<<<<< HEAD
 	theme *materialplus.Theme
+=======
+	infoModalWidgets *infoModalWidgets
+	moreModalWidgets *moreModalWidgets
+
+	isGenerateNewAddBtnModal bool
+	isInfoBtnModal           bool
+
+	theme          *materialplus.Theme
+
+>>>>>>> added generate new address button as a popup on screen when the more icon is pushed
 	listContainer  layout.List
 	receiveAddress string
 	states         map[string]interface{}
