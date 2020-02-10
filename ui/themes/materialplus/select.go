@@ -39,40 +39,26 @@ func (t *Theme) Select(items []SelectItem) *Select {
 		isOpen:   false,
 		textSize: t.TextSize.V,
 		shaper:   t.Shaper,
+		items:    []SelectItem{},
 	}
 
-	s.SetOptions(items)
+	if items != nil {
+		s.SetOptions(items)
+	}
 
 	return s
 }
 
 // SetOptions sets the select options
 func (s *Select) SetOptions(items []SelectItem) {
-	s.items = make([]SelectItem, len(items)+1)
+	for index, item := range items {
+		item.button = new(widget.Button)
 
-	if len(items) > 0 {
-		// init option buttons
-		for i := range items {
-			items[i].button = new(widget.Button)
-			s.items[i+1] = items[i]
+		if index == 0 {
+			s.items[0] = item
 		}
 
-		// set the current selected option to be the first option
-		s.items[0] = items[0]
-		s.items[0].button = new(widget.Button)
-	}
-}
-
-// UpdateOptions updates already set options
-func (s *Select) UpdateOptions(items []SelectItem) {
-	if len(items) > 0 {
-		s.items[0].Key = items[0].Key
-		s.items[0].Text = items[0].Text
-
-		for i := range items {
-			s.items[i+1].Key = items[i].Key
-			s.items[i+1].Text = items[i].Text
-		}
+		s.items = append(s.items, item)
 	}
 }
 
