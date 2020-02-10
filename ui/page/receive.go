@@ -90,6 +90,9 @@ type Receive struct {
 
 	accountSelectorButtons map[string]*widget.Button
 
+	infoModalWidgets *infoModalWidgets
+	moreModalWidgets *moreModalWidgets
+
 	isGenerateNewAddBtnModal bool
 	isInfoBtnModal           bool
 
@@ -172,7 +175,6 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.gotItBtn = theme.Button("Got It")
 
 	pg.accountSelectorButtons = map[string]*widget.Button{}
-
 	pg.listContainer = layout.List{Axis: layout.Vertical}
 
 	pg.accountModalLine = pg.theme.Line()
