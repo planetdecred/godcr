@@ -12,15 +12,15 @@ import (
 
 type (
 	ProgressBar struct {
-		height          int
-		backgroundColor color.RGBA
-		progressColor   color.RGBA
+		Height          int
+		BackgroundColor color.RGBA
+		ProgressColor   color.RGBA
 	}
 )
 
 // tracks lays out a rectangle to represent the level of progress yet to be completed.
 func (p *ProgressBar) track(gtx *layout.Context) {
-	borderedRectangle(gtx, values.ProgressBarGray, gtx.Constraints.Width.Max, p.height)
+	borderedRectangle(gtx, values.ProgressBarGray, gtx.Constraints.Width.Max, p.Height)
 }
 
 // values lays out a rectangle to represent the level of progress that has been completed.
@@ -29,7 +29,7 @@ func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
 	if width > float64(gtx.Constraints.Width.Max) {
 		width = float64(gtx.Constraints.Width.Max)
 	}
-	borderedRectangle(gtx, p.progressColor, int(width), p.height)
+	borderedRectangle(gtx, p.ProgressColor, int(width), p.Height)
 }
 
 // borderedRectangle defines the dimensions of the rectangle.
@@ -50,24 +50,6 @@ func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
 	Fill(gtx, color, x, y)
 }
 
-// SetHeight sets the height of the progress bar
-func (p *ProgressBar) SetHeight(height int) *ProgressBar {
-	p.height = height
-	return p
-}
-
-// SetBackgroundColor sets the color of track of the progress bar
-func (p *ProgressBar) SetBackgroundColor(col color.RGBA) *ProgressBar {
-	p.backgroundColor = col
-	return p
-}
-
-// SetProgressColor sets the color of the level of progress that has been completed.
-func (p *ProgressBar) SetProgressColor(col color.RGBA) *ProgressBar {
-	p.progressColor = col
-	return p
-}
-
 // Layout lays out the track and level of progress on each other.
 func (p *ProgressBar) Layout(gtx *layout.Context, progress float64) {
 	layout.Stack{}.Layout(gtx,
@@ -81,8 +63,8 @@ func (p *ProgressBar) Layout(gtx *layout.Context, progress float64) {
 // NewProgressBar creates a new ProgressBar object.
 func (t *Theme) ProgressBar() *ProgressBar {
 	return &ProgressBar{
-		height:          values.DefaultProgressBarHeight,
-		backgroundColor: values.ProgressBarGray,
-		progressColor:   values.ProgressBarGreen,
+		Height:          values.DefaultProgressBarHeight,
+		BackgroundColor: values.ProgressBarGray,
+		ProgressColor:   values.ProgressBarGreen,
 	}
 }
