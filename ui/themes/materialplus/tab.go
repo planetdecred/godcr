@@ -10,14 +10,9 @@ import (
 )
 
 type (
-	tabItem struct {
-		label      string
-		btnWidget  *widget.Button
-		renderFunc func(*layout.Context)
-	}
-
 	// Tab represents a tab item
 	Tab struct {
+		ID         int32
 		Label      string
 		RenderFunc func(*layout.Context)
 
@@ -27,6 +22,7 @@ type (
 
 	// TabContainer represents a tab container
 	TabContainer struct {
+		title           material.Label
 		items           []Tab
 		currentTabIndex int
 	}
@@ -47,14 +43,19 @@ func (t *Theme) TabContainer(items []Tab) *TabContainer {
 	}
 
 	return &TabContainer{
+		title:           t.H6(""),
 		items:           items,
 		currentTabIndex: 0,
 	}
 }
 
 // Draw renders the tabcontainer to screen
-func (t *TabContainer) Draw(gtx *layout.Context) {
+func (t *TabContainer) Draw(gtx *layout.Context, title string) {
 	w := []func(){
+		func() {
+			t.title.Text = title
+			t.title.Layout(gtx)
+		},
 		func() {
 			t.drawNavSection(gtx)
 		},
@@ -64,7 +65,7 @@ func (t *TabContainer) Draw(gtx *layout.Context) {
 	}
 
 	list := layout.List{Axis: layout.Vertical}
-	list.Layout(gtx, 2, func(i int) {
+	list.Layout(gtx, len(w), func(i int) {
 		layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
 	})
 }
@@ -103,7 +104,7 @@ func (t *TabContainer) drawContentSection(gtx *layout.Context) {
 	t.items[t.currentTabIndex].RenderFunc(gtx)
 }
 
-// GetCurrentTabLabel returns the label of the open tab
-func (t *TabContainer) GetCurrentTabLabel() string {
-	return t.items[t.currentTabIndex].Label
+// GetCurrentTabID returns the id of the open tab
+func (t *TabContainer) GetCurrentTabID() int32 {
+	return t.items[t.currentTabIndex].ID
 }
