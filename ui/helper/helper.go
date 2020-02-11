@@ -1,4 +1,3 @@
-
 package helper
 
 import (
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/wallet"
 
@@ -17,29 +17,19 @@ import (
 	"gioui.org/op/paint"
 )
 
-// PaintArea paints an area with the given color and dimensions
-func PaintArea(gtx *layout.Context, col color.RGBA, x, y int) {
-	dim := image.Point{
-		X: x,
-		Y: y,
-	}
+const (
+	transactionStatusConfirmed = "confirmed"
+	transactionStatusPending   = "pending"
 
-	rect := f32.Rectangle{
-		Max: f32.Point{
-			X: float32(dim.X),
-			Y: float32(dim.Y),
-		},
-	}
+	walletStatusWaiting = "waiting for other wallets"
+	walletStatusSyncing = "syncing..."
+	walletStatusSynced  = "synced"
+)
 
-	paint.ColorOp{Color: col}.Add(gtx.Ops)
-	paint.PaintOp{Rect: rect}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{Size: dim}
+func Balance(balance int64) string {
+	return dcrutil.Amount(balance).String()
 }
 
-// Fill paints an area completely
-func Fill(gtx *layout.Context, col color.RGBA) {
-	PaintArea(gtx, col, gtx.Constraints.Width.Min, gtx.Constraints.Height.Min)
-}
 // breakBalance takes the balance string and returns it in two slices
 func BreakBalance(balance string) (b1, b2 string) {
 	balanceParts := strings.Split(balance, ".")
@@ -51,6 +41,14 @@ func BreakBalance(balance string) (b1, b2 string) {
 	b1 = b1 + "." + b2[:2]
 	b2 = b2[2:]
 	return
+}
+
+func TransactionStatus(bestBlockHeight, txnBlockHeight int32) string {
+	confirmations := bestBlockHeight - txnBlockHeight + 1
+	if txnBlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
+		return transactionStatusConfirmed
+	}
+	return transactionStatusPending
 }
 
 // divMod divides a numerator by a denominator and returns its quotient and remainder.
@@ -86,26 +84,31 @@ func RemainingSyncTime(totalTimeLeft int64) string {
 	return fmt.Sprintf("%d"+"s", seconds)
 }
 
+// WalletSyncStatus returns the sync status of a single wallet
 func WalletSyncStatus(info wallet.InfoShort, bestBlockHeight int32) string {
 	if info.IsWaiting {
-		return "waiting for other wallets"
+		return walletStatusWaiting
 	}
 	if info.BestBlockHeight < bestBlockHeight {
-		return "syncing.."
+		return walletStatusSyncing
 	}
 
-	return "synced"
+	return walletStatusSynced
 }
 
+// WalletSyncProgressTime returns the sync time in days
 func WalletSyncProgressTime(timestamp int64) string {
 	return fmt.Sprintf("%s behind", dcrlibwallet.CalculateDaysBehind(timestamp))
 }
 
+// LastBlockSync returns how long ago the current block was attached
 func LastBlockSync(timestamp int64) string {
 	return truncateTime(time.Since(time.Unix(timestamp, 0)).String(), 0)
 }
 
-func truncateTime (duration string, place int) string {
+// truncateTime takes a time duration in string and chops off decimal places in the string
+// by the specified number of places.
+func truncateTime(duration string, place int) string {
 	var durationCharacter string
 	durationSlice := strings.Split(duration, ".")
 	if len(durationSlice) == 1 {
@@ -117,12 +120,12 @@ func truncateTime (duration string, place int) string {
 		return duration
 	}
 
-	secondLastCharacter := secondsDecimals[len(secondsDecimals) - 2:len(secondsDecimals) - 1]
+	secondLastCharacter := secondsDecimals[len(secondsDecimals)-2 : len(secondsDecimals)-1]
 	_, err := strconv.Atoi(secondLastCharacter)
 	if err != nil {
-		durationCharacter = secondsDecimals[len(secondsDecimals) - 2:]
+		durationCharacter = secondsDecimals[len(secondsDecimals)-2:]
 	} else {
-		durationCharacter = secondsDecimals[len(secondsDecimals) - 1:]
+		durationCharacter = secondsDecimals[len(secondsDecimals)-1:]
 	}
 	if place == 0 {
 		return durationSlice[0] + durationCharacter

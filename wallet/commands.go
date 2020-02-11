@@ -129,12 +129,13 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			frontTime := time.Unix(recentTxs[i].Timestamp, 0)
 			return backTime.Before(frontTime)
 		})
-		if len(recentTxs) > 5 {
-			recentTxs = recentTxs[:5]
+		recentTxsLimit := 5
+		if len(recentTxs) > recentTxsLimit {
+			recentTxs = recentTxs[:recentTxsLimit]
 		}
 
 		resp.Resp = &Transactions{
-			Txs: alltxs,
+			Txs:    alltxs,
 			Recent: recentTxs,
 		}
 		wal.Send <- resp

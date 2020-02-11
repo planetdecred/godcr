@@ -217,7 +217,7 @@ func (win Window) updateConnectedPeers(resp wallet.SyncPeersChanged) {
 }
 
 // updateTransactionState updates the transactions state.
-func (win Window) updateTransactions(resp wallet.Transactions) {
+func (win Window) updateTransactions(resp *wallet.Transactions) {
 	state := win.stateObject(page.StateTransactions)
 	txState := state.(*wallet.Transactions)
 	txState.Recent = resp.Recent

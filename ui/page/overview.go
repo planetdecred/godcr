@@ -6,8 +6,8 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/decred/dcrd/dcrutil"
 
+	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui/helper"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
@@ -42,7 +42,6 @@ type Overview struct {
 	headersFetched      material.Label
 	connectedPeersTitle material.Label
 	connectedPeers      material.Label
-	test                material.Label
 
 	walletHeaderFetchedTitle   material.Label
 	walletSyncingProgressTitle material.Label
@@ -65,13 +64,14 @@ type Overview struct {
 	listContainer  layout.List
 	walletSyncList layout.List
 
-	transactionAmount string
-	balance           string
-	progress          float64
-	states            map[string]interface{}
-	wallet            *wallet.Wallet
-	walletInfo        *wallet.MultiWalletInfo
-	walletSyncStatus  *wallet.SyncStatus
+	balance            int64
+	progress           float64
+	states             map[string]interface{}
+	wallet             *wallet.Wallet
+	walletInfo         *wallet.MultiWalletInfo
+	walletSyncStatus   *wallet.SyncStatus
+	transactions       *wallet.Transactions
+	recentTransactions []dcrlibwallet.Transaction
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -81,6 +81,15 @@ type walletSyncDetails struct {
 	status             material.Label
 	blockHeaderFetched material.Label
 	syncingProgress    material.Label
+}
+
+type transactionWidgets struct {
+	wallet      material.Label
+	balance     int64
+	mainBalance material.Label
+	subBalance  material.Label
+	date        material.Label
+	status      material.Label
 }
 
 // Init initializes all widgets to be used on the overview page.
@@ -96,7 +105,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.listContainer = layout.List{Axis: layout.Vertical}
 
 	page.balanceTitle = theme.Caption("Current Total Balance")
-	page.balance = "315.08193725 DCR"
+	page.balance = 0
 	page.mainBalance = theme.H4("")
 	page.subBalance = theme.H6("")
 	page.statusTitle = theme.Caption("Wallet Status")
@@ -116,14 +125,11 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.walletSyncingProgressTitle = theme.Caption("SyncingProgress")
 	page.walletSyncCard = widgets.NewCard()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
-	page.transactionIcon = theme.Caption("icon")
-	page.transactionAmount = "34.17458878 DCR"
 	page.transactionMainAmount = theme.Label(units.TransactionBalanceMain, "")
 	page.transactionSubAmount = theme.Label(units.TransactionBalanceSub, "")
 	page.transactionWallet = theme.Caption("Default")
 	page.transactionDate = theme.Caption("11 Jan 2020, 13:24")
 	page.transactionStatus = theme.Caption("Pending")
-	page.test = theme.Caption("t")
 	page.syncButtonCard = widgets.NewCard()
 	page.latestBlockTitle = theme.Caption("Latest Block")
 	page.latestBlock = theme.Caption("")
@@ -136,19 +142,10 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	}
 }
 
-func (page *Overview) syncDetail(name, status, headersFetched, progress string) walletSyncDetails {
-	theme := page.theme
-	return walletSyncDetails{
-		name:               theme.Caption(name),
-		status:             theme.Caption(status),
-		blockHeaderFetched: theme.Caption(headersFetched),
-		syncingProgress:    theme.Caption(progress),
-	}
-}
-
 // Draw adds all the widgets to the stored layout context.
 func (page *Overview) Draw(gtx *layout.Context) interface{} {
 	page.walletInfo = page.states[StateWalletInfo].(*wallet.MultiWalletInfo)
+	page.transactions = page.states[StateTransactions].(*wallet.Transactions)
 	page.update(gtx)
 
 	layout.Stack{}.Layout(gtx,
@@ -171,6 +168,7 @@ func (page *Overview) checkState(state string) bool {
 
 func (page *Overview) update(gtx *layout.Context) {
 	page.updateBalance()
+	page.updateRecentTransactions()
 	page.updateSyncData()
 	page.updateSyncProgressData()
 	page.updateWalletSyncBox(gtx)
@@ -178,7 +176,7 @@ func (page *Overview) update(gtx *layout.Context) {
 
 // updatePage updates the state of the overview page
 func (page *Overview) updateBalance() {
-	page.balance = dcrutil.Amount(page.walletInfo.TotalBalance).String()
+	page.balance = page.walletInfo.TotalBalance
 }
 
 func (page *Overview) updateSyncData() {
@@ -211,6 +209,18 @@ func (page *Overview) updateSyncProgressData() {
 		helper.LastBlockSync(page.walletInfo.BestBlockTime))
 }
 
+// syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
+func (page *Overview) syncDetail(name, status, headersFetched, progress string) walletSyncDetails {
+	theme := page.theme
+	return walletSyncDetails{
+		name:               theme.Caption(name),
+		status:             theme.Caption(status),
+		blockHeaderFetched: theme.Caption(headersFetched),
+		syncingProgress:    theme.Caption(progress),
+	}
+}
+
+// updateWalletSyncBox updates wallet sync boxes with data of each opened wallet.
 func (page *Overview) updateWalletSyncBox(gtx *layout.Context) {
 	var overallBlockHeight int32
 
@@ -236,8 +246,9 @@ func (page *Overview) updateWalletSyncBox(gtx *layout.Context) {
 	}
 }
 
-func (page *Overview) updateRecentTransactions(gtx *layout.Context) {
-	// todo
+// updateRecentTransactions updates the list of recent transactions from the transactions state
+func (page *Overview) updateRecentTransactions() {
+	page.recentTransactions = page.transactions.Recent
 }
 
 // content lays out the entire content for overview page.
@@ -273,9 +284,23 @@ func (page *Overview) content(gtx *layout.Context) {
 // recentTransactionsColumn lays out the list of recent transactions.
 func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 	var transactionRows []func()
-	for i := 0; i < 5; i++ {
+	if len(page.recentTransactions) > 0 {
+		for _, txn := range page.recentTransactions {
+			txn := transactionWidgets{
+				wallet:      page.theme.Caption(""),
+				balance:     txn.Amount,
+				mainBalance: page.theme.Caption(""),
+				subBalance:  page.theme.Caption(""),
+				date:        page.theme.Caption(fmt.Sprintf("%v", dcrlibwallet.ExtractDateOrTime(txn.Timestamp))),
+				status:      page.theme.Caption(helper.TransactionStatus(page.walletInfo.BestBlockHeight, txn.BlockHeight)),
+			}
+			transactionRows = append(transactionRows, func() {
+				page.recentTransactionRow(gtx, txn)
+			})
+		}
+	} else {
 		transactionRows = append(transactionRows, func() {
-			page.recentTransactionRow(gtx)
+
 		})
 	}
 
@@ -294,12 +319,12 @@ func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 }
 
 // recentTransactionRow lays out a single row of a recent transaction.
-func (page *Overview) recentTransactionRow(gtx *layout.Context) {
+func (page *Overview) recentTransactionRow(gtx *layout.Context, txn transactionWidgets) {
 	margin := layout.UniformInset(units.TransactionsRowMargin)
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
-				layoutBalance(gtx, page.transactionAmount, page.transactionMainAmount, page.transactionSubAmount)
+				layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)
 			})
 		}),
 		layout.Flexed(1, func() {
@@ -312,12 +337,12 @@ func (page *Overview) recentTransactionRow(gtx *layout.Context) {
 					}),
 					layout.Rigid(func() {
 						margin.Layout(gtx, func() {
-							page.transactionDate.Layout(gtx)
+							txn.date.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func() {
 						margin.Layout(gtx, func() {
-							page.transactionStatus.Layout(gtx)
+							txn.status.Layout(gtx)
 						})
 					}),
 				)
@@ -441,6 +466,7 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 	})
 }
 
+// triggerSync Cancels or Starts a wallet sync process
 func (page *Overview) triggerSync() {
 	if page.walletInfo.Syncing || page.walletInfo.Synced {
 		page.wallet.CancelSync()
@@ -517,8 +543,9 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func layoutBalance(gtx *layout.Context, balance string, main, sub material.Label) {
-	mainText, subText := helper.BreakBalance(balance)
+func layoutBalance(gtx *layout.Context, amount int64, main, sub material.Label) {
+	amountStr := helper.Balance(amount)
+	mainText, subText := helper.BreakBalance(amountStr)
 	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func() {
 			main.Text = mainText
