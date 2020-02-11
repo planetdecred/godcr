@@ -2,6 +2,7 @@ package page
 
 import (
 	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -30,7 +31,7 @@ type Overview struct {
 	statusTitle         material.Label
 	latestBlockTitle    material.Label
 	latestBlock         material.Label
-	latestBlockTime 	material.Label
+	latestBlockTime     material.Label
 	syncStatus          material.Label
 	onlineStatus        material.Label
 	syncButton          material.Button

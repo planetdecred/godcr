@@ -2,6 +2,9 @@ package wallet
 
 import (
 	"errors"
+	"fmt"
+	"sort"
+	"time"
 
 	"github.com/raedahgroup/dcrlibwallet"
 )
@@ -117,8 +120,22 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			alltxs[i] = txs
 		}
 
+		var recentTxs []dcrlibwallet.Transaction
+		for _, tx := range alltxs {
+			recentTxs = append(recentTxs, tx...)
+		}
+		sort.SliceStable(recentTxs, func(i, j int) bool {
+			backTime := time.Unix(recentTxs[j].Timestamp, 0)
+			frontTime := time.Unix(recentTxs[i].Timestamp, 0)
+			return backTime.Before(frontTime)
+		})
+		if len(recentTxs) > 5 {
+			recentTxs = recentTxs[:5]
+		}
+
 		resp.Resp = &Transactions{
 			Txs: alltxs,
+			Recent: recentTxs,
 		}
 		wal.Send <- resp
 	}()

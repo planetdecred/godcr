@@ -80,6 +80,7 @@ func (win *Window) Loop(shutdown chan int) {
 			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo()
+				win.wallet.GetAllTransactions(0, 10, 0)
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
@@ -136,6 +137,8 @@ func (win *Window) updateState(t interface{}) {
 		win.updateRescanHeaderProgress(t)
 	case wallet.SyncAddressDiscoveryProgress:
 		win.updateAddressDiscoveryProgress(t)
+	case wallet.Transactions:
+		win.updateTransactions(t)
 		// todo
 		win.updateSyncProgress(t)
 		win.updateSyncProgress(t.(wallet.SyncHeadersFetchProgress))
@@ -154,6 +157,9 @@ func (win Window) stateObject(key string) interface{} {
 	switch key {
 	case page.StateSyncStatus:
 		win.states[key] = new(wallet.SyncStatus)
+		return win.states[key]
+	case page.StateTransactions:
+		win.states[key] = new(wallet.Transactions)
 		return win.states[key]
 	}
 	return nil
@@ -181,7 +187,7 @@ func (win Window) updateHeaderFetchProgress(resp wallet.SyncHeadersFetchProgress
 	fmt.Printf("HEADER fetch progress triggered!\n \n")
 }
 
-// updateSyncProgress updates escan Header Progress in the SyncStatus state
+// updateSyncProgress updates rescan Header Progress in the SyncStatus state
 func (win Window) updateRescanHeaderProgress(resp wallet.SyncHeadersRescanProgress) {
 	state := win.stateObject(page.StateSyncStatus)
 	syncState := state.(*wallet.SyncStatus)
@@ -208,4 +214,12 @@ func (win Window) updateConnectedPeers(resp wallet.SyncPeersChanged) {
 	state := win.stateObject(page.StateSyncStatus)
 	syncState := state.(*wallet.SyncStatus)
 	syncState.ConnectedPeers = resp.ConnectedPeers
+}
+
+// updateTransactionState updates the transactions state.
+func (win Window) updateTransactions(resp wallet.Transactions) {
+	state := win.stateObject(page.StateTransactions)
+	txState := state.(*wallet.Transactions)
+	txState.Recent = resp.Recent
+	txState.Txs = resp.Txs
 }

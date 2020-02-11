@@ -47,7 +47,8 @@ type CreatedSeed struct {
 
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
-	Txs [][]dcrlibwallet.Transaction
+	Txs    [][]dcrlibwallet.Transaction
+	Recent []dcrlibwallet.Transaction
 }
 
 // SyncStatus is sent when a wallet progress event is triggered.

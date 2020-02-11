@@ -26,8 +26,13 @@ const (
 	// StateWalletInfo is the map key for the WalletInfo state
 	StateWalletInfo = "walletinfo"
 
+	// StateSyncStatus is the map key for SyncStatus state
+
 	// SyncStatus is the map key for SyncStatus state
 	StateSyncStatus = "syncstatus"
+
+	// StateTransactions is the map key for Transactions state
+	StateTransactions = "transactions"
 
 	// StateWalletCreated is the map key for the WalletCreated state
 	StateWalletCreated = "walletCreated"
