@@ -14,8 +14,9 @@ var (
 	DarkBlueColor  = color.RGBA{9, 20, 64, 255}
 	LightBlueColor = color.RGBA{41, 112, 255, 255}
 
-	OrangeColor = color.RGBA{237, 109, 71, 255}
-	GreenColor  = color.RGBA{46, 214, 161, 255} //color.RGBA{65, 191, 83, 255}
+	OrangeColor    = color.RGBA{237, 109, 71, 255}
+	GreenColor     = color.RGBA{46, 214, 161, 255} //color.RGBA{65, 191, 83, 255}
+	LighGreenColor = color.RGBA{45, 216, 163, 255}
 
 	BackgroundColor = color.RGBA{248, 249, 250, 255}
 )

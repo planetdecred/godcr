@@ -98,7 +98,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
 		func() {
-			layout.Inset{Bottom: unit.Dp(8)}.Layout(gtx, func() {})
+			layout.Inset{Bottom: unit.Dp(16)}.Layout(gtx, func() {})
 		},
 
 		func() {

@@ -59,14 +59,14 @@ func (pg *Loading) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[
 func (pg *Loading) Draw(gtx *layout.Context) (res interface{}) {
 	widgets := []func(){
 		func() {
-			gtx.Dimensions.Size.Y = 264
+			layout.Inset{Bottom: unit.Dp(180)}.Layout(gtx, func() {})
 		},
 		func() {
 			pg.icon.Scale = 0.08
 			pg.icon.Layout(gtx)
 		},
 		func() {
-			gtx.Dimensions.Size.Y = 16
+			layout.Inset{Bottom: unit.Dp(16)}.Layout(gtx, func() {})
 		},
 		func() {
 			pg.testnetLabel.Layout(gtx)
