@@ -61,4 +61,5 @@ type SyncStatus struct {
 	ConnectedPeers           int32
 	Steps                    int32
 	TotalSteps               int32
+	CurrentBlockHeight       int32
 }

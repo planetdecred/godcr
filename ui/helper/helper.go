@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -97,4 +99,33 @@ func WalletSyncStatus(info wallet.InfoShort, bestBlockHeight int32) string {
 
 func WalletSyncProgressTime(timestamp int64) string {
 	return fmt.Sprintf("%s behind", dcrlibwallet.CalculateDaysBehind(timestamp))
+}
+
+func LastBlockSync(timestamp int64) string {
+	return truncateTime(time.Since(time.Unix(timestamp, 0)).String(), 0)
+}
+
+func truncateTime (duration string, place int) string {
+	var durationCharacter string
+	durationSlice := strings.Split(duration, ".")
+	if len(durationSlice) == 1 {
+		return duration
+	}
+
+	secondsDecimals := durationSlice[1]
+	if place > len(secondsDecimals) {
+		return duration
+	}
+
+	secondLastCharacter := secondsDecimals[len(secondsDecimals) - 2:len(secondsDecimals) - 1]
+	_, err := strconv.Atoi(secondLastCharacter)
+	if err != nil {
+		durationCharacter = secondsDecimals[len(secondsDecimals) - 2:]
+	} else {
+		durationCharacter = secondsDecimals[len(secondsDecimals) - 1:]
+	}
+	if place == 0 {
+		return durationSlice[0] + durationCharacter
+	}
+	return durationSlice[0] + "." + secondsDecimals[0:place] + durationCharacter
 }

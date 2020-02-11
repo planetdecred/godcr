@@ -2,7 +2,6 @@ package page
 
 import (
 	"fmt"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -29,6 +28,9 @@ type Overview struct {
 	mainBalance         material.Label
 	subBalance          material.Label
 	statusTitle         material.Label
+	latestBlockTitle    material.Label
+	latestBlock         material.Label
+	latestBlockTime 	material.Label
 	syncStatus          material.Label
 	onlineStatus        material.Label
 	syncButton          material.Button
@@ -68,7 +70,7 @@ type Overview struct {
 	states            map[string]interface{}
 	wallet            *wallet.Wallet
 	walletInfo        *wallet.MultiWalletInfo
-	syncStatusState   *wallet.SyncStatus
+	walletSyncStatus  *wallet.SyncStatus
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -122,6 +124,8 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.transactionStatus = theme.Caption("Pending")
 	page.test = theme.Caption("t")
 	page.syncButtonCard = widgets.NewCard()
+	page.latestBlockTitle = theme.Caption("Latest Block")
+	page.latestBlock = theme.Caption("")
 
 	page.walletSyncDetails = walletSyncDetails{
 		name:               theme.Caption("wallet-1"),
@@ -194,14 +198,16 @@ func (page *Overview) updateSyncData() {
 
 func (page *Overview) updateSyncProgressData() {
 	if page.checkState(StateSyncStatus) {
-		page.syncStatusState = page.states[StateSyncStatus].(*wallet.SyncStatus)
-		page.progress = float64(page.syncStatusState.Progress)
+		page.walletSyncStatus = page.states[StateSyncStatus].(*wallet.SyncStatus)
+		page.progress = float64(page.walletSyncStatus.Progress)
 		page.progressPercentage.Text = fmt.Sprintf("%v%%", page.progress)
-		page.timeLeft.Text = fmt.Sprintf("%v left", helper.RemainingSyncTime(page.syncStatusState.RemainingTime))
-		page.headersFetched.Text = fmt.Sprintf("Fetching block headers. %v%%", page.syncStatusState.HeadersFetchProgress)
-		page.connectedPeers.Text = fmt.Sprintf("%d", page.syncStatusState.ConnectedPeers)
-		page.syncSteps.Text = fmt.Sprintf("Step %d/%d", page.syncStatusState.Steps, page.syncStatusState.TotalSteps)
+		page.timeLeft.Text = fmt.Sprintf("%v left", helper.RemainingSyncTime(page.walletSyncStatus.RemainingTime))
+		page.headersFetched.Text = fmt.Sprintf("Fetching block headers. %v%%", page.walletSyncStatus.HeadersFetchProgress)
+		page.connectedPeers.Text = fmt.Sprintf("%d", page.walletSyncStatus.ConnectedPeers)
+		page.syncSteps.Text = fmt.Sprintf("Step %d/%d", page.walletSyncStatus.Steps, page.walletSyncStatus.TotalSteps)
 	}
+	page.latestBlock.Text = fmt.Sprintf("%v . %v ago", page.walletInfo.BestBlockHeight,
+		helper.LastBlockSync(page.walletInfo.BestBlockTime))
 }
 
 func (page *Overview) updateWalletSyncBox(gtx *layout.Context) {
@@ -209,7 +215,7 @@ func (page *Overview) updateWalletSyncBox(gtx *layout.Context) {
 
 	page.walletSyncBoxes = []func(){}
 	if page.checkState(StateSyncStatus) {
-		overallBlockHeight = page.syncStatusState.HeadersToFetch
+		overallBlockHeight = page.walletSyncStatus.HeadersToFetch
 	}
 
 	for i := 0; i < len(page.walletInfo.Wallets); i++ {
@@ -227,6 +233,10 @@ func (page *Overview) updateWalletSyncBox(gtx *layout.Context) {
 				page.walletSyncBox(gtx, uniform, details)
 			})
 	}
+}
+
+func (page *Overview) updateRecentTransactions(gtx *layout.Context) {
+	// todo
 }
 
 // content lays out the entire content for overview page.
@@ -327,16 +337,38 @@ func (page *Overview) syncStatusColumn(gtx *layout.Context) {
 				page.syncStatusTextRow(gtx, uniform)
 			}),
 			layout.Rigid(func() {
-				page.progressBarRow(gtx, uniform)
-			}),
-			layout.Rigid(func() {
-				page.progressStatusRow(gtx, uniform)
-			}),
-			layout.Rigid(func() {
-				page.walletSyncRow(gtx, uniform)
+				if page.walletInfo.Syncing {
+					page.syncActiveContent(gtx, uniform)
+				} else {
+					page.syncDormantContent(gtx, uniform)
+				}
 			}),
 		)
 	})
+}
+
+// syncingContent lays out sync status content when the wallet is syncing
+func (page *Overview) syncActiveContent(gtx *layout.Context, uniform layout.Inset) {
+	page.column.Layout(gtx,
+		layout.Rigid(func() {
+			page.progressBarRow(gtx, uniform)
+		}),
+		layout.Rigid(func() {
+			page.progressStatusRow(gtx, uniform)
+		}),
+		layout.Rigid(func() {
+			page.walletSyncRow(gtx, uniform)
+		}),
+	)
+}
+
+// syncDormantContent lays out sync status content when the wallet is synced or not connected
+func (page *Overview) syncDormantContent(gtx *layout.Context, uniform layout.Inset) {
+	page.column.Layout(gtx,
+		layout.Rigid(func() {
+			page.endToEndRow(gtx, uniform, page.latestBlockTitle, page.latestBlock)
+		}),
+	)
 }
 
 // endToEndRow layouts out its content on both ends of its horizontal layout.

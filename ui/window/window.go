@@ -175,6 +175,10 @@ func (win Window) updateHeaderFetchProgress(resp wallet.SyncHeadersFetchProgress
 	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
 	syncState.TotalSteps = wallet.TotalSyncSteps
 	syncState.Steps = wallet.FetchHeadersStep
+	syncState.CurrentBlockHeight = resp.Progress.CurrentHeaderHeight
+	// update wallet state when new headers are fetched
+	win.wallet.GetMultiWalletInfo(2)
+	fmt.Printf("HEADER fetch progress triggered!\n \n")
 }
 
 // updateSyncProgress updates escan Header Progress in the SyncStatus state
