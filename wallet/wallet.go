@@ -58,9 +58,17 @@ func (wal *Wallet) LoadWallets() {
 		}
 
 		wal.multi = multiWal
-		err = wal.multi.AddSyncProgressListener(&progressListener{
+		l := &listener{
 			Send: wal.Send,
-		}, syncID)
+		}
+		err = wal.multi.AddSyncProgressListener(l, syncID)
+		if err != nil {
+			resp.Err = err
+			send <- resp
+			return
+		}
+
+		err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
 		if err != nil {
 			resp.Err = err
 			send <- resp
