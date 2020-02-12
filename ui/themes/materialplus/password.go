@@ -51,8 +51,7 @@ type PasswordAndPin struct {
 	nextButton         *widget.Button
 	nextButtonMaterial material.Button
 
-	createErrorLabel material.Label
-	errorLabel       material.Label
+	errorLabel material.Label
 }
 
 const (

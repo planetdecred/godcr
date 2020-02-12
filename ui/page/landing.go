@@ -155,8 +155,6 @@ func (pg *Landing) drawPasswordAndPinModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, func() {
 		pg.passwordAndPinModal.Draw(gtx, pg.createFunc, pg.cancelFunc)
 	})
-
-	return
 }
 
 func (pg *Landing) createFunc(password string, passType int32) {
