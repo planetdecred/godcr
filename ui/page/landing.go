@@ -1,8 +1,6 @@
 package page
 
 import (
-	"fmt"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -65,7 +63,7 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 		func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 			if pg.createWdg.Clicked(gtx) {
-				fmt.Println("ButtonClicked")
+				log.Debugf("{%s} Create Btn clicked", LandingID)
 				// res = EventNav {
 				// 	Current: LandingID,
 				// 	Next: CreateID,
@@ -75,12 +73,20 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 		},
 		func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			if pg.restoreWdg.Clicked(gtx) {
+				log.Debugf("{%s} Restore Btn clicked", LandingID)
+				// res = EventNav {
+				// 	Current: LandingID,
+				// 	Next: CreateID,
+				// }
+			}
 			pg.restoreBtn.Layout(gtx, pg.restoreWdg)
 		},
 		func() {
 			if walletInfo.LoadedWallets != 0 {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				if pg.walletsWdg.Clicked(gtx) {
+					log.Debugf("{%s} Wallets Btn clicked", LandingID)
 					res = EventNav{
 						Current: LandingID,
 						Next:    WalletsID,

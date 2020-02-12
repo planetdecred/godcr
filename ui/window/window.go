@@ -2,6 +2,7 @@ package window
 
 import (
 	"fmt"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/io/system"
@@ -70,7 +71,6 @@ func (win *Window) Loop(shutdown chan int) {
 			switch evt := e.(type) {
 			case page.EventNav:
 				win.current = evt.Next
-
 			case error:
 				// TODO: display error
 			}
@@ -96,16 +96,18 @@ func (win *Window) Loop(shutdown chan int) {
 				close(shutdown)
 				return
 			case system.FrameEvent:
-				//fmt.Println("Frame")
 				win.gtx.Reset(evt.Config, evt.Size)
-				if pageEvt := win.pages[win.current].Draw(win.gtx); pageEvt != nil {
+				start := time.Now()
+				pageEvt := win.pages[win.current].Draw(win.gtx)
+				log.Tracef("Page {%s} rendered in %v", win.current, time.Since(start))
+				if pageEvt != nil {
 					win.uiEvents <- pageEvt
 				}
 				evt.Frame(win.gtx.Ops)
 			case nil:
 				// Ignore
 			default:
-				//fmt.Printf("Unhandled window event %+v\n", e)
+				log.Tracef("Unhandled window event %+v\n", e)
 			}
 		}
 	}

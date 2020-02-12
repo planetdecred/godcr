@@ -12,6 +12,7 @@ import (
 
 	"github.com/markbates/pkger"
 
+	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/ui/window"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -23,24 +24,29 @@ func main() {
 		fmt.Printf("Error: %s\n", err.Error())
 		return
 	}
-	fmt.Printf("godcr v%s\n", Version())
 
-	source, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
+	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
+	sans, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
 	if err != nil {
-		fmt.Println("Failed to load font")
+		log.Warn("Failed to load font Source Sans Pro. Using gofont")
 		gofont.Register()
 	} else {
-		stat, err := source.Stat()
+		stat, err := sans.Stat()
 		if err != nil {
-			fmt.Println(err)
+			log.Warn(err)
 		}
 		bytes := make([]byte, stat.Size())
-		source.Read(bytes)
+		sans.Read(bytes)
 		fnt, err := opentype.Parse(bytes)
 		if err != nil {
-			fmt.Println(err)
+			log.Warn(err)
 		}
-		font.Register(text.Font{}, fnt)
+		if fnt != nil {
+			font.Register(text.Font{}, fnt)
+		} else {
+			log.Warn("Failed to load font Source Sans Pro. Using gofont")
+			gofont.Register()
+		}
 	}
 
 	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response))
@@ -60,6 +66,7 @@ func main() {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
 	}
+
 	// Start the ui frontend
 	// Does not need to be added to the WaitGroup, app.Main() handles that
 	go win.Loop(shutdown)
