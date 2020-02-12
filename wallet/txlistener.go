@@ -1,6 +1,6 @@
 package wallet
 
-// NewTransaction is sent when a new transaction is recieved.
+// NewTransaction is sent when a new transaction is received.
 type NewTransaction string
 
 // NewBlock is sent when a block is attached to the multiwallet.
