@@ -18,6 +18,8 @@ const (
 	walletStatusWaiting = "waiting for other wallets"
 	walletStatusSyncing = "syncing..."
 	walletStatusSynced  = "synced"
+
+	ErrWalletIDNotFound = "wallet ID not found"
 )
 
 func Balance(balance int64) string {
@@ -125,4 +127,14 @@ func truncateTime(duration string, place int) string {
 		return durationSlice[0] + durationCharacter
 	}
 	return durationSlice[0] + "." + secondsDecimals[0:place] + durationCharacter
+}
+
+// WalletIDFromName gets the id of a wallet by using its name
+func WalletNameFromID(id int, walletInfo []wallet.InfoShort) (string, error) {
+	for _, info := range walletInfo {
+		if info.ID == id {
+			return info.Name, nil
+		}
+	}
+	return "", fmt.Errorf(ErrWalletIDNotFound)
 }

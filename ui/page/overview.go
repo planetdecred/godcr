@@ -31,7 +31,6 @@ type Overview struct {
 	statusTitle         material.Label
 	latestBlockTitle    material.Label
 	latestBlock         material.Label
-	latestBlockTime     material.Label
 	syncStatus          material.Label
 	onlineStatus        material.Label
 	syncButton          material.Button
@@ -50,7 +49,7 @@ type Overview struct {
 	walletSyncBoxes            []func()
 
 	transactionColumnTitle material.Label
-	transactionWallet	   material.Label
+	noTransaction          material.Label
 
 	column         layout.Flex
 	columnMargin   layout.Inset
@@ -105,11 +104,11 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.subBalance = theme.H6("")
 	page.statusTitle = theme.Caption("Wallet Status")
 	page.syncStatus = theme.H6("Syncing...")
-	page.onlineStatus = theme.Caption("Online")
+	page.onlineStatus = theme.Body1(" ")
 	page.syncButtonWidget = new(widget.Button)
 	page.syncButton = theme.Button("Cancel")
 	page.progressBar = theme.ProgressBar()
-	page.progressPercentage = theme.Caption("0%")
+	page.progressPercentage = theme.Body1("0%")
 	page.timeLeft = theme.Body1("0s left")
 	page.syncStatus = theme.H5("Syncing...")
 	page.syncSteps = theme.Caption("Step 0/0")
@@ -120,7 +119,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.walletSyncingProgressTitle = theme.Caption("Syncing progress")
 	page.walletSyncCard = widgets.NewCard()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
-	page.transactionWallet = theme.Caption("Default")
+	page.noTransaction = theme.Caption("no transactions")
 	page.syncButtonCard = widgets.NewCard()
 	page.latestBlockTitle = theme.Body1("Latest Block")
 	page.latestBlock = theme.Body1("")
@@ -137,6 +136,8 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.walletSyncingProgressTitle.Color = values.TextGray
 	page.walletHeaderFetchedTitle.Color = values.TextGray
 	page.connectedPeersTitle.Color = values.TextGray
+	page.noTransaction.Color = values.TextGray
+	page.statusTitle.Color = values.TextGray
 }
 
 // Draw adds all the widgets to the stored layout context.
@@ -192,6 +193,7 @@ func (page *Overview) updateSyncData() {
 	}
 }
 
+// update
 func (page *Overview) updateSyncProgressData() {
 	if page.checkState(StateSyncStatus) {
 		page.walletSyncStatus = page.states[StateSyncStatus].(*wallet.SyncStatus)
@@ -283,21 +285,34 @@ func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 	var transactionRows []func()
 	if len(page.recentTransactions) > 0 {
 		for _, txn := range page.recentTransactions {
-			txn := transactionWidgets{
+			txnWidgets := transactionWidgets{
 				wallet:      page.theme.Body1(""),
 				balance:     txn.Amount,
 				mainBalance: page.theme.Body1(""),
-				subBalance:  page.theme.Body1(""),
-				date:        page.theme.Body1(fmt.Sprintf("%v", dcrlibwallet.ExtractDateOrTime(txn.Timestamp))),
-				status:      page.theme.Body1(helper.TransactionStatus(page.walletInfo.BestBlockHeight, txn.BlockHeight)),
+				subBalance:  page.theme.Caption(""),
+				date: page.theme.Body1(fmt.Sprintf("%v",
+					dcrlibwallet.ExtractDateOrTime(txn.Timestamp))),
+				status: page.theme.Body1(helper.TransactionStatus(page.walletInfo.BestBlockHeight,
+					txn.BlockHeight)),
 			}
+			walletName, err := helper.WalletNameFromID(txn.WalletID, page.walletInfo.Wallets)
+			if err != nil {
+				fmt.Printf("%v \n", err.Error())
+			} else {
+				txnWidgets.wallet.Text = walletName
+			}
+
 			transactionRows = append(transactionRows, func() {
-				page.recentTransactionRow(gtx, txn)
+				page.recentTransactionRow(gtx, txnWidgets)
 			})
 		}
 	} else {
 		transactionRows = append(transactionRows, func() {
-
+			page.row.Layout(gtx, layout.Flexed(values.EntireSpace, func() {
+				layout.Align(layout.Center).Layout(gtx, func() {
+					page.noTransaction.Layout(gtx)
+				})
+			}))
 		})
 	}
 
@@ -329,7 +344,7 @@ func (page *Overview) recentTransactionRow(gtx *layout.Context, txn transactionW
 				page.row.Layout(gtx,
 					layout.Rigid(func() {
 						margin.Layout(gtx, func() {
-							page.transactionWallet.Layout(gtx)
+							txn.wallet.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func() {

@@ -23,6 +23,7 @@ type MultiWalletInfo struct {
 
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
+	ID              int
 	Name     string
 	Balance  int64
 	Accounts []int32
