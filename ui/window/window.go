@@ -86,12 +86,6 @@ func (win *Window) Loop(shutdown chan int) {
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
-			case wallet.SyncStarted:
-				win.walletInfo.Synced = false
-				win.walletInfo.Syncing = true
-			case wallet.SyncCompleted:
-				win.walletInfo.Synced = true
-				win.walletInfo.Syncing = false
 			default:
 				win.updateState(e.Resp)
 			}
