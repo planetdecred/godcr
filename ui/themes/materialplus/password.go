@@ -214,7 +214,7 @@ func (p *PasswordAndPin) Draw(gtx *layout.Context, createFunc func(string, int32
 	}
 
 	for p.cancelButton.Clicked(gtx) {
-		p.reset()
+		p.Reset()
 		cancelFunc()
 	}
 
@@ -288,7 +288,8 @@ func (p *PasswordAndPin) bothPinsMatch() bool {
 	return p.pinTabWidgets.confirmEditor.Text() == p.pinTabWidgets.spendingEditor.Text()
 }
 
-func (p *PasswordAndPin) reset() {
+// Reset empties the contents of the password and pin forms
+func (p *PasswordAndPin) Reset() {
 	p.passwordTabWidgets.spendingEditor.SetText("")
 	p.passwordTabWidgets.confirmEditor.SetText("")
 	p.pinTabWidgets.spendingEditor.SetText("")

@@ -75,7 +75,7 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
 func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
-	go pg.updateValues()
+	pg.updateValues()
 
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
@@ -142,13 +142,21 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 		pg.drawPasswordAndPinModal(gtx)
 	}
 
-	return pg.walletCreationSuccessEvent
+	ev := pg.walletCreationSuccessEvent
+	if pg.walletCreationSuccessEvent != nil {
+		pg.walletCreationSuccessEvent = nil
+	}
+
+	return ev
 }
 
 func (pg *Landing) updateValues() {
 	if pg.isCreatingWallet {
 		pg.createBtn.Text = "Creating wallet..."
 		pg.createBtn.Background = ui.GrayColor
+	} else {
+		pg.createBtn.Text = "Create wallet"
+		pg.createBtn.Background = ui.LightBlueColor
 	}
 }
 
@@ -166,15 +174,28 @@ func (pg *Landing) createFunc(password string, passType int32) {
 		pg.wal.CreateWallet(password, passType)
 		res := <-pg.wal.Send
 
-		pg.isCreatingWallet = false
-
 		if res.Err != nil {
+			pg.isCreatingWallet = false
 			pg.errorLabel.Text = fmt.Sprintf("error creating wallet: %s", res.Err.Error())
-		} else {
-			pg.walletCreationSuccessEvent = EventNav{
-				Current: LandingID,
-				Next:    WalletsID,
-			}
+			return
+		}
+
+		// reset password and pin form
+		pg.passwordAndPinModal.Reset()
+
+		// reload wallets
+		pg.createBtn.Text = "Reloading wallets..."
+		pg.wal.Reload()
+		res = <-pg.wal.Send
+		pg.isCreatingWallet = false
+		if res.Err != nil {
+			pg.errorLabel.Text = fmt.Sprintf("error reloading wallets: %s", res.Err.Error())
+			return
+		}
+
+		pg.walletCreationSuccessEvent = EventNav{
+			Current: LandingID,
+			Next:    WalletsID,
 		}
 	}()
 }
