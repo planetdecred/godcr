@@ -89,6 +89,10 @@ func (win *Window) Loop(shutdown chan int) {
 			default:
 				win.updateState(e.Resp)
 			}
+			// set error if it exists
+			if e.Err != nil {
+				win.states[page.StateError] = e.Err
+			}
 			win.window.Invalidate()
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
@@ -123,6 +127,8 @@ func (win *Window) updateState(t interface{}) {
 		win.updateSyncStatus(false, false)
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
+	case *wallet.CreatedSeed:
+		win.states[page.StateWalletCreated] = t
 	}
 }
 

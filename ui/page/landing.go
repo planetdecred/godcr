@@ -1,7 +1,7 @@
 package page
 
 import (
-	"fmt"
+	//"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -22,10 +22,10 @@ const LandingID = "landing"
 // It should only be should shown if the app launches
 // and cannot find any wallets.
 type Landing struct {
-	inset      layout.Inset
-	container  layout.List
-	heading    material.Label
-	errorLabel material.Label
+	inset            layout.Inset
+	container        layout.List
+	heading          material.Label
+	createErrorLabel material.Label
 
 	restoreBtn material.Button
 	restoreWdg *widget.Button
@@ -49,8 +49,8 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.heading = theme.Label(units.Label, "Welcome to decred")
 	pg.heading.Alignment = text.Middle
 
-	pg.errorLabel = theme.Body2("")
-	pg.errorLabel.Color = ui.DangerColor
+	pg.createErrorLabel = theme.Body2("")
+	pg.createErrorLabel.Color = ui.DangerColor
 
 	pg.createBtn = theme.Button("Create Wallet")
 	pg.createWdg = new(widget.Button)
@@ -75,7 +75,7 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
 func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
-	pg.updateValues()
+	pg.watchForStatesUpdate()
 
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
@@ -86,8 +86,8 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 		func() {
 			topInset := float32(0)
 
-			if pg.errorLabel.Text != "" {
-				pg.errorLabel.Layout(gtx)
+			if pg.createErrorLabel.Text != "" {
+				pg.createErrorLabel.Layout(gtx)
 				topInset += 20
 			}
 
@@ -120,6 +120,7 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				for pg.walletsWdg.Clicked(gtx) {
 					if !pg.isCreatingWallet {
+						pg.reset()
 						res = EventNav{
 							Current: LandingID,
 							Next:    WalletsID,
@@ -150,13 +151,26 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 	return ev
 }
 
-func (pg *Landing) updateValues() {
-	if pg.isCreatingWallet {
-		pg.createBtn.Text = "Creating wallet..."
-		pg.createBtn.Background = ui.GrayColor
-	} else {
-		pg.createBtn.Text = "Create wallet"
-		pg.createBtn.Background = ui.LightBlueColor
+func (pg *Landing) watchForStatesUpdate() {
+	err := pg.states[StateError]
+	created := pg.states[StateWalletCreated]
+
+	if err == nil && created == nil {
+		return
+	}
+
+	pg.reset()
+
+	if created != nil {
+		delete(pg.states, StateWalletCreated)
+
+		pg.walletCreationSuccessEvent = EventNav{
+			Current: LandingID,
+			Next:    WalletsID,
+		}
+	} else if err != nil {
+		pg.createErrorLabel.Text = err.(error).Error()
+		delete(pg.states, StateError)
 	}
 }
 
@@ -167,39 +181,24 @@ func (pg *Landing) drawPasswordAndPinModal(gtx *layout.Context) {
 }
 
 func (pg *Landing) createFunc(password string, passType int32) {
+	pg.reset()
+
+	pg.createBtn.Text = "Creating wallet..."
+	pg.createBtn.Background = ui.GrayColor
+
 	pg.isCreatingWallet = true
 	pg.isShowingPasswordAndPinModal = false
 
-	go func() {
-		pg.wal.CreateWallet(password, passType)
-		res := <-pg.wal.Send
-
-		if res.Err != nil {
-			pg.isCreatingWallet = false
-			pg.errorLabel.Text = fmt.Sprintf("error creating wallet: %s", res.Err.Error())
-			return
-		}
-
-		// reset password and pin form
-		pg.passwordAndPinModal.Reset()
-
-		// reload wallets
-		pg.createBtn.Text = "Reloading wallets..."
-		pg.wal.Reload()
-		res = <-pg.wal.Send
-		pg.isCreatingWallet = false
-		if res.Err != nil {
-			pg.errorLabel.Text = fmt.Sprintf("error reloading wallets: %s", res.Err.Error())
-			return
-		}
-
-		pg.walletCreationSuccessEvent = EventNav{
-			Current: LandingID,
-			Next:    WalletsID,
-		}
-	}()
+	pg.wal.CreateWallet(password, passType)
 }
 
 func (pg *Landing) cancelFunc() {
 	pg.isShowingPasswordAndPinModal = false
+}
+
+func (pg *Landing) reset() {
+	pg.isCreatingWallet = false
+	pg.createBtn.Text = "Create wallet"
+	pg.createBtn.Background = ui.LightBlueColor
+	pg.createErrorLabel.Text = ""
 }
