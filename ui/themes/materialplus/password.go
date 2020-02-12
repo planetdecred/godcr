@@ -260,18 +260,20 @@ func (p *PasswordAndPin) validate(currentTabID int32) bool {
 	p.errorLabel.Text = ""
 
 	if currentTabID == passwordTabID {
-		if p.passwordTabWidgets.spendingEditor.Text() != "" && p.passwordTabWidgets.confirmEditor.Text() != "" {
+		if p.passwordTabWidgets.spendingEditor.Len() > 0 && p.passwordTabWidgets.confirmEditor.Len() > 0 {
 			if !p.bothPasswordsMatch() {
 				p.errorLabel.Text = "Both passwords do not match"
 				return false
 			}
+		} else {
+			return false
 		}
 	} else {
-		if p.pinTabWidgets.spendingEditor.Len() > 0 && p.pinTabWidgets.confirmEditor.Len() > 0 {
-			if !p.bothPinsMatch() {
-				p.errorLabel.Text = "Both pins do not match"
-				return false
-			}
+		if p.pinTabWidgets.confirmEditor.Len() == 0 || p.pinTabWidgets.spendingEditor.Len() == 0 {
+			return false
+		} else if !p.bothPinsMatch() {
+			p.errorLabel.Text = "Both pins do not match"
+			return false
 		}
 	}
 

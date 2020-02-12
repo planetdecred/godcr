@@ -161,20 +161,21 @@ func (pg *Landing) createFunc(password string, passType int32) {
 	pg.isCreatingWallet = true
 	pg.isShowingPasswordAndPinModal = false
 
-	go func(pwd string, pType int32) {
-		pg.wal.CreateWallet(pwd, pType)
+	go func() {
+		pg.wal.CreateWallet(password, passType)
 		res := <-pg.wal.Send
+
+		pg.isCreatingWallet = false
+
 		if res.Err != nil {
 			pg.errorLabel.Text = fmt.Sprintf("error creating wallet: %s", res.Err.Error())
 		} else {
-			pg.isCreatingWallet = false
-
 			pg.walletCreationSuccessEvent = EventNav{
 				Current: LandingID,
 				Next:    WalletsID,
 			}
 		}
-	}(password, passType)
+	}()
 }
 
 func (pg *Landing) cancelFunc() {
