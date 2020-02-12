@@ -137,7 +137,7 @@ func (win *Window) updateState(t interface{}) {
 		win.updateRescanHeaderProgress(t)
 	case wallet.SyncAddressDiscoveryProgress:
 		win.updateAddressDiscoveryProgress(t)
-	case wallet.Transactions:
+	case *wallet.Transactions:
 		win.updateTransactions(t)
 		// todo
 		win.updateSyncProgress(t)

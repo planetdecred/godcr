@@ -2,8 +2,6 @@ package helper
 
 import (
 	"fmt"
-	"image"
-	"image/color"
 	"strconv"
 	"strings"
 	"time"
@@ -11,10 +9,6 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/wallet"
-
-	"gioui.org/f32"
-	"gioui.org/layout"
-	"gioui.org/op/paint"
 )
 
 const (
