@@ -17,4 +17,7 @@ var (
 
 	// Transparent is the RGBA value for no color
 	ButtonGray = color.RGBA{196, 203, 210, 255}
+
+	// TextGray is the RGBA value for light texts on the app
+	TextGray = color.RGBA{137, 151, 165, 255}
 )

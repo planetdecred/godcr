@@ -50,12 +50,7 @@ type Overview struct {
 	walletSyncBoxes            []func()
 
 	transactionColumnTitle material.Label
-	transactionIcon        material.Label
-	transactionMainAmount  material.Label
-	transactionSubAmount   material.Label
-	transactionWallet      material.Label
-	transactionStatus      material.Label
-	transactionDate        material.Label
+	transactionWallet	   material.Label
 
 	column         layout.Flex
 	columnMargin   layout.Inset
@@ -115,24 +110,20 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.syncButton = theme.Button("Cancel")
 	page.progressBar = theme.ProgressBar()
 	page.progressPercentage = theme.Caption("0%")
-	page.timeLeft = theme.Caption("0s left")
+	page.timeLeft = theme.Body1("0s left")
 	page.syncStatus = theme.H5("Syncing...")
 	page.syncSteps = theme.Caption("Step 0/0")
-	page.headersFetched = theme.Caption("Fetching block headers. 0%")
+	page.headersFetched = theme.Body1("Fetching block headers. 0%")
 	page.connectedPeersTitle = theme.Caption("Connected peers count")
-	page.connectedPeers = theme.Caption("0")
+	page.connectedPeers = theme.Body1("0")
 	page.walletHeaderFetchedTitle = theme.Caption("Block header fetched")
-	page.walletSyncingProgressTitle = theme.Caption("SyncingProgress")
+	page.walletSyncingProgressTitle = theme.Caption("Syncing progress")
 	page.walletSyncCard = widgets.NewCard()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
-	page.transactionMainAmount = theme.Label(units.TransactionBalanceMain, "")
-	page.transactionSubAmount = theme.Label(units.TransactionBalanceSub, "")
 	page.transactionWallet = theme.Caption("Default")
-	page.transactionDate = theme.Caption("11 Jan 2020, 13:24")
-	page.transactionStatus = theme.Caption("Pending")
 	page.syncButtonCard = widgets.NewCard()
-	page.latestBlockTitle = theme.Caption("Latest Block")
-	page.latestBlock = theme.Caption("")
+	page.latestBlockTitle = theme.Body1("Latest Block")
+	page.latestBlock = theme.Body1("")
 
 	page.walletSyncDetails = walletSyncDetails{
 		name:               theme.Caption("wallet-1"),
@@ -140,6 +131,12 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 		blockHeaderFetched: theme.Caption("100 of 164864"),
 		syncingProgress:    theme.Caption("320 days behind"),
 	}
+
+	page.syncSteps.Color = values.TextGray
+	page.latestBlockTitle.Color = values.TextGray
+	page.walletSyncingProgressTitle.Color = values.TextGray
+	page.walletHeaderFetchedTitle.Color = values.TextGray
+	page.connectedPeersTitle.Color = values.TextGray
 }
 
 // Draw adds all the widgets to the stored layout context.
@@ -287,12 +284,12 @@ func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 	if len(page.recentTransactions) > 0 {
 		for _, txn := range page.recentTransactions {
 			txn := transactionWidgets{
-				wallet:      page.theme.Caption(""),
+				wallet:      page.theme.Body1(""),
 				balance:     txn.Amount,
-				mainBalance: page.theme.Caption(""),
-				subBalance:  page.theme.Caption(""),
-				date:        page.theme.Caption(fmt.Sprintf("%v", dcrlibwallet.ExtractDateOrTime(txn.Timestamp))),
-				status:      page.theme.Caption(helper.TransactionStatus(page.walletInfo.BestBlockHeight, txn.BlockHeight)),
+				mainBalance: page.theme.Body1(""),
+				subBalance:  page.theme.Body1(""),
+				date:        page.theme.Body1(fmt.Sprintf("%v", dcrlibwallet.ExtractDateOrTime(txn.Timestamp))),
+				status:      page.theme.Body1(helper.TransactionStatus(page.walletInfo.BestBlockHeight, txn.BlockHeight)),
 			}
 			transactionRows = append(transactionRows, func() {
 				page.recentTransactionRow(gtx, txn)
