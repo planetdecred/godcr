@@ -13,7 +13,6 @@ import (
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr-gio/ui"
-	"github.com/raedahgroup/godcr-gio/ui/helper"
 )
 
 // SelectItem represents a select option
@@ -110,7 +109,7 @@ func (s *Select) layoutItem(gtx *layout.Context, item *SelectItem) {
 				SE: rounding,
 				SW: rounding,
 			}.Op(gtx.Ops).Add(gtx.Ops)
-			helper.Fill(gtx, bgcol)
+			Fill(gtx, bgcol, gtx.Constraints.Width.Min, gtx.Constraints.Height.Min)
 		}),
 		layout.Stacked(func() {
 			gtx.Constraints.Width.Min = 120
