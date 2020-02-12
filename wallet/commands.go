@@ -173,9 +173,9 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			completeTotal += acctBalance
 			infos[i] = InfoShort{
 				ID: 			 wall.ID,
-				Name:     wall.Name,
-				Balance:  acctBalance,
-				Accounts: accts,
+				Name:            wall.Name,
+				Balance:         acctBalance,
+				Accounts: 		 accts,
 				BestBlockHeight: wall.GetBestBlock(),
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
 				IsWaiting:       wall.IsWaiting(),
