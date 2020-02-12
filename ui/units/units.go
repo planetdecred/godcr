@@ -7,7 +7,8 @@ import (
 
 var (
 	// Label is the unit for the app labels
-	Label = unit.Dp(50)
+	Label     = unit.Dp(50)
+	SmallText = unit.Dp(25)
 
 	// FlexInset is the unit for flex insets
 	FlexInset = unit.Dp(50)

@@ -12,6 +12,7 @@ import (
 
 	"github.com/markbates/pkger"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -32,16 +33,11 @@ func (pg *Loading) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[
 		Axis: layout.Vertical,
 	}
 
-	pg.loadingLabel = theme.Label(unit.Dp(16), "Loading Wallets....")
-	pg.loadingLabel.Font.Size = unit.Px(48)
+	pg.loadingLabel = theme.Label(units.SmallText, "Loading Wallets....")
 	pg.loadingLabel.Alignment = text.Middle
-	pg.loadingLabel.Font.Weight = text.Bold
 
-	pg.testnetLabel = theme.Label(unit.Dp(16), "testnet")
-	pg.testnetLabel.Font.Weight = text.Bold
-	pg.testnetLabel.Font.Size = unit.Px(50)
+	pg.testnetLabel = theme.Label(units.SmallText, "testnet")
 	pg.testnetLabel.Alignment = text.Middle
-	pg.testnetLabel.Font.Weight = text.Bold
 
 	file, err := pkger.Open("/assets/icons/decred-loader.png")
 	if err != nil {
@@ -72,7 +68,7 @@ func (pg *Loading) Draw(gtx *layout.Context) (res interface{}) {
 			pg.testnetLabel.Layout(gtx)
 		},
 		func() {
-			gtx.Dimensions.Size.Y = 20
+			layout.Inset{Bottom: unit.Dp(20)}.Layout(gtx, func() {})
 		},
 		func() {
 			pg.loadingLabel.Layout(gtx)
