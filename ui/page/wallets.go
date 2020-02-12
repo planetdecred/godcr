@@ -73,6 +73,7 @@ func (pg *Wallets) Draw(gtx *layout.Context) interface{} {
 	}))
 
 	if pg.addWalletBtn.Clicked(gtx) {
+		log.Debugf("{%s} AddWallet Btn Clicked", WalletsID)
 		return EventNav{
 			Current: WalletsID,
 			Next:    LandingID,
