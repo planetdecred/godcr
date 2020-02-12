@@ -34,6 +34,8 @@ type ImageButton struct {
 }
 
 func NewImageButton(img *material.Image, text string) ImageButton {
+	img.Scale = 0.2
+
 	return ImageButton{
 		Text: text,
 		Font: gioText.Font{
@@ -79,7 +81,6 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 
 			icon := layout.Rigid(func() {
 				layout.Inset{Top: b.VPadding, Left: b.HPadding, Bottom: b.VPadding, Right: unit.Dp(buttonTextSpace / 2)}.Layout(gtx, func() {
-					b.Src.Scale = 0.2
 					b.Src.Layout(gtx)
 				})
 			})
@@ -87,9 +88,8 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 			label := layout.Rigid(func() {
 				layout.Inset{Top: b.VPadding, Right: b.HPadding, Bottom: b.VPadding, Left: unit.Dp(buttonTextSpace / 2)}.Layout(gtx, func() {
 					paint.ColorOp{Color: b.Color}.Add(gtx.Ops)
-					widget.Label{Alignment: gioText.Start}.Layout(gtx, b.shaper, b.Font, b.Text)
+					widget.Label{}.Layout(gtx, b.shaper, b.Font, b.Text)
 				})
-
 			})
 
 			if b.Src != nil {

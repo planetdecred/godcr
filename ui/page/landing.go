@@ -1,6 +1,7 @@
 package page
 
 import (
+	"image/color"
 	"image/png"
 
 	"gioui.org/layout"
@@ -8,8 +9,6 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
-
-	"github.com/raedahgroup/godcr-gio/ui/units"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -19,7 +18,15 @@ import (
 
 	"github.com/markbates/pkger"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+<<<<<<< HEAD
 	"github.com/raedahgroup/godcr-gio/ui/units"
+=======
+<<<<<<< HEAD
+=======
+	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/ui/widgets"
+>>>>>>> add back button
+>>>>>>> add back button
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -30,6 +37,7 @@ const LandingID = "landing"
 // It should only be should shown if the app launches
 // and cannot find any wallets.
 type Landing struct {
+<<<<<<< HEAD
 	inset            layout.Inset
 	container        layout.List
 	heading          material.Label
@@ -56,6 +64,32 @@ type Landing struct {
 func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[string]interface{}) {
 	pg.heading = theme.Label(units.Label, "Welcome to decred")
 	pg.heading.Alignment = text.Middle
+=======
+	container    *layout.List
+	image        material.Image
+	welcomeLabel material.Label
+
+	createButton  *widget.Button
+	restoreButton *widget.Button
+
+	addIcon     material.Image
+	restoreIcon material.Image
+	backIcon    material.Image
+	walletExits bool
+}
+
+// Init adds a heading and two buttons.
+func (pg *Landing) Init(theme *materialplus.Theme, wallet *wallet.Wallet, states map[string]interface{}) {
+	file, err := pkger.Open("/assets/icons/decred.png")
+	if err != nil {
+		log.Println(err)
+	}
+	image, err := png.Decode(file)
+	if err != nil {
+		log.Println(err)
+	}
+	pg.image = theme.Image(paint.NewImageOp(image))
+>>>>>>> add back button
 
 	pg.createErrorLabel = theme.Body2("")
 	pg.createErrorLabel.Color = theme.Danger
@@ -73,6 +107,7 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	}
 	pg.addIcon = theme.Image(paint.NewImageOp(image))
 
+<<<<<<< HEAD
 	pg.walletsBtn = theme.Button("Back to Wallets")
 	pg.walletsWdg = new(widget.Button)
 
@@ -85,6 +120,30 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.states = states
 	pg.theme = theme
 	pg.wal = wal
+=======
+	file, err = pkger.Open("/assets/icons/restore.png")
+	if err != nil {
+		log.Println(err)
+	}
+	image, err = png.Decode(file)
+	if err != nil {
+		log.Println(err)
+	}
+	pg.restoreIcon = theme.Image(paint.NewImageOp(image))
+
+	file, err = pkger.Open("/assets/icons/back.png")
+	if err != nil {
+		log.Println(err)
+	}
+	image, err = png.Decode(file)
+	if err != nil {
+		log.Println(err)
+	}
+	pg.backIcon = theme.Image(paint.NewImageOp(image))
+	pg.container = &layout.List{
+		Axis: layout.Vertical,
+	}
+>>>>>>> add back button
 }
 
 // Draw draws the page's to the given layout context.
@@ -99,6 +158,14 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
+		func() {
+			imgBt := widgets.NewImageButton(&pg.backIcon, "")
+			imgBt.Background = color.RGBA{255, 255, 255, 255}
+			imgBt.Src.Scale = 0.5
+			imgBt.HPadding = unit.Dp(0)
+			imgBt.Layout(gtx, pg.createButton, 20)
+		},
+
 		func() {
 			layout.Inset{Bottom: unit.Dp(16)}.Layout(gtx, func() {})
 		},
@@ -155,6 +222,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 		},
 	}
 
+<<<<<<< HEAD
 	pg.container.Layout(gtx, len(widgets),
 		layout.ListElement(func(i int) {
 			layout.UniformInset(units.FlexInset).Layout(gtx, widgets[i])
@@ -195,6 +263,10 @@ func (pg *Landing) checkForStatesUpdate() {
 func (pg *Landing) drawPasswordModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, func() {
 		pg.passwordModal.Draw(gtx, pg.confirm, pg.cancel)
+=======
+	pg.container.Layout(gtx, len(widgets), func(i int) {
+		layout.Inset{Tozp: unit.Dp(8), Left: unit.Dp(24), Right: unit.Dp(24), Bottom: unit.Dp(8)}.Layout(gtx, widgets[i])
+>>>>>>> add back button
 	})
 }
 

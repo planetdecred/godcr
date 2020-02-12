@@ -34,7 +34,7 @@ type Window struct {
 // than once.
 func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win := new(Window)
-	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"), app.Size(unit.Dp(550), unit.Dp(720)))
+	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"), app.Size(unit.Dp(550), unit.Dp(800)))
 	win.theme = materialplus.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 
