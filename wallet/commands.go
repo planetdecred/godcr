@@ -211,3 +211,13 @@ func (wal *Wallet) IsAddressValid(address string) (bool, error) {
 	}
 	return wall.IsAddressValid(address), nil
 }
+
+// StartSync starts the multiwallet SPV sync
+func (wal *Wallet) StartSync() error {
+	return wal.multi.SpvSync()
+}
+
+// CancelSync cancels the SPV sync
+func (wal *Wallet) CancelSync() {
+	go wal.multi.CancelSync()
+}

@@ -26,6 +26,9 @@ type Wallets struct {
 	addWalletWdg material.Button
 
 	states map[string]interface{}
+
+	syncBtn *widget.Button
+	syncWdg material.Button
 }
 
 // Init stores the theme and Wallet
@@ -38,6 +41,9 @@ func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.addWalletBtn = new(widget.Button)
 	pg.addWalletWdg = theme.Button("Add Wallet")
 
+	pg.syncBtn = new(widget.Button)
+	pg.syncWdg = theme.Button("Start sync")
+
 	pg.states = states
 }
 
@@ -49,6 +55,13 @@ func (pg *Wallets) Draw(gtx *layout.Context) interface{} {
 		return nil
 	}
 
+	if walletInfo.Synced {
+		pg.syncWdg.Text = "Synced"
+	} else if walletInfo.Syncing {
+		pg.syncWdg.Text = "Cancel Sync"
+	} else {
+		pg.syncWdg.Text = "Start Sync"
+	}
 	widgets := []func(){
 		func() {
 			pg.theme.Label(units.Label, "Wallets").Layout(gtx)
@@ -67,6 +80,9 @@ func (pg *Wallets) Draw(gtx *layout.Context) interface{} {
 		func() {
 			pg.addWalletWdg.Layout(gtx, pg.addWalletBtn)
 		},
+		func() {
+			pg.syncWdg.Layout(gtx, pg.syncBtn)
+		},
 	}
 	pg.list.Layout(gtx, len(widgets), layout.ListElement(func(i int) {
 		layout.UniformInset(units.FlexInset).Layout(gtx, widgets[i])
@@ -77,6 +93,21 @@ func (pg *Wallets) Draw(gtx *layout.Context) interface{} {
 		return EventNav{
 			Current: WalletsID,
 			Next:    LandingID,
+		}
+	}
+	if pg.syncBtn.Clicked(gtx) {
+		if !walletInfo.Synced {
+			log.Info("Starting sync")
+			if err := pg.wal.StartSync(); err != nil {
+				log.Error(err)
+				pg.syncWdg.Text = "Error starting sync"
+			} else {
+				pg.syncWdg.Text = "Cancel Sync"
+			}
+		}
+		if walletInfo.Syncing {
+			log.Info("Cancelling sync")
+			pg.wal.CancelSync()
 		}
 	}
 	return nil

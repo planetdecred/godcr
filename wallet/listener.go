@@ -4,7 +4,7 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
-type progressListener struct {
+type listener struct {
 	Send chan<- Response
 }
 
@@ -46,66 +46,66 @@ type SyncHeadersRescanProgress struct {
 	Progress *dcrlibwallet.HeadersRescanProgressReport
 }
 
-func (listener *progressListener) Debug(info *dcrlibwallet.DebugInfo) {
-	// Log Traces
+func (l *listener) Debug(info *dcrlibwallet.DebugInfo) {
+	log.Trace(info)
 }
 
-func (listener *progressListener) OnSyncStarted(restarted bool) {
-	listener.Send <- Response{
+func (l *listener) OnSyncStarted(restarted bool) {
+	l.Send <- Response{
 		Resp: SyncStarted{
 			WasRestarted: restarted,
 		},
 	}
 }
 
-func (listener *progressListener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
-	listener.Send <- Response{
+func (l *listener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
+	l.Send <- Response{
 		Resp: SyncPeersChanged{
 			ConnectedPeers: numberOfConnectedPeers,
 		},
 	}
 }
 
-func (listener *progressListener) OnHeadersFetchProgress(progress *dcrlibwallet.HeadersFetchProgressReport) {
-	listener.Send <- Response{
+func (l *listener) OnHeadersFetchProgress(progress *dcrlibwallet.HeadersFetchProgressReport) {
+	l.Send <- Response{
 		Resp: SyncHeadersFetchProgress{
 			Progress: progress,
 		},
 	}
 }
-func (listener *progressListener) OnAddressDiscoveryProgress(progress *dcrlibwallet.AddressDiscoveryProgressReport) {
-	listener.Send <- Response{
+func (l *listener) OnAddressDiscoveryProgress(progress *dcrlibwallet.AddressDiscoveryProgressReport) {
+	l.Send <- Response{
 		Resp: SyncAddressDiscoveryProgress{
 			Progress: progress,
 		},
 	}
 }
 
-func (listener *progressListener) OnHeadersRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
-	listener.Send <- Response{
+func (l *listener) OnHeadersRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
+	l.Send <- Response{
 		Resp: SyncHeadersRescanProgress{
 			Progress: progress,
 		},
 	}
 }
 
-func (listener *progressListener) OnSyncCompleted() {
-	listener.Send <- Response{
+func (l *listener) OnSyncCompleted() {
+	l.Send <- Response{
 		Resp: SyncCompleted{},
 	}
 }
 
-func (listener *progressListener) OnSyncCanceled(willRestart bool) {
-	listener.Send <- Response{
+func (l *listener) OnSyncCanceled(willRestart bool) {
+	l.Send <- Response{
 		Resp: SyncCanceled{
 			WillRestart: willRestart,
 		},
 	}
 }
 
-func (listener *progressListener) OnSyncEndedWithError(err error) {
+func (l *listener) OnSyncEndedWithError(err error) {
 	// todo: create custom sync error
-	listener.Send <- Response{
+	l.Send <- Response{
 		Resp: SyncEndedWithError{
 			Error: err,
 		},
