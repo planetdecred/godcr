@@ -1,7 +1,6 @@
 package page
 
 import (
-	//"fmt"
 	"image"
 	"strconv"
 
@@ -121,9 +120,9 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 	pg.remainingBalanceLabel = theme.Body1("Balance after send")
 
 	// error labels
-	pg.destinationAddressErrorLabel = theme.Caption("error")
+	pg.destinationAddressErrorLabel = theme.Caption("")
 	pg.destinationAddressErrorLabel.Color = ui.DangerColor
-	pg.amountErrorLabel = theme.Caption("error")
+	pg.amountErrorLabel = theme.Caption("")
 	pg.amountErrorLabel.Color = ui.DangerColor
 
 	// selected account labels
@@ -174,8 +173,8 @@ func (pg *Send) initValidationWidgets(theme *materialplus.Theme) {
 
 // Draw renders all of this page's widgets
 func (pg *Send) Draw(gtx *layout.Context) interface{} {
-	go pg.validate(false)
-	pg.updateValuesAndTx(gtx)
+	pg.validate(true)
+	pg.updateValues(gtx)
 
 	// set wallet options
 	if pg.wallets == nil {
@@ -328,20 +327,14 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 			})
 		},
 		func() {
-			hasPassedValidation := false
-
-			if pg.destinationAddressEditor.Text() != "" && pg.amountEditor.Text() != "" {
-				if pg.destinationAddressErrorLabel.Text == "" && pg.amountErrorLabel.Text == "" {
-					hasPassedValidation = true
+			for pg.nextButton.Clicked(gtx) {
+				if pg.validate(false) {
+					pg.isAccountModalOpen = true
 				}
 			}
 
-			for pg.nextButton.Clicked(gtx) {
-
-			}
-
 			btn := pg.theme.Button("Next")
-			if hasPassedValidation {
+			if pg.validate(true) {
 				btn.Background = ui.LightBlueColor
 			} else {
 				btn.Background = ui.GrayColor
@@ -426,93 +419,6 @@ func (pg *Send) drawAccountsModal(gtx *layout.Context) {
 			})
 		})
 	})
-}
-
-func (pg *Send) setDefaultSendAccount(wallets []wallet.InfoShort) {
-	pg.wallets = wallets
-
-	for i := range wallets {
-		if len(wallets[i].Accounts) == 0 {
-			continue
-		}
-
-		pg.setSelectedAccount(wallets[i], wallets[i].Accounts[0])
-		break
-	}
-}
-
-func (pg *Send) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account) {
-	pg.sendWalletNameLabel.Text = wallet.Name
-	pg.sendAccountNameLabel.Text = account.Name
-	pg.sendAccountSpendableBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
-}
-
-func (pg *Send) updateValuesAndTx(gtx *layout.Context) {
-	hasError := false
-	if pg.destinationAddressErrorLabel.Text != "" && pg.amountErrorLabel.Text != "" {
-		hasError = true
-	}
-
-	for range pg.destinationAddressEditor.Events(gtx) {
-		if !hasError {
-			pg.calculateTxFee(false)
-		}
-	}
-
-	for range pg.amountEditor.Events(gtx) {
-		if !hasError {
-			pg.calculateTxFee(false)
-		}
-	}
-}
-
-func (pg *Send) calculateTxFee(createNewTx bool) {
-	if createNewTx {
-		pg.createTransaction()
-	}
-	/**pg.transaction = pg.wallet.CreateTransaction(pg.selectedWalletID, pg.selectedAccountID, dcrlibwallet.DefaultRequiredConfirmations)
-	pg.transaction.AddSendDestination(pg.destinationAddressEditor.Text(), 0, false)
-
-	txFee, err := pg.transaction.EstimateFeeAndSize()
-	if err != nil {
-		//handle error
-		return
-	}**/
-}
-
-func (pg *Send) createTransaction() {
-	pg.wallet.CreateTransaction(pg.selectedWalletID, pg.selectedAccountID, dcrlibwallet.DefaultRequiredConfirmations)
-}
-
-func (pg *Send) validate(hasSubmitted bool) {
-	destinationAddress := pg.destinationAddressEditor.Text()
-	amount := pg.amountEditor.Text()
-
-	pg.destinationAddressErrorLabel.Text = ""
-	pg.amountErrorLabel.Text = ""
-
-	if hasSubmitted {
-		if destinationAddress == "" {
-			pg.destinationAddressErrorLabel.Text = "please enter a destination address"
-		}
-
-		if amount == "" {
-			pg.amountErrorLabel.Text = "please enter a send amount"
-		}
-	}
-
-	if destinationAddress != "" {
-		if isValid, _ := pg.wallet.IsAddressValid(destinationAddress); !isValid {
-			pg.destinationAddressErrorLabel.Text = "invalid address"
-		}
-	}
-
-	if amount != "" {
-		_, err := strconv.Atoi(amount)
-		if err != nil {
-			pg.amountErrorLabel.Text = "please enter a valid amount"
-		}
-	}
 }
 
 func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
@@ -671,4 +577,89 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 			})
 		})
 	})**/
+}
+
+func (pg *Send) setDefaultSendAccount(wallets []wallet.InfoShort) {
+	pg.wallets = wallets
+
+	for i := range wallets {
+		if len(wallets[i].Accounts) == 0 {
+			continue
+		}
+
+		pg.setSelectedAccount(wallets[i], wallets[i].Accounts[0])
+		break
+	}
+}
+
+func (pg *Send) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account) {
+	pg.sendWalletNameLabel.Text = wallet.Name
+	pg.sendAccountNameLabel.Text = account.Name
+	pg.sendAccountSpendableBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
+
+	// create a mew transaction everytime a new account is chosen
+	pg.wallet.CreateTransaction(wallet.ID, account.Number, dcrlibwallet.DefaultRequiredConfirmations)
+}
+
+func (pg *Send) validateDestinationAddress(ignoreEmpty bool) bool {
+	destinationAddress := pg.destinationAddressEditor.Text()
+	if !ignoreEmpty && destinationAddress == "" {
+		pg.destinationAddressErrorLabel.Text = "please enter a destination address"
+		return false
+	}
+
+	if destinationAddress != "" {
+		isValid, _ := pg.wallet.IsAddressValid(destinationAddress)
+		if !isValid {
+			pg.destinationAddressErrorLabel.Text = "invalid address"
+			return false
+		}
+	}
+
+	pg.destinationAddressErrorLabel.Text = ""
+	return true
+}
+
+func (pg *Send) validateAmount(ignoreEmpty bool) bool {
+	amount := pg.amountEditor.Text()
+	if !ignoreEmpty && amount == "" {
+		pg.amountErrorLabel.Text = "please enter a send amount"
+		return false
+	}
+
+	if amount != "" {
+		_, err := strconv.Atoi(amount)
+		if err != nil {
+			pg.amountErrorLabel.Text = "please enter a valid amount"
+			return false
+		}
+	}
+
+	pg.amountErrorLabel.Text = ""
+	return true
+}
+
+func (pg *Send) validate(ignoreEmpty bool) bool {
+	isAddressValid := pg.validateDestinationAddress(ignoreEmpty)
+	isAmountValid := pg.validateAmount(ignoreEmpty)
+
+	return isAddressValid || isAmountValid
+}
+
+func (pg *Send) updateValues(gtx *layout.Context) {
+	for range pg.destinationAddressEditor.Events(gtx) {
+		if pg.destinationAddressErrorLabel.Text == "" && pg.amountErrorLabel.Text == "" {
+			pg.calculateValues()
+		}
+	}
+
+	for range pg.amountEditor.Events(gtx) {
+		if pg.destinationAddressErrorLabel.Text == "" && pg.amountErrorLabel.Text == "" {
+			pg.calculateValues()
+		}
+	}
+}
+
+func (pg *Send) calculateValues() {
+
 }

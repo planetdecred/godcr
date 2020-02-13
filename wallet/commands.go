@@ -71,19 +71,24 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 			return
 		}
 
-		if walletID > len(wallets) || walletID < 0 {
-			resp.Err = err
-			wal.Send <- resp
+		var wallet *dcrlibwallet.Wallet
+		for i := range wallets {
+			if wallets[i].ID == walletID {
+				break
+			}
+		}
+
+		if wallet == nil {
+			send <- errors.New("unknown wallet")
 			return
 		}
 
-		if _, err := wallets[walletID].GetAccount(accountID, wal.confirms); err != nil {
-			resp.Err = err
-			wal.Send <- resp
+		if _, err := wallet.GetAccount(acct, confirms); err != nil {
+			send <- err
 			return
 		}
 
-		txAuthor := wallets[walletID].NewUnsignedTx(accountID, wal.confirms)
+		txAuthor := wallet.NewUnsignedTx(acct, confirms)
 		if txAuthor == nil {
 			resp.Err = err
 			wal.Send <- resp
