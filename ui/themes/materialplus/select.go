@@ -39,7 +39,7 @@ func (t *Theme) Select(items []SelectItem) *Select {
 		isOpen:   false,
 		textSize: t.TextSize.V,
 		shaper:   t.Shaper,
-		items:    []SelectItem{},
+		items:    make([]SelectItem, len(items)),
 	}
 
 	if items != nil {

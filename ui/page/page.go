@@ -31,4 +31,7 @@ const (
 
 	// StateError is the map key for error
 	StateError = "error"
+
+	// StateTxAuthor is the map key for the TxAuthor state
+	StateTxAuthor = "txAuthor"
 )

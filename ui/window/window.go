@@ -11,6 +11,8 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/wallet"
+
+	"github.com/raedahgroup/dcrlibwallet"
 )
 
 // Window represents the app window (and UI in general). There should only be one.
@@ -83,7 +85,7 @@ func (win *Window) Loop(shutdown chan int) {
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
-					win.current = page.WalletsID
+					win.current = page.SendID
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
@@ -131,6 +133,8 @@ func (win *Window) updateState(t interface{}) {
 	case *wallet.CreatedSeed:
 		win.wallet.GetMultiWalletInfo()
 		win.states[page.StateWalletCreated] = t
+	case *dcrlibwallet.TxAuthor:
+		win.states[page.StateTxAuthor] = t
 	}
 }
 

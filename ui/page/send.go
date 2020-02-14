@@ -1,6 +1,7 @@
 package page
 
 import (
+	"fmt"
 	"image"
 	"strconv"
 
@@ -21,7 +22,7 @@ import (
 // SendID is the id of the send page
 const SendID = "send"
 
-type modalWidgets struct {
+type confirmModalWidgets struct {
 	line       *materialplus.Line
 	sendButton *widget.Button
 
@@ -52,22 +53,29 @@ type Send struct {
 	selectedWalletID  int
 	selectedAccountID int32
 
-	// calculated values
-	transactionFee             int64
-	totalCost                  int64
-	remainingBalance           int64
-	previousAmount             int64
-	previousDestinationAddress string
+	selectedWallet  *wallet.InfoShort
+	selectedAccount *wallet.Account
 
 	// labels
-	loadingLabel            material.Label
-	titleLabel              material.Label
-	fromLabel               material.Label
-	destinationAddressLabel material.Label
-	sendAmountLabel         material.Label
-	txFeeLabel              material.Label
-	totalCostLabel          material.Label
-	remainingBalanceLabel   material.Label
+	loadingLabel               material.Label
+	titleLabel                 material.Label
+	fromLabel                  material.Label
+	destinationAddressLabel    material.Label
+	sendAmountLabel            material.Label
+	txFeeLabel                 material.Label
+	txFeeValueLabel            material.Label
+	totalCostLabel             material.Label
+	totalCostValueLabel        material.Label
+	remainingBalanceLabel      material.Label
+	remainingBalanceValueLabel material.Label
+	amountLabel                material.Label
+	destinationLabel           material.Label
+
+	// confirm modal labels
+	confirmLabel                   material.Label
+	confirmSendingFromLabel        material.Label
+	confirmDestinationAddressLabel material.Label
+	confirmWarningLabel            material.Label
 
 	// error labels
 	destinationAddressErrorLabel material.Label
@@ -85,10 +93,15 @@ type Send struct {
 	// buttons
 	openAccountModalButton *widget.Button
 	nextButton             *widget.Button
+	confirmButton          *widget.Button
 
 	accountSelectorButtons map[string]*widget.Button
+
 	// modals
 	accountModalWidgets *accountModalWidgets
+	confirmModalWidgets *confirmModalWidgets
+
+	txAuthor *dcrlibwallet.TxAuthor
 
 	// state
 	states map[string]interface{}
@@ -103,21 +116,27 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 	pg.isAccountModalOpen = false
 	pg.wallet = wal
 
-	// calculated values
-	pg.transactionFee = 0
-	pg.totalCost = 0
-	pg.previousAmount = -1
-	pg.previousDestinationAddress = ""
-
-	// labels
+	// main labels
 	pg.titleLabel = theme.Label(units.Label, "Send DCR")
 	pg.loadingLabel = theme.Caption("loading...")
 	pg.fromLabel = theme.Body1("From:")
 	pg.destinationAddressLabel = theme.Body1("Destination Address:")
 	pg.sendAmountLabel = theme.Body1("Amount")
 	pg.txFeeLabel = theme.Body1("Transaction Fee:")
+	pg.txFeeValueLabel = theme.Body1("0 DCR")
 	pg.totalCostLabel = theme.Body1("Total Cost:")
+	pg.totalCostValueLabel = theme.Body1("0 DCR")
+	pg.txFeeValueLabel = theme.Body1("0 DCR")
 	pg.remainingBalanceLabel = theme.Body1("Balance after send")
+	pg.remainingBalanceValueLabel = theme.Body1("0 DCR")
+	pg.amountLabel = theme.Body1("0 DCR")
+	pg.destinationLabel = theme.Body1("")
+
+	// confirm modal labels
+	pg.confirmLabel = theme.Body1("Confirm to send")
+	pg.confirmSendingFromLabel = theme.Body1("")
+	pg.confirmDestinationAddressLabel = theme.Body1("To destination address")
+	pg.confirmWarningLabel = theme.Caption("Your DCR will be sent and CANNOT be undone.")
 
 	// error labels
 	pg.destinationAddressErrorLabel = theme.Caption("")
@@ -132,11 +151,13 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 
 	// editors
 	pg.destinationAddressEditor = new(widget.Editor)
+	pg.destinationAddressEditor.SetText("TseCXEcbPdSbDY2ZU97XuUuQCNLHcpyq3iH")
 	pg.amountEditor = new(widget.Editor)
 
 	// buttons
 	pg.openAccountModalButton = new(widget.Button)
 	pg.nextButton = new(widget.Button)
+	pg.confirmButton = new(widget.Button)
 
 	pg.accountSelectorButtons = map[string]*widget.Button{}
 
@@ -148,33 +169,20 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 }
 
 func (pg *Send) initModalWidgets(theme *materialplus.Theme) {
-	/**pg.modalWidgets = &modalWidgets{
+	pg.confirmModalWidgets = &confirmModalWidgets{
 		line:               theme.Line(),
 		confirmLabel:       theme.Body1("Confirm to send"),
 		sendingFromLabel:   theme.Body1("Sending from Default (wallet-2)"),
 		toDestinationLabel: theme.Body2("To destination address"),
 		sendWarningLabel:   theme.Caption("Your DCR will be sent and CANNOT be undone."),
 		sendButton:         new(widget.Button),
-	}**/
-}
-
-func (pg *Send) initValidationWidgets(theme *materialplus.Theme) {
-	/**destinationAddressLabel := theme.Body2("")
-	destinationAddressLabel.Color = ui.DangerColor
-
-	amountLabel := theme.Body2("")
-	amountLabel.Color = ui.DangerColor
-
-	pg.validationWidgets = &validationWidgets{
-		destinationAddressLabel: destinationAddressLabel,
-		amountLabel:             amountLabel,
-	}**/
+	}
 }
 
 // Draw renders all of this page's widgets
 func (pg *Send) Draw(gtx *layout.Context) interface{} {
 	pg.validate(true)
-	pg.updateValues(gtx)
+	pg.watchAndUpdateValues(gtx)
 
 	// set wallet options
 	if pg.wallets == nil {
@@ -285,7 +293,7 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 					layout.Stack{Alignment: layout.NE}.Layout(gtx,
 						layout.Stacked(func() {
 							layout.Align(layout.Center).Layout(gtx, func() {
-								pg.theme.Body1(dcrutil.Amount(pg.transactionFee).String()).Layout(gtx)
+								pg.txFeeValueLabel.Layout(gtx)
 							})
 						}),
 					)
@@ -301,7 +309,7 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 					layout.Stack{Alignment: layout.NE}.Layout(gtx,
 						layout.Stacked(func() {
 							layout.Align(layout.Center).Layout(gtx, func() {
-								pg.theme.Body1(dcrutil.Amount(pg.totalCost).String()).Layout(gtx)
+								pg.totalCostValueLabel.Layout(gtx)
 							})
 						}),
 					)
@@ -319,7 +327,7 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 					layout.Flexed(1, func() {
 						layout.Stack{Alignment: layout.NE}.Layout(gtx,
 							layout.Stacked(func() {
-								pg.theme.Body1(dcrutil.Amount(pg.remainingBalance).String()).Layout(gtx)
+								pg.remainingBalanceValueLabel.Layout(gtx)
 							}),
 						)
 					}),
@@ -329,7 +337,7 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 		func() {
 			for pg.nextButton.Clicked(gtx) {
 				if pg.validate(false) {
-					pg.isAccountModalOpen = true
+					pg.isShowingConfirmationModal = true
 				}
 			}
 
@@ -422,10 +430,10 @@ func (pg *Send) drawAccountsModal(gtx *layout.Context) {
 }
 
 func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
-	/**modalWidgetFuncs := []func(){
+	modalWidgetFuncs := []func(){
 		func() {
 			layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-				pg.modalWidgets.confirmLabel.Layout(gtx)
+				pg.confirmLabel.Layout(gtx)
 			})
 		},
 		func() {
@@ -434,7 +442,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 				Bottom: unit.Dp(1),
 			}
 			inset.Layout(gtx, func() {
-				pg.modalWidgets.line.Draw(gtx)
+				//pg.confirmModalWidgets.line.Draw(gtx)
 			})
 		},
 		func() {
@@ -444,7 +452,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 					Top: unit.Dp(5),
 				}
 				inset.Layout(gtx, func() {
-					pg.modalWidgets.sendingFromLabel.Layout(gtx)
+					pg.confirmSendingFromLabel.Layout(gtx)
 				})
 			})
 		},
@@ -466,7 +474,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 					Top: unit.Dp(40),
 				}
 				inset.Layout(gtx, func() {
-					pg.modalWidgets.toDestinationLabel.Layout(gtx)
+					pg.confirmDestinationAddressLabel.Layout(gtx)
 				})
 			})
 		},
@@ -493,7 +501,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 					layout.Flexed(1, func() {
 						layout.Stack{Alignment: layout.NE}.Layout(gtx,
 							layout.Stacked(func() {
-								pg.theme.Body1(dcrutil.Amount(pg.transactionFee).String()).Layout(gtx)
+								pg.txFeeValueLabel.Layout(gtx)
 							}),
 						)
 					}),
@@ -531,9 +539,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 					layout.Flexed(1, func() {
 						layout.Stack{Alignment: layout.NE}.Layout(gtx,
 							layout.Stacked(func() {
-								// TODO get this value from wallet balance
-								// i.e wallet balance - total cost
-								pg.theme.Body2("4.37280441 DCR").Layout(gtx)
+								pg.totalCostValueLabel.Layout(gtx)
 							}),
 						)
 					}),
@@ -547,7 +553,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 			inset.Layout(gtx, func() {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				layout.Align(layout.Center).Layout(gtx, func() {
-					pg.modalWidgets.sendWarningLabel.Layout(gtx)
+					pg.confirmWarningLabel.Layout(gtx)
 				})
 			})
 		},
@@ -560,7 +566,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				gtx.Constraints.Height.Min = 50
-				btn.Layout(gtx, pg.modalWidgets.sendButton)
+				btn.Layout(gtx, pg.confirmButton)
 			})
 		},
 	}
@@ -576,7 +582,7 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 				layout.UniformInset(unit.Dp(0)).Layout(gtx, modalWidgetFuncs[i])
 			})
 		})
-	})**/
+	})
 }
 
 func (pg *Send) setDefaultSendAccount(wallets []wallet.InfoShort) {
@@ -590,21 +596,29 @@ func (pg *Send) setDefaultSendAccount(wallets []wallet.InfoShort) {
 		pg.setSelectedAccount(wallets[i], wallets[i].Accounts[0])
 		break
 	}
+
+	pg.remainingBalanceValueLabel.Text = dcrutil.Amount(pg.selectedWallet.SpendableBalance).String()
 }
 
 func (pg *Send) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account) {
+	pg.selectedWallet = &wallet
+	pg.selectedAccount = &account
+
 	pg.sendWalletNameLabel.Text = wallet.Name
 	pg.sendAccountNameLabel.Text = account.Name
 	pg.sendAccountSpendableBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
 
 	// create a mew transaction everytime a new account is chosen
 	pg.wallet.CreateTransaction(wallet.ID, account.Number, dcrlibwallet.DefaultRequiredConfirmations)
+	pg.calculateValues()
 }
 
 func (pg *Send) validateDestinationAddress(ignoreEmpty bool) bool {
 	destinationAddress := pg.destinationAddressEditor.Text()
-	if !ignoreEmpty && destinationAddress == "" {
-		pg.destinationAddressErrorLabel.Text = "please enter a destination address"
+	if destinationAddress == "" {
+		if !ignoreEmpty {
+			pg.destinationAddressErrorLabel.Text = "please enter a destination address"
+		}
 		return false
 	}
 
@@ -622,13 +636,15 @@ func (pg *Send) validateDestinationAddress(ignoreEmpty bool) bool {
 
 func (pg *Send) validateAmount(ignoreEmpty bool) bool {
 	amount := pg.amountEditor.Text()
-	if !ignoreEmpty && amount == "" {
-		pg.amountErrorLabel.Text = "please enter a send amount"
+	if amount == "" {
+		if !ignoreEmpty {
+			pg.amountErrorLabel.Text = "please enter a send amount"
+		}
 		return false
 	}
 
 	if amount != "" {
-		_, err := strconv.Atoi(amount)
+		_, err := strconv.ParseFloat(pg.amountEditor.Text(), 64)
 		if err != nil {
 			pg.amountErrorLabel.Text = "please enter a valid amount"
 			return false
@@ -643,23 +659,70 @@ func (pg *Send) validate(ignoreEmpty bool) bool {
 	isAddressValid := pg.validateDestinationAddress(ignoreEmpty)
 	isAmountValid := pg.validateAmount(ignoreEmpty)
 
-	return isAddressValid || isAmountValid
+	if !isAddressValid || !isAmountValid {
+		return false
+	}
+
+	return true
 }
 
-func (pg *Send) updateValues(gtx *layout.Context) {
+func (pg *Send) watchAndUpdateValues(gtx *layout.Context) {
+	txAuthor := pg.states[StateTxAuthor]
+	if txAuthor != nil {
+		pg.txAuthor = txAuthor.(*dcrlibwallet.TxAuthor)
+		delete(pg.states, StateTxAuthor)
+	}
+
 	for range pg.destinationAddressEditor.Events(gtx) {
-		if pg.destinationAddressErrorLabel.Text == "" && pg.amountErrorLabel.Text == "" {
-			pg.calculateValues()
-		}
+		pg.calculateValues()
 	}
 
 	for range pg.amountEditor.Events(gtx) {
-		if pg.destinationAddressErrorLabel.Text == "" && pg.amountErrorLabel.Text == "" {
-			pg.calculateValues()
-		}
+		pg.calculateValues()
 	}
 }
 
 func (pg *Send) calculateValues() {
+	pg.txFeeValueLabel.Text = "0 DCR"
+	pg.totalCostValueLabel.Text = "0 DCR"
 
+	if pg.selectedWallet != nil {
+		pg.remainingBalanceValueLabel.Text = dcrutil.Amount(pg.selectedWallet.SpendableBalance).String()
+	}
+
+	if pg.txAuthor == nil || !pg.validate(true) {
+		return
+	}
+
+	amountDCR, _ := strconv.ParseFloat(pg.amountEditor.Text(), 64)
+	if amountDCR <= 0 {
+		return
+	}
+
+	amount, err := dcrutil.NewAmount(amountDCR)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	amountAtoms := int64(amount)
+
+	// set destination address
+	pg.txAuthor.RemoveSendDestination(0)
+	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Text(), amountAtoms, false)
+
+	// calculate transaction fee
+	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	txFee := feeAndSize.Fee.AtomValue
+	totalCost := txFee + amountAtoms
+	remainingBalance := pg.selectedWallet.SpendableBalance - totalCost
+
+	pg.txFeeValueLabel.Text = dcrutil.Amount(txFee).String()
+	pg.totalCostValueLabel.Text = dcrutil.Amount(totalCost).String()
+	pg.remainingBalanceValueLabel.Text = dcrutil.Amount(remainingBalance).String()
 }
