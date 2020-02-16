@@ -11,7 +11,9 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"gioui.org/gesture"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui"
@@ -92,9 +94,13 @@ type Receive struct {
 
 	infoModalWidgets *infoModalWidgets
 	moreModalWidgets *moreModalWidgets
+	walletInfo        *wallet.MultiWalletInfo
+	userClicks   gesture.Click
 
 	isGenerateNewAddBtnModal bool
 	isInfoBtnModal           bool
+	selectedWallet *wallet.Wallet
+	wallet            *wallet.Wallet
 
 	theme          *materialplus.Theme
 
@@ -252,7 +258,6 @@ func (pg *Receive) setDefaultAccount(wallets []wallet.InfoShort) {
 		break
 	}
 }
-
 func (pg *Receive) generateAddressQrCode(gtx *layout.Context) {
 	qrCode, err := qrcode.New(pg.receiveAddress, qrcode.Highest)
 	if err != nil {
@@ -294,7 +299,7 @@ func (pg *Receive) receiveAddressSection(gtx *layout.Context) {
 	)
 }
 
-func (pg *Receive) pageFirstColumn(gtx *layout.Context) {
+func (pg *Receive) pageFirstColumn(gtx *layout.Context) {	
 	layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func() {
 			pg.pageTitleLabel.Layout(gtx)

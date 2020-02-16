@@ -6,6 +6,7 @@ require (
 	gioui.org v0.0.0-20200229151727-48eb5c666cdc
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/atotto/clipboard v0.1.2
+	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
 	github.com/decred/slog v1.0.0
 	github.com/jessevdk/go-flags v1.4.0
