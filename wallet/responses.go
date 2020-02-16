@@ -47,6 +47,7 @@ type Account struct {
 
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
+<<<<<<< HEAD
 	ID              int
 	Name            string
 	Balance         string
