@@ -147,13 +147,16 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 				return
 			}
 			var acctBalance int64
+			accts := make([]int32, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
+				accts = append(accts, acct.Number)
 				acctBalance += acct.TotalBalance
 			}
 			completeTotal += acctBalance
 			infos[i] = InfoShort{
-				Name:    wall.Name,
-				Balance: acctBalance,
+				Name:     wall.Name,
+				Balance:  acctBalance,
+				Accounts: accts,
 			}
 		}
 		best := wal.multi.GetBestBlock()
