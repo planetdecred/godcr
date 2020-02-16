@@ -7,6 +7,7 @@ require (
 	github.com/atotto/clipboard v0.1.2
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/atotto/clipboard v0.1.2
+	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
 	github.com/decred/slog v1.0.0
 	github.com/jessevdk/go-flags v1.4.0
