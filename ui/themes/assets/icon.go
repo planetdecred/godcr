@@ -12,6 +12,7 @@ var (
 	NavigationMoreIcon *material.Icon
 	ContentCopyIcon    *material.Icon
 	ActionInfoIcon     *material.Icon
+	DropDownIcon              *material.Icon
 )
 
 func init() {
@@ -32,4 +33,9 @@ func init() {
 		log.Fatal(err)
 	}
 	ActionInfoIcon.Color = color.RGBA{44, 114, 255, 255}
+
+	DropDownIcon, err = material.NewIcon(icons.NavigationArrowDropDown)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
