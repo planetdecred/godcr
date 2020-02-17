@@ -7,6 +7,10 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui"
 )
 
+const (
+	heightPercentage = 80 // percentage of window height the modal content takes
+)
+
 // Modal renders a modal instamce to screen
 func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 	overlayColor := ui.BlackColor
@@ -16,7 +20,7 @@ func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
-			gtx.Constraints.Height.Min = 170
+			gtx.Constraints.Height.Min = (heightPercentage / 100) * gtx.Constraints.Height.Max
 		}),
 		layout.Stacked(func() {
 			inset := layout.Inset{
