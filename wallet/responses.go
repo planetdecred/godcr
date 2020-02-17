@@ -23,8 +23,9 @@ type MultiWalletInfo struct {
 
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
-	Name    string
-	Balance int64
+	Name     string
+	Balance  int64
+	Accounts []int32
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets
