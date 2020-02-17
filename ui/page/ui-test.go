@@ -30,6 +30,7 @@ type UITest struct {
 	loadMainUIButton         *widget.Button
 	loadMainUIButtonMaterial material.Button
 	progressBar              *materialplus.ProgressBar
+	editor                   *materialplus.Editor
 	states                   map[string]interface{}
 }
 
@@ -58,6 +59,8 @@ func (pg *UITest) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[s
 	}
 
 	pg.loadMainUIButton = new(widget.Button)
+	pg.editor = theme.Editor("hint", "*")
+	pg.editor.IsNumeric()
 	pg.loadMainUIButtonMaterial = theme.Button("Load Main UI")
 	pg.progressBar = theme.ProgressBar()
 
@@ -95,6 +98,12 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 				}),
 			)
 		},
+		func() {
+			pg.progressBar.Layout(gtx, 25)
+		},
+		func() {
+			pg.editor.Draw(gtx)
+		},
 	}
 
 	pageWidgets := []func(){
@@ -104,9 +113,6 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 				layout.UniformInset(unit.Dp(10)).Layout(gtx, widgets[i])
 			})
 
-		},
-		func() {
-			pg.progressBar.Layout(gtx, 25)
 		},
 		func() {
 			for pg.loadMainUIButton.Clicked(gtx) {
