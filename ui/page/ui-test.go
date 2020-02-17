@@ -2,6 +2,8 @@ package page
 
 import (
 	"fmt"
+	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/ui/values"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -31,6 +33,7 @@ type UITest struct {
 	loadMainUIButtonMaterial material.Button
 	progressBar              *materialplus.ProgressBar
 	states                   map[string]interface{}
+	card  					 materialplus.Card
 }
 
 // Init initializes all available custom widgets
@@ -60,6 +63,7 @@ func (pg *UITest) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[s
 	pg.loadMainUIButton = new(widget.Button)
 	pg.loadMainUIButtonMaterial = theme.Button("Load Main UI")
 	pg.progressBar = theme.ProgressBar()
+	pg.card = theme.Card()
 
 	pg.states = states
 }
@@ -103,7 +107,6 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 			list.Layout(gtx, len(widgets), func(i int) {
 				layout.UniformInset(unit.Dp(10)).Layout(gtx, widgets[i])
 			})
-
 		},
 		func() {
 			pg.progressBar.Layout(gtx, 25)
@@ -124,6 +127,12 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 				res = ev
 			}
 			pg.loadMainUIButtonMaterial.Layout(gtx, pg.loadMainUIButton)
+		},
+		func() {
+			pg.card.Width = gtx.Px(units.WalletSyncBoxWidthMin)
+			pg.card.Height = gtx.Px(units.WalletSyncBoxHeightMin)
+			pg.card.Color = values.ProgressBarGreen
+			pg.card.Layout(gtx, 0)
 		},
 	}
 

@@ -12,7 +12,6 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
-	"github.com/raedahgroup/godcr-gio/ui/widgets"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -34,7 +33,7 @@ type Overview struct {
 	syncStatus          material.Label
 	onlineStatus        material.Label
 	syncButton          material.Button
-	syncButtonCard      widgets.Card
+	syncButtonCard      materialplus.Card
 	progressPercentage  material.Label
 	timeLeft            material.Label
 	syncSteps           material.Label
@@ -45,7 +44,7 @@ type Overview struct {
 	walletHeaderFetchedTitle   material.Label
 	walletSyncingProgressTitle material.Label
 	walletSyncDetails          walletSyncDetails
-	walletSyncCard             widgets.Card
+	walletSyncCard             materialplus.Card
 	walletSyncBoxes            []func()
 
 	transactionColumnTitle material.Label
@@ -117,10 +116,10 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.connectedPeers = theme.Body1("0")
 	page.walletHeaderFetchedTitle = theme.Caption("Block header fetched")
 	page.walletSyncingProgressTitle = theme.Caption("Syncing progress")
-	page.walletSyncCard = widgets.NewCard()
+	page.walletSyncCard = theme.Card()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
 	page.noTransaction = theme.Caption("no transactions")
-	page.syncButtonCard = widgets.NewCard()
+	page.syncButtonCard = theme.Card()
 	page.latestBlockTitle = theme.Body1("Latest Block")
 	page.latestBlock = theme.Body1("")
 
@@ -157,6 +156,7 @@ func (page *Overview) Draw(gtx *layout.Context) interface{} {
 	return nil
 }
 
+// checkState checks if a state has been added to the state map
 func (page *Overview) checkState(state string) bool {
 	if _, ok := page.states[state]; ok {
 		return true
@@ -164,10 +164,11 @@ func (page *Overview) checkState(state string) bool {
 	return false
 }
 
+// update updates every dynamic data on the page when the overview page is re-drawn.
 func (page *Overview) update(gtx *layout.Context) {
 	page.updateBalance()
 	page.updateRecentTransactions()
-	page.updateSyncData()
+	page.updateSyncStatus()
 	page.updateSyncProgressData()
 	page.updateWalletSyncBox(gtx)
 }
@@ -177,7 +178,8 @@ func (page *Overview) updateBalance() {
 	page.balance = page.walletInfo.TotalBalance
 }
 
-func (page *Overview) updateSyncData() {
+// updateSyncStatus updates the general sync status displayed on the page
+func (page *Overview) updateSyncStatus() {
 	if page.walletInfo.Synced {
 		page.syncButton.Text = "Disconnect"
 		page.syncStatus.Text = "Synced"
@@ -193,7 +195,8 @@ func (page *Overview) updateSyncData() {
 	}
 }
 
-// update
+// updateSyncProgressData updates the sync progress of open wallets every time the overview page
+// is redrawn.
 func (page *Overview) updateSyncProgressData() {
 	if page.checkState(StateSyncStatus) {
 		page.walletSyncStatus = page.states[StateSyncStatus].(*wallet.SyncStatus)
@@ -442,9 +445,9 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 				layout.Align(layout.E).Layout(gtx, func() {
 					layout.Stack{}.Layout(gtx,
 						layout.Stacked(func() {
-							page.syncButtonCard.SetColor(values.ButtonGray)
-							page.syncButtonCard.SetWidth(values.SyncButtonWidth)
-							page.syncButtonCard.SetHeight(values.SyncButtonHeight)
+							page.syncButtonCard.Color = values.ButtonGray
+							page.syncButtonCard.Width = values.SyncButtonWidth
+							page.syncButtonCard.Height = values.SyncButtonHeight
 							page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 						}),
 						layout.Expanded(func() {
@@ -527,8 +530,8 @@ func (page *Overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 	page.columnMargin.Layout(gtx, func() {
 		layout.Stack{}.Layout(gtx,
 			layout.Stacked(func() {
-				page.walletSyncCard.SetWidth(gtx.Px(units.WalletSyncBoxWidthMin))
-				page.walletSyncCard.SetHeight(gtx.Px(units.WalletSyncBoxHeightMin))
+				page.walletSyncCard.Width = gtx.Px(units.WalletSyncBoxWidthMin)
+				page.walletSyncCard.Height = gtx.Px(units.WalletSyncBoxHeightMin)
 				page.walletSyncCard.Layout(gtx, 0)
 			}),
 			layout.Stacked(func() {
