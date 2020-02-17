@@ -11,7 +11,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"gioui.org/gesture"
+	// "gioui.org/gesture"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/atotto/clipboard"
@@ -95,7 +95,8 @@ type Receive struct {
 	infoModalWidgets *infoModalWidgets
 	moreModalWidgets *moreModalWidgets
 	walletInfo        *wallet.MultiWalletInfo
-	userClicks   gesture.Click
+
+	// userClicks   gesture.Click
 
 	isGenerateNewAddBtnModal bool
 	isInfoBtnModal           bool
@@ -456,6 +457,14 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 							}
 							pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
 						})
+					}),
+					layout.Rigid(func() {
+						layout.Inset{Left: unit.Dp(15)}.Layout(gtx, func() {
+								if pg.dropDownBtnWdg.Clicked(gtx) {
+									pg.isInfoBtnModal = true
+								}
+								pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
+							})
 					}),
 				)
 			})
