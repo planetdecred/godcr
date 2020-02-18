@@ -32,7 +32,7 @@ const (
 	tabNavHeight = 60
 )
 
-// TabContainer returns a tabcontainer instance
+// TabContainer initializes an instance of TabContainer
 func (t *Theme) TabContainer(items []Tab) *TabContainer {
 	for i := range items {
 		btn := t.Button(items[i].Label)
@@ -49,8 +49,8 @@ func (t *Theme) TabContainer(items []Tab) *TabContainer {
 	}
 }
 
-// Draw renders the tabcontainer to screen
-func (t *TabContainer) Draw(gtx *layout.Context, title string) {
+// Layout renders the tabcontainer to screen
+func (t *TabContainer) Layout(gtx *layout.Context, title string) {
 	w := []func(){
 		func() {
 			t.title.Text = title
