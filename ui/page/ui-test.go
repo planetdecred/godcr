@@ -30,7 +30,7 @@ type UITest struct {
 	loadMainUIButton         *widget.Button
 	loadMainUIButtonMaterial material.Button
 	progressBar              *materialplus.ProgressBar
-	editor                   *materialplus.Editor
+	passwordEditor           *materialplus.PasswordEditor
 	states                   map[string]interface{}
 }
 
@@ -59,8 +59,7 @@ func (pg *UITest) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[s
 	}
 
 	pg.loadMainUIButton = new(widget.Button)
-	pg.editor = theme.Editor("hint", "*")
-	pg.editor.IsNumeric()
+	pg.passwordEditor = theme.PasswordEditor("hint")
 	pg.loadMainUIButtonMaterial = theme.Button("Load Main UI")
 	pg.progressBar = theme.ProgressBar()
 
@@ -102,7 +101,7 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 			pg.progressBar.Layout(gtx, 25)
 		},
 		func() {
-			pg.editor.Layout(gtx)
+			pg.passwordEditor.Layout(gtx)
 		},
 	}
 
