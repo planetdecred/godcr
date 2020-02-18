@@ -364,66 +364,54 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 	return nil
 }
 
+func (pg *Send) addAccountSelectorButton(accountName string) {
+	if _, ok := pg.accountSelectorButtons[accountName]; !ok {
+		pg.accountSelectorButtons[accountName] = new(widget.Button)
+	}
+}
+
 func (pg *Send) drawAccountsModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, func() {
 		list := layout.List{Axis: layout.Vertical}
-		list.Layout(gtx, len(pg.wallets)+1, func(i int) {
-			layout.UniformInset(unit.Dp(0)).Layout(gtx, func() {
-				if i == 0 {
-					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-						pg.accountModalWidgets.titleLabel.Layout(gtx)
-					})
-					return
+		list.Layout(gtx, len(pg.wallets), func(i int) {
+			wallet := pg.wallets[i]
+			pg.theme.H5(fmt.Sprintf("%s - %s", wallet.Name, dcrutil.Amount(wallet.TotalBalance).String())).Layout(gtx)
+
+			list := layout.List{Axis: layout.Vertical}
+			list.Layout(gtx, len(wallet.Accounts), func(k int) {
+				account := pg.wallets[i].Accounts[k]
+
+				pg.addAccountSelectorButton(wallet.Name + account.Name)
+
+				for pg.accountSelectorButtons[wallet.Name+account.Name].Clicked(gtx) {
+					pg.setSelectedAccount(wallet, account)
+					pg.isAccountModalOpen = false
 				}
 
-				wallet := pg.wallets[i-1]
-
-				walletNameLabel := pg.theme.H5(wallet.Name + dcrutil.Amount(wallet.TotalBalance).String())
-				walletNameLabel.Layout(gtx)
-
-				list := layout.List{Axis: layout.Vertical}
-				list.Layout(gtx, len(wallet.Accounts), func(i int) {
-					account := wallet.Accounts[i]
-
-					if _, ok := pg.accountSelectorButtons[account.Name]; !ok {
-						pg.accountSelectorButtons[account.Name] = new(widget.Button)
-					}
-
-					for pg.accountSelectorButtons[account.Name].Clicked(gtx) {
-						pg.setSelectedAccount(wallet, account)
-						pg.isAccountModalOpen = false
-					}
-
-					layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func() {
+				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func() {
+						inset := layout.Inset{
+							Left: unit.Dp(10),
+						}
+						inset.Layout(gtx, func() {
 							inset := layout.Inset{
-								Left: unit.Dp(10),
+								Top: unit.Dp(25),
 							}
 							inset.Layout(gtx, func() {
-								inset := layout.Inset{
-									Top: unit.Dp(25),
-								}
-								inset.Layout(gtx, func() {
-									sendAccountNameLabel := pg.theme.H6(account.Name + "  " + dcrutil.Amount(account.TotalBalance).String())
-									sendAccountNameLabel.Layout(gtx)
-								})
-
-								inset = layout.Inset{
-									Top: unit.Dp(50),
-								}
-								inset.Layout(gtx, func() {
-									spendableBalanceLabel := pg.theme.Body1("Spendable: " + dcrutil.Amount(account.SpendableBalance).String())
-									spendableBalanceLabel.Layout(gtx)
-								})
+								pg.theme.H6(fmt.Sprintf("%s %s", account.Name, dcrutil.Amount(account.TotalBalance).String())).Layout(gtx)
 							})
-						}),
-						layout.Rigid(func() {
 
-						}),
-					)
-					pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
-					pg.accountSelectorButtons[account.Name].Layout(gtx)
-				})
+							inset = layout.Inset{
+								Top: unit.Dp(50),
+							}
+							inset.Layout(gtx, func() {
+								pg.theme.Body1(fmt.Sprintf("Spendable: %s", dcrutil.Amount(account.SpendableBalance).String())).Layout(gtx)
+							})
+						})
+					}),
+				)
+				pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
+				pg.accountSelectorButtons[wallet.Name+account.Name].Layout(gtx)
 			})
 		})
 	})
