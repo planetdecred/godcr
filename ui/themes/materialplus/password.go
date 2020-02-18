@@ -14,7 +14,6 @@ import (
 type colors struct {
 	cancelLabelColor            color.RGBA
 	createButtonBackgroundColor color.RGBA
-	nextButtonBackgroundColor   color.RGBA
 }
 
 type editor struct {
