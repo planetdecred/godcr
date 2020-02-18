@@ -11,7 +11,7 @@ const (
 	heightPercentage = 80 // percentage of window height the modal content takes
 )
 
-// Modal renders a modal instamce to screen
+// Modal renders a modal instance to screen
 func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 	overlayColor := ui.BlackColor
 	overlayColor.A = 200

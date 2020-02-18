@@ -37,7 +37,7 @@ type Landing struct {
 	isCreatingWallet             bool
 	isShowingPasswordAndPinModal bool
 	walletCreationSuccessEvent   interface{}
-	passwordAndPinModal          *materialplus.PasswordAndPin
+	passwordAndPinModal          *materialplus.Password
 
 	states map[string]interface{}
 	theme  *materialplus.Theme
@@ -66,7 +66,7 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.isCreatingWallet = false
 	pg.isShowingPasswordAndPinModal = false
 	pg.walletCreationSuccessEvent = nil
-	pg.passwordAndPinModal = theme.PasswordAndPin()
+	pg.passwordAndPinModal = theme.Password()
 	pg.states = states
 	pg.theme = theme
 	pg.wal = wal
@@ -180,7 +180,7 @@ func (pg *Landing) drawPasswordAndPinModal(gtx *layout.Context) {
 	})
 }
 
-func (pg *Landing) createFunc(password string, passType int32) {
+func (pg *Landing) createFunc(password string) {
 	pg.reset()
 
 	pg.createBtn.Text = "Creating wallet..."
@@ -189,7 +189,7 @@ func (pg *Landing) createFunc(password string, passType int32) {
 	pg.isCreatingWallet = true
 	pg.isShowingPasswordAndPinModal = false
 
-	pg.wal.CreateWallet(password, passType)
+	pg.wal.CreateWallet(password, 0)
 }
 
 func (pg *Landing) cancelFunc() {

@@ -11,56 +11,36 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui"
 )
 
-type passwordTabWidgets struct {
-	spendingEditor         *widget.Editor
-	spendingEditorMaterial material.Editor
-
-	confirmEditor         *widget.Editor
-	confirmEditorMaterial material.Editor
-}
-
-type pinTabWidgets struct {
-	spendingEditor         *widget.Editor
-	spendingEditorMaterial material.Editor
-
-	confirmEditor         *widget.Editor
-	confirmEditorMaterial material.Editor
-
-	isShowingConfirmEditor bool
-}
-
 type colors struct {
 	cancelLabelColor            color.RGBA
 	createButtonBackgroundColor color.RGBA
 	nextButtonBackgroundColor   color.RGBA
 }
 
-// PasswordAndPin represents the spending password and pin widget
-type PasswordAndPin struct {
-	colors             colors
-	tabContainer       *TabContainer
-	passwordTabWidgets *passwordTabWidgets
-	pinTabWidgets      *pinTabWidgets
+type editor struct {
+	widget   *widget.Editor
+	material material.Editor
+	line     *Line
+}
+
+// Password represents a form for collecting user password
+type Password struct {
+	colors     colors
+	titleLabel material.Label
+
+	spendingEditor *editor
+	confirmEditor  *editor
 
 	cancelButton         *widget.Button
-	cancelButtonMaterial material.Button
-
 	createButton         *widget.Button
+	cancelButtonMaterial material.Button
 	createButtonMaterial material.Button
-
-	nextButton         *widget.Button
-	nextButtonMaterial material.Button
 
 	errorLabel material.Label
 }
 
-const (
-	passwordTabID int32 = iota
-	pinTabID
-)
-
-// PasswordAndPin returns an instance of the PasswordAndPin widget
-func (t *Theme) PasswordAndPin() *PasswordAndPin {
+// Password initializes and returns an instance of Password
+func (t *Theme) Password() *Password {
 	cancelButtonMaterial := t.Button("Cancel")
 	cancelButtonMaterial.Background = ui.WhiteColor
 	cancelButtonMaterial.Color = ui.LightBlueColor
@@ -68,148 +48,50 @@ func (t *Theme) PasswordAndPin() *PasswordAndPin {
 	errorLabel := t.Body2("")
 	errorLabel.Color = ui.DangerColor
 
-	passwordTabWidgets := &passwordTabWidgets{
-		spendingEditor:         new(widget.Editor),
-		confirmEditor:          new(widget.Editor),
-		spendingEditorMaterial: t.Editor("Spending password"),
-		confirmEditorMaterial:  t.Editor("Confirm spending password"),
+	spendingEditor := &editor{
+		widget:   new(widget.Editor),
+		material: t.Editor("Spending password"),
+		line:     t.Line(),
+	}
+	confirmEditor := &editor{
+		widget:   new(widget.Editor),
+		material: t.Editor("Confirm spending password"),
+		line:     t.Line(),
 	}
 
-	pinTabWidgets := &pinTabWidgets{
-		spendingEditor:         new(widget.Editor),
-		confirmEditor:          new(widget.Editor),
-		spendingEditorMaterial: t.Editor("Enter spending PIN"),
-		confirmEditorMaterial:  t.Editor("Enter spending PIN again"),
-	}
+	confirmEditor.line.Color = ui.LightBlueColor
+	spendingEditor.line.Color = ui.LightBlueColor
 
-	p := &PasswordAndPin{
+	p := &Password{
+		titleLabel: t.H5("Create spending password"),
+		errorLabel: errorLabel,
+
+		confirmEditor:        confirmEditor,
+		spendingEditor:       spendingEditor,
 		cancelButton:         new(widget.Button),
-		cancelButtonMaterial: cancelButtonMaterial,
-
 		createButton:         new(widget.Button),
-		nextButton:           new(widget.Button),
-		nextButtonMaterial:   t.Button("Next"),
+		cancelButtonMaterial: cancelButtonMaterial,
 		createButtonMaterial: t.Button("Create"),
 
-		passwordTabWidgets: passwordTabWidgets,
-		pinTabWidgets:      pinTabWidgets,
-		colors:             colors{},
-
-		errorLabel: errorLabel,
+		colors: colors{},
 	}
-
-	tabItems := []Tab{
-		{
-			ID:         passwordTabID,
-			Label:      "Password",
-			RenderFunc: p.passwordTab,
-		},
-		{
-			ID:         pinTabID,
-			Label:      "Pin",
-			RenderFunc: p.pinTab,
-		},
-	}
-	p.tabContainer = t.TabContainer(tabItems)
 
 	return p
 }
 
-func (p *PasswordAndPin) pinTab(gtx *layout.Context) {
-	w := []func(){
-		func() {
-			gtx.Constraints.Height.Min = 50
-			if !p.pinTabWidgets.isShowingConfirmEditor {
-				p.pinTabWidgets.spendingEditorMaterial.Layout(gtx, p.pinTabWidgets.spendingEditor)
-			} else {
-				p.pinTabWidgets.confirmEditorMaterial.Layout(gtx, p.pinTabWidgets.confirmEditor)
-			}
-		},
-	}
-
-	list := layout.List{Axis: layout.Vertical}
-	list.Layout(gtx, len(w), func(i int) {
-		inset := layout.Inset{
-			Top:   unit.Dp(7),
-			Left:  unit.Dp(25),
-			Right: unit.Dp(25),
-		}
-		inset.Layout(gtx, func() {
-			w[i]()
-		})
-	})
-}
-
-func (p *PasswordAndPin) passwordTab(gtx *layout.Context) {
-	w := []func(){
-		func() {
-			gtx.Constraints.Height.Min = 50
-			p.passwordTabWidgets.spendingEditorMaterial.Layout(gtx, p.passwordTabWidgets.spendingEditor)
-		},
-		func() {
-			gtx.Constraints.Height.Min = 50
-			p.passwordTabWidgets.confirmEditorMaterial.Layout(gtx, p.passwordTabWidgets.confirmEditor)
-		},
-	}
-
-	list := layout.List{Axis: layout.Vertical}
-	list.Layout(gtx, len(w), func(i int) {
-		inset := layout.Inset{
-			Top:   unit.Dp(7),
-			Left:  unit.Dp(25),
-			Right: unit.Dp(25),
-		}
-		inset.Layout(gtx, func() {
-			w[i]()
-		})
-	})
-}
-
-func (p *PasswordAndPin) updateColors() {
+func (p *Password) updateColors() {
 	p.colors.cancelLabelColor = ui.GrayColor
 	p.colors.createButtonBackgroundColor = ui.GrayColor
-	p.colors.nextButtonBackgroundColor = ui.GrayColor
 
-	currentTabID := p.tabContainer.GetCurrentTabID()
-	p.colors.cancelLabelColor = ui.LightBlueColor
-
-	if currentTabID == pinTabID {
-		if p.pinTabWidgets.spendingEditor.Len() > 0 {
-			p.colors.nextButtonBackgroundColor = ui.LightBlueColor
-		}
-
-		if p.pinTabWidgets.isShowingConfirmEditor && p.bothPinsMatch() {
-			p.colors.createButtonBackgroundColor = ui.LightBlueColor
-		}
-	} else {
-		if p.bothPasswordsMatch() && p.passwordTabWidgets.confirmEditor.Len() > 0 {
-			p.colors.createButtonBackgroundColor = ui.LightBlueColor
-		}
+	if p.bothPasswordsMatch() && p.confirmEditor.widget.Len() > 0 {
+		p.colors.createButtonBackgroundColor = ui.LightBlueColor
 	}
 }
 
-// Draw renders this widget
-func (p *PasswordAndPin) Draw(gtx *layout.Context, createFunc func(string, int32), cancelFunc func()) {
-	go p.updateColors()
-	go p.validate(p.tabContainer.GetCurrentTabID())
-
-	currentTabID := p.tabContainer.GetCurrentTabID()
-
-	for p.nextButton.Clicked(gtx) {
-		if p.pinTabWidgets.spendingEditor.Len() > 0 {
-			p.pinTabWidgets.isShowingConfirmEditor = true
-		}
-	}
-
+func (p *Password) processButtonClicks(gtx *layout.Context, createFunc func(string), cancelFunc func()) {
 	for p.createButton.Clicked(gtx) {
-		pwd := p.passwordTabWidgets.spendingEditor.Text()
-
-		if currentTabID == pinTabID {
-			pwd = p.pinTabWidgets.spendingEditor.Text()
-		}
-
-		if p.validate(currentTabID) {
-			createFunc(pwd, currentTabID)
+		if p.validate() {
+			createFunc(p.spendingEditor.widget.Text())
 		}
 	}
 
@@ -217,10 +99,28 @@ func (p *PasswordAndPin) Draw(gtx *layout.Context, createFunc func(string, int32
 		p.Reset()
 		cancelFunc()
 	}
+}
 
-	w := []func(){
+// Draw renders the widget to screen
+func (p *Password) Draw(gtx *layout.Context, createFunc func(string), cancelFunc func()) {
+	p.processButtonClicks(gtx, createFunc, cancelFunc)
+	p.updateColors()
+	p.validate()
+
+	widgets := []func(){
 		func() {
-			p.tabContainer.Draw(gtx, "Create spending password")
+			p.titleLabel.Layout(gtx)
+		},
+		func() {
+			inset := layout.Inset{
+				Top: unit.Dp(20),
+			}
+			inset.Layout(gtx, func() {
+				p.spendingEditor.layout(gtx)
+			})
+		},
+		func() {
+			p.confirmEditor.layout(gtx)
 		},
 		func() {
 			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -236,13 +136,8 @@ func (p *PasswordAndPin) Draw(gtx *layout.Context, createFunc func(string, int32
 				layout.Rigid(func() {
 					gtx.Constraints.Width.Min = 70
 					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-						if currentTabID == passwordTabID || p.pinTabWidgets.isShowingConfirmEditor {
-							p.createButtonMaterial.Background = p.colors.createButtonBackgroundColor
-							p.createButtonMaterial.Layout(gtx, p.createButton)
-						} else {
-							p.nextButtonMaterial.Background = p.colors.nextButtonBackgroundColor
-							p.nextButtonMaterial.Layout(gtx, p.nextButton)
-						}
+						p.createButtonMaterial.Background = p.colors.createButtonBackgroundColor
+						p.createButtonMaterial.Layout(gtx, p.createButton)
 					})
 				}),
 			)
@@ -250,48 +145,38 @@ func (p *PasswordAndPin) Draw(gtx *layout.Context, createFunc func(string, int32
 	}
 
 	list := layout.List{Axis: layout.Vertical}
-	list.Layout(gtx, len(w), func(i int) {
-		layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
+	list.Layout(gtx, len(widgets), func(i int) {
+		layout.UniformInset(unit.Dp(0)).Layout(gtx, widgets[i])
 	})
-
 }
 
-func (p *PasswordAndPin) validate(currentTabID int32) bool {
+func (p *Password) validate() bool {
 	p.errorLabel.Text = ""
 
-	if currentTabID == passwordTabID {
-		if p.passwordTabWidgets.spendingEditor.Len() > 0 && p.passwordTabWidgets.confirmEditor.Len() > 0 {
-			if !p.bothPasswordsMatch() {
-				p.errorLabel.Text = "Both passwords do not match"
-				return false
-			}
-		} else {
-			return false
-		}
-	} else {
-		if p.pinTabWidgets.confirmEditor.Len() == 0 || p.pinTabWidgets.spendingEditor.Len() == 0 {
-			return false
-		} else if !p.bothPinsMatch() {
-			p.errorLabel.Text = "Both pins do not match"
-			return false
-		}
+	if p.spendingEditor.widget.Len() > 0 && p.confirmEditor.widget.Len() > 0 && !p.bothPasswordsMatch() {
+		p.errorLabel.Text = "Both passwords do not match"
+		return false
 	}
 
 	return true
 }
 
-func (p *PasswordAndPin) bothPasswordsMatch() bool {
-	return p.passwordTabWidgets.confirmEditor.Text() == p.passwordTabWidgets.spendingEditor.Text()
+func (p *Password) bothPasswordsMatch() bool {
+	return p.confirmEditor.widget.Text() == p.spendingEditor.widget.Text()
 }
 
-func (p *PasswordAndPin) bothPinsMatch() bool {
-	return p.pinTabWidgets.confirmEditor.Text() == p.pinTabWidgets.spendingEditor.Text()
+// Reset empties the contents of the password form
+func (p *Password) Reset() {
+	p.spendingEditor.widget.SetText("")
+	p.confirmEditor.widget.SetText("")
 }
 
-// Reset empties the contents of the password and pin forms
-func (p *PasswordAndPin) Reset() {
-	p.passwordTabWidgets.spendingEditor.SetText("")
-	p.passwordTabWidgets.confirmEditor.SetText("")
-	p.pinTabWidgets.spendingEditor.SetText("")
-	p.pinTabWidgets.confirmEditor.SetText("")
+func (e *editor) layout(gtx *layout.Context) {
+	e.material.Layout(gtx, e.widget)
+	inset := layout.Inset{
+		Top: unit.Dp(float32(gtx.Constraints.Height.Min)),
+	}
+	inset.Layout(gtx, func() {
+		e.line.Draw(gtx)
+	})
 }
