@@ -23,6 +23,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
+	"github.com/raedahgroup/godcr-gio/ui"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -37,6 +38,8 @@ type Editor struct {
 	HintColor color.RGBA
 
 	shaper text.Shaper
+
+	line *Line
 
 	Alignment text.Alignment
 	// SingleLine force the text to stay on a single line.
@@ -116,6 +119,7 @@ func (t *Theme) Editor(hint, mask string) *Editor {
 		},
 		Color:     t.Color.Text,
 		shaper:    t.Shaper,
+		line:      t.Line(),
 		Hint:      hint,
 		mask:      mask,
 		HintColor: t.Color.Hint,
@@ -253,6 +257,11 @@ func (e *Editor) Focus() {
 
 // Draw draws the editor
 func (e *Editor) Draw(gtx *layout.Context) {
+	e.line.Color = ui.GrayColor
+	if e.focused {
+		e.line.Color = ui.LightBlueColor
+	}
+
 	var stack op.StackOp
 	stack.Push(gtx.Ops)
 	var macro op.MacroOp
@@ -277,6 +286,13 @@ func (e *Editor) Draw(gtx *layout.Context) {
 	paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
 	e.PaintCaret(gtx)
 	stack.Pop()
+
+	inset := layout.Inset{
+		Top: unit.Dp(float32(gtx.Constraints.Height.Min * len(e.lines))),
+	}
+	inset.Layout(gtx, func() {
+		e.line.Draw(gtx)
+	})
 }
 
 // Layout lays out the editor.

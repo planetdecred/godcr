@@ -48,7 +48,7 @@ func (e *editBuffer) deleteRunes(runes int) {
 		e.gapend += s
 		e.changed = e.changed || s > 0
 	}
-	e.dump()
+	//e.dump()
 }
 
 // moveGap moves the gap to the caret position. After returning,
@@ -84,7 +84,7 @@ func (e *editBuffer) moveGap(space int) {
 		e.gapstart = e.caret
 		e.gapend = e.gapstart + l
 	}
-	e.dump()
+	//e.dump()
 }
 
 func (e *editBuffer) len() int {
@@ -143,14 +143,14 @@ func (e *editBuffer) prepend(s string) {
 	copy(e.text[e.caret:], s)
 	e.gapstart += len(s)
 	e.changed = e.changed || len(s) > 0
-	e.dump()
+	//e.dump()
 }
 
-func (e *editBuffer) dump() {
+/**func (e *editBuffer) dump() {
 	if bufferDebug {
 		fmt.Printf("len(e.text) %d e.len() %d e.gapstart %d e.gapend %d e.caret %d txt:\n'%+x'<-%d->'%+x'\n", len(e.text), e.len(), e.gapstart, e.gapend, e.caret, e.text[:e.gapstart], e.gapLen(), e.text[e.gapend:])
 	}
-}
+}**/
 
 func (e *editBuffer) move(runes int) {
 	for ; runes < 0 && e.caret > 0; runes++ {
@@ -161,7 +161,7 @@ func (e *editBuffer) move(runes int) {
 		_, s := e.runeAt(e.caret)
 		e.caret += s
 	}
-	e.dump()
+	//e.dump()
 }
 
 func (e *editBuffer) runeBefore(idx int) (rune, int) {
