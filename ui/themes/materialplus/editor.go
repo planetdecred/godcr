@@ -28,6 +28,7 @@ import (
 )
 
 // Editor implements an editable and scrollable text area.
+// It also has the ability to mask it's content for use as a password editor.
 type Editor struct {
 	Font text.Font
 	// Color is the text color.
@@ -255,8 +256,8 @@ func (e *Editor) Focus() {
 	e.requestFocus = true
 }
 
-// Draw draws the editor
-func (e *Editor) Draw(gtx *layout.Context) {
+// Layout draws the editor
+func (e *Editor) Layout(gtx *layout.Context) {
 	e.line.Color = ui.GrayColor
 	if e.focused {
 		e.line.Color = ui.LightBlueColor
@@ -276,7 +277,7 @@ func (e *Editor) Draw(gtx *layout.Context) {
 	if h := gtx.Dimensions.Size.Y; gtx.Constraints.Height.Min < h {
 		gtx.Constraints.Height.Min = h
 	}
-	e.Layout(gtx, e.shaper, e.Font)
+	e.draw(gtx, e.shaper, e.Font)
 	if e.Len() > 0 {
 		paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
 		e.PaintText(gtx)
@@ -295,8 +296,7 @@ func (e *Editor) Draw(gtx *layout.Context) {
 	})
 }
 
-// Layout lays out the editor.
-func (e *Editor) Layout(gtx *layout.Context, sh text.Shaper, font text.Font) {
+func (e *Editor) draw(gtx *layout.Context, sh text.Shaper, font text.Font) {
 	// Flush events from before the previous frame.
 	copy(e.events, e.events[e.prevEvents:])
 	e.events = e.events[:len(e.events)-e.prevEvents]

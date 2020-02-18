@@ -3,7 +3,6 @@
 package materialplus
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"unicode/utf8"

@@ -102,7 +102,7 @@ func (pg *UITest) Draw(gtx *layout.Context) (res interface{}) {
 			pg.progressBar.Layout(gtx, 25)
 		},
 		func() {
-			pg.editor.Draw(gtx)
+			pg.editor.Layout(gtx)
 		},
 	}
 
