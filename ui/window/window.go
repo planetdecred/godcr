@@ -78,7 +78,7 @@ func (win *Window) Loop(shutdown chan int) {
 		case e := <-win.wallet.Send:
 			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
-				win.wallet.GetMultiWalletInfo(2)
+				win.wallet.GetMultiWalletInfo()
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {

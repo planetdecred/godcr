@@ -61,38 +61,38 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
 // CreateTransaction creates a TxAuthor with the given parameters.
 // The created TxAuthor will have to have a destination added before broadcasting.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) CreateTransaction(walletID int, accountID, confirms int32) {
-	go func(send chan<- Response, walletID int, acct, confirms int32) {
+func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
+	go func() {
 		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
 		if walletID > len(wallets) || walletID < 0 {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
-		if _, err := wallets[walletID].GetAccount(acct, confirms); err != nil {
+		if _, err := wallets[walletID].GetAccount(accountID, wal.confirms); err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
-		txAuthor := wallets[walletID].NewUnsignedTx(acct, confirms)
+		txAuthor := wallets[walletID].NewUnsignedTx(accountID, wal.confirms)
 		if txAuthor == nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
 		resp.Resp = txAuthor
-		send <- resp
-	}(wal.Send, walletID, accountID, confirms)
+		wal.Send <- resp
+	}()
 }
 
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
@@ -125,10 +125,10 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 }
 
 // GetMultiWalletInfo gets bulk information about the loaded wallets.
-// Information regarding transactions is collected with respect to confirms as the
+// Information regarding transactions is collected with respect to wal.confirms as the
 // number of required confirmations for said transactions.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
+func (wal *Wallet) GetMultiWalletInfo() {
 	go func() {
 		var resp Response
 		wallets, err := wal.wallets()
@@ -140,7 +140,7 @@ func (wal *Wallet) GetMultiWalletInfo(confirms int32) {
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		for i, wall := range wallets {
-			iter, err := wall.AccountsIterator(confirms)
+			iter, err := wall.AccountsIterator(wal.confirms)
 			if err != nil {
 				resp.Err = err
 				wal.Send <- resp

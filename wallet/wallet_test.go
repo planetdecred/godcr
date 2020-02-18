@@ -34,7 +34,7 @@ var (
 )
 var _ = BeforeSuite(func() {
 	var err error
-	wal, err = NewWallet(getTestDir(), testnet, make(chan Response))
+	wal, err = NewWallet(getTestDir(), testnet, make(chan Response), 2)
 	Expect(err).To(BeNil())
 	wal.LoadWallets()
 	resp := <-wal.Send
@@ -50,7 +50,7 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("Wallet", func() {
 	It("can get the multi wallet info", func() {
-		wal.GetMultiWalletInfo(1)
+		wal.GetMultiWalletInfo()
 		info := <-wal.Send
 		Expect(info.Resp).To(BeAssignableToTypeOf(&MultiWalletInfo{}))
 		inf := info.Resp.(*MultiWalletInfo)

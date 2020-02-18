@@ -49,7 +49,7 @@ func main() {
 		}
 	}
 
-	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3))
+	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3), 2)
 	wal.LoadWallets()
 
 	var wg sync.WaitGroup
