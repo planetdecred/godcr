@@ -15,6 +15,7 @@ type Wallet struct {
 	multi     *dcrlibwallet.MultiWallet
 	root, net string
 	Send      chan Response
+	confirms  int32
 }
 
 // InternalWalletError represents errors generated during the handling of the multiwallet
@@ -30,14 +31,15 @@ func (err InternalWalletError) Error() string {
 
 // NewWallet initializies an new Wallet instance.
 // The Wallet is not loaded until LoadWallets is called.
-func NewWallet(root string, net string, send chan Response) (*Wallet, error) {
+func NewWallet(root string, net string, send chan Response, confirms int32) (*Wallet, error) {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
 		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
 	wal := &Wallet{
-		root: root,
-		net:  net,
-		Send: send,
+		root:     root,
+		net:      net,
+		Send:     send,
+		confirms: confirms,
 	}
 
 	return wal, nil
