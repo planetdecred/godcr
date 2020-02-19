@@ -2,7 +2,6 @@ package page
 
 import (
 	"image/png"
-	"log"
 
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -41,11 +40,11 @@ func (pg *Loading) Init(theme *materialplus.Theme, _ *wallet.Wallet, states map[
 
 	file, err := pkger.Open("/assets/icons/decred-loader.png")
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	image, err := png.Decode(file)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	pg.icon = theme.Image(paint.NewImageOp(image))
 }

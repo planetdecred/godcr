@@ -6,18 +6,23 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op/paint"
+<<<<<<< HEAD
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"gioui.org/layout"
 	"gioui.org/text"
+=======
+>>>>>>> use slog logger
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
 	"github.com/markbates/pkger"
+	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+<<<<<<< HEAD
 <<<<<<< HEAD
 	"github.com/raedahgroup/godcr-gio/ui/units"
 =======
@@ -27,6 +32,10 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
 >>>>>>> add back button
 >>>>>>> add back button
+=======
+	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/ui/widgets"
+>>>>>>> use slog logger
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -82,11 +91,11 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 func (pg *Landing) Init(theme *materialplus.Theme, wallet *wallet.Wallet, states map[string]interface{}) {
 	file, err := pkger.Open("/assets/icons/decred.png")
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	image, err := png.Decode(file)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	pg.image = theme.Image(paint.NewImageOp(image))
 >>>>>>> add back button
@@ -99,11 +108,11 @@ func (pg *Landing) Init(theme *materialplus.Theme, wallet *wallet.Wallet, states
 
 	file, err = pkger.Open("/assets/icons/add.png")
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	image, err = png.Decode(file)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	pg.addIcon = theme.Image(paint.NewImageOp(image))
 
@@ -123,21 +132,21 @@ func (pg *Landing) Init(theme *materialplus.Theme, wallet *wallet.Wallet, states
 =======
 	file, err = pkger.Open("/assets/icons/restore.png")
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	image, err = png.Decode(file)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	pg.restoreIcon = theme.Image(paint.NewImageOp(image))
 
 	file, err = pkger.Open("/assets/icons/back.png")
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	image, err = png.Decode(file)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 	pg.backIcon = theme.Image(paint.NewImageOp(image))
 	pg.container = &layout.List{
@@ -171,6 +180,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 		},
 
 		func() {
+<<<<<<< HEAD
 			topInset := float32(0)
 
 			if pg.createErrorLabel.Text != "" {
@@ -190,21 +200,22 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 				}
 				pg.createBtn.Layout(gtx, pg.createWdg)
 			})
+=======
+			pg.image.Scale = 0.5
+			pg.image.Layout(gtx)
 		},
 
 		func() {
-			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-			if pg.restoreWdg.Clicked(gtx) {
-				log.Debugf("{%s} Restore Btn clicked", LandingID)
-				// res = EventNav {
-				// 	Current: LandingID,
-				// 	Next: CreateID,
-				// }
-			}
-			pg.restoreBtn.Layout(gtx, pg.restoreWdg)
+			layout.Inset{Bottom: unit.Dp(16)}.Layout(gtx, func() {})
+>>>>>>> use slog logger
 		},
 
 		func() {
+			pg.welcomeLabel.Layout(gtx)
+		},
+
+		func() {
+<<<<<<< HEAD
 			if walletInfo.LoadedWallets != 0 {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				for pg.walletsWdg.Clicked(gtx) {
@@ -219,6 +230,29 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 				pg.walletsBtn.Layout(gtx, pg.walletsWdg)
 
 			}
+=======
+			layout.Inset{Bottom: unit.Dp(270)}.Layout(gtx, func() {})
+		},
+
+		func() {
+			imgBt := widgets.NewImageButton(&pg.addIcon, "Create a new wallet")
+			imgBt.Background = ui.LightBlueColor
+			imgBt.VPadding = unit.Dp(20)
+			imgBt.Src.Scale = 0.3
+			imgBt.Font.Size = units.SmallText
+
+			imgBt.Layout(gtx, pg.createButton, 20)
+		},
+
+		func() {
+			imgBt := widgets.NewImageButton(&pg.restoreIcon, "Restore an existing wallet")
+			imgBt.Background = ui.LighGreenColor
+			imgBt.VPadding = unit.Dp(20)
+			imgBt.Src.Scale = 0.3
+			imgBt.Font.Size = units.SmallText
+
+			imgBt.Layout(gtx, pg.restoreButton, 20)
+>>>>>>> use slog logger
 		},
 	}
 
@@ -265,8 +299,12 @@ func (pg *Landing) drawPasswordModal(gtx *layout.Context) {
 		pg.passwordModal.Draw(gtx, pg.confirm, pg.cancel)
 =======
 	pg.container.Layout(gtx, len(widgets), func(i int) {
+<<<<<<< HEAD
 		layout.Inset{Tozp: unit.Dp(8), Left: unit.Dp(24), Right: unit.Dp(24), Bottom: unit.Dp(8)}.Layout(gtx, widgets[i])
 >>>>>>> add back button
+=======
+		layout.Inset{Top: unit.Dp(8), Left: unit.Dp(24), Right: unit.Dp(24), Bottom: unit.Dp(8)}.Layout(gtx, widgets[i])
+>>>>>>> use slog logger
 	})
 }
 
