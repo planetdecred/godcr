@@ -80,11 +80,13 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 
 	createButton  *widget.Button
 	restoreButton *widget.Button
+	backButton    *widget.Button
 
 	addIcon     material.Image
 	restoreIcon material.Image
 	backIcon    material.Image
-	walletExits bool
+
+	states map[string]interface{}
 }
 
 // Init adds a heading and two buttons.
@@ -103,8 +105,14 @@ func (pg *Landing) Init(theme *materialplus.Theme, wallet *wallet.Wallet, states
 	pg.createErrorLabel = theme.Body2("")
 	pg.createErrorLabel.Color = theme.Danger
 
+<<<<<<< HEAD
 	pg.createBtn = theme.Button("Create Wallet")
 	pg.createWdg = new(widget.Button)
+=======
+	pg.createButton = new(widget.Button)
+	pg.restoreButton = new(widget.Button)
+	pg.backButton = new(widget.Button)
+>>>>>>> back button supports
 
 	file, err = pkger.Open("/assets/icons/add.png")
 	if err != nil {
@@ -152,7 +160,12 @@ func (pg *Landing) Init(theme *materialplus.Theme, wallet *wallet.Wallet, states
 	pg.container = &layout.List{
 		Axis: layout.Vertical,
 	}
+<<<<<<< HEAD
 >>>>>>> add back button
+=======
+
+	pg.states = states
+>>>>>>> back button supports
 }
 
 // Draw draws the page's to the given layout context.
@@ -172,11 +185,19 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 			imgBt.Background = color.RGBA{255, 255, 255, 255}
 			imgBt.Src.Scale = 0.5
 			imgBt.HPadding = unit.Dp(0)
-			imgBt.Layout(gtx, pg.createButton, 20)
+			imgBt.Layout(gtx, pg.backButton, 20)
+			for pg.backButton.Clicked(gtx) {
+				ev := EventNav{
+					Current: LandingID,
+					Next:    WalletsID,
+				}
+
+				res = ev
+			}
 		},
 
 		func() {
-			layout.Inset{Bottom: unit.Dp(16)}.Layout(gtx, func() {})
+			layout.Inset{Bottom: unit.Dp(6)}.Layout(gtx, func() {})
 		},
 
 		func() {
@@ -257,6 +278,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	pg.container.Layout(gtx, len(widgets),
 		layout.ListElement(func(i int) {
 			layout.UniformInset(units.FlexInset).Layout(gtx, widgets[i])
@@ -298,6 +320,18 @@ func (pg *Landing) drawPasswordModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, func() {
 		pg.passwordModal.Draw(gtx, pg.confirm, pg.cancel)
 =======
+=======
+	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
+	if walletInfo.LoadedWallets == 0 {
+		widgets[0] = func() {
+			layout.Inset{Bottom: unit.Dp(12)}.Layout(gtx, func() {})
+		}
+		widgets[5] = func() {
+			layout.Inset{Bottom: unit.Dp(310)}.Layout(gtx, func() {})
+		}
+	}
+
+>>>>>>> back button supports
 	pg.container.Layout(gtx, len(widgets), func(i int) {
 <<<<<<< HEAD
 		layout.Inset{Tozp: unit.Dp(8), Left: unit.Dp(24), Right: unit.Dp(24), Bottom: unit.Dp(8)}.Layout(gtx, widgets[i])
@@ -324,9 +358,13 @@ func (pg *Landing) cancel() {
 	pg.isShowingPasswordModal = false
 }
 
+<<<<<<< HEAD
 func (pg *Landing) reset() {
 	pg.isCreatingWallet = false
 	pg.createBtn.Text = "Create wallet"
 	pg.createBtn.Background = pg.theme.Color.Primary
 	pg.createErrorLabel.Text = ""
+=======
+	return res
+>>>>>>> back button supports
 }
