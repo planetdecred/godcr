@@ -23,6 +23,7 @@ type Overview struct {
 	theme *materialplus.Theme
 
 	syncButtonWidget    *widget.Button
+	moreButtonWidget    *widget.Button
 	progressBar         *materialplus.ProgressBar
 	balanceTitle        material.Label
 	mainBalance         material.Label
@@ -33,6 +34,7 @@ type Overview struct {
 	syncStatus          material.Label
 	onlineStatus        material.Label
 	syncButton          material.Button
+	moreButton          material.Button
 	syncButtonCard      materialplus.Card
 	progressPercentage  material.Label
 	timeLeft            material.Label
@@ -101,6 +103,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.balance = 0
 	page.mainBalance = theme.H4("")
 	page.subBalance = theme.H6("")
+	page.moreButton = theme.Button("more")
 	page.statusTitle = theme.Caption("Wallet Status")
 	page.syncStatus = theme.H6("Syncing...")
 	page.onlineStatus = theme.Body1(" ")
@@ -202,6 +205,7 @@ func (page *Overview) updateSyncProgressData() {
 		page.walletSyncStatus = page.states[StateSyncStatus].(*wallet.SyncStatus)
 		page.progress = float64(page.walletSyncStatus.Progress)
 		page.progressPercentage.Text = fmt.Sprintf("%v%%", page.progress)
+		page.timeLeft.Text = fmt.Sprintf("%v left", helper.RemainingSyncTime(page.walletSyncStatus.RemainingTime))
 		page.timeLeft.Text = fmt.Sprintf("%v left", helper.RemainingSyncTime(page.walletSyncStatus.RemainingTime))
 		page.headersFetched.Text = fmt.Sprintf("Fetching block headers. %v%%", page.walletSyncStatus.HeadersFetchProgress)
 		page.connectedPeers.Text = fmt.Sprintf("%d", page.walletSyncStatus.ConnectedPeers)

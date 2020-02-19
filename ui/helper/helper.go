@@ -56,28 +56,12 @@ func divMod(numerator, denominator int64) (quotient, remainder int64) {
 
 // RemainingSyncTime takes time on int64 and returns its string equivalent.
 func RemainingSyncTime(totalTimeLeft int64) string {
-	var days, hours, minutes, seconds int64
-
 	q, r := divMod(totalTimeLeft, 24*60*60)
-	days = q
-	totalTimeLeft = r
-	q, r = divMod(totalTimeLeft, 60*60)
-	hours = q
-	totalTimeLeft = r
-	q, r = divMod(totalTimeLeft, 60)
-	minutes = q
-	totalTimeLeft = r
-	seconds = totalTimeLeft
-	if days > 0 {
-		return fmt.Sprintf("%d"+"d"+"%d"+"h"+"%d"+"m"+"%d"+"s", days, hours, minutes, seconds)
+	timeLeft := time.Duration(r) * time.Second
+	if q > 0 {
+		return fmt.Sprintf("%dd%s", q, timeLeft.String())
 	}
-	if hours > 0 {
-		return fmt.Sprintf("%d"+"h"+"%d"+"m"+"%d"+"s", hours, minutes, seconds)
-	}
-	if minutes > 0 {
-		return fmt.Sprintf("%d"+"m"+"%d"+"s", minutes, seconds)
-	}
-	return fmt.Sprintf("%d"+"s", seconds)
+	return timeLeft.String()
 }
 
 // WalletSyncStatus returns the sync status of a single wallet

@@ -24,9 +24,9 @@ type MultiWalletInfo struct {
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
 	ID              int
-	Name     string
-	Balance  int64
-	Accounts []int32
+	Name            string
+	Balance         int64
+	Accounts        []int32
 	BestBlockHeight int32
 	BlockTimestamp  int64
 	IsWaiting       bool
