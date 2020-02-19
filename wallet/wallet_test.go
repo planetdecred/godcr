@@ -39,7 +39,7 @@ var _ = BeforeSuite(func() {
 	wal.LoadWallets()
 	resp := <-wal.Send
 	Expect(resp.Resp).To(BeAssignableToTypeOf(&LoadedWallets{}))
-	wal.CreateWallet("password", 1)
+	wal.CreateWallet("password")
 	resp = <-wal.Send
 	Expect(resp.Resp).To(BeAssignableToTypeOf(&CreatedSeed{}))
 })

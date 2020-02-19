@@ -26,10 +26,10 @@ var (
 
 // CreateWallet creates a new wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
+func (wal *Wallet) CreateWallet(passphrase string) {
 	go func() {
 		var resp Response
-		wall, err := wal.multi.CreateNewWallet(passphrase, passtype)
+		wall, err := wal.multi.CreateNewWallet(passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
 			resp.Err = err
 			wal.Send <- resp
@@ -44,10 +44,10 @@ func (wal *Wallet) CreateWallet(passphrase string, passtype int32) {
 
 // RestoreWallet restores a wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) RestoreWallet(seed, passphrase string, passtype int32) {
+func (wal *Wallet) RestoreWallet(seed, passphrase string) {
 	go func() {
 		var resp Response
-		_, err := wal.multi.RestoreWallet(seed, passphrase, passtype)
+		_, err := wal.multi.RestoreWallet(seed, passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
 			resp.Err = err
 			wal.Send <- resp
