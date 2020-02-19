@@ -42,6 +42,11 @@ type CreatedSeed struct {
 	Seed string
 }
 
+// DeletedWallet is sent when a wallet is deleted
+type DeletedWallet struct {
+	ID int
+}
+
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
 	Txs [][]dcrlibwallet.Transaction
