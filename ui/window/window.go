@@ -84,7 +84,7 @@ func (win *Window) Loop(shutdown chan int) {
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
-					win.current = page.UITestID
+					win.current = page.OverviewID
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
@@ -151,7 +151,7 @@ func (win *Window) updateState(t interface{}) {
 // stateObject fetches and returns the state if it already exists in the state map.
 // Otherwise, it creates a new state object and returns a pointer of that state.
 func (win Window) stateObject(key string) interface{} {
-	if state, ok := win.states[page.StateSyncStatus]; ok {
+	if state, ok := win.states[key]; ok {
 		return state
 	}
 	switch key {
@@ -183,7 +183,7 @@ func (win Window) updateHeaderFetchProgress(resp wallet.SyncHeadersFetchProgress
 	syncState.Steps = wallet.FetchHeadersStep
 	syncState.CurrentBlockHeight = resp.Progress.CurrentHeaderHeight
 	// update wallet state when new headers are fetched
-	win.wallet.GetMultiWalletInfo(2)
+	win.wallet.GetMultiWalletInfo()
 }
 
 // updateSyncProgress updates rescan Header Progress in the SyncStatus state
