@@ -49,7 +49,7 @@ func main() {
 		}
 	}
 
-	var confirms int32 = 2
+	var confirms int32 = dcrlibwallet.DefaultRequiredConfirmations
 
 	if cfg.SpendUnconfirmed {
 		confirms = 0
