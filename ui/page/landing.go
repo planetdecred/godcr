@@ -34,10 +34,10 @@ type Landing struct {
 	walletsBtn material.Button
 	walletsWdg *widget.Button
 
-	isCreatingWallet             bool
-	isShowingPasswordAndPinModal bool
-	walletCreationSuccessEvent   interface{}
-	passwordAndPinModal          *materialplus.Password
+	isCreatingWallet           bool
+	isShowingPasswordModal     bool
+	walletCreationSuccessEvent interface{}
+	passwordModal              *materialplus.Password
 
 	states map[string]interface{}
 	theme  *materialplus.Theme
@@ -64,9 +64,9 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.inset = layout.UniformInset(units.FlexInset)
 	pg.container = layout.List{Axis: layout.Vertical}
 	pg.isCreatingWallet = false
-	pg.isShowingPasswordAndPinModal = false
+	pg.isShowingPasswordModal = false
 	pg.walletCreationSuccessEvent = nil
-	pg.passwordAndPinModal = theme.Password()
+	pg.passwordModal = theme.Password()
 	pg.states = states
 	pg.theme = theme
 	pg.wal = wal
@@ -98,7 +98,7 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				for pg.createWdg.Clicked(gtx) {
 					if !pg.isCreatingWallet {
-						pg.isShowingPasswordAndPinModal = !pg.isShowingPasswordAndPinModal
+						pg.isShowingPasswordModal = !pg.isShowingPasswordModal
 					}
 				}
 				pg.createBtn.Layout(gtx, pg.createWdg)
@@ -139,8 +139,8 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 		}),
 	)
 
-	if pg.isShowingPasswordAndPinModal {
-		pg.drawPasswordAndPinModal(gtx)
+	if pg.isShowingPasswordModal {
+		pg.drawPasswordModal(gtx)
 	}
 
 	ev := pg.walletCreationSuccessEvent
@@ -162,6 +162,7 @@ func (pg *Landing) watchForStatesUpdate() {
 	pg.reset()
 
 	if created != nil {
+		pg.passwordModal.Reset()
 		delete(pg.states, StateWalletCreated)
 
 		pg.walletCreationSuccessEvent = EventNav{
@@ -174,9 +175,9 @@ func (pg *Landing) watchForStatesUpdate() {
 	}
 }
 
-func (pg *Landing) drawPasswordAndPinModal(gtx *layout.Context) {
+func (pg *Landing) drawPasswordModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, func() {
-		pg.passwordAndPinModal.Draw(gtx, pg.createFunc, pg.cancelFunc)
+		pg.passwordModal.Draw(gtx, pg.createFunc, pg.cancelFunc)
 	})
 }
 
@@ -187,13 +188,13 @@ func (pg *Landing) createFunc(password string) {
 	pg.createBtn.Background = ui.GrayColor
 
 	pg.isCreatingWallet = true
-	pg.isShowingPasswordAndPinModal = false
+	pg.isShowingPasswordModal = false
 
 	pg.wal.CreateWallet(password, 0)
 }
 
 func (pg *Landing) cancelFunc() {
-	pg.isShowingPasswordAndPinModal = false
+	pg.isShowingPasswordModal = false
 }
 
 func (pg *Landing) reset() {
