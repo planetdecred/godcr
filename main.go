@@ -11,7 +11,6 @@ import (
 	"gioui.org/text"
 
 	"github.com/markbates/pkger"
-
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/ui/window"

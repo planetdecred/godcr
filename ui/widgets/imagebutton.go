@@ -4,8 +4,6 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/raedahgroup/godcr-gio/ui/helper"
-
 	"gioui.org/f32"
 	"gioui.org/font"
 	"gioui.org/io/pointer"
@@ -17,6 +15,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
+	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 )
 
 type ImageButton struct {
@@ -41,8 +41,8 @@ func NewImageButton(img *material.Image, text string) ImageButton {
 		Font: gioText.Font{
 			Size: unit.Sp(16).Scale(14.0 / 16.0),
 		},
-		Color:      helper.RGB(0xffffff),
-		Background: helper.RGB(0x3f51b5),
+		Color:      materialplus.RGB(0xffffff),
+		Background: materialplus.RGB(0x3f51b5),
 		shaper:     font.Default(),
 		alignment:  layout.Middle,
 		Axis:       layout.Horizontal,
@@ -68,7 +68,7 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 				NE: rr, NW: rr, SE: rr, SW: rr,
 			}.Op(gtx.Ops).Add(gtx.Ops)
 
-			helper.Fill(gtx, b.Background)
+			materialplus.Fill(gtx, b.Background, gtx.Constraints.Width.Min, gtx.Constraints.Height.Min)
 			for _, c := range button.History() {
 				drawInk(gtx, c)
 			}
