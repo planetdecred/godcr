@@ -60,6 +60,19 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string) {
 	}()
 }
 
+// DeleteWallet deletes a wallet.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) DeleteWallet(walletID int, passphrase string) {
+	go func() {
+		var resp Response
+		resp.Err = wal.multi.DeleteWallet(walletID, []byte(passphrase))
+		if resp.Err == nil {
+			resp.Resp = DeletedWallet{ID: walletID}
+		}
+		wal.Send <- resp
+	}()
+}
+
 // CreateTransaction creates a TxAuthor with the given parameters.
 // The created TxAuthor will have to have a destination added before broadcasting.
 // It is non-blocking and sends its result or any error to wal.Send.
