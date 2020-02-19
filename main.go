@@ -49,7 +49,13 @@ func main() {
 		}
 	}
 
-	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3), 2)
+	var confirms int32 = 2
+
+	if cfg.SpendUnconfirmed {
+		confirms = 0
+	}
+
+	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3), confirms)
 	wal.LoadWallets()
 
 	var wg sync.WaitGroup
