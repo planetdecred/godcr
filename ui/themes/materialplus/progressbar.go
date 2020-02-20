@@ -10,20 +10,20 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/values"
 )
 
-type (
-	ProgressBar struct {
-		Height          int
-		BackgroundColor color.RGBA
-		ProgressColor   color.RGBA
-	}
-)
+// ProgressBar indicates the progress of a process. Height defines the thickness of the progressbar,
+// BackgroundColor defines the color of the track, ProgressColor defines the color of the moving progress.
+type ProgressBar struct {
+	Height          int
+	BackgroundColor color.RGBA
+	ProgressColor   color.RGBA
+}
 
-// tracks lays out a rectangle to represent the level of progress yet to be completed.
+// track lays out a rectangle to represent the level of progress yet to be completed.
 func (p *ProgressBar) track(gtx *layout.Context) {
 	borderedRectangle(gtx, values.ProgressBarGray, gtx.Constraints.Width.Max, p.Height)
 }
 
-// values lays out a rectangle to represent the level of progress that has been completed.
+// value lays out a rectangle to represent the level of progress that has been completed.
 func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
 	width := progress / 100 * float64(gtx.Constraints.Width.Max)
 	if width > float64(gtx.Constraints.Width.Max) {
@@ -32,8 +32,7 @@ func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
 	borderedRectangle(gtx, p.ProgressColor, int(width), p.Height)
 }
 
-// borderedRectangle defines the dimensions of the rectangle.
-//func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
+// borderedRectangle defines the dimensions of the rectangle, draws it and adds color it using the Fill method.
 func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
 	br := float32(y / 5)
 	rect := f32.Rectangle{
@@ -60,7 +59,7 @@ func (p *ProgressBar) Layout(gtx *layout.Context, progress float64) {
 	)
 }
 
-// NewProgressBar creates a new ProgressBar object.
+// ProgressBar returns a new ProgressBar instance.
 func (t *Theme) ProgressBar() *ProgressBar {
 	return &ProgressBar{
 		Height:          values.DefaultProgressBarHeight,
