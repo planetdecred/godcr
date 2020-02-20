@@ -46,7 +46,7 @@ import (
 const LandingID = "landing"
 
 // Landing represents the landing page of the app.
-// It's shown when the users are to create or restore a wallet.
+// It's shown when users are to create or restore a wallet.
 type Landing struct {
 <<<<<<< HEAD
 	inset            layout.Inset
