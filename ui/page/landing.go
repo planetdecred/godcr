@@ -1,8 +1,6 @@
 package page
 
 import (
-	//"fmt"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -74,7 +72,12 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 
 // Draw draws the page's to the given layout context.
 // Does not react to any event but can return a Nav event.
-func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
+func (pg *Landing) Draw(gtx *layout.Context) interface{} {
+	ev := pg.walletCreationSuccessEvent
+	if pg.walletCreationSuccessEvent != nil {
+		pg.walletCreationSuccessEvent = nil
+	}
+
 	pg.watchForStatesUpdate()
 
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
@@ -121,7 +124,7 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 				for pg.walletsWdg.Clicked(gtx) {
 					if !pg.isCreatingWallet {
 						pg.reset()
-						res = EventNav{
+						ev = EventNav{
 							Current: LandingID,
 							Next:    WalletsID,
 						}
@@ -141,11 +144,6 @@ func (pg *Landing) Draw(gtx *layout.Context) (res interface{}) {
 
 	if pg.isShowingPasswordModal {
 		pg.drawPasswordModal(gtx)
-	}
-
-	ev := pg.walletCreationSuccessEvent
-	if pg.walletCreationSuccessEvent != nil {
-		pg.walletCreationSuccessEvent = nil
 	}
 
 	return ev

@@ -128,6 +128,7 @@ func (win *Window) updateState(t interface{}) {
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
 	case *wallet.CreatedSeed:
+		win.wallet.GetMultiWalletInfo(2)
 		win.states[page.StateWalletCreated] = t
 	}
 }
