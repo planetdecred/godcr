@@ -19,6 +19,7 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 )
 
+// ImageButton represents an image button widget which supports both image and texts in buttons
 type ImageButton struct {
 	Text       string
 	Font       gioText.Font
@@ -33,6 +34,7 @@ type ImageButton struct {
 	Src       *material.Image
 }
 
+// NewImageButton returns an image button instance
 func NewImageButton(img *material.Image, text string) ImageButton {
 	img.Scale = 0.2
 
@@ -53,9 +55,10 @@ func NewImageButton(img *material.Image, text string) ImageButton {
 	}
 }
 
+// Layout renders the select instance on screen
 func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTextSpace float32) {
-	hmin := gtx.Constraints.Width.Min
-	vmin := gtx.Constraints.Height.Min
+	wmin := gtx.Constraints.Width.Min
+	hmin := gtx.Constraints.Height.Min
 
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
@@ -76,8 +79,8 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 
 		layout.Stacked(func() {
 			iconAndLabel := layout.Flex{Axis: b.Axis, Alignment: layout.Middle}
-			gtx.Constraints.Width.Min = hmin
-			gtx.Constraints.Height.Min = vmin
+			gtx.Constraints.Width.Min = wmin
+			gtx.Constraints.Height.Min = hmin
 
 			icon := layout.Rigid(func() {
 				layout.Inset{Top: b.VPadding, Left: b.HPadding, Bottom: b.VPadding, Right: unit.Dp(buttonTextSpace / 2)}.Layout(gtx, func() {
@@ -104,6 +107,7 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 	)
 }
 
+// drawInk inks button space
 func drawInk(gtx *layout.Context, c widget.Click) {
 	d := gtx.Now().Sub(c.Time)
 	t := float32(d.Seconds())
