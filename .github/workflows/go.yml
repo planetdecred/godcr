@@ -43,4 +43,4 @@ jobs:
             --enable staticcheck --enable gosimple \
             --enable unconvert --enable ineffassign \
             --enable structcheck --enable goimports \
-            --enable misspell --enable unparam --enable go-lint
+            --enable misspell --enable unparam --enable golint
