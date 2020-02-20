@@ -10,9 +10,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	// "gioui.org/gesture"
 
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui"
@@ -455,11 +453,11 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Left: unit.Dp(15)}.Layout(gtx, func() {
-								if pg.dropDownBtnWdg.Clicked(gtx) {
-									pg.isInfoBtnModal = true
-								}
-								pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
-							})
+							if pg.dropDownBtnWdg.Clicked(gtx) {
+								pg.isAccountModalOpen = true
+							}
+							pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
+						})
 					}),
 				)
 			})
