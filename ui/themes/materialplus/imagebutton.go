@@ -1,4 +1,4 @@
-package widgets
+package materialplus
 
 import (
 	"image"
@@ -15,8 +15,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 )
 
 // ImageButton represents an image button widget which supports both image and texts in buttons
@@ -43,8 +41,8 @@ func NewImageButton(img *material.Image, text string) ImageButton {
 		Font: gioText.Font{
 			Size: unit.Sp(16).Scale(14.0 / 16.0),
 		},
-		Color:      materialplus.RGB(0xffffff),
-		Background: materialplus.RGB(0x3f51b5),
+		Color:      RGB(0xffffff),
+		Background: RGB(0x3f51b5),
 		shaper:     font.Default(),
 		alignment:  layout.Middle,
 		Axis:       layout.Horizontal,
@@ -55,7 +53,7 @@ func NewImageButton(img *material.Image, text string) ImageButton {
 	}
 }
 
-// Layout renders the select instance on screen
+// Layout renders the ImageButton instance on screen
 func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTextSpace float32) {
 	wmin := gtx.Constraints.Width.Min
 	hmin := gtx.Constraints.Height.Min
@@ -71,7 +69,7 @@ func (b ImageButton) Layout(gtx *layout.Context, button *widget.Button, buttonTe
 				NE: rr, NW: rr, SE: rr, SW: rr,
 			}.Op(gtx.Ops).Add(gtx.Ops)
 
-			materialplus.Fill(gtx, b.Background, gtx.Constraints.Width.Min, gtx.Constraints.Height.Min)
+			Fill(gtx, b.Background, gtx.Constraints.Width.Min, gtx.Constraints.Height.Min)
 			for _, c := range button.History() {
 				drawInk(gtx, c)
 			}

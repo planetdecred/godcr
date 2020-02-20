@@ -34,8 +34,11 @@ import (
 >>>>>>> add back button
 =======
 	"github.com/raedahgroup/godcr-gio/ui/units"
+<<<<<<< HEAD
 	"github.com/raedahgroup/godcr-gio/ui/widgets"
 >>>>>>> use slog logger
+=======
+>>>>>>> moved imagebutton to material widget
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -181,7 +184,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
 		func() {
-			imgBt := widgets.NewImageButton(&pg.backIcon, "")
+			imgBt := materialplus.NewImageButton(&pg.backIcon, "")
 			imgBt.Background = color.RGBA{255, 255, 255, 255}
 			imgBt.Src.Scale = 0.5
 			imgBt.HPadding = unit.Dp(0)
@@ -256,7 +259,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 		},
 
 		func() {
-			imgBt := widgets.NewImageButton(&pg.addIcon, "Create a new wallet")
+			imgBt := materialplus.NewImageButton(&pg.addIcon, "Create a new wallet")
 			imgBt.Background = ui.LightBlueColor
 			imgBt.VPadding = unit.Dp(20)
 			imgBt.Src.Scale = 0.3
@@ -266,7 +269,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 		},
 
 		func() {
-			imgBt := widgets.NewImageButton(&pg.restoreIcon, "Restore an existing wallet")
+			imgBt := materialplus.NewImageButton(&pg.restoreIcon, "Restore an existing wallet")
 			imgBt.Background = ui.LighGreenColor
 			imgBt.VPadding = unit.Dp(20)
 			imgBt.Src.Scale = 0.3
