@@ -188,7 +188,7 @@ func (pg *Landing) createFunc(password string) {
 	pg.isCreatingWallet = true
 	pg.isShowingPasswordModal = false
 
-	pg.wal.CreateWallet(password, 0)
+	pg.wal.CreateWallet(password)
 }
 
 func (pg *Landing) cancelFunc() {
