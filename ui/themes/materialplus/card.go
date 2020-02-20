@@ -44,7 +44,7 @@ func (c *Card) Layout(gtx *layout.Context, borderRadius float32) {
 	Fill(gtx, c.Color, c.Width, c.Height)
 }
 
-// NewCard creates a new card object
+// Card returns an instance of Card
 func (t *Theme) Card() Card {
 	return Card{
 		Color: values.DefaultCardGray,

@@ -27,7 +27,7 @@ var (
 	// TransactionBalanceMain is the unit for the main balance text size on a transaction row
 	TransactionBalanceMain = unit.Dp(14)
 
-	// TransactionBalanceMain is the unit for the main balance text size on a transaction row
+	// TransactionBalanceSub is the unit for the main balance text size on a transaction row
 	TransactionBalanceSub = unit.Dp(10)
 
 	// TransactionsRowMargin is the unit for uniform spacing between widgets in a recent transaction row

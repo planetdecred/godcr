@@ -15,6 +15,7 @@ import (
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
+// OverviewID is the id of the overview page
 const OverviewID = "overview"
 
 // Overview represents the overview page of the app.
@@ -35,7 +36,7 @@ type Overview struct {
 	onlineStatus        material.Label
 	syncButton          material.Button
 	moreButton          material.Button
-	syncButtonCard      materialplus.Card
+	card                materialplus.Card
 	progressPercentage  material.Label
 	timeLeft            material.Label
 	syncSteps           material.Label
@@ -104,6 +105,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.mainBalance = theme.H4("")
 	page.subBalance = theme.H6("")
 	page.moreButton = theme.Button("more")
+	page.moreButtonWidget = new(widget.Button)
 	page.statusTitle = theme.Caption("Wallet Status")
 	page.syncStatus = theme.H6("Syncing...")
 	page.onlineStatus = theme.Body1(" ")
@@ -122,7 +124,7 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.walletSyncCard = theme.Card()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
 	page.noTransaction = theme.Caption("no transactions")
-	page.syncButtonCard = theme.Card()
+	page.card = theme.Card()
 	page.latestBlockTitle = theme.Body1("Latest Block")
 	page.latestBlock = theme.Body1("")
 
@@ -333,6 +335,35 @@ func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 					layout.Inset{Top: units.Padding}.Layout(gtx, transactionRows[i])
 				})
 			}),
+			layout.Rigid(func() {
+				if len(transactionRows) > 5 {
+					layout.Align(layout.Center).Layout(gtx, func() {
+						layout.Inset{Top: units.Padding}.Layout(gtx, func() {
+							layout.Stack{}.Layout(gtx,
+								layout.Stacked(func() {
+									page.card.Color = values.ButtonGray
+									page.card.Width = values.MoreButtonWidth
+									page.card.Height = values.MoreButtonHeight
+									page.card.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+								}),
+								layout.Expanded(func() {
+									layout.Align(layout.Center).Layout(gtx, func() {
+										gtx.Constraints.Width.Min = values.MoreButtonWidth - values.ButtonBorder
+										gtx.Constraints.Height.Max = values.MoreButtonHeight - values.ButtonBorder
+										page.moreButton.Color = values.ButtonGray
+										page.moreButton.Background = values.White
+										page.moreButton.Font.Size = units.SyncButtonTextSize
+										page.moreButton.Layout(gtx, page.moreButtonWidget)
+										for page.moreButtonWidget.Clicked(gtx) {
+											// go to transactions page
+										}
+									})
+								}),
+							)
+						})
+					})
+				}
+			}),
 		)
 	})
 }
@@ -449,34 +480,23 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 				layout.Align(layout.E).Layout(gtx, func() {
 					layout.Stack{}.Layout(gtx,
 						layout.Stacked(func() {
-							page.syncButtonCard.Color = values.ButtonGray
-							page.syncButtonCard.Width = values.SyncButtonWidth
-							page.syncButtonCard.Height = values.SyncButtonHeight
-							page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+							page.card.Color = values.ButtonGray
+							page.card.Width = values.SyncButtonWidth
+							page.card.Height = values.SyncButtonHeight
+							page.card.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 						}),
 						layout.Expanded(func() {
-							gtx.Constraints.Width.Max = values.SyncButtonWidth
-							gtx.Constraints.Height.Max = values.SyncButtonHeight
-							layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-								layout.Flexed(1, func() {
-									layout.Align(layout.Center).Layout(gtx, func() {
-										layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-											layout.Flexed(1, func() {
-												layout.Align(layout.Center).Layout(gtx, func() {
-													page.syncButton.Font.Size = units.SyncButtonTextSize
-													page.syncButton.Color = values.ButtonGray
-													page.syncButton.Background = values.White
-													gtx.Constraints.Width.Min = values.SyncButtonWidth - values.SyncButtonBorder
-													page.syncButton.Layout(gtx, page.syncButtonWidget)
-													for page.syncButtonWidget.Clicked(gtx) {
-														page.triggerSync()
-													}
-												})
-											}),
-										)
-									})
-								}),
-							)
+							layout.Align(layout.Center).Layout(gtx, func() {
+								gtx.Constraints.Width.Min = values.SyncButtonWidth - values.ButtonBorder
+								gtx.Constraints.Height.Max = values.SyncButtonHeight - values.ButtonBorder
+								page.syncButton.Color = values.ButtonGray
+								page.syncButton.Background = values.White
+								page.syncButton.Font.Size = units.SyncButtonTextSize
+								page.syncButton.Layout(gtx, page.syncButtonWidget)
+								for page.syncButtonWidget.Clicked(gtx) {
+									page.triggerSync()
+								}
+							})
 						}),
 					)
 				})

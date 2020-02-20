@@ -11,9 +11,17 @@ var (
 	// SyncButtonHeight is the height for the button used to trigger sync actions
 	SyncButtonHeight = 70
 
-	// SyncButtonWidth is the height for the button used to trigger sync actions
+	// SyncButtonWidth is the width for the button used to trigger sync actions
 	SyncButtonWidth = 145
 
-	// SyncButtonBorder is the border width for the sync trigger button
-	SyncButtonBorder = 4
+	// ButtonBorder is the border width for the sync trigger button
+	ButtonBorder = 4
+
+	// MoreButtonWidth is the width for the button used to navigate to the transaction page from the overview
+	// page
+	MoreButtonWidth = 115
+
+	// MoreButtonHeight is the height for the button used to navigate to the transaction page from the overview
+	// page
+	MoreButtonHeight = 70
 )
