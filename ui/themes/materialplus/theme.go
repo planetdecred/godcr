@@ -2,6 +2,8 @@ package materialplus
 
 import (
 	"gioui.org/widget/material"
+
+	"github.com/raedahgroup/godcr-gio/ui"
 )
 
 // Theme is an extenstion of gio's material theme
@@ -11,7 +13,10 @@ type Theme struct {
 
 // NewTheme returns a new materialplus theme
 func NewTheme() *Theme {
-	return &Theme{
-		Theme: material.NewTheme(),
+	theme := &Theme{
+		material.NewTheme(),
 	}
+	theme.Color.Primary = ui.LightBlueColor
+
+	return theme
 }
