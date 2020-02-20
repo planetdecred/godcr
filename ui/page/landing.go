@@ -46,8 +46,7 @@ import (
 const LandingID = "landing"
 
 // Landing represents the landing page of the app.
-// It should only be should shown if the app launches
-// and cannot find any wallets.
+// It's shown when the users are to create or restore a wallet.
 type Landing struct {
 <<<<<<< HEAD
 	inset            layout.Inset
