@@ -11,9 +11,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	// "gioui.org/gesture"
 
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui"
@@ -92,16 +90,23 @@ type Receive struct {
 
 	accountSelectorButtons map[string]*widget.Button
 
-	infoModalWidgets *infoModalWidgets
-	moreModalWidgets *moreModalWidgets
-	walletInfo        *wallet.MultiWalletInfo
-
-	// userClicks   gesture.Click
+	infoModalWidgets      *infoModalWidgets
+	moreModalWidgets      *moreModalWidgets
+	walletInfo            *wallet.MultiWalletInfo
+	accountSelectionModal *accountSelectionModal
 
 	isGenerateNewAddBtnModal bool
 	isInfoBtnModal           bool
-	selectedWallet *wallet.Wallet
-	wallet            *wallet.Wallet
+	isAccountModalOpen       bool
+
+	selectedWallet  *wallet.InfoShort
+	selectedAccount *wallet.Account
+
+	selectedAccountNameLabel    material.Label
+	selectedWalletLabel         material.Label
+	selectedAccountBalanceLabel material.Label
+
+	accountSelectorButtons map[string]*widget.Button
 
 	theme          *materialplus.Theme
 
@@ -300,7 +305,7 @@ func (pg *Receive) receiveAddressSection(gtx *layout.Context) {
 	)
 }
 
-func (pg *Receive) pageFirstColumn(gtx *layout.Context) {	
+func (pg *Receive) pageFirstColumn(gtx *layout.Context) {
 	layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func() {
 			pg.pageTitleLabel.Layout(gtx)
@@ -460,11 +465,11 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Left: unit.Dp(15)}.Layout(gtx, func() {
-								if pg.dropDownBtnWdg.Clicked(gtx) {
-									pg.isInfoBtnModal = true
-								}
-								pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
-							})
+							if pg.dropDownBtnWdg.Clicked(gtx) {
+								pg.isAccountModalOpen = true
+							}
+							pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
+						})
 					}),
 				)
 			})

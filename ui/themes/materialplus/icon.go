@@ -1,4 +1,4 @@
-package assets
+package materialplus
 
 import (
 	"image/color"
@@ -12,7 +12,7 @@ var (
 	NavigationMoreIcon *material.Icon
 	ContentCopyIcon    *material.Icon
 	ActionInfoIcon     *material.Icon
-	DropDownIcon              *material.Icon
+	DropDownIcon       *material.Icon
 )
 
 func init() {
