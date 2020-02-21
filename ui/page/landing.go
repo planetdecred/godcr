@@ -174,11 +174,11 @@ func (pg *Landing) checkForStatesUpdate() {
 
 func (pg *Landing) drawPasswordModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, func() {
-		pg.passwordModal.Draw(gtx, pg.createFunc, pg.cancelFunc)
+		pg.passwordModal.Draw(gtx, pg.create, pg.cancel)
 	})
 }
 
-func (pg *Landing) createFunc(password string) {
+func (pg *Landing) create(password string) {
 	pg.reset()
 
 	pg.createBtn.Text = "Creating wallet..."
@@ -190,7 +190,7 @@ func (pg *Landing) createFunc(password string) {
 	pg.wal.CreateWallet(password)
 }
 
-func (pg *Landing) cancelFunc() {
+func (pg *Landing) cancel() {
 	pg.isShowingPasswordModal = false
 }
 
