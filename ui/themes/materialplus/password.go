@@ -9,11 +9,6 @@ import (
 	"gioui.org/widget/material"
 )
 
-type colors struct {
-	cancelLabelColor            color.RGBA
-	createButtonBackgroundColor color.RGBA
-}
-
 type editor struct {
 	widget   *widget.Editor
 	material material.Editor
@@ -24,11 +19,13 @@ type editor struct {
 type Password struct {
 	theme *Theme
 
-	colors     colors
 	titleLabel material.Label
 
 	spendingEditor *editor
 	confirmEditor  *editor
+
+	cancelLabelColor            color.RGBA
+	createButtonBackgroundColor color.RGBA
 
 	cancelButton         *widget.Button
 	createButton         *widget.Button
@@ -73,19 +70,17 @@ func (t *Theme) Password() *Password {
 		createButton:         new(widget.Button),
 		cancelButtonMaterial: cancelButtonMaterial,
 		createButtonMaterial: t.Button("Create"),
-
-		colors: colors{},
 	}
 
 	return p
 }
 
 func (p *Password) updateColors() {
-	p.colors.cancelLabelColor = p.theme.Disabled
-	p.colors.createButtonBackgroundColor = p.theme.Disabled
+	p.cancelLabelColor = p.theme.Disabled
+	p.createButtonBackgroundColor = p.theme.Disabled
 
 	if p.bothPasswordsMatch() && p.confirmEditor.widget.Len() > 0 {
-		p.colors.createButtonBackgroundColor = p.theme.Primary
+		p.createButtonBackgroundColor = p.theme.Primary
 	}
 }
 
@@ -132,14 +127,14 @@ func (p *Password) Draw(gtx *layout.Context, confirm func(string), cancel func()
 				}),
 				layout.Rigid(func() {
 					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-						p.cancelButtonMaterial.Color = p.colors.cancelLabelColor
+						p.cancelButtonMaterial.Color = p.cancelLabelColor
 						p.cancelButtonMaterial.Layout(gtx, p.cancelButton)
 					})
 				}),
 				layout.Rigid(func() {
 					gtx.Constraints.Width.Min = 70
 					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-						p.createButtonMaterial.Background = p.colors.createButtonBackgroundColor
+						p.createButtonMaterial.Background = p.createButtonBackgroundColor
 						p.createButtonMaterial.Layout(gtx, p.createButton)
 					})
 				}),
