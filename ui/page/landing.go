@@ -78,7 +78,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 		pg.walletCreationSuccessEvent = nil
 	}
 
-	pg.watchForStatesUpdate()
+	pg.checkForStatesUpdate()
 
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
@@ -149,7 +149,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 	return ev
 }
 
-func (pg *Landing) watchForStatesUpdate() {
+func (pg *Landing) checkForStatesUpdate() {
 	err := pg.states[StateError]
 	created := pg.states[StateWalletCreated]
 
@@ -183,7 +183,7 @@ func (pg *Landing) createFunc(password string) {
 	pg.reset()
 
 	pg.createBtn.Text = "Creating wallet..."
-	pg.createBtn.Background = ui.GrayColor
+	pg.createBtn.Background = pg.theme.Disabled
 
 	pg.isCreatingWallet = true
 	pg.isShowingPasswordModal = false
@@ -198,6 +198,6 @@ func (pg *Landing) cancelFunc() {
 func (pg *Landing) reset() {
 	pg.isCreatingWallet = false
 	pg.createBtn.Text = "Create wallet"
-	pg.createBtn.Background = ui.LightBlueColor
+	pg.createBtn.Background = pg.theme.Color.Primary
 	pg.createErrorLabel.Text = ""
 }

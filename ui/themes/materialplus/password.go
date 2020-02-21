@@ -7,8 +7,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
-	"github.com/raedahgroup/godcr-gio/ui"
 )
 
 type colors struct {
@@ -22,8 +20,10 @@ type editor struct {
 	line     *Line
 }
 
-// Password represents a form for collecting user password
+// Password represents a form for collecting and confirming user password
 type Password struct {
+	theme *Theme
+
 	colors     colors
 	titleLabel material.Label
 
@@ -41,11 +41,11 @@ type Password struct {
 // Password initializes and returns an instance of Password
 func (t *Theme) Password() *Password {
 	cancelButtonMaterial := t.Button("Cancel")
-	cancelButtonMaterial.Background = ui.WhiteColor
-	cancelButtonMaterial.Color = ui.LightBlueColor
+	cancelButtonMaterial.Background = t.White
+	cancelButtonMaterial.Color = t.Primary
 
 	errorLabel := t.Body2("")
-	errorLabel.Color = ui.DangerColor
+	errorLabel.Color = t.Danger
 
 	spendingEditor := &editor{
 		widget:   new(widget.Editor),
@@ -58,10 +58,12 @@ func (t *Theme) Password() *Password {
 		line:     t.Line(),
 	}
 
-	confirmEditor.line.Color = ui.LightBlueColor
-	spendingEditor.line.Color = ui.LightBlueColor
+	confirmEditor.line.Color = t.Primary
+	spendingEditor.line.Color = t.Primary
 
 	p := &Password{
+		theme: t,
+
 		titleLabel: t.H5("Create spending password"),
 		errorLabel: errorLabel,
 
@@ -79,11 +81,11 @@ func (t *Theme) Password() *Password {
 }
 
 func (p *Password) updateColors() {
-	p.colors.cancelLabelColor = ui.GrayColor
-	p.colors.createButtonBackgroundColor = ui.GrayColor
+	p.colors.cancelLabelColor = p.theme.Disabled
+	p.colors.createButtonBackgroundColor = p.theme.Disabled
 
 	if p.bothPasswordsMatch() && p.confirmEditor.widget.Len() > 0 {
-		p.colors.createButtonBackgroundColor = ui.LightBlueColor
+		p.colors.createButtonBackgroundColor = p.theme.Primary
 	}
 }
 
@@ -100,7 +102,9 @@ func (p *Password) processButtonClicks(gtx *layout.Context, createFunc func(stri
 	}
 }
 
-// Draw renders the widget to screen
+// Draw renders the widget to screen. The createFunc passed by the calling page is called when the create button
+// is clicked, and the form passes validation. The entered password is passed as an argument to the create func.
+// The cancel func is called when the cancel button is clicked
 func (p *Password) Draw(gtx *layout.Context, createFunc func(string), cancelFunc func()) {
 	p.processButtonClicks(gtx, createFunc, cancelFunc)
 	p.updateColors()
