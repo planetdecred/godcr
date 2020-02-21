@@ -3,6 +3,7 @@ package wallet
 import (
 	"errors"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
@@ -160,15 +161,15 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				return
 			}
 			var acctBalance int64
-			accts := make([]int32, 0)
+			accts := make([]dcrlibwallet.Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
-				accts = append(accts, acct.Number)
+				accts = append(accts, *acct)
 				acctBalance += acct.TotalBalance
 			}
 			completeTotal += acctBalance
 			infos[i] = InfoShort{
 				Name:     wall.Name,
-				Balance:  acctBalance,
+				Balance:  dcrutil.Amount(acctBalance),
 				Accounts: accts,
 			}
 		}
@@ -184,7 +185,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 
 		resp.Resp = &MultiWalletInfo{
 			LoadedWallets:   len(wallets),
-			TotalBalance:    completeTotal,
+			TotalBalance:    dcrutil.Amount(completeTotal),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
 			Wallets:         infos,

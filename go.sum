@@ -6,6 +6,7 @@ gioui.org v0.0.0-20200116122050-18cddc030077 h1:0E9tL3KsP9yf7lYiuUiX4FdVs9GaHP4s
 gioui.org v0.0.0-20200116122050-18cddc030077/go.mod h1:KqFFi2Dq5gYA3FJ0sDOt8OBXoMsuxMtE8v2f0JExXAY=
 gioui.org v0.0.0-20200203225345-b8b8003a7a98 h1:oQS5xS67GXndgOkPReXvPpNTR0SnDqp1+ZDf2cd+evg=
 gioui.org v0.0.0-20200212080447-fd5dfacb4043 h1:XaTm7Z3cWaW5NfHAZBcWjXiI0JCMiFY/sGCy/DeiNck=
+gioui.org v0.0.0-20200220081202-150b34aedef6 h1:l5egeGesHfrZTN3NelvBrQEGHGKdr5XE/WIbNZxaMPs=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=

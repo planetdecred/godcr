@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
@@ -13,7 +14,7 @@ type Response struct {
 // MultiWalletInfo represents bulk information about the wallets returned by the wallet backend
 type MultiWalletInfo struct {
 	LoadedWallets   int
-	TotalBalance    int64
+	TotalBalance    dcrutil.Amount
 	Wallets         []InfoShort
 	BestBlockHeight int32
 	BestBlockTime   int64
@@ -24,8 +25,15 @@ type MultiWalletInfo struct {
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
 	Name     string
-	Balance  int64
-	Accounts []int32
+	Balance  dcrutil.Amount
+	Accounts []dcrlibwallet.Account
+}
+
+// Account represents infomation about a wallet's account
+type Account struct {
+	id      int32
+	name    string
+	Balance dcrutil.Amount
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets
