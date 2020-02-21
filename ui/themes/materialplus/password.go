@@ -156,6 +156,10 @@ func (p *Password) Draw(gtx *layout.Context, createFunc func(string), cancelFunc
 func (p *Password) validate() bool {
 	p.errorLabel.Text = ""
 
+	if p.spendingEditor.widget.Len() == 0 || p.confirmEditor.widget.Len() == 0 {
+		return false
+	}
+
 	if p.spendingEditor.widget.Len() > 0 && p.confirmEditor.widget.Len() > 0 && !p.bothPasswordsMatch() {
 		p.errorLabel.Text = "Both passwords do not match"
 		return false

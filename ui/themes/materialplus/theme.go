@@ -31,6 +31,7 @@ func (t *Theme) setColors() {
 	t.White = ui.WhiteColor
 	t.Danger = ui.DangerColor
 	t.Disabled = ui.GrayColor
+	t.Primary = ui.LightBlueColor
 
 	t.Color.Primary = ui.LightBlueColor
 }
