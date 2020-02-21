@@ -89,24 +89,24 @@ func (p *Password) updateColors() {
 	}
 }
 
-func (p *Password) processButtonClicks(gtx *layout.Context, createFunc func(string), cancelFunc func()) {
+func (p *Password) processButtonClicks(gtx *layout.Context, confirm func(string), cancel func()) {
 	for p.createButton.Clicked(gtx) {
 		if p.validate() {
-			createFunc(p.spendingEditor.widget.Text())
+			confirm(p.spendingEditor.widget.Text())
 		}
 	}
 
 	for p.cancelButton.Clicked(gtx) {
 		p.Reset()
-		cancelFunc()
+		cancel()
 	}
 }
 
-// Draw renders the widget to screen. The createFunc passed by the calling page is called when the create button
-// is clicked, and the form passes validation. The entered password is passed as an argument to the create func.
+// Draw renders the widget to screen. The confirm function passed by the calling page is called when the confirm button
+// is clicked, and the form passes validation. The entered password is passed as an argument to the confirm func.
 // The cancel func is called when the cancel button is clicked
-func (p *Password) Draw(gtx *layout.Context, createFunc func(string), cancelFunc func()) {
-	p.processButtonClicks(gtx, createFunc, cancelFunc)
+func (p *Password) Draw(gtx *layout.Context, confirm func(string), cancel func()) {
+	p.processButtonClicks(gtx, confirm, cancel)
 	p.updateColors()
 	p.validate()
 
