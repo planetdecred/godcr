@@ -11,8 +11,8 @@ import (
 
 	"github.com/decred/slog"
 	"github.com/jrick/logrotate/rotator"
-	"github.com/raedahgroup/godcr-gio/ui/page"
-	"github.com/raedahgroup/godcr-gio/ui/window"
+	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -47,22 +47,19 @@ var (
 	log = backendLog.Logger("GDCR")
 
 	walletLog = backendLog.Logger("WALL")
-	pageLog   = backendLog.Logger("PAGE")
-	winLog    = backendLog.Logger("WIND")
+	winLog    = backendLog.Logger("UI")
 )
 
 // Initialize package-global logger variables.
 func init() {
 	wallet.UseLogger(walletLog)
-	window.UseLogger(winLog)
-	page.UseLogger(pageLog)
+	ui.UseLogger(winLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
 var subsystemLoggers = map[string]slog.Logger{
 	"WALL": walletLog,
-	"PAGE": pageLog,
-	"WIND": winLog,
+	"UI":   winLog,
 	"GDCR": log,
 }
 
@@ -94,7 +91,7 @@ func setLogLevel(subsystemID string, logLevel string) {
 	if !ok {
 		return
 	}
-
+	dcrlibwallet.SetLogLevels("info")
 	// Defaults to info if the log level is invalid.
 	level, _ := slog.LevelFromString(logLevel)
 	logger.SetLevel(level)

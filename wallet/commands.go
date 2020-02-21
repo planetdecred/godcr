@@ -1,29 +1,11 @@
 package wallet
 
 import (
-	"errors"
 	"sort"
 	"time"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
-)
-
-var (
-	// ErrInvalidArguments is returned when a wallet command is send with invalid arguments.
-	ErrInvalidArguments = errors.New("invalid command arguments")
-
-	// ErrNotFound is returned when a wallet command is given that does not exist or is not
-	// implemented.
-	ErrNotFound = errors.New("command not found or not implemented")
-
-	// ErrNoSuchWallet is returned with the wallet requested by the given id does not exist
-	ErrNoSuchWallet = errors.New("no such wallet with id")
-
-	// ErrNoSuchAcct is returned when the given account number cannot be found
-	ErrNoSuchAcct = errors.New("no such account")
-
-	// ErrCreateTx is returned when a tx author cannot be created
-	ErrCreateTx = errors.New("can not create transaction")
 )
 
 // CreateWallet creates a new wallet with the given parameters.
@@ -34,10 +16,13 @@ func (wal *Wallet) CreateWallet(passphrase string) {
 		wall, err := wal.multi.CreateNewWallet(passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
 			resp.Err = err
-			wal.Send <- resp
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not create wallet",
+				Err:     err,
+			})
 			return
 		}
-		resp.Resp = &CreatedSeed{
+		resp.Resp = CreatedSeed{
 			Seed: wall.Seed,
 		}
 		wal.Send <- resp
@@ -52,10 +37,13 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string) {
 		_, err := wal.multi.RestoreWallet(seed, passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
 			resp.Err = err
-			wal.Send <- resp
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not restore wallet",
+				Err:     err,
+			})
 			return
 		}
-		resp.Resp = &Restored{}
+		resp.Resp = Restored{}
 		wal.Send <- resp
 	}()
 }
@@ -63,13 +51,23 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string) {
 // DeleteWallet deletes a wallet.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) DeleteWallet(walletID int, passphrase string) {
+	log.Debug("Deleting Wallet")
 	go func() {
-		var resp Response
-		resp.Err = wal.multi.DeleteWallet(walletID, []byte(passphrase))
-		if resp.Err == nil {
-			resp.Resp = DeletedWallet{ID: walletID}
+		log.Debugf("Wallet %d: %+v", walletID, wal.multi.WalletWithID(walletID))
+		err := wal.multi.DeleteWallet(walletID, []byte(passphrase))
+		if err != nil {
+			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+				err = ErrBadPass
+			}
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not delete wallet",
+				Affected: []int{walletID},
+				Err:      err,
+			})
+
+		} else {
+			wal.Send <- ResponseResp(DeletedWallet{ID: walletID})
 		}
-		wal.Send <- resp
 	}()
 }
 
@@ -160,6 +158,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetMultiWalletInfo() {
 	go func() {
+		log.Debug("Getting multiwallet info")
 		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {
@@ -174,7 +173,8 @@ func (wal *Wallet) GetMultiWalletInfo() {
 
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
-		for i, wall := range wallets {
+		i := 0
+		for _, wall := range wallets {
 			iter, err := wall.AccountsIterator(wal.confirms)
 			if err != nil {
 				resp.Err = err
@@ -182,25 +182,33 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				return
 			}
 			var acctBalance int64
-			accts := make([]int32, 0)
+			accts := make([]Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
-				accts = append(accts, acct.Number)
+				accts = append(accts, Account{
+					Name:         acct.Name,
+					TotalBalance: dcrutil.Amount(acct.TotalBalance).String(),
+				})
 				acctBalance += acct.TotalBalance
 			}
 			completeTotal += acctBalance
 			infos[i] = InfoShort{
 				ID:              wall.ID,
 				Name:            wall.Name,
-				Balance:         acctBalance,
+				Balance:         dcrutil.Amount(acctBalance).String(),
 				Accounts:        accts,
 				BestBlockHeight: wall.GetBestBlock(),
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
 				IsWaiting:       wall.IsWaiting(),
 			}
+			i++
 		}
 		best := wal.multi.GetBestBlock()
 
 		if best == nil {
+			if len(wallets) == 0 {
+				wal.Send <- ResponseResp(MultiWalletInfo{})
+				return
+			}
 			resp.Err = InternalWalletError{
 				Message: "Could not get load best block",
 			}
@@ -208,9 +216,9 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			return
 		}
 
-		resp.Resp = &MultiWalletInfo{
+		resp.Resp = MultiWalletInfo{
 			LoadedWallets:   len(wallets),
-			TotalBalance:    completeTotal,
+			TotalBalance:    dcrutil.Amount(completeTotal).String(),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
 			Wallets:         infos,
@@ -230,7 +238,7 @@ func (wal *Wallet) RenameWallet(walletID int, name string) error {
 func (wal *Wallet) CurrentAddress(walletID int, accountID int32) (string, error) {
 	wall := wal.multi.WalletWithID(walletID)
 	if wall == nil {
-		return "", ErrNoSuchWallet
+		return "", ErrIDNotExist
 	}
 	return wall.CurrentAddress(accountID)
 }
@@ -239,7 +247,7 @@ func (wal *Wallet) CurrentAddress(walletID int, accountID int32) (string, error)
 func (wal *Wallet) NextAddress(walletID int, accountID int32) (string, error) {
 	wall := wal.multi.WalletWithID(walletID)
 	if wall == nil {
-		return "", ErrNoSuchWallet
+		return "", ErrIDNotExist
 	}
 	return wall.NextAddress(accountID)
 }
@@ -248,7 +256,7 @@ func (wal *Wallet) NextAddress(walletID int, accountID int32) (string, error) {
 func (wal *Wallet) IsAddressValid(address string) (bool, error) {
 	wall := wal.multi.FirstOrDefaultWallet()
 	if wall == nil {
-		return false, &InternalWalletError{
+		return false, InternalWalletError{
 			Message: "No wallet loaded",
 		}
 	}

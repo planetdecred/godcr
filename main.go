@@ -13,8 +13,7 @@ import (
 	"github.com/markbates/pkger"
 
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/ui/page"
-	"github.com/raedahgroup/godcr-gio/ui/window"
+	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -26,7 +25,7 @@ func main() {
 	}
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
-	sans, err := pkger.Open("/ui/fonts/source_sans_pro_regular.otf")
+	sans, err := pkger.Open("/ui/materialplus/fonts/source_sans_pro_regular.otf")
 	if err != nil {
 		log.Warn("Failed to load font Source Sans Pro. Using gofont")
 		gofont.Register()
@@ -67,7 +66,7 @@ func main() {
 		wg.Done()
 	}()
 
-	win, err := window.CreateWindow(page.LoadingID, wal)
+	win, err := ui.CreateWindow(wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return

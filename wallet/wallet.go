@@ -18,17 +18,6 @@ type Wallet struct {
 	confirms  int32
 }
 
-// InternalWalletError represents errors generated during the handling of the multiwallet
-// and connected wallets
-type InternalWalletError struct {
-	Message         string
-	AffectedWallets []int
-}
-
-func (err InternalWalletError) Error() string {
-	return err.Message
-}
-
 // NewWallet initializies an new Wallet instance.
 // The Wallet is not loaded until LoadWallets is called.
 func NewWallet(root string, net string, send chan Response, confirms int32) (*Wallet, error) {
@@ -87,7 +76,7 @@ func (wal *Wallet) LoadWallets() {
 			}
 		}
 
-		resp.Resp = &LoadedWallets{
+		resp.Resp = LoadedWallets{
 			Count:              wal.multi.LoadedWalletsCount(),
 			StartUpSecuritySet: startupPassSet,
 		}
@@ -95,24 +84,26 @@ func (wal *Wallet) LoadWallets() {
 	}(wal.Send, wal)
 }
 
-// wallets returns an up-to-date slice of all opened wallets
-func (wal *Wallet) wallets() ([]*dcrlibwallet.Wallet, error) {
+// wallets returns an up-to-date map of all opened wallets
+func (wal *Wallet) wallets() (map[int]*dcrlibwallet.Wallet, error) {
 	if wal.multi == nil {
-		return nil, &InternalWalletError{
+		return nil, MultiWalletError{
 			Message: "No MultiWallet loaded",
 		}
 	}
 
-	wallets := make([]*dcrlibwallet.Wallet, len(wal.multi.OpenedWalletIDsRaw()))
+	wallets := make(map[int]*dcrlibwallet.Wallet, len(wal.multi.OpenedWalletIDsRaw()))
 
-	for i, j := range wal.multi.OpenedWalletIDsRaw() {
+	for _, j := range wal.multi.OpenedWalletIDsRaw() {
 		w := wal.multi.WalletWithID(j)
 		if w == nil {
-			return nil, &InternalWalletError{
-				Message: "Invalid Wallet ID",
+			return nil, InternalWalletError{
+				Message:  "Invalid Wallet ID",
+				Err:      ErrIDNotExist,
+				Affected: []int{j},
 			}
 		}
-		wallets[i] = w
+		wallets[j] = w
 	}
 	return wallets, nil
 }

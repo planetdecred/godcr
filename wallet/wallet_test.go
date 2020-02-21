@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/decred/dcrd/dcrutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/raedahgroup/godcr-gio/wallet"
@@ -38,10 +39,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).To(BeNil())
 	wal.LoadWallets()
 	resp := <-wal.Send
-	Expect(resp.Resp).To(BeAssignableToTypeOf(&LoadedWallets{}))
+	Expect(resp.Resp).To(BeAssignableToTypeOf(LoadedWallets{}))
 	wal.CreateWallet("password")
 	resp = <-wal.Send
-	Expect(resp.Resp).To(BeAssignableToTypeOf(&CreatedSeed{}))
+	Expect(resp.Resp).To(BeAssignableToTypeOf(CreatedSeed{}))
 })
 
 var _ = AfterSuite(func() {
@@ -55,7 +56,7 @@ var _ = Describe("Wallet", func() {
 		Expect(info.Resp).To(BeAssignableToTypeOf(&MultiWalletInfo{}))
 		inf := info.Resp.(*MultiWalletInfo)
 		Expect(inf.LoadedWallets).To(BeEquivalentTo(1))
-		Expect(inf.TotalBalance).To(BeEquivalentTo(0))
+		Expect(inf.TotalBalance).To(BeEquivalentTo(dcrutil.Amount(0).String()))
 		Expect(inf.Synced).To(Equal(false))
 	})
 	It("can rename a wallet", func() {
