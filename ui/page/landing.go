@@ -7,7 +7,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -48,7 +47,7 @@ func (pg *Landing) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.heading.Alignment = text.Middle
 
 	pg.createErrorLabel = theme.Body2("")
-	pg.createErrorLabel.Color = ui.DangerColor
+	pg.createErrorLabel.Color = theme.Danger
 
 	pg.createBtn = theme.Button("Create Wallet")
 	pg.createWdg = new(widget.Button)
