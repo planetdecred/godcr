@@ -19,14 +19,15 @@ const (
 	walletStatusSyncing = "syncing..."
 	walletStatusSynced  = "synced"
 
-	ErrWalletIDNotFound = "wallet ID not found"
+	errWalletIDNotFound = "wallet ID not found"
 )
 
+// Balance takes the balance as an integer and returns its string equivalent
 func Balance(balance int64) string {
 	return dcrutil.Amount(balance).String()
 }
 
-// breakBalance takes the balance string and returns it in two slices
+// BreakBalance takes the balance string and returns it in two slices
 func BreakBalance(balance string) (b1, b2 string) {
 	balanceParts := strings.Split(balance, ".")
 	if len(balanceParts) == 1 {
@@ -39,6 +40,8 @@ func BreakBalance(balance string) (b1, b2 string) {
 	return
 }
 
+// TransactionStatus accepts the bestBlockHeight, transactionBlockHeight and returns a transaction status
+// which could be confirmed or pending
 func TransactionStatus(bestBlockHeight, txnBlockHeight int32) string {
 	confirmations := bestBlockHeight - txnBlockHeight + 1
 	if txnBlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
@@ -113,12 +116,12 @@ func truncateTime(duration string, place int) string {
 	return durationSlice[0] + "." + secondsDecimals[0:place] + durationCharacter
 }
 
-// WalletIDFromName gets the id of a wallet by using its name
+// WalletNameFromID gets the id of a wallet by using its name
 func WalletNameFromID(id int, walletInfo []wallet.InfoShort) (string, error) {
 	for _, info := range walletInfo {
 		if info.ID == id {
 			return info.Name, nil
 		}
 	}
-	return "", fmt.Errorf(ErrWalletIDNotFound)
+	return "", fmt.Errorf(errWalletIDNotFound)
 }
