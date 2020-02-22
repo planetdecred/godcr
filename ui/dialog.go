@@ -16,13 +16,14 @@ const (
 type Dialog struct {
 	ConfirmButton, CancelButton material.Button
 	Confirm, Cancel             *widget.Button
+	Active                      bool
 }
 
-// Layout renders the modal if active is true.
+// Layout renders the modal if Active is true.
 // Blocks input behind the modal.
 // If either Confirm or Cancel is nil, the corresponding Button is not rendered.
-func (diag Dialog) Layout(gtx *layout.Context, active bool, dialog func()) {
-	if !active {
+func (diag Dialog) Layout(gtx *layout.Context, dialog func()) {
+	if !diag.Active {
 		return
 	}
 
