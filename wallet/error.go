@@ -10,17 +10,18 @@ var (
 	// ErrIDNotExist is returned when a given ID does not exist
 	ErrIDNotExist = errors.New("ID does not exist")
 
+	// ErrBadPass wraps dcrlibwallet.ErrInvalidPassphrase
 	ErrBadPass = errors.New(dcrlibwallet.ErrInvalidPassphrase)
 )
 
-// InternalWalletError represents errors generated during the handling of the multiwallet
-// and connected wallets
+// InternalWalletError wraps errors encountered with individual Wallets and Accounts
 type InternalWalletError struct {
 	Message  string
 	Affected []int
 	Err      error
 }
 
+// Unwrap returns the embedded error
 func (err InternalWalletError) Unwrap() error {
 	return err.Err
 }
@@ -29,6 +30,7 @@ func (err InternalWalletError) Error() string {
 	return err.Message
 }
 
+// MultiWalletError wraps errors encountered with the Multiwallet
 type MultiWalletError struct {
 	Message string
 	Err     error
@@ -38,18 +40,7 @@ func (err MultiWalletError) Error() string {
 	return err.Message
 }
 
+// Unwrap returns the embedded error
 func (err MultiWalletError) Unwrap() error {
 	return err.Err
-}
-
-func ResponseError(err error) Response {
-	return Response{
-		Err: err,
-	}
-}
-
-func ResponseResp(resp interface{}) Response {
-	return Response{
-		Resp: resp,
-	}
 }

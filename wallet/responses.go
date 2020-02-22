@@ -5,10 +5,25 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
-// Response represents the structure of data that the Send channel receives
+// Response represents a discriminated union for wallet responses.
+// Either Resp or Err must be nil.
 type Response struct {
 	Resp interface{}
 	Err  error
+}
+
+// ResponseError wraps err in a Response
+func ResponseError(err error) Response {
+	return Response{
+		Err: err,
+	}
+}
+
+// ResponseResp wraps resp in a Response
+func ResponseResp(resp interface{}) Response {
+	return Response{
+		Resp: resp,
+	}
 }
 
 // MultiWalletInfo represents bulk information about the wallets returned by the wallet backend

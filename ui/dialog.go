@@ -19,6 +19,7 @@ type Dialog struct {
 }
 
 // Layout renders the modal if active is true.
+// Blocks input behind the modal.
 // If either Confirm or Cancel is nil, the corresponding Button is not rendered.
 func (diag Dialog) Layout(gtx *layout.Context, active bool, dialog func()) {
 	if !active {

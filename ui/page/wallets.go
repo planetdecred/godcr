@@ -5,9 +5,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
-
-	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
@@ -21,8 +18,6 @@ const (
 
 	//StateDeletedWallet is the map key for a deleted walet event
 	StateDeletedWallet = "deleted"
-
-	StateDeleteErrorWallet = "deleteerror"
 )
 
 // Wallets contains the Wallet, Theme and various widgets
@@ -37,7 +32,6 @@ type Wallets struct {
 
 	expandBtns []widget.Button
 
-	addIcon, expandIcon                 *material.Icon
 	delete, dialogCancel, dialogConfirm widget.Button
 
 	editor widget.Editor
@@ -50,17 +44,10 @@ func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.wal = wal
 	pg.theme = theme
 
-	expand, err := material.NewIcon(icons.NavigationExpandMore)
-	pg.expandIcon = expand
-
-	pg.addIcon, err = material.NewIcon(icons.ContentAdd)
-
 	pg.states = states
 	pg.expandBtns = make([]widget.Button, 0)
 
 	pg.editor = widget.Editor{SingleLine: true, Submit: true}
-
-	log.Tracef("Handle %v", err)
 }
 
 // Draw layouts out the widgets on the given context
@@ -85,46 +72,73 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 	// 	pg.syncWdg.Text = "Start Sync"
 	// }
 
-	layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Flexed(.35, func() {
+	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Flexed(.15, func() {
 			layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-				layout.Rigid(func() {
+				layout.Flexed(.3, func() {
 					pg.theme.H2("Wallets").Layout(gtx)
 				}),
 				layout.Rigid(func() {
-					pg.theme.IconButton(pg.addIcon).Layout(gtx, &pg.add)
+					pg.theme.IconButton(ui.IconContentAdd).Layout(gtx, &pg.add)
 					if pg.add.Clicked(gtx) {
-						//log.Debugf("{%s} AddWallet Btn Clicked", WalletsID)
+						log.Tracef("{%s} AddWallet Btn Clicked", WalletsID)
 						event = EventNav{
 							Current: WalletsID,
 							Next:    LandingID,
 						}
 					}
 				}),
+				layout.Rigid(func() {
+					btn := pg.theme.IconButton(ui.IconNavigationRefresh)
+					if info.Synced {
+						btn = pg.theme.IconButton(ui.IconNavigationCheck)
+						btn.Background = pg.theme.Success
+					} else if info.Syncing {
+						btn = pg.theme.IconButton(ui.IconNavigationClose)
+						btn.Background = pg.theme.Danger
+					}
+					btn.Layout(gtx, &pg.sync)
+					for pg.sync.Clicked(gtx) {
+						if !info.Synced {
+							if err := pg.wal.StartSync(); err != nil {
+								log.Error(err)
+								//pg.syncWdg.Text = "Error starting sync"
+							} else {
+								//pg.syncWdg.Text = "Cancel Sync"
+							}
+						}
+						if info.Syncing {
+							log.Info("Cancelling sync")
+							pg.wal.CancelSync()
+						}
+					}
+				}),
 			)
 		}),
-		layout.Rigid(func() {
+		layout.Flexed(.85, func() {
 			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func() {
+				layout.Flexed(.3, func() {
 					(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(info.Wallets), func(i int) {
 						//pg.theme.LayoutWithBackGround(gtx, false, func() {
 						//gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 						layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-							layout.Flexed(.3, func() {
+							layout.Flexed(.4, func() {
 								ui.Center(gtx, func() { pg.theme.H4(info.Wallets[i].Name).Layout(gtx) })
 							}),
-							layout.Rigid(func() {
+							layout.Flexed(.4, func() {
 								ui.Center(gtx, func() {
 									pg.theme.H5(info.Wallets[i].Balance.String()).Layout(gtx)
 								})
 							}),
-							layout.Rigid(func() {
+							layout.Flexed(.2, func() {
 								ui.Center(gtx, func() {
-									if pg.selected != i {
-										pg.theme.IconButton(pg.expandIcon).Layout(gtx, &pg.expandBtns[i])
-										if pg.expandBtns[i].Clicked(gtx) {
-											pg.selected = i
-										}
+									btn := pg.theme.IconButton(ui.IconToggleIndeterminateCheckBox)
+									if pg.selected == i {
+										btn.Background = pg.theme.Disabled
+									}
+									btn.Layout(gtx, &pg.expandBtns[i])
+									if pg.expandBtns[i].Clicked(gtx) {
+										pg.selected = i
 									}
 								})
 							}),
@@ -132,7 +146,7 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 						//})
 					})
 				}),
-				layout.Rigid(func() {
+				layout.Flexed(.7, func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Flexed(.2, func() {
 							layout.Flex{Spacing: layout.SpaceAround}.Layout(gtx,
@@ -144,7 +158,10 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 								}),
 							)
 						}),
-						layout.Rigid(func() {
+						layout.Flexed(.6, func() {
+
+						}),
+						layout.Flexed(.2, func() {
 							del := pg.theme.Button("Delete wallet")
 							del.Background = pg.theme.Danger
 							del.Layout(gtx, &pg.delete)
@@ -158,10 +175,6 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 		}),
 	)
 
-	confirm := pg.theme.Button("Confirm")
-	if pg.deleting {
-		confirm.Background = ui.GrayColor
-	}
 	lbl := pg.theme.H3("Are you sure?")
 	if haveError {
 		lbl.Color = pg.theme.Danger
@@ -174,16 +187,20 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 		pg.deleting = false
 	}
 
-	if _, ok := pg.states[StateDeletedWallet]; ok {
-		lbl.Text = "Wallet deleted"
+	dconfirm := &pg.dialogConfirm
+	dcancel := &pg.dialogCancel
+
+	confirm := pg.theme.Button("Confirm")
+	if pg.deleting {
+		confirm.Background = pg.theme.Disabled
 	}
 
-	ui.Dialog{
-		ConfirmButton: confirm,
-		Confirm:       &pg.dialogConfirm,
-		CancelButton:  pg.theme.ButtonWithColor("Cancel", pg.theme.Danger),
-		Cancel:        &pg.dialogCancel,
-	}.Layout(gtx, pg.dialog, func() {
+	cancel := pg.theme.Button("Cancel")
+	cancel.Background = pg.theme.Danger
+	if pg.deleting {
+		cancel.Background = pg.theme.Disabled
+	}
+	diag := func() {
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func() {
 				ui.Center(gtx, func() { lbl.Layout(gtx) })
@@ -192,7 +209,24 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 				ui.Center(gtx, func() { pg.theme.Editor("Enter spending password").Layout(gtx, &pg.editor) })
 			}),
 		)
-	})
+	}
+
+	if _, ok := pg.states[StateDeletedWallet]; ok {
+		lbl.Text = "Wallet deleted"
+		lbl.Color = pg.theme.Success
+		diag = func() {
+			ui.Center(gtx, func() { lbl.Layout(gtx) })
+		}
+		dconfirm = nil
+		pg.selected = 0
+	}
+
+	ui.Dialog{
+		ConfirmButton: confirm,
+		Confirm:       dconfirm,
+		CancelButton:  cancel,
+		Cancel:        dcancel,
+	}.Layout(gtx, pg.dialog, diag)
 
 	for pg.dialogCancel.Clicked(gtx) {
 		pg.dialog = false
@@ -216,20 +250,5 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 		}
 	}
 
-	if pg.sync.Clicked(gtx) {
-		if !info.Synced {
-			log.Info("Starting sync")
-			if err := pg.wal.StartSync(); err != nil {
-				log.Error(err)
-				//pg.syncWdg.Text = "Error starting sync"
-			} else {
-				//pg.syncWdg.Text = "Cancel Sync"
-			}
-		}
-		if info.Syncing {
-			log.Info("Cancelling sync")
-			pg.wal.CancelSync()
-		}
-	}
 	return
 }

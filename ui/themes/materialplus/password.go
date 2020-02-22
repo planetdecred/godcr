@@ -39,7 +39,7 @@ type Password struct {
 func (t *Theme) Password() *Password {
 	cancelButtonMaterial := t.Button("Cancel")
 	cancelButtonMaterial.Background = color.RGBA{}
-	cancelButtonMaterial.Color = t.Primary
+	cancelButtonMaterial.Color = t.Color.Primary
 
 	errorLabel := t.Body2("")
 	errorLabel.Color = t.Danger
@@ -55,8 +55,8 @@ func (t *Theme) Password() *Password {
 		line:     t.Line(),
 	}
 
-	confirmEditor.line.Color = t.Primary
-	spendingEditor.line.Color = t.Primary
+	confirmEditor.line.Color = t.Color.Primary
+	spendingEditor.line.Color = t.Color.Primary
 
 	p := &Password{
 		theme: t,
@@ -80,7 +80,7 @@ func (p *Password) updateColors() {
 	p.createButtonBackgroundColor = p.theme.Disabled
 
 	if p.bothPasswordsMatch() && p.confirmEditor.widget.Len() > 0 {
-		p.createButtonBackgroundColor = p.theme.Primary
+		p.createButtonBackgroundColor = p.theme.Color.Primary
 	}
 }
 

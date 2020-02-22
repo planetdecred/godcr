@@ -9,6 +9,8 @@ import (
 	"gioui.org/widget"
 )
 
+// FillWithColor renders a color rectangle with the Context contraints.
+// If blocked, FillWithColor renders a false button on the Context.
 func FillWithColor(gtx *layout.Context, color color.RGBA, blocked bool) {
 	paint.ColorOp{Color: color}.Add(gtx.Ops)
 	paint.PaintOp{Rect: f32.Rectangle{

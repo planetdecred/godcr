@@ -11,9 +11,7 @@ import (
 type Theme struct {
 	*material.Theme
 
-	Danger   color.RGBA
-	Disabled color.RGBA
-	Primary  color.RGBA
+	Danger, Disabled, Success, Secondary, Background color.RGBA
 }
 
 // NewTheme returns a new materialplus theme
@@ -24,6 +22,5 @@ func NewTheme() *Theme {
 		Theme:    t,
 		Danger:   ui.DangerColor,
 		Disabled: ui.GrayColor,
-		Primary:  ui.LightBlueColor,
 	}
 }
