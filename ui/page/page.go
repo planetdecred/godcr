@@ -25,4 +25,10 @@ type Page interface {
 const (
 	// StateWalletInfo is the map key for the WalletInfo state
 	StateWalletInfo = "walletinfo"
+
+	// StateWalletCreated is the map key for the WalletCreated state
+	StateWalletCreated = "walletCreated"
+
+	// StateError is the map key for error
+	StateError = "error"
 )
