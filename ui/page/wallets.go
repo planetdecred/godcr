@@ -64,74 +64,64 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 		pg.expandBtns = make([]widget.Button, numWallets)
 	}
 
-	// if info.Synced {
-	// 	pg.syncWdg.Text = "Synced"
-	// } else if info.Syncing {
-	// 	pg.syncWdg.Text = "Cancel Sync"
-	// } else {
-	// 	pg.syncWdg.Text = "Start Sync"
-	// }
-
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(.15, func() {
-			layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-				layout.Flexed(.3, func() {
-					pg.theme.H2("Wallets").Layout(gtx)
-				}),
-				layout.Rigid(func() {
-					pg.theme.IconButton(ui.IconContentAdd).Layout(gtx, &pg.add)
-					if pg.add.Clicked(gtx) {
-						log.Tracef("{%s} AddWallet Btn Clicked", WalletsID)
-						event = EventNav{
-							Current: WalletsID,
-							Next:    LandingID,
-						}
-					}
-				}),
-				layout.Rigid(func() {
-					btn := pg.theme.IconButton(ui.IconNavigationRefresh)
-					if info.Synced {
-						btn = pg.theme.IconButton(ui.IconNavigationCheck)
-						btn.Background = pg.theme.Success
-					} else if info.Syncing {
-						btn = pg.theme.IconButton(ui.IconNavigationClose)
-						btn.Background = pg.theme.Danger
-					}
-					btn.Layout(gtx, &pg.sync)
-					for pg.sync.Clicked(gtx) {
-						if !info.Synced {
-							if err := pg.wal.StartSync(); err != nil {
-								log.Error(err)
-								//pg.syncWdg.Text = "Error starting sync"
-							} else {
-								//pg.syncWdg.Text = "Cancel Sync"
+			ui.LayoutWithBackground(gtx, ui.Faded(ui.DarkBlueColor), false, func() {
+				layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+					layout.Flexed(.3, func() {
+						pg.theme.H2("Wallets").Layout(gtx)
+					}),
+					layout.Rigid(func() {
+						pg.theme.IconButton(ui.IconContentAdd).Layout(gtx, &pg.add)
+						if pg.add.Clicked(gtx) {
+							log.Tracef("{%s} AddWallet Btn Clicked", WalletsID)
+							event = EventNav{
+								Current: WalletsID,
+								Next:    LandingID,
 							}
 						}
-						if info.Syncing {
-							log.Info("Cancelling sync")
-							pg.wal.CancelSync()
+					}),
+					layout.Rigid(func() {
+						btn := pg.theme.IconButton(ui.IconNavigationRefresh)
+						if info.Synced {
+							btn = pg.theme.IconButton(ui.IconNavigationCheck)
+							btn.Background = pg.theme.Success
+						} else if info.Syncing {
+							btn = pg.theme.IconButton(ui.IconNavigationClose)
+							btn.Background = pg.theme.Danger
 						}
-					}
-				}),
-			)
+						btn.Layout(gtx, &pg.sync)
+						for pg.sync.Clicked(gtx) {
+							if !info.Synced {
+								if err := pg.wal.StartSync(); err != nil {
+									log.Error(err)
+									//pg.syncWdg.Text = "Error starting sync"
+								} else {
+									//pg.syncWdg.Text = "Cancel Sync"
+								}
+							}
+							if info.Syncing {
+								log.Info("Cancelling sync")
+								pg.wal.CancelSync()
+							}
+						}
+					}),
+				)
+			})
 		}),
 		layout.Flexed(.85, func() {
 			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Flexed(.3, func() {
 					(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(info.Wallets), func(i int) {
-						//pg.theme.LayoutWithBackGround(gtx, false, func() {
-						//gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-						layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-							layout.Flexed(.4, func() {
-								ui.Center(gtx, func() { pg.theme.H4(info.Wallets[i].Name).Layout(gtx) })
-							}),
-							layout.Flexed(.4, func() {
-								ui.Center(gtx, func() {
+						ui.LayoutWithBackground(gtx, ui.Faded(ui.DarkBlueColor), false, func() {
+							layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+								layout.Flexed(.4, func() {
+									pg.theme.H4(info.Wallets[i].Name).Layout(gtx)
+								}),
+								layout.Flexed(.4, func() {
 									pg.theme.H5(info.Wallets[i].Balance.String()).Layout(gtx)
-								})
-							}),
-							layout.Flexed(.2, func() {
-								ui.Center(gtx, func() {
+								}),
+								layout.Flexed(.2, func() {
 									btn := pg.theme.IconButton(ui.IconToggleIndeterminateCheckBox)
 									if pg.selected == i {
 										btn.Background = pg.theme.Disabled
@@ -140,10 +130,9 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 									if pg.expandBtns[i].Clicked(gtx) {
 										pg.selected = i
 									}
-								})
-							}),
-						)
-						//})
+								}),
+							)
+						})
 					})
 				}),
 				layout.Flexed(.7, func() {

@@ -21,3 +21,9 @@ var (
 
 	FadedColor = color.RGBA{0, 0, 0, 128}
 )
+
+// Faded redues the color Aplha by half
+func Faded(color color.RGBA) color.RGBA {
+	color.A = color.A / 2
+	return color
+}
