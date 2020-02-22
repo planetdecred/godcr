@@ -14,24 +14,16 @@ type Theme struct {
 	Danger   color.RGBA
 	Disabled color.RGBA
 	Primary  color.RGBA
-	White    color.RGBA
 }
 
 // NewTheme returns a new materialplus theme
 func NewTheme() *Theme {
-	theme := &Theme{
-		Theme: material.NewTheme(),
-	}
-	theme.setColors()
-
-	return theme
-}
-
-func (t *Theme) setColors() {
-	t.White = ui.WhiteColor
-	t.Danger = ui.DangerColor
-	t.Disabled = ui.GrayColor
-	t.Primary = ui.LightBlueColor
-
+	t := material.NewTheme()
 	t.Color.Primary = ui.LightBlueColor
+	return &Theme{
+		Theme:    t,
+		Danger:   ui.DangerColor,
+		Disabled: ui.GrayColor,
+		Primary:  ui.LightBlueColor,
+	}
 }

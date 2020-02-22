@@ -38,7 +38,7 @@ type Password struct {
 // Password initializes and returns an instance of Password
 func (t *Theme) Password() *Password {
 	cancelButtonMaterial := t.Button("Cancel")
-	cancelButtonMaterial.Background = t.White
+	cancelButtonMaterial.Background = color.RGBA{}
 	cancelButtonMaterial.Color = t.Primary
 
 	errorLabel := t.Body2("")

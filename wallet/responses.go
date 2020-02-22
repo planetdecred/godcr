@@ -24,16 +24,18 @@ type MultiWalletInfo struct {
 
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
+	ID       int
 	Name     string
 	Balance  dcrutil.Amount
-	Accounts []dcrlibwallet.Account
+	Accounts []Account
 }
 
 // Account represents infomation about a wallet's account
 type Account struct {
-	id      int32
-	name    string
-	Balance dcrutil.Amount
+	Number string
+	Name   string
+	//Balance dcrutil.Amount
+	TotalBalance string
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets

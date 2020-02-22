@@ -18,4 +18,6 @@ var (
 	GreenColor  = color.RGBA{46, 214, 161, 255} //color.RGBA{65, 191, 83, 255}
 
 	BackgroundColor = color.RGBA{248, 249, 250, 255}
+
+	FadedColor = color.RGBA{0, 0, 0, 128}
 )

@@ -76,6 +76,12 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 			win.window.Invalidate()
 		case e := <-win.wallet.Send:
+			log.Debugf("Recieved event %+v", e)
+			if e.Err != nil {
+				win.states[page.StateError] = e.Err
+				win.window.Invalidate()
+				break
+			}
 			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo()
@@ -130,6 +136,9 @@ func (win *Window) updateState(t interface{}) {
 	case *wallet.CreatedSeed:
 		win.wallet.GetMultiWalletInfo()
 		win.states[page.StateWalletCreated] = t
+	case wallet.DeletedWallet:
+		win.states[page.StateDeletedWallet] = t
+		win.wallet.GetMultiWalletInfo()
 	}
 }
 
