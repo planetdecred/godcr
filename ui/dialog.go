@@ -3,6 +3,7 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"github.com/raedahgroup/godcr-gio/ui/styles"
 
 	"gioui.org/widget/material"
 )
@@ -29,10 +30,10 @@ func (diag Dialog) Layout(gtx *layout.Context, dialog func()) {
 
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(1-dialogSize, func() {
-			FillWithColor(gtx, FadedColor, true)
+			styles.FillWithColor(gtx, FadedColor, true)
 		}),
 		layout.Flexed(dialogSize, func() {
-			FillWithColor(gtx, WhiteColor, true)
+			styles.FillWithColor(gtx, WhiteColor, true)
 
 			children := make([]layout.FlexChild, 0, 2)
 

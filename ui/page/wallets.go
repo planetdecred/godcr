@@ -4,9 +4,12 @@ import (
 	"errors"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr-gio/ui"
+	"github.com/raedahgroup/godcr-gio/ui/layouts"
+	"github.com/raedahgroup/godcr-gio/ui/styles"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -40,6 +43,7 @@ type Wallets struct {
 	prompt                      string
 	onDialogConfirm             func(string)
 	err                         error
+	list                        *layout.List
 }
 
 // Init stores the theme and Wallet
@@ -51,6 +55,7 @@ func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.expandBtns = make([]widget.Button, 0)
 
 	pg.editor = widget.Editor{SingleLine: true, Submit: true}
+	pg.list = (&layout.List{Axis: layout.Vertical})
 }
 
 func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo) (event interface{}) {
@@ -67,6 +72,15 @@ func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo)
 					Next:    LandingID,
 				}
 			}
+		}),
+		layout.Rigid(func() {
+			status := pg.theme.Label(unit.Dp(20), "Not Synced")
+			if info.Synced {
+				status.Text = "Synced"
+			} else if info.Syncing {
+				status.Text = "Syncing"
+			}
+			status.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			btn := pg.theme.IconButton(ui.IconNavigationRefresh)
@@ -98,58 +112,28 @@ func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo)
 func (pg *Wallets) drawWalletInfo(gtx *layout.Context, info *wallet.MultiWalletInfo) (event interface{}) {
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(.2, func() {
-			layout.Flex{Spacing: layout.SpaceAround}.Layout(gtx,
-				layout.Rigid(func() {
-					ui.Center(gtx, func() { pg.theme.H3("Balance").Layout(gtx) })
+			layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+				layouts.RigidWithStyle(gtx, styles.Centered, func() {
+					pg.theme.H3("Balance").Layout(gtx)
 				}),
-				layout.Rigid(func() {
-					ui.Center(gtx, func() { pg.theme.H4(info.Wallets[pg.selected].Balance.String()).Layout(gtx) })
+				layouts.RigidWithStyle(gtx, styles.Centered, func() {
+					pg.theme.H4(info.Wallets[pg.selected].Balance.String()).Layout(gtx)
 				}),
 			)
 		}),
 		layout.Flexed(.6, func() {
 
 		}),
-		layout.Flexed(.2, func() {
-			del := pg.theme.Button("Delete wallet")
-			del.Background = pg.theme.Danger
-			del.Layout(gtx, &pg.delete)
+		layout.Flexed(.2, styles.WithStyle(gtx, styles.Centered, func() {
+			pg.theme.DangerButton("Delete wallet").Layout(gtx, &pg.delete)
 			if pg.delete.Clicked(gtx) {
 				pg.showDialog("Delete Wallet?", func(pass string) {
 					pg.wal.DeleteWallet(info.Wallets[pg.selected].ID, pass)
 				})
 			}
-		}),
+		})),
 	)
 	return
-}
-
-func (pg *Wallets) drawSelector(gtx *layout.Context, info *wallet.MultiWalletInfo) {
-	(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(info.Wallets), func(i int) {
-		layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Flexed(.8, func() {
-				layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Flexed(0.5, func() {
-						pg.theme.H6(info.Wallets[i].Name).Layout(gtx)
-					}),
-					layout.Flexed(0.5, func() {
-						pg.theme.H6(info.Wallets[i].Balance.String()).Layout(gtx)
-					}),
-				)
-			}),
-			layout.Rigid(func() {
-				if pg.selected == i {
-					ui.FillWithColor(gtx, ui.DarkBlueColor, true)
-				} else {
-					pg.theme.IconButton(ui.IconNavigationArrowForward).Layout(gtx, &pg.expandBtns[i])
-					if pg.expandBtns[i].Clicked(gtx) {
-						pg.selected = i
-					}
-				}
-			}),
-		)
-
-	})
 }
 
 func (pg *Wallets) drawDialog(gtx *layout.Context, info *wallet.MultiWalletInfo) {
@@ -162,14 +146,14 @@ func (pg *Wallets) drawDialog(gtx *layout.Context, info *wallet.MultiWalletInfo)
 	cancel.Background = pg.theme.Danger
 
 	labelLayout := func() {
-		ui.Center(gtx, func() { label.Layout(gtx) })
+		label.Layout(gtx)
 	}
 
 	diag := func() {
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(labelLayout),
-			layout.Rigid(func() {
-				ui.Center(gtx, func() { pg.theme.Editor("Enter spending password").Layout(gtx, &pg.editor) })
+			layouts.RigidWithStyle(gtx, styles.Centered, labelLayout),
+			layouts.RigidWithStyle(gtx, styles.Centered, func() {
+				pg.theme.Editor("Enter spending password").Layout(gtx, &pg.editor)
 			}),
 		)
 	}
@@ -242,6 +226,7 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 		pg.expandBtns = make([]widget.Button, numWallets)
 	}
 
+	//selector := pg.drawSelector(gtx, info)
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(.15, func() {
 			evt := pg.drawHeader(gtx, info)
@@ -252,16 +237,30 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 		layout.Flexed(.85, func() {
 			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Flexed(.3, func() {
-					pg.drawSelector(gtx, info)
-				}),
-				layout.Flexed(.7, func() {
-					ui.LayoutWithBackground(gtx, ui.DarkBlueColor, false, func() {
-						evt := pg.drawWalletInfo(gtx, info)
-						if event == nil {
-							event = evt
-						}
+					(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(info.Wallets), func(i int) {
+						layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Flexed(.7, styles.WithStyles(gtx, func() {
+								pg.theme.Label(unit.Dp(20), info.Wallets[i].Name+"\n"+info.Wallets[i].Balance.String()).Layout(gtx)
+							}, styles.Centered)),
+							layout.Flexed(.3, styles.WithStyles(gtx, func() {
+								btn := pg.theme.IconButton(ui.IconNavigationArrowForward)
+								if pg.selected == i {
+									styles.FillWithColor(gtx, pg.theme.Color.Primary, false)
+								}
+								btn.Layout(gtx, &pg.expandBtns[i])
+								if pg.expandBtns[i].Clicked(gtx) {
+									pg.selected = i
+								}
+							}, styles.Centered)),
+						)
 					})
 				}),
+				layout.Flexed(.7, styles.WithStyle(gtx, styles.Background{Color: pg.theme.Color.Primary}, func() {
+					evt := pg.drawWalletInfo(gtx, info)
+					if event == nil {
+						event = evt
+					}
+				})),
 			)
 		}),
 	)
