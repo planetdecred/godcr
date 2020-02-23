@@ -112,6 +112,9 @@ type Receive struct {
 
 	listContainer  layout.List
 	receiveAddress string
+	accountName string
+	walletName string
+	accountBalance string
 	states         map[string]interface{}
 }
 
@@ -145,6 +148,10 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.selectedAccountBalanceLabel = pg.theme.Body2("")
 	pg.receiveAddressLabel = pg.theme.H6("")
 	pg.receiveAddressLabel.Color = color.RGBA{44, 114, 255, 255}
+
+	pg.accountName = ""
+	pg.walletName = ""
+	pg.accountBalance = ""
 
 	pg.copyBtnWdg = new(widget.Button)
 	pg.copyBtn = theme.IconButton(materialplus.ContentCopyIcon)
@@ -213,6 +220,7 @@ func (pg *Receive) Draw(gtx *layout.Context) (res interface{}) {
 }
 
 func (pg *Receive) ReceivePageContents(gtx *layout.Context) {
+	// pg.setSelectedAccount(*pg.selectedWallet, *pg.selectedAccount)
 	ReceivePageContent := []func(){
 		func() {
 			pg.pageFirstColumn(gtx)
@@ -230,7 +238,6 @@ func (pg *Receive) ReceivePageContents(gtx *layout.Context) {
 	pg.listContainer.Layout(gtx, len(ReceivePageContent), func(i int) {
 		layout.UniformInset(unit.Dp(10)).Layout(gtx, ReceivePageContent[i])
 	})
-
 	if pg.isGenerateNewAddBtnModal {
 		pg.drawMoreModal(gtx)
 	}
@@ -433,12 +440,16 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 							layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func() {
 									layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
+										// fmt.Println(walletName)
+										// fmt.Println(accountName)
+										// pg.theme.Body1(accountName).Layout(gtx)
 										pg.selectedAccountNameLabel.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func() {
 									layout.Inset{Left: unit.Dp(2)}.Layout(gtx, func() {
-										pg.selectedWalletLabel.Layout(gtx)
+										// pg.theme.Label(unit.Dp(10), walletName).Layout(gtx)
+									pg.selectedWalletLabel.Layout(gtx)
 									})
 								}),
 							)
@@ -446,6 +457,7 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Top: unit.Dp(6.5)}.Layout(gtx, func() {
+							// pg.theme.Label(unit.Dp(10), accountBalance).Layout(gtx)
 							pg.selectedAccountBalanceLabel.Layout(gtx)
 						})
 					}),
@@ -583,6 +595,13 @@ func (pg *Receive) accountSelectedModal(gtx *layout.Context) {
 func (pg *Receive) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account, generateNew bool) {
 	pg.selectedWallet = &wallet
 	pg.selectedAccount = &account
+
+	// walletName := wallet.Name
+	// accountName := account.Name
+	// accountBalance := dcrutil.Amount(account.SpendableBalance).String()
+
+	// fmt.Println(pg.walletName)
+	// fmt.Println(pg.accountName)
 
 	pg.selectedWalletLabel.Text = wallet.Name
 	pg.selectedAccountNameLabel.Text = account.Name
