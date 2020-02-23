@@ -1,6 +1,8 @@
-package ui
+package layouts
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/styles"
@@ -15,6 +17,7 @@ const (
 
 // Dialog is a convenient struct for presenting a dialog modal.
 type Dialog struct {
+	Background                  color.RGBA
 	ConfirmButton, CancelButton material.Button
 	Confirm, Cancel             *widget.Button
 	Active                      bool
@@ -30,13 +33,11 @@ func (diag Dialog) Layout(gtx *layout.Context, dialog func()) {
 
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(1-dialogSize, func() {
-			styles.FillWithColor(gtx, FadedColor, true)
+			styles.FillWithColor(gtx, color.RGBA{128, 128, 128, 128}, true)
 		}),
 		layout.Flexed(dialogSize, func() {
-			styles.FillWithColor(gtx, WhiteColor, true)
-
+			styles.FillWithColor(gtx, diag.Background, true)
 			children := make([]layout.FlexChild, 0, 2)
-
 			if diag.Confirm != nil {
 				children = append(children,
 					layout.Rigid(func() {
@@ -45,7 +46,6 @@ func (diag Dialog) Layout(gtx *layout.Context, dialog func()) {
 						})
 					}))
 			}
-
 			if diag.Cancel != nil {
 				children = append(children,
 					layout.Rigid(func() {
@@ -54,7 +54,6 @@ func (diag Dialog) Layout(gtx *layout.Context, dialog func()) {
 						})
 					}))
 			}
-
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Flexed(1-confirmCancelSize, dialog),
 				layout.Flexed(confirmCancelSize, func() {

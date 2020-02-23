@@ -7,10 +7,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/layouts"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus/icons"
 	"github.com/raedahgroup/godcr-gio/ui/styles"
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
@@ -64,7 +64,7 @@ func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo)
 			pg.theme.H2("Wallets").Layout(gtx)
 		}),
 		layout.Rigid(func() {
-			pg.theme.IconButton(ui.IconContentAdd).Layout(gtx, &pg.add)
+			pg.theme.IconButton(icons.ContentAdd).Layout(gtx, &pg.add)
 			if pg.add.Clicked(gtx) {
 				log.Tracef("{%s} AddWallet Btn Clicked", WalletsID)
 				event = EventNav{
@@ -83,12 +83,12 @@ func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo)
 			status.Layout(gtx)
 		}),
 		layout.Rigid(func() {
-			btn := pg.theme.IconButton(ui.IconNavigationRefresh)
+			btn := pg.theme.IconButton(icons.NavigationRefresh)
 			if info.Synced {
-				btn = pg.theme.IconButton(ui.IconNavigationCheck)
+				btn = pg.theme.IconButton(icons.NavigationCheck)
 				btn.Background = pg.theme.Success
 			} else if info.Syncing {
-				btn = pg.theme.IconButton(ui.IconNavigationClose)
+				btn = pg.theme.IconButton(icons.NavigationClose)
 				btn.Background = pg.theme.Danger
 			}
 			btn.Layout(gtx, &pg.sync)
@@ -178,7 +178,7 @@ func (pg *Wallets) drawDialog(gtx *layout.Context, info *wallet.MultiWalletInfo)
 		cancel.Background = pg.theme.Theme.Color.Primary
 	}
 
-	ui.Dialog{
+	layouts.Dialog{
 		ConfirmButton: confirm,
 		Confirm:       dconfirm,
 		CancelButton:  cancel,
@@ -243,7 +243,7 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 								pg.theme.Label(unit.Dp(20), info.Wallets[i].Name+"\n"+info.Wallets[i].Balance.String()).Layout(gtx)
 							}, styles.Centered)),
 							layout.Flexed(.3, styles.WithStyles(gtx, func() {
-								btn := pg.theme.IconButton(ui.IconNavigationArrowForward)
+								btn := pg.theme.IconButton(icons.NavigationArrowForward)
 								if pg.selected == i {
 									styles.FillWithColor(gtx, pg.theme.Color.Primary, false)
 								}

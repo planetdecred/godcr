@@ -2,6 +2,7 @@ package materialplus
 
 import (
 	"image"
+	"image/color"
 
 	"gioui.org/f32"
 	"gioui.org/io/pointer"
@@ -11,8 +12,6 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
-
-	"github.com/raedahgroup/godcr-gio/ui"
 )
 
 // SelectItem represents a select option
@@ -86,8 +85,8 @@ func (s *Select) setSelected(itemIndex int) {
 }
 
 func (s *Select) layoutItem(gtx *layout.Context, item *SelectItem) {
-	col := ui.BlackColor
-	bgcol := ui.LightGrayColor
+	col := color.RGBA{255, 255, 255, 255}
+	bgcol := color.RGBA{255, 255, 255, 255}
 	vmin := gtx.Constraints.Height.Min
 
 	font := text.Font{

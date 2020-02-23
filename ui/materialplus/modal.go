@@ -1,10 +1,10 @@
 package materialplus
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
-
-	"github.com/raedahgroup/godcr-gio/ui"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 
 // Modal renders a modal instance to screen
 func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
-	overlayColor := ui.BlackColor
+	overlayColor := color.RGBA{255, 255, 255, 255}
 	overlayColor.A = 200
 
 	Fill(gtx, overlayColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
@@ -27,7 +27,7 @@ func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 				Top: unit.Dp(50),
 			}
 			inset.Layout(gtx, func() {
-				Fill(gtx, ui.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
+				Fill(gtx, color.RGBA{}, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
 				inset := layout.Inset{
 					Top:   unit.Dp(7),
 					Left:  unit.Dp(25),

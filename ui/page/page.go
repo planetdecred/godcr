@@ -4,7 +4,7 @@ package page
 
 import (
 	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 
 	"github.com/raedahgroup/godcr-gio/wallet"
 )

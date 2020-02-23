@@ -7,8 +7,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
-
-	"github.com/raedahgroup/godcr-gio/ui"
 )
 
 type (
@@ -21,7 +19,7 @@ type (
 
 // Line returns a line widget instance
 func (t *Theme) Line() *Line {
-	col := ui.GrayColor
+	col := color.RGBA{255, 255, 255, 255}
 	col.A = 150
 
 	return &Line{
