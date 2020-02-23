@@ -15,6 +15,7 @@ type Theme struct {
 	Disabled color.RGBA
 	Primary  color.RGBA
 	White    color.RGBA
+	Success  color.RGBA
 }
 
 // NewTheme returns a new materialplus theme
@@ -32,6 +33,7 @@ func (t *Theme) setColors() {
 	t.Danger = ui.DangerColor
 	t.Disabled = ui.GrayColor
 	t.Primary = ui.LightBlueColor
+	t.Success = ui.GreenColor
 
 	t.Color.Primary = ui.LightBlueColor
 }

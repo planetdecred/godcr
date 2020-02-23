@@ -135,6 +135,8 @@ func (win *Window) updateState(t interface{}) {
 		win.states[page.StateWalletCreated] = t
 	case *dcrlibwallet.TxAuthor:
 		win.states[page.StateTxAuthor] = t
+	case *wallet.TxHash:
+		win.states[page.StateTxHash] = t
 	}
 }
 

@@ -81,17 +81,17 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 
 		if wallet == nil {
 			resp.Err = ErrNoSuchWallet
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
-		if _, err := wallet.GetAccount(acct, confirms); err != nil {
+		if _, err := wallet.GetAccount(accountID, dcrlibwallet.DefaultRequiredConfirmations); err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
-		txAuthor := wallet.NewUnsignedTx(acct, confirms)
+		txAuthor := wallet.NewUnsignedTx(accountID, dcrlibwallet.DefaultRequiredConfirmations)
 		if txAuthor == nil {
 			resp.Err = err
 			wal.Send <- resp
@@ -99,6 +99,26 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 		}
 
 		resp.Resp = txAuthor
+		wal.Send <- resp
+	}()
+}
+
+// BroadcastTransaction broadcasts the transaction built with txAuthor to the network.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) BroadcastTransaction(txAuthor *dcrlibwallet.TxAuthor, passphrase string) {
+	go func() {
+		var resp Response
+
+		txHash, err := txAuthor.Broadcast([]byte(passphrase))
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+
+		resp.Resp = &TxHash{
+			Hash: string(txHash),
+		}
 		wal.Send <- resp
 	}()
 }

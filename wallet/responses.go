@@ -56,3 +56,8 @@ type CreatedSeed struct {
 type Transactions struct {
 	Txs [][]dcrlibwallet.Transaction
 }
+
+// TxHash is sent when the Wallet successfully broadcasts a transaction
+type TxHash struct {
+	Hash string
+}

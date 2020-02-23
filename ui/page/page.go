@@ -34,4 +34,7 @@ const (
 
 	// StateTxAuthor is the map key for the TxAuthor state
 	StateTxAuthor = "txAuthor"
+
+	// StateTxHash is the map key for the TxHash state
+	StateTxHash = "txHash"
 )

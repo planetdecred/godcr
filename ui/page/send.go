@@ -15,22 +15,11 @@ import (
 
 	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
-	//"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // SendID is the id of the send page
 const SendID = "send"
-
-type confirmModalWidgets struct {
-	line       *materialplus.Line
-	sendButton *widget.Button
-
-	confirmLabel       material.Label
-	sendingFromLabel   material.Label
-	toDestinationLabel material.Label
-	sendWarningLabel   material.Label
-}
 
 type accountModalWidgets struct {
 	titleLabel material.Label
@@ -63,6 +52,7 @@ type Send struct {
 
 	isAccountModalOpen        bool
 	isConfirmationModalOpen   bool
+	isPasswordModalOpen       bool
 	isBroadcastingTransaction bool
 
 	// editors
@@ -87,6 +77,7 @@ type Send struct {
 	confirmDestinationAddressLabel material.Label
 	confirmWarningLabel            material.Label
 	accountsModalTitleLabel        material.Label
+	txHashLabel                    material.Label
 
 	// error labels
 	destinationAddressErrorLabel material.Label
@@ -99,6 +90,8 @@ type Send struct {
 	nextButton          *button
 	confirmButton       *button
 
+	passwordModal *materialplus.Password
+
 	accountSelectorButtons map[string]*widget.Button
 }
 
@@ -109,7 +102,8 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 	pg.states = states
 	pg.isAccountModalOpen = false
 	pg.isConfirmationModalOpen = false
-	pg.isBroadcastingTransaction = true
+	pg.isBroadcastingTransaction = false
+	pg.isPasswordModalOpen = false
 
 	// labels
 	pg.titleLabel = theme.H5("Send DCR")
@@ -129,6 +123,8 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 	pg.confirmDestinationAddressLabel = pg.theme.Body2("To destination address")
 	pg.confirmWarningLabel = pg.theme.Caption("Your DCR will be sent and CANNOT be undone")
 	pg.accountsModalTitleLabel = pg.theme.H5("Choose sending account")
+	pg.txHashLabel = pg.theme.H5("dddd")
+	pg.txHashLabel.Color = pg.theme.Success
 
 	pg.destinationAddressErrorLabel = pg.theme.Caption("")
 	pg.sendErrorLabel = pg.theme.Caption("")
@@ -141,6 +137,7 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 
 	pg.accountSelectorButtons = map[string]*widget.Button{}
 
+	pg.passwordModal = theme.Password()
 	pg.destinationAddressEditor = &editor{
 		editor:   new(widget.Editor),
 		material: pg.theme.Editor("Destination Address"),
@@ -187,6 +184,15 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 		{
 			func() {
 				pg.titleLabel.Layout(gtx)
+
+				if pg.txHashLabel.Text != "" {
+					inset := layout.Inset{
+						Top: unit.Dp(40),
+					}
+					inset.Layout(gtx, func() {
+						pg.txHashLabel.Layout(gtx)
+					})
+				}
 			},
 			func() {
 				pg.drawSelectedAccountSection(gtx)
@@ -256,9 +262,30 @@ func (pg *Send) Draw(gtx *layout.Context) interface{} {
 		pg.drawAccountsModal(gtx)
 	} else if pg.isConfirmationModalOpen {
 		pg.drawConfirmationModal(gtx)
+
+		if pg.isPasswordModalOpen {
+			pg.drawPasswordModal(gtx)
+		}
 	}
 
 	return nil
+}
+
+func (pg *Send) drawPasswordModal(gtx *layout.Context) {
+	pg.theme.Modal(gtx, func() {
+		pg.passwordModal.Draw(gtx, pg.confirm, pg.cancel)
+	})
+}
+
+func (pg *Send) confirm(password string) {
+	pg.isBroadcastingTransaction = true
+	pg.isPasswordModalOpen = false
+
+	pg.wallet.BroadcastTransaction(pg.txAuthor, password)
+}
+
+func (pg *Send) cancel() {
+	pg.isPasswordModalOpen = false
 }
 
 func reduceWidgetsWrapper(widgetsWrapper [][]func()) []func() {
@@ -455,10 +482,8 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 			func() {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 
-				for range pg.confirmButton.button.Clicked(gtx) {
-					if !pg.isBroadcastingTransaction {
-						pg.broadcastTransaction()
-					}
+				for pg.confirmButton.button.Clicked(gtx) {
+					pg.isPasswordModalOpen = true
 				}
 				pg.confirmButton.layout(gtx)
 			},
@@ -472,14 +497,6 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 			layout.UniformInset(unit.Dp(10)).Layout(gtx, widgets[i])
 		})
 	})
-}
-
-func (pg *Send) broadcastTransaction() {
-	/**pg.sendErrorLabel.Text = ""
-
-	pg.isBroadcastingTransaction = true
-	//pg.txAuthor.Broadcast(nil)
-	pg.isBroadcastingTransaction = false**/
 }
 
 func (pg *Send) waitAndSetWalletInfo() {
@@ -520,7 +537,7 @@ func (pg *Send) setSelectedAccount(wallet wallet.InfoShort, account wallet.Accou
 	pg.selectedAccountLabel.Text = fmt.Sprintf("%s - %s", account.Name, dcrutil.Amount(account.SpendableBalance).String())
 
 	// create a mew transaction everytime a new account is chosen
-	pg.wallet.CreateTransaction(wallet.ID, account.Number, dcrlibwallet.DefaultRequiredConfirmations)
+	pg.wallet.CreateTransaction(wallet.ID, account.Number)
 	pg.calculateValues()
 }
 
@@ -581,9 +598,34 @@ func (pg *Send) validate(ignoreEmpty bool) bool {
 	return true
 }
 
+func (pg *Send) watchForBroadcastResult(gtx *layout.Context) {
+	err := pg.states[StateError]
+	hash := pg.states[StateTxHash]
+
+	if err == nil && hash == nil {
+		return
+	}
+
+	if err != nil {
+		pg.sendErrorLabel.Text = fmt.Sprintf("error broadcasting transaction: %s", err.(error).Error())
+		delete(pg.states, StateError)
+	} else if hash != nil {
+		pg.txHashLabel.Text = fmt.Sprintf("The transaction was published successfully. Hash: %s", hash.(*wallet.TxHash).Hash)
+		pg.destinationAddressEditor.editor.SetText("")
+		pg.sendAmountEditor.editor.SetText("")
+		pg.isConfirmationModalOpen = false
+
+		delete(pg.states, StateTxHash)
+	}
+
+	pg.isBroadcastingTransaction = false
+}
+
 func (pg *Send) watchAndUpdateValues(gtx *layout.Context) {
-	pg.confirmButton.button.Text = "Send"
-	pg.confirmButton.button.Background = ui.LightBlueColor
+	pg.watchForBroadcastResult(gtx)
+
+	pg.confirmButton.material.Text = "Send"
+	pg.confirmButton.material.Background = ui.LightBlueColor
 
 	txAuthor := pg.states[StateTxAuthor]
 	if txAuthor != nil {
@@ -592,8 +634,8 @@ func (pg *Send) watchAndUpdateValues(gtx *layout.Context) {
 	}
 
 	if pg.isBroadcastingTransaction {
-		pg.confirmButton.button.Text = "Sending..."
-		pg.confirmButton.button.Background = ui.GrayColor
+		pg.confirmButton.material.Text = "Sending..."
+		pg.confirmButton.material.Background = ui.GrayColor
 	}
 
 	for range pg.destinationAddressEditor.editor.Events(gtx) {
