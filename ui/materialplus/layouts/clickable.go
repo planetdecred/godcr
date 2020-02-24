@@ -8,16 +8,12 @@ import (
 	"gioui.org/widget"
 )
 
-type Clicker struct {
-	Widget layout.Widget
-}
+// Clicker lays out a button over widget
+type Clicker layout.Widget
 
+// Layout lays out btn over the Clicker widget
 func (c Clicker) Layout(gtx *layout.Context, btn *widget.Button) {
-	c.Widget()
+	c()
 	pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
 	btn.Layout(gtx)
-}
-
-type Clickable interface {
-	Layout(*layout.Context, widget.Button)
 }

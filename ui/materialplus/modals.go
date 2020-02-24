@@ -5,7 +5,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus/styles"
 )
 
 const ModalSize float32 = .3
@@ -25,5 +24,8 @@ func (dialog ConfirmCancel) Layout(gtx *layout.Context, confirm, cancel *widget.
 			layout.Flexed(0.20, func() { dialog.Confirm.Layout(gtx, confirm) }),
 		)
 	}
-	layouts.Modal(gtx, modal, styles.RGBA(0xffffff6))
+	layouts.Modal{
+		Background: layouts.ARGB(0x77ffffff),
+		Direction:  layout.S,
+	}.Layout(gtx, modal)
 }

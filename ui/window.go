@@ -2,7 +2,6 @@ package ui
 
 import (
 	"errors"
-	"time"
 
 	"gioui.org/app"
 	"gioui.org/io/system"
@@ -21,9 +20,11 @@ type Window struct {
 	current     func(*layout.Context, *materialplus.Theme, *wallet.MultiWalletInfo)
 	wallet      *wallet.Wallet
 	walletInfo  *wallet.MultiWalletInfo
+	selected    int
 	infoLoading bool
 	buttons     struct {
-		deleteWallet, cancelDialog, confirmDialog *widget.Button
+		deleteWallet, cancelDialog, confirmDialog widget.Button
+		tabs                                      []*widget.Button
 	}
 }
 
@@ -46,6 +47,8 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 	win.current = blank
 	win.wallet = wal
+	win.infoLoading = true
+	win.buttons.tabs = make([]*widget.Button, 0)
 	return win, nil
 }
 
@@ -68,6 +71,7 @@ func (win *Window) Loop(shutdown chan int) {
 					win.current = blank
 				}
 			case *wallet.MultiWalletInfo:
+				win.infoLoading = false
 				*win.walletInfo = *evt
 			default:
 				win.updateState(e.Resp)
@@ -84,13 +88,18 @@ func (win *Window) Loop(shutdown chan int) {
 				return
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
-				start := time.Now()
 
+				lenWallets := len(win.walletInfo.Wallets)
+				if len(win.buttons.tabs) != lenWallets {
+					win.buttons.tabs = make([]*widget.Button, lenWallets)
+					for i := range win.buttons.tabs {
+						win.buttons.tabs[i] = new(widget.Button)
+					}
+				}
 				win.current(win.gtx, win.theme, win.walletInfo)
 				if win.infoLoading {
 					loading(win.gtx, win.theme, win.walletInfo)
 				}
-				log.Tracef("Page {%s} rendered in %v", win.current, time.Since(start))
 				evt.Frame(win.gtx.Ops)
 				win.HandleInputs()
 			case nil:
