@@ -4,14 +4,16 @@ import (
 	"gioui.org/layout"
 )
 
-type Alignment layout.Alignment
+type Alignment struct {
+	layout.Direction
+}
 
-const (
-	Centered = Alignment(layout.Center)
+var (
+	Centered = Alignment{layout.Center}
 )
 
 func (align Alignment) Layout(gtx *layout.Context, widget func()) func() {
 	return func() {
-		layout.Align(align).Layout(gtx, widget)
+		align.Direction.Layout(gtx, widget)
 	}
 }

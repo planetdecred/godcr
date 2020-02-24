@@ -1,8 +1,6 @@
 package page
 
 import (
-	"errors"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -30,20 +28,16 @@ type Wallets struct {
 
 	states map[string]interface{}
 
-	add, sync widget.Button
-	selected  int
+	add, sync, confirm, cancel, delete widget.Button
+	selected                           int
 
-	expandBtns []widget.Button
+	tabBtns []*widget.Button
 
-	delete, dialogCancel, dialogConfirm widget.Button
+	editor *widget.Editor
 
-	editor widget.Editor
+	processing, deleted, deleting bool
 
-	dialog, processing, deleted bool
-	prompt                      string
-	onDialogConfirm             func(string)
-	err                         error
-	list                        *layout.List
+	err error
 }
 
 // Init stores the theme and Wallet
@@ -52,10 +46,9 @@ func (pg *Wallets) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.theme = theme
 
 	pg.states = states
-	pg.expandBtns = make([]widget.Button, 0)
+	pg.tabBtns = make([]*widget.Button, 0)
 
-	pg.editor = widget.Editor{SingleLine: true, Submit: true}
-	pg.list = (&layout.List{Axis: layout.Vertical})
+	pg.editor = &widget.Editor{SingleLine: true, Submit: true}
 }
 
 func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo) (event interface{}) {
@@ -65,13 +58,6 @@ func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo)
 		}),
 		layout.Rigid(func() {
 			pg.theme.IconButton(icons.ContentAdd).Layout(gtx, &pg.add)
-			if pg.add.Clicked(gtx) {
-				log.Tracef("{%s} AddWallet Btn Clicked", WalletsID)
-				event = EventNav{
-					Current: WalletsID,
-					Next:    LandingID,
-				}
-			}
 		}),
 		layout.Rigid(func() {
 			status := pg.theme.Label(unit.Dp(20), "Not Synced")
@@ -92,24 +78,12 @@ func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo)
 				btn.Background = pg.theme.Danger
 			}
 			btn.Layout(gtx, &pg.sync)
-			for pg.sync.Clicked(gtx) {
-				if !info.Synced {
-					if err := pg.wal.StartSync(); err != nil {
-						log.Error(err)
-						pg.err = err
-					}
-				}
-				if info.Syncing {
-					log.Info("Cancelling sync")
-					pg.wal.CancelSync()
-				}
-			}
 		}),
 	)
 	return
 }
 
-func (pg *Wallets) drawWalletInfo(gtx *layout.Context, info *wallet.MultiWalletInfo) (event interface{}) {
+func (pg *Wallets) drawWalletInfo(gtx *layout.Context, info wallet.InfoShort) {
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(.2, func() {
 			layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -117,7 +91,7 @@ func (pg *Wallets) drawWalletInfo(gtx *layout.Context, info *wallet.MultiWalletI
 					pg.theme.H3("Balance").Layout(gtx)
 				}),
 				layouts.RigidWithStyle(gtx, styles.Centered, func() {
-					pg.theme.H4(info.Wallets[pg.selected].Balance.String()).Layout(gtx)
+					pg.theme.H4(info.Balance.String()).Layout(gtx)
 				}),
 			)
 		}),
@@ -126,77 +100,17 @@ func (pg *Wallets) drawWalletInfo(gtx *layout.Context, info *wallet.MultiWalletI
 		}),
 		layout.Flexed(.2, styles.WithStyle(gtx, styles.Centered, func() {
 			pg.theme.DangerButton("Delete wallet").Layout(gtx, &pg.delete)
-			if pg.delete.Clicked(gtx) {
-				pg.showDialog("Delete Wallet?", func(pass string) {
-					pg.wal.DeleteWallet(info.Wallets[pg.selected].ID, pass)
-				})
-			}
 		})),
 	)
-	return
+
 }
 
 func (pg *Wallets) drawDialog(gtx *layout.Context, info *wallet.MultiWalletInfo) {
-	dconfirm := &pg.dialogConfirm
-	dcancel := &pg.dialogCancel
-
-	label := pg.theme.H3(pg.prompt)
-	confirm := pg.theme.Button("Confirm")
-	cancel := pg.theme.Button("Cancel")
-	cancel.Background = pg.theme.Danger
-
-	labelLayout := func() {
-		label.Layout(gtx)
+	if pg.deleting {
+		diag := pg.theme.PasswordDialog("Enter spending password")
+		diag.Layout(gtx, pg.editor, &pg.confirm, &pg.cancel)
 	}
 
-	diag := func() {
-		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layouts.RigidWithStyle(gtx, styles.Centered, labelLayout),
-			layouts.RigidWithStyle(gtx, styles.Centered, func() {
-				pg.theme.Editor("Enter spending password").Layout(gtx, &pg.editor)
-			}),
-		)
-	}
-
-	if pg.err != nil {
-		label.Color = pg.theme.Danger
-		if errors.Is(pg.err, wallet.ErrBadPass) {
-			label.Text = "Invalid password"
-		} else {
-			label.Text = "Something went wrong. See log for details"
-		}
-		pg.processing = false
-	} else if pg.processing {
-		confirm.Background = pg.theme.Disabled
-		cancel.Background = pg.theme.Disabled
-	} else if pg.deleted {
-		label.Text = "Wallet deleted"
-		label.Color = pg.theme.Success
-		diag = labelLayout
-		dconfirm = nil
-		cancel.Text = "Close dialog"
-		cancel.Background = pg.theme.Theme.Color.Primary
-	}
-
-	layouts.Dialog{
-		ConfirmButton: confirm,
-		Confirm:       dconfirm,
-		CancelButton:  cancel,
-		Cancel:        dcancel,
-		Active:        pg.dialog,
-	}.Layout(gtx, diag)
-
-	if !pg.processing {
-		for pg.dialogCancel.Clicked(gtx) {
-			pg.closeDialog()
-			delete(pg.states, StateError)
-			delete(pg.states, StateDeletedWallet)
-		}
-		for pg.dialogConfirm.Clicked(gtx) {
-			pg.onDialogConfirm(pg.editor.Text())
-			pg.processing = true
-		}
-	}
 }
 
 // Draw layouts out the widgets on the given context
@@ -222,11 +136,13 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 		return nil
 	}
 
-	if len(pg.expandBtns) != numWallets {
-		pg.expandBtns = make([]widget.Button, numWallets)
+	if len(pg.tabBtns) != numWallets {
+		pg.tabBtns = make([]*widget.Button, numWallets)
+		for i := range pg.tabBtns {
+			pg.tabBtns[i] = new(widget.Button)
+		}
 	}
 
-	//selector := pg.drawSelector(gtx, info)
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(.15, func() {
 			evt := pg.drawHeader(gtx, info)
@@ -234,50 +150,52 @@ func (pg *Wallets) Draw(gtx *layout.Context) (event interface{}) {
 				event = evt
 			}
 		}),
-		layout.Flexed(.85, func() {
-			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Flexed(.3, func() {
-					(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(info.Wallets), func(i int) {
-						layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Flexed(.7, styles.WithStyles(gtx, func() {
-								pg.theme.Label(unit.Dp(20), info.Wallets[i].Name+"\n"+info.Wallets[i].Balance.String()).Layout(gtx)
-							}, styles.Centered)),
-							layout.Flexed(.3, styles.WithStyles(gtx, func() {
-								btn := pg.theme.IconButton(icons.NavigationArrowForward)
-								if pg.selected == i {
-									styles.FillWithColor(gtx, pg.theme.Color.Primary, false)
-								}
-								btn.Layout(gtx, &pg.expandBtns[i])
-								if pg.expandBtns[i].Clicked(gtx) {
-									pg.selected = i
-								}
-							}, styles.Centered)),
-						)
-					})
+		layout.Flexed(.85,
+			pg.theme.Tabbed(gtx,
+				&pg.selected,
+				pg.tabBtns,
+				styles.WithStyle(gtx, styles.Background(pg.theme.Background), func() {
+
 				}),
-				layout.Flexed(.7, styles.WithStyle(gtx, styles.Background{Color: pg.theme.Color.Primary}, func() {
-					evt := pg.drawWalletInfo(gtx, info)
-					if event == nil {
-						event = evt
-					}
-				})),
-			)
-		}),
+				func(i int) {
+					pg.theme.Label(unit.Dp(50), info.Wallets[i].Name).Layout(gtx)
+				},
+				styles.WithStyle(gtx, styles.Background(pg.theme.Background), func() {
+					pg.drawWalletInfo(gtx, info.Wallets[pg.selected])
+				}),
+			)),
 	)
+
 	pg.drawDialog(gtx, info)
+	for i, btn := range pg.tabBtns {
+		if btn.Clicked(gtx) {
+			log.Debugf("Tab %d selected", i)
+			pg.selected = i
+		}
+	}
+
+	for pg.sync.Clicked(gtx) {
+		if !info.Synced {
+			if err := pg.wal.StartSync(); err != nil {
+				log.Error(err)
+				pg.err = err
+			}
+		}
+		if info.Syncing {
+			log.Info("Cancelling sync")
+			pg.wal.CancelSync()
+		}
+	}
+
+	if pg.add.Clicked(gtx) {
+		log.Tracef("{%s} AddWallet Btn Clicked", WalletsID)
+		event = EventNav{
+			Current: WalletsID,
+			Next:    LandingID,
+		}
+	}
+	if pg.delete.Clicked(gtx) {
+		pg.deleting = true
+	}
 	return
-}
-
-func (pg *Wallets) showDialog(prompt string, onConfirm func(string)) {
-	pg.dialog = true
-	pg.prompt = prompt
-	pg.onDialogConfirm = onConfirm
-}
-
-func (pg *Wallets) closeDialog() {
-	pg.dialog = false
-	pg.deleted = false
-	pg.prompt = ""
-	pg.editor.SetText("")
-	pg.onDialogConfirm = func(_ string) {}
 }

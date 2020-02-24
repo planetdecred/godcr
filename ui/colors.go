@@ -31,5 +31,5 @@ var DecredPalette = materialplus.Palette{
 	Success:    successGreen,
 	Danger:     dangerRed,
 	Text:       black,
-	Background: white,
+	Background: darkBlue,
 }
