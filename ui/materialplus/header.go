@@ -2,7 +2,7 @@ package materialplus
 
 import (
 	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/layouts"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
 const (

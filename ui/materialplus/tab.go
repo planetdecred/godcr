@@ -3,7 +3,7 @@ package materialplus
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr-gio/ui/layouts"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
 func (t *Theme) Tabbed(gtx *layout.Context, selected *int, tabs []*widget.Button, selectedItem layout.Widget, item layout.ListElement, body layout.Widget) layout.Widget {

@@ -5,10 +5,9 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr-gio/ui/layouts"
 	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 	"github.com/raedahgroup/godcr-gio/ui/materialplus/icons"
-	"github.com/raedahgroup/godcr-gio/ui/styles"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus/styles"
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
@@ -84,13 +83,15 @@ func (pg *Wallets) drawHeader(gtx *layout.Context, info *wallet.MultiWalletInfo)
 }
 
 func (pg *Wallets) drawWalletInfo(gtx *layout.Context, info wallet.InfoShort) {
+	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
+	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(.2, func() {
-			layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-				layouts.RigidWithStyle(gtx, styles.Centered, func() {
+			layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Baseline}.Layout(gtx,
+				layout.Rigid(func() {
 					pg.theme.H3("Balance").Layout(gtx)
 				}),
-				layouts.RigidWithStyle(gtx, styles.Centered, func() {
+				layout.Rigid(func() {
 					pg.theme.H4(info.Balance.String()).Layout(gtx)
 				}),
 			)
@@ -98,9 +99,9 @@ func (pg *Wallets) drawWalletInfo(gtx *layout.Context, info wallet.InfoShort) {
 		layout.Flexed(.6, func() {
 
 		}),
-		layout.Flexed(.2, styles.WithStyle(gtx, styles.Centered, func() {
+		layout.Flexed(.2, styles.WithStyles(gtx, func() {
 			pg.theme.DangerButton("Delete wallet").Layout(gtx, &pg.delete)
-		})),
+		}, styles.Maxed)),
 	)
 
 }

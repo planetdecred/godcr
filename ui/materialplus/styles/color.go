@@ -1,12 +1,10 @@
 package styles
 
 import (
-	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op/paint"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
 var (
@@ -17,13 +15,13 @@ var (
 
 type Background color.RGBA
 
-func (c Background) Layout(gtx *layout.Context, widget func()) func() {
+func (c Background) Styled(gtx *layout.Context, widget layout.Widget) layout.Widget {
 	return func() {
 		wmin := gtx.Constraints.Width.Min
 		hmin := gtx.Constraints.Height.Min
 		layout.Stack{Alignment: layout.Center}.Layout(gtx,
 			layout.Expanded(func() {
-				FillWithColor(gtx, color.RGBA(c))
+				layouts.FillWithColor(gtx, color.RGBA(c))
 			}),
 			layout.Stacked(func() {
 				gtx.Constraints.Width.Min = wmin
@@ -33,20 +31,6 @@ func (c Background) Layout(gtx *layout.Context, widget func()) func() {
 		)
 	}
 }
-
-// FillWithColor renders a color rectangle with the Context contraints.
-// Additional, FillWithColor lays out a false button if blockInput is true.
-func FillWithColor(gtx *layout.Context, color color.RGBA) {
-	cs := gtx.Constraints
-	d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
-	dr := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-	}
-	paint.ColorOp{Color: color}.Add(gtx.Ops)
-	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{Size: d}
-}
-
 func RGB(hex int32) color.RGBA {
 	return RGBA((hex << 4) | 0xff)
 }

@@ -17,6 +17,7 @@ func NewTheme(colors Palette) *Theme {
 	t.Color.Primary = colors.Primary
 	t.Color.Text = colors.Text
 	return &Theme{
-		Theme: t,
+		Theme:   t,
+		Palette: colors,
 	}
 }

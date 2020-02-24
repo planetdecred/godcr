@@ -4,9 +4,11 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/raedahgroup/godcr-gio/ui/layouts"
-	"github.com/raedahgroup/godcr-gio/ui/styles"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus/styles"
 )
+
+const ModalSize float32 = .3
 
 type ConfirmCancel struct {
 	Body    layout.Widget
@@ -15,6 +17,7 @@ type ConfirmCancel struct {
 }
 
 func (dialog ConfirmCancel) Layout(gtx *layout.Context, confirm, cancel *widget.Button) {
+	gtx.Constraints.Height.Max = int(float32(gtx.Constraints.Height.Max) * ModalSize)
 	modal := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Flexed(0.20, func() { dialog.Cancel.Layout(gtx, cancel) }),

@@ -12,8 +12,8 @@ var (
 	Centered = Alignment{layout.Center}
 )
 
-func (align Alignment) Layout(gtx *layout.Context, widget func()) func() {
+func (align Alignment) Styled(gtx *layout.Context, w layout.Widget) layout.Widget {
 	return func() {
-		align.Direction.Layout(gtx, widget)
+		align.Direction.Layout(gtx, w)
 	}
 }

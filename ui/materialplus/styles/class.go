@@ -7,6 +7,6 @@ type Class struct {
 	Background
 }
 
-func WithClass(gtx *layout.Context, class Class, widget func()) func() {
+func WithClass(gtx *layout.Context, class Class, widget layout.Widget) layout.Widget {
 	return WithStyles(gtx, widget, class.Alignment, class.Background)
 }
