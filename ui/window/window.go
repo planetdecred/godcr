@@ -1,15 +1,12 @@
 package window
 
 import (
-	"fmt"
-
 	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/materialplus"
-	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -18,11 +15,8 @@ type Window struct {
 	window     *app.Window
 	theme      *materialplus.Theme
 	gtx        *layout.Context
-	pages      map[string]page.Page
-	current    string
+	current    func(theme *materialplus.Theme, gtx *layout.Context)
 	wallet     *wallet.Wallet
-	states     map[string]interface{}
-	uiEvents   chan interface{}
 	walletInfo *wallet.MultiWalletInfo
 	buttons    struct {
 		deleteWallet, cancelDialog, confirmDialog *widget.Button
@@ -34,34 +28,15 @@ type Window struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
+func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win := new(Window)
 	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
 	win.theme = materialplus.NewTheme(ui.DecredPalette)
 	win.gtx = layout.NewContext(win.window.Queue())
 
-	pages := make(map[string]page.Page)
-
-	win.uiEvents = make(chan interface{}, 2) // Buffered so Loop can send and receive in the goroutine
-
-	win.states = make(map[string]interface{})
-	pages[page.LandingID] = new(page.Landing)
-	pages[page.LoadingID] = new(page.Loading)
-	pages[page.WalletsID] = new(page.Wallets)
-	//pages[page.UITestID] = new(page.UITest)
-
 	win.walletInfo = new(wallet.MultiWalletInfo)
-	win.states[page.StateWalletInfo] = win.walletInfo
-	for _, p := range pages {
-		p.Init(win.theme, wal, win.states)
-	}
 
-	if _, ok := pages[start]; !ok {
-		return nil, fmt.Errorf("no such page")
-	}
-
-	win.current = start
-	win.pages = pages
+	win.current = Loading
 	win.wallet = wal
 	return win, nil
 }
@@ -78,9 +53,9 @@ func (win *Window) updateState(t interface{}) {
 		win.updateSyncStatus(false, true)
 	case *wallet.CreatedSeed:
 		win.wallet.GetMultiWalletInfo()
-		win.states[page.StateWalletCreated] = t
+		//win.states[page.StateWalletCreated] = t
 	case wallet.DeletedWallet:
-		win.states[page.StateDeletedWallet] = t
+		//win.states[page.StateDeletedWallet] = t
 		win.wallet.GetMultiWalletInfo()
 	}
 }

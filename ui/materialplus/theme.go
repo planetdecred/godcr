@@ -9,6 +9,9 @@ type Theme struct {
 	*material.Theme
 
 	Palette
+	Icons struct {
+		Cancel, Loading *material.Icon
+	}
 }
 
 // NewTheme returns a new materialplus theme

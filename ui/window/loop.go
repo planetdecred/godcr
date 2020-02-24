@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"gioui.org/io/system"
-	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -14,18 +13,9 @@ import (
 func (win *Window) Loop(shutdown chan int) {
 	for {
 		select {
-		case e := <-win.uiEvents:
-			switch evt := e.(type) {
-			case page.EventNav:
-				win.current = evt.Next
-			case error:
-				// TODO: display error
-			}
-			win.window.Invalidate()
 		case e := <-win.wallet.Send:
 			log.Debugf("Recieved event %+v", e)
 			if e.Err != nil {
-				win.states[page.StateError] = e.Err
 				win.window.Invalidate()
 				break
 			}
@@ -33,10 +23,11 @@ func (win *Window) Loop(shutdown chan int) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo()
 				if evt.Count == 0 {
-					win.current = page.LandingID
-				} else {
-					win.current = page.WalletsID
+					win.current = Loading
 				}
+				//else {
+				//	win.current =
+				//}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
 			default:
@@ -44,7 +35,7 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 			// set error if it exists
 			if e.Err != nil {
-				win.states[page.StateError] = e.Err
+				//win.states[page.StateError] = e.Err
 			}
 			win.window.Invalidate()
 		case e := <-win.window.Events():
@@ -55,12 +46,10 @@ func (win *Window) Loop(shutdown chan int) {
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
 				start := time.Now()
-				pageEvt := win.pages[win.current].Draw(win.gtx)
+				win.current(win.theme, win.gtx)
 				log.Tracef("Page {%s} rendered in %v", win.current, time.Since(start))
-				if pageEvt != nil {
-					win.uiEvents <- pageEvt
-				}
 				evt.Frame(win.gtx.Ops)
+				win.HandleInputs()
 			case nil:
 				// Ignore
 			default:
