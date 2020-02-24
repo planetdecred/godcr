@@ -1,5 +1,6 @@
 package ui
 
+// HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	for i, tab := range win.buttons.tabs {
 		if tab.Clicked(win.gtx) {

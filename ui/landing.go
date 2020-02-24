@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 )
 
+// Landing lays out the windows landing page
 func (win *Window) Landing() layout.Widget {
 	log.Debug("On Landing")
 	return func() {

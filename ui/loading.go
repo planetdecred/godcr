@@ -7,6 +7,7 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
+// Loading lays out the loading widget with a faded background
 func (win *Window) Loading() {
 	layouts.FillWithColor(win.gtx, layouts.Faded(win.theme.Background))
 	log.Debugf("With Loading")

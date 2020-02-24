@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 )
 
+// WalletsPage layouts the main wallet page
 func (win *Window) WalletsPage() layout.Widget {
 	log.Debug("On Wallets")
 	tabbed := func() {
