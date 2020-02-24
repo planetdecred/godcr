@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ContentAdd                  *material.Icon
+	ContentAdd                  = mustIcon(material.NewIcon(icons.ContentAdd))
 	NavigationRefresh           *material.Icon
 	NavigationCheck             *material.Icon
 	ToggleIndeterminateCheckBox *material.Icon
@@ -47,4 +47,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func mustIcon(ic *material.Icon, err error) *material.Icon {
+	if err != nil {
+		panic(err)
+	}
+	return ic
 }

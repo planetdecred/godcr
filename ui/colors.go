@@ -25,7 +25,7 @@ var (
 	darkBlue  = color.RGBA{0x09, 0x14, 0x40, 255}
 )
 
-var DecredPalette = materialplus.Palette{
+var decredPalette = materialplus.Palette{
 	Primary:    keyBlue,
 	Secondary:  turquiose,
 	Success:    successGreen,
