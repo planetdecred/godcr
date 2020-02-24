@@ -7,13 +7,13 @@ import (
 	"gioui.org/widget"
 )
 
-// Modal lays out out a widget stacked above an area filled with Background
+// Modal lays out out a widget Directrion stacked above an area filled with Background
 type Modal struct {
 	Background color.RGBA
 	layout.Direction
 }
 
-// Layout a widget.
+// Layout a widget
 func (m Modal) Layout(gtx *layout.Context, w layout.Widget) {
 	layout.Stack{Alignment: m.Direction}.Layout(gtx,
 		layout.Stacked(func() {

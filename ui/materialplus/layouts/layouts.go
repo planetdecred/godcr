@@ -30,12 +30,12 @@ func Faded(c color.RGBA) color.RGBA {
 	return c
 }
 
-// RGB converts a 24 bit int color to color.RGBA with bits 0x__RRGGBB
+// RGB converts a 24 bit color to color.RGBA with bits 0x__RRGGBB
 func RGB(c uint32) color.RGBA {
 	return ARGB(0xff000000 | c)
 }
 
-// ARGB converts a 32 bit int color to color.RGBA with bits 0xAARRGGBB
+// ARGB converts a 32 bit color to color.RGBA with bits 0xAARRGGBB
 func ARGB(c uint32) color.RGBA {
 	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
 }
