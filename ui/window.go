@@ -60,14 +60,15 @@ func (win *Window) Loop(shutdown chan int) {
 	for {
 		select {
 		case e := <-win.wallet.Send:
-
 			if e.Err != nil {
+				log.Error("Wallet Error: %s", e.Err.Error())
 				win.window.Invalidate()
 				break
 			}
+
 			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
-				log.Debugf("Recieved event LoadedWallets %d", evt.Count)
+				log.Debugf("Received event LoadedWallets %d", evt.Count)
 				win.wallet.GetMultiWalletInfo()
 				if evt.Count == 0 {
 					win.current = win.Landing()
@@ -75,17 +76,12 @@ func (win *Window) Loop(shutdown chan int) {
 					win.current = win.WalletsPage()
 				}
 			case *wallet.MultiWalletInfo:
-				log.Debugf("Recieved event MultiWalletInfo %v", e)
+				log.Debugf("Received event MultiWalletInfo %v", e)
 				win.loading = false
 				*win.walletInfo = *evt
-				win.reload()
 			default:
-				log.Debugf("Recieved event %v", e)
+				log.Debugf("Received event %v", e)
 				win.updateState(e.Resp)
-			}
-			// set error if it exists
-			if e.Err != nil {
-				//win.states[page.StateError] = e.Err
 			}
 			win.window.Invalidate()
 		case e := <-win.window.Events():
@@ -135,11 +131,9 @@ func (win *Window) updateState(t interface{}) {
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
 	case *wallet.CreatedSeed:
-		win.reloadInfo()
 		//win.states[page.StateWalletCreated] = t
 	case wallet.DeletedWallet:
 		//win.states[page.StateDeletedWallet] = t
-		win.reloadInfo()
 	}
 }
 
@@ -147,9 +141,4 @@ func (win *Window) updateState(t interface{}) {
 func (win Window) updateSyncStatus(syncing, synced bool) {
 	win.walletInfo.Syncing = syncing
 	win.walletInfo.Synced = synced
-}
-
-func (win *Window) reloadInfo() {
-	win.loading = true
-	win.wallet.GetMultiWalletInfo()
 }

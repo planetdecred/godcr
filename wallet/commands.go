@@ -170,7 +170,8 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			infos[i] = InfoShort{
 				ID:       id,
 				Name:     wall.Name,
-				Balance:  dcrutil.Amount(acctBalance),
+				balance:  dcrutil.Amount(acctBalance),
+				Balance:  dcrutil.Amount(acctBalance).String(),
 				Accounts: accts,
 			}
 			i++
@@ -187,7 +188,8 @@ func (wal *Wallet) GetMultiWalletInfo() {
 
 		resp.Resp = &MultiWalletInfo{
 			LoadedWallets:   len(wallets),
-			TotalBalance:    dcrutil.Amount(completeTotal),
+			totalBalance:    dcrutil.Amount(completeTotal),
+			TotalBalance:    dcrutil.Amount(completeTotal).String(),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
 			Wallets:         infos,

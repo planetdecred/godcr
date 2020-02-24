@@ -14,7 +14,7 @@ func (win *Window) WalletsPage() layout.Widget {
 			func() {
 				win.Background()
 				info := win.walletInfo.Wallets[win.selected]
-				win.theme.H5(info.Balance.String()).Layout(win.gtx)
+				win.theme.H5(info.Balance).Layout(win.gtx)
 			},
 			func() {
 				win.Background()
@@ -28,7 +28,7 @@ func (win *Window) WalletsPage() layout.Widget {
 						win.theme.H5(info.Name).Layout(win.gtx)
 					}),
 					layout.Rigid(func() {
-						win.theme.H5(info.Balance.String()).Layout(win.gtx)
+						win.theme.H5(info.Balance).Layout(win.gtx)
 					}),
 				)
 
