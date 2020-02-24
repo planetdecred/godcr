@@ -32,3 +32,9 @@ const (
 	// StateError is the map key for error
 	StateError = "error"
 )
+
+type Common struct {
+	*materialplus.Theme
+	*wallet.Wallet
+	States map[string]interface{}
+}

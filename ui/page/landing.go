@@ -77,7 +77,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 		pg.walletCreationSuccessEvent = nil
 	}
 
-	pg.checkForStatesUpdate()
+	//pg.checkForStatesUpdate()
 
 	walletInfo := pg.states[StateWalletInfo].(*wallet.MultiWalletInfo)
 	widgets := []func(){
@@ -122,7 +122,7 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				for pg.walletsWdg.Clicked(gtx) {
 					if !pg.isCreatingWallet {
-						pg.reset()
+						//pg.reset()
 						ev = EventNav{
 							Current: LandingID,
 							Next:    WalletsID,
@@ -142,61 +142,8 @@ func (pg *Landing) Draw(gtx *layout.Context) interface{} {
 	)
 
 	if pg.isShowingPasswordModal {
-		pg.drawPasswordModal(gtx)
+		//pg.drawPasswordModal(gtx)
 	}
 
 	return ev
-}
-
-func (pg *Landing) checkForStatesUpdate() {
-	err := pg.states[StateError]
-	created := pg.states[StateWalletCreated]
-
-	if err == nil && created == nil {
-		return
-	}
-
-	pg.reset()
-
-	if created != nil {
-		pg.passwordModal.Reset()
-		delete(pg.states, StateWalletCreated)
-
-		pg.walletCreationSuccessEvent = EventNav{
-			Current: LandingID,
-			Next:    WalletsID,
-		}
-	} else if err != nil {
-		pg.createErrorLabel.Text = err.(error).Error()
-		delete(pg.states, StateError)
-	}
-}
-
-func (pg *Landing) drawPasswordModal(gtx *layout.Context) {
-	pg.theme.Modal(gtx, func() {
-		pg.passwordModal.Draw(gtx, pg.confirm, pg.cancel)
-	})
-}
-
-func (pg *Landing) confirm(password string) {
-	pg.reset()
-
-	pg.createBtn.Text = "Creating wallet..."
-	pg.createBtn.Background = pg.theme.Disabled
-
-	pg.isCreatingWallet = true
-	pg.isShowingPasswordModal = false
-
-	pg.wal.CreateWallet(password)
-}
-
-func (pg *Landing) cancel() {
-	pg.isShowingPasswordModal = false
-}
-
-func (pg *Landing) reset() {
-	pg.isCreatingWallet = false
-	pg.createBtn.Text = "Create wallet"
-	pg.createBtn.Background = pg.theme.Color.Primary
-	pg.createErrorLabel.Text = ""
 }

@@ -27,6 +27,17 @@ func (t *Theme) PasswordDialog(prompt string) PasswordDialog {
 
 func (diag PasswordDialog) Layout(gtx *layout.Context, editor *widget.Editor, confirm, cancel *widget.Button) {
 	body := func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func() { diag.Prompt.Layout(gtx) }),
+			layout.Rigid(func() { diag.Password.Layout(gtx, editor) }),
+		)
+	}
+	diag.ConfirmCancel.Body = body
+	diag.ConfirmCancel.Layout(gtx, confirm, cancel)
+}
+
+func (diag PasswordDialog) LayoutWithMatch(gtx *layout.Context, editor, match *widget.Editor, confirm, cancel *widget.Button) {
+	body := func() {
 
 	}
 	diag.ConfirmCancel.Body = body
