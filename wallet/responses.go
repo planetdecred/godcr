@@ -29,7 +29,8 @@ func ResponseResp(resp interface{}) Response {
 // MultiWalletInfo represents bulk information about the wallets returned by the wallet backend
 type MultiWalletInfo struct {
 	LoadedWallets   int
-	TotalBalance    dcrutil.Amount
+	totalBalance    dcrutil.Amount
+	TotalBalance    string
 	Wallets         []InfoShort
 	BestBlockHeight int32
 	BestBlockTime   int64
@@ -41,15 +42,16 @@ type MultiWalletInfo struct {
 type InfoShort struct {
 	ID       int
 	Name     string
-	Balance  dcrutil.Amount
+	balance  dcrutil.Amount
+	Balance  string
 	Accounts []Account
 }
 
-// Account represents infomation about a wallet's account
+// Account represents information about a wallet's account
 type Account struct {
-	Number string
-	Name   string
-	//Balance dcrutil.Amount
+	Number       string
+	Name         string
+	totalBalance dcrutil.Amount
 	TotalBalance string
 }
 
