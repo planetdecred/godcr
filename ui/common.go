@@ -15,11 +15,14 @@ func (win *Window) TabbedWallets(selected, body layout.Widget, item layout.ListE
 		Flex: layout.Flex{
 			Axis: layout.Horizontal,
 		},
-		Size:       .3,
-		ButtonSize: .2,
+		Size: .3,
 	}.Layout(win.gtx, &win.selected, win.buttons.tabs)
 }
 
 func (win *Window) Header() {
 	win.theme.Label(unit.Dp(50), "GoDcr").Layout(win.gtx)
+}
+
+func (win *Window) Background() {
+	layouts.FillWithColor(win.gtx, win.theme.Background)
 }

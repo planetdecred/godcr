@@ -14,15 +14,15 @@ import (
 
 // Window represents the app window (and UI in general). There should only be one.
 type Window struct {
-	window      *app.Window
-	theme       *materialplus.Theme
-	gtx         *layout.Context
-	current     layout.Widget
-	wallet      *wallet.Wallet
-	walletInfo  *wallet.MultiWalletInfo
-	selected    int
-	infoLoading bool
-	buttons     struct {
+	window     *app.Window
+	theme      *materialplus.Theme
+	gtx        *layout.Context
+	current    layout.Widget
+	wallet     *wallet.Wallet
+	walletInfo *wallet.MultiWalletInfo
+	selected   int
+	loading    bool
+	buttons    struct {
 		deleteWallet, cancelDialog, confirmDialog widget.Button
 		createWallet, restoreWallet               widget.Button
 		tabs                                      []*widget.Button
@@ -49,7 +49,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 	win.current = func() {}
 	win.wallet = wal
-	win.infoLoading = true
+	win.loading = true
 	win.buttons.tabs = make([]*widget.Button, 0)
 	win.tabsList = &layout.List{Axis: layout.Vertical}
 	return win, nil
@@ -60,23 +60,27 @@ func (win *Window) Loop(shutdown chan int) {
 	for {
 		select {
 		case e := <-win.wallet.Send:
-			log.Debugf("Recieved event %+v", e)
+
 			if e.Err != nil {
 				win.window.Invalidate()
 				break
 			}
 			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
+				log.Debugf("Recieved event LoadedWallets %d", evt.Count)
 				win.wallet.GetMultiWalletInfo()
 				if evt.Count == 0 {
 					win.current = win.Landing()
 				} else {
-					win.current = win.Landing()
+					win.current = win.WalletsPage()
 				}
 			case *wallet.MultiWalletInfo:
-				win.infoLoading = false
+				log.Debugf("Recieved event MultiWalletInfo %v", e)
+				win.loading = false
 				*win.walletInfo = *evt
+				win.reload()
 			default:
+				log.Debugf("Recieved event %v", e)
 				win.updateState(e.Resp)
 			}
 			// set error if it exists
@@ -101,7 +105,7 @@ func (win *Window) Loop(shutdown chan int) {
 				}
 
 				win.current()
-				if win.infoLoading {
+				if win.loading {
 					win.Loading()
 				}
 				evt.Frame(win.gtx.Ops)
@@ -113,6 +117,11 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 		}
 	}
+}
+
+func (win *Window) reload() {
+	win.current = win.WalletsPage()
+	win.window.Invalidate()
 }
 
 // updateState checks for the event type that is passed as an argument and updates its
@@ -141,6 +150,6 @@ func (win Window) updateSyncStatus(syncing, synced bool) {
 }
 
 func (win *Window) reloadInfo() {
-	win.infoLoading = true
+	win.loading = true
 	win.wallet.GetMultiWalletInfo()
 }

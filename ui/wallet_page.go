@@ -2,24 +2,47 @@ package ui
 
 import (
 	"gioui.org/layout"
-	"gioui.org/unit"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
 func (win *Window) WalletsPage() layout.Widget {
 	log.Debug("On Wallets")
-	return func() {
+	tabbed := func() {
+		if len(win.walletInfo.Wallets) == 0 {
+			return
+		}
 		win.TabbedWallets(
 			func() {
-				layouts.FillWithColor(win.gtx, win.theme.Background)
-				win.theme.Label(unit.Dp(100), "Selected")
+				win.Background()
+				info := win.walletInfo.Wallets[win.selected]
+				win.theme.H5(info.Balance.String()).Layout(win.gtx)
 			},
 			func() {
-				win.theme.Label(unit.Dp(100), "Body")
+				win.Background()
+				info := win.walletInfo.Wallets[win.selected]
+				win.theme.H5(info.Name).Layout(win.gtx)
 			},
 			func(i int) {
-				win.theme.Label(unit.Dp(100), "Item")
+				info := win.walletInfo.Wallets[i]
+				layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+					layout.Rigid(func() {
+						win.theme.H5(info.Name).Layout(win.gtx)
+					}),
+					layout.Rigid(func() {
+						win.theme.H5(info.Balance.String()).Layout(win.gtx)
+					}),
+				)
+
 			},
+		)
+	}
+	return func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+			layout.Flexed(.3, func() {
+				layout.Flex{}.Layout(win.gtx,
+					layout.Flexed(.3, win.Header),
+				)
+			}),
+			layout.Rigid(tabbed),
 		)
 	}
 }
