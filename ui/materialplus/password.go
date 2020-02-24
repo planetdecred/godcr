@@ -1,184 +1,175 @@
 package materialplus
 
-import (
-	"image/color"
+// type editor struct {
+// 	widget   *widget.Editor
+// 	material material.Editor
+// 	line     *Line
+// }
 
-	"gioui.org/layout"
-	"gioui.org/unit"
-	"gioui.org/widget"
-	"gioui.org/widget/material"
-)
+// // Password represents a form for collecting and confirming user password
+// type Password struct {
+// 	theme *Theme
 
-type editor struct {
-	widget   *widget.Editor
-	material material.Editor
-	line     *Line
-}
+// 	titleLabel material.Label
 
-// Password represents a form for collecting and confirming user password
-type Password struct {
-	theme *Theme
+// 	spendingEditor *editor
+// 	confirmEditor  *editor
 
-	titleLabel material.Label
+// 	cancelLabelColor            color.RGBA
+// 	createButtonBackgroundColor color.RGBA
 
-	spendingEditor *editor
-	confirmEditor  *editor
+// 	cancelButton         *widget.Button
+// 	createButton         *widget.Button
+// 	cancelButtonMaterial material.Button
+// 	createButtonMaterial material.Button
 
-	cancelLabelColor            color.RGBA
-	createButtonBackgroundColor color.RGBA
+// 	errorLabel material.Label
+// }
 
-	cancelButton         *widget.Button
-	createButton         *widget.Button
-	cancelButtonMaterial material.Button
-	createButtonMaterial material.Button
+// // Password initializes and returns an instance of Password
+// func (t *Theme) Password() *Password {
+// 	cancelButtonMaterial := t.Button("Cancel")
+// 	cancelButtonMaterial.Background = color.RGBA{}
+// 	cancelButtonMaterial.Color = t.Color.Primary
 
-	errorLabel material.Label
-}
+// 	errorLabel := t.Body2("")
+// 	errorLabel.Color = t.Danger
 
-// Password initializes and returns an instance of Password
-func (t *Theme) Password() *Password {
-	cancelButtonMaterial := t.Button("Cancel")
-	cancelButtonMaterial.Background = color.RGBA{}
-	cancelButtonMaterial.Color = t.Color.Primary
+// 	spendingEditor := &editor{
+// 		widget:   new(widget.Editor),
+// 		material: t.Editor("Spending password"),
+// 		line:     t.Line(),
+// 	}
+// 	confirmEditor := &editor{
+// 		widget:   new(widget.Editor),
+// 		material: t.Editor("Confirm spending password"),
+// 		line:     t.Line(),
+// 	}
 
-	errorLabel := t.Body2("")
-	errorLabel.Color = t.Danger
+// 	confirmEditor.line.Color = t.Color.Primary
+// 	spendingEditor.line.Color = t.Color.Primary
 
-	spendingEditor := &editor{
-		widget:   new(widget.Editor),
-		material: t.Editor("Spending password"),
-		line:     t.Line(),
-	}
-	confirmEditor := &editor{
-		widget:   new(widget.Editor),
-		material: t.Editor("Confirm spending password"),
-		line:     t.Line(),
-	}
+// 	p := &Password{
+// 		theme: t,
 
-	confirmEditor.line.Color = t.Color.Primary
-	spendingEditor.line.Color = t.Color.Primary
+// 		titleLabel: t.H5("Create spending password"),
+// 		errorLabel: errorLabel,
 
-	p := &Password{
-		theme: t,
+// 		confirmEditor:        confirmEditor,
+// 		spendingEditor:       spendingEditor,
+// 		cancelButton:         new(widget.Button),
+// 		createButton:         new(widget.Button),
+// 		cancelButtonMaterial: cancelButtonMaterial,
+// 		createButtonMaterial: t.Button("Create"),
+// 	}
 
-		titleLabel: t.H5("Create spending password"),
-		errorLabel: errorLabel,
+// 	return p
+// }
 
-		confirmEditor:        confirmEditor,
-		spendingEditor:       spendingEditor,
-		cancelButton:         new(widget.Button),
-		createButton:         new(widget.Button),
-		cancelButtonMaterial: cancelButtonMaterial,
-		createButtonMaterial: t.Button("Create"),
-	}
+// func (p *Password) updateColors() {
+// 	p.cancelLabelColor = p.theme.Disabled
+// 	p.createButtonBackgroundColor = p.theme.Disabled
 
-	return p
-}
+// 	if p.bothPasswordsMatch() && p.confirmEditor.widget.Len() > 0 {
+// 		p.createButtonBackgroundColor = p.theme.Color.Primary
+// 	}
+// }
 
-func (p *Password) updateColors() {
-	p.cancelLabelColor = p.theme.Disabled
-	p.createButtonBackgroundColor = p.theme.Disabled
+// func (p *Password) processButtonClicks(gtx *layout.Context, confirm func(string), cancel func()) {
+// 	for p.createButton.Clicked(gtx) {
+// 		if p.validate() {
+// 			confirm(p.spendingEditor.widget.Text())
+// 		}
+// 	}
 
-	if p.bothPasswordsMatch() && p.confirmEditor.widget.Len() > 0 {
-		p.createButtonBackgroundColor = p.theme.Color.Primary
-	}
-}
+// 	for p.cancelButton.Clicked(gtx) {
+// 		p.Reset()
+// 		cancel()
+// 	}
+// }
 
-func (p *Password) processButtonClicks(gtx *layout.Context, confirm func(string), cancel func()) {
-	for p.createButton.Clicked(gtx) {
-		if p.validate() {
-			confirm(p.spendingEditor.widget.Text())
-		}
-	}
+// // Draw renders the widget to screen. The confirm function passed by the calling page is called when the confirm button
+// // is clicked, and the form passes validation. The entered password is passed as an argument to the confirm func.
+// // The cancel func is called when the cancel button is clicked
+// func (p *Password) Draw(gtx *layout.Context, confirm func(string), cancel func()) {
+// 	p.processButtonClicks(gtx, confirm, cancel)
+// 	p.updateColors()
+// 	p.validate()
 
-	for p.cancelButton.Clicked(gtx) {
-		p.Reset()
-		cancel()
-	}
-}
+// 	widgets := []func(){
+// 		func() {
+// 			p.titleLabel.Layout(gtx)
+// 		},
+// 		func() {
+// 			inset := layout.Inset{
+// 				Top: unit.Dp(20),
+// 			}
+// 			inset.Layout(gtx, func() {
+// 				p.spendingEditor.layout(gtx)
+// 			})
+// 		},
+// 		func() {
+// 			p.confirmEditor.layout(gtx)
+// 		},
+// 		func() {
+// 			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+// 				layout.Flexed(2, func() {
+// 					p.errorLabel.Layout(gtx)
+// 				}),
+// 				layout.Rigid(func() {
+// 					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
+// 						p.cancelButtonMaterial.Color = p.cancelLabelColor
+// 						p.cancelButtonMaterial.Layout(gtx, p.cancelButton)
+// 					})
+// 				}),
+// 				layout.Rigid(func() {
+// 					gtx.Constraints.Width.Min = 70
+// 					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
+// 						p.createButtonMaterial.Background = p.createButtonBackgroundColor
+// 						p.createButtonMaterial.Layout(gtx, p.createButton)
+// 					})
+// 				}),
+// 			)
+// 		},
+// 	}
 
-// Draw renders the widget to screen. The confirm function passed by the calling page is called when the confirm button
-// is clicked, and the form passes validation. The entered password is passed as an argument to the confirm func.
-// The cancel func is called when the cancel button is clicked
-func (p *Password) Draw(gtx *layout.Context, confirm func(string), cancel func()) {
-	p.processButtonClicks(gtx, confirm, cancel)
-	p.updateColors()
-	p.validate()
+// 	list := layout.List{Axis: layout.Vertical}
+// 	list.Layout(gtx, len(widgets), func(i int) {
+// 		layout.UniformInset(unit.Dp(0)).Layout(gtx, widgets[i])
+// 	})
+// }
 
-	widgets := []func(){
-		func() {
-			p.titleLabel.Layout(gtx)
-		},
-		func() {
-			inset := layout.Inset{
-				Top: unit.Dp(20),
-			}
-			inset.Layout(gtx, func() {
-				p.spendingEditor.layout(gtx)
-			})
-		},
-		func() {
-			p.confirmEditor.layout(gtx)
-		},
-		func() {
-			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Flexed(2, func() {
-					p.errorLabel.Layout(gtx)
-				}),
-				layout.Rigid(func() {
-					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-						p.cancelButtonMaterial.Color = p.cancelLabelColor
-						p.cancelButtonMaterial.Layout(gtx, p.cancelButton)
-					})
-				}),
-				layout.Rigid(func() {
-					gtx.Constraints.Width.Min = 70
-					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-						p.createButtonMaterial.Background = p.createButtonBackgroundColor
-						p.createButtonMaterial.Layout(gtx, p.createButton)
-					})
-				}),
-			)
-		},
-	}
+// func (p *Password) validate() bool {
+// 	p.errorLabel.Text = ""
 
-	list := layout.List{Axis: layout.Vertical}
-	list.Layout(gtx, len(widgets), func(i int) {
-		layout.UniformInset(unit.Dp(0)).Layout(gtx, widgets[i])
-	})
-}
+// 	if p.spendingEditor.widget.Len() == 0 || p.confirmEditor.widget.Len() == 0 {
+// 		return false
+// 	}
 
-func (p *Password) validate() bool {
-	p.errorLabel.Text = ""
+// 	if p.spendingEditor.widget.Len() > 0 && p.confirmEditor.widget.Len() > 0 && !p.bothPasswordsMatch() {
+// 		p.errorLabel.Text = "Both passwords do not match"
+// 		return false
+// 	}
 
-	if p.spendingEditor.widget.Len() == 0 || p.confirmEditor.widget.Len() == 0 {
-		return false
-	}
+// 	return true
+// }
 
-	if p.spendingEditor.widget.Len() > 0 && p.confirmEditor.widget.Len() > 0 && !p.bothPasswordsMatch() {
-		p.errorLabel.Text = "Both passwords do not match"
-		return false
-	}
+// func (p *Password) bothPasswordsMatch() bool {
+// 	return p.confirmEditor.widget.Text() == p.spendingEditor.widget.Text()
+// }
 
-	return true
-}
+// // Reset empties the contents of the password form
+// func (p *Password) Reset() {
+// 	p.spendingEditor.widget.SetText("")
+// 	p.confirmEditor.widget.SetText("")
+// }
 
-func (p *Password) bothPasswordsMatch() bool {
-	return p.confirmEditor.widget.Text() == p.spendingEditor.widget.Text()
-}
-
-// Reset empties the contents of the password form
-func (p *Password) Reset() {
-	p.spendingEditor.widget.SetText("")
-	p.confirmEditor.widget.SetText("")
-}
-
-func (e *editor) layout(gtx *layout.Context) {
-	e.material.Layout(gtx, e.widget)
-	inset := layout.Inset{
-		Top: unit.Dp(float32(gtx.Constraints.Height.Min)),
-	}
-	inset.Layout(gtx, func() {
-		e.line.Draw(gtx)
-	})
-}
+// func (e *editor) layout(gtx *layout.Context) {
+// 	e.material.Layout(gtx, e.widget)
+// 	inset := layout.Inset{
+// 		Top: unit.Dp(float32(gtx.Constraints.Height.Min)),
+// 	}
+// 	inset.Layout(gtx, func() {
+// 		e.line.Draw(gtx)
+// 	})
+// }

@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	loading = func(gtx *layout.Context, theme *materialplus.Theme, info *wallet.MultiWalletInfo) {
+	loading = func(gtx *layout.Context, theme *materialplus.Theme, _ *wallet.InfoShort) {
 		layout.Center.Layout(gtx, func() {
 			theme.Icon.Logo.Layout(gtx, unit.Dp(100))
 		})
 	}
-	blank = func(gtx *layout.Context, theme *materialplus.Theme, info *wallet.MultiWalletInfo) {
+	blank = func(gtx *layout.Context, theme *materialplus.Theme, _ *wallet.InfoShort) {
 		layouts.FillWithColor(gtx, theme.Background)
 	}
 )
