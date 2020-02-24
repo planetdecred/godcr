@@ -17,20 +17,18 @@ type Window struct {
 	window      *app.Window
 	theme       *materialplus.Theme
 	gtx         *layout.Context
-	current     WalletPage
+	current     layout.Widget
 	wallet      *wallet.Wallet
 	walletInfo  *wallet.MultiWalletInfo
 	selected    int
 	infoLoading bool
 	buttons     struct {
 		deleteWallet, cancelDialog, confirmDialog widget.Button
+		createWallet, restoreWallet               widget.Button
 		tabs                                      []*widget.Button
 	}
 	tabsList *layout.List
 }
-
-type Page func(*layout.Context, *materialplus.Theme, *wallet.MultiWalletInfo)
-type WalletPage func(*layout.Context, *materialplus.Theme, *wallet.InfoShort)
 
 // CreateWindow creates and initializes a new window with start
 // as the first page displayed.
@@ -49,7 +47,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 
-	win.current = blank
+	win.current = func() {}
 	win.wallet = wal
 	win.infoLoading = true
 	win.buttons.tabs = make([]*widget.Button, 0)
@@ -71,9 +69,9 @@ func (win *Window) Loop(shutdown chan int) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo()
 				if evt.Count == 0 {
-					win.current = landing
+					win.current = win.Landing()
 				} else {
-					win.current = walletInfo
+					win.current = win.Landing()
 				}
 			case *wallet.MultiWalletInfo:
 				win.infoLoading = false
@@ -102,10 +100,9 @@ func (win *Window) Loop(shutdown chan int) {
 					}
 				}
 
+				win.current()
 				if win.infoLoading {
-					loading(win.gtx, win.theme, nil)
-				} else {
-					win.tabbedBody(win.current)
+					win.Loading()
 				}
 				evt.Frame(win.gtx.Ops)
 				win.HandleInputs()

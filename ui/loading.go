@@ -3,18 +3,13 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
-	"github.com/raedahgroup/godcr-gio/wallet"
+	"gioui.org/widget"
 )
 
-var (
-	loading = func(gtx *layout.Context, theme *materialplus.Theme, _ *wallet.InfoShort) {
-		layout.Center.Layout(gtx, func() {
-			theme.Icon.Logo.Layout(gtx, unit.Dp(100))
-		})
-	}
-	blank = func(gtx *layout.Context, theme *materialplus.Theme, _ *wallet.InfoShort) {
-		layouts.FillWithColor(gtx, theme.Background)
-	}
-)
+func (win *Window) Loading() {
+	log.Debug("With Loading")
+	layout.Center.Layout(win.gtx, func() {
+		win.theme.Label(unit.Dp(100), "Loading").Layout(win.gtx)
+	})
+	new(widget.Button).Layout(win.gtx)
+}

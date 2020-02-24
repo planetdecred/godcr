@@ -39,3 +39,10 @@ func (tab Tabs) Layout(gtx *layout.Context, selected *int, tabs []*widget.Button
 		layout.Flexed(1-tab.Size, tab.Body),
 	)
 }
+
+func (tab Tabs) Layedout(gtx *layout.Context, selected *int, tabs []*widget.Button) layout.Widget {
+	return func() {
+		tab.Layout(gtx, selected, tabs)
+	}
+
+}
