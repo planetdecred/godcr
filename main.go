@@ -13,7 +13,7 @@ import (
 	"github.com/markbates/pkger"
 
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/ui/window"
+	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -66,7 +66,7 @@ func main() {
 		wg.Done()
 	}()
 
-	win, err := window.CreateWindow(wal)
+	win, err := ui.CreateWindow(wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
