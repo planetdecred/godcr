@@ -19,7 +19,7 @@ func (wal *Wallet) CreateWallet(passphrase string) {
 			})
 			return
 		}
-		resp.Resp = &CreatedSeed{
+		resp.Resp = CreatedSeed{
 			Seed: wall.Seed,
 		}
 		wal.Send <- resp
@@ -40,7 +40,7 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string) {
 			})
 			return
 		}
-		resp.Resp = &Restored{}
+		resp.Resp = Restored{}
 		wal.Send <- resp
 	}()
 }
@@ -127,7 +127,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			alltxs[i] = txs
 		}
 
-		resp.Resp = &Transactions{
+		resp.Resp = Transactions{
 			Txs: alltxs,
 		}
 		wal.Send <- resp
@@ -140,6 +140,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetMultiWalletInfo() {
 	go func() {
+		log.Debug("Getting multiwallet info")
 		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {

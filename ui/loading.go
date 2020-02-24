@@ -10,7 +10,6 @@ import (
 // Loading lays out the loading widget with a faded background
 func (win *Window) Loading() {
 	layouts.FillWithColor(win.gtx, layouts.Faded(win.theme.Background))
-	log.Debugf("With Loading")
 	layout.Center.Layout(win.gtx, func() {
 		lbl := win.theme.Label(unit.Dp(100), "Loading")
 		lbl.Color = win.theme.Primary

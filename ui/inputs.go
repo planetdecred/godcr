@@ -1,5 +1,7 @@
 package ui
 
+import "gioui.org/widget"
+
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	for i, tab := range win.buttons.tabs {
@@ -25,5 +27,15 @@ func (win *Window) HandleInputs() {
 	}
 	if win.buttons.confirmDialog.Clicked(win.gtx) {
 		log.Debug("Confirm dialog clicked")
+	}
+}
+
+func (win *Window) resetInputs() {
+	lenWallets := len(win.walletInfo.Wallets)
+	if len(win.buttons.tabs) != lenWallets {
+		win.buttons.tabs = make([]*widget.Button, lenWallets)
+		for i := range win.buttons.tabs {
+			win.buttons.tabs[i] = new(widget.Button)
+		}
 	}
 }

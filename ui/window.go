@@ -13,6 +13,7 @@ import (
 )
 
 // Window represents the app window (and UI in general). There should only be one.
+// Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
 	window     *app.Window
 	theme      *materialplus.Theme
@@ -20,13 +21,16 @@ type Window struct {
 	current    layout.Widget
 	wallet     *wallet.Wallet
 	walletInfo *wallet.MultiWalletInfo
-	selected   int
-	loading    bool
-	buttons    struct {
+
+	buttons struct {
 		deleteWallet, cancelDialog, confirmDialog widget.Button
 		createWallet, restoreWallet               widget.Button
 		tabs                                      []*widget.Button
 	}
+
+	selected int
+	states
+
 	tabsList *layout.List
 }
 
@@ -49,7 +53,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 	win.current = func() {}
 	win.wallet = wal
-	win.loading = true
+	win.states.loading = true
 	win.buttons.tabs = make([]*widget.Button, 0)
 	win.tabsList = &layout.List{Axis: layout.Vertical}
 	return win, nil
@@ -65,25 +69,8 @@ func (win *Window) Loop(shutdown chan int) {
 				win.window.Invalidate()
 				break
 			}
-
-			switch evt := e.Resp.(type) {
-			case *wallet.LoadedWallets:
-				log.Debugf("Received event LoadedWallets %d", evt.Count)
-				win.wallet.GetMultiWalletInfo()
-				if evt.Count == 0 {
-					win.current = win.Landing()
-				} else {
-					win.current = win.WalletsPage()
-				}
-			case *wallet.MultiWalletInfo:
-				log.Debugf("Received event MultiWalletInfo %v", e)
-				win.loading = false
-				*win.walletInfo = *evt
-			default:
-				log.Debugf("Received event %v", e)
-				win.updateState(e.Resp)
-			}
-			win.window.Invalidate()
+			win.updateStates(e.Resp)
+			win.reload()
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
@@ -92,18 +79,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
 
-				lenWallets := len(win.walletInfo.Wallets)
-				if len(win.buttons.tabs) != lenWallets {
-					win.buttons.tabs = make([]*widget.Button, lenWallets)
-					for i := range win.buttons.tabs {
-						win.buttons.tabs[i] = new(widget.Button)
-					}
-				}
-
 				win.current()
-				if win.loading {
-					win.Loading()
-				}
 				evt.Frame(win.gtx.Ops)
 				win.HandleInputs()
 			case nil:
@@ -113,32 +89,4 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 		}
 	}
-}
-
-func (win *Window) reload() {
-	win.current = win.WalletsPage()
-	win.window.Invalidate()
-}
-
-// updateState checks for the event type that is passed as an argument and updates its
-// respective state.
-func (win *Window) updateState(t interface{}) {
-	switch t.(type) {
-	case wallet.SyncStarted:
-		win.updateSyncStatus(true, false)
-	case wallet.SyncCanceled:
-		win.updateSyncStatus(false, false)
-	case wallet.SyncCompleted:
-		win.updateSyncStatus(false, true)
-	case *wallet.CreatedSeed:
-		//win.states[page.StateWalletCreated] = t
-	case wallet.DeletedWallet:
-		//win.states[page.StateDeletedWallet] = t
-	}
-}
-
-// updateSyncStatus updates the sync status in the walletInfo state.
-func (win Window) updateSyncStatus(syncing, synced bool) {
-	win.walletInfo.Syncing = syncing
-	win.walletInfo.Synced = synced
 }

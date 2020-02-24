@@ -76,7 +76,7 @@ func (wal *Wallet) LoadWallets() {
 			}
 		}
 
-		resp.Resp = &LoadedWallets{
+		resp.Resp = LoadedWallets{
 			Count:              wal.multi.LoadedWalletsCount(),
 			StartUpSecuritySet: startupPassSet,
 		}
