@@ -154,6 +154,11 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			wal.Send <- resp
 			return
 		}
+
+		sort.SliceStable(wallets, func(i, j int) bool {
+			return wallets[i].ID < wallets[j].ID
+		})
+
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		for i, wall := range wallets {

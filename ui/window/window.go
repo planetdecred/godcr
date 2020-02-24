@@ -139,9 +139,6 @@ func (win *Window) updateState(t interface{}) {
 		win.updateAddressDiscoveryProgress(t)
 	case *wallet.Transactions:
 		win.updateTransactions(t)
-		// todo
-		win.updateSyncProgress(t)
-		win.updateSyncProgress(t.(wallet.SyncHeadersFetchProgress))
 	case *wallet.CreatedSeed:
 		win.wallet.GetMultiWalletInfo()
 		win.states[page.StateWalletCreated] = t
