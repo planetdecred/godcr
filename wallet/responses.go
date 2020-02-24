@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
@@ -29,7 +28,6 @@ func ResponseResp(resp interface{}) Response {
 // MultiWalletInfo represents bulk information about the wallets returned by the wallet backend
 type MultiWalletInfo struct {
 	LoadedWallets   int
-	totalBalance    dcrutil.Amount
 	TotalBalance    string
 	Wallets         []InfoShort
 	BestBlockHeight int32
@@ -42,7 +40,6 @@ type MultiWalletInfo struct {
 type InfoShort struct {
 	ID       int
 	Name     string
-	balance  dcrutil.Amount
 	Balance  string
 	Accounts []Account
 }
@@ -51,7 +48,6 @@ type InfoShort struct {
 type Account struct {
 	Number       string
 	Name         string
-	totalBalance dcrutil.Amount
 	TotalBalance string
 }
 
