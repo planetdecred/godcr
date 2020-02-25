@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"gioui.org/layout"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -46,8 +48,19 @@ func (win *Window) updateStates(update interface{}) {
 // reload combines the window's state to determine what widget to layout
 // then invalidates the gioui window.
 func (win *Window) reload() {
+	s := win.states
 	log.Debugf("Reloaded with info %+v", win.walletInfo)
 	current := win.WalletsPage()
+	if s.dialog {
+		win.current = func() {
+			layout.Stack{}.Layout(win.gtx,
+				layout.Stacked(current),
+				layout.Stacked(func() {
+					materialplus.Modal{}.Layout(win.gtx, win.dialog)
+				}),
+			)
+		}
+	}
 	win.current = current
 	win.window.Invalidate()
 }
