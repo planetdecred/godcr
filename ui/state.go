@@ -20,7 +20,6 @@ type states struct {
 
 // updateStates changes the wallet state based on the received update
 func (win *Window) updateStates(update interface{}) {
-	win.states.loading = false
 	log.Debugf("Received update %+v", update)
 	switch e := update.(type) {
 	case *wallet.MultiWalletInfo:
@@ -32,13 +31,17 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
 	case wallet.CreatedSeed:
+		win.states.loading = false
 		win.states.created = true
 	case wallet.Restored:
+		win.states.loading = false
 		win.states.restored = true
 	case wallet.LoadedWallets:
+		win.states.loading = false
 		win.wallet.GetMultiWalletInfo()
 		win.states.loading = true
 	case wallet.DeletedWallet:
+		win.states.loading = false
 		win.states.deleted = true
 	}
 
@@ -50,13 +53,23 @@ func (win *Window) updateStates(update interface{}) {
 func (win *Window) reload() {
 	s := win.states
 	log.Debugf("Reloaded with info %+v", win.walletInfo)
-	current := win.WalletsPage()
+	current := win.Landing()
 	if s.dialog {
 		win.current = func() {
 			layout.Stack{}.Layout(win.gtx,
 				layout.Stacked(current),
 				layout.Stacked(func() {
 					materialplus.Modal{}.Layout(win.gtx, win.dialog)
+				}),
+			)
+		}
+	}
+	if s.loading {
+		win.current = func() {
+			layout.Stack{}.Layout(win.gtx,
+				layout.Stacked(current),
+				layout.Stacked(func() {
+					materialplus.Modal{}.Layout(win.gtx, win.Loading)
 				}),
 			)
 		}

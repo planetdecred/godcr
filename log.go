@@ -11,6 +11,7 @@ import (
 
 	"github.com/decred/slog"
 	"github.com/jrick/logrotate/rotator"
+	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
@@ -90,7 +91,7 @@ func setLogLevel(subsystemID string, logLevel string) {
 	if !ok {
 		return
 	}
-
+	dcrlibwallet.SetLogLevels("info")
 	// Defaults to info if the log level is invalid.
 	level, _ := slog.LevelFromString(logLevel)
 	logger.SetLevel(level)

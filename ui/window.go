@@ -60,6 +60,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 // Loop runs main event handling and page rendering loop
 func (win *Window) Loop(shutdown chan int) {
+	win.reload()
 	for {
 		select {
 		case e := <-win.wallet.Send:

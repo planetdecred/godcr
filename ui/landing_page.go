@@ -13,7 +13,7 @@ func (win *Window) Landing() layout.Widget {
 			Alignment: layout.Middle,
 			Spacing:   layout.SpaceEnd,
 		}.Layout(win.gtx,
-			layout.Flexed(0.3, func() {
+			layout.Flexed(0.2, func() {
 				win.Header()
 			}),
 			layout.Rigid(func() {
@@ -28,6 +28,9 @@ func (win *Window) Landing() layout.Widget {
 						}),
 						layout.Flexed(.3, func() {
 							win.theme.Button("Restore Wallet").Layout(win.gtx, &win.inputs.restoreWallet)
+						}),
+						layout.Flexed(.1, func() {
+							win.theme.Editor("Enter password").Layout(win.gtx, &win.inputs.spendingPassword)
 						}),
 					)
 				})
