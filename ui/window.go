@@ -84,7 +84,28 @@ func (win *Window) Loop(shutdown chan int) {
 						win.inputs.tabs[i] = new(widget.Button)
 					}
 				}
-				win.current()
+				s := win.states
+				current := win.current
+				if s.dialog {
+					current = func() {
+						layout.Stack{}.Layout(win.gtx,
+							layout.Stacked(win.current),
+							layout.Expanded(func() {
+								win.dialog()
+							}),
+						)
+					}
+				} else if s.loading {
+					current = func() {
+						layout.Stack{}.Layout(win.gtx,
+							layout.Stacked(win.current),
+							layout.Expanded(func() {
+								win.Loading()
+							}),
+						)
+					}
+				}
+				current()
 				evt.Frame(win.gtx.Ops)
 				win.HandleInputs()
 			case nil:

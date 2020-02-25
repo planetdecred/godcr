@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -24,6 +22,7 @@ func (win *Window) updateStates(update interface{}) {
 	switch e := update.(type) {
 	case *wallet.MultiWalletInfo:
 		*win.walletInfo = *e
+		win.states.loading = false
 	case wallet.SyncStarted:
 		win.updateSyncStatus(true, false)
 	case wallet.SyncCanceled:
@@ -37,7 +36,6 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.loading = false
 		win.states.restored = true
 	case wallet.LoadedWallets:
-		win.states.loading = false
 		win.wallet.GetMultiWalletInfo()
 		win.states.loading = true
 	case wallet.DeletedWallet:
@@ -45,34 +43,15 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.deleted = true
 	}
 
-	log.Debugf("Updated state %+v", win.states)
 }
 
 // reload combines the window's state to determine what widget to layout
 // then invalidates the gioui window.
 func (win *Window) reload() {
-	s := win.states
-	log.Debugf("Reloaded with info %+v", win.walletInfo)
-	current := win.Landing()
-	if s.dialog {
-		win.current = func() {
-			layout.Stack{}.Layout(win.gtx,
-				layout.Stacked(current),
-				layout.Stacked(func() {
-					materialplus.Modal{}.Layout(win.gtx, win.dialog)
-				}),
-			)
-		}
-	}
-	if s.loading {
-		win.current = func() {
-			layout.Stack{}.Layout(win.gtx,
-				layout.Stacked(current),
-				layout.Stacked(func() {
-					materialplus.Modal{}.Layout(win.gtx, win.Loading)
-				}),
-			)
-		}
+	log.Debugf("Reloaded with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
+	current := win.current
+	if win.walletInfo.LoadedWallets == 0 {
+		current = win.Landing()
 	}
 	win.current = current
 	win.window.Invalidate()

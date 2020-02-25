@@ -8,10 +8,10 @@ import (
 func (win *Window) Landing() layout.Widget {
 	log.Debug("On Landing")
 	return func() {
+		toMax(win.gtx)
 		layout.Flex{
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
-			Spacing:   layout.SpaceEnd,
 		}.Layout(win.gtx,
 			layout.Flexed(0.2, func() {
 				win.Header()
