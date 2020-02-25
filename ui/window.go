@@ -15,23 +15,21 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
-	window     *app.Window
-	theme      *materialplus.Theme
-	gtx        *layout.Context
-	current    layout.Widget
+	window *app.Window
+	theme  *materialplus.Theme
+	gtx    *layout.Context
+
 	wallet     *wallet.Wallet
 	walletInfo *wallet.MultiWalletInfo
 
-	buttons struct {
-		deleteWallet, cancelDialog, confirmDialog widget.Button
-		createWallet, restoreWallet               widget.Button
-		tabs                                      []*widget.Button
-	}
+	current  layout.Widget
+	dialog   layout.Widget
+	tabsList *layout.List
 
 	selected int
 	states
 
-	tabsList *layout.List
+	inputs
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -51,11 +49,13 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 
-	win.current = func() {}
 	win.wallet = wal
 	win.states.loading = true
-	win.buttons.tabs = make([]*widget.Button, 0)
+	win.inputs.tabs = make([]*widget.Button, 0)
 	win.tabsList = &layout.List{Axis: layout.Vertical}
+
+	win.current = func() {}
+	win.dialog = func() {}
 	return win, nil
 }
 

@@ -24,10 +24,10 @@ func (win *Window) Landing() layout.Widget {
 						Spacing:   layout.SpaceBetween,
 					}.Layout(win.gtx,
 						layout.Flexed(.3, func() {
-							win.theme.Button("Create Wallet").Layout(win.gtx, &win.buttons.createWallet)
+							win.theme.Button("Create Wallet").Layout(win.gtx, &win.inputs.createWallet)
 						}),
 						layout.Flexed(.3, func() {
-							win.theme.Button("Restore Wallet").Layout(win.gtx, &win.buttons.restoreWallet)
+							win.theme.Button("Restore Wallet").Layout(win.gtx, &win.inputs.restoreWallet)
 						}),
 					)
 				})

@@ -17,7 +17,7 @@ func (win *Window) TabbedWallets(selected, body layout.Widget, item layout.ListE
 			Axis: layout.Horizontal,
 		},
 		Size: .3,
-	}.Layout(win.gtx, &win.selected, win.buttons.tabs)
+	}.Layout(win.gtx, &win.selected, win.inputs.tabs)
 }
 
 // Header lays out the window header
