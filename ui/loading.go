@@ -4,12 +4,10 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
 // Loading lays out the loading widget with a faded background
 func (win *Window) Loading() {
-	layouts.FillWithColor(win.gtx, layouts.Faded(win.theme.Background))
 	layout.Center.Layout(win.gtx, func() {
 		lbl := win.theme.Label(unit.Dp(100), "Loading")
 		lbl.Color = win.theme.Primary

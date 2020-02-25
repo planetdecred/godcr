@@ -3,37 +3,21 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
+	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 )
 
 // TabbedWallets layouts a layout.Tabs
-func (win *Window) TabbedWallets(selected, body layout.Widget, item layout.ListElement) {
-	layouts.Tabs{
-		Selected: selected,
-		Item:     item,
-		Body:     body,
-		List:     win.tabsList,
-		Flex: layout.Flex{
-			Axis: layout.Horizontal,
-		},
-		Size: .3,
-	}.Layout(win.gtx, &win.selected, win.inputs.tabs)
+func (win *Window) TabbedPage(body layout.Widget) {
+	items := make([]materialplus.TabItem, win.walletInfo.LoadedWallets)
+	for i := 0; i < win.walletInfo.LoadedWallets; i++ {
+		items[i] = materialplus.TabItem{
+			Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
+		}
+	}
+	win.tabs.Layout(win.gtx, &win.selected, win.inputs.tabs, items, body)
 }
 
 // Header lays out the window header
 func (win *Window) Header() {
 	win.theme.Label(unit.Dp(50), "GoDcr").Layout(win.gtx)
-}
-
-// Background fills the context with theme Background
-func (win *Window) Background() {
-	layouts.FillWithColor(win.gtx, win.theme.Background)
-}
-
-// Overlay stacks foreground on Expanded backgound
-func (win *Window) Overlay(foreground layout.Widget, background layout.Widget) {
-	layout.Stack{}.Layout(win.gtx,
-		layout.Expanded(background),
-		layout.Stacked(foreground),
-	)
 }

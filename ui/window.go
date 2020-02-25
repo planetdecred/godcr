@@ -22,9 +22,9 @@ type Window struct {
 	wallet     *wallet.Wallet
 	walletInfo *wallet.MultiWalletInfo
 
-	current  layout.Widget
-	dialog   layout.Widget
-	tabsList *layout.List
+	current layout.Widget
+	dialog  layout.Widget
+	tabs    *materialplus.Tabs
 
 	selected int
 	states
@@ -52,8 +52,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.wallet = wal
 	win.states.loading = true
 	win.inputs.tabs = make([]*widget.Button, 0)
-	win.tabsList = &layout.List{Axis: layout.Vertical}
-
+	win.tabs = materialplus.NewTabs()
 	win.current = func() {}
 	win.dialog = func() {}
 	return win, nil
@@ -78,7 +77,12 @@ func (win *Window) Loop(shutdown chan int) {
 				return
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
-
+				if len(win.inputs.tabs) != win.walletInfo.LoadedWallets {
+					win.inputs.tabs = make([]*widget.Button, win.walletInfo.LoadedWallets)
+					for i := range win.inputs.tabs {
+						win.inputs.tabs[i] = new(widget.Button)
+					}
+				}
 				win.current()
 				evt.Frame(win.gtx.Ops)
 				win.HandleInputs()

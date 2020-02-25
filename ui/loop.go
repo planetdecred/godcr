@@ -1,3 +1,0 @@
-// +build !dev
-
-package ui

@@ -36,10 +36,8 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.LoadedWallets:
 		win.wallet.GetMultiWalletInfo()
 		win.states.loading = true
-		win.resetInputs()
 	case wallet.DeletedWallet:
 		win.states.deleted = true
-		win.resetInputs()
 	}
 
 	log.Debugf("Updated state %+v", win.states)
@@ -50,18 +48,6 @@ func (win *Window) updateStates(update interface{}) {
 func (win *Window) reload() {
 	log.Debugf("Reloaded with info %+v", win.walletInfo)
 	current := win.WalletsPage()
-
-	if win.states.dialog {
-		current = func() {
-			win.Overlay(win.dialog, current)
-		}
-	}
-
-	if win.states.loading {
-		current = func() {
-			win.Overlay(win.Loading, current)
-		}
-	}
 	win.current = current
 	win.window.Invalidate()
 }

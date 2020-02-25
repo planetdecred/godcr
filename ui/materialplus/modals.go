@@ -5,7 +5,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
 // ConfirmCancel lays out Body with layout
@@ -42,7 +41,7 @@ func (cc ConfirmCancel) Layout(gtx *layout.Context, confirm, cancel *widget.Butt
 			}),
 		)
 	}
-	layouts.Modal{
+	Modal{
 		Background: cc.Background,
 		Direction:  cc.Direction,
 	}.Layout(gtx, modal)

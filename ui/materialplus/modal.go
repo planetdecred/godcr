@@ -1,4 +1,4 @@
-package layouts
+package materialplus
 
 import (
 	"image/color"
@@ -8,7 +8,7 @@ import (
 )
 
 // Modal lays out a widget Stacked (with Directrion) after a Stacked area filled with Background.
-// The Stacked background is layed out with max Contraints.
+// The Stacked background is laid out with max Contraints.
 type Modal struct {
 	Background color.RGBA
 	layout.Direction
@@ -20,7 +20,7 @@ func (m Modal) Layout(gtx *layout.Context, w layout.Widget) {
 		layout.Stacked(func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 			gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
-			FillWithColor(gtx, m.Background)
+			fillWithColor(gtx, m.Background)
 			new(widget.Button).Layout(gtx)
 		}),
 		layout.Stacked(w),

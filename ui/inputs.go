@@ -13,7 +13,7 @@ type inputs struct {
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	for i, tab := range win.inputs.tabs {
-		if tab.Clicked(win.gtx) {
+		for tab.Clicked(win.gtx) {
 			win.selected = i
 			log.Debugf("Tab %d selected", i)
 		}
@@ -39,15 +39,5 @@ func (win *Window) HandleInputs() {
 	}
 	if win.inputs.confirmDialog.Clicked(win.gtx) {
 		log.Debug("Confirm dialog clicked")
-	}
-}
-
-func (win *Window) resetInputs() {
-	lenWallets := len(win.walletInfo.Wallets)
-	if len(win.inputs.tabs) != lenWallets {
-		win.inputs.tabs = make([]*widget.Button, lenWallets)
-		for i := range win.inputs.tabs {
-			win.inputs.tabs[i] = new(widget.Button)
-		}
 	}
 }

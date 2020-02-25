@@ -1,4 +1,4 @@
-package layouts
+package materialplus
 
 import (
 	"image"
@@ -6,22 +6,20 @@ import (
 
 	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op"
 	"gioui.org/op/paint"
 )
 
-// FillWithColor paints a color on the Context's max contraints.
+// fillWithColor paints a colored rectangle on the Context's max contraints.
 // Restores the dimensions after painting.
-func FillWithColor(gtx *layout.Context, color color.RGBA) {
+func fillWithColor(gtx *layout.Context, col color.RGBA) {
 	cs := gtx.Constraints
-	dmin := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
-	rect := f32.Rectangle{
-		Max: f32.Point{X: float32(cs.Width.Max), Y: float32(cs.Height.Max)},
+	d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
+	dr := f32.Rectangle{
+		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 	}
-	paint.ColorOp{Color: color}.Add(gtx.Ops)
-	paint.PaintOp{Rect: rect}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{Size: dmin}
-	op.InvalidateOp{}.Add(gtx.Ops)
+	paint.ColorOp{Color: col}.Add(gtx.Ops)
+	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
+	gtx.Dimensions = layout.Dimensions{Size: d}
 }
 
 // Faded halfs the color alpha
