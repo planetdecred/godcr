@@ -13,7 +13,7 @@ func decredTheme() *materialplus.Theme {
 	}
 	theme.Icon.Cancel = mustIcon(material.NewIcon(icons.NavigationCancel))
 	theme.Icon.Check = mustIcon(material.NewIcon(icons.NavigationCheck))
-	theme.Icon.Logo = mustIcon(material.NewIcon(icons.NavigationCancel))
+	theme.Icon.Logo = mustIcon(material.NewIcon(icons.ActionAccountCircle))
 	return theme
 }
 
