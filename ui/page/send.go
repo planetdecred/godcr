@@ -450,8 +450,6 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 			func() {
 				if pg.sendErrorLabel.Text != "" {
 					pg.sendErrorLabel.Layout(gtx)
-				} else {
-
 				}
 			},
 			func() {
