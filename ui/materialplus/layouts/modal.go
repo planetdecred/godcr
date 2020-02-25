@@ -7,13 +7,14 @@ import (
 	"gioui.org/widget"
 )
 
-// Modal lays out out a widget Directrion stacked above an area filled with Background
+// Modal lays out a widget Stacked (with Directrion) after a Stacked area filled with Background.
+// The Stacked background is layed out with max Contraints.
 type Modal struct {
 	Background color.RGBA
 	layout.Direction
 }
 
-// Layout a widget
+// Layout the modal
 func (m Modal) Layout(gtx *layout.Context, w layout.Widget) {
 	layout.Stack{Alignment: m.Direction}.Layout(gtx,
 		layout.Stacked(func() {

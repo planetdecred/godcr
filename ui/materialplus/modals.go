@@ -1,31 +1,49 @@
 package materialplus
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 	"github.com/raedahgroup/godcr-gio/ui/materialplus/layouts"
 )
 
-const ModalSize float32 = .3
-
+// ConfirmCancel lays out Body with layout
+// Flex{Flexed(Cancel), Flexed(Body), Flexed(Confirm)}
 type ConfirmCancel struct {
-	Body    layout.Widget
-	Confirm material.Button
-	Cancel  material.IconButton
+	layout.Flex
+	layout.Direction
+	Body struct {
+		Size float32
+		layout.Widget
+	}
+	Confirm struct {
+		layout.Direction
+		layout.Widget
+	}
+	Cancel struct {
+		layout.Direction
+		layout.Widget
+	}
+	Background color.RGBA
 }
 
-func (dialog ConfirmCancel) Layout(gtx *layout.Context, confirm, cancel *widget.Button) {
-	gtx.Constraints.Height.Max = int(float32(gtx.Constraints.Height.Max) * ModalSize)
+// Layout lays out the widget
+func (cc ConfirmCancel) Layout(gtx *layout.Context, confirm, cancel *widget.Button) {
 	modal := func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Flexed(0.20, func() { dialog.Cancel.Layout(gtx, cancel) }),
-			layout.Flexed(0.60, dialog.Body),
-			layout.Flexed(0.20, func() { dialog.Confirm.Layout(gtx, confirm) }),
+		s := (1 - (cc.Body.Size)) / 2
+		cc.Flex.Layout(gtx,
+			layout.Flexed(s, func() {
+				cc.Cancel.Direction.Layout(gtx, cc.Cancel.Widget)
+			}),
+			layout.Flexed(cc.Body.Size, cc.Body.Widget),
+			layout.Flexed(s, func() {
+				cc.Confirm.Direction.Layout(gtx, cc.Confirm.Widget)
+			}),
 		)
 	}
 	layouts.Modal{
-		Background: layouts.ARGB(0x77ffffff),
-		Direction:  layout.S,
+		Background: cc.Background,
+		Direction:  cc.Direction,
 	}.Layout(gtx, modal)
 }
