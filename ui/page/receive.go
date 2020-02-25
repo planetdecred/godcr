@@ -102,10 +102,15 @@ type Receive struct {
 	selectedWallet  *wallet.InfoShort
 	selectedAccount *wallet.Account
 
+	pageTitleLabel              material.Label
 	selectedAccountNameLabel    material.Label
 	selectedWalletLabel         material.Label
 	selectedAccountBalanceLabel material.Label
-	receiveAddressLabel material.Label
+	receiveAddressLabel         material.Label
+	accountModalTitleLabel      material.Label
+
+	accountModalLine *materialplus.Line
+
 	accountSelectorButtons map[string]*widget.Button
 
 	theme          *materialplus.Theme
@@ -442,7 +447,7 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 								}),
 								layout.Rigid(func() {
 									layout.Inset{Left: unit.Dp(2)}.Layout(gtx, func() {
-									pg.selectedWalletLabel.Layout(gtx)
+										pg.selectedWalletLabel.Layout(gtx)
 									})
 								}),
 							)
