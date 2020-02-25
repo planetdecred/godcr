@@ -5,7 +5,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus/icons"
 )
 
 type PasswordDialog struct {
@@ -20,7 +19,7 @@ func (t *Theme) PasswordDialog(prompt string) PasswordDialog {
 		Prompt:   t.Label(unit.Dp(20), prompt),
 		ConfirmCancel: ConfirmCancel{
 			Confirm: t.Button("Confirm"),
-			Cancel:  t.IconButton(icons.ContentAdd),
+			Cancel:  t.IconButton(t.Icon.Add),
 		},
 	}
 }

@@ -10,7 +10,7 @@ type Theme struct {
 
 	Palette
 	Icon struct {
-		Cancel, Logo, Check *material.Icon
+		Cancel, Logo, Check, Add *material.Icon
 	}
 }
 
