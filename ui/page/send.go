@@ -86,9 +86,10 @@ type Send struct {
 	sendErrorLabel               material.Label
 
 	// buttons
-	selectAccountButton *button
-	nextButton          *button
-	confirmButton       *button
+	selectAccountButton          *button
+	nextButton                   *button
+	confirmButton                *button
+	closeConfirmationModalButton *button
 
 	passwordModal *materialplus.Password
 
@@ -123,7 +124,7 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 	pg.confirmDestinationAddressLabel = pg.theme.Body2("To destination address")
 	pg.confirmWarningLabel = pg.theme.Caption("Your DCR will be sent and CANNOT be undone")
 	pg.accountsModalTitleLabel = pg.theme.H5("Choose sending account")
-	pg.txHashLabel = pg.theme.H5("dddd")
+	pg.txHashLabel = pg.theme.H5("")
 	pg.txHashLabel.Color = pg.theme.Success
 
 	pg.destinationAddressErrorLabel = pg.theme.Caption("")
@@ -169,6 +170,13 @@ func (pg *Send) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[s
 		button:   new(widget.Button),
 		material: pg.theme.Button("Confirm"),
 	}
+
+	pg.closeConfirmationModalButton = &button{
+		button:   new(widget.Button),
+		material: pg.theme.Button("Close"),
+	}
+	pg.closeConfirmationModalButton.material.Background = ui.WhiteColor
+	pg.closeConfirmationModalButton.material.Color = ui.LightBlueColor
 }
 
 // Draw renders all of this page's widgets
@@ -480,12 +488,20 @@ func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
 				})
 			},
 			func() {
-				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-
-				for pg.confirmButton.button.Clicked(gtx) {
-					pg.isPasswordModalOpen = true
-				}
-				pg.confirmButton.layout(gtx)
+				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func() {
+						for pg.confirmButton.button.Clicked(gtx) {
+							pg.isPasswordModalOpen = true
+						}
+						pg.confirmButton.layout(gtx)
+					}),
+					layout.Rigid(func() {
+						for pg.closeConfirmationModalButton.button.Clicked(gtx) {
+							pg.isConfirmationModalOpen = false
+						}
+						pg.closeConfirmationModalButton.layout(gtx)
+					}),
+				)
 			},
 		},
 	}
