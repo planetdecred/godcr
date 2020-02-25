@@ -429,7 +429,7 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 								}),
 								layout.Rigid(func() {
 									layout.Inset{Left: unit.Dp(2)}.Layout(gtx, func() {
-									pg.selectedWalletLabel.Layout(gtx)
+										pg.selectedWalletLabel.Layout(gtx)
 									})
 								}),
 							)
