@@ -21,11 +21,6 @@ import (
 // SendID is the id of the send page
 const SendID = "send"
 
-type accountModalWidgets struct {
-	titleLabel material.Label
-	titleLine  *materialplus.Line
-}
-
 type editor struct {
 	editor   *widget.Editor
 	material material.Editor
@@ -614,7 +609,7 @@ func (pg *Send) validate(ignoreEmpty bool) bool {
 	return true
 }
 
-func (pg *Send) watchForBroadcastResult(gtx *layout.Context) {
+func (pg *Send) watchForBroadcastResult() {
 	err := pg.states[StateError]
 	hash := pg.states[StateTxHash]
 
@@ -638,7 +633,7 @@ func (pg *Send) watchForBroadcastResult(gtx *layout.Context) {
 }
 
 func (pg *Send) watchAndUpdateValues(gtx *layout.Context) {
-	pg.watchForBroadcastResult(gtx)
+	pg.watchForBroadcastResult()
 
 	pg.confirmButton.material.Text = "Send"
 	pg.confirmButton.material.Background = ui.LightBlueColor
