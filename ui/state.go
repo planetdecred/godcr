@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"gioui.org/layout"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -54,19 +53,13 @@ func (win *Window) reload() {
 
 	if win.states.dialog {
 		current = func() {
-			layout.Stack{}.Layout(win.gtx,
-				layout.Stacked(win.current),
-				layout.Stacked(win.dialog),
-			)
+			win.Overlay(win.dialog, current)
 		}
 	}
 
 	if win.states.loading {
 		current = func() {
-			layout.Stack{}.Layout(win.gtx,
-				layout.Stacked(win.current),
-				layout.Stacked(win.Loading),
-			)
+			win.Overlay(win.Loading, current)
 		}
 	}
 	win.current = current

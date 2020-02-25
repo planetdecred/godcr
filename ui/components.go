@@ -29,3 +29,11 @@ func (win *Window) Header() {
 func (win *Window) Background() {
 	layouts.FillWithColor(win.gtx, win.theme.Background)
 }
+
+// Overlay stacks foreground on Expanded backgound
+func (win *Window) Overlay(foreground layout.Widget, background layout.Widget) {
+	layout.Stack{}.Layout(win.gtx,
+		layout.Expanded(background),
+		layout.Stacked(foreground),
+	)
+}
