@@ -6,7 +6,6 @@ require (
 	gioui.org v0.0.0-20200223075147-73b99a80e29a
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
-	github.com/decred/dcrwallet/wallet/v3 v3.0.5
 	github.com/decred/slog v1.0.0
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jrick/logrotate v1.0.0
