@@ -15,7 +15,7 @@ func (win *Window) HandleInputs() {
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
-			win.outputs.spendingPassword.HintColor = win.theme.Color.Text
+			win.outputs.spendingPassword.HintColor = win.theme.Color.InvText
 			return
 		}
 		log.Debug(evt)
@@ -82,6 +82,7 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.cancelDialog.Clicked(win.gtx) {
 		win.states.dialog = false
+		win.err = ""
 		log.Debug("Cancel dialog clicked")
 		return
 	}
@@ -97,7 +98,7 @@ func (win *Window) validatePasswords() string {
 	match := win.inputs.matchSpending.Text()
 	if match == "" {
 		win.outputs.matchSpending.HintColor = win.theme.Danger
-		return pass
+		return ""
 	}
 
 	if match != pass {
@@ -119,8 +120,8 @@ func (win *Window) validatePassword() string {
 }
 
 func (win *Window) resetPasswords() {
-	win.outputs.spendingPassword.HintColor = win.theme.Color.Text
+	win.outputs.spendingPassword.HintColor = win.theme.Color.InvText
 	win.inputs.spendingPassword.SetText("")
-	win.outputs.matchSpending.HintColor = win.theme.Color.Text
+	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
 	win.inputs.matchSpending.SetText("")
 }

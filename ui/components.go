@@ -15,7 +15,7 @@ func (win *Window) Page(body layout.Widget) {
 		layout.Flexed(headerHeight, win.Header),
 		layout.Flexed(1-headerHeight-navSize, func() {
 			toMax(win.gtx)
-			body()
+			win.theme.Foreground(win.gtx, body)
 		}),
 		layout.Flexed(navSize, win.NavBar),
 	)
@@ -47,16 +47,11 @@ func (win *Window) Header() {
 			win.outputs.createDiag.Layout(win.gtx, &win.inputs.createDiag)
 		}),
 	)
-	// 	layout.Flex{Spacing: layout.SpaceEvenly}.Layout(win.gtx,
-	// 		layout.Rigid(func() {
-	// 			win.outputs.toWallets.Layout(win.gtx, &win.inputs.toWallets)
-	// 		}),
-	// 	)
 }
 
 func (win *Window) NavBar() {
 	toMax(win.gtx)
-	layout.Flex{Spacing: layout.SpaceEvenly}.Layout(win.gtx,
+	layout.Flex{Spacing: layout.SpaceEvenly, Alignment: layout.Middle}.Layout(win.gtx,
 		layout.Rigid(func() {
 			win.outputs.toWallets.Layout(win.gtx, &win.inputs.toWallets)
 		}),
@@ -65,7 +60,15 @@ func (win *Window) NavBar() {
 		}),
 	)
 }
+
 func toMax(gtx *layout.Context) {
 	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
+}
+
+func (win *Window) Err() {
+	if win.err != "" {
+		win.outputs.err.Text = win.err
+		win.outputs.err.Layout(win.gtx)
+	}
 }

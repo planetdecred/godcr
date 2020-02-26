@@ -22,6 +22,7 @@ func NewTheme(colors Palette) *Theme {
 		return nil
 	}
 	t.Color.Primary = colors.Primary
+	t.Color.Text = t.Color.InvText
 	return &Theme{
 		Theme:   t,
 		Palette: colors,
@@ -30,5 +31,10 @@ func NewTheme(colors Palette) *Theme {
 
 func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
 	fillWithColor(gtx, t.Tertiary)
+	w()
+}
+
+func (t *Theme) Foreground(gtx *layout.Context, w layout.Widget) {
+	fillWithColor(gtx, t.Secondary)
 	w()
 }

@@ -57,6 +57,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.states.loading = true
 	win.inputs.tabs = make([]*widget.Button, 0)
 	win.tabs = materialplus.NewTabs()
+	win.tabs.Flex.Spacing = layout.SpaceBetween
 	win.current = win.WalletsPage
 	win.dialog = func() {}
 
@@ -96,7 +97,8 @@ func (win *Window) Loop(shutdown chan int) {
 					}
 				}
 				s := win.states
-				win.current()
+				win.theme.Background(win.gtx, win.current)
+
 				if s.loading {
 					win.Loading()
 				} else if s.dialog {

@@ -15,13 +15,13 @@ func (win *Window) WalletsPage() {
 	body := func() {
 		info := win.walletInfo.Wallets[win.selected]
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-			layout.Rigid(func() {
+			layout.Flexed(.2, func() {
 				win.theme.H3(info.Name).Layout(win.gtx)
 			}),
-			layout.Rigid(func() {
+			layout.Flexed(.2, func() {
 				win.theme.H5(info.Balance).Layout(win.gtx)
 			}),
-			layout.Rigid(func() {
+			layout.Flexed(.5, func() {
 				(&layout.List{Axis: layout.Vertical}).Layout(win.gtx, len(info.Accounts), func(i int) {
 					acct := info.Accounts[i]
 					layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
@@ -43,8 +43,5 @@ func (win *Window) WalletsPage() {
 			}),
 		)
 	}
-	bd := func() {
-		win.theme.Background(win.gtx, body)
-	}
-	win.TabbedPage(bd)
+	win.TabbedPage(body)
 }

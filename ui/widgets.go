@@ -22,7 +22,7 @@ type outputs struct {
 
 	createWallet, restoreWallet, deleteWallet, deleteDiag material.Button
 
-	notImplemented, noWallet material.Label
+	notImplemented, noWallet, err material.Label
 }
 
 func (win *Window) initWidgets() {
@@ -36,8 +36,8 @@ func (win *Window) initWidgets() {
 	win.outputs.createDiag = theme.IconButton(mustIcon(material.NewIcon(icons.ContentAdd)))
 	win.outputs.createWallet = theme.Button("create")
 
-	win.outputs.deleteDiag = theme.Button("Delete Wallet")
-	win.outputs.deleteWallet = theme.Button("delete")
+	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")
+	win.outputs.deleteWallet = theme.DangerButton("delete")
 
 	win.outputs.cancelDiag = theme.IconButton(mustIcon(material.NewIcon(icons.NavigationCancel)))
 	win.outputs.cancelDiag.Background = theme.Danger
@@ -48,4 +48,7 @@ func (win *Window) initWidgets() {
 	win.outputs.toOverview = theme.IconButton(mustIcon(material.NewIcon(icons.ActionAccountBox)))
 
 	win.outputs.noWallet = theme.H3("No wallet loaded")
+
+	win.outputs.err = theme.Caption("")
+	win.outputs.err.Color = theme.Danger
 }
