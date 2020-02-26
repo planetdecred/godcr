@@ -19,33 +19,36 @@ type states struct {
 // updateStates changes the wallet state based on the received update
 func (win *Window) updateStates(update interface{}) {
 	log.Debugf("Received update %+v", update)
+
 	switch e := update.(type) {
+	case wallet.SyncCompleted, wallet.SyncCanceled, wallet.SyncStarted:
+		switch e.(type) {
+		case wallet.SyncStarted:
+			win.updateSyncStatus(true, false)
+		case wallet.SyncCanceled:
+			win.updateSyncStatus(false, false)
+		case wallet.SyncCompleted:
+			win.updateSyncStatus(false, true)
+		}
+		return
 	case *wallet.MultiWalletInfo:
 		*win.walletInfo = *e
+		if e.LoadedWallets == 0 {
+			win.current = win.Landing
+		}
 		win.states.loading = false
-	case wallet.SyncStarted:
-		win.updateSyncStatus(true, false)
-	case wallet.SyncCanceled:
-		win.updateSyncStatus(false, false)
-	case wallet.SyncCompleted:
-		win.updateSyncStatus(false, true)
+		return
 	case wallet.CreatedSeed:
-		win.states.loading = false
+		win.current = win.WalletsPage
 		win.states.created = true
 	case wallet.Restored:
-		win.states.loading = false
+		win.current = win.WalletsPage
 		win.states.restored = true
-	case wallet.LoadedWallets:
-		win.wallet.GetMultiWalletInfo()
-		if e.Count > 0 {
-			win.current = win.WalletsPage
-		}
-		win.states.loading = true
 	case wallet.DeletedWallet:
-		win.wallet.GetMultiWalletInfo()
-		win.states.loading = true
 		win.states.deleted = true
 	}
+	win.states.loading = true
+	win.wallet.GetMultiWalletInfo()
 
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }

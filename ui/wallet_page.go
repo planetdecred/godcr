@@ -2,7 +2,6 @@ package ui
 
 import (
 	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 )
 
 // WalletsPage lays out the main wallet page
@@ -50,15 +49,10 @@ func (win *Window) WalletsPage() {
 		)
 	}
 	toMax(win.gtx)
-	materialplus.Modal{}.Layout(win.gtx, func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-			layout.Flexed(.3, func() {
-				layout.Flex{}.Layout(win.gtx,
-					layout.Flexed(.3, win.Header),
-				)
-			}),
-			layout.Rigid(tabbed),
-		)
-	})
+
+	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+		layout.Flexed(headerHeight, win.Header),
+		layout.Rigid(tabbed),
+	)
 
 }

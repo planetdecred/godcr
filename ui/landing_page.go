@@ -11,7 +11,7 @@ func (win *Window) Landing() {
 		Axis:      layout.Vertical,
 		Alignment: layout.Middle,
 	}.Layout(win.gtx,
-		layout.Flexed(0.2, func() {
+		layout.Flexed(headerHeight, func() {
 			win.Header()
 		}),
 		layout.Rigid(func() {

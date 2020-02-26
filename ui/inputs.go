@@ -19,8 +19,14 @@ func (win *Window) HandleInputs() {
 			return
 		}
 	}
+	spEvents := win.inputs.spendingPassword.Events(win.gtx)
+	log.Debug(spEvents)
+
+	pass := win.inputs.spendingPassword.Text()
 	if win.inputs.createWallet.Clicked(win.gtx) {
-		pass := win.inputs.spendingPassword.Text()
+		if pass == "" {
+			return
+		}
 		win.wallet.CreateWallet(pass)
 		win.inputs.spendingPassword.SetText("")
 		log.Debug("Create Wallet clicked")
@@ -29,6 +35,9 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.restoreWallet.Clicked(win.gtx) {
+		if pass == "" {
+			return
+		}
 		log.Debug("Restore Wallet clicked")
 		return
 	}

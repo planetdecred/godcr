@@ -76,6 +76,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.window.Invalidate()
 				break
 			}
+			log.Debugf("Updating with %+v", e.Resp)
 			win.updateStates(e.Resp)
 		case e := <-win.window.Events():
 			switch evt := e.(type) {

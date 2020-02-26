@@ -2,8 +2,11 @@ package ui
 
 import (
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"github.com/raedahgroup/godcr-gio/ui/materialplus"
+)
+
+const (
+	headerHeight = .35
 )
 
 // TabbedPage layouts a layout.Tabs
@@ -19,7 +22,7 @@ func (win *Window) TabbedPage(body layout.Widget) {
 
 // Header lays out the window header
 func (win *Window) Header() {
-	win.theme.Label(unit.Dp(50), "GoDcr").Layout(win.gtx)
+	win.theme.H3("GoDcr").Layout(win.gtx)
 }
 
 func toMax(gtx *layout.Context) {
