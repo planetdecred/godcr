@@ -30,6 +30,8 @@ type Window struct {
 	states
 
 	inputs
+
+	display
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -64,7 +66,13 @@ func (win *Window) Loop(shutdown chan int) {
 		select {
 		case e := <-win.wallet.Send:
 			if e.Err != nil {
-				log.Error("Wallet Error: %s", e.Err.Error())
+				err := e.Err.Error()
+				log.Error("Wallet Error: " + err)
+				win.err = err
+				if win.states.loading {
+					log.Warn("Attemping to get multiwallet info")
+					win.wallet.GetMultiWalletInfo()
+				}
 				win.window.Invalidate()
 				break
 			}

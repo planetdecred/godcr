@@ -5,7 +5,7 @@ import (
 	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 )
 
-// WalletsPage layouts the main wallet page
+// WalletsPage lays out the main wallet page
 func (win *Window) WalletsPage() {
 	tabbed := func() {
 		if win.walletInfo.LoadedWallets == 0 {

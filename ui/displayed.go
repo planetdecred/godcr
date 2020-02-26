@@ -1,7 +1,8 @@
 package ui
 
 type display struct {
-	str struct {
+	err    string
+	static struct {
 		confirm, cancel string
 	}
 	icon struct {

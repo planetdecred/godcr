@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 )
 
+// Landing page lays out the create wallet and restore wallet buttons
 func (win *Window) Landing() {
 	toMax(win.gtx)
 	layout.Flex{
