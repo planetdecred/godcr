@@ -180,7 +180,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 
 		if best == nil {
 			if len(wallets) == 0 {
-				wal.Send <- ResponseResp(&MultiWalletInfo{})
+				wal.Send <- ResponseResp(MultiWalletInfo{})
 				return
 			}
 			resp.Err = InternalWalletError{
@@ -190,7 +190,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			return
 		}
 
-		resp.Resp = &MultiWalletInfo{
+		resp.Resp = MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    dcrutil.Amount(completeTotal).String(),
 			BestBlockHeight: best.Height,

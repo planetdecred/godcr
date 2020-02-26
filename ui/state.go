@@ -31,8 +31,8 @@ func (win *Window) updateStates(update interface{}) {
 			win.updateSyncStatus(false, true)
 		}
 		return
-	case *wallet.MultiWalletInfo:
-		*win.walletInfo = *e
+	case wallet.MultiWalletInfo:
+		*win.walletInfo = e
 		win.states.loading = false
 		return
 	case wallet.CreatedSeed:
