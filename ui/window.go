@@ -7,6 +7,8 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -31,9 +33,9 @@ type Window struct {
 
 	inputs
 
-	display
+	err string
 
-	widgets
+	outputs
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -60,8 +62,14 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.current = win.WalletsPage
 	win.dialog = func() {}
 
-	win.widgets.spendingPassword = theme.Editor("Enter password")
+	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
+
+	win.outputs.icons.add = mustIcon(material.NewIcon(icons.ContentAdd))
+	win.outputs.icons.check = mustIcon(material.NewIcon(icons.NavigationCheck))
+
+	win.outputs.toWallets = theme.IconButton(mustIcon(material.NewIcon(icons.ActionAccountBalanceWallet)))
+	win.outputs.toLanding = theme.IconButton(win.outputs.icons.add)
 	return win, nil
 }
 

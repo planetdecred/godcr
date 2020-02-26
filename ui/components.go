@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	headerHeight = .35
+	headerHeight = .15
+	navSize      = .15
 )
 
 // TabbedPage layouts a layout.Tabs
@@ -17,14 +18,40 @@ func (win *Window) TabbedPage(body layout.Widget) {
 			Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
 		}
 	}
-	win.tabs.Layout(win.gtx, &win.selected, win.inputs.tabs, items, body)
+	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+		layout.Flexed(headerHeight, func() {
+			win.Header()
+		}),
+		layout.Flexed(1-headerHeight-navSize, func() {
+			toMax(win.gtx)
+			win.tabs.Layout(win.gtx, &win.selected, win.inputs.tabs, items, body)
+		}),
+		layout.Flexed(navSize, win.NavBar),
+	)
 }
 
 // Header lays out the window header
 func (win *Window) Header() {
-	win.theme.H3("GoDcr").Layout(win.gtx)
+	toMax(win.gtx)
+	layout.Flex{}.Layout(win.gtx,
+		layout.Flexed(0.4, func() {
+			win.theme.H3("GoDcr").Layout(win.gtx)
+		}),
+		layout.Rigid(func() {
+			win.outputs.toLanding.Layout(win.gtx, &win.inputs.toLanding)
+		}),
+	)
+
 }
 
+func (win *Window) NavBar() {
+	toMax(win.gtx)
+	layout.Flex{Spacing: layout.SpaceEvenly}.Layout(win.gtx,
+		layout.Rigid(func() {
+			win.outputs.toWallets.Layout(win.gtx, &win.inputs.toWallets)
+		}),
+	)
+}
 func toMax(gtx *layout.Context) {
 	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
