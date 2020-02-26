@@ -27,7 +27,11 @@ func (err InternalWalletError) Unwrap() error {
 }
 
 func (err InternalWalletError) Error() string {
-	return err.Message
+	m := err.Message
+	if err.Err != nil {
+		m += " : " + err.Err.Error()
+	}
+	return m
 }
 
 // MultiWalletError wraps errors encountered with the Multiwallet
@@ -37,7 +41,11 @@ type MultiWalletError struct {
 }
 
 func (err MultiWalletError) Error() string {
-	return err.Message
+	m := err.Message
+	if err.Err != nil {
+		m += " : " + err.Err.Error()
+	}
+	return m
 }
 
 // Unwrap returns the embedded error

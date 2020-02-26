@@ -42,7 +42,8 @@ func (win *Window) updateStates(update interface{}) {
 		}
 		win.states.loading = true
 	case wallet.DeletedWallet:
-		win.states.loading = false
+		win.wallet.GetMultiWalletInfo()
+		win.states.loading = true
 		win.states.deleted = true
 	}
 

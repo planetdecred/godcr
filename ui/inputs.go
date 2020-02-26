@@ -22,6 +22,7 @@ func (win *Window) HandleInputs() {
 	if win.inputs.createWallet.Clicked(win.gtx) {
 		pass := win.inputs.spendingPassword.Text()
 		win.wallet.CreateWallet(pass)
+		win.inputs.spendingPassword.SetText("")
 		log.Debug("Create Wallet clicked")
 		win.states.loading = true
 		return
@@ -34,7 +35,8 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.deleteWallet.Clicked(win.gtx) {
 		pass := win.inputs.spendingPassword.Text()
-		win.wallet.DeleteWallet(win.selected, pass)
+		win.wallet.DeleteWallet(win.walletInfo.Wallets[win.selected].ID, pass)
+		win.inputs.spendingPassword.SetText("")
 		log.Debug("Delete Wallet clicked")
 		return
 	}

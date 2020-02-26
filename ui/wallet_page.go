@@ -34,6 +34,17 @@ func (win *Window) WalletsPage() {
 							)
 						})
 					}),
+					layout.Flexed(.3, func() {
+						layout.Flex{}.Layout(win.gtx,
+							layout.Rigid(func() {
+								dbtn := win.theme.DangerButton("Delete wallet")
+								dbtn.Layout(win.gtx, &win.inputs.deleteWallet)
+							}),
+							layout.Rigid(func() {
+								win.theme.Editor("Enter password").Layout(win.gtx, &win.inputs.spendingPassword)
+							}),
+						)
+					}),
 				)
 			},
 		)
