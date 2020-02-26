@@ -33,20 +33,17 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case *wallet.MultiWalletInfo:
 		*win.walletInfo = *e
-		if e.LoadedWallets == 0 {
-			win.current = win.Landing
-		}
 		win.states.loading = false
 		return
 	case wallet.CreatedSeed:
 		win.current = win.WalletsPage
-		win.states.created = true
+		win.states.dialog = false
 	case wallet.Restored:
 		win.current = win.WalletsPage
-		win.states.restored = true
+		win.states.dialog = false
 	case wallet.DeletedWallet:
 		win.selected = 0
-		win.states.deleted = true
+		win.states.dialog = false
 	}
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()

@@ -29,8 +29,6 @@ func NewTheme(colors Palette) *Theme {
 }
 
 func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
-	Modal{
-		Background: t.Tertiary,
-		Direction:  layout.Center,
-	}.Layout(gtx, w)
+	fillWithColor(gtx, t.Tertiary)
+	w()
 }

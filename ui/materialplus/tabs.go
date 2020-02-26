@@ -42,6 +42,6 @@ func (tab *Tabs) Layout(gtx *layout.Context, selected *int, tabBtns []*widget.Bu
 				tabItems[i].Layout(gtx, tabBtns[i], i == *selected)
 			})
 		}),
-		layout.Rigid(body),
+		layout.Flexed(.9-tab.Size, body),
 	)
 }
