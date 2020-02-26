@@ -40,7 +40,7 @@ func (win *Window) WalletsPage() {
 								dbtn.Layout(win.gtx, &win.inputs.deleteWallet)
 							}),
 							layout.Rigid(func() {
-								win.theme.Editor("Enter password").Layout(win.gtx, &win.inputs.spendingPassword)
+								win.widgets.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
 							}),
 						)
 					}),

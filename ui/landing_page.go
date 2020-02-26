@@ -28,7 +28,7 @@ func (win *Window) Landing() {
 						win.theme.Button("Restore Wallet").Layout(win.gtx, &win.inputs.restoreWallet)
 					}),
 					layout.Flexed(.1, func() {
-						win.theme.Editor("Enter password").Layout(win.gtx, &win.inputs.spendingPassword)
+						win.widgets.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
 					}),
 				)
 			})

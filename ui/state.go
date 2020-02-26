@@ -45,6 +45,7 @@ func (win *Window) updateStates(update interface{}) {
 		win.current = win.WalletsPage
 		win.states.restored = true
 	case wallet.DeletedWallet:
+		win.selected = 0
 		win.states.deleted = true
 	}
 	win.states.loading = true

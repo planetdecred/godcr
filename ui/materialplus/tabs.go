@@ -6,7 +6,7 @@ import (
 	"gioui.org/widget/material"
 )
 
-// DefaultTabSize is the default flexed size of the tab sectio in a Tabs
+// DefaultTabSize is the default flexed size of the tab section in a Tabs
 const DefaultTabSize = .3
 
 type TabItem struct {

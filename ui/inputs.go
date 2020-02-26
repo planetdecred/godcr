@@ -19,12 +19,19 @@ func (win *Window) HandleInputs() {
 			return
 		}
 	}
-	spEvents := win.inputs.spendingPassword.Events(win.gtx)
-	log.Debug(spEvents)
-
 	pass := win.inputs.spendingPassword.Text()
+	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.widgets.spendingPassword.HintColor = win.theme.Color.Text
+			return
+		}
+		log.Debug(evt)
+	}
+
 	if win.inputs.createWallet.Clicked(win.gtx) {
 		if pass == "" {
+			win.widgets.spendingPassword.HintColor = win.theme.Danger
 			return
 		}
 		win.wallet.CreateWallet(pass)
@@ -36,6 +43,7 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.restoreWallet.Clicked(win.gtx) {
 		if pass == "" {
+			win.widgets.spendingPassword.HintColor = win.theme.Danger
 			return
 		}
 		log.Debug("Restore Wallet clicked")
@@ -43,6 +51,10 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.deleteWallet.Clicked(win.gtx) {
+		if pass == "" {
+			win.widgets.spendingPassword.HintColor = win.theme.Danger
+			return
+		}
 		pass := win.inputs.spendingPassword.Text()
 		win.wallet.DeleteWallet(win.walletInfo.Wallets[win.selected].ID, pass)
 		win.inputs.spendingPassword.SetText("")

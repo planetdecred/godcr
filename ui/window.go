@@ -32,6 +32,8 @@ type Window struct {
 	inputs
 
 	display
+
+	widgets
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -55,8 +57,11 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.states.loading = true
 	win.inputs.tabs = make([]*widget.Button, 0)
 	win.tabs = materialplus.NewTabs()
-	win.current = win.Landing
+	win.current = win.WalletsPage
 	win.dialog = func() {}
+
+	win.widgets.spendingPassword = theme.Editor("Enter password")
+	win.inputs.spendingPassword.SingleLine = true
 	return win, nil
 }
 
