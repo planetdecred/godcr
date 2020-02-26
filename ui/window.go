@@ -53,14 +53,13 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.states.loading = true
 	win.inputs.tabs = make([]*widget.Button, 0)
 	win.tabs = materialplus.NewTabs()
-	win.current = func() {}
+	win.current = win.Landing
 	win.dialog = func() {}
 	return win, nil
 }
 
 // Loop runs main event handling and page rendering loop
 func (win *Window) Loop(shutdown chan int) {
-	win.reload()
 	for {
 		select {
 		case e := <-win.wallet.Send:
@@ -70,7 +69,6 @@ func (win *Window) Loop(shutdown chan int) {
 				break
 			}
 			win.updateStates(e.Resp)
-			win.reload()
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
@@ -85,27 +83,13 @@ func (win *Window) Loop(shutdown chan int) {
 					}
 				}
 				s := win.states
-				current := win.current
+				win.current()
 				if s.dialog {
-					current = func() {
-						layout.Stack{}.Layout(win.gtx,
-							layout.Stacked(win.current),
-							layout.Expanded(func() {
-								win.dialog()
-							}),
-						)
-					}
+					win.dialog()
 				} else if s.loading {
-					current = func() {
-						layout.Stack{}.Layout(win.gtx,
-							layout.Stacked(win.current),
-							layout.Expanded(func() {
-								win.Loading()
-							}),
-						)
-					}
+					win.Loading()
 				}
-				current()
+
 				evt.Frame(win.gtx.Ops)
 				win.HandleInputs()
 			case nil:

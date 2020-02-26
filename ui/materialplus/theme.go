@@ -1,6 +1,7 @@
 package materialplus
 
 import (
+	"gioui.org/layout"
 	"gioui.org/widget/material"
 )
 
@@ -21,9 +22,15 @@ func NewTheme(colors Palette) *Theme {
 		return nil
 	}
 	t.Color.Primary = colors.Primary
-	t.Color.Text = colors.Text
 	return &Theme{
 		Theme:   t,
 		Palette: colors,
 	}
+}
+
+func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
+	Modal{
+		Background: t.Tertiary,
+		Direction:  layout.Center,
+	}.Layout(gtx, w)
 }

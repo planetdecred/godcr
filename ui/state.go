@@ -37,24 +37,16 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.restored = true
 	case wallet.LoadedWallets:
 		win.wallet.GetMultiWalletInfo()
+		if e.Count > 0 {
+			win.current = win.WalletsPage
+		}
 		win.states.loading = true
 	case wallet.DeletedWallet:
 		win.states.loading = false
 		win.states.deleted = true
 	}
 
-}
-
-// reload combines the window's state to determine what widget to layout
-// then invalidates the gioui window.
-func (win *Window) reload() {
-	log.Debugf("Reloaded with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
-	current := win.current
-	if win.walletInfo.LoadedWallets == 0 {
-		current = win.Landing()
-	}
-	win.current = current
-	win.window.Invalidate()
+	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }
 
 // updateSyncStatus updates the sync status in the walletInfo state.

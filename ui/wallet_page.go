@@ -6,8 +6,7 @@ import (
 )
 
 // WalletsPage layouts the main wallet page
-func (win *Window) WalletsPage() layout.Widget {
-	log.Debug("On Wallets")
+func (win *Window) WalletsPage() {
 	tabbed := func() {
 		if win.walletInfo.LoadedWallets == 0 {
 			return
@@ -39,18 +38,16 @@ func (win *Window) WalletsPage() layout.Widget {
 			},
 		)
 	}
-	return func() {
-		toMax(win.gtx)
-		materialplus.Modal{}.Layout(win.gtx, func() {
-			layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-				layout.Flexed(.3, func() {
-					layout.Flex{}.Layout(win.gtx,
-						layout.Flexed(.3, win.Header),
-					)
-				}),
-				layout.Rigid(tabbed),
-			)
-		})
+	toMax(win.gtx)
+	materialplus.Modal{}.Layout(win.gtx, func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+			layout.Flexed(.3, func() {
+				layout.Flex{}.Layout(win.gtx,
+					layout.Flexed(.3, win.Header),
+				)
+			}),
+			layout.Rigid(tabbed),
+		)
+	})
 
-	}
 }

@@ -26,10 +26,9 @@ var (
 )
 
 var decredPalette = materialplus.Palette{
-	Primary:    keyBlue,
-	Secondary:  turquiose,
-	Success:    successGreen,
-	Danger:     dangerRed,
-	Text:       black,
-	Background: darkBlue,
+	Primary:   keyBlue,
+	Secondary: turquiose,
+	Success:   successGreen,
+	Danger:    dangerRed,
+	Tertiary:  darkBlue,
 }
