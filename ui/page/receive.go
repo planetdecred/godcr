@@ -86,19 +86,6 @@ type Receive struct {
 	states         map[string]interface{}
 }
 
-func (pg *Receive) initMoreModalWidgets() {
-	pg.moreModalWidgets = &moreModalWidgets{
-		generateNewAddBtnWdg: new(widget.Button),
-	}
-}
-
-func (pg *Receive) initInfoModalWidgets(theme *materialplus.Theme) {
-	pg.infoModalWidgets = &infoModalWidgets{
-		infoLabel:    theme.Body1(ReceivePageInfo),
-		gotItdBtnWdg: new(widget.Button),
-	}
-}
-
 // Init initializies the page with a label.
 func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states map[string]interface{}) {
 	pg.theme = theme
@@ -163,8 +150,14 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.accountModalLine = pg.theme.Line()
 	pg.accountModalLine.Width = 297
 
-	pg.initMoreModalWidgets()
-	pg.initInfoModalWidgets(theme)
+	pg.moreModalWidgets = &moreModalWidgets{
+		generateNewAddBtnWdg: new(widget.Button),
+	}
+
+	pg.infoModalWidgets = &infoModalWidgets{
+		infoLabel:    pg.theme.Body1(ReceivePageInfo),
+		gotItdBtnWdg: new(widget.Button),
+	}
 }
 
 // Draw renders the page materialplus.
