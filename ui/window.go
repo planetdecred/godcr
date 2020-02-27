@@ -91,6 +91,9 @@ func (win *Window) Loop(shutdown chan int) {
 				win.updateSyncStatus(false, true)
 			case wallet.SyncStarted:
 				win.updateSyncStatus(true, false)
+			case wallet.SyncCanceled:
+				win.outputs.sync = win.outputs.icons.sync
+				win.updateSyncStatus(false, false)
 			}
 
 		case e := <-win.window.Events():

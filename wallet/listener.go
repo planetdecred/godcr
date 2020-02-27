@@ -9,6 +9,7 @@ type SyncProgressStage int
 const (
 	SyncStarted SyncProgressStage = iota
 
+	SyncCanceled
 	SyncCompleted
 )
 
@@ -93,6 +94,9 @@ func (l *listener) OnSyncCompleted() {
 }
 
 func (l *listener) OnSyncCanceled(willRestart bool) {
+	l.Send <- SyncStatusUpdate{
+		Stage: SyncCanceled,
+	}
 	// l.Send <- SyncCanceled{
 	// 	WillRestart: willRestart,
 	// }
