@@ -12,7 +12,7 @@ var (
 	// White is the RGBA value for white color
 	White = color.RGBA{255, 255, 255, 255}
 
-	// walletSyncBoxGray is the background color of wallet sync boxes.
+	// DefaultCardGray is the background color of the card widget.
 	DefaultCardGray = color.RGBA{243, 245, 246, 255}
 
 	// Transparent is the RGBA value for no color

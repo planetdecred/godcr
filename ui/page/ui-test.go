@@ -2,6 +2,7 @@ package page
 
 import (
 	"fmt"
+
 	"github.com/raedahgroup/godcr-gio/ui/units"
 	"github.com/raedahgroup/godcr-gio/ui/values"
 
@@ -33,7 +34,7 @@ type UITest struct {
 	loadMainUIButtonMaterial material.Button
 	progressBar              *materialplus.ProgressBar
 	states                   map[string]interface{}
-	card  					 materialplus.Card
+	card                     materialplus.Card
 }
 
 // Init initializes all available custom widgets
