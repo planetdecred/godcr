@@ -49,9 +49,10 @@ type InfoShort struct {
 
 // Account represents information about a wallet's account
 type Account struct {
-	Number       string
-	Name         string
-	TotalBalance string
+	Number         string
+	Name           string
+	TotalBalance   string
+	CurrentAddress string
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets

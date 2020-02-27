@@ -180,13 +180,19 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			var acctBalance int64
 			accts := make([]Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
+				addr, er := wall.CurrentAddress(acct.Number)
+				if er != nil {
+					log.Error("Could not get current address for wallet ", id, "account", acct.Number)
+				}
 				accts = append(accts, Account{
-					Name:         acct.Name,
-					TotalBalance: dcrutil.Amount(acct.TotalBalance).String(),
+					Name:           acct.Name,
+					TotalBalance:   dcrutil.Amount(acct.TotalBalance).String(),
+					CurrentAddress: addr,
 				})
 				acctBalance += acct.TotalBalance
 			}
 			completeTotal += acctBalance
+
 			infos[i] = InfoShort{
 				ID:              wall.ID,
 				Name:            wall.Name,
