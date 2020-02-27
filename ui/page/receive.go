@@ -38,14 +38,6 @@ type moreModalWidgets struct {
 	generateNewAddBtnWdg *widget.Button
 }
 
-type accountSelectionModal struct {
-	titleLabel            material.Label
-	walletNameLabel       material.Label
-	clickBtnWdg           *widget.Button
-	minimizeBtnWdg        *widget.Button
-	spendableBalanceLAbel material.Label
-}
-
 // Receive represents the receiving page of the app.
 type Receive struct {
 	wallet  *wallet.Wallet
@@ -66,10 +58,8 @@ type Receive struct {
 	dropDownBtnWdg *widget.Button
 	minimizeBtnWdg *widget.Button
 
-	infoModalWidgets      *infoModalWidgets
-	moreModalWidgets      *moreModalWidgets
-	walletInfo            *wallet.MultiWalletInfo
-	accountSelectionModal *accountSelectionModal
+	infoModalWidgets *infoModalWidgets
+	moreModalWidgets *moreModalWidgets
 
 	isGenerateNewAddBtnModal bool
 	isInfoBtnModal           bool
@@ -96,7 +86,7 @@ type Receive struct {
 	states         map[string]interface{}
 }
 
-func (pg *Receive) initMoreModalWidgets(theme *materialplus.Theme) {
+func (pg *Receive) initMoreModalWidgets() {
 	pg.moreModalWidgets = &moreModalWidgets{
 		generateNewAddBtnWdg: new(widget.Button),
 	}
@@ -173,7 +163,7 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.accountModalLine = pg.theme.Line()
 	pg.accountModalLine.Width = 297
 
-	pg.initMoreModalWidgets(theme)
+	pg.initMoreModalWidgets()
 	pg.initInfoModalWidgets(theme)
 }
 
