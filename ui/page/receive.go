@@ -15,7 +15,6 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui"
-	"github.com/raedahgroup/godcr-gio/ui/helper"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 	"github.com/raedahgroup/godcr-gio/wallet"
 	"github.com/skip2/go-qrcode"
@@ -90,30 +89,7 @@ type Receive struct {
 
 	accountSelectorButtons map[string]*widget.Button
 
-	infoModalWidgets      *infoModalWidgets
-	moreModalWidgets      *moreModalWidgets
-	walletInfo            *wallet.MultiWalletInfo
-	accountSelectionModal *accountSelectionModal
-
-	isGenerateNewAddBtnModal bool
-	isInfoBtnModal           bool
-	isAccountModalOpen       bool
-
-	selectedWallet  *wallet.InfoShort
-	selectedAccount *wallet.Account
-
-	pageTitleLabel              material.Label
-	selectedAccountNameLabel    material.Label
-	selectedWalletLabel         material.Label
-	selectedAccountBalanceLabel material.Label
-	receiveAddressLabel         material.Label
-	accountModalTitleLabel      material.Label
-
-	accountModalLine *materialplus.Line
-
-	accountSelectorButtons map[string]*widget.Button
-
-	theme          *materialplus.Theme
+	theme *materialplus.Theme
 
 	listContainer  layout.List
 	receiveAddress string
@@ -150,10 +126,6 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.selectedAccountBalanceLabel = pg.theme.Body2("")
 	pg.receiveAddressLabel = pg.theme.H6("")
 	pg.receiveAddressLabel.Color = color.RGBA{44, 114, 255, 255}
-
-	pg.accountName = ""
-	pg.walletName = ""
-	pg.accountBalance = ""
 
 	pg.copyBtnWdg = new(widget.Button)
 	pg.copyBtn = theme.IconButton(materialplus.ContentCopyIcon)
@@ -472,14 +444,6 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 							pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
 						})
 					}),
-					layout.Rigid(func() {
-						layout.Inset{Left: unit.Dp(15)}.Layout(gtx, func() {
-							if pg.dropDownBtnWdg.Clicked(gtx) {
-								pg.isAccountModalOpen = true
-							}
-							pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
-						})
-					}),
 				)
 			})
 		}),
@@ -578,7 +542,7 @@ func (pg *Receive) accountSelectedModal(gtx *layout.Context) {
 		layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Stacked(func() {
 				layout.Inset{}.Layout(gtx, func() {
-					helper.PaintArea(gtx, ui.LightGrayColor, 230, 210)
+					materialplus.PaintArea(gtx, ui.LightGrayColor, 230, 210)
 					list := layout.List{Axis: layout.Vertical}
 					list.Layout(gtx, len(modalWidgetFuncs), func(i int) {
 						layout.UniformInset(unit.Dp(0)).Layout(gtx, modalWidgetFuncs[i])
