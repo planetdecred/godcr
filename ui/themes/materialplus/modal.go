@@ -18,22 +18,18 @@ func (t *Theme) ModalPopUp(gtx *layout.Context, WindowHeight, WindowWidth int, r
 	overlayColor := ui.BlackColor
 	overlayColor.A = 200
 
-	helper.PaintArea(gtx, overlayColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
+	PaintArea(gtx, overlayColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
 
-	layout.Stack{}.Layout(gtx,
+	layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func() {
 			gtx.Constraints.Height.Min = (heightPercentage / 100) * gtx.Constraints.Height.Max
 		}),
 		layout.Stacked(func() {
-			inset := layout.Inset{
-				Top: unit.Dp(50),
-			}
-			inset.Layout(gtx, func() {
-				Fill(gtx, ui.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
+			layout.Inset{}.Layout(gtx, func() {
+				Fill(gtx, ui.WhiteColor, WindowHeight, WindowWidth)
 				inset := layout.Inset{
-					Top:   unit.Dp(7),
-					Left:  unit.Dp(25),
-					Right: unit.Dp(25),
+					Top:  unit.Dp(7),
+					Left: unit.Dp(7),
 				}
 				inset.Layout(gtx, renderFunc)
 			})
@@ -45,7 +41,7 @@ func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 	overlayColor := ui.BlackColor
 	overlayColor.A = 200
 
-	helper.PaintArea(gtx, overlayColor, gtx.Constraints.Width.Max, helper.WindowHeight)
+	PaintArea(gtx, overlayColor, gtx.Constraints.Width.Max, WindowHeight)
 
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
@@ -56,7 +52,7 @@ func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 				Top: unit.Dp(50),
 			}
 			inset.Layout(gtx, func() {
-				helper.PaintArea(gtx, ui.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
+				PaintArea(gtx, ui.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
 				inset := layout.Inset{
 					Top:   unit.Dp(7),
 					Left:  unit.Dp(25),

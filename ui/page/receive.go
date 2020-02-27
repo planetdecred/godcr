@@ -60,6 +60,7 @@ type Receive struct {
 	infoModalWidgets *infoModalWidgets
 	moreModalWidgets *moreModalWidgets
 
+
 	isGenerateNewAddBtnModal bool
 	isInfoBtnModal           bool
 	isAccountModalOpen       bool
@@ -107,10 +108,6 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.errorLabel.Color = ui.DangerColor
 	pg.addressCopiedLabel = theme.Caption("")
 	pg.addressCopiedLabel.Color = ui.LightBlueColor
-
-	pg.accountName = ""
-	pg.walletName = ""
-	pg.accountBalance = ""
 
 	pg.copyBtnWdg = new(widget.Button)
 	pg.copyBtn = theme.IconButton(materialplus.ContentCopyIcon)
@@ -450,14 +447,6 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 									pg.isInfoBtnModal = false
 									pg.isGenerateNewAddBtnModal = false
 								}
-							}
-							pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
-						})
-					}),
-					layout.Rigid(func() {
-						layout.Inset{Left: unit.Dp(15)}.Layout(gtx, func() {
-							if pg.dropDownBtnWdg.Clicked(gtx) {
-								pg.isAccountModalOpen = true
 							}
 							pg.dropDownBtn.Layout(gtx, pg.dropDownBtnWdg)
 						})
