@@ -15,7 +15,7 @@ var (
 	// DefaultCardGray is the background color of the card widget.
 	DefaultCardGray = color.RGBA{243, 245, 246, 255}
 
-	// Transparent is the RGBA value for no color
+	// ButtonGray is the RGBA value for no color
 	ButtonGray = color.RGBA{196, 203, 210, 255}
 
 	// TextGray is the RGBA value for light texts on the app
