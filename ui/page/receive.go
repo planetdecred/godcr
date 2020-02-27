@@ -60,7 +60,6 @@ type Receive struct {
 	infoModalWidgets *infoModalWidgets
 	moreModalWidgets *moreModalWidgets
 
-
 	isGenerateNewAddBtnModal bool
 	isInfoBtnModal           bool
 	isAccountModalOpen       bool
