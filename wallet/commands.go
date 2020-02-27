@@ -167,10 +167,6 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			return
 		}
 
-		sort.SliceStable(wallets, func(i, j int) bool {
-			return wallets[i].ID < wallets[j].ID
-		})
-
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		i := 0

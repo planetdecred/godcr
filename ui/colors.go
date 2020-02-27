@@ -13,7 +13,7 @@ var (
 	lightGray = color.RGBA{200, 200, 200, 205}
 
 	dangerRed    = color.RGBA{215, 58, 73, 255}
-	successGreen = color.RGBA{227, 98, 9, 255}
+	successGreen = color.RGBA{9, 227, 98, 255}
 
 	lightBlue = color.RGBA{41, 112, 255, 255}
 

@@ -83,6 +83,16 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 			log.Debugf("Updating with %+v", e.Resp)
 			win.updateStates(e.Resp)
+
+		case update := <-win.wallet.Sync:
+			switch update.Stage {
+			case wallet.SyncCompleted:
+				win.outputs.sync = win.outputs.icons.check
+				win.updateSyncStatus(false, true)
+			case wallet.SyncStarted:
+				win.updateSyncStatus(true, false)
+			}
+
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
@@ -105,8 +115,9 @@ func (win *Window) Loop(shutdown chan int) {
 					win.dialog()
 				}
 
-				evt.Frame(win.gtx.Ops)
 				win.HandleInputs()
+				evt.Frame(win.gtx.Ops)
+
 			case nil:
 				// Ignore
 			default:

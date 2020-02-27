@@ -39,12 +39,21 @@ func (win *Window) TabbedPage(body layout.Widget) {
 // Header lays out the window header
 func (win *Window) Header() {
 	toMax(win.gtx)
-	layout.Flex{}.Layout(win.gtx,
+	layout.Flex{
+		Alignment: layout.Middle,
+	}.Layout(win.gtx,
 		layout.Flexed(0.4, func() {
 			win.theme.H3("GoDcr").Layout(win.gtx)
 		}),
-		layout.Rigid(func() {
-			win.outputs.createDiag.Layout(win.gtx, &win.inputs.createDiag)
+		layout.Flexed(0.2, func() {
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.createDiag.Layout(win.gtx, &win.inputs.createDiag)
+			})
+		}),
+		layout.Flexed(0.4, func() {
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.sync.Layout(win.gtx, &win.inputs.sync)
+			})
 		}),
 	)
 }
@@ -53,10 +62,14 @@ func (win *Window) NavBar() {
 	toMax(win.gtx)
 	layout.Flex{Spacing: layout.SpaceEvenly, Alignment: layout.Middle}.Layout(win.gtx,
 		layout.Rigid(func() {
-			win.outputs.toWallets.Layout(win.gtx, &win.inputs.toWallets)
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.toOverview.Layout(win.gtx, &win.inputs.toOverview)
+			})
 		}),
 		layout.Rigid(func() {
-			win.outputs.toOverview.Layout(win.gtx, &win.inputs.toOverview)
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.toWallets.Layout(win.gtx, &win.inputs.toWallets)
+			})
 		}),
 	)
 }

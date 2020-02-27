@@ -11,26 +11,13 @@ type states struct {
 	deleted  bool // true if a wallet has been deleted
 	restored bool // true if a wallet has been restored
 	created  bool // true if a wallet has been created
-	synced   bool // true if the mutiwallet is synced
-	syncing  bool // true if the multiwallet is syncing
 
 }
 
 // updateStates changes the wallet state based on the received update
 func (win *Window) updateStates(update interface{}) {
-	log.Debugf("Received update %+v", update)
-
+	log.Infof("Received update %+v", update)
 	switch e := update.(type) {
-	case wallet.SyncCompleted, wallet.SyncCanceled, wallet.SyncStarted:
-		switch e.(type) {
-		case wallet.SyncStarted:
-			win.updateSyncStatus(true, false)
-		case wallet.SyncCanceled:
-			win.updateSyncStatus(false, false)
-		case wallet.SyncCompleted:
-			win.updateSyncStatus(false, true)
-		}
-		return
 	case wallet.MultiWalletInfo:
 		*win.walletInfo = e
 		win.states.loading = false
@@ -55,6 +42,4 @@ func (win *Window) updateStates(update interface{}) {
 func (win Window) updateSyncStatus(syncing, synced bool) {
 	win.walletInfo.Syncing = syncing
 	win.walletInfo.Synced = synced
-	win.states.synced = synced
-	win.states.syncing = syncing
 }

@@ -15,10 +15,20 @@ func (win *Window) HandleInputs() {
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
-			win.outputs.spendingPassword.HintColor = win.theme.Color.InvText
+			win.outputs.spendingPassword.HintColor = win.theme.Color.Hint
 			return
 		}
-		log.Debug(evt)
+		log.Debug("Pass evt", evt)
+	}
+
+	for _, evt := range win.inputs.matchSpending.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.outputs.matchSpending.Color = win.theme.Color.Text
+			win.outputs.matchSpending.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("Match evt", evt)
 	}
 
 	// CREATE WALLET
@@ -72,12 +82,29 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	// NAVIGATION
+
 	if win.inputs.toWallets.Clicked(win.gtx) {
 		win.current = win.WalletsPage
+		return
 	}
 
 	if win.inputs.toOverview.Clicked(win.gtx) {
 		win.current = win.Overview
+		return
+	}
+
+	// SYNC
+
+	if win.inputs.sync.Clicked(win.gtx) {
+		//log.Info("Sync clicked :", win.walletInfo.Synced, win.walletInfo.Syncing)
+		if win.walletInfo.Syncing {
+			win.wallet.CancelSync()
+		} else if !win.walletInfo.Synced {
+			win.wallet.StartSync()
+			cancel := win.outputs.icons.cancel
+			win.outputs.sync = cancel
+		}
 	}
 
 	if win.inputs.cancelDialog.Clicked(win.gtx) {
@@ -102,8 +129,7 @@ func (win *Window) validatePasswords() string {
 	}
 
 	if match != pass {
-		win.outputs.matchSpending.HintColor = win.theme.Danger
-		win.inputs.matchSpending.SetText("")
+		win.outputs.matchSpending.Color = win.theme.Danger
 		return ""
 	}
 
@@ -114,7 +140,6 @@ func (win *Window) validatePassword() string {
 	pass := win.inputs.spendingPassword.Text()
 	if pass == "" {
 		win.outputs.spendingPassword.HintColor = win.theme.Danger
-
 	}
 	return pass
 }

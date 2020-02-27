@@ -22,7 +22,6 @@ func NewTheme(colors Palette) *Theme {
 		return nil
 	}
 	t.Color.Primary = colors.Primary
-	t.Color.Text = t.Color.InvText
 	return &Theme{
 		Theme:   t,
 		Palette: colors,

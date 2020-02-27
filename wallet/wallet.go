@@ -13,8 +13,10 @@ const syncID = "godcr"
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi     *dcrlibwallet.MultiWallet
+	info      MultiWalletInfo
 	root, net string
 	Send      chan Response
+	Sync      chan SyncStatusUpdate
 	confirms  int32
 }
 
@@ -27,6 +29,7 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 	wal := &Wallet{
 		root:     root,
 		net:      net,
+		Sync:     make(chan SyncStatusUpdate, 2),
 		Send:     send,
 		confirms: confirms,
 	}
@@ -39,30 +42,32 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 // startup passphrase was set.
 // It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) LoadWallets() {
-	go func(send chan<- Response, wal *Wallet) {
-		var resp Response
+	go func() {
+		resp := Response{
+			Resp: LoadedWallets{},
+		}
 		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.net)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
 		wal.multi = multiWal
 		l := &listener{
-			Send: wal.Send,
+			Send: wal.Sync,
 		}
 		err = wal.multi.AddSyncProgressListener(l, syncID)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
 		err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
@@ -71,7 +76,7 @@ func (wal *Wallet) LoadWallets() {
 			err = wal.multi.OpenWallets(nil)
 			if err != nil {
 				resp.Err = err
-				send <- resp
+				wal.Send <- resp
 				return
 			}
 		}
@@ -80,8 +85,8 @@ func (wal *Wallet) LoadWallets() {
 			Count:              wal.multi.LoadedWalletsCount(),
 			StartUpSecuritySet: startupPassSet,
 		}
-		send <- resp
-	}(wal.Send, wal)
+		wal.Send <- resp
+	}()
 }
 
 // wallets returns an up-to-date map of all opened wallets

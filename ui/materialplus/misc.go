@@ -9,8 +9,7 @@ import (
 	"gioui.org/op/paint"
 )
 
-// fillWithColor paints a colored rectangle on the Context's max contraints.
-// Restores the dimensions after painting.
+// fillWithColor paints a colored rectangle with gtx min contraints
 func fillWithColor(gtx *layout.Context, col color.RGBA) {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
@@ -36,4 +35,9 @@ func RGB(c uint32) color.RGBA {
 // ARGB converts a 32 bit color to color.RGBA with bits 0xAARRGGBB
 func ARGB(c uint32) color.RGBA {
 	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
+}
+
+func toMax(gtx *layout.Context) {
+	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
 }
