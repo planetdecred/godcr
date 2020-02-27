@@ -2,7 +2,6 @@ package helper
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -86,34 +85,7 @@ func WalletSyncProgressTime(timestamp int64) string {
 
 // LastBlockSync returns how long ago the current block was attached
 func LastBlockSync(timestamp int64) string {
-	return truncateTime(time.Since(time.Unix(timestamp, 0)).String(), 0)
-}
-
-// truncateTime takes a time duration in string and chops off decimal places in the string
-// by the specified number of places.
-func truncateTime(duration string, place int) string {
-	var durationCharacter string
-	durationSlice := strings.Split(duration, ".")
-	if len(durationSlice) == 1 {
-		return duration
-	}
-
-	secondsDecimals := durationSlice[1]
-	if place > len(secondsDecimals) {
-		return duration
-	}
-
-	secondLastCharacter := secondsDecimals[len(secondsDecimals)-2 : len(secondsDecimals)-1]
-	_, err := strconv.Atoi(secondLastCharacter)
-	if err != nil {
-		durationCharacter = secondsDecimals[len(secondsDecimals)-2:]
-	} else {
-		durationCharacter = secondsDecimals[len(secondsDecimals)-1:]
-	}
-	if place == 0 {
-		return durationSlice[0] + durationCharacter
-	}
-	return durationSlice[0] + "." + secondsDecimals[0:place] + durationCharacter
+	return time.Since(time.Unix(timestamp, 0)).Truncate(time.Minute).String()
 }
 
 // WalletNameFromID gets the id of a wallet by using its name
