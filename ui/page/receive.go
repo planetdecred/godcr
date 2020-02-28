@@ -1,9 +1,8 @@
 package page
 
 import (
-	"fmt"
 	"image"
-	"image/color"
+	"time"
 
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
@@ -74,6 +73,8 @@ type Receive struct {
 	selectedAccountBalanceLabel material.Label
 	receiveAddressLabel         material.Label
 	accountModalTitleLabel      material.Label
+	errorLabel                  material.Label
+	addressCopiedLabel          material.Label
 
 	accountModalLine *materialplus.Line
 
@@ -102,7 +103,11 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.selectedWalletLabel = pg.theme.Caption("")
 	pg.selectedAccountBalanceLabel = pg.theme.Body2("")
 	pg.receiveAddressLabel = pg.theme.H6("")
-	pg.receiveAddressLabel.Color = color.RGBA{44, 114, 255, 255}
+	pg.receiveAddressLabel.Color = ui.LightBlueColor
+	pg.errorLabel = theme.Body1("")
+	pg.errorLabel.Color = ui.DangerColor
+	pg.addressCopiedLabel = theme.Caption("")
+	pg.addressCopiedLabel.Color = ui.LightBlueColor
 
 	pg.copyBtnWdg = new(widget.Button)
 	pg.copyBtn = theme.IconButton(materialplus.ContentCopyIcon)
@@ -148,7 +153,7 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.listContainer = layout.List{Axis: layout.Vertical}
 
 	pg.accountModalLine = pg.theme.Line()
-	pg.accountModalLine.Width = 297
+	pg.accountModalLine.Width = 230
 
 	pg.moreModalWidgets = &moreModalWidgets{
 		generateNewAddBtnWdg: new(widget.Button),
@@ -163,6 +168,7 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 // Draw renders the page materialplus.
 // It does not react to nor does it generate any event.
 func (pg *Receive) Draw(gtx *layout.Context) (res interface{}) {
+	pg.checkForStatesUpdate()
 	if pg.wallets == nil {
 		pg.waitAndSetWalletInfo()
 	}
@@ -183,11 +189,25 @@ func (pg *Receive) ReceivePageContents(gtx *layout.Context) {
 		},
 		func() {
 			layout.Align(layout.Center).Layout(gtx, func() {
+				if pg.errorLabel.Text != "" {
+					pg.errorLabel.Layout(gtx)
+				}
+			})
+		},
+		func() {
+			layout.Align(layout.Center).Layout(gtx, func() {
 				pg.selectedAccountLabel(gtx)
 			})
 		},
 		func() {
 			pg.generateAddressQrCode(gtx)
+		},
+		func() {
+			layout.Align(layout.Center).Layout(gtx, func() {
+				if pg.addressCopiedLabel.Text != "" {
+					pg.addressCopiedLabel.Layout(gtx)
+				}
+			})
 		},
 	}
 
@@ -228,12 +248,42 @@ func (pg *Receive) setDefaultAccount(wallets []wallet.InfoShort) {
 	}
 }
 
+func (pg *Receive) pageFirstColumn(gtx *layout.Context) {
+	layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func() {
+			pg.pageTitleLabel.Layout(gtx)
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func() {
+				layout.Flex{}.Layout(gtx,
+					layout.Rigid(func() {
+						if pg.infoBtnWdg.Clicked(gtx) {
+							pg.isInfoBtnModal = true
+							pg.isGenerateNewAddBtnModal = false
+							pg.isAccountModalOpen = false
+						}
+						pg.infoBtn.Layout(gtx, pg.infoBtnWdg)
+					}),
+					layout.Rigid(func() {
+						if pg.moreBtnWdg.Clicked(gtx) {
+							pg.isGenerateNewAddBtnModal = true
+							pg.isInfoBtnModal = false
+							pg.isAccountModalOpen = false
+						}
+						pg.moreBtn.Layout(gtx, pg.moreBtnWdg)
+					}),
+				)
+			})
+		}),
+	)
+}
+
 func (pg *Receive) generateAddressQrCode(gtx *layout.Context) {
 	qrCode, err := qrcode.New(pg.receiveAddress, qrcode.Highest)
 	if err != nil {
-		fmt.Println(err.Error())
 		return
 	}
+
 	qrCode.DisableBorder = true
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
@@ -262,38 +312,12 @@ func (pg *Receive) receiveAddressSection(gtx *layout.Context) {
 			layout.Inset{Left: unit.Dp(16)}.Layout(gtx, func() {
 				if pg.copyBtnWdg.Clicked(gtx) {
 					clipboard.WriteAll(pg.receiveAddress)
+					pg.addressCopiedLabel.Text = "Address Copied"
+					time.AfterFunc(time.Second*1, func() {
+						pg.addressCopiedLabel.Text = ""
+					})
 				}
 				pg.copyBtn.Layout(gtx, pg.copyBtnWdg)
-			})
-		}),
-	)
-}
-
-func (pg *Receive) pageFirstColumn(gtx *layout.Context) {
-	layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func() {
-			pg.pageTitleLabel.Layout(gtx)
-		}),
-		layout.Rigid(func() {
-			layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func() {
-				layout.Flex{}.Layout(gtx,
-					layout.Rigid(func() {
-						if pg.infoBtnWdg.Clicked(gtx) {
-							pg.isInfoBtnModal = true
-							pg.isGenerateNewAddBtnModal = false
-							pg.isAccountModalOpen = false
-						}
-						pg.infoBtn.Layout(gtx, pg.infoBtnWdg)
-					}),
-					layout.Rigid(func() {
-						if pg.moreBtnWdg.Clicked(gtx) {
-							pg.isGenerateNewAddBtnModal = true
-							pg.isInfoBtnModal = false
-							pg.isAccountModalOpen = false
-						}
-						pg.moreBtn.Layout(gtx, pg.moreBtnWdg)
-					}),
-				)
 			})
 		}),
 	)
@@ -551,13 +575,28 @@ func (pg *Receive) setSelectedAccount(wallet wallet.InfoShort, account wallet.Ac
 	if generateNew {
 		addr, err = pg.wallet.NextAddress(wallet.ID, account.Number)
 		if err != nil {
-			fmt.Println(err.Error())
+			pg.errorLabel.Text = err.Error()
+			return
 		}
 	} else {
 		addr, err = pg.wallet.CurrentAddress(wallet.ID, account.Number)
 		if err != nil {
-			fmt.Println(err.Error())
+			pg.errorLabel.Text = err.Error()
+			return
 		}
 	}
 	pg.receiveAddress = addr
+}
+
+func (pg *Receive) checkForStatesUpdate() {
+	err := pg.states[StateError]
+	if err == nil {
+		return
+	}
+
+	if err != nil {
+		pg.errorLabel.Text = err.(error).Error()
+		delete(pg.states, StateError)
+		return
+	}
 }
