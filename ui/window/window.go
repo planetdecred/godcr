@@ -44,6 +44,7 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win.states = make(map[string]interface{})
 	pages[page.LandingID] = new(page.Landing)
 	pages[page.LoadingID] = new(page.Loading)
+	pages[page.OverviewID] = new(page.Overview)
 	pages[page.WalletsID] = new(page.Wallets)
 	pages[page.UITestID] = new(page.UITest)
 
@@ -79,10 +80,11 @@ func (win *Window) Loop(shutdown chan int) {
 			switch evt := e.Resp.(type) {
 			case *wallet.LoadedWallets:
 				win.wallet.GetMultiWalletInfo()
+				win.wallet.GetAllTransactions(0, 10, 0)
 				if evt.Count == 0 {
 					win.current = page.LandingID
 				} else {
-					win.current = page.WalletsID
+					win.current = page.OverviewID
 				}
 			case *wallet.MultiWalletInfo:
 				*win.walletInfo = *evt
@@ -111,7 +113,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case nil:
 				// Ignore
 			default:
-				log.Tracef("Unhandled window event %+v\n", e)
+				//fmt.Printf("Unhandled window event %+v\n", e)
 			}
 		}
 	}
@@ -120,21 +122,100 @@ func (win *Window) Loop(shutdown chan int) {
 // updateState checks for the event type that is passed as an argument and updates its
 // respective state.
 func (win *Window) updateState(t interface{}) {
-	switch t.(type) {
+	switch t := t.(type) {
 	case wallet.SyncStarted:
 		win.updateSyncStatus(true, false)
 	case wallet.SyncCanceled:
 		win.updateSyncStatus(false, false)
 	case wallet.SyncCompleted:
 		win.updateSyncStatus(false, true)
+	case wallet.SyncHeadersFetchProgress:
+		win.updateHeaderFetchProgress(t)
+	case wallet.SyncPeersChanged:
+		win.updateConnectedPeers(t)
+	case wallet.SyncHeadersRescanProgress:
+		win.updateRescanHeaderProgress(t)
+	case wallet.SyncAddressDiscoveryProgress:
+		win.updateAddressDiscoveryProgress(t)
+	case *wallet.Transactions:
+		win.updateTransactions(t)
 	case *wallet.CreatedSeed:
 		win.wallet.GetMultiWalletInfo()
 		win.states[page.StateWalletCreated] = t
 	}
 }
 
+// stateObject fetches and returns the state if it already exists in the state map.
+// Otherwise, it creates a new state object and returns a pointer of that state.
+func (win Window) stateObject(key string) interface{} {
+	if state, ok := win.states[key]; ok {
+		return state
+	}
+	switch key {
+	case page.StateSyncStatus:
+		win.states[key] = new(wallet.SyncStatus)
+		return win.states[key]
+	case page.StateTransactions:
+		win.states[key] = new(wallet.Transactions)
+		return win.states[key]
+	}
+	return nil
+}
+
 // updateSyncStatus updates the sync status in the walletInfo state.
 func (win Window) updateSyncStatus(syncing, synced bool) {
 	win.walletInfo.Syncing = syncing
 	win.walletInfo.Synced = synced
+}
+
+// updateSyncProgress updates the headers fetched in the SyncStatus state
+func (win Window) updateHeaderFetchProgress(resp wallet.SyncHeadersFetchProgress) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.HeadersFetchProgress = resp.Progress.HeadersFetchProgress
+	syncState.HeadersToFetch = resp.Progress.TotalHeadersToFetch
+	syncState.Progress = resp.Progress.TotalSyncProgress
+	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
+	syncState.TotalSteps = wallet.TotalSyncSteps
+	syncState.Steps = wallet.FetchHeadersStep
+	syncState.CurrentBlockHeight = resp.Progress.CurrentHeaderHeight
+	// update wallet state when new headers are fetched
+	win.wallet.GetMultiWalletInfo()
+}
+
+// updateSyncProgress updates rescan Header Progress in the SyncStatus state
+func (win Window) updateRescanHeaderProgress(resp wallet.SyncHeadersRescanProgress) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.RescanHeadersProgress = resp.Progress.RescanProgress
+	syncState.Progress = resp.Progress.TotalSyncProgress
+	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
+	syncState.TotalSteps = wallet.TotalSyncSteps
+	syncState.Steps = wallet.RescanHeadersStep
+}
+
+// updateSyncProgress updates Address Discovery Progress in the SyncStatus state
+func (win Window) updateAddressDiscoveryProgress(resp wallet.SyncAddressDiscoveryProgress) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.RescanHeadersProgress = resp.Progress.AddressDiscoveryProgress
+	syncState.Progress = resp.Progress.TotalSyncProgress
+	syncState.RemainingTime = resp.Progress.TotalTimeRemainingSeconds
+	syncState.TotalSteps = wallet.TotalSyncSteps
+	syncState.Steps = wallet.AddressDiscoveryStep
+}
+
+// updateConnectedPeers updates connected peers in the SyncStatus state
+func (win Window) updateConnectedPeers(resp wallet.SyncPeersChanged) {
+	state := win.stateObject(page.StateSyncStatus)
+	syncState := state.(*wallet.SyncStatus)
+	syncState.ConnectedPeers = resp.ConnectedPeers
+}
+
+// updateTransactionState updates the transactions state.
+func (win Window) updateTransactions(resp *wallet.Transactions) {
+	state := win.stateObject(page.StateTransactions)
+	txState := state.(*wallet.Transactions)
+	txState.Recent = resp.Recent
+	txState.Txs = resp.Txs
 }

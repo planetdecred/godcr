@@ -4,6 +4,17 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
+const (
+	// FetchHeadersStep is the first step when a wallet is syncing.
+	FetchHeadersStep = 1
+	// AddressDiscoveryStep is the third step when a wallet is syncing.
+	AddressDiscoveryStep = 2
+	// RescanHeadersStep is the second step when a wallet is syncing.
+	RescanHeadersStep = 3
+	// TotalSyncSteps is the total number of steps to complete a sync process
+	TotalSyncSteps = 3
+)
+
 type listener struct {
 	Send chan<- Response
 }
