@@ -36,7 +36,8 @@ type Overview struct {
 	onlineStatus        material.Label
 	syncButton          material.Button
 	moreButton          material.Button
-	card                materialplus.Card
+	syncButtonCard      materialplus.Card
+	moreButtonCard      materialplus.Card
 	progressPercentage  material.Label
 	timeLeft            material.Label
 	syncSteps           material.Label
@@ -124,7 +125,8 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 	page.walletSyncCard = theme.Card()
 	page.transactionColumnTitle = theme.Caption("Recent Transactions")
 	page.noTransaction = theme.Caption("no transactions")
-	page.card = theme.Card()
+	page.moreButtonCard = theme.Card()
+	page.syncButtonCard = theme.Card()
 	page.latestBlockTitle = theme.Body1("Latest Block")
 	page.latestBlock = theme.Body1("")
 
@@ -186,14 +188,20 @@ func (page *Overview) updateBalance() {
 // updateSyncStatus updates the general sync status displayed on the page
 func (page *Overview) updateSyncStatus() {
 	if page.walletInfo.Synced {
+		page.syncButton.Color = values.ProgressBarGreen
+		page.syncButtonCard.Color = values.ProgressBarGreen
 		page.syncButton.Text = "Disconnect"
 		page.syncStatus.Text = "Synced"
 		page.onlineStatus.Text = "Online"
 	} else if page.walletInfo.Syncing {
+		page.syncButton.Color = values.ButtonRed
+		page.syncButtonCard.Color = values.ButtonRed
 		page.syncButton.Text = "Cancel"
 		page.syncStatus.Text = "Syncing..."
 		page.onlineStatus.Text = "Online"
 	} else {
+		page.syncButtonCard.Color = values.ButtonGray
+		page.syncButton.Color = values.ButtonGray
 		page.syncStatus.Text = "Not synced"
 		page.syncButton.Text = "Reconnect"
 		page.onlineStatus.Text = "Offline"
@@ -341,10 +349,10 @@ func (page *Overview) recentTransactionsColumn(gtx *layout.Context) {
 						layout.Inset{Top: units.Padding}.Layout(gtx, func() {
 							layout.Stack{}.Layout(gtx,
 								layout.Stacked(func() {
-									page.card.Color = values.ButtonGray
-									page.card.Width = values.MoreButtonWidth
-									page.card.Height = values.MoreButtonHeight
-									page.card.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+									page.moreButtonCard.Color = values.ButtonGray
+									page.moreButtonCard.Width = values.MoreButtonWidth
+									page.moreButtonCard.Height = values.MoreButtonHeight
+									page.moreButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 								}),
 								layout.Expanded(func() {
 									layout.Align(layout.Center).Layout(gtx, func() {
@@ -480,16 +488,14 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 				layout.Align(layout.E).Layout(gtx, func() {
 					layout.Stack{}.Layout(gtx,
 						layout.Stacked(func() {
-							page.card.Color = values.ButtonGray
-							page.card.Width = values.SyncButtonWidth
-							page.card.Height = values.SyncButtonHeight
-							page.card.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+							page.syncButtonCard.Width = values.SyncButtonWidth
+							page.syncButtonCard.Height = values.SyncButtonHeight
+							page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 						}),
 						layout.Expanded(func() {
 							layout.Align(layout.Center).Layout(gtx, func() {
 								gtx.Constraints.Width.Min = values.SyncButtonWidth - values.ButtonBorder
 								gtx.Constraints.Height.Max = values.SyncButtonHeight - values.ButtonBorder
-								page.syncButton.Color = values.ButtonGray
 								page.syncButton.Background = values.White
 								page.syncButton.Font.Size = units.SyncButtonTextSize
 								page.syncButton.Layout(gtx, page.syncButtonWidget)
