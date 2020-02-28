@@ -29,11 +29,19 @@ func NewTheme(colors Palette) *Theme {
 }
 
 func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
-	fillWithColor(gtx, t.Tertiary)
-	w()
+	layout.Stack{}.Layout(gtx,
+		layout.Expanded(func() {
+			fillWithColor(gtx, ARGB(0x22444444))
+		}),
+		layout.Stacked(w),
+	)
 }
 
-func (t *Theme) Foreground(gtx *layout.Context, w layout.Widget) {
-	fillWithColor(gtx, t.Secondary)
-	w()
+func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
+	layout.Stack{}.Layout(gtx,
+		layout.Expanded(func() {
+			fillWithColor(gtx, RGB(0xffffff))
+		}),
+		layout.Stacked(w),
+	)
 }

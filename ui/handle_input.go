@@ -94,6 +94,16 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	if win.inputs.toSend.Clicked(win.gtx) {
+		win.current = win.SendPage
+		return
+	}
+
+	if win.inputs.toTransactions.Clicked(win.gtx) {
+		win.current = win.TransactionsPage
+		return
+	}
+
 	// SYNC
 
 	if win.inputs.sync.Clicked(win.gtx) {

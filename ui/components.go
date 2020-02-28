@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"github.com/raedahgroup/godcr-gio/ui/materialplus"
 )
 
@@ -12,12 +13,25 @@ const (
 
 func (win *Window) Page(body layout.Widget) {
 	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-		layout.Flexed(headerHeight, win.Header),
+		layout.Flexed(headerHeight, func() {
+			materialplus.Card{
+				Inset: layout.Inset{
+					Bottom: unit.Dp(1),
+				},
+			}.Layout(win.gtx, win.Header)
+
+		}),
 		layout.Flexed(1-headerHeight-navSize, func() {
 			toMax(win.gtx)
-			win.theme.Foreground(win.gtx, body)
+			body()
 		}),
-		layout.Flexed(navSize, win.NavBar),
+		layout.Flexed(navSize, func() {
+			materialplus.Card{
+				Inset: layout.Inset{
+					Top: unit.Dp(1),
+				},
+			}.Layout(win.gtx, win.NavBar)
+		}),
 	)
 }
 
@@ -69,6 +83,16 @@ func (win *Window) NavBar() {
 		layout.Rigid(func() {
 			layout.Center.Layout(win.gtx, func() {
 				win.outputs.toWallets.Layout(win.gtx, &win.inputs.toWallets)
+			})
+		}),
+		layout.Rigid(func() {
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.toTransactions.Layout(win.gtx, &win.inputs.toTransactions)
+			})
+		}),
+		layout.Rigid(func() {
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.toSettings.Layout(win.gtx, &win.inputs.toSettings)
 			})
 		}),
 	)

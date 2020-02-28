@@ -33,6 +33,7 @@ type Window struct {
 
 	err string
 
+	combined
 	outputs
 }
 

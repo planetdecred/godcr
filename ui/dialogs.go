@@ -5,7 +5,7 @@ import (
 )
 
 func (win *Window) CreateDiag() {
-	win.theme.Background(win.gtx, func() {
+	win.theme.Surface(win.gtx, func() {
 		toMax(win.gtx)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
 			layout.Rigid(func() {
@@ -35,7 +35,7 @@ func (win *Window) CreateDiag() {
 }
 
 func (win *Window) DeleteDiag() {
-	win.theme.Background(win.gtx, func() {
+	win.theme.Surface(win.gtx, func() {
 		toMax(win.gtx)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
 			layout.Rigid(func() {

@@ -11,16 +11,19 @@ type Card struct {
 }
 
 func (c Card) Layout(gtx *layout.Context, w layout.Widget) {
-
-	layout.Stack{Alignment: layout.NW}.Layout(gtx,
+	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
-			gtx.Constraints.Height.Min -= 10
-			gtx.Constraints.Height.Max -= 10
-			fillWithColor(gtx, color.RGBA{A: 128})
+			fillWithColor(gtx, color.RGBA{A: 64})
 		}),
 		layout.Stacked(func() {
-			fillWithColor(gtx, ARGB(0x0fffffff))
-			c.Inset.Layout(gtx, w)
+			c.Inset.Layout(gtx, func() {
+				layout.Stack{}.Layout(gtx,
+					layout.Expanded(func() {
+						fillWithColor(gtx, ARGB(0x0fffffff))
+					}),
+					layout.Stacked(w),
+				)
+			})
 		}),
 	)
 }

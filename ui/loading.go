@@ -8,7 +8,7 @@ import (
 // Loading lays out the loading widget with a faded background
 func (win *Window) Loading() {
 
-	win.theme.Background(win.gtx, func() {
+	win.theme.Surface(win.gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 			layout.Rigid(func() {
 				layout.Center.Layout(win.gtx, func() {
