@@ -2,6 +2,8 @@ package wallet
 
 import (
 	"errors"
+	"sort"
+	"time"
 
 	"github.com/raedahgroup/dcrlibwallet"
 )
@@ -117,8 +119,23 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			alltxs[i] = txs
 		}
 
+		var recentTxs []dcrlibwallet.Transaction
+		for _, tx := range alltxs {
+			recentTxs = append(recentTxs, tx...)
+		}
+		sort.SliceStable(recentTxs, func(i, j int) bool {
+			backTime := time.Unix(recentTxs[j].Timestamp, 0)
+			frontTime := time.Unix(recentTxs[i].Timestamp, 0)
+			return backTime.Before(frontTime)
+		})
+		recentTxsLimit := 5
+		if len(recentTxs) > recentTxsLimit {
+			recentTxs = recentTxs[:recentTxsLimit]
+		}
+
 		resp.Resp = &Transactions{
-			Txs: alltxs,
+			Txs:    alltxs,
+			Recent: recentTxs,
 		}
 		wal.Send <- resp
 	}()
@@ -137,6 +154,11 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			wal.Send <- resp
 			return
 		}
+
+		sort.SliceStable(wallets, func(i, j int) bool {
+			return wallets[i].ID < wallets[j].ID
+		})
+
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		for i, wall := range wallets {
@@ -154,9 +176,13 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			}
 			completeTotal += acctBalance
 			infos[i] = InfoShort{
-				Name:     wall.Name,
-				Balance:  acctBalance,
-				Accounts: accts,
+				ID:              wall.ID,
+				Name:            wall.Name,
+				Balance:         acctBalance,
+				Accounts:        accts,
+				BestBlockHeight: wall.GetBestBlock(),
+				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
+				IsWaiting:       wall.IsWaiting(),
 			}
 		}
 		best := wal.multi.GetBestBlock()
@@ -176,6 +202,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			BestBlockTime:   best.Timestamp,
 			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
+			Syncing:         wal.multi.IsSyncing(),
 		}
 		wal.Send <- resp
 	}()
