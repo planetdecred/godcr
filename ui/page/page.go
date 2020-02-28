@@ -22,6 +22,13 @@ type Page interface {
 	Draw(gtx *layout.Context) interface{}
 }
 
+// Handler represents a page handler
+type Handler struct {
+	ID        string
+	IsNavPage bool
+	Page      Page
+}
+
 const (
 	// StateWalletInfo is the map key for the WalletInfo state
 	StateWalletInfo = "walletinfo"
@@ -40,3 +47,29 @@ const (
 	// StateError is the map key for error
 	StateError = "error"
 )
+
+// GetPages returns all pages
+func GetHandlers() []Handler {
+	return []Handler{
+		{
+			ID:        LandingID,
+			IsNavPage: false,
+			Page:      new(Landing),
+		},
+		{
+			ID:        LoadingID,
+			IsNavPage: false,
+			Page:      new(Loading),
+		},
+		{
+			ID:        WalletsID,
+			IsNavPage: true,
+			Page:      new(Wallets),
+		},
+		{
+			ID:        UITestID,
+			IsNavPage: true,
+			Page:      new(UITest),
+		},
+	}
+}

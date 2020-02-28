@@ -1,7 +1,7 @@
 package window
 
 import (
-	"fmt"
+	//"fmt"
 	"time"
 
 	"gioui.org/app"
@@ -18,7 +18,7 @@ type Window struct {
 	window     *app.Window
 	theme      *materialplus.Theme
 	gtx        *layout.Context
-	pages      map[string]page.Page
+	handlers   map[string]page.Handler
 	current    string
 	wallet     *wallet.Wallet
 	states     map[string]interface{}
@@ -37,29 +37,24 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win.theme = materialplus.NewTheme()
 	win.gtx = layout.NewContext(win.window.Queue())
 
-	pages := make(map[string]page.Page)
-
 	win.uiEvents = make(chan interface{}, 2) // Buffered so Loop can send and receive in the goroutine
 
 	win.states = make(map[string]interface{})
-	pages[page.LandingID] = new(page.Landing)
-	pages[page.LoadingID] = new(page.Loading)
-	pages[page.OverviewID] = new(page.Overview)
-	pages[page.WalletsID] = new(page.Wallets)
-	pages[page.UITestID] = new(page.UITest)
-
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	win.states[page.StateWalletInfo] = win.walletInfo
-	for _, p := range pages {
-		p.Init(win.theme, wal, win.states)
+
+	handlers := page.GetHandlers()
+	win.handlers = make(map[string]page.Handler, len(handlers))
+	for _, h := range handlers {
+		h.Page.Init(win.theme, wal, win.states)
+		win.handlers[h.ID] = h
 	}
 
-	if _, ok := pages[start]; !ok {
+	/**if _, ok := pages[start]; !ok {
 		return nil, fmt.Errorf("no such page")
-	}
+	}**/
 
 	win.current = start
-	win.pages = pages
 	win.wallet = wal
 	return win, nil
 }
@@ -103,8 +98,9 @@ func (win *Window) Loop(shutdown chan int) {
 				return
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
+				handler := win.handlers[win.current]
 				start := time.Now()
-				pageEvt := win.pages[win.current].Draw(win.gtx)
+				pageEvt := win.layoutPage(win.gtx, handler)
 				log.Tracef("Page {%s} rendered in %v", win.current, time.Since(start))
 				if pageEvt != nil {
 					win.uiEvents <- pageEvt
