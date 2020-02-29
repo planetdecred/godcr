@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -23,12 +24,13 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
+	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/godcr-gio/ui"
 	"golang.org/x/image/math/fixed"
 )
 
-// PasswordEditor represents an editor for use in collecting user passsord input
-type PasswordEditor struct {
+// Editor represents an editor for use in collecting text input
+type Editor struct {
 	Font text.Font
 	// Color is the text color.
 	Color color.RGBA
@@ -111,9 +113,9 @@ const (
 	maxBlinkDuration = 10 * time.Second
 )
 
-// PasswordEditor returns an instance of PasswordEditor
-func (t *Theme) PasswordEditor(hint string) *PasswordEditor {
-	return &PasswordEditor{
+// Editor returns an instance of Editor
+func (t *Theme) Editor(hint, mask string) *Editor {
+	return &Editor{
 		Font: text.Font{
 			Size: t.TextSize,
 		},
@@ -121,19 +123,19 @@ func (t *Theme) PasswordEditor(hint string) *PasswordEditor {
 		shaper:     t.Shaper,
 		line:       t.Line(),
 		Hint:       hint,
-		mask:       "*",
+		mask:       mask,
 		SingleLine: true,
 		HintColor:  t.Color.Hint,
 	}
 }
 
 // IsNumeric sets the editor to only accept numeric characters
-func (e *PasswordEditor) IsNumeric() {
+func (e *Editor) IsNumeric() {
 	e.isNumeric = true
 }
 
 // Events returns available editor events.
-func (e *PasswordEditor) Events(gtx *layout.Context) []EditorEvent {
+func (e *Editor) Events(gtx *layout.Context) []EditorEvent {
 	e.processEvents(gtx)
 	events := e.events
 	e.events = nil
@@ -141,12 +143,12 @@ func (e *PasswordEditor) Events(gtx *layout.Context) []EditorEvent {
 	return events
 }
 
-func (e *PasswordEditor) processEvents(gtx *layout.Context) {
+func (e *Editor) processEvents(gtx *layout.Context) {
 	e.processPointer(gtx)
 	e.processKey(gtx)
 }
 
-func (e *PasswordEditor) processPointer(gtx *layout.Context) {
+func (e *Editor) processPointer(gtx *layout.Context) {
 	sbounds := e.scrollBounds()
 	var smin, smax int
 	var axis gesture.Axis
@@ -186,7 +188,7 @@ func (e *PasswordEditor) processPointer(gtx *layout.Context) {
 	}
 }
 
-func (e *PasswordEditor) processKey(gtx *layout.Context) {
+func (e *Editor) processKey(gtx *layout.Context) {
 	for _, ke := range gtx.Events(&e.eventKey) {
 		e.blinkStart = gtx.Now()
 		switch ke := ke.(type) {
@@ -196,6 +198,13 @@ func (e *PasswordEditor) processKey(gtx *layout.Context) {
 			if !e.focused {
 				break
 			}
+
+			// check if a paste event was requested
+			if ke.Name == "V" && ke.Modifiers == key.ModCtrl {
+				e.pasteFromClipboard()
+				return
+			}
+
 			if e.Submit && (ke.Name == key.NameReturn || ke.Name == key.NameEnter) {
 				if !ke.Modifiers.Contain(key.ModShift) {
 					e.events = append(e.events, SubmitEvent{
@@ -219,7 +228,7 @@ func (e *PasswordEditor) processKey(gtx *layout.Context) {
 	}
 }
 
-func (e *PasswordEditor) command(k key.Event) bool {
+func (e *Editor) command(k key.Event) bool {
 	switch k.Name {
 	case key.NameReturn, key.NameEnter:
 		e.append("\n")
@@ -252,12 +261,12 @@ func (e *PasswordEditor) command(k key.Event) bool {
 }
 
 // Focus requests the input focus for the Editor.
-func (e *PasswordEditor) Focus() {
+func (e *Editor) Focus() {
 	e.requestFocus = true
 }
 
 // Layout draws the editor
-func (e *PasswordEditor) Layout(gtx *layout.Context) {
+func (e *Editor) Layout(gtx *layout.Context) {
 	e.line.Color = ui.GrayColor
 	if e.focused {
 		e.line.Color = ui.LightBlueColor
@@ -296,7 +305,7 @@ func (e *PasswordEditor) Layout(gtx *layout.Context) {
 	})
 }
 
-func (e *PasswordEditor) draw(gtx *layout.Context, sh text.Shaper, font text.Font) {
+func (e *Editor) draw(gtx *layout.Context, sh text.Shaper, font text.Font) {
 	// Flush events from before the previous frame.
 	copy(e.events, e.events[e.prevEvents:])
 	e.events = e.events[:len(e.events)-e.prevEvents]
@@ -309,7 +318,7 @@ func (e *PasswordEditor) draw(gtx *layout.Context, sh text.Shaper, font text.Fon
 	e.layout(gtx, sh)
 }
 
-func (e *PasswordEditor) layout(gtx *layout.Context, sh text.Shaper) {
+func (e *Editor) layout(gtx *layout.Context, sh text.Shaper) {
 	// Crude configuration change detection.
 	if scale := gtx.Px(unit.Sp(100)); scale != e.scale {
 		e.invalidate()
@@ -393,7 +402,7 @@ func (e *PasswordEditor) layout(gtx *layout.Context, sh text.Shaper) {
 }
 
 // PaintText paints the text
-func (e *PasswordEditor) PaintText(gtx *layout.Context) {
+func (e *Editor) PaintText(gtx *layout.Context) {
 	clip := textPadding(e.lines)
 	clip.Max = clip.Max.Add(e.viewSize)
 	for _, shape := range e.shapes {
@@ -407,7 +416,7 @@ func (e *PasswordEditor) PaintText(gtx *layout.Context) {
 }
 
 // PaintCaret draws the blinker
-func (e *PasswordEditor) PaintCaret(gtx *layout.Context) {
+func (e *Editor) PaintCaret(gtx *layout.Context) {
 	if !e.caretOn {
 		return
 	}
@@ -443,17 +452,27 @@ func (e *PasswordEditor) PaintCaret(gtx *layout.Context) {
 }
 
 // Len is the length of the editor contents.
-func (e *PasswordEditor) Len() int {
+func (e *Editor) Len() int {
 	return e.rr.len()
 }
 
 // Text returns the contents of the editor.
-func (e *PasswordEditor) Text() string {
+func (e *Editor) Text() string {
 	return e.rr.String()
 }
 
+func (e *Editor) pasteFromClipboard() {
+	str, err := clipboard.ReadAll()
+	if err != nil {
+		log.Printf("error getting clipboard data: %s", err.Error())
+		return
+	}
+
+	e.Insert(str)
+}
+
 // SetText replaces the contents of the editor.
-func (e *PasswordEditor) SetText(s string) {
+func (e *Editor) SetText(s string) {
 	// return if it's a numeric input but a string is entered
 	if e.isNumeric && !validateNumberStr(s) {
 		return
@@ -464,7 +483,7 @@ func (e *PasswordEditor) SetText(s string) {
 	e.prepend(s)
 }
 
-func (e *PasswordEditor) scrollBounds() image.Rectangle {
+func (e *Editor) scrollBounds() image.Rectangle {
 	var b image.Rectangle
 	if e.SingleLine {
 		if len(e.lines) > 0 {
@@ -480,11 +499,11 @@ func (e *PasswordEditor) scrollBounds() image.Rectangle {
 	return b
 }
 
-func (e *PasswordEditor) scrollRel(dx, dy int) {
+func (e *Editor) scrollRel(dx, dy int) {
 	e.scrollAbs(e.scrollOff.X+dx, e.scrollOff.Y+dy)
 }
 
-func (e *PasswordEditor) scrollAbs(x, y int) {
+func (e *Editor) scrollAbs(x, y int) {
 	e.scrollOff.X = x
 	e.scrollOff.Y = y
 	b := e.scrollBounds()
@@ -502,7 +521,7 @@ func (e *PasswordEditor) scrollAbs(x, y int) {
 	}
 }
 
-func (e *PasswordEditor) moveCoord(pos image.Point) {
+func (e *Editor) moveCoord(pos image.Point) {
 	var (
 		prevDesc fixed.Int26_6
 		carLine  int
@@ -520,7 +539,7 @@ func (e *PasswordEditor) moveCoord(pos image.Point) {
 	e.moveToLine(x, carLine)
 }
 
-func (e *PasswordEditor) layoutText(c unit.Converter, s text.Shaper, font text.Font) ([]text.Line, layout.Dimensions) {
+func (e *Editor) layoutText(c unit.Converter, s text.Shaper, font text.Font) ([]text.Line, layout.Dimensions) {
 	e.rr.Reset()
 
 	buff := e.rr
@@ -546,7 +565,7 @@ func (e *PasswordEditor) layoutText(c unit.Converter, s text.Shaper, font text.F
 	return lines, dims
 }
 
-func (e *PasswordEditor) layoutCaret() (carLine, carCol int, x fixed.Int26_6, y int) {
+func (e *Editor) layoutCaret() (carLine, carCol int, x fixed.Int26_6, y int) {
 	var idx int
 	var prevDesc fixed.Int26_6
 loop:
@@ -571,20 +590,20 @@ loop:
 	return
 }
 
-func (e *PasswordEditor) invalidate() {
+func (e *Editor) invalidate() {
 	e.valid = false
 }
 
 // Delete runes from the caret position. The sign of runes specifies the
 // direction to delete: positive is forward, negative is backward.
-func (e *PasswordEditor) Delete(runes int) {
+func (e *Editor) Delete(runes int) {
 	e.rr.deleteRunes(runes)
 	e.carXOff = 0
 	e.invalidate()
 }
 
 // Insert inserts text at the caret, moving the caret forward.
-func (e *PasswordEditor) Insert(s string) {
+func (e *Editor) Insert(s string) {
 	// return if it's a numeric input but a string is entered
 	if e.isNumeric && !validateNumberStr(s) {
 		return
@@ -595,7 +614,7 @@ func (e *PasswordEditor) Insert(s string) {
 	e.invalidate()
 }
 
-func (e *PasswordEditor) append(s string) {
+func (e *Editor) append(s string) {
 	// return if it's a numeric input but a string is entered
 	if e.isNumeric && !validateNumberStr(s) {
 		return
@@ -608,13 +627,13 @@ func (e *PasswordEditor) append(s string) {
 	e.rr.caret += len(s)
 }
 
-func (e *PasswordEditor) prepend(s string) {
+func (e *Editor) prepend(s string) {
 	e.rr.prepend(s)
 	e.carXOff = 0
 	e.invalidate()
 }
 
-func (e *PasswordEditor) movePages(pages int) {
+func (e *Editor) movePages(pages int) {
 	_, _, carX, carY := e.layoutCaret()
 	y := carY + pages*e.viewSize.Y
 	var (
@@ -638,7 +657,7 @@ func (e *PasswordEditor) movePages(pages int) {
 	e.carXOff = e.moveToLine(carX+e.carXOff, carLine2)
 }
 
-func (e *PasswordEditor) moveToLine(carX fixed.Int26_6, carLine2 int) fixed.Int26_6 {
+func (e *Editor) moveToLine(carX fixed.Int26_6, carLine2 int) fixed.Int26_6 {
 	carLine, carCol, _, _ := e.layoutCaret()
 	if carLine2 < 0 {
 		carLine2 = 0
@@ -688,12 +707,12 @@ func (e *PasswordEditor) moveToLine(carX fixed.Int26_6, carLine2 int) fixed.Int2
 
 // Move the caret: positive distance moves forward, negative distance moves
 // backward.
-func (e *PasswordEditor) Move(distance int) {
+func (e *Editor) Move(distance int) {
 	e.rr.move(distance)
 	e.carXOff = 0
 }
 
-func (e *PasswordEditor) moveStart() {
+func (e *Editor) moveStart() {
 	carLine, carCol, x, _ := e.layoutCaret()
 	layout := e.lines[carLine].Layout
 	for i := carCol - 1; i >= 0; i-- {
@@ -704,7 +723,7 @@ func (e *PasswordEditor) moveStart() {
 	e.carXOff = -x
 }
 
-func (e *PasswordEditor) moveEnd() {
+func (e *Editor) moveEnd() {
 	carLine, carCol, x, _ := e.layoutCaret()
 	l := e.lines[carLine]
 	// Only move past the end of the last line
@@ -723,7 +742,7 @@ func (e *PasswordEditor) moveEnd() {
 	e.carXOff = l.Width + a - x
 }
 
-func (e *PasswordEditor) scrollToCaret() {
+func (e *Editor) scrollToCaret() {
 	carLine, _, x, y := e.layoutCaret()
 	l := e.lines[carLine]
 	if e.SingleLine {
