@@ -2,7 +2,6 @@ package window
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"gioui.org/app"

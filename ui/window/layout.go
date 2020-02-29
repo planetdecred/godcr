@@ -1,6 +1,8 @@
 package window
 
 import (
+	"strings"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 
@@ -42,12 +44,19 @@ func (win *Window) layoutNavSection(gtx *layout.Context) {
 			id := page.ID
 
 			fn := func() {
+				isCurrent := win.current == id
 				for page.Button.Clicked(gtx) {
-					if win.current != id {
+					if !isCurrent {
 						win.current = id
 					}
 				}
-				btn := win.theme.Button(id)
+				btn := win.theme.Button(strings.Title(strings.ToLower(id)))
+				btn.CornerRadius = unit.Dp(0)
+				if isCurrent {
+					btn.Background = win.theme.Secondary
+				} else {
+					btn.Background = win.theme.Primary
+				}
 				btn.Layout(gtx, page.Button)
 			}
 			w = append(w, fn)
