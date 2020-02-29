@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 
+	"github.com/raedahgroup/godcr-gio/ui"
+
 	"gioui.org/f32"
 	"gioui.org/font"
 	"gioui.org/io/pointer"
@@ -41,8 +43,8 @@ func NewImageButton(img *material.Image, text string) ImageButton {
 		Font: gioText.Font{
 			Size: unit.Sp(16).Scale(14.0 / 16.0),
 		},
-		Color:      RGB(0xffffff),
-		Background: RGB(0x3f51b5),
+		Color:      ui.WhiteColor,
+		Background: ui.LightBlueColor,
 		shaper:     font.Default(),
 		alignment:  layout.Middle,
 		Axis:       layout.Horizontal,

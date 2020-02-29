@@ -3,15 +3,14 @@ package page
 import (
 	"fmt"
 
-	"github.com/raedahgroup/godcr-gio/ui/units"
-	"github.com/raedahgroup/godcr-gio/ui/values"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/ui/values"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 

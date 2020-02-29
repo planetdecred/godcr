@@ -19,13 +19,3 @@ func Fill(gtx *layout.Context, col color.RGBA, x, y int) {
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
 	gtx.Dimensions = layout.Dimensions{Size: d}
 }
-
-// RGB converts Hex color code to color.RGBA
-func RGB(c uint32) color.RGBA {
-	return argb(0xff000000 | c)
-}
-
-// argb converts Hex color code to color.RGBA setting Alpha color
-func argb(c uint32) color.RGBA {
-	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
-}
