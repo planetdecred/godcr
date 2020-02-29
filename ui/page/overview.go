@@ -148,9 +148,19 @@ func (page *Overview) Init(theme *materialplus.Theme, w *wallet.Wallet, states m
 
 // Draw adds all the widgets to the stored layout context.
 func (page *Overview) Draw(gtx *layout.Context) interface{} {
-	page.walletInfo = page.states[StateWalletInfo].(*wallet.MultiWalletInfo)
-	page.transactions = page.states[StateTransactions].(*wallet.Transactions)
-	page.update(gtx)
+	walletInfo := page.states[StateWalletInfo]
+	if walletInfo != nil {
+		page.walletInfo = walletInfo.(*wallet.MultiWalletInfo)
+	}
+
+	transactions := page.states[StateTransactions]
+	if transactions != nil {
+		page.transactions = transactions.(*wallet.Transactions)
+	}
+
+	if walletInfo != nil && transactions != nil {
+		page.update(gtx)
+	}
 
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {

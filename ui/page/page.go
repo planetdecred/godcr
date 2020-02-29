@@ -4,12 +4,13 @@ package page
 
 import (
 	"gioui.org/layout"
+	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
 
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
-// Page represents a single page of the app.
+// Handler represents a single page of the app.
 //
 // Init creates widgets with the given theme.
 //
@@ -17,16 +18,17 @@ import (
 // layout context with regards to the given states.
 // Draw returns any window event not handled by page itself.
 // Draw is only called once per frame for the active page.
-type Page interface {
+type Handler interface {
 	Init(*materialplus.Theme, *wallet.Wallet, map[string]interface{})
 	Draw(gtx *layout.Context) interface{}
 }
 
-// Handler represents a page handler
-type Handler struct {
+// Page represents information about a page
+type Page struct {
 	ID        string
 	IsNavPage bool
-	Page      Page
+	Handler   Handler
+	Button    *widget.Button
 }
 
 const (
@@ -49,27 +51,37 @@ const (
 )
 
 // GetPages returns all pages
-func GetHandlers() []Handler {
-	return []Handler{
+func GetPages() []Page {
+	return []Page{
 		{
 			ID:        LandingID,
 			IsNavPage: false,
-			Page:      new(Landing),
+			Handler:   new(Landing),
+			Button:    new(widget.Button),
+		},
+		{
+			ID:        OverviewID,
+			IsNavPage: true,
+			Handler:   new(Overview),
+			Button:    new(widget.Button),
 		},
 		{
 			ID:        LoadingID,
 			IsNavPage: false,
-			Page:      new(Loading),
+			Handler:   new(Loading),
+			Button:    new(widget.Button),
 		},
 		{
 			ID:        WalletsID,
 			IsNavPage: true,
-			Page:      new(Wallets),
+			Handler:   new(Wallets),
+			Button:    new(widget.Button),
 		},
 		{
 			ID:        UITestID,
 			IsNavPage: true,
-			Page:      new(UITest),
+			Handler:   new(UITest),
+			Button:    new(widget.Button),
 		},
 	}
 }

@@ -1,12 +1,14 @@
 package window
 
 import (
-	//"fmt"
+	"fmt"
+	"strings"
 	"time"
 
 	"gioui.org/app"
 	"gioui.org/io/system"
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr-gio/ui/page"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
@@ -18,7 +20,7 @@ type Window struct {
 	window     *app.Window
 	theme      *materialplus.Theme
 	gtx        *layout.Context
-	handlers   map[string]page.Handler
+	pages      []page.Page
 	current    string
 	wallet     *wallet.Wallet
 	states     map[string]interface{}
@@ -43,16 +45,20 @@ func CreateWindow(start string, wal *wallet.Wallet) (*Window, error) {
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	win.states[page.StateWalletInfo] = win.walletInfo
 
-	handlers := page.GetHandlers()
-	win.handlers = make(map[string]page.Handler, len(handlers))
-	for _, h := range handlers {
-		h.Page.Init(win.theme, wal, win.states)
-		win.handlers[h.ID] = h
+	win.pages = page.GetPages()
+	hasStart := false
+	for _, h := range win.pages {
+		h.Handler.Init(win.theme, wal, win.states)
+		h.Button = new(widget.Button)
+
+		if h.ID == start {
+			hasStart = true
+		}
 	}
 
-	/**if _, ok := pages[start]; !ok {
+	if !hasStart {
 		return nil, fmt.Errorf("no such page")
-	}**/
+	}
 
 	win.current = start
 	win.wallet = wal
@@ -98,9 +104,9 @@ func (win *Window) Loop(shutdown chan int) {
 				return
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
-				handler := win.handlers[win.current]
+				page := win.getCurrentPage()
 				start := time.Now()
-				pageEvt := win.layoutPage(win.gtx, handler)
+				pageEvt := win.layoutPage(win.gtx, page)
 				log.Tracef("Page {%s} rendered in %v", win.current, time.Since(start))
 				if pageEvt != nil {
 					win.uiEvents <- pageEvt
@@ -113,6 +119,16 @@ func (win *Window) Loop(shutdown chan int) {
 			}
 		}
 	}
+}
+
+func (win *Window) getCurrentPage() page.Page {
+	for _, h := range win.pages {
+		if h.ID == win.current {
+			return h
+		}
+	}
+
+	return win.pages[0]
 }
 
 // updateState checks for the event type that is passed as an argument and updates its
