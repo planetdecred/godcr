@@ -42,7 +42,6 @@ func (cc ConfirmCancel) Layout(gtx *layout.Context, confirm, cancel *widget.Butt
 		)
 	}
 	Modal{
-		Background: cc.Background,
-		Direction:  cc.Direction,
+		Direction: cc.Direction,
 	}.Layout(gtx, modal)
 }

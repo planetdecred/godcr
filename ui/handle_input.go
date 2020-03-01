@@ -4,12 +4,8 @@ import "gioui.org/widget"
 
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
-	for i, tab := range win.inputs.tabs {
-		for tab.Clicked(win.gtx) {
-			win.selected = i
-			log.Debugf("Tab %d selected", i)
-			return
-		}
+	if win.tabs.Changed() {
+		win.selected = win.tabs.Selected
 	}
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {

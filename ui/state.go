@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -20,6 +21,15 @@ func (win *Window) updateStates(update interface{}) {
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
 		*win.walletInfo = e
+		if len(win.outputs.tabs) != win.walletInfo.LoadedWallets {
+			win.outputs.tabs = make([]decredmaterial.TabItem, win.walletInfo.LoadedWallets)
+			for i := range win.outputs.tabs {
+				win.outputs.tabs[i] = decredmaterial.TabItem{
+					Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
+				}
+			}
+		}
+		win.tabs.SetTabs(win.outputs.tabs)
 		win.states.loading = false
 		return
 	case wallet.CreatedSeed:

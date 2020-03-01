@@ -50,7 +50,7 @@ func (win *Window) TabbedPage(body layout.Widget) {
 	}
 	bd := func() {
 		toMax(win.gtx)
-		win.tabs.Layout(win.gtx, &win.selected, win.inputs.tabs, items, body)
+		win.tabs.Layout(win.gtx, body)
 	}
 	win.Page(bd)
 }

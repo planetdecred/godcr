@@ -12,7 +12,6 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toReceive                                                 widget.Button
 	sync                                                      widget.Button
-	tabs                                                      []*widget.Button
 
 	spendingPassword, matchSpending, renameWallet widget.Editor
 }
@@ -33,6 +32,7 @@ type outputs struct {
 	createWallet, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
 	sync                                                  decredmaterial.IconButton
 
+	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
 }
 

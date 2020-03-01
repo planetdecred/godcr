@@ -6,7 +6,6 @@ import (
 	"gioui.org/app"
 	"gioui.org/io/system"
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"github.com/raedahgroup/godcr-gio/wallet"
@@ -56,7 +55,6 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 	win.wallet = wal
 	win.states.loading = true
-	win.inputs.tabs = make([]*widget.Button, 0)
 	win.tabs = decredmaterial.NewTabs()
 	win.tabs.Flex.Spacing = layout.SpaceBetween
 	win.current = win.WalletsPage
@@ -104,19 +102,13 @@ func (win *Window) Loop(shutdown chan int) {
 				return
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
-				if len(win.inputs.tabs) != win.walletInfo.LoadedWallets {
-					win.inputs.tabs = make([]*widget.Button, win.walletInfo.LoadedWallets)
-					for i := range win.inputs.tabs {
-						win.inputs.tabs[i] = new(widget.Button)
-					}
-				}
 				s := win.states
 				win.theme.Background(win.gtx, win.current)
 
 				if s.loading {
 					win.Loading()
 				} else if s.dialog {
-					win.dialog()
+					decredmaterial.Modal{}.Layout(win.gtx, win.dialog)
 				}
 
 				win.HandleInputs()

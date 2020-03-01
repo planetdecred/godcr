@@ -18,7 +18,6 @@ type Select struct {
 }
 
 func (t *Theme) Select() *Select {
-
 	return &Select{
 		item: t.Button(""),
 		size: 0.2,
