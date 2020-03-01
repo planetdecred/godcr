@@ -25,7 +25,7 @@ func main() {
 	}
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
-	sans, err := pkger.Open("/ui/materialplus/fonts/source_sans_pro_regular.otf")
+	sans, err := pkger.Open("/ui/decredmaterial/fonts/source_sans_pro_regular.otf")
 	if err != nil {
 		log.Warn("Failed to load font Source Sans Pro. Using gofont")
 		gofont.Register()

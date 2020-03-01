@@ -13,7 +13,7 @@ func (win *Window) Loading() {
 			layout.Rigid(func() {
 				layout.Center.Layout(win.gtx, func() {
 					lbl := win.theme.H1("Loading")
-					lbl.Color = win.theme.Primary
+					lbl.Color = win.theme.Color.Primary
 					lbl.Layout(win.gtx)
 				})
 			}),

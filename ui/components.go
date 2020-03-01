@@ -3,43 +3,48 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 )
 
 const (
 	headerHeight = .15
-	navSize      = .15
+	navSize      = .1
 )
 
 func (win *Window) Page(body layout.Widget) {
-	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-		layout.Flexed(headerHeight, func() {
-			materialplus.Card{
-				Inset: layout.Inset{
-					Bottom: unit.Dp(1),
-				},
-			}.Layout(win.gtx, win.Header)
+	bd := func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+			layout.Flexed(headerHeight, func() {
+				decredmaterial.Card{
+					Inset: layout.Inset{
+						Bottom: unit.Dp(1),
+					},
+				}.Layout(win.gtx, win.Header)
 
-		}),
-		layout.Flexed(1-headerHeight-navSize, func() {
-			toMax(win.gtx)
-			body()
-		}),
+			}),
+			layout.Flexed(1-headerHeight, func() {
+				toMax(win.gtx)
+				body()
+			}),
+		)
+	}
+	layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
 		layout.Flexed(navSize, func() {
-			materialplus.Card{
+			decredmaterial.Card{
 				Inset: layout.Inset{
-					Top: unit.Dp(1),
+					Right: unit.Dp(1),
 				},
 			}.Layout(win.gtx, win.NavBar)
 		}),
+		layout.Flexed(1-navSize, bd),
 	)
 }
 
 // TabbedPage layouts a layout.Tabs
 func (win *Window) TabbedPage(body layout.Widget) {
-	items := make([]materialplus.TabItem, win.walletInfo.LoadedWallets)
+	items := make([]decredmaterial.TabItem, win.walletInfo.LoadedWallets)
 	for i := 0; i < win.walletInfo.LoadedWallets; i++ {
-		items[i] = materialplus.TabItem{
+		items[i] = decredmaterial.TabItem{
 			Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
 		}
 	}
@@ -74,7 +79,7 @@ func (win *Window) Header() {
 
 func (win *Window) NavBar() {
 	toMax(win.gtx)
-	layout.Flex{Spacing: layout.SpaceEvenly, Alignment: layout.Middle}.Layout(win.gtx,
+	layout.Flex{Spacing: layout.SpaceEvenly, Alignment: layout.Middle, Axis: layout.Vertical}.Layout(win.gtx,
 		layout.Rigid(func() {
 			layout.Center.Layout(win.gtx, func() {
 				win.outputs.toOverview.Layout(win.gtx, &win.inputs.toOverview)

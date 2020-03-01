@@ -8,7 +8,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr-gio/ui/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
@@ -16,7 +16,7 @@ import (
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
 	window *app.Window
-	theme  *materialplus.Theme
+	theme  *decredmaterial.Theme
 	gtx    *layout.Context
 
 	wallet     *wallet.Wallet
@@ -24,7 +24,7 @@ type Window struct {
 
 	current layout.Widget
 	dialog  layout.Widget
-	tabs    *materialplus.Tabs
+	tabs    *decredmaterial.Tabs
 
 	selected int
 	states
@@ -45,7 +45,7 @@ type Window struct {
 func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win := new(Window)
 	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
-	theme := decredTheme()
+	theme := decredmaterial.NewTheme()
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
 	}
@@ -57,7 +57,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.wallet = wal
 	win.states.loading = true
 	win.inputs.tabs = make([]*widget.Button, 0)
-	win.tabs = materialplus.NewTabs()
+	win.tabs = decredmaterial.NewTabs()
 	win.tabs.Flex.Spacing = layout.SpaceBetween
 	win.current = win.WalletsPage
 	win.dialog = func() {}

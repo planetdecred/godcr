@@ -128,18 +128,18 @@ func (win *Window) HandleInputs() {
 func (win *Window) validatePasswords() string {
 	pass := win.inputs.spendingPassword.Text()
 	if pass == "" {
-		win.outputs.spendingPassword.HintColor = win.theme.Danger
+		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
 		return pass
 	}
 
 	match := win.inputs.matchSpending.Text()
 	if match == "" {
-		win.outputs.matchSpending.HintColor = win.theme.Danger
+		win.outputs.matchSpending.HintColor = win.theme.Color.Danger
 		return ""
 	}
 
 	if match != pass {
-		win.outputs.matchSpending.Color = win.theme.Danger
+		win.outputs.matchSpending.Color = win.theme.Color.Danger
 		return ""
 	}
 
@@ -149,7 +149,7 @@ func (win *Window) validatePasswords() string {
 func (win *Window) validatePassword() string {
 	pass := win.inputs.spendingPassword.Text()
 	if pass == "" {
-		win.outputs.spendingPassword.HintColor = win.theme.Danger
+		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
 	}
 	return pass
 }

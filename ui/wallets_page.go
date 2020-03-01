@@ -2,7 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 )
 
 // WalletsPage lays out the main wallet page
@@ -35,7 +35,7 @@ func (win *Window) WalletsPage() {
 							}),
 						)
 					}
-					materialplus.Card{}.Layout(win.gtx, a)
+					decredmaterial.Card{}.Layout(win.gtx, a)
 					// a()
 				})
 			}),

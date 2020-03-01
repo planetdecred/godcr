@@ -1,16 +1,15 @@
-package materialplus
+package decredmaterial
 
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 )
 
 // DefaultTabSize is the default flexed size of the tab section in a Tabs
 const DefaultTabSize = .3
 
 type TabItem struct {
-	material.Button
+	Button
 }
 
 func (t *TabItem) Layout(gtx *layout.Context, btn *widget.Button, selected bool) {

@@ -1,13 +1,12 @@
-package materialplus
+package decredmaterial
 
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 )
 
 type Select struct {
-	item     material.Button
+	item     Button
 	size     float32
 	changed  bool
 	open     bool

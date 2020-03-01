@@ -1,4 +1,4 @@
-package materialplus
+package decredmaterial
 
 import (
 	"image"
