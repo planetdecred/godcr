@@ -10,7 +10,7 @@ require (
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jrick/logrotate v1.0.0
 	github.com/markbates/pkger v0.14.1
-	github.com/onsi/ginkgo v1.11.0
+	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.8.1
 	github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
