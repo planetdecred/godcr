@@ -4,15 +4,21 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
+// SyncProgressStage represents the spv sync stage at which the multiwallet is currently
 type SyncProgressStage int
 
 const (
+	// SyncStarted signifies that spv sync has started
 	SyncStarted SyncProgressStage = iota
 
+	// SyncCanceled is a pseudo stage that represents a canceled sync
 	SyncCanceled
+
+	// SyncCompleted signifies that spv sync has been completed
 	SyncCompleted
 )
 
+// SyncStatusUpdate represents infomation about the status of the multiwallet spv sync
 type SyncStatusUpdate struct {
 	Stage SyncProgressStage
 }
