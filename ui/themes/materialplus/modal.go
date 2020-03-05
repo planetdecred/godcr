@@ -18,7 +18,7 @@ func (t *Theme) ModalPopUp(gtx *layout.Context, WindowHeight, WindowWidth int, r
 	overlayColor := ui.BlackColor
 	overlayColor.A = 200
 
-	PaintArea(gtx, overlayColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
+	Fill(gtx, overlayColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
 
 	layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func() {
@@ -41,7 +41,7 @@ func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 	overlayColor := ui.BlackColor
 	overlayColor.A = 200
 
-	PaintArea(gtx, overlayColor, gtx.Constraints.Width.Max, WindowHeight)
+	Fill(gtx, overlayColor, gtx.Constraints.Width.Max, WindowHeight)
 
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
@@ -52,7 +52,7 @@ func (t *Theme) Modal(gtx *layout.Context, renderFunc func()) {
 				Top: unit.Dp(50),
 			}
 			inset.Layout(gtx, func() {
-				PaintArea(gtx, ui.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
+				Fill(gtx, ui.WhiteColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
 				inset := layout.Inset{
 					Top:   unit.Dp(7),
 					Left:  unit.Dp(25),

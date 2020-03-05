@@ -3,7 +3,7 @@ package page
 import (
 	"image"
 	"time"
-
+	// "fmt"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -15,6 +15,8 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui"
 	"github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
+	"github.com/raedahgroup/godcr-gio/ui/units"
+	"github.com/raedahgroup/godcr-gio/ui/values"
 	"github.com/raedahgroup/godcr-gio/wallet"
 	"github.com/skip2/go-qrcode"
 )
@@ -57,6 +59,10 @@ type Receive struct {
 	dropDownBtnWdg *widget.Button
 	minimizeBtnWdg *widget.Button
 
+	selectedAccountCard  materialplus.Card
+	accountSelectionCard materialplus.Card
+	moreButtonCard       materialplus.Card
+
 	infoModalWidgets *infoModalWidgets
 	moreModalWidgets *moreModalWidgets
 
@@ -75,6 +81,8 @@ type Receive struct {
 	accountModalTitleLabel      material.Label
 	errorLabel                  material.Label
 	addressCopiedLabel          material.Label
+
+	AccountSelectionLabelCard materialplus.Card
 
 	accountModalLine *materialplus.Line
 
@@ -95,6 +103,16 @@ func (pg *Receive) Init(theme *materialplus.Theme, wal *wallet.Wallet, states ma
 	pg.isGenerateNewAddBtnModal = false
 	pg.isInfoBtnModal = false
 	pg.isAccountModalOpen = false
+
+	pg.selectedAccountCard = theme.Card()
+	pg.selectedAccountCard.Color = ui.LightGrayColor
+	pg.selectedAccountCard.Width = values.SelectedAccountCardWidth
+	pg.selectedAccountCard.Height = values.SelectedAccountCardHeight
+
+	pg.accountSelectionCard = theme.Card()
+	pg.accountSelectionCard.Color = ui.LightGrayColor
+	pg.accountSelectionCard.Width = values.AccountSelecttionCardWidth
+	pg.accountSelectionCard.Height = values.AccountSelecttionCardHeight
 
 	pg.pageTitleLabel = theme.H3(pageTitle)
 	pg.accountModalTitleLabel = theme.H6(accountModalTitle)
@@ -240,6 +258,10 @@ func (pg *Receive) setDefaultAccount(wallets []wallet.InfoShort) {
 	for i := range wallets {
 		if len(wallets[i].Accounts) == 0 {
 			continue
+		}
+
+		if len(pg.wallets) > 2 {
+			pg.accountSelectionCard.Height = values.AccountSelecttionCardHeight * 2
 		}
 
 		pg.setSelectedAccount(wallets[i], wallets[i].Accounts[0], false)
@@ -409,11 +431,11 @@ func (pg *Receive) selectedAccountLabel(gtx *layout.Context) {
 	layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func() {
 			layout.Inset{}.Layout(gtx, func() {
-				materialplus.Fill(gtx, ui.LightGrayColor, 200, 60)
+				pg.selectedAccountCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 			})
 		}),
 		layout.Stacked(func() {
-			layout.Inset{}.Layout(gtx, func() {
+			layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
 				layout.Flex{}.Layout(gtx,
 					layout.Rigid(func() {
 						layout.Inset{Right: unit.Dp(30)}.Layout(gtx, func() {
@@ -539,16 +561,13 @@ func (pg *Receive) accountSelectedModal(gtx *layout.Context) {
 		},
 	}
 
-	inset := layout.Inset{
-		Top:   unit.Dp(160),
-		Right: unit.Dp(10),
-	}
-
-	inset.Layout(gtx, func() {
-		layout.Stack{Alignment: layout.N}.Layout(gtx,
+	layout.Align(layout.Center).Layout(gtx, func() {
+		layout.Stack{}.Layout(gtx,
+			layout.Expanded(func() {
+				pg.accountSelectionCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+			}),
 			layout.Stacked(func() {
 				layout.Inset{}.Layout(gtx, func() {
-					materialplus.PaintArea(gtx, ui.LightGrayColor, 230, 210)
 					list := layout.List{Axis: layout.Vertical}
 					list.Layout(gtx, len(modalWidgetFuncs), func(i int) {
 						layout.UniformInset(unit.Dp(0)).Layout(gtx, modalWidgetFuncs[i])
