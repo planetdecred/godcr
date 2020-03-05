@@ -18,15 +18,15 @@ import (
 var (
 	// decred primary colors
 
-	keyblue   = rgb(0x2970ff)
-	turquiose = rgb(0x2ed6a1)
-	darkblue  = rgb(0x091440)
+	keyblue = rgb(0x2970ff)
+	//turquiose = rgb(0x2ed6a1)
+	darkblue = rgb(0x091440)
 
 	// decred complemetary colors
 
-	lightblue = rgb(0x70cbff)
-	orange    = rgb(0xed6d47)
-	green     = rgb(0x41bf53)
+	//lightblue = rgb(0x70cbff)
+	//orange    = rgb(0xed6d47)
+	green = rgb(0x41bf53)
 )
 
 type Theme struct {

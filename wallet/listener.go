@@ -18,7 +18,7 @@ const (
 	SyncCompleted
 )
 
-// SyncStatusUpdate represents infomation about the status of the multiwallet spv sync
+// SyncStatusUpdate represents information about the status of the multiwallet spv sync
 type SyncStatusUpdate struct {
 	Stage SyncProgressStage
 }

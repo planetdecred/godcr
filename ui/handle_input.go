@@ -101,7 +101,6 @@ func (win *Window) HandleInputs() {
 	}
 
 	// SYNC
-
 	if win.inputs.sync.Clicked(win.gtx) {
 		//log.Info("Sync clicked :", win.walletInfo.Synced, win.walletInfo.Syncing)
 		if win.walletInfo.Syncing {

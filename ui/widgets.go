@@ -10,8 +10,8 @@ type inputs struct {
 	createDiag, deleteDiag, cancelDialog                      widget.Button
 	createWallet, restoreWallet, deleteWallet                 widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
-	toReceive                                                 widget.Button
-	sync                                                      widget.Button
+	//toReceive                                                 widget.Button
+	sync widget.Button
 
 	spendingPassword, matchSpending, renameWallet widget.Editor
 }
@@ -26,8 +26,8 @@ type outputs struct {
 	}
 	spendingPassword, matchSpending                           decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toSend, toSettings decredmaterial.IconButton
-	toReceive                                                 decredmaterial.IconButton
-	createDiag, restoreDiag, cancelDiag                       decredmaterial.IconButton
+	//toReceive                                                 decredmaterial.IconButton
+	createDiag, restoreDiag, cancelDiag decredmaterial.IconButton
 
 	createWallet, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
 	sync                                                  decredmaterial.IconButton

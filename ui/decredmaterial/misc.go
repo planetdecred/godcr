@@ -36,8 +36,3 @@ func RGB(c uint32) color.RGBA {
 func ARGB(c uint32) color.RGBA {
 	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
 }
-
-func toMax(gtx *layout.Context) {
-	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
-}
