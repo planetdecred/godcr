@@ -15,7 +15,6 @@ func (win *Window) CreateDiag() {
 			}),
 			layout.Rigid(func() {
 				d := win.theme.H3("Create Wallet")
-				d.Color = win.theme.Color.InvText
 				d.Layout(win.gtx)
 			}),
 			layout.Rigid(func() {
@@ -45,7 +44,6 @@ func (win *Window) DeleteDiag() {
 			}),
 			layout.Rigid(func() {
 				d := win.theme.H3("Delete wallet")
-				d.Color = win.theme.Color.InvText
 				d.Layout(win.gtx)
 			}),
 			layout.Rigid(func() {
