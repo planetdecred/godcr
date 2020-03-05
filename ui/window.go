@@ -19,8 +19,9 @@ type Window struct {
 	theme  *decredmaterial.Theme
 	gtx    *layout.Context
 
-	wallet     *wallet.Wallet
-	walletInfo *wallet.MultiWalletInfo
+	wallet           *wallet.Wallet
+	walletInfo       *wallet.MultiWalletInfo
+	walletSyncStatus *wallet.SyncStatus
 
 	current layout.Widget
 	dialog  layout.Widget
