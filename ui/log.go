@@ -1,7 +1,7 @@
 // Copyright (c) 2017, The dcrdata developers
 // See LICENSE for details.
 
-package page
+package ui
 
 import "github.com/decred/slog"
 

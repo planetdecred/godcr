@@ -15,18 +15,8 @@ type Wallet struct {
 	multi     *dcrlibwallet.MultiWallet
 	root, net string
 	Send      chan Response
+	Sync      chan SyncStatusUpdate
 	confirms  int32
-}
-
-// InternalWalletError represents errors generated during the handling of the multiwallet
-// and connected wallets
-type InternalWalletError struct {
-	Message         string
-	AffectedWallets []int
-}
-
-func (err InternalWalletError) Error() string {
-	return err.Message
 }
 
 // NewWallet initializies an new Wallet instance.
@@ -38,6 +28,7 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 	wal := &Wallet{
 		root:     root,
 		net:      net,
+		Sync:     make(chan SyncStatusUpdate, 2),
 		Send:     send,
 		confirms: confirms,
 	}
@@ -50,30 +41,32 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 // startup passphrase was set.
 // It is non-blocking and sends its result or any erro to wal.Send.
 func (wal *Wallet) LoadWallets() {
-	go func(send chan<- Response, wal *Wallet) {
-		var resp Response
+	go func() {
+		resp := Response{
+			Resp: LoadedWallets{},
+		}
 		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.net)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
 		wal.multi = multiWal
 		l := &listener{
-			Send: wal.Send,
+			Send: wal.Sync,
 		}
 		err = wal.multi.AddSyncProgressListener(l, syncID)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
 		err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
 		if err != nil {
 			resp.Err = err
-			send <- resp
+			wal.Send <- resp
 			return
 		}
 
@@ -82,37 +75,39 @@ func (wal *Wallet) LoadWallets() {
 			err = wal.multi.OpenWallets(nil)
 			if err != nil {
 				resp.Err = err
-				send <- resp
+				wal.Send <- resp
 				return
 			}
 		}
 
-		resp.Resp = &LoadedWallets{
+		resp.Resp = LoadedWallets{
 			Count:              wal.multi.LoadedWalletsCount(),
 			StartUpSecuritySet: startupPassSet,
 		}
-		send <- resp
-	}(wal.Send, wal)
+		wal.Send <- resp
+	}()
 }
 
-// wallets returns an up-to-date slice of all opened wallets
-func (wal *Wallet) wallets() ([]*dcrlibwallet.Wallet, error) {
+// wallets returns an up-to-date map of all opened wallets
+func (wal *Wallet) wallets() (map[int]*dcrlibwallet.Wallet, error) {
 	if wal.multi == nil {
-		return nil, &InternalWalletError{
+		return nil, MultiWalletError{
 			Message: "No MultiWallet loaded",
 		}
 	}
 
-	wallets := make([]*dcrlibwallet.Wallet, len(wal.multi.OpenedWalletIDsRaw()))
+	wallets := make(map[int]*dcrlibwallet.Wallet, len(wal.multi.OpenedWalletIDsRaw()))
 
-	for i, j := range wal.multi.OpenedWalletIDsRaw() {
+	for _, j := range wal.multi.OpenedWalletIDsRaw() {
 		w := wal.multi.WalletWithID(j)
 		if w == nil {
-			return nil, &InternalWalletError{
-				Message: "Invalid Wallet ID",
+			return nil, InternalWalletError{
+				Message:  "Invalid Wallet ID",
+				Err:      ErrIDNotExist,
+				Affected: []int{j},
 			}
 		}
-		wallets[i] = w
+		wallets[j] = w
 	}
 	return wallets, nil
 }

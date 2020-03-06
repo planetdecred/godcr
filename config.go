@@ -19,7 +19,6 @@ const (
 	defaultNetwork        = "testnet3"
 	defaultConfigFileName = "godcr.conf"
 	defaultLogFilename    = "godcr.log"
-	defaultDataDirname    = "data"
 	defaultLogLevel       = "info"
 	defaultLogDirname     = "logs"
 )
