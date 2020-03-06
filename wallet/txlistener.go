@@ -17,27 +17,21 @@ type TxConfirmed struct {
 }
 
 func (l *listener) OnTransaction(transaction string) {
-	l.Send <- Response{
-		Resp: NewTransaction(transaction),
-		Err:  nil,
-	}
+	l.Send <- SyncStatusUpdate{}
+
 }
 func (l *listener) OnBlockAttached(walletID int, blockHeight int32) {
-	l.Send <- Response{
-		Resp: NewBlock{
-			WalletID: walletID,
-			Height:   blockHeight,
-		},
-		Err: nil,
-	}
+	l.Send <- SyncStatusUpdate{}
+	// l.Send <- NewBlock{
+	// 	WalletID: walletID,
+	// 	Height:   blockHeight,
+	// }
 }
 func (l *listener) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
-	l.Send <- Response{
-		Resp: TxConfirmed{
-			WalletID: walletID,
-			Height:   blockHeight,
-			Hash:     hash,
-		},
-		Err: nil,
-	}
+	l.Send <- SyncStatusUpdate{}
+	// l.Send <- TxConfirmed{
+	// 	WalletID: walletID,
+	// 	Height:   blockHeight,
+	// 	Hash:     hash,
+	// }
 }
