@@ -504,8 +504,12 @@ func (page *Overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 						}),
 						layout.Expanded(func() {
 							layout.Align(layout.Center).Layout(gtx, func() {
-								gtx.Constraints.Width.Min = values.SyncButtonWidth - values.ButtonBorder
-								gtx.Constraints.Height.Max = values.SyncButtonHeight - values.ButtonBorder
+								gtx.Constraints.Height.Min = page.syncButtonCard.Height - values.ButtonBorder
+								gtx.Constraints.Height.Max = gtx.Constraints.Height.Min
+
+								gtx.Constraints.Width.Min = page.syncButtonCard.Width - values.ButtonBorder
+								gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
+
 								page.syncButton.Background = values.White
 								page.syncButton.Font.Size = units.SyncButtonTextSize
 								page.syncButton.Layout(gtx, page.syncButtonWidget)
