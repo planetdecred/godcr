@@ -47,12 +47,19 @@ func (win *Window) HandleInputs() {
 
 	// RESTORE WALLET
 
+	if win.inputs.restoreDiag.Clicked(win.gtx) && win.validateSeeds() != "" {
+		win.dialog = win.RestoreDiag
+		win.states.dialog = true
+	}
+
 	if win.inputs.restoreWallet.Clicked(win.gtx) {
 		pass := win.validatePasswords()
 		if pass == "" {
 			return
 		}
-		// TODO: implement
+
+		win.wallet.RestoreWallet(win.validateSeeds(), pass)
+		win.resetSeeds()
 		win.states.loading = true
 		log.Debug("Restore Wallet clicked")
 		return
@@ -154,4 +161,24 @@ func (win *Window) resetPasswords() {
 	win.inputs.spendingPassword.SetText("")
 	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
 	win.inputs.matchSpending.SetText("")
+}
+
+func (win *Window) validateSeeds() string {
+	text := ""
+
+	for _, editor := range win.inputs.seeds {
+		if editor.Text() == "" {
+			return ""
+		}
+
+		text += editor.Text() + " "
+	}
+
+	return text
+}
+
+func (win *Window) resetSeeds() {
+	for _, editor := range win.inputs.seeds {
+		editor.SetText("")
+	}
 }

@@ -1,19 +1,23 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 type inputs struct {
-	createDiag, deleteDiag, cancelDialog                      widget.Button
+	createDiag, deleteDiag, cancelDialog, restoreDiag         widget.Button
 	createWallet, restoreWallet, deleteWallet                 widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
+	toRestoreWallet                                           widget.Button
 	//toReceive                                                 widget.Button
 	sync widget.Button
 
 	spendingPassword, matchSpending, renameWallet widget.Editor
+	seeds                                         []widget.Editor
 }
 
 type combined struct {
@@ -24,16 +28,17 @@ type outputs struct {
 	icons struct {
 		add, check, cancel, sync decredmaterial.IconButton
 	}
-	spendingPassword, matchSpending                           decredmaterial.Editor
-	toOverview, toWallets, toTransactions, toSend, toSettings decredmaterial.IconButton
+	spendingPassword, matchSpending                                            decredmaterial.Editor
+	toOverview, toWallets, toRestoreWallet, toTransactions, toSend, toSettings decredmaterial.IconButton
 	//toReceive                                                 decredmaterial.IconButton
-	createDiag, restoreDiag, cancelDiag decredmaterial.IconButton
+	createDiag, cancelDiag decredmaterial.IconButton
 
-	createWallet, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
-	sync                                                  decredmaterial.IconButton
+	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
+	sync                                                               decredmaterial.IconButton
 
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
+	seeds                         []decredmaterial.Editor
 }
 
 func (win *Window) initWidgets() {
@@ -57,8 +62,9 @@ func (win *Window) initWidgets() {
 	win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
 	win.outputs.createWallet = theme.Button("create")
 
-	win.outputs.restoreDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
-	win.outputs.restoreWallet = theme.Button("restore")
+	win.outputs.toRestoreWallet = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
+	win.outputs.restoreDiag = theme.Button("Restore wallet")
+	win.outputs.restoreWallet = theme.Button("Restore")
 
 	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")
 	win.outputs.deleteWallet = theme.DangerButton("delete")
@@ -80,6 +86,12 @@ func (win *Window) initWidgets() {
 
 	win.outputs.sync = win.outputs.icons.sync
 
+	var testWords [33]string = [33]string{"baboon", "graduate", "frighten", "tolerance", "hamlet", "Bradbury", "regain", "consulting", "miser", "Dakota", "Geiger", "Chicago", "select", "cumbersome", "jawbone", "hideaway", "rematch", "enterprise", "concert", "positive", "spaniel", "tradition", "spigot", "bodyguard", "stagehand", "cumbersome", "beaming", "inception", "accrue", "applicant", "spindle", "tolerance", "sawdust"}
+	for i := 0; i <= 32; i++ {
+		win.outputs.seeds = append(win.outputs.seeds, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
+		win.inputs.seeds = append(win.inputs.seeds, widget.Editor{SingleLine: true, Submit: true})
+		win.inputs.seeds[i].SetText(testWords[i])
+	}
 }
 
 func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
