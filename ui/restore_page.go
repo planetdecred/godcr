@@ -14,8 +14,8 @@ const (
 )
 
 var (
-	inputGroupContainerLeft  = *&layout.List{Axis: layout.Vertical}
-	inputGroupContainerRight = *&layout.List{Axis: layout.Vertical}
+	inputGroupContainerLeft  = &layout.List{Axis: layout.Vertical}
+	inputGroupContainerRight = &layout.List{Axis: layout.Vertical}
 )
 
 // RestorePage lays out the main wallet page
@@ -39,10 +39,10 @@ func (win *Window) RestorePage() {
 				layout.Center.Layout(win.gtx, func() {
 					layout.Flex{}.Layout(win.gtx,
 						layout.Rigid(func() {
-							drawInputGroup(win, &inputGroupContainerLeft, 16, 0)
+							drawInputGroup(win, inputGroupContainerLeft, 16, 0)
 						}),
 						layout.Rigid(func() {
-							drawInputGroup(win, &inputGroupContainerRight, 17, 16)
+							drawInputGroup(win, inputGroupContainerRight, 17, 16)
 						}),
 					)
 				})
