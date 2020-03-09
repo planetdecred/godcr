@@ -141,14 +141,16 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			return
 		}
 		alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
-		for i, wall := range wallets {
+		index := 0
+		for _, wall := range wallets {
 			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
 			if err != nil {
 				resp.Err = err
 				wal.Send <- resp
 				return
 			}
-			alltxs[i] = txs
+			alltxs[index] = txs
+			index++
 		}
 
 		var recentTxs []dcrlibwallet.Transaction

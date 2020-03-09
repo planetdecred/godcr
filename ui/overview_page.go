@@ -17,10 +17,9 @@ import (
 // Overview represents the overview page of the app.
 // It is the first page the user sees on launch when a wallet exists.
 type overview struct {
-	win *Window
+	win   *Window
 	theme *decredmaterial.Theme
 
-	syncButtonWidget    *widget.Button
 	moreButtonWidget    *widget.Button
 	progressBar         *decredmaterial.ProgressBar
 	balanceTitle        decredmaterial.Label
@@ -93,16 +92,28 @@ func (win *Window) OverviewPage() {
 		return
 	}
 	body := func() {
+		page := overview{}
+		page.initialize(win)
+		page.update(win.gtx)
 
+		layout.Stack{}.Layout(win.gtx,
+			layout.Expanded(func() {
+				container := layout.Inset{Left: units.ContainerPadding, Right: units.ContainerPadding}
+				container.Layout(win.gtx, func() {
+					page.layout(win.gtx)
+				})
+			}),
+		)
 	}
 	win.Page(body)
 }
 
 // init initializes all widgets to be used on the overview page.
-func (page *overview) init(theme *decredmaterial.Theme, w *wallet.Wallet, win *Window) {
+func (page *overview) initialize(win *Window) {
+	theme := win.theme
 	page.theme = theme
 	page.win = win
-	page.wallet = w
+	page.wallet = win.wallet
 	page.row = layout.Flex{Axis: layout.Horizontal}
 	page.column = layout.Flex{Axis: layout.Vertical}
 	page.columnMargin = layout.Inset{Top: units.ColumnMargin}
@@ -119,8 +130,7 @@ func (page *overview) init(theme *decredmaterial.Theme, w *wallet.Wallet, win *W
 	page.statusTitle = theme.Caption("Wallet Status")
 	page.syncStatus = theme.H6("Syncing...")
 	page.onlineStatus = theme.Body1(" ")
-	page.syncButtonWidget = new(widget.Button)
-	page.syncButton = theme.Button("Cancel")
+	page.syncButton = win.outputs.sync
 	page.progressBar = theme.ProgressBar()
 	page.progressPercentage = theme.Body1("0%")
 	page.timeLeft = theme.Body1("0s left")
@@ -153,6 +163,10 @@ func (page *overview) init(theme *decredmaterial.Theme, w *wallet.Wallet, win *W
 	page.connectedPeersTitle.Color = values.TextGray
 	page.noTransaction.Color = values.TextGray
 	page.statusTitle.Color = values.TextGray
+
+	page.walletInfo = win.walletInfo
+	page.transactions = win.walletTransactions
+	page.win.states.overviewInitialized = true
 }
 
 // update updates every dynamic data on the page when the overview page is re-drawn.
@@ -248,8 +262,8 @@ func (page *overview) updateRecentTransactions() {
 	page.recentTransactions = page.transactions.Recent
 }
 
-// content lays out the entire content for overview page.
-func (page *overview) content(gtx *layout.Context) {
+// layout lays out the entire content for overview page.
+func (page *overview) layout(gtx *layout.Context) {
 	pageContent := []func(){
 		func() {
 			layout.Inset{Top: units.PageMarginTop}.Layout(gtx, func() {
@@ -330,10 +344,10 @@ func (page *overview) recentTransactionsColumn(gtx *layout.Context) {
 						layout.Inset{Top: units.Padding}.Layout(gtx, func() {
 							layout.Stack{}.Layout(gtx,
 								layout.Stacked(func() {
-									page.moreButtonCard.Color = values.ButtonGray
-									page.moreButtonCard.Width = values.MoreButtonWidth
-									page.moreButtonCard.Height = values.MoreButtonHeight
-									page.moreButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+									//page.moreButtonCard.Color = values.ButtonGray
+									//page.moreButtonCard.Width = values.MoreButtonWidth
+									//page.moreButtonCard.Height = values.MoreButtonHeight
+									//page.moreButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 								}),
 								layout.Expanded(func() {
 									layout.Center.Layout(gtx, func() {
@@ -341,7 +355,7 @@ func (page *overview) recentTransactionsColumn(gtx *layout.Context) {
 										gtx.Constraints.Height.Max = values.MoreButtonHeight - values.ButtonBorder
 										page.moreButton.Color = values.ButtonGray
 										page.moreButton.Background = values.White
-										page.moreButton.Font.Size = units.SyncButtonTextSize
+										page.moreButton.TextSize = units.SyncButtonTextSize
 										page.moreButton.Layout(gtx, page.moreButtonWidget)
 										for page.moreButtonWidget.Clicked(gtx) {
 											// go to transactions page
@@ -363,7 +377,7 @@ func (page *overview) recentTransactionRow(gtx *layout.Context, txn transactionW
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
-				layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)
+				layoutBalance(gtx, helper.Balance(txn.balance), txn.mainBalance, txn.subBalance)
 			})
 		}),
 		layout.Flexed(1, func() {
@@ -469,20 +483,17 @@ func (page *overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 				layout.E.Layout(gtx, func() {
 					layout.Stack{}.Layout(gtx,
 						layout.Stacked(func() {
-							page.syncButtonCard.Width = values.SyncButtonWidth
-							page.syncButtonCard.Height = values.SyncButtonHeight
-							page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
+							//page.syncButtonCard.Width = values.SyncButtonWidth
+							//page.syncButtonCard.Height = values.SyncButtonHeight
+							//page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
 						}),
 						layout.Expanded(func() {
 							layout.Center.Layout(gtx, func() {
 								gtx.Constraints.Width.Min = values.SyncButtonWidth - values.ButtonBorder
 								gtx.Constraints.Height.Max = values.SyncButtonHeight - values.ButtonBorder
 								page.syncButton.Background = values.White
-								page.syncButton.Font.Size = units.SyncButtonTextSize
-								page.syncButton.Layout(gtx, page.syncButtonWidget)
-								for page.syncButtonWidget.Clicked(gtx) {
-									page.triggerSync()
-								}
+								page.syncButton.TextSize = units.SyncButtonTextSize
+								page.syncButton.Layout(gtx, &page.win.inputs.sync)
 							})
 						}),
 					)
@@ -490,15 +501,6 @@ func (page *overview) syncStatusTextRow(gtx *layout.Context, inset layout.Inset)
 			}),
 		)
 	})
-}
-
-// triggerSync Cancels or Starts a wallet sync process
-func (page *overview) triggerSync() {
-	if page.walletInfo.Syncing || page.walletInfo.Synced {
-		page.wallet.CancelSync()
-	} else {
-		page.wallet.StartSync()
-	}
 }
 
 // syncBoxTitleRow lays out the progress bar.
@@ -541,9 +543,9 @@ func (page *overview) walletSyncBox(gtx *layout.Context, inset layout.Inset, det
 	page.columnMargin.Layout(gtx, func() {
 		layout.Stack{}.Layout(gtx,
 			layout.Stacked(func() {
-				page.walletSyncCard.Width = gtx.Px(units.WalletSyncBoxWidthMin)
-				page.walletSyncCard.Height = gtx.Px(units.WalletSyncBoxHeightMin)
-				page.walletSyncCard.Layout(gtx, 0)
+				//page.walletSyncCard.Width = gtx.Px(units.WalletSyncBoxWidthMin)
+				//page.walletSyncCard.Height = gtx.Px(units.WalletSyncBoxHeightMin)
+				//page.walletSyncCard.Layout(gtx, 0)
 			}),
 			layout.Stacked(func() {
 				uniform := layout.UniformInset(units.SyncBoxPadding)
@@ -582,4 +584,3 @@ func layoutBalance(gtx *layout.Context, amount string, main, sub decredmaterial.
 		}),
 	)
 }
-

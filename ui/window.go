@@ -2,7 +2,6 @@ package ui
 
 import (
 	"errors"
-
 	"gioui.org/app"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
@@ -19,9 +18,10 @@ type Window struct {
 	theme  *decredmaterial.Theme
 	gtx    *layout.Context
 
-	wallet           *wallet.Wallet
-	walletInfo       *wallet.MultiWalletInfo
-	walletSyncStatus *wallet.SyncStatus
+	wallet             *wallet.Wallet
+	walletInfo         *wallet.MultiWalletInfo
+	walletSyncStatus   *wallet.SyncStatus
+	walletTransactions *wallet.Transactions
 
 	current layout.Widget
 	dialog  layout.Widget
@@ -54,6 +54,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.gtx = layout.NewContext(win.window.Queue())
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
+	win.walletSyncStatus = new(wallet.SyncStatus)
 
 	win.wallet = wal
 	win.states.loading = true
@@ -88,13 +89,21 @@ func (win *Window) Loop(shutdown chan int) {
 		case update := <-win.wallet.Sync:
 			switch update.Stage {
 			case wallet.SyncCompleted:
-				win.outputs.sync = win.outputs.icons.check
+				// win.outputs.sync = win.outputs.icons.check
 				win.updateSyncStatus(false, true)
 			case wallet.SyncStarted:
 				win.updateSyncStatus(true, false)
 			case wallet.SyncCanceled:
-				win.outputs.sync = win.outputs.icons.sync
+				// win.outputs.sync = win.outputs.icons.sync
 				win.updateSyncStatus(false, false)
+			case wallet.HeadersFetchProgress:
+				win.updateSyncProgress(update.ProgressReport)
+			case wallet.AddressDiscoveryProgress:
+				win.updateSyncProgress(update.ProgressReport)
+			case wallet.HeadersRescanProgress:
+				win.updateSyncProgress(update.ProgressReport)
+			case wallet.PeersConnected:
+				win.updateConnectedPeers(update.ConnectedPeers)
 			}
 
 		case e := <-win.window.Events():

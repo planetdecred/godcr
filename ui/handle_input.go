@@ -157,7 +157,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.toOverview.Clicked(win.gtx) {
-		win.current = win.Overview
+		win.current = win.OverviewPage
 		return
 	}
 
@@ -174,12 +174,12 @@ func (win *Window) HandleInputs() {
 	// SYNC
 	if win.inputs.sync.Clicked(win.gtx) {
 		//log.Info("Sync clicked :", win.walletInfo.Synced, win.walletInfo.Syncing)
-		if win.walletInfo.Syncing {
+		if win.walletInfo.Synced || win.walletInfo.Syncing{
 			win.wallet.CancelSync()
-		} else if !win.walletInfo.Synced {
+			win.outputs.sync.Text = "reconnect"
+		} else {
 			win.wallet.StartSync()
-			cancel := win.outputs.icons.cancel
-			win.outputs.sync = cancel
+			win.outputs.sync.Text = "cancel"
 		}
 	}
 

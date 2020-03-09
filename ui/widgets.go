@@ -107,13 +107,12 @@ func (win *Window) initWidgets() {
 	win.outputs.err = theme.Caption("")
 	win.outputs.err.Color = theme.Color.Danger
 
-	win.outputs.sync = win.outputs.icons.sync
-
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
 		win.inputs.seedEditors.focusIndex = -1
 		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
+	win.outputs.sync = theme.Button("")
 
 	win.outputs.addAcctDiag = win.outputs.icons.add
 	win.outputs.addAccount = theme.Button("add")
