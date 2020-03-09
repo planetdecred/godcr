@@ -17,11 +17,16 @@ type inputs struct {
 	sync widget.Button
 
 	spendingPassword, matchSpending, renameWallet widget.Editor
-	seeds                                         []widget.Editor
+
+	seeds []widget.Editor
 }
 
 type combined struct {
 	sel *decredmaterial.Select
+
+	autocompleteButtons       [2]widget.Button
+	editorsEventsHandlerIndex int
+	suggestionsWords          []string
 }
 
 type outputs struct {
@@ -86,11 +91,11 @@ func (win *Window) initWidgets() {
 
 	win.outputs.sync = win.outputs.icons.sync
 
-	var testWords [33]string = [33]string{"baboon", "graduate", "frighten", "tolerance", "hamlet", "Bradbury", "regain", "consulting", "miser", "Dakota", "Geiger", "Chicago", "select", "cumbersome", "jawbone", "hideaway", "rematch", "enterprise", "concert", "positive", "spaniel", "tradition", "spigot", "bodyguard", "stagehand", "cumbersome", "beaming", "inception", "accrue", "applicant", "spindle", "tolerance", "sawdust"}
+	// var testWords [33]string = [33]string{"baboon", "graduate", "frighten", "tolerance", "hamlet", "Bradbury", "regain", "consulting", "miser", "Dakota", "Geiger", "Chicago", "select", "cumbersome", "jawbone", "hideaway", "rematch", "enterprise", "concert", "positive", "spaniel", "tradition", "spigot", "bodyguard", "stagehand", "cumbersome", "beaming", "inception", "accrue", "applicant", "spindle", "tolerance", "sawdust"}
 	for i := 0; i <= 32; i++ {
 		win.outputs.seeds = append(win.outputs.seeds, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
 		win.inputs.seeds = append(win.inputs.seeds, widget.Editor{SingleLine: true, Submit: true})
-		win.inputs.seeds[i].SetText(testWords[i])
+		// win.inputs.seeds[i].SetText(testWords[i])
 	}
 }
 

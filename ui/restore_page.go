@@ -2,15 +2,12 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
-)
-
-const (
-	suggestionItems = 4   // Maximum of suggestionItems
-	buttonWidth     = 210 // Width of the buttons
+	"github.com/raedahgroup/dcrlibwallet"
 )
 
 var (
@@ -18,7 +15,7 @@ var (
 	inputGroupContainerRight = &layout.List{Axis: layout.Vertical}
 )
 
-// RestorePage lays out the main wallet page
+// RestorePage lays out the main restore page
 func (win *Window) RestorePage() {
 	body := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
@@ -39,17 +36,17 @@ func (win *Window) RestorePage() {
 				layout.Center.Layout(win.gtx, func() {
 					layout.Flex{}.Layout(win.gtx,
 						layout.Rigid(func() {
-							drawInputGroup(win, inputGroupContainerLeft, 16, 0)
+							inputsGroup(win, inputGroupContainerLeft, 16, 0)
 						}),
 						layout.Rigid(func() {
-							drawInputGroup(win, inputGroupContainerRight, 17, 16)
+							inputsGroup(win, inputGroupContainerRight, 17, 16)
 						}),
 					)
 				})
 			}),
 			layout.Rigid(func() {
 				layout.Center.Layout(win.gtx, func() {
-					win.gtx.Constraints.Width.Min = buttonWidth
+					win.gtx.Constraints.Width.Min = 210
 					layout.Inset{Top: unit.Dp(15), Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
 						win.outputs.restoreDiag.Layout(win.gtx, &win.inputs.restoreDiag)
 					})
@@ -61,8 +58,7 @@ func (win *Window) RestorePage() {
 	win.Page(body)
 }
 
-// drawInputGroup lays out the list vertically with each row align input and label horizontally
-func drawInputGroup(win *Window, l *layout.List, len int, startIndex int) {
+func inputsGroup(win *Window, l *layout.List, len int, startIndex int) {
 	win.gtx.Constraints.Width.Min = win.gtx.Constraints.Width.Max / 2
 	l.Layout(win.gtx, len, func(i int) {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
@@ -75,13 +71,34 @@ func drawInputGroup(win *Window, l *layout.List, len int, startIndex int) {
 						layout.Inset{Left: unit.Dp(20), Bottom: unit.Dp(20)}.Layout(win.gtx, func() {
 							win.outputs.seeds[i+startIndex].Layout(win.gtx, &win.inputs.seeds[i+startIndex])
 						})
-						// pg.editorEventsHandler(gtx, i+startIndex)
 					}),
 				)
 			}),
-			// layout.Rigid(func() {
-			// 	pg.drawAutoComplete(gtx, i+startIndex)
-			// }),
+			layout.Rigid(func() {
+				autoComplete(win, i+startIndex)
+			}),
 		)
+	})
+}
+
+func autoComplete(win *Window, index int) {
+	if index != win.combined.editorsEventsHandlerIndex {
+		return
+	}
+
+	win.combined.suggestionsWords = nil
+
+	for _, word := range dcrlibwallet.PGPWordList() {
+		if strings.HasPrefix(word, win.inputs.seeds[index].Text()) {
+			win.combined.suggestionsWords = append(win.combined.suggestionsWords, word)
+		}
+	}
+
+	(&layout.List{Axis: layout.Horizontal}).Layout(win.gtx, len(win.combined.suggestionsWords), func(i int) {
+		if i < len(win.combined.autocompleteButtons) {
+			layout.Inset{Right: unit.Dp(4)}.Layout(win.gtx, func() {
+				win.theme.Button(win.combined.suggestionsWords[i]).Layout(win.gtx, &win.combined.autocompleteButtons[i])
+			})
+		}
 	})
 }

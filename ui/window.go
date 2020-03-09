@@ -57,7 +57,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.states.loading = true
 	win.tabs = decredmaterial.NewTabs()
 	win.tabs.Flex.Spacing = layout.SpaceBetween
-	win.current = win.RestorePage
+	win.current = win.WalletsPage
 	win.dialog = func() {}
 
 	win.initWidgets()

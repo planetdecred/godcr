@@ -1,6 +1,10 @@
 package ui
 
-import "gioui.org/widget"
+import (
+	"strings"
+
+	"gioui.org/widget"
+)
 
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
@@ -46,6 +50,14 @@ func (win *Window) HandleInputs() {
 	}
 
 	// RESTORE WALLET
+
+	if win.inputs.toRestoreWallet.Clicked(win.gtx) {
+		win.current = win.RestorePage
+		return
+	}
+
+	win.editorSeedsEventsHandler()
+	win.onSuggestionSeedsClicked()
 
 	if win.inputs.restoreDiag.Clicked(win.gtx) && win.validateSeeds() != "" {
 		win.dialog = win.RestoreDiag
@@ -166,8 +178,9 @@ func (win *Window) resetPasswords() {
 func (win *Window) validateSeeds() string {
 	text := ""
 
-	for _, editor := range win.inputs.seeds {
+	for i, editor := range win.inputs.seeds {
 		if editor.Text() == "" {
+			win.outputs.seeds[i].HintColor = win.theme.Color.Danger
 			return ""
 		}
 
@@ -180,5 +193,39 @@ func (win *Window) validateSeeds() string {
 func (win *Window) resetSeeds() {
 	for _, editor := range win.inputs.seeds {
 		editor.SetText("")
+	}
+}
+
+func (win *Window) editorSeedsEventsHandler() {
+	for i, editor := range win.inputs.seeds {
+		if editor.Focused() &&
+			(win.combined.editorsEventsHandlerIndex != i || strings.Trim(editor.Text(), " ") == "") {
+			win.combined.editorsEventsHandlerIndex = -1
+		}
+
+		for _, e := range editor.Events(win.gtx) {
+			switch e.(type) {
+			case widget.ChangeEvent:
+				win.combined.editorsEventsHandlerIndex = i
+			case widget.SubmitEvent:
+				if i < len(win.inputs.seeds)-1 {
+					win.inputs.seeds[i+1].Focus()
+				}
+			}
+		}
+	}
+}
+
+func (win *Window) onSuggestionSeedsClicked() {
+	for i := 0; i < len(win.combined.autocompleteButtons); i++ {
+		if win.combined.autocompleteButtons[i].Clicked(win.gtx) {
+			win.inputs.seeds[win.combined.editorsEventsHandlerIndex].SetText(win.combined.suggestionsWords[i])
+			win.inputs.seeds[win.combined.editorsEventsHandlerIndex].Move(len(win.combined.suggestionsWords[i]))
+			win.combined.suggestionsWords = nil
+
+			if win.combined.editorsEventsHandlerIndex < len(win.inputs.seeds)-1 {
+				win.inputs.seeds[win.combined.editorsEventsHandlerIndex+1].Focus()
+			}
+		}
 	}
 }
