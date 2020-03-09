@@ -18,7 +18,7 @@ type inputs struct {
 	addAccount, toggleWalletRename                            widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
-	//toReceive                                                 widget.Button
+	toReceive                                                 widget.Button
 	sync, syncHeader widget.Button
 
 	spendingPassword, matchSpending, rename, dialog widget.Editor
@@ -46,7 +46,7 @@ type outputs struct {
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
-	//toReceive                                                 decredmaterial.IconButton
+	toReceive                                                 decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag decredmaterial.IconButton
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
@@ -102,6 +102,7 @@ func (win *Window) initWidgets() {
 	win.outputs.toTransactions = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.SocialPoll)))
 	win.outputs.toSettings = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionSettings)))
 	win.outputs.toSend = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSend)))
+	win.outputs.toReceive = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)))
 
 	win.outputs.noWallet = theme.H3("No wallet loaded")
 

@@ -161,6 +161,11 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	if win.inputs.toReceive.Clicked(win.gtx) {
+		win.current = win.Receive
+		return
+	}
+
 	if win.inputs.toSend.Clicked(win.gtx) {
 		win.current = win.SendPage
 		return
