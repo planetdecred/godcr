@@ -234,6 +234,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				wal.Send <- resp
 				return
 			}
+
 			var acctBalance int64
 			accts := make([]Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
@@ -255,6 +256,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					},
 					HDPath:         wal.hdPrefix() + strconv.Itoa(int(acct.Number)) + "'",
 					CurrentAddress: addr,
+					SpendableBalance: acct.Balance.Spendable,
 				})
 				acctBalance += acct.TotalBalance
 			}

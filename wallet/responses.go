@@ -76,6 +76,11 @@ type Account struct {
 // AddedAccount is sent when the wallet is done adding an account
 type AddedAccount struct {
 	ID int32
+	Number         string
+	Name           string
+	TotalBalance   string
+	CurrentAddress string
+	SpendableBalance int64
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets
