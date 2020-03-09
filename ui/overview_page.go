@@ -95,15 +95,10 @@ func (win *Window) OverviewPage() {
 		page := overview{}
 		page.initialize(win)
 		page.update(win.gtx)
-
-		layout.Stack{}.Layout(win.gtx,
-			layout.Expanded(func() {
-				container := layout.Inset{Left: units.ContainerPadding, Right: units.ContainerPadding}
-				container.Layout(win.gtx, func() {
-					page.layout(win.gtx)
-				})
-			}),
-		)
+		container := layout.Inset{Left: units.ContainerPadding, Right: units.ContainerPadding}
+		container.Layout(win.gtx, func() {
+			page.layout(win.gtx)
+		})
 	}
 	win.Page(body)
 }
