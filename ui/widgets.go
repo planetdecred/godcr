@@ -19,7 +19,11 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
 	toReceive                                                 widget.Button
+<<<<<<< HEAD
 	sync, syncHeader widget.Button
+=======
+	sync, info, more, dropdown                                widget.Button
+>>>>>>> added selected accountlabel
 
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 
@@ -42,7 +46,7 @@ type outputs struct {
 		create, clear, done *decredmaterial.Icon
 	}
 	icons struct {
-		add, check, cancel, sync decredmaterial.IconButton
+		add, check, cancel, sync, info, more, dropdown decredmaterial.IconButton
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
@@ -51,8 +55,12 @@ type outputs struct {
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
 	addAccount                                                         decredmaterial.Button
+<<<<<<< HEAD
 	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
 	sync, more                                                         decredmaterial.Button
+=======
+	sync, toggleWalletRename, renameWallet, info, more, dropdown                              decredmaterial.IconButton
+>>>>>>> added selected accountlabel
 
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
@@ -76,6 +84,9 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.cancel.Background = theme.Color.Danger
 	win.outputs.icons.check = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)))
 	win.outputs.icons.check.Background = theme.Color.Success
+	win.outputs.icons.more = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
+	win.outputs.icons.info = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionInfo)))
+	win.outputs.icons.dropdown = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowDropDown)))
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
@@ -108,9 +119,17 @@ func (win *Window) initWidgets() {
 
 	win.outputs.err = theme.Caption("")
 	win.outputs.err.Color = theme.Color.Danger
+<<<<<<< HEAD
 	win.outputs.sync = theme.Button("Reconnect")
 	win.outputs.syncHeader = win.outputs.icons.sync
 	win.outputs.more = theme.Button("more")
+=======
+
+	win.outputs.sync = win.outputs.icons.sync
+	win.outputs.more = win.outputs.icons.more
+	win.outputs.info = win.outputs.icons.info
+	win.outputs.dropdown = win.outputs.icons.dropdown
+>>>>>>> added selected accountlabel
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
