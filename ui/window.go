@@ -116,7 +116,7 @@ func (win *Window) Loop(shutdown chan int) {
 				evt.Frame(win.gtx.Ops)
 			case key.Event:
 				win.combined.keyEvent = &evt
-				win.HandleInputs()
+				win.KeysEventsHandler()
 			case nil:
 				// Ignore
 			default:

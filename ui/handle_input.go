@@ -59,7 +59,6 @@ func (win *Window) HandleInputs() {
 
 	win.editorSeedsEventsHandler()
 	win.onSuggestionSeedsClicked()
-	win.keysEventsHandler()
 
 	if win.inputs.restoreDiag.Clicked(win.gtx) && win.validateSeeds() != "" {
 		win.dialog = win.RestoreDiag
@@ -231,9 +230,9 @@ func (win *Window) onSuggestionSeedsClicked() {
 	}
 }
 
-// keysEventsHandler handlers all key events when typing editor, if pressed Tab will putting first word
+// KeysEventsHandler handlers all key events when typing editor, if Tab pressed will putting first word
 // from the list of suggestion to the editor
-func (win *Window) keysEventsHandler() {
+func (win *Window) KeysEventsHandler() {
 	if win.combined.keyEvent == nil {
 		return
 	}
