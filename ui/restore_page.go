@@ -46,7 +46,6 @@ func (win *Window) RestorePage() {
 			}),
 			layout.Rigid(func() {
 				layout.Center.Layout(win.gtx, func() {
-					win.gtx.Constraints.Width.Min = 210
 					layout.Inset{Top: unit.Dp(15), Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
 						win.outputs.restoreDiag.Layout(win.gtx, &win.inputs.restoreDiag)
 					})

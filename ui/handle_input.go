@@ -71,7 +71,6 @@ func (win *Window) HandleInputs() {
 		}
 
 		win.wallet.RestoreWallet(win.validateSeeds(), pass)
-		win.resetSeeds()
 		win.states.loading = true
 		log.Debug("Restore Wallet clicked")
 		return
@@ -191,8 +190,8 @@ func (win *Window) validateSeeds() string {
 }
 
 func (win *Window) resetSeeds() {
-	for _, editor := range win.inputs.seeds {
-		editor.SetText("")
+	for i := 0; i < len(win.inputs.seeds); i++ {
+		win.inputs.seeds[i].SetText("")
 	}
 }
 

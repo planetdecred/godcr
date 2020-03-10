@@ -48,13 +48,5 @@ func (win *Window) WalletsPage() {
 			}),
 		)
 	}
-
-	layout.Stack{Alignment: layout.SE}.Layout(win.gtx,
-		layout.Expanded(func() {
-			win.TabbedPage(body)
-		}),
-		layout.Stacked(func() {
-			win.outputs.toRestoreWallet.Layout(win.gtx, &win.inputs.toRestoreWallet)
-		}),
-	)
+	win.TabbedPage(body)
 }
