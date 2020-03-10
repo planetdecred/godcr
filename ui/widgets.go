@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 
+	"gioui.org/io/key"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -24,9 +25,10 @@ type inputs struct {
 type combined struct {
 	sel *decredmaterial.Select
 
-	autocompleteButtons       [2]widget.Button
-	editorsEventsHandlerIndex int
-	suggestionsWords          []string
+	keyEvent                *key.Event
+	seedEditorsHandlerIndex int
+	seedsSuggestions        []string
+	seedsSuggestionsBtn     [2]widget.Button
 }
 
 type outputs struct {

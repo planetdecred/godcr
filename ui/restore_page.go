@@ -81,22 +81,22 @@ func inputsGroup(win *Window, l *layout.List, len int, startIndex int) {
 }
 
 func autoComplete(win *Window, index int) {
-	if index != win.combined.editorsEventsHandlerIndex {
+	if index != win.combined.seedEditorsHandlerIndex {
 		return
 	}
 
-	win.combined.suggestionsWords = nil
+	win.combined.seedsSuggestions = nil
 
 	for _, word := range dcrlibwallet.PGPWordList() {
 		if strings.HasPrefix(word, win.inputs.seeds[index].Text()) {
-			win.combined.suggestionsWords = append(win.combined.suggestionsWords, word)
+			win.combined.seedsSuggestions = append(win.combined.seedsSuggestions, word)
 		}
 	}
 
-	(&layout.List{Axis: layout.Horizontal}).Layout(win.gtx, len(win.combined.suggestionsWords), func(i int) {
-		if i < len(win.combined.autocompleteButtons) {
+	(&layout.List{Axis: layout.Horizontal}).Layout(win.gtx, len(win.combined.seedsSuggestions), func(i int) {
+		if i < len(win.combined.seedsSuggestionsBtn) {
 			layout.Inset{Right: unit.Dp(4)}.Layout(win.gtx, func() {
-				win.theme.Button(win.combined.suggestionsWords[i]).Layout(win.gtx, &win.combined.autocompleteButtons[i])
+				win.theme.Button(win.combined.seedsSuggestions[i]).Layout(win.gtx, &win.combined.seedsSuggestionsBtn[i])
 			})
 		}
 	})

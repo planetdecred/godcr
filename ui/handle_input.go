@@ -3,6 +3,7 @@ package ui
 import (
 	"strings"
 
+	"gioui.org/io/key"
 	"gioui.org/widget"
 )
 
@@ -58,6 +59,7 @@ func (win *Window) HandleInputs() {
 
 	win.editorSeedsEventsHandler()
 	win.onSuggestionSeedsClicked()
+	win.keysEventsHandler()
 
 	if win.inputs.restoreDiag.Clicked(win.gtx) && win.validateSeeds() != "" {
 		win.dialog = win.RestoreDiag
@@ -198,14 +200,14 @@ func (win *Window) resetSeeds() {
 func (win *Window) editorSeedsEventsHandler() {
 	for i, editor := range win.inputs.seeds {
 		if editor.Focused() &&
-			(win.combined.editorsEventsHandlerIndex != i || strings.Trim(editor.Text(), " ") == "") {
-			win.combined.editorsEventsHandlerIndex = -1
+			(win.combined.seedEditorsHandlerIndex != i || strings.Trim(editor.Text(), " ") == "") {
+			win.combined.seedEditorsHandlerIndex = -1
 		}
 
 		for _, e := range editor.Events(win.gtx) {
 			switch e.(type) {
 			case widget.ChangeEvent:
-				win.combined.editorsEventsHandlerIndex = i
+				win.combined.seedEditorsHandlerIndex = i
 			case widget.SubmitEvent:
 				if i < len(win.inputs.seeds)-1 {
 					win.inputs.seeds[i+1].Focus()
@@ -216,15 +218,35 @@ func (win *Window) editorSeedsEventsHandler() {
 }
 
 func (win *Window) onSuggestionSeedsClicked() {
-	for i := 0; i < len(win.combined.autocompleteButtons); i++ {
-		if win.combined.autocompleteButtons[i].Clicked(win.gtx) {
-			win.inputs.seeds[win.combined.editorsEventsHandlerIndex].SetText(win.combined.suggestionsWords[i])
-			win.inputs.seeds[win.combined.editorsEventsHandlerIndex].Move(len(win.combined.suggestionsWords[i]))
-			win.combined.suggestionsWords = nil
+	for i := 0; i < len(win.combined.seedsSuggestionsBtn); i++ {
+		if win.combined.seedsSuggestionsBtn[i].Clicked(win.gtx) {
+			win.inputs.seeds[win.combined.seedEditorsHandlerIndex].SetText(win.combined.seedsSuggestions[i])
+			win.inputs.seeds[win.combined.seedEditorsHandlerIndex].Move(len(win.combined.seedsSuggestions[i]))
+			win.combined.seedsSuggestions = nil
 
-			if win.combined.editorsEventsHandlerIndex < len(win.inputs.seeds)-1 {
-				win.inputs.seeds[win.combined.editorsEventsHandlerIndex+1].Focus()
+			if win.combined.seedEditorsHandlerIndex < len(win.inputs.seeds)-1 {
+				win.inputs.seeds[win.combined.seedEditorsHandlerIndex+1].Focus()
 			}
 		}
 	}
+}
+
+// keysEventsHandler handlers all key events when typing editor, if pressed Tab will putting first word
+// from the list of suggestion to the editor
+func (win *Window) keysEventsHandler() {
+	if win.combined.keyEvent == nil {
+		return
+	}
+
+	evt := win.combined.keyEvent
+
+	if evt.Name == key.NameTab &&
+		win.combined.seedEditorsHandlerIndex != -1 &&
+		win.combined.seedsSuggestions != nil {
+		txt := win.combined.seedsSuggestions[0]
+		win.inputs.seeds[win.combined.seedEditorsHandlerIndex].SetText(txt)
+		win.inputs.seeds[win.combined.seedEditorsHandlerIndex].Move(len(txt))
+	}
+
+	win.combined.keyEvent = nil
 }

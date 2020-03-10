@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"gioui.org/app"
+	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
 
@@ -113,7 +114,9 @@ func (win *Window) Loop(shutdown chan int) {
 
 				win.HandleInputs()
 				evt.Frame(win.gtx.Ops)
-
+			case key.Event:
+				win.combined.keyEvent = &evt
+				win.HandleInputs()
 			case nil:
 				// Ignore
 			default:
