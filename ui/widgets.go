@@ -19,11 +19,8 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
 	toReceive                                                 widget.Button
-<<<<<<< HEAD
 	sync, syncHeader widget.Button
-=======
-	sync, info, more, dropdown                                widget.Button
->>>>>>> added selected accountlabel
+	info, more, dropdown, copy                               widget.Button
 
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 
@@ -46,7 +43,7 @@ type outputs struct {
 		create, clear, done *decredmaterial.Icon
 	}
 	icons struct {
-		add, check, cancel, sync, info, more, dropdown decredmaterial.IconButton
+		add, check, cancel, sync, info, more, dropdown, copy decredmaterial.IconButton
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
@@ -55,18 +52,21 @@ type outputs struct {
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
 	addAccount                                                         decredmaterial.Button
-<<<<<<< HEAD
 	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
 	sync, more                                                         decredmaterial.Button
-=======
-	sync, toggleWalletRename, renameWallet, info, more, dropdown                              decredmaterial.IconButton
->>>>>>> added selected accountlabel
+
+	sync, toggleWalletRename, renameWallet, info, more, dropdown, copy                              decredmaterial.IconButton
 
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
+
+	//receive page labels
+	selectedAccountNameLabel, selectedAccountBalanceLabel decredmaterial.Label
+	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
+	selectedWalletBalLabel, selectedWalletNameLabel decredmaterial.Label
 }
 
 func (win *Window) initWidgets() {
@@ -87,6 +87,7 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.more = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
 	win.outputs.icons.info = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionInfo)))
 	win.outputs.icons.dropdown = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowDropDown)))
+	win.outputs.icons.copy = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy)))
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
@@ -107,6 +108,18 @@ func (win *Window) initWidgets() {
 	win.outputs.cancelDiag = win.outputs.icons.cancel
 
 	win.outputs.notImplemented = theme.H3("Not Implemented")
+
+	//receive Labels
+	win.outputs.selectedAccountNameLabel = win.theme.H6("")
+	win.outputs.selectedWalletNameLabel = win.theme.Body2("")
+	win.outputs.selectedWalletBalLabel = win.theme.Body2("")
+	win.outputs.selectedAccountBalanceLabel = win.theme.H6("")
+	win.outputs.receiveAddressLabel = win.theme.H6("")
+	// win.outputs.receiveAddressLabel.Color = ui.LightBlueColor
+	// win.outputs.errorLabel = win.theme.Body1("")
+	// win.outputs.errorLabel.Color = ui.DangerColor
+	win.outputs.addressCopiedLabel = win.theme.Caption("")
+	// win.outputs.addressCopiedLabel.Color = ui.LightBlueColor
 
 	win.outputs.toWallets = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionAccountBalanceWallet)))
 	win.outputs.toOverview = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionHome)))
@@ -129,7 +142,11 @@ func (win *Window) initWidgets() {
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.dropdown = win.outputs.icons.dropdown
+<<<<<<< HEAD
 >>>>>>> added selected accountlabel
+=======
+	win.outputs.copy = win.outputs.icons.copy
+>>>>>>> refactored selected selected walletacount codes 2
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
