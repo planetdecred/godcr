@@ -19,8 +19,12 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
 	toReceive                                                 widget.Button
+<<<<<<< HEAD
 	sync, syncHeader widget.Button
 	info, more, dropdown, copy                               widget.Button
+=======
+	sync, info, more, dropdown, copy                          widget.Button
+>>>>>>> added receive address section
 
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 
@@ -64,9 +68,9 @@ type outputs struct {
 	seedsSuggestions []decredmaterial.Button
 
 	//receive page labels
-	selectedAccountNameLabel, selectedAccountBalanceLabel decredmaterial.Label
+	selectedAccountNameLabel, selectedAccountBalanceLabel           decredmaterial.Label
 	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
-	selectedWalletBalLabel, selectedWalletNameLabel decredmaterial.Label
+	selectedWalletBalLabel, selectedWalletNameLabel                 decredmaterial.Label
 }
 
 func (win *Window) initWidgets() {
@@ -132,21 +136,14 @@ func (win *Window) initWidgets() {
 
 	win.outputs.err = theme.Caption("")
 	win.outputs.err.Color = theme.Color.Danger
-<<<<<<< HEAD
 	win.outputs.sync = theme.Button("Reconnect")
 	win.outputs.syncHeader = win.outputs.icons.sync
 	win.outputs.more = theme.Button("more")
-=======
 
 	win.outputs.sync = win.outputs.icons.sync
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.dropdown = win.outputs.icons.dropdown
-<<<<<<< HEAD
->>>>>>> added selected accountlabel
-=======
-	win.outputs.copy = win.outputs.icons.copy
->>>>>>> refactored selected selected walletacount codes 2
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
