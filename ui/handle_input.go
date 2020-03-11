@@ -174,12 +174,12 @@ func (win *Window) HandleInputs() {
 	// SYNC
 	if win.inputs.sync.Clicked(win.gtx) {
 		//log.Info("Sync clicked :", win.walletInfo.Synced, win.walletInfo.Syncing)
-		if win.walletInfo.Synced || win.walletInfo.Syncing{
+		if win.walletInfo.Synced || win.walletInfo.Syncing {
 			win.wallet.CancelSync()
-			win.outputs.sync.Text = "reconnect"
+			win.outputs.sync = win.theme.Button("Reconnect")
 		} else {
 			win.wallet.StartSync()
-			win.outputs.sync.Text = "cancel"
+			win.outputs.sync = win.theme.DangerButton("Cancel")
 		}
 	}
 

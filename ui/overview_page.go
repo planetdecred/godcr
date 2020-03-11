@@ -3,12 +3,11 @@ package ui
 import (
 	"fmt"
 	"gioui.org/layout"
-	"github.com/raedahgroup/godcr-gio/ui/helper"
-
+	"gioui.org/unit"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"github.com/raedahgroup/godcr-gio/ui/units"
-	"github.com/raedahgroup/godcr-gio/ui/values"
+	"github.com/raedahgroup/godcr-gio/ui/helper"
+	"image/color"
 )
 
 const (
@@ -26,6 +25,27 @@ const (
 	notSyncedStatus      = "Not Synced"
 	syncedStatus         = "Synced"
 	fetchingBlockHeaders = "Fetching block headers"
+)
+
+var (
+	listContainer = &layout.List{Axis: layout.Vertical}
+	walletSyncList = &layout.List{Axis: layout.Horizontal}
+	 
+	syncButtonHeight = 70
+	syncButtonWidth = 145
+	moreButtonWidth = 115
+	moreButtonHeight = 70
+
+	padding = unit.Dp(5)
+	containerPadding = unit.Dp(20)
+	pageMarginTop = unit.Dp(50)
+	columnMargin = unit.Dp(30)
+	transactionsRowMargin = unit.Dp(10)
+	noPadding = unit.Dp(0)
+	walletSyncBoxContentWidth = unit.Dp(280)
+	syncButtonTextSize = unit.Dp(10)
+
+	gray = color.RGBA{137, 151, 165, 255}
 )
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -54,7 +74,7 @@ func (win *Window) OverviewPage() {
 		return
 	}
 	body := func() {
-		container := layout.Inset{Left: units.ContainerPadding, Right: units.ContainerPadding}
+		container := layout.Inset{Left: containerPadding, Right: containerPadding}
 		container.Layout(win.gtx, func() {
 			layoutPage(win)
 		})
@@ -80,7 +100,7 @@ func layoutPage(win *Window) {
 
 	pageContent := []func(){
 		func() {
-			layout.Inset{Top: units.PageMarginTop}.Layout(gtx, func() {
+			layout.Inset{Top: pageMarginTop}.Layout(gtx, func() {
 				layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func() {
 						mainBalance := theme.H4("")
@@ -98,15 +118,14 @@ func layoutPage(win *Window) {
 			recentTransactionsColumn(win)
 		},
 		func() {
-			layout.Inset{Bottom: units.ContainerPadding}.Layout(gtx, func() {
+			layout.Inset{Bottom: containerPadding}.Layout(gtx, func() {
 				syncStatusColumn(win)
 			})
 		},
 	}
 
-	listContainer := layout.List{Axis: layout.Vertical}
 	listContainer.Layout(gtx, len(pageContent), func(i int) {
-		layout.UniformInset(units.NoPadding).Layout(gtx, pageContent[i])
+		layout.UniformInset(noPadding).Layout(gtx, pageContent[i])
 	})
 }
 
@@ -118,7 +137,7 @@ func recentTransactionsColumn(win *Window) {
 	recentTransactions := win.walletTransactions.Recent
 
 	var transactionRows []func()
-	if len(recentTransactions) > 0 {
+	if len(win.walletTransactions.Txs) > 0 {
 		for _, txn := range recentTransactions {
 			txnWidgets := transactionWidgets{
 				wallet:      theme.Body1(""),
@@ -143,17 +162,17 @@ func recentTransactionsColumn(win *Window) {
 		}
 	} else {
 		transactionRows = append(transactionRows, func() {
-			layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Flexed(values.EntireSpace, func() {
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Flexed(1, func() {
 				layout.Center.Layout(gtx, func() {
 					label := theme.Caption(noTransaction)
-					label.Color = values.TextGray
+					label.Color = gray
 					label.Layout(gtx)
 				})
 			}))
 		})
 	}
 
-	layout.Inset{Top: units.ColumnMargin}.Layout(gtx, func() {
+	layout.Inset{Top: columnMargin}.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
 				theme.Caption(transactionsTitle).Layout(gtx)
@@ -161,28 +180,21 @@ func recentTransactionsColumn(win *Window) {
 			layout.Rigid(func() {
 				list := &layout.List{Axis: layout.Vertical}
 				list.Layout(gtx, len(transactionRows), func(i int) {
-					layout.Inset{Top: units.Padding}.Layout(gtx, transactionRows[i])
+					layout.Inset{Top: padding}.Layout(gtx, transactionRows[i])
 				})
 			}),
 			layout.Rigid(func() {
 				if len(transactionRows) > 5 {
 					layout.Center.Layout(gtx, func() {
-						layout.Inset{Top: units.Padding}.Layout(gtx, func() {
+						layout.Inset{Top: padding}.Layout(gtx, func() {
 							layout.Stack{}.Layout(gtx,
-								layout.Stacked(func() {
-									//page.moreButtonCard.Color = values.ButtonGray
-									//page.moreButtonCard.Width = values.MoreButtonWidth
-									//page.moreButtonCard.Height = values.MoreButtonHeight
-									//page.moreButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
-								}),
 								layout.Expanded(func() {
 									layout.Center.Layout(gtx, func() {
-										//gtx.Constraints.Width.Min = values.MoreButtonWidth - values.ButtonBorder
-										//gtx.Constraints.Height.Max = values.MoreButtonHeight - values.ButtonBorder
-										//page.moreButton.Color = values.ButtonGray
-										//page.moreButton.Background = values.White
-										//page.moreButton.TextSize = units.SyncButtonTextSize
-										//page.moreButton.Layout(gtx, page.moreButtonWidget)
+										gtx.Constraints.Width.Min = moreButtonWidth
+										gtx.Constraints.Height.Max = moreButtonHeight
+										moreButton := win.outputs.more
+										moreButton.TextSize = syncButtonTextSize
+										moreButton.Layout(gtx, &win.inputs.toTransactions)
 									})
 								}),
 							)
@@ -196,7 +208,7 @@ func recentTransactionsColumn(win *Window) {
 
 // recentTransactionRow lays out a single row of a recent transaction.
 func recentTransactionRow(gtx *layout.Context, txn transactionWidgets) {
-	margin := layout.UniformInset(units.TransactionsRowMargin)
+	margin := layout.UniformInset(transactionsRowMargin)
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
@@ -230,8 +242,8 @@ func recentTransactionRow(gtx *layout.Context, txn transactionWidgets) {
 // syncStatusColumn lays out content for displaying sync status.
 func syncStatusColumn(win *Window) {
 	gtx := win.gtx
-	uniform := layout.UniformInset(units.Padding)
-	layout.Inset{Top: units.ColumnMargin}.Layout(gtx, func() {
+	uniform := layout.UniformInset(padding)
+	layout.Inset{Top: columnMargin}.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
 				syncBoxTitleRow(win, uniform)
@@ -285,7 +297,7 @@ func endToEndRow(gtx *layout.Context, inset layout.Inset, leftLabel, rightLabel 
 			layout.Rigid(func() {
 				leftLabel.Layout(gtx)
 			}),
-			layout.Flexed(values.EntireSpace, func() {
+			layout.Flexed(1, func() {
 				layout.E.Layout(gtx, func() {
 					rightLabel.Layout(gtx)
 				})
@@ -297,7 +309,7 @@ func endToEndRow(gtx *layout.Context, inset layout.Inset, leftLabel, rightLabel 
 // syncBoxTitleRow lays out widgets in the title row inside the sync status box.
 func syncBoxTitleRow(win *Window, inset layout.Inset) {
 	statusTitleLabel := win.theme.Caption(statusTitle)
-	statusTitleLabel.Color = values.TextGray
+	statusTitleLabel.Color = gray
 	statusLabel := win.theme.Body1(onlineStatus)
 	endToEndRow(win.gtx, inset, statusTitleLabel, statusLabel)
 }
@@ -307,37 +319,30 @@ func syncStatusTextRow(win *Window, inset layout.Inset) {
 	gtx := win.gtx
 	inset.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func() {
-				syncText := ""
-				if win.walletInfo.Syncing {
-					syncText = syncingStatus
-				} else if win.walletInfo.Synced {
-					syncText = syncedStatus
-				} else {
-					syncText = notSyncedStatus
-				}
-				win.theme.H6(syncText).Layout(gtx)
+			layout.Flexed(0.5, func() {
+				layout.W.Layout(gtx, func() {
+					syncText := ""
+					if win.walletInfo.Syncing {
+						syncText = syncingStatus
+					} else if win.walletInfo.Synced {
+						syncText = syncedStatus
+					} else {
+						syncText = notSyncedStatus
+					}
+					win.theme.H6(syncText).Layout(gtx)
+				})
 			}),
-			layout.Flexed(values.EntireSpace, func() {
+			layout.Flexed(1, func() {
 				// stack a button on a card widget to produce a transparent button.
 				layout.E.Layout(gtx, func() {
-					layout.Stack{}.Layout(gtx,
-						layout.Stacked(func() {
-							//page.syncButtonCard.Width = values.SyncButtonWidth
-							//page.syncButtonCard.Height = values.SyncButtonHeight
-							//page.syncButtonCard.Layout(gtx, float32(gtx.Px(units.DefaultButtonRadius)))
-						}),
-						layout.Expanded(func() {
-							layout.Center.Layout(gtx, func() {
-								gtx.Constraints.Width.Min = values.SyncButtonWidth - values.ButtonBorder
-								gtx.Constraints.Height.Max = values.SyncButtonHeight - values.ButtonBorder
-								syncButton := win.outputs.sync
-								syncButton.Background = values.White
-								syncButton.TextSize = units.SyncButtonTextSize
-								syncButton.Layout(gtx, &win.inputs.sync)
-							})
-						}),
-					)
+					gtx.Constraints.Width.Min = syncButtonWidth
+					gtx.Constraints.Height.Max = syncButtonHeight
+					syncButton := win.outputs.sync
+					syncButton.TextSize = syncButtonTextSize
+					if win.walletInfo.Synced {
+						syncButton.Text = "Disconnect"
+					}
+					syncButton.Layout(gtx, &win.inputs.sync)
 				})
 			}),
 		)
@@ -364,21 +369,21 @@ func progressStatusRow(win *Window, inset layout.Inset) {
 //	walletSyncRow layouts a list of wallet sync boxes horizontally.
 func walletSyncRow(win *Window, inset layout.Inset) {
 	gtx := win.gtx
-	layout.Inset{Top: units.ColumnMargin}.Layout(gtx, func() {
+	layout.Inset{Top: columnMargin}.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
 				completedSteps := win.walletSyncStatus.Steps
 				totalSteps := win.walletSyncStatus.TotalSteps
 				completedStepsLabel := win.theme.Caption(fmt.Sprintf("%s %d/%d", stepsTitle, completedSteps, totalSteps))
-				completedStepsLabel.Color = values.TextGray
+				completedStepsLabel.Color = gray
 				headersFetchedLabel := win.theme.Body1(fmt.Sprintf("%s. %v%%", fetchingBlockHeaders,
 					win.walletSyncStatus.HeadersFetchProgress))
-				headersFetchedLabel.Color = values.TextGray
+				headersFetchedLabel.Color = gray
 				endToEndRow(win.gtx, inset, completedStepsLabel, headersFetchedLabel)
 			}),
 			layout.Rigid(func() {
 				connectedPeersTitleLabel := win.theme.Caption(connectedPeersTitle)
-				connectedPeersTitleLabel.Color = values.TextGray
+				connectedPeersTitleLabel.Color = gray
 				connectedPeersLabel := win.theme.Body1(fmt.Sprintf("%d", win.walletSyncStatus.ConnectedPeers))
 				endToEndRow(gtx, inset, connectedPeersTitleLabel, connectedPeersLabel)
 			}),
@@ -399,19 +404,18 @@ func walletSyncRow(win *Window, inset layout.Inset) {
 					status := helper.WalletSyncStatus(w, overallBlockHeight)
 					progress := helper.WalletSyncProgressTime(w.BlockTimestamp)
 					details := syncDetail(win.theme, w.Name, status, blockHeightProgress, progress)
-					uniform := layout.UniformInset(units.Padding)
+					uniform := layout.UniformInset(padding)
 					walletSyncBoxes = append(walletSyncBoxes,
 						func() {
 							walletSyncBox(win, uniform, details)
 						})
 				}
 
-				walletSyncList := &layout.List{Axis: layout.Horizontal}
 				walletSyncList.Layout(gtx, len(walletSyncBoxes), func(i int) {
 					if i == 0 {
-						layout.UniformInset(units.NoPadding).Layout(gtx, walletSyncBoxes[i])
+						layout.UniformInset(noPadding).Layout(gtx, walletSyncBoxes[i])
 					} else {
-						layout.Inset{Left: units.ColumnMargin}.Layout(gtx, walletSyncBoxes[i])
+						layout.Inset{Left: columnMargin}.Layout(gtx, walletSyncBoxes[i])
 					}
 				})
 			}),
@@ -422,36 +426,26 @@ func walletSyncRow(win *Window, inset layout.Inset) {
 // walletSyncBox lays out the wallet syncing details of a single wallet.
 func walletSyncBox(win *Window, inset layout.Inset, details walletSyncDetails) {
 	gtx := win.gtx
-	layout.Inset{Top: units.ColumnMargin}.Layout(gtx, func() {
-		layout.Stack{}.Layout(gtx,
-			layout.Stacked(func() {
-				//page.walletSyncCard.Width = gtx.Px(units.WalletSyncBoxWidthMin)
-				//page.walletSyncCard.Height = gtx.Px(units.WalletSyncBoxHeightMin)
-				//page.walletSyncCard.Layout(gtx, 0)
-			}),
-			layout.Stacked(func() {
-				uniform := layout.UniformInset(units.SyncBoxPadding)
-				uniform.Layout(gtx, func() {
-					gtx.Constraints.Width.Min = gtx.Px(units.WalletSyncBoxContentWidth)
-					gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
-					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func() {
-							endToEndRow(gtx, inset, details.name, details.status)
-						}),
-						layout.Rigid(func() {
-							headersFetchedTitleLabel := win.theme.Caption(headersFetchedTitle)
-							headersFetchedTitleLabel.Color = values.TextGray
-							endToEndRow(gtx, inset, headersFetchedTitleLabel, details.blockHeaderFetched)
-						}),
-						layout.Rigid(func() {
-							progressTitleLabel := win.theme.Caption(syncingProgressTitle)
-							progressTitleLabel.Color = values.TextGray
-							endToEndRow(gtx, inset, progressTitleLabel, details.syncingProgress)
-						}),
-					)
-				})
-			}),
-		)
+	layout.Inset{Top: columnMargin}.Layout(gtx, func() {
+		gtx.Constraints.Width.Min = gtx.Px(walletSyncBoxContentWidth)
+		gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
+		decredmaterial.Card{Inset: layout.UniformInset(unit.Dp(0))}.Layout(gtx, func() {
+			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func() {
+					endToEndRow(gtx, inset, details.name, details.status)
+				}),
+				layout.Rigid(func() {
+					headersFetchedTitleLabel := win.theme.Caption(headersFetchedTitle)
+					headersFetchedTitleLabel.Color = gray
+					endToEndRow(gtx, inset, headersFetchedTitleLabel, details.blockHeaderFetched)
+				}),
+				layout.Rigid(func() {
+					progressTitleLabel := win.theme.Caption(syncingProgressTitle)
+					progressTitleLabel.Color = gray
+					endToEndRow(gtx, inset, progressTitleLabel, details.syncingProgress)
+				}),
+			)
+		})
 	})
 }
 

@@ -51,7 +51,7 @@ type outputs struct {
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
 	addAccount                                                         decredmaterial.Button
-	sync, toggleWalletRename, renameWallet                             decredmaterial.IconButton
+	sync, more, toggleWalletRename, renameWallet                             decredmaterial.IconButton
 
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
@@ -106,6 +106,8 @@ func (win *Window) initWidgets() {
 
 	win.outputs.err = theme.Caption("")
 	win.outputs.err.Color = theme.Color.Danger
+	win.outputs.sync = theme.Button("Reconnect")
+	win.outputs.more = theme.Button("more")
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
