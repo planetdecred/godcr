@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/widget"
+	"github.com/raedahgroup/dcrlibwallet"
 )
 
 // HandleInputs handles all ui inputs
@@ -178,9 +179,9 @@ func (win *Window) resetPasswords() {
 func (win *Window) validateSeeds() string {
 	text := ""
 
-	for i, editor := range win.inputs.seeds {
+	for i, editor := range win.inputs.seedEditors {
 		if editor.Text() == "" {
-			win.outputs.seeds[i].HintColor = win.theme.Color.Danger
+			win.outputs.seedEditors[i].HintColor = win.theme.Color.Danger
 			return ""
 		}
 
@@ -191,25 +192,41 @@ func (win *Window) validateSeeds() string {
 }
 
 func (win *Window) resetSeeds() {
-	for i := 0; i < len(win.inputs.seeds); i++ {
-		win.inputs.seeds[i].SetText("")
+	for i := 0; i < len(win.inputs.seedEditors); i++ {
+		win.inputs.seedEditors[i].SetText("")
 	}
 }
 
 func (win *Window) editorSeedsEventsHandler() {
-	for i, editor := range win.inputs.seeds {
-		if editor.Focused() &&
-			(win.combined.seedEditorsHandlerIndex != i || strings.Trim(editor.Text(), " ") == "") {
-			win.combined.seedEditorsHandlerIndex = -1
-		}
-
+	for i, editor := range win.inputs.seedEditors {
 		for _, e := range editor.Events(win.gtx) {
 			switch e.(type) {
 			case widget.ChangeEvent:
-				win.combined.seedEditorsHandlerIndex = i
+				if editor.Text() == "" {
+					return
+				}
+
+				win.inputs.seedsSuggestionsBtn = nil
+				win.outputs.seedsSuggestionsBtn = nil
+
+				for _, word := range dcrlibwallet.PGPWordList() {
+					if strings.HasPrefix(word, editor.Text()) {
+						if len(win.inputs.seedsSuggestionsBtn) < 2 {
+							var btn struct {
+								text   string
+								button widget.Button
+							}
+
+							btn.text = word
+							win.inputs.seedsSuggestionsBtn = append(win.inputs.seedsSuggestionsBtn, btn)
+							win.outputs.seedsSuggestionsBtn = append(win.outputs.seedsSuggestionsBtn, win.theme.Button(word))
+						}
+					}
+				}
+
 			case widget.SubmitEvent:
-				if i < len(win.inputs.seeds)-1 {
-					win.inputs.seeds[i+1].Focus()
+				if i < len(win.inputs.seedEditors)-1 {
+					win.inputs.seedEditors[i+1].Focus()
 				}
 			}
 		}
@@ -217,35 +234,32 @@ func (win *Window) editorSeedsEventsHandler() {
 }
 
 func (win *Window) onSuggestionSeedsClicked() {
-	for i := 0; i < len(win.combined.seedsSuggestionsBtn); i++ {
-		if win.combined.seedsSuggestionsBtn[i].Clicked(win.gtx) {
-			win.inputs.seeds[win.combined.seedEditorsHandlerIndex].SetText(win.combined.seedsSuggestions[i])
-			win.inputs.seeds[win.combined.seedEditorsHandlerIndex].Move(len(win.combined.seedsSuggestions[i]))
-			win.combined.seedsSuggestions = nil
+	for i := 0; i < len(win.inputs.seedsSuggestionsBtn); i++ {
+		btn := win.inputs.seedsSuggestionsBtn[i]
+		if btn.button.Clicked(win.gtx) {
+			for i := 0; i < len(win.inputs.seedEditors); i++ {
+				if win.inputs.seedEditors[i].Focused() {
+					win.inputs.seedEditors[i].SetText(btn.text)
+					win.inputs.seedEditors[i].Move(len(btn.text))
 
-			if win.combined.seedEditorsHandlerIndex < len(win.inputs.seeds)-1 {
-				win.inputs.seeds[win.combined.seedEditorsHandlerIndex+1].Focus()
+					if i < len(win.inputs.seedEditors)-1 {
+						win.inputs.seedEditors[i+1].Focus()
+					}
+				}
 			}
 		}
 	}
 }
 
-// KeysEventsHandler handlers all key events when typing editor, if Tab pressed will putting first word
-// from the list of suggestion to the editor
-func (win *Window) KeysEventsHandler() {
-	if win.combined.keyEvent == nil {
-		return
+// KeysEventsHandler handlers all pressed keys events
+func (win *Window) KeysEventsHandler(evt *key.Event) {
+	if evt.Name == key.NameTab {
+		for i := 0; i < len(win.inputs.seedEditors); i++ {
+			if win.inputs.seedEditors[i].Focused() && win.inputs.seedsSuggestionsBtn != nil {
+				btn := win.inputs.seedsSuggestionsBtn[0]
+				win.inputs.seedEditors[i].SetText(btn.text)
+				win.inputs.seedEditors[i].Move(len(btn.text))
+			}
+		}
 	}
-
-	evt := win.combined.keyEvent
-
-	if evt.Name == key.NameTab &&
-		win.combined.seedEditorsHandlerIndex != -1 &&
-		win.combined.seedsSuggestions != nil {
-		txt := win.combined.seedsSuggestions[0]
-		win.inputs.seeds[win.combined.seedEditorsHandlerIndex].SetText(txt)
-		win.inputs.seeds[win.combined.seedEditorsHandlerIndex].Move(len(txt))
-	}
-
-	win.combined.keyEvent = nil
 }

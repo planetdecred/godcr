@@ -7,7 +7,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"github.com/raedahgroup/dcrlibwallet"
 )
 
 var (
@@ -68,36 +67,27 @@ func inputsGroup(win *Window, l *layout.List, len int, startIndex int) {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Left: unit.Dp(20), Bottom: unit.Dp(20)}.Layout(win.gtx, func() {
-							win.outputs.seeds[i+startIndex].Layout(win.gtx, &win.inputs.seeds[i+startIndex])
+							win.outputs.seedEditors[i+startIndex].Layout(win.gtx, &win.inputs.seedEditors[i+startIndex])
 						})
 					}),
 				)
 			}),
 			layout.Rigid(func() {
-				autoComplete(win, i+startIndex)
+				autoComplete(win, i+startIndex, win.inputs.seedEditors[i+startIndex].Focused())
 			}),
 		)
 	})
 }
 
-func autoComplete(win *Window, index int) {
-	if index != win.combined.seedEditorsHandlerIndex {
+func autoComplete(win *Window, eIndex int, isFocused bool) {
+	if !isFocused ||
+		strings.Trim(win.inputs.seedEditors[eIndex].Text(), " ") == "" {
 		return
 	}
 
-	win.combined.seedsSuggestions = nil
-
-	for _, word := range dcrlibwallet.PGPWordList() {
-		if strings.HasPrefix(word, win.inputs.seeds[index].Text()) {
-			win.combined.seedsSuggestions = append(win.combined.seedsSuggestions, word)
-		}
-	}
-
-	(&layout.List{Axis: layout.Horizontal}).Layout(win.gtx, len(win.combined.seedsSuggestions), func(i int) {
-		if i < len(win.combined.seedsSuggestionsBtn) {
-			layout.Inset{Right: unit.Dp(4)}.Layout(win.gtx, func() {
-				win.theme.Button(win.combined.seedsSuggestions[i]).Layout(win.gtx, &win.combined.seedsSuggestionsBtn[i])
-			})
-		}
+	(&layout.List{Axis: layout.Horizontal}).Layout(win.gtx, len(win.inputs.seedsSuggestionsBtn), func(i int) {
+		layout.Inset{Right: unit.Dp(4)}.Layout(win.gtx, func() {
+			win.outputs.seedsSuggestionsBtn[i].Layout(win.gtx, &win.inputs.seedsSuggestionsBtn[i].button)
+		})
 	})
 }

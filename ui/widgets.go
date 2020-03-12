@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 
-	"gioui.org/io/key"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -19,16 +18,15 @@ type inputs struct {
 
 	spendingPassword, matchSpending, renameWallet widget.Editor
 
-	seeds []widget.Editor
+	seedEditors         []widget.Editor
+	seedsSuggestionsBtn []struct {
+		text   string
+		button widget.Button
+	}
 }
 
 type combined struct {
 	sel *decredmaterial.Select
-
-	keyEvent                *key.Event
-	seedEditorsHandlerIndex int
-	seedsSuggestions        []string
-	seedsSuggestionsBtn     [2]widget.Button
 }
 
 type outputs struct {
@@ -45,7 +43,9 @@ type outputs struct {
 
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
-	seeds                         []decredmaterial.Editor
+
+	seedEditors         []decredmaterial.Editor
+	seedsSuggestionsBtn []decredmaterial.Button
 }
 
 func (win *Window) initWidgets() {
@@ -94,8 +94,8 @@ func (win *Window) initWidgets() {
 	win.outputs.sync = win.outputs.icons.sync
 
 	for i := 0; i <= 32; i++ {
-		win.outputs.seeds = append(win.outputs.seeds, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
-		win.inputs.seeds = append(win.inputs.seeds, widget.Editor{SingleLine: true, Submit: true})
+		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
+		win.inputs.seedEditors = append(win.inputs.seedEditors, widget.Editor{SingleLine: true, Submit: true})
 	}
 }
 
