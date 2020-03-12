@@ -1,23 +1,15 @@
 package ui
 
 import (
-	// "image"
 	"time"
-	// "fmt"
-	// "gioui.org/io/pointer"
+
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-	// "gioui.org/widget"
-	// "gioui.org/widget/material"
 
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	// "github.com/raedahgroup/godcr-gio/ui"
-	// "github.com/raedahgroup/godcr-gio/ui/themes/materialplus"
-	// "github.com/raedahgroup/godcr-gio/ui/units"
-	// "github.com/raedahgroup/godcr-gio/ui/values"
 	"github.com/raedahgroup/godcr-gio/wallet"
 	"github.com/skip2/go-qrcode"
 )
@@ -26,8 +18,8 @@ var (
 	listContainer   = &layout.List{Axis: layout.Vertical}
 	selectedAcctNum int32
 	generateNew     bool
-	addrs            string
-	// pageTitle         = "Receiving DCR"
+	addrs           string
+	pageTitle       = "Receiving DCR"
 )
 
 func (win *Window) Receive() {
@@ -50,27 +42,16 @@ func (win *Window) ReceivePageContents() {
 		func() {
 			win.pageFirstColumn()
 		},
-		// func() {
-		// 	layout.Align(layout.Center).Layout(gtx, func() {
-		// 		if win.errorLabel.Text != "" {
-		// 			win.errorLabel.Layout(gtx)
-		// 		}
-		// 	})
-		// },
 		func() {
-			// layout.Align(layout.Center).Layout(win.gtx, func() {
 			win.selectedAccountColumn()
-			// })
 		},
 		func() {
 			win.qrCodeAddressColumn()
 		},
 		func() {
-			// layout.Align(layout.Center).Layout(win.gtx, func() {
-				if win.addressCopiedLabel.Text != "" {
-					win.addressCopiedLabel.Layout(win.gtx)
-				}
-			// })
+			if win.addressCopiedLabel.Text != "" {
+				win.addressCopiedLabel.Layout(win.gtx)
+			}
 		},
 	}
 
@@ -91,7 +72,7 @@ func (win *Window) ReceivePageContents() {
 func (win *Window) pageFirstColumn() {
 	layout.Flex{Spacing: layout.SpaceBetween}.Layout(win.gtx,
 		layout.Rigid(func() {
-			win.theme.H4("Receiving DCR").Layout(win.gtx)
+			win.theme.H4(pageTitle).Layout(win.gtx)
 		}),
 		layout.Rigid(func() {
 			layout.Inset{}.Layout(win.gtx, func() {
@@ -179,35 +160,6 @@ func (win *Window) selectedAccountColumn() {
 	)
 }
 
-// func (win *Window) generateAddress() (string, error) {
-// 	var err error
-// 	info := win.walletInfo.Wallets[win.selected]
-// 	list := layout.List{Axis: layout.Vertical}
-// 	list.Layout(win.gtx, len(info.Accounts), func(i int) {
-// 		acct := info.Accounts[i]
-// 		if acct.Name != "imported" {
-// 			// create a new receive address everytime a new account is chosen
-// 			if generateNew {
-// 				addr, err = win.wallet.NextAddress(info.ID, selectedAcctNum)
-// 				if err != nil {
-// 					err = err
-// 					return
-// 				}
-// 				addr = addr
-// 			} else {
-// 				addr, err = win.wallet.CurrentAddress(info.ID, selectedAcctNum)
-// 				if err != nil {
-// 					err = err
-// 					return
-// 				}
-// 				addr = addr
-// 			}
-// 		}
-// 	})
-
-// 	return addr, err
-// }
-
 func (win *Window) qrCodeAddressColumn() {
 	// addr, err := win.generateAddress()
 	// if err != nil {
@@ -219,18 +171,20 @@ func (win *Window) qrCodeAddressColumn() {
 		return
 	}
 
-	// qrCode.DisableBorder = true
+	qrCode.DisableBorder = true
 	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 		layout.Rigid(func() {
 			// layout.Align(layout.Center).Layout(win.gtx, func() {
-				img := win.theme.Image(paint.NewImageOp(qrCode.Image(140)))
-				img.Layout(win.gtx)
+			img := win.theme.Image(paint.NewImageOp(qrCode.Image(140)))
+			img.Src.Rect.Max.X = 141
+			img.Src.Rect.Max.Y = 141
+			img.Layout(win.gtx)
 			// })
 		}),
 		layout.Rigid(func() {
 			layout.Inset{Top: unit.Dp(16)}.Layout(win.gtx, func() {
 				// layout.Align(layout.Center).Layout(win.gtx, func() {
-					win.receiveAddressColumn()
+				win.receiveAddressColumn()
 				// })
 			})
 		}),
@@ -258,30 +212,19 @@ func (win *Window) receiveAddressColumn() {
 }
 
 func (win *Window) setDefaultPageValues() {
-	wallets := win.walletInfo.Wallets
+	info := win.walletInfo.Wallets[win.selected]
 
-	for i := range wallets {
-		if len(wallets[i].Accounts) == 0 {
-			continue
-		}
-
-		win.setSelectedAccount(wallets[i], wallets[i].Accounts[0], false)
+	for i := range info.Accounts {
+		win.setSelectedAccount(info, info.Accounts[i], false)
 		break
 	}
 }
 
 func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account, generateNew bool) {
-	// win.selectedWallet = &wallet
-	// win.selectedAccount = &account
 	win.outputs.selectedAccountNameLabel.Text = account.Name
 	win.outputs.selectedWalletNameLabel.Text = wallet.Name
 	win.outputs.selectedWalletBalLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
 	win.outputs.selectedAccountBalanceLabel.Text = wallet.Balance
-	// win.outputs.receiveAddressLabel.Text =
-
-	// win.selectedWalletLabel.Text = wallet.Name
-	// win.selectedAccountNameLabel.Text = account.Name
-	// win.selectedAccountBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
 
 	var addr string
 	var err error
