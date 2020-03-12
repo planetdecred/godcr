@@ -18,8 +18,10 @@ var (
 	listContainer   = &layout.List{Axis: layout.Vertical}
 	selectedAcctNum int32
 	generateNew     bool
+	isInfoBtnModal = false
 	addrs           string
 	pageTitle       = "Receiving DCR"
+	ReceivePageInfo   = "Each time you request a payment, a \nnew address is created to protect \nyour privacy."
 )
 
 func (win *Window) Receive() {
@@ -61,9 +63,9 @@ func (win *Window) ReceivePageContents() {
 	// if win.isGenerateNewAddBtnModal {
 	// 	win.drawMoreModal(gtx)
 	// }
-	// if win.isInfoBtnModal {
-	// 	win.drawInfoModal(gtx)
-	// }
+	if isInfoBtnModal {
+		win.drawInfoModal()
+	}
 	// if win.isAccountModalOpen {
 	// 	win.accountSelectedModal(gtx)
 	// }
@@ -78,11 +80,11 @@ func (win *Window) pageFirstColumn() {
 			layout.Inset{}.Layout(win.gtx, func() {
 				layout.Flex{Spacing: layout.SpaceBetween}.Layout(win.gtx,
 					layout.Rigid(func() {
-						// if win.infoBtnWdg.Clicked(gtx) {
-						// 	win.isInfoBtnModal = true
+						if win.inputs.info.Clicked(win.gtx) {
+							isInfoBtnModal = true
 						// 	win.isGenerateNewAddBtnModal = false
 						// 	win.isAccountModalOpen = false
-						// }
+						}
 						win.outputs.info.Layout(win.gtx, &win.inputs.info)
 					}),
 					layout.Rigid(func() {
@@ -245,3 +247,34 @@ func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Ac
 	}
 	addrs = addr
 }
+
+func (win *Window) drawInfoModal() {
+	layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+		selectedDetails := func() {
+			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
+				layout.Rigid(func() {
+					layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+						win.theme.Body1(ReceivePageInfo).Layout(win.gtx)
+					})
+				}),
+				layout.Rigid(func() {
+					inset := layout.Inset{
+						Left: unit.Dp(190),
+					}
+					inset.Layout(win.gtx, func() {
+						if win.inputs.gotIt.Clicked(win.gtx) {
+							if isInfoBtnModal {
+								isInfoBtnModal = false
+							}
+						}
+
+						win.outputs.gotIt.Layout(win.gtx, &win.inputs.gotIt)
+					})
+				}),
+			)
+		}
+		decredmaterial.Modal{layout.SE}.Layout(win.gtx, selectedDetails)
+	})
+}
+
+

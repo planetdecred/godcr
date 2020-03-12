@@ -1,6 +1,8 @@
 package decredmaterial
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 )
@@ -13,7 +15,11 @@ type Modal struct {
 
 // Layout the modal
 func (m Modal) Layout(gtx *layout.Context, w layout.Widget) {
+	fillMax(gtx, color.RGBA{A: 64})
 	layout.Stack{Alignment: m.Direction}.Layout(gtx,
+		layout.Expanded(func() {
+			fill(gtx, argb(0x0fffffff))
+		}),
 		layout.Stacked(func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 			gtx.Constraints.Height.Min = gtx.Constraints.Height.Max

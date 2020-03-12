@@ -19,12 +19,9 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
 	toReceive                                                 widget.Button
-<<<<<<< HEAD
 	sync, syncHeader widget.Button
-	info, more, dropdown, copy                               widget.Button
-=======
-	sync, info, more, dropdown, copy                          widget.Button
->>>>>>> added receive address section
+
+	info, more, dropdown, copy, gotIt                          widget.Button
 
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 
@@ -105,6 +102,8 @@ func (win *Window) initWidgets() {
 	win.outputs.toRestoreWallet = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
 	win.outputs.restoreDiag = theme.Button("Restore wallet")
 	win.outputs.restoreWallet = theme.Button("Restore")
+
+	win.outputs.gotIt = theme.Button("Got It")
 
 	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")
 	win.outputs.deleteWallet = theme.DangerButton("delete")
