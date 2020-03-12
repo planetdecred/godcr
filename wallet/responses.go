@@ -46,7 +46,6 @@ type InfoShort struct {
 	BestBlockHeight int32
 	BlockTimestamp  int64
 	DaysBehind      string
-	IsWaiting       bool
 	Status          string
 }
 

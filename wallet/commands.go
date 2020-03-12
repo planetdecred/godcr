@@ -18,8 +18,6 @@ const (
 	walletStatusWaiting = "waiting for other wallets"
 	walletStatusSyncing = "syncing..."
 	walletStatusSynced  = "synced"
-
-	errWalletIDNotFound = "wallet ID not found"
 )
 
 // CreateWallet creates a new wallet with the given parameters.
@@ -271,9 +269,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			}
 			completeTotal += acctBalance
 
-			overallBlockHeight := wal.OverallBlockHeight
 			infos[i] = InfoShort{
-				Status:          walletSyncStatus(infos[i].IsWaiting, infos[i].BestBlockHeight, overallBlockHeight),
 				ID:              wall.ID,
 				Name:            wall.Name,
 				Balance:         dcrutil.Amount(acctBalance).String(),
@@ -282,7 +278,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
 				DaysBehind: fmt.Sprintf("%s behind",
 					dcrlibwallet.CalculateDaysBehind(wall.GetBestBlockTimeStamp())),
-				IsWaiting: wall.IsWaiting(),
+				Status:    walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 			}
 			i++
 		}

@@ -25,6 +25,7 @@ func (win Window) updateSyncProgress(report interface{}) {
 		status.Steps = wallet.FetchHeadersSteps
 		status.CurrentBlockHeight = t.Progress.CurrentHeaderHeight
 		win.wallet.OverallBlockHeight = t.Progress.TotalHeadersToFetch
+		win.wallet.GetMultiWalletInfo()
 	case wallet.SyncAddressDiscoveryProgress:
 		status.RescanHeadersProgress = t.Progress.AddressDiscoveryProgress
 		status.Progress = t.Progress.TotalSyncProgress
