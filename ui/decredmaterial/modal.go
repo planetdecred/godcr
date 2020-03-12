@@ -11,11 +11,14 @@ import (
 // The Stacked background is laid out with max Contraints.
 type Modal struct {
 	layout.Direction
+	Overlay bool
 }
 
 // Layout the modal
 func (m Modal) Layout(gtx *layout.Context, w layout.Widget) {
-	fillMax(gtx, color.RGBA{A: 64})
+	if m.Overlay {
+		fillMax(gtx, color.RGBA{A: 64})
+	}
 	layout.Stack{Alignment: m.Direction}.Layout(gtx,
 		layout.Expanded(func() {
 			fill(gtx, argb(0x0fffffff))

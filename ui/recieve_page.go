@@ -16,10 +16,16 @@ import (
 
 var (
 	listContainer   = &layout.List{Axis: layout.Vertical}
-	selectedAcctNum int32
+	
 	generateNew     bool
-	isInfoBtnModal = false
 	addrs           string
+
+	isInfoBtnModal = false
+	isNewAddrModal = false
+
+	selectedWallet  *wallet.InfoShort
+	selectedAccount *wallet.Account
+
 	pageTitle       = "Receiving DCR"
 	ReceivePageInfo   = "Each time you request a payment, a \nnew address is created to protect \nyour privacy."
 )
@@ -60,9 +66,9 @@ func (win *Window) ReceivePageContents() {
 	listContainer.Layout(win.gtx, len(ReceivePageContent), func(i int) {
 		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, ReceivePageContent[i])
 	})
-	// if win.isGenerateNewAddBtnModal {
-	// 	win.drawMoreModal(gtx)
-	// }
+	if isNewAddrModal {
+		win.drawMoreModal()
+	}
 	if isInfoBtnModal {
 		win.drawInfoModal()
 	}
@@ -88,11 +94,11 @@ func (win *Window) pageFirstColumn() {
 						win.outputs.info.Layout(win.gtx, &win.inputs.info)
 					}),
 					layout.Rigid(func() {
-						// if win.moreBtnWdg.Clicked(gtx) {
-						// 	win.isGenerateNewAddBtnModal = true
-						// 	win.isInfoBtnModal = false
-						// 	win.isAccountModalOpen = false
-						// }
+						if win.inputs.more.Clicked(win.gtx) {
+							isNewAddrModal = true
+							isInfoBtnModal = false
+							// win.isAccountModalOpen = false
+						}
 						win.outputs.more.Layout(win.gtx, &win.inputs.more)
 					}),
 				)
@@ -163,10 +169,6 @@ func (win *Window) selectedAccountColumn() {
 }
 
 func (win *Window) qrCodeAddressColumn() {
-	// addr, err := win.generateAddress()
-	// if err != nil {
-	// 	return
-	// }
 	qrCode, err := qrcode.New(addrs, qrcode.Highest)
 	if err != nil {
 		win.outputs.err.Text = err.Error()
@@ -176,18 +178,18 @@ func (win *Window) qrCodeAddressColumn() {
 	qrCode.DisableBorder = true
 	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 		layout.Rigid(func() {
-			// layout.Align(layout.Center).Layout(win.gtx, func() {
+		layout.Center.Layout(win.gtx, func() {
 			img := win.theme.Image(paint.NewImageOp(qrCode.Image(140)))
 			img.Src.Rect.Max.X = 141
 			img.Src.Rect.Max.Y = 141
 			img.Layout(win.gtx)
-			// })
+			})
 		}),
 		layout.Rigid(func() {
 			layout.Inset{Top: unit.Dp(16)}.Layout(win.gtx, func() {
-				// layout.Align(layout.Center).Layout(win.gtx, func() {
+		layout.Center.Layout(win.gtx, func() {
 				win.receiveAddressColumn()
-				// })
+				})
 			})
 		}),
 	)
@@ -223,6 +225,9 @@ func (win *Window) setDefaultPageValues() {
 }
 
 func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account, generateNew bool) {
+	selectedWallet = &wallet
+	selectedAccount = &account
+
 	win.outputs.selectedAccountNameLabel.Text = account.Name
 	win.outputs.selectedWalletNameLabel.Text = wallet.Name
 	win.outputs.selectedWalletBalLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
@@ -273,8 +278,31 @@ func (win *Window) drawInfoModal() {
 				}),
 			)
 		}
-		decredmaterial.Modal{layout.SE}.Layout(win.gtx, selectedDetails)
+		decredmaterial.Modal{layout.SE, true}.Layout(win.gtx, selectedDetails)
 	})
 }
 
+func (win *Window) drawMoreModal() {
+	// layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+		selectedDetails := func() {
+			inset := layout.Inset{
+				Top:   unit.Dp(50),
+				Right: unit.Dp(20),
+			}
+			inset.Layout(win.gtx, func() {
+				if win.inputs.newAddress.Clicked(win.gtx) {
+					if isNewAddrModal {
+				win.setSelectedAccount(*selectedWallet, *selectedAccount, true)
+						isNewAddrModal = false
+					}
+				}
+
+				win.gtx.Constraints.Width.Min = 40
+				win.gtx.Constraints.Height.Min = 40
+				win.outputs.newAddress.Layout(win.gtx, &win.inputs.newAddress)
+			})
+		}
+		decredmaterial.Modal{layout.SE, false}.Layout(win.gtx, selectedDetails)
+	// })
+}
 

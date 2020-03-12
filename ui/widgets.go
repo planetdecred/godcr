@@ -20,8 +20,7 @@ type inputs struct {
 	toRestoreWallet                                           widget.Button
 	toReceive                                                 widget.Button
 	sync, syncHeader widget.Button
-
-	info, more, dropdown, copy, gotIt                          widget.Button
+	info, more, dropdown, copy, gotIt, newAddress                          widget.Button
 
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 
@@ -103,7 +102,6 @@ func (win *Window) initWidgets() {
 	win.outputs.restoreDiag = theme.Button("Restore wallet")
 	win.outputs.restoreWallet = theme.Button("Restore")
 
-	win.outputs.gotIt = theme.Button("Got It")
 
 	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")
 	win.outputs.deleteWallet = theme.DangerButton("delete")
@@ -112,7 +110,10 @@ func (win *Window) initWidgets() {
 
 	win.outputs.notImplemented = theme.H3("Not Implemented")
 
-	//receive Labels
+	//receive widgets
+	win.outputs.gotIt = theme.Button("Got It")
+	win.outputs.newAddress = theme.Button("Generate new address")
+
 	win.outputs.selectedAccountNameLabel = win.theme.H6("")
 	win.outputs.selectedWalletNameLabel = win.theme.Body2("")
 	win.outputs.selectedWalletBalLabel = win.theme.Body2("")
