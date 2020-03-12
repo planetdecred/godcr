@@ -2,12 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
+	"strings"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"github.com/raedahgroup/godcr-gio/ui/helper"
-	"image/color"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 	connectedPeersTitle  = "Connected peers count"
 	headersFetchedTitle  = "Block header fetched"
 	syncingProgressTitle = "Syncing progress"
-	latestBlockTitle 	 = "Latest Block"
+	latestBlockTitle     = "Latest Block"
 	noTransaction        = "no transactions"
 	onlineStatus         = "Offline"
 	syncingStatus        = "Syncing..."
@@ -28,22 +29,22 @@ const (
 )
 
 var (
-	listContainer = &layout.List{Axis: layout.Vertical}
+	listContainer  = &layout.List{Axis: layout.Vertical}
 	walletSyncList = &layout.List{Axis: layout.Horizontal}
-	 
+
 	syncButtonHeight = 70
-	syncButtonWidth = 145
-	moreButtonWidth = 115
+	syncButtonWidth  = 145
+	moreButtonWidth  = 115
 	moreButtonHeight = 70
 
-	padding = unit.Dp(5)
-	containerPadding = unit.Dp(20)
-	pageMarginTop = unit.Dp(50)
-	columnMargin = unit.Dp(30)
-	transactionsRowMargin = unit.Dp(10)
-	noPadding = unit.Dp(0)
+	padding                   = unit.Dp(5)
+	containerPadding          = unit.Dp(20)
+	pageMarginTop             = unit.Dp(50)
+	columnMargin              = unit.Dp(30)
+	transactionsRowMargin     = unit.Dp(10)
+	noPadding                 = unit.Dp(0)
 	walletSyncBoxContentWidth = unit.Dp(280)
-	syncButtonTextSize = unit.Dp(10)
+	syncButtonTextSize        = unit.Dp(10)
 
 	gray = color.RGBA{137, 151, 165, 255}
 )
@@ -59,7 +60,7 @@ type walletSyncDetails struct {
 
 type transactionWidgets struct {
 	wallet      decredmaterial.Label
-	balance     int64
+	balance     string
 	mainBalance decredmaterial.Label
 	subBalance  decredmaterial.Label
 	date        decredmaterial.Label
@@ -133,27 +134,19 @@ func layoutPage(win *Window) {
 func recentTransactionsColumn(win *Window) {
 	theme := win.theme
 	gtx := win.gtx
-	walletInfo := win.walletInfo
 	recentTransactions := win.walletTransactions.Recent
 
 	var transactionRows []func()
 	if len(win.walletTransactions.Txs) > 0 {
 		for _, txn := range recentTransactions {
 			txnWidgets := transactionWidgets{
-				wallet:      theme.Body1(""),
-				balance:     txn.Amount,
+				wallet:      theme.Body1(txn.WalletName),
+				balance:     txn.Balance,
 				mainBalance: theme.Body1(""),
 				subBalance:  theme.Caption(""),
 				date: theme.Body1(fmt.Sprintf("%v",
-					dcrlibwallet.ExtractDateOrTime(txn.Timestamp))),
-				status: theme.Body1(helper.TransactionStatus(walletInfo.BestBlockHeight,
-					txn.BlockHeight)),
-			}
-			walletName, err := helper.WalletNameFromID(txn.WalletID, walletInfo.Wallets)
-			if err != nil {
-				fmt.Printf("%v \n", err.Error())
-			} else {
-				txnWidgets.wallet.Text = walletName
+					dcrlibwallet.ExtractDateOrTime(txn.Txn.Timestamp))),
+				status: theme.Body1(txn.Status),
 			}
 
 			transactionRows = append(transactionRows, func() {
@@ -212,7 +205,7 @@ func recentTransactionRow(gtx *layout.Context, txn transactionWidgets) {
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
-				layoutBalance(gtx, helper.Balance(txn.balance), txn.mainBalance, txn.subBalance)
+				layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)
 			})
 		}),
 		layout.Flexed(1, func() {
@@ -280,11 +273,11 @@ func syncActiveContent(win *Window, uniform layout.Inset) {
 
 // syncDormantContent lays out sync status content when the wallet is synced or not connected
 func syncDormantContent(win *Window, uniform layout.Inset) {
-	layout.Flex{Axis:layout.Vertical}.Layout(win.gtx,
+	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 		layout.Rigid(func() {
 			latestBlockTitleLabel := win.theme.Body1(latestBlockTitle)
 			blockLabel := win.theme.Body1(fmt.Sprintf("%v . %v ago", win.walletInfo.BestBlockHeight,
-				helper.LastBlockSync(win.walletInfo.BestBlockTime)))
+				win.walletInfo.LastSyncTime))
 			endToEndRow(win.gtx, uniform, latestBlockTitleLabel, blockLabel)
 		}),
 	)
@@ -361,8 +354,7 @@ func progressBarRow(win *Window, inset layout.Inset) {
 func progressStatusRow(win *Window, inset layout.Inset) {
 	gtx := win.gtx
 	percentageLabel := win.theme.Body1(fmt.Sprintf("%v%%", win.walletSyncStatus.Progress))
-	timeLeftLabel := win.theme.Body1(fmt.Sprintf("%v left",
-		helper.RemainingSyncTime(win.walletSyncStatus.RemainingTime)))
+	timeLeftLabel := win.theme.Body1(fmt.Sprintf("%v left", win.walletSyncStatus.RemainingTime))
 	endToEndRow(gtx, inset, percentageLabel, timeLeftLabel)
 }
 
@@ -401,9 +393,7 @@ func walletSyncRow(win *Window, inset layout.Inset) {
 						overallBlockHeight = w.BestBlockHeight
 					}
 					blockHeightProgress := fmt.Sprintf("%v of %v", w.BestBlockHeight, overallBlockHeight)
-					status := helper.WalletSyncStatus(w, overallBlockHeight)
-					progress := helper.WalletSyncProgressTime(w.BlockTimestamp)
-					details := syncDetail(win.theme, w.Name, status, blockHeightProgress, progress)
+					details := syncDetail(win.theme, w.Name, w.Status, blockHeightProgress, w.DaysBehind)
 					uniform := layout.UniformInset(padding)
 					walletSyncBoxes = append(walletSyncBoxes,
 						func() {
@@ -452,7 +442,7 @@ func walletSyncBox(win *Window, inset layout.Inset, details walletSyncDetails) {
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
 func layoutBalance(gtx *layout.Context, amount string, main, sub decredmaterial.Label) {
-	mainText, subText := helper.BreakBalance(amount)
+	mainText, subText := breakBalance(amount)
 	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func() {
 			main.Text = mainText
@@ -463,4 +453,17 @@ func layoutBalance(gtx *layout.Context, amount string, main, sub decredmaterial.
 			sub.Layout(gtx)
 		}),
 	)
+}
+
+// breakBalance takes the balance string and returns it in two slices
+func breakBalance(balance string) (b1, b2 string) {
+	balanceParts := strings.Split(balance, ".")
+	if len(balanceParts) == 1 {
+		return balanceParts[0], ""
+	}
+	b1 = balanceParts[0]
+	b2 = balanceParts[1]
+	b1 = b1 + "." + b2[:2]
+	b2 = b2[2:]
+	return
 }

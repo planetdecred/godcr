@@ -98,7 +98,7 @@ func (l *listener) OnSyncStarted(restarted bool) {
 
 func (l *listener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
 	l.Send <- SyncStatusUpdate{
-		Stage: PeersConnected,
+		Stage:          PeersConnected,
 		ConnectedPeers: numberOfConnectedPeers,
 	}
 }
@@ -121,7 +121,7 @@ func (l *listener) OnAddressDiscoveryProgress(progress *dcrlibwallet.AddressDisc
 }
 
 func (l *listener) OnHeadersRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
-	l.Send <-SyncStatusUpdate{
+	l.Send <- SyncStatusUpdate{
 		Stage: HeadersRescanProgress,
 		ProgressReport: SyncHeadersRescanProgress{
 			Progress: progress,

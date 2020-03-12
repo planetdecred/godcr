@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"fmt"
 	"math"
 	"sort"
 	"strconv"
@@ -8,6 +9,17 @@ import (
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
+)
+
+const (
+	transactionStatusConfirmed = "confirmed"
+	transactionStatusPending   = "pending"
+
+	walletStatusWaiting = "waiting for other wallets"
+	walletStatusSyncing = "syncing..."
+	walletStatusSynced  = "synced"
+
+	errWalletIDNotFound = "wallet ID not found"
 )
 
 // CreateWallet creates a new wallet with the given parameters.
@@ -129,6 +141,16 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 	}()
 }
 
+// transactionStatus accepts the bestBlockHeight, transactionBlockHeight and returns a transaction status
+// which could be confirmed or pending
+func transactionStatus(bestBlockHeight, txnBlockHeight int32) string {
+	confirmations := bestBlockHeight - txnBlockHeight + 1
+	if txnBlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
+		return transactionStatusConfirmed
+	}
+	return transactionStatusPending
+}
+
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
@@ -153,15 +175,26 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			index++
 		}
 
-		var recentTxs []dcrlibwallet.Transaction
+		var recentTxs []RecentTransaction
+		bestBestBlock := wal.multi.GetBestBlock()
 		for _, tx := range alltxs {
-			recentTxs = append(recentTxs, tx...)
+			var recentRaw []dcrlibwallet.Transaction
+			recentRaw = append(recentRaw, tx...)
+			for _, txn := range recentRaw {
+				recentTxs = append(recentTxs, RecentTransaction{
+					Txn:        txn,
+					Status:     transactionStatus(bestBestBlock.Height, txn.BlockHeight),
+					Balance:    dcrutil.Amount(txn.Amount).String(),
+					WalletName: wallets[txn.WalletID].Name,
+				})
+			}
 		}
 		sort.SliceStable(recentTxs, func(i, j int) bool {
-			backTime := time.Unix(recentTxs[j].Timestamp, 0)
-			frontTime := time.Unix(recentTxs[i].Timestamp, 0)
+			backTime := time.Unix(recentTxs[j].Txn.Timestamp, 0)
+			frontTime := time.Unix(recentTxs[i].Txn.Timestamp, 0)
 			return backTime.Before(frontTime)
 		})
+
 		recentTxsLimit := 5
 		if len(recentTxs) > recentTxsLimit {
 			recentTxs = recentTxs[:recentTxsLimit]
@@ -173,6 +206,18 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 		wal.Send <- resp
 	}()
+}
+
+// WalletSyncStatus returns the sync status of a single wallet
+func walletSyncStatus(isWaiting bool, walletBestBlock, bestBlockHeight int32) string {
+	if isWaiting {
+		return walletStatusWaiting
+	}
+	if walletBestBlock < bestBlockHeight {
+		return walletStatusSyncing
+	}
+
+	return walletStatusSynced
 }
 
 // GetMultiWalletInfo gets bulk information about the loaded wallets.
@@ -226,14 +271,18 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			}
 			completeTotal += acctBalance
 
+			overallBlockHeight := wal.OverallBlockHeight
 			infos[i] = InfoShort{
+				Status:          walletSyncStatus(infos[i].IsWaiting, infos[i].BestBlockHeight, overallBlockHeight),
 				ID:              wall.ID,
 				Name:            wall.Name,
 				Balance:         dcrutil.Amount(acctBalance).String(),
 				Accounts:        accts,
 				BestBlockHeight: wall.GetBestBlock(),
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
-				IsWaiting:       wall.IsWaiting(),
+				DaysBehind: fmt.Sprintf("%s behind",
+					dcrlibwallet.CalculateDaysBehind(wall.GetBestBlockTimeStamp())),
+				IsWaiting: wall.IsWaiting(),
 			}
 			i++
 		}
@@ -256,6 +305,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			TotalBalance:    dcrutil.Amount(completeTotal).String(),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
+			LastSyncTime:    time.Since(time.Unix(best.Timestamp, 0)).Truncate(time.Minute).String(),
 			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
 			Syncing:         wal.multi.IsSyncing(),

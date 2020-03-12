@@ -14,7 +14,6 @@ type states struct {
 
 // updateStates changes the wallet state based on the received update
 func (win *Window) updateStates(update interface{}) {
-	log.Infof("Received update %+v", update)
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
 		*win.walletInfo = e

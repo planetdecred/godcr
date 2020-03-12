@@ -32,6 +32,7 @@ type MultiWalletInfo struct {
 	Wallets         []InfoShort
 	BestBlockHeight int32
 	BestBlockTime   int64
+	LastSyncTime    string
 	Synced          bool
 	Syncing         bool
 }
@@ -44,7 +45,9 @@ type InfoShort struct {
 	Accounts        []Account
 	BestBlockHeight int32
 	BlockTimestamp  int64
+	DaysBehind      string
 	IsWaiting       bool
+	Status          string
 }
 
 // Account represents information about a wallet's account
@@ -84,10 +87,18 @@ type DeletedWallet struct {
 	ID int
 }
 
+// Transaction wraps the dcrlibwallet Transaction type and adds processed data
+type RecentTransaction struct {
+	Txn        dcrlibwallet.Transaction
+	Status     string
+	Balance    string
+	WalletName string
+}
+
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
 	Txs    [][]dcrlibwallet.Transaction
-	Recent []dcrlibwallet.Transaction
+	Recent []RecentTransaction
 }
 
 // SyncStatus is sent when a wallet progress event is triggered.
@@ -97,7 +108,7 @@ type SyncStatus struct {
 	HeadersToFetch           int32
 	RescanHeadersProgress    int32
 	AddressDiscoveryProgress int32
-	RemainingTime            int64
+	RemainingTime            string
 	ConnectedPeers           int32
 	Steps                    int32
 	TotalSteps               int32
