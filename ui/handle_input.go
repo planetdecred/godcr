@@ -256,9 +256,8 @@ func (win *Window) KeysEventsHandler(evt *key.Event) {
 	if evt.Name == key.NameTab {
 		for i := 0; i < len(win.inputs.seedEditors); i++ {
 			if win.inputs.seedEditors[i].Focused() && win.inputs.seedsSuggestionsBtn != nil {
-				btn := win.inputs.seedsSuggestionsBtn[0]
-				win.inputs.seedEditors[i].SetText(btn.text)
-				win.inputs.seedEditors[i].Move(len(btn.text))
+				win.inputs.seedEditors[i].SetText(win.inputs.seedsSuggestionsBtn[0].text)
+				win.inputs.seedEditors[i].Move(len(win.inputs.seedsSuggestionsBtn[0].text))
 			}
 		}
 	}
