@@ -180,6 +180,7 @@ func (win *Window) HandleInputs() {
 		} else {
 			win.wallet.StartSync()
 			win.outputs.sync = win.theme.DangerButton("Cancel")
+			win.outputs.syncHeader =  win.outputs.icons.cancel
 		}
 	}
 

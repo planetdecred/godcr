@@ -11,15 +11,6 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
-const (
-	transactionStatusConfirmed = "confirmed"
-	transactionStatusPending   = "pending"
-
-	walletStatusWaiting = "waiting for other wallets"
-	walletStatusSyncing = "syncing..."
-	walletStatusSynced  = "synced"
-)
-
 // CreateWallet creates a new wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) CreateWallet(passphrase string) {
@@ -144,9 +135,9 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 func transactionStatus(bestBlockHeight, txnBlockHeight int32) string {
 	confirmations := bestBlockHeight - txnBlockHeight + 1
 	if txnBlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
-		return transactionStatusConfirmed
+		return "confirmed"
 	}
-	return transactionStatusPending
+	return "pending"
 }
 
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
@@ -209,13 +200,13 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 // WalletSyncStatus returns the sync status of a single wallet
 func walletSyncStatus(isWaiting bool, walletBestBlock, bestBlockHeight int32) string {
 	if isWaiting {
-		return walletStatusWaiting
+		return "waiting for other wallets"
 	}
 	if walletBestBlock < bestBlockHeight {
-		return walletStatusSyncing
+		return "syncing..."
 	}
 
-	return walletStatusSynced
+	return "synced"
 }
 
 // GetMultiWalletInfo gets bulk information about the loaded wallets.

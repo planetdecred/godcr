@@ -23,7 +23,8 @@ const (
 	syncingProgressTitle = "Syncing progress"
 	latestBlockTitle     = "Latest Block"
 	noTransaction        = "no transactions"
-	onlineStatus         = "Offline"
+	offlineStatus        = "Offline"
+	onlineStatus         = "Online"
 	syncingStatus        = "Syncing..."
 	notSyncedStatus      = "Not Synced"
 	syncedStatus         = "Synced"
@@ -323,7 +324,10 @@ func (page overviewPage) endToEndRow(inset layout.Inset, leftLabel, rightLabel d
 func (page overviewPage) syncBoxTitleRow(inset layout.Inset) {
 	statusTitleLabel := page.theme.Caption(statusTitle)
 	statusTitleLabel.Color = gray
-	statusLabel := page.theme.Body1(onlineStatus)
+	statusLabel := page.theme.Body1(offlineStatus)
+	if page.walletInfo.Synced || page.walletInfo.Syncing {
+		statusLabel.Text = onlineStatus
+	}
 	page.endToEndRow(inset, statusTitleLabel, statusLabel)
 }
 
@@ -334,15 +338,13 @@ func (page overviewPage) syncStatusTextRow(inset layout.Inset) {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(0.5, func() {
 				layout.W.Layout(gtx, func() {
-					syncText := ""
+					syncStatusLabel := page.theme.H6(notSyncedStatus)
 					if page.walletInfo.Syncing {
-						syncText = syncingStatus
+						syncStatusLabel.Text = syncingStatus
 					} else if page.walletInfo.Synced {
-						syncText = syncedStatus
-					} else {
-						syncText = notSyncedStatus
+						syncStatusLabel.Text = syncedStatus
 					}
-					page.theme.H6(syncText).Layout(gtx)
+					syncStatusLabel.Layout(page.gtx)
 				})
 			}),
 			layout.Flexed(1, func() {

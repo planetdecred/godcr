@@ -89,12 +89,12 @@ func (win *Window) Loop(shutdown chan int) {
 		case update := <-win.wallet.Sync:
 			switch update.Stage {
 			case wallet.SyncCompleted:
-				// win.outputs.sync = win.outputs.icons.check
+				win.outputs.syncHeader = win.outputs.icons.check
 				win.updateSyncStatus(false, true)
 			case wallet.SyncStarted:
 				win.updateSyncStatus(true, false)
 			case wallet.SyncCanceled:
-				// win.outputs.sync = win.outputs.icons.sync
+				win.outputs.syncHeader = win.outputs.icons.sync
 				win.updateSyncStatus(false, false)
 			case wallet.HeadersFetchProgress:
 				win.updateSyncProgress(update.ProgressReport)
