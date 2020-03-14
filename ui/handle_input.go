@@ -202,7 +202,7 @@ func (win *Window) editorSeedsEventsHandler() {
 		for _, e := range editor.Events(win.gtx) {
 			switch e.(type) {
 			case widget.ChangeEvent:
-				if editor.Text() == "" {
+				if strings.Trim(editor.Text(), " ") == "" {
 					return
 				}
 
@@ -210,7 +210,7 @@ func (win *Window) editorSeedsEventsHandler() {
 				win.outputs.seedsSuggestionsBtn = nil
 
 				for _, word := range dcrlibwallet.PGPWordList() {
-					if strings.HasPrefix(word, editor.Text()) {
+					if strings.HasPrefix(strings.ToLower(word), strings.ToLower(editor.Text())) {
 						if len(win.inputs.seedsSuggestionsBtn) < 2 {
 							var btn struct {
 								text   string
