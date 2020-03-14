@@ -100,7 +100,7 @@ func (win *Window) pageFirstColumn() {
 							if isNewAddrModal {
 								isInfoBtnModal = false
 								isNewAddrModal = false
-							}else{
+							} else {
 								isNewAddrModal = true
 							}
 						}
@@ -293,12 +293,12 @@ func (win *Window) drawInfoModal() {
 }
 
 func (win *Window) drawMoreModal() {
-layout.Flex{}.Layout(win.gtx,
+	layout.Flex{}.Layout(win.gtx,
 		layout.Flexed(.73, func() {
 		}),
 		layout.Flexed(1, func() {
 			inset := layout.Inset{
-				Top:   unit.Dp(50),
+				Top: unit.Dp(50),
 			}
 			inset.Layout(win.gtx, func() {
 				for win.inputs.newAddress.Clicked(win.gtx) {
@@ -313,7 +313,7 @@ layout.Flex{}.Layout(win.gtx,
 				win.outputs.newAddress.Layout(win.gtx, &win.inputs.newAddress)
 			})
 		}),
-)
+	)
 	// }
 	// decredmaterial.Modal{layout.SE, false}.Layout(win.gtx, selectedDetails)
 	// })
