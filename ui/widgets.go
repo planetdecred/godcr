@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"image/color"
-
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -85,10 +85,16 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.check = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)))
 	win.outputs.icons.check.Background = theme.Color.Success
 	win.outputs.icons.more = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
+	win.outputs.icons.more.Padding = unit.Dp(5)
+	win.outputs.icons.more.Size = unit.Dp(35)
 	win.outputs.icons.info = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionInfo)))
-	win.outputs.icons.dropdown = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowDropDown)))
+	win.outputs.icons.info.Padding = unit.Dp(5)
+	win.outputs.icons.info.Size = unit.Dp(35)
 	win.outputs.icons.copy = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy)))
-
+	win.outputs.icons.copy.Padding = unit.Dp(5)
+	win.outputs.icons.copy.Size = unit.Dp(30)
+	win.outputs.icons.copy.Background = theme.Color.Background
+	win.outputs.icons.copy.Color = theme.Color.Text
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
 
@@ -101,7 +107,6 @@ func (win *Window) initWidgets() {
 	win.outputs.toRestoreWallet = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
 	win.outputs.restoreDiag = theme.Button("Restore wallet")
 	win.outputs.restoreWallet = theme.Button("Restore")
-
 
 	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")
 	win.outputs.deleteWallet = theme.DangerButton("delete")
@@ -119,11 +124,8 @@ func (win *Window) initWidgets() {
 	win.outputs.selectedWalletBalLabel = win.theme.Body2("")
 	win.outputs.selectedAccountBalanceLabel = win.theme.H6("")
 	win.outputs.receiveAddressLabel = win.theme.H6("")
-	// win.outputs.receiveAddressLabel.Color = ui.LightBlueColor
-	// win.outputs.errorLabel = win.theme.Body1("")
-	// win.outputs.errorLabel.Color = ui.DangerColor
+	win.outputs.receiveAddressLabel.Color = theme.Color.Primary
 	win.outputs.addressCopiedLabel = win.theme.Caption("")
-	// win.outputs.addressCopiedLabel.Color = ui.LightBlueColor
 
 	win.outputs.toWallets = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionAccountBalanceWallet)))
 	win.outputs.toOverview = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionHome)))
