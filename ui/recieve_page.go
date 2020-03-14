@@ -114,7 +114,7 @@ func (win *Window) pageFirstColumn() {
 
 func (win *Window) selectedAccountColumn() {
 	layout.Flex{}.Layout(win.gtx,
-		layout.Flexed(.24, func() {
+		layout.Flexed(0.22, func() {
 		}),
 		layout.Flexed(1, func() {
 			layout.Stack{}.Layout(win.gtx,
@@ -174,12 +174,13 @@ func (win *Window) qrCodeAddressColumn() {
 		layout.Rigid(func() {
 			layout.Inset{Top: unit.Dp(16)}.Layout(win.gtx, func() {
 				layout.Flex{}.Layout(win.gtx,
-					layout.Flexed(.2, func() {
+					layout.Flexed(0.2, func() {
 					}),
 					layout.Flexed(1, func() {
-						img := win.theme.Image(paint.NewImageOp(qrCode.Image(140)))
-						img.Src.Rect.Max.X = 141
-						img.Src.Rect.Max.Y = 141
+						img := win.theme.Image(paint.NewImageOp(qrCode.Image(520)))
+						img.Src.Rect.Max.X = 521
+						img.Src.Rect.Max.Y = 521
+						img.Scale = 0.5
 						img.Layout(win.gtx)
 					}),
 				)
@@ -188,7 +189,7 @@ func (win *Window) qrCodeAddressColumn() {
 		layout.Rigid(func() {
 			layout.Inset{Top: unit.Dp(16)}.Layout(win.gtx, func() {
 				layout.Flex{}.Layout(win.gtx,
-					layout.Flexed(.1, func() {
+					layout.Flexed(0.1, func() {
 					}),
 					layout.Flexed(1, func() {
 						win.receiveAddressColumn()
@@ -283,11 +284,10 @@ func (win *Window) drawInfoModal() {
 								win.outputs.gotIt.Layout(win.gtx, &win.inputs.gotIt)
 							})
 						}),
-					// })
 					)
 				})
 			}
-			decredmaterial.Modal{layout.SE, false}.Layout(win.gtx, selectedDetails)
+			decredmaterial.Modal{layout.SE}.Layout(win.gtx, selectedDetails)
 		})
 	})
 }
@@ -314,7 +314,4 @@ func (win *Window) drawMoreModal() {
 			})
 		}),
 	)
-	// }
-	// decredmaterial.Modal{layout.SE, false}.Layout(win.gtx, selectedDetails)
-	// })
 }
