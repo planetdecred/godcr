@@ -69,6 +69,11 @@ func (win *Window) Header() {
 				win.outputs.createDiag.Layout(win.gtx, &win.inputs.createDiag)
 			})
 		}),
+		layout.Flexed(0.2, func() {
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.toRestoreWallet.Layout(win.gtx, &win.inputs.toRestoreWallet)
+			})
+		}),
 		layout.Flexed(0.4, func() {
 			layout.Center.Layout(win.gtx, func() {
 				win.outputs.sync.Layout(win.gtx, &win.inputs.sync)

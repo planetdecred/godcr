@@ -32,6 +32,7 @@ func (win *Window) updateStates(update interface{}) {
 		win.current = win.WalletsPage
 		win.states.dialog = false
 	case wallet.Restored:
+		win.resetSeeds()
 		win.current = win.WalletsPage
 		win.states.dialog = false
 	case wallet.DeletedWallet:
