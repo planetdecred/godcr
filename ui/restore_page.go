@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -29,7 +28,11 @@ func (win *Window) RestorePage() {
 				txt.Layout(win.gtx)
 			}),
 			layout.Rigid(func() {
-				layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {})
+				layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(10)}.Layout(win.gtx, func() {
+					layout.Center.Layout(win.gtx, func() {
+						win.Err()
+					})
+				})
 			}),
 			layout.Flexed(1, func() {
 				layout.Center.Layout(win.gtx, func() {
@@ -67,27 +70,26 @@ func inputsGroup(win *Window, l *layout.List, len int, startIndex int) {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Left: unit.Dp(20), Bottom: unit.Dp(20)}.Layout(win.gtx, func() {
-							win.outputs.seedEditors[i+startIndex].Layout(win.gtx, &win.inputs.seedEditors[i+startIndex])
+							win.outputs.seedEditors[i+startIndex].Layout(win.gtx, &win.inputs.seedEditors.editors[i+startIndex])
 						})
 					}),
 				)
 			}),
 			layout.Rigid(func() {
-				autoComplete(win, i+startIndex, win.inputs.seedEditors[i+startIndex].Focused())
+				autoComplete(win, win.inputs.seedEditors.editors[i+startIndex].Focused())
 			}),
 		)
 	})
 }
 
-func autoComplete(win *Window, eIndex int, isFocused bool) {
-	if !isFocused ||
-		strings.Trim(win.inputs.seedEditors[eIndex].Text(), " ") == "" {
+func autoComplete(win *Window, isFocused bool) {
+	if !isFocused {
 		return
 	}
 
-	(&layout.List{Axis: layout.Horizontal}).Layout(win.gtx, len(win.inputs.seedsSuggestionsBtn), func(i int) {
+	(&layout.List{Axis: layout.Horizontal}).Layout(win.gtx, len(win.inputs.seedsSuggestions), func(i int) {
 		layout.Inset{Right: unit.Dp(4)}.Layout(win.gtx, func() {
-			win.outputs.seedsSuggestionsBtn[i].Layout(win.gtx, &win.inputs.seedsSuggestionsBtn[i].button)
+			win.outputs.seedsSuggestions[i].Layout(win.gtx, &win.inputs.seedsSuggestions[i].button)
 		})
 	})
 }

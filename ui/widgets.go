@@ -18,8 +18,11 @@ type inputs struct {
 
 	spendingPassword, matchSpending, renameWallet widget.Editor
 
-	seedEditors         []widget.Editor
-	seedsSuggestionsBtn []struct {
+	seedEditors struct {
+		focusIndex int
+		editors    []widget.Editor
+	}
+	seedsSuggestions []struct {
 		text   string
 		button widget.Button
 	}
@@ -44,8 +47,8 @@ type outputs struct {
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
 
-	seedEditors         []decredmaterial.Editor
-	seedsSuggestionsBtn []decredmaterial.Button
+	seedEditors      []decredmaterial.Editor
+	seedsSuggestions []decredmaterial.Button
 }
 
 func (win *Window) initWidgets() {
@@ -95,7 +98,8 @@ func (win *Window) initWidgets() {
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
-		win.inputs.seedEditors = append(win.inputs.seedEditors, widget.Editor{SingleLine: true, Submit: true})
+		win.inputs.seedEditors.focusIndex = -1
+		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
 }
 
