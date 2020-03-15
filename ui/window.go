@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"gioui.org/app"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
@@ -92,7 +93,12 @@ func (win *Window) Loop(shutdown chan int) {
 				win.outputs.syncHeader = win.outputs.icons.check
 				win.updateSyncStatus(false, true)
 			case wallet.SyncStarted:
-				win.updateSyncStatus(true, false)
+				fmt.Printf("SYNC START TRIGGERED !!!!\n")
+				// dcrlibwallet triggers the SyncStart method several times
+				// without sending a SyncComplete signal when sync is done.
+				if !win.walletInfo.Synced {
+					win.updateSyncStatus(true, false)
+				}
 			case wallet.SyncCanceled:
 				win.outputs.syncHeader = win.outputs.icons.sync
 				win.updateSyncStatus(false, false)
