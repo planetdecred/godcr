@@ -91,7 +91,8 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.toSend.Clicked(win.gtx) {
-		win.current = win.SendPage
+		// win.current = win.SendPage
+		win.wallet.CreateTransaction(1, 0)
 		return
 	}
 

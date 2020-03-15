@@ -105,6 +105,8 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 			return
 		}
 
+		txAuthor.AddSendDestination("TseCXEcbPdSbDY2ZU97XuUuQCNLHcpyq3iH", 1, false)
+		txAuthor.Broadcast([]byte("123"))
 		resp.Resp = txAuthor
 		wal.Send <- resp
 	}()
