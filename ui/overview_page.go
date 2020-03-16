@@ -368,6 +368,7 @@ func (page overviewPage) syncStatusTextRow(inset layout.Inset) {
 func (page overviewPage) progressBarRow(inset layout.Inset) {
 	inset.Layout(page.gtx, func() {
 		progress := page.walletSyncStatus.Progress
+		page.gtx.Constraints.Height.Max = 20
 		page.theme.ProgressBar().Layout(page.gtx, float64(progress))
 	})
 }

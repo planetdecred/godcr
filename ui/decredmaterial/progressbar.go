@@ -10,19 +10,16 @@ import (
 	"gioui.org/op/paint"
 )
 
-var defaultHeight = 20
-
 // ProgressBar indicates the progress of a process. Height defines the thickness of the progressbar,
 // BackgroundColor defines the color of the track, ProgressColor defines the color of the moving progress.
 type ProgressBar struct {
-	Height          int
 	BackgroundColor color.RGBA
 	ProgressColor   color.RGBA
 }
 
 // track lays out a rectangle to represent the level of progress yet to be completed.
 func (p *ProgressBar) track(gtx *layout.Context) {
-	borderedRectangle(gtx, p.BackgroundColor, gtx.Constraints.Width.Max, p.Height)
+	borderedRectangle(gtx, p.BackgroundColor, gtx.Constraints.Width.Max, gtx.Constraints.Height.Max)
 }
 
 // value lays out a rectangle to represent the level of progress that has been completed.
@@ -31,7 +28,7 @@ func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
 	if width > float64(gtx.Constraints.Width.Max) {
 		width = float64(gtx.Constraints.Width.Max)
 	}
-	borderedRectangle(gtx, p.ProgressColor, int(width), p.Height)
+	borderedRectangle(gtx, p.ProgressColor, int(width), gtx.Constraints.Height.Max)
 }
 
 // borderedRectangle defines the dimensions of the rectangle, draws it and adds color it using the Fill method.
@@ -64,7 +61,6 @@ func (p *ProgressBar) Layout(gtx *layout.Context, progress float64) {
 // ProgressBar returns a new ProgressBar instance.
 func (t *Theme) ProgressBar() *ProgressBar {
 	return &ProgressBar{
-		Height:          defaultHeight,
 		BackgroundColor: t.Color.Hint,
 		ProgressColor:   t.Color.Success,
 	}

@@ -171,20 +171,7 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	// SYNC
-	if win.inputs.sync.Clicked(win.gtx) {
-		//log.Info("Sync clicked :", win.walletInfo.Synced, win.walletInfo.Syncing)
-		if win.walletInfo.Synced || win.walletInfo.Syncing {
-			win.wallet.CancelSync()
-			win.outputs.sync = win.theme.Button("Reconnect")
-		} else {
-			win.wallet.StartSync()
-			win.outputs.sync = win.theme.DangerButton("Cancel")
-			win.outputs.syncHeader = win.outputs.icons.cancel
-		}
-	}
-
-	if win.inputs.syncHeader.Clicked(win.gtx) {
+	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
 		//log.Info("Sync clicked :", win.walletInfo.Synced, win.walletInfo.Syncing)
 		if win.walletInfo.Synced || win.walletInfo.Syncing {
 			win.wallet.CancelSync()
