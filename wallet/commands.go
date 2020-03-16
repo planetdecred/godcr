@@ -269,7 +269,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
 				DaysBehind: fmt.Sprintf("%s behind",
 					dcrlibwallet.CalculateDaysBehind(wall.GetBestBlockTimeStamp())),
-				Status:    walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
+				Status: walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 			}
 			i++
 		}

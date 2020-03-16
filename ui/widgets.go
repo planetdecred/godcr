@@ -19,7 +19,7 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
 	//toReceive                                                 widget.Button
-	sync widget.Button
+	sync, syncHeader widget.Button
 
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 

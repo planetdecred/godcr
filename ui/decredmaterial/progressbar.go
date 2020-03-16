@@ -1,13 +1,13 @@
 package decredmaterial
 
 import (
-	"gioui.org/op/paint"
 	"image"
 	"image/color"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 )
 
 var defaultHeight = 20
