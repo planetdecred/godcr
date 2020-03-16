@@ -287,7 +287,7 @@ func (win *Window) drawInfoModal() {
 					)
 				})
 			}
-			decredmaterial.Modal{layout.SE}.Layout(win.gtx, selectedDetails)
+			decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
 		})
 	})
 }
