@@ -21,9 +21,11 @@ type inputs struct {
 	toReceive                                                 widget.Button
 	sync, syncHeader widget.Button
 	info, more, dropdown, copy, gotIt, newAddress                          widget.Button
-
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 
+	receiveIcons struct {
+		info, more, copy, gotItDiag, newAddress widget.Button
+	}
 	seedEditors struct {
 		focusIndex int
 		editors    []widget.Editor
@@ -43,7 +45,7 @@ type outputs struct {
 		create, clear, done *decredmaterial.Icon
 	}
 	icons struct {
-		add, check, cancel, sync, info, more, dropdown, copy decredmaterial.IconButton
+		add, check, cancel, sync, info, more, copy decredmaterial.IconButton
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
@@ -57,8 +59,8 @@ type outputs struct {
 
 	sync, toggleWalletRename, renameWallet, info, more, dropdown, copy                              decredmaterial.IconButton
 
-	tabs                          []decredmaterial.TabItem
-	notImplemented, noWallet, err decredmaterial.Label
+	tabs                                                      []decredmaterial.TabItem
+	notImplemented, noWallet, receivePageTitle, pageInfo, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -116,8 +118,11 @@ func (win *Window) initWidgets() {
 	win.outputs.notImplemented = theme.H3("Not Implemented")
 
 	//receive widgets
-	win.outputs.gotIt = theme.Button("Got It")
+	win.outputs.gotItDiag = theme.Button("Got It")
 	win.outputs.newAddress = theme.Button("Generate new address")
+
+	win.outputs.receivePageTitle = theme.H4("Receiving DCR")
+	win.outputs.pageInfo = theme.Body1("Each time you request a payment, a \nnew address is created to protect \nyour privacy.")
 
 	win.outputs.selectedAccountNameLabel = win.theme.H6("")
 	win.outputs.selectedWalletNameLabel = win.theme.Body2("")
@@ -145,7 +150,7 @@ func (win *Window) initWidgets() {
 	win.outputs.sync = win.outputs.icons.sync
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
-	win.outputs.dropdown = win.outputs.icons.dropdown
+	win.outputs.copy = win.outputs.icons.copy
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))

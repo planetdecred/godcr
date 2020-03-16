@@ -16,18 +16,6 @@ import (
 
 var (
 	listContainer = &layout.List{Axis: layout.Vertical}
-
-	generateNew bool
-	addrs       string
-
-	isInfoBtnModal = false
-	isNewAddrModal = false
-
-	selectedWallet  *wallet.InfoShort
-	selectedAccount *wallet.Account
-
-	pageTitle       = "Receiving DCR"
-	ReceivePageInfo = "Each time you request a payment, a \nnew address is created to protect \nyour privacy."
 )
 
 func (win *Window) Receive() {
@@ -51,6 +39,13 @@ func (win *Window) ReceivePageContents() {
 			win.pageFirstColumn()
 		},
 		func() {
+			layout.Center.Layout(win.gtx, func() {
+				if win.outputs.err.Text != "" {
+					win.outputs.err.Layout(win.gtx)
+				}
+			})
+		},
+		func() {
 			win.selectedAccountColumn()
 		},
 		func() {
@@ -72,10 +67,10 @@ func (win *Window) ReceivePageContents() {
 	listContainer.Layout(win.gtx, len(ReceivePageContent), func(i int) {
 		layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, ReceivePageContent[i])
 	})
-	if isNewAddrModal {
+	if win.isNewAddrModal {
 		win.drawMoreModal()
 	}
-	if isInfoBtnModal {
+	if win.isInfoBtnModal {
 		win.drawInfoModal()
 	}
 }
@@ -83,28 +78,28 @@ func (win *Window) ReceivePageContents() {
 func (win *Window) pageFirstColumn() {
 	layout.Flex{}.Layout(win.gtx,
 		layout.Flexed(.6, func() {
-			win.theme.H4(pageTitle).Layout(win.gtx)
+			win.outputs.receivePageTitle.Layout(win.gtx)
 		}),
 		layout.Flexed(.4, func() {
 			layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(20)}.Layout(win.gtx, func() {
 				layout.Flex{}.Layout(win.gtx,
 					layout.Flexed(.5, func() {
-						if win.inputs.info.Clicked(win.gtx) {
-							isInfoBtnModal = true
-							isNewAddrModal = false
+						if win.inputs.receiveIcons.info.Clicked(win.gtx) {
+							win.isInfoBtnModal = true
+							win.isNewAddrModal = false
 						}
-						win.outputs.info.Layout(win.gtx, &win.inputs.info)
+						win.outputs.info.Layout(win.gtx, &win.inputs.receiveIcons.info)
 					}),
 					layout.Flexed(.5, func() {
-						for win.inputs.more.Clicked(win.gtx) {
-							if isNewAddrModal {
-								isInfoBtnModal = false
-								isNewAddrModal = false
+						for win.inputs.receiveIcons.more.Clicked(win.gtx) {
+							if win.isNewAddrModal {
+								win.isInfoBtnModal = false
+								win.isNewAddrModal = false
 							} else {
-								isNewAddrModal = true
+								win.isNewAddrModal = true
 							}
 						}
-						win.outputs.more.Layout(win.gtx, &win.inputs.more)
+						win.outputs.more.Layout(win.gtx, &win.inputs.receiveIcons.more)
 					}),
 				)
 			})
@@ -163,7 +158,7 @@ func (win *Window) selectedAccountColumn() {
 }
 
 func (win *Window) qrCodeAddressColumn() {
-	qrCode, err := qrcode.New(addrs, qrcode.Highest)
+	qrCode, err := qrcode.New(win.addrs, qrcode.Highest)
 	if err != nil {
 		win.outputs.err.Text = err.Error()
 		return
@@ -203,19 +198,19 @@ func (win *Window) qrCodeAddressColumn() {
 func (win *Window) receiveAddressColumn() {
 	layout.Flex{}.Layout(win.gtx,
 		layout.Rigid(func() {
-			win.outputs.receiveAddressLabel.Text = addrs
+			win.outputs.receiveAddressLabel.Text = win.addrs
 			win.outputs.receiveAddressLabel.Layout(win.gtx)
 		}),
 		layout.Rigid(func() {
 			layout.Inset{Left: unit.Dp(16)}.Layout(win.gtx, func() {
-				for win.inputs.copy.Clicked(win.gtx) {
-					clipboard.WriteAll(addrs)
+				for win.inputs.receiveIcons.copy.Clicked(win.gtx) {
+					clipboard.WriteAll(win.addrs)
 					win.addressCopiedLabel.Text = "Address Copied"
 					time.AfterFunc(time.Second*9, func() {
 						win.addressCopiedLabel.Text = ""
 					})
 				}
-				win.outputs.copy.Layout(win.gtx, &win.inputs.copy)
+				win.outputs.copy.Layout(win.gtx, &win.inputs.receiveIcons.copy)
 			})
 		}),
 	)
@@ -231,8 +226,8 @@ func (win *Window) setDefaultPageValues() {
 }
 
 func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account, generateNew bool) {
-	selectedWallet = &wallet
-	selectedAccount = &account
+	win.selectedWallet = &wallet
+	win.selectedAccount = &account
 
 	win.outputs.selectedAccountNameLabel.Text = account.Name
 	win.outputs.selectedWalletNameLabel.Text = wallet.Name
@@ -256,7 +251,7 @@ func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Ac
 			return
 		}
 	}
-	addrs = addr
+	win.addrs = addr
 }
 
 func (win *Window) drawInfoModal() {
@@ -267,7 +262,7 @@ func (win *Window) drawInfoModal() {
 					layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
 						layout.Rigid(func() {
 							layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-								win.theme.Body1(ReceivePageInfo).Layout(win.gtx)
+								win.outputs.pageInfo.Layout(win.gtx)
 							})
 						}),
 						layout.Rigid(func() {
@@ -275,13 +270,13 @@ func (win *Window) drawInfoModal() {
 								Left: unit.Dp(190),
 							}
 							inset.Layout(win.gtx, func() {
-								if win.inputs.gotIt.Clicked(win.gtx) {
-									if isInfoBtnModal {
-										isInfoBtnModal = false
+								if win.inputs.receiveIcons.gotItDiag.Clicked(win.gtx) {
+									if win.isInfoBtnModal {
+										win.isInfoBtnModal = false
 									}
 								}
 
-								win.outputs.gotIt.Layout(win.gtx, &win.inputs.gotIt)
+								win.outputs.gotItDiag.Layout(win.gtx, &win.inputs.receiveIcons.gotItDiag)
 							})
 						}),
 					)
@@ -301,16 +296,16 @@ func (win *Window) drawMoreModal() {
 				Top: unit.Dp(50),
 			}
 			inset.Layout(win.gtx, func() {
-				for win.inputs.newAddress.Clicked(win.gtx) {
-					if isNewAddrModal {
-						win.setSelectedAccount(*selectedWallet, *selectedAccount, true)
-						isNewAddrModal = false
+				for win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
+					if win.isNewAddrModal {
+						win.setSelectedAccount(*win.selectedWallet, *win.selectedAccount, true)
+						win.isNewAddrModal = false
 					}
 				}
 
 				win.gtx.Constraints.Width.Min = 40
 				win.gtx.Constraints.Height.Min = 40
-				win.outputs.newAddress.Layout(win.gtx, &win.inputs.newAddress)
+				win.outputs.newAddress.Layout(win.gtx, &win.inputs.receiveIcons.newAddress)
 			})
 		}),
 	)
