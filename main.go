@@ -1,7 +1,6 @@
 package main
 
-import ( // app "gioui.org/app"
-	// "gioui.org/font/gofont"
+import (
 	"fmt"
 	"sync"
 
@@ -67,9 +66,9 @@ func main() {
 		wg.Done()
 	}()
 
-	win, err := ui.CreateWindow(wal)	
+	win, err := ui.CreateWindow(wal)
 	if err != nil {
-		fmt.Printf("%+v\n", err)
+		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
 	}
 
