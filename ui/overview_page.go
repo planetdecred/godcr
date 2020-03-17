@@ -375,8 +375,13 @@ func (page overviewPage) progressBarRow(inset layout.Inset) {
 
 // syncBoxTitleRow lays out the progress status when the wallet is syncing.
 func (page overviewPage) progressStatusRow(inset layout.Inset) {
+	timeLeft := page.walletSyncStatus.RemainingTime
+	if timeLeft == "" {
+		timeLeft = "0s"
+	}
+
 	percentageLabel := page.theme.Body1(fmt.Sprintf("%v%%", page.walletSyncStatus.Progress))
-	timeLeftLabel := page.theme.Body1(fmt.Sprintf("%v left", page.walletSyncStatus.RemainingTime))
+	timeLeftLabel := page.theme.Body1(fmt.Sprintf("%v left", timeLeft))
 	page.endToEndRow(inset, percentageLabel, timeLeftLabel)
 }
 

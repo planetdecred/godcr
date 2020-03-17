@@ -56,6 +56,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	win.walletSyncStatus = new(wallet.SyncStatus)
+	win.walletTransactions = new(wallet.Transactions)
 
 	win.wallet = wal
 	win.states.loading = true
@@ -109,6 +110,10 @@ func (win *Window) Loop(shutdown chan int) {
 				win.updateSyncProgress(update.ProgressReport)
 			case wallet.PeersConnected:
 				win.updateConnectedPeers(update.ConnectedPeers)
+			case wallet.BlockAttached:
+				if win.walletInfo.Synced {
+					win.wallet.GetMultiWalletInfo()
+				}
 			}
 
 		case e := <-win.window.Events():

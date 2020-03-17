@@ -287,12 +287,13 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			return
 		}
 
+		lastSyncTime := int64(time.Since(time.Unix(best.Timestamp, 0)).Truncate(time.Minute).Seconds())
 		resp.Resp = MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    dcrutil.Amount(completeTotal).String(),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
-			LastSyncTime:    time.Since(time.Unix(best.Timestamp, 0)).Truncate(time.Minute).String(),
+			LastSyncTime:    SecondsToDays(lastSyncTime),
 			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
 			Syncing:         wal.multi.IsSyncing(),
@@ -348,4 +349,21 @@ func (wal *Wallet) StartSync() error {
 // CancelSync cancels the SPV sync
 func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
+}
+
+// SecondsToDays takes time in seconds and returns its string equivalent in the format ddhhmm.
+func SecondsToDays(totalTimeLeft int64) string {
+	q, r := divMod(totalTimeLeft, 24*60*60)
+	timeLeft := time.Duration(r) * time.Second
+	if q > 0 {
+		return fmt.Sprintf("%dd%s", q, timeLeft.String())
+	}
+	return timeLeft.String()
+}
+
+// divMod divides a numerator by a denominator and returns its quotient and remainder.
+func divMod(numerator, denominator int64) (quotient, remainder int64) {
+	quotient = numerator / denominator // integer division, decimals are truncated
+	remainder = numerator % denominator
+	return
 }

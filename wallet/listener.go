@@ -17,13 +17,20 @@ const (
 	// SyncCompleted signifies that spv sync has been completed
 	SyncCompleted
 
+	// HeadersFetchProgress indicates a headers fetch signal
 	HeadersFetchProgress
 
+	// HeadersFetchProgress indicates an address discovery signal
 	AddressDiscoveryProgress
 
+	// HeadersRescanProgress indicates an address rescan signal
 	HeadersRescanProgress
 
+	// HeadersFetchProgress indicates an peer connected signal
 	PeersConnected
+
+	// BlockAttached indicates a block attached signal
+	BlockAttached
 )
 
 const (
@@ -50,6 +57,7 @@ type (
 		Stage          SyncProgressStage
 		ProgressReport interface{}
 		ConnectedPeers int32
+		BlockUpdate    NewBlock
 	}
 )
 
