@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 
+	"gioui.org/gesture"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -30,6 +31,11 @@ type inputs struct {
 
 type combined struct {
 	sel *decredmaterial.Select
+
+	transactions []struct {
+		data    interface{}
+		gesture *gesture.Click
+	}
 }
 
 type outputs struct {

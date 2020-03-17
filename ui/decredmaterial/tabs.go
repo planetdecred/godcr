@@ -67,5 +67,7 @@ func (tab *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 			tab.Selected = i
 			return
 		}
+
+		tab.changed = false
 	}
 }

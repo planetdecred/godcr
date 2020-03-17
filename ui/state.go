@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"gioui.org/gesture"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
@@ -13,7 +14,7 @@ type states struct {
 
 // updateStates changes the wallet state based on the received update
 func (win *Window) updateStates(update interface{}) {
-	log.Infof("Received update %+v", update)
+	// log.Infof("Received update %+v", update)
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
 		*win.walletInfo = e
@@ -38,6 +39,15 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.DeletedWallet:
 		win.selected = 0
 		win.states.dialog = false
+	case wallet.TransactionsWallet:
+		win.combined.transactions = nil
+
+		for i := 0; i < len(e.Txs); i++ {
+			win.combined.transactions = append(win.combined.transactions, struct {
+				data    interface{}
+				gesture *gesture.Click
+			}{&e.Txs[i], &gesture.Click{}})
+		}
 	}
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()

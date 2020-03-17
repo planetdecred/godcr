@@ -1,9 +1,8 @@
 package wallet
 
 import (
-	"math"
+	"fmt"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -105,8 +104,6 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 			return
 		}
 
-		txAuthor.AddSendDestination("TseCXEcbPdSbDY2ZU97XuUuQCNLHcpyq3iH", 1, false)
-		txAuthor.Broadcast([]byte("123"))
 		resp.Resp = txAuthor
 		wal.Send <- resp
 	}()
@@ -156,6 +153,44 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 	}()
 }
 
+// GetTransactionsByWallet get list of transactions fitting the parameters.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) GetTransactionsByWallet(walletID int, offset, limit, txfilter int32) {
+	go func() {
+		var resp Response
+
+		wallets, err := wal.wallets()
+
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+
+			return
+		}
+
+		var alltxs []dcrlibwallet.Transaction
+
+		for _, wall := range wallets {
+			if wall.ID == walletID {
+				txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
+				if err != nil {
+					resp.Err = err
+					wal.Send <- resp
+
+					return
+				}
+
+				alltxs = txs
+			}
+		}
+
+		resp.Resp = TransactionsWallet{
+			Txs: alltxs,
+		}
+		wal.Send <- resp
+	}()
+}
+
 // GetMultiWalletInfo gets bulk information about the loaded wallets.
 // Information regarding transactions is collected with respect to wal.confirms as the
 // number of required confirmations for said transactions.
@@ -174,35 +209,33 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		i := 0
-		for id, wall := range wallets {
+		for _, wall := range wallets {
 			iter, err := wall.AccountsIterator(wal.confirms)
 			if err != nil {
 				resp.Err = err
 				wal.Send <- resp
 				return
 			}
-			var acctBalance int64
-			accts := make([]Account, 0)
-			for acct := iter.Next(); acct != nil; acct = iter.Next() {
-				addr, er := wall.CurrentAddress(acct.Number)
-				if er != nil && acct.Number != math.MaxInt32 {
-					log.Error("Could not get current address for wallet ", id, "account", acct.Number)
-				}
-				accts = append(accts, Account{
-					Number:         strconv.Itoa(int(acct.Number)),
-					Name:           acct.Name,
-					TotalBalance:   dcrutil.Amount(acct.TotalBalance).String(),
-					CurrentAddress: addr,
-				})
-				acctBalance += acct.TotalBalance
-			}
-			completeTotal += acctBalance
 
+			walletAccounts := []Account{}
+			var totalWalletBalance, spendableWalletBalance int64
+			for acct := iter.Next(); acct != nil; acct = iter.Next() {
+				totalWalletBalance += acct.TotalBalance
+				spendableWalletBalance += acct.Balance.Spendable
+
+				account := Account{
+					Number:       fmt.Sprint(acct.Number),
+					Name:         acct.Name,
+					TotalBalance: fmt.Sprint(acct.Balance.Total),
+				}
+				walletAccounts = append(walletAccounts, account)
+			}
+
+			completeTotal += totalWalletBalance
 			infos[i] = InfoShort{
 				ID:              wall.ID,
 				Name:            wall.Name,
-				Balance:         dcrutil.Amount(acctBalance).String(),
-				Accounts:        accts,
+				Accounts:        walletAccounts,
 				BestBlockHeight: wall.GetBestBlock(),
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
 				IsWaiting:       wall.IsWaiting(),

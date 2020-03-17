@@ -80,6 +80,11 @@ type Transactions struct {
 	Recent []dcrlibwallet.Transaction
 }
 
+// TransactionsWallet is sent in response to Wallet.GetTransactionsByWallet
+type TransactionsWallet struct {
+	Txs []dcrlibwallet.Transaction
+}
+
 // SyncStatus is sent when a wallet progress event is triggered.
 type SyncStatus struct {
 	Progress                 int32
