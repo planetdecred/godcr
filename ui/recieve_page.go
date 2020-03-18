@@ -220,6 +220,10 @@ func (win *Window) setDefaultPageValues() {
 	info := win.walletInfo.Wallets[win.selected]
 
 	for i := range info.Accounts {
+		if len(info.Accounts) == 0 {
+			continue
+		}
+
 		for win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
 			addr, err := win.wallet.NextAddress(info.ID, info.Accounts[i].Number)
 			if err != nil {

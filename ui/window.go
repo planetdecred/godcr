@@ -31,7 +31,7 @@ type Window struct {
 	dialog  layout.Widget
 	tabs    *decredmaterial.Tabs
 
-	addrs       string
+	addrs string
 
 	isInfoBtnModal bool
 	isNewAddrModal bool
