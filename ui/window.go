@@ -31,7 +31,6 @@ type Window struct {
 	dialog  layout.Widget
 	tabs    *decredmaterial.Tabs
 
-	generateNew bool
 	addrs       string
 
 	isInfoBtnModal bool
