@@ -220,6 +220,15 @@ func (win *Window) setDefaultPageValues() {
 	info := win.walletInfo.Wallets[win.selected]
 
 	for i := range info.Accounts {
+		if win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
+			addr, err := win.wallet.NextAddress(info.ID, info.Accounts[i].Number)
+			if err != nil {
+				win.outputs.err.Text = err.Error()
+				return
+			}
+			info.Accounts[i].CurrentAddress = addr
+			win.isNewAddrModal = false
+		}
 		win.setSelectedAccount(info, info.Accounts[i], false)
 		break
 	}
@@ -233,25 +242,7 @@ func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Ac
 	win.outputs.selectedWalletNameLabel.Text = wallet.Name
 	win.outputs.selectedWalletBalLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
 	win.outputs.selectedAccountBalanceLabel.Text = wallet.Balance
-
-	var addr string
-	var err error
-
-	// create a new receive address everytime a new account is chosen
-	if generateNew {
-		addr, err = win.wallet.NextAddress(wallet.ID, account.Number)
-		if err != nil {
-			win.outputs.err.Text = err.Error()
-			return
-		}
-	} else {
-		addr, err = win.wallet.CurrentAddress(wallet.ID, account.Number)
-		if err != nil {
-			win.outputs.err.Text = err.Error()
-			return
-		}
-	}
-	win.addrs = addr
+	win.addrs = account.CurrentAddress
 }
 
 func (win *Window) drawInfoModal() {
@@ -289,20 +280,13 @@ func (win *Window) drawInfoModal() {
 
 func (win *Window) drawMoreModal() {
 	layout.Flex{}.Layout(win.gtx,
-		layout.Flexed(.73, func() {
+		layout.Flexed(0.73, func() {
 		}),
 		layout.Flexed(1, func() {
 			inset := layout.Inset{
 				Top: unit.Dp(50),
 			}
 			inset.Layout(win.gtx, func() {
-				for win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
-					if win.isNewAddrModal {
-						win.setSelectedAccount(*win.selectedWallet, *win.selectedAccount, true)
-						win.isNewAddrModal = false
-					}
-				}
-
 				win.gtx.Constraints.Width.Min = 40
 				win.gtx.Constraints.Height.Min = 40
 				win.outputs.newAddress.Layout(win.gtx, &win.inputs.receiveIcons.newAddress)
