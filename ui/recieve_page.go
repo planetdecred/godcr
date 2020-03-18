@@ -220,7 +220,7 @@ func (win *Window) setDefaultPageValues() {
 	info := win.walletInfo.Wallets[win.selected]
 
 	for i := range info.Accounts {
-		if win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
+		for win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
 			addr, err := win.wallet.NextAddress(info.ID, info.Accounts[i].Number)
 			if err != nil {
 				win.outputs.err.Text = err.Error()
@@ -229,12 +229,13 @@ func (win *Window) setDefaultPageValues() {
 			info.Accounts[i].CurrentAddress = addr
 			win.isNewAddrModal = false
 		}
-		win.setSelectedAccount(info, info.Accounts[i], false)
+
+		win.setSelectedAccount(info, info.Accounts[i])
 		break
 	}
 }
 
-func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account, generateNew bool) {
+func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account) {
 	win.selectedWallet = &wallet
 	win.selectedAccount = &account
 
