@@ -1,8 +1,9 @@
 package wallet
 
 import (
-	"fmt"
+	"math"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -68,6 +69,25 @@ func (wal *Wallet) DeleteWallet(walletID int, passphrase string) {
 
 		} else {
 			wal.Send <- ResponseResp(DeletedWallet{ID: walletID})
+		}
+	}()
+}
+
+// AddAccount adds an account to a wallet.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) AddAccount(walletID int, name string, pass string) {
+	go func() {
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			wal.Send <- Response{
+				Resp: AddedAccount{},
+				Err:  ErrIDNotExist,
+			}
+		}
+		id, err := wall.NextAccount(name, []byte(pass))
+		wal.Send <- Response{
+			Resp: AddedAccount{ID: id},
+			Err:  err,
 		}
 	}()
 }
@@ -209,33 +229,44 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		i := 0
-		for _, wall := range wallets {
+		for id, wall := range wallets {
 			iter, err := wall.AccountsIterator(wal.confirms)
 			if err != nil {
 				resp.Err = err
 				wal.Send <- resp
 				return
 			}
-
-			walletAccounts := []Account{}
-			var totalWalletBalance, spendableWalletBalance int64
+			var acctBalance int64
+			accts := make([]Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
-				totalWalletBalance += acct.TotalBalance
-				spendableWalletBalance += acct.Balance.Spendable
-
-				account := Account{
-					Number:       fmt.Sprint(acct.Number),
-					Name:         acct.Name,
-					TotalBalance: fmt.Sprint(acct.Balance.Total),
+				addr, er := wall.CurrentAddress(acct.Number)
+				if er != nil && acct.Number != math.MaxInt32 {
+					log.Error("Could not get current address for wallet ", id, "account", acct.Number)
 				}
-				walletAccounts = append(walletAccounts, account)
+				accts = append(accts, Account{
+					Number:       strconv.Itoa(int(acct.Number)),
+					Name:         acct.Name,
+					TotalBalance: dcrutil.Amount(acct.TotalBalance).String(),
+					Spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
+					Keys: struct {
+						Internal, External, Imported string
+					}{
+						Internal: strconv.Itoa(int(acct.InternalKeyCount)),
+						External: strconv.Itoa(int(acct.ExternalKeyCount)),
+						Imported: strconv.Itoa(int(acct.ImportedKeyCount)),
+					},
+					HDPath:         wal.hdPrefix() + strconv.Itoa(int(acct.Number)) + "'",
+					CurrentAddress: addr,
+				})
+				acctBalance += acct.TotalBalance
 			}
+			completeTotal += acctBalance
 
-			completeTotal += totalWalletBalance
 			infos[i] = InfoShort{
 				ID:              wall.ID,
 				Name:            wall.Name,
-				Accounts:        walletAccounts,
+				Balance:         dcrutil.Amount(acctBalance).String(),
+				Accounts:        accts,
 				BestBlockHeight: wall.GetBestBlock(),
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
 				IsWaiting:       wall.IsWaiting(),
@@ -272,6 +303,11 @@ func (wal *Wallet) GetMultiWalletInfo() {
 // RenameWallet renames the wallet identified by walletID.
 func (wal *Wallet) RenameWallet(walletID int, name string) error {
 	return wal.multi.RenameWallet(walletID, name)
+}
+
+// RenameAccount renames the acct of wallet with id walletID.
+func (wal *Wallet) RenameAccount(walletID int, acct int32, name string) error {
+	return wal.multi.WalletWithID(walletID).RenameAccount(acct, name)
 }
 
 // CurrentAddress returns the next address for the specified wallet account.

@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/gesture"
 	"gioui.org/io/key"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/dcrlibwallet"
 )
@@ -80,6 +81,39 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	// RENAME WALLET
+
+	if win.inputs.toggleWalletRename.Clicked(win.gtx) {
+		if win.states.renamingWallet {
+			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
+			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
+		} else {
+			win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
+			win.outputs.rename.TextSize = unit.Dp(48)
+			win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
+			win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
+		}
+
+		win.states.renamingWallet = !win.states.renamingWallet
+	}
+
+	if win.inputs.renameWallet.Clicked(win.gtx) {
+		name := win.inputs.rename.Text()
+		if name == "" {
+			return
+		}
+		err := win.wallet.RenameWallet(win.walletInfo.Wallets[win.selected].ID, name)
+		if err != nil {
+			log.Debug("Error renaming wallet")
+		} else {
+			win.walletInfo.Wallets[win.selected].Name = name
+			win.states.renamingWallet = false
+			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
+			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
+			win.reloadTabs()
+		}
+	}
+
 	// DELETE WALLET
 
 	if win.inputs.deleteDiag.Clicked(win.gtx) {
@@ -98,6 +132,23 @@ func (win *Window) HandleInputs() {
 		win.states.loading = true
 		log.Debug("Delete Wallet clicked")
 		return
+	}
+
+	// ADD ACCOUNT
+
+	if win.inputs.addAcctDiag.Clicked(win.gtx) {
+		win.outputs.dialog.Hint = "Enter account name"
+		win.dialog = win.AddAccountDiag
+		win.states.dialog = true
+	}
+
+	if win.inputs.addAccount.Clicked(win.gtx) {
+		pass := win.validatePassword()
+		if pass == "" {
+			return
+		}
+		win.wallet.AddAccount(win.walletInfo.Wallets[win.selected].ID, win.inputs.dialog.Text(), pass)
+		win.states.loading = true
 	}
 
 	// NAVIGATION
