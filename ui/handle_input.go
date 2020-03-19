@@ -12,8 +12,8 @@ import (
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 20, 0)
 		win.selected = win.tabs.Selected
+		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
 	}
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
@@ -118,7 +118,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.toTransactions.Clicked(win.gtx) {
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 20, 0)
+		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
 		win.current = win.TransactionsPage
 		return
 	}
