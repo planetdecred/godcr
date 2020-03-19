@@ -72,7 +72,7 @@ func renderTxsRow(win *Window, index int) {
 						win.theme.Label(unit.Dp(22), amountStr[0:indexOfDot+3]).Layout(win.gtx)
 					}),
 					layout.Rigid(func() {
-						win.theme.Label(unit.Dp(14), amountStr[indexOfDot+3:len(amountStr)]).Layout(win.gtx)
+						win.theme.Label(unit.Dp(14), amountStr[indexOfDot+3:]).Layout(win.gtx)
 					}),
 				)
 			})
