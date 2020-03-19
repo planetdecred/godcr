@@ -22,7 +22,7 @@ const (
 	headersFetchedTitle  = "Block header fetched"
 	syncingProgressTitle = "Syncing progress"
 	latestBlockTitle     = "Latest Block"
-	lastSyncedTitle           = "Last Synced"
+	lastSyncedTitle      = "Last Synced"
 	noTransaction        = "no transactions"
 	offlineStatus        = "Offline"
 	onlineStatus         = "Online"
