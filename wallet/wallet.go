@@ -112,6 +112,17 @@ func (wal *Wallet) wallets() (map[int]*dcrlibwallet.Wallet, error) {
 	return wallets, nil
 }
 
+func (wal *Wallet) hdPrefix() string {
+	switch wal.net {
+	case "testnet3": // should use a constant
+		return dcrlibwallet.TestnetHDPath
+	case "mainnet":
+		return dcrlibwallet.MainnetHDPath
+	default:
+		return ""
+	}
+}
+
 // Shutdown shutsdown the multiwallet
 func (wal *Wallet) Shutdown() {
 	wal.multi.Shutdown()

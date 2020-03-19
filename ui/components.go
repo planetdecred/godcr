@@ -11,6 +11,38 @@ const (
 	navSize      = .1
 )
 
+var (
+	// layout.Flex: Vertical
+	vertFlex = layout.Flex{Axis: layout.Vertical}
+	// layout.Flex: Vertical, SpaceBetween
+	vertFlexSB = layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}
+	// layout.Flex: Horizontal
+	horFlex = layout.Flex{}
+	// layout.Flex: Horizontal
+	horFlexSB = layout.Flex{Spacing: layout.SpaceBetween}
+
+	// layout.Rigid
+	rigid = layout.Rigid
+	// layout.Flexed
+	flexed = layout.Flexed
+)
+
+func (win *Window) vFlex(children ...layout.FlexChild) {
+	vertFlex.Layout(win.gtx, children...)
+}
+
+func (win *Window) vFlexSB(children ...layout.FlexChild) {
+	vertFlexSB.Layout(win.gtx, children...)
+}
+
+func (win *Window) hFlex(children ...layout.FlexChild) {
+	horFlex.Layout(win.gtx, children...)
+}
+
+func (win *Window) hFlexSB(children ...layout.FlexChild) {
+	horFlexSB.Layout(win.gtx, children...)
+}
+
 func (win *Window) Page(body layout.Widget) {
 	bd := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
