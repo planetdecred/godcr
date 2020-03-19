@@ -22,6 +22,7 @@ const (
 	headersFetchedTitle  = "Block header fetched"
 	syncingProgressTitle = "Syncing progress"
 	latestBlockTitle     = "Latest Block"
+	lastSyncedTitle           = "Last Synced"
 	noTransaction        = "no transactions"
 	offlineStatus        = "Offline"
 	onlineStatus         = "Online"
@@ -296,9 +297,13 @@ func (page overviewPage) syncDormantContent(uniform layout.Inset) {
 	layout.Flex{Axis: layout.Vertical}.Layout(page.gtx,
 		layout.Rigid(func() {
 			latestBlockTitleLabel := page.theme.Body1(latestBlockTitle)
-			blockLabel := page.theme.Body1(fmt.Sprintf("%v . %v ago", page.walletInfo.BestBlockHeight,
-				page.walletInfo.LastSyncTime))
+			blockLabel := page.theme.Body1(fmt.Sprintf("%v", page.walletInfo.BestBlockHeight))
 			page.endToEndRow(uniform, latestBlockTitleLabel, blockLabel)
+		}),
+		layout.Rigid(func() {
+			lastSyncedLabel := page.theme.Body1(lastSyncedTitle)
+			blockLabel := page.theme.Body1(fmt.Sprintf("%v ago", page.walletInfo.LastSyncTime))
+			page.endToEndRow(uniform, lastSyncedLabel, blockLabel)
 		}),
 	)
 }
