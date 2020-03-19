@@ -73,6 +73,25 @@ func (wal *Wallet) DeleteWallet(walletID int, passphrase string) {
 	}()
 }
 
+// AddAccount adds an account to a wallet.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) AddAccount(walletID int, name string, pass string) {
+	go func() {
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			wal.Send <- Response{
+				Resp: AddedAccount{},
+				Err:  ErrIDNotExist,
+			}
+		}
+		id, err := wall.NextAccount(name, []byte(pass))
+		wal.Send <- Response{
+			Resp: AddedAccount{ID: id},
+			Err:  err,
+		}
+	}()
+}
+
 // CreateTransaction creates a TxAuthor with the given parameters.
 // The created TxAuthor will have to have a destination added before broadcasting.
 // It is non-blocking and sends its result or any error to wal.Send.
@@ -187,9 +206,18 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					log.Error("Could not get current address for wallet ", id, "account", acct.Number)
 				}
 				accts = append(accts, Account{
-					Number:         strconv.Itoa(int(acct.Number)),
-					Name:           acct.Name,
-					TotalBalance:   dcrutil.Amount(acct.TotalBalance).String(),
+					Number:       strconv.Itoa(int(acct.Number)),
+					Name:         acct.Name,
+					TotalBalance: dcrutil.Amount(acct.TotalBalance).String(),
+					Spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
+					Keys: struct {
+						Internal, External, Imported string
+					}{
+						Internal: strconv.Itoa(int(acct.InternalKeyCount)),
+						External: strconv.Itoa(int(acct.ExternalKeyCount)),
+						Imported: strconv.Itoa(int(acct.ImportedKeyCount)),
+					},
+					HDPath:         wal.hdPrefix() + strconv.Itoa(int(acct.Number)) + "'",
 					CurrentAddress: addr,
 				})
 				acctBalance += acct.TotalBalance
@@ -237,6 +265,11 @@ func (wal *Wallet) GetMultiWalletInfo() {
 // RenameWallet renames the wallet identified by walletID.
 func (wal *Wallet) RenameWallet(walletID int, name string) error {
 	return wal.multi.RenameWallet(walletID, name)
+}
+
+// RenameAccount renames the acct of wallet with id walletID.
+func (wal *Wallet) RenameAccount(walletID int, acct int32, name string) error {
+	return wal.multi.WalletWithID(walletID).RenameAccount(acct, name)
 }
 
 // CurrentAddress returns the next address for the specified wallet account.

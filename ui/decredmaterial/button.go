@@ -32,6 +32,7 @@ type Button struct {
 type IconButton struct {
 	Background color.RGBA
 	Color      color.RGBA
+	Animated   bool
 	Icon       *Icon
 	Size       unit.Value
 	Padding    unit.Value
@@ -59,6 +60,17 @@ func (t *Theme) IconButton(icon *Icon) IconButton {
 		Icon:       icon,
 		Size:       unit.Dp(56),
 		Padding:    unit.Dp(16),
+		Animated:   true,
+	}
+}
+
+func (t *Theme) PlainIconButton(icon *Icon) IconButton {
+	return IconButton{
+		Background: color.RGBA{},
+		Color:      t.Color.Primary,
+		Icon:       icon,
+		Size:       unit.Dp(56),
+		Padding:    unit.Dp(0),
 	}
 }
 
@@ -108,8 +120,10 @@ func (b IconButton) Layout(gtx *layout.Context, button *widget.Button) {
 				NE:   rr, NW: rr, SE: rr, SW: rr,
 			}.Op(gtx.Ops).Add(gtx.Ops)
 			fill(gtx, b.Background)
-			for _, c := range button.History() {
-				drawInk(gtx, c)
+			if b.Animated {
+				for _, c := range button.History() {
+					drawInk(gtx, c)
+				}
 			}
 		}),
 		layout.Stacked(func() {

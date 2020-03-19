@@ -3,20 +3,25 @@ package ui
 import (
 	"fmt"
 
+	"image/color"
+
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 type inputs struct {
-	createDiag, deleteDiag, cancelDialog, restoreDiag         widget.Button
-	createWallet, restoreWallet, deleteWallet                 widget.Button
+	createDiag, deleteDiag, cancelDialog                      widget.Button
+	restoreDiag, addAcctDiag                                  widget.Button
+	createWallet, restoreWallet, deleteWallet, renameWallet   widget.Button
+	addAccount, toggleWalletRename                            widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
 	//toReceive                                                 widget.Button
 	sync widget.Button
 
-	spendingPassword, matchSpending, renameWallet widget.Editor
+	spendingPassword, matchSpending, rename, dialog widget.Editor
 
 	seedEditors struct {
 		focusIndex int
@@ -33,16 +38,20 @@ type combined struct {
 }
 
 type outputs struct {
+	ic struct {
+		create, clear, done *decredmaterial.Icon
+	}
 	icons struct {
 		add, check, cancel, sync decredmaterial.IconButton
 	}
-	spendingPassword, matchSpending                                            decredmaterial.Editor
-	toOverview, toWallets, toRestoreWallet, toTransactions, toSend, toSettings decredmaterial.IconButton
+	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
+	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	//toReceive                                                 decredmaterial.IconButton
-	createDiag, cancelDiag decredmaterial.IconButton
+	createDiag, cancelDiag, addAcctDiag decredmaterial.IconButton
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
-	sync                                                               decredmaterial.IconButton
+	addAccount                                                         decredmaterial.Button
+	sync, toggleWalletRename, renameWallet                             decredmaterial.IconButton
 
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
@@ -55,6 +64,10 @@ func (win *Window) initWidgets() {
 	theme := win.theme
 
 	win.combined.sel = theme.Select()
+
+	win.outputs.ic.clear = mustIcon(decredmaterial.NewIcon(icons.ContentClear))
+	win.outputs.ic.done = mustIcon(decredmaterial.NewIcon(icons.ActionDone))
+	win.outputs.ic.create = mustIcon(decredmaterial.NewIcon(icons.ContentCreate))
 
 	win.outputs.icons.add = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAdd)))
 	win.outputs.icons.sync = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NotificationSync)))
@@ -100,6 +113,29 @@ func (win *Window) initWidgets() {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
 		win.inputs.seedEditors.focusIndex = -1
 		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
+	}
+
+	win.outputs.addAcctDiag = win.outputs.icons.add
+	win.outputs.addAccount = theme.Button("add")
+	win.outputs.addAcctDiag.Size = unit.Dp(24)
+	win.outputs.addAcctDiag.Padding = unit.Dp(0)
+	win.outputs.dialog = theme.Editor("")
+
+	win.outputs.toggleWalletRename = decredmaterial.IconButton{
+		Icon:       win.outputs.ic.create,
+		Size:       unit.Dp(48),
+		Background: color.RGBA{},
+		Color:      win.theme.Color.Primary,
+		Padding:    unit.Dp(0),
+	}
+
+	win.outputs.rename = theme.Editor("")
+	win.outputs.renameWallet = decredmaterial.IconButton{
+		Icon:       win.outputs.ic.done,
+		Size:       unit.Dp(48),
+		Background: color.RGBA{},
+		Color:      win.theme.Color.Success,
+		Padding:    unit.Dp(0),
 	}
 }
 
