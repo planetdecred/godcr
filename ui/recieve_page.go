@@ -8,9 +8,7 @@ import (
 	"gioui.org/unit"
 
 	"github.com/atotto/clipboard"
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"github.com/raedahgroup/godcr-gio/wallet"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -19,8 +17,27 @@ var (
 )
 
 func (win *Window) Receive() {
-	if win.walletInfo.LoadedWallets != 0 {
-		win.setDefaultPageValues()
+	if win.walletInfo.LoadedWallets == 0 {
+		win.Page(func() {
+			win.outputs.noWallet.Layout(win.gtx)
+		})
+		return
+	}
+
+	info := win.walletInfo.Wallets[win.selected]
+ 	for i := range info.Accounts {
+		if len(info.Accounts) == 0 {
+			continue
+		}
+		
+		account := info.Accounts[i]
+
+		win.outputs.selectedWalletNameLabel.Text = info.Name
+		win.outputs.selectedWalletBalLabel.Text = info.Balance
+		win.outputs.selectedAccountNameLabel.Text = account.Name
+		win.outputs.selectedAccountBalanceLabel.Text = account.SpendableBalance
+		win.addrs = account.CurrentAddress
+		break
 	}
 
 	body := func() {
@@ -67,38 +84,20 @@ func (win *Window) ReceivePageContents() {
 	listContainer.Layout(win.gtx, len(ReceivePageContent), func(i int) {
 		layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, ReceivePageContent[i])
 	})
-	if win.isNewAddrModal {
-		win.drawMoreModal()
-	}
-	if win.isInfoBtnModal {
-		win.drawInfoModal()
-	}
 }
 
 func (win *Window) pageFirstColumn() {
 	layout.Flex{}.Layout(win.gtx,
 		layout.Flexed(.6, func() {
-			win.outputs.receivePageTitle.Layout(win.gtx)
+			win.outputs.pageTitle.Layout(win.gtx)
 		}),
 		layout.Flexed(.4, func() {
 			layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(20)}.Layout(win.gtx, func() {
 				layout.Flex{}.Layout(win.gtx,
 					layout.Flexed(.5, func() {
-						if win.inputs.receiveIcons.info.Clicked(win.gtx) {
-							win.isInfoBtnModal = true
-							win.isNewAddrModal = false
-						}
 						win.outputs.info.Layout(win.gtx, &win.inputs.receiveIcons.info)
 					}),
 					layout.Flexed(.5, func() {
-						for win.inputs.receiveIcons.more.Clicked(win.gtx) {
-							if win.isNewAddrModal {
-								win.isInfoBtnModal = false
-								win.isNewAddrModal = false
-							} else {
-								win.isNewAddrModal = true
-							}
-						}
 						win.outputs.more.Layout(win.gtx, &win.inputs.receiveIcons.more)
 					}),
 				)
@@ -211,90 +210,6 @@ func (win *Window) receiveAddressColumn() {
 					})
 				}
 				win.outputs.copy.Layout(win.gtx, &win.inputs.receiveIcons.copy)
-			})
-		}),
-	)
-}
-
-func (win *Window) setDefaultPageValues() {
-	info := win.walletInfo.Wallets[win.selected]
-
-	for i := range info.Accounts {
-		if len(info.Accounts) == 0 {
-			continue
-		}
-
-		for win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
-			addr, err := win.wallet.NextAddress(info.ID, info.Accounts[i].Number)
-			if err != nil {
-				win.outputs.err.Text = err.Error()
-				return
-			}
-			info.Accounts[i].CurrentAddress = addr
-			win.isNewAddrModal = false
-		}
-
-		win.setSelectedAccount(info, info.Accounts[i])
-		break
-	}
-}
-
-func (win *Window) setSelectedAccount(wallet wallet.InfoShort, account wallet.Account) {
-	win.selectedWallet = &wallet
-	win.selectedAccount = &account
-
-	win.outputs.selectedAccountNameLabel.Text = account.Name
-	win.outputs.selectedWalletNameLabel.Text = wallet.Name
-	win.outputs.selectedWalletBalLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
-	win.outputs.selectedAccountBalanceLabel.Text = wallet.Balance
-	win.addrs = account.CurrentAddress
-}
-
-func (win *Window) drawInfoModal() {
-	win.theme.Surface(win.gtx, func() {
-		layout.Center.Layout(win.gtx, func() {
-			selectedDetails := func() {
-				layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-					layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
-						layout.Rigid(func() {
-							layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-								win.outputs.pageInfo.Layout(win.gtx)
-							})
-						}),
-						layout.Rigid(func() {
-							inset := layout.Inset{
-								Left: unit.Dp(190),
-							}
-							inset.Layout(win.gtx, func() {
-								if win.inputs.receiveIcons.gotItDiag.Clicked(win.gtx) {
-									if win.isInfoBtnModal {
-										win.isInfoBtnModal = false
-									}
-								}
-
-								win.outputs.gotItDiag.Layout(win.gtx, &win.inputs.receiveIcons.gotItDiag)
-							})
-						}),
-					)
-				})
-			}
-			decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
-		})
-	})
-}
-
-func (win *Window) drawMoreModal() {
-	layout.Flex{}.Layout(win.gtx,
-		layout.Flexed(0.73, func() {
-		}),
-		layout.Flexed(1, func() {
-			inset := layout.Inset{
-				Top: unit.Dp(50),
-			}
-			inset.Layout(win.gtx, func() {
-				win.gtx.Constraints.Width.Min = 40
-				win.gtx.Constraints.Height.Min = 40
-				win.outputs.newAddress.Layout(win.gtx, &win.inputs.receiveIcons.newAddress)
 			})
 		}),
 	)

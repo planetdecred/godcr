@@ -255,7 +255,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					},
 					HDPath:         wal.hdPrefix() + strconv.Itoa(int(acct.Number)) + "'",
 					CurrentAddress: addr,
-					SpendableBalance: acct.Balance.Spendable,
+					SpendableBalance: dcrutil.Amount(acct.Balance.Spendable).String(),
 				})
 				acctBalance += acct.TotalBalance
 			}

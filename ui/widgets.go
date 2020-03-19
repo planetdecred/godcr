@@ -60,7 +60,7 @@ type outputs struct {
 	sync, toggleWalletRename, renameWallet, info, more, dropdown, copy                              decredmaterial.IconButton
 
 	tabs                                                      []decredmaterial.TabItem
-	notImplemented, noWallet, receivePageTitle, pageInfo, err decredmaterial.Label
+	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -121,7 +121,7 @@ func (win *Window) initWidgets() {
 	win.outputs.gotItDiag = theme.Button("Got It")
 	win.outputs.newAddress = theme.Button("Generate new address")
 
-	win.outputs.receivePageTitle = theme.H4("Receiving DCR")
+	win.outputs.pageTitle = theme.H4("Receiving DCR")
 	win.outputs.pageInfo = theme.Body1("Each time you request a payment, a \nnew address is created to protect \nyour privacy.")
 
 	win.outputs.selectedAccountNameLabel = win.theme.H6("")

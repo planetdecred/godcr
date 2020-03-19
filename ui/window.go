@@ -24,17 +24,11 @@ type Window struct {
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions *wallet.Transactions
 
-	selectedWallet  *wallet.InfoShort
-	selectedAccount *wallet.Account
-
 	current layout.Widget
 	dialog  layout.Widget
 	tabs    *decredmaterial.Tabs
 
 	addrs string
-
-	isInfoBtnModal bool
-	isNewAddrModal bool
 
 	selected int
 	states

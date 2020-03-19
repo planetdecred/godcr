@@ -194,6 +194,31 @@ func (win *Window) HandleInputs() {
 		log.Debug("Cancel dialog clicked")
 		return
 	}
+
+	// RECEIVE PAGE
+	if win.inputs.receiveIcons.info.Clicked(win.gtx) {
+		win.states.dialog = true
+		win.dialog = win.infoDiag
+	}
+
+	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
+		win.states.dialog = true
+		win.dialog = win.generateNewAddressDiag
+	}
+
+	if win.inputs.receiveIcons.gotItDiag.Clicked(win.gtx) {
+		win.states.dialog = false
+	}
+
+	if win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
+		// addr, err := win.wallet.NextAddress(info.ID, info.Accounts[i].Number)
+		// if err != nil {
+		// 	win.outputs.err.Text = err.Error()
+		// 	return
+		// }
+		// info.Accounts[i].CurrentAddress = addr
+		win.states.dialog = false
+	}
 }
 
 func (win *Window) validatePasswords() string {

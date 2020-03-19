@@ -3,6 +3,8 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
+
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 )
 
 func (win *Window) CreateDiag() {
@@ -118,4 +120,48 @@ func (win *Window) AddAccountDiag() {
 			}),
 		)
 	})
+}
+
+func (win *Window) infoDiag() {
+	win.theme.Surface(win.gtx, func() {
+		layout.Center.Layout(win.gtx, func() {
+			selectedDetails := func() {
+				layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+					layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
+						layout.Rigid(func() {
+							layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+								win.outputs.pageInfo.Layout(win.gtx)
+							})
+						}),
+						layout.Rigid(func() {
+							inset := layout.Inset{
+								Left: unit.Dp(190),
+							}
+							inset.Layout(win.gtx, func() {
+								win.outputs.gotItDiag.Layout(win.gtx, &win.inputs.receiveIcons.gotItDiag)
+							})
+						}),
+					)
+				})
+			}
+			decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
+		})
+	})
+}
+
+func (win *Window) generateNewAddressDiag() {
+	layout.Flex{}.Layout(win.gtx,
+		layout.Flexed(0.80, func() {
+		}),
+		layout.Flexed(1, func() {
+			inset := layout.Inset{
+				Top: unit.Dp(150),
+			}
+			inset.Layout(win.gtx, func() {
+				win.gtx.Constraints.Width.Min = 40
+				win.gtx.Constraints.Height.Min = 40
+				win.outputs.newAddress.Layout(win.gtx, &win.inputs.receiveIcons.newAddress)
+			})
+		}),
+	)
 }
