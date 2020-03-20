@@ -13,6 +13,9 @@ func (win *Window) TransactionsPage() {
 					layout.Rigid(func() {
 						win.outputs.toSend.Layout(win.gtx, &win.inputs.toSend)
 					}),
+					layout.Rigid(func() {
+						win.outputs.toReceive.Layout(win.gtx, &win.inputs.toReceive)
+					}),
 				)
 			}),
 		)

@@ -28,7 +28,7 @@ type Window struct {
 	dialog  layout.Widget
 	tabs    *decredmaterial.Tabs
 
-	addrs string
+	selectedAccount int
 
 	selected int
 	states

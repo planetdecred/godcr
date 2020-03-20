@@ -49,7 +49,7 @@ func (s *Select) Layout(gtx *layout.Context, w layout.Widget) {
 	}
 	layout.Stack{Alignment: layout.NW}.Layout(gtx,
 		layout.Stacked(func() {
-			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flex{}.Layout(gtx,
 				layout.Flexed(s.size, func() {
 
 				}),

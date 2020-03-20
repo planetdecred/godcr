@@ -14,6 +14,9 @@ func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
 		win.selected = win.tabs.Selected
 	}
+	if win.combined.sel.Changed() {
+		win.selectedAccount = win.combined.sel.Selected()
+	}
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
 		switch evt.(type) {

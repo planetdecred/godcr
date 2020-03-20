@@ -5,6 +5,7 @@ import (
 	"math"
 	"sort"
 	"time"
+	"strconv"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -245,7 +246,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					Number:       strconv.Itoa(int(acct.Number)),
 					Name:         acct.Name,
 					TotalBalance: dcrutil.Amount(acct.TotalBalance).String(),
-					Spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
+					SpendableBalance:    dcrutil.Amount(acct.Balance.Spendable).String(),
 					Keys: struct {
 						Internal, External, Imported string
 					}{
@@ -255,7 +256,6 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					},
 					HDPath:         wal.hdPrefix() + strconv.Itoa(int(acct.Number)) + "'",
 					CurrentAddress: addr,
-					SpendableBalance: dcrutil.Amount(acct.Balance.Spendable).String(),
 				})
 				acctBalance += acct.TotalBalance
 			}

@@ -25,20 +25,18 @@ func (win *Window) Receive() {
 	}
 
 	info := win.walletInfo.Wallets[win.selected]
- 	for i := range info.Accounts {
-		if len(info.Accounts) == 0 {
-			continue
-		}
-		
-		account := info.Accounts[i]
+	win.outputs.selectedWalletNameLabel.Text = info.Name
+	win.outputs.selectedWalletBalLabel.Text = info.Balance
 
-		win.outputs.selectedWalletNameLabel.Text = info.Name
-		win.outputs.selectedWalletBalLabel.Text = info.Balance
-		win.outputs.selectedAccountNameLabel.Text = account.Name
-		win.outputs.selectedAccountBalanceLabel.Text = account.SpendableBalance
-		win.addrs = account.CurrentAddress
-		break
+	accounts := make([]string, len(info.Accounts))
+	for i, acct := range info.Accounts {
+		accounts[i] = acct.Name
 	}
+	win.combined.sel.Options = accounts
+
+	account := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount]
+	win.outputs.selectedAccountNameLabel.Text = account.Name
+	win.outputs.selectedAccountBalanceLabel.Text = account.SpendableBalance
 
 	body := func() {
 		layout.Stack{}.Layout(win.gtx,
@@ -53,7 +51,7 @@ func (win *Window) Receive() {
 func (win *Window) ReceivePageContents() {
 	ReceivePageContent := []func(){
 		func() {
-			win.pageFirstColumn()
+			win.pageHeaderColumn()
 		},
 		func() {
 			layout.Center.Layout(win.gtx, func() {
@@ -63,7 +61,55 @@ func (win *Window) ReceivePageContents() {
 			})
 		},
 		func() {
-			win.selectedAccountColumn()
+			win.combined.sel.Layout(win.gtx, func() {
+				layout.Flex{}.Layout(win.gtx,
+					layout.Flexed(0.22, func() {
+					}),
+					layout.Flexed(1, func() {
+						layout.Stack{}.Layout(win.gtx,
+							layout.Stacked(func() {
+								selectedDetails := func() {
+									layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+										layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+											layout.Rigid(func() {
+												layout.Flex{}.Layout(win.gtx,
+													layout.Rigid(func() {
+														layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
+															win.outputs.selectedAccountNameLabel.Layout(win.gtx)
+														})
+													}),
+													layout.Rigid(func() {
+														layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
+															win.outputs.selectedAccountBalanceLabel.Layout(win.gtx)
+														})
+													}),
+												)
+											}),
+											layout.Rigid(func() {
+												layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
+													layout.Flex{}.Layout(win.gtx,
+														layout.Rigid(func() {
+															layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
+																win.outputs.selectedWalletNameLabel.Layout(win.gtx)
+															})
+														}),
+														layout.Rigid(func() {
+															layout.Inset{Left: unit.Dp(22)}.Layout(win.gtx, func() {
+																win.outputs.selectedWalletBalLabel.Layout(win.gtx)
+															})
+														}),
+													)
+												})
+											}),
+										)
+									})
+								}
+								decredmaterial.Card{}.Layout(win.gtx, selectedDetails)
+							}),
+						)
+					}),
+				)
+			})
 		},
 		func() {
 			win.qrCodeAddressColumn()
@@ -86,7 +132,7 @@ func (win *Window) ReceivePageContents() {
 	})
 }
 
-func (win *Window) pageFirstColumn() {
+func (win *Window) pageHeaderColumn() {
 	layout.Flex{}.Layout(win.gtx,
 		layout.Flexed(.6, func() {
 			win.outputs.pageTitle.Layout(win.gtx)
@@ -106,58 +152,9 @@ func (win *Window) pageFirstColumn() {
 	)
 }
 
-func (win *Window) selectedAccountColumn() {
-	layout.Flex{}.Layout(win.gtx,
-		layout.Flexed(0.22, func() {
-		}),
-		layout.Flexed(1, func() {
-			layout.Stack{}.Layout(win.gtx,
-				layout.Stacked(func() {
-					selectedDetails := func() {
-						layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-								layout.Rigid(func() {
-									layout.Flex{}.Layout(win.gtx,
-										layout.Rigid(func() {
-											layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
-												win.outputs.selectedAccountNameLabel.Layout(win.gtx)
-											})
-										}),
-										layout.Rigid(func() {
-											layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
-												win.outputs.selectedAccountBalanceLabel.Layout(win.gtx)
-											})
-										}),
-									)
-								}),
-								layout.Rigid(func() {
-									layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
-										layout.Flex{}.Layout(win.gtx,
-											layout.Rigid(func() {
-												layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
-													win.outputs.selectedWalletNameLabel.Layout(win.gtx)
-												})
-											}),
-											layout.Rigid(func() {
-												layout.Inset{Left: unit.Dp(22)}.Layout(win.gtx, func() {
-													win.outputs.selectedWalletBalLabel.Layout(win.gtx)
-												})
-											}),
-										)
-									})
-								}),
-							)
-						})
-					}
-					decredmaterial.Card{}.Layout(win.gtx, selectedDetails)
-				}),
-			)
-		}),
-	)
-}
-
 func (win *Window) qrCodeAddressColumn() {
-	qrCode, err := qrcode.New(win.addrs, qrcode.Highest)
+	addrs := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress
+	qrCode, err := qrcode.New(addrs, qrcode.Highest)
 	if err != nil {
 		win.outputs.err.Text = err.Error()
 		return
@@ -186,7 +183,7 @@ func (win *Window) qrCodeAddressColumn() {
 					layout.Flexed(0.1, func() {
 					}),
 					layout.Flexed(1, func() {
-						win.receiveAddressColumn()
+						win.receiveAddressColumn(addrs)
 					}),
 				)
 			})
@@ -194,16 +191,16 @@ func (win *Window) qrCodeAddressColumn() {
 	)
 }
 
-func (win *Window) receiveAddressColumn() {
+func (win *Window) receiveAddressColumn(addrs string) {
 	layout.Flex{}.Layout(win.gtx,
 		layout.Rigid(func() {
-			win.outputs.receiveAddressLabel.Text = win.addrs
+			win.outputs.receiveAddressLabel.Text = addrs
 			win.outputs.receiveAddressLabel.Layout(win.gtx)
 		}),
 		layout.Rigid(func() {
 			layout.Inset{Left: unit.Dp(16)}.Layout(win.gtx, func() {
 				for win.inputs.receiveIcons.copy.Clicked(win.gtx) {
-					clipboard.WriteAll(win.addrs)
+					clipboard.WriteAll(addrs)
 					win.addressCopiedLabel.Text = "Address Copied"
 					time.AfterFunc(time.Second*9, func() {
 						win.addressCopiedLabel.Text = ""
@@ -214,3 +211,8 @@ func (win *Window) receiveAddressColumn() {
 		}),
 	)
 }
+
+
+
+
+

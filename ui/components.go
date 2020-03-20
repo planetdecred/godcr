@@ -129,11 +129,6 @@ func (win *Window) NavBar() {
 		}),
 		layout.Rigid(func() {
 			layout.Center.Layout(win.gtx, func() {
-				win.outputs.toReceive.Layout(win.gtx, &win.inputs.toReceive)
-			})
-		}),
-		layout.Rigid(func() {
-			layout.Center.Layout(win.gtx, func() {
 				win.outputs.toTransactions.Layout(win.gtx, &win.inputs.toTransactions)
 			})
 		}),

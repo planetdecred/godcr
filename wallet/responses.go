@@ -64,7 +64,7 @@ type InfoShort struct {
 type Account struct {
 	Number    string
 	Name      string
-	Spendable string
+	SpendableBalance string
 	Keys      struct {
 		Internal, External, Imported string
 	}

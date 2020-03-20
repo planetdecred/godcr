@@ -52,12 +52,11 @@ type outputs struct {
 	toReceive                                                 decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag decredmaterial.IconButton
 
-	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
-	addAccount                                                         decredmaterial.Button
+	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
 	sync, more                                                         decredmaterial.Button
 
-	sync, toggleWalletRename, renameWallet, info, more, dropdown, copy                              decredmaterial.IconButton
+	addAccount, newAddress                                                    decredmaterial.Button
 
 	tabs                                                      []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label
