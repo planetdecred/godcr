@@ -179,8 +179,8 @@ func (wal *Wallet) GetTransactionsByWallet(walletID int, offset, limit, txfilter
 	go func() {
 		var resp Response
 
-		wallets, err := wal.wallets()
-
+		wall := wal.multi.WalletWithID(walletID)
+		txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
 		if err != nil {
 			resp.Err = err
 			wal.Send <- resp
@@ -188,19 +188,22 @@ func (wal *Wallet) GetTransactionsByWallet(walletID int, offset, limit, txfilter
 			return
 		}
 
-		var alltxs []dcrlibwallet.Transaction
+		alltxs := make([]TransactionInfo, len(txs))
 
-		for _, wall := range wallets {
-			if wall.ID == walletID {
-				txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
-				if err != nil {
-					resp.Err = err
-					wal.Send <- resp
+		for i := 0; i < len(txs); i++ {
+			transaction := txs[i]
+			confirmations := wall.GetBestBlock() - transaction.BlockHeight + 1
+			status := "pending"
 
-					return
-				}
+			if transaction.BlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
+				status = "confirmed"
+			}
 
-				alltxs = txs
+			alltxs[i] = TransactionInfo{
+				Datetime:  dcrlibwallet.ExtractDateOrTime(transaction.Timestamp),
+				Status:    status,
+				Amount:    dcrutil.Amount(transaction.Amount).String(),
+				Direction: dcrlibwallet.TransactionDirectionName(transaction.Direction),
 			}
 		}
 

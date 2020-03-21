@@ -90,9 +90,17 @@ type Transactions struct {
 	Recent []dcrlibwallet.Transaction
 }
 
+// TransactionInfo represents information a transaction
+type TransactionInfo struct {
+	Datetime  string
+	Status    string
+	Amount    string
+	Direction string
+}
+
 // TransactionsWallet is sent in response to Wallet.GetTransactionsByWallet
 type TransactionsWallet struct {
-	Txs []dcrlibwallet.Transaction
+	Txs []TransactionInfo
 }
 
 // SyncStatus is sent when a wallet progress event is triggered.

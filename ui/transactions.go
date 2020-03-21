@@ -10,18 +10,11 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-	"github.com/decred/dcrd/dcrutil"
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"golang.org/x/exp/shiny/materialdesign/icons"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 var (
-	txsList        = layout.List{Axis: layout.Vertical}
-	icoReceived, _ = decredmaterial.NewIcon(icons.ContentAdd)
-	icoSent, _     = decredmaterial.NewIcon(icons.ContentRemove)
-	icoConfirm, _  = decredmaterial.NewIcon(icons.ActionCheckCircle)
-	icoPending, _  = decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)
+	txsList = layout.List{Axis: layout.Vertical}
 )
 
 func (win *Window) TransactionsPage() {
@@ -53,87 +46,65 @@ func (win *Window) TransactionsPage() {
 }
 
 func renderTxsRow(win *Window, index int) {
-	transaction := win.combined.transactions[index].data.(*dcrlibwallet.Transaction)
-	if transaction == nil {
+	transaction := &win.combined.transactions[index]
+	info := transaction.data.(*wallet.TransactionInfo)
+
+	if info == nil {
 		return
 	}
 
-	amountStr := dcrutil.Amount(transaction.Amount).String()
-	indexOfDot := strings.Index(amountStr, ".")
+	indexOfDot := strings.Index(info.Amount, ".")
 
 	layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(win.gtx,
 		layout.Rigid(func() {
-			renderTxsDirection(win, transaction.Direction)
+			layout.Stack{}.Layout(win.gtx,
+				layout.Stacked(func() {
+					layout.Inset{Top: unit.Dp(10)}.Layout(win.gtx, func() {
+						background(win.gtx, transaction.iconDirection.innerColor)
+					})
+				}),
+				layout.Stacked(func() {
+					layout.Inset{Left: unit.Dp(5)}.Layout(win.gtx, func() {
+						background(win.gtx, transaction.iconDirection.backgroundColor)
+						layout.Inset{Left: unit.Dp(10), Top: unit.Dp(-5)}.Layout(win.gtx, func() {
+							txt := win.theme.Label(unit.Dp(16), transaction.iconDirection.icon)
+							txt.Color = win.theme.Color.InvText
+							txt.Layout(win.gtx)
+						})
+					})
+				}),
+			)
 		}),
 		layout.Flexed(1, func() {
 			layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
 				layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(win.gtx,
 					layout.Rigid(func() {
-						win.theme.Label(unit.Dp(22), amountStr[0:indexOfDot+3]).Layout(win.gtx)
+						win.theme.Label(unit.Dp(22), info.Amount[0:indexOfDot+3]).Layout(win.gtx)
 					}),
 					layout.Rigid(func() {
-						win.theme.Label(unit.Dp(14), amountStr[indexOfDot+3:]).Layout(win.gtx)
+						win.theme.Label(unit.Dp(14), info.Amount[indexOfDot+3:]).Layout(win.gtx)
 					}),
 				)
 			})
 		}),
 		layout.Rigid(func() {
 			layout.Inset{Left: unit.Dp(10)}.Layout(win.gtx, func() {
-				win.theme.Body1(dcrlibwallet.ExtractDateOrTime(transaction.Timestamp)).Layout(win.gtx)
+				txt := "Pending"
+				if info.Status == "confirmed" {
+					txt = info.Datetime
+				}
+				win.theme.Body1(txt).Layout(win.gtx)
 			})
 		}),
 		layout.Rigid(func() {
 			layout.Inset{Bottom: unit.Dp(15), Left: unit.Dp(8)}.Layout(win.gtx, func() {
-				renderTxsStatus(win, transaction)
+				transaction.iconStatus.Layout(win.gtx, unit.Dp(16))
 			})
 		}),
 	)
 
 	pointer.Rect(image.Rectangle{Max: win.gtx.Dimensions.Size}).Add(win.gtx.Ops)
-	click := &win.combined.transactions[index]
-	click.gesture.Add(win.gtx.Ops)
-}
-
-func renderTxsStatus(win *Window, txn *dcrlibwallet.Transaction) {
-	confirmations := win.walletInfo.BestBlockHeight - txn.BlockHeight + 1
-	if txn.BlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
-		icoConfirm.Color = win.theme.Color.Success
-		icoConfirm.Layout(win.gtx, unit.Dp(16))
-
-		return
-	}
-
-	icoPending.Layout(win.gtx, unit.Dp(16))
-}
-
-func renderTxsDirection(win *Window, direction int32) {
-	innerColor := color.RGBA{254, 209, 198, 255}
-	frontColor := win.theme.Color.Danger
-	icon := icoSent
-
-	if direction == 1 || direction == 2 {
-		innerColor = color.RGBA{198, 236, 203, 255}
-		frontColor = win.theme.Color.Success
-		icon = icoReceived
-	}
-
-	icon.Color = win.theme.Color.InvText
-
-	layout.Stack{}.Layout(win.gtx,
-		layout.Stacked(func() {
-			layout.Inset{Top: unit.Dp(10)}.Layout(win.gtx, func() {
-				background(win.gtx, innerColor)
-			})
-		}),
-		layout.Stacked(func() {
-			layout.Inset{Left: unit.Dp(5)}.Layout(win.gtx, func() {
-				background(win.gtx, frontColor)
-				layout.Inset{Left: unit.Dp(5), Top: unit.Dp(-2)}.Layout(win.gtx, func() {
-					icon.Layout(win.gtx, unit.Dp(16))
-				})
-			})
-		}),
-	)
+	transaction.gesture.Add(win.gtx.Ops)
 }
 
 func background(gtx *layout.Context, col color.RGBA) {

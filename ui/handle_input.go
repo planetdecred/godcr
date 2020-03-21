@@ -8,6 +8,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // HandleInputs handles all ui inputs
@@ -177,8 +178,8 @@ func (win *Window) HandleInputs() {
 	for i := 0; i < len(win.combined.transactions); i++ {
 		for _, e := range win.combined.transactions[i].gesture.Events(win.gtx) {
 			if e.Type == gesture.TypeClick {
-				transaction := win.combined.transactions[i].data.(*dcrlibwallet.Transaction)
-				log.Infof("To transaction details %+v", transaction.BlockHeight)
+				transaction := win.combined.transactions[i].data.(*wallet.TransactionInfo)
+				log.Infof("To transaction details %+v", transaction)
 			}
 		}
 	}

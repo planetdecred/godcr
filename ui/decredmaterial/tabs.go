@@ -62,12 +62,11 @@ func (tab *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 		layout.Flexed(1-tab.Size, body),
 	)
 	for i := range tab.btns {
+		tab.changed = false
 		if tab.btns[i].Clicked(gtx) {
 			tab.changed = true
 			tab.Selected = i
 			return
 		}
-
-		tab.changed = false
 	}
 }
