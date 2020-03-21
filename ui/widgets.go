@@ -24,7 +24,7 @@ type inputs struct {
 	spendingPassword, matchSpending, rename, dialog widget.Editor
 
 	receiveIcons struct {
-		info, more, copy, gotItDiag, newAddress widget.Button
+		info, more, copy, gotItDiag, newAddressDiag widget.Button
 	}
 	seedEditors struct {
 		focusIndex int
@@ -56,7 +56,7 @@ type outputs struct {
 	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
 	sync, more                                                         decredmaterial.Button
 
-	addAccount, newAddress                                                    decredmaterial.Button
+	addAccount, newAddressDiag                                                    decredmaterial.Button
 
 	tabs                                               []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label

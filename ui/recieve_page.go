@@ -209,8 +209,3 @@ func (win *Window) receiveAddressColumn(addrs string) {
 		}),
 	)
 }
-
-
-
-
-

@@ -213,7 +213,7 @@ func (win *Window) HandleInputs() {
 		win.states.dialog = false
 	}
 
-	if win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
+	if win.inputs.receiveIcons.newAddressDiag.Clicked(win.gtx) {
 		wallet := win.walletInfo.Wallets[win.selected]
 		account := wallet.Accounts[win.selectedAccount]
 		addr, err := win.wallet.NextAddress(wallet.ID, account.Number)
