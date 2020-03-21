@@ -160,7 +160,7 @@ func (win *Window) generateNewAddressDiag() {
 			inset.Layout(win.gtx, func() {
 				win.gtx.Constraints.Width.Min = 40
 				win.gtx.Constraints.Height.Min = 40
-				win.outputs.newAddress.Layout(win.gtx, &win.inputs.receiveIcons.newAddress)
+				win.outputs.newAddressDiag.Layout(win.gtx, &win.inputs.receiveIcons.newAddressDiag)
 			})
 		}),
 	)
