@@ -54,13 +54,6 @@ func (win *Window) ReceivePageContents() {
 			win.pageHeaderColumn()
 		},
 		func() {
-			layout.Center.Layout(win.gtx, func() {
-				if win.outputs.err.Text != "" {
-					win.outputs.err.Layout(win.gtx)
-				}
-			})
-		},
-		func() {
 			win.combined.sel.Layout(win.gtx, func() {
 				layout.Flex{}.Layout(win.gtx,
 					layout.Flexed(0.22, func() {
@@ -125,6 +118,11 @@ func (win *Window) ReceivePageContents() {
 				}),
 			)
 		},
+		func() {
+			layout.Center.Layout(win.gtx, func() {
+				win.Err()
+			})
+		},
 	}
 
 	listContainer.Layout(win.gtx, len(ReceivePageContent), func(i int) {
@@ -156,10 +154,10 @@ func (win *Window) qrCodeAddressColumn() {
 	addrs := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress
 	qrCode, err := qrcode.New(addrs, qrcode.Highest)
 	if err != nil {
-		win.outputs.err.Text = err.Error()
+		win.err = err.Error()
 		return
 	}
-
+	win.err = ""
 	qrCode.DisableBorder = true
 	layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 		layout.Rigid(func() {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -243,10 +243,10 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					log.Error("Could not get current address for wallet ", id, "account", acct.Number)
 				}
 				accts = append(accts, Account{
-					Number:       strconv.Itoa(int(acct.Number)),
-					Name:         acct.Name,
-					TotalBalance: dcrutil.Amount(acct.TotalBalance).String(),
-					SpendableBalance:    dcrutil.Amount(acct.Balance.Spendable).String(),
+					Number:           acct.Number,
+					Name:             acct.Name,
+					TotalBalance:     dcrutil.Amount(acct.TotalBalance).String(),
+					SpendableBalance: dcrutil.Amount(acct.Balance.Spendable).String(),
 					Keys: struct {
 						Internal, External, Imported string
 					}{

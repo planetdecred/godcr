@@ -214,13 +214,16 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.receiveIcons.newAddress.Clicked(win.gtx) {
-		// addr, err := win.wallet.NextAddress(info.ID, info.Accounts[i].Number)
-		// if err != nil {
-		// 	win.outputs.err.Text = err.Error()
-		// 	return
-		// }
-		// info.Accounts[i].CurrentAddress = addr
-		win.states.dialog = false
+		wallet := win.walletInfo.Wallets[win.selected]
+		account := wallet.Accounts[win.selectedAccount]
+		addr, err := win.wallet.NextAddress(wallet.ID, account.Number)
+		if err != nil {
+			log.Debug("Error generating new address" + err.Error())
+			win.err = err.Error()
+		} else {
+			account.CurrentAddress = addr
+			win.states.dialog = false
+		}
 	}
 }
 

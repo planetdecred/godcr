@@ -49,8 +49,8 @@ type outputs struct {
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
-	toReceive                                                 decredmaterial.IconButton
-	createDiag, cancelDiag, addAcctDiag decredmaterial.IconButton
+	toReceive                                                                  decredmaterial.IconButton
+	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
@@ -58,7 +58,7 @@ type outputs struct {
 
 	addAccount, newAddress                                                    decredmaterial.Button
 
-	tabs                                                      []decredmaterial.TabItem
+	tabs                                               []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor

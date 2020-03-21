@@ -62,10 +62,10 @@ type InfoShort struct {
 
 // Account represents information about a wallet's account
 type Account struct {
-	Number    string
-	Name      string
+	Number           int32
+	Name             string
 	SpendableBalance string
-	Keys      struct {
+	Keys             struct {
 		Internal, External, Imported string
 	}
 	HDPath         string
