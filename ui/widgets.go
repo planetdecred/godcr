@@ -51,8 +51,8 @@ type outputs struct {
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
 	addAccount                                                         decredmaterial.Button
-	sync, more, toggleWalletRename, renameWallet                             decredmaterial.IconButton
-	syncHeader                                            decredmaterial.IconButton
+	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
+	sync, more                                                         decredmaterial.Button
 
 	tabs                          []decredmaterial.TabItem
 	notImplemented, noWallet, err decredmaterial.Label
@@ -116,7 +116,7 @@ func (win *Window) initWidgets() {
 		win.inputs.seedEditors.focusIndex = -1
 		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
-	win.outputs.sync = theme.Button("")
+	win.outputs.sync = theme.Button("Reconnect")
 
 	win.outputs.addAcctDiag = win.outputs.icons.add
 	win.outputs.addAccount = theme.Button("add")
