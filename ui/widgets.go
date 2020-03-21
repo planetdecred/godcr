@@ -118,7 +118,7 @@ func (win *Window) initWidgets() {
 
 	//receive widgets
 	win.outputs.gotItDiag = theme.Button("Got It")
-	win.outputs.newAddress = theme.Button("Generate new address")
+	win.outputs.newAddressDiag = theme.Button("Generate new address")
 
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
 	win.outputs.pageInfo = theme.Body1("Each time you request a payment, a \nnew address is created to protect \nyour privacy.")
