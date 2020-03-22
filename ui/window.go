@@ -19,8 +19,10 @@ type Window struct {
 	theme  *decredmaterial.Theme
 	gtx    *layout.Context
 
-	wallet     *wallet.Wallet
-	walletInfo *wallet.MultiWalletInfo
+	wallet             *wallet.Wallet
+	walletInfo         *wallet.MultiWalletInfo
+	walletSyncStatus   *wallet.SyncStatus
+	walletTransactions *wallet.Transactions
 
 	current layout.Widget
 	dialog  layout.Widget
@@ -53,12 +55,14 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.gtx = layout.NewContext(win.window.Queue())
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
+	win.walletSyncStatus = new(wallet.SyncStatus)
+	win.walletTransactions = new(wallet.Transactions)
 
 	win.wallet = wal
 	win.states.loading = true
 	win.tabs = decredmaterial.NewTabs()
 	win.tabs.Flex.Spacing = layout.SpaceBetween
-	win.current = win.WalletsPage
+	win.current = win.OverviewPage
 	win.dialog = func() {}
 
 	win.initWidgets()
@@ -87,13 +91,29 @@ func (win *Window) Loop(shutdown chan int) {
 		case update := <-win.wallet.Sync:
 			switch update.Stage {
 			case wallet.SyncCompleted:
-				win.outputs.sync = win.outputs.icons.check
+				win.outputs.syncHeader = win.outputs.icons.check
 				win.updateSyncStatus(false, true)
 			case wallet.SyncStarted:
-				win.updateSyncStatus(true, false)
+				// dcrlibwallet triggers the SyncStart method several times
+				// without sending a SyncComplete signal when sync is done.
+				if !win.walletInfo.Synced {
+					win.updateSyncStatus(true, false)
+				}
 			case wallet.SyncCanceled:
-				win.outputs.sync = win.outputs.icons.sync
+				win.outputs.syncHeader = win.outputs.icons.sync
 				win.updateSyncStatus(false, false)
+			case wallet.HeadersFetchProgress:
+				win.updateSyncProgress(update.ProgressReport)
+			case wallet.AddressDiscoveryProgress:
+				win.updateSyncProgress(update.ProgressReport)
+			case wallet.HeadersRescanProgress:
+				win.updateSyncProgress(update.ProgressReport)
+			case wallet.PeersConnected:
+				win.updateConnectedPeers(update.ConnectedPeers)
+			case wallet.BlockAttached:
+				if win.walletInfo.Synced {
+					win.wallet.GetMultiWalletInfo()
+				}
 			}
 
 		case e := <-win.window.Events():

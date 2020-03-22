@@ -16,16 +16,50 @@ const (
 
 	// SyncCompleted signifies that spv sync has been completed
 	SyncCompleted
+
+	// HeadersFetchProgress indicates a headers fetch signal
+	HeadersFetchProgress
+
+	// HeadersFetchProgress indicates an address discovery signal
+	AddressDiscoveryProgress
+
+	// HeadersRescanProgress indicates an address rescan signal
+	HeadersRescanProgress
+
+	// HeadersFetchProgress indicates an peer connected signal
+	PeersConnected
+
+	// BlockAttached indicates a block attached signal
+	BlockAttached
 )
 
-// SyncStatusUpdate represents information about the status of the multiwallet spv sync
-type SyncStatusUpdate struct {
-	Stage SyncProgressStage
-}
+const (
+	// FetchHeadersStep is the first step when a wallet is syncing.
+	FetchHeadersSteps = iota + 1
 
-type listener struct {
-	Send chan<- SyncStatusUpdate
-}
+	// AddressDiscoveryStep is the third step when a wallet is syncing.
+	AddressDiscoveryStep
+
+	// RescanHeadersStep is the second step when a wallet is syncing.
+	RescanHeadersStep
+)
+
+// TotalSyncSteps is the total number of steps to complete a sync process
+const TotalSyncSteps = 3
+
+type (
+	listener struct {
+		Send chan<- SyncStatusUpdate
+	}
+
+	// SyncStatusUpdate represents information about the status of the multiwallet spv sync
+	SyncStatusUpdate struct {
+		Stage          SyncProgressStage
+		ProgressReport interface{}
+		ConnectedPeers int32
+		BlockUpdate    NewBlock
+	}
+)
 
 // // SyncCompleted is sent when the sync is completed
 // type SyncCompleted struct{}
@@ -40,25 +74,25 @@ type listener struct {
 // 	WillRestart bool
 // }
 
-// // SyncPeersChanged is sent when the amount of connected peers changes during sync
-// type SyncPeersChanged struct {
-// 	ConnectedPeers int32
-// }
+// SyncPeersChanged is sent when the amount of connected peers changes during sync
+type SyncPeersChanged struct {
+	ConnectedPeers int32
+}
 
-// // SyncHeadersFetchProgress is sent whenever syncing makes any progress in fetching headers
-// type SyncHeadersFetchProgress struct {
-// 	Progress *dcrlibwallet.HeadersFetchProgressReport
-// }
+// SyncHeadersFetchProgress is sent whenever syncing makes any progress in fetching headers
+type SyncHeadersFetchProgress struct {
+	Progress *dcrlibwallet.HeadersFetchProgressReport
+}
 
-// // SyncAddressDiscoveryProgress is sent whenever syncing makes any progress in discovering addresses
-// type SyncAddressDiscoveryProgress struct {
-// 	Progress *dcrlibwallet.AddressDiscoveryProgressReport
-// }
+// SyncAddressDiscoveryProgress is sent whenever syncing makes any progress in discovering addresses
+type SyncAddressDiscoveryProgress struct {
+	Progress *dcrlibwallet.AddressDiscoveryProgressReport
+}
 
-// // SyncHeadersRescanProgress is sent whenever syncing makes any progress in rescanning headers
-// type SyncHeadersRescanProgress struct {
-// 	Progress *dcrlibwallet.HeadersRescanProgressReport
-// }
+// SyncHeadersRescanProgress is sent whenever syncing makes any progress in rescanning headers
+type SyncHeadersRescanProgress struct {
+	Progress *dcrlibwallet.HeadersRescanProgressReport
+}
 
 func (l *listener) Debug(info *dcrlibwallet.DebugInfo) {
 	log.Trace(info)
@@ -71,26 +105,36 @@ func (l *listener) OnSyncStarted(restarted bool) {
 }
 
 func (l *listener) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
-	// l.Send <- SyncPeersChanged{
-	// 	ConnectedPeers: numberOfConnectedPeers,
-	// }
+	l.Send <- SyncStatusUpdate{
+		Stage:          PeersConnected,
+		ConnectedPeers: numberOfConnectedPeers,
+	}
 }
 
 func (l *listener) OnHeadersFetchProgress(progress *dcrlibwallet.HeadersFetchProgressReport) {
-	// l.Send <- SyncHeadersFetchProgress{
-	// 	Progress: progress,
-	// }
+	l.Send <- SyncStatusUpdate{
+		Stage: HeadersFetchProgress,
+		ProgressReport: SyncHeadersFetchProgress{
+			Progress: progress,
+		},
+	}
 }
 func (l *listener) OnAddressDiscoveryProgress(progress *dcrlibwallet.AddressDiscoveryProgressReport) {
-	// l.Send <- SyncAddressDiscoveryProgress{
-	// 	Progress: progress,
-	// }
+	l.Send <- SyncStatusUpdate{
+		Stage: AddressDiscoveryProgress,
+		ProgressReport: SyncAddressDiscoveryProgress{
+			Progress: progress,
+		},
+	}
 }
 
 func (l *listener) OnHeadersRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
-	// l.Send <- SyncHeadersRescanProgress{
-	// 	Progress: progress,
-	// }
+	l.Send <- SyncStatusUpdate{
+		Stage: HeadersRescanProgress,
+		ProgressReport: SyncHeadersRescanProgress{
+			Progress: progress,
+		},
+	}
 }
 
 func (l *listener) OnSyncCompleted() {

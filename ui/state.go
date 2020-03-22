@@ -14,7 +14,6 @@ type states struct {
 
 // updateStates changes the wallet state based on the received update
 func (win *Window) updateStates(update interface{}) {
-	log.Infof("Received update %+v", update)
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
 		*win.walletInfo = e
@@ -22,6 +21,9 @@ func (win *Window) updateStates(update interface{}) {
 			win.reloadTabs()
 		}
 		win.states.loading = false
+		return
+	case *wallet.Transactions:
+		win.walletTransactions = e
 		return
 	case wallet.CreatedSeed:
 		win.current = win.WalletsPage
@@ -38,6 +40,7 @@ func (win *Window) updateStates(update interface{}) {
 	}
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
+	win.wallet.GetAllTransactions(0, 10, 0)
 
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }
