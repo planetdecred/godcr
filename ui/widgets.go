@@ -39,7 +39,9 @@ type inputs struct {
 type combined struct {
 	sel *decredmaterial.Select
 
-	transactions []struct {
+	transactionStatus *decredmaterial.Select
+	transactionSort   *decredmaterial.Select
+	transactions      []struct {
 		iconStatus    *decredmaterial.Icon
 		iconDirection struct {
 			icon            string
@@ -151,6 +153,11 @@ func (win *Window) initWidgets() {
 		Color:      win.theme.Color.Success,
 		Padding:    unit.Dp(0),
 	}
+
+	win.combined.transactionStatus = theme.Select()
+	win.combined.transactionStatus.Options = []string{"All", "Sent", "Received", "Transfer"}
+	win.combined.transactionSort = theme.Select()
+	win.combined.transactionSort.Options = []string{"Newest", "Oldest"}
 }
 
 func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {

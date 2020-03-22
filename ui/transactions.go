@@ -30,7 +30,21 @@ func (win *Window) TransactionsPage() {
 					}),
 				)
 			}),
-			layout.Flexed(.8, func() {
+			layout.Flexed(.2, func() {
+				layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+					layout.Rigid(func() {
+						layout.Inset{Right: unit.Dp(10)}.Layout(win.gtx, func() {
+							win.combined.transactionSort.Layout(win.gtx, func() {
+							})
+						})
+					}),
+					layout.Rigid(func() {
+						win.combined.transactionStatus.Layout(win.gtx, func() {
+						})
+					}),
+				)
+			}),
+			layout.Flexed(.6, func() {
 				layout.UniformInset(unit.Dp(30)).Layout(win.gtx, func() {
 					txsList.Layout(win.gtx, len(win.combined.transactions), func(index int) {
 						layout.Inset{Bottom: unit.Dp(15)}.Layout(win.gtx, func() {

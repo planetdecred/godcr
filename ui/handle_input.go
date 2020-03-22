@@ -15,7 +15,7 @@ import (
 func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
 		win.selected = win.tabs.Selected
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
+		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0, 0)
 	}
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
@@ -170,9 +170,27 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.toTransactions.Clicked(win.gtx) {
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
+		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0, 0)
 		win.current = win.TransactionsPage
 		return
+	}
+
+	if win.combined.transactionSort.Changed() {
+		win.wallet.GetTransactionsByWallet(
+			win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100,
+			int32(win.combined.transactionStatus.Selected()),
+			win.combined.transactionSort.Selected(),
+		)
+		log.Info(win.tabs.Selected)
+	}
+
+	if win.combined.transactionStatus.Changed() {
+		log.Info(win.tabs.Selected)
+		win.wallet.GetTransactionsByWallet(
+			win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100,
+			int32(win.combined.transactionStatus.Selected()),
+			win.combined.transactionSort.Selected(),
+		)
 	}
 
 	for i := 0; i < len(win.combined.transactions); i++ {
