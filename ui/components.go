@@ -108,7 +108,7 @@ func (win *Window) Header() {
 		}),
 		layout.Flexed(0.4, func() {
 			layout.Center.Layout(win.gtx, func() {
-				win.outputs.sync.Layout(win.gtx, &win.inputs.sync)
+				win.outputs.syncHeader.Layout(win.gtx, &win.inputs.syncHeader)
 			})
 		}),
 	)
