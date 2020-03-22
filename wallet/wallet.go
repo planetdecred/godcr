@@ -12,11 +12,12 @@ const syncID = "godcr"
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
-	multi     *dcrlibwallet.MultiWallet
-	root, net string
-	Send      chan Response
-	Sync      chan SyncStatusUpdate
-	confirms  int32
+	multi              *dcrlibwallet.MultiWallet
+	root, net          string
+	Send               chan Response
+	Sync               chan SyncStatusUpdate
+	confirms           int32
+	OverallBlockHeight int32
 }
 
 // NewWallet initializies an new Wallet instance.

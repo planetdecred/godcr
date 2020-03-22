@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"fmt"
 	"math"
 	"sort"
 	"strconv"
@@ -129,6 +130,16 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 	}()
 }
 
+// transactionStatus accepts the bestBlockHeight, transactionBlockHeight and returns a transaction status
+// which could be confirmed or pending
+func transactionStatus(bestBlockHeight, txnBlockHeight int32) string {
+	confirmations := bestBlockHeight - txnBlockHeight + 1
+	if txnBlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
+		return "confirmed"
+	}
+	return "pending"
+}
+
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
 func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
@@ -141,25 +152,38 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			return
 		}
 		alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
-		for i, wall := range wallets {
+		index := 0
+		for _, wall := range wallets {
 			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
 			if err != nil {
 				resp.Err = err
 				wal.Send <- resp
 				return
 			}
-			alltxs[i] = txs
+			alltxs[index] = txs
+			index++
 		}
 
-		var recentTxs []dcrlibwallet.Transaction
+		var recentTxs []RecentTransaction
+		bestBestBlock := wal.multi.GetBestBlock()
 		for _, tx := range alltxs {
-			recentTxs = append(recentTxs, tx...)
+			var recentRaw []dcrlibwallet.Transaction
+			recentRaw = append(recentRaw, tx...)
+			for _, txn := range recentRaw {
+				recentTxs = append(recentTxs, RecentTransaction{
+					Txn:        txn,
+					Status:     transactionStatus(bestBestBlock.Height, txn.BlockHeight),
+					Balance:    dcrutil.Amount(txn.Amount).String(),
+					WalletName: wallets[txn.WalletID].Name,
+				})
+			}
 		}
 		sort.SliceStable(recentTxs, func(i, j int) bool {
-			backTime := time.Unix(recentTxs[j].Timestamp, 0)
-			frontTime := time.Unix(recentTxs[i].Timestamp, 0)
+			backTime := time.Unix(recentTxs[j].Txn.Timestamp, 0)
+			frontTime := time.Unix(recentTxs[i].Txn.Timestamp, 0)
 			return backTime.Before(frontTime)
 		})
+
 		recentTxsLimit := 5
 		if len(recentTxs) > recentTxsLimit {
 			recentTxs = recentTxs[:recentTxsLimit]
@@ -171,6 +195,18 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 		wal.Send <- resp
 	}()
+}
+
+// WalletSyncStatus returns the sync status of a single wallet
+func walletSyncStatus(isWaiting bool, walletBestBlock, bestBlockHeight int32) string {
+	if isWaiting {
+		return "waiting for other wallets"
+	}
+	if walletBestBlock < bestBlockHeight {
+		return "syncing..."
+	}
+
+	return "synced"
 }
 
 // GetMultiWalletInfo gets bulk information about the loaded wallets.
@@ -231,7 +267,9 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				Accounts:        accts,
 				BestBlockHeight: wall.GetBestBlock(),
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
-				IsWaiting:       wall.IsWaiting(),
+				DaysBehind: fmt.Sprintf("%s behind",
+					dcrlibwallet.CalculateDaysBehind(wall.GetBestBlockTimeStamp())),
+				Status: walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 			}
 			i++
 		}
@@ -249,11 +287,13 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			return
 		}
 
+		lastSyncTime := int64(time.Since(time.Unix(best.Timestamp, 0)).Truncate(time.Minute).Seconds())
 		resp.Resp = MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    dcrutil.Amount(completeTotal).String(),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
+			LastSyncTime:    SecondsToDays(lastSyncTime),
 			Wallets:         infos,
 			Synced:          wal.multi.IsSynced(),
 			Syncing:         wal.multi.IsSyncing(),
@@ -309,4 +349,21 @@ func (wal *Wallet) StartSync() error {
 // CancelSync cancels the SPV sync
 func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
+}
+
+// SecondsToDays takes time in seconds and returns its string equivalent in the format ddhhmm.
+func SecondsToDays(totalTimeLeft int64) string {
+	q, r := divMod(totalTimeLeft, 24*60*60)
+	timeLeft := time.Duration(r) * time.Second
+	if q > 0 {
+		return fmt.Sprintf("%dd%s", q, timeLeft.String())
+	}
+	return timeLeft.String()
+}
+
+// divMod divides a numerator by a denominator and returns its quotient and remainder.
+func divMod(numerator, denominator int64) (quotient, remainder int64) {
+	quotient = numerator / denominator // integer division, decimals are truncated
+	remainder = numerator % denominator
+	return
 }
