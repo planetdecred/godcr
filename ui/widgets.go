@@ -2,10 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"image/color"
 
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
