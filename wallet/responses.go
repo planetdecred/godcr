@@ -37,14 +37,6 @@ type MultiWalletInfo struct {
 	Syncing         bool
 }
 
-// Account represents information about an account in a wallet
-type Account struct {
-	Number           int32
-	Name             string
-	TotalBalance     int64
-	SpendableBalance int64
-}
-
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
 	ID              int

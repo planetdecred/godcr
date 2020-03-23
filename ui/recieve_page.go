@@ -12,10 +12,6 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-var (
-	listContainer = &layout.List{Axis: layout.Vertical}
-)
-
 func (win *Window) Receive() {
 	if win.walletInfo.LoadedWallets == 0 {
 		win.Page(func() {
