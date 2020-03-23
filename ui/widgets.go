@@ -5,8 +5,6 @@ import (
 
 	"image/color"
 
-	"gioui.org/gesture"
-
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
@@ -43,13 +41,8 @@ type combined struct {
 	transactionSort   *decredmaterial.Select
 	transactions      []struct {
 		iconStatus    *decredmaterial.Icon
-		iconDirection struct {
-			icon            string
-			backgroundColor color.RGBA
-			innerColor      color.RGBA
-		}
-		data    interface{}
-		gesture *gesture.Click
+		iconDirection *decredmaterial.Icon
+		info          *wallet.TransactionInfo
 	}
 }
 
@@ -168,50 +161,4 @@ func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
 		panic(err)
 	}
 	return ic
-}
-
-func (win *Window) initTransactionsWidgets(transactions []wallet.TransactionInfo) {
-	win.combined.transactions = nil
-
-	for i := 0; i < len(transactions); i++ {
-		iconStatus, _ := decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)
-		if transactions[i].Status == "confirmed" {
-			iconStatus, _ = decredmaterial.NewIcon(icons.ActionCheckCircle)
-			iconStatus.Color = win.theme.Color.Success
-		}
-
-		var iconDirection struct {
-			icon            string
-			backgroundColor color.RGBA
-			innerColor      color.RGBA
-		}
-
-		switch transactions[i].Direction {
-		case "Sent":
-			iconDirection.icon = "-"
-			iconDirection.backgroundColor = win.theme.Color.Danger
-			iconDirection.innerColor = color.RGBA{254, 209, 198, 255}
-		case "Received", "Yourself":
-			iconDirection.icon = "+"
-			iconDirection.backgroundColor = win.theme.Color.Success
-			iconDirection.innerColor = color.RGBA{198, 236, 203, 255}
-		}
-
-		transaction := struct {
-			iconStatus    *decredmaterial.Icon
-			iconDirection struct {
-				icon            string
-				backgroundColor color.RGBA
-				innerColor      color.RGBA
-			}
-			data    interface{}
-			gesture *gesture.Click
-		}{
-			iconStatus,
-			iconDirection,
-			&transactions[i],
-			&gesture.Click{},
-		}
-		win.combined.transactions = append(win.combined.transactions, transaction)
-	}
 }

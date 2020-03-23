@@ -217,28 +217,22 @@ func (wal *Wallet) GetTransactionsByWallet(walletID int, offset, limit, txfilter
 			return
 		}
 
-		alltxs := make([]TransactionInfo, len(txs))
+		alltxs := make(TransactionsWallet, len(txs))
 
 		for i := 0; i < len(txs); i++ {
-			transaction := txs[i]
-			confirmations := wall.GetBestBlock() - transaction.BlockHeight + 1
-			status := "pending"
+			confirmations := wall.GetBestBlock() - txs[i].BlockHeight + 1
+			alltxs[i].Status = "Pending"
 
-			if transaction.BlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
-				status = "confirmed"
+			if txs[i].BlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
+				alltxs[i].Status = "Confirmed"
 			}
 
-			alltxs[i] = TransactionInfo{
-				Datetime:  dcrlibwallet.ExtractDateOrTime(transaction.Timestamp),
-				Status:    status,
-				Amount:    dcrutil.Amount(transaction.Amount).String(),
-				Direction: dcrlibwallet.TransactionDirectionName(transaction.Direction),
-			}
+			alltxs[i].Datetime = dcrlibwallet.ExtractDateOrTime(txs[i].Timestamp)
+			alltxs[i].Amount = dcrutil.Amount(txs[i].Amount).String()
+			alltxs[i].Direction = txs[i].Direction
 		}
 
-		resp.Resp = TransactionsWallet{
-			Txs: alltxs,
-		}
+		resp.Resp = alltxs
 		wal.Send <- resp
 	}()
 }

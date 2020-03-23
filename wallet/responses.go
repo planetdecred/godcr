@@ -105,13 +105,11 @@ type TransactionInfo struct {
 	Datetime  string
 	Status    string
 	Amount    string
-	Direction string
+	Direction int32
 }
 
 // TransactionsWallet is sent in response to Wallet.GetTransactionsByWallet
-type TransactionsWallet struct {
-	Txs []TransactionInfo
-}
+type TransactionsWallet []TransactionInfo
 
 // SyncStatus is sent when a wallet progress event is triggered.
 type SyncStatus struct {

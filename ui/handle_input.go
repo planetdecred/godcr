@@ -3,12 +3,10 @@ package ui
 import (
 	"strings"
 
-	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/wallet"
 )
 
 // HandleInputs handles all ui inputs
@@ -181,25 +179,14 @@ func (win *Window) HandleInputs() {
 			int32(win.combined.transactionStatus.Selected()),
 			win.combined.transactionSort.Selected(),
 		)
-		log.Info(win.tabs.Selected)
 	}
 
 	if win.combined.transactionStatus.Changed() {
-		log.Info(win.tabs.Selected)
 		win.wallet.GetTransactionsByWallet(
 			win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100,
 			int32(win.combined.transactionStatus.Selected()),
 			win.combined.transactionSort.Selected(),
 		)
-	}
-
-	for i := 0; i < len(win.combined.transactions); i++ {
-		for _, e := range win.combined.transactions[i].gesture.Events(win.gtx) {
-			if e.Type == gesture.TypeClick {
-				transaction := win.combined.transactions[i].data.(*wallet.TransactionInfo)
-				log.Infof("To transaction details %+v", transaction)
-			}
-		}
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
