@@ -9,13 +9,18 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
+var old int
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
-		win.selected = win.tabs.Selected
+		if win.tabs.Selected != win.selected {
+			win.combined.sel.Selected = 0
+			win.selectedAccount = 0
+			win.selected = win.tabs.Selected
+		}
 	}
 	if win.combined.sel.Changed() {
-		win.selectedAccount = win.combined.sel.Selected()
+		win.selectedAccount = win.combined.sel.Selected
 	}
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {

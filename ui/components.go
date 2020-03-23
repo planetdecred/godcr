@@ -80,6 +80,13 @@ func (win *Window) TabbedPage(body layout.Widget) {
 			Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
 		}
 	}
+	info := win.walletInfo.Wallets[win.selected]
+	accounts := make([]string, len(info.Accounts))
+	for i, acct := range info.Accounts {
+		accounts[i] = acct.Name
+	}
+	win.combined.sel.Options = accounts
+
 	bd := func() {
 		toMax(win.gtx)
 		win.tabs.Layout(win.gtx, body)

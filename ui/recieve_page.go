@@ -28,12 +28,6 @@ func (win *Window) Receive() {
 	win.outputs.selectedWalletNameLabel.Text = info.Name
 	win.outputs.selectedWalletBalLabel.Text = info.Balance
 
-	accounts := make([]string, len(info.Accounts))
-	for i, acct := range info.Accounts {
-		accounts[i] = acct.Name
-	}
-	win.combined.sel.Options = accounts
-
 	account := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount]
 	win.outputs.selectedAccountNameLabel.Text = account.Name
 	win.outputs.selectedAccountBalanceLabel.Text = account.SpendableBalance
