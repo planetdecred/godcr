@@ -3,9 +3,9 @@ package ui
 import (
 	"fmt"
 
-	"image/color"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"image/color"
 
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -19,9 +19,8 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
 	toReceive                                                 widget.Button
-	sync, syncHeader widget.Button
-	info, more, dropdown, copy, gotIt, newAddress                          widget.Button
-	spendingPassword, matchSpending, rename, dialog widget.Editor
+	sync, syncHeader                                          widget.Button
+	spendingPassword, matchSpending, rename, dialog           widget.Editor
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -53,11 +52,11 @@ type outputs struct {
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
-	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
-	sync, moreDiag                                                         decredmaterial.Button
+	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
+	sync, moreDiag                                                                decredmaterial.Button
 
-	addAccount, newAddressDiag                                                    decredmaterial.Button
-	info, more, copy            decredmaterial.IconButton
+	addAccount, newAddressDiag decredmaterial.Button
+	info, more, copy           decredmaterial.IconButton
 
 	tabs                                               []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label

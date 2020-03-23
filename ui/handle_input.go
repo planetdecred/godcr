@@ -10,6 +10,7 @@ import (
 )
 
 var old int
+
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
