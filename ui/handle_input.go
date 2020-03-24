@@ -212,7 +212,7 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
 		win.states.dialog = true
-		win.dialog = win.generateNewAddressDiag
+		win.dialog = win.generateNewAddress
 	}
 
 	if win.inputs.receiveIcons.gotItDiag.Clicked(win.gtx) {

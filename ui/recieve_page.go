@@ -8,6 +8,7 @@ import (
 	"gioui.org/unit"
 
 	"github.com/atotto/clipboard"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -22,7 +23,16 @@ func (win *Window) Receive() {
 	body := func() {
 		layout.Stack{}.Layout(win.gtx,
 			layout.Expanded(func() {
-				win.ReceivePageContents()
+				layout.Flex{}.Layout(win.gtx,
+					layout.Rigid(func() {
+						win.combined.sel.Layout(win.gtx, func() {
+
+						})
+					}),
+					layout.Rigid(func() {
+						win.ReceivePageContents()
+					}),
+				)
 			}),
 		)
 	}
@@ -35,14 +45,14 @@ func (win *Window) ReceivePageContents() {
 			win.pageHeaderColumn()
 		},
 		func() {
-			win.selectedAcountDiag()
+			win.selectedAcountColumn()
 		},
 		func() {
 			win.qrCodeAddressColumn()
 		},
 		func() {
 			layout.Flex{}.Layout(win.gtx,
-				layout.Flexed(.35, func() {
+				layout.Flexed(0.35, func() {
 				}),
 				layout.Flexed(1, func() {
 					if win.addressCopiedLabel.Text != "" {
@@ -52,14 +62,18 @@ func (win *Window) ReceivePageContents() {
 			)
 		},
 		func() {
-			layout.Center.Layout(win.gtx, func() {
-				win.Err()
-			})
+			layout.Flex{}.Layout(win.gtx,
+				layout.Flexed(0.35, func() {
+				}),
+				layout.Flexed(1, func() {
+					win.Err()
+				}),
+			)
 		},
 	}
 
 	listContainer.Layout(win.gtx, len(ReceivePageContent), func(i int) {
-		layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, ReceivePageContent[i])
+		layout.Inset{Left: unit.Dp(3)}.Layout(win.gtx, ReceivePageContent[i])
 	})
 }
 
@@ -138,6 +152,81 @@ func (win *Window) receiveAddressColumn(addrs string) {
 					})
 				}
 				win.outputs.copy.Layout(win.gtx, &win.inputs.receiveIcons.copy)
+			})
+		}),
+	)
+}
+
+func (win *Window) selectedAcountColumn() {
+	info := win.walletInfo.Wallets[win.selected]
+	win.outputs.selectedWalletNameLabel.Text = info.Name
+	win.outputs.selectedWalletBalLabel.Text = info.Balance
+
+	account := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount]
+	win.outputs.selectedAccountNameLabel.Text = account.Name
+	win.outputs.selectedAccountBalanceLabel.Text = account.SpendableBalance
+
+	layout.Flex{}.Layout(win.gtx,
+		layout.Flexed(0.22, func() {
+		}),
+		layout.Flexed(1, func() {
+			layout.Stack{}.Layout(win.gtx,
+				layout.Stacked(func() {
+					selectedDetails := func() {
+						layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+								layout.Rigid(func() {
+									layout.Flex{}.Layout(win.gtx,
+										layout.Rigid(func() {
+											layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
+												win.outputs.selectedAccountNameLabel.Layout(win.gtx)
+											})
+										}),
+										layout.Rigid(func() {
+											layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
+												win.outputs.selectedAccountBalanceLabel.Layout(win.gtx)
+											})
+										}),
+									)
+								}),
+								layout.Rigid(func() {
+									layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
+										layout.Flex{}.Layout(win.gtx,
+											layout.Rigid(func() {
+												layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
+													win.outputs.selectedWalletNameLabel.Layout(win.gtx)
+												})
+											}),
+											layout.Rigid(func() {
+												layout.Inset{Left: unit.Dp(22)}.Layout(win.gtx, func() {
+													win.outputs.selectedWalletBalLabel.Layout(win.gtx)
+												})
+											}),
+										)
+									})
+								}),
+							)
+						})
+					}
+					decredmaterial.Card{}.Layout(win.gtx, selectedDetails)
+				}),
+			)
+		}),
+	)
+}
+
+func (win *Window) generateNewAddress() {
+	layout.Flex{}.Layout(win.gtx,
+		layout.Flexed(0.80, func() {
+		}),
+		layout.Flexed(1, func() {
+			inset := layout.Inset{
+				Top: unit.Dp(150),
+			}
+			inset.Layout(win.gtx, func() {
+				win.gtx.Constraints.Width.Min = 40
+				win.gtx.Constraints.Height.Min = 40
+				win.outputs.newAddressDiag.Layout(win.gtx, &win.inputs.receiveIcons.newAddressDiag)
 			})
 		}),
 	)

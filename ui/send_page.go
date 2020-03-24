@@ -6,8 +6,11 @@ func (win *Window) SendPage() {
 			win.theme.H3("No wallets").Layout(win.gtx)
 			return
 		}
+		win.combined.sel.Layout(win.gtx, func() {
 
-		win.selectedAcountDiag()
+		})
+
+		win.selectedAcountColumn()
 	}
 	win.TabbedPage(bd)
 }
