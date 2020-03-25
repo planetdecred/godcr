@@ -199,17 +199,12 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 
 // GetTransactionsByWallet get list of transactions fitting the parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) GetTransactionsByWallet(walletID int, offset, limit, txfilter int32, sortDirection int) {
+func (wal *Wallet) GetTransactionsByWallet(walletID int, offset, limit, txfilter int32) {
 	go func() {
 		var resp Response
 
-		newestFirst := true
-		if sortDirection == 1 {
-			newestFirst = false
-		}
-
 		wall := wal.multi.WalletWithID(walletID)
-		txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, newestFirst)
+		txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
 		if err != nil {
 			resp.Err = err
 			wal.Send <- resp
@@ -227,9 +222,9 @@ func (wal *Wallet) GetTransactionsByWallet(walletID int, offset, limit, txfilter
 				alltxs[i].Status = "Confirmed"
 			}
 
-			alltxs[i].Datetime = dcrlibwallet.ExtractDateOrTime(txs[i].Timestamp)
+			alltxs[i].Timestamp = txs[i].Timestamp
 			alltxs[i].Amount = dcrutil.Amount(txs[i].Amount).String()
-			alltxs[i].Direction = txs[i].Direction
+			alltxs[i].Direction = TxDirection(txs[i].Direction)
 		}
 
 		resp.Resp = alltxs

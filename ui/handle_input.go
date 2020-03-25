@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"sort"
 	"strings"
+	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/unit"
@@ -13,7 +15,7 @@ import (
 func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
 		win.selected = win.tabs.Selected
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0, 0)
+		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
 	}
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
@@ -168,25 +170,27 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.toTransactions.Clicked(win.gtx) {
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0, 0)
+		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
 		win.current = win.TransactionsPage
 		return
-	}
-
-	if win.combined.transactionSort.Changed() {
-		win.wallet.GetTransactionsByWallet(
-			win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100,
-			int32(win.combined.transactionStatus.Selected()),
-			win.combined.transactionSort.Selected(),
-		)
 	}
 
 	if win.combined.transactionStatus.Changed() {
 		win.wallet.GetTransactionsByWallet(
 			win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100,
 			int32(win.combined.transactionStatus.Selected()),
-			win.combined.transactionSort.Selected(),
 		)
+	}
+
+	if win.combined.transactionSort.Changed() {
+		sort.SliceStable(*win.transactionsWallet, func(i, j int) bool {
+			backTime := time.Unix((*win.transactionsWallet)[j].Timestamp, 0)
+			frontTime := time.Unix((*win.transactionsWallet)[i].Timestamp, 0)
+			if win.combined.transactionSort.Selected() == 0 {
+				return backTime.Before(frontTime)
+			}
+			return backTime.After(frontTime)
+		})
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {

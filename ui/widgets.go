@@ -8,7 +8,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"github.com/raedahgroup/godcr-gio/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -39,10 +38,9 @@ type combined struct {
 
 	transactionStatus *decredmaterial.Select
 	transactionSort   *decredmaterial.Select
-	transactions      []struct {
-		iconStatus    *decredmaterial.Icon
-		iconDirection *decredmaterial.Icon
-		info          *wallet.TransactionInfo
+	transaction       struct {
+		status, direction *decredmaterial.Icon
+		amount, time      decredmaterial.Label
 	}
 }
 
