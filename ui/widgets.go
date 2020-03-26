@@ -262,6 +262,8 @@ func (win *Window) initWidgets() {
 	}
 
 	win.outputs.rename = theme.Editor("")
+	win.outputs.rename.TextSize = unit.Dp(30)
+
 	win.outputs.renameWallet = decredmaterial.IconButton{
 		Icon:       win.outputs.ic.done,
 		Size:       unit.Dp(48),

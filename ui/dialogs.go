@@ -159,6 +159,7 @@ func (win *Window) infoDiag() {
 	})
 }
 
+<<<<<<< HEAD
 func (win *Window) transactionsFilters() {
 	w := win.gtx.Constraints.Width.Max / 2
 	win.theme.Surface(win.gtx, func() {
@@ -411,6 +412,111 @@ func (win *Window) msgInfoDiag() {
 					)
 				}),
 			)
+		})
+	})
+}
+
+func (win *Window) editWalletDiag() {
+	win.theme.Surface(win.gtx, func() {
+		layout.Center.Layout(win.gtx, func() {
+			selectedDetails := func() {
+				layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+					win.vFlex(
+						rigid(func() {
+							win.theme.H5("Edit Wallet Details").Layout(win.gtx)
+						}),
+						rigid(func() {
+							inset := layout.Inset{
+								Top:   unit.Dp(20),
+								Bottom: unit.Dp(20),
+							}
+							inset.Layout(win.gtx, func() {
+								win.vFlexSB(
+									rigid(func() {
+										win.theme.H6("Rename Wallet").Layout(win.gtx)
+									}),
+									rigid(func() {
+										win.hFlexSB(
+											rigid(func() {
+												win.gtx.Constraints.Width.Min = win.gtx.Px(walletSyncBoxContentWidth)
+												win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
+												decredmaterial.Card{}.Layout(win.gtx, func() {
+													layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+														layout.Flexed(1, func() {
+															win.outputs.rename.Layout(win.gtx, &win.inputs.rename)
+														}),
+													)
+												})
+											}),
+											rigid(func() {
+												win.outputs.renameWallet.Layout(win.gtx, &win.inputs.renameWallet)
+											}),
+										)
+									}),
+								)	
+							})						
+						}),
+						rigid(func() {
+							win.vFlexSB(
+								rigid(func() {
+									win.theme.H6("Change Wallet Password").Layout(win.gtx)
+								}),
+								rigid(func() {
+									win.vFlexSB(
+										rigid(func() {
+											win.theme.Body1("New Password").Layout(win.gtx)
+										}),
+										rigid(func() {
+											win.hFlexSB(
+												rigid(func() {
+													win.gtx.Constraints.Width.Min = win.gtx.Px(walletSyncBoxContentWidth)
+													win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
+													decredmaterial.Card{}.Layout(win.gtx, func() {
+														layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+															layout.Flexed(1, func() {
+																win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+															}),
+														)
+													})
+												}),
+												rigid(func() {
+													win.outputs.renameWallet.Layout(win.gtx, &win.inputs.renameWallet)
+												}),
+											)
+										}),
+									)
+								}),
+							)
+						}),
+						rigid(func() {
+							win.vFlexSB(
+								rigid(func() {
+									win.theme.Body1("Confirm New Password").Layout(win.gtx)
+								}),
+								rigid(func() {
+									win.hFlexSB(
+										rigid(func() {
+											win.gtx.Constraints.Width.Min = win.gtx.Px(walletSyncBoxContentWidth)
+											win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
+											decredmaterial.Card{}.Layout(win.gtx, func() {
+												layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+													layout.Flexed(1, func() {
+														win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
+													}),
+												)
+											})
+										}),
+										rigid(func() {
+											win.outputs.renameWallet.Layout(win.gtx, &win.inputs.renameWallet)
+										}),
+									)
+							}),
+							)
+						}),
+					)
+				})
+			}
+			decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
 		})
 	})
 }

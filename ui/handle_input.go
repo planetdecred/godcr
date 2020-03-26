@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gioui.org/io/key"
-	"gioui.org/unit"
+	// "gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -128,21 +128,36 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	// RENAME WALLET
+	// EDIT WALLET
 
 	if win.inputs.toggleWalletRename.Clicked(win.gtx) {
+		win.dialog = win.editWalletDiag
 		if win.states.renamingWallet {
 			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
 			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
 		} else {
 			win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
-			win.outputs.rename.TextSize = unit.Dp(48)
 			win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
 			win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
 		}
+		win.states.dialog = true
+	}
+	
+	// RENAME WALLET
+
+	// if win.inputs.toggleWalletRename.Clicked(win.gtx) {
+		// if win.states.renamingWallet {
+		// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
+		// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
+		// } else {
+		// 	win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
+		// 	win.outputs.rename.TextSize = unit.Dp(48)
+		// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
+		// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
+		// }
 
 		win.states.renamingWallet = !win.states.renamingWallet
-	}
+	// }
 
 	if win.inputs.renameWallet.Clicked(win.gtx) {
 		name := win.inputs.rename.Text()
