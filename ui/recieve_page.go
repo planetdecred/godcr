@@ -1,16 +1,15 @@
 package ui
 
 import (
-	"time"
-
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 
-	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"github.com/skip2/go-qrcode"
 )
+
+var pageContainer = &layout.List{Axis: layout.Vertical}
 
 func (win *Window) Receive() {
 	if win.walletInfo.LoadedWallets == 0 {
@@ -72,9 +71,13 @@ func (win *Window) ReceivePageContents() {
 		},
 	}
 
-	listContainer.Layout(win.gtx, len(ReceivePageContent), func(i int) {
+	pageContainer.Layout(win.gtx, len(ReceivePageContent), func(i int) {
 		layout.Inset{Left: unit.Dp(3)}.Layout(win.gtx, ReceivePageContent[i])
 	})
+
+	if newAddr {
+		win.generateNewAddress()
+	}
 }
 
 func (win *Window) pageHeaderColumn() {
@@ -144,13 +147,6 @@ func (win *Window) receiveAddressColumn(addrs string) {
 		}),
 		layout.Rigid(func() {
 			layout.Inset{Left: unit.Dp(16)}.Layout(win.gtx, func() {
-				for win.inputs.receiveIcons.copy.Clicked(win.gtx) {
-					clipboard.WriteAll(addrs)
-					win.addressCopiedLabel.Text = "Address Copied"
-					time.AfterFunc(time.Second*9, func() {
-						win.addressCopiedLabel.Text = ""
-					})
-				}
 				win.outputs.copy.Layout(win.gtx, &win.inputs.receiveIcons.copy)
 			})
 		}),
@@ -217,11 +213,11 @@ func (win *Window) selectedAcountColumn() {
 
 func (win *Window) generateNewAddress() {
 	layout.Flex{}.Layout(win.gtx,
-		layout.Flexed(0.80, func() {
+		layout.Flexed(0.71, func() {
 		}),
 		layout.Flexed(1, func() {
 			inset := layout.Inset{
-				Top: unit.Dp(150),
+				Top: unit.Dp(45),
 			}
 			inset.Layout(win.gtx, func() {
 				win.gtx.Constraints.Width.Min = 40

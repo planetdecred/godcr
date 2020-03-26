@@ -2,14 +2,19 @@ package ui
 
 import (
 	"strings"
+	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
-var old int
+var (
+	old     int
+	newAddr bool
+)
 
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
@@ -211,8 +216,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
-		win.states.dialog = true
-		win.dialog = win.generateNewAddress
+		newAddr = !newAddr
 	}
 
 	if win.inputs.receiveIcons.gotItDiag.Clicked(win.gtx) {
@@ -227,9 +231,18 @@ func (win *Window) HandleInputs() {
 			log.Debug("Error generating new address" + err.Error())
 			win.err = err.Error()
 		} else {
-			account.CurrentAddress = addr
-			win.states.dialog = false
+			win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress = addr
+			newAddr = false
 		}
+	}
+
+	for win.inputs.receiveIcons.copy.Clicked(win.gtx) {
+		clipboard.WriteAll(win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress)
+		win.addressCopiedLabel.Text = "Address Copied"
+		time.AfterFunc(time.Second*3, func() {
+			win.addressCopiedLabel.Text = ""
+		})
+		return
 	}
 }
 
