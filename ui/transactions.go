@@ -13,24 +13,19 @@ var (
 	txsList = layout.List{Axis: layout.Vertical}
 )
 
+const (
+	pageHeadHeight      = 0.2
+	pageContainerHeight = .8
+	filterButtonWidth   = 200
+)
+
 func (win *Window) TransactionsPage() {
 	bd := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-			layout.Flexed(.2, func() {
+			layout.Flexed(pageHeadHeight, func() {
 				layout.Flex{Spacing: layout.SpaceBetween}.Layout(win.gtx,
 					layout.Rigid(func() {
-						layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
-							layout.Rigid(func() {
-								layout.Inset{Right: unit.Dp(10)}.Layout(win.gtx, func() {
-									win.combined.transactionSort.Layout(win.gtx, func() {
-									})
-								})
-							}),
-							layout.Rigid(func() {
-								win.combined.transactionStatus.Layout(win.gtx, func() {
-								})
-							}),
-						)
+						win.theme.H3("Transactions").Layout(win.gtx)
 					}),
 					layout.Rigid(func() {
 						win.outputs.toSend.Layout(win.gtx, &win.inputs.toSend)
@@ -42,19 +37,36 @@ func (win *Window) TransactionsPage() {
 					}),
 				)
 			}),
-			layout.Flexed(.6, func() {
-				txsList.Layout(win.gtx, len(*win.transactionsWallet), func(index int) {
-					layout.Inset{Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
-						renderTxsRow(win, &(*win.transactionsWallet)[index])
-					})
-				})
+			layout.Flexed(pageContainerHeight, func() {
+				layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+					layout.Rigid(func() {
+						win.gtx.Constraints.Width.Min = filterButtonWidth
+						layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+							layout.Rigid(func() {
+								win.combined.transactionSort.Layout(win.gtx, func() {
+								})
+							}),
+							layout.Rigid(func() {
+								win.combined.transactionStatus.Layout(win.gtx, func() {
+								})
+							}),
+						)
+					}),
+					layout.Flexed(1, func() {
+						layout.Inset{Left: unit.Dp(20), Right: unit.Dp(20)}.Layout(win.gtx, func() {
+							txsList.Layout(win.gtx, len(*win.transactionsWallet), func(index int) {
+								layout.Inset{Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
+									renderTxsRow(win, &(*win.transactionsWallet)[index])
+								})
+							})
+						})
+					}),
+				)
 			}),
 		)
 	}
 
-	win.TabbedPage(func() {
-		layout.Inset{Left: unit.Dp(10), Right: unit.Dp(20)}.Layout(win.gtx, bd)
-	})
+	win.TabbedPage(bd)
 }
 
 func renderTxsRow(win *Window, transaction *wallet.TransactionInfo) {
