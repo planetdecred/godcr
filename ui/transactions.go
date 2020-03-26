@@ -35,6 +35,11 @@ func (win *Window) TransactionsPage() {
 					layout.Rigid(func() {
 						win.outputs.toSend.Layout(win.gtx, &win.inputs.toSend)
 					}),
+					layout.Rigid(func() {
+						layout.Inset{Right: unit.Dp(20)}.Layout(win.gtx, func() {
+							win.outputs.toReceive.Layout(win.gtx, &win.inputs.toReceive)
+						})
+					}),
 				)
 			}),
 			layout.Flexed(.6, func() {

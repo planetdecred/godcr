@@ -10,7 +10,7 @@ type Select struct {
 	size     float32
 	changed  bool
 	open     bool
-	selected int
+	Selected int
 	openbtn  widget.Button
 	Options  []string
 	btns     []*widget.Button
@@ -23,10 +23,6 @@ func (t *Theme) Select() *Select {
 		size: 0.2,
 		list: layout.List{Axis: layout.Vertical},
 	}
-}
-
-func (s *Select) Selected() int {
-	return s.selected
 }
 
 func (s *Select) Open() bool {
@@ -61,7 +57,7 @@ func (s *Select) Layout(gtx *layout.Context, w layout.Widget) {
 				layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func() {
 						lbl := s.item
-						lbl.Text = s.Options[s.selected]
+						lbl.Text = s.Options[s.Selected]
 						lbl.Layout(gtx, &s.openbtn)
 					}),
 					layout.Rigid(func() {
@@ -85,7 +81,7 @@ func (s *Select) Layout(gtx *layout.Context, w layout.Widget) {
 		if s.btns[i].Clicked(gtx) {
 			s.changed = true
 			s.open = false
-			s.selected = i
+			s.Selected = i
 			return
 		}
 	}

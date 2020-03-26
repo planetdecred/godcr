@@ -3,6 +3,8 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
+
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 )
 
 func (win *Window) CreateDiag() {
@@ -117,5 +119,32 @@ func (win *Window) AddAccountDiag() {
 				win.outputs.addAccount.Layout(win.gtx, &win.inputs.addAccount)
 			}),
 		)
+	})
+}
+
+func (win *Window) infoDiag() {
+	win.theme.Surface(win.gtx, func() {
+		layout.Center.Layout(win.gtx, func() {
+			selectedDetails := func() {
+				layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+					layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
+						layout.Rigid(func() {
+							layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+								win.outputs.pageInfo.Layout(win.gtx)
+							})
+						}),
+						layout.Rigid(func() {
+							inset := layout.Inset{
+								Left: unit.Dp(190),
+							}
+							inset.Layout(win.gtx, func() {
+								win.outputs.gotItDiag.Layout(win.gtx, &win.inputs.receiveIcons.gotItDiag)
+							})
+						}),
+					)
+				})
+			}
+			decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
+		})
 	})
 }
