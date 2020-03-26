@@ -2,17 +2,31 @@ package ui
 
 import (
 	"strings"
+	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/dcrlibwallet"
+)
+
+var (
+	old     int
+	newAddr bool
 )
 
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
-		win.selected = win.tabs.Selected
+		if win.tabs.Selected != win.selected {
+			win.combined.sel.Selected = 0
+			win.selectedAccount = 0
+			win.selected = win.tabs.Selected
+		}
+	}
+	if win.combined.sel.Changed() {
+		win.selectedAccount = win.combined.sel.Selected
 	}
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
@@ -161,6 +175,11 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	if win.inputs.toReceive.Clicked(win.gtx) {
+		win.current = win.Receive
+		return
+	}
+
 	if win.inputs.toSend.Clicked(win.gtx) {
 		win.current = win.SendPage
 		return
@@ -187,6 +206,42 @@ func (win *Window) HandleInputs() {
 		win.states.dialog = false
 		win.err = ""
 		log.Debug("Cancel dialog clicked")
+		return
+	}
+
+	// RECEIVE PAGE
+	if win.inputs.receiveIcons.info.Clicked(win.gtx) {
+		win.states.dialog = true
+		win.dialog = win.infoDiag
+	}
+
+	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
+		newAddr = !newAddr
+	}
+
+	if win.inputs.receiveIcons.gotItDiag.Clicked(win.gtx) {
+		win.states.dialog = false
+	}
+
+	if win.inputs.receiveIcons.newAddressDiag.Clicked(win.gtx) {
+		wallet := win.walletInfo.Wallets[win.selected]
+		account := wallet.Accounts[win.selectedAccount]
+		addr, err := win.wallet.NextAddress(wallet.ID, account.Number)
+		if err != nil {
+			log.Debug("Error generating new address" + err.Error())
+			win.err = err.Error()
+		} else {
+			win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress = addr
+			newAddr = false
+		}
+	}
+
+	for win.inputs.receiveIcons.copy.Clicked(win.gtx) {
+		clipboard.WriteAll(win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress)
+		win.addressCopiedLabel.Text = "Address Copied"
+		time.AfterFunc(time.Second*3, func() {
+			win.addressCopiedLabel.Text = ""
+		})
 		return
 	}
 }

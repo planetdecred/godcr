@@ -39,22 +39,25 @@ type MultiWalletInfo struct {
 
 // InfoShort represents basic information about a wallet
 type InfoShort struct {
-	ID              int
-	Name            string
-	Balance         string
-	Accounts        []Account
-	BestBlockHeight int32
-	BlockTimestamp  int64
-	DaysBehind      string
-	Status          string
+	ID               int
+	Name             string
+	Balance          string
+	Accounts         []Account
+	BestBlockHeight  int32
+	BlockTimestamp   int64
+	DaysBehind       string
+	Status           string
+	IsWaiting        bool
+	TotalBalance     int64
+	SpendableBalance int64
 }
 
 // Account represents information about a wallet's account
 type Account struct {
-	Number    string
-	Name      string
-	Spendable string
-	Keys      struct {
+	Number           int32
+	Name             string
+	SpendableBalance string
+	Keys             struct {
 		Internal, External, Imported string
 	}
 	HDPath         string
@@ -64,7 +67,12 @@ type Account struct {
 
 // AddedAccount is sent when the wallet is done adding an account
 type AddedAccount struct {
-	ID int32
+	ID               int32
+	Number           int32
+	Name             string
+	TotalBalance     string
+	CurrentAddress   string
+	SpendableBalance int64
 }
 
 // LoadedWallets is sent when then the Wallet is done loading wallets

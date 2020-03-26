@@ -206,7 +206,7 @@ func (page overviewPage) recentTransactionsColumn() {
 									layout.Center.Layout(page.gtx, func() {
 										gtx.Constraints.Width.Min = moreButtonWidth
 										gtx.Constraints.Height.Max = moreButtonHeight
-										moreButton := page.outputs.more
+										moreButton := page.outputs.moreDiag
 										moreButton.TextSize = syncButtonTextSize
 										moreButton.Layout(gtx, &page.inputs.toTransactions)
 									})
