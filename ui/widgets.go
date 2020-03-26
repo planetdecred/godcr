@@ -2,11 +2,11 @@ package ui
 
 import (
 	"fmt"
-
 	"image/color"
 
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -18,11 +18,13 @@ type inputs struct {
 	addAccount, toggleWalletRename                            widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
 	toRestoreWallet                                           widget.Button
-	//toReceive                                                 widget.Button
-	sync, syncHeader widget.Button
+	toReceive                                                 widget.Button
+	sync, syncHeader                                          widget.Button
+	spendingPassword, matchSpending, rename, dialog           widget.Editor
 
-	spendingPassword, matchSpending, rename, dialog widget.Editor
-
+	receiveIcons struct {
+		info, more, copy, gotItDiag, newAddressDiag widget.Button
+	}
 	seedEditors struct {
 		focusIndex int
 		editors    []widget.Editor
@@ -42,23 +44,30 @@ type outputs struct {
 		create, clear, done *decredmaterial.Icon
 	}
 	icons struct {
-		add, check, cancel, sync decredmaterial.IconButton
+		add, check, cancel, sync, info, more, copy decredmaterial.IconButton
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
-	//toReceive                                                 decredmaterial.IconButton
-	createDiag, cancelDiag, addAcctDiag decredmaterial.IconButton
+	toReceive                                                                  decredmaterial.IconButton
+	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
 
-	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag decredmaterial.Button
-	addAccount                                                         decredmaterial.Button
-	toggleWalletRename, renameWallet, syncHeader                       decredmaterial.IconButton
-	sync, more                                                         decredmaterial.Button
+	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
+	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
+	sync, moreDiag                                                                decredmaterial.Button
 
-	tabs                          []decredmaterial.TabItem
-	notImplemented, noWallet, err decredmaterial.Label
+	addAccount, newAddressDiag decredmaterial.Button
+	info, more, copy           decredmaterial.IconButton
+
+	tabs                                               []decredmaterial.TabItem
+	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
+
+	//receive page labels
+	selectedAccountNameLabel, selectedAccountBalanceLabel           decredmaterial.Label
+	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
+	selectedWalletBalLabel, selectedWalletNameLabel                 decredmaterial.Label
 }
 
 func (win *Window) initWidgets() {
@@ -76,7 +85,17 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.cancel.Background = theme.Color.Danger
 	win.outputs.icons.check = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)))
 	win.outputs.icons.check.Background = theme.Color.Success
-
+	win.outputs.icons.more = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
+	win.outputs.icons.more.Padding = unit.Dp(5)
+	win.outputs.icons.more.Size = unit.Dp(35)
+	win.outputs.icons.info = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionInfo)))
+	win.outputs.icons.info.Padding = unit.Dp(5)
+	win.outputs.icons.info.Size = unit.Dp(35)
+	win.outputs.icons.copy = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy)))
+	win.outputs.icons.copy.Padding = unit.Dp(5)
+	win.outputs.icons.copy.Size = unit.Dp(30)
+	win.outputs.icons.copy.Background = theme.Color.Background
+	win.outputs.icons.copy.Color = theme.Color.Text
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
 
@@ -97,11 +116,27 @@ func (win *Window) initWidgets() {
 
 	win.outputs.notImplemented = theme.H3("Not Implemented")
 
+	//receive widgets
+	win.outputs.gotItDiag = theme.Button("Got It")
+	win.outputs.newAddressDiag = theme.Button("Generate new address")
+
+	win.outputs.pageTitle = theme.H4("Receiving DCR")
+	win.outputs.pageInfo = theme.Body1("Each time you request a payment, a \nnew address is created to protect \nyour privacy.")
+
+	win.outputs.selectedAccountNameLabel = win.theme.H6("")
+	win.outputs.selectedWalletNameLabel = win.theme.Body2("")
+	win.outputs.selectedWalletBalLabel = win.theme.Body2("")
+	win.outputs.selectedAccountBalanceLabel = win.theme.H6("")
+	win.outputs.receiveAddressLabel = win.theme.H6("")
+	win.outputs.receiveAddressLabel.Color = theme.Color.Primary
+	win.outputs.addressCopiedLabel = win.theme.Caption("")
+
 	win.outputs.toWallets = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionAccountBalanceWallet)))
 	win.outputs.toOverview = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionHome)))
 	win.outputs.toTransactions = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.SocialPoll)))
 	win.outputs.toSettings = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionSettings)))
 	win.outputs.toSend = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSend)))
+	win.outputs.toReceive = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)))
 
 	win.outputs.noWallet = theme.H3("No wallet loaded")
 
@@ -109,7 +144,11 @@ func (win *Window) initWidgets() {
 	win.outputs.err.Color = theme.Color.Danger
 	win.outputs.sync = theme.Button("Reconnect")
 	win.outputs.syncHeader = win.outputs.icons.sync
-	win.outputs.more = theme.Button("more")
+	win.outputs.moreDiag = theme.Button("more")
+
+	win.outputs.more = win.outputs.icons.more
+	win.outputs.info = win.outputs.icons.info
+	win.outputs.copy = win.outputs.icons.copy
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))

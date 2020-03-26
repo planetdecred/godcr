@@ -80,6 +80,13 @@ func (win *Window) TabbedPage(body layout.Widget) {
 			Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
 		}
 	}
+	info := win.walletInfo.Wallets[win.selected]
+	accounts := make([]string, len(info.Accounts))
+	for i, acct := range info.Accounts {
+		accounts[i] = acct.Name
+	}
+	win.combined.sel.Options = accounts
+
 	bd := func() {
 		toMax(win.gtx)
 		win.tabs.Layout(win.gtx, body)
@@ -93,7 +100,7 @@ func (win *Window) Header() {
 	layout.Flex{
 		Alignment: layout.Middle,
 	}.Layout(win.gtx,
-		layout.Flexed(0.4, func() {
+		layout.Flexed(0.6, func() {
 			win.theme.H3("GoDcr").Layout(win.gtx)
 		}),
 		layout.Flexed(0.2, func() {

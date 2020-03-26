@@ -234,6 +234,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				wal.Send <- resp
 				return
 			}
+
 			var acctBalance int64
 			accts := make([]Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
@@ -242,10 +243,10 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					log.Error("Could not get current address for wallet ", id, "account", acct.Number)
 				}
 				accts = append(accts, Account{
-					Number:       strconv.Itoa(int(acct.Number)),
-					Name:         acct.Name,
-					TotalBalance: dcrutil.Amount(acct.TotalBalance).String(),
-					Spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
+					Number:           acct.Number,
+					Name:             acct.Name,
+					TotalBalance:     dcrutil.Amount(acct.TotalBalance).String(),
+					SpendableBalance: dcrutil.Amount(acct.Balance.Spendable).String(),
 					Keys: struct {
 						Internal, External, Imported string
 					}{
