@@ -142,21 +142,21 @@ func (win *Window) HandleInputs() {
 		}
 		win.states.dialog = true
 	}
-	
+
 	// RENAME WALLET
 
 	// if win.inputs.toggleWalletRename.Clicked(win.gtx) {
-		// if win.states.renamingWallet {
-		// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
-		// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
-		// } else {
-		// 	win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
-		// 	win.outputs.rename.TextSize = unit.Dp(48)
-		// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
-		// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
-		// }
+	// if win.states.renamingWallet {
+	// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
+	// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
+	// } else {
+	// 	win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
+	// 	win.outputs.rename.TextSize = unit.Dp(48)
+	// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
+	// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
+	// }
 
-		win.states.renamingWallet = !win.states.renamingWallet
+	win.states.renamingWallet = !win.states.renamingWallet
 	// }
 
 	if win.inputs.renameWallet.Clicked(win.gtx) {

@@ -13,7 +13,6 @@ import (
 
 type inputs struct {
 	createDiag, deleteDiag, cancelDialog                           widget.Button
-	restoreDiag, addAcctDiag                                       widget.Button
 	createWallet, restoreWallet, deleteWallet, renameWallet        widget.Button
 	addAccount, toggleWalletRename                                 widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings      widget.Button
@@ -26,6 +25,7 @@ type inputs struct {
 	spendingPassword, matchSpending, rename, dialog                widget.Editor
 	addressInput, messageInput, signInput                          widget.Editor
 	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                widget.Button
+	restoreDiag, addAcctDiag, savePassword                    widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -70,7 +70,7 @@ type outputs struct {
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
 	applyFiltersTransactions                                                      decredmaterial.Button
-	sync, moreDiag, hideMsgInfo                                                   decredmaterial.Button
+	sync, moreDiag, hideMsgInfo, savePassword                                                   decredmaterial.Button
 
 	addAccount, newAddressDiag                                     decredmaterial.Button
 	info, more, copy, verifyInfo                                   decredmaterial.IconButton
@@ -112,7 +112,6 @@ func (win *Window) initWidgets() {
 		Color:      win.theme.Color.Hint,
 		Padding:    unit.Dp(0),
 	}
-
 	win.outputs.icons.check = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)))
 	win.outputs.icons.check.Background = theme.Color.Success
 	win.outputs.icons.more = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
@@ -197,6 +196,9 @@ func (win *Window) initWidgets() {
 	//receive widgets
 	win.outputs.gotItDiag = theme.Button("Got It")
 	win.outputs.newAddressDiag = theme.Button("Generate new address")
+
+	win.outputs.renameWalletDiag = theme.Button("Save Name")
+	win.outputs.savePassword = theme.Button("Save Password")
 
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
 
