@@ -11,6 +11,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial/editor"
 )
 
 type Editor struct {
@@ -36,7 +37,7 @@ func (t *Theme) Editor(hint string) Editor {
 	}
 }
 
-func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
+func (e Editor) Layout(gtx *layout.Context, editor *editor.Editor) {
 	var stack op.StackOp
 	stack.Push(gtx.Ops)
 	var macro op.MacroOp

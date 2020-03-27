@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial/editor"
 )
 
 var (
@@ -31,7 +32,7 @@ func (win *Window) HandleInputs() {
 
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
 		switch evt.(type) {
-		case widget.ChangeEvent:
+		case editor.ChangeEvent:
 			win.outputs.spendingPassword.HintColor = win.theme.Color.Hint
 			return
 		}
@@ -40,7 +41,7 @@ func (win *Window) HandleInputs() {
 
 	for _, evt := range win.inputs.matchSpending.Events(win.gtx) {
 		switch evt.(type) {
-		case widget.ChangeEvent:
+		case editor.ChangeEvent:
 			win.outputs.matchSpending.Color = win.theme.Color.Text
 			win.outputs.matchSpending.HintColor = win.theme.Color.Hint
 			return
@@ -311,9 +312,9 @@ func (win *Window) resetSeeds() {
 
 func (win *Window) editorSeedsEventsHandler() {
 	for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-		editor := &win.inputs.seedEditors.editors[i]
+		ed := &win.inputs.seedEditors.editors[i]
 
-		if editor.Focused() && win.inputs.seedEditors.focusIndex != i {
+		if ed.Focused() && win.inputs.seedEditors.focusIndex != i {
 			win.inputs.seedsSuggestions = nil
 			win.outputs.seedsSuggestions = nil
 			win.inputs.seedEditors.focusIndex = i
@@ -321,18 +322,18 @@ func (win *Window) editorSeedsEventsHandler() {
 			return
 		}
 
-		for _, e := range editor.Events(win.gtx) {
+		for _, e := range ed.Events(win.gtx) {
 			switch e.(type) {
-			case widget.ChangeEvent:
+			case editor.ChangeEvent:
 				win.inputs.seedsSuggestions = nil
 				win.outputs.seedsSuggestions = nil
 
-				if strings.Trim(editor.Text(), " ") == "" {
+				if strings.Trim(ed.Text(), " ") == "" {
 					return
 				}
 
 				for _, word := range dcrlibwallet.PGPWordList() {
-					if strings.HasPrefix(strings.ToLower(word), strings.ToLower(editor.Text())) {
+					if strings.HasPrefix(strings.ToLower(word), strings.ToLower(ed.Text())) {
 						if len(win.inputs.seedsSuggestions) < 2 {
 							var btn struct {
 								text   string
@@ -346,7 +347,7 @@ func (win *Window) editorSeedsEventsHandler() {
 					}
 				}
 
-			case widget.SubmitEvent:
+			case editor.SubmitEvent:
 				if i < len(win.inputs.seedEditors.editors)-1 {
 					win.inputs.seedEditors.editors[i+1].Focus()
 				}

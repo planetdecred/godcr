@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial/editor"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -20,14 +21,14 @@ type inputs struct {
 	toRestoreWallet                                           widget.Button
 	toReceive                                                 widget.Button
 	sync, syncHeader                                          widget.Button
-	spendingPassword, matchSpending, rename, dialog           widget.Editor
+	spendingPassword, matchSpending, rename, dialog           editor.Editor
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
 	}
 	seedEditors struct {
 		focusIndex int
-		editors    []widget.Editor
+		editors    []editor.Editor
 	}
 	seedsSuggestions []struct {
 		text   string
@@ -153,7 +154,7 @@ func (win *Window) initWidgets() {
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
 		win.inputs.seedEditors.focusIndex = -1
-		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
+		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, editor.Editor{SingleLine: true, Submit: true})
 	}
 	win.outputs.sync = theme.Button("Reconnect")
 
