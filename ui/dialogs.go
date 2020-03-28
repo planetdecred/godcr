@@ -419,111 +419,107 @@ func (win *Window) msgInfoDiag() {
 func (win *Window) editWalletDiag() {
 	win.theme.Surface(win.gtx, func() {
 		layout.Center.Layout(win.gtx, func() {
-			win.vFlexSB(
-			rigid(func() {
-				win.theme.H5("Edit Wallet Details").Layout(win.gtx)
-			}),
-			rigid(func() {
-				selectedDetails := func() {
-					layout.UniformInset(unit.Dp(20)).Layout(win.gtx, func() {
-						win.vFlex(
-							rigid(func() {
-								win.hFlex(
-									// rigid(func() {
-									// 	win.theme.H5("Edit Wallet Details").Layout(win.gtx)
-									// }),
-									layout.Flexed(1, func() {
-										layout.E.Layout(win.gtx, func() {
-											win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
-										})
-									}),
-								)
-							}),
-							rigid(func() {
-								inset := layout.Inset{
-									Top:    unit.Dp(20),
-									Bottom: unit.Dp(30),
-								}
-								inset.Layout(win.gtx, func() {
-									win.vFlexSB(
-										rigid(func() {
-											win.theme.H6("Rename Wallet").Layout(win.gtx)
-										}),
-										rigid(func() {
-											decredmaterial.Card{}.Layout(win.gtx, func() {
-												win.hFlex(
-													layout.Flexed(1, func() {
-														win.outputs.rename.Layout(win.gtx, &win.inputs.rename)
-													}),
-												)
-											})
-										}),
-										rigid(func() {
-											layout.Inset{Top: unit.Dp(5)}.Layout(win.gtx, func() {
-												win.gtx.Constraints.Width.Min = syncButtonWidth
-												win.gtx.Constraints.Height.Max = syncButtonHeight
-												win.outputs.renameWalletDiag.Layout(win.gtx, &win.inputs.renameWalletDiag)
-											})
-										}),
-									)
-								})
-							}),
-							rigid(func() {
+			selectedDetails := func() {
+				layout.UniformInset(unit.Dp(20)).Layout(win.gtx, func() {
+					win.vFlex(
+						rigid(func() {
+							win.hFlex(
+								rigid(func() {
+									win.theme.H5("Edit Wallet Details").Layout(win.gtx)
+								}),
+								layout.Flexed(1, func() {
+									layout.E.Layout(win.gtx, func() {
+										win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
+									})
+								}),
+							)
+						}),
+						rigid(func() {
+							win.Err()
+						}),
+						rigid(func() {
+							inset := layout.Inset{
+								Top:    unit.Dp(20),
+								Bottom: unit.Dp(30),
+							}
+							inset.Layout(win.gtx, func() {
 								win.vFlexSB(
 									rigid(func() {
-										win.theme.H6("Change Wallet Password").Layout(win.gtx)
-									}),
-									rigid(func() {
-										inset := layout.Inset{
-											Top:    unit.Dp(10),
-											Bottom: unit.Dp(5),
-										}
-										inset.Layout(win.gtx, func() {
-											win.vFlexSB(
-												rigid(func() {
-													win.theme.Body1("New Password").Layout(win.gtx)
-												}),
-												rigid(func() {
-													decredmaterial.Card{}.Layout(win.gtx, func() {
-														win.hFlexSB(
-															layout.Flexed(1, func() {
-																win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
-															}),
-														)
-													})
-												}),
-											)
-										})
-									}),
-									rigid(func() {
-										win.theme.Body1("Confirm New Password").Layout(win.gtx)
+										win.theme.H6("Rename Wallet").Layout(win.gtx)
 									}),
 									rigid(func() {
 										decredmaterial.Card{}.Layout(win.gtx, func() {
-											win.hFlexSB(
+											win.hFlex(
 												layout.Flexed(1, func() {
-													win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
+													win.outputs.rename.Layout(win.gtx, &win.inputs.rename)
 												}),
 											)
 										})
 									}),
 									rigid(func() {
-										layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
+										layout.Inset{Top: unit.Dp(5)}.Layout(win.gtx, func() {
 											win.gtx.Constraints.Width.Min = syncButtonWidth
 											win.gtx.Constraints.Height.Max = syncButtonHeight
-											win.outputs.savePassword.Layout(win.gtx, &win.inputs.savePassword)
+											win.outputs.renameWalletDiag.Layout(win.gtx, &win.inputs.renameWalletDiag)
 										})
 									}),
 								)
-							}),
-						)
-					})
-				}
-				win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(350))
-				win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
-				decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
-			}),
-		)
-	})
+							})
+						}),
+						rigid(func() {
+							win.vFlexSB(
+								rigid(func() {
+									win.theme.H6("Change Wallet Password").Layout(win.gtx)
+								}),
+								rigid(func() {
+									inset := layout.Inset{
+										Top:    unit.Dp(10),
+										Bottom: unit.Dp(5),
+									}
+									inset.Layout(win.gtx, func() {
+										win.vFlexSB(
+											rigid(func() {
+												win.theme.Body1("Old Password").Layout(win.gtx)
+											}),
+											rigid(func() {
+												decredmaterial.Card{}.Layout(win.gtx, func() {
+													win.hFlexSB(
+														layout.Flexed(1, func() {
+															win.outputs.oldSpendingPassword.Layout(win.gtx, &win.inputs.oldSpendingPassword)
+														}),
+													)
+												})
+											}),
+										)
+									})
+								}),
+								rigid(func() {
+									win.theme.Body1("New Password").Layout(win.gtx)
+								}),
+								rigid(func() {
+									decredmaterial.Card{}.Layout(win.gtx, func() {
+										win.hFlexSB(
+											layout.Flexed(1, func() {
+												win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+											}),
+										)
+									})
+								}),
+								rigid(func() {
+									layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
+										win.gtx.Constraints.Width.Min = syncButtonWidth
+										win.gtx.Constraints.Height.Max = syncButtonHeight
+										win.outputs.savePassword.Layout(win.gtx, &win.inputs.savePassword)
+									})
+								}),
+							)
+						}),
+					)
+				})
+			}
+			win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(350))
+			win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
+			decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
+		})
 	})
 }

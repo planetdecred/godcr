@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"gioui.org/io/key"
-	// "gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -128,38 +127,17 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	// EDIT WALLET
+	// Edit WALLET
 
 	if win.inputs.toggleWalletRename.Clicked(win.gtx) {
 		win.dialog = win.editWalletDiag
-		if win.states.renamingWallet {
-			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
-			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
-		} else {
-			win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
-			win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
-			win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
-		}
+		win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
 		win.states.dialog = true
 	}
 
 	// RENAME WALLET
 
-	// if win.inputs.toggleWalletRename.Clicked(win.gtx) {
-	// if win.states.renamingWallet {
-	// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
-	// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
-	// } else {
-	// 	win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
-	// 	win.outputs.rename.TextSize = unit.Dp(48)
-	// 	win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
-	// 	win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
-	// }
-
-	win.states.renamingWallet = !win.states.renamingWallet
-	// }
-
-	if win.inputs.renameWallet.Clicked(win.gtx) {
+	if win.inputs.renameWalletDiag.Clicked(win.gtx) {
 		name := win.inputs.rename.Text()
 		if name == "" {
 			return
@@ -167,11 +145,13 @@ func (win *Window) HandleInputs() {
 		err := win.wallet.RenameWallet(win.walletInfo.Wallets[win.selected].ID, name)
 		if err != nil {
 			log.Debug("Error renaming wallet")
+			win.outputs.err.Color = win.theme.Color.Danger
+			win.err = err.Error()
 		} else {
 			win.walletInfo.Wallets[win.selected].Name = name
 			win.states.renamingWallet = false
-			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
-			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
+			win.err = "Wallet name changed successfully"
+			win.outputs.err.Color = win.theme.Color.Success
 			win.reloadTabs()
 		}
 	}
@@ -267,6 +247,36 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.hideMsgInfo.Clicked(win.gtx) {
 		win.dialog = win.verifyMessageDiag
+	}
+
+	// CHANGE PASSWORD
+
+	if win.inputs.savePassword.Clicked(win.gtx) {
+		op := win.validateOldPassword()
+		if op == "" {
+			return
+		}
+		np := win.validatePassword()
+		if np == "" {
+			return
+		}
+
+		err := win.wallet.ChangeWalletPassphrase(win.walletInfo.Wallets[win.selected].ID, op, np)
+		if err != nil {
+			log.Debug("Error changing wallet password " + err.Error())
+			win.outputs.err.Color = win.theme.Color.Danger
+			if err.Error() == "invalid_passphrase" {
+				win.err = "Passphrase is incorrect"
+			} else {
+				win.err = err.Error()
+			}
+			return
+		}
+
+		win.err = "Password changed successfully"
+		win.outputs.err.Color = win.theme.Color.Success
+		win.resetPasswords()
+		return
 	}
 
 	// DELETE WALLET
@@ -426,7 +436,19 @@ func (win *Window) validatePassword() string {
 	pass := win.inputs.spendingPassword.Text()
 	if pass == "" {
 		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
+		return ""
 	}
+
+	return pass
+}
+
+func (win *Window) validateOldPassword() string {
+	pass := win.inputs.oldSpendingPassword.Text()
+	if pass == "" {
+		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
+		return ""
+	}
+
 	return pass
 }
 
@@ -435,6 +457,8 @@ func (win *Window) resetPasswords() {
 	win.inputs.spendingPassword.SetText("")
 	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
 	win.inputs.matchSpending.SetText("")
+	win.outputs.oldSpendingPassword.HintColor = win.theme.Color.InvText
+	win.inputs.oldSpendingPassword.SetText("")
 }
 
 func (win *Window) resetVerifyFields() {

@@ -22,10 +22,18 @@ type inputs struct {
 	applyFiltersTransactions                                       widget.Button
 	sync, syncHeader, hideMsgInfo                                  widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
-	spendingPassword, matchSpending, rename, dialog                widget.Editor
+	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog                widget.Editor
 	addressInput, messageInput, signInput                          widget.Editor
 	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                widget.Button
 	restoreDiag, addAcctDiag, savePassword                    widget.Button
+	createWallet, restoreWallet, deleteWallet, renameWallet   widget.Button
+	addAccount, toggleWalletRename, renameWalletDiag          widget.Button
+	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
+	toRestoreWallet                                           widget.Button
+	toTransactionsFilters                                     widget.Button
+	applyFiltersTransactions                                  widget.Button
+	toReceive                                                 widget.Button
+	sync, syncHeader                                          widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -60,8 +68,8 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
-	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	addressInput, messageInput, signInput                                      decredmaterial.Editor
+	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
@@ -162,6 +170,9 @@ func (win *Window) initWidgets() {
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
 
+	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
+	win.inputs.oldSpendingPassword.SingleLine = true
+
 	win.outputs.matchSpending = theme.Editor("Enter password again")
 	win.inputs.matchSpending.SingleLine = true
 
@@ -257,14 +268,14 @@ func (win *Window) initWidgets() {
 
 	win.outputs.toggleWalletRename = decredmaterial.IconButton{
 		Icon:       win.outputs.ic.create,
-		Size:       unit.Dp(48),
+		Size:       unit.Dp(40),
 		Background: color.RGBA{},
 		Color:      win.theme.Color.Primary,
-		Padding:    unit.Dp(0),
+		Padding:    unit.Dp(3),
 	}
 
 	win.outputs.rename = theme.Editor("")
-	win.outputs.rename.TextSize = unit.Dp(30)
+	win.outputs.rename.TextSize = unit.Dp(23)
 
 	win.outputs.renameWallet = decredmaterial.IconButton{
 		Icon:       win.outputs.ic.done,

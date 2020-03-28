@@ -309,6 +309,11 @@ func (wal *Wallet) RenameWallet(walletID int, name string) error {
 	return wal.multi.RenameWallet(walletID, name)
 }
 
+// RenameWallet renames the wallet identified by walletID.
+func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, newPrivatePassphrase string) error {
+	return wal.multi.ChangePrivatePassphraseForWallet(walletID, []byte(oldPrivatePassphrase), []byte(newPrivatePassphrase), dcrlibwallet.PassphraseTypePass)
+}
+
 // RenameAccount renames the acct of wallet with id walletID.
 func (wal *Wallet) RenameAccount(walletID int, acct int32, name string) error {
 	return wal.multi.WalletWithID(walletID).RenameAccount(acct, name)
