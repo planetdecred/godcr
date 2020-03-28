@@ -254,10 +254,12 @@ func (win *Window) HandleInputs() {
 	if win.inputs.savePassword.Clicked(win.gtx) {
 		op := win.validateOldPassword()
 		if op == "" {
+			win.err = "Old wallet password required"
 			return
 		}
 		np := win.validatePassword()
 		if np == "" {
+			win.err = "New wallet password required"
 			return
 		}
 
