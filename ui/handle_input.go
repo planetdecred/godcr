@@ -20,12 +20,15 @@ var (
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
 	if win.tabs.Changed() {
-		win.selected = win.tabs.Selected
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
 		if win.tabs.Selected != win.selected {
 			win.combined.sel.Selected = 0
 			win.selectedAccount = 0
 			win.selected = win.tabs.Selected
+		}
+
+		if !win.states.fetchingTxs {
+			win.states.fetchingTxs = true
+			win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
 		}
 	}
 	if win.combined.sel.Changed() {
@@ -189,12 +192,16 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.toTransactions.Clicked(win.gtx) {
-		win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
 		win.current = win.TransactionsPage
+		if !win.states.fetchingTxs {
+			win.states.fetchingTxs = true
+			win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0)
+		}
 		return
 	}
 
-	if win.combined.transactionStatus.Changed() {
+	if win.combined.transactionStatus.Changed() && !win.states.fetchingTxs {
+		win.states.fetchingTxs = true
 		win.wallet.GetTransactionsByWallet(
 			win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100,
 			int32(win.combined.transactionStatus.Selected),
