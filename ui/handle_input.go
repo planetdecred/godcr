@@ -252,21 +252,19 @@ func (win *Window) HandleInputs() {
 	// CHANGE PASSWORD
 
 	if win.inputs.savePassword.Clicked(win.gtx) {
+		win.outputs.err.Color = win.theme.Color.Danger
 		op := win.validateOldPassword()
 		if op == "" {
-			win.err = "Old wallet password required"
 			return
 		}
-		np := win.validatePassword()
+		np := win.validatePasswords()
 		if np == "" {
-			win.err = "New wallet password required"
 			return
 		}
 
 		err := win.wallet.ChangeWalletPassphrase(win.walletInfo.Wallets[win.selected].ID, op, np)
 		if err != nil {
 			log.Debug("Error changing wallet password " + err.Error())
-			win.outputs.err.Color = win.theme.Color.Danger
 			if err.Error() == "invalid_passphrase" {
 				win.err = "Passphrase is incorrect"
 			} else {
@@ -414,20 +412,22 @@ func (win *Window) HandleInputs() {
 }
 
 func (win *Window) validatePasswords() string {
-	pass := win.inputs.spendingPassword.Text()
+	pass := win.validatePassword()
 	if pass == "" {
-		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
-		return pass
+		return ""
 	}
 
 	match := win.inputs.matchSpending.Text()
 	if match == "" {
 		win.outputs.matchSpending.HintColor = win.theme.Color.Danger
+		win.err = "Enter new wallet password again."
 		return ""
 	}
 
 	if match != pass {
+		win.outputs.spendingPassword.Color = win.theme.Color.Danger
 		win.outputs.matchSpending.Color = win.theme.Color.Danger
+		win.err = "Wallet passwords does no match. Try again."
 		return ""
 	}
 
@@ -438,6 +438,7 @@ func (win *Window) validatePassword() string {
 	pass := win.inputs.spendingPassword.Text()
 	if pass == "" {
 		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
+		win.err = "Wallet password required and cannot be empty."
 		return ""
 	}
 
@@ -448,6 +449,7 @@ func (win *Window) validateOldPassword() string {
 	pass := win.inputs.oldSpendingPassword.Text()
 	if pass == "" {
 		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
+		win.err = "Old Wallet password required and cannot be empty"
 		return ""
 	}
 

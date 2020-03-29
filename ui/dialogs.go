@@ -473,8 +473,7 @@ func (win *Window) editWalletDiag() {
 								}),
 								rigid(func() {
 									inset := layout.Inset{
-										Top:    unit.Dp(10),
-										Bottom: unit.Dp(5),
+										Top: unit.Dp(10),
 									}
 									inset.Layout(win.gtx, func() {
 										win.vFlexSB(
@@ -494,13 +493,35 @@ func (win *Window) editWalletDiag() {
 									})
 								}),
 								rigid(func() {
-									win.theme.Body1("New Password").Layout(win.gtx)
+									inset := layout.Inset{
+										Top:    unit.Dp(10),
+										Bottom: unit.Dp(10),
+									}
+									inset.Layout(win.gtx, func() {
+										win.vFlexSB(
+											rigid(func() {
+												win.theme.Body1("New Password").Layout(win.gtx)
+											}),
+											rigid(func() {
+												decredmaterial.Card{}.Layout(win.gtx, func() {
+													win.hFlexSB(
+														layout.Flexed(1, func() {
+															win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+														}),
+													)
+												})
+											}),
+										)
+									})
+								}),
+								rigid(func() {
+									win.theme.Body1("Confirm New Password").Layout(win.gtx)
 								}),
 								rigid(func() {
 									decredmaterial.Card{}.Layout(win.gtx, func() {
 										win.hFlexSB(
 											layout.Flexed(1, func() {
-												win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+												win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
 											}),
 										)
 									})
