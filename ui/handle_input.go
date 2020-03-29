@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gioui.org/io/key"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -127,17 +128,23 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	// Edit WALLET
-
-	if win.inputs.toggleWalletRename.Clicked(win.gtx) {
-		win.dialog = win.editWalletDiag
-		win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
-		win.states.dialog = true
-	}
-
 	// RENAME WALLET
 
-	if win.inputs.renameWalletDiag.Clicked(win.gtx) {
+	if win.inputs.toggleWalletRename.Clicked(win.gtx) {
+		if win.states.renamingWallet {
+			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
+			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
+		} else {
+			win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
+			win.outputs.rename.TextSize = unit.Dp(48)
+			win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
+			win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
+		}
+
+		win.states.renamingWallet = !win.states.renamingWallet
+	}
+
+	if win.inputs.renameWallet.Clicked(win.gtx) {
 		name := win.inputs.rename.Text()
 		if name == "" {
 			return
@@ -145,13 +152,11 @@ func (win *Window) HandleInputs() {
 		err := win.wallet.RenameWallet(win.walletInfo.Wallets[win.selected].ID, name)
 		if err != nil {
 			log.Debug("Error renaming wallet")
-			win.outputs.err.Color = win.theme.Color.Danger
-			win.err = err.Error()
 		} else {
 			win.walletInfo.Wallets[win.selected].Name = name
 			win.states.renamingWallet = false
-			win.err = "Wallet name changed successfully"
-			win.outputs.err.Color = win.theme.Color.Success
+			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
+			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
 			win.reloadTabs()
 		}
 	}
@@ -249,7 +254,12 @@ func (win *Window) HandleInputs() {
 		win.dialog = win.verifyMessageDiag
 	}
 
-	// CHANGE PASSWORD
+	// CHANGE WALLET PASSWORD
+
+	if win.inputs.changePasswordDiag.Clicked(win.gtx) {
+		win.dialog = win.editPasswordDiag
+		win.states.dialog = true
+	}
 
 	if win.inputs.savePassword.Clicked(win.gtx) {
 		win.outputs.err.Color = win.theme.Color.Danger
@@ -461,8 +471,6 @@ func (win *Window) resetPasswords() {
 	win.inputs.spendingPassword.SetText("")
 	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
 	win.inputs.matchSpending.SetText("")
-	win.outputs.oldSpendingPassword.HintColor = win.theme.Color.InvText
-	win.inputs.oldSpendingPassword.SetText("")
 }
 
 func (win *Window) resetVerifyFields() {

@@ -78,8 +78,7 @@ type outputs struct {
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
 	applyFiltersTransactions                                                      decredmaterial.Button
-	sync, moreDiag, hideMsgInfo, savePassword                                                   decredmaterial.Button
-
+	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag                                                   decredmaterial.Button
 	addAccount, newAddressDiag                                     decredmaterial.Button
 	info, more, copy, verifyInfo                                   decredmaterial.IconButton
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
@@ -208,7 +207,7 @@ func (win *Window) initWidgets() {
 	win.outputs.gotItDiag = theme.Button("Got It")
 	win.outputs.newAddressDiag = theme.Button("Generate new address")
 
-	win.outputs.renameWalletDiag = theme.Button("Save Name")
+	win.outputs.changePasswordDiag = theme.Button("Change Password")
 	win.outputs.savePassword = theme.Button("Save Password")
 
 	win.outputs.pageTitle = theme.H4("Receiving DCR")

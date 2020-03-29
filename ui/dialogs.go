@@ -159,7 +159,6 @@ func (win *Window) infoDiag() {
 	})
 }
 
-<<<<<<< HEAD
 func (win *Window) transactionsFilters() {
 	w := win.gtx.Constraints.Width.Max / 2
 	win.theme.Surface(win.gtx, func() {
@@ -416,7 +415,7 @@ func (win *Window) msgInfoDiag() {
 	})
 }
 
-func (win *Window) editWalletDiag() {
+func (win *Window) editPasswordDiag() {
 	win.theme.Surface(win.gtx, func() {
 		layout.Center.Layout(win.gtx, func() {
 			selectedDetails := func() {
@@ -425,7 +424,7 @@ func (win *Window) editWalletDiag() {
 						rigid(func() {
 							win.hFlex(
 								rigid(func() {
-									win.theme.H5("Edit Wallet Details").Layout(win.gtx)
+									win.theme.H5("Change Wallet Password").Layout(win.gtx)
 								}),
 								layout.Flexed(1, func() {
 									layout.E.Layout(win.gtx, func() {
@@ -438,39 +437,7 @@ func (win *Window) editWalletDiag() {
 							win.Err()
 						}),
 						rigid(func() {
-							inset := layout.Inset{
-								Top:    unit.Dp(20),
-								Bottom: unit.Dp(30),
-							}
-							inset.Layout(win.gtx, func() {
-								win.vFlexSB(
-									rigid(func() {
-										win.theme.H6("Rename Wallet").Layout(win.gtx)
-									}),
-									rigid(func() {
-										decredmaterial.Card{}.Layout(win.gtx, func() {
-											win.hFlex(
-												layout.Flexed(1, func() {
-													win.outputs.rename.Layout(win.gtx, &win.inputs.rename)
-												}),
-											)
-										})
-									}),
-									rigid(func() {
-										layout.Inset{Top: unit.Dp(5)}.Layout(win.gtx, func() {
-											win.gtx.Constraints.Width.Min = syncButtonWidth
-											win.gtx.Constraints.Height.Max = syncButtonHeight
-											win.outputs.renameWalletDiag.Layout(win.gtx, &win.inputs.renameWalletDiag)
-										})
-									}),
-								)
-							})
-						}),
-						rigid(func() {
 							win.vFlexSB(
-								rigid(func() {
-									win.theme.H6("Change Wallet Password").Layout(win.gtx)
-								}),
 								rigid(func() {
 									inset := layout.Inset{
 										Top: unit.Dp(10),
