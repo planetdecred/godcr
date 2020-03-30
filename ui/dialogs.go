@@ -148,3 +148,54 @@ func (win *Window) infoDiag() {
 		})
 	})
 }
+
+func (win *Window) transactionsFilters() {
+	win.theme.Surface(win.gtx, func() {
+		toMax(win.gtx)
+		layout.UniformInset(unit.Dp(30)).Layout(win.gtx, func() {
+			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
+				layout.Rigid(func() {
+					layout.E.Layout(win.gtx, func() {
+						win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
+					})
+				}),
+				layout.Rigid(func() {
+					win.theme.H3("Transactions filters").Layout(win.gtx)
+				}),
+				layout.Rigid(func() {
+					layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+						layout.Flexed(.5, func() {
+							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+								layout.Rigid(func() {
+									win.theme.H6("Order").Layout(win.gtx)
+								}),
+								layout.Rigid(func() {
+									(&layout.List{Axis: layout.Vertical}).
+										Layout(win.gtx, len(win.outputs.transactionFilterSort), func(index int) {
+											win.outputs.transactionFilterSort[index].Layout(win.gtx, win.inputs.transactionFilterSort)
+										})
+								}),
+							)
+						}),
+						layout.Flexed(.5, func() {
+							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
+								layout.Rigid(func() {
+									win.theme.H6("Direction").Layout(win.gtx)
+								}),
+								layout.Rigid(func() {
+									(&layout.List{Axis: layout.Vertical}).
+										Layout(win.gtx, len(win.outputs.transactionFilterDirection), func(index int) {
+											win.outputs.transactionFilterDirection[index].Layout(win.gtx, win.inputs.transactionFilterDirection)
+										})
+								}),
+							)
+						}),
+					)
+				}),
+				layout.Rigid(func() {
+					win.outputs.applyFiltersTransactions.Layout(win.gtx, &win.inputs.applyFiltersTransactions)
+				}),
+			)
+		})
+	})
+}

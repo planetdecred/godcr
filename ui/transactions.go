@@ -23,32 +23,20 @@ func (win *Window) TransactionsPage() {
 	bd := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 			layout.Flexed(pageHeadHeight, func() {
-				layout.Flex{}.Layout(win.gtx,
-					layout.Flexed(1, func() {
-						layout.Inset{Left: unit.Dp(10)}.Layout(win.gtx, func() {
-							layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
-								layout.Rigid(func() {
-									win.combined.transactionSort.Layout(win.gtx, func() {
-									})
-								}),
-								layout.Rigid(func() {
-									win.combined.transactionStatus.Layout(win.gtx, func() {
-									})
-								}),
-							)
-						})
+				layout.Flex{Spacing: layout.SpaceBetween}.Layout(win.gtx,
+					layout.Rigid(func() {
+						win.theme.H3("Transactions").Layout(win.gtx)
 					}),
 					layout.Rigid(func() {
-						layout.Flex{Spacing: layout.SpaceBetween}.Layout(win.gtx,
-							layout.Rigid(func() {
-								win.outputs.toSend.Layout(win.gtx, &win.inputs.toSend)
-							}),
-							layout.Rigid(func() {
-								layout.Inset{Right: unit.Dp(20), Left: unit.Dp(20)}.Layout(win.gtx, func() {
-									win.outputs.toReceive.Layout(win.gtx, &win.inputs.toReceive)
-								})
-							}),
-						)
+						win.outputs.toTransactionsFilters.Layout(win.gtx, &win.inputs.toTransactionsFilters)
+					}),
+					layout.Rigid(func() {
+						win.outputs.toSend.Layout(win.gtx, &win.inputs.toSend)
+					}),
+					layout.Rigid(func() {
+						layout.Inset{Right: unit.Dp(20)}.Layout(win.gtx, func() {
+							win.outputs.toReceive.Layout(win.gtx, &win.inputs.toReceive)
+						})
 					}),
 				)
 			}),
