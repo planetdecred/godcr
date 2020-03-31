@@ -15,7 +15,7 @@ var (
 )
 
 const (
-	pageHeadHeight      = 0.2
+	pageHeadHeight      = .2
 	pageContainerHeight = .8
 )
 
@@ -28,7 +28,7 @@ func (win *Window) TransactionsPage() {
 						win.theme.H3("Transactions").Layout(win.gtx)
 					}),
 					layout.Rigid(func() {
-						win.outputs.toTransactionsFilters.Layout(win.gtx, &win.inputs.toTransactionsFilters)
+						renderFiltererButton(win)
 					}),
 					layout.Rigid(func() {
 						win.outputs.toSend.Layout(win.gtx, &win.inputs.toSend)
@@ -59,6 +59,31 @@ func (win *Window) TransactionsPage() {
 	}
 
 	win.TabbedPage(bd)
+}
+
+func renderFiltererButton(win *Window) {
+	var button decredmaterial.IconButton
+
+	if win.inputs.transactionFilterSort.Value(win.gtx) == "0" {
+		button = win.outputs.toTransactionsFilters.sortNewest
+	} else {
+		button = win.outputs.toTransactionsFilters.sortOldest
+	}
+
+	switch win.inputs.transactionFilterDirection.Value(win.gtx) {
+	case "0":
+		button.Background = win.theme.Color.Primary
+	case "1":
+		button.Background = win.theme.Color.Danger
+	case "2":
+		button.Background = win.theme.Color.Success
+	case "3":
+		button.Background = win.theme.Color.Hint
+	default:
+		button.Background = win.theme.Color.Hint
+	}
+
+	button.Layout(win.gtx, &win.inputs.toTransactionsFilters)
 }
 
 func renderTxsRow(win *Window, transaction *wallet.TransactionInfo) {

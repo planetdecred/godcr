@@ -167,7 +167,7 @@ func (win *Window) transactionsFilters() {
 						layout.Flexed(.5, func() {
 							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 								layout.Rigid(func() {
-									win.theme.H6("Order").Layout(win.gtx)
+									win.theme.H5("Order").Layout(win.gtx)
 								}),
 								layout.Rigid(func() {
 									(&layout.List{Axis: layout.Vertical}).
@@ -180,7 +180,7 @@ func (win *Window) transactionsFilters() {
 						layout.Flexed(.5, func() {
 							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 								layout.Rigid(func() {
-									win.theme.H6("Direction").Layout(win.gtx)
+									win.theme.H5("Direction").Layout(win.gtx)
 								}),
 								layout.Rigid(func() {
 									(&layout.List{Axis: layout.Vertical}).

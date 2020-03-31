@@ -59,7 +59,6 @@ type outputs struct {
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
-	toTransactionsFilters                                                      decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
@@ -81,6 +80,9 @@ type outputs struct {
 	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
 	selectedWalletBalLabel, selectedWalletNameLabel                 decredmaterial.Label
 
+	toTransactionsFilters struct {
+		sortNewest, sortOldest decredmaterial.IconButton
+	}
 	transactionFilterDirection []decredmaterial.RadioButton
 	transactionFilterSort      []decredmaterial.RadioButton
 }
@@ -152,7 +154,8 @@ func (win *Window) initWidgets() {
 	win.outputs.toSettings = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionSettings)))
 	win.outputs.toSend = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSend)))
 	win.outputs.toReceive = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)))
-	win.outputs.toTransactionsFilters = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentFilterList)))
+	win.outputs.toTransactionsFilters.sortNewest = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentFilterList)))
+	win.outputs.toTransactionsFilters.sortOldest = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSort)))
 
 	win.outputs.noWallet = theme.H3("No wallet loaded")
 
