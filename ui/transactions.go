@@ -25,10 +25,9 @@ func (win *Window) TransactionsPage() {
 			layout.Flexed(pageHeadHeight, func() {
 				layout.Flex{Spacing: layout.SpaceBetween}.Layout(win.gtx,
 					layout.Rigid(func() {
-						win.theme.H3("Transactions").Layout(win.gtx)
-					}),
-					layout.Rigid(func() {
-						renderFiltererButton(win)
+						layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
+							renderFiltererButton(win)
+						})
 					}),
 					layout.Rigid(func() {
 						win.outputs.toSend.Layout(win.gtx, &win.inputs.toSend)
