@@ -36,6 +36,7 @@ type Theme struct {
 		Secondary  color.RGBA
 		Text       color.RGBA
 		Hint       color.RGBA
+		Overlay    color.RGBA
 		InvText    color.RGBA
 		Success    color.RGBA
 		Danger     color.RGBA
@@ -61,6 +62,7 @@ func NewTheme() *Theme {
 	t.Color.Text = darkblue
 	t.Color.Hint = rgb(0xbbbbbb)
 	t.Color.InvText = rgb(0xffffff)
+	t.Color.Overlay = rgb(0x000000)
 	t.Color.Background = argb(0x22444444)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
@@ -81,6 +83,18 @@ func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
 	}.Layout(gtx,
 		layout.Expanded(func() {
 			fill(gtx, t.Color.Background)
+		}),
+		layout.Stacked(w),
+	)
+}
+
+func (t *Theme) Faded(gtx *layout.Context, w layout.Widget) {
+	t.Color.Overlay.A = 200
+	layout.Stack{
+		Alignment: layout.Center,
+	}.Layout(gtx,
+		layout.Expanded(func() {
+			fillMax(gtx, t.Color.Overlay)
 		}),
 		layout.Stacked(w),
 	)

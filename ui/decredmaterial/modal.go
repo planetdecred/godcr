@@ -9,6 +9,7 @@ import (
 // The Stacked background is laid out with max Contraints.
 type Modal struct {
 	layout.Direction
+	Overlay bool
 }
 
 // Layout the modal
