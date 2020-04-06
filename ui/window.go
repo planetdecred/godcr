@@ -23,7 +23,6 @@ type Window struct {
 	walletInfo         *wallet.MultiWalletInfo
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions *wallet.Transactions
-	transactionsWallet *wallet.TransactionsWallet
 
 	current layout.Widget
 	dialog  layout.Widget

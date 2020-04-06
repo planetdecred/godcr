@@ -25,6 +25,7 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case *wallet.Transactions:
 		win.walletTransactions = e
+		win.states.fetchingTxs = false
 		return
 	case wallet.CreatedSeed:
 		win.current = win.WalletsPage
@@ -36,10 +37,6 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.DeletedWallet:
 		win.selected = 0
 		win.states.dialog = false
-	case wallet.TransactionsWallet:
-		win.transactionsWallet = &e
-		win.states.fetchingTxs = false
-		return
 	case wallet.AddedAccount:
 		win.states.dialog = false
 	}

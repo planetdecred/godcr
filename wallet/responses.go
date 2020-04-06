@@ -4,23 +4,6 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 )
 
-// TxDirection is direction of a transaction
-type TxDirection int32
-
-const (
-	// TxDirectionInvalid is a transaction invalid
-	TxDirectionInvalid TxDirection = iota - 1
-
-	// TxDirectionSent is a transaction sent
-	TxDirectionSent
-
-	// TxDirectionReceived is a transaction received
-	TxDirectionReceived
-
-	// TxDirectionTransferred is a transaction transfer by yourself
-	TxDirectionTransferred
-)
-
 // Response represents a discriminated union for wallet responses.
 // Either Resp or Err must be nil.
 type Response struct {
@@ -119,22 +102,14 @@ type RecentTransaction struct {
 	WalletName string
 }
 
+// TransactionInfo represents information a transaction
+type TransactionInfo RecentTransaction
+
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
-	Txs    [][]dcrlibwallet.Transaction
+	Txs    map[int][]TransactionInfo
 	Recent []RecentTransaction
 }
-
-// TransactionInfo represents information a transaction
-type TransactionInfo struct {
-	Timestamp int64
-	Status    string
-	Amount    string
-	Direction TxDirection
-}
-
-// TransactionsWallet is sent in response to Wallet.GetTransactionsByWallet
-type TransactionsWallet []TransactionInfo
 
 // SyncStatus is sent when a wallet progress event is triggered.
 type SyncStatus struct {

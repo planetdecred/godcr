@@ -25,12 +25,6 @@ func (win *Window) HandleInputs() {
 			win.selectedAccount = 0
 			win.selected = win.tabs.Selected
 		}
-
-		if !win.states.fetchingTxs {
-			win.states.fetchingTxs = true
-			win.resetTransactionsFilterer()
-			win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0, true)
-		}
 	}
 	if win.combined.sel.Changed() {
 		win.selectedAccount = win.combined.sel.Selected
@@ -197,7 +191,9 @@ func (win *Window) HandleInputs() {
 		if !win.states.fetchingTxs {
 			win.states.fetchingTxs = true
 			win.resetTransactionsFilterer()
-			win.wallet.GetTransactionsByWallet(win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100, 0, true)
+			win.wallet.GetTransactionsByWallet(
+				win.walletInfo.Wallets[win.selected].ID,
+				win.walletTransactions, 0, 100, 0, true)
 		}
 		return
 	}
@@ -218,9 +214,8 @@ func (win *Window) HandleInputs() {
 		}
 
 		win.wallet.GetTransactionsByWallet(
-			win.walletInfo.Wallets[win.tabs.Selected].ID, 0, 100,
-			int32(direction),
-			newestFirst,
+			win.walletInfo.Wallets[win.selected].ID,
+			win.walletTransactions, 0, 100, int32(direction), newestFirst,
 		)
 	}
 

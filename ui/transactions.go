@@ -40,16 +40,18 @@ func (win *Window) TransactionsPage() {
 				)
 			}),
 			layout.Flexed(pageContainerHeight, func() {
-				if win.transactionsWallet == nil || len(*win.transactionsWallet) == 0 {
+				walletID := win.walletInfo.Wallets[win.selected].ID
+				txs := win.walletTransactions.Txs[walletID]
+				if txs == nil || len(txs) == 0 {
 					txt := win.theme.Body1("No transactions")
 					txt.Alignment = text.Middle
 					txt.Layout(win.gtx)
 					return
 				}
 				layout.Inset{Left: unit.Dp(20), Right: unit.Dp(20)}.Layout(win.gtx, func() {
-					txsList.Layout(win.gtx, len(*win.transactionsWallet), func(index int) {
+					txsList.Layout(win.gtx, len(txs), func(index int) {
 						layout.Inset{Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
-							renderTxsRow(win, &(*win.transactionsWallet)[index])
+							renderTxsRow(win, txs[index])
 						})
 					})
 				})
@@ -85,20 +87,20 @@ func renderFiltererButton(win *Window) {
 	button.Layout(win.gtx, &win.inputs.toTransactionsFilters)
 }
 
-func renderTxsRow(win *Window, transaction *wallet.TransactionInfo) {
+func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
 	txWidgets := win.combined.transaction
-	txWidgets.amount = win.theme.Label(unit.Dp(18), transaction.Amount)
+	txWidgets.amount = win.theme.Label(unit.Dp(18), transaction.Balance)
 	txWidgets.time = win.theme.Body1("Pending")
 
-	if transaction.Status == "Confirmed" {
-		txWidgets.time.Text = dcrlibwallet.ExtractDateOrTime(transaction.Timestamp)
+	if transaction.Status == "confirmed" {
+		txWidgets.time.Text = dcrlibwallet.ExtractDateOrTime(transaction.Txn.Timestamp)
 		txWidgets.status, _ = decredmaterial.NewIcon(icons.ActionCheckCircle)
 		txWidgets.status.Color = win.theme.Color.Success
 	} else {
 		txWidgets.status, _ = decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)
 	}
 
-	if transaction.Direction == wallet.TxDirectionSent {
+	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
 		txWidgets.direction, _ = decredmaterial.NewIcon(icons.ContentRemove)
 		txWidgets.direction.Color = win.theme.Color.Danger
 	} else {
