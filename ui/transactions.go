@@ -42,7 +42,7 @@ func (win *Window) TransactionsPage() {
 			layout.Flexed(pageContainerHeight, func() {
 				walletID := win.walletInfo.Wallets[win.selected].ID
 				txs := win.walletTransactions.Txs[walletID]
-				if txs == nil || len(txs) == 0 {
+				if txs == nil {
 					txt := win.theme.Body1("No transactions")
 					txt.Alignment = text.Middle
 					txt.Layout(win.gtx)
