@@ -286,6 +286,9 @@ func (win *Window) HandleInputs() {
 		win.err = "Password changed successfully"
 		win.outputs.err.Color = win.theme.Color.Success
 		win.resetPasswords()
+		time.AfterFunc(time.Second*3, func() {
+			win.err = ""
+		})
 		return
 	}
 
@@ -380,6 +383,7 @@ func (win *Window) HandleInputs() {
 		win.states.dialog = false
 		win.err = ""
 		win.resetVerifyFields()
+		win.resetPasswords()
 		log.Debug("Cancel dialog clicked")
 		return
 	}
@@ -411,13 +415,21 @@ func (win *Window) HandleInputs() {
 		}
 	}
 
-	for win.inputs.receiveIcons.copy.Clicked(win.gtx) {
+	if win.inputs.receiveIcons.copy.Clicked(win.gtx) {
 		clipboard.WriteAll(win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress)
 		win.addressCopiedLabel.Text = "Address Copied"
 		time.AfterFunc(time.Second*3, func() {
 			win.addressCopiedLabel.Text = ""
+			return
 		})
 		return
+	}
+
+	if win.err != "" {
+		time.AfterFunc(time.Second*4, func() {
+			win.err = ""
+			return
+		})
 	}
 }
 
@@ -471,6 +483,8 @@ func (win *Window) resetPasswords() {
 	win.inputs.spendingPassword.SetText("")
 	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
 	win.inputs.matchSpending.SetText("")
+	win.outputs.oldSpendingPassword.HintColor = win.theme.Color.InvText
+	win.inputs.oldSpendingPassword.SetText("")
 }
 
 func (win *Window) resetVerifyFields() {
