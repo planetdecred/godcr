@@ -420,7 +420,6 @@ func (win *Window) HandleInputs() {
 		win.addressCopiedLabel.Text = "Address Copied"
 		time.AfterFunc(time.Second*3, func() {
 			win.addressCopiedLabel.Text = ""
-			return
 		})
 		return
 	}
@@ -428,8 +427,8 @@ func (win *Window) HandleInputs() {
 	if win.err != "" {
 		time.AfterFunc(time.Second*4, func() {
 			win.err = ""
-			return
 		})
+		return
 	}
 }
 
