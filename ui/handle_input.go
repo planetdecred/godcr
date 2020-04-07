@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"strconv"
+	"sort"
 	"strings"
 	"time"
 
@@ -188,13 +188,6 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.toTransactions.Clicked(win.gtx) {
 		win.current = win.TransactionsPage
-		if !win.states.fetchingTxs {
-			win.states.fetchingTxs = true
-			win.resetTransactionsFilterer()
-			win.wallet.GetTransactionsByWallet(
-				win.walletInfo.Wallets[win.selected].ID,
-				win.walletTransactions, 0, 100, 0, true)
-		}
 		return
 	}
 
@@ -205,18 +198,23 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.applyFiltersTransactions.Clicked(win.gtx) {
 		win.states.dialog = false
-		win.states.fetchingTxs = true
-		direction, _ := strconv.Atoi(win.inputs.transactionFilterDirection.Value(win.gtx))
 		newestFirst := true
-
 		if win.inputs.transactionFilterSort.Value(win.gtx) == "1" {
 			newestFirst = false
 		}
 
-		win.wallet.GetTransactionsByWallet(
-			win.walletInfo.Wallets[win.selected].ID,
-			win.walletTransactions, 0, 100, int32(direction), newestFirst,
-		)
+		walletSelected := win.walletInfo.Wallets[win.selected].ID
+		transactions := win.walletTransactions.Txs[walletSelected]
+		sort.SliceStable(transactions, func(i, j int) bool {
+			backTime := time.Unix(transactions[j].Txn.Timestamp, 0)
+			frontTime := time.Unix(transactions[i].Txn.Timestamp, 0)
+			if newestFirst {
+				return backTime.Before(frontTime)
+			}
+			return frontTime.Before(backTime)
+		})
+
+		win.walletTransactions.Txs[walletSelected] = transactions
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {

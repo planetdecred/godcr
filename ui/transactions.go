@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strconv"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -88,6 +90,12 @@ func renderFiltererButton(win *Window) {
 }
 
 func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
+	directionFilter, _ := strconv.Atoi(win.inputs.transactionFilterDirection.Value(win.gtx))
+	if directionFilter != 0 &&
+		transaction.Txn.Direction != int32(directionFilter-1) {
+		return
+	}
+
 	txWidgets := win.combined.transaction
 	txWidgets.amount = win.theme.Label(unit.Dp(18), transaction.Balance)
 	txWidgets.time = win.theme.Body1("Pending")

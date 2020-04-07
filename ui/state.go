@@ -10,7 +10,6 @@ type states struct {
 	loading        bool // true if the window is in the middle of an operation that cannot be stopped
 	dialog         bool // true if the window dialog modal is open
 	renamingWallet bool // true if the wallets-page is renaming a wallet
-	fetchingTxs    bool // true if the transaction-page is fetched transactions
 }
 
 // updateStates changes the wallet state based on the received update
@@ -25,7 +24,6 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case *wallet.Transactions:
 		win.walletTransactions = e
-		win.states.fetchingTxs = false
 		return
 	case wallet.CreatedSeed:
 		win.current = win.WalletsPage
