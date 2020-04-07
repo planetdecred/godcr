@@ -206,39 +206,6 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 	}()
 }
 
-// GetTransactionsByWallet get list of transactions fitting the parameters.
-// It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) GetTransactionsByWallet(
-	walletID int, walletTransactions *Transactions, offset, limit, txfilter int32, newestFirst bool) {
-	go func() {
-		var resp Response
-
-		wall := wal.multi.WalletWithID(walletID)
-		txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, newestFirst)
-		if err != nil {
-			resp.Err = err
-			wal.Send <- resp
-
-			return
-		}
-
-		alltxs := make([]TransactionInfo, len(txs))
-		bestBestBlock := wal.multi.GetBestBlock()
-
-		for i := 0; i < len(txs); i++ {
-			alltxs[i] = TransactionInfo{
-				Txn:     txs[i],
-				Status:  transactionStatus(bestBestBlock.Height, txs[i].BlockHeight),
-				Balance: dcrutil.Amount(txs[i].Amount).String(),
-			}
-		}
-
-		walletTransactions.Txs[walletID] = alltxs
-		resp.Resp = walletTransactions
-		wal.Send <- resp
-	}()
-}
-
 // WalletSyncStatus returns the sync status of a single wallet
 func walletSyncStatus(isWaiting bool, walletBestBlock, bestBlockHeight int32) string {
 	if isWaiting {

@@ -117,6 +117,7 @@ func (win *Window) Loop(shutdown chan int) {
 					win.wallet.GetMultiWalletInfo()
 				}
 			}
+			win.updateSyncProgress(update.BlockConfirmed)
 
 		case e := <-win.window.Events():
 			switch evt := e.(type) {

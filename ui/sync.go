@@ -35,6 +35,8 @@ func (win Window) updateSyncProgress(report interface{}) {
 		status.RemainingTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
 		status.TotalSteps = wallet.TotalSyncSteps
 		status.Steps = wallet.RescanHeadersStep
+	case wallet.TxConfirmed:
+		win.wallet.GetAllTransactions(0, 10, 0)
 	}
 }
 
