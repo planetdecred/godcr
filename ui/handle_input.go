@@ -213,8 +213,6 @@ func (win *Window) HandleInputs() {
 			}
 			return frontTime.Before(backTime)
 		})
-
-		win.walletTransactions.Txs[walletSelected] = transactions
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
