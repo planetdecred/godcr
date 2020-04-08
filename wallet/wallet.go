@@ -49,6 +49,7 @@ func (wal *Wallet) LoadWallets() {
 		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.net)
 		if err != nil {
 			resp.Err = err
+			log.Error("Wallet not loaded. Is another process using the data directory?")
 			wal.Send <- resp
 			return
 		}
@@ -126,5 +127,7 @@ func (wal *Wallet) hdPrefix() string {
 
 // Shutdown shutsdown the multiwallet
 func (wal *Wallet) Shutdown() {
-	wal.multi.Shutdown()
+	if wal.multi != nil {
+		wal.multi.Shutdown()
+	}
 }

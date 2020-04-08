@@ -22,6 +22,12 @@ const (
 )
 
 func (win *Window) TransactionsPage() {
+	if win.walletInfo.LoadedWallets == 0 {
+		win.Page(func() {
+			win.outputs.noWallet.Layout(win.gtx)
+		})
+		return
+	}
 	bd := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 			layout.Flexed(pageHeadHeight, func() {
