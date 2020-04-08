@@ -54,7 +54,12 @@ func main() {
 		confirms = 0
 	}
 
-	wal, _ := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3), confirms)
+	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3), confirms)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
 	wal.LoadWallets()
 
 	var wg sync.WaitGroup

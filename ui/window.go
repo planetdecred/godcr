@@ -8,6 +8,7 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 
+	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 	"github.com/raedahgroup/godcr-gio/wallet"
 )
@@ -71,6 +72,21 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	return win, nil
 }
 
+func (win *Window) unloaded() {
+	lbl := win.theme.H3("Multiwallet not loaded\nIs another instance open?")
+	for {
+		e := <-win.window.Events()
+		switch evt := e.(type) {
+		case system.DestroyEvent:
+			return
+		case system.FrameEvent:
+			win.gtx.Reset(evt.Config, evt.Size)
+			lbl.Layout(win.gtx)
+			evt.Frame(win.gtx.Ops)
+		}
+	}
+}
+
 // Loop runs main event handling and page rendering loop
 func (win *Window) Loop(shutdown chan int) {
 	for {
@@ -79,6 +95,11 @@ func (win *Window) Loop(shutdown chan int) {
 			if e.Err != nil {
 				err := e.Err.Error()
 				log.Error("Wallet Error: " + err)
+				if err == dcrlibwallet.ErrWalletDatabaseInUse {
+					close(shutdown)
+					win.unloaded()
+					return
+				}
 				win.err = err
 				if win.states.loading {
 					log.Warn("Attemping to get multiwallet info")
