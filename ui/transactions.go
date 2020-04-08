@@ -102,7 +102,34 @@ func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
 		return
 	}
 
-	txWidgets := win.combined.transaction
+	cbn := win.combined
+	initTxnWidgets(win, transaction, &cbn)
+	layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+		layout.Rigid(func() {
+			layout.Inset{Left: unit.Dp(5), Top: unit.Dp(3)}.Layout(win.gtx, func() {
+				cbn.transaction.direction.Layout(win.gtx, unit.Dp(16))
+			})
+		}),
+		layout.Flexed(1, func() {
+			layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
+				cbn.transaction.amount.Layout(win.gtx)
+			})
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Left: unit.Dp(10)}.Layout(win.gtx, func() {
+				cbn.transaction.time.Layout(win.gtx)
+			})
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Bottom: unit.Dp(15), Left: unit.Dp(8), Top: unit.Dp(3)}.Layout(win.gtx, func() {
+				cbn.transaction.status.Layout(win.gtx, unit.Dp(16))
+			})
+		}),
+	)
+}
+
+func initTxnWidgets(win *Window, transaction wallet.TransactionInfo, cb *combined) {
+	txWidgets := &cb.transaction
 	txWidgets.amount = win.theme.Label(unit.Dp(18), transaction.Balance)
 	txWidgets.time = win.theme.Body1("Pending")
 
@@ -121,27 +148,4 @@ func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
 		txWidgets.direction, _ = decredmaterial.NewIcon(icons.ContentAdd)
 		txWidgets.direction.Color = win.theme.Color.Success
 	}
-
-	layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
-		layout.Rigid(func() {
-			layout.Inset{Left: unit.Dp(5), Top: unit.Dp(3)}.Layout(win.gtx, func() {
-				txWidgets.direction.Layout(win.gtx, unit.Dp(16))
-			})
-		}),
-		layout.Flexed(1, func() {
-			layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
-				txWidgets.amount.Layout(win.gtx)
-			})
-		}),
-		layout.Rigid(func() {
-			layout.Inset{Left: unit.Dp(10)}.Layout(win.gtx, func() {
-				txWidgets.time.Layout(win.gtx)
-			})
-		}),
-		layout.Rigid(func() {
-			layout.Inset{Bottom: unit.Dp(15), Left: unit.Dp(8), Top: unit.Dp(3)}.Layout(win.gtx, func() {
-				txWidgets.status.Layout(win.gtx, unit.Dp(16))
-			})
-		}),
-	)
 }
