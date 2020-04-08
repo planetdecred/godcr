@@ -12,12 +12,6 @@ import (
 var pageContainer = &layout.List{Axis: layout.Vertical}
 
 func (win *Window) Receive() {
-	if win.walletInfo.LoadedWallets == 0 {
-		win.Page(func() {
-			win.outputs.noWallet.Layout(win.gtx)
-		})
-		return
-	}
 
 	body := func() {
 		layout.Stack{}.Layout(win.gtx,
