@@ -288,6 +288,7 @@ func (win *Window) HandleInputs() {
 		win.resetPasswords()
 		time.AfterFunc(time.Second*3, func() {
 			win.err = ""
+			win.states.dialog = false
 		})
 		return
 	}
