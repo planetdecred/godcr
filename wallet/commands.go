@@ -238,10 +238,15 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			var acctBalance int64
 			accts := make([]Account, 0)
 			for acct := iter.Next(); acct != nil; acct = iter.Next() {
-				addr, er := wall.CurrentAddress(acct.Number)
-				if er != nil && acct.Number != math.MaxInt32 {
-					log.Error("Could not get current address for wallet ", id, "account", acct.Number)
+				var addr string
+				if acct.Number != math.MaxInt32 {
+					var er error
+					addr, er = wall.CurrentAddress(acct.Number)
+					if er != nil {
+						log.Error("Could not get current address for wallet ", id, "account", acct.Number)
+					}
 				}
+
 				accts = append(accts, Account{
 					Number:           acct.Number,
 					Name:             acct.Name,
