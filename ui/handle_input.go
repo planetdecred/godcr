@@ -413,8 +413,3 @@ func (win *Window) KeysEventsHandler(evt *key.Event) {
 		}
 	}
 }
-
-func (win *Window) resetTransactionsFilterer() {
-	win.inputs.transactionFilterDirection.SetValue("0")
-	win.inputs.transactionFilterSort.SetValue("0")
-}
