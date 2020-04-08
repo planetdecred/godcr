@@ -103,7 +103,7 @@ func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
 	}
 
 	cbn := win.combined
-	initTxnWidgets(win, transaction, &cbn)
+	initTxnWidgets(win, &transaction, &cbn)
 	layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
 		layout.Rigid(func() {
 			layout.Inset{Left: unit.Dp(5), Top: unit.Dp(3)}.Layout(win.gtx, func() {
@@ -128,7 +128,7 @@ func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
 	)
 }
 
-func initTxnWidgets(win *Window, transaction wallet.TransactionInfo, cb *combined) {
+func initTxnWidgets(win *Window, transaction *wallet.TransactionInfo, cb *combined) {
 	txWidgets := &cb.transaction
 	txWidgets.amount = win.theme.Label(unit.Dp(18), transaction.Balance)
 	txWidgets.time = win.theme.Body1("Pending")
