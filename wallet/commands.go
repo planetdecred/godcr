@@ -181,9 +181,10 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				})
 
 				transactions[txn.WalletID] = append(transactions[txn.WalletID], TransactionInfo{
-					Txn:     txn,
-					Status:  recentTxs[i].Status,
-					Balance: recentTxs[i].Balance,
+					Txn:        txn,
+					Status:     recentTxs[i].Status,
+					Balance:    recentTxs[i].Balance,
+					WalletName: recentTxs[i].WalletName,
 				})
 			}
 		}
