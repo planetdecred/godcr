@@ -128,6 +128,15 @@ func (win *Window) HandleInputs() {
 		}
 	}
 
+	// VERIFY MESSAGE
+
+	if win.inputs.verifyMessDiag.Clicked(win.gtx) {
+		win.states.dialog = true
+		win.dialog = win.verifyMessageDiag
+		return
+	}
+
+	
 	// DELETE WALLET
 
 	if win.inputs.deleteDiag.Clicked(win.gtx) {

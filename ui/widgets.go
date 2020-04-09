@@ -23,6 +23,8 @@ type inputs struct {
 	toReceive                                                 widget.Button
 	sync, syncHeader                                          widget.Button
 	spendingPassword, matchSpending, rename, dialog           widget.Editor
+	addressInput, messageInput, signInput                          widget.Editor
+	clearBtn, verifyBtn, verifyMessDiag                                        widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -57,9 +59,11 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy decredmaterial.IconButton
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
+	addressInput, messageInput, signInput                          decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
+	clearBtn, verifyBtn, verifyMessDiag                                        decredmaterial.Button
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
@@ -125,6 +129,16 @@ func (win *Window) initWidgets() {
 	win.outputs.matchSpending = theme.Editor("Enter password again")
 	win.inputs.matchSpending.SingleLine = true
 
+	// verify message widgets
+	win.outputs.addressInput = theme.Editor("Address")
+	win.outputs.signInput = theme.Editor("Signature")
+	win.outputs.messageInput = theme.Editor("Message")
+	// win.inputs.messageInput.SingleLine = true
+	win.outputs.verifyBtn = theme.Button("Verify")
+	win.outputs.clearBtn = theme.Button("Clear")
+	win.outputs.verifyMessDiag = theme.Button("Verify Message")
+	
+	//
 	win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
 	win.outputs.createWallet = theme.Button("create")
 

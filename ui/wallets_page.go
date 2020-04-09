@@ -97,6 +97,9 @@ func (win *Window) WalletsPage() {
 					layout.Rigid(func() {
 						win.outputs.deleteDiag.Layout(win.gtx, &win.inputs.deleteDiag)
 					}),
+					layout.Rigid(func() {
+						win.outputs.verifyMessDiag.Layout(win.gtx, &win.inputs.verifyMessDiag)
+					}),
 				)
 			}),
 		)

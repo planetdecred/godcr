@@ -220,3 +220,167 @@ func (win *Window) transactionsFilters() {
 		})
 	})
 }
+
+func (win *Window) verifyMessageDiag() {
+	win.theme.Surface(win.gtx, func() {
+		win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(450))
+		win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
+		layout.UniformInset(unit.Dp(20)).Layout(win.gtx, func() {
+			win.vFlex(
+				rigid(func() {
+					win.hFlex(
+						rigid(func() {
+							win.theme.H5("Verify Wallet Message").Layout(win.gtx)
+						}),
+						layout.Flexed(.7, func() {
+							layout.E.Layout(win.gtx, func() {
+								win.outputs.verifyInfo.Layout(win.gtx, &win.inputs.verifyInfo)
+							})
+						}),
+						layout.Flexed(1, func() {
+							layout.E.Layout(win.gtx, func() {
+								win.outputs.cancelDiag.Padding = unit.Dp(5)
+								win.outputs.cancelDiag.Size = unit.Dp(35)
+								win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
+							})
+						}),
+					)
+				}),
+				rigid(func() {
+					win.Err()
+				}),
+				rigid(func() {
+					win.vFlexSB(
+						rigid(func() {
+							inset := layout.Inset{
+								Top: unit.Dp(10),
+							}
+							inset.Layout(win.gtx, func() {
+								win.vFlexSB(
+									rigid(func() {
+										win.theme.Body1("Enter Address").Layout(win.gtx)
+									}),
+									rigid(func() {
+										win.hFlexSB(
+											rigid(func() {
+												decredmaterial.Card{}.Layout(win.gtx, func() {
+													win.hFlexSB(
+														layout.Flexed(0.9, func() {
+															win.outputs.addressInput.Layout(win.gtx, &win.inputs.addressInput)
+														}),
+													)
+												})
+											}),
+											rigid(func() {
+												inset := layout.Inset{
+													Left:   unit.Dp(10),
+													Bottom: unit.Dp(5),
+												}
+												inset.Layout(win.gtx, func() {
+													if win.inputs.addressInput.Text() == "" {
+														win.outputs.pasteAddr.Layout(win.gtx, &win.inputs.pasteAddr)
+													} else {
+														win.outputs.clearAddr.Layout(win.gtx, &win.inputs.clearAddr)
+													}
+												})
+											}),
+										)
+									}),
+								)
+							})
+						}),
+						rigid(func() {
+							inset := layout.Inset{
+								Top:    unit.Dp(10),
+								Bottom: unit.Dp(10),
+							}
+							inset.Layout(win.gtx, func() {
+								win.vFlexSB(
+									rigid(func() {
+										win.theme.Body1("Enter Signature").Layout(win.gtx)
+									}),
+									rigid(func() {
+										win.hFlexSB(
+											rigid(func() {
+												decredmaterial.Card{}.Layout(win.gtx, func() {
+													win.hFlexSB(
+														layout.Flexed(0.9, func() {
+															win.outputs.signInput.Layout(win.gtx, &win.inputs.signInput)
+														}),
+													)
+												})
+											}),
+											rigid(func() {
+												inset := layout.Inset{
+													Left:   unit.Dp(10),
+													Bottom: unit.Dp(5),
+												}
+												inset.Layout(win.gtx, func() {
+													if win.inputs.signInput.Text() == "" {
+														win.outputs.pasteSign.Layout(win.gtx, &win.inputs.pasteSign)
+													} else {
+														win.outputs.clearSign.Layout(win.gtx, &win.inputs.clearSign)
+													}
+												})
+											}),
+										)
+									}),
+								)
+							})
+						}),
+						rigid(func() {
+							win.theme.Body1("Enter Message").Layout(win.gtx)
+						}),
+						rigid(func() {
+							win.hFlexSB(
+								rigid(func() {
+									decredmaterial.Card{}.Layout(win.gtx, func() {
+										win.hFlexSB(
+											layout.Flexed(0.9, func() {
+												win.outputs.messageInput.Layout(win.gtx, &win.inputs.messageInput)
+											}),
+										)
+									})
+								}),
+								rigid(func() {
+									inset := layout.Inset{
+										Left:   unit.Dp(10),
+										Bottom: unit.Dp(5),
+									}
+									inset.Layout(win.gtx, func() {
+										if win.inputs.messageInput.Text() == "" {
+											win.outputs.pasteMsg.Layout(win.gtx, &win.inputs.pasteMsg)
+										} else {
+											win.outputs.clearMsg.Layout(win.gtx, &win.inputs.clearMsg)
+										}
+									})
+								}),
+							)
+						}),
+						rigid(func() {
+							layout.Flex{}.Layout(win.gtx,
+								layout.Flexed(.6, func() {
+									layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
+										win.outputs.verifyMessage.Layout(win.gtx)
+									})
+								}),
+								layout.Flexed(.4, func() {
+									layout.Flex{}.Layout(win.gtx,
+										layout.Flexed(.5, func() {
+											layout.Inset{Left: unit.Dp(0), Right: unit.Dp(10)}.Layout(win.gtx, func() {
+												win.outputs.clearBtn.Layout(win.gtx, &win.inputs.clearBtn)
+											})
+										}),
+										layout.Flexed(.5, func() {
+											win.outputs.verifyBtn.Layout(win.gtx, &win.inputs.verifyBtn)
+										}),
+									)
+								}),
+							)
+						}),
+					)
+				}),
+			)
+		})
+	})
+}
