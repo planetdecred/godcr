@@ -51,7 +51,7 @@ func (win *Window) TransactionsPage() {
 				walletID := win.walletInfo.Wallets[win.selected].ID
 				walTxs := win.walletTransactions.Txs[walletID]
 
-				if walTxs == nil {
+				if len(walTxs) == 0 {
 					txt := win.theme.Body1("No transactions")
 					txt.Alignment = text.Middle
 					txt.Layout(win.gtx)
