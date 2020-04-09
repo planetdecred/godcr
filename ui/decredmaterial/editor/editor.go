@@ -7,6 +7,7 @@ import (
 	"image"
 	"log"
 	"math"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -176,8 +177,13 @@ func (e *Editor) processKey(gtx *layout.Context) {
 			}
 
 			// process paste event
-			if ke.Modifiers == key.ModCtrl && ke.Name == keyV {
-				e.pasteFromClipboard()
+			if ke.Name == keyV {
+				if ke.Modifiers == key.ModCommand && runtime.GOOS == "darwin" {
+					e.pasteFromClipboard()
+				} else if ke.Modifiers == key.ModCtrl {
+					e.pasteFromClipboard()
+				}
+
 				return
 			}
 
