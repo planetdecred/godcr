@@ -49,13 +49,25 @@ func (win *Window) TransactionsPage() {
 			}),
 			layout.Flexed(pageContainerHeight, func() {
 				walletID := win.walletInfo.Wallets[win.selected].ID
-				txs := win.walletTransactions.Txs[walletID]
-				if txs == nil {
+				walTxs := win.walletTransactions.Txs[walletID]
+
+				if walTxs == nil {
 					txt := win.theme.Body1("No transactions")
 					txt.Alignment = text.Middle
 					txt.Layout(win.gtx)
 					return
 				}
+
+				var txs []wallet.TransactionInfo
+				directionFilter, _ := strconv.Atoi(win.inputs.transactionFilterDirection.Value(win.gtx))
+
+				for _, txn := range walTxs {
+					if directionFilter != 0 && txn.Txn.Direction != int32(directionFilter-1) {
+						continue
+					}
+					txs = append(txs, txn)
+				}
+
 				layout.Inset{Left: unit.Dp(20), Right: unit.Dp(20)}.Layout(win.gtx, func() {
 					txsList.Layout(win.gtx, len(txs), func(index int) {
 						layout.Inset{Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
@@ -96,12 +108,6 @@ func renderFiltererButton(win *Window) {
 }
 
 func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
-	directionFilter, _ := strconv.Atoi(win.inputs.transactionFilterDirection.Value(win.gtx))
-	if directionFilter != 0 &&
-		transaction.Txn.Direction != int32(directionFilter-1) {
-		return
-	}
-
 	cbn := win.combined
 	initTxnWidgets(win, &transaction, &cbn)
 	layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
