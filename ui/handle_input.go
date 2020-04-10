@@ -136,7 +136,14 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	
+	if win.inputs.addressInput.Text() == "" || win.inputs.signInput.Text() == "" || win.inputs.messageInput.Text() == "" {
+		win.outputs.verifyBtn.Background = win.theme.Color.Hint
+		win.outputs.clearBtn.Color = win.theme.Color.Hint
+	} else {
+		win.outputs.verifyBtn.Background = win.theme.Color.Primary
+		win.outputs.clearBtn.Color = win.theme.Color.Primary
+	}
+
 	// DELETE WALLET
 
 	if win.inputs.deleteDiag.Clicked(win.gtx) {
@@ -295,6 +302,14 @@ func (win *Window) validatePassword() string {
 	}
 	return pass
 }
+
+// func (win *Window) valMsgAddr() string {
+// 	win.inputs.addressInput.Text() == "" || win.inputs.signInput.Text() == "" || win.inputs.messageInput.Text() == ""
+// 	if pass == "" {
+// 		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
+// 	}
+// 	return pass
+// }
 
 func (win *Window) resetPasswords() {
 	win.outputs.spendingPassword.HintColor = win.theme.Color.InvText

@@ -12,19 +12,20 @@ import (
 )
 
 type inputs struct {
-	createDiag, deleteDiag, cancelDialog                      widget.Button
-	restoreDiag, addAcctDiag                                  widget.Button
-	createWallet, restoreWallet, deleteWallet, renameWallet   widget.Button
-	addAccount, toggleWalletRename                            widget.Button
-	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
-	toRestoreWallet                                           widget.Button
+	createDiag, deleteDiag, cancelDialog                           widget.Button
+	restoreDiag, addAcctDiag                                       widget.Button
+	createWallet, restoreWallet, deleteWallet, renameWallet        widget.Button
+	addAccount, toggleWalletRename                                 widget.Button
+	toOverview, toWallets, toTransactions, toSend, toSettings      widget.Button
+	toRestoreWallet                                                widget.Button
+	toReceive                                                      widget.Button
 	toTransactionsFilters                                     widget.Button
 	applyFiltersTransactions                                  widget.Button
-	toReceive                                                 widget.Button
-	sync, syncHeader, pasteAddr, pasteMsg, pasteSign                                          widget.Button
-	spendingPassword, matchSpending, rename, dialog           widget.Editor
+	sync, syncHeader                                               widget.Button
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
+	spendingPassword, matchSpending, rename, dialog                widget.Editor
 	addressInput, messageInput, signInput                          widget.Editor
-	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                                        widget.Button
+	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -56,11 +57,11 @@ type outputs struct {
 		create, clear, done *decredmaterial.Icon
 	}
 	icons struct {
-		add, check, cancel, sync, info, more, copy, verifyInfo decredmaterial.IconButton
-		pasteAddr, pasteMsg, pasteSign decredmaterial.IconButton
+		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
+		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
 	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
-	addressInput, messageInput, signInput                          decredmaterial.Editor
+	addressInput, messageInput, signInput                                      decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
@@ -71,8 +72,9 @@ type outputs struct {
 	sync, moreDiag                                                                decredmaterial.Button
 	applyFiltersTransactions                                                      decredmaterial.Button
 
-	addAccount, newAddressDiag decredmaterial.Button
-	info, more, copy, verifyInfo, pasteAddr, pasteMsg, pasteSign          decredmaterial.IconButton
+	addAccount, newAddressDiag                                     decredmaterial.Button
+	info, more, copy, verifyInfo                                   decredmaterial.IconButton
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 
 	tabs                                               []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label
@@ -142,6 +144,22 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.pasteSign.Size = unit.Dp(30)
 	win.outputs.icons.pasteSign.Background = theme.Color.Background
 	win.outputs.icons.pasteSign.Color = theme.Color.Text
+	win.outputs.icons.clearSign = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
+	win.outputs.icons.clearSign.Padding = unit.Dp(5)
+	win.outputs.icons.clearSign.Size = unit.Dp(30)
+	win.outputs.icons.clearSign.Background = theme.Color.Background
+	win.outputs.icons.clearSign.Color = theme.Color.Text
+	win.outputs.icons.clearAddr = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
+	win.outputs.icons.clearAddr.Padding = unit.Dp(5)
+	win.outputs.icons.clearAddr.Size = unit.Dp(30)
+	win.outputs.icons.clearAddr.Background = theme.Color.Background
+	win.outputs.icons.clearAddr.Color = theme.Color.Text
+	win.outputs.icons.clearMsg = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
+	win.outputs.icons.clearMsg.Padding = unit.Dp(5)
+	win.outputs.icons.clearMsg.Size = unit.Dp(30)
+	win.outputs.icons.clearMsg.Background = theme.Color.Background
+	win.outputs.icons.clearMsg.Color = theme.Color.Text
+
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
 
@@ -153,9 +171,13 @@ func (win *Window) initWidgets() {
 	win.outputs.signInput = theme.Editor("Signature")
 	win.outputs.messageInput = theme.Editor("Message")
 	win.outputs.verifyBtn = theme.Button("Verify")
+	win.outputs.verifyBtn.TextSize = unit.Dp(12)
 	win.outputs.clearBtn = theme.Button("Clear")
+	win.outputs.clearBtn.Background = win.theme.Color.Transparent
+	win.outputs.clearBtn.TextSize = unit.Dp(12)
+
 	win.outputs.verifyMessDiag = theme.Button("Verify Message")
-	
+
 	//
 	win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
 	win.outputs.createWallet = theme.Button("create")
@@ -209,6 +231,9 @@ func (win *Window) initWidgets() {
 	win.outputs.pasteAddr = win.outputs.icons.pasteAddr
 	win.outputs.pasteMsg = win.outputs.icons.pasteMsg
 	win.outputs.pasteSign = win.outputs.icons.pasteSign
+	win.outputs.clearAddr = win.outputs.icons.clearAddr
+	win.outputs.clearMsg = win.outputs.icons.clearMsg
+	win.outputs.clearSign = win.outputs.icons.clearSign
 	win.outputs.verifyInfo = win.outputs.icons.verifyInfo
 
 	for i := 0; i <= 32; i++ {

@@ -32,15 +32,16 @@ var (
 type Theme struct {
 	Shaper text.Shaper
 	Color  struct {
-		Primary    color.RGBA
-		Secondary  color.RGBA
-		Text       color.RGBA
-		Hint       color.RGBA
-		InvText    color.RGBA
-		Success    color.RGBA
-		Danger     color.RGBA
-		Background color.RGBA
-		Surface    color.RGBA
+		Primary     color.RGBA
+		Secondary   color.RGBA
+		Text        color.RGBA
+		Hint        color.RGBA
+		InvText     color.RGBA
+		Success     color.RGBA
+		Danger      color.RGBA
+		Background  color.RGBA
+		Transparent color.RGBA
+		Surface     color.RGBA
 	}
 	Icon struct {
 		ContentCreate *Icon
@@ -62,6 +63,7 @@ func NewTheme() *Theme {
 	t.Color.Hint = rgb(0xbbbbbb)
 	t.Color.InvText = rgb(0xffffff)
 	t.Color.Background = argb(0x22444444)
+	t.Color.Transparent = argb(0x111111)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xff0000)
