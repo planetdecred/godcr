@@ -172,20 +172,22 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			var recentRaw []dcrlibwallet.Transaction
 			recentRaw = append(recentRaw, tx...)
 
-			for i, txn := range recentRaw {
-				recentTxs = append(recentTxs, RecentTransaction{
+			for _, txn := range recentRaw {
+				recent := RecentTransaction{
 					Txn:        txn,
 					Status:     transactionStatus(bestBestBlock.Height, txn.BlockHeight),
 					Balance:    dcrutil.Amount(txn.Amount).String(),
 					WalletName: wallets[txn.WalletID].Name,
-				})
-
-				transactions[txn.WalletID] = append(transactions[txn.WalletID], TransactionInfo{
+				}
+				info := TransactionInfo{
 					Txn:        txn,
-					Status:     recentTxs[i].Status,
-					Balance:    recentTxs[i].Balance,
-					WalletName: recentTxs[i].WalletName,
-				})
+					Status:     recent.Status,
+					Balance:    recent.Balance,
+					WalletName: recent.WalletName,
+				}
+
+				recentTxs = append(recentTxs, recent)
+				transactions[txn.WalletID] = append(transactions[txn.WalletID], info)
 			}
 		}
 		sort.SliceStable(recentTxs, func(i, j int) bool {
