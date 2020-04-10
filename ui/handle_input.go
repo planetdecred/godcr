@@ -24,6 +24,7 @@ func (win *Window) HandleInputs() {
 			win.combined.sel.Selected = 0
 			win.selectedAccount = 0
 			win.selected = win.tabs.Selected
+			win.sortTransactions()
 		}
 	}
 	if win.combined.sel.Changed() {
@@ -198,21 +199,7 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.applyFiltersTransactions.Clicked(win.gtx) {
 		win.states.dialog = false
-		newestFirst := true
-		if win.inputs.transactionFilterSort.Value(win.gtx) == "1" {
-			newestFirst = false
-		}
-
-		walletSelected := win.walletInfo.Wallets[win.selected].ID
-		transactions := win.walletTransactions.Txs[walletSelected]
-		sort.SliceStable(transactions, func(i, j int) bool {
-			backTime := time.Unix(transactions[j].Txn.Timestamp, 0)
-			frontTime := time.Unix(transactions[i].Txn.Timestamp, 0)
-			if newestFirst {
-				return backTime.Before(frontTime)
-			}
-			return frontTime.Before(backTime)
-		})
+		win.sortTransactions()
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
@@ -412,4 +399,22 @@ func (win *Window) KeysEventsHandler(evt *key.Event) {
 			}
 		}
 	}
+}
+
+func (win *Window) sortTransactions() {
+	newestFirst := true
+	if win.inputs.transactionFilterSort.Value(win.gtx) == "1" {
+		newestFirst = false
+	}
+
+	walletSelected := win.walletInfo.Wallets[win.selected].ID
+	transactions := win.walletTransactions.Txs[walletSelected]
+	sort.SliceStable(transactions, func(i, j int) bool {
+		backTime := time.Unix(transactions[j].Txn.Timestamp, 0)
+		frontTime := time.Unix(transactions[i].Txn.Timestamp, 0)
+		if newestFirst {
+			return backTime.Before(frontTime)
+		}
+		return frontTime.Before(backTime)
+	})
 }
