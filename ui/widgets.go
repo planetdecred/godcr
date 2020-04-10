@@ -208,7 +208,7 @@ func (win *Window) initWidgets() {
 	win.outputs.newAddressDiag = theme.Button("Generate new address")
 
 	win.outputs.changePasswordDiag = theme.Button("Change Password")
-	win.outputs.savePassword = theme.Button("Save Password")
+	win.outputs.savePassword = theme.Button("Change")
 
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
 

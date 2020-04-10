@@ -286,8 +286,7 @@ func (win *Window) HandleInputs() {
 		win.err = "Password changed successfully"
 		win.outputs.err.Color = win.theme.Color.Success
 		win.resetPasswords()
-		time.AfterFunc(time.Second*3, func() {
-			win.err = ""
+		time.AfterFunc(time.Second*2, func() {
 			win.states.dialog = false
 		})
 		return
@@ -426,7 +425,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.err != "" {
-		time.AfterFunc(time.Second*4, func() {
+		time.AfterFunc(time.Second*3, func() {
 			win.err = ""
 		})
 		return
@@ -447,8 +446,6 @@ func (win *Window) validatePasswords() string {
 	}
 
 	if match != pass {
-		win.outputs.spendingPassword.Color = win.theme.Color.Danger
-		win.outputs.matchSpending.Color = win.theme.Color.Danger
 		win.err = "Wallet passwords does no match. Try again."
 		return ""
 	}
