@@ -12,8 +12,9 @@ type Modal struct {
 }
 
 // Layout the modal
-func (m Modal) Layout(gtx *layout.Context, w layout.Widget) {
+func (m Modal) Layout(gtx *layout.Context, background, dialog layout.Widget) {
 	layout.Stack{Alignment: m.Direction}.Layout(gtx,
+		layout.Stacked(background),
 		layout.Expanded(func() {
 			fill(gtx, argb(0x22444444))
 		}),
@@ -22,6 +23,6 @@ func (m Modal) Layout(gtx *layout.Context, w layout.Widget) {
 			gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
 			new(widget.Button).Layout(gtx)
 		}),
-		layout.Stacked(w),
+		layout.Stacked(dialog),
 	)
 }
