@@ -495,7 +495,7 @@ func (win *Window) editPasswordDiag() {
 								}),
 								rigid(func() {
 									layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(15)}.Layout(win.gtx, func() {
-										win.gtx.Constraints.Width.Min = syncButtonWidth
+										// win.gtx.Constraints.Width.Min = syncButtonWidth
 										win.gtx.Constraints.Height.Max = syncButtonHeight
 										win.outputs.savePassword.Layout(win.gtx, &win.inputs.savePassword)
 									})

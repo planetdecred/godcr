@@ -262,7 +262,6 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.savePassword.Clicked(win.gtx) {
-		win.outputs.err.Color = win.theme.Color.Danger
 		op := win.validateOldPassword()
 		if op == "" {
 			return
@@ -285,9 +284,12 @@ func (win *Window) HandleInputs() {
 
 		win.err = "Password changed successfully"
 		win.outputs.err.Color = win.theme.Color.Success
+		win.outputs.savePassword.Text = "Changed"
+		win.outputs.savePassword.Background = win.theme.Color.Success
 		win.resetPasswords()
 		time.AfterFunc(time.Second*2, func() {
 			win.states.dialog = false
+			win.resetButton()
 		})
 		return
 	}
@@ -427,6 +429,7 @@ func (win *Window) HandleInputs() {
 	if win.err != "" {
 		time.AfterFunc(time.Second*3, func() {
 			win.err = ""
+			win.outputs.err.Color = win.theme.Color.Danger
 		})
 		return
 	}
@@ -489,6 +492,10 @@ func (win *Window) resetVerifyFields() {
 	win.inputs.signInput.SetText("")
 	win.inputs.messageInput.SetText("")
 	win.outputs.verifyMessage.Text = ""
+
+func (win *Window) resetButton() {
+	win.outputs.savePassword.Text = "Change"
+	win.outputs.savePassword.Background = win.theme.Color.Primary
 }
 
 func (win *Window) validateSeeds() string {

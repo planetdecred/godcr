@@ -209,6 +209,7 @@ func (win *Window) initWidgets() {
 
 	win.outputs.changePasswordDiag = theme.Button("Change Password")
 	win.outputs.savePassword = theme.Button("Change")
+	win.outputs.savePassword.TextSize = unit.Dp(11)
 
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
 
