@@ -262,7 +262,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.savePassword.Clicked(win.gtx) {
-		op := win.validateOldPassword()
+		op := win.valOldAndNewPasswords()
 		if op == "" {
 			return
 		}
@@ -449,11 +449,32 @@ func (win *Window) validatePasswords() string {
 	}
 
 	if match != pass {
-		win.err = "Wallet passwords does no match. Try again."
+		win.err = "New wallet passwords does no match. Try again."
 		return ""
 	}
 
 	return pass
+}
+
+func (win *Window) valOldAndNewPasswords() string {
+	op := win.inputs.oldSpendingPassword.Text()
+	if op == "" {
+		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
+		win.err = "Old Wallet password required and cannot be empty"
+		return ""
+	}
+
+	np := win.validatePassword()
+	if np == "" {
+		return ""
+	}
+
+	if op == np {
+		win.err = "The old and new wallet passwords cannot be the same."
+		return ""
+	}
+
+	return op
 }
 
 func (win *Window) validatePassword() string {

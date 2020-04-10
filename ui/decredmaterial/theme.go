@@ -88,18 +88,6 @@ func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
 	)
 }
 
-func (t *Theme) Faded(gtx *layout.Context, w layout.Widget) {
-	t.Color.Overlay.A = 200
-	layout.Stack{
-		Alignment: layout.Center,
-	}.Layout(gtx,
-		layout.Expanded(func() {
-			fillMax(gtx, t.Color.Overlay)
-		}),
-		layout.Stacked(w),
-	)
-}
-
 func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.Center,
