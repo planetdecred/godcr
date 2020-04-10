@@ -91,7 +91,7 @@ func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 		Alignment: layout.Center,
 	}.Layout(gtx,
 		layout.Expanded(func() {
-			fillMax(gtx, t.Color.Surface)
+			fill(gtx, t.Color.Surface)
 		}),
 		layout.Stacked(w),
 	)

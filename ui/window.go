@@ -108,7 +108,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.window.Invalidate()
 				break
 			}
-			log.Debugf("Updating with %+v", e.Resp)
+			//log.Debugf("Updating with %+v", e.Resp)
 			win.updateStates(e.Resp)
 
 		case update := <-win.wallet.Sync:
@@ -148,12 +148,13 @@ func (win *Window) Loop(shutdown chan int) {
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
 				s := win.states
-				win.theme.Background(win.gtx, win.current)
 
 				if s.loading {
 					win.Loading()
 				} else if s.dialog {
-					decredmaterial.Modal{}.Layout(win.gtx, win.dialog)
+					decredmaterial.Modal{Direction: layout.Center}.Layout(win.gtx, func() { win.theme.Background(win.gtx, win.current) }, win.dialog)
+				} else {
+					win.theme.Background(win.gtx, win.current)
 				}
 
 				win.HandleInputs()
