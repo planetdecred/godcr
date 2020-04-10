@@ -40,7 +40,7 @@ func (win *Window) updateStates(update interface{}) {
 	}
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
-	win.wallet.GetAllTransactions(0, 10, 0)
+	win.wallet.GetAllTransactions(0, 50, 0)
 
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }
