@@ -16,7 +16,7 @@ func (m Modal) Layout(gtx *layout.Context, background, dialog layout.Widget) {
 	layout.Stack{Alignment: m.Direction}.Layout(gtx,
 		layout.Stacked(background),
 		layout.Expanded(func() {
-			fill(gtx, argb(0x22444444))
+			fill(gtx, argb(0x7F444444))
 		}),
 		layout.Stacked(func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
