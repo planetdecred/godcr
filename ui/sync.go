@@ -36,7 +36,7 @@ func (win Window) updateSyncProgress(report interface{}) {
 		status.TotalSteps = wallet.TotalSyncSteps
 		status.Steps = wallet.RescanHeadersStep
 	case wallet.TxConfirmed:
-		win.wallet.GetAllTransactions(0, 50, 0)
+		win.wallet.GetAllTransactions(0, 0, 0)
 	}
 }
 
