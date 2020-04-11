@@ -157,12 +157,12 @@ func (win *Window) HandleInputs() {
 				return
 			}
 
-			v, err := win.wallet.VerifyMessage(addr, msg, sign)
+			valid, err := win.wallet.VerifyMessage(addr, msg, sign)
 			if err != nil {
 				win.err = err.Error()
 				return
 			}
-			if v == false {
+			if !valid  {
 				win.outputs.verifyMessage.Text = "Invalid Signature"
 				return
 			}
