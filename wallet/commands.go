@@ -343,6 +343,18 @@ func (wal *Wallet) IsAddressValid(address string) (bool, error) {
 	return wall.IsAddressValid(address), nil
 }
 
+// VerifyNessage checks if the given address is valid for the multiwallet network
+func (wal *Wallet) VerifyMessage(address string, message string, signature string) (bool, error) {
+	wall := wal.multi.FirstOrDefaultWallet()
+	if wall == nil {
+		return false, InternalWalletError{
+			Message: "No wallet loaded",
+		}
+	}
+
+	return wall.VerifyMessage(address, message, signature)
+}
+
 // StartSync starts the multiwallet SPV sync
 func (wal *Wallet) StartSync() error {
 	return wal.multi.SpvSync()

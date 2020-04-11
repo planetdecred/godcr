@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
+	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
 )
 
 func (win *Window) CreateDiag() {
@@ -221,7 +222,7 @@ func (win *Window) transactionsFilters() {
 	})
 }
 
-func (win *Window) verifyMessageDiag() {
+ffunc (win *Window) verifyMessageDiag() {
 	win.theme.Surface(win.gtx, func() {
 		win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(450))
 		win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min

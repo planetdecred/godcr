@@ -77,7 +77,7 @@ type outputs struct {
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 
 	tabs                                               []decredmaterial.TabItem
-	notImplemented, noWallet, pageTitle, pageInfo, err decredmaterial.Label
+	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -171,10 +171,11 @@ func (win *Window) initWidgets() {
 	win.outputs.signInput = theme.Editor("Signature")
 	win.outputs.messageInput = theme.Editor("Message")
 	win.outputs.verifyBtn = theme.Button("Verify")
-	win.outputs.verifyBtn.TextSize = unit.Dp(12)
+	win.outputs.verifyBtn.TextSize = unit.Dp(13)
 	win.outputs.clearBtn = theme.Button("Clear")
 	win.outputs.clearBtn.Background = win.theme.Color.Transparent
-	win.outputs.clearBtn.TextSize = unit.Dp(12)
+	win.outputs.clearBtn.Color = win.theme.Color.Primary
+	win.outputs.clearBtn.TextSize = unit.Dp(13)
 
 	win.outputs.verifyMessDiag = theme.Button("Verify Message")
 
@@ -221,6 +222,7 @@ func (win *Window) initWidgets() {
 
 	win.outputs.err = theme.Caption("")
 	win.outputs.err.Color = theme.Color.Danger
+	win.outputs.verifyMessage = win.theme.H6("")
 	win.outputs.sync = theme.Button("Reconnect")
 	win.outputs.syncHeader = win.outputs.icons.sync
 	win.outputs.moreDiag = theme.Button("more")

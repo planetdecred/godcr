@@ -138,12 +138,46 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.addressInput.Text() == "" || win.inputs.signInput.Text() == "" || win.inputs.messageInput.Text() == "" {
 		win.outputs.verifyBtn.Background = win.theme.Color.Hint
-		win.outputs.clearBtn.Color = win.theme.Color.Hint
+		if win.inputs.verifyBtn.Clicked(win.gtx) {
+			return
+		}
 	} else {
 		win.outputs.verifyBtn.Background = win.theme.Color.Primary
-		win.outputs.clearBtn.Color = win.theme.Color.Primary
+		if win.inputs.verifyBtn.Clicked(win.gtx) {
+			addr := win.inputs.addressInput.Text()
+			valid, err := win.wallet.IsAddressValid(addr)
+			if err != nil {
+				win.err = err.Error()
+				return
+			}
+			if valid == false {
+				win.err = "address is not valid"
+			}
+
+			sign := win.inputs.signInput.Text()
+			if sign == "" {
+				return
+			}
+			msg := win.inputs.messageInput.Text()
+			if msg == "" {
+				return
+			}
+
+			v, err := win.wallet.VerifyMessage(addr, msg, sign)
+			if err != nil {
+				win.err = err.Error()
+				return
+			}
+			if v == false {
+				win.outputs.verifyMessage.Text = "Invalid Signature"
+				return
+			}
+
+			win.outputs.verifyMessage.Text = "Valid Signature"
+		}
 	}
 
+	
 	// DELETE WALLET
 
 	if win.inputs.deleteDiag.Clicked(win.gtx) {

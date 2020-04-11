@@ -41,6 +41,7 @@ type Theme struct {
 		Danger      color.RGBA
 		Background  color.RGBA
 		Transparent color.RGBA
+		Transparent2 color.RGBA
 		Surface     color.RGBA
 	}
 	Icon struct {
@@ -64,6 +65,7 @@ func NewTheme() *Theme {
 	t.Color.InvText = rgb(0xffffff)
 	t.Color.Background = argb(0x22444444)
 	t.Color.Transparent = argb(0x111111)
+	t.Color.Transparent2 = rgb(0xf2f2f2)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xff0000)
@@ -94,6 +96,17 @@ func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 	}.Layout(gtx,
 		layout.Expanded(func() {
 			fill(gtx, t.Color.Surface)
+		}),
+		layout.Stacked(w),
+	)
+}
+
+func (t *Theme) Surface2(gtx *layout.Context, w layout.Widget) {
+	layout.Stack{
+		Alignment: layout.Center,
+	}.Layout(gtx,
+		layout.Expanded(func() {
+			fill(gtx, t.Color.Transparent2)
 		}),
 		layout.Stacked(w),
 	)
