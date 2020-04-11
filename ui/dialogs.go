@@ -159,6 +159,7 @@ func (win *Window) infoDiag() {
 	})
 }
 
+<<<<<<< HEAD
 func (win *Window) transactionsFilters() {
 	w := win.gtx.Constraints.Width.Max / 2
 	win.theme.Surface(win.gtx, func() {
@@ -222,7 +223,7 @@ func (win *Window) transactionsFilters() {
 	})
 }
 
-ffunc (win *Window) verifyMessageDiag() {
+func (win *Window) verifyMessageDiag() {
 	win.theme.Surface(win.gtx, func() {
 		win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(450))
 		win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min

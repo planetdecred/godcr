@@ -145,15 +145,9 @@ func (win *Window) HandleInputs() {
 		win.outputs.verifyBtn.Background = win.theme.Color.Primary
 		if win.inputs.verifyBtn.Clicked(win.gtx) {
 			addr := win.inputs.addressInput.Text()
-			valid, err := win.wallet.IsAddressValid(addr)
-			if err != nil {
-				win.err = err.Error()
+			if addr == "" {
 				return
 			}
-			if valid == false {
-				win.err = "address is not valid"
-			}
-
 			sign := win.inputs.signInput.Text()
 			if sign == "" {
 				return
@@ -177,7 +171,44 @@ func (win *Window) HandleInputs() {
 		}
 	}
 
-	
+	data, err := clipboard.ReadAll()
+	if err != nil {
+		win.err = err.Error()
+	}
+
+	//signature control
+	if win.inputs.clearSign.Clicked(win.gtx) {
+		win.inputs.signInput.SetText("")
+		return
+	}
+	if win.inputs.pasteSign.Clicked(win.gtx) {
+		win.inputs.signInput.SetText(data)
+		return
+	}
+	//address control
+	if win.inputs.clearAddr.Clicked(win.gtx) {
+		win.inputs.addressInput.SetText("")
+		return
+	}
+	if win.inputs.pasteAddr.Clicked(win.gtx) {
+		win.inputs.addressInput.SetText(data)
+		return
+	}
+	//mesage control
+	if win.inputs.clearMsg.Clicked(win.gtx) {
+		win.inputs.messageInput.SetText("")
+		return
+	}
+	if win.inputs.pasteMsg.Clicked(win.gtx) {
+		win.inputs.messageInput.SetText(data)
+		return
+	}
+
+	if win.inputs.clearBtn.Clicked(win.gtx) {
+		win.resetVerifyFields()
+		return
+	}
+
 	// DELETE WALLET
 
 	if win.inputs.deleteDiag.Clicked(win.gtx) {
@@ -267,6 +298,7 @@ func (win *Window) HandleInputs() {
 	if win.inputs.cancelDialog.Clicked(win.gtx) {
 		win.states.dialog = false
 		win.err = ""
+		win.resetVerifyFields()
 		log.Debug("Cancel dialog clicked")
 		return
 	}
@@ -350,6 +382,12 @@ func (win *Window) resetPasswords() {
 	win.inputs.spendingPassword.SetText("")
 	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
 	win.inputs.matchSpending.SetText("")
+}
+
+func (win *Window) resetVerifyFields() {
+	win.inputs.addressInput.SetText("")
+	win.inputs.signInput.SetText("")
+	win.inputs.messageInput.SetText("")
 }
 
 func (win *Window) validateSeeds() string {
