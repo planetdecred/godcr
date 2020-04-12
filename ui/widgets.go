@@ -11,6 +11,13 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
+var msg = `After you or your counterparty has genrated a signature, you can use this 
+form to verify the signature. 
+
+Once you have entered the address, the message and the corresponding 
+signature, you will see VALID if the signature appropraitely matches 
+the address and message otherwise INVALID.`
+
 type inputs struct {
 	createDiag, deleteDiag, cancelDialog                           widget.Button
 	restoreDiag, addAcctDiag                                       widget.Button
@@ -21,7 +28,7 @@ type inputs struct {
 	toReceive                                                      widget.Button
 	toTransactionsFilters                                     widget.Button
 	applyFiltersTransactions                                  widget.Button
-	sync, syncHeader                                               widget.Button
+	sync, syncHeader, vMsgInfoBtn                                  widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
 	spendingPassword, matchSpending, rename, dialog                widget.Editor
 	addressInput, messageInput, signInput                          widget.Editor
@@ -69,15 +76,15 @@ type outputs struct {
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
-	sync, moreDiag                                                                decredmaterial.Button
 	applyFiltersTransactions                                                      decredmaterial.Button
+	sync, moreDiag, vMsgInfoBtn                                                   decredmaterial.Button
 
 	addAccount, newAddressDiag                                     decredmaterial.Button
 	info, more, copy, verifyInfo                                   decredmaterial.IconButton
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 
-	tabs                                                              []decredmaterial.TabItem
-	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
+	tabs                                                                        []decredmaterial.TabItem
+	notImplemented, noWallet, pageTitle, pageInfo, vMsgInfo, verifyMessage, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -172,7 +179,7 @@ func (win *Window) initWidgets() {
 	win.outputs.messageInput = theme.Editor("Message")
 	win.outputs.verifyBtn = theme.Button("Verify")
 	win.outputs.verifyBtn.TextSize = unit.Dp(13)
-	win.outputs.clearBtn = theme.Button("Clear")
+	win.outputs.clearBtn = theme.Button("Clear All")
 	win.outputs.clearBtn.Background = win.theme.Color.Transparent
 	win.outputs.clearBtn.Color = win.theme.Color.Primary
 	win.outputs.clearBtn.TextSize = unit.Dp(13)
@@ -199,7 +206,9 @@ func (win *Window) initWidgets() {
 	win.outputs.newAddressDiag = theme.Button("Generate new address")
 
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
+
 	win.outputs.pageInfo = theme.Body1("Each time you request a payment, a \nnew address is created to protect \nyour privacy.")
+	win.outputs.vMsgInfo = theme.Body1(msg)
 
 	win.outputs.selectedAccountNameLabel = win.theme.H6("")
 	win.outputs.selectedWalletNameLabel = win.theme.Body2("")
@@ -226,6 +235,7 @@ func (win *Window) initWidgets() {
 	win.outputs.sync = theme.Button("Reconnect")
 	win.outputs.syncHeader = win.outputs.icons.sync
 	win.outputs.moreDiag = theme.Button("more")
+	win.outputs.vMsgInfoBtn = theme.Button("Got it")
 
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info

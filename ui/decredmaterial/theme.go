@@ -90,23 +90,12 @@ func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
 	)
 }
 
-func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
+func (t *Theme) Surface(gtx *layout.Context, color color.RGBA, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.Center,
 	}.Layout(gtx,
 		layout.Expanded(func() {
-			fill(gtx, t.Color.Surface)
-		}),
-		layout.Stacked(w),
-	)
-}
-
-func (t *Theme) Surface2(gtx *layout.Context, w layout.Widget) {
-	layout.Stack{
-		Alignment: layout.Center,
-	}.Layout(gtx,
-		layout.Expanded(func() {
-			fill(gtx, t.Color.Transparent2)
+			fill(gtx, color)
 		}),
 		layout.Stacked(w),
 	)

@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	old     int
-	newAddr bool
+	old      int
+	newAddr  bool
+	vMsgInfo bool
 )
 
 // HandleInputs handles all ui inputs
@@ -130,6 +131,9 @@ func (win *Window) HandleInputs() {
 
 	// VERIFY MESSAGE
 
+	if vMsgInfo {
+		win.msgInfoDiag()
+	}
 	if win.inputs.verifyMessDiag.Clicked(win.gtx) {
 		win.states.dialog = true
 		win.dialog = win.verifyMessageDiag
@@ -163,7 +167,7 @@ func (win *Window) HandleInputs() {
 				win.err = err.Error()
 				return
 			}
-			if !valid  {
+			if !valid {
 				win.outputs.verifyMessage.Text = "Invalid Signature"
 				win.outputs.verifyMessage.Color = win.theme.Color.Danger
 				return
@@ -210,6 +214,14 @@ func (win *Window) HandleInputs() {
 	if win.inputs.clearBtn.Clicked(win.gtx) {
 		win.resetVerifyFields()
 		return
+	}
+
+	if win.inputs.verifyInfo.Clicked(win.gtx) {
+		vMsgInfo = true
+	}
+
+	if win.inputs.vMsgInfoBtn.Clicked(win.gtx) {
+		vMsgInfo = false
 	}
 
 	// DELETE WALLET
@@ -300,6 +312,7 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.cancelDialog.Clicked(win.gtx) {
 		win.states.dialog = false
+		vMsgInfo = false
 		win.err = ""
 		win.resetVerifyFields()
 		log.Debug("Cancel dialog clicked")

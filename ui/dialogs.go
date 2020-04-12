@@ -8,7 +8,7 @@ import (
 )
 
 func (win *Window) CreateDiag() {
-	win.theme.Surface(win.gtx, func() {
+	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
 		toMax(win.gtx)
 		pd := unit.Dp(15)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
@@ -44,7 +44,7 @@ func (win *Window) CreateDiag() {
 }
 
 func (win *Window) DeleteDiag() {
-	win.theme.Surface(win.gtx, func() {
+	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
 		toMax(win.gtx)
 		pd := unit.Dp(15)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
@@ -77,7 +77,7 @@ func (win *Window) DeleteDiag() {
 }
 
 func (win *Window) RestoreDiag() {
-	win.theme.Surface(win.gtx, func() {
+	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
 		toMax(win.gtx)
 		layout.UniformInset(unit.Dp(30)).Layout(win.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
@@ -108,7 +108,7 @@ func (win *Window) RestoreDiag() {
 }
 
 func (win *Window) AddAccountDiag() {
-	win.theme.Surface(win.gtx, func() {
+	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
 		toMax(win.gtx)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
 			layout.Rigid(func() {
@@ -137,7 +137,7 @@ func (win *Window) AddAccountDiag() {
 }
 
 func (win *Window) infoDiag() {
-	win.theme.Surface(win.gtx, func() {
+	win.theme.Surface(win.gtx, win.theme.Color.Transparent2, func() {
 		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
 				layout.Rigid(func() {
@@ -159,7 +159,6 @@ func (win *Window) infoDiag() {
 	})
 }
 
-<<<<<<< HEAD
 func (win *Window) transactionsFilters() {
 	w := win.gtx.Constraints.Width.Max / 2
 	win.theme.Surface(win.gtx, func() {
@@ -217,6 +216,34 @@ func (win *Window) transactionsFilters() {
 					layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {
 						win.outputs.applyFiltersTransactions.Layout(win.gtx, &win.inputs.applyFiltersTransactions)
 					})
+				}),
+			)
+		})
+	})
+}
+
+func (win *Window) msgInfoDiag() {
+	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
+		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
+				layout.Rigid(func() {
+					win.theme.H5("Verify Message").Layout(win.gtx)
+				}),
+				layout.Rigid(func() {
+					inset := layout.Inset{
+						Top:    unit.Dp(20),
+						Bottom: unit.Dp(10),
+					}
+					inset.Layout(win.gtx, func() {
+						win.outputs.vMsgInfo.Layout(win.gtx)
+					})
+				}),
+				layout.Rigid(func() {
+					layout.Flex{}.Layout(win.gtx,
+						layout.Rigid(func() {
+							win.outputs.vMsgInfoBtn.Layout(win.gtx, &win.inputs.vMsgInfoBtn)
+						}),
+					)
 				}),
 			)
 		})
