@@ -18,11 +18,12 @@ var (
 )
 
 const (
-	rowDirectionWidth  = .1
-	rowDateWidth       = .2
-	rowStatusWidth     = .2
-	rowAmountWidth     = .3
-	rowFeeWidth        = .2
+	rowDirectionWidth = .04
+	rowDateWidth      = .2
+	rowStatusWidth    = .2
+	rowAmountWidth    = .3
+	rowFeeWidth       = .26
+
 	txnRowLabelSize    = 16
 	txnPageInsetTop    = 15
 	txnPageInsetLeft   = 15
@@ -130,6 +131,8 @@ func renderFiltererButton(win *Window) {
 func rowHeader(win *Window) {
 	txt := win.theme.Label(unit.Dp(txnRowLabelSize), "#")
 	txt.Color = win.theme.Color.Hint
+	txt.Alignment = text.Middle
+
 	layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
 		layout.Flexed(rowDirectionWidth, func() {
 			txt.Layout(win.gtx)
@@ -163,16 +166,22 @@ func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
 			})
 		}),
 		layout.Flexed(rowDateWidth, func() {
+			cbn.transaction.time.Alignment = text.Middle
 			cbn.transaction.time.Layout(win.gtx)
 		}),
 		layout.Flexed(rowStatusWidth, func() {
-			win.theme.Body1(transaction.Status).Layout(win.gtx)
+			txt := win.theme.Body1(transaction.Status)
+			txt.Alignment = text.Middle
+			txt.Layout(win.gtx)
 		}),
 		layout.Flexed(rowAmountWidth, func() {
+			cbn.transaction.amount.Alignment = text.End
 			cbn.transaction.amount.Layout(win.gtx)
 		}),
 		layout.Flexed(rowFeeWidth, func() {
-			win.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String()).Layout(win.gtx)
+			txt := win.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
+			txt.Alignment = text.End
+			txt.Layout(win.gtx)
 		}),
 	)
 }
