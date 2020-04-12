@@ -256,12 +256,12 @@ func (win *Window) HandleInputs() {
 
 	// CHANGE WALLET PASSWORD
 
-	if win.inputs.changePasswordDiag.Clicked(win.gtx) {
+	for win.inputs.changePasswordDiag.Clicked(win.gtx) {
 		win.dialog = win.editPasswordDiag
 		win.states.dialog = true
 	}
 
-	if win.inputs.savePassword.Clicked(win.gtx) {
+	for win.inputs.savePassword.Clicked(win.gtx) {
 		op := win.valOldAndNewPasswords()
 		if op == "" {
 			return
@@ -274,7 +274,7 @@ func (win *Window) HandleInputs() {
 		err := win.wallet.ChangeWalletPassphrase(win.walletInfo.Wallets[win.selected].ID, op, np)
 		if err != nil {
 			log.Debug("Error changing wallet password " + err.Error())
-			if err.Error() == "invalid_passphrase" {
+			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 				win.err = "Passphrase is incorrect"
 			} else {
 				win.err = err.Error()
@@ -431,12 +431,9 @@ func (win *Window) HandleInputs() {
 		switch {
 		case strength > 0.6:
 			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Success
-			win.outputs.passStgthTxt.Text = "Strong"
 		case strength > 0.3 && strength <= 0.6:
-			win.outputs.passStgthTxt.Text = "moderate"
 			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Average
 		default:
-			win.outputs.passStgthTxt.Text = "Weak"
 			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Danger
 		}
 

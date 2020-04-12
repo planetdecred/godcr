@@ -462,7 +462,7 @@ func (win *Window) editPasswordDiag() {
 						rigid(func() {
 							win.vFlexSB(
 								rigid(func() {
-									win.passwordStrenght()
+									win.passwordStrength()
 								}),
 								rigid(func() {
 									win.theme.Body1("New Password").Layout(win.gtx)
@@ -498,7 +498,7 @@ func (win *Window) editPasswordDiag() {
 	})
 }
 
-func (win *Window) passwordStrenght() {
+func (win *Window) passwordStrength() {
 	if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
 		layout.Inset{Top: unit.Dp(20), Bottom: unit.Dp(10)}.Layout(win.gtx, func() {
 			win.gtx.Constraints.Height.Max = 20
