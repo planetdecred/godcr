@@ -42,6 +42,7 @@ type Theme struct {
 		Danger     color.RGBA
 		Background color.RGBA
 		Surface    color.RGBA
+		Average    color.RGBA
 	}
 	Icon struct {
 		ContentCreate *Icon
@@ -66,6 +67,7 @@ func NewTheme() *Theme {
 	t.Color.Background = argb(0x22444444)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
+	t.Color.Average = rgb(0xF8E71B)
 	t.Color.Danger = rgb(0xff0000)
 	t.TextSize = unit.Sp(16)
 

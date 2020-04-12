@@ -426,6 +426,23 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
+		strength := (dcrlibwallet.ShannonEntropy(win.inputs.spendingPassword.Text()) / 4.0)
+		switch {
+		case strength > 0.6:
+			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Success
+			win.outputs.passStgthTxt.Text = "Strong"
+		case strength > 0.3 && strength <= 0.6:
+			win.outputs.passStgthTxt.Text = "moderate"
+			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Average
+		default:
+			win.outputs.passStgthTxt.Text = "Weak"
+			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Danger
+		}
+
+		win.outputs.passwordStgth.Progress = strength * 100
+	}
+
 	if win.err != "" {
 		time.AfterFunc(time.Second*3, func() {
 			win.err = ""
@@ -442,9 +459,9 @@ func (win *Window) validatePasswords() string {
 	}
 
 	match := win.inputs.matchSpending.Text()
-	if match == "" {
+	if strings.Trim(match, " ") == "" {
 		win.outputs.matchSpending.HintColor = win.theme.Color.Danger
-		win.err = "Enter new wallet password again."
+		win.err = "Enter new wallet password again and it cannot be empty."
 		return ""
 	}
 
@@ -458,7 +475,7 @@ func (win *Window) validatePasswords() string {
 
 func (win *Window) valOldAndNewPasswords() string {
 	op := win.inputs.oldSpendingPassword.Text()
-	if op == "" {
+	if strings.Trim(op, " ") == "" {
 		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
 		win.err = "Old Wallet password required and cannot be empty"
 		return ""
@@ -479,7 +496,7 @@ func (win *Window) valOldAndNewPasswords() string {
 
 func (win *Window) validatePassword() string {
 	pass := win.inputs.spendingPassword.Text()
-	if pass == "" {
+	if strings.Trim(pass, " ") == "" {
 		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
 		win.err = "Wallet password required and cannot be empty."
 		return ""
@@ -490,7 +507,7 @@ func (win *Window) validatePassword() string {
 
 func (win *Window) validateOldPassword() string {
 	pass := win.inputs.oldSpendingPassword.Text()
-	if pass == "" {
+	if strings.Trim(pass, " ") == "" {
 		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
 		win.err = "Old Wallet password required and cannot be empty"
 		return ""

@@ -85,6 +85,7 @@ type outputs struct {
 
 	tabs                                                              []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
+	passwordStgth                                                                 *decredmaterial.ProgressBar
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -168,7 +169,7 @@ func (win *Window) initWidgets() {
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
-
+	win.outputs.passwordStgth = theme.ProgressBar(0)
 	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
 	win.inputs.oldSpendingPassword.SingleLine = true
 
@@ -222,6 +223,7 @@ func (win *Window) initWidgets() {
 	win.outputs.receiveAddressLabel = win.theme.H6("")
 	win.outputs.receiveAddressLabel.Color = theme.Color.Primary
 	win.outputs.addressCopiedLabel = win.theme.Caption("")
+	win.outputs.passStgthTxt = win.theme.Caption("")
 
 	win.outputs.toWallets = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionAccountBalanceWallet)))
 	win.outputs.toOverview = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionHome)))
@@ -275,7 +277,8 @@ func (win *Window) initWidgets() {
 	}
 
 	win.outputs.rename = theme.Editor("")
-	win.outputs.rename.TextSize = unit.Dp(23)
+	win.inputs.rename.SingleLine = true
+	win.outputs.rename.TextSize = unit.Dp(20)
 
 	win.outputs.renameWallet = decredmaterial.IconButton{
 		Icon:       win.outputs.ic.done,

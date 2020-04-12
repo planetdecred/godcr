@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -458,24 +460,31 @@ func (win *Window) editPasswordDiag() {
 							})
 						}),
 						rigid(func() {
-							inset := layout.Inset{
-								Top:    unit.Dp(10),
-								Bottom: unit.Dp(10),
-							}
-							inset.Layout(win.gtx, func() {
-								win.vFlexSB(
-									rigid(func() {
-										win.theme.Body1("New Password").Layout(win.gtx)
-									}),
-									rigid(func() {
-										win.hFlexSB(
-											layout.Flexed(1, func() {
-												win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
-											}),
-										)
-									}),
-								)
-							})
+							win.vFlexSB(
+								rigid(func() {
+									if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
+										layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {
+											win.gtx.Constraints.Height.Max = 20
+											win.outputs.passwordStgth.Layout(win.gtx)
+										})
+									}
+								}),
+								rigid(func() {
+									if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
+										win.outputs.passStgthTxt.Layout(win.gtx)
+									}
+								}),
+								rigid(func() {
+									win.theme.Body1("New Password").Layout(win.gtx)
+								}),
+								rigid(func() {
+									win.hFlexSB(
+										layout.Flexed(1, func() {
+											win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+										}),
+									)
+								}),
+							)
 						}),
 						rigid(func() {
 							win.theme.Body1("Confirm New Password").Layout(win.gtx)
