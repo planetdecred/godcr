@@ -499,19 +499,10 @@ func (win *Window) editPasswordDiag() {
 }
 
 func (win *Window) passwordStrenght() {
-	win.vFlex(
-		rigid(func() {
-			if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
-				layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {
-					win.gtx.Constraints.Height.Max = 20
-					win.outputs.passwordStgth.Layout(win.gtx)
-				})
-			}
-		}),
-		rigid(func() {
-			if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
-				win.outputs.passStgthTxt.Layout(win.gtx)
-			}
-		}),
-	)
+	if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
+		layout.Inset{Top: unit.Dp(20), Bottom: unit.Dp(10)}.Layout(win.gtx, func() {
+			win.gtx.Constraints.Height.Max = 20
+			win.outputs.passwordStgth.Layout(win.gtx)
+		})
+	}
 }
