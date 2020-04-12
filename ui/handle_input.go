@@ -291,7 +291,6 @@ func (win *Window) HandleInputs() {
 			win.states.dialog = false
 			win.resetButton()
 		})
-		return
 	}
 
 	// DELETE WALLET
