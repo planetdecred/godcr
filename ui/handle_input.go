@@ -136,8 +136,9 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	if win.inputs.addressInput.Text() == "" || win.inputs.signInput.Text() == "" || win.inputs.messageInput.Text() == "" {
+	if strings.Trim(win.inputs.addressInput.Text(), " ") == "" || strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
 		win.outputs.verifyBtn.Background = win.theme.Color.Hint
+		win.outputs.verifyMessage.Text = ""
 		if win.inputs.verifyBtn.Clicked(win.gtx) {
 			return
 		}
@@ -164,10 +165,12 @@ func (win *Window) HandleInputs() {
 			}
 			if !valid  {
 				win.outputs.verifyMessage.Text = "Invalid Signature"
+				win.outputs.verifyMessage.Color = win.theme.Color.Danger
 				return
 			}
 
 			win.outputs.verifyMessage.Text = "Valid Signature"
+			win.outputs.verifyMessage.Color = win.theme.Color.Success
 		}
 	}
 
@@ -369,14 +372,6 @@ func (win *Window) validatePassword() string {
 	return pass
 }
 
-// func (win *Window) valMsgAddr() string {
-// 	win.inputs.addressInput.Text() == "" || win.inputs.signInput.Text() == "" || win.inputs.messageInput.Text() == ""
-// 	if pass == "" {
-// 		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
-// 	}
-// 	return pass
-// }
-
 func (win *Window) resetPasswords() {
 	win.outputs.spendingPassword.HintColor = win.theme.Color.InvText
 	win.inputs.spendingPassword.SetText("")
@@ -388,6 +383,7 @@ func (win *Window) resetVerifyFields() {
 	win.inputs.addressInput.SetText("")
 	win.inputs.signInput.SetText("")
 	win.inputs.messageInput.SetText("")
+	win.outputs.verifyMessage.Text = ""
 }
 
 func (win *Window) validateSeeds() string {
