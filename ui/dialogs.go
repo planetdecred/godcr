@@ -462,17 +462,7 @@ func (win *Window) editPasswordDiag() {
 						rigid(func() {
 							win.vFlexSB(
 								rigid(func() {
-									if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
-										layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {
-											win.gtx.Constraints.Height.Max = 20
-											win.outputs.passwordStgth.Layout(win.gtx)
-										})
-									}
-								}),
-								rigid(func() {
-									if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
-										win.outputs.passStgthTxt.Layout(win.gtx)
-									}
+									win.passwordStrenght()
 								}),
 								rigid(func() {
 									win.theme.Body1("New Password").Layout(win.gtx)
@@ -506,4 +496,22 @@ func (win *Window) editPasswordDiag() {
 			)
 		})
 	})
+}
+
+func (win *Window) passwordStrenght() {
+	win.vFlex(
+		rigid(func() {
+			if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
+				layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {
+					win.gtx.Constraints.Height.Max = 20
+					win.outputs.passwordStgth.Layout(win.gtx)
+				})
+			}
+		}),
+		rigid(func() {
+			if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
+				win.outputs.passStgthTxt.Layout(win.gtx)
+			}
+		}),
+	)
 }
