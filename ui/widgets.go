@@ -15,7 +15,7 @@ var msg = `After you or your counterparty has genrated a signature, you can use 
 form to verify the signature. 
 
 Once you have entered the address, the message and the corresponding 
-signature, you will see VALID if the signature appropraitely matches 
+signature, you will see VALID if the signature appropriately matches 
 the address and message otherwise INVALID.`
 
 type inputs struct {
