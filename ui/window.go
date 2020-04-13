@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"time"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
@@ -146,8 +147,9 @@ func (win *Window) Loop(shutdown chan int) {
 				return
 			case system.FrameEvent:
 				win.gtx.Reset(evt.Config, evt.Size)
+				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
+				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
-
 				if s.loading {
 					win.Loading()
 				} else if s.dialog {
