@@ -2,6 +2,7 @@ package ui
 
 import (
 	"sort"
+	"image/color"
 	"strings"
 	"time"
 
@@ -431,7 +432,7 @@ func (win *Window) HandleInputs() {
 		case strength > 0.6:
 			win.outputs.passwordBar.ProgressColor = win.theme.Color.Success
 		case strength > 0.3 && strength <= 0.6:
-			win.outputs.passwordBar.ProgressColor = win.theme.Color.Average
+			win.outputs.passwordBar.ProgressColor = color.RGBA{248, 231, 27, 255}
 		default:
 			win.outputs.passwordBar.ProgressColor = win.theme.Color.Danger
 		}
