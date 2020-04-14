@@ -42,6 +42,7 @@ type Theme struct {
 		Danger     color.RGBA
 		Background color.RGBA
 		Surface    color.RGBA
+		Gray       color.RGBA
 	}
 	Icon struct {
 		ContentCreate *Icon
@@ -67,6 +68,7 @@ func NewTheme() *Theme {
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xff0000)
+	t.Color.Gray = rgb(0x808080)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(NewIcon(icons.ToggleCheckBox))

@@ -121,3 +121,9 @@ type SyncStatus struct {
 	TotalSteps               int32
 	CurrentBlockHeight       int32
 }
+
+// Signature is sent in response to Wallet.SignMessage
+type Signature struct {
+	Signature string
+	Err       error
+}

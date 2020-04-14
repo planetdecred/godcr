@@ -162,3 +162,7 @@ func (win *Window) Err() {
 		win.outputs.err.Layout(win.gtx)
 	}
 }
+
+func GetClipboardContent() string {
+	return ""
+}

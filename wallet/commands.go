@@ -304,6 +304,18 @@ func (wal *Wallet) GetMultiWalletInfo() {
 	}()
 }
 
+func (wal *Wallet) SignMessage(walletID int, address, message, password string) {
+	go func() {
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			wal.Send <- Response{
+				Resp: AddedAccount{},
+				Err:  ErrIDNotExist,
+			}
+		}
+	}()
+}
+
 // RenameWallet renames the wallet identified by walletID.
 func (wal *Wallet) RenameWallet(walletID int, name string) error {
 	return wal.multi.RenameWallet(walletID, name)
