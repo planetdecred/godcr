@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -379,6 +380,36 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	for key, g := range win.inputs.toTransactionDetails {
+		for _, e := range g.Events(win.gtx) {
+			if e.Type == gesture.TypeClick {
+				for _, walTxs := range win.walletTransactions.Txs {
+					for _, txn := range walTxs {
+						if key == txn.Txn.Hash {
+							win.walletTransaction = &txn
+							break
+						}
+					}
+				}
+				win.current = win.TransactionPage
+			}
+		}
+	}
+
+	if win.inputs.toggleTxnDetailsIOs.txnInputs.Clicked(win.gtx) {
+		win.inputs.toggleTxnDetailsIOs.isTxnInputsShow = !win.inputs.toggleTxnDetailsIOs.isTxnInputsShow
+	}
+
+	if win.inputs.toggleTxnDetailsIOs.txnOutputs.Clicked(win.gtx) {
+		win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow = !win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow
+	}
+
+	if win.inputs.hideTransactionDetails.Clicked(win.gtx) {
+		win.current = win.OverviewPage
+		win.inputs.toggleTxnDetailsIOs.isTxnInputsShow = false
+		win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow = false
+	}
+
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
 		//log.Info("Sync clicked :", win.walletInfo.Synced, win.walletInfo.Syncing)
 		if win.walletInfo.Synced || win.walletInfo.Syncing {
@@ -627,6 +658,15 @@ func (win *Window) KeysEventsHandler(evt *key.Event) {
 				editor.SetText(win.inputs.seedsSuggestions[0].text)
 				editor.Move(len(win.inputs.seedsSuggestions[0].text))
 			}
+		}
+	}
+}
+
+func (win *Window) updateToTransactionDetailsBtns() {
+	win.inputs.toTransactionDetails = make(map[string]*gesture.Click)
+	for _, walTxs := range win.walletTransactions.Txs {
+		for _, txn := range walTxs {
+			win.inputs.toTransactionDetails[txn.Txn.Hash] = &gesture.Click{}
 		}
 	}
 }

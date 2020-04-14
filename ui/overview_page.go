@@ -2,11 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 	"strings"
 
 	"github.com/raedahgroup/godcr/wallet"
 
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -171,9 +173,14 @@ func (page overviewPage) recentTransactionsColumn() {
 					dcrlibwallet.ExtractDateOrTime(txn.Txn.Timestamp))),
 				status: theme.Body1(txn.Status),
 			}
+			hash := txn.Txn.Hash
 
 			transactionRows = append(transactionRows, func() {
 				page.recentTransactionRow(txnWidgets)
+				pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
+				click := page.inputs.toTransactionDetails[hash]
+				click.Add(gtx.Ops)
+				page.inputs.toTransactionDetails[hash] = click
 			})
 		}
 	} else {

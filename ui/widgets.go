@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 
+	"gioui.org/gesture"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -37,10 +38,22 @@ type inputs struct {
 		text   string
 		button widget.Button
 	}
+
+	toTransactionDetails   map[string]*gesture.Click
+	hideTransactionDetails widget.Button
+	toggleTxnDetailsIOs    struct {
+		isTxnInputsShow, isTxnOutputsShow bool
+		txnInputs, txnOutputs             widget.Button
+	}
 }
 
 type combined struct {
 	sel *decredmaterial.Select
+
+	transaction struct {
+		status, direction *decredmaterial.Icon
+		amount, time      decredmaterial.Label
+	}
 }
 
 type outputs struct {
@@ -76,6 +89,11 @@ type outputs struct {
 	selectedAccountNameLabel, selectedAccountBalanceLabel           decredmaterial.Label
 	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
 	selectedWalletBalLabel, selectedWalletNameLabel                 decredmaterial.Label
+
+	hideTransactionDetails decredmaterial.Button
+	toggleTxnDetailsIOs    struct {
+		expandMore, expandLess decredmaterial.IconButton
+	}
 }
 
 func (win *Window) initWidgets() {
@@ -258,6 +276,22 @@ func (win *Window) initWidgets() {
 		Size:       unit.Dp(48),
 		Background: color.RGBA{},
 		Color:      win.theme.Color.Success,
+		Padding:    unit.Dp(0),
+	}
+
+	win.outputs.hideTransactionDetails = theme.Button("Hide details")
+	win.outputs.toggleTxnDetailsIOs.expandMore = decredmaterial.IconButton{
+		Icon:       mustIcon(decredmaterial.NewIcon(icons.NavigationExpandMore)),
+		Size:       unit.Dp(32),
+		Background: color.RGBA{},
+		Color:      win.theme.Color.Text,
+		Padding:    unit.Dp(0),
+	}
+	win.outputs.toggleTxnDetailsIOs.expandLess = decredmaterial.IconButton{
+		Icon:       mustIcon(decredmaterial.NewIcon(icons.NavigationExpandLess)),
+		Size:       unit.Dp(32),
+		Background: color.RGBA{},
+		Color:      win.theme.Color.Text,
 		Padding:    unit.Dp(0),
 	}
 }

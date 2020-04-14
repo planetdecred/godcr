@@ -131,14 +131,14 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 	}()
 }
 
-// transactionStatus accepts the bestBlockHeight, transactionBlockHeight and returns a transaction status
-// which could be confirmed or pending
-func transactionStatus(bestBlockHeight, txnBlockHeight int32) string {
+// transactionStatus accepts the bestBlockHeight, transactionBlockHeight returns a transaction status
+// which could be confirmed/pending and confirmations count
+func transactionStatus(bestBlockHeight, txnBlockHeight int32) (string, int32) {
 	confirmations := bestBlockHeight - txnBlockHeight + 1
 	if txnBlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
-		return "confirmed"
+		return "confirmed", confirmations
 	}
-	return "pending"
+	return "pending", confirmations
 }
 
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
@@ -164,13 +164,14 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				wal.Send <- resp
 				return
 			}
-
 			for _, txnRaw := range txs {
+				status, confirmations := transactionStatus(bestBestBlock.Height, txnRaw.BlockHeight)
 				txn := Transaction{
-					Txn:        txnRaw,
-					Status:     transactionStatus(bestBestBlock.Height, txnRaw.BlockHeight),
-					Balance:    dcrutil.Amount(txnRaw.Amount).String(),
-					WalletName: wallets[txnRaw.WalletID].Name,
+					Txn:           txnRaw,
+					Status:        status,
+					Balance:       dcrutil.Amount(txnRaw.Amount).String(),
+					WalletName:    wallets[txnRaw.WalletID].Name,
+					Confirmations: confirmations,
 				}
 				recentTxs = append(recentTxs, txn)
 				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)

@@ -96,10 +96,11 @@ type DeletedWallet struct {
 
 // Transaction wraps the dcrlibwallet Transaction type and adds processed data
 type Transaction struct {
-	Txn        dcrlibwallet.Transaction
-	Status     string
-	Balance    string
-	WalletName string
+	Txn           dcrlibwallet.Transaction
+	Status        string
+	Balance       string
+	WalletName    string
+	Confirmations int32
 }
 
 // Transactions is sent in response to Wallet.GetAllTransactions
