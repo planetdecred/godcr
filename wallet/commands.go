@@ -176,6 +176,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
 			}
 		}
+
 		sort.SliceStable(recentTxs, func(i, j int) bool {
 			backTime := time.Unix(recentTxs[j].Txn.Timestamp, 0)
 			frontTime := time.Unix(recentTxs[i].Txn.Timestamp, 0)
