@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 )
 
@@ -144,21 +145,31 @@ func (win *Window) infoDiag() {
 }
 
 func (win *Window) transactionsFilters() {
+	w := win.gtx.Constraints.Width.Max / 2
 	win.theme.Surface(win.gtx, func() {
-		toMax(win.gtx)
-		layout.UniformInset(unit.Dp(30)).Layout(win.gtx, func() {
-			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
+		layout.UniformInset(unit.Dp(20)).Layout(win.gtx, func() {
+			win.gtx.Constraints.Width.Min = w
+			layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 				layout.Rigid(func() {
-					layout.E.Layout(win.gtx, func() {
-						win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
-					})
+					layout.Stack{}.Layout(win.gtx,
+						layout.Expanded(func() {
+							win.gtx.Constraints.Width.Min = w
+							headTxt := win.theme.H4("Transactions filters")
+							headTxt.Alignment = text.Middle
+							headTxt.Layout(win.gtx)
+						}),
+						layout.Stacked(func() {
+							win.gtx.Constraints.Width.Min = w
+							layout.E.Layout(win.gtx, func() {
+								win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
+							})
+						}),
+					)
 				}),
 				layout.Rigid(func() {
-					win.theme.H3("Transactions filters").Layout(win.gtx)
-				}),
-				layout.Rigid(func() {
+					win.gtx.Constraints.Width.Min = w
 					layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
-						layout.Flexed(.5, func() {
+						layout.Flexed(.25, func() {
 							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 								layout.Rigid(func() {
 									win.theme.H5("Order").Layout(win.gtx)
@@ -171,7 +182,7 @@ func (win *Window) transactionsFilters() {
 								}),
 							)
 						}),
-						layout.Flexed(.5, func() {
+						layout.Flexed(.25, func() {
 							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 								layout.Rigid(func() {
 									win.theme.H5("Direction").Layout(win.gtx)
@@ -187,7 +198,9 @@ func (win *Window) transactionsFilters() {
 					)
 				}),
 				layout.Rigid(func() {
-					win.outputs.applyFiltersTransactions.Layout(win.gtx, &win.inputs.applyFiltersTransactions)
+					layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {
+						win.outputs.applyFiltersTransactions.Layout(win.gtx, &win.inputs.applyFiltersTransactions)
+					})
 				}),
 			)
 		})
