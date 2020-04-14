@@ -95,20 +95,17 @@ type DeletedWallet struct {
 }
 
 // Transaction wraps the dcrlibwallet Transaction type and adds processed data
-type RecentTransaction struct {
+type Transaction struct {
 	Txn        dcrlibwallet.Transaction
 	Status     string
 	Balance    string
 	WalletName string
 }
 
-// TransactionInfo represents information a transaction
-type TransactionInfo RecentTransaction
-
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
-	Txs    map[int][]TransactionInfo
-	Recent []RecentTransaction
+	Txs    map[int][]Transaction
+	Recent []Transaction
 }
 
 // SyncStatus is sent when a wallet progress event is triggered.

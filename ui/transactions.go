@@ -77,21 +77,12 @@ func (win *Window) TransactionsPage() {
 								txt.Layout(win.gtx)
 								return
 							}
-
-							var txs []wallet.TransactionInfo
 							directionFilter, _ := strconv.Atoi(win.inputs.transactionFilterDirection.Value(win.gtx))
-
-							for _, txn := range walTxs {
-								if directionFilter != 0 && txn.Txn.Direction != int32(directionFilter-1) {
-									continue
+							txsList.Layout(win.gtx, len(walTxs), func(index int) {
+								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
+									return
 								}
-								txs = append(txs, txn)
-							}
-
-							txsList.Layout(win.gtx, len(txs), func(index int) {
-								layout.Inset{Bottom: unit.Dp(txnPageInsetBottom)}.Layout(win.gtx, func() {
-									renderTxsRow(win, txs[index])
-								})
+								renderTxsRow(win, walTxs[index])
 							})
 						}),
 					)
@@ -156,37 +147,39 @@ func rowHeader(win *Window) {
 	)
 }
 
-func renderTxsRow(win *Window, transaction wallet.TransactionInfo) {
+func renderTxsRow(win *Window, transaction wallet.Transaction) {
 	cbn := win.combined
 	initTxnWidgets(win, &transaction, &cbn)
-	layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
-		layout.Flexed(rowDirectionWidth, func() {
-			layout.Inset{Top: unit.Dp(3)}.Layout(win.gtx, func() {
-				cbn.transaction.direction.Layout(win.gtx, unit.Dp(16))
-			})
-		}),
-		layout.Flexed(rowDateWidth, func() {
-			cbn.transaction.time.Alignment = text.Middle
-			cbn.transaction.time.Layout(win.gtx)
-		}),
-		layout.Flexed(rowStatusWidth, func() {
-			txt := win.theme.Body1(transaction.Status)
-			txt.Alignment = text.Middle
-			txt.Layout(win.gtx)
-		}),
-		layout.Flexed(rowAmountWidth, func() {
-			cbn.transaction.amount.Alignment = text.End
-			cbn.transaction.amount.Layout(win.gtx)
-		}),
-		layout.Flexed(rowFeeWidth, func() {
-			txt := win.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
-			txt.Alignment = text.End
-			txt.Layout(win.gtx)
-		}),
-	)
+	layout.Inset{Bottom: unit.Dp(txnPageInsetBottom)}.Layout(win.gtx, func() {
+		layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
+			layout.Flexed(rowDirectionWidth, func() {
+				layout.Inset{Top: unit.Dp(3)}.Layout(win.gtx, func() {
+					cbn.transaction.direction.Layout(win.gtx, unit.Dp(16))
+				})
+			}),
+			layout.Flexed(rowDateWidth, func() {
+				cbn.transaction.time.Alignment = text.Middle
+				cbn.transaction.time.Layout(win.gtx)
+			}),
+			layout.Flexed(rowStatusWidth, func() {
+				txt := win.theme.Body1(transaction.Status)
+				txt.Alignment = text.Middle
+				txt.Layout(win.gtx)
+			}),
+			layout.Flexed(rowAmountWidth, func() {
+				cbn.transaction.amount.Alignment = text.End
+				cbn.transaction.amount.Layout(win.gtx)
+			}),
+			layout.Flexed(rowFeeWidth, func() {
+				txt := win.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
+				txt.Alignment = text.End
+				txt.Layout(win.gtx)
+			}),
+		)
+	})
 }
 
-func initTxnWidgets(win *Window, transaction *wallet.TransactionInfo, cb *combined) {
+func initTxnWidgets(win *Window, transaction *wallet.Transaction, cb *combined) {
 	txWidgets := &cb.transaction
 	txWidgets.amount = win.theme.Label(unit.Dp(16), transaction.Balance)
 	txWidgets.time = win.theme.Body1("Pending")
