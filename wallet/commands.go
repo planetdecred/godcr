@@ -151,8 +151,11 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			wal.Send <- resp
 			return
 		}
-		alltxs := make([][]dcrlibwallet.Transaction, len(wallets))
-		index := 0
+
+		var recentTxs []Transaction
+		transactions := make(map[int][]Transaction)
+		bestBestBlock := wal.multi.GetBestBlock()
+
 		for _, wall := range wallets {
 			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
 			if err != nil {
@@ -160,22 +163,16 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				wal.Send <- resp
 				return
 			}
-			alltxs[index] = txs
-			index++
-		}
 
-		var recentTxs []RecentTransaction
-		bestBestBlock := wal.multi.GetBestBlock()
-		for _, tx := range alltxs {
-			var recentRaw []dcrlibwallet.Transaction
-			recentRaw = append(recentRaw, tx...)
-			for _, txn := range recentRaw {
-				recentTxs = append(recentTxs, RecentTransaction{
-					Txn:        txn,
-					Status:     transactionStatus(bestBestBlock.Height, txn.BlockHeight),
-					Balance:    dcrutil.Amount(txn.Amount).String(),
-					WalletName: wallets[txn.WalletID].Name,
-				})
+			for _, txnRaw := range txs {
+				txn := Transaction{
+					Txn:        txnRaw,
+					Status:     transactionStatus(bestBestBlock.Height, txnRaw.BlockHeight),
+					Balance:    dcrutil.Amount(txnRaw.Amount).String(),
+					WalletName: wallets[txnRaw.WalletID].Name,
+				}
+				recentTxs = append(recentTxs, txn)
+				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
 			}
 		}
 		sort.SliceStable(recentTxs, func(i, j int) bool {
@@ -190,7 +187,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 
 		resp.Resp = &Transactions{
-			Txs:    alltxs,
+			Txs:    transactions,
 			Recent: recentTxs,
 		}
 		wal.Send <- resp
