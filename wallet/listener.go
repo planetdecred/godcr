@@ -58,6 +58,7 @@ type (
 		ProgressReport interface{}
 		ConnectedPeers int32
 		BlockUpdate    NewBlock
+		BlockConfirmed TxConfirmed
 	}
 )
 

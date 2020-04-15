@@ -26,7 +26,13 @@ func (l *listener) OnBlockAttached(walletID int, blockHeight int32) {
 	}
 }
 func (l *listener) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
-	l.Send <- SyncStatusUpdate{}
+	l.Send <- SyncStatusUpdate{
+		BlockConfirmed: TxConfirmed{
+			WalletID: walletID,
+			Height:   blockHeight,
+			Hash:     hash,
+		},
+	}
 	// l.Send <- TxConfirmed{
 	// 	WalletID: walletID,
 	// 	Height:   blockHeight,
