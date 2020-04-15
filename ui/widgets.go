@@ -39,9 +39,9 @@ type inputs struct {
 		button widget.Button
 	}
 
-	toTransactionDetails   map[string]*gesture.Click
-	hideTransactionDetails widget.Button
-	toggleTxnDetailsIOs    struct {
+	toTransactionDetails map[string]*gesture.Click
+	viewTxnOnDcrdata     widget.Button
+	toggleTxnDetailsIOs  struct {
 		isTxnInputsShow, isTxnOutputsShow bool
 		txnInputs, txnOutputs             widget.Button
 	}
@@ -90,8 +90,8 @@ type outputs struct {
 	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
 	selectedWalletBalLabel, selectedWalletNameLabel                 decredmaterial.Label
 
-	hideTransactionDetails decredmaterial.Button
-	toggleTxnDetailsIOs    struct {
+	viewTxnOnDcrdata    decredmaterial.Button
+	toggleTxnDetailsIOs struct {
 		expandMore, expandLess decredmaterial.IconButton
 	}
 }
@@ -279,20 +279,18 @@ func (win *Window) initWidgets() {
 		Padding:    unit.Dp(0),
 	}
 
-	win.outputs.hideTransactionDetails = theme.Button("Hide details")
+	win.outputs.viewTxnOnDcrdata = theme.Button("View on dcrdata")
 	win.outputs.toggleTxnDetailsIOs.expandMore = decredmaterial.IconButton{
-		Icon:       mustIcon(decredmaterial.NewIcon(icons.NavigationExpandMore)),
-		Size:       unit.Dp(32),
-		Background: color.RGBA{},
-		Color:      win.theme.Color.Text,
-		Padding:    unit.Dp(0),
+		Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandMore)),
+		Size:    unit.Dp(25),
+		Color:   win.theme.Color.Text,
+		Padding: unit.Dp(0),
 	}
 	win.outputs.toggleTxnDetailsIOs.expandLess = decredmaterial.IconButton{
-		Icon:       mustIcon(decredmaterial.NewIcon(icons.NavigationExpandLess)),
-		Size:       unit.Dp(32),
-		Background: color.RGBA{},
-		Color:      win.theme.Color.Text,
-		Padding:    unit.Dp(0),
+		Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandLess)),
+		Size:    unit.Dp(25),
+		Color:   win.theme.Color.Text,
+		Padding: unit.Dp(0),
 	}
 }
 

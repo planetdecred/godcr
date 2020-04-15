@@ -391,7 +391,8 @@ func (win *Window) HandleInputs() {
 						}
 					}
 				}
-				win.current = win.TransactionPage
+				win.dialog = win.TransactionPage
+				win.states.dialog = true
 			}
 		}
 	}
@@ -404,10 +405,8 @@ func (win *Window) HandleInputs() {
 		win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow = !win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow
 	}
 
-	if win.inputs.hideTransactionDetails.Clicked(win.gtx) {
-		win.current = win.OverviewPage
-		win.inputs.toggleTxnDetailsIOs.isTxnInputsShow = false
-		win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow = false
+	if win.inputs.viewTxnOnDcrdata.Clicked(win.gtx) {
+
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
