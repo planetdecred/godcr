@@ -385,16 +385,17 @@ func (win *Window) HandleInputs() {
 	for key, g := range win.inputs.toTransactionDetails {
 		for _, e := range g.Events(win.gtx) {
 			if e.Type == gesture.TypeClick {
+			out:
 				for _, walTxs := range win.walletTransactions.Txs {
 					for _, txn := range walTxs {
 						if key == txn.Txn.Hash {
 							win.walletTransaction = &txn
-							break
+							win.dialog = win.TransactionPage
+							win.states.dialog = true
+							break out
 						}
 					}
 				}
-				win.dialog = win.TransactionPage
-				win.states.dialog = true
 			}
 		}
 	}
