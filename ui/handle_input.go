@@ -1,8 +1,8 @@
 package ui
 
 import (
-	"sort"
 	"image/color"
+	"sort"
 	"strings"
 	"time"
 
