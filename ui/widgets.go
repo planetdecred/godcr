@@ -20,20 +20,13 @@ type inputs struct {
 	toReceive                                                      widget.Button
 	toTransactionsFilters                                          widget.Button
 	applyFiltersTransactions                                       widget.Button
-	sync, syncHeader, hideMsgInfo                                  widget.Button
+	sync, syncHeader, hideMsgInfo, changePasswordDiag                                  widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog                widget.Editor
 	addressInput, messageInput, signInput                          widget.Editor
 	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                widget.Button
 	restoreDiag, addAcctDiag, savePassword                    widget.Button
 	createWallet, restoreWallet, deleteWallet, renameWallet   widget.Button
-	addAccount, toggleWalletRename, renameWalletDiag          widget.Button
-	toOverview, toWallets, toTransactions, toSend, toSettings widget.Button
-	toRestoreWallet                                           widget.Button
-	toTransactionsFilters                                     widget.Button
-	applyFiltersTransactions                                  widget.Button
-	toReceive                                                 widget.Button
-	sync, syncHeader                                          widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -82,6 +75,7 @@ type outputs struct {
 	addAccount, newAddressDiag                                     decredmaterial.Button
 	info, more, copy, verifyInfo                                   decredmaterial.IconButton
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
+	passwordBar                                                                   *decredmaterial.ProgressBar
 
 	tabs                                                              []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
@@ -169,7 +163,7 @@ func (win *Window) initWidgets() {
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
-	win.outputs.passwordStgth = theme.ProgressBar(0)
+	win.outputs.passwordBar = theme.ProgressBar(0)
 	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
 	win.inputs.oldSpendingPassword.SingleLine = true
 

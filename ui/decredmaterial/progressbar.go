@@ -60,11 +60,11 @@ func (p *ProgressBar) Layout(gtx *layout.Context) {
 }
 
 // ProgressBar returns a new ProgressBar instance.
-func (t *Theme) ProgressBar(val float64) *ProgressBar {
+func (t *Theme) ProgressBar(progress float64) *ProgressBar {
 	return &ProgressBar{
 		BackgroundColor: t.Color.Hint,
 		ProgressColor:   t.Color.Success,
-		Progress:        val,
+		Progress:        progress,
 	}
 }
 

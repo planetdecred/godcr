@@ -426,17 +426,17 @@ func (win *Window) HandleInputs() {
 	}
 
 	if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
-		strength := (dcrlibwallet.ShannonEntropy(win.inputs.spendingPassword.Text()) / 4.0)
+		strength := dcrlibwallet.ShannonEntropy(win.inputs.spendingPassword.Text()) / 4.0
 		switch {
 		case strength > 0.6:
-			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Success
+			win.outputs.passwordBar.ProgressColor = win.theme.Color.Success
 		case strength > 0.3 && strength <= 0.6:
-			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Average
+			win.outputs.passwordBar.ProgressColor = win.theme.Color.Average
 		default:
-			win.outputs.passwordStgth.ProgressColor = win.theme.Color.Danger
+			win.outputs.passwordBar.ProgressColor = win.theme.Color.Danger
 		}
 
-		win.outputs.passwordStgth.Progress = strength * 100
+		win.outputs.passwordBar.Progress = strength * 100
 	}
 
 	if win.err != "" {

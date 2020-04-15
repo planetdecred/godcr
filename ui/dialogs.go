@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"strings"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -499,10 +497,8 @@ func (win *Window) editPasswordDiag() {
 }
 
 func (win *Window) passwordStrength() {
-	if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
-		layout.Inset{Top: unit.Dp(20), Bottom: unit.Dp(10)}.Layout(win.gtx, func() {
-			win.gtx.Constraints.Height.Max = 20
-			win.outputs.passwordStgth.Layout(win.gtx)
-		})
-	}
+	layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(8)}.Layout(win.gtx, func() {
+		win.gtx.Constraints.Height.Max = 20
+		win.outputs.passwordBar.Layout(win.gtx)
+	})
 }
