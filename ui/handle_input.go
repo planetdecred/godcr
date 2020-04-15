@@ -3,6 +3,8 @@ package ui
 import (
 	"fmt"
 	"image/color"
+	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -406,7 +408,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.viewTxnOnDcrdata.Clicked(win.gtx) {
-
+		viewTxnOnBrowser(win.walletTransaction.Txn.Hash)
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
@@ -667,5 +669,24 @@ func (win *Window) updateToTransactionDetailsBtns() {
 		for _, txn := range walTxs {
 			win.inputs.toTransactionDetails[txn.Txn.Hash] = &gesture.Click{}
 		}
+	}
+}
+
+func viewTxnOnBrowser(hash string) {
+	var err error
+	url := "https://testnet.dcrdata.org/tx/" + hash
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Error(err)
 	}
 }

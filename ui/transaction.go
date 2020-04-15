@@ -117,6 +117,11 @@ func txnBalanceAndStatus(win *Window, transaction *wallet.Transaction) {
 				txt.Layout(win.gtx)
 			})
 		}),
+		layout.Rigid(func() {
+			txt := win.theme.Body1(fmt.Sprintf("%d confirmations", transaction.Confirmations))
+			txt.Color = win.theme.Color.Primary
+			txt.Layout(win.gtx)
+		}),
 	)
 }
 
@@ -166,7 +171,7 @@ func txnInputs(win *Window, transaction *wallet.Transaction) {
 			if win.inputs.toggleTxnDetailsIOs.isTxnInputsShow {
 				transactionInputsContainer.Layout(win.gtx, len(transaction.Txn.Inputs), func(i int) {
 					txnIORow(win, dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String(),
-						transaction.Txn.Inputs[i].PreviousTransactionHash)
+						transaction.Txn.Inputs[i].PreviousOutpoint)
 				})
 			}
 		}),
