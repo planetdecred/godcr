@@ -222,34 +222,6 @@ func (win *Window) transactionsFilters() {
 	})
 }
 
-func (win *Window) msgInfoDiag() {
-	win.theme.Surface(win.gtx, func() {
-		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
-				layout.Rigid(func() {
-					win.theme.H5("Verify Message").Layout(win.gtx)
-				}),
-				layout.Rigid(func() {
-					inset := layout.Inset{
-						Top:    unit.Dp(20),
-						Bottom: unit.Dp(10),
-					}
-					inset.Layout(win.gtx, func() {
-						win.outputs.vMsgInfo.Layout(win.gtx)
-					})
-				}),
-				layout.Rigid(func() {
-					layout.Flex{}.Layout(win.gtx,
-						layout.Rigid(func() {
-							win.outputs.vMsgInfoBtn.Layout(win.gtx, &win.inputs.vMsgInfoBtn)
-						}),
-					)
-				}),
-			)
-		})
-	})
-}
-
 func (win *Window) verifyMessageDiag() {
 	win.theme.Surface(win.gtx, func() {
 		win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(450))
@@ -406,6 +378,34 @@ func (win *Window) verifyMessageDiag() {
 									)
 								}),
 							)
+						}),
+					)
+				}),
+			)
+		})
+	})
+}
+
+func (win *Window) msgInfoDiag() {
+	win.theme.Surface(win.gtx, func() {
+		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
+			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
+				layout.Rigid(func() {
+					win.theme.H5("Verify Message").Layout(win.gtx)
+				}),
+				layout.Rigid(func() {
+					inset := layout.Inset{
+						Top:    unit.Dp(20),
+						Bottom: unit.Dp(10),
+					}
+					inset.Layout(win.gtx, func() {
+						win.outputs.vMsgInfo.Layout(win.gtx)
+					})
+				}),
+				layout.Rigid(func() {
+					layout.Flex{}.Layout(win.gtx,
+						layout.Rigid(func() {
+							win.outputs.vMsgInfoBtn.Layout(win.gtx, &win.inputs.vMsgInfoBtn)
 						}),
 					)
 				}),
