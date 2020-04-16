@@ -321,7 +321,7 @@ func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message
 			return
 		}
 
-		signedMessageBytes, err := wall.SignMessage([]byte(passphrase), address, message)
+		signedMessageBytes, err := wall.SignMessage(passphrase, address, message)
 		if err != nil {
 			resp.Resp = &Signature{
 				Err: fmt.Errorf("error signing message: %s", err.Error()),
