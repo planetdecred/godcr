@@ -28,7 +28,7 @@ type inputs struct {
 	toReceive                                                      widget.Button
 	toTransactionsFilters                                          widget.Button
 	applyFiltersTransactions                                       widget.Button
-	sync, syncHeader, vMsgInfoBtn                                  widget.Button
+	sync, syncHeader, hideMsgInfo                                  widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
 	spendingPassword, matchSpending, rename, dialog                widget.Editor
 	addressInput, messageInput, signInput                          widget.Editor
@@ -77,14 +77,14 @@ type outputs struct {
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
 	applyFiltersTransactions                                                      decredmaterial.Button
-	sync, moreDiag, vMsgInfoBtn                                                   decredmaterial.Button
+	sync, moreDiag, hideMsgInfo                                                   decredmaterial.Button
 
 	addAccount, newAddressDiag                                     decredmaterial.Button
 	info, more, copy, verifyInfo                                   decredmaterial.IconButton
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 
-	tabs                                                                        []decredmaterial.TabItem
-	notImplemented, noWallet, pageTitle, pageInfo, vMsgInfo, verifyMessage, err decredmaterial.Label
+	tabs                                                                          []decredmaterial.TabItem
+	notImplemented, noWallet, pageTitle, pageInfo, msgInfoBtn, verifyMessage, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -208,7 +208,7 @@ func (win *Window) initWidgets() {
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
 
 	win.outputs.pageInfo = theme.Body1("Each time you request a payment, a \nnew address is created to protect \nyour privacy.")
-	win.outputs.vMsgInfo = theme.Body1(msg)
+	win.outputs.msgInfoBtn = theme.Body1(msg)
 
 	win.outputs.selectedAccountNameLabel = win.theme.H6("")
 	win.outputs.selectedWalletNameLabel = win.theme.Body2("")
@@ -235,7 +235,7 @@ func (win *Window) initWidgets() {
 	win.outputs.sync = theme.Button("Reconnect")
 	win.outputs.syncHeader = win.outputs.icons.sync
 	win.outputs.moreDiag = theme.Button("more")
-	win.outputs.vMsgInfoBtn = theme.Button("Got it")
+	win.outputs.hideMsgInfo = theme.Button("Got it")
 
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info

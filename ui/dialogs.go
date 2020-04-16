@@ -224,7 +224,7 @@ func (win *Window) transactionsFilters() {
 
 func (win *Window) verifyMessageDiag() {
 	win.theme.Surface(win.gtx, func() {
-		win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(450))
+		win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(550))
 		win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
 		layout.UniformInset(unit.Dp(20)).Layout(win.gtx, func() {
 			win.vFlex(
@@ -259,7 +259,7 @@ func (win *Window) verifyMessageDiag() {
 							inset.Layout(win.gtx, func() {
 								win.vFlexSB(
 									rigid(func() {
-										win.theme.Body1("Enter Address").Layout(win.gtx)
+										win.theme.H6("Enter Address").Layout(win.gtx)
 									}),
 									rigid(func() {
 										win.hFlexSB(
@@ -274,8 +274,7 @@ func (win *Window) verifyMessageDiag() {
 											}),
 											rigid(func() {
 												inset := layout.Inset{
-													Left:   unit.Dp(10),
-													Bottom: unit.Dp(5),
+													Left: unit.Dp(10),
 												}
 												inset.Layout(win.gtx, func() {
 													if win.inputs.addressInput.Text() == "" {
@@ -292,13 +291,12 @@ func (win *Window) verifyMessageDiag() {
 						}),
 						rigid(func() {
 							inset := layout.Inset{
-								Top:    unit.Dp(10),
-								Bottom: unit.Dp(10),
+								Top: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
 								win.vFlexSB(
 									rigid(func() {
-										win.theme.Body1("Enter Signature").Layout(win.gtx)
+										win.theme.H6("Enter Signature").Layout(win.gtx)
 									}),
 									rigid(func() {
 										win.hFlexSB(
@@ -313,8 +311,7 @@ func (win *Window) verifyMessageDiag() {
 											}),
 											rigid(func() {
 												inset := layout.Inset{
-													Left:   unit.Dp(10),
-													Bottom: unit.Dp(5),
+													Left: unit.Dp(10),
 												}
 												inset.Layout(win.gtx, func() {
 													if win.inputs.signInput.Text() == "" {
@@ -330,7 +327,7 @@ func (win *Window) verifyMessageDiag() {
 							})
 						}),
 						rigid(func() {
-							win.theme.Body1("Enter Message").Layout(win.gtx)
+							win.theme.H6("Enter Message").Layout(win.gtx)
 						}),
 						rigid(func() {
 							win.hFlexSB(
@@ -345,8 +342,7 @@ func (win *Window) verifyMessageDiag() {
 								}),
 								rigid(func() {
 									inset := layout.Inset{
-										Left:   unit.Dp(10),
-										Bottom: unit.Dp(5),
+										Left: unit.Dp(10),
 									}
 									inset.Layout(win.gtx, func() {
 										if win.inputs.messageInput.Text() == "" {
@@ -361,7 +357,7 @@ func (win *Window) verifyMessageDiag() {
 						rigid(func() {
 							layout.Flex{}.Layout(win.gtx,
 								layout.Flexed(.6, func() {
-									layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
+									layout.Inset{Bottom: unit.Dp(5), Top: unit.Dp(20)}.Layout(win.gtx, func() {
 										win.outputs.verifyMessage.Layout(win.gtx)
 									})
 								}),
@@ -399,13 +395,13 @@ func (win *Window) msgInfoDiag() {
 						Bottom: unit.Dp(10),
 					}
 					inset.Layout(win.gtx, func() {
-						win.outputs.vMsgInfo.Layout(win.gtx)
+						win.outputs.msgInfoBtn.Layout(win.gtx)
 					})
 				}),
 				layout.Rigid(func() {
 					layout.Flex{}.Layout(win.gtx,
 						layout.Rigid(func() {
-							win.outputs.vMsgInfoBtn.Layout(win.gtx, &win.inputs.vMsgInfoBtn)
+							win.outputs.hideMsgInfo.Layout(win.gtx, &win.inputs.hideMsgInfo)
 						}),
 					)
 				}),

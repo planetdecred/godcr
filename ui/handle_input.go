@@ -13,9 +13,8 @@ import (
 )
 
 var (
-	old      int
-	newAddr  bool
-	vMsgInfo bool
+	old     int
+	newAddr bool
 )
 
 // HandleInputs handles all ui inputs
@@ -131,9 +130,6 @@ func (win *Window) HandleInputs() {
 
 	// VERIFY MESSAGE
 
-	if vMsgInfo {
-		win.msgInfoDiag()
-	}
 	if win.inputs.verifyMessDiag.Clicked(win.gtx) {
 		win.states.dialog = true
 		win.dialog = win.verifyMessageDiag
@@ -217,11 +213,11 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.verifyInfo.Clicked(win.gtx) {
-		vMsgInfo = true
+		win.dialog = win.msgInfoDiag
 	}
 
-	if win.inputs.vMsgInfoBtn.Clicked(win.gtx) {
-		vMsgInfo = false
+	if win.inputs.hideMsgInfo.Clicked(win.gtx) {
+		win.dialog = win.verifyMessageDiag
 	}
 
 	// DELETE WALLET
@@ -312,7 +308,6 @@ func (win *Window) HandleInputs() {
 
 	if win.inputs.cancelDialog.Clicked(win.gtx) {
 		win.states.dialog = false
-		vMsgInfo = false
 		win.err = ""
 		win.resetVerifyFields()
 		log.Debug("Cancel dialog clicked")
@@ -351,6 +346,14 @@ func (win *Window) HandleInputs() {
 		win.addressCopiedLabel.Text = "Address Copied"
 		time.AfterFunc(time.Second*3, func() {
 			win.addressCopiedLabel.Text = ""
+		})
+		return
+	}
+
+	if win.err != "" {
+		win.outputs.verifyMessage.Text = ""
+		time.AfterFunc(time.Second*3, func() {
+			win.err = ""
 		})
 		return
 	}
