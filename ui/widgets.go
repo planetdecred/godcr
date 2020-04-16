@@ -180,7 +180,7 @@ func (win *Window) initWidgets() {
 	win.outputs.verifyBtn = theme.Button("Verify")
 	win.outputs.verifyBtn.TextSize = unit.Dp(13)
 	win.outputs.clearBtn = theme.Button("Clear All")
-	win.outputs.clearBtn.Background = win.theme.Color.Transparent
+	win.outputs.clearBtn.Background = color.RGBA{0, 0, 0, 0}
 	win.outputs.clearBtn.Color = win.theme.Color.Primary
 	win.outputs.clearBtn.TextSize = unit.Dp(13)
 

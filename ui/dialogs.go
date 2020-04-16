@@ -8,7 +8,7 @@ import (
 )
 
 func (win *Window) CreateDiag() {
-	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
+	win.theme.Surface(win.gtx, func() {
 		toMax(win.gtx)
 		pd := unit.Dp(15)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
@@ -44,7 +44,7 @@ func (win *Window) CreateDiag() {
 }
 
 func (win *Window) DeleteDiag() {
-	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
+	win.theme.Surface(win.gtx, func() {
 		toMax(win.gtx)
 		pd := unit.Dp(15)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
@@ -77,7 +77,7 @@ func (win *Window) DeleteDiag() {
 }
 
 func (win *Window) RestoreDiag() {
-	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
+	win.theme.Surface(win.gtx, func() {
 		toMax(win.gtx)
 		layout.UniformInset(unit.Dp(30)).Layout(win.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
@@ -108,7 +108,7 @@ func (win *Window) RestoreDiag() {
 }
 
 func (win *Window) AddAccountDiag() {
-	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
+	win.theme.Surface(win.gtx, func() {
 		toMax(win.gtx)
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(win.gtx,
 			layout.Rigid(func() {
@@ -137,7 +137,7 @@ func (win *Window) AddAccountDiag() {
 }
 
 func (win *Window) infoDiag() {
-	win.theme.Surface(win.gtx, win.theme.Color.Transparent2, func() {
+	win.theme.Surface(win.gtx, func() {
 		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
 				layout.Rigid(func() {
@@ -223,7 +223,7 @@ func (win *Window) transactionsFilters() {
 }
 
 func (win *Window) msgInfoDiag() {
-	win.theme.Surface(win.gtx, win.theme.Color.Surface, func() {
+	win.theme.Surface(win.gtx, func() {
 		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
 				layout.Rigid(func() {

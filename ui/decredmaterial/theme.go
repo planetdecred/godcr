@@ -64,8 +64,6 @@ func NewTheme() *Theme {
 	t.Color.Hint = rgb(0xbbbbbb)
 	t.Color.InvText = rgb(0xffffff)
 	t.Color.Background = argb(0x22444444)
-	t.Color.Transparent = argb(0x111111)
-	t.Color.Transparent2 = rgb(0xf2f2f2)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xff0000)
@@ -90,12 +88,12 @@ func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
 	)
 }
 
-func (t *Theme) Surface(gtx *layout.Context, color color.RGBA, w layout.Widget) {
+func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.Center,
 	}.Layout(gtx,
 		layout.Expanded(func() {
-			fill(gtx, color)
+			fill(gtx, t.Color.Surface)
 		}),
 		layout.Stacked(w),
 	)
