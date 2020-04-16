@@ -291,7 +291,8 @@ func (win *Window) verifyMessageDiag() {
 						}),
 						rigid(func() {
 							inset := layout.Inset{
-								Top: unit.Dp(10),
+								Top:    unit.Dp(10),
+								Bottom: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
 								win.vFlexSB(
@@ -342,7 +343,8 @@ func (win *Window) verifyMessageDiag() {
 								}),
 								rigid(func() {
 									inset := layout.Inset{
-										Left: unit.Dp(10),
+										Left:   unit.Dp(10),
+										Bottom: unit.Dp(10),
 									}
 									inset.Layout(win.gtx, func() {
 										if win.inputs.messageInput.Text() == "" {
@@ -357,7 +359,7 @@ func (win *Window) verifyMessageDiag() {
 						rigid(func() {
 							layout.Flex{}.Layout(win.gtx,
 								layout.Flexed(.6, func() {
-									layout.Inset{Bottom: unit.Dp(5), Top: unit.Dp(20)}.Layout(win.gtx, func() {
+									layout.Inset{Bottom: unit.Dp(5), Top: unit.Dp(10)}.Layout(win.gtx, func() {
 										win.outputs.verifyMessage.Layout(win.gtx)
 									})
 								}),
