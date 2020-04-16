@@ -5,7 +5,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/skip2/go-qrcode"
 )
 

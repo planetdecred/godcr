@@ -5,12 +5,12 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/raedahgroup/godcr/wallet"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
 
 const (

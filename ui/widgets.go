@@ -7,7 +7,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
