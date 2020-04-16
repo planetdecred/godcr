@@ -1,4 +1,4 @@
-module github.com/raedahgroup/godcr-gio
+module github.com/raedahgroup/godcr
 
 go 1.13
 

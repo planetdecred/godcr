@@ -1,7 +1,7 @@
-# godcr-gio
+# godcr
 
-[![Build Status](https://github.com/raedahgroup/godcr-gio/workflows/Build/badge.svg)](https://github.com/raedahgroup/godcr-gio/actions)
-[![Tests Status](https://github.com/raedahgroup/godcr-gio/workflows/Tests/badge.svg)](https://github.com/raedahgroup/godcr-gio/actions)
+[![Build Status](https://github.com/raedahgroup/godcr/workflows/Build/badge.svg)](https://github.com/raedahgroup/godcr/actions)
+[![Tests Status](https://github.com/raedahgroup/godcr/workflows/Tests/badge.svg)](https://github.com/raedahgroup/godcr/actions)
 
 A cross-platform desktop [SPV](https://docs.decred.org/wallets/spv/) wallet for [decred](https://decred.org/) built with [gio](https://gioui.org/).
 
@@ -15,4 +15,4 @@ Then `go build`.
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/raedahgroup/godcr-gio/blob/master/.github/CONTRIBUTING.md)
+See [CONTRIBUTING.md](https://github.com/raedahgroup/godcr/blob/master/.github/CONTRIBUTING.md)

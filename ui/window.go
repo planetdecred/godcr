@@ -9,8 +9,8 @@ import (
 	"gioui.org/layout"
 
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/wallet"
 )
 
 // Window represents the app window (and UI in general). There should only be one.

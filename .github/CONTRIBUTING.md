@@ -52,13 +52,13 @@ Only submit a PR once the intended edits are either done or nearing completion. 
 - Visual Studio Code with Go extension plus `golangci-lint`
 ### Git Workflow
 
-1. Fork the repository on GitHub.  Just click the little Fork button at https://github.com/raedahgroup/godcr-gio
+1. Fork the repository on GitHub.  Just click the little Fork button at https://github.com/raedahgroup/godcr
 
 
-2. Clone your newly forked godcr-gio repository
+2. Clone your newly forked godcr repository
 
 ```sh
-git clone git@github.com:my-user-name/godcr-gio.git
+git clone git@github.com:my-user-name/godcr.git
 ```
 
 ###### recommended
@@ -67,7 +67,7 @@ Setting your master branch to track this repository makes keeping everything up-
 The rest of this workflow guide will assume that you have completed this step.
 
 ```sh
-git remote add upstream https://github.com/raedahgroup/godcr-gio.git
+git remote add upstream https://github.com/raedahgroup/godcr.git
 git fetch upstream
 git branch -u upstream/master master
 ```
