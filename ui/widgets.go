@@ -26,8 +26,8 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings      widget.Button
 	toRestoreWallet                                                widget.Button
 	toReceive                                                      widget.Button
-	toTransactionsFilters                                     widget.Button
-	applyFiltersTransactions                                  widget.Button
+	toTransactionsFilters                                          widget.Button
+	applyFiltersTransactions                                       widget.Button
 	sync, syncHeader, vMsgInfoBtn                                  widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
 	spendingPassword, matchSpending, rename, dialog                widget.Editor
