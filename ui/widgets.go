@@ -71,7 +71,7 @@ type outputs struct {
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
 	applyFiltersTransactions                                                      decredmaterial.Button
 	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag                 decredmaterial.Button
-	addAccount, newAddressDiag                                                    decredmaterial.Button
+	addAccount, newAddressDiag, signMessageDiag                                   decredmaterial.Button
 	info, more, copy, verifyInfo                                                  decredmaterial.IconButton
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                decredmaterial.IconButton
 	passwordBar                                                                   *decredmaterial.ProgressBar
@@ -234,7 +234,7 @@ func (win *Window) initWidgets() {
 	win.outputs.syncHeader = win.outputs.icons.sync
 	win.outputs.moreDiag = theme.Button("more")
 	win.outputs.hideMsgInfo = theme.Button("Got it")
-
+	win.outputs.signMessageDiag = theme.Button("Sign Message")
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.copy = win.outputs.icons.copy

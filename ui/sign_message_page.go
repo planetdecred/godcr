@@ -5,8 +5,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/wallet"
 )
 
 type SignMessagePage struct {
@@ -35,6 +35,8 @@ type SignMessagePage struct {
 	copyButtonMaterial           decredmaterial.Button
 	pasteInAddressButtonMaterial decredmaterial.Button
 	pasteInMessageButtonMaterial decredmaterial.Button
+
+	passwordModal *decredmaterial.Password
 
 	clearButtonWidget          *widget.Button
 	signButtonWidget           *widget.Button
@@ -90,7 +92,7 @@ func (pg *SignMessagePage) Draw(gtx *layout.Context) {
 	})
 
 	if pg.isPasswordModalOpen {
-		//pg.drawPasswordModal(gtx)
+		pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
 	}
 }
 
@@ -120,7 +122,7 @@ func (pg *SignMessagePage) drawMessageEditor(gtx *layout.Context) {
 			pg.messageEditorMaterial.Layout(gtx, pg.messageEditorWidget)
 		}),
 		layout.Rigid(func() {
-			pg.pasteInMessageButtonMaterial.Layout(gtx, pg.pasteInAddressButtonWidget)
+			pg.pasteInMessageButtonMaterial.Layout(gtx, pg.pasteInMessageButtonWidget)
 		}),
 	)
 	if pg.messageErrorLabel.Text != "" {
@@ -156,19 +158,14 @@ func (pg *SignMessagePage) drawResult(gtx *layout.Context) {
 		return
 	}
 
-	inset := layout.Inset{
-		Top: unit.Dp(15),
-	}
-	inset.Layout(gtx, func() {
-		pg.signedMessageLabel.Layout(gtx)
-	})
-
-	inset = layout.Inset{
-		Top: unit.Dp(10),
-	}
-	inset.Layout(gtx, func() {
-		pg.copyButtonMaterial.Layout(gtx, pg.copyButtonWidget)
-	})
+	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func() {
+			pg.signedMessageLabel.Layout(gtx)
+		}),
+		layout.Rigid(func() {
+			pg.copyButtonMaterial.Layout(gtx, pg.copyButtonWidget)
+		}),
+	)
 }
 
 func (pg *SignMessagePage) updateColors() {
@@ -203,12 +200,12 @@ func (pg *SignMessagePage) handleEvents(gtx *layout.Context) {
 	}
 }
 
-func (pg *SignMessagePage) confirm(password string) {
+func (pg *SignMessagePage) confirm(password []byte) {
 	pg.isPasswordModalOpen = false
 	pg.isSigningMessage = true
 
 	pg.signButtonMaterial.Text = "Signing..."
-	pg.wallet.SignMessage(pg.walletID, pg.addressEditorWidget.Text(), pg.messageEditorWidget.Text(), password)
+	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorWidget.Text(), pg.messageEditorWidget.Text())
 }
 
 func (pg *SignMessagePage) cancel() {
@@ -256,6 +253,8 @@ func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
 func (pg *SignMessagePage) clearForm() {
 	pg.addressEditorWidget.SetText("")
 	pg.messageEditorWidget.SetText("")
+
+	pg.errorLabel.Text = ""
 }
 
 func (win *Window) newSignMessagePage(walletID int) *SignMessagePage {
@@ -263,6 +262,8 @@ func (win *Window) newSignMessagePage(walletID int) *SignMessagePage {
 	pg.theme = win.theme
 	pg.wallet = win.wallet
 	pg.walletID = walletID
+
+	pg.passwordModal = pg.theme.Password()
 
 	pg.titleLabel = pg.theme.H5("Sign Message")
 	pg.subtitleLabel = pg.theme.Body2("Enter the address and message you want to sign")
@@ -309,7 +310,8 @@ func (win *Window) newSignMessagePage(walletID int) *SignMessagePage {
 	return pg
 }
 
-func (win *Window) SignMessagePage(walletID int) {
+func (win *Window) SignMessagePage() {
+	walletID := win.walletInfo.Wallets[win.selected].ID
 	if signMessagePage == nil {
 		signMessagePage = win.newSignMessagePage(walletID)
 	}

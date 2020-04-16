@@ -43,6 +43,7 @@ type Theme struct {
 		Background color.RGBA
 		Surface    color.RGBA
 		Gray       color.RGBA
+		Black      color.RGBA
 	}
 	Icon struct {
 		ContentCreate *Icon
@@ -69,6 +70,7 @@ func NewTheme() *Theme {
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xff0000)
 	t.Color.Gray = rgb(0x808080)
+	t.Color.Black = rgb(0x000000)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(NewIcon(icons.ToggleCheckBox))
@@ -77,6 +79,31 @@ func NewTheme() *Theme {
 	t.radioUncheckedIcon = mustIcon(NewIcon(icons.ToggleRadioButtonUnchecked))
 
 	return t
+}
+
+func (t *Theme) Modal(gtx *layout.Context, w layout.Widget) {
+	overlayColor := t.Color.Black
+	overlayColor.A = 200
+
+	layout.Stack{}.Layout(gtx,
+		layout.Expanded(func() {
+			fillMax(gtx, overlayColor)
+		}),
+		layout.Stacked(func() {
+			inset := layout.Inset{
+				Top: unit.Dp(50),
+			}
+			inset.Layout(gtx, func() {
+				fillMax(gtx, t.Color.Surface)
+				inset := layout.Inset{
+					Top:   unit.Dp(7),
+					Left:  unit.Dp(25),
+					Right: unit.Dp(25),
+				}
+				inset.Layout(gtx, w)
+			})
+		}),
+	)
 }
 
 func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {

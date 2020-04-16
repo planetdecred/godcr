@@ -460,6 +460,11 @@ func (win *Window) HandleInputs() {
 
 		win.outputs.passwordBar.Progress = strength * 100
 	}
+
+	if win.inputs.signMessageDiag.Clicked(win.gtx) {
+		win.current = win.SignMessagePage
+		return
+	}
 }
 
 func (win *Window) validatePasswords() string {

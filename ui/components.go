@@ -1,8 +1,11 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
+	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
 
@@ -164,5 +167,11 @@ func (win *Window) Err() {
 }
 
 func GetClipboardContent() string {
-	return ""
+	str, err := clipboard.ReadAll()
+	if err != nil {
+		log.Warn(fmt.Sprintf("error getting clipboard data: %s", err.Error()))
+		return ""
+	}
+
+	return str
 }

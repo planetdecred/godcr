@@ -37,7 +37,7 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.dialog = false
 	case wallet.AddedAccount:
 		win.states.dialog = false
-	case wallet.Signature:
+	case *wallet.Signature:
 		win.signatureResult = update.(*wallet.Signature)
 	}
 	win.states.loading = true
