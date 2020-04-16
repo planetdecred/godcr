@@ -13,8 +13,8 @@ import (
 	"github.com/markbates/pkger"
 
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/ui"
-	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/raedahgroup/godcr/ui"
+	"github.com/raedahgroup/godcr/wallet"
 )
 
 func main() {

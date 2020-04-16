@@ -3,7 +3,7 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
 
 const (

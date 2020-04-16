@@ -12,7 +12,7 @@ import (
 	"github.com/decred/dcrd/dcrutil/v2"
 	"github.com/decred/slog"
 	flags "github.com/jessevdk/go-flags"
-	"github.com/raedahgroup/godcr-gio/version"
+	"github.com/raedahgroup/godcr/version"
 )
 
 const (

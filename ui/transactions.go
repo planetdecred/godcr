@@ -8,8 +8,8 @@ import (
 	"gioui.org/unit"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
-	"github.com/raedahgroup/godcr-gio/wallet"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
