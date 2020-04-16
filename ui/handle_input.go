@@ -35,7 +35,20 @@ func (win *Window) HandleInputs() {
 	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.err.Color = win.theme.Color.Danger
 			win.outputs.spendingPassword.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("Pass evt", evt)
+	}
+
+	for _, evt := range win.inputs.oldSpendingPassword.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.err.Color = win.theme.Color.Danger
+			win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Hint
 			return
 		}
 		log.Debug("Pass evt", evt)
@@ -44,6 +57,8 @@ func (win *Window) HandleInputs() {
 	for _, evt := range win.inputs.matchSpending.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.err.Color = win.theme.Color.Danger
 			win.outputs.matchSpending.Color = win.theme.Color.Text
 			win.outputs.matchSpending.HintColor = win.theme.Color.Hint
 			return
@@ -438,14 +453,6 @@ func (win *Window) HandleInputs() {
 		}
 
 		win.outputs.passwordBar.Progress = strength * 100
-	}
-
-	if win.err != "" {
-		time.AfterFunc(time.Second*3, func() {
-			win.err = ""
-			win.outputs.err.Color = win.theme.Color.Danger
-		})
-		return
 	}
 }
 
