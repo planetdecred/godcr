@@ -270,9 +270,8 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				Accounts:        accts,
 				BestBlockHeight: wall.GetBestBlock(),
 				BlockTimestamp:  wall.GetBestBlockTimeStamp(),
-				DaysBehind: fmt.Sprintf("%s behind",
-					dcrlibwallet.CalculateDaysBehind(wall.GetBestBlockTimeStamp())),
-				Status: walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
+				DaysBehind:      fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
+				Status:          walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 			}
 			i++
 		}
@@ -290,7 +289,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			return
 		}
 
-		lastSyncTime := int64(time.Since(time.Unix(best.Timestamp, 0)).Truncate(time.Minute).Seconds())
+		lastSyncTime := int64(time.Since(time.Unix(best.Timestamp, 0)).Seconds())
 		resp.Resp = MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    dcrutil.Amount(completeTotal).String(),
@@ -352,6 +351,18 @@ func (wal *Wallet) StartSync() error {
 // CancelSync cancels the SPV sync
 func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
+}
+
+func calculateDaysBehind(lastHeaderTime int64) string {
+	diff := time.Since(time.Unix(lastHeaderTime, 0))
+	daysBehind := int(math.Round(diff.Hours() / 24))
+	if daysBehind < 1 {
+		return "<1 day"
+	} else if daysBehind == 1 {
+		return "1 day"
+	} else {
+		return fmt.Sprintf("%d days", daysBehind)
+	}
 }
 
 // SecondsToDays takes time in seconds and returns its string equivalent in the format ddhhmm.
