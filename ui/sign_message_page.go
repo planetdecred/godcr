@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -253,15 +255,13 @@ func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
 func (pg *SignMessagePage) clearForm() {
 	pg.addressEditorWidget.SetText("")
 	pg.messageEditorWidget.SetText("")
-
 	pg.errorLabel.Text = ""
 }
 
-func (win *Window) newSignMessagePage(walletID int) *SignMessagePage {
+func (win *Window) newSignMessagePage() *SignMessagePage {
 	pg := &SignMessagePage{}
 	pg.theme = win.theme
 	pg.wallet = win.wallet
-	pg.walletID = walletID
 
 	pg.passwordModal = pg.theme.Password()
 
@@ -311,10 +311,10 @@ func (win *Window) newSignMessagePage(walletID int) *SignMessagePage {
 }
 
 func (win *Window) SignMessagePage() {
-	walletID := win.walletInfo.Wallets[win.selected].ID
 	if signMessagePage == nil {
-		signMessagePage = win.newSignMessagePage(walletID)
+		signMessagePage = win.newSignMessagePage()
 	}
+	signMessagePage.walletID = win.walletInfo.Wallets[win.selected].ID
 
 	if win.signatureResult != nil {
 		if win.signatureResult.Err != nil {
@@ -332,6 +332,5 @@ func (win *Window) SignMessagePage() {
 			signMessagePage.Draw(win.gtx)
 		})
 	}
-
 	win.Page(body)
 }
