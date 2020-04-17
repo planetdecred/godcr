@@ -98,8 +98,14 @@ func (win *Window) initWidgets() {
 
 	win.outputs.icons.add = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAdd)))
 	win.outputs.icons.sync = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NotificationSync)))
-	win.outputs.icons.cancel = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationCancel)))
-	win.outputs.icons.cancel.Background = theme.Color.Danger
+	win.outputs.icons.cancel = decredmaterial.IconButton{
+		Icon:       win.outputs.ic.clear,
+		Size:       unit.Dp(40),
+		Background: color.RGBA{},
+		Color:      win.theme.Color.Hint,
+		Padding:    unit.Dp(0),
+	}
+
 	win.outputs.icons.check = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)))
 	win.outputs.icons.check.Background = theme.Color.Success
 	win.outputs.icons.more = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
