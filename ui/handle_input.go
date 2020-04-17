@@ -37,6 +37,8 @@ func (win *Window) HandleInputs() {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.err.Color = win.theme.Color.Danger
+			win.outputs.savePassword.Text = "Change"
+			win.outputs.savePassword.Background = win.theme.Color.Primary
 			win.outputs.spendingPassword.HintColor = win.theme.Color.Hint
 			return
 		}
@@ -48,6 +50,8 @@ func (win *Window) HandleInputs() {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.err.Color = win.theme.Color.Danger
+			win.outputs.savePassword.Text = "Change"
+			win.outputs.savePassword.Background = win.theme.Color.Primary
 			win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Hint
 			return
 		}
@@ -60,6 +64,8 @@ func (win *Window) HandleInputs() {
 			win.err = ""
 			win.outputs.err.Color = win.theme.Color.Danger
 			win.outputs.matchSpending.Color = win.theme.Color.Text
+			win.outputs.savePassword.Text = "Change"
+			win.outputs.savePassword.Background = win.theme.Color.Primary
 			win.outputs.matchSpending.HintColor = win.theme.Color.Hint
 			return
 		}
@@ -303,10 +309,6 @@ func (win *Window) HandleInputs() {
 		win.outputs.savePassword.Text = "Changed"
 		win.outputs.savePassword.Background = win.theme.Color.Success
 		win.resetPasswords()
-		time.AfterFunc(time.Second*2, func() {
-			win.states.dialog = false
-			win.resetButton()
-		})
 	}
 
 	// DELETE WALLET
