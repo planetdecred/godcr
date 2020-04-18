@@ -1,7 +1,6 @@
 package decredmaterial
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 
@@ -20,7 +19,6 @@ const sizeOfIcon float32 = 24
 
 type TabContainer struct {
 	Tabs            []Tab
-	pageContent     *layout.Widget
 	buttonContainer *layout.List
 
 	Font               text.Font
@@ -45,18 +43,13 @@ const (
 	TabLocationTop
 )
 
-func (t *Theme) TabContainer(tabItems ...Tab) TabContainer {
-	// Initiate first tab item as active tab.
-	pageContent := new(layout.Widget)
-	*pageContent = tabItems[0].Content()
-
+func NewTabContainer(t *material.Theme, tabItems ...Tab) TabContainer {
 	return TabContainer{
 		Tabs:            tabItems,
 		buttonContainer: &layout.List{Axis: layout.Vertical},
-		pageContent:     pageContent,
 
 		ActiveButtonStripe:   t.Color.Primary,
-		buttonContentDivider: rgb(0xe6eaed),
+		buttonContentDivider: color.RGBA{200, 255, 144, 255},
 		color:                t.Color.Text,
 		TextSize:             t.TextSize.Scale(1),
 		shaper:               t.Shaper,
@@ -73,7 +66,6 @@ func (b TabContainer) Layout(gtx *layout.Context) {
 		i := i
 		for Tab.Button.Clicked(gtx) {
 			*b.currenTab = i
-			*b.pageContent = b.Tabs[i].Content()
 		}
 	}
 
@@ -124,7 +116,7 @@ func (b TabContainer) Layout(gtx *layout.Context) {
 		})
 	})
 
-	contentContainer := layout.Flexed(1, *b.pageContent)
+	contentContainer := layout.Flexed(1, b.Tabs[*b.currenTab].Content())
 
 	// Divides tab buttons and tab button.
 	buttonContentDivider := layout.Rigid(func() {
@@ -143,8 +135,6 @@ func (b TabContainer) Layout(gtx *layout.Context) {
 
 		gtx.Dimensions = layout.Dimensions{Size: d}
 	})
-
-	fmt.Println(b.buttonContainer.Position)
 
 	tabFlexContainer := layout.Flex{Axis: tabContainerAxis}
 	switch *b.tabLocation {
@@ -166,7 +156,6 @@ func (b TabContainer) ChangeTabIndex(gtx *layout.Context, index int) {
 	}
 
 	*b.currenTab = index
-	*b.pageContent = b.Tabs[index].Content()
 	op.InvalidateOp{}.Add(gtx.Ops)
 }
 
@@ -197,7 +186,6 @@ func (b *TabContainer) Pop(gtx *layout.Context, index int) {
 	}
 	b.Tabs = append(b.Tabs[:index], b.Tabs[index+1:]...)
 	*b.currenTab = changeLocation
-	*b.pageContent = b.Tabs[*b.currenTab].Content()
 	b.maxDimension.Size.X, b.maxDimension.Size.X = 0, 0
 	op.InvalidateOp{}.Add(gtx.Ops)
 }
@@ -234,7 +222,7 @@ func (b TabContainer) tabLayout(gtx *layout.Context, index int, axis layout.Axis
 
 		icon := layout.Rigid(func() {
 			layout.Inset{Top: unit.Dp(10), Left: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func() {
-				// Icon minimum size should be 24 dp.
+				// Set icon maximum size to 24 dp.
 				pxSizeOfIcon := gtx.Px(unit.Dp(sizeOfIcon))
 				if b.Tabs[index].Icon != nil {
 					imgOp := *b.Tabs[index].Icon
@@ -244,7 +232,7 @@ func (b TabContainer) tabLayout(gtx *layout.Context, index int, axis layout.Axis
 					}
 
 					val := float32(pxSizeOfIcon) / float32(max)
-					Image{Src: imgOp, Scale: val}.Layout(gtx)
+					material.Image{Src: imgOp, Scale: val}.Layout(gtx)
 					if gtx.Dimensions.Size.X < 96 {
 						gtx.Dimensions.Size.X = 96
 					}
@@ -275,6 +263,7 @@ func (b TabContainer) tabLayout(gtx *layout.Context, index int, axis layout.Axis
 	})
 
 	activeTabIndicator := layout.Rigid(func() {
+		// Set stripline indicator to max length of icon, text and spacer.
 		var stripLine = f32.Point{
 			X: float32(gtx.Px(unit.Dp(4))),
 			Y: float32(b.maxDimension.Size.Y + gtx.Px(unit.Dp(30))),
