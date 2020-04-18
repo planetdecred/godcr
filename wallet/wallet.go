@@ -131,3 +131,16 @@ func (wal *Wallet) Shutdown() {
 		wal.multi.Shutdown()
 	}
 }
+
+// GetBlockExplorerURL accept transaction hash,
+// return the block explorer URL with respect to the network
+func (wal *Wallet) GetBlockExplorerURL(txnHash string) string {
+	switch wal.net {
+	case "testnet3": // should use a constant
+		return "https://testnet.dcrdata.org/tx/" + txnHash
+	case "mainnet":
+		return "https://explorer.dcrdata.org/tx/" + txnHash
+	default:
+		return ""
+	}
+}

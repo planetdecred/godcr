@@ -105,6 +105,7 @@ type Transaction struct {
 
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
+	Total  int
 	Txs    map[int][]Transaction
 	Recent []Transaction
 }

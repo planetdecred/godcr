@@ -156,6 +156,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		var recentTxs []Transaction
 		transactions := make(map[int][]Transaction)
 		bestBestBlock := wal.multi.GetBestBlock()
+		totalTxn := 0
 
 		for _, wall := range wallets {
 			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
@@ -165,6 +166,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				return
 			}
 			for _, txnRaw := range txs {
+				totalTxn += 1
 				status, confirmations := transactionStatus(bestBestBlock.Height, txnRaw.BlockHeight)
 				txn := Transaction{
 					Txn:           txnRaw,
@@ -190,6 +192,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 
 		resp.Resp = &Transactions{
+			Total:  totalTxn,
 			Txs:    transactions,
 			Recent: recentTxs,
 		}
