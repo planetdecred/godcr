@@ -166,7 +166,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				return
 			}
 			for _, txnRaw := range txs {
-				totalTxn += 1
+				totalTxn++
 				status, confirmations := transactionStatus(bestBestBlock.Height, txnRaw.BlockHeight)
 				txn := Transaction{
 					Txn:           txnRaw,

@@ -26,7 +26,7 @@ var (
 	transactionOutputsContainer = &layout.List{Axis: layout.Vertical}
 )
 
-func (win *Window) TransactionPage() {
+func (win *Window) TransactionDetailDialog() {
 	transaction := *win.walletTransaction
 
 	widgets := []func(){

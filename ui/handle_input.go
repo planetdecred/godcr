@@ -390,7 +390,7 @@ func (win *Window) HandleInputs() {
 					for _, txn := range walTxs {
 						if key == txn.Txn.Hash {
 							win.walletTransaction = &txn
-							win.dialog = win.TransactionPage
+							win.dialog = win.TransactionDetailDialog
 							win.states.dialog = true
 							break out
 						}
@@ -409,7 +409,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.viewTxnOnDcrdata.Clicked(win.gtx) {
-		viewTxnOnBrowser(win.walletTransaction.Txn.Hash)
+		viewTxnOnBrowser(win)
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
@@ -673,9 +673,9 @@ func (win *Window) updateToTransactionDetailsBtns() {
 	}
 }
 
-func viewTxnOnBrowser(hash string) {
+func viewTxnOnBrowser(win *Window) {
 	var err error
-	url := "https://testnet.dcrdata.org/tx/" + hash
+	url := win.wallet.GetBlockExplorerURL(win.walletTransaction.Txn.Hash)
 
 	switch runtime.GOOS {
 	case "linux":
