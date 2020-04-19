@@ -529,6 +529,7 @@ func (win *Window) resetPasswords() {
 	win.inputs.matchSpending.SetText("")
 	win.outputs.oldSpendingPassword.HintColor = win.theme.Color.InvText
 	win.inputs.oldSpendingPassword.SetText("")
+	win.outputs.passwordBar.Progress = 0
 }
 
 func (win *Window) resetVerifyFields() {
