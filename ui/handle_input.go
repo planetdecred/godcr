@@ -37,8 +37,7 @@ func (win *Window) HandleInputs() {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.err.Color = win.theme.Color.Danger
-			win.outputs.savePassword.Text = "Change"
-			win.outputs.savePassword.Background = win.theme.Color.Primary
+			win.resetButton()
 			win.outputs.spendingPassword.HintColor = win.theme.Color.Hint
 			return
 		}
@@ -50,8 +49,7 @@ func (win *Window) HandleInputs() {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.err.Color = win.theme.Color.Danger
-			win.outputs.savePassword.Text = "Change"
-			win.outputs.savePassword.Background = win.theme.Color.Primary
+			win.resetButton()
 			win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Hint
 			return
 		}
@@ -64,8 +62,7 @@ func (win *Window) HandleInputs() {
 			win.err = ""
 			win.outputs.err.Color = win.theme.Color.Danger
 			win.outputs.matchSpending.Color = win.theme.Color.Text
-			win.outputs.savePassword.Text = "Change"
-			win.outputs.savePassword.Background = win.theme.Color.Primary
+			win.resetButton()
 			win.outputs.matchSpending.HintColor = win.theme.Color.Hint
 			return
 		}
@@ -284,8 +281,10 @@ func (win *Window) HandleInputs() {
 	}
 
 	for win.inputs.savePassword.Clicked(win.gtx) {
-		op := win.valOldAndNewPasswords()
-		if op == "" {
+		op := win.inputs.oldSpendingPassword.Text()
+		if strings.Trim(op, " ") == "" {
+			win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
+			win.err = "Old Wallet password required and cannot be empty"
 			return
 		}
 		np := win.validatePasswords()
@@ -402,6 +401,7 @@ func (win *Window) HandleInputs() {
 		win.states.dialog = false
 		win.err = ""
 		win.resetVerifyFields()
+		win.resetButton()
 		win.resetPasswords()
 		log.Debug("Cancel dialog clicked")
 		return
@@ -477,27 +477,6 @@ func (win *Window) validatePasswords() string {
 	}
 
 	return pass
-}
-
-func (win *Window) valOldAndNewPasswords() string {
-	op := win.inputs.oldSpendingPassword.Text()
-	if strings.Trim(op, " ") == "" {
-		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
-		win.err = "Old Wallet password required and cannot be empty"
-		return ""
-	}
-
-	np := win.validatePassword()
-	if np == "" {
-		return ""
-	}
-
-	if op == np {
-		win.err = "The old and new wallet passwords cannot be the same."
-		return ""
-	}
-
-	return op
 }
 
 func (win *Window) validatePassword() string {
