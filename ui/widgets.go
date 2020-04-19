@@ -76,7 +76,7 @@ type outputs struct {
 	info, more, copy, verifyInfo                                   decredmaterial.IconButton
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 
-	tabs                                                                          []decredmaterial.TabItem
+	tabs                                                              []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor

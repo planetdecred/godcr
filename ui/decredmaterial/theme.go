@@ -32,15 +32,15 @@ var (
 type Theme struct {
 	Shaper text.Shaper
 	Color  struct {
-		Primary      color.RGBA
-		Secondary    color.RGBA
-		Text         color.RGBA
-		Hint         color.RGBA
-		InvText      color.RGBA
-		Success      color.RGBA
-		Danger       color.RGBA
-		Background   color.RGBA
-		Surface      color.RGBA
+		Primary    color.RGBA
+		Secondary  color.RGBA
+		Text       color.RGBA
+		Hint       color.RGBA
+		InvText    color.RGBA
+		Success    color.RGBA
+		Danger     color.RGBA
+		Background color.RGBA
+		Surface    color.RGBA
 	}
 	Icon struct {
 		ContentCreate *Icon

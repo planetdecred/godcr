@@ -385,12 +385,9 @@ func (win *Window) verifyMessageDiag() {
 }
 
 func (win *Window) msgInfoDiag() {
-	var msg = `After you or your counterparty has genrated a signature, you can use this 
-	form to verify the signature. 
-
-	Once you have entered the address, the message and the corresponding 
-	signature, you will see VALID if the signature appropriately matches 
-	the address and message otherwise INVALID.`
+	var msg = "After you or your counterparty has genrated a signature, you can use this \nform to verify the signature." +
+		"\n\nOnce you have entered the address, the message and the corresponding \nsignature, you will see VALID if the signature" +
+		"appropriately matches \nthe address and message otherwise INVALID."
 	win.theme.Surface(win.gtx, func() {
 		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
@@ -399,7 +396,7 @@ func (win *Window) msgInfoDiag() {
 				}),
 				layout.Rigid(func() {
 					inset := layout.Inset{
-						Top:    unit.Dp(20),
+						Top:    unit.Dp(10),
 						Bottom: unit.Dp(10),
 					}
 					inset.Layout(win.gtx, func() {
