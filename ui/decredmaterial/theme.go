@@ -40,8 +40,6 @@ type Theme struct {
 		Success      color.RGBA
 		Danger       color.RGBA
 		Background   color.RGBA
-		Transparent  color.RGBA
-		Transparent2 color.RGBA
 		Surface      color.RGBA
 	}
 	Icon struct {

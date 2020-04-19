@@ -343,7 +343,7 @@ func (wal *Wallet) IsAddressValid(address string) (bool, error) {
 	return wall.IsAddressValid(address), nil
 }
 
-// VerifyNessage checks if the given address is valid for the multiwallet network
+// VerifyNessage checks if the given message match with the signature for the specified wallet address.
 func (wal *Wallet) VerifyMessage(address string, message string, signature string) (bool, error) {
 	wall := wal.multi.FirstOrDefaultWallet()
 	if wall == nil {

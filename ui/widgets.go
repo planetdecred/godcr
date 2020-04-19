@@ -11,13 +11,6 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-var msg = `After you or your counterparty has genrated a signature, you can use this 
-form to verify the signature. 
-
-Once you have entered the address, the message and the corresponding 
-signature, you will see VALID if the signature appropriately matches 
-the address and message otherwise INVALID.`
-
 type inputs struct {
 	createDiag, deleteDiag, cancelDialog                           widget.Button
 	restoreDiag, addAcctDiag                                       widget.Button
@@ -84,7 +77,7 @@ type outputs struct {
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 
 	tabs                                                                          []decredmaterial.TabItem
-	notImplemented, noWallet, pageTitle, pageInfo, msgInfoBtn, verifyMessage, err decredmaterial.Label
+	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -208,7 +201,6 @@ func (win *Window) initWidgets() {
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
 
 	win.outputs.pageInfo = theme.Body1("Each time you request a payment, a \nnew address is created to protect \nyour privacy.")
-	win.outputs.msgInfoBtn = theme.Body1(msg)
 
 	win.outputs.selectedAccountNameLabel = win.theme.H6("")
 	win.outputs.selectedWalletNameLabel = win.theme.Body2("")

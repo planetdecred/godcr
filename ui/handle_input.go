@@ -50,6 +50,39 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
+	for _, evt := range win.inputs.addressInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			win.outputs.addressInput.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("address evt", evt)
+	}
+
+	for _, evt := range win.inputs.signInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			win.outputs.signInput.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("sign evt", evt)
+	}
+
+	for _, evt := range win.inputs.messageInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			win.outputs.messageInput.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("Match evt", evt)
+	}
+
 	// CREATE WALLET
 	if win.inputs.createDiag.Clicked(win.gtx) {
 		win.dialog = win.CreateDiag
@@ -139,6 +172,7 @@ func (win *Window) HandleInputs() {
 	if strings.Trim(win.inputs.addressInput.Text(), " ") == "" || strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
 		win.outputs.verifyBtn.Background = win.theme.Color.Hint
 		win.outputs.verifyMessage.Text = ""
+		win.err = ""
 		if win.inputs.verifyBtn.Clicked(win.gtx) {
 			return
 		}
@@ -346,14 +380,6 @@ func (win *Window) HandleInputs() {
 		win.addressCopiedLabel.Text = "Address Copied"
 		time.AfterFunc(time.Second*3, func() {
 			win.addressCopiedLabel.Text = ""
-		})
-		return
-	}
-
-	if win.err != "" {
-		win.outputs.verifyMessage.Text = ""
-		time.AfterFunc(time.Second*3, func() {
-			win.err = ""
 		})
 		return
 	}

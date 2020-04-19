@@ -4,7 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"github.com/raedahgroup/godcr-gio/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
 
 func (win *Window) CreateDiag() {
@@ -385,6 +385,12 @@ func (win *Window) verifyMessageDiag() {
 }
 
 func (win *Window) msgInfoDiag() {
+	var msg = `After you or your counterparty has genrated a signature, you can use this 
+	form to verify the signature. 
+
+	Once you have entered the address, the message and the corresponding 
+	signature, you will see VALID if the signature appropriately matches 
+	the address and message otherwise INVALID.`
 	win.theme.Surface(win.gtx, func() {
 		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(win.gtx,
@@ -397,7 +403,7 @@ func (win *Window) msgInfoDiag() {
 						Bottom: unit.Dp(10),
 					}
 					inset.Layout(win.gtx, func() {
-						win.outputs.msgInfoBtn.Layout(win.gtx)
+						win.theme.Body1(msg).Layout(win.gtx)
 					})
 				}),
 				layout.Rigid(func() {
