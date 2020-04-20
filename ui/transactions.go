@@ -17,6 +17,8 @@ var (
 	txsList = layout.List{Axis: layout.Vertical}
 )
 
+const PageTransactions = "txs"
+
 const (
 	rowDirectionWidth = .04
 	rowDateWidth      = .2

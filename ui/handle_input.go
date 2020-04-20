@@ -104,7 +104,7 @@ func (win *Window) HandleInputs() {
 	// RESTORE WALLET
 
 	if win.inputs.toRestoreWallet.Clicked(win.gtx) {
-		win.current = win.RestorePage
+		win.current = PageRestore
 		return
 	}
 
@@ -294,27 +294,28 @@ func (win *Window) HandleInputs() {
 	// NAVIGATION
 
 	if win.inputs.toWallets.Clicked(win.gtx) {
-		win.current = win.WalletsPage
+		//win.current = win.WalletsPage
+		win.current = PageWallet
 		return
 	}
 
 	if win.inputs.toOverview.Clicked(win.gtx) {
-		win.current = win.OverviewPage
+		win.current = PageOverview
 		return
 	}
 
 	if win.inputs.toReceive.Clicked(win.gtx) {
-		win.current = win.Receive
+		win.current = PageReceive
 		return
 	}
 
 	if win.inputs.toSend.Clicked(win.gtx) {
-		win.current = win.SendPage
+		win.current = PageSend
 		return
 	}
 
 	if win.inputs.toTransactions.Clicked(win.gtx) {
-		win.current = win.TransactionsPage
+		win.current = PageTransactions
 		return
 	}
 

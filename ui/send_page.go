@@ -1,5 +1,7 @@
 package ui
 
+const PageSend = "send"
+
 func (win *Window) SendPage() {
 	bd := func() {
 		if len(win.walletInfo.Wallets) == 0 {
