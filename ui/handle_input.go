@@ -50,6 +50,39 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
+	for _, evt := range win.inputs.addressInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			win.outputs.addressInput.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("address evt", evt)
+	}
+
+	for _, evt := range win.inputs.signInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			win.outputs.signInput.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("sign evt", evt)
+	}
+
+	for _, evt := range win.inputs.messageInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			win.outputs.messageInput.HintColor = win.theme.Color.Hint
+			return
+		}
+		log.Debug("Match evt", evt)
+	}
+
 	// CREATE WALLET
 	if win.inputs.createDiag.Clicked(win.gtx) {
 		win.dialog = win.CreateDiag
@@ -126,6 +159,99 @@ func (win *Window) HandleInputs() {
 			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
 			win.reloadTabs()
 		}
+	}
+
+	// VERIFY MESSAGE
+
+	if win.inputs.verifyMessDiag.Clicked(win.gtx) {
+		win.states.dialog = true
+		win.dialog = win.verifyMessageDiag
+		return
+	}
+
+	if strings.Trim(win.inputs.addressInput.Text(), " ") == "" || strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
+		win.outputs.verifyBtn.Background = win.theme.Color.Hint
+		win.outputs.verifyMessage.Text = ""
+		win.err = ""
+		if win.inputs.verifyBtn.Clicked(win.gtx) {
+			return
+		}
+	} else {
+		win.outputs.verifyBtn.Background = win.theme.Color.Primary
+		if win.inputs.verifyBtn.Clicked(win.gtx) {
+			addr := win.inputs.addressInput.Text()
+			if addr == "" {
+				return
+			}
+			sign := win.inputs.signInput.Text()
+			if sign == "" {
+				return
+			}
+			msg := win.inputs.messageInput.Text()
+			if msg == "" {
+				return
+			}
+
+			valid, err := win.wallet.VerifyMessage(addr, msg, sign)
+			if err != nil {
+				win.err = err.Error()
+				return
+			}
+			if !valid {
+				win.outputs.verifyMessage.Text = "Invalid Signature"
+				win.outputs.verifyMessage.Color = win.theme.Color.Danger
+				return
+			}
+
+			win.outputs.verifyMessage.Text = "Valid Signature"
+			win.outputs.verifyMessage.Color = win.theme.Color.Success
+		}
+	}
+
+	data, err := clipboard.ReadAll()
+	if err != nil {
+		win.err = err.Error()
+	}
+
+	//signature control
+	if win.inputs.clearSign.Clicked(win.gtx) {
+		win.inputs.signInput.SetText("")
+		return
+	}
+	if win.inputs.pasteSign.Clicked(win.gtx) {
+		win.inputs.signInput.SetText(data)
+		return
+	}
+	//address control
+	if win.inputs.clearAddr.Clicked(win.gtx) {
+		win.inputs.addressInput.SetText("")
+		return
+	}
+	if win.inputs.pasteAddr.Clicked(win.gtx) {
+		win.inputs.addressInput.SetText(data)
+		return
+	}
+	//mesage control
+	if win.inputs.clearMsg.Clicked(win.gtx) {
+		win.inputs.messageInput.SetText("")
+		return
+	}
+	if win.inputs.pasteMsg.Clicked(win.gtx) {
+		win.inputs.messageInput.SetText(data)
+		return
+	}
+
+	if win.inputs.clearBtn.Clicked(win.gtx) {
+		win.resetVerifyFields()
+		return
+	}
+
+	if win.inputs.verifyInfo.Clicked(win.gtx) {
+		win.dialog = win.msgInfoDiag
+	}
+
+	if win.inputs.hideMsgInfo.Clicked(win.gtx) {
+		win.dialog = win.verifyMessageDiag
 	}
 
 	// DELETE WALLET
@@ -217,6 +343,7 @@ func (win *Window) HandleInputs() {
 	if win.inputs.cancelDialog.Clicked(win.gtx) {
 		win.states.dialog = false
 		win.err = ""
+		win.resetVerifyFields()
 		log.Debug("Cancel dialog clicked")
 		return
 	}
@@ -292,6 +419,13 @@ func (win *Window) resetPasswords() {
 	win.inputs.spendingPassword.SetText("")
 	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
 	win.inputs.matchSpending.SetText("")
+}
+
+func (win *Window) resetVerifyFields() {
+	win.inputs.addressInput.SetText("")
+	win.inputs.signInput.SetText("")
+	win.inputs.messageInput.SetText("")
+	win.outputs.verifyMessage.Text = ""
 }
 
 func (win *Window) validateSeeds() string {

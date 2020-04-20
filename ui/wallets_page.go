@@ -91,11 +91,19 @@ func (win *Window) WalletsPage() {
 					layout.Rigid(b),
 				)
 			}),
-			// Delete wallet
+			// Action Buttons
 			layout.Rigid(func() {
 				layout.Flex{}.Layout(win.gtx,
 					layout.Rigid(func() {
 						win.outputs.deleteDiag.Layout(win.gtx, &win.inputs.deleteDiag)
+					}),
+					layout.Rigid(func() {
+						inset := layout.Inset{
+							Left: unit.Dp(10),
+						}
+						inset.Layout(win.gtx, func() {
+							win.outputs.verifyMessDiag.Layout(win.gtx, &win.inputs.verifyMessDiag)
+						})
 					}),
 				)
 			}),

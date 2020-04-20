@@ -2,8 +2,6 @@ decred.org/cspp v0.1.3/go.mod h1:AluGqqtq580GdsWxH2wbYtCDKi5D5P4sA96waw70D5c=
 decred.org/cspp v0.2.0 h1:SdwdoGT2wZenkczeDxzcKwoAA55Y0Ti3aZslabBORvA=
 decred.org/cspp v0.2.0/go.mod h1:KVnB49sueBFCldRa/ivZCaWZbrPNEiXWwxHCf1jTYKI=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
-gioui.org v0.0.0-20200229151727-48eb5c666cdc h1:SUORQqETdW3hG6rhfIfWhbXsVJioAocCzkSnthooG3Y=
-gioui.org v0.0.0-20200229151727-48eb5c666cdc/go.mod h1:AHI9rFr6AEEHCb8EPVtb/p5M+NMJRKH58IOp8O3Je04=
 gioui.org v0.0.0-20200403084947-efce78d414f3 h1:H0RIP0Zv5XJ+w2G4aOCpv+iDWZEctswYiRDuUU8Dq2g=
 gioui.org v0.0.0-20200403084947-efce78d414f3/go.mod h1:AHI9rFr6AEEHCb8EPVtb/p5M+NMJRKH58IOp8O3Je04=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=
@@ -254,6 +252,8 @@ github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05 h1:Z3Ct
 github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05/go.mod h1:xBEq2Lb5A1Ia6sLuZ9NZrwKm4Ob+G8OJopKRo74NgUg=
 github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c h1:b9p7k6aEKx7VVjvp+PWhc1GDWCjq8LWcm7eiCS1fFz0=
 github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c/go.mod h1:ZBnPwcopuDqDbJ1sb2D+2rMs2oRbbpisCRHKUZ/KJQI=
+github.com/raedahgroup/godcr v0.0.0-20200417144526-6558a98a6837 h1:1GP+LsmPWQ8KjOYEdsP6xLMYPV52D5JGBMWroUgMH1w=
+github.com/raedahgroup/godcr v0.0.0-20200417144526-6558a98a6837/go.mod h1:KMKovYfg6kuNc+tr12+0IJJBVF39QMIwKyarQzL4/vo=
 github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 h1:RYiqpb2ii2Z6J4x0wxK46kvPBbFuZcdhS+CIztmYgZs=
 github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086/go.mod h1:PLPIyL7ikehBD1OAjmKKiOEhbvWyHGaNDjquXMcYABo=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
