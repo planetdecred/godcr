@@ -282,7 +282,7 @@ func (win *Window) HandleInputs() {
 
 	for win.inputs.savePassword.Clicked(win.gtx) {
 		op := win.inputs.oldSpendingPassword.Text()
-		if strings.Trim(op, " ") == "" {
+		if op == "" {
 			win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
 			win.err = "Old Wallet password required and cannot be empty"
 			return
@@ -465,7 +465,7 @@ func (win *Window) validatePasswords() string {
 	}
 
 	match := win.inputs.matchSpending.Text()
-	if strings.Trim(match, " ") == "" {
+	if match == "" {
 		win.outputs.matchSpending.HintColor = win.theme.Color.Danger
 		win.err = "Enter new wallet password again and it cannot be empty."
 		return ""
@@ -481,7 +481,7 @@ func (win *Window) validatePasswords() string {
 
 func (win *Window) validatePassword() string {
 	pass := win.inputs.spendingPassword.Text()
-	if strings.Trim(pass, " ") == "" {
+	if pass == "" {
 		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
 		win.err = "Wallet password required and cannot be empty."
 		return ""
@@ -492,7 +492,7 @@ func (win *Window) validatePassword() string {
 
 func (win *Window) validateOldPassword() string {
 	pass := win.inputs.oldSpendingPassword.Text()
-	if strings.Trim(pass, " ") == "" {
+	if pass == "" {
 		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
 		win.err = "Old Wallet password required and cannot be empty"
 		return ""
