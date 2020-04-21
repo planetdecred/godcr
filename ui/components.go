@@ -112,16 +112,21 @@ func (win *Window) Header() {
 		layout.Flexed(0.6, func() {
 			win.theme.H3("GoDcr").Layout(win.gtx)
 		}),
-		layout.Flexed(0.2, func() {
-			layout.Center.Layout(win.gtx, func() {
-				win.outputs.createDiag.Layout(win.gtx, &win.inputs.createDiag)
-			})
-		}),
-		layout.Flexed(0.2, func() {
-			layout.Center.Layout(win.gtx, func() {
-				win.outputs.toRestoreWallet.Layout(win.gtx, &win.inputs.toRestoreWallet)
-			})
-		}),
+		//layout.Flexed(0.2, func() {
+		//	layout.Center.Layout(win.gtx, func() {
+		//		win.outputs.createDiag.Layout(win.gtx, &win.inputs.createDiag)
+		//	})
+		//}),
+		//layout.Flexed(0.2, func() {
+		//	layout.Center.Layout(win.gtx, func() {
+		//		win.outputs.toRestoreWallet.Layout(win.gtx, &win.inputs.toRestoreWallet)
+		//	})
+		//}),
+		//layout.Flexed(0.4, func() {
+		//	layout.Center.Layout(win.gtx, func() {
+		//		win.outputs.syncHeader.Layout(win.gtx, &win.inputs.syncHeader)
+		//	})
+		//}),
 	)
 }
 

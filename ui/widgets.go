@@ -1,4 +1,3 @@
-//widget
 package ui
 
 import (
@@ -124,12 +123,16 @@ func (win *Window) initWidgets() {
 	win.outputs.verifyMessDiag = theme.Button("Verify Message")
 	win.outputs.signMessageDiag = theme.Button("Sign Message")
 
-	//
-	win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
+	//win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
+	win.outputs.createDiag = theme.Button("Create a new wallet")
+	win.outputs.showRestoreWallet = theme.Button("Restore an existing wallet")
+	win.outputs.showRestoreWallet.Background = color.RGBA{}
+	win.outputs.showRestoreWallet.Color = theme.Color.Primary
 	win.outputs.createWallet = theme.Button("create")
 
-	win.outputs.toRestoreWallet = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
+	// win.outputs.toRestoreWallet = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
 	win.outputs.restoreDiag = theme.Button("Restore wallet")
+	win.outputs.createRestoreDiag = theme.Button("Add wallet")
 	win.outputs.restoreWallet = theme.Button("Restore")
 
 	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")

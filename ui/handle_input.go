@@ -74,6 +74,10 @@ func (win *Window) HandleInputs() {
 		win.states.dialog = true
 	}
 
+	if win.inputs.toCreateRestorePage.Clicked(win.gtx) {
+		win.states.createRestoreWallet = true
+	}
+
 	if win.inputs.createWallet.Clicked(win.gtx) {
 		pass := win.validatePasswords()
 		if pass == "" {
@@ -86,10 +90,19 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	// RESTORE WALLET
+	if win.inputs.backCreateRestore.Clicked(win.gtx) {
+		if win.states.restoreWallet {
+			win.states.restoreWallet = false
+			win.states.createRestoreWallet = true
+			return
+		}
+		win.states.createRestoreWallet = false
+		return
+	}
 
-	if win.inputs.toRestoreWallet.Clicked(win.gtx) {
-		win.current = PageRestore
+	// RESTORE WALLET
+	if win.inputs.showRestoreWallet.Clicked(win.gtx) {
+		win.states.restoreWallet = true
 		return
 	}
 
