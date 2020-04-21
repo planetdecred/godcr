@@ -56,6 +56,7 @@ func (win *Window) addPages() {
 		page:           &win.current,
 		navTab:         tabs,
 		walletsTab:     decredmaterial.NewTabs(),
+		//cancelDialogW:  win.theme.PlainIconButton(icons.contentClear),
 	}
 
 	win.pages = make(map[string]layout.Widget)
@@ -73,6 +74,7 @@ func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
 	navs := []string{PageOverview, PageWallet, PageTransactions, PageOverview}
 	toMax(gtx)
 	page.navTab.Layout(gtx, body)
+
 	if page.navTab.Changed() {
 		*page.page = navs[page.navTab.Selected]
 	}

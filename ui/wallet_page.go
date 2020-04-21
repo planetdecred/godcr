@@ -10,16 +10,19 @@ import (
 const PageWallet = "wallet"
 
 type walletPage struct {
-	container, accountsList                        layout.List
-	renaming                                       bool
-	rename, beginRename, cancelRename, addAcct     widget.Button
-	renameW, beginRenameW, cancelRenameW, addAcctW decredmaterial.IconButton
-	editor                                         widget.Editor
-	editorW                                        decredmaterial.Editor
+	dialog                                             *dialogWidgets
+	container, accountsList                            layout.List
+	renaming, deleting                                 bool
+	rename, delete, beginRename, cancelRename, addAcct widget.Button
+	renameW, beginRenameW, cancelRenameW, addAcctW     decredmaterial.IconButton
+	editor                                             widget.Editor
+	editorW                                            decredmaterial.Editor
+	deleteW                                            decredmaterial.Button
 }
 
 func WalletPage(common pageCommon) layout.Widget {
 	page := walletPage{
+		dialog: newDialogWidgets(common),
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -31,11 +34,15 @@ func WalletPage(common pageCommon) layout.Widget {
 		renameW:       common.theme.PlainIconButton(common.icons.navigationCheck),
 		editorW:       common.theme.Editor("Enter wallet name"),
 		addAcctW:      common.theme.IconButton(common.icons.contentAdd),
+		deleteW:       common.theme.DangerButton("Delete Wallet"),
 	}
 	gtx := common.gtx
 
 	return func() {
 		current := common.info.Wallets[*common.selectedWallet]
+		if common.walletsTab.Changed() {
+			page.renaming = false
+		}
 		wdgs := []func(){
 			func() {
 				if page.renaming {
@@ -66,10 +73,10 @@ func WalletPage(common pageCommon) layout.Widget {
 				}
 			},
 			func() {
+				common.theme.H5("Total Balance: " + current.Balance).Layout(gtx)
+			},
+			func() {
 				horFlex.Layout(gtx,
-					rigid(func() {
-						common.theme.H5("Total Balance: " + current.Balance).Layout(gtx)
-					}),
 					rigid(func() {
 						common.theme.H5("Accounts").Layout(gtx)
 					}),
@@ -99,14 +106,19 @@ func WalletPage(common pageCommon) layout.Widget {
 							}),
 						)
 					}
-					layout.Inset{Top: unit.Dp(3)}.Layout(gtx, a)
+					layout.UniformInset(unit.Dp(5)).Layout(gtx, a)
 				})
+			},
+			func() {
+				page.deleteW.Layout(gtx, &page.delete)
 			},
 		}
 
-		common.LayoutWithWallets(gtx, func() {
-			page.container.Layout(common.gtx, len(wdgs), func(i int) {
-				wdgs[i]()
+		page.dialog.LayoutIfActive(gtx, func() {
+			common.LayoutWithWallets(gtx, func() {
+				page.container.Layout(common.gtx, len(wdgs), func(i int) {
+					wdgs[i]()
+				})
 			})
 		})
 
@@ -117,7 +129,6 @@ func WalletPage(common pageCommon) layout.Widget {
 
 		if page.cancelRename.Clicked(gtx) {
 			page.renaming = false
-			page.editor.SetText(current.Name)
 		}
 
 		if page.rename.Clicked(gtx) {
@@ -129,6 +140,34 @@ func WalletPage(common pageCommon) layout.Widget {
 				common.info.Wallets[*common.selectedWallet].Name = name
 				page.renaming = false
 			}
+		}
+
+		if page.delete.Clicked(gtx) {
+			page.dialog.SetDialog(page.dialog.deleteWallet(common))
+		}
+	}
+}
+
+func (wdgs *dialogWidgets) deleteWallet(common pageCommon) layout.Widget {
+	return func() {
+		gtx := common.gtx
+		common.theme.Surface(gtx, func() {
+			vertFlex.Layout(gtx,
+				rigid(func() {
+					wdgs.cancelW.Layout(gtx, &wdgs.cancel)
+				}),
+				rigid(func() {
+					wdgs.passwordW.Layout(gtx, &wdgs.password)
+				}),
+				rigid(func() {
+					wdgs.confirmW.Layout(gtx, &wdgs.confirm)
+				}),
+			)
+		})
+		if wdgs.confirm.Clicked(gtx) {
+			pass := wdgs.password.Text()
+			common.wallet.DeleteWallet(common.info.Wallets[*common.selectedWallet].ID, pass)
+			wdgs.active = false
 		}
 	}
 }
