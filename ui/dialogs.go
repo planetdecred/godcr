@@ -240,8 +240,6 @@ func (win *Window) verifyMessageDiag() {
 						}),
 						layout.Flexed(1, func() {
 							layout.E.Layout(win.gtx, func() {
-								win.outputs.cancelDiag.Padding = unit.Dp(5)
-								win.outputs.cancelDiag.Size = unit.Dp(35)
 								win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
 							})
 						}),
