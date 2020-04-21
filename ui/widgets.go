@@ -12,21 +12,20 @@ import (
 )
 
 type inputs struct {
-	createDiag, deleteDiag, cancelDialog                           widget.Button
-	createWallet, restoreWallet, deleteWallet, renameWallet        widget.Button
-	addAccount, toggleWalletRename                                 widget.Button
-	toOverview, toWallets, toTransactions, toSend, toSettings      widget.Button
-	toRestoreWallet                                                widget.Button
-	toReceive                                                      widget.Button
-	toTransactionsFilters                                          widget.Button
-	applyFiltersTransactions                                       widget.Button
-	sync, syncHeader, hideMsgInfo, changePasswordDiag                                  widget.Button
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
-	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog                widget.Editor
-	addressInput, messageInput, signInput                          widget.Editor
-	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                widget.Button
-	restoreDiag, addAcctDiag, savePassword                    widget.Button
-	createWallet, restoreWallet, deleteWallet, renameWallet   widget.Button
+	createDiag, deleteDiag, cancelDialog                                 widget.Button
+	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
+	addAccount, toggleWalletRename                                       widget.Button
+	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
+	toRestoreWallet                                                      widget.Button
+	toReceive                                                            widget.Button
+	toTransactionsFilters                                                widget.Button
+	applyFiltersTransactions                                             widget.Button
+	sync, syncHeader, hideMsgInfo, changePasswordDiag                    widget.Button
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
+	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
+	addressInput, messageInput, signInput                                widget.Editor
+	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                      widget.Button
+	restoreDiag, addAcctDiag, savePassword                               widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -71,15 +70,14 @@ type outputs struct {
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
 	applyFiltersTransactions                                                      decredmaterial.Button
-	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag                                                   decredmaterial.Button
-	addAccount, newAddressDiag                                     decredmaterial.Button
-	info, more, copy, verifyInfo                                   decredmaterial.IconButton
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
+	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag                 decredmaterial.Button
+	addAccount, newAddressDiag                                                    decredmaterial.Button
+	info, more, copy, verifyInfo                                                  decredmaterial.IconButton
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                decredmaterial.IconButton
 	passwordBar                                                                   *decredmaterial.ProgressBar
 
 	tabs                                                              []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
-	passwordStgth                                                                 *decredmaterial.ProgressBar
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -217,7 +215,6 @@ func (win *Window) initWidgets() {
 	win.outputs.receiveAddressLabel = win.theme.H6("")
 	win.outputs.receiveAddressLabel.Color = theme.Color.Primary
 	win.outputs.addressCopiedLabel = win.theme.Caption("")
-	win.outputs.passStgthTxt = win.theme.Caption("")
 
 	win.outputs.toWallets = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionAccountBalanceWallet)))
 	win.outputs.toOverview = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionHome)))

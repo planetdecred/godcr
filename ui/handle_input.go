@@ -191,7 +191,6 @@ func (win *Window) HandleInputs() {
 	if strings.Trim(win.inputs.addressInput.Text(), " ") == "" || strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
 		win.outputs.verifyBtn.Background = win.theme.Color.Hint
 		win.outputs.verifyMessage.Text = ""
-		win.err = ""
 		if win.inputs.verifyBtn.Clicked(win.gtx) {
 			return
 		}
@@ -234,6 +233,7 @@ func (win *Window) HandleInputs() {
 
 	//signature control
 	if win.inputs.clearSign.Clicked(win.gtx) {
+		win.err = ""
 		win.inputs.signInput.SetText("")
 		return
 	}
@@ -243,6 +243,7 @@ func (win *Window) HandleInputs() {
 	}
 	//address control
 	if win.inputs.clearAddr.Clicked(win.gtx) {
+		win.err = ""
 		win.inputs.addressInput.SetText("")
 		return
 	}
@@ -252,6 +253,7 @@ func (win *Window) HandleInputs() {
 	}
 	//mesage control
 	if win.inputs.clearMsg.Clicked(win.gtx) {
+		win.err = ""
 		win.inputs.messageInput.SetText("")
 		return
 	}
@@ -512,10 +514,12 @@ func (win *Window) resetPasswords() {
 }
 
 func (win *Window) resetVerifyFields() {
+	win.err = ""
 	win.inputs.addressInput.SetText("")
 	win.inputs.signInput.SetText("")
 	win.inputs.messageInput.SetText("")
 	win.outputs.verifyMessage.Text = ""
+}
 
 func (win *Window) resetButton() {
 	win.outputs.savePassword.Text = "Change"
