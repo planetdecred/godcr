@@ -183,6 +183,7 @@ func (win *Window) HandleInputs() {
 	// VERIFY MESSAGE
 
 	if win.inputs.verifyMessDiag.Clicked(win.gtx) {
+		win.err = ""
 		win.states.dialog = true
 		win.dialog = win.verifyMessageDiag
 		return
@@ -278,6 +279,7 @@ func (win *Window) HandleInputs() {
 	// CHANGE WALLET PASSWORD
 
 	for win.inputs.changePasswordDiag.Clicked(win.gtx) {
+		win.err = ""
 		win.dialog = win.editPasswordDiag
 		win.states.dialog = true
 	}
