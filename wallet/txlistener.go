@@ -18,13 +18,14 @@ type TxConfirmed struct {
 
 func (l *listener) OnTransaction(transaction string) {
 	l.Send <- SyncStatusUpdate{}
-
 }
+
 func (l *listener) OnBlockAttached(walletID int, blockHeight int32) {
 	l.Send <- SyncStatusUpdate{
 		Stage: BlockAttached,
 	}
 }
+
 func (l *listener) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
 	l.Send <- SyncStatusUpdate{
 		BlockConfirmed: TxConfirmed{
@@ -33,9 +34,4 @@ func (l *listener) OnTransactionConfirmed(walletID int, hash string, blockHeight
 			Hash:     hash,
 		},
 	}
-	// l.Send <- TxConfirmed{
-	// 	WalletID: walletID,
-	// 	Height:   blockHeight,
-	// 	Hash:     hash,
-	// }
 }

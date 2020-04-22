@@ -143,6 +143,7 @@ func (win *Window) Loop(shutdown chan int) {
 			case wallet.BlockAttached:
 				if win.walletInfo.Synced {
 					win.wallet.GetMultiWalletInfo()
+					win.wallet.GetAllTransactions(0, 0, 0)
 				}
 			}
 			win.updateSyncProgress(update.BlockConfirmed)
