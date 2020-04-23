@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 )
@@ -195,6 +196,40 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 			Total:  totalTxn,
 			Txs:    transactions,
 			Recent: recentTxs,
+		}
+		wal.Send <- resp
+	}()
+}
+
+// GetTransaction get transaction information by wallet ID and transaction hash
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
+	go func() {
+		var resp Response
+		wall := wal.multi.WalletWithID(walletID)
+
+		hash, err := chainhash.NewHashFromStr(txnHash)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+
+		txn, err := wall.GetTransactionRaw(hash[:])
+		if err != nil {
+			log.Info(err, txnHash)
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+		bestBestBlock := wal.multi.GetBestBlock()
+		status, confirmations := transactionStatus(bestBestBlock.Height, txn.BlockHeight)
+		resp.Resp = &Transaction{
+			Txn:           *txn,
+			Status:        status,
+			Balance:       dcrutil.Amount(txn.Amount).String(),
+			WalletName:    wall.Name,
+			Confirmations: confirmations,
 		}
 		wal.Send <- resp
 	}()
