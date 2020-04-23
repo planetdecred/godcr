@@ -1,72 +1,112 @@
 package decredmaterial
 
 import (
+	"gioui.org/f32"
 	"gioui.org/layout"
+	"gioui.org/op/paint"
 	"gioui.org/widget"
+	"image"
+	"image/color"
 )
 
 // DefaultTabSize is the default flexed size of the tab section in a Tabs
 const DefaultTabSize = .15
 
+const (
+	Top Position = iota
+	Right
+	Bottom
+	Left
+)
+
+type Position int
+
 type TabItem struct {
 	Button
+	Icon
 }
 
-func (t *TabItem) Layout(gtx *layout.Context, btn *widget.Button, selected bool) {
-	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-	t.Button.Layout(gtx, btn)
+func (t *TabItem) Layout(gtx *layout.Context, tabIndex, selected int, btn *widget.Button) {
+	var tabWidth, tabHeight int
+
+	layout.Stack{Alignment: layout.E}.Layout(gtx,
+		layout.Stacked(func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			t.Button.Color = darkblue
+			t.Button.Background = color.RGBA{}
+			t.Button.Layout(gtx, btn)
+			tabHeight = gtx.Dimensions.Size.Y
+		}),
+		layout.Stacked(func() {
+			layout.Flex{Axis:layout.Horizontal}.Layout(gtx, layout.Flexed(0, func() {
+				if selected != tabIndex {
+					return
+				}
+				paint.ColorOp{Color: keyblue}.Add(gtx.Ops)
+				paint.PaintOp{Rect: f32.Rectangle{
+					Max: f32.Point{
+						X: float32(5),
+						Y: float32(tabHeight),
+					},
+				}}.Add(gtx.Ops)
+				gtx.Dimensions = layout.Dimensions{
+					Size: image.Point{X: tabWidth, Y: tabHeight},
+				}
+			}))
+		}),
+	)
 }
 
 // Tabs laysout a Flexed(Size) List with Selected as the first element and Item as the rest.
 type Tabs struct {
-	List     *layout.List
-	Flex     layout.Flex
-	Size     float32
-	items    []TabItem
-	Selected int
-	changed  bool
-	btns     []*widget.Button
+	Flex        layout.Flex
+	Size        float32
+	items       []TabItem
+	Selected    int
+	changed     bool
+	btns        []*widget.Button
+	list        *layout.List
+	Position 	Position
 }
 
 func NewTabs() *Tabs {
 	return &Tabs{
-		List: &layout.List{
-			Axis: layout.Vertical,
-		},
+		list: &layout.List{},
+		Position: Left,
 		Size: DefaultTabSize,
 	}
 }
 
-func (tab *Tabs) SetTabs(tabs []TabItem) {
-	tab.items = tabs
-	if len(tab.items) != len(tab.btns) {
-		tab.btns = make([]*widget.Button, len(tab.items))
-		for i := range tab.btns {
-			tab.btns[i] = new(widget.Button)
+func (t *Tabs) SetTabs(tabs []TabItem) {
+	t.items = tabs
+	if len(t.items) != len(t.btns) {
+		t.btns = make([]*widget.Button, len(t.items))
+		for i := range t.btns {
+			t.btns[i] = new(widget.Button)
 		}
 	}
-}
-
-func (tab *Tabs) Changed() bool {
-	return tab.changed
 }
 
 // Layout the tabs
-func (tab *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
-	tab.Flex.Layout(gtx,
-		layout.Flexed(tab.Size, func() {
-			tab.List.Layout(gtx, len(tab.btns), func(i int) {
-				tab.items[i].Layout(gtx, tab.btns[i], i == tab.Selected)
+func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
+	switch t.Position {
+	case Top, Bottom:
+		t.list.Axis = layout.Horizontal
+		t.Flex.Axis = layout.Vertical
+	default:
+		t.list.Axis = layout.Vertical
+		t.Flex.Axis = layout.Horizontal
+	}
+
+	t.Flex.Layout(gtx,
+		layout.Flexed(t.Size, func() {
+			t.list.Layout(gtx, len(t.btns), func(i int) {
+				t.items[i].Layout(gtx, i, t.Selected, t.btns[i])
+				if t.btns[i].Clicked(gtx) {
+					t.Selected = i
+				}
 			})
 		}),
-		layout.Flexed(1-tab.Size, body),
+		layout.Flexed(1-t.Size, body),
 	)
-	for i := range tab.btns {
-		tab.changed = false
-		if tab.btns[i].Clicked(gtx) {
-			tab.changed = true
-			tab.Selected = i
-			return
-		}
-	}
 }

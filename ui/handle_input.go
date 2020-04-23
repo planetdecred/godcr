@@ -20,14 +20,13 @@ var (
 
 // HandleInputs handles all ui inputs
 func (win *Window) HandleInputs() {
-	if win.tabs.Changed() {
-		if win.tabs.Selected != win.selected {
-			win.combined.sel.Selected = 0
-			win.selectedAccount = 0
-			win.selected = win.tabs.Selected
-			win.sortTransactions()
-		}
+	if win.tabs.Selected != win.selected {
+		win.combined.sel.Selected = 0
+		win.selectedAccount = 0
+		win.selected = win.tabs.Selected
+		win.sortTransactions()
 	}
+
 	if win.combined.sel.Changed() {
 		win.selectedAccount = win.combined.sel.Selected
 	}
