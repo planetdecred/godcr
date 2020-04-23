@@ -35,10 +35,20 @@ func (win Window) updateSyncProgress(report interface{}) {
 		status.RemainingTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
 		status.TotalSteps = wallet.TotalSyncSteps
 		status.Steps = wallet.RescanHeadersStep
+	case wallet.NewBlock:
+		for _, info := range win.walletInfo.Wallets {
+			if info.ID == t.WalletID {
+				win.wallet.GetAllTransactions(0, 0, 0)
+				break
+			}
+		}
 	case wallet.TxConfirmed:
 		if t.Hash != "" {
-			log.Info(">> wallet.TxConfirmed: Transaction confirmed")
 			win.wallet.GetAllTransactions(0, 0, 0)
+			if win.walletTransaction != nil &&
+				win.walletTransaction.Txn.Hash == t.Hash {
+				win.wallet.GetTransaction(t.WalletID, t.Hash)
+			}
 		}
 	}
 }

@@ -26,6 +26,9 @@ func (win *Window) updateStates(update interface{}) {
 		win.walletTransactions = e
 		win.updateToTransactionDetailsButtons()
 		return
+	case *wallet.Transaction:
+		win.walletTransaction = e
+		return
 	case wallet.CreatedSeed:
 		win.current = PageWallet
 		win.states.dialog = false
