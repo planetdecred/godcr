@@ -12,6 +12,7 @@ const PageWallet = "wallet"
 // const (
 // 	subDeleteWallet = iota
 // 	subAddAcct
+
 // 	subVerifyMessage
 // )
 
