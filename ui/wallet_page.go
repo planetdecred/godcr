@@ -9,8 +9,14 @@ import (
 
 const PageWallet = "wallet"
 
+// const (
+// 	subDeleteWallet = iota
+// 	subAddAcct
+// 	subVerifyMessage
+// )
+
 type walletPage struct {
-	dialog                                             *dialogWidgets
+	//subPage                                            int
 	container, accountsList                            layout.List
 	renaming, deleting                                 bool
 	rename, delete, beginRename, cancelRename, addAcct widget.Button
@@ -22,7 +28,6 @@ type walletPage struct {
 
 func WalletPage(common pageCommon) layout.Widget {
 	page := &walletPage{
-		dialog: newDialogWidgets(common),
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -119,12 +124,9 @@ func (page *walletPage) Layout(common pageCommon) {
 			page.deleteW.Layout(gtx, &page.delete)
 		},
 	}
-
-	page.dialog.LayoutIfActive(gtx, func() {
-		common.LayoutWithWallets(gtx, func() {
-			page.container.Layout(common.gtx, len(wdgs), func(i int) {
-				wdgs[i]()
-			})
+	common.LayoutWithWallets(gtx, func() {
+		page.container.Layout(common.gtx, len(wdgs), func(i int) {
+			wdgs[i]()
 		})
 	})
 }
@@ -149,34 +151,6 @@ func (page *walletPage) Handle(common pageCommon) {
 		} else {
 			common.info.Wallets[*common.selectedWallet].Name = name
 			page.renaming = false
-		}
-	}
-
-	if page.delete.Clicked(gtx) {
-		page.dialog.SetDialog(page.dialog.deleteWallet(common))
-	}
-}
-
-func (wdgs *dialogWidgets) deleteWallet(common pageCommon) layout.Widget {
-	return func() {
-		gtx := common.gtx
-		common.theme.Surface(gtx, func() {
-			vertFlex.Layout(gtx,
-				rigid(func() {
-					wdgs.cancelW.Layout(gtx, &wdgs.cancel)
-				}),
-				rigid(func() {
-					wdgs.passwordW.Layout(gtx, &wdgs.password)
-				}),
-				rigid(func() {
-					wdgs.confirmW.Layout(gtx, &wdgs.confirm)
-				}),
-			)
-		})
-		if wdgs.confirm.Clicked(gtx) {
-			pass := wdgs.password.Text()
-			common.wallet.DeleteWallet(common.info.Wallets[*common.selectedWallet].ID, pass)
-			wdgs.active = false
 		}
 	}
 }
