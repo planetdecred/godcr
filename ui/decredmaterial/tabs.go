@@ -11,11 +11,10 @@ import (
 	"gioui.org/widget"
 )
 
-// 	IndicatorAxis is the default axis for active indicators on a tab item
-var IndicatorAxis = layout.Horizontal
-
-// DefaultTabSize is the default flexed size of the tab section in a Tabs
-const DefaultTabSize = .15
+// DefaultTabSizeVertical is the default flexed size of the tab section in a Tabs when vertically aligned
+const DefaultTabSizeVertical = .15
+// DefaultTabSizeHorizontal is the default flexed size of the tab section in a Tabs when horizontally aligned
+const DefaultTabSizeHorizontal = .08
 
 const (
 	Top Position = iota
@@ -28,7 +27,7 @@ type Position int
 
 type TabItem struct {
 	Button
-	index     int
+	index int
 }
 
 func tabIndicatorDimensions(gtx *layout.Context, tabPosition Position) (width, height int) {
@@ -41,6 +40,8 @@ func tabIndicatorDimensions(gtx *layout.Context, tabPosition Position) (width, h
 	return
 }
 
+// tabAlignment determines the alignment of the active tab indicator relative to the tab item
+// content. It is determined by the position of the tab.
 func tabAlignment(tabPosition Position) layout.Direction {
 	switch tabPosition {
 	case Top:
@@ -56,6 +57,7 @@ func tabAlignment(tabPosition Position) layout.Direction {
 	}
 }
 
+// indicator defines how the active tab indicator is drawn
 func indicator(gtx *layout.Context, width, height int) layout.Widget {
 	return func() {
 		paint.ColorOp{Color: keyblue}.Add(gtx.Ops)
@@ -76,6 +78,9 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 
 	layout.Stack{Alignment: tabAlignment(tabPosition)}.Layout(gtx,
 		layout.Stacked(func() {
+			if tabPosition == Left || tabPosition == Right {
+				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			}
 			t.Button.Color = darkblue
 			t.Button.Background = color.RGBA{}
 			t.Button.Layout(gtx, btn)
@@ -86,7 +91,8 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 				return
 			}
 			if tabPosition == Left || tabPosition == Right {
-				layout.Flex{Axis: IndicatorAxis}.Layout(gtx, layout.Flexed(0, indicator(gtx, tabWidth, tabHeight)))
+				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(0, indicator(gtx, tabWidth, tabHeight)))
 			} else {
 				indicator(gtx, tabWidth, tabHeight)()
 			}
@@ -110,10 +116,11 @@ func NewTabs() *Tabs {
 	return &Tabs{
 		list:     &layout.List{},
 		Position: Left,
-		Size:     DefaultTabSize,
+		Size:     DefaultTabSizeVertical,
 	}
 }
 
+// SetTabs creates a button widget for each tab item
 func (t *Tabs) SetTabs(tabs []TabItem) {
 	t.items = tabs
 	if len(t.items) != len(t.btns) {
@@ -124,11 +131,41 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 	}
 }
 
+// contentTabPosition depending on the specified tab position determines the order of the tab and
+// the page content.
+func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widgets []layout.FlexChild) {
+	var content, tab layout.FlexChild
+
+	widgets = make([]layout.FlexChild, 2)
+	content = layout.Flexed(1-t.Size, func() {
+		layout.Inset{Left: unit.Dp(5)}.Layout(gtx, body)
+	})
+	tab = layout.Flexed(t.Size, func() {
+		t.list.Layout(gtx, len(t.btns), func(i int) {
+			t.items[i].index = i
+			t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
+			if t.btns[i].Clicked(gtx) {
+				t.Selected = i
+			}
+		})
+	})
+
+	switch t.Position {
+	case Bottom, Right:
+		widgets[0], widgets[1] = content, tab
+	default:
+		widgets[0], widgets[1] = tab, content
+	}
+	return widgets
+}
+
 // Layout the tabs
 func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	switch t.Position {
 	case Top, Bottom:
-		t.Size = 0.08
+		if t.Size < DefaultTabSizeHorizontal {
+			t.Size = DefaultTabSizeHorizontal
+		}
 		t.list.Axis = layout.Horizontal
 		t.Flex.Axis = layout.Vertical
 	default:
@@ -136,18 +173,6 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 		t.Flex.Axis = layout.Horizontal
 	}
 
-	t.Flex.Layout(gtx,
-		layout.Flexed(t.Size, func() {
-			t.list.Layout(gtx, len(t.btns), func(i int) {
-				t.items[i].index = i
-				t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
-				if t.btns[i].Clicked(gtx) {
-					t.Selected = i
-				}
-			})
-		}),
-		layout.Flexed(1-t.Size, func() {
-			layout.Inset{Left: unit.Dp(5)}.Layout(gtx, body)
-		}),
-	)
+	widgets := t.contentTabPosition(gtx, body)
+	t.Flex.Layout(gtx, widgets...)
 }
