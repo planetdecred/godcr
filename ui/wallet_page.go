@@ -48,6 +48,7 @@ func WalletPage(common pageCommon) layout.Widget {
 	}
 }
 
+// Layout lays out the widgets for the main wallets page.
 func (page *walletPage) Layout(common pageCommon) {
 	gtx := common.gtx
 	current := common.info.Wallets[*common.selectedWallet]
@@ -131,6 +132,7 @@ func (page *walletPage) Layout(common pageCommon) {
 	})
 }
 
+// Handle handles all widget inputs on the main wallets page.
 func (page *walletPage) Handle(common pageCommon) {
 	gtx := common.gtx
 	current := common.info.Wallets[*common.selectedWallet]
