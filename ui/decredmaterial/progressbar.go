@@ -15,6 +15,7 @@ import (
 type ProgressBar struct {
 	BackgroundColor color.RGBA
 	ProgressColor   color.RGBA
+	Progress        float64
 }
 
 // track lays out a rectangle to represent the level of progress yet to be completed.
@@ -23,8 +24,8 @@ func (p *ProgressBar) track(gtx *layout.Context) {
 }
 
 // value lays out a rectangle to represent the level of progress that has been completed.
-func (p *ProgressBar) value(gtx *layout.Context, progress float64) {
-	width := progress / 100 * float64(gtx.Constraints.Width.Max)
+func (p *ProgressBar) value(gtx *layout.Context) {
+	width := p.Progress / 100 * float64(gtx.Constraints.Width.Max)
 	if width > float64(gtx.Constraints.Width.Max) {
 		width = float64(gtx.Constraints.Width.Max)
 	}
@@ -49,20 +50,21 @@ func borderedRectangle(gtx *layout.Context, color color.RGBA, x, y int) {
 }
 
 // Layout lays out the track and level of progress on each other.
-func (p *ProgressBar) Layout(gtx *layout.Context, progress float64) {
+func (p *ProgressBar) Layout(gtx *layout.Context) {
 	layout.Stack{}.Layout(gtx,
 		layout.Stacked(func() {
 			p.track(gtx)
-			p.value(gtx, progress)
+			p.value(gtx)
 		}),
 	)
 }
 
 // ProgressBar returns a new ProgressBar instance.
-func (t *Theme) ProgressBar() *ProgressBar {
+func (t *Theme) ProgressBar(progress float64) *ProgressBar {
 	return &ProgressBar{
 		BackgroundColor: t.Color.Hint,
 		ProgressColor:   t.Color.Success,
+		Progress:        progress,
 	}
 }
 
