@@ -12,6 +12,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
+	"github.com/atotto/clipboard"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -29,11 +30,10 @@ type Editor struct {
 }
 
 type EditorCustom struct {
-	theme *Theme
 	titleLabel Label
 
 	editorMaterial Editor
-	editorWidget   *widget.Editor
+	editor         *widget.Editor
 
 	pasteButtonMaterial IconButton
 	pasteButtonWidget   *widget.Button
@@ -52,18 +52,29 @@ func (t *Theme) Editor(hint string) Editor {
 	}
 }
 
-func (t *Theme) EditorCustom(hint, title string) EditorCustom {
+func (t *Theme) EditorCustom(hint, title string, editor *widget.Editor) EditorCustom {
 	return EditorCustom{
-		theme:      t,
 		titleLabel: t.H6(title),
 
 		editorMaterial: t.Editor(hint),
-		editorWidget:   new(widget.Editor),
+		editor:         editor,
 
-		pasteButtonMaterial:  t.IconButton(mustIcon(NewIcon(icons.ContentContentPaste))),
-		clearButtonMaterial:  t.IconButton(mustIcon(NewIcon(icons.ContentClear))),
+		pasteButtonMaterial: IconButton{
+			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
+			Size:       unit.Dp(30),
+			Background: color.RGBA{0, 0, 0, 0},
+			Color:      t.Color.Text,
+			Padding:    unit.Dp(5),
+		},
 
-		pasteButtonWidget:  new(widget.Button),
+		clearButtonMaterial: IconButton{
+			Icon:       mustIcon(NewIcon(icons.ContentClear)),
+			Size:       unit.Dp(30),
+			Background: color.RGBA{0, 0, 0, 0},
+			Color:      t.Color.Text,
+			Padding:    unit.Dp(5),
+		},
+		pasteButtonWidget: new(widget.Button),
 		clearButtonWidget: new(widget.Button),
 	}
 }
@@ -96,9 +107,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 }
 
 func (e EditorCustom) Layout(gtx *layout.Context) {
-	// p.handleEvents(gtx, confirm, cancel)
-	// p.updateColors()
-
+	e.handleEvents(gtx)
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
 			e.titleLabel.Layout(gtx)
@@ -106,20 +115,18 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 		layout.Rigid(func() {
 			layout.Flex{}.Layout(gtx,
 				layout.Rigid(func() {
-					Card{}.Layout(gtx, func() {
-						layout.Flex{}.Layout(gtx,
-							layout.Flexed(0.9, func() {
-								e.editorMaterial.Layout(gtx, e.editorWidget)
-							}),
-						)
-					})
+					layout.Flex{}.Layout(gtx,
+						layout.Flexed(0.9, func() {
+							e.editorMaterial.Layout(gtx, e.editor)
+						}),
+					)
 				}),
 				layout.Rigid(func() {
 					inset := layout.Inset{
 						Left: unit.Dp(10),
 					}
 					inset.Layout(gtx, func() {
-						if e.editorWidget.Text() == "" {
+						if e.editor.Text() == "" {
 							e.pasteButtonMaterial.Layout(gtx, e.pasteButtonWidget)
 						} else {
 							e.clearButtonMaterial.Layout(gtx, e.clearButtonWidget)
@@ -129,4 +136,18 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 			)
 		}),
 	)
+}
+
+func (e EditorCustom) handleEvents(gtx *layout.Context) {
+	data, err := clipboard.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+
+	for e.pasteButtonWidget.Clicked(gtx) {
+		e.editor.SetText(data)
+	}
+	for e.clearButtonWidget.Clicked(gtx) {
+		e.editor.SetText("")
+	}
 }
