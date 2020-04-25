@@ -26,6 +26,19 @@ type Editor struct {
 	shaper text.Shaper
 }
 
+type EditorCustom struct {
+	titleLabel Label
+
+	passwordEditorMaterial Editor
+	passwordEditorWidget   *widget.Editor
+
+	confirmButtonMaterial Button
+	confirmButtonWidget   *widget.Button
+
+	cancelButtonMaterial Button
+	cancelButtonWidget   *widget.Button
+}
+
 func (t *Theme) Editor(hint string) Editor {
 	return Editor{
 		TextSize:  t.TextSize,
