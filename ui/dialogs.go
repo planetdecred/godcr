@@ -200,36 +200,7 @@ func (win *Window) verifyMessageDiag() {
 								Bottom: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
-								win.vFlexSB(
-									rigid(func() {
-										win.theme.H6("Enter Signature").Layout(win.gtx)
-									}),
-									rigid(func() {
-										win.hFlexSB(
-											rigid(func() {
-												decredmaterial.Card{}.Layout(win.gtx, func() {
-													win.hFlexSB(
-														layout.Flexed(0.9, func() {
-															win.outputs.signInput.Layout(win.gtx, &win.inputs.signInput)
-														}),
-													)
-												})
-											}),
-											rigid(func() {
-												inset := layout.Inset{
-													Left: unit.Dp(10),
-												}
-												inset.Layout(win.gtx, func() {
-													if win.inputs.signInput.Text() == "" {
-														win.outputs.pasteSign.Layout(win.gtx, &win.inputs.pasteSign)
-													} else {
-														win.outputs.clearSign.Layout(win.gtx, &win.inputs.clearSign)
-													}
-												})
-											}),
-										)
-									}),
-								)
+								win.outputs.signInput.Layout(win.gtx)
 							})
 						}),
 						rigid(func() {

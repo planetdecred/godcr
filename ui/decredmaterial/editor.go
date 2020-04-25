@@ -11,6 +11,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/f32"
 
 	"github.com/atotto/clipboard"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -31,6 +32,7 @@ type Editor struct {
 
 type EditorCustom struct {
 	titleLabel Label
+	LineColor color.RGBA
 
 	editorMaterial Editor
 	editor         *widget.Editor
@@ -54,7 +56,8 @@ func (t *Theme) Editor(hint string) Editor {
 
 func (t *Theme) EditorCustom(hint, title string, editor *widget.Editor) EditorCustom {
 	return EditorCustom{
-		titleLabel: t.H6(title),
+		titleLabel: t.Body1(title),
+		LineColor: t.Color.Text,
 
 		editorMaterial: t.Editor(hint),
 		editor:         editor,
@@ -115,9 +118,37 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 		layout.Rigid(func() {
 			layout.Flex{}.Layout(gtx,
 				layout.Rigid(func() {
-					layout.Flex{}.Layout(gtx,
-						layout.Flexed(0.9, func() {
-							e.editorMaterial.Layout(gtx, e.editor)
+					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func() {
+							inset := layout.Inset{
+								Top: unit.Dp(6),
+								Bottom: unit.Dp(4),
+							}
+							inset.Layout(gtx, func() {
+								layout.Flex{}.Layout(gtx,
+									layout.Flexed(0.9, func() {
+										e.editorMaterial.Layout(gtx, e.editor)
+									}),
+								)
+							})
+						}),
+						layout.Rigid(func(){
+							layout.Flex{}.Layout(gtx,
+								layout.Flexed(0.9, func() {
+									rect := f32.Rectangle{
+										Max: f32.Point{
+											X: float32(gtx.Constraints.Width.Max),
+											Y: 1,
+										},
+									}
+									op.TransformOp{}.Offset(f32.Point{
+										X: 0,
+										Y: 0,
+									}).Add(gtx.Ops)
+									paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
+									paint.PaintOp{Rect: rect}.Add(gtx.Ops)
+								}),
+							)
 						}),
 					)
 				}),
