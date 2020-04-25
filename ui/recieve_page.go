@@ -9,6 +9,8 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
+const PageReceive = "receive"
+
 var pageContainer = &layout.List{Axis: layout.Vertical}
 
 func (win *Window) Receive() {
