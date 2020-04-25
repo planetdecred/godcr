@@ -69,34 +69,31 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
-	// for _, evt := range win.inputs.addressInput.Events(win.gtx) {
-	// 	switch evt.(type) {
-	// 	case widget.ChangeEvent:
-	// 		win.err = ""
-	// 		win.outputs.verifyMessage.Text = ""
-	// 		win.outputs.addressInput.HintColor = win.theme.Color.Hint
-	// 		return
-	// 	}
-	// 	log.Debug("address evt", evt)
-	// }
+	for _, evt := range win.inputs.addressInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			return
+		}
+		log.Debug("address evt", evt)
+	}
 
-	// for _, evt := range win.inputs.signInput.Events(win.gtx) {
-	// 	switch evt.(type) {
-	// 	case widget.ChangeEvent:
-	// 		win.err = ""
-	// 		win.outputs.verifyMessage.Text = ""
-	// 		win.outputs.signInput.HintColor = win.theme.Color.Hint
-	// 		return
-	// 	}
-	// 	log.Debug("sign evt", evt)
-	// }
+	for _, evt := range win.inputs.signInput.Events(win.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			win.err = ""
+			win.outputs.verifyMessage.Text = ""
+			return
+		}
+		log.Debug("sign evt", evt)
+	}
 
 	for _, evt := range win.inputs.messageInput.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.verifyMessage.Text = ""
-			win.outputs.messageInput.HintColor = win.theme.Color.Hint
 			return
 		}
 		log.Debug("Match evt", evt)

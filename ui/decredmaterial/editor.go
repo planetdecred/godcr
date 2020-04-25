@@ -5,13 +5,13 @@ package decredmaterial
 import (
 	"image/color"
 
+	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/f32"
 
 	"github.com/atotto/clipboard"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -31,17 +31,21 @@ type Editor struct {
 }
 
 type EditorCustom struct {
-	titleLabel Label
+	theme *Theme
+	//title is the title of the editor input field
+	title     string
 	LineColor color.RGBA
 
 	editorMaterial Editor
+	flexWidth      float32
 	editor         *widget.Editor
 
-	pasteButtonMaterial IconButton
-	pasteButtonWidget   *widget.Button
+	IsVisibleBtn     bool
+	pasteBtnMaterial IconButton
+	pasteBtnWidget   *widget.Button
 
-	clearButtonMaterial IconButton
-	clearButtonWidget   *widget.Button
+	clearBtMaterial IconButton
+	clearBtnWidget  *widget.Button
 }
 
 func (t *Theme) Editor(hint string) Editor {
@@ -54,15 +58,17 @@ func (t *Theme) Editor(hint string) Editor {
 	}
 }
 
-func (t *Theme) EditorCustom(hint, title string, editor *widget.Editor) EditorCustom {
+func (t *Theme) EditorCustom(hint string, editor *widget.Editor) EditorCustom {
 	return EditorCustom{
-		titleLabel: t.Body1(title),
+		theme:     t,
+		title:     hint,
+		flexWidth: 1,
 		LineColor: t.Color.Text,
 
 		editorMaterial: t.Editor(hint),
 		editor:         editor,
 
-		pasteButtonMaterial: IconButton{
+		pasteBtnMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
 			Size:       unit.Dp(30),
 			Background: color.RGBA{0, 0, 0, 0},
@@ -70,15 +76,15 @@ func (t *Theme) EditorCustom(hint, title string, editor *widget.Editor) EditorCu
 			Padding:    unit.Dp(5),
 		},
 
-		clearButtonMaterial: IconButton{
+		clearBtMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentClear)),
 			Size:       unit.Dp(30),
 			Background: color.RGBA{0, 0, 0, 0},
 			Color:      t.Color.Text,
 			Padding:    unit.Dp(5),
 		},
-		pasteButtonWidget: new(widget.Button),
-		clearButtonWidget: new(widget.Button),
+		pasteBtnWidget: new(widget.Button),
+		clearBtnWidget: new(widget.Button),
 	}
 }
 
@@ -111,9 +117,17 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 
 func (e EditorCustom) Layout(gtx *layout.Context) {
 	e.handleEvents(gtx)
+	if e.IsVisibleBtn {
+		e.flexWidth = 0.93
+	}
+
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
-			e.titleLabel.Layout(gtx)
+			if e.editor.Text() == "" {
+				e.theme.Body1("").Layout(gtx)
+			} else {
+				e.theme.Body1(e.title).Layout(gtx)
+			}
 		}),
 		layout.Rigid(func() {
 			layout.Flex{}.Layout(gtx,
@@ -121,20 +135,20 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func() {
 							inset := layout.Inset{
-								Top: unit.Dp(6),
+								Top:    unit.Dp(6),
 								Bottom: unit.Dp(4),
 							}
 							inset.Layout(gtx, func() {
 								layout.Flex{}.Layout(gtx,
-									layout.Flexed(0.9, func() {
+									layout.Flexed(e.flexWidth, func() {
 										e.editorMaterial.Layout(gtx, e.editor)
 									}),
 								)
 							})
 						}),
-						layout.Rigid(func(){
+						layout.Rigid(func() {
 							layout.Flex{}.Layout(gtx,
-								layout.Flexed(0.9, func() {
+								layout.Flexed(e.flexWidth, func() {
 									rect := f32.Rectangle{
 										Max: f32.Point{
 											X: float32(gtx.Constraints.Width.Max),
@@ -157,10 +171,12 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 						Left: unit.Dp(10),
 					}
 					inset.Layout(gtx, func() {
-						if e.editor.Text() == "" {
-							e.pasteButtonMaterial.Layout(gtx, e.pasteButtonWidget)
-						} else {
-							e.clearButtonMaterial.Layout(gtx, e.clearButtonWidget)
+						if e.IsVisibleBtn {
+							if e.editor.Text() == "" {
+								e.pasteBtnMaterial.Layout(gtx, e.pasteBtnWidget)
+							} else {
+								e.clearBtMaterial.Layout(gtx, e.clearBtnWidget)
+							}
 						}
 					})
 				}),
@@ -175,10 +191,18 @@ func (e EditorCustom) handleEvents(gtx *layout.Context) {
 		panic(err)
 	}
 
-	for e.pasteButtonWidget.Clicked(gtx) {
+	for e.pasteBtnWidget.Clicked(gtx) {
 		e.editor.SetText(data)
 	}
-	for e.clearButtonWidget.Clicked(gtx) {
+	for e.clearBtnWidget.Clicked(gtx) {
 		e.editor.SetText("")
+	}
+
+	for _, evt := range e.editor.Events(gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			e.editorMaterial.HintColor = e.theme.Color.Hint
+			return
+		}
 	}
 }

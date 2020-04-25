@@ -52,9 +52,7 @@ type outputs struct {
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
 	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
-	messageInput, signInput                                                    decredmaterial.Editor
-	addressInput                                                               decredmaterial.EditorCustom
-	addressInput, signInput                                                               decredmaterial.EditorCustom
+	addressInput, signInput, messageInput                                      decredmaterial.EditorCustom
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
@@ -114,36 +112,6 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.copy.Size = unit.Dp(30)
 	win.outputs.icons.copy.Background = theme.Color.Background
 	win.outputs.icons.copy.Color = theme.Color.Text
-	win.outputs.icons.pasteAddr = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteAddr.Padding = unit.Dp(5)
-	win.outputs.icons.pasteAddr.Size = unit.Dp(30)
-	win.outputs.icons.pasteAddr.Background = theme.Color.Background
-	win.outputs.icons.pasteAddr.Color = theme.Color.Text
-	win.outputs.icons.pasteMsg = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteMsg.Padding = unit.Dp(5)
-	win.outputs.icons.pasteMsg.Size = unit.Dp(30)
-	win.outputs.icons.pasteMsg.Background = theme.Color.Background
-	win.outputs.icons.pasteMsg.Color = theme.Color.Text
-	win.outputs.icons.pasteSign = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteSign.Padding = unit.Dp(5)
-	win.outputs.icons.pasteSign.Size = unit.Dp(30)
-	win.outputs.icons.pasteSign.Background = theme.Color.Background
-	win.outputs.icons.pasteSign.Color = theme.Color.Text
-	win.outputs.icons.clearSign = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearSign.Padding = unit.Dp(5)
-	win.outputs.icons.clearSign.Size = unit.Dp(30)
-	win.outputs.icons.clearSign.Background = theme.Color.Background
-	win.outputs.icons.clearSign.Color = theme.Color.Text
-	win.outputs.icons.clearAddr = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearAddr.Padding = unit.Dp(5)
-	win.outputs.icons.clearAddr.Size = unit.Dp(30)
-	win.outputs.icons.clearAddr.Background = theme.Color.Background
-	win.outputs.icons.clearAddr.Color = theme.Color.Text
-	win.outputs.icons.clearMsg = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearMsg.Padding = unit.Dp(5)
-	win.outputs.icons.clearMsg.Size = unit.Dp(30)
-	win.outputs.icons.clearMsg.Background = theme.Color.Background
-	win.outputs.icons.clearMsg.Color = theme.Color.Text
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
@@ -155,9 +123,12 @@ func (win *Window) initWidgets() {
 	win.inputs.matchSpending.SingleLine = true
 
 	// verify message widgets
-	win.outputs.addressInput = theme.EditorCustom("Address", "Enter Address", &win.inputs.addressInput)
-	win.outputs.signInput = theme.EditorCustom("Signature", "Enter Signature", &win.inputs.signInput)
-	win.outputs.messageInput = theme.Editor("Message")
+	win.outputs.addressInput = theme.EditorCustom("Address", &win.inputs.addressInput)
+	win.outputs.addressInput.IsVisibleBtn = true
+	win.outputs.signInput = theme.EditorCustom("Signature", &win.inputs.signInput)
+	win.outputs.signInput.IsVisibleBtn = true
+	win.outputs.messageInput = theme.EditorCustom("Message", &win.inputs.messageInput)
+	win.outputs.messageInput.IsVisibleBtn = true
 	win.outputs.verifyBtn = theme.Button("Verify")
 	win.outputs.verifyBtn.TextSize = unit.Dp(13)
 	win.outputs.clearBtn = theme.Button("Clear All")

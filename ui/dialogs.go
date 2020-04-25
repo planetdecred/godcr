@@ -3,7 +3,6 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
 
 func (win *Window) CreateDiag() {
@@ -188,56 +187,29 @@ func (win *Window) verifyMessageDiag() {
 					win.vFlexSB(
 						rigid(func() {
 							inset := layout.Inset{
-								Top: unit.Dp(10),
+								Top:    unit.Dp(10),
+								Bottom: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
 								win.outputs.addressInput.Layout(win.gtx)
 							})
 						}),
 						rigid(func() {
+							win.outputs.signInput.Layout(win.gtx)
+						}),
+						rigid(func() {
 							inset := layout.Inset{
 								Top:    unit.Dp(10),
-								Bottom: unit.Dp(10),
+								Bottom: unit.Dp(20),
 							}
 							inset.Layout(win.gtx, func() {
-								win.outputs.signInput.Layout(win.gtx)
+								win.outputs.messageInput.Layout(win.gtx)
 							})
-						}),
-						rigid(func() {
-							win.theme.H6("Enter Message").Layout(win.gtx)
-						}),
-						rigid(func() {
-							win.hFlexSB(
-								rigid(func() {
-									decredmaterial.Card{}.Layout(win.gtx, func() {
-										win.hFlexSB(
-											layout.Flexed(0.9, func() {
-												win.outputs.messageInput.Layout(win.gtx, &win.inputs.messageInput)
-											}),
-										)
-									})
-								}),
-								rigid(func() {
-									inset := layout.Inset{
-										Left:   unit.Dp(10),
-										Bottom: unit.Dp(10),
-									}
-									inset.Layout(win.gtx, func() {
-										if win.inputs.messageInput.Text() == "" {
-											win.outputs.pasteMsg.Layout(win.gtx, &win.inputs.pasteMsg)
-										} else {
-											win.outputs.clearMsg.Layout(win.gtx, &win.inputs.clearMsg)
-										}
-									})
-								}),
-							)
 						}),
 						rigid(func() {
 							layout.Flex{}.Layout(win.gtx,
 								layout.Flexed(.6, func() {
-									layout.Inset{Bottom: unit.Dp(5), Top: unit.Dp(10)}.Layout(win.gtx, func() {
-										win.outputs.verifyMessage.Layout(win.gtx)
-									})
+									win.outputs.verifyMessage.Layout(win.gtx)
 								}),
 								layout.Flexed(.4, func() {
 									layout.Flex{}.Layout(win.gtx,
