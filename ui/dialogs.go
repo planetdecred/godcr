@@ -191,36 +191,7 @@ func (win *Window) verifyMessageDiag() {
 								Top: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
-								win.vFlexSB(
-									rigid(func() {
-										win.theme.H6("Enter Address").Layout(win.gtx)
-									}),
-									rigid(func() {
-										win.hFlexSB(
-											rigid(func() {
-												decredmaterial.Card{}.Layout(win.gtx, func() {
-													win.hFlexSB(
-														layout.Flexed(0.9, func() {
-															win.outputs.addressInput.Layout(win.gtx, &win.inputs.addressInput)
-														}),
-													)
-												})
-											}),
-											rigid(func() {
-												inset := layout.Inset{
-													Left: unit.Dp(10),
-												}
-												inset.Layout(win.gtx, func() {
-													if win.inputs.addressInput.Text() == "" {
-														win.outputs.pasteAddr.Layout(win.gtx, &win.inputs.pasteAddr)
-													} else {
-														win.outputs.clearAddr.Layout(win.gtx, &win.inputs.clearAddr)
-													}
-												})
-											}),
-										)
-									}),
-								)
+								win.outputs.addressInput.Layout(win.gtx)
 							})
 						}),
 						rigid(func() {

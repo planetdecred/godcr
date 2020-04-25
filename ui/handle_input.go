@@ -69,16 +69,16 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
-	for _, evt := range win.inputs.addressInput.Events(win.gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			win.err = ""
-			win.outputs.verifyMessage.Text = ""
-			win.outputs.addressInput.HintColor = win.theme.Color.Hint
-			return
-		}
-		log.Debug("address evt", evt)
-	}
+	// for _, evt := range win.inputs.addressInput.Events(win.gtx) {
+	// 	switch evt.(type) {
+	// 	case widget.ChangeEvent:
+	// 		win.err = ""
+	// 		win.outputs.verifyMessage.Text = ""
+	// 		win.outputs.addressInput.HintColor = win.theme.Color.Hint
+	// 		return
+	// 	}
+	// 	log.Debug("address evt", evt)
+	// }
 
 	for _, evt := range win.inputs.signInput.Events(win.gtx) {
 		switch evt.(type) {

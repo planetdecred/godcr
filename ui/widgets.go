@@ -51,8 +51,9 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
-	addressInput, messageInput, signInput                                      decredmaterial.Editor
 	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
+	messageInput, signInput                                      decredmaterial.Editor
+	addressInput decredmaterial.EditorCustom
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
@@ -153,7 +154,7 @@ func (win *Window) initWidgets() {
 	win.inputs.matchSpending.SingleLine = true
 
 	// verify message widgets
-	win.outputs.addressInput = theme.Editor("Address")
+	win.outputs.addressInput = theme.EditorCustom("Address", "Enter Address")
 	win.outputs.signInput = theme.Editor("Signature")
 	win.outputs.messageInput = theme.Editor("Message")
 	win.outputs.verifyBtn = theme.Button("Verify")

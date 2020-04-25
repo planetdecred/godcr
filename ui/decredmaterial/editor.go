@@ -11,6 +11,8 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 type Editor struct {
@@ -27,16 +29,17 @@ type Editor struct {
 }
 
 type EditorCustom struct {
+	theme *Theme
 	titleLabel Label
 
-	passwordEditorMaterial Editor
-	passwordEditorWidget   *widget.Editor
+	editorMaterial Editor
+	editorWidget   *widget.Editor
 
-	confirmButtonMaterial Button
-	confirmButtonWidget   *widget.Button
+	pasteButtonMaterial IconButton
+	pasteButtonWidget   *widget.Button
 
-	cancelButtonMaterial Button
-	cancelButtonWidget   *widget.Button
+	clearButtonMaterial IconButton
+	clearButtonWidget   *widget.Button
 }
 
 func (t *Theme) Editor(hint string) Editor {
@@ -46,6 +49,22 @@ func (t *Theme) Editor(hint string) Editor {
 		shaper:    t.Shaper,
 		Hint:      hint,
 		HintColor: t.Color.Hint,
+	}
+}
+
+func (t *Theme) EditorCustom(hint, title string) EditorCustom {
+	return EditorCustom{
+		theme:      t,
+		titleLabel: t.H6(title),
+
+		editorMaterial: t.Editor(hint),
+		editorWidget:   new(widget.Editor),
+
+		pasteButtonMaterial:  t.IconButton(mustIcon(NewIcon(icons.ContentContentPaste))),
+		clearButtonMaterial:  t.IconButton(mustIcon(NewIcon(icons.ContentClear))),
+
+		pasteButtonWidget:  new(widget.Button),
+		clearButtonWidget: new(widget.Button),
 	}
 }
 
@@ -74,4 +93,40 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 	paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
 	editor.PaintCaret(gtx)
 	stack.Pop()
+}
+
+func (e EditorCustom) Layout(gtx *layout.Context) {
+	// p.handleEvents(gtx, confirm, cancel)
+	// p.updateColors()
+
+	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func() {
+			e.titleLabel.Layout(gtx)
+		}),
+		layout.Rigid(func() {
+			layout.Flex{}.Layout(gtx,
+				layout.Rigid(func() {
+					Card{}.Layout(gtx, func() {
+						layout.Flex{}.Layout(gtx,
+							layout.Flexed(0.9, func() {
+								e.editorMaterial.Layout(gtx, e.editorWidget)
+							}),
+						)
+					})
+				}),
+				layout.Rigid(func() {
+					inset := layout.Inset{
+						Left: unit.Dp(10),
+					}
+					inset.Layout(gtx, func() {
+						if e.editorWidget.Text() == "" {
+							e.pasteButtonMaterial.Layout(gtx, e.pasteButtonWidget)
+						} else {
+							e.clearButtonMaterial.Layout(gtx, e.clearButtonWidget)
+						}
+					})
+				}),
+			)
+		}),
+	)
 }
