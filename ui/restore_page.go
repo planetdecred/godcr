@@ -8,6 +8,8 @@ import (
 	"gioui.org/unit"
 )
 
+const PageRestore = "restore"
+
 var (
 	inputGroupContainerLeft  = &layout.List{Axis: layout.Vertical}
 	inputGroupContainerRight = &layout.List{Axis: layout.Vertical}

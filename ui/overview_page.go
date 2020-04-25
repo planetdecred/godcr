@@ -13,6 +13,8 @@ import (
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
 
+const PageOverview = "overview"
+
 const (
 	balanceTitle         = "Current Total Balance"
 	statusTitle          = "Wallet Status"

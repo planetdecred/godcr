@@ -26,11 +26,11 @@ func (win *Window) updateStates(update interface{}) {
 		win.walletTransactions = e
 		return
 	case wallet.CreatedSeed:
-		win.current = win.WalletsPage
+		win.current = PageWallet
 		win.states.dialog = false
 	case wallet.Restored:
 		win.resetSeeds()
-		win.current = win.WalletsPage
+		win.current = PageWallet
 		win.states.dialog = false
 	case wallet.DeletedWallet:
 		win.selected = 0

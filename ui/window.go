@@ -26,7 +26,7 @@ type Window struct {
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions *wallet.Transactions
 
-	current layout.Widget
+	current string
 	dialog  layout.Widget
 	tabs    *decredmaterial.Tabs
 
@@ -41,6 +41,7 @@ type Window struct {
 
 	combined
 	outputs
+	pages map[string]layout.Widget
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -66,10 +67,11 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.states.loading = true
 	win.tabs = decredmaterial.NewTabs()
 	win.tabs.Flex.Spacing = layout.SpaceBetween
-	win.current = win.OverviewPage
+	win.current = PageOverview
 	win.dialog = func() {}
 
 	win.initWidgets()
+	win.addPages()
 	return win, nil
 }
 
@@ -154,9 +156,11 @@ func (win *Window) Loop(shutdown chan int) {
 				if s.loading {
 					win.Loading()
 				} else if s.dialog {
-					decredmaterial.Modal{Direction: layout.Center}.Layout(win.gtx, func() { win.theme.Background(win.gtx, win.current) }, win.dialog)
+					decredmaterial.Modal{Direction: layout.Center}.Layout(win.gtx, func() {
+						win.theme.Background(win.gtx, win.pages[win.current])
+					}, win.dialog)
 				} else {
-					win.theme.Background(win.gtx, win.current)
+					win.theme.Background(win.gtx, win.pages[win.current])
 				}
 
 				win.HandleInputs()
