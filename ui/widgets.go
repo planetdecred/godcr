@@ -12,20 +12,20 @@ import (
 )
 
 type inputs struct {
-	createDiag, deleteDiag, cancelDialog                           widget.Button
-	restoreDiag, addAcctDiag                                       widget.Button
-	createWallet, restoreWallet, deleteWallet, renameWallet        widget.Button
-	addAccount, toggleWalletRename                                 widget.Button
-	toOverview, toWallets, toTransactions, toSend, toSettings      widget.Button
-	toRestoreWallet                                                widget.Button
-	toReceive                                                      widget.Button
-	toTransactionsFilters                                          widget.Button
-	applyFiltersTransactions                                       widget.Button
-	sync, syncHeader, hideMsgInfo                                  widget.Button
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign widget.Button
-	spendingPassword, matchSpending, rename, dialog                widget.Editor
-	addressInput, messageInput, signInput                          widget.Editor
-	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                widget.Button
+	createDiag, deleteDiag, cancelDialog                                 widget.Button
+	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
+	addAccount, toggleWalletRename                                       widget.Button
+	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
+	toRestoreWallet                                                      widget.Button
+	toReceive                                                            widget.Button
+	toTransactionsFilters                                                widget.Button
+	applyFiltersTransactions                                             widget.Button
+	sync, syncHeader, hideMsgInfo, changePasswordDiag                    widget.Button
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
+	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
+	addressInput, messageInput, signInput                                widget.Editor
+	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                      widget.Button
+	restoreDiag, addAcctDiag, savePassword                               widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -60,8 +60,8 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
-	spendingPassword, matchSpending, dialog, rename                            decredmaterial.Editor
 	addressInput, messageInput, signInput                                      decredmaterial.Editor
+	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
@@ -70,11 +70,11 @@ type outputs struct {
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
 	applyFiltersTransactions                                                      decredmaterial.Button
-	sync, moreDiag, hideMsgInfo                                                   decredmaterial.Button
-
-	addAccount, newAddressDiag                                     decredmaterial.Button
-	info, more, copy, verifyInfo                                   decredmaterial.IconButton
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
+	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag                 decredmaterial.Button
+	addAccount, newAddressDiag                                                    decredmaterial.Button
+	info, more, copy, verifyInfo                                                  decredmaterial.IconButton
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                decredmaterial.IconButton
+	passwordBar                                                                   *decredmaterial.ProgressBar
 
 	tabs                                                              []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
@@ -112,7 +112,6 @@ func (win *Window) initWidgets() {
 		Color:      win.theme.Color.Hint,
 		Padding:    unit.Dp(0),
 	}
-
 	win.outputs.icons.check = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)))
 	win.outputs.icons.check.Background = theme.Color.Success
 	win.outputs.icons.more = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
@@ -162,6 +161,9 @@ func (win *Window) initWidgets() {
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
 	win.inputs.spendingPassword.SingleLine = true
+	win.outputs.passwordBar = theme.ProgressBar(0)
+	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
+	win.inputs.oldSpendingPassword.SingleLine = true
 
 	win.outputs.matchSpending = theme.Editor("Enter password again")
 	win.inputs.matchSpending.SingleLine = true
@@ -197,6 +199,10 @@ func (win *Window) initWidgets() {
 	//receive widgets
 	win.outputs.gotItDiag = theme.Button("Got It")
 	win.outputs.newAddressDiag = theme.Button("Generate new address")
+
+	win.outputs.changePasswordDiag = theme.Button("Change Password")
+	win.outputs.savePassword = theme.Button("Change")
+	win.outputs.savePassword.TextSize = unit.Dp(11)
 
 	win.outputs.pageTitle = theme.H4("Receiving DCR")
 
@@ -255,13 +261,16 @@ func (win *Window) initWidgets() {
 
 	win.outputs.toggleWalletRename = decredmaterial.IconButton{
 		Icon:       win.outputs.ic.create,
-		Size:       unit.Dp(48),
+		Size:       unit.Dp(40),
 		Background: color.RGBA{},
 		Color:      win.theme.Color.Primary,
-		Padding:    unit.Dp(0),
+		Padding:    unit.Dp(3),
 	}
 
 	win.outputs.rename = theme.Editor("")
+	win.inputs.rename.SingleLine = true
+	win.outputs.rename.TextSize = unit.Dp(20)
+
 	win.outputs.renameWallet = decredmaterial.IconButton{
 		Icon:       win.outputs.ic.done,
 		Size:       unit.Dp(48),
