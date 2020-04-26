@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/gesture"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -37,13 +36,6 @@ type inputs struct {
 	seedsSuggestions []struct {
 		text   string
 		button widget.Button
-	}
-
-	toTransactionDetails map[string]*gesture.Click
-	viewTxnOnDcrdata     widget.Button
-	toggleTxnDetailsIOs  struct {
-		isTxnInputsShow, isTxnOutputsShow bool
-		txnInputs, txnOutputs             widget.Button
 	}
 }
 
@@ -89,11 +81,6 @@ type outputs struct {
 	selectedAccountNameLabel, selectedAccountBalanceLabel           decredmaterial.Label
 	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
 	selectedWalletBalLabel, selectedWalletNameLabel                 decredmaterial.Label
-
-	viewTxnOnDcrdata    decredmaterial.Button
-	toggleTxnDetailsIOs struct {
-		expandMore, expandLess decredmaterial.IconButton
-	}
 }
 
 func (win *Window) initWidgets() {
@@ -277,20 +264,6 @@ func (win *Window) initWidgets() {
 		Background: color.RGBA{},
 		Color:      win.theme.Color.Success,
 		Padding:    unit.Dp(0),
-	}
-
-	win.outputs.viewTxnOnDcrdata = theme.Button("View on dcrdata")
-	win.outputs.toggleTxnDetailsIOs.expandMore = decredmaterial.IconButton{
-		Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandMore)),
-		Size:    unit.Dp(25),
-		Color:   win.theme.Color.Text,
-		Padding: unit.Dp(0),
-	}
-	win.outputs.toggleTxnDetailsIOs.expandLess = decredmaterial.IconButton{
-		Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandLess)),
-		Size:    unit.Dp(25),
-		Color:   win.theme.Color.Text,
-		Padding: unit.Dp(0),
 	}
 }
 

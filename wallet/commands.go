@@ -217,7 +217,6 @@ func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
 
 		txn, err := wall.GetTransactionRaw(hash[:])
 		if err != nil {
-			log.Info(err, txnHash)
 			resp.Err = err
 			wal.Send <- resp
 			return

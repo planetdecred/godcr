@@ -3,8 +3,6 @@ package ui
 import (
 	"fmt"
 	"image/color"
-	"os/exec"
-	"runtime"
 	"strings"
 	"time"
 
@@ -390,26 +388,13 @@ func (win *Window) HandleInputs() {
 					for _, txn := range walTxs {
 						if key == txn.Txn.Hash {
 							win.walletTransaction = &txn
-							win.dialog = win.TransactionDetailDialog
-							win.states.dialog = true
+							win.current = PageTransactionDetails
 							break out
 						}
 					}
 				}
 			}
 		}
-	}
-
-	if win.inputs.toggleTxnDetailsIOs.txnInputs.Clicked(win.gtx) {
-		win.inputs.toggleTxnDetailsIOs.isTxnInputsShow = !win.inputs.toggleTxnDetailsIOs.isTxnInputsShow
-	}
-
-	if win.inputs.toggleTxnDetailsIOs.txnOutputs.Clicked(win.gtx) {
-		win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow = !win.inputs.toggleTxnDetailsIOs.isTxnOutputsShow
-	}
-
-	if win.inputs.viewTxnOnDcrdata.Clicked(win.gtx) {
-		viewTxnOnBrowser(win)
 	}
 
 	if win.inputs.sync.Clicked(win.gtx) || win.inputs.syncHeader.Clicked(win.gtx) {
@@ -670,24 +655,5 @@ func (win *Window) updateToTransactionDetailsBtns() {
 		for _, txn := range walTxs {
 			win.inputs.toTransactionDetails[txn.Txn.Hash] = &gesture.Click{}
 		}
-	}
-}
-
-func viewTxnOnBrowser(win *Window) {
-	var err error
-	url := win.wallet.GetBlockExplorerURL(win.walletTransaction.Txn.Hash)
-
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-	if err != nil {
-		log.Error(err)
 	}
 }
