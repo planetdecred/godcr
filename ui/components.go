@@ -77,9 +77,11 @@ func (win *Window) TabbedPage(body layout.Widget) {
 	items := make([]decredmaterial.TabItem, win.walletInfo.LoadedWallets)
 	for i := 0; i < win.walletInfo.LoadedWallets; i++ {
 		items[i] = decredmaterial.TabItem{
-			Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
+			Button: win.theme.Button(""),
+			Label: win.theme.Body1(win.walletInfo.Wallets[i].Name),
 		}
 	}
+	win.tabs.SetTabs(items)
 
 	if len(win.walletInfo.Wallets) == win.selected {
 		win.selected = 0
