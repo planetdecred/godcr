@@ -14,13 +14,11 @@ import (
 	"golang.org/x/image/draw"
 )
 
-// DefaultTabSizeVertical is the default flexed size of the tab section in a Tabs when vertically aligned
-// todo: make the tab size adjust based on size of the widget of the highest width or height
 // todo: an empty tab should be displayed when no label is passed to a TabItem
 // todo: add side line for vertical tabs
+// todo: add physical scroll button for scrolling horizontally
 // todo: add a script for generating Decred icons as bytes
 
-const DefaultTabSize = .18
 
 const (
 	Top Position = iota
@@ -28,6 +26,8 @@ const (
 	Bottom
 	Left
 )
+
+var adaptiveTabWidth int
 
 type Position int
 
@@ -62,7 +62,7 @@ func indicatorDirection(tabPosition Position) layout.Direction {
 	case Right:
 		return layout.E
 	default:
-		return layout.E
+		return layout.W
 	}
 }
 
@@ -98,7 +98,6 @@ func (t *TabItem) LayoutIcon(gtx *layout.Context) {
 func (t *TabItem) iconText(gtx *layout.Context, tabPosition Position) layout.Widget {
 	widgetAxis := layout.Vertical
 	if tabPosition == Left || tabPosition == Right {
-		gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 		widgetAxis = layout.Horizontal
 	}
 
@@ -132,10 +131,13 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 	layout.Stack{}.Layout(gtx,
 		layout.Stacked(func() {
 			t.iconText(gtx, tabPosition)()
+			if gtx.Dimensions.Size.X > adaptiveTabWidth {
+				adaptiveTabWidth = gtx.Dimensions.Size.X
+			}
 		}),
 		layout.Expanded(func() {
 			if tabPosition == Left || tabPosition == Right {
-				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+				gtx.Constraints.Width.Min = adaptiveTabWidth
 			}
 			t.Button.Color = darkblue
 			t.Button.Background = color.RGBA{}
@@ -170,7 +172,6 @@ func NewTabs() *Tabs {
 	return &Tabs{
 		list:     &layout.List{},
 		Position: Left,
-		Size:     DefaultTabSize,
 	}
 }
 
@@ -195,10 +196,10 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 	var content, tab layout.FlexChild
 
 	widgets = make([]layout.FlexChild, 2)
-	content = layout.Flexed(1-t.Size, func() {
+	content = layout.Rigid(func() {
 		layout.Inset{Left: unit.Dp(5)}.Layout(gtx, body)
 	})
-	tab = layout.Flexed(t.Size, func() {
+	tab = layout.Rigid(func() {
 		t.list.Layout(gtx, len(t.btns), func(i int) {
 			t.items[i].index = i
 			t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
