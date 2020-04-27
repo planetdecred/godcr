@@ -1,7 +1,9 @@
 package decredmaterial
 
 import (
-	"fmt"
+	"image"
+	"image/color"
+
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -10,19 +12,11 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"golang.org/x/image/draw"
-	"image"
-	"image/color"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
 )
 
 // DefaultTabSizeVertical is the default flexed size of the tab section in a Tabs when vertically aligned
-const DefaultTabSizeVertical = .15
-
-// DefaultTabSizeHorizontal is the default flexed size of the tab section in a Tabs when horizontally aligned
-const DefaultTabSizeHorizontal = .10
+// todo: make the tab size adjust based on size of the widget of the highest width or height
+const DefaultTabSize = .15
 
 const (
 	Top Position = iota
@@ -36,8 +30,9 @@ type Position int
 type TabItem struct {
 	Button
 	Label
-	index     int
-	icon      paint.ImageOp
+	Icon   image.Image
+	iconOp paint.ImageOp
+	index  int
 }
 
 func tabIndicatorDimensions(gtx *layout.Context, tabPosition Position) (width, height int) {
@@ -68,7 +63,7 @@ func indicatorDirection(tabPosition Position) layout.Direction {
 }
 
 // indicator defines how the active tab indicator is drawn
-func indicator(gtx *layout.Context, width, height int) layout.Widget {
+func activeIndicator(gtx *layout.Context, width, height int) layout.Widget {
 	return func() {
 		paint.ColorOp{Color: keyblue}.Add(gtx.Ops)
 		paint.PaintOp{Rect: f32.Rectangle{
@@ -83,30 +78,17 @@ func indicator(gtx *layout.Context, width, height int) layout.Widget {
 	}
 }
 
-func (t *TabItem) LayoutIcon(gtx *layout.Context, icon image.Image) {
+func (t *TabItem) LayoutIcon(gtx *layout.Context) {
 	sz := gtx.Constraints.Width.Min
-	if t.icon.Size().X != sz {
+	if t.iconOp.Size().X != sz {
 		img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: sz}})
-		draw.ApproxBiLinear.Scale(img, img.Bounds(), icon, icon.Bounds(), draw.Src, nil)
-		t.icon = paint.NewImageOp(img)
+		draw.ApproxBiLinear.Scale(img, img.Bounds(), t.Icon, t.Icon.Bounds(), draw.Src, nil)
+		t.iconOp = paint.NewImageOp(img)
 	}
 
-	img := material.Image{Src: t.icon}
+	img := material.Image{Src: t.iconOp}
 	img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
 	img.Layout(gtx)
-}
-
-func readImage() (image.Image, error) {
-	_, b, _, _ := runtime.Caller(0)
-	d := path.Join(path.Dir(b))
-	file, err := os.Open(filepath.Dir(d) + "/assets/decredicons/overview.png")
-	if err != nil {
-		return nil, fmt.Errorf("img.jpg file not found!")
-	}
-
-	defer file.Close()
-	img, _, err := image.Decode(file)
-	return img, err
 }
 
 func (t *TabItem) iconText(gtx *layout.Context, tabPosition Position) layout.Widget {
@@ -121,13 +103,12 @@ func (t *TabItem) iconText(gtx *layout.Context, tabPosition Position) layout.Wid
 			layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
 				layout.Flex{Axis: widgetAxis, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func() {
-						if t.icon.Size().X != 0 {
+						if t.Icon != nil {
 							layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
 								dim := gtx.Px(unit.Dp(20))
 								sz := image.Point{X: dim, Y: dim}
 								gtx.Constraints = layout.RigidConstraints(gtx.Constraints.Constrain(sz))
-								img, _ := readImage()
-								t.LayoutIcon(gtx, img)
+								t.LayoutIcon(gtx)
 							})
 						}
 					}),
@@ -163,7 +144,7 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 			}
 			indicatorDirection(tabPosition).Layout(gtx, func() {
 				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(indicator(gtx, tabWidth, tabHeight)))
+					layout.Rigid(activeIndicator(gtx, tabWidth, tabHeight)))
 			})
 		}),
 	)
@@ -185,7 +166,7 @@ func NewTabs() *Tabs {
 	return &Tabs{
 		list:     &layout.List{},
 		Position: Left,
-		Size:     DefaultTabSizeVertical,
+		Size:     DefaultTabSize,
 	}
 }
 
@@ -232,9 +213,6 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	switch t.Position {
 	case Top, Bottom:
-		if t.Size < DefaultTabSizeHorizontal {
-			t.Size = DefaultTabSizeHorizontal
-		}
 		t.list.Axis = layout.Horizontal
 		t.Flex.Axis = layout.Vertical
 	default:

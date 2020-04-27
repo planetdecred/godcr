@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
+	"image"
 	"image/color"
 
 	"gioui.org/unit"
@@ -307,4 +309,12 @@ func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
 		panic(err)
 	}
 	return ic
+}
+
+func mustDcrIcon(dcrIcon []byte) image.Image {
+	icon, _, err := image.Decode(bytes.NewReader(dcrIcon))
+	if err != nil {
+		panic(err)
+	}
+	return icon
 }
