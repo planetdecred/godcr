@@ -3,6 +3,7 @@
 package decredmaterial
 
 import (
+	// "fmt"
 	"image/color"
 
 	"gioui.org/f32"
@@ -31,16 +32,21 @@ type Editor struct {
 }
 
 type EditorCustom struct {
-	theme *Theme
-	//title is the title of the editor input field
-	title     string
-	LineColor color.RGBA
+	theme      *Theme
+	hint       string
+	TitleLabel Label
+	ErrorLabel Label
+	LineColor  color.RGBA
+
+	selected bool
 
 	editorMaterial Editor
 	flexWidth      float32
 	editor         *widget.Editor
-
-	IsVisibleBtn     bool
+	//IsVisible if false hides the paste and clear button.
+	IsVisible bool
+	//Required if true the input field must contain data and cannot be empty.
+	Required         bool
 	pasteBtnMaterial IconButton
 	pasteBtnWidget   *widget.Button
 
@@ -60,10 +66,12 @@ func (t *Theme) Editor(hint string) Editor {
 
 func (t *Theme) EditorCustom(hint string, editor *widget.Editor) EditorCustom {
 	return EditorCustom{
-		theme:     t,
-		title:     hint,
-		flexWidth: 1,
-		LineColor: t.Color.Text,
+		TitleLabel: t.Body1(""),
+		ErrorLabel: t.Caption(""),
+		selected:   false,
+		flexWidth:  1,
+		hint:       hint,
+		LineColor:  t.Color.Text,
 
 		editorMaterial: t.Editor(hint),
 		editor:         editor,
@@ -117,17 +125,27 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 
 func (e EditorCustom) Layout(gtx *layout.Context) {
 	e.handleEvents(gtx)
-	if e.IsVisibleBtn {
+	e.reset(gtx)
+
+	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
 
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
-			if e.editor.Text() == "" {
-				e.theme.Body1("").Layout(gtx)
-			} else {
-				e.theme.Body1(e.title).Layout(gtx)
+			if e.editor.Focused() || e.editor.Len() != 0 {
+				e.TitleLabel.Text = e.hint
+				e.editorMaterial.Hint = ""
 			}
+
+			// if e.Required {
+			// 	if !e.editor.Focused(){
+			// 		if e.editor.Len() == 0 {
+			// 			e.TitleLabel.Color = color.RGBA{255, 0, 0, 255}
+			// 		}
+			// 	}
+			// }
+			e.TitleLabel.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			layout.Flex{}.Layout(gtx,
@@ -147,6 +165,13 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 							})
 						}),
 						layout.Rigid(func() {
+							if e.Required {
+								if !e.editor.Focused() {
+									if e.editor.Len() == 0 {
+										e.LineColor = color.RGBA{255, 0, 0, 255}
+									}
+								}
+							}
 							layout.Flex{}.Layout(gtx,
 								layout.Flexed(e.flexWidth, func() {
 									rect := f32.Rectangle{
@@ -164,6 +189,16 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 								}),
 							)
 						}),
+						layout.Rigid(func() {
+							if e.Required {
+								if e.editor.Len() == 0 && !e.editor.Focused() {
+									e.ErrorLabel.Text = "Field is required"
+									e.ErrorLabel.Color = color.RGBA{255, 0, 0, 255}
+								}
+								e.ErrorLabel.Layout(gtx)
+							}
+
+						}),
 					)
 				}),
 				layout.Rigid(func() {
@@ -171,7 +206,7 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 						Left: unit.Dp(10),
 					}
 					inset.Layout(gtx, func() {
-						if e.IsVisibleBtn {
+						if e.IsVisible {
 							if e.editor.Text() == "" {
 								e.pasteBtnMaterial.Layout(gtx, e.pasteBtnWidget)
 							} else {
@@ -190,18 +225,34 @@ func (e EditorCustom) handleEvents(gtx *layout.Context) {
 	if err != nil {
 		panic(err)
 	}
-
 	for e.pasteBtnWidget.Clicked(gtx) {
 		e.editor.SetText(data)
+		e.reset(gtx)
 	}
 	for e.clearBtnWidget.Clicked(gtx) {
 		e.editor.SetText("")
+		e.reset(gtx)
 	}
+}
 
+func (e EditorCustom) validate() {
+	if e.Required {
+		if !e.editor.Focused() {
+			if e.editor.Len() == 0 {
+				e.ErrorLabel.Text = "Field is required"
+				e.LineColor = color.RGBA{255, 0, 0, 255}
+				e.TitleLabel.Color = color.RGBA{255, 0, 0, 255}
+			}
+		}
+	}
+}
+
+func (e EditorCustom) reset(gtx *layout.Context) {
 	for _, evt := range e.editor.Events(gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
-			e.editorMaterial.HintColor = e.theme.Color.Hint
+			e.LineColor = darkblue
+			e.TitleLabel.Color = darkblue
 			return
 		}
 	}
