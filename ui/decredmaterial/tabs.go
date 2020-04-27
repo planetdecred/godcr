@@ -1,24 +1,24 @@
 package decredmaterial
 
 import (
+	"gioui.org/font"
+	"gioui.org/text"
 	"image"
 	"image/color"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"golang.org/x/image/draw"
 )
 
-// todo: an empty tab should be displayed when no label is passed to a TabItem
 // todo: add side line for vertical tabs
 // todo: add physical scroll button for scrolling horizontally
 // todo: add a script for generating Decred icons as bytes
-
+// todo: remove radius from button animation
 
 const (
 	Top Position = iota
@@ -32,7 +32,6 @@ var adaptiveTabWidth int
 type Position int
 
 type TabItem struct {
-	Button
 	Label
 	Icon   image.Image
 	iconOp paint.ImageOp
@@ -116,8 +115,10 @@ func (t *TabItem) iconText(gtx *layout.Context, tabPosition Position) layout.Wid
 						}
 					}),
 					layout.Rigid(func() {
-						t.Label.Alignment = text.Middle
-						t.Label.Layout(gtx)
+						if t.Label.shaper != nil {
+							t.Label.Alignment = text.Middle
+							t.Label.Layout(gtx)
+						}
 					}),
 				)
 			})
@@ -139,9 +140,7 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 			if tabPosition == Left || tabPosition == Right {
 				gtx.Constraints.Width.Min = adaptiveTabWidth
 			}
-			t.Button.Color = darkblue
-			t.Button.Background = color.RGBA{}
-			t.Button.Layout(gtx, btn)
+			Button{Background: color.RGBA{}, shaper: font.Default(),}.Layout(gtx, btn)
 			tabWidth, tabHeight = tabIndicatorDimensions(gtx, tabPosition)
 		}),
 		layout.Expanded(func() {
@@ -196,7 +195,7 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 	var content, tab layout.FlexChild
 
 	widgets = make([]layout.FlexChild, 2)
-	content = layout.Rigid(func() {
+	content = layout.Flexed(1, func() {
 		layout.Inset{Left: unit.Dp(5)}.Layout(gtx, body)
 	})
 	tab = layout.Rigid(func() {
@@ -227,6 +226,7 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	}
 
 	widgets := t.contentTabPosition(gtx, body)
+	t.Flex.Spacing = layout.SpaceBetween
 	t.Flex.Layout(gtx, widgets...)
 	for i := range t.btns {
 		t.changed = false

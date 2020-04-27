@@ -33,22 +33,18 @@ func (win *Window) addPages() {
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
-			Button: win.theme.Button(""),
 			Label:  win.theme.Body1("Overview"),
 			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Button: win.theme.Button(""),
 			Label:  win.theme.Body1("Wallets"),
 			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Button: win.theme.Button(""),
 			Label:  win.theme.Body1("Transactions"),
 			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Button: win.theme.Button(""),
 			Label:  win.theme.Body1("Settings"),
 			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
@@ -92,7 +88,6 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
 	for i := range page.info.Wallets {
 		wallets[i] = decredmaterial.TabItem{
-			Button: page.theme.Button(""),
 			Label:  page.theme.Body1(page.info.Wallets[i].Name),
 		}
 	}

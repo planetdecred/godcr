@@ -49,8 +49,7 @@ func (win *Window) reloadTabs() {
 	win.outputs.tabs = make([]decredmaterial.TabItem, win.walletInfo.LoadedWallets)
 	for i := range win.outputs.tabs {
 		win.outputs.tabs[i] = decredmaterial.TabItem{
-			//Button: win.theme.Button(win.walletInfo.Wallets[i].Name),
-			Button: win.theme.Button(""),
+			Label: win.theme.Body1(win.walletInfo.Wallets[i].Name),
 		}
 	}
 	win.tabs.SetTabs(win.outputs.tabs)
