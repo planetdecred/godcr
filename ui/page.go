@@ -33,16 +33,24 @@ func (win *Window) addPages() {
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
-			Button: win.theme.Button("Overview"),
+			Button: win.theme.Button(""),
+			Label:  win.theme.Body1("Overview"),
+			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Button: win.theme.Button("Wallets"),
+			Button: win.theme.Button(""),
+			Label:  win.theme.Body1("Wallets"),
+			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Button: win.theme.Button("Transactions"),
+			Button: win.theme.Button(""),
+			Label:  win.theme.Body1("Transactions"),
+			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Button: win.theme.Button("Settings"),
+			Button: win.theme.Button(""),
+			Label:  win.theme.Body1("Settings"),
+			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 	})
 
@@ -84,15 +92,17 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
 	for i := range page.info.Wallets {
 		wallets[i] = decredmaterial.TabItem{
-			Button: page.theme.Button(page.info.Wallets[i].Name),
+			Button: page.theme.Button(""),
+			Label:  page.theme.Body1(page.info.Wallets[i].Name),
 		}
 	}
 	page.walletsTab.SetTabs(wallets)
+	page.walletsTab.Position = decredmaterial.Top
 	bd := func() {
-		page.walletsTab.Layout(gtx, body)
 		if page.walletsTab.Changed() {
 			*page.selectedWallet = page.walletsTab.Selected
 		}
+		page.walletsTab.Layout(gtx, body)
 	}
 	page.Layout(gtx, bd)
 }

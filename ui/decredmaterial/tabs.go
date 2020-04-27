@@ -16,7 +16,11 @@ import (
 
 // DefaultTabSizeVertical is the default flexed size of the tab section in a Tabs when vertically aligned
 // todo: make the tab size adjust based on size of the widget of the highest width or height
-const DefaultTabSize = .15
+// todo: an empty tab should be displayed when no label is passed to a TabItem
+// todo: add side line for vertical tabs
+// todo: add a script for generating Decred icons as bytes
+
+const DefaultTabSize = .18
 
 const (
 	Top Position = iota
@@ -52,11 +56,11 @@ func indicatorDirection(tabPosition Position) layout.Direction {
 	case Top:
 		return layout.S
 	case Left:
-		return layout.E
+		return layout.W
 	case Bottom:
 		return layout.N
 	case Right:
-		return layout.W
+		return layout.E
 	default:
 		return layout.E
 	}
@@ -181,6 +185,10 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 	}
 }
 
+func (t *Tabs) Changed() bool {
+	return t.changed
+}
+
 // contentTabPosition depending on the specified tab position determines the order of the tab and
 // the page content.
 func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widgets []layout.FlexChild) {
@@ -194,9 +202,6 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 		t.list.Layout(gtx, len(t.btns), func(i int) {
 			t.items[i].index = i
 			t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
-			if t.btns[i].Clicked(gtx) {
-				t.Selected = i
-			}
 		})
 	})
 
@@ -222,4 +227,12 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 
 	widgets := t.contentTabPosition(gtx, body)
 	t.Flex.Layout(gtx, widgets...)
+	for i := range t.btns {
+		t.changed = false
+		if t.btns[i].Clicked(gtx) {
+			t.changed = true
+			t.Selected = i
+			return
+		}
+	}
 }

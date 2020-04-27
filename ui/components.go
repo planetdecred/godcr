@@ -79,10 +79,10 @@ func (win *Window) TabbedPage(body layout.Widget) {
 		items[i] = decredmaterial.TabItem{
 			Button: win.theme.Button(""),
 			Label:  win.theme.Body1(win.walletInfo.Wallets[i].Name),
-			Icon:   mustDcrIcon(decredmaterial.OverviewIcon),
 		}
 	}
 	win.tabs.SetTabs(items)
+	win.tabs.Position = decredmaterial.Top
 
 	if len(win.walletInfo.Wallets) == win.selected {
 		win.selected = 0
