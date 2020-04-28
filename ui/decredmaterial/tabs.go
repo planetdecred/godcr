@@ -1,10 +1,11 @@
 package decredmaterial
 
 import (
-	"gioui.org/font"
-	"gioui.org/text"
 	"image"
 	"image/color"
+
+	"gioui.org/font"
+	"gioui.org/text"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
@@ -15,7 +16,6 @@ import (
 	"golang.org/x/image/draw"
 )
 
-// todo: add side line for vertical tabs
 // todo: add physical scroll button for scrolling horizontally
 // todo: add a script for generating Decred icons as bytes
 // todo: remove radius from button animation
@@ -48,7 +48,7 @@ func tabIndicatorDimensions(gtx *layout.Context, tabPosition Position) (width, h
 	return
 }
 
-// tabAlignment determines the alignment of the active tab indicator relative to the tab item
+// indicatorDirection determines the alignment of the active tab indicator relative to the tab item
 // content. It is determined by the position of the tab.
 func indicatorDirection(tabPosition Position) layout.Direction {
 	switch tabPosition {
@@ -65,10 +65,9 @@ func indicatorDirection(tabPosition Position) layout.Direction {
 	}
 }
 
-// indicator defines how the active tab indicator is drawn
-func activeIndicator(gtx *layout.Context, width, height int) layout.Widget {
+func line(gtx *layout.Context, width, height int, col color.RGBA) layout.Widget {
 	return func() {
-		paint.ColorOp{Color: keyblue}.Add(gtx.Ops)
+		paint.ColorOp{Color: col}.Add(gtx.Ops)
 		paint.PaintOp{Rect: f32.Rectangle{
 			Max: f32.Point{
 				X: float32(width),
@@ -140,7 +139,7 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 			if tabPosition == Left || tabPosition == Right {
 				gtx.Constraints.Width.Min = adaptiveTabWidth
 			}
-			Button{Background: color.RGBA{}, shaper: font.Default(),}.Layout(gtx, btn)
+			Button{Background: color.RGBA{}, shaper: font.Default()}.Layout(gtx, btn)
 			tabWidth, tabHeight = tabIndicatorDimensions(gtx, tabPosition)
 		}),
 		layout.Expanded(func() {
@@ -149,7 +148,7 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 			}
 			indicatorDirection(tabPosition).Layout(gtx, func() {
 				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(activeIndicator(gtx, tabWidth, tabHeight)))
+					layout.Rigid(line(gtx, tabWidth, tabHeight, keyblue)))
 			})
 		}),
 	)
@@ -157,14 +156,15 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 
 // Tabs lays out a Flexed(Size) List with Selected as the first element and Item as the rest.
 type Tabs struct {
-	Flex     layout.Flex
-	Size     float32
-	items    []TabItem
-	Selected int
-	changed  bool
-	btns     []*widget.Button
-	list     *layout.List
-	Position Position
+	Flex      layout.Flex
+	Size      float32
+	items     []TabItem
+	Selected  int
+	changed   bool
+	btns      []*widget.Button
+	list      *layout.List
+	Position  Position
+	Separator bool
 }
 
 func NewTabs() *Tabs {
@@ -199,10 +199,30 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 		layout.Inset{Left: unit.Dp(5)}.Layout(gtx, body)
 	})
 	tab = layout.Rigid(func() {
-		t.list.Layout(gtx, len(t.btns), func(i int) {
-			t.items[i].index = i
-			t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
-		})
+		layout.Stack{}.Layout(gtx,
+			layout.Stacked(func() {
+				t.list.Layout(gtx, len(t.btns), func(i int) {
+					t.items[i].index = i
+					t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
+				})
+			}),
+			layout.Expanded(func() {
+				direction := layout.E
+				if t.Position == Right {
+					direction = layout.W
+				}
+				// display separator only if Separator is true and tab is vertical
+				if t.Separator && (t.Position == Right || t.Position == Left) {
+					direction.Layout(gtx, func() {
+						layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func() {
+								line(gtx, 2, gtx.Constraints.Height.Max, rgb(0xcccccc))()
+							}),
+						)
+					})
+				}
+			}),
+		)
 	})
 
 	switch t.Position {
@@ -228,8 +248,8 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	widgets := t.contentTabPosition(gtx, body)
 	t.Flex.Spacing = layout.SpaceBetween
 	t.Flex.Layout(gtx, widgets...)
+	t.changed = false
 	for i := range t.btns {
-		t.changed = false
 		if t.btns[i].Clicked(gtx) {
 			t.changed = true
 			t.Selected = i

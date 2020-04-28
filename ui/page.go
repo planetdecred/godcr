@@ -33,20 +33,20 @@ func (win *Window) addPages() {
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
-			Label:  win.theme.Body1("Overview"),
-			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
+			Label: win.theme.Body1("Overview"),
+			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Label:  win.theme.Body1("Wallets"),
-			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
+			Label: win.theme.Body1("Wallets"),
+			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Label:  win.theme.Body1("Transactions"),
-			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
+			Label: win.theme.Body1("Transactions"),
+			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 		{
-			Label:  win.theme.Body1("Settings"),
-			Icon: 	mustDcrIcon(decredmaterial.OverviewIcon),
+			Label: win.theme.Body1("Settings"),
+			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
 		},
 	})
 
@@ -77,6 +77,7 @@ func (win *Window) addPages() {
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
 	navs := []string{PageOverview, PageWallet, PageTransactions, PageOverview}
 	toMax(gtx)
+	page.navTab.Separator = true
 	page.navTab.Layout(gtx, body)
 
 	if page.navTab.Changed() {
@@ -88,7 +89,7 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
 	for i := range page.info.Wallets {
 		wallets[i] = decredmaterial.TabItem{
-			Label:  page.theme.Body1(page.info.Wallets[i].Name),
+			Label: page.theme.Body1(page.info.Wallets[i].Name),
 		}
 	}
 	page.walletsTab.SetTabs(wallets)
@@ -97,6 +98,7 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 		if page.walletsTab.Changed() {
 			*page.selectedWallet = page.walletsTab.Selected
 		}
+		page.walletsTab.Separator = false
 		page.walletsTab.Layout(gtx, body)
 	}
 	page.Layout(gtx, bd)
