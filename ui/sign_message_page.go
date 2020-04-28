@@ -9,6 +9,8 @@ import (
 	"github.com/raedahgroup/godcr/wallet"
 )
 
+const PageSignMessage = "sign_message"
+
 type SignMessagePage struct {
 	theme    *decredmaterial.Theme
 	wallet   *wallet.Wallet

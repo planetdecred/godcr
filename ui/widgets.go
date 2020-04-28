@@ -20,7 +20,7 @@ type inputs struct {
 	toReceive                                                            widget.Button
 	toTransactionsFilters                                                widget.Button
 	applyFiltersTransactions                                             widget.Button
-	sync, syncHeader, hideMsgInfo, changePasswordDiag                    widget.Button
+	sync, syncHeader, hideMsgInfo, changePasswordDiag, signMessageDiag   widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
 	addressInput, messageInput, signInput                                widget.Editor
@@ -67,14 +67,14 @@ type outputs struct {
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
 	clearBtn, verifyBtn, verifyMessDiag                                        decredmaterial.Button
 
-	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
-	toggleWalletRename, renameWallet, syncHeader                                  decredmaterial.IconButton
-	applyFiltersTransactions                                                      decredmaterial.Button
-	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag                 decredmaterial.Button
-	addAccount, newAddressDiag, signMessageDiag                                   decredmaterial.Button
-	info, more, copy, verifyInfo                                                  decredmaterial.IconButton
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                decredmaterial.IconButton
-	passwordBar                                                                   *decredmaterial.ProgressBar
+	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag  decredmaterial.Button
+	toggleWalletRename, renameWallet, syncHeader                                   decredmaterial.IconButton
+	applyFiltersTransactions                                                       decredmaterial.Button
+	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag decredmaterial.Button
+	addAccount, newAddressDiag                                                     decredmaterial.Button
+	info, more, copy, verifyInfo                                                   decredmaterial.IconButton
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                 decredmaterial.IconButton
+	passwordBar                                                                    *decredmaterial.ProgressBar
 
 	tabs                                                              []decredmaterial.TabItem
 	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
@@ -180,6 +180,7 @@ func (win *Window) initWidgets() {
 	win.outputs.clearBtn.TextSize = unit.Dp(13)
 
 	win.outputs.verifyMessDiag = theme.Button("Verify Message")
+	win.outputs.signMessageDiag = theme.Button("Sign Message")
 
 	//
 	win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
@@ -234,7 +235,6 @@ func (win *Window) initWidgets() {
 	win.outputs.syncHeader = win.outputs.icons.sync
 	win.outputs.moreDiag = theme.Button("more")
 	win.outputs.hideMsgInfo = theme.Button("Got it")
-	win.outputs.signMessageDiag = theme.Button("Sign Message")
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.copy = win.outputs.icons.copy

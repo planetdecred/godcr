@@ -61,12 +61,13 @@ func (win *Window) addPages() {
 
 	win.pages = make(map[string]layout.Widget)
 
-	win.pages[PageWallet] = WalletPage(common)
+	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage
 	win.pages[PageTransactions] = win.TransactionsPage
 	win.pages[PageReceive] = win.Receive
 	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
+	win.pages[PageSignMessage] = win.SignMessagePage
 
 }
 
