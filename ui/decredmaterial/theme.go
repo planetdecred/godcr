@@ -54,6 +54,8 @@ type Theme struct {
 	checkBoxUncheckedIcon *Icon
 	radioCheckedIcon      *Icon
 	radioUncheckedIcon    *Icon
+	chevronUpIcon         *Icon
+	chevronDownIcon       *Icon
 }
 
 func NewTheme() *Theme {
@@ -77,6 +79,8 @@ func NewTheme() *Theme {
 	t.checkBoxUncheckedIcon = mustIcon(NewIcon(icons.ToggleCheckBoxOutlineBlank))
 	t.radioCheckedIcon = mustIcon(NewIcon(icons.ToggleRadioButtonChecked))
 	t.radioUncheckedIcon = mustIcon(NewIcon(icons.ToggleRadioButtonUnchecked))
+	t.chevronUpIcon = mustIcon(NewIcon(icons.NavigationExpandLess))
+	t.chevronDownIcon = mustIcon(NewIcon(icons.NavigationExpandMore))
 
 	return t
 }

@@ -15,14 +15,14 @@ import (
 type Direction int
 
 type Collapsible struct {
-	textLabel Label
-	axis      Direction
-
-	buttonWidget *widget.Button
-	isOpen       bool
-
+	isOpen                bool
+	axis                  Direction
+	buttonWidget          *widget.Button
+	textLabel             Label
+	outline               Outline
+	openIcon              *Icon
+	closeIcon             *Icon
 	headerBackgroundColor color.RGBA
-	headerBorderColor     color.RGBA
 }
 
 const (
@@ -36,6 +36,9 @@ func (t *Theme) Collapsible(text string, axis Direction) *Collapsible {
 		textLabel:             t.Body2(text),
 		buttonWidget:          new(widget.Button),
 		headerBackgroundColor: t.Color.Hint,
+		outline:               t.Outline(),
+		openIcon:              t.chevronUpIcon,
+		closeIcon:             t.chevronDownIcon,
 	}
 
 	return c
@@ -56,15 +59,29 @@ func (c *Collapsible) layoutHeader(gtx *layout.Context) {
 		}),
 		layout.Stacked(func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-			layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func() {
-						c.textLabel.Layout(gtx)
-					}),
-					layout.Rigid(func() {
-
-					}),
-				)
+			c.outline.Layout(gtx, func() {
+				layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
+					layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func() {
+							c.textLabel.Layout(gtx)
+						}),
+						layout.Rigid(func() {
+							gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+							layout.NE.Layout(gtx, func() {
+								icon := c.closeIcon
+								if c.isOpen {
+									icon = c.openIcon
+								}
+								inset := layout.Inset{
+									Right: unit.Dp(10),
+								}
+								inset.Layout(gtx, func() {
+									icon.Layout(gtx, unit.Dp(20))
+								})
+							})
+						}),
+					)
+				})
 			})
 			pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
 			c.buttonWidget.Layout(gtx)
