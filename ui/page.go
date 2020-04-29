@@ -38,7 +38,7 @@ func (win *Window) addPages() {
 		},
 		{
 			Label: win.theme.Body1("Wallets"),
-			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
+			Icon:  mustDcrIcon(decredmaterial.WalletIcon),
 		},
 		{
 			Label: win.theme.Body1("Transactions"),
@@ -93,7 +93,7 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 		}
 	}
 	page.walletsTab.SetTabs(wallets)
-	page.walletsTab.Position = decredmaterial.Top
+	page.walletsTab.Position = decredmaterial.Bottom
 	bd := func() {
 		if page.walletsTab.Changed() {
 			*page.selectedWallet = page.walletsTab.Selected

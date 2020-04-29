@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 
+	"golang.org/x/exp/shiny/materialdesign/icons"
+
 	"gioui.org/font"
 	"gioui.org/text"
 
@@ -16,8 +18,6 @@ import (
 	"golang.org/x/image/draw"
 )
 
-// todo: add physical scroll button for scrolling horizontally
-// todo: add a script for generating Decred icons as bytes
 // todo: remove radius from button animation
 
 const (
@@ -154,23 +154,26 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 	)
 }
 
-// Tabs lays out a Flexed(Size) List with Selected as the first element and Item as the rest.
 type Tabs struct {
-	Flex      layout.Flex
-	Size      float32
-	items     []TabItem
-	Selected  int
-	changed   bool
-	btns      []*widget.Button
-	list      *layout.List
-	Position  Position
-	Separator bool
+	Flex        layout.Flex
+	Size        float32
+	items       []TabItem
+	Selected    int
+	changed     bool
+	btns        []*widget.Button
+	list        *layout.List
+	Position    Position
+	Separator   bool
+	scrollLeft  *widget.Button
+	scrollRight *widget.Button
 }
 
 func NewTabs() *Tabs {
 	return &Tabs{
-		list:     &layout.List{},
-		Position: Left,
+		list:        &layout.List{},
+		Position:    Left,
+		scrollLeft:  new(widget.Button),
+		scrollRight: new(widget.Button),
 	}
 }
 
@@ -189,6 +192,28 @@ func (t *Tabs) Changed() bool {
 	return t.changed
 }
 
+func (t *Tabs) scrollButton(gtx *layout.Context, right bool, button *widget.Button) layout.FlexChild {
+	show := false
+	icon := mustIcon(NewIcon(icons.NavigationChevronLeft))
+	if right && t.list.Position.BeforeEnd {
+		show = true
+		icon = mustIcon(NewIcon(icons.NavigationChevronRight))
+	}
+
+	if !right && t.list.Position.Offset > 0 {
+		show = true
+	}
+	return layout.Rigid(func() {
+		if (t.Position == Top || t.Position == Bottom) && show {
+			IconButton{
+				Color: rgb(0xbbbbbb),
+				Icon:  icon,
+				Size:  unit.Dp(35),
+			}.Layout(gtx, button)
+		}
+	})
+}
+
 // contentTabPosition depending on the specified tab position determines the order of the tab and
 // the page content.
 func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widgets []layout.FlexChild) {
@@ -201,10 +226,16 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 	tab = layout.Rigid(func() {
 		layout.Stack{}.Layout(gtx,
 			layout.Stacked(func() {
-				t.list.Layout(gtx, len(t.btns), func(i int) {
-					t.items[i].index = i
-					t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
-				})
+				layout.Flex{Axis: t.list.Axis, Spacing: layout.SpaceBetween}.Layout(gtx,
+					t.scrollButton(gtx, false, t.scrollLeft),
+					layout.Flexed(1, func() {
+						t.list.Layout(gtx, len(t.btns), func(i int) {
+							t.items[i].index = i
+							t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
+						})
+					}),
+					t.scrollButton(gtx, true, t.scrollRight),
+				)
 			}),
 			layout.Expanded(func() {
 				direction := layout.E
@@ -249,6 +280,15 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	t.Flex.Spacing = layout.SpaceBetween
 	t.Flex.Layout(gtx, widgets...)
 	t.changed = false
+
+	for t.scrollRight.Clicked(gtx) {
+		t.list.Position.Offset += 60
+	}
+
+	for t.scrollLeft.Clicked(gtx) {
+		t.list.Position.Offset -= 60
+	}
+
 	for i := range t.btns {
 		if t.btns[i].Clicked(gtx) {
 			t.changed = true
