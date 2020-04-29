@@ -1,9 +1,5 @@
 package ui
 
-import (
-	"gioui.org/layout"
-)
-
 const PageSend = "send"
 
 func (win *Window) SendPage() {
