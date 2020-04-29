@@ -18,8 +18,6 @@ import (
 	"golang.org/x/image/draw"
 )
 
-// todo: remove radius from button animation
-
 const (
 	Top Position = iota
 	Right
@@ -139,7 +137,7 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 			if tabPosition == Left || tabPosition == Right {
 				gtx.Constraints.Width.Min = adaptiveTabWidth
 			}
-			Button{Background: color.RGBA{}, shaper: font.Default()}.Layout(gtx, btn)
+			Button{Background: color.RGBA{}, Radius: 0, shaper: font.Default()}.Layout(gtx, btn)
 			tabWidth, tabHeight = tabIndicatorDimensions(gtx, tabPosition)
 		}),
 		layout.Expanded(func() {

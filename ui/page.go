@@ -93,7 +93,7 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 		}
 	}
 	page.walletsTab.SetTabs(wallets)
-	page.walletsTab.Position = decredmaterial.Bottom
+	page.walletsTab.Position = decredmaterial.Top
 	bd := func() {
 		if page.walletsTab.Changed() {
 			*page.selectedWallet = page.walletsTab.Selected
