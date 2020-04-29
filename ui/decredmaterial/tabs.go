@@ -27,8 +27,10 @@ const (
 
 var adaptiveTabWidth int
 
+// Position determines what side of the page the tab would be laid out
 type Position int
 
+// TabItem displays a single child of a tab. Label and Icon in TabItem are optional.
 type TabItem struct {
 	Label
 	Icon   image.Image
@@ -36,6 +38,8 @@ type TabItem struct {
 	index  int
 }
 
+// tabIndicatorDimensions defines the width and height of the active tab item indicator depending
+// on the tab Position.
 func tabIndicatorDimensions(gtx *layout.Context, tabPosition Position) (width, height int) {
 	switch tabPosition {
 	case Top, Bottom:
@@ -63,6 +67,7 @@ func indicatorDirection(tabPosition Position) layout.Direction {
 	}
 }
 
+// line returns a rectangle using a defined width, height and color.
 func line(gtx *layout.Context, width, height int, col color.RGBA) layout.Widget {
 	return func() {
 		paint.ColorOp{Color: col}.Add(gtx.Ops)
@@ -78,7 +83,8 @@ func line(gtx *layout.Context, width, height int, col color.RGBA) layout.Widget 
 	}
 }
 
-func (t *TabItem) LayoutIcon(gtx *layout.Context) {
+// layoutIcon lays out the icon of a tab item
+func (t *TabItem) layoutIcon(gtx *layout.Context) {
 	sz := gtx.Constraints.Width.Min
 	if t.iconOp.Size().X != sz {
 		img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: sz}})
@@ -91,6 +97,8 @@ func (t *TabItem) LayoutIcon(gtx *layout.Context) {
 	img.Layout(gtx)
 }
 
+// iconText lays out the text of a tab item and its icon if it has one. It aligns the text and the icon
+// based on the position of the tab.
 func (t *TabItem) iconText(gtx *layout.Context, tabPosition Position) layout.Widget {
 	widgetAxis := layout.Vertical
 	if tabPosition == Left || tabPosition == Right {
@@ -107,7 +115,7 @@ func (t *TabItem) iconText(gtx *layout.Context, tabPosition Position) layout.Wid
 								dim := gtx.Px(unit.Dp(20))
 								sz := image.Point{X: dim, Y: dim}
 								gtx.Constraints = layout.RigidConstraints(gtx.Constraints.Constrain(sz))
-								t.LayoutIcon(gtx)
+								t.layoutIcon(gtx)
 							})
 						}
 					}),
@@ -152,8 +160,10 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 	)
 }
 
+// Tabs displays succession of TabItems. Using the Position option, Tabs can be displayed on any four sides
+// of a rendered page.
 type Tabs struct {
-	Flex        layout.Flex
+	flex        layout.Flex
 	Size        float32
 	items       []TabItem
 	Selected    int
@@ -175,7 +185,7 @@ func NewTabs() *Tabs {
 	}
 }
 
-// SetTabs creates a button widget for each tab item
+// SetTabs creates a button widget for each tab item.
 func (t *Tabs) SetTabs(tabs []TabItem) {
 	t.items = tabs
 	if len(t.items) != len(t.btns) {
@@ -186,10 +196,12 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 	}
 }
 
+// Changed returns the changed state of the tab.
 func (t *Tabs) Changed() bool {
 	return t.changed
 }
 
+// scrollButton lays out the right and left scroll buttons of the tab when Position is Horizontal.
 func (t *Tabs) scrollButton(gtx *layout.Context, right bool, button *widget.Button) layout.FlexChild {
 	show := false
 	icon := mustIcon(NewIcon(icons.NavigationChevronLeft))
@@ -212,8 +224,7 @@ func (t *Tabs) scrollButton(gtx *layout.Context, right bool, button *widget.Butt
 	})
 }
 
-// contentTabPosition depending on the specified tab position determines the order of the tab and
-// the page content.
+// contentTabPosition determines the order of the tab and page content depending on the tab Position.
 func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widgets []layout.FlexChild) {
 	var content, tab layout.FlexChild
 
@@ -263,21 +274,19 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 	return widgets
 }
 
-// Layout the tabs
 func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	switch t.Position {
 	case Top, Bottom:
 		t.list.Axis = layout.Horizontal
-		t.Flex.Axis = layout.Vertical
+		t.flex.Axis = layout.Vertical
 	default:
 		t.list.Axis = layout.Vertical
-		t.Flex.Axis = layout.Horizontal
+		t.flex.Axis = layout.Horizontal
 	}
 
 	widgets := t.contentTabPosition(gtx, body)
-	t.Flex.Spacing = layout.SpaceBetween
-	t.Flex.Layout(gtx, widgets...)
-	t.changed = false
+	t.flex.Spacing = layout.SpaceBetween
+	t.flex.Layout(gtx, widgets...)
 
 	for t.scrollRight.Clicked(gtx) {
 		t.list.Position.Offset += 60
@@ -287,6 +296,7 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 		t.list.Position.Offset -= 60
 	}
 
+	t.changed = false
 	for i := range t.btns {
 		if t.btns[i].Clicked(gtx) {
 			t.changed = true
