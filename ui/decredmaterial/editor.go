@@ -122,7 +122,6 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 
 func (e EditorCustom) Layout(gtx *layout.Context) {
 	e.handleEvents(gtx)
-
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
@@ -178,6 +177,9 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 							}),
 							layout.Rigid(func() {
 								if e.IsRequired {
+									if e.editor.Len() != 0 {
+										e.ErrorLabel.Text = "Field is required"
+									}
 									e.ErrorLabel.Layout(gtx)
 								}
 

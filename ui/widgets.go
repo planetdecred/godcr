@@ -17,15 +17,8 @@ type inputs struct {
 	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
-<<<<<<< HEAD
 	toReceive                                                            widget.Button
 	toRestoreWallet                                                      widget.Button
-=======
-	toRestoreWallet                                                      widget.Button
-	toReceive, toTest                                                    widget.Button
-	toTransactionsFilters                                                widget.Button
-	applyFiltersTransactions                                             widget.Button
->>>>>>> remove widget param, add test.go, add text func
 	sync, syncHeader, hideMsgInfo, changePasswordDiag, signMessageDiag   widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
@@ -58,8 +51,12 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
+	customEditor struct {
+		test1, test2, test3, test4             decredmaterial.EditorCustom
+		test1btn, test2btn, test3btn, test4btn decredmaterial.Button
+		testOutput                             decredmaterial.Label
+	}
 	addressInput, messageInput, signInput                                      decredmaterial.Editor
-	test1, test2, test3, test4                                                 decredmaterial.EditorCustom
 	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive, toTest                                                          decredmaterial.IconButton
@@ -215,12 +212,6 @@ func (win *Window) initWidgets() {
 	win.outputs.toSettings = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionSettings)))
 	win.outputs.toSend = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSend)))
 	win.outputs.toReceive = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)))
-<<<<<<< HEAD
-=======
-	win.outputs.toTransactionsFilters.sortNewest = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentFilterList)))
-	win.outputs.toTransactionsFilters.sortOldest = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSort)))
-	win.outputs.toTest = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionSettings)))
->>>>>>> remove widget param, add test.go, add text func
 
 	win.outputs.noWallet = theme.H3("No wallet loaded")
 
@@ -274,44 +265,6 @@ func (win *Window) initWidgets() {
 		Color:      win.theme.Color.Success,
 		Padding:    unit.Dp(0),
 	}
-<<<<<<< HEAD
-=======
-
-	win.inputs.transactionFilterDirection = new(widget.Enum)
-	win.inputs.transactionFilterDirection.SetValue("0")
-	win.inputs.transactionFilterSort = new(widget.Enum)
-	win.inputs.transactionFilterSort.SetValue("0")
-
-	txFiltersDirection := []string{"All", "Sent", "Received", "Transfer"}
-	txSort := []string{"Newest", "Oldest"}
-
-	for i := 0; i < len(txFiltersDirection); i++ {
-		win.outputs.transactionFilterDirection = append(
-			win.outputs.transactionFilterDirection,
-			theme.RadioButton(fmt.Sprint(i), txFiltersDirection[i]))
-	}
-
-	for i := 0; i < len(txSort); i++ {
-		win.outputs.transactionFilterSort = append(
-			win.outputs.transactionFilterSort,
-			theme.RadioButton(fmt.Sprint(i), txSort[i]))
-	}
-
-	win.outputs.applyFiltersTransactions = theme.Button("Ok")
-
-	// Editor test
-	win.outputs.test1 = theme.EditorCustom("Enter Hint Text1")
-	win.outputs.test1.IsVisible = true
-	win.outputs.test1.Required = true
-
-	win.outputs.test2 = theme.EditorCustom("Enter Hint Text2")
-	win.outputs.test2.IsVisible = true
-
-	win.outputs.test3 = theme.EditorCustom("Enter Hint Text3")
-	win.outputs.test3.Required = true
-
-	win.outputs.test4 = theme.EditorCustom("Enter Hint Text3")
->>>>>>> remove widget param, add test.go, add text func
 }
 
 func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
