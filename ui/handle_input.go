@@ -74,6 +74,7 @@ func (win *Window) HandleInputs() {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.verifyMessage.Text = ""
+			win.outputs.addressInput.HintColor = win.theme.Color.Hint
 			return
 		}
 		log.Debug("address evt", evt)
@@ -84,6 +85,7 @@ func (win *Window) HandleInputs() {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.verifyMessage.Text = ""
+			win.outputs.signInput.HintColor = win.theme.Color.Hint
 			return
 		}
 		log.Debug("sign evt", evt)
@@ -94,6 +96,7 @@ func (win *Window) HandleInputs() {
 		case widget.ChangeEvent:
 			win.err = ""
 			win.outputs.verifyMessage.Text = ""
+			win.outputs.messageInput.HintColor = win.theme.Color.Hint
 			return
 		}
 		log.Debug("Match evt", evt)
@@ -186,7 +189,7 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	if strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
+	if strings.Trim(win.inputs.addressInput.Text(), " ") == "" || strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
 		win.outputs.verifyBtn.Background = win.theme.Color.Hint
 		win.outputs.verifyMessage.Text = ""
 		if win.inputs.verifyBtn.Clicked(win.gtx) {

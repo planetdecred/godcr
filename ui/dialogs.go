@@ -191,11 +191,11 @@ func (win *Window) verifyMessageDiag() {
 								Bottom: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
-								win.outputs.addressInput.Layout(win.gtx)
+								win.outputs.addressInput.Layout(win.gtx, &win.inputs.addressInput)
 							})
 						}),
 						rigid(func() {
-							win.outputs.signInput.Layout(win.gtx)
+							win.outputs.signInput.Layout(win.gtx, &win.inputs.signInput)
 						}),
 						rigid(func() {
 							inset := layout.Inset{
@@ -203,7 +203,7 @@ func (win *Window) verifyMessageDiag() {
 								Bottom: unit.Dp(20),
 							}
 							inset.Layout(win.gtx, func() {
-								win.outputs.messageInput.Layout(win.gtx)
+								win.outputs.messageInput.Layout(win.gtx, &win.inputs.messageInput)
 							})
 						}),
 						rigid(func() {

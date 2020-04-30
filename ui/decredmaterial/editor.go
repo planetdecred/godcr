@@ -3,7 +3,7 @@
 package decredmaterial
 
 import (
-	// "fmt"
+	// "errors"
 	"image/color"
 
 	"gioui.org/f32"
@@ -32,13 +32,10 @@ type Editor struct {
 }
 
 type EditorCustom struct {
-	theme      *Theme
 	hint       string
 	TitleLabel Label
 	ErrorLabel Label
 	LineColor  color.RGBA
-
-	selected bool
 
 	editorMaterial Editor
 	flexWidth      float32
@@ -64,22 +61,24 @@ func (t *Theme) Editor(hint string) Editor {
 	}
 }
 
-func (t *Theme) EditorCustom(hint string, editor *widget.Editor) EditorCustom {
+func (t *Theme) EditorCustom(hint string) EditorCustom {
+	errorLabel := t.Caption("Field is required")
+	errorLabel.Color = color.RGBA{255, 0, 0, 255}
+
 	return EditorCustom{
 		TitleLabel: t.Body1(""),
-		ErrorLabel: t.Caption(""),
-		selected:   false,
-		flexWidth:  1,
-		hint:       hint,
-		LineColor:  t.Color.Text,
-
+		// selected:   false,
+		flexWidth:      1,
+		hint:           hint,
+		LineColor:      t.Color.Text,
+		ErrorLabel:     errorLabel,
 		editorMaterial: t.Editor(hint),
-		editor:         editor,
+		editor:         new(widget.Editor),
 
 		pasteBtnMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
 			Size:       unit.Dp(30),
-			Background: color.RGBA{0, 0, 0, 0},
+			Background: color.RGBA{237, 237, 237, 255},
 			Color:      t.Color.Text,
 			Padding:    unit.Dp(5),
 		},
@@ -87,7 +86,7 @@ func (t *Theme) EditorCustom(hint string, editor *widget.Editor) EditorCustom {
 		clearBtMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentClear)),
 			Size:       unit.Dp(30),
-			Background: color.RGBA{0, 0, 0, 0},
+			Background: color.RGBA{237, 237, 237, 255},
 			Color:      t.Color.Text,
 			Padding:    unit.Dp(5),
 		},
@@ -125,99 +124,98 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 
 func (e EditorCustom) Layout(gtx *layout.Context) {
 	e.handleEvents(gtx)
-	e.reset(gtx)
 
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
 
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func() {
-			if e.editor.Focused() || e.editor.Len() != 0 {
-				e.TitleLabel.Text = e.hint
-				e.editorMaterial.Hint = ""
-			}
-
-			// if e.Required {
-			// 	if !e.editor.Focused(){
-			// 		if e.editor.Len() == 0 {
-			// 			e.TitleLabel.Color = color.RGBA{255, 0, 0, 255}
-			// 		}
-			// 	}
-			// }
-			e.TitleLabel.Layout(gtx)
-		}),
-		layout.Rigid(func() {
-			layout.Flex{}.Layout(gtx,
-				layout.Rigid(func() {
-					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func() {
-							inset := layout.Inset{
-								Top:    unit.Dp(6),
-								Bottom: unit.Dp(4),
-							}
-							inset.Layout(gtx, func() {
+	layout.UniformInset(unit.Dp(1)).Layout(gtx, func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func() {
+				if e.editor.Focused() || e.editor.Len() != 0 {
+					e.TitleLabel.Text = e.hint
+					e.editorMaterial.Hint = ""
+				}
+				e.TitleLabel.Layout(gtx)
+			}),
+			layout.Rigid(func() {
+				layout.Flex{}.Layout(gtx,
+					layout.Rigid(func() {
+						layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func() {
+								inset := layout.Inset{
+									Top:    unit.Dp(4),
+									Bottom: unit.Dp(4),
+								}
+								inset.Layout(gtx, func() {
+									layout.Flex{}.Layout(gtx,
+										layout.Flexed(e.flexWidth, func() {
+											e.editorMaterial.Layout(gtx, e.editor)
+										}),
+									)
+								})
+							}),
+							layout.Rigid(func() {
+								// if e.Required {
+								// 	if !e.editor.Focused() && e.editor.Len() == 0 {
+								// 		e.LineColor = color.RGBA{255, 0, 0, 255}
+								// 	}
+								// }
 								layout.Flex{}.Layout(gtx,
 									layout.Flexed(e.flexWidth, func() {
-										e.editorMaterial.Layout(gtx, e.editor)
+										rect := f32.Rectangle{
+											Max: f32.Point{
+												X: float32(gtx.Constraints.Width.Max),
+												Y: 1,
+											},
+										}
+										op.TransformOp{}.Offset(f32.Point{
+											X: 0,
+											Y: 0,
+										}).Add(gtx.Ops)
+										paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
+										paint.PaintOp{Rect: rect}.Add(gtx.Ops)
 									}),
 								)
-							})
-						}),
-						layout.Rigid(func() {
-							if e.Required {
-								if !e.editor.Focused() {
-									if e.editor.Len() == 0 {
-										e.LineColor = color.RGBA{255, 0, 0, 255}
-									}
+							}),
+							layout.Rigid(func() {
+								if e.Required {
+									// if e.editor.Len() == 0 && !e.editor.Focused(){
+									// e.ErrorLabel.Text = "Field is required"
+									// }
+									e.ErrorLabel.Layout(gtx)
 								}
-							}
-							layout.Flex{}.Layout(gtx,
-								layout.Flexed(e.flexWidth, func() {
-									rect := f32.Rectangle{
-										Max: f32.Point{
-											X: float32(gtx.Constraints.Width.Max),
-											Y: 1,
-										},
-									}
-									op.TransformOp{}.Offset(f32.Point{
-										X: 0,
-										Y: 0,
-									}).Add(gtx.Ops)
-									paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
-									paint.PaintOp{Rect: rect}.Add(gtx.Ops)
-								}),
-							)
-						}),
-						layout.Rigid(func() {
-							if e.Required {
-								if e.editor.Len() == 0 && !e.editor.Focused() {
-									e.ErrorLabel.Text = "Field is required"
-									e.ErrorLabel.Color = color.RGBA{255, 0, 0, 255}
-								}
-								e.ErrorLabel.Layout(gtx)
-							}
 
-						}),
-					)
-				}),
-				layout.Rigid(func() {
-					inset := layout.Inset{
-						Left: unit.Dp(10),
-					}
-					inset.Layout(gtx, func() {
-						if e.IsVisible {
-							if e.editor.Text() == "" {
-								e.pasteBtnMaterial.Layout(gtx, e.pasteBtnWidget)
-							} else {
-								e.clearBtMaterial.Layout(gtx, e.clearBtnWidget)
-							}
+							}),
+						)
+					}),
+					layout.Rigid(func() {
+						inset := layout.Inset{
+							Left: unit.Dp(10),
 						}
-					})
-				}),
-			)
-		}),
-	)
+						inset.Layout(gtx, func() {
+							if e.IsVisible {
+								if e.editor.Text() == "" {
+									e.pasteBtnMaterial.Layout(gtx, e.pasteBtnWidget)
+								} else {
+									e.clearBtMaterial.Layout(gtx, e.clearBtnWidget)
+								}
+							}
+						})
+					}),
+				)
+			}),
+		)
+	})
+}
+
+func (e EditorCustom) Text() string {
+	if e.Required && e.editor.Len() == 0 && !e.editor.Focused() {
+		e.ErrorLabel.Text = "Field is required and cannot be empty."
+		e.LineColor = color.RGBA{255, 0, 0, 255}
+		return ""
+	}
+	return e.editor.Text()
 }
 
 func (e EditorCustom) handleEvents(gtx *layout.Context) {
@@ -235,24 +233,11 @@ func (e EditorCustom) handleEvents(gtx *layout.Context) {
 	}
 }
 
-func (e EditorCustom) validate() {
-	if e.Required {
-		if !e.editor.Focused() {
-			if e.editor.Len() == 0 {
-				e.ErrorLabel.Text = "Field is required"
-				e.LineColor = color.RGBA{255, 0, 0, 255}
-				e.TitleLabel.Color = color.RGBA{255, 0, 0, 255}
-			}
-		}
-	}
-}
-
 func (e EditorCustom) reset(gtx *layout.Context) {
 	for _, evt := range e.editor.Events(gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			e.LineColor = darkblue
-			e.TitleLabel.Color = darkblue
 			return
 		}
 	}

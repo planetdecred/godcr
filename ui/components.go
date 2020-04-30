@@ -153,6 +153,11 @@ func (win *Window) NavBar() {
 				win.outputs.toSettings.Layout(win.gtx, &win.inputs.toSettings)
 			})
 		}),
+		layout.Rigid(func() {
+			layout.Center.Layout(win.gtx, func() {
+				win.outputs.toTest.Layout(win.gtx, &win.inputs.toTest)
+			})
+		}),
 	)
 }
 
