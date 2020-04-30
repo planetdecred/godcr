@@ -3,7 +3,6 @@
 package decredmaterial
 
 import (
-	// "errors"
 	"image/color"
 
 	"gioui.org/f32"
@@ -40,10 +39,10 @@ type EditorCustom struct {
 	editorMaterial Editor
 	flexWidth      float32
 	editor         *widget.Editor
-	//IsVisible if false hides the paste and clear button.
+	//IsVisible if true, shows the paste and clear button.
 	IsVisible bool
-	//Required if true the input field must contain data and cannot be empty.
-	Required         bool
+	//IsRequired if true, the input field must contain data and cannot be empty.
+	IsRequired       bool
 	pasteBtnMaterial IconButton
 	pasteBtnWidget   *widget.Button
 
@@ -66,8 +65,7 @@ func (t *Theme) EditorCustom(hint string) EditorCustom {
 	errorLabel.Color = color.RGBA{255, 0, 0, 255}
 
 	return EditorCustom{
-		TitleLabel: t.Body1(""),
-		// selected:   false,
+		TitleLabel:     t.Body1(""),
 		flexWidth:      1,
 		hint:           hint,
 		LineColor:      t.Color.Text,
@@ -129,7 +127,7 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 		e.flexWidth = 0.93
 	}
 
-	layout.UniformInset(unit.Dp(1)).Layout(gtx, func() {
+	layout.UniformInset(unit.Dp(2)).Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
 				if e.editor.Focused() || e.editor.Len() != 0 {
@@ -156,7 +154,7 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 								})
 							}),
 							layout.Rigid(func() {
-								// if e.Required {
+								// if e.IsRequired {
 								// 	if !e.editor.Focused() && e.editor.Len() == 0 {
 								// 		e.LineColor = color.RGBA{255, 0, 0, 255}
 								// 	}
@@ -179,10 +177,7 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 								)
 							}),
 							layout.Rigid(func() {
-								if e.Required {
-									// if e.editor.Len() == 0 && !e.editor.Focused(){
-									// e.ErrorLabel.Text = "Field is required"
-									// }
+								if e.IsRequired {
 									e.ErrorLabel.Layout(gtx)
 								}
 
@@ -210,7 +205,7 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 }
 
 func (e EditorCustom) Text() string {
-	if e.Required && e.editor.Len() == 0 && !e.editor.Focused() {
+	if e.IsRequired && e.editor.Len() == 0 && !e.editor.Focused() {
 		e.ErrorLabel.Text = "Field is required and cannot be empty."
 		e.LineColor = color.RGBA{255, 0, 0, 255}
 		return ""
@@ -225,20 +220,8 @@ func (e EditorCustom) handleEvents(gtx *layout.Context) {
 	}
 	for e.pasteBtnWidget.Clicked(gtx) {
 		e.editor.SetText(data)
-		e.reset(gtx)
 	}
 	for e.clearBtnWidget.Clicked(gtx) {
 		e.editor.SetText("")
-		e.reset(gtx)
-	}
-}
-
-func (e EditorCustom) reset(gtx *layout.Context) {
-	for _, evt := range e.editor.Events(gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			e.LineColor = darkblue
-			return
-		}
 	}
 }
