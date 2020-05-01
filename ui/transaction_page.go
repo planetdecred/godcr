@@ -18,7 +18,7 @@ import (
 
 const (
 	PageTransactionDetails = "transaction"
-	pageContentInset       = 15
+	pageContentInset       = 30
 	rowGroupInset          = 20
 )
 
@@ -28,15 +28,15 @@ type transactionWdg struct {
 }
 
 type transactionPage struct {
-	transactionPageContainer          layout.List
-	transactionInputsContainer        layout.List
-	transactionOutputsContainer       layout.List
-	expandMore, expandLess            decredmaterial.IconButton
-	details                           **wallet.Transaction
-	isTxnInputsShow, isTxnOutputsShow bool
-	expandInputs, expandOutputs,
-	viewTxnOnDcrdataW, hideTransaction widget.Button
-	hideTransactionW, viewTxnOnDcrdata decredmaterial.Button
+	transactionPageContainer            layout.List
+	transactionInputsContainer          layout.List
+	transactionOutputsContainer         layout.List
+	expandMore, expandLess, backButtonW decredmaterial.IconButton
+	txnInfo                             **wallet.Transaction
+	isTxnInputsShow, isTxnOutputsShow   bool
+	expandInputs, expandOutputs, viewTxnOnDcrdataW,
+	backButton widget.Button
+	viewTxnOnDcrdata decredmaterial.Button
 }
 
 func TransactionPage(common pageCommon, transaction **wallet.Transaction) layout.Widget {
@@ -50,7 +50,7 @@ func TransactionPage(common pageCommon, transaction **wallet.Transaction) layout
 		transactionOutputsContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		details: transaction,
+		txnInfo: transaction,
 		expandMore: decredmaterial.IconButton{
 			Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandMore)),
 			Size:    unit.Dp(25),
@@ -63,11 +63,11 @@ func TransactionPage(common pageCommon, transaction **wallet.Transaction) layout
 			Color:   common.theme.Color.Text,
 			Padding: unit.Dp(0),
 		},
-		hideTransactionW: common.theme.Button("Hide"),
+		backButtonW:      common.theme.PlainIconButton(common.icons.navigationArrowBack),
 		viewTxnOnDcrdata: common.theme.Button("View on dcrdata"),
 	}
-	page.hideTransactionW.Color = common.theme.Color.InvText
-	page.hideTransactionW.Background = common.theme.Color.Hint
+	page.backButtonW.Color = common.theme.Color.Hint
+	page.backButtonW.Size = unit.Dp(32)
 
 	return func() {
 		page.layout(common)
@@ -100,15 +100,15 @@ func (page *transactionPage) layout(common pageCommon) {
 		},
 	}
 
-	common.LayoutWithWallets(gtx, func() {
-		// common.theme.Surface(gtx, func() {
+	common.theme.Surface(gtx, func() {
+		toMax(gtx)
 		layout.UniformInset(unit.Dp(pageContentInset)).Layout(gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func() {
-					page.txnDirection(&common)
+					page.header(&common)
 				}),
 				layout.Flexed(1, func() {
-					if *page.details == nil {
+					if *page.txnInfo == nil {
 						return
 					}
 					page.transactionPageContainer.Layout(gtx, len(widgets), func(i int) {
@@ -116,28 +116,23 @@ func (page *transactionPage) layout(common pageCommon) {
 					})
 				}),
 				layout.Rigid(func() {
-					if *page.details == nil {
+					if *page.txnInfo == nil {
 						return
 					}
-					layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-						layout.Flexed(.47, func() {
-							page.hideTransactionW.Layout(common.gtx, &page.hideTransaction)
-						}),
-						layout.Flexed(.47, func() {
-							page.viewTxnOnDcrdata.Layout(gtx, &page.viewTxnOnDcrdataW)
-						}),
-					)
+					page.viewTxnOnDcrdata.Layout(gtx, &page.viewTxnOnDcrdataW)
 				}),
 			)
 		})
-		// })
 	})
 }
 
-func (page *transactionPage) txnDirection(common *pageCommon) {
+func (page *transactionPage) header(common *pageCommon) {
+	layout.W.Layout(common.gtx, func() {
+		page.backButtonW.Layout(common.gtx, &page.backButton)
+	})
 	txt := common.theme.H4("")
-	if *page.details != nil {
-		txt.Text = dcrlibwallet.TransactionDirectionName((*page.details).Txn.Direction)
+	if *page.txnInfo != nil {
+		txt.Text = dcrlibwallet.TransactionDirectionName((*page.txnInfo).Txn.Direction)
 	} else {
 		txt.Text = "Not found"
 	}
@@ -147,7 +142,7 @@ func (page *transactionPage) txnDirection(common *pageCommon) {
 }
 
 func (page *transactionPage) initTxnWidgets(common *pageCommon, txWidgets *transactionWdg) {
-	transaction := *page.details
+	transaction := *page.txnInfo
 	txWidgets.amount = common.theme.Label(unit.Dp(16), transaction.Balance)
 	txWidgets.time = common.theme.Body1("Pending")
 
@@ -163,7 +158,7 @@ func (page *transactionPage) initTxnWidgets(common *pageCommon, txWidgets *trans
 		txWidgets.direction, _ = decredmaterial.NewIcon(icons.ContentRemove)
 		txWidgets.direction.Color = common.theme.Color.Danger
 	} else {
-		txWidgets.direction, _ = decredmaterial.NewIcon(icons.ContentAdd)
+		txWidgets.direction = common.icons.contentAdd
 		txWidgets.direction.Color = common.theme.Color.Success
 	}
 }
@@ -190,13 +185,13 @@ func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 				txnWidgets.status.Layout(common.gtx, unit.Dp(16))
 			})
 			layout.Inset{Left: unit.Dp(18)}.Layout(common.gtx, func() {
-				txt := common.theme.Body1((*page.details).Status)
+				txt := common.theme.Body1((*page.txnInfo).Status)
 				txt.Color = txnWidgets.status.Color
 				txt.Layout(common.gtx)
 			})
 		}),
 		layout.Rigid(func() {
-			txt := common.theme.Body1(fmt.Sprintf("%d confirmations", (*page.details).Confirmations))
+			txt := common.theme.Body1(fmt.Sprintf("%d confirmations", (*page.txnInfo).Confirmations))
 			txt.Color = common.theme.Color.Primary
 			txt.Layout(common.gtx)
 		}),
@@ -204,7 +199,7 @@ func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 }
 
 func (page *transactionPage) txnTypeAndID(common *pageCommon) {
-	transaction := *page.details
+	transaction := *page.txnInfo
 	gtx := common.gtx
 	row := func(label string, t decredmaterial.Label) {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -242,7 +237,7 @@ func (page *transactionPage) txnTypeAndID(common *pageCommon) {
 }
 
 func (page *transactionPage) txnInputs(common *pageCommon) {
-	transaction := *page.details
+	transaction := *page.txnInfo
 
 	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
 		layout.Rigid(func() {
@@ -261,7 +256,7 @@ func (page *transactionPage) txnInputs(common *pageCommon) {
 }
 
 func (page *transactionPage) txnOutputs(common *pageCommon) {
-	transaction := *page.details
+	transaction := *page.txnInfo
 	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
 		layout.Rigid(func() {
 			txt := fmt.Sprintf("%d Outputs created", len(transaction.Txn.Outputs))
@@ -310,7 +305,7 @@ func (page *transactionPage) txnIORowHeader(common *pageCommon, str string, in *
 
 func (page *transactionPage) viewTxnOnBrowser(common *pageCommon) {
 	var err error
-	url := common.wallet.GetBlockExplorerURL((*page.details).Txn.Hash)
+	url := common.wallet.GetBlockExplorerURL((*page.txnInfo).Txn.Hash)
 
 	switch runtime.GOOS {
 	case "linux":
@@ -337,7 +332,7 @@ func (page *transactionPage) handler(common pageCommon) {
 	if page.viewTxnOnDcrdataW.Clicked(common.gtx) {
 		page.viewTxnOnBrowser(&common)
 	}
-	if page.hideTransaction.Clicked(common.gtx) {
+	if page.backButton.Clicked(common.gtx) {
 		*common.page = PageTransactions
 	}
 }
