@@ -10,7 +10,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	// "gioui.org/widget/material"
 
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )

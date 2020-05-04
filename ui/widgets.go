@@ -51,11 +51,6 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
-	customEditor struct {
-		test1, test2, test3, test4             decredmaterial.EditorCustom
-		test1btn, test2btn, test3btn, test4btn decredmaterial.Button
-		testOutput                             decredmaterial.Label
-	}
 	addressInput, messageInput, signInput                                      decredmaterial.Editor
 	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
