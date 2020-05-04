@@ -39,7 +39,7 @@ type transactionPage struct {
 	viewTxnOnDcrdata decredmaterial.Button
 }
 
-func TransactionPage(common pageCommon, transaction **wallet.Transaction) layout.Widget {
+func (win *Window) TransactionPage(common pageCommon, transaction **wallet.Transaction) layout.Widget {
 	page := &transactionPage{
 		transactionPageContainer: layout.List{
 			Axis: layout.Vertical,

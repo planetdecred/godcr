@@ -85,8 +85,8 @@ func (win *Window) addPages() {
 	win.pages[PageReceive] = win.Receive
 	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
+	win.pages[PageTransactionDetails] = win.TransactionPage(common, &win.walletTransaction)
 	win.pages[PageSignMessage] = win.SignMessagePage
-	win.pages[PageTransactionDetails] = TransactionPage(common, &win.walletTransaction)
 
 }
 
