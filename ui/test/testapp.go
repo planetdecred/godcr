@@ -65,17 +65,14 @@ func CreateWindow() (*TestStruct, error) {
 }
 
 func (t *TestStruct) Loop() {
-	for {
-		select {
-		case e := <-t.window.Events():
-			switch e := e.(type) {
-			case system.DestroyEvent:
-				return
-			case system.FrameEvent:
-				t.gtx.Reset(e.Config, e.Size)
-				t.TestPage()
-				e.Frame(t.gtx.Ops)
-			}
+	for e := range t.window.Events() {
+		switch e := e.(type) {
+		case system.DestroyEvent:
+			return
+		case system.FrameEvent:
+			t.gtx.Reset(e.Config, e.Size)
+			t.TestPage()
+			e.Frame(t.gtx.Ops)
 		}
 	}
 }
