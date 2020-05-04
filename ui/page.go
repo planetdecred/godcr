@@ -60,9 +60,6 @@ func (win *Window) addPages() {
 			Label: win.theme.Body1("Settings"),
 			Icon:  icons.overviewIcon,
 		},
-		{
-			Button: win.theme.Button("Test"),
-		},
 	})
 
 	common := pageCommon{
@@ -90,7 +87,7 @@ func (win *Window) addPages() {
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
-	navs := []string{PageOverview, PageWallet, PageTransactions, PageOverview, PageTest}
+	navs := []string{PageOverview, PageWallet, PageTransactions, PageOverview}
 	toMax(gtx)
 	page.navTab.Separator = true
 	page.navTab.Layout(gtx, body)
