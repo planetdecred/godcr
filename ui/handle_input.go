@@ -388,11 +388,7 @@ func (win *Window) HandleInputs() {
 					for _, txn := range walTxs {
 						if key == txn.Txn.Hash {
 							win.walletTransaction = &txn
-							if win.current == PageOverview {
-								win.current = PageTransactions
-							} else {
-								win.current = PageTransactionDetails
-							}
+							win.current = PageTransactionDetails
 							break out
 						}
 					}

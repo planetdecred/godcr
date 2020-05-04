@@ -39,7 +39,7 @@ type transactionPage struct {
 	viewTxnOnDcrdata decredmaterial.Button
 }
 
-func (win *Window) TransactionPage(common pageCommon, transaction **wallet.Transaction) layout.Widget {
+func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 	page := &transactionPage{
 		transactionPageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -50,7 +50,7 @@ func (win *Window) TransactionPage(common pageCommon, transaction **wallet.Trans
 		transactionOutputsContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		txnInfo: transaction,
+		txnInfo: &win.walletTransaction,
 		expandMore: decredmaterial.IconButton{
 			Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandMore)),
 			Size:    unit.Dp(25),
