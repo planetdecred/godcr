@@ -30,6 +30,8 @@ type Window struct {
 	dialog  layout.Widget
 	tabs    *decredmaterial.Tabs
 
+	signatureResult *wallet.Signature
+
 	selectedAccount int
 
 	selected int

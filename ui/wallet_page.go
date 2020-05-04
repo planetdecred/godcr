@@ -21,13 +21,15 @@ type walletPage struct {
 	container, accountsList                            layout.List
 	renaming, deleting                                 bool
 	rename, delete, beginRename, cancelRename, addAcct widget.Button
+	signMessageDiag                                    *widget.Button
 	renameW, beginRenameW, cancelRenameW, addAcctW     decredmaterial.IconButton
 	editor                                             widget.Editor
 	editorW                                            decredmaterial.Editor
 	deleteW                                            decredmaterial.Button
+	gotoSignMessagePageBtn                             decredmaterial.Button
 }
 
-func WalletPage(common pageCommon) layout.Widget {
+func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	page := &walletPage{
 		container: layout.List{
 			Axis: layout.Vertical,
@@ -35,12 +37,14 @@ func WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
-		beginRenameW:  common.theme.PlainIconButton(common.icons.contentCreate),
-		cancelRenameW: common.theme.PlainIconButton(common.icons.contentClear),
-		renameW:       common.theme.PlainIconButton(common.icons.navigationCheck),
-		editorW:       common.theme.Editor("Enter wallet name"),
-		addAcctW:      common.theme.IconButton(common.icons.contentAdd),
-		deleteW:       common.theme.DangerButton("Delete Wallet"),
+		beginRenameW:           common.theme.PlainIconButton(common.icons.contentCreate),
+		cancelRenameW:          common.theme.PlainIconButton(common.icons.contentClear),
+		renameW:                common.theme.PlainIconButton(common.icons.navigationCheck),
+		editorW:                common.theme.Editor("Enter wallet name"),
+		addAcctW:               common.theme.IconButton(common.icons.contentAdd),
+		deleteW:                common.theme.DangerButton("Delete Wallet"),
+		gotoSignMessagePageBtn: win.outputs.signMessageDiag,
+		signMessageDiag:        &win.inputs.signMessageDiag,
 	}
 
 	return func() {
@@ -123,7 +127,19 @@ func (page *walletPage) Layout(common pageCommon) {
 			})
 		},
 		func() {
-			page.deleteW.Layout(gtx, &page.delete)
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func() {
+					page.deleteW.Layout(gtx, &page.delete)
+				}),
+				layout.Rigid(func() {
+					inset := layout.Inset{
+						Left: unit.Dp(5),
+					}
+					inset.Layout(gtx, func() {
+						page.gotoSignMessagePageBtn.Layout(gtx, page.signMessageDiag)
+					})
+				}),
+			)
 		},
 	}
 	common.LayoutWithWallets(gtx, func() {
