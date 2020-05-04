@@ -29,6 +29,7 @@ func (win *Window) HandleInputs() {
 			win.sortTransactions()
 		}
 	}
+
 	if win.combined.sel.Changed() {
 		win.selectedAccount = win.combined.sel.Selected
 	}

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 
 	"gioui.org/unit"
@@ -307,4 +308,11 @@ func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
 		panic(err)
 	}
 	return ic
+}
+
+func mustDcrIcon(icon image.Image, err error) image.Image {
+	if err != nil {
+		panic(err)
+	}
+	return icon
 }
