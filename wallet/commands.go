@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"encoding/base64"
 	"fmt"
 	"math"
 	"sort"
@@ -300,6 +301,39 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			Synced:          wal.multi.IsSynced(),
 			Syncing:         wal.multi.IsSyncing(),
 		}
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message string) {
+	go func() {
+		var resp Response
+
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			resp.Resp = &Signature{
+				Err: InternalWalletError{
+					Message: "No wallet found",
+				},
+			}
+
+			wal.Send <- resp
+			return
+		}
+
+		signedMessageBytes, err := wall.SignMessage(passphrase, address, message)
+		if err != nil {
+			resp.Resp = &Signature{
+				Err: fmt.Errorf("error signing message: %s", err.Error()),
+			}
+			wal.Send <- resp
+			return
+		}
+
+		resp.Resp = &Signature{
+			Signature: base64.StdEncoding.EncodeToString(signedMessageBytes),
+		}
+
 		wal.Send <- resp
 	}()
 }

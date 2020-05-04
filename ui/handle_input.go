@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"image/color"
 	"sort"
 	"strings"
@@ -459,6 +460,12 @@ func (win *Window) HandleInputs() {
 		}
 
 		win.outputs.passwordBar.Progress = strength * 100
+	}
+
+	if win.inputs.signMessageDiag.Clicked(win.gtx) {
+		fmt.Println("Ddd")
+		win.current = PageSignMessage
+		return
 	}
 }
 
