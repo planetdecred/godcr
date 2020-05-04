@@ -54,7 +54,7 @@ type outputs struct {
 	addressInput, messageInput, signInput                                      decredmaterial.Editor
 	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
-	toReceive, toTest                                                          decredmaterial.IconButton
+	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
 	clearBtn, verifyBtn, verifyMessDiag                                        decredmaterial.Button
 
