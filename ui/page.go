@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"image"
+
 	"gioui.org/layout"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
@@ -9,6 +11,7 @@ import (
 
 type pageIcons struct {
 	contentAdd, contentClear, contentCreate, navigationCheck *decredmaterial.Icon
+	overviewIcon, walletIcon                                 image.Image
 }
 
 type pageCommon struct {
@@ -29,24 +32,26 @@ func (win *Window) addPages() {
 		contentClear:    mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
 		contentCreate:   mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
 		navigationCheck: mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
+		overviewIcon:    mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
+		walletIcon:      mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
 			Label: win.theme.Body1("Overview"),
-			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
+			Icon:  icons.overviewIcon,
 		},
 		{
 			Label: win.theme.Body1("Wallets"),
-			Icon:  mustDcrIcon(decredmaterial.WalletIcon),
+			Icon:  icons.walletIcon,
 		},
 		{
 			Label: win.theme.Body1("Transactions"),
-			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
+			Icon:  icons.overviewIcon,
 		},
 		{
 			Label: win.theme.Body1("Settings"),
-			Icon:  mustDcrIcon(decredmaterial.OverviewIcon),
+			Icon:  icons.overviewIcon,
 		},
 	})
 

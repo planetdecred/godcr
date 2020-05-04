@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"bytes"
 	"fmt"
 	"image"
 	"image/color"
@@ -311,8 +310,7 @@ func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
 	return ic
 }
 
-func mustDcrIcon(dcrIcon []byte) image.Image {
-	icon, _, err := image.Decode(bytes.NewReader(dcrIcon))
+func mustDcrIcon(icon image.Image, err error) image.Image {
 	if err != nil {
 		panic(err)
 	}
