@@ -10,6 +10,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	// "gioui.org/widget/material"
 
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
@@ -36,12 +37,17 @@ type TestStruct struct {
 
 	customEditorInput struct {
 		test1btn, test2btn, test3btn, test4btn widget.Button
+		radiobtn                               widget.Enum
+		checkbox                               widget.CheckBox
 	}
 
 	customEditorOutput struct {
 		test1, test2, test3, test4             decredmaterial.EditorCustom
 		test1btn, test2btn, test3btn, test4btn decredmaterial.Button
 		testOutput                             decredmaterial.Label
+		radiobtn                               decredmaterial.RadioButton
+		checkbox                               decredmaterial.CheckBox
+		progressBar                            *decredmaterial.ProgressBar
 	}
 }
 
@@ -98,6 +104,10 @@ func (t *TestStruct) initWidgets() {
 	t.customEditorOutput.test2btn = theme.Button("Text2")
 	t.customEditorOutput.test3btn = theme.Button("Text3")
 	t.customEditorOutput.test4btn = theme.Button("Text4")
+	t.customEditorOutput.radiobtn = theme.RadioButton("btn1", "test radio button")
+	t.customEditorOutput.checkbox = theme.CheckBox("test checkbox")
+	t.customEditorOutput.progressBar = theme.ProgressBar(60)
+
 }
 
 func (t *TestStruct) TestPage() {
@@ -143,6 +153,27 @@ func (t *TestStruct) testPageContents() {
 				layout.Rigid(func() {
 					t.customEditorOutput.test4btn.Layout(t.gtx, &t.customEditorInput.test4btn)
 				}),
+			)
+		},
+		func() {
+			t.gtx.Constraints.Height.Max = 20
+			t.gtx.Constraints.Width.Max = t.gtx.Px(unit.Dp(550))
+			t.customEditorOutput.progressBar.Layout(t.gtx)
+		},
+		func() {
+			layout.Flex{}.Layout(t.gtx,
+				layout.Rigid(func() {
+					t.customEditorOutput.radiobtn.Layout(t.gtx, &t.customEditorInput.radiobtn)
+				}),
+				layout.Rigid(func() {
+					t.customEditorOutput.checkbox.Layout(t.gtx, &t.customEditorInput.checkbox)
+				}),
+				// layout.Rigid(func() {
+				// 	t.customEditorOutput.test3btn.Layout(t.gtx, &t.customEditorInput.test3btn)
+				// }),
+				// layout.Rigid(func() {
+				// 	t.customEditorOutput.test4btn.Layout(t.gtx, &t.customEditorInput.test4btn)
+				// }),
 			)
 		},
 		func() {

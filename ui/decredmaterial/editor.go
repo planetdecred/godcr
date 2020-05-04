@@ -39,10 +39,15 @@ type EditorCustom struct {
 	editorMaterial Editor
 	flexWidth      float32
 	editor         *widget.Editor
-	//IsVisible if true, shows the paste and clear button.
+	//IsVisible if true, displays the paste and clear button.
 	IsVisible bool
-	//IsRequired if true, the input field must contain data and cannot be empty.
-	IsRequired       bool
+	//IsRequired if true, displays a required field text at the buttom of the editor.
+	IsRequired bool
+	// SingleLine force the text to stay on a single line.
+	// SingleLine also sets the scrolling direction to
+	// horizontal.
+	SingleLine bool
+
 	pasteBtnMaterial IconButton
 	pasteBtnWidget   *widget.Button
 
@@ -76,7 +81,7 @@ func (t *Theme) EditorCustom(hint string) EditorCustom {
 		pasteBtnMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
 			Size:       unit.Dp(30),
-			Background: color.RGBA{237, 237, 237, 255},
+			Background: color.RGBA{},
 			Color:      t.Color.Text,
 			Padding:    unit.Dp(5),
 		},
@@ -84,7 +89,7 @@ func (t *Theme) EditorCustom(hint string) EditorCustom {
 		clearBtMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentClear)),
 			Size:       unit.Dp(30),
-			Background: color.RGBA{237, 237, 237, 255},
+			Background: color.RGBA{},
 			Color:      t.Color.Text,
 			Padding:    unit.Dp(5),
 		},
@@ -147,17 +152,13 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 								inset.Layout(gtx, func() {
 									layout.Flex{}.Layout(gtx,
 										layout.Flexed(e.flexWidth, func() {
+											e.editor.SingleLine = e.SingleLine
 											e.editorMaterial.Layout(gtx, e.editor)
 										}),
 									)
 								})
 							}),
 							layout.Rigid(func() {
-								// if e.IsRequired {
-								// 	if !e.editor.Focused() && e.editor.Len() == 0 {
-								// 		e.LineColor = color.RGBA{255, 0, 0, 255}
-								// 	}
-								// }
 								layout.Flex{}.Layout(gtx,
 									layout.Flexed(e.flexWidth, func() {
 										rect := f32.Rectangle{
