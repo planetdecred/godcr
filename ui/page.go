@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"image"
+
 	"gioui.org/layout"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
@@ -9,6 +11,7 @@ import (
 
 type pageIcons struct {
 	contentAdd, contentClear, contentCreate, navigationCheck *decredmaterial.Icon
+	overviewIcon, walletIcon                                 image.Image
 }
 
 type pageCommon struct {
@@ -29,20 +32,26 @@ func (win *Window) addPages() {
 		contentClear:    mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
 		contentCreate:   mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
 		navigationCheck: mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
+		overviewIcon:    mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
+		walletIcon:      mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
-			Button: win.theme.Button("Overview"),
+			Label: win.theme.Body1("Overview"),
+			Icon:  icons.overviewIcon,
 		},
 		{
-			Button: win.theme.Button("Wallets"),
+			Label: win.theme.Body1("Wallets"),
+			Icon:  icons.walletIcon,
 		},
 		{
-			Button: win.theme.Button("Transactions"),
+			Label: win.theme.Body1("Transactions"),
+			Icon:  icons.overviewIcon,
 		},
 		{
-			Button: win.theme.Button("Settings"),
+			Label: win.theme.Body1("Settings"),
+			Icon:  icons.overviewIcon,
 		},
 	})
 
@@ -74,6 +83,7 @@ func (win *Window) addPages() {
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
 	navs := []string{PageOverview, PageWallet, PageTransactions, PageOverview}
 	toMax(gtx)
+	page.navTab.Separator = true
 	page.navTab.Layout(gtx, body)
 
 	if page.navTab.Changed() {
@@ -85,15 +95,17 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
 	for i := range page.info.Wallets {
 		wallets[i] = decredmaterial.TabItem{
-			Button: page.theme.Button(page.info.Wallets[i].Name),
+			Label: page.theme.Body1(page.info.Wallets[i].Name),
 		}
 	}
 	page.walletsTab.SetTabs(wallets)
+	page.walletsTab.Position = decredmaterial.Top
 	bd := func() {
-		page.walletsTab.Layout(gtx, body)
 		if page.walletsTab.Changed() {
 			*page.selectedWallet = page.walletsTab.Selected
 		}
+		page.walletsTab.Separator = false
+		page.walletsTab.Layout(gtx, body)
 	}
 	page.Layout(gtx, bd)
 }

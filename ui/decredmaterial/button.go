@@ -26,6 +26,7 @@ type Button struct {
 	Background   color.RGBA
 	CornerRadius unit.Value
 	Inset        layout.Inset
+	Radius       float32
 	shaper       text.Shaper
 }
 
@@ -49,6 +50,7 @@ func (t *Theme) Button(txt string) Button {
 			Top: unit.Dp(10), Bottom: unit.Dp(10),
 			Left: unit.Dp(12), Right: unit.Dp(12),
 		},
+		Radius: 4,
 		shaper: t.Shaper,
 	}
 }
@@ -81,7 +83,7 @@ func (b Button) Layout(gtx *layout.Context, button *widget.Button) {
 	vmin := gtx.Constraints.Height.Min
 	layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func() {
-			rr := float32(gtx.Px(unit.Dp(4)))
+			rr := float32(gtx.Px(unit.Dp(b.Radius)))
 			clip.Rect{
 				Rect: f32.Rectangle{Max: f32.Point{
 					X: float32(gtx.Constraints.Width.Min),
