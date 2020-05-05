@@ -10,8 +10,9 @@ import (
 )
 
 type pageIcons struct {
-	contentAdd, contentClear, contentCreate, navigationCheck *decredmaterial.Icon
-	overviewIcon, walletIcon                                 image.Image
+	contentAdd, contentClear, contentCreate, navigationCheck,
+	contentSend, contentAddBox *decredmaterial.Icon
+	overviewIcon, walletIcon image.Image
 }
 
 type pageCommon struct {
@@ -34,6 +35,8 @@ func (win *Window) addPages() {
 		navigationCheck: mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
 		overviewIcon:    mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
 		walletIcon:      mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
+		contentSend:     mustIcon(decredmaterial.NewIcon(icons.ContentSend)),
+		contentAddBox:   mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
@@ -72,7 +75,7 @@ func (win *Window) addPages() {
 
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage
-	win.pages[PageTransactions] = win.TransactionsPage
+	win.pages[PageTransactions] = win.TransactionsPage(common)
 	win.pages[PageReceive] = win.Receive
 	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage

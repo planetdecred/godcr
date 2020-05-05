@@ -16,11 +16,8 @@ type inputs struct {
 	createDiag, deleteDiag, cancelDialog                                 widget.Button
 	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
-	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
+	toOverview, toWallets, toTransactions, toSettings                    widget.Button
 	toRestoreWallet                                                      widget.Button
-	toReceive                                                            widget.Button
-	toTransactionsFilters                                                widget.Button
-	applyFiltersTransactions                                             widget.Button
 	sync, syncHeader, hideMsgInfo, changePasswordDiag, signMessageDiag   widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
@@ -39,18 +36,10 @@ type inputs struct {
 		text   string
 		button widget.Button
 	}
-
-	transactionFilterDirection *widget.Enum
-	transactionFilterSort      *widget.Enum
 }
 
 type combined struct {
 	sel *decredmaterial.Select
-
-	transaction struct {
-		status, direction *decredmaterial.Icon
-		amount, time      decredmaterial.Label
-	}
 }
 
 type outputs struct {
@@ -61,16 +50,14 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
-	addressInput, messageInput, signInput                                      decredmaterial.Editor
-	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
-	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
-	toReceive                                                                  decredmaterial.IconButton
-	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
-	clearBtn, verifyBtn, verifyMessDiag                                        decredmaterial.Button
+	addressInput, messageInput, signInput                                decredmaterial.Editor
+	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename decredmaterial.Editor
+	toOverview, toWallets, toTransactions, toRestoreWallet, toSettings   decredmaterial.IconButton
+	createDiag, cancelDiag, addAcctDiag                                  decredmaterial.IconButton
+	clearBtn, verifyBtn, verifyMessDiag                                  decredmaterial.Button
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag  decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                   decredmaterial.IconButton
-	applyFiltersTransactions                                                       decredmaterial.Button
 	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag decredmaterial.Button
 	addAccount, newAddressDiag                                                     decredmaterial.Button
 	info, more, copy, verifyInfo                                                   decredmaterial.IconButton
@@ -87,12 +74,6 @@ type outputs struct {
 	selectedAccountNameLabel, selectedAccountBalanceLabel           decredmaterial.Label
 	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label
 	selectedWalletBalLabel, selectedWalletNameLabel                 decredmaterial.Label
-
-	toTransactionsFilters struct {
-		sortNewest, sortOldest decredmaterial.IconButton
-	}
-	transactionFilterDirection []decredmaterial.RadioButton
-	transactionFilterSort      []decredmaterial.RadioButton
 }
 
 func (win *Window) initWidgets() {
@@ -222,10 +203,6 @@ func (win *Window) initWidgets() {
 	win.outputs.toOverview = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionHome)))
 	win.outputs.toTransactions = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.SocialPoll)))
 	win.outputs.toSettings = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionSettings)))
-	win.outputs.toSend = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSend)))
-	win.outputs.toReceive = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)))
-	win.outputs.toTransactionsFilters.sortNewest = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentFilterList)))
-	win.outputs.toTransactionsFilters.sortOldest = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSort)))
 
 	win.outputs.noWallet = theme.H3("No wallet loaded")
 
@@ -279,28 +256,6 @@ func (win *Window) initWidgets() {
 		Color:      win.theme.Color.Success,
 		Padding:    unit.Dp(0),
 	}
-
-	win.inputs.transactionFilterDirection = new(widget.Enum)
-	win.inputs.transactionFilterDirection.SetValue("0")
-	win.inputs.transactionFilterSort = new(widget.Enum)
-	win.inputs.transactionFilterSort.SetValue("0")
-
-	txFiltersDirection := []string{"All", "Sent", "Received", "Transfer"}
-	txSort := []string{"Newest", "Oldest"}
-
-	for i := 0; i < len(txFiltersDirection); i++ {
-		win.outputs.transactionFilterDirection = append(
-			win.outputs.transactionFilterDirection,
-			theme.RadioButton(fmt.Sprint(i), txFiltersDirection[i]))
-	}
-
-	for i := 0; i < len(txSort); i++ {
-		win.outputs.transactionFilterSort = append(
-			win.outputs.transactionFilterSort,
-			theme.RadioButton(fmt.Sprint(i), txSort[i]))
-	}
-
-	win.outputs.applyFiltersTransactions = theme.Button("Ok")
 }
 
 func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
