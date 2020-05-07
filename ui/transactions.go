@@ -2,15 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"image"
 	"sort"
 	"strconv"
 	"time"
 
-	"gioui.org/f32"
-	"gioui.org/io/key"
 	"gioui.org/layout"
-	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -50,18 +46,9 @@ type transactionsPage struct {
 	toSend, toReceive               decredmaterial.IconButton
 	toSendW, toReceiveW, toFiltersW widget.Button
 	walletTransactions              **wallet.Transactions
-
-	toFilters       map[string]decredmaterial.IconButton
-	isShowFilters   bool
-	filterSort      string
-	filterDirection string
-	keyEvent        **key.Event
-	containerWidth  int
-}
-
-type transactionsFiltersSide struct {
-	filterSortW, filterDirectionW *widget.Enum
-	filterDirection, filterSort   []decredmaterial.RadioButton
+	filterSorter                    string
+	filterSortW, filterDirectionW   *widget.Enum
+	filterDirection, filterSort     []decredmaterial.RadioButton
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
@@ -71,61 +58,48 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		toSend:             common.theme.PlainIconButton(common.icons.contentSend),
 		toReceive:          common.theme.PlainIconButton(common.icons.contentAddBox),
 		walletTransactions: &win.walletTransactions,
-		filterSort:         defaultFilterSorter,
-		filterDirection:    defaultFilterDirection,
-		keyEvent:           &win.keyEvt,
+		filterSorter:       defaultFilterSorter,
+		filterDirectionW:   new(widget.Enum),
+		filterSortW:        new(widget.Enum),
 	}
-
-	fitlerSide := transactionsFiltersSide{
-		filterDirectionW: new(widget.Enum),
-		filterSortW:      new(widget.Enum),
-	}
-	fitlerSide.filterDirectionW.SetValue(defaultFilterDirection)
-	fitlerSide.filterSortW.SetValue(defaultFilterSorter)
+	page.toSend.Size, page.toReceive.Size = unit.Dp(40), unit.Dp(40)
+	page.filterDirectionW.SetValue(defaultFilterDirection)
+	page.filterSortW.SetValue(defaultFilterSorter)
 
 	txFilterDirection := []string{"All", "Sent", "Received", "Transfer"}
 	txFilterSorts := []string{"Newest", "Oldest"}
-	page.toFilters = make(map[string]decredmaterial.IconButton, len(txFilterSorts))
 
 	for i := 0; i < len(txFilterDirection); i++ {
-		fitlerSide.filterDirection = append(
-			fitlerSide.filterDirection,
+		page.filterDirection = append(
+			page.filterDirection,
 			common.theme.RadioButton(fmt.Sprint(i), txFilterDirection[i]))
+		page.filterDirection[i].Color = common.theme.Color.Success
+		page.filterDirection[i].Size = unit.Dp(20)
 	}
 
 	for i := 0; i < len(txFilterSorts); i++ {
-		if i == 0 {
-			page.toFilters[fmt.Sprint(i)] = common.theme.IconButton(
-				mustIcon(decredmaterial.NewIcon(icons.ContentFilterList)))
-		} else {
-			page.toFilters[fmt.Sprint(i)] = common.theme.IconButton(
-				mustIcon(decredmaterial.NewIcon(icons.ContentSort)))
-		}
-
-		fitlerSide.filterSort = append(fitlerSide.filterSort,
+		page.filterSort = append(page.filterSort,
 			common.theme.RadioButton(fmt.Sprint(i), txFilterSorts[i]))
+		page.filterSort[i].Size = unit.Dp(20)
 	}
 
 	return func() {
-		page.layout(common)
-		page.handle(common)
-		fitlerSide.layout(&common, &page)
-		fitlerSide.handle(&common, &page)
+		page.Layout(common)
+		page.Handle(common)
 	}
 }
 
-func (page *transactionsPage) layout(common pageCommon) {
+func (page *transactionsPage) Layout(common pageCommon) {
 	gtx := common.gtx
 
 	container := func() {
-		page.containerWidth = gtx.Constraints.Width.Max
 		page.container.Layout(gtx,
 			layout.Rigid(func() {
 				layout.Inset{Top: unit.Dp(txsPageInsetTop)}.Layout(gtx, func() {
 					layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Rigid(func() {
 							layout.Inset{Left: unit.Dp(txsPageInsetLeft)}.Layout(gtx, func() {
-								page.renderFiltererButton(&common)
+								page.renderFiltererButtons(&common)
 							})
 						}),
 						layout.Rigid(func() {
@@ -157,7 +131,7 @@ func (page *transactionsPage) layout(common pageCommon) {
 								txt.Layout(gtx)
 								return
 							}
-							directionFilter, _ := strconv.Atoi(page.filterDirection)
+							directionFilter, _ := strconv.Atoi(page.filterDirectionW.Value(gtx))
 							page.txsList.Layout(gtx, len(walTxs), func(index int) {
 								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
 									return
@@ -171,24 +145,6 @@ func (page *transactionsPage) layout(common pageCommon) {
 		)
 	}
 	common.LayoutWithWallets(gtx, container)
-}
-
-func (page *transactionsPage) renderFiltererButton(common *pageCommon) {
-	button := page.toFilters[page.filterSort]
-
-	switch page.filterDirection {
-	case "0":
-		button.Background = common.theme.Color.Primary
-	case "1":
-		button.Background = common.theme.Color.Danger
-	case "2":
-		button.Background = common.theme.Color.Success
-	case "3":
-		button.Background = common.theme.Color.Hint
-	default:
-		button.Background = common.theme.Color.Hint
-	}
-	button.Layout(common.gtx, &page.toFiltersW)
 }
 
 func (page *transactionsPage) txnRowHeader(common *pageCommon) {
@@ -254,69 +210,38 @@ func (page *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.
 	})
 }
 
-func (fitlerSide *transactionsFiltersSide) layout(common *pageCommon, page *transactionsPage) {
-	if !page.isShowFilters {
-		return
-	}
-
+func (page *transactionsPage) renderFiltererButtons(common *pageCommon) {
 	gtx := common.gtx
-	w := gtx.Constraints.Width.Max - page.containerWidth - 23
-
-	body := func() {
-		gtx.Constraints.Width.Min, gtx.Constraints.Width.Max = w, w
-
-		{
-			d := image.Point{X: w, Y: gtx.Constraints.Height.Max}
-			dr := f32.Rectangle{
-				Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-			}
-			paint.ColorOp{Color: common.theme.Color.Surface}.Add(gtx.Ops)
-			paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-			gtx.Dimensions = layout.Dimensions{Size: d}
-		}
-
-		layout.Inset{Left: unit.Dp(txsPageInsetLeft)}.Layout(gtx, func() {
-			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(func() {
+			(&layout.List{Axis: layout.Vertical}).
+				Layout(gtx, len(page.filterSort), func(index int) {
+					page.filterSort[index].Layout(gtx, page.filterSortW)
+				})
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Left: unit.Dp(35)}.Layout(gtx, func() {})
+		}),
+		layout.Rigid(func() {
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(txsPageInsetTop)}.Layout(gtx, func() {})
+					(&layout.List{Axis: layout.Vertical}).
+						Layout(gtx, 2, func(index int) {
+							page.filterDirection[index].Layout(gtx, page.filterDirectionW)
+						})
 				}),
 				layout.Rigid(func() {
-					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func() {
-							common.theme.H5("Order").Layout(gtx)
-						}),
-						layout.Rigid(func() {
-							(&layout.List{Axis: layout.Vertical}).
-								Layout(gtx, len(fitlerSide.filterSort), func(index int) {
-									fitlerSide.filterSort[index].Layout(gtx, fitlerSide.filterSortW)
-								})
-						}),
-					)
-				}),
-				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(txsPageInsetTop)}.Layout(gtx, func() {})
-				}),
-				layout.Rigid(func() {
-					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func() {
-							common.theme.H5("Direction").Layout(gtx)
-						}),
-						layout.Rigid(func() {
-							(&layout.List{Axis: layout.Vertical}).
-								Layout(gtx, len(fitlerSide.filterDirection), func(index int) {
-									fitlerSide.filterDirection[index].Layout(gtx, fitlerSide.filterDirectionW)
-								})
-						}),
-					)
+					(&layout.List{Axis: layout.Vertical}).
+						Layout(gtx, 2, func(index int) {
+							page.filterDirection[index+2].Layout(gtx, page.filterDirectionW)
+						})
 				}),
 			)
-		})
-	}
-
-	layout.Inset{}.Layout(gtx, body)
+		}),
+	)
 }
 
-func (page *transactionsPage) handle(common pageCommon) {
+func (page *transactionsPage) Handle(common pageCommon) {
 	if page.toReceiveW.Clicked(common.gtx) {
 		*common.page = PageReceive
 		return
@@ -327,21 +252,9 @@ func (page *transactionsPage) handle(common pageCommon) {
 		return
 	}
 
-	if page.toFiltersW.Clicked(common.gtx) {
-		page.isShowFilters = !page.isShowFilters
-	}
-
-	if *page.keyEvent != nil && (*page.keyEvent).Name == key.NameEscape && page.isShowFilters {
-		page.isShowFilters = false
-	}
-	*page.keyEvent = nil
-}
-
-func (fitlerSide *transactionsFiltersSide) handle(common *pageCommon, page *transactionsPage) {
-	page.filterDirection = fitlerSide.filterDirectionW.Value(common.gtx)
-	if page.filterSort != fitlerSide.filterSortW.Value(common.gtx) {
-		page.filterSort = fitlerSide.filterSortW.Value(common.gtx)
-		page.sortTransactions(common)
+	if page.filterSorter != page.filterSortW.Value(common.gtx) {
+		page.filterSorter = page.filterSortW.Value(common.gtx)
+		page.sortTransactions(&common)
 	}
 }
 
@@ -368,7 +281,7 @@ func initTxnWidgets(common *pageCommon,
 }
 
 func (page *transactionsPage) sortTransactions(common *pageCommon) {
-	newestFirst := page.filterSort == defaultFilterSorter
+	newestFirst := page.filterSorter == defaultFilterSorter
 
 	for _, wal := range common.info.Wallets {
 		transactions := (*page.walletTransactions).Txs[wal.ID]

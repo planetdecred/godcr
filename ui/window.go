@@ -43,8 +43,7 @@ type Window struct {
 
 	combined
 	outputs
-	pages  map[string]layout.Widget
-	keyEvt *key.Event
+	pages map[string]layout.Widget
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -171,7 +170,6 @@ func (win *Window) Loop(shutdown chan int) {
 				evt.Frame(win.gtx.Ops)
 			case key.Event:
 				win.KeysEventsHandler(&evt)
-				win.keyEvt = &evt
 			case nil:
 				// Ignore
 			default:
