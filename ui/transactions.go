@@ -24,9 +24,7 @@ import (
 const (
 	PageTransactions                            = "txs"
 	defaultFilterSorter, defaultFilterDirection = "0", "0"
-)
 
-const (
 	rowDirectionWidth = .04
 	rowDateWidth      = .2
 	rowStatusWidth    = .2
@@ -49,23 +47,21 @@ type transactionsPage struct {
 	container layout.Flex
 	txsList   layout.List
 
-	toSend, toReceive, cancelModalFilter                decredmaterial.IconButton
-	toSendW, toReceiveW, toFiltersW, cancelModalFilterW widget.Button
-	walletTransactions                                  **wallet.Transactions
+	toSend, toReceive               decredmaterial.IconButton
+	toSendW, toReceiveW, toFiltersW widget.Button
+	walletTransactions              **wallet.Transactions
 
-	toFilters          map[string]decredmaterial.IconButton
-	isShowModalFilters bool
-	filterSort         string
-	filterDirection    string
-	keyEvent           **key.Event
+	toFilters       map[string]decredmaterial.IconButton
+	isShowFilters   bool
+	filterSort      string
+	filterDirection string
+	keyEvent        **key.Event
+	containerWidth  int
 }
 
-type transactionsFilterModal struct {
-	container                     decredmaterial.Modal
+type transactionsFiltersSide struct {
 	filterSortW, filterDirectionW *widget.Enum
 	filterDirection, filterSort   []decredmaterial.RadioButton
-	applyFiltersW                 widget.Button
-	applyFilters                  decredmaterial.Button
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
@@ -74,31 +70,26 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		txsList:            layout.List{Axis: layout.Vertical},
 		toSend:             common.theme.PlainIconButton(common.icons.contentSend),
 		toReceive:          common.theme.PlainIconButton(common.icons.contentAddBox),
-		cancelModalFilter:  common.theme.PlainIconButton(common.icons.contentClear),
 		walletTransactions: &win.walletTransactions,
 		filterSort:         defaultFilterSorter,
 		filterDirection:    defaultFilterDirection,
 		keyEvent:           &win.keyEvt,
 	}
-	page.cancelModalFilter.Color = common.theme.Color.Hint
-	page.cancelModalFilter.Size = unit.Dp(40)
 
-	modal := transactionsFilterModal{
-		container:        decredmaterial.Modal{Direction: layout.Center},
+	fitlerSide := transactionsFiltersSide{
 		filterDirectionW: new(widget.Enum),
 		filterSortW:      new(widget.Enum),
-		applyFilters:     common.theme.Button("Ok"),
 	}
-	modal.filterDirectionW.SetValue(defaultFilterDirection)
-	modal.filterSortW.SetValue(defaultFilterSorter)
+	fitlerSide.filterDirectionW.SetValue(defaultFilterDirection)
+	fitlerSide.filterSortW.SetValue(defaultFilterSorter)
 
 	txFilterDirection := []string{"All", "Sent", "Received", "Transfer"}
 	txFilterSorts := []string{"Newest", "Oldest"}
 	page.toFilters = make(map[string]decredmaterial.IconButton, len(txFilterSorts))
 
 	for i := 0; i < len(txFilterDirection); i++ {
-		modal.filterDirection = append(
-			modal.filterDirection,
+		fitlerSide.filterDirection = append(
+			fitlerSide.filterDirection,
 			common.theme.RadioButton(fmt.Sprint(i), txFilterDirection[i]))
 	}
 
@@ -111,21 +102,23 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 				mustIcon(decredmaterial.NewIcon(icons.ContentSort)))
 		}
 
-		modal.filterSort = append(modal.filterSort,
+		fitlerSide.filterSort = append(fitlerSide.filterSort,
 			common.theme.RadioButton(fmt.Sprint(i), txFilterSorts[i]))
 	}
 
 	return func() {
 		page.layout(common)
-		page.handle(common, &modal)
-		modal.layout(&common, &page)
-		modal.handle(&common, &page)
+		page.handle(common)
+		fitlerSide.layout(&common, &page)
+		fitlerSide.handle(&common, &page)
 	}
 }
 
 func (page *transactionsPage) layout(common pageCommon) {
 	gtx := common.gtx
+
 	container := func() {
+		page.containerWidth = gtx.Constraints.Width.Max
 		page.container.Layout(gtx,
 			layout.Rigid(func() {
 				layout.Inset{Top: unit.Dp(txsPageInsetTop)}.Layout(gtx, func() {
@@ -261,87 +254,69 @@ func (page *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.
 	})
 }
 
-func (modal *transactionsFilterModal) layout(common *pageCommon, page *transactionsPage) {
-	if !page.isShowModalFilters {
+func (fitlerSide *transactionsFiltersSide) layout(common *pageCommon, page *transactionsPage) {
+	if !page.isShowFilters {
 		return
 	}
-	gtx := common.gtx
-	body := func() {
-		w := common.gtx.Constraints.Width.Max / 2
-		common.theme.Surface(gtx, func() {
-			layout.UniformInset(unit.Dp(20)).Layout(gtx, func() {
-				gtx.Constraints.Width.Min = w
-				layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func() {
-						gtx.Constraints.Width.Min = w
-						headTxt := common.theme.H4("Transactions filters")
-						headTxt.Alignment = text.Middle
-						headTxt.Layout(gtx)
-						layout.E.Layout(gtx, func() {
-							page.cancelModalFilter.Layout(gtx, &page.cancelModalFilterW)
-						})
-					}),
-					layout.Rigid(func() {
-						layout.Inset{Bottom: unit.Dp(20)}.Layout(gtx, func() {})
-					}),
-					layout.Rigid(func() {
-						gtx.Constraints.Width.Min = w
-						layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Flexed(.25, func() {
-								layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func() {
-										common.theme.H5("Order").Layout(gtx)
-									}),
-									layout.Rigid(func() {
-										(&layout.List{Axis: layout.Vertical}).
-											Layout(gtx, len(modal.filterSort), func(index int) {
-												modal.filterSort[index].Layout(gtx, modal.filterSortW)
-											})
-									}),
-								)
-							}),
-							layout.Flexed(.25, func() {
-								layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func() {
-										common.theme.H5("Direction").Layout(gtx)
-									}),
-									layout.Rigid(func() {
-										(&layout.List{Axis: layout.Vertical}).
-											Layout(gtx, len(modal.filterDirection), func(index int) {
-												modal.filterDirection[index].Layout(gtx, modal.filterDirectionW)
-											})
-									}),
-								)
-							}),
-						)
-					}),
-					layout.Rigid(func() {
-						layout.Inset{Top: unit.Dp(20)}.Layout(gtx, func() {
-							modal.applyFilters.Layout(gtx, &modal.applyFiltersW)
-						})
-					}),
-				)
-			})
-		})
-	}
 
-	modal.container.Layout(gtx, func() {
-		layout.Inset{}.Layout(gtx, func() {
-			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-			gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
-			cs := gtx.Constraints
-			d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
+	gtx := common.gtx
+	w := gtx.Constraints.Width.Max - page.containerWidth - 23
+
+	body := func() {
+		gtx.Constraints.Width.Min, gtx.Constraints.Width.Max = w, w
+
+		{
+			d := image.Point{X: w, Y: gtx.Constraints.Height.Max}
 			dr := f32.Rectangle{
 				Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 			}
-			paint.ColorOp{Color: common.theme.Color.Background}.Add(gtx.Ops)
+			paint.ColorOp{Color: common.theme.Color.Surface}.Add(gtx.Ops)
 			paint.PaintOp{Rect: dr}.Add(gtx.Ops)
 			gtx.Dimensions = layout.Dimensions{Size: d}
+		}
+
+		layout.Inset{Left: unit.Dp(txsPageInsetLeft)}.Layout(gtx, func() {
+			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func() {
+					layout.Inset{Top: unit.Dp(txsPageInsetTop)}.Layout(gtx, func() {})
+				}),
+				layout.Rigid(func() {
+					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func() {
+							common.theme.H5("Order").Layout(gtx)
+						}),
+						layout.Rigid(func() {
+							(&layout.List{Axis: layout.Vertical}).
+								Layout(gtx, len(fitlerSide.filterSort), func(index int) {
+									fitlerSide.filterSort[index].Layout(gtx, fitlerSide.filterSortW)
+								})
+						}),
+					)
+				}),
+				layout.Rigid(func() {
+					layout.Inset{Top: unit.Dp(txsPageInsetTop)}.Layout(gtx, func() {})
+				}),
+				layout.Rigid(func() {
+					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func() {
+							common.theme.H5("Direction").Layout(gtx)
+						}),
+						layout.Rigid(func() {
+							(&layout.List{Axis: layout.Vertical}).
+								Layout(gtx, len(fitlerSide.filterDirection), func(index int) {
+									fitlerSide.filterDirection[index].Layout(gtx, fitlerSide.filterDirectionW)
+								})
+						}),
+					)
+				}),
+			)
 		})
-	}, body)
+	}
+
+	layout.Inset{}.Layout(gtx, body)
 }
 
-func (page *transactionsPage) handle(common pageCommon, modal *transactionsFilterModal) {
+func (page *transactionsPage) handle(common pageCommon) {
 	if page.toReceiveW.Clicked(common.gtx) {
 		*common.page = PageReceive
 		return
@@ -353,29 +328,20 @@ func (page *transactionsPage) handle(common pageCommon, modal *transactionsFilte
 	}
 
 	if page.toFiltersW.Clicked(common.gtx) {
-		modal.filterDirectionW.SetValue(page.filterDirection)
-		modal.filterSortW.SetValue(page.filterSort)
-		page.isShowModalFilters = true
+		page.isShowFilters = !page.isShowFilters
 	}
 
-	if page.cancelModalFilterW.Clicked(common.gtx) {
-		page.isShowModalFilters = false
-	}
-
-	if *page.keyEvent != nil && (*page.keyEvent).Name == key.NameEscape && page.isShowModalFilters {
-		page.isShowModalFilters = false
+	if *page.keyEvent != nil && (*page.keyEvent).Name == key.NameEscape && page.isShowFilters {
+		page.isShowFilters = false
 	}
 	*page.keyEvent = nil
 }
 
-func (modal *transactionsFilterModal) handle(common *pageCommon, page *transactionsPage) {
-	if modal.applyFiltersW.Clicked(common.gtx) {
-		page.filterDirection = modal.filterDirectionW.Value(common.gtx)
-		if page.filterSort != modal.filterSortW.Value(common.gtx) {
-			page.filterSort = modal.filterSortW.Value(common.gtx)
-			page.sortTransactions(common)
-		}
-		page.isShowModalFilters = false
+func (fitlerSide *transactionsFiltersSide) handle(common *pageCommon, page *transactionsPage) {
+	page.filterDirection = fitlerSide.filterDirectionW.Value(common.gtx)
+	if page.filterSort != fitlerSide.filterSortW.Value(common.gtx) {
+		page.filterSort = fitlerSide.filterSortW.Value(common.gtx)
+		page.sortTransactions(common)
 	}
 }
 
