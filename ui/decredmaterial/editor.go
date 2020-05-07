@@ -28,17 +28,13 @@ type Editor struct {
 	HintColor color.RGBA
 
 	shaper text.Shaper
-}
 
-type EditorCustom struct {
-	hint       string
 	TitleLabel Label
 	ErrorLabel Label
 	LineColor  color.RGBA
 
-	editorMaterial Editor
-	flexWidth      float32
-	editor         *widget.Editor
+	flexWidth float32
+	editor    *widget.Editor
 	//IsVisible if true, displays the paste and clear button.
 	IsVisible bool
 	//IsRequired if true, displays a required field text at the buttom of the editor.
@@ -56,27 +52,20 @@ type EditorCustom struct {
 }
 
 func (t *Theme) Editor(hint string) Editor {
-	return Editor{
-		TextSize:  t.TextSize,
-		Color:     t.Color.Text,
-		shaper:    t.Shaper,
-		Hint:      hint,
-		HintColor: t.Color.Hint,
-	}
-}
-
-func (t *Theme) EditorCustom(hint string) EditorCustom {
 	errorLabel := t.Caption("Field is required")
 	errorLabel.Color = color.RGBA{255, 0, 0, 255}
 
-	return EditorCustom{
-		TitleLabel:     t.Body1(""),
-		flexWidth:      1,
-		hint:           hint,
-		LineColor:      t.Color.Text,
-		ErrorLabel:     errorLabel,
-		editorMaterial: t.Editor(hint),
-		editor:         new(widget.Editor),
+	return Editor{
+		TextSize:   t.TextSize,
+		Color:      t.Color.Text,
+		shaper:     t.Shaper,
+		Hint:       hint,
+		HintColor:  t.Color.Hint,
+		TitleLabel: t.Body1(""),
+		flexWidth:  1,
+		LineColor:  t.Color.Text,
+		ErrorLabel: errorLabel,
+		editor:     new(widget.Editor),
 
 		pasteBtnMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
@@ -98,34 +87,7 @@ func (t *Theme) EditorCustom(hint string) EditorCustom {
 	}
 }
 
-func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
-	var stack op.StackOp
-	stack.Push(gtx.Ops)
-	var macro op.MacroOp
-	macro.Record(gtx.Ops)
-	paint.ColorOp{Color: e.HintColor}.Add(gtx.Ops)
-	tl := widget.Label{Alignment: editor.Alignment}
-	tl.Layout(gtx, e.shaper, e.Font, e.TextSize, e.Hint)
-	macro.Stop()
-	if w := gtx.Dimensions.Size.X; gtx.Constraints.Width.Min < w {
-		gtx.Constraints.Width.Min = w
-	}
-	if h := gtx.Dimensions.Size.Y; gtx.Constraints.Height.Min < h {
-		gtx.Constraints.Height.Min = h
-	}
-	editor.Layout(gtx, e.shaper, e.Font, e.TextSize)
-	if editor.Len() > 0 {
-		paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-		editor.PaintText(gtx)
-	} else {
-		macro.Add()
-	}
-	paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-	editor.PaintCaret(gtx)
-	stack.Pop()
-}
-
-func (e EditorCustom) Layout(gtx *layout.Context) {
+func (e Editor) Layout(gtx *layout.Context) {
 	e.handleEvents(gtx)
 	if e.IsVisible {
 		e.flexWidth = 0.93
@@ -135,8 +97,7 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
 				if e.editor.Focused() || e.editor.Len() != 0 {
-					e.TitleLabel.Text = e.hint
-					e.editorMaterial.Hint = ""
+					e.TitleLabel.Text = e.Hint
 				}
 				e.TitleLabel.Layout(gtx)
 			}),
@@ -152,29 +113,13 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 								inset.Layout(gtx, func() {
 									layout.Flex{}.Layout(gtx,
 										layout.Flexed(e.flexWidth, func() {
-											e.editor.SingleLine = e.SingleLine
-											e.editorMaterial.Layout(gtx, e.editor)
+											e.editorSection(gtx)
 										}),
 									)
 								})
 							}),
 							layout.Rigid(func() {
-								layout.Flex{}.Layout(gtx,
-									layout.Flexed(e.flexWidth, func() {
-										rect := f32.Rectangle{
-											Max: f32.Point{
-												X: float32(gtx.Constraints.Width.Max),
-												Y: 1,
-											},
-										}
-										op.TransformOp{}.Offset(f32.Point{
-											X: 0,
-											Y: 0,
-										}).Add(gtx.Ops)
-										paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
-										paint.PaintOp{Rect: rect}.Add(gtx.Ops)
-									}),
-								)
+								e.editorLine(gtx)
 							}),
 							layout.Rigid(func() {
 								if e.IsRequired {
@@ -183,7 +128,6 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 									}
 									e.ErrorLabel.Layout(gtx)
 								}
-
 							}),
 						)
 					}),
@@ -207,7 +151,54 @@ func (e EditorCustom) Layout(gtx *layout.Context) {
 	})
 }
 
-func (e EditorCustom) Text() string {
+func (e Editor) editorSection(gtx *layout.Context) {
+	var stack op.StackOp
+	stack.Push(gtx.Ops)
+	var macro op.MacroOp
+	macro.Record(gtx.Ops)
+	e.editor.SingleLine = e.SingleLine
+	paint.ColorOp{Color: e.HintColor}.Add(gtx.Ops)
+	tl := widget.Label{Alignment: e.editor.Alignment}
+	tl.Layout(gtx, e.shaper, e.Font, e.TextSize, e.Hint)
+	macro.Stop()
+	if w := gtx.Dimensions.Size.X; gtx.Constraints.Width.Min < w {
+		gtx.Constraints.Width.Min = w
+	}
+	if h := gtx.Dimensions.Size.Y; gtx.Constraints.Height.Min < h {
+		gtx.Constraints.Height.Min = h
+	}
+	e.editor.Layout(gtx, e.shaper, e.Font, e.TextSize)
+	if e.editor.Len() > 0 {
+		paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
+		e.editor.PaintText(gtx)
+	} else {
+		macro.Add()
+	}
+	paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
+	e.editor.PaintCaret(gtx)
+	stack.Pop()
+}
+
+func (e Editor) editorLine(gtx *layout.Context) {
+	layout.Flex{}.Layout(gtx,
+		layout.Flexed(e.flexWidth, func() {
+			rect := f32.Rectangle{
+				Max: f32.Point{
+					X: float32(gtx.Constraints.Width.Max),
+					Y: 1,
+				},
+			}
+			op.TransformOp{}.Offset(f32.Point{
+				X: 0,
+				Y: 0,
+			}).Add(gtx.Ops)
+			paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
+			paint.PaintOp{Rect: rect}.Add(gtx.Ops)
+		}),
+	)
+}
+
+func (e Editor) Text() string {
 	if e.IsRequired && e.editor.Len() == 0 && !e.editor.Focused() {
 		e.ErrorLabel.Text = "Field is required and cannot be empty."
 		e.LineColor = color.RGBA{255, 0, 0, 255}
@@ -216,7 +207,16 @@ func (e EditorCustom) Text() string {
 	return e.editor.Text()
 }
 
-func (e EditorCustom) handleEvents(gtx *layout.Context) {
+func (e Editor) Len() int {
+	return e.editor.Len()
+}
+
+func (e Editor) Clear() {
+	e.editor.SetText("")
+	return
+}
+
+func (e Editor) handleEvents(gtx *layout.Context) {
 	data, err := clipboard.ReadAll()
 	if err != nil {
 		panic(err)

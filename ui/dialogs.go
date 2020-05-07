@@ -23,10 +23,10 @@ func (win *Window) CreateDiag() {
 							d.Layout(win.gtx)
 						}),
 						layout.Rigid(func() {
-							win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+							win.outputs.spendingPassword.Layout(win.gtx)
 						}),
 						layout.Rigid(func() {
-							win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
+							win.outputs.matchSpending.Layout(win.gtx)
 						}),
 						layout.Rigid(func() {
 							win.Err()
@@ -59,7 +59,7 @@ func (win *Window) DeleteDiag() {
 							d.Layout(win.gtx)
 						}),
 						layout.Rigid(func() {
-							win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+							win.outputs.spendingPassword.Layout(win.gtx)
 						}),
 						layout.Rigid(func() {
 							win.Err()
@@ -89,10 +89,10 @@ func (win *Window) RestoreDiag() {
 					d.Layout(win.gtx)
 				}),
 				layout.Rigid(func() {
-					win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+					win.outputs.spendingPassword.Layout(win.gtx)
 				}),
 				layout.Rigid(func() {
-					win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
+					win.outputs.matchSpending.Layout(win.gtx)
 				}),
 				layout.Rigid(func() {
 					win.Err()
@@ -119,10 +119,10 @@ func (win *Window) AddAccountDiag() {
 				d.Layout(win.gtx)
 			}),
 			layout.Rigid(func() {
-				win.outputs.dialog.Layout(win.gtx, &win.inputs.dialog)
+				win.outputs.dialog.Layout(win.gtx)
 			}),
 			layout.Rigid(func() {
-				win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+				win.outputs.spendingPassword.Layout(win.gtx)
 			}),
 			layout.Rigid(func() {
 				win.Err()
@@ -191,11 +191,11 @@ func (win *Window) verifyMessageDiag() {
 								Bottom: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
-								win.outputs.addressInput.Layout(win.gtx, &win.inputs.addressInput)
+								win.outputs.addressInput.Layout(win.gtx)
 							})
 						}),
 						rigid(func() {
-							win.outputs.signInput.Layout(win.gtx, &win.inputs.signInput)
+							win.outputs.signInput.Layout(win.gtx)
 						}),
 						rigid(func() {
 							inset := layout.Inset{
@@ -203,7 +203,7 @@ func (win *Window) verifyMessageDiag() {
 								Bottom: unit.Dp(20),
 							}
 							inset.Layout(win.gtx, func() {
-								win.outputs.messageInput.Layout(win.gtx, &win.inputs.messageInput)
+								win.outputs.messageInput.Layout(win.gtx)
 							})
 						}),
 						rigid(func() {
@@ -298,7 +298,7 @@ func (win *Window) editPasswordDiag() {
 									rigid(func() {
 										win.hFlexSB(
 											layout.Flexed(1, func() {
-												win.outputs.oldSpendingPassword.Layout(win.gtx, &win.inputs.oldSpendingPassword)
+												win.outputs.oldSpendingPassword.Layout(win.gtx)
 											}),
 										)
 									}),
@@ -316,7 +316,7 @@ func (win *Window) editPasswordDiag() {
 								rigid(func() {
 									win.hFlexSB(
 										layout.Flexed(1, func() {
-											win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
+											win.outputs.spendingPassword.Layout(win.gtx)
 										}),
 									)
 								}),
@@ -328,7 +328,7 @@ func (win *Window) editPasswordDiag() {
 						rigid(func() {
 							win.hFlexSB(
 								layout.Flexed(1, func() {
-									win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
+									win.outputs.matchSpending.Layout(win.gtx)
 								}),
 							)
 						}),

@@ -12,7 +12,6 @@ type Password struct {
 	titleLabel Label
 
 	passwordEditorMaterial Editor
-	passwordEditorWidget   *widget.Editor
 
 	confirmButtonMaterial Button
 	confirmButtonWidget   *widget.Button
@@ -27,12 +26,13 @@ func (t *Theme) Password() *Password {
 	cancelButtonMaterial.Background = t.Color.Surface
 	cancelButtonMaterial.Color = t.Color.Primary
 
+	passwordEditorMaterial := t.Editor("Password")
+	passwordEditorMaterial.IsRequired = true
 	p := &Password{
 		theme:      t,
 		titleLabel: t.H5("Enter password to confirm"),
 
-		passwordEditorMaterial: t.Editor("Password"),
-		passwordEditorWidget:   new(widget.Editor),
+		passwordEditorMaterial: passwordEditorMaterial,
 
 		cancelButtonMaterial:  cancelButtonMaterial,
 		confirmButtonMaterial: t.Button("Confirm"),
@@ -56,7 +56,7 @@ func (p *Password) Layout(gtx *layout.Context, confirm func([]byte), cancel func
 			p.titleLabel.Layout(gtx)
 		},
 		func() {
-			p.passwordEditorMaterial.Layout(gtx, p.passwordEditorWidget)
+			p.passwordEditorMaterial.Layout(gtx)
 		},
 		func() {
 			inset := layout.Inset{
@@ -91,15 +91,15 @@ func (p *Password) Layout(gtx *layout.Context, confirm func([]byte), cancel func
 func (p *Password) updateColors() {
 	p.confirmButtonMaterial.Background = p.theme.Color.Hint
 
-	if p.passwordEditorWidget.Len() > 0 {
+	if p.passwordEditorMaterial.Len() > 0 {
 		p.confirmButtonMaterial.Background = p.theme.Color.Primary
 	}
 }
 
 func (p *Password) handleEvents(gtx *layout.Context, confirm func([]byte), cancel func()) {
 	for p.confirmButtonWidget.Clicked(gtx) {
-		if p.passwordEditorWidget.Len() > 0 {
-			confirm([]byte(p.passwordEditorWidget.Text()))
+		if p.passwordEditorMaterial.Len() > 0 {
+			confirm([]byte(p.passwordEditorMaterial.Text()))
 			p.reset()
 		}
 	}
@@ -111,5 +111,5 @@ func (p *Password) handleEvents(gtx *layout.Context, confirm func([]byte), cance
 }
 
 func (p *Password) reset() {
-	p.passwordEditorWidget.SetText("")
+	p.passwordEditorMaterial.Clear()
 }

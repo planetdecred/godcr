@@ -72,7 +72,7 @@ func inputsGroup(win *Window, l *layout.List, len int, startIndex int) {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Left: unit.Dp(20), Bottom: unit.Dp(20)}.Layout(win.gtx, func() {
-							win.outputs.seedEditors[i+startIndex].Layout(win.gtx, &win.inputs.seedEditors.editors[i+startIndex])
+							// win.outputs.seedEditors[i+startIndex].Layout(win.gtx, &win.inputs.seedEditors.editors[i+startIndex])
 						})
 					}),
 				)

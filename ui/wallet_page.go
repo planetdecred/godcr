@@ -65,7 +65,7 @@ func (page *walletPage) Layout(common pageCommon) {
 			if page.renaming {
 				horFlex.Layout(gtx,
 					rigid(func() {
-						page.editorW.Layout(gtx, &page.editor)
+						page.editorW.Layout(gtx)
 					}),
 					rigid(func() {
 						page.renameW.Layout(gtx, &page.rename)
