@@ -22,7 +22,7 @@ type Editor struct {
 	TextSize unit.Value
 	// Color is the text color.
 	Color color.RGBA
-	// Hint contains the text displayed when the editor is empty.
+	// Hint contains the text displayed when the EditorWdgt is empty.
 	Hint string
 	// HintColor is the color of hint text.
 	HintColor color.RGBA
@@ -33,11 +33,11 @@ type Editor struct {
 	ErrorLabel Label
 	LineColor  color.RGBA
 
-	flexWidth float32
-	editor    *widget.Editor
+	flexWidth  float32
+	EditorWdgt *widget.Editor
 	//IsVisible if true, displays the paste and clear button.
 	IsVisible bool
-	//IsRequired if true, displays a required field text at the buttom of the editor.
+	//IsRequired if true, displays a required field text at the buttom of the EditorWdgt.
 	IsRequired bool
 	// SingleLine force the text to stay on a single line.
 	// SingleLine also sets the scrolling direction to
@@ -65,7 +65,7 @@ func (t *Theme) Editor(hint string) Editor {
 		flexWidth:  1,
 		LineColor:  t.Color.Text,
 		ErrorLabel: errorLabel,
-		editor:     new(widget.Editor),
+		EditorWdgt: new(widget.Editor),
 
 		pasteBtnMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
@@ -96,7 +96,7 @@ func (e Editor) Layout(gtx *layout.Context) {
 	layout.UniformInset(unit.Dp(2)).Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
-				if e.editor.Focused() || e.editor.Len() != 0 {
+				if e.EditorWdgt.Focused() || e.EditorWdgt.Len() != 0 {
 					e.TitleLabel.Text = e.Hint
 				}
 				e.TitleLabel.Layout(gtx)
@@ -113,17 +113,17 @@ func (e Editor) Layout(gtx *layout.Context) {
 								inset.Layout(gtx, func() {
 									layout.Flex{}.Layout(gtx,
 										layout.Flexed(e.flexWidth, func() {
-											e.editorSection(gtx)
+											e.EditorWdgtSection(gtx)
 										}),
 									)
 								})
 							}),
 							layout.Rigid(func() {
-								e.editorLine(gtx)
+								e.EditorWdgtLine(gtx)
 							}),
 							layout.Rigid(func() {
 								if e.IsRequired {
-									if e.editor.Len() != 0 {
+									if e.EditorWdgt.Len() != 0 {
 										e.ErrorLabel.Text = "Field is required"
 									}
 									e.ErrorLabel.Layout(gtx)
@@ -137,7 +137,7 @@ func (e Editor) Layout(gtx *layout.Context) {
 						}
 						inset.Layout(gtx, func() {
 							if e.IsVisible {
-								if e.editor.Text() == "" {
+								if e.EditorWdgt.Text() == "" {
 									e.pasteBtnMaterial.Layout(gtx, e.pasteBtnWidget)
 								} else {
 									e.clearBtMaterial.Layout(gtx, e.clearBtnWidget)
@@ -151,14 +151,14 @@ func (e Editor) Layout(gtx *layout.Context) {
 	})
 }
 
-func (e Editor) editorSection(gtx *layout.Context) {
+func (e Editor) EditorWdgtSection(gtx *layout.Context) {
 	var stack op.StackOp
 	stack.Push(gtx.Ops)
 	var macro op.MacroOp
 	macro.Record(gtx.Ops)
-	e.editor.SingleLine = e.SingleLine
+	e.EditorWdgt.SingleLine = e.SingleLine
 	paint.ColorOp{Color: e.HintColor}.Add(gtx.Ops)
-	tl := widget.Label{Alignment: e.editor.Alignment}
+	tl := widget.Label{Alignment: e.EditorWdgt.Alignment}
 	tl.Layout(gtx, e.shaper, e.Font, e.TextSize, e.Hint)
 	macro.Stop()
 	if w := gtx.Dimensions.Size.X; gtx.Constraints.Width.Min < w {
@@ -167,19 +167,19 @@ func (e Editor) editorSection(gtx *layout.Context) {
 	if h := gtx.Dimensions.Size.Y; gtx.Constraints.Height.Min < h {
 		gtx.Constraints.Height.Min = h
 	}
-	e.editor.Layout(gtx, e.shaper, e.Font, e.TextSize)
-	if e.editor.Len() > 0 {
+	e.EditorWdgt.Layout(gtx, e.shaper, e.Font, e.TextSize)
+	if e.EditorWdgt.Len() > 0 {
 		paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-		e.editor.PaintText(gtx)
+		e.EditorWdgt.PaintText(gtx)
 	} else {
 		macro.Add()
 	}
 	paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-	e.editor.PaintCaret(gtx)
+	e.EditorWdgt.PaintCaret(gtx)
 	stack.Pop()
 }
 
-func (e Editor) editorLine(gtx *layout.Context) {
+func (e Editor) EditorWdgtLine(gtx *layout.Context) {
 	layout.Flex{}.Layout(gtx,
 		layout.Flexed(e.flexWidth, func() {
 			rect := f32.Rectangle{
@@ -199,20 +199,28 @@ func (e Editor) editorLine(gtx *layout.Context) {
 }
 
 func (e Editor) Text() string {
-	if e.IsRequired && e.editor.Len() == 0 && !e.editor.Focused() {
+	if e.IsRequired && e.EditorWdgt.Len() == 0 && !e.EditorWdgt.Focused() {
 		e.ErrorLabel.Text = "Field is required and cannot be empty."
 		e.LineColor = color.RGBA{255, 0, 0, 255}
 		return ""
 	}
-	return e.editor.Text()
+	return e.EditorWdgt.Text()
+}
+
+func (e Editor) SetText(text string) {
+	if text == "" {
+		return
+	}
+	e.EditorWdgt.SetText(text)
+	return
 }
 
 func (e Editor) Len() int {
-	return e.editor.Len()
+	return e.EditorWdgt.Len()
 }
 
 func (e Editor) Clear() {
-	e.editor.SetText("")
+	e.EditorWdgt.SetText("")
 	return
 }
 
@@ -222,9 +230,9 @@ func (e Editor) handleEvents(gtx *layout.Context) {
 		panic(err)
 	}
 	for e.pasteBtnWidget.Clicked(gtx) {
-		e.editor.SetText(data)
+		e.EditorWdgt.SetText(data)
 	}
 	for e.clearBtnWidget.Clicked(gtx) {
-		e.editor.SetText("")
+		e.EditorWdgt.SetText("")
 	}
 }

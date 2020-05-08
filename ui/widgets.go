@@ -13,6 +13,7 @@ import (
 )
 
 type inputs struct {
+// <<<<<<< HEAD
 	createDiag, deleteDiag, cancelDialog                                 widget.Button
 	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
@@ -25,6 +26,19 @@ type inputs struct {
 	addressInput, messageInput, signInput                                widget.Editor
 	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                      widget.Button
 	restoreDiag, addAcctDiag, savePassword                               widget.Button
+// =======
+// 	createDiag, deleteDiag, cancelDialog                               widget.Button
+// 	createWallet, restoreWallet, deleteWallet, renameWallet            widget.Button
+// 	addAccount, toggleWalletRename                                     widget.Button
+// 	toOverview, toWallets, toTransactions, toSend, toSettings          widget.Button
+// 	toRestoreWallet                                                    widget.Button
+// 	toReceive                                                          widget.Button
+// 	toTransactionsFilters                                              widget.Button
+// 	applyFiltersTransactions                                           widget.Button
+// 	sync, syncHeader, hideMsgInfo, changePasswordDiag, signMessageDiag widget.Button
+// 	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                    widget.Button
+// 	restoreDiag, addAcctDiag, savePassword                             widget.Button
+// >>>>>>> add settext(), fix editor on other pages
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -63,7 +77,6 @@ type outputs struct {
 	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag decredmaterial.Button
 	addAccount, newAddressDiag                                                     decredmaterial.Button
 	info, more, copy, verifyInfo                                                   decredmaterial.IconButton
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                 decredmaterial.IconButton
 	passwordBar                                                                    *decredmaterial.ProgressBar
 
 	tabs                                                              []decredmaterial.TabItem
@@ -112,50 +125,34 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.copy.Size = unit.Dp(30)
 	win.outputs.icons.copy.Background = theme.Color.Background
 	win.outputs.icons.copy.Color = theme.Color.Text
-	win.outputs.icons.pasteAddr = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteAddr.Padding = unit.Dp(5)
-	win.outputs.icons.pasteAddr.Size = unit.Dp(30)
-	win.outputs.icons.pasteAddr.Background = theme.Color.Background
-	win.outputs.icons.pasteAddr.Color = theme.Color.Text
-	win.outputs.icons.pasteMsg = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteMsg.Padding = unit.Dp(5)
-	win.outputs.icons.pasteMsg.Size = unit.Dp(30)
-	win.outputs.icons.pasteMsg.Background = theme.Color.Background
-	win.outputs.icons.pasteMsg.Color = theme.Color.Text
-	win.outputs.icons.pasteSign = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteSign.Padding = unit.Dp(5)
-	win.outputs.icons.pasteSign.Size = unit.Dp(30)
-	win.outputs.icons.pasteSign.Background = theme.Color.Background
-	win.outputs.icons.pasteSign.Color = theme.Color.Text
-	win.outputs.icons.clearSign = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearSign.Padding = unit.Dp(5)
-	win.outputs.icons.clearSign.Size = unit.Dp(30)
-	win.outputs.icons.clearSign.Background = theme.Color.Background
-	win.outputs.icons.clearSign.Color = theme.Color.Text
-	win.outputs.icons.clearAddr = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearAddr.Padding = unit.Dp(5)
-	win.outputs.icons.clearAddr.Size = unit.Dp(30)
-	win.outputs.icons.clearAddr.Background = theme.Color.Background
-	win.outputs.icons.clearAddr.Color = theme.Color.Text
-	win.outputs.icons.clearMsg = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearMsg.Padding = unit.Dp(5)
-	win.outputs.icons.clearMsg.Size = unit.Dp(30)
-	win.outputs.icons.clearMsg.Background = theme.Color.Background
-	win.outputs.icons.clearMsg.Color = theme.Color.Text
 
-	win.outputs.spendingPassword = theme.Editor("Enter password")
-	win.inputs.spendingPassword.SingleLine = true
+	win.outputs.spendingPassword = theme.Editor("Enter new password")
+	win.outputs.spendingPassword.SingleLine = true
+	win.outputs.spendingPassword.IsRequired = true
+
 	win.outputs.passwordBar = theme.ProgressBar(0)
-	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
-	win.inputs.oldSpendingPassword.SingleLine = true
 
-	win.outputs.matchSpending = theme.Editor("Enter password again")
-	win.inputs.matchSpending.SingleLine = true
+	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
+	win.outputs.oldSpendingPassword.SingleLine = true
+	win.outputs.oldSpendingPassword.IsRequired = true
+
+	win.outputs.matchSpending = theme.Editor("Enter new password again")
+	win.outputs.matchSpending.SingleLine = true
+	win.outputs.matchSpending.IsRequired = true
 
 	// verify message widgets
 	win.outputs.addressInput = theme.Editor("Address")
+	win.outputs.addressInput.SingleLine = true
+	win.outputs.addressInput.IsRequired = true
+
 	win.outputs.signInput = theme.Editor("Signature")
+	win.outputs.signInput.SingleLine = true
+	win.outputs.signInput.IsRequired = true
+
 	win.outputs.messageInput = theme.Editor("Message")
+	win.outputs.messageInput.SingleLine = true
+	win.outputs.messageInput.IsRequired = true
+
 	win.outputs.verifyBtn = theme.Button("Verify")
 	win.outputs.verifyBtn.TextSize = unit.Dp(13)
 	win.outputs.clearBtn = theme.Button("Clear All")
@@ -220,13 +217,6 @@ func (win *Window) initWidgets() {
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.copy = win.outputs.icons.copy
-	win.outputs.pasteAddr = win.outputs.icons.pasteAddr
-	win.outputs.pasteMsg = win.outputs.icons.pasteMsg
-	win.outputs.pasteSign = win.outputs.icons.pasteSign
-	win.outputs.clearAddr = win.outputs.icons.clearAddr
-	win.outputs.clearMsg = win.outputs.icons.clearMsg
-	win.outputs.clearSign = win.outputs.icons.clearSign
-	win.outputs.verifyInfo = win.outputs.icons.verifyInfo
 
 	for i := 0; i <= 32; i++ {
 		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
@@ -250,7 +240,7 @@ func (win *Window) initWidgets() {
 	}
 
 	win.outputs.rename = theme.Editor("")
-	win.inputs.rename.SingleLine = true
+	win.outputs.rename.SingleLine = true
 	win.outputs.rename.TextSize = unit.Dp(20)
 
 	win.outputs.renameWallet = decredmaterial.IconButton{

@@ -65,6 +65,8 @@ func (page *walletPage) Layout(common pageCommon) {
 			if page.renaming {
 				horFlex.Layout(gtx,
 					rigid(func() {
+						gtx.Constraints.Width.Min = gtx.Px(unit.Dp(450))
+						gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
 						page.editorW.Layout(gtx)
 					}),
 					rigid(func() {

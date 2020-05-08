@@ -32,7 +32,7 @@ func (win *Window) HandleInputs() {
 		win.selectedAccount = win.combined.sel.Selected
 	}
 
-	for _, evt := range win.inputs.spendingPassword.Events(win.gtx) {
+	for _, evt := range win.outputs.spendingPassword.EditorWdgt.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			win.err = ""
@@ -44,7 +44,7 @@ func (win *Window) HandleInputs() {
 		log.Debug("Pass evt", evt)
 	}
 
-	for _, evt := range win.inputs.oldSpendingPassword.Events(win.gtx) {
+	for _, evt := range win.outputs.oldSpendingPassword.EditorWdgt.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			win.err = ""
@@ -56,7 +56,7 @@ func (win *Window) HandleInputs() {
 		log.Debug("Pass evt", evt)
 	}
 
-	for _, evt := range win.inputs.matchSpending.Events(win.gtx) {
+	for _, evt := range win.outputs.matchSpending.EditorWdgt.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			win.err = ""
@@ -69,7 +69,7 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
-	for _, evt := range win.inputs.addressInput.Events(win.gtx) {
+	for _, evt := range win.outputs.addressInput.EditorWdgt.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			win.err = ""
@@ -80,7 +80,7 @@ func (win *Window) HandleInputs() {
 		log.Debug("address evt", evt)
 	}
 
-	for _, evt := range win.inputs.signInput.Events(win.gtx) {
+	for _, evt := range win.outputs.signInput.EditorWdgt.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			win.err = ""
@@ -91,7 +91,7 @@ func (win *Window) HandleInputs() {
 		log.Debug("sign evt", evt)
 	}
 
-	for _, evt := range win.inputs.messageInput.Events(win.gtx) {
+	for _, evt := range win.outputs.messageInput.EditorWdgt.Events(win.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			win.err = ""
@@ -154,7 +154,7 @@ func (win *Window) HandleInputs() {
 			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
 			win.outputs.toggleWalletRename.Color = win.theme.Color.Primary
 		} else {
-			win.inputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
+			win.outputs.rename.SetText(win.walletInfo.Wallets[win.selected].Name)
 			win.outputs.rename.TextSize = unit.Dp(48)
 			win.outputs.toggleWalletRename.Icon = win.outputs.ic.clear
 			win.outputs.toggleWalletRename.Color = win.theme.Color.Danger
@@ -164,7 +164,8 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.renameWallet.Clicked(win.gtx) {
-		name := win.inputs.rename.Text()
+		name := win.outputs.rename.Text()
+		fmt.Println(name)
 		if name == "" {
 			return
 		}
@@ -189,7 +190,7 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	if strings.Trim(win.inputs.addressInput.Text(), " ") == "" || strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
+	if strings.Trim(win.outputs.addressInput.Text(), " ") == "" || strings.Trim(win.outputs.signInput.Text(), " ") == "" || strings.Trim(win.outputs.messageInput.Text(), " ") == "" {
 		win.outputs.verifyBtn.Background = win.theme.Color.Hint
 		win.outputs.verifyMessage.Text = ""
 		if win.inputs.verifyBtn.Clicked(win.gtx) {
@@ -198,15 +199,15 @@ func (win *Window) HandleInputs() {
 	} else {
 		win.outputs.verifyBtn.Background = win.theme.Color.Primary
 		if win.inputs.verifyBtn.Clicked(win.gtx) {
-			addr := win.inputs.addressInput.Text()
+			addr := win.outputs.addressInput.Text()
 			if addr == "" {
 				return
 			}
-			sign := win.inputs.signInput.Text()
+			sign := win.outputs.signInput.Text()
 			if sign == "" {
 				return
 			}
-			msg := win.inputs.messageInput.Text()
+			msg := win.outputs.messageInput.Text()
 			if msg == "" {
 				return
 			}
@@ -225,42 +226,6 @@ func (win *Window) HandleInputs() {
 			win.outputs.verifyMessage.Text = "Valid Signature"
 			win.outputs.verifyMessage.Color = win.theme.Color.Success
 		}
-	}
-
-	data, err := clipboard.ReadAll()
-	if err != nil {
-		win.err = err.Error()
-	}
-
-	//signature control
-	if win.inputs.clearSign.Clicked(win.gtx) {
-		win.err = ""
-		win.inputs.signInput.SetText("")
-		return
-	}
-	if win.inputs.pasteSign.Clicked(win.gtx) {
-		win.inputs.signInput.SetText(data)
-		return
-	}
-	//address control
-	if win.inputs.clearAddr.Clicked(win.gtx) {
-		win.err = ""
-		win.inputs.addressInput.SetText("")
-		return
-	}
-	if win.inputs.pasteAddr.Clicked(win.gtx) {
-		win.inputs.addressInput.SetText(data)
-		return
-	}
-	//mesage control
-	if win.inputs.clearMsg.Clicked(win.gtx) {
-		win.err = ""
-		win.inputs.messageInput.SetText("")
-		return
-	}
-	if win.inputs.pasteMsg.Clicked(win.gtx) {
-		win.inputs.messageInput.SetText(data)
-		return
 	}
 
 	if win.inputs.clearBtn.Clicked(win.gtx) {
@@ -285,7 +250,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	for win.inputs.savePassword.Clicked(win.gtx) {
-		op := win.inputs.oldSpendingPassword.Text()
+		op := win.outputs.oldSpendingPassword.Text()
 		if op == "" {
 			win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
 			win.err = "Old Wallet password required and cannot be empty"
@@ -347,7 +312,7 @@ func (win *Window) HandleInputs() {
 		if pass == "" {
 			return
 		}
-		win.wallet.AddAccount(win.walletInfo.Wallets[win.selected].ID, win.inputs.dialog.Text(), pass)
+		win.wallet.AddAccount(win.walletInfo.Wallets[win.selected].ID, win.outputs.dialog.Text(), pass)
 		win.states.loading = true
 	}
 
@@ -437,8 +402,8 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	if strings.Trim(win.inputs.spendingPassword.Text(), " ") != "" {
-		strength := dcrlibwallet.ShannonEntropy(win.inputs.spendingPassword.Text()) / 4.0
+	if strings.Trim(win.outputs.spendingPassword.Text(), " ") != "" {
+		strength := dcrlibwallet.ShannonEntropy(win.outputs.spendingPassword.Text()) / 4.0
 		switch {
 		case strength > 0.6:
 			win.outputs.passwordBar.ProgressColor = win.theme.Color.Success
@@ -464,7 +429,7 @@ func (win *Window) validatePasswords() string {
 		return ""
 	}
 
-	match := win.inputs.matchSpending.Text()
+	match := win.outputs.matchSpending.Text()
 	if match == "" {
 		win.outputs.matchSpending.HintColor = win.theme.Color.Danger
 		win.err = "Enter new wallet password again and it cannot be empty."
@@ -480,7 +445,7 @@ func (win *Window) validatePasswords() string {
 }
 
 func (win *Window) validatePassword() string {
-	pass := win.inputs.spendingPassword.Text()
+	pass := win.outputs.spendingPassword.Text()
 	if pass == "" {
 		win.outputs.spendingPassword.HintColor = win.theme.Color.Danger
 		win.err = "Wallet password required and cannot be empty."
@@ -491,7 +456,7 @@ func (win *Window) validatePassword() string {
 }
 
 func (win *Window) validateOldPassword() string {
-	pass := win.inputs.oldSpendingPassword.Text()
+	pass := win.outputs.oldSpendingPassword.Text()
 	if pass == "" {
 		win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
 		win.err = "Old Wallet password required and cannot be empty"
@@ -503,19 +468,19 @@ func (win *Window) validateOldPassword() string {
 
 func (win *Window) resetPasswords() {
 	win.outputs.spendingPassword.HintColor = win.theme.Color.InvText
-	win.inputs.spendingPassword.SetText("")
+	win.outputs.spendingPassword.Clear()
 	win.outputs.matchSpending.HintColor = win.theme.Color.InvText
-	win.inputs.matchSpending.SetText("")
+	win.outputs.matchSpending.Clear()
 	win.outputs.oldSpendingPassword.HintColor = win.theme.Color.InvText
-	win.inputs.oldSpendingPassword.SetText("")
+	win.outputs.oldSpendingPassword.Clear()
 	win.outputs.passwordBar.Progress = 0
 }
 
 func (win *Window) resetVerifyFields() {
 	win.err = ""
-	win.inputs.addressInput.SetText("")
-	win.inputs.signInput.SetText("")
-	win.inputs.messageInput.SetText("")
+	win.outputs.addressInput.Clear()
+	win.outputs.signInput.Clear()
+	win.outputs.messageInput.Clear()
 	win.outputs.verifyMessage.Text = ""
 }
 
