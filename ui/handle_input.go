@@ -364,6 +364,16 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
+	if win.inputs.toReceive.Clicked(win.gtx) {
+		win.current = PageReceive
+		return
+	}
+
+	if win.inputs.toSend.Clicked(win.gtx) {
+		win.current = PageSend
+		return
+	}
+
 	if win.inputs.toTransactions.Clicked(win.gtx) {
 		win.current = PageTransactions
 		return

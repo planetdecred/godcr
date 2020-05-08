@@ -16,7 +16,8 @@ type inputs struct {
 	createDiag, deleteDiag, cancelDialog                                 widget.Button
 	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
-	toOverview, toWallets, toTransactions, toSettings                    widget.Button
+	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
+	toReceive                                                            widget.Button
 	toRestoreWallet                                                      widget.Button
 	sync, syncHeader, hideMsgInfo, changePasswordDiag, signMessageDiag   widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
@@ -50,11 +51,12 @@ type outputs struct {
 		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
 		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
 	}
-	addressInput, messageInput, signInput                                decredmaterial.Editor
-	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename decredmaterial.Editor
-	toOverview, toWallets, toTransactions, toRestoreWallet, toSettings   decredmaterial.IconButton
-	createDiag, cancelDiag, addAcctDiag                                  decredmaterial.IconButton
-	clearBtn, verifyBtn, verifyMessDiag                                  decredmaterial.Button
+	addressInput, messageInput, signInput                                      decredmaterial.Editor
+	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
+	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
+	toReceive                                                                  decredmaterial.IconButton
+	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
+	clearBtn, verifyBtn, verifyMessDiag                                        decredmaterial.Button
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag  decredmaterial.Button
 	toggleWalletRename, renameWallet, syncHeader                                   decredmaterial.IconButton
@@ -203,6 +205,8 @@ func (win *Window) initWidgets() {
 	win.outputs.toOverview = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionHome)))
 	win.outputs.toTransactions = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.SocialPoll)))
 	win.outputs.toSettings = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionSettings)))
+	win.outputs.toSend = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSend)))
+	win.outputs.toReceive = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)))
 
 	win.outputs.noWallet = theme.H3("No wallet loaded")
 
