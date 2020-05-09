@@ -218,7 +218,6 @@ func (e Editor) SetText(text string) {
 		return
 	}
 	e.EditorWdgt.SetText(text)
-	return
 }
 
 func (e Editor) Len() int {
@@ -227,7 +226,6 @@ func (e Editor) Len() int {
 
 func (e Editor) Clear() {
 	e.EditorWdgt.SetText("")
-	return
 }
 
 func (e Editor) Focused() bool {

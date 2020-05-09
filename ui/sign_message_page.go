@@ -29,9 +29,6 @@ type SignMessagePage struct {
 	addressEditorMaterial decredmaterial.Editor
 	messageEditorMaterial decredmaterial.Editor
 
-	addressEditorWidget *widget.Editor
-	messageEditorWidget *widget.Editor
-
 	clearButtonMaterial decredmaterial.Button
 	signButtonMaterial  decredmaterial.Button
 	copyButtonMaterial  decredmaterial.Button
