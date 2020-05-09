@@ -43,6 +43,8 @@ type Editor struct {
 	// SingleLine also sets the scrolling direction to
 	// horizontal.
 	SingleLine bool
+	//IsTitleLabel if true makes the title lable visible.
+	IsTitleLabel bool
 
 	pasteBtnMaterial IconButton
 	pasteBtnWidget   *widget.Button
@@ -56,16 +58,17 @@ func (t *Theme) Editor(hint string) Editor {
 	errorLabel.Color = color.RGBA{255, 0, 0, 255}
 
 	return Editor{
-		TextSize:   t.TextSize,
-		Color:      t.Color.Text,
-		shaper:     t.Shaper,
-		Hint:       hint,
-		HintColor:  t.Color.Hint,
-		TitleLabel: t.Body1(""),
-		flexWidth:  1,
-		LineColor:  t.Color.Text,
-		ErrorLabel: errorLabel,
-		EditorWdgt: new(widget.Editor),
+		TextSize:     t.TextSize,
+		Color:        t.Color.Text,
+		shaper:       t.Shaper,
+		Hint:         hint,
+		HintColor:    t.Color.Hint,
+		TitleLabel:   t.Body1(""),
+		flexWidth:    1,
+		IsTitleLabel: true,
+		LineColor:    t.Color.Text,
+		ErrorLabel:   errorLabel,
+		EditorWdgt:   new(widget.Editor),
 
 		pasteBtnMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
@@ -98,8 +101,11 @@ func (e Editor) Layout(gtx *layout.Context) {
 			layout.Rigid(func() {
 				if e.EditorWdgt.Focused() || e.EditorWdgt.Len() != 0 {
 					e.TitleLabel.Text = e.Hint
+					e.Hint = ""
 				}
-				e.TitleLabel.Layout(gtx)
+				if e.IsTitleLabel {
+					e.TitleLabel.Layout(gtx)
+				}
 			}),
 			layout.Rigid(func() {
 				layout.Flex{}.Layout(gtx,
@@ -113,7 +119,7 @@ func (e Editor) Layout(gtx *layout.Context) {
 								inset.Layout(gtx, func() {
 									layout.Flex{}.Layout(gtx,
 										layout.Flexed(e.flexWidth, func() {
-											e.EditorWdgtSection(gtx)
+											e.EditorWidget(gtx)
 										}),
 									)
 								})
@@ -151,7 +157,7 @@ func (e Editor) Layout(gtx *layout.Context) {
 	})
 }
 
-func (e Editor) EditorWdgtSection(gtx *layout.Context) {
+func (e Editor) EditorWidget(gtx *layout.Context) {
 	var stack op.StackOp
 	stack.Push(gtx.Ops)
 	var macro op.MacroOp
@@ -222,6 +228,10 @@ func (e Editor) Len() int {
 func (e Editor) Clear() {
 	e.EditorWdgt.SetText("")
 	return
+}
+
+func (e Editor) Focused() bool {
+	return e.EditorWdgt.Focused()
 }
 
 func (e Editor) handleEvents(gtx *layout.Context) {

@@ -45,7 +45,6 @@ type inputs struct {
 	}
 	seedEditors struct {
 		focusIndex int
-		editors    []widget.Editor
 	}
 	seedsSuggestions []struct {
 		text   string
@@ -219,9 +218,12 @@ func (win *Window) initWidgets() {
 	win.outputs.copy = win.outputs.icons.copy
 
 	for i := 0; i <= 32; i++ {
-		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
+		e := theme.Editor(fmt.Sprintf("Input word %d...", i+1))
+		e.SingleLine = true
+		e.IsTitleLabel = false
+		e.EditorWdgt.Submit = true
+		win.outputs.seedEditors = append(win.outputs.seedEditors, e)
 		win.inputs.seedEditors.focusIndex = -1
-		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
 	win.outputs.sync = theme.Button("Reconnect")
 

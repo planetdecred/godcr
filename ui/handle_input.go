@@ -493,7 +493,7 @@ func (win *Window) validateSeeds() string {
 	text := ""
 	win.err = ""
 
-	for i, editor := range win.inputs.seedEditors.editors {
+	for i, editor := range win.outputs.seedEditors {
 		if editor.Text() == "" {
 			win.outputs.seedEditors[i].HintColor = win.theme.Color.Danger
 			return ""
@@ -511,14 +511,14 @@ func (win *Window) validateSeeds() string {
 }
 
 func (win *Window) resetSeeds() {
-	for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-		win.inputs.seedEditors.editors[i].SetText("")
+	for i := 0; i < len(win.outputs.seedEditors); i++ {
+		win.outputs.seedEditors[i].Clear()
 	}
 }
 
 func (win *Window) editorSeedsEventsHandler() {
-	for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-		editor := &win.inputs.seedEditors.editors[i]
+	for i := 0; i < len(win.outputs.seedEditors); i++ {
+		editor := win.outputs.seedEditors[i].EditorWdgt
 
 		if editor.Focused() && win.inputs.seedEditors.focusIndex != i {
 			win.inputs.seedsSuggestions = nil
@@ -554,8 +554,8 @@ func (win *Window) editorSeedsEventsHandler() {
 				}
 
 			case widget.SubmitEvent:
-				if i < len(win.inputs.seedEditors.editors)-1 {
-					win.inputs.seedEditors.editors[i+1].Focus()
+				if i < len(win.outputs.seedEditors)-1 {
+					win.outputs.seedEditors[i+1].EditorWdgt.Focus()
 				}
 			}
 		}
@@ -566,14 +566,14 @@ func (win *Window) onSuggestionSeedsClicked() {
 	for i := 0; i < len(win.inputs.seedsSuggestions); i++ {
 		btn := win.inputs.seedsSuggestions[i]
 		if btn.button.Clicked(win.gtx) {
-			for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-				editor := &win.inputs.seedEditors.editors[i]
+			for i := 0; i < len(win.outputs.seedEditors); i++ {
+				editor := win.outputs.seedEditors[i].EditorWdgt
 				if editor.Focused() {
 					editor.SetText(btn.text)
 					editor.Move(len(btn.text))
 
-					if i < len(win.inputs.seedEditors.editors)-1 {
-						win.inputs.seedEditors.editors[i+1].Focus()
+					if i < len(win.outputs.seedEditors)-1 {
+						win.outputs.seedEditors[i+1].EditorWdgt.Focus()
 					} else {
 						win.inputs.seedEditors.focusIndex = -1
 					}
@@ -586,8 +586,8 @@ func (win *Window) onSuggestionSeedsClicked() {
 // KeysEventsHandler handlers all pressed keys events
 func (win *Window) KeysEventsHandler(evt *key.Event) {
 	if evt.Name == key.NameTab {
-		for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-			editor := &win.inputs.seedEditors.editors[i]
+		for i := 0; i < len(win.outputs.seedEditors); i++ {
+			editor := win.outputs.seedEditors[i].EditorWdgt
 			if editor.Focused() && win.inputs.seedsSuggestions != nil {
 				editor.SetText(win.inputs.seedsSuggestions[0].text)
 				editor.Move(len(win.inputs.seedsSuggestions[0].text))

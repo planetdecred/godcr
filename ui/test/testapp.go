@@ -41,7 +41,7 @@ type TestStruct struct {
 	}
 
 	customEditorOutput struct {
-		test1, test2, test3, test4             decredmaterial.EditorCustom
+		test1, test2, test3, test4             decredmaterial.Editor
 		test1btn, test2btn, test3btn, test4btn decredmaterial.Button
 		testOutput                             decredmaterial.Label
 		radiobtn                               decredmaterial.RadioButton
@@ -81,18 +81,18 @@ func (t *TestStruct) initWidgets() {
 	theme := t.theme
 
 	// Editor test
-	t.customEditorOutput.test1 = theme.EditorCustom("Enter Hint Text1")
+	t.customEditorOutput.test1 = theme.Editor("Enter Hint Text1")
 	t.customEditorOutput.test1.IsVisible = true
 	t.customEditorOutput.test1.IsRequired = true
 
-	t.customEditorOutput.test2 = theme.EditorCustom("Enter Hint Text2")
+	t.customEditorOutput.test2 = theme.Editor("Enter Hint Text2")
 	t.customEditorOutput.test2.IsVisible = true
 	t.customEditorOutput.test2.SingleLine = true
 
-	t.customEditorOutput.test3 = theme.EditorCustom("Enter Hint Text3")
+	t.customEditorOutput.test3 = theme.Editor("Enter Hint Text3")
 	t.customEditorOutput.test3.IsRequired = true
 
-	t.customEditorOutput.test4 = theme.EditorCustom("Enter Hint Text3")
+	t.customEditorOutput.test4 = theme.Editor("Enter Hint Text3")
 
 	t.customEditorOutput.testOutput = t.theme.H6("no button clicked yet.")
 
