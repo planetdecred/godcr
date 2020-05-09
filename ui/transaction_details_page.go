@@ -70,12 +70,12 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 	page.backButtonW.Size = unit.Dp(32)
 
 	return func() {
-		page.layout(common)
-		page.handler(common)
+		page.Layout(common)
+		page.Handler(common)
 	}
 }
 
-func (page *transactionPage) layout(common pageCommon) {
+func (page *transactionPage) Layout(common pageCommon) {
 	gtx := common.gtx
 	widgets := []func(){
 		func() {
@@ -100,8 +100,7 @@ func (page *transactionPage) layout(common pageCommon) {
 		},
 	}
 
-	common.theme.Surface(gtx, func() {
-		toMax(gtx)
+	common.Layout(gtx, func() {
 		layout.UniformInset(unit.Dp(pageContentInset)).Layout(gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func() {
@@ -277,10 +276,10 @@ func (page *transactionPage) txnIORow(common *pageCommon, amount string, hash st
 	layout.Inset{Bottom: unit.Dp(5)}.Layout(common.gtx, func() {
 		layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(common.gtx,
 			layout.Rigid(func() {
-				common.theme.Body1(amount).Layout(common.gtx)
+				common.theme.Label(unit.Dp(13), amount).Layout(common.gtx)
 			}),
 			layout.Rigid(func() {
-				txt := common.theme.Body1(hash)
+				txt := common.theme.Label(unit.Dp(13), hash)
 				txt.Color = common.theme.Color.Primary
 				txt.Layout(common.gtx)
 			}),
@@ -322,7 +321,7 @@ func (page *transactionPage) viewTxnOnBrowser(common *pageCommon) {
 	}
 }
 
-func (page *transactionPage) handler(common pageCommon) {
+func (page *transactionPage) Handler(common pageCommon) {
 	if page.expandInputs.Clicked(common.gtx) {
 		page.isTxnInputsShow = !page.isTxnInputsShow
 	}

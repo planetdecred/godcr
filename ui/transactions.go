@@ -4,6 +4,7 @@ import (
 	"image"
 	"strconv"
 
+	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -16,7 +17,8 @@ import (
 )
 
 var (
-	txsList = layout.List{Axis: layout.Vertical}
+	txsList         = layout.List{Axis: layout.Vertical}
+	txsToTxsDetails map[string]*gesture.Click
 )
 
 const (
@@ -40,6 +42,8 @@ func (win *Window) TransactionsPage() {
 		})
 		return
 	}
+	initTotransactionDetailsButtons(win)
+
 	bd := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
 			layout.Rigid(func() {
@@ -79,16 +83,18 @@ func (win *Window) TransactionsPage() {
 								txt.Layout(win.gtx)
 								return
 							}
+
 							directionFilter, _ := strconv.Atoi(win.inputs.transactionFilterDirection.Value(win.gtx))
 							txsList.Layout(win.gtx, len(walTxs), func(index int) {
 								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
 									return
 								}
 								renderTxsRow(win, walTxs[index])
+
+								click := txsToTxsDetails[walTxs[index].Txn.Hash]
 								pointer.Rect(image.Rectangle{Max: win.gtx.Dimensions.Size}).Add(win.gtx.Ops)
-								click := win.inputs.toTransactionDetails[walTxs[index].Txn.Hash]
 								click.Add(win.gtx.Ops)
-								win.inputs.toTransactionDetails[walTxs[index].Txn.Hash] = click
+								toDetails(win, &walTxs[index], click)
 							})
 						}),
 					)
@@ -204,5 +210,26 @@ func initTxnWidgets(win *Window, transaction *wallet.Transaction, cb *combined) 
 	} else {
 		txWidgets.direction, _ = decredmaterial.NewIcon(icons.ContentAdd)
 		txWidgets.direction.Color = win.theme.Color.Success
+	}
+}
+
+func initTotransactionDetailsButtons(win *Window) {
+	if win.walletTransactions.Total != len(txsToTxsDetails) {
+		txsToTxsDetails = make(map[string]*gesture.Click, win.walletTransactions.Total)
+
+		for _, walTxs := range win.walletTransactions.Txs {
+			for _, txn := range walTxs {
+				txsToTxsDetails[txn.Txn.Hash] = &gesture.Click{}
+			}
+		}
+	}
+}
+
+func toDetails(win *Window, txn *wallet.Transaction, click *gesture.Click) {
+	for _, e := range click.Events(win.gtx) {
+		if e.Type == gesture.TypeClick {
+			win.walletTransaction = txn
+			win.current = PageTransactionDetails
+		}
 	}
 }

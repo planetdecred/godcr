@@ -24,7 +24,6 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case *wallet.Transactions:
 		win.walletTransactions = e
-		win.updateToTransactionDetailsButtons()
 		return
 	case *wallet.Transaction:
 		win.walletTransaction = e
