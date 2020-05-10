@@ -7,6 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	_ "image/png"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
