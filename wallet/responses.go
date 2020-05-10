@@ -124,7 +124,6 @@ type SyncStatus struct {
 	CurrentBlockHeight       int32
 }
 
-<<<<<<< HEAD
 // Signature is sent in response to Wallet.SignMessage
 type Signature struct {
 	Signature string

@@ -144,7 +144,7 @@ func (win *Window) NewSendPage() *Send {
 	pg.closeConfirmationModalButtonMaterial = pg.theme.Button("Close")
 	pg.pasteAddressButtonMaterial = pg.theme.Button("Paste")
 
-	pg.closeConfirmationModalButtonMaterial.Background = pg.theme.Color.White
+	pg.closeConfirmationModalButtonMaterial.Background = pg.theme.Color.Surface
 	pg.closeConfirmationModalButtonMaterial.Color = pg.theme.Color.Primary
 
 	return pg
