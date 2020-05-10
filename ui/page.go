@@ -12,7 +12,7 @@ import (
 type pageIcons struct {
 	contentAdd, contentClear, contentCreate, navigationCheck,
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
-	actionCheckCircle *decredmaterial.Icon
+	actionCheckCircle, contentCopy, actionInfo, navigationMore *decredmaterial.Icon
 	overviewIcon, walletIcon image.Image
 	navigationArrowBack      *decredmaterial.Icon
 }
@@ -43,6 +43,9 @@ func (win *Window) addPages() {
 		toggleRadioButtonUnchecked: mustIcon(decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)),
 		actionCheckCircle:          mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 		navigationArrowBack:        mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)),
+		contentCopy:     mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
+		actionInfo:      mustIcon(decredmaterial.NewIcon(icons.ActionInfo)),
+		navigationMore:  mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
@@ -57,6 +60,10 @@ func (win *Window) addPages() {
 		{
 			Label: win.theme.Body1("Transactions"),
 			Icon:  icons.overviewIcon,
+		},
+		{
+			// Label: win.theme.Body1("Receive"),
+			// Icon:  icons.overviewIcon,
 		},
 		{
 			Label: win.theme.Body1("Settings"),
