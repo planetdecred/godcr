@@ -2,12 +2,12 @@ package ui
 
 import (
 	"gioui.org/layout"
-	// "gioui.org/op/paint"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	// "github.com/skip2/go-qrcode"
+	"github.com/skip2/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -69,61 +69,54 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 }
 
 func (p *receivePage) Layout(common pageCommon) {
-	// 	body := func() {
-	// 		layout.Stack{}.Layout(gtx,
-	// 			layout.Expanded(func() {
-	// 				layout.Flex{}.Layout(gtx,
-	// 					layout.Rigid(func() {
-	// 						win.combined.sel.Layout(gtx, func() {
+	body := func() {
+		layout.Stack{}.Layout(p.gtx,
+			layout.Expanded(func() {
+				layout.Flex{}.Layout(p.gtx,
+					layout.Flexed(0.9, func() {
+						p.ReceivePageContents(common)
+					}),
+					layout.Rigid(func() {
+						p.rightNav()
+					}),
+				)
+			}),
+		)
+	}
+	common.LayoutWithWallets(p.gtx, body)
+}
 
-	// 						})
-	// 					}),
-	// 					layout.Rigid(func() {
-	// 						win.ReceivePageContents()
-	// 					}),
-	// 				)
-	// 			}),
-	// 		)
-	// 	}
-	// 	win.TabbedPage(body)
-	// }
-
-	// func (win *Window) ReceivePageContents() {
+func (p *receivePage) ReceivePageContents(common pageCommon) {
 	pageContent := []func(){
 		func() {
-			p.pageHeaderColumn()
+			p.selectedAcountColumn(common)
 		},
-		// func() {
-		// 	win.selectedAcountColumn()
-		// },
-		// func() {
-		// 	win.qrCodeAddressColumn()
-		// },
-		// func() {
-		// 	layout.Flex{}.Layout(gtx,
-		// 		layout.Flexed(0.35, func() {
-		// 		}),
-		// 		layout.Flexed(1, func() {
-		// 			if win.addressCopiedLabel.Text != "" {
-		// 				win.addressCopiedLabel.Layout(gtx)
-		// 			}
-		// 		}),
-		// 	)
-		// },
-		// func() {
-		// 	layout.Flex{}.Layout(gtx,
-		// 		layout.Flexed(0.35, func() {
-		// 		}),
-		// 		layout.Flexed(1, func() {
-		// 			win.Err()
-		// 		}),
-		// 	)
-		// },
+		func() {
+			p.qrCodeAddressColumn(common)
+		},
+		func() {
+			layout.Flex{}.Layout(p.gtx,
+				layout.Flexed(0.35, func() {
+				}),
+				layout.Flexed(1, func() {
+					if p.addressCopiedLabel.Text != "" {
+						p.addressCopiedLabel.Layout(p.gtx)
+					}
+				}),
+			)
+		},
+		func() {
+			layout.Flex{}.Layout(p.gtx,
+				layout.Flexed(0.35, func() {
+				}),
+				layout.Flexed(1, func() {
+					// win.Err()
+				}),
+			)
+		},
 	}
-	common.LayoutWithWallets(p.gtx, func() {
-		p.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
-			layout.Inset{Left: unit.Dp(3)}.Layout(p.gtx, pageContent[i])
-		})
+	p.pageContainer.Layout(p.gtx, len(pageContent), func(i int) {
+		layout.Inset{Left: unit.Dp(3)}.Layout(p.gtx, pageContent[i])
 	})
 
 	// if newAddr {
@@ -131,19 +124,109 @@ func (p *receivePage) Layout(common pageCommon) {
 	// }
 }
 
-func (p *receivePage) pageHeaderColumn() {
-	layout.Flex{}.Layout(p.gtx,
-		layout.Flexed(.6, func() {
-			// win.outputs.pageTitle.Layout(gtx)
+func (p *receivePage) rightNav() {
+	layout.Flex{Axis: layout.Vertical}.Layout(p.gtx,
+		layout.Rigid(func() {
+			p.moreBtn.Layout(p.gtx, &p.moreBtnW)
 		}),
-		layout.Flexed(.4, func() {
-			layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(20)}.Layout(p.gtx, func() {
+		layout.Rigid(func() {
+			// layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(20)}.Layout(p.gtx, func() {
+			p.infoBtn.Layout(p.gtx, &p.infoBtnW)
+		}),
+	)
+}
+
+func (p *receivePage) selectedAcountColumn(common pageCommon) {
+	current := common.info.Wallets[*common.selectedWallet]
+
+	p.selectedWalletNameLabel.Text = current.Name
+	p.selectedWalletBalLabel.Text = current.Balance
+
+	account := common.info.Wallets[*common.selectedWallet].Accounts[0]
+	p.selectedAccountNameLabel.Text = account.Name
+	p.selectedAccountBalanceLabel.Text = account.SpendableBalance
+
+	layout.Flex{}.Layout(p.gtx,
+		layout.Flexed(0.22, func() {
+		}),
+		layout.Flexed(1, func() {
+			layout.Stack{}.Layout(p.gtx,
+				layout.Stacked(func() {
+					selectedDetails := func() {
+						layout.UniformInset(unit.Dp(10)).Layout(p.gtx, func() {
+							layout.Flex{Axis: layout.Vertical}.Layout(p.gtx,
+								layout.Rigid(func() {
+									layout.Flex{}.Layout(p.gtx,
+										layout.Rigid(func() {
+											layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
+												p.selectedAccountNameLabel.Layout(p.gtx)
+											})
+										}),
+										layout.Rigid(func() {
+											layout.Inset{Left: unit.Dp(20)}.Layout(p.gtx, func() {
+												p.selectedAccountBalanceLabel.Layout(p.gtx)
+											})
+										}),
+									)
+								}),
+								layout.Rigid(func() {
+									layout.Inset{Left: unit.Dp(20)}.Layout(p.gtx, func() {
+										layout.Flex{}.Layout(p.gtx,
+											layout.Rigid(func() {
+												layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
+													p.selectedWalletNameLabel.Layout(p.gtx)
+												})
+											}),
+											layout.Rigid(func() {
+												layout.Inset{Left: unit.Dp(22)}.Layout(p.gtx, func() {
+													p.selectedWalletBalLabel.Layout(p.gtx)
+												})
+											}),
+										)
+									})
+								}),
+							)
+						})
+					}
+					decredmaterial.Card{}.Layout(p.gtx, selectedDetails)
+				}),
+			)
+		}),
+	)
+}
+
+func (p *receivePage) qrCodeAddressColumn(common pageCommon) {
+	addrs := common.info.Wallets[*common.selectedWallet].Accounts[0].CurrentAddress
+	qrCode, err := qrcode.New(addrs, qrcode.Highest)
+	if err != nil {
+		// win.err = err.Error()
+		return
+	}
+	// win.err = ""
+	qrCode.DisableBorder = true
+	layout.Flex{Axis: layout.Vertical}.Layout(p.gtx,
+		layout.Rigid(func() {
+			layout.Inset{Top: unit.Dp(16)}.Layout(p.gtx, func() {
 				layout.Flex{}.Layout(p.gtx,
-					layout.Flexed(.5, func() {
-						p.infoBtn.Layout(p.gtx, &p.infoBtnW)
+					layout.Flexed(0.2, func() {
 					}),
-					layout.Flexed(.5, func() {
-						p.moreBtn.Layout(p.gtx, &p.moreBtnW)
+					layout.Flexed(1, func() {
+						img := common.theme.Image(paint.NewImageOp(qrCode.Image(520)))
+						img.Src.Rect.Max.X = 521
+						img.Src.Rect.Max.Y = 521
+						img.Scale = 0.5
+						img.Layout(p.gtx)
+					}),
+				)
+			})
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Top: unit.Dp(16)}.Layout(p.gtx, func() {
+				layout.Flex{}.Layout(p.gtx,
+					layout.Flexed(0.1, func() {
+					}),
+					layout.Flexed(1, func() {
+						p.receiveAddressColumn(addrs)
 					}),
 				)
 			})
@@ -151,130 +234,33 @@ func (p *receivePage) pageHeaderColumn() {
 	)
 }
 
-// func (win *Window) qrCodeAddressColumn() {
-// 	addrs := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount].CurrentAddress
-// 	qrCode, err := qrcode.New(addrs, qrcode.Highest)
-// 	if err != nil {
-// 		win.err = err.Error()
-// 		return
-// 	}
-// 	win.err = ""
-// 	qrCode.DisableBorder = true
-// 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 		layout.Rigid(func() {
-// 			layout.Inset{Top: unit.Dp(16)}.Layout(gtx, func() {
-// 				layout.Flex{}.Layout(gtx,
-// 					layout.Flexed(0.2, func() {
-// 					}),
-// 					layout.Flexed(1, func() {
-// 						img := win.theme.Image(paint.NewImageOp(qrCode.Image(520)))
-// 						img.Src.Rect.Max.X = 521
-// 						img.Src.Rect.Max.Y = 521
-// 						img.Scale = 0.5
-// 						img.Layout(gtx)
-// 					}),
-// 				)
-// 			})
-// 		}),
-// 		layout.Rigid(func() {
-// 			layout.Inset{Top: unit.Dp(16)}.Layout(gtx, func() {
-// 				layout.Flex{}.Layout(gtx,
-// 					layout.Flexed(0.1, func() {
-// 					}),
-// 					layout.Flexed(1, func() {
-// 						win.receiveAddressColumn(addrs)
-// 					}),
-// 				)
-// 			})
-// 		}),
-// 	)
-// }
+func (p *receivePage) receiveAddressColumn(addrs string) {
+	layout.Flex{}.Layout(p.gtx,
+		layout.Rigid(func() {
+			p.receiveAddressLabel.Text = addrs
+			p.receiveAddressLabel.Layout(p.gtx)
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Left: unit.Dp(16)}.Layout(p.gtx, func() {
+				p.copyBtn.Layout(p.gtx, &p.copyBtnW)
+			})
+		}),
+	)
+}
 
-// func (win *Window) receiveAddressColumn(addrs string) {
-// 	layout.Flex{}.Layout(gtx,
-// 		layout.Rigid(func() {
-// 			win.outputs.receiveAddressLabel.Text = addrs
-// 			win.outputs.receiveAddressLabel.Layout(gtx)
-// 		}),
-// 		layout.Rigid(func() {
-// 			layout.Inset{Left: unit.Dp(16)}.Layout(gtx, func() {
-// 				win.outputs.copy.Layout(gtx, &win.inputs.receiveIcons.copy)
-// 			})
-// 		}),
-// 	)
-// }
-
-// func (win *Window) selectedAcountColumn() {
-// 	info := win.walletInfo.Wallets[win.selected]
-// 	win.outputs.selectedWalletNameLabel.Text = info.Name
-// 	win.outputs.selectedWalletBalLabel.Text = info.Balance
-
-// 	account := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount]
-// 	win.outputs.selectedAccountNameLabel.Text = account.Name
-// 	win.outputs.selectedAccountBalanceLabel.Text = account.SpendableBalance
-
-// 	layout.Flex{}.Layout(gtx,
-// 		layout.Flexed(0.22, func() {
-// 		}),
-// 		layout.Flexed(1, func() {
-// 			layout.Stack{}.Layout(gtx,
-// 				layout.Stacked(func() {
-// 					selectedDetails := func() {
-// 						layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-// 							layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 								layout.Rigid(func() {
-// 									layout.Flex{}.Layout(gtx,
-// 										layout.Rigid(func() {
-// 											layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
-// 												win.outputs.selectedAccountNameLabel.Layout(gtx)
-// 											})
-// 										}),
-// 										layout.Rigid(func() {
-// 											layout.Inset{Left: unit.Dp(20)}.Layout(gtx, func() {
-// 												win.outputs.selectedAccountBalanceLabel.Layout(gtx)
-// 											})
-// 										}),
-// 									)
-// 								}),
-// 								layout.Rigid(func() {
-// 									layout.Inset{Left: unit.Dp(20)}.Layout(gtx, func() {
-// 										layout.Flex{}.Layout(gtx,
-// 											layout.Rigid(func() {
-// 												layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
-// 													win.outputs.selectedWalletNameLabel.Layout(gtx)
-// 												})
-// 											}),
-// 											layout.Rigid(func() {
-// 												layout.Inset{Left: unit.Dp(22)}.Layout(gtx, func() {
-// 													win.outputs.selectedWalletBalLabel.Layout(gtx)
-// 												})
-// 											}),
-// 										)
-// 									})
-// 								}),
-// 							)
-// 						})
-// 					}
-// 					decreddecredmaterial.Card{}.Layout(gtx, selectedDetails)
-// 				}),
-// 			)
-// 		}),
-// 	)
-// }
-
-// func (win *Window) generateNewAddress() {
-// 	layout.Flex{}.Layout(gtx,
-// 		layout.Flexed(0.71, func() {
-// 		}),
-// 		layout.Flexed(1, func() {
-// 			inset := layout.Inset{
-// 				Top: unit.Dp(45),
-// 			}
-// 			inset.Layout(gtx, func() {
-// 				gtx.Constraints.Width.Min = 40
-// 				gtx.Constraints.Height.Min = 40
-// 				win.outputs.newAddressDiag.Layout(gtx, &win.inputs.receiveIcons.newAddressDiag)
-// 			})
-// 		}),
-// 	)
-// }
+func (p *receivePage) generateNewAddress() {
+	layout.Flex{}.Layout(p.gtx,
+		layout.Flexed(0.71, func() {
+		}),
+		layout.Flexed(1, func() {
+			inset := layout.Inset{
+				Top: unit.Dp(45),
+			}
+			inset.Layout(p.gtx, func() {
+				p.gtx.Constraints.Width.Min = 40
+				p.gtx.Constraints.Height.Min = 40
+				p.newAddrBtn.Layout(p.gtx, &p.newAddrBtnW)
+			})
+		}),
+	)
+}

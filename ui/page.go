@@ -12,9 +12,9 @@ import (
 type pageIcons struct {
 	contentAdd, contentClear, contentCreate, navigationCheck,
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
-	actionCheckCircle, contentCopy, actionInfo, navigationMore *decredmaterial.Icon
+	actionCheckCircle, contentCopy, actionInfo, navigationMore,
+	navigationArrowBack *decredmaterial.Icon
 	overviewIcon, walletIcon image.Image
-	navigationArrowBack      *decredmaterial.Icon
 }
 
 type pageCommon struct {
@@ -35,8 +35,6 @@ func (win *Window) addPages() {
 		contentClear:               mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
 		contentCreate:              mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
 		navigationCheck:            mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
-		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
-		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 		contentSend:                mustIcon(decredmaterial.NewIcon(icons.ContentSend)),
 		contentAddBox:              mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)),
 		contentRemove:              mustIcon(decredmaterial.NewIcon(icons.ContentRemove)),
@@ -46,6 +44,8 @@ func (win *Window) addPages() {
 		contentCopy:     mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
 		actionInfo:      mustIcon(decredmaterial.NewIcon(icons.ActionInfo)),
 		navigationMore:  mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
+		overviewIcon:    mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
+		walletIcon:      mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
@@ -62,8 +62,8 @@ func (win *Window) addPages() {
 			Icon:  icons.overviewIcon,
 		},
 		{
-			// Label: win.theme.Body1("Receive"),
-			// Icon:  icons.overviewIcon,
+			Label: win.theme.Body1("Receive"),
+			Icon:  icons.receiveIcon,
 		},
 		{
 			Label: win.theme.Body1("Settings"),
@@ -89,7 +89,7 @@ func (win *Window) addPages() {
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage
 	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageReceive] = win.Receive
+	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
@@ -97,7 +97,7 @@ func (win *Window) addPages() {
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
-	navs := []string{PageOverview, PageWallet, PageTransactions, PageOverview}
+	navs := []string{PageOverview, PageWallet, PageTransactions, PageReceive, PageOverview}
 	toMax(gtx)
 	page.navTab.Separator = true
 	page.navTab.Layout(gtx, body)
