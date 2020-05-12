@@ -90,7 +90,12 @@ func (p *receivePage) Layout(common pageCommon) {
 			}),
 		)
 	}
-	common.LayoutWithWallets(p.gtx, body)
+
+	body2 := func() {
+		common.accountTab(p.gtx, body)
+	}
+
+	common.LayoutWithWallets(p.gtx, body2)
 }
 
 func (p *receivePage) ReceivePageContents(common pageCommon) {
@@ -105,7 +110,9 @@ func (p *receivePage) ReceivePageContents(common pageCommon) {
 						p.qrCodeAddressColumn(common)
 					},
 					func() {
-						p.receiveAddressColumn()
+						if p.addrs != "" {
+							p.receiveAddressColumn()
+						}
 					},
 					func() {
 						layout.Flex{}.Layout(p.gtx,
@@ -157,7 +164,7 @@ func (p *receivePage) selectedAcountColumn(common pageCommon) {
 	p.selectedWalletNameLabel.Text = current.Name
 	p.selectedWalletBalLabel.Text = current.Balance
 
-	account := common.info.Wallets[*common.selectedWallet].Accounts[0]
+	account := common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount]
 	p.selectedAccountNameLabel.Text = account.Name
 	p.selectedAccountBalanceLabel.Text = account.SpendableBalance
 
@@ -179,20 +186,18 @@ func (p *receivePage) selectedAcountColumn(common pageCommon) {
 					)
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(20)}.Layout(p.gtx, func() {
-						layout.Flex{}.Layout(p.gtx,
-							layout.Rigid(func() {
-								layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
-									p.selectedWalletNameLabel.Layout(p.gtx)
-								})
-							}),
-							layout.Rigid(func() {
-								layout.Inset{Left: unit.Dp(22)}.Layout(p.gtx, func() {
-									p.selectedWalletBalLabel.Layout(p.gtx)
-								})
-							}),
-						)
-					})
+					layout.Flex{}.Layout(p.gtx,
+						layout.Rigid(func() {
+							layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
+								p.selectedWalletNameLabel.Layout(p.gtx)
+							})
+						}),
+						layout.Rigid(func() {
+							layout.Inset{Left: unit.Dp(22)}.Layout(p.gtx, func() {
+								p.selectedWalletBalLabel.Layout(p.gtx)
+							})
+						}),
+					)
 				}),
 			)
 		})
@@ -201,10 +206,10 @@ func (p *receivePage) selectedAcountColumn(common pageCommon) {
 }
 
 func (p *receivePage) qrCodeAddressColumn(common pageCommon) {
-	p.addrs = common.info.Wallets[*common.selectedWallet].Accounts[0].CurrentAddress
+	p.addrs = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress
 	qrCode, err := qrcode.New(p.addrs, qrcode.Highest)
 	if err != nil {
-		// win.err = err.Error()
+		log.Debug("Error generating address qrCode: " + err.Error())
 		return
 	}
 	// win.err = ""
@@ -287,20 +292,20 @@ func (p *receivePage) Handle(common pageCommon) {
 
 	if p.newAddrBtnW.Clicked(p.gtx) {
 		wallet := common.info.Wallets[*common.selectedWallet]
-		account := common.info.Wallets[*common.selectedWallet].Accounts[0]
+		account := common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount]
 
 		addr, err := common.wallet.NextAddress(wallet.ID, account.Number)
 		if err != nil {
 			log.Debug("Error generating new address" + err.Error())
 			// win.err = err.Error()
 		} else {
-			common.info.Wallets[*common.selectedWallet].Accounts[0].CurrentAddress = addr
+			common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress = addr
 			p.isNewAddr = false
 		}
 	}
 
 	if p.copyBtnW.Clicked(p.gtx) {
-		clipboard.WriteAll(common.info.Wallets[*common.selectedWallet].Accounts[0].CurrentAddress)
+		clipboard.WriteAll(common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress)
 		p.addressCopiedLabel.Text = "Address Copied"
 		time.AfterFunc(time.Second*3, func() {
 			p.addressCopiedLabel.Text = ""

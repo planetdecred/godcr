@@ -18,15 +18,17 @@ type pageIcons struct {
 }
 
 type pageCommon struct {
-	wallet         *wallet.Wallet
-	info           *wallet.MultiWalletInfo
-	selectedWallet *int
-	gtx            *layout.Context
-	theme          *decredmaterial.Theme
-	icons          pageIcons
-	page           *string
-	navTab         *decredmaterial.Tabs
-	walletsTab     *decredmaterial.Tabs
+	wallet          *wallet.Wallet
+	info            *wallet.MultiWalletInfo
+	selectedWallet  *int
+	selectedAccount *int
+	gtx             *layout.Context
+	theme           *decredmaterial.Theme
+	icons           pageIcons
+	page            *string
+	navTab          *decredmaterial.Tabs
+	walletsTab      *decredmaterial.Tabs
+	accountsTab     *decredmaterial.Tabs
 }
 
 func (win *Window) addPages() {
@@ -63,7 +65,7 @@ func (win *Window) addPages() {
 		},
 		{
 			Label: win.theme.Body1("Receive"),
-			Icon:  icons.receiveIcon,
+			Icon:  icons.overviewIcon,
 		},
 		{
 			Label: win.theme.Body1("Settings"),
@@ -72,15 +74,17 @@ func (win *Window) addPages() {
 	})
 
 	common := pageCommon{
-		wallet:         win.wallet,
-		info:           win.walletInfo,
-		selectedWallet: &win.selected,
-		gtx:            win.gtx,
-		theme:          win.theme,
-		icons:          icons,
-		page:           &win.current,
-		navTab:         tabs,
-		walletsTab:     decredmaterial.NewTabs(),
+		wallet:          win.wallet,
+		info:            win.walletInfo,
+		selectedWallet:  &win.selected,
+		selectedAccount: &win.selectedAccount,
+		gtx:             win.gtx,
+		theme:           win.theme,
+		icons:           icons,
+		page:            &win.current,
+		navTab:          tabs,
+		walletsTab:      decredmaterial.NewTabs(),
+		accountsTab:     decredmaterial.NewTabs(),
 		//cancelDialogW:  win.theme.PlainIconButton(icons.contentClear),
 	}
 
@@ -116,12 +120,47 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	}
 	page.walletsTab.SetTabs(wallets)
 	page.walletsTab.Position = decredmaterial.Top
+	if page.accountsTab.Changed() {
+		*page.selectedAccount = page.accountsTab.Selected
+	}
+
+	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
+	for i := range page.info.Wallets[*page.selectedWallet].Accounts {
+		accounts[i] = decredmaterial.TabItem{
+			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
+		}
+	}
+	page.accountsTab.SetTabs(accounts)
+	page.accountsTab.Position = decredmaterial.Top
+	if page.accountsTab.Changed() {
+		*page.selectedAccount = page.accountsTab.Selected
+	}
+	page.accountsTab.Separator = false
+
 	bd := func() {
 		if page.walletsTab.Changed() {
 			*page.selectedWallet = page.walletsTab.Selected
+			*page.selectedAccount = 0
+			page.accountsTab.Selected = 0
 		}
 		page.walletsTab.Separator = false
 		page.walletsTab.Layout(gtx, body)
 	}
 	page.Layout(gtx, bd)
+}
+
+func (page pageCommon) accountTab(gtx *layout.Context, body layout.Widget) {
+	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
+	for i := range page.info.Wallets[*page.selectedWallet].Accounts {
+		accounts[i] = decredmaterial.TabItem{
+			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
+		}
+	}
+	page.accountsTab.SetTabs(accounts)
+	page.accountsTab.Position = decredmaterial.Top
+	if page.accountsTab.Changed() {
+		*page.selectedAccount = page.accountsTab.Selected
+	}
+	page.accountsTab.Separator = false
+	page.accountsTab.Layout(gtx, body)
 }
