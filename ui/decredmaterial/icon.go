@@ -7,8 +7,8 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
- 	_ "image/png" // fixes unknown format error when trying to decode png images
- 	
+	_ "image/png" // fixes unknown format error when trying to decode png images
+
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
