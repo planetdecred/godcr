@@ -54,8 +54,8 @@ type Editor struct {
 }
 
 func (t *Theme) Editor(hint string) Editor {
-	errorLabel := t.Caption("Field is required")
-	errorLabel.Color = color.RGBA{255, 0, 0, 255}
+	errorLabel := t.Caption("")
+	errorLabel.Color = t.Color.Danger
 
 	return Editor{
 		TextSize:     t.TextSize,
@@ -95,15 +95,19 @@ func (e Editor) Layout(gtx *layout.Context) {
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
+	if e.EditorWdgt.Focused() || e.EditorWdgt.Len() != 0 {
+		e.TitleLabel.Text = e.Hint
+		e.LineColor = color.RGBA{0, 137, 123, 255}
+		e.Hint = ""
+	}
 
 	layout.UniformInset(unit.Dp(2)).Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
-				if e.EditorWdgt.Focused() || e.EditorWdgt.Len() != 0 {
-					e.TitleLabel.Text = e.Hint
-					e.Hint = ""
-				}
 				if e.IsTitleLabel {
+					if e.EditorWdgt.Focused() {
+						e.TitleLabel.Color = color.RGBA{0, 137, 123, 255}
+					}
 					e.TitleLabel.Layout(gtx)
 				}
 			}),
@@ -129,7 +133,7 @@ func (e Editor) Layout(gtx *layout.Context) {
 							}),
 							layout.Rigid(func() {
 								if e.IsRequired {
-									if e.EditorWdgt.Len() != 0 {
+									if !e.EditorWdgt.Focused() && e.EditorWdgt.Len() == 0 {
 										e.ErrorLabel.Text = "Field is required"
 									}
 									e.ErrorLabel.Layout(gtx)
@@ -191,7 +195,7 @@ func (e Editor) EditorWdgtLine(gtx *layout.Context) {
 			rect := f32.Rectangle{
 				Max: f32.Point{
 					X: float32(gtx.Constraints.Width.Max),
-					Y: 1,
+					Y: 2,
 				},
 			}
 			op.TransformOp{}.Offset(f32.Point{
