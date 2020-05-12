@@ -63,7 +63,7 @@ func (t *Theme) Editor(hint string) Editor {
 		shaper:       t.Shaper,
 		Hint:         hint,
 		HintColor:    t.Color.Hint,
-		TitleLabel:   t.Body1(""),
+		TitleLabel:   t.Body2(""),
 		flexWidth:    1,
 		IsTitleLabel: true,
 		LineColor:    t.Color.Text,
