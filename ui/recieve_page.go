@@ -91,11 +91,9 @@ func (p *receivePage) Layout(common pageCommon) {
 		)
 	}
 
-	body2 := func() {
+	common.LayoutWithWallets(p.gtx, func() {
 		common.accountTab(p.gtx, body)
-	}
-
-	common.LayoutWithWallets(p.gtx, body2)
+	})
 }
 
 func (p *receivePage) ReceivePageContents(common pageCommon) {
