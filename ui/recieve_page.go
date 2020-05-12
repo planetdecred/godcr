@@ -23,9 +23,9 @@ type receivePage struct {
 	isNewAddr, isInfo bool
 	addrs             string
 
-	newAddrBtn, gotItBtn                                 decredmaterial.Button
-	copyBtn, infoBtn, moreBtn                            decredmaterial.IconButton
-	copyBtnW, infoBtnW, moreBtnW, gotItBtnW, newAddrBtnW widget.Button
+	newAddrBtn, minInfo                                 decredmaterial.Button
+	copyBtn, infoBtn, moreBtn                           decredmaterial.IconButton
+	copyBtnW, infoBtnW, moreBtnW, minInfoW, newAddrBtnW widget.Button
 
 	selectedAccountNameLabel, selectedAccountBalanceLabel decredmaterial.Label
 	receiveAddressLabel, addressCopiedLabel, pageInfo     decredmaterial.Label
@@ -56,7 +56,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		moreBtn:                     moreBtn,
 		infoBtn:                     infoBtn,
 		copyBtn:                     copyBtn,
-		gotItBtn:                    common.theme.Button("Got It"),
+		minInfo:                     common.theme.Button("Got It"),
 		newAddrBtn:                  common.theme.Button("Generate new address"),
 		receiveAddressLabel:         receiveAddressLabel,
 		pageInfo:                    pageInfo,
@@ -207,7 +207,7 @@ func (p *receivePage) qrCodeAddressColumn(common pageCommon) {
 	p.addrs = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress
 	qrCode, err := qrcode.New(p.addrs, qrcode.Highest)
 	if err != nil {
-		log.Debug("Error generating address qrCode: " + err.Error())
+		log.Error("Error generating address qrCode: " + err.Error())
 		return
 	}
 	// win.err = ""
@@ -260,8 +260,8 @@ func (p *receivePage) infoDiag() {
 					})
 				}),
 				layout.Rigid(func() {
-					p.gotItBtn.TextSize = syncButtonTextSize
-					p.gotItBtn.Layout(p.gtx, &p.gotItBtnW)
+					p.minInfo.TextSize = syncButtonTextSize
+					p.minInfo.Layout(p.gtx, &p.minInfoW)
 				}),
 			)
 		})
@@ -284,7 +284,7 @@ func (p *receivePage) Handle(common pageCommon) {
 		}
 	}
 
-	if p.gotItBtnW.Clicked(p.gtx) {
+	if p.minInfoW.Clicked(p.gtx) {
 		p.isInfo = false
 	}
 

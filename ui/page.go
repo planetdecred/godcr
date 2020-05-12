@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -73,6 +74,9 @@ func (win *Window) addPages() {
 		},
 	})
 
+	accountsTab := decredmaterial.NewTabs()
+	accountsTab.Position = decredmaterial.Left
+	accountsTab.Separator = false
 	common := pageCommon{
 		wallet:          win.wallet,
 		info:            win.walletInfo,
@@ -84,7 +88,7 @@ func (win *Window) addPages() {
 		page:            &win.current,
 		navTab:          tabs,
 		walletsTab:      decredmaterial.NewTabs(),
-		accountsTab:     decredmaterial.NewTabs(),
+		accountsTab:     accountsTab,
 		//cancelDialogW:  win.theme.PlainIconButton(icons.contentClear),
 	}
 
@@ -157,10 +161,17 @@ func (page pageCommon) accountTab(gtx *layout.Context, body layout.Widget) {
 		}
 	}
 	page.accountsTab.SetTabs(accounts)
-	page.accountsTab.Position = decredmaterial.Top
 	if page.accountsTab.Changed() {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
-	page.accountsTab.Separator = false
-	page.accountsTab.Layout(gtx, body)
+	layout.Flex{}.Layout(gtx,
+		layout.Rigid(func() {
+			layout.Inset{Top: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func() {
+				page.theme.H6("Accounts: ").Layout(gtx)
+			})
+		}),
+		layout.Rigid(func() {
+			page.accountsTab.Layout(gtx, body)
+		}),
+	)
 }
