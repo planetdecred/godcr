@@ -61,7 +61,8 @@ func (wal *Wallet) RestoreWallet(seed, passphrase string, errChan chan error) {
 
 // DeleteWallet deletes a wallet.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) DeleteWallet(walletID int, passphrase string) {
+func (wal *Wallet) DeleteWallet(walletID int, passphrase string) chan error {
+	errChan := make(chan error, 1)
 	log.Debug("Deleting Wallet")
 	go func() {
 		log.Debugf("Wallet %d: %+v", walletID, wal.multi.WalletWithID(walletID))
@@ -70,16 +71,18 @@ func (wal *Wallet) DeleteWallet(walletID int, passphrase string) {
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 				err = ErrBadPass
 			}
+			errChan <- err
 			wal.Send <- ResponseError(InternalWalletError{
 				Message:  "Could not delete wallet",
 				Affected: []int{walletID},
 				Err:      err,
 			})
-
 		} else {
 			wal.Send <- ResponseResp(DeletedWallet{ID: walletID})
 		}
 	}()
+
+	return errChan
 }
 
 // AddAccount adds an account to a wallet.

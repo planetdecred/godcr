@@ -112,6 +112,7 @@ func (win *Window) Loop(shutdown chan int) {
 					return
 				}
 				win.err = err
+				*win.lastErr = e.Err
 				if win.states.loading {
 					log.Warn("Attemping to get multiwallet info")
 					win.wallet.GetMultiWalletInfo()
