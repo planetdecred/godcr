@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"gioui.org/io/key"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
@@ -340,15 +339,3 @@ func (win *Window) resetSeeds() {
 	}
 }
 
-// KeysEventsHandler handlers all pressed keys events
-func (win *Window) KeysEventsHandler(evt *key.Event) {
-	if evt.Name == key.NameTab {
-		for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-			editor := &win.inputs.seedEditors.editors[i]
-			if editor.Focused() && win.inputs.seedsSuggestions != nil {
-				editor.SetText(win.inputs.seedsSuggestions[0].text)
-				editor.Move(len(win.inputs.seedsSuggestions[0].text))
-			}
-		}
-	}
-}

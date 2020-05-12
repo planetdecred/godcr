@@ -5,7 +5,6 @@ import (
 	"gioui.org/unit"
 )
 
-
 func (win *Window) DeleteDiag() {
 	win.theme.Surface(win.gtx, func() {
 		toMax(win.gtx)

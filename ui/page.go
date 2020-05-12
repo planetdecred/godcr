@@ -3,6 +3,7 @@ package ui
 import (
 	"image"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -31,6 +32,7 @@ type pageCommon struct {
 	walletsTab      *decredmaterial.Tabs
 	accountsTab     *decredmaterial.Tabs
 	errorChannels   map[string]chan error
+	keyEvents	   chan *key.Event
 }
 
 func (win *Window) addPages() {
@@ -93,6 +95,7 @@ func (win *Window) addPages() {
 		errorChannels: map[string]chan error{
 			PageSignMessage: make(chan error),
 		},
+		keyEvents: 		win.keyEvents,
 		//cancelDialogW:  win.theme.PlainIconButton(icons.contentClear),
 	}
 

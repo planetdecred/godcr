@@ -64,9 +64,6 @@ type outputs struct {
 	tabs                                     []decredmaterial.TabItem
 	notImplemented, pageTitle, pageInfo, err decredmaterial.Label
 
-	seedEditors      []decredmaterial.Editor
-	seedsSuggestions []decredmaterial.Button
-
 	//receive page labels
 	selectedAccountNameLabel, selectedAccountBalanceLabel           decredmaterial.Label
 	receiveAddressLabel, accountModalTitleLabel, addressCopiedLabel decredmaterial.Label

@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"strings"
 
+	"gioui.org/io/key"
+
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/wallet"
 
@@ -38,11 +40,11 @@ type createRestore struct {
 	gtx             *layout.Context
 	theme           *decredmaterial.Theme
 	wal             *wallet.Wallet
+	keyEvent        chan *key.Event
 	err             func()
 	walletExists    bool
 	showRestore     bool
 	showPassword    bool
-	createNewWallet bool
 
 	closeCreateRestore    decredmaterial.IconButton
 	backToMain            decredmaterial.IconButton
@@ -54,7 +56,6 @@ type createRestore struct {
 	seedSuggestionButtons []decredmaterial.Button
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
-	closeModal            decredmaterial.Editor
 	addWallet             decredmaterial.Button
 
 	seedEditorWidgets           seedEditors
@@ -62,7 +63,6 @@ type createRestore struct {
 	toCreateWalletWidget        *widget.Button
 	togglePasswordModalWidget   *widget.Button
 	backCreateRestoreWidget     *widget.Button
-	// backToMainWidget            *widget.Button
 	toggleDisplayRestoreWidget  *widget.Button
 	spendingPasswordWidget      *widget.Editor
 	matchSpendingPasswordWidget *widget.Editor
@@ -72,14 +72,14 @@ type createRestore struct {
 // Loading lays out the loading widget with a faded background
 func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg := createRestore{
-		gtx:                     common.gtx,
-		theme:                   common.theme,
-		wal:                     common.wallet,
-		err:                     win.Err,
-		walletExists:            win.walletInfo.LoadedWallets > 0,
-		toCreateWalletWidget:    new(widget.Button),
-		backCreateRestoreWidget: new(widget.Button),
-		// backToMainWidget:            new(widget.Button),
+		gtx:                         common.gtx,
+		theme:                       common.theme,
+		wal:                         common.wallet,
+		keyEvent:                    common.keyEvents,
+		err:                         win.Err,
+		walletExists:                win.walletInfo.LoadedWallets > 0,
+		toCreateWalletWidget:        new(widget.Button),
+		backCreateRestoreWidget:     new(widget.Button),
 		toggleDisplayRestoreWidget:  new(widget.Button),
 		togglePasswordModalWidget:   new(widget.Button),
 		spendingPasswordWidget:      new(widget.Editor),
@@ -109,7 +109,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	pg.hidePasswordModal = common.theme.Button("cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
-	pg.hidePasswordModal.Background = color.RGBA{R:238, G:238, B:238, A: 255}
+	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
 	for i := 0; i <= 32; i++ {
 		pg.seedEditors = append(pg.seedEditors, common.theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
@@ -401,13 +401,13 @@ func (pg *createRestore) validatePasswords() string {
 	if match == "" {
 		pg.matchSpendingPassword.HintColor = pg.theme.Color.Danger
 		// win.err = "Enter new wallet password again and it cannot be empty."
-		fmt.Printf( "Enter new wallet password again and it cannot be empty.\n")
+		fmt.Printf("Enter new wallet password again and it cannot be empty.\n")
 		return ""
 	}
 
 	if match != pass {
 		// win.err = "New wallet passwords does no match. Try again."
-		fmt.Printf( "New wallet passwords does no match. Try again. \n")
+		fmt.Printf("New wallet passwords does no match. Try again. \n")
 		return ""
 	}
 
@@ -453,7 +453,6 @@ func (pg *createRestore) handle(common pageCommon, win *Window) {
 		fmt.Printf("clicked back button")
 	}
 
-
 	for pg.toCreateWalletWidget.Clicked(gtx) {
 		pg.showPassword = true
 	}
@@ -482,6 +481,21 @@ func (pg *createRestore) handle(common pageCommon, win *Window) {
 		log.Debug("Create Wallet clicked")
 		win.states.loading = true
 		return
+	}
+
+	// handle key events
+	select {
+	case evt := <-pg.keyEvent:
+		if evt.Name == key.NameTab {
+			for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
+				editor := &pg.seedEditorWidgets.editors[i]
+				if editor.Focused() && pg.seedSuggestionButtonWidgets != nil {
+					editor.SetText(pg.seedSuggestionButtonWidgets[0].text)
+					editor.Move(len(pg.seedSuggestionButtonWidgets[0].text))
+				}
+			}
+		}
+	default:
 	}
 
 	pg.editorSeedsEventsHandler()
