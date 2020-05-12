@@ -156,6 +156,9 @@ func (win *Window) Loop(shutdown chan int) {
 				win.gtx.Reset(evt.Config, evt.Size)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
+				if win.walletInfo.LoadedWallets == 0 {
+					win.current = PageCreateRestore
+				}
 				s := win.states
 				if s.loading {
 					win.Loading()

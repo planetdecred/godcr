@@ -68,66 +68,8 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
-	// CREATE WALLET
-	if win.inputs.createDiag.Clicked(win.gtx) {
-		win.dialog = win.CreateDiag
-		win.states.dialog = true
-	}
-
-	if win.inputs.toCreateRestorePage.Clicked(win.gtx) {
-		win.states.createRestoreWallet = true
-	}
-
-	if win.inputs.createWallet.Clicked(win.gtx) {
-		pass := win.validatePasswords()
-		if pass == "" {
-			return
-		}
-		win.wallet.CreateWallet(pass)
-		win.resetPasswords()
-		log.Debug("Create Wallet clicked")
-		win.states.loading = true
-		return
-	}
-
-	if win.inputs.backCreateRestore.Clicked(win.gtx) {
-		if win.states.restoreWallet {
-			win.states.restoreWallet = false
-			win.states.createRestoreWallet = true
-			return
-		}
-		win.states.createRestoreWallet = false
-		return
-	}
-
-	// RESTORE WALLET
-	if win.inputs.showRestoreWallet.Clicked(win.gtx) {
-		win.states.restoreWallet = true
-		return
-	}
-
-	win.editorSeedsEventsHandler()
-	win.onSuggestionSeedsClicked()
-
-	if win.inputs.restoreDiag.Clicked(win.gtx) && win.validateSeeds() != "" {
-		win.dialog = win.RestoreDiag
-		win.states.dialog = true
-	}
-
-	if win.inputs.restoreWallet.Clicked(win.gtx) {
-		pass := win.validatePasswords()
-		if pass == "" {
-			return
-		}
-
-		win.wallet.RestoreWallet(win.validateSeeds(), pass)
-		win.states.loading = true
-		log.Debug("Restore Wallet clicked")
-		return
-	}
 
 	// RENAME WALLET
-
 	if win.inputs.toggleWalletRename.Clicked(win.gtx) {
 		if win.states.renamingWallet {
 			win.outputs.toggleWalletRename.Icon = win.outputs.ic.create
@@ -392,97 +334,9 @@ func (win *Window) resetButton() {
 	win.outputs.savePassword.Background = win.theme.Color.Primary
 }
 
-func (win *Window) validateSeeds() string {
-	text := ""
-	win.err = ""
-
-	for i, editor := range win.inputs.seedEditors.editors {
-		if editor.Text() == "" {
-			win.outputs.seedEditors[i].HintColor = win.theme.Color.Danger
-			return ""
-		}
-
-		text += editor.Text() + " "
-	}
-
-	if !dcrlibwallet.VerifySeed(text) {
-		win.err = "Invalid seed phrase"
-		return ""
-	}
-
-	return text
-}
-
 func (win *Window) resetSeeds() {
 	for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
 		win.inputs.seedEditors.editors[i].SetText("")
-	}
-}
-
-func (win *Window) editorSeedsEventsHandler() {
-	for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-		editor := &win.inputs.seedEditors.editors[i]
-
-		if editor.Focused() && win.inputs.seedEditors.focusIndex != i {
-			win.inputs.seedsSuggestions = nil
-			win.outputs.seedsSuggestions = nil
-			win.inputs.seedEditors.focusIndex = i
-
-			return
-		}
-
-		for _, e := range editor.Events(win.gtx) {
-			switch e.(type) {
-			case widget.ChangeEvent:
-				win.inputs.seedsSuggestions = nil
-				win.outputs.seedsSuggestions = nil
-
-				if strings.Trim(editor.Text(), " ") == "" {
-					return
-				}
-
-				for _, word := range dcrlibwallet.PGPWordList() {
-					if strings.HasPrefix(strings.ToLower(word), strings.ToLower(editor.Text())) {
-						if len(win.inputs.seedsSuggestions) < 2 {
-							var btn struct {
-								text   string
-								button widget.Button
-							}
-
-							btn.text = word
-							win.inputs.seedsSuggestions = append(win.inputs.seedsSuggestions, btn)
-							win.outputs.seedsSuggestions = append(win.outputs.seedsSuggestions, win.theme.Button(word))
-						}
-					}
-				}
-
-			case widget.SubmitEvent:
-				if i < len(win.inputs.seedEditors.editors)-1 {
-					win.inputs.seedEditors.editors[i+1].Focus()
-				}
-			}
-		}
-	}
-}
-
-func (win *Window) onSuggestionSeedsClicked() {
-	for i := 0; i < len(win.inputs.seedsSuggestions); i++ {
-		btn := win.inputs.seedsSuggestions[i]
-		if btn.button.Clicked(win.gtx) {
-			for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-				editor := &win.inputs.seedEditors.editors[i]
-				if editor.Focused() {
-					editor.SetText(btn.text)
-					editor.Move(len(btn.text))
-
-					if i < len(win.inputs.seedEditors.editors)-1 {
-						win.inputs.seedEditors.editors[i+1].Focus()
-					} else {
-						win.inputs.seedEditors.focusIndex = -1
-					}
-				}
-			}
-		}
 	}
 }
 

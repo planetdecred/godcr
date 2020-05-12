@@ -11,7 +11,6 @@ type states struct {
 	dialog              bool // true if the window dialog modal is open
 	renamingWallet      bool // true if the wallets-page is renaming a wallet
 	createRestoreWallet bool
-	restoreWallet       bool
 }
 
 // updateStates changes the wallet state based on the received update

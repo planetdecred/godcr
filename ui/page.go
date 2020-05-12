@@ -100,8 +100,9 @@ func (win *Window) addPages() {
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)
+	win.pages[PageReceive] = win.Receive
+	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
 	win.pages[PageReceive] = win.ReceivePage(common)
-	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
 	win.pages[PageSignMessage] = win.SignMessagePage(common)

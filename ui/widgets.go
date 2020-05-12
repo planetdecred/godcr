@@ -13,8 +13,8 @@ import (
 )
 
 type inputs struct {
-	createDiag, deleteDiag, cancelDialog                                 widget.Button
-	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
+	deleteDiag, cancelDialog                                             widget.Button
+	deleteWallet, renameWallet                                           widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button
@@ -48,13 +48,13 @@ type outputs struct {
 	icons struct {
 		add, check, cancel, sync, info, more, copy decredmaterial.IconButton
 	}
-	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
-	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
-	toReceive                                                                  decredmaterial.IconButton
-	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
-	verifyMessDiag                                                             decredmaterial.Button
+	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename decredmaterial.Editor
+	toOverview, toWallets, toTransactions, toSend, toSettings            decredmaterial.IconButton
+	toReceive                                                            decredmaterial.IconButton
+	cancelDiag, addAcctDiag                                              decredmaterial.IconButton
+	verifyMessDiag                                  decredmaterial.Button
 
-	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
+	deleteWallet, deleteDiag, gotItDiag 								 decredmaterial.Button
 	toggleWalletRename, renameWallet                                              decredmaterial.IconButton
 	hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag                decredmaterial.Button
 	addAccount, newAddressDiag                                                    decredmaterial.Button
@@ -122,18 +122,6 @@ func (win *Window) initWidgets() {
 	// verify message
 	win.outputs.verifyMessDiag = theme.Button("Verify Message")
 	win.outputs.signMessageDiag = theme.Button("Sign Message")
-
-	//win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
-	win.outputs.createDiag = theme.Button("Create a new wallet")
-	win.outputs.showRestoreWallet = theme.Button("Restore an existing wallet")
-	win.outputs.showRestoreWallet.Background = color.RGBA{}
-	win.outputs.showRestoreWallet.Color = theme.Color.Primary
-	win.outputs.createWallet = theme.Button("create")
-
-	// win.outputs.toRestoreWallet = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
-	win.outputs.restoreDiag = theme.Button("Restore wallet")
-	win.outputs.createRestoreDiag = theme.Button("Add wallet")
-	win.outputs.restoreWallet = theme.Button("Restore")
 
 	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")
 	win.outputs.deleteWallet = theme.DangerButton("delete")
