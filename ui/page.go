@@ -10,8 +10,10 @@ import (
 )
 
 type pageIcons struct {
-	contentAdd, contentClear, contentCreate, navigationCheck *decredmaterial.Icon
-	overviewIcon, walletIcon                                 image.Image
+	contentAdd, contentClear, contentCreate, navigationCheck,
+	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
+	actionCheckCircle *decredmaterial.Icon
+	overviewIcon, walletIcon image.Image
 }
 
 type pageCommon struct {
@@ -28,12 +30,17 @@ type pageCommon struct {
 
 func (win *Window) addPages() {
 	icons := pageIcons{
-		contentAdd:      mustIcon(decredmaterial.NewIcon(icons.ContentAdd)),
-		contentClear:    mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
-		contentCreate:   mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
-		navigationCheck: mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
-		overviewIcon:    mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
-		walletIcon:      mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
+		contentAdd:                 mustIcon(decredmaterial.NewIcon(icons.ContentAdd)),
+		contentClear:               mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
+		contentCreate:              mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
+		navigationCheck:            mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
+		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
+		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
+		contentSend:                mustIcon(decredmaterial.NewIcon(icons.ContentSend)),
+		contentAddBox:              mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)),
+		contentRemove:              mustIcon(decredmaterial.NewIcon(icons.ContentRemove)),
+		toggleRadioButtonUnchecked: mustIcon(decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)),
+		actionCheckCircle:          mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
@@ -72,7 +79,7 @@ func (win *Window) addPages() {
 
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage
-	win.pages[PageTransactions] = win.TransactionsPage
+	win.pages[PageTransactions] = win.TransactionsPage(common)
 	win.pages[PageReceive] = win.Receive
 	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
