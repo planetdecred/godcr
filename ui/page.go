@@ -44,11 +44,11 @@ func (win *Window) addPages() {
 		toggleRadioButtonUnchecked: mustIcon(decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)),
 		actionCheckCircle:          mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 		navigationArrowBack:        mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)),
-		contentCopy:     mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
-		actionInfo:      mustIcon(decredmaterial.NewIcon(icons.ActionInfo)),
-		navigationMore:  mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
-		overviewIcon:    mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
-		walletIcon:      mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
+		contentCopy:                mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
+		actionInfo:                 mustIcon(decredmaterial.NewIcon(icons.ActionInfo)),
+		navigationMore:             mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
+		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
+		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
@@ -155,7 +155,10 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 
 func (page pageCommon) accountTab(gtx *layout.Context, body layout.Widget) {
 	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
-	for i := range page.info.Wallets[*page.selectedWallet].Accounts {
+	for i, account := range page.info.Wallets[*page.selectedWallet].Accounts {
+		if account.Name == "imported" {
+			continue
+		}
 		accounts[i] = decredmaterial.TabItem{
 			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
 		}

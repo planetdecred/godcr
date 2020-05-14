@@ -79,10 +79,10 @@ func (p *receivePage) Layout(common pageCommon) {
 			layout.Expanded(func() {
 				layout.Inset{Top: unit.Dp(15)}.Layout(p.gtx, func() {
 					layout.Flex{}.Layout(p.gtx,
-						layout.Flexed(0.9, func() {
+						layout.Flexed(0.7, func() {
 							p.ReceivePageContents(common)
 						}),
-						layout.Rigid(func() {
+						layout.Flexed(0.3, func() {
 							p.rightNav()
 						}),
 					)
@@ -102,7 +102,7 @@ func (p *receivePage) ReceivePageContents(common pageCommon) {
 			layout.Rigid(func() {
 				pageContent := []func(){
 					func() {
-						p.selectedAcountColumn(common)
+						p.selectedAccountColumn(common)
 					},
 					func() {
 						p.qrCodeAddressColumn(common)
@@ -134,29 +134,32 @@ func (p *receivePage) ReceivePageContents(common pageCommon) {
 }
 
 func (p *receivePage) rightNav() {
-	layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(p.gtx,
-		layout.Rigid(func() {
-			p.moreBtn.Layout(p.gtx, &p.moreBtnW)
-		}),
-		layout.Rigid(func() {
-			if p.isNewAddr {
-				p.generateNewAddress()
-			}
-		}),
-		layout.Rigid(func() {
-			layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(p.gtx, func() {
-				p.infoBtn.Layout(p.gtx, &p.infoBtnW)
-			})
-		}),
-		layout.Rigid(func() {
-			if p.isInfo {
-				p.infoDiag()
-			}
-		}),
-	)
+	layout.Center.Layout(p.gtx, func() {
+
+		layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(p.gtx,
+			layout.Rigid(func() {
+				p.moreBtn.Layout(p.gtx, &p.moreBtnW)
+			}),
+			layout.Rigid(func() {
+				if p.isNewAddr {
+					p.generateNewAddress()
+				}
+			}),
+			layout.Rigid(func() {
+				layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(p.gtx, func() {
+					p.infoBtn.Layout(p.gtx, &p.infoBtnW)
+				})
+			}),
+			layout.Rigid(func() {
+				if p.isInfo {
+					p.infoDiag()
+				}
+			}),
+		)
+	})
 }
 
-func (p *receivePage) selectedAcountColumn(common pageCommon) {
+func (p *receivePage) selectedAccountColumn(common pageCommon) {
 	current := common.info.Wallets[*common.selectedWallet]
 
 	p.selectedWalletNameLabel.Text = current.Name
@@ -270,12 +273,12 @@ func (p *receivePage) infoDiag() {
 }
 
 func (p *receivePage) Handle(common pageCommon) {
-	if p.infoBtnW.Clicked(p.gtx) {
-		p.isInfo = !p.isInfo
-		if p.isNewAddr {
-			p.isNewAddr = false
-		}
-	}
+	// if p.infoBtnW.Clicked(p.gtx) {
+	// 	p.isInfo = !p.isInfo
+	// 	if p.isNewAddr {
+	// 		p.isNewAddr = false
+	// 	}
+	// }
 
 	if p.moreBtnW.Clicked(p.gtx) {
 		p.isNewAddr = !p.isNewAddr
