@@ -592,7 +592,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 		pg.sendErrorText = fmt.Sprintf("error broadcasting transaction: %s", err.Error())
 	} else if txHash != "" {
 		pg.txHash = txHash
-		pg.txHashText = fmt.Sprintf("Successfull. Hash: %s", txHash)
+		pg.txHashText = fmt.Sprintf("Successful. Hash: %s", txHash)
 		pg.destinationAddressEditor.SetText("")
 		pg.sendAmountEditor.SetText("")
 		pg.isConfirmationModalOpen = false
