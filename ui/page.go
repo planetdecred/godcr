@@ -11,7 +11,8 @@ import (
 
 type pageIcons struct {
 	contentAdd, contentClear, contentCreate, navigationCheck,
-	contentSend, contentAddBox *decredmaterial.Icon
+	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
+	actionCheckCircle *decredmaterial.Icon
 	overviewIcon, walletIcon image.Image
 }
 
@@ -29,14 +30,17 @@ type pageCommon struct {
 
 func (win *Window) addPages() {
 	icons := pageIcons{
-		contentAdd:      mustIcon(decredmaterial.NewIcon(icons.ContentAdd)),
-		contentClear:    mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
-		contentCreate:   mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
-		navigationCheck: mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
-		overviewIcon:    mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
-		walletIcon:      mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
-		contentSend:     mustIcon(decredmaterial.NewIcon(icons.ContentSend)),
-		contentAddBox:   mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)),
+		contentAdd:                 mustIcon(decredmaterial.NewIcon(icons.ContentAdd)),
+		contentClear:               mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
+		contentCreate:              mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
+		navigationCheck:            mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
+		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
+		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
+		contentSend:                mustIcon(decredmaterial.NewIcon(icons.ContentSend)),
+		contentAddBox:              mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)),
+		contentRemove:              mustIcon(decredmaterial.NewIcon(icons.ContentRemove)),
+		toggleRadioButtonUnchecked: mustIcon(decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)),
+		actionCheckCircle:          mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{

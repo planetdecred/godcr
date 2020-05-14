@@ -17,25 +17,9 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const (
-	PageTransactions                            = "txs"
-	defaultFilterSorter, defaultFilterDirection = "0", "0"
-
-	rowDirectionWidth = .04
-	rowDateWidth      = .2
-	rowStatusWidth    = .2
-	rowAmountWidth    = .3
-	rowFeeWidth       = .26
-
-	txsRowLabelSize    = 16
-	txsPageInsetTop    = 15
-	txsPageInsetLeft   = 15
-	txsPageInsetRight  = 15
-	txsPageInsetBottom = 15
-)
+const PageTransactions = "transactions"
 
 type transactionWdg struct {
 	status, direction *decredmaterial.Icon
@@ -43,25 +27,50 @@ type transactionWdg struct {
 }
 
 type transactionsPage struct {
-	container                     layout.Flex
-	txsList                       layout.List
-	walletTransactions            **wallet.Transactions
-	filterSorter                  string
-	filterSortW, filterDirectionW *widget.Enum
-	filterDirection, filterSort   []decredmaterial.RadioButton
+	container                                   layout.Flex
+	txsList                                     layout.List
+	walletTransactions                          **wallet.Transactions
+	filterSorter                                string
+	filterSortW, filterDirectionW               *widget.Enum
+	filterDirection, filterSort                 []decredmaterial.RadioButton
+	defaultFilterSorter, defaultFilterDirection string
+
+	rowDirectionWidth,
+	rowDateWidth,
+	rowStatusWidth,
+	rowAmountWidth,
+	rowFeeWidth,
+	txsRowLabelSize,
+	txsPageInsetTop,
+	txsPageInsetLeft,
+	txsPageInsetRight,
+	txsPageInsetBottom float32
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 	page := transactionsPage{
-		container:          layout.Flex{Axis: layout.Vertical},
-		txsList:            layout.List{Axis: layout.Vertical},
-		walletTransactions: &win.walletTransactions,
-		filterSorter:       defaultFilterSorter,
-		filterDirectionW:   new(widget.Enum),
-		filterSortW:        new(widget.Enum),
+		container:              layout.Flex{Axis: layout.Vertical},
+		txsList:                layout.List{Axis: layout.Vertical},
+		walletTransactions:     &win.walletTransactions,
+		filterDirectionW:       new(widget.Enum),
+		filterSortW:            new(widget.Enum),
+		defaultFilterSorter:    "0",
+		defaultFilterDirection: "0",
+		rowDirectionWidth:      .04,
+		rowDateWidth:           .2,
+		rowStatusWidth:         .2,
+		rowAmountWidth:         .3,
+		rowFeeWidth:            .26,
+		txsRowLabelSize:        16,
+		txsPageInsetTop:        15,
+		txsPageInsetLeft:       15,
+		txsPageInsetRight:      15,
+		txsPageInsetBottom:     15,
 	}
-	page.filterDirectionW.SetValue(defaultFilterDirection)
-	page.filterSortW.SetValue(defaultFilterSorter)
+
+	page.filterSorter = page.defaultFilterSorter
+	page.filterDirectionW.SetValue(page.defaultFilterDirection)
+	page.filterSortW.SetValue(page.defaultFilterSorter)
 
 	txFilterDirection := []string{"All", "Sent", "Received", "Transfer"}
 	txFilterSorts := []string{"Newest", "Oldest"}
@@ -92,13 +101,13 @@ func (page *transactionsPage) Layout(common pageCommon) {
 			layout.Rigid(page.txsFilters(&common)),
 			layout.Flexed(1, func() {
 				layout.Inset{
-					Left:  unit.Dp(txsPageInsetLeft),
-					Right: unit.Dp(txsPageInsetRight)}.Layout(gtx, func() {
+					Left:  unit.Dp(page.txsPageInsetLeft),
+					Right: unit.Dp(page.txsPageInsetRight)}.Layout(gtx, func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func() {
 							layout.Inset{
-								Top:    unit.Dp(txsPageInsetTop),
-								Bottom: unit.Dp(txsPageInsetBottom)}.Layout(gtx, func() {
+								Top:    unit.Dp(page.txsPageInsetTop),
+								Bottom: unit.Dp(page.txsPageInsetBottom)}.Layout(gtx, func() {
 								page.txnRowHeader(&common)
 							})
 						}),
@@ -132,14 +141,14 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	gtx := common.gtx
 	return func() {
 		layout.Inset{
-			Top:    unit.Dp(txsPageInsetTop),
-			Left:   unit.Dp(txsPageInsetLeft),
-			Bottom: unit.Dp(txsPageInsetBottom)}.Layout(gtx, func() {
+			Top:    unit.Dp(page.txsPageInsetTop),
+			Left:   unit.Dp(page.txsPageInsetLeft),
+			Bottom: unit.Dp(page.txsPageInsetBottom)}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func() {
 					(&layout.List{Axis: layout.Horizontal}).
 						Layout(gtx, len(page.filterSort), func(index int) {
-							layout.Inset{Right: unit.Dp(txsPageInsetRight)}.Layout(gtx, func() {
+							layout.Inset{Right: unit.Dp(page.txsPageInsetRight)}.Layout(gtx, func() {
 								page.filterSort[index].Layout(gtx, page.filterSortW)
 							})
 						})
@@ -158,7 +167,7 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 				layout.Rigid(func() {
 					(&layout.List{Axis: layout.Horizontal}).
 						Layout(gtx, len(page.filterDirection), func(index int) {
-							layout.Inset{Right: unit.Dp(txsPageInsetRight)}.Layout(gtx, func() {
+							layout.Inset{Right: unit.Dp(page.txsPageInsetRight)}.Layout(gtx, func() {
 								page.filterDirection[index].Layout(gtx, page.filterDirectionW)
 							})
 						})
@@ -170,27 +179,27 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 
 func (page *transactionsPage) txnRowHeader(common *pageCommon) {
 	gtx := common.gtx
-	txt := common.theme.Label(unit.Dp(txsRowLabelSize), "#")
+	txt := common.theme.Label(unit.Dp(page.txsRowLabelSize), "#")
 	txt.Color = common.theme.Color.Hint
 
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Flexed(rowDirectionWidth, func() {
+		layout.Flexed(page.rowDirectionWidth, func() {
 			txt.Layout(gtx)
 		}),
-		layout.Flexed(rowDateWidth, func() {
+		layout.Flexed(page.rowDateWidth, func() {
 			txt.Alignment = text.Middle
 			txt.Text = "Date (UTC)"
 			txt.Layout(gtx)
 		}),
-		layout.Flexed(rowStatusWidth, func() {
+		layout.Flexed(page.rowStatusWidth, func() {
 			txt.Text = "Status"
 			txt.Layout(gtx)
 		}),
-		layout.Flexed(rowAmountWidth, func() {
+		layout.Flexed(page.rowAmountWidth, func() {
 			txt.Text = "Amount"
 			txt.Layout(gtx)
 		}),
-		layout.Flexed(rowFeeWidth, func() {
+		layout.Flexed(page.rowFeeWidth, func() {
 			txt.Text = "Fee"
 			txt.Layout(gtx)
 		}),
@@ -202,27 +211,27 @@ func (page *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
 
-	layout.Inset{Bottom: unit.Dp(txsPageInsetBottom)}.Layout(gtx, func() {
+	layout.Inset{Bottom: unit.Dp(page.txsPageInsetBottom)}.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Flexed(rowDirectionWidth, func() {
+			layout.Flexed(page.rowDirectionWidth, func() {
 				layout.Inset{Top: unit.Dp(3)}.Layout(gtx, func() {
 					txnWidgets.direction.Layout(gtx, unit.Dp(16))
 				})
 			}),
-			layout.Flexed(rowDateWidth, func() {
+			layout.Flexed(page.rowDateWidth, func() {
 				txnWidgets.time.Alignment = text.Middle
 				txnWidgets.time.Layout(gtx)
 			}),
-			layout.Flexed(rowStatusWidth, func() {
+			layout.Flexed(page.rowStatusWidth, func() {
 				txt := common.theme.Body1(transaction.Status)
 				txt.Alignment = text.Middle
 				txt.Layout(gtx)
 			}),
-			layout.Flexed(rowAmountWidth, func() {
+			layout.Flexed(page.rowAmountWidth, func() {
 				txnWidgets.amount.Alignment = text.End
 				txnWidgets.amount.Layout(gtx)
 			}),
-			layout.Flexed(rowFeeWidth, func() {
+			layout.Flexed(page.rowFeeWidth, func() {
 				txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
 				txt.Alignment = text.End
 				txt.Layout(gtx)
@@ -238,21 +247,20 @@ func (page *transactionsPage) Handle(common pageCommon) {
 	}
 }
 
-func initTxnWidgets(common *pageCommon,
-	transaction *wallet.Transaction, txWidgets *transactionWdg) {
+func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidgets *transactionWdg) {
 	txWidgets.amount = common.theme.Label(unit.Dp(16), transaction.Balance)
 	txWidgets.time = common.theme.Body1("Pending")
 
 	if transaction.Status == "confirmed" {
 		txWidgets.time.Text = dcrlibwallet.ExtractDateOrTime(transaction.Txn.Timestamp)
-		txWidgets.status, _ = decredmaterial.NewIcon(icons.ActionCheckCircle)
+		txWidgets.status = common.icons.actionCheckCircle
 		txWidgets.status.Color = common.theme.Color.Success
 	} else {
-		txWidgets.status, _ = decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)
+		txWidgets.status = common.icons.toggleRadioButtonUnchecked
 	}
 
 	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
-		txWidgets.direction, _ = decredmaterial.NewIcon(icons.ContentRemove)
+		txWidgets.direction = common.icons.contentRemove
 		txWidgets.direction.Color = common.theme.Color.Danger
 	} else {
 		txWidgets.direction = common.icons.contentAdd
@@ -261,7 +269,7 @@ func initTxnWidgets(common *pageCommon,
 }
 
 func (page *transactionsPage) sortTransactions(common *pageCommon) {
-	newestFirst := page.filterSorter == defaultFilterSorter
+	newestFirst := page.filterSorter == page.defaultFilterSorter
 
 	for _, wal := range common.info.Wallets {
 		transactions := (*page.walletTransactions).Txs[wal.ID]
