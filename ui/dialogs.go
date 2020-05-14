@@ -2,7 +2,6 @@ package ui
 
 import (
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
@@ -156,69 +155,6 @@ func (win *Window) infoDiag() {
 			)
 		})
 		//decredmaterial.Modal{}.Layout(win.gtx, selectedDetails)
-	})
-}
-
-func (win *Window) transactionsFilters() {
-	w := win.gtx.Constraints.Width.Max / 2
-	win.theme.Surface(win.gtx, func() {
-		layout.UniformInset(unit.Dp(20)).Layout(win.gtx, func() {
-			win.gtx.Constraints.Width.Min = w
-			layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-				layout.Rigid(func() {
-					win.gtx.Constraints.Width.Min = w
-					layout.E.Layout(win.gtx, func() {
-						win.outputs.cancelDiag.Layout(win.gtx, &win.cancelDialog)
-					})
-				}),
-				layout.Rigid(func() {
-					layout.Stack{}.Layout(win.gtx,
-						layout.Expanded(func() {
-							win.gtx.Constraints.Width.Min = w
-							headTxt := win.theme.H4("Transactions filters")
-							headTxt.Alignment = text.Middle
-							headTxt.Layout(win.gtx)
-						}),
-					)
-				}),
-				layout.Rigid(func() {
-					win.gtx.Constraints.Width.Min = w
-					layout.Flex{Axis: layout.Horizontal}.Layout(win.gtx,
-						layout.Flexed(.25, func() {
-							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-								layout.Rigid(func() {
-									win.theme.H5("Order").Layout(win.gtx)
-								}),
-								layout.Rigid(func() {
-									(&layout.List{Axis: layout.Vertical}).
-										Layout(win.gtx, len(win.outputs.transactionFilterSort), func(index int) {
-											win.outputs.transactionFilterSort[index].Layout(win.gtx, win.inputs.transactionFilterSort)
-										})
-								}),
-							)
-						}),
-						layout.Flexed(.25, func() {
-							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-								layout.Rigid(func() {
-									win.theme.H5("Direction").Layout(win.gtx)
-								}),
-								layout.Rigid(func() {
-									(&layout.List{Axis: layout.Vertical}).
-										Layout(win.gtx, len(win.outputs.transactionFilterDirection), func(index int) {
-											win.outputs.transactionFilterDirection[index].Layout(win.gtx, win.inputs.transactionFilterDirection)
-										})
-								}),
-							)
-						}),
-					)
-				}),
-				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(20)}.Layout(win.gtx, func() {
-						win.outputs.applyFiltersTransactions.Layout(win.gtx, &win.inputs.applyFiltersTransactions)
-					})
-				}),
-			)
-		})
 	})
 }
 
