@@ -34,8 +34,8 @@ type Window struct {
 	signatureResult *wallet.Signature
 
 	selectedAccount int
-	txAuthor        *dcrlibwallet.TxAuthor
-	broadcastResult *wallet.Broadcast
+	txAuthor        dcrlibwallet.TxAuthor
+	broadcastResult wallet.Broadcast
 
 	selected int
 	states

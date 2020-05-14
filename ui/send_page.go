@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"strconv"
 
 	"gioui.org/layout"
@@ -11,278 +12,214 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageSend = "send"
-
-var sendPage *Send
-
-// Send represents the send page of the app.
-// It should only be accessible if the app finds
-// at least one wallet.
-type Send struct {
-	theme    *decredmaterial.Theme
-	txAuthor *dcrlibwallet.TxAuthor
-	wallet   *wallet.Wallet
+type SendPage struct {
+	theme           *decredmaterial.Theme
+	wallet          *wallet.Wallet
+	txAuthor        *dcrlibwallet.TxAuthor
+	broadcastResult *wallet.Broadcast
 
 	selectedWallet  wallet.InfoShort
 	selectedAccount wallet.Account
 
+	destinationAddressEditor           *widget.Editor
+	sendAmountEditor                   *widget.Editor
+	pasteAddressButtonWidget           *widget.Button
+	nextButtonWidget                   *widget.Button
+	closeConfirmationModalButtonWidget *widget.Button
+	confirmButtonWidget                *widget.Button
+
+	destinationAddressErrorLabel decredmaterial.Label
+	sendAmountErrorLabel         decredmaterial.Label
+	transactionFeeValueLabel     decredmaterial.Label
+	totalCostValueLabel          decredmaterial.Label
+	balanceAfterSendValueLabel   decredmaterial.Label
+	calculateErrorLabel          decredmaterial.Label
+
+	destinationAddressEditorMaterial     decredmaterial.Editor
+	sendAmountEditorMaterial             decredmaterial.Editor
+	pasteAddressButtonMaterial           decredmaterial.IconButton
+	nextButtonMaterial                   decredmaterial.Button
+	closeConfirmationModalButtonMaterial decredmaterial.Button
+	confirmButtonMaterial                decredmaterial.Button
+
+	sendErrorText string
+	txHashText    string
+
+	editorLine    *decredmaterial.Line
+	passwordModal *decredmaterial.Password
+
 	isConfirmationModalOpen   bool
 	isPasswordModalOpen       bool
 	isBroadcastingTransaction bool
-
-	// editors
-	destinationAddressEditor *widget.Editor
-	sendAmountEditor         *widget.Editor
-
-	destinationAddressEditorMaterial decredmaterial.Editor
-	sendAmountEditorMaterial         decredmaterial.Editor
-
-	// lines
-	editorLine *decredmaterial.Line
-
-	// labels
-	titleLabel                     decredmaterial.Label
-	selectedAccountLabel           decredmaterial.Label
-	selectedAccountBalanceLabel    decredmaterial.Label
-	selectedWalletLabel            decredmaterial.Label
-	sendAmountLabel                decredmaterial.Label
-	sourceAccountLabel             decredmaterial.Label
-	destinationAddressLabel        decredmaterial.Label
-	transactionFeeLabel            decredmaterial.Label
-	transactionFeeValueLabel       decredmaterial.Label
-	totalCostLabel                 decredmaterial.Label
-	totalCostValueLabel            decredmaterial.Label
-	balanceAfterSendLabel          decredmaterial.Label
-	balanceAfterSendValueLabel     decredmaterial.Label
-	confirmModalTitleLabel         decredmaterial.Label
-	confirmSourceAccountLabel      decredmaterial.Label
-	confirmDestinationAddressLabel decredmaterial.Label
-	confirmWarningLabel            decredmaterial.Label
-	accountsModalTitleLabel        decredmaterial.Label
-	txHashLabel                    decredmaterial.Label
-
-	// error labels
-	destinationAddressErrorLabel decredmaterial.Label
-	sendAmountErrorLabel         decredmaterial.Label
-	calculateErrorLabel          decredmaterial.Label
-	sendErrorLabel               decredmaterial.Label
-
-	// buttons
-	nextButtonWidget                   *widget.Button
-	confirmButtonWidget                *widget.Button
-	closeConfirmationModalButtonWidget *widget.Button
-	pasteAddressButtonWidget           *widget.Button
-
-	nextButtonMaterial                   decredmaterial.Button
-	confirmButtonMaterial                decredmaterial.Button
-	closeConfirmationModalButtonMaterial decredmaterial.Button
-	pasteAddressButtonMaterial           decredmaterial.Button
-
-	passwordModal *decredmaterial.Password
+	hasSetWallet              bool
 }
 
-// NewSendPage initializes this page's widgets
-func (win *Window) NewSendPage() *Send {
-	pg := &Send{}
-	pg.theme = win.theme
-	pg.wallet = win.wallet
-	pg.isConfirmationModalOpen = false
-	pg.isBroadcastingTransaction = false
-	pg.isPasswordModalOpen = false
-	pg.txAuthor = win.txAuthor
+const PageSend = "send"
 
-	// labels
-	pg.titleLabel = pg.theme.H5("Send DCR")
-	pg.selectedAccountLabel = pg.theme.Body2("")
-	pg.selectedAccountBalanceLabel = pg.theme.Body2("")
-	pg.selectedWalletLabel = pg.theme.Body2("")
-	pg.sourceAccountLabel = pg.theme.Body2("Source Account:")
-	pg.destinationAddressLabel = pg.theme.Body2("Destination Address")
-	pg.transactionFeeLabel = pg.theme.Body2("Transaction Fee:")
-	pg.transactionFeeValueLabel = pg.theme.Body2("0 DCR")
-	pg.sendAmountLabel = pg.theme.Body2("Amount")
-	pg.totalCostLabel = pg.theme.Body2("Total Cost")
-	pg.totalCostValueLabel = pg.theme.Body2("0 DCR")
-	pg.balanceAfterSendLabel = pg.theme.Body2("Balance after send")
-	pg.balanceAfterSendValueLabel = pg.theme.Body2("0 DCR")
-	pg.confirmModalTitleLabel = pg.theme.H5("Confirm to send")
-	pg.confirmSourceAccountLabel = pg.theme.Body2("")
-	pg.confirmDestinationAddressLabel = pg.theme.Body2("To destination address")
-	pg.confirmWarningLabel = pg.theme.Caption("Your DCR will be sent and CANNOT be undone")
-	pg.accountsModalTitleLabel = pg.theme.H5("Choose sending account")
-	pg.txHashLabel = pg.theme.Body2("")
-	pg.txHashLabel.Color = pg.theme.Color.Success
+func (win *Window) SendPage(common pageCommon) layout.Widget {
+	page := &SendPage{
+		theme:           common.theme,
+		wallet:          common.wallet,
+		txAuthor:        &win.txAuthor,
+		broadcastResult: &win.broadcastResult,
 
-	pg.destinationAddressErrorLabel = pg.theme.Caption("")
-	pg.sendErrorLabel = pg.theme.Caption("")
-	pg.sendAmountErrorLabel = pg.theme.Caption("")
-	pg.calculateErrorLabel = pg.theme.Caption("")
-	pg.destinationAddressErrorLabel.Color = pg.theme.Color.Danger
-	pg.sendErrorLabel.Color = pg.theme.Color.Danger
-	pg.sendAmountErrorLabel.Color = pg.theme.Color.Danger
-	pg.calculateErrorLabel.Color = pg.theme.Color.Danger
+		destinationAddressEditor:           new(widget.Editor),
+		sendAmountEditor:                   new(widget.Editor),
+		pasteAddressButtonWidget:           new(widget.Button),
+		nextButtonWidget:                   new(widget.Button),
+		closeConfirmationModalButtonWidget: new(widget.Button),
+		confirmButtonWidget:                new(widget.Button),
 
-	pg.passwordModal = pg.theme.Password()
+		destinationAddressErrorLabel: common.theme.ErrorLabel(""),
+		sendAmountErrorLabel:         common.theme.ErrorLabel(""),
+		sendErrorText:                "",
+		txHashText:                   "your transaction was published successfully",
 
-	pg.destinationAddressEditor = new(widget.Editor)
-	pg.sendAmountEditor = new(widget.Editor)
+		destinationAddressEditorMaterial:     common.theme.Editor("Destination Address"),
+		closeConfirmationModalButtonMaterial: common.theme.Button("Close"),
+		sendAmountEditorMaterial:             common.theme.Editor("Amount to be sent"),
+		editorLine:                           common.theme.Line(),
+		nextButtonMaterial:                   common.theme.Button("Next"),
+		confirmButtonMaterial:                common.theme.Button("Confirm"),
+		transactionFeeValueLabel:             common.theme.Body2("0 DCR"),
+		totalCostValueLabel:                  common.theme.Body2("0 DCR"),
+		balanceAfterSendValueLabel:           common.theme.Body2("0 DCR"),
 
-	pg.destinationAddressEditorMaterial = pg.theme.Editor("Destination Address")
-	pg.sendAmountEditorMaterial = pg.theme.Editor("Amount to be sent")
+		isConfirmationModalOpen: false,
+		isPasswordModalOpen:     false,
+		hasSetWallet:            false,
 
-	pg.editorLine = pg.theme.Line()
+		passwordModal: common.theme.Password(),
 
-	pg.nextButtonWidget = new(widget.Button)
-	pg.confirmButtonWidget = new(widget.Button)
-	pg.closeConfirmationModalButtonWidget = new(widget.Button)
-	pg.pasteAddressButtonWidget = new(widget.Button)
-
-	pg.nextButtonMaterial = pg.theme.Button("Next")
-	pg.confirmButtonMaterial = pg.theme.Button("Confirm")
-	pg.closeConfirmationModalButtonMaterial = pg.theme.Button("Close")
-	pg.pasteAddressButtonMaterial = pg.theme.Button("Paste")
-
-	pg.closeConfirmationModalButtonMaterial.Background = pg.theme.Color.Surface
-	pg.closeConfirmationModalButtonMaterial.Color = pg.theme.Color.Primary
-
-	return pg
-}
-
-// Draw renders all of this page's widgets
-func (pg *Send) Draw(gtx *layout.Context) interface{} {
-	pg.handleEvents(gtx)
-
-	widgetsWrapper := [][]func(){
-		{
-			func() {
-				pg.titleLabel.Layout(gtx)
-
-				if pg.txHashLabel.Text != "" {
-					inset := layout.Inset{
-						Top: unit.Dp(40),
-					}
-					inset.Layout(gtx, func() {
-						pg.txHashLabel.Layout(gtx)
-					})
-				}
-			},
-			func() {
-				pg.drawSelectedAccountSection(gtx)
-			},
-			func() {
-				pg.drawDestinationAddressSection(gtx)
-			},
-			func() {
-				pg.drawSendAmountSection(gtx)
-			},
-		},
-		pg.getTransactionDetailWidgets(gtx),
-		{
-			func() {
-				pg.calculateErrorLabel.Layout(gtx)
-			},
-			func() {
-				pg.nextButtonMaterial.Layout(gtx, pg.nextButtonWidget)
-			},
+		pasteAddressButtonMaterial: decredmaterial.IconButton{
+			Icon:       mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)),
+			Size:       unit.Dp(30),
+			Background: color.RGBA{},
+			Color:      common.theme.Color.Text,
+			Padding:    unit.Dp(5),
 		},
 	}
+	page.closeConfirmationModalButtonMaterial.Background = common.theme.Color.Gray
 
-	widgets := collapseWidgetsWrapper(widgetsWrapper)
-
-	list := layout.List{Axis: layout.Vertical}
-	list.Layout(gtx, len(widgets), func(i int) {
-		layout.UniformInset(unit.Dp(7)).Layout(gtx, widgets[i])
-	})
-
-	if pg.isConfirmationModalOpen {
-		pg.drawConfirmationModal(gtx)
-
-		if pg.isPasswordModalOpen {
-			pg.drawPasswordModal(gtx)
-		}
+	return func() {
+		page.Layout(common)
+		page.Handle(common)
 	}
-	return nil
 }
 
-func (pg *Send) handleEvents(gtx *layout.Context) {
-	for pg.pasteAddressButtonWidget.Clicked(gtx) {
+func (pg *SendPage) Handle(common pageCommon) {
+	pg.validate(true)
+
+	pg.watchForBroadcastResult()
+	pg.confirmButtonMaterial.Text = "Send"
+	pg.confirmButtonMaterial.Background = pg.theme.Color.Primary
+
+	if pg.isBroadcastingTransaction {
+		pg.confirmButtonMaterial.Text = "Sending..."
+		pg.confirmButtonMaterial.Background = pg.theme.Color.Background
+	}
+
+	for pg.pasteAddressButtonWidget.Clicked(common.gtx) {
 		pg.destinationAddressEditor.Insert(GetClipboardContent())
 	}
 
-	for pg.nextButtonWidget.Clicked(gtx) {
+	for pg.nextButtonWidget.Clicked(common.gtx) {
 		if pg.validate(false) && pg.calculateErrorLabel.Text == "" {
 			pg.isConfirmationModalOpen = true
 		}
 	}
 
-	for pg.confirmButtonWidget.Clicked(gtx) {
+	for pg.confirmButtonWidget.Clicked(common.gtx) {
 		pg.isPasswordModalOpen = true
 	}
 
-	for pg.closeConfirmationModalButtonWidget.Clicked(gtx) {
+	for pg.closeConfirmationModalButtonWidget.Clicked(common.gtx) {
+		pg.sendErrorText = ""
 		pg.isConfirmationModalOpen = false
 	}
+
+	for range pg.destinationAddressEditor.Events(common.gtx) {
+		go pg.calculateValues()
+	}
+
+	for range pg.sendAmountEditor.Events(common.gtx) {
+		go pg.calculateValues()
+	}
 }
 
-func (pg *Send) drawDestinationAddressSection(gtx *layout.Context) {
-	pg.destinationAddressLabel.Layout(gtx)
-	inset := layout.Inset{
-		Top: unit.Dp(20),
+func (pg *SendPage) Layout(common pageCommon) {
+	if len(common.info.Wallets) == 0 {
+		// show no wallets message
+		return
 	}
-	inset.Layout(gtx, func() {
-		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Flexed(0.95, func() {
-				pg.destinationAddressEditorMaterial.Layout(gtx, pg.destinationAddressEditor)
-				inset := layout.Inset{
-					Top: unit.Dp(25),
-				}
-				inset.Layout(gtx, func() {
-					pg.editorLine.Draw(gtx)
-				})
-			}),
-			layout.Rigid(func() {
-				pg.pasteAddressButtonMaterial.Layout(gtx, pg.pasteAddressButtonWidget)
-			}),
-		)
-	})
 
-	inset = layout.Inset{
-		Top: unit.Dp(40),
+	selectedWallet := common.info.Wallets[*common.selectedWallet]
+	selectedAccount := selectedWallet.Accounts[0]
+
+	if !pg.hasSetWallet || (pg.selectedWallet.ID != selectedWallet.ID || pg.selectedAccount.Number != selectedAccount.Number) {
+		pg.selectedWallet = selectedWallet
+		pg.selectedAccount = selectedAccount
+
+		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number)
+		pg.hasSetWallet = true
 	}
-	inset.Layout(gtx, func() {
-		pg.destinationAddressErrorLabel.Layout(gtx)
-	})
-}
 
-func (pg *Send) drawSendAmountSection(gtx *layout.Context) {
-	pg.sendAmountLabel.Layout(gtx)
-	inset := layout.Inset{
-		Top: unit.Dp(20),
+	w := []func(){
+		func() {
+			pg.theme.H5("Send DCR").Layout(common.gtx)
+		},
+		func() {
+			if pg.txHashText != "" {
+				layout.Flex{Axis: layout.Horizontal}.Layout(common.gtx,
+					layout.Rigid(func() {
+						pg.theme.SuccessAlert(common.gtx, pg.txHashText)
+					}),
+					layout.Rigid(func() {
+
+					}),
+				)
+			}
+		},
+		func() {
+			pg.drawSelectedAccountSection(common.gtx)
+		},
+		func() {
+			pg.drawDestinationAddressSection(common.gtx)
+		},
+		func() {
+			pg.drawSendAmountSection(common.gtx)
+		},
+		func() {
+			pg.drawTransactionDetailWidgets(common.gtx)
+		},
+		func() {
+
+		},
+		func() {
+			pg.nextButtonMaterial.Layout(common.gtx, pg.nextButtonWidget)
+		},
 	}
-	inset.Layout(gtx, func() {
-		pg.sendAmountEditorMaterial.Layout(gtx, pg.sendAmountEditor)
 
-		inset := layout.Inset{
-			Top: unit.Dp(25),
-		}
-		inset.Layout(gtx, func() {
-			pg.editorLine.Draw(gtx)
+	common.LayoutWithWallets(common.gtx, func() {
+		list := layout.List{Axis: layout.Vertical}
+		list.Layout(common.gtx, len(w), func(i int) {
+			layout.UniformInset(unit.Dp(7)).Layout(common.gtx, w[i])
 		})
 	})
 
-	if pg.sendAmountErrorLabel.Text != "" {
-		inset := layout.Inset{
-			Top: unit.Dp(40),
+	if pg.isConfirmationModalOpen {
+		pg.drawConfirmationModal(common.gtx)
+
+		if pg.isPasswordModalOpen {
+			pg.drawPasswordModal(common.gtx)
 		}
-		inset.Layout(gtx, func() {
-			pg.sendAmountErrorLabel.Layout(gtx)
-		})
 	}
 }
 
-func (pg *Send) drawSelectedAccountSection(gtx *layout.Context) {
+func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
 	layout.Flex{}.Layout(gtx,
 		layout.Flexed(0.22, func() {
 		}),
@@ -321,74 +258,171 @@ func (pg *Send) drawSelectedAccountSection(gtx *layout.Context) {
 	)
 }
 
-func (pg *Send) drawConfirmationModal(gtx *layout.Context) {
-	widgetsWrapper := [][]func(){
-		{
-			func() {
-				pg.theme.H4("Confirm to send").Layout(gtx)
-			},
-			func() {
-				if pg.sendErrorLabel.Text != "" {
-					pg.sendErrorLabel.Layout(gtx)
-				}
-			},
-			func() {
-				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-				layout.Stack{Alignment: layout.Center}.Layout(gtx,
-					layout.Expanded(func() {
-						pg.theme.Body1(fmt.Sprintf("Sending from %s (%s)", pg.selectedAccount.Name, pg.selectedWallet.Name)).Layout(gtx)
-					}),
-				)
-			},
-			func() {
-				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-				layout.Stack{Alignment: layout.Center}.Layout(gtx,
-					layout.Expanded(func() {
-						pg.confirmDestinationAddressLabel.Layout(gtx)
-					}),
-				)
-			},
-			func() {
-				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-				layout.Stack{Alignment: layout.Center}.Layout(gtx,
-					layout.Expanded(func() {
-						pg.theme.Body1(pg.destinationAddressEditor.Text()).Layout(gtx)
-					}),
-				)
-			},
+func (pg *SendPage) drawDestinationAddressSection(gtx *layout.Context) {
+	pg.theme.Body2("Destination Address").Layout(gtx)
+
+	inset := layout.Inset{
+		Top: unit.Dp(20),
+	}
+
+	inset.Layout(gtx, func() {
+		pg.destinationAddressEditorMaterial.Layout(gtx, pg.destinationAddressEditor)
+		inset := layout.Inset{
+			Left: unit.Dp(float32(gtx.Constraints.Width.Max - 30)),
+		}
+		inset.Layout(gtx, func() {
+			pg.pasteAddressButtonMaterial.Layout(gtx, pg.pasteAddressButtonWidget)
+		})
+
+		inset = layout.Inset{
+			Top: unit.Dp(25),
+		}
+		inset.Layout(gtx, func() {
+			pg.editorLine.Draw(gtx)
+		})
+	})
+
+	inset = layout.Inset{
+		Top: unit.Dp(48),
+	}
+	inset.Layout(gtx, func() {
+		pg.destinationAddressErrorLabel.Layout(gtx)
+	})
+}
+
+func (pg *SendPage) drawSendAmountSection(gtx *layout.Context) {
+	pg.theme.Body2("Amount").Layout(gtx)
+	inset := layout.Inset{
+		Top: unit.Dp(20),
+	}
+	inset.Layout(gtx, func() {
+		pg.sendAmountEditorMaterial.Layout(gtx, pg.sendAmountEditor)
+
+		inset := layout.Inset{
+			Top: unit.Dp(25),
+		}
+		inset.Layout(gtx, func() {
+			pg.editorLine.Draw(gtx)
+		})
+	})
+
+	if pg.sendAmountErrorLabel.Text != "" {
+		inset := layout.Inset{
+			Top: unit.Dp(48),
+		}
+		inset.Layout(gtx, func() {
+			pg.sendAmountErrorLabel.Layout(gtx)
+		})
+	}
+}
+
+func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
+	w := []func(){
+		func() {
+			pg.tableLayoutFunc(gtx, pg.theme.Body2("Transaction Fee"), pg.transactionFeeValueLabel)
 		},
-		pg.getTransactionDetailWidgets(gtx),
-		{
-			func() {
-				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-				layout.Stack{Alignment: layout.Center}.Layout(gtx,
-					layout.Expanded(func() {
-						pg.confirmWarningLabel.Layout(gtx)
-					}),
-				)
-			},
-			func() {
-				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func() {
-						pg.confirmButtonMaterial.Layout(gtx, pg.confirmButtonWidget)
-					}),
-					layout.Rigid(func() {
-						pg.closeConfirmationModalButtonMaterial.Layout(gtx, pg.closeConfirmationModalButtonWidget)
-					}),
-				)
-			},
+		func() {
+			pg.tableLayoutFunc(gtx, pg.theme.Body2("Total Cost"), pg.totalCostValueLabel)
+		},
+		func() {
+			pg.tableLayoutFunc(gtx, pg.theme.Body2("Balance after send"), pg.balanceAfterSendValueLabel)
 		},
 	}
 
-	widgets := collapseWidgetsWrapper(widgetsWrapper)
+	list := layout.List{Axis: layout.Vertical}
+	list.Layout(gtx, len(w), func(i int) {
+		inset := layout.Inset{
+			Top: unit.Dp(10),
+		}
+		inset.Layout(gtx, w[i])
+	})
+}
+
+func (pg *SendPage) tableLayoutFunc(gtx *layout.Context, leftLabel, rightLabel decredmaterial.Label) {
+	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(func() {
+			leftLabel.Layout(gtx)
+		}),
+		layout.Flexed(1, func() {
+			layout.Stack{Alignment: layout.NE}.Layout(gtx,
+				layout.Stacked(func() {
+					rightLabel.Layout(gtx)
+				}),
+			)
+		}),
+	)
+}
+
+func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
+	w := []func(){
+		func() {
+			pg.theme.H4("Confirm to send").Layout(gtx)
+		},
+		func() {
+			if pg.sendErrorText != "" {
+				pg.theme.ErrorAlert(gtx, pg.sendErrorText)
+			}
+		},
+		func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			layout.Stack{Alignment: layout.Center}.Layout(gtx,
+				layout.Expanded(func() {
+					pg.theme.Body1(fmt.Sprintf("Sending from %s (%s)", pg.selectedAccount.Name, pg.selectedWallet.Name)).Layout(gtx)
+				}),
+			)
+		},
+		func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			layout.Stack{Alignment: layout.Center}.Layout(gtx,
+				layout.Expanded(func() {
+					pg.theme.Body2("To destination address").Layout(gtx)
+				}),
+			)
+		},
+		func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			layout.Stack{Alignment: layout.Center}.Layout(gtx,
+				layout.Expanded(func() {
+					pg.theme.Body1(pg.destinationAddressEditor.Text()).Layout(gtx)
+				}),
+			)
+		},
+		func() {
+			pg.drawTransactionDetailWidgets(gtx)
+		},
+		func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			layout.Stack{Alignment: layout.Center}.Layout(gtx,
+				layout.Expanded(func() {
+					pg.theme.Caption("Your DCR will be sent and CANNOT be undone").Layout(gtx)
+				}),
+			)
+		},
+		func() {
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func() {
+					pg.confirmButtonMaterial.Layout(gtx, pg.confirmButtonWidget)
+				}),
+				layout.Rigid(func() {
+					inset := layout.Inset{
+						Left: unit.Dp(15),
+					}
+					inset.Layout(gtx, func() {
+						pg.closeConfirmationModalButtonMaterial.Layout(gtx, pg.closeConfirmationModalButtonWidget)
+					})
+				}),
+			)
+		},
+	}
+
 	pg.theme.Modal(gtx, func() {
-		(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(widgets), func(i int) {
-			layout.UniformInset(unit.Dp(10)).Layout(gtx, widgets[i])
+		(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(w), func(i int) {
+			layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
 		})
 	})
 }
 
-func (pg *Send) drawPasswordModal(gtx *layout.Context) {
+func (pg *SendPage) drawPasswordModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, func() {
 		pg.passwordModal.Layout(gtx, func(password []byte) {
 			pg.isBroadcastingTransaction = true
@@ -401,41 +435,20 @@ func (pg *Send) drawPasswordModal(gtx *layout.Context) {
 	})
 }
 
-func (pg *Send) getTransactionDetailWidgets(gtx *layout.Context) []func() {
-	return []func(){
-		pg.tableLayoutFunc(gtx, pg.transactionFeeLabel, pg.transactionFeeValueLabel),
-		pg.tableLayoutFunc(gtx, pg.totalCostLabel, pg.totalCostValueLabel),
-		pg.tableLayoutFunc(gtx, pg.balanceAfterSendLabel, pg.balanceAfterSendValueLabel),
+func (pg *SendPage) validate(ignoreEmpty bool) bool {
+	isAddressValid := pg.validateDestinationAddress(ignoreEmpty)
+	isAmountValid := pg.validateAmount(ignoreEmpty)
+
+	if !isAddressValid || !isAmountValid || pg.calculateErrorLabel.Text != "" {
+		pg.nextButtonMaterial.Background = pg.theme.Color.Hint
+		return false
 	}
+
+	pg.nextButtonMaterial.Background = pg.theme.Color.Primary
+	return true
 }
 
-func (pg *Send) tableLayoutFunc(gtx *layout.Context, leftLabel, rightLabel decredmaterial.Label) func() {
-	return func() {
-		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func() {
-				leftLabel.Layout(gtx)
-			}),
-			layout.Flexed(1, func() {
-				layout.Stack{Alignment: layout.NE}.Layout(gtx,
-					layout.Stacked(func() {
-						rightLabel.Layout(gtx)
-					}),
-				)
-			}),
-		)
-	}
-}
-
-// collapseWidggetsWrapper receives a two dimensional slice and collapses it into a single slice
-func collapseWidgetsWrapper(widgetsWrapper [][]func()) []func() {
-	widgets := []func(){}
-	for i := range widgetsWrapper {
-		widgets = append(widgets, widgetsWrapper[i]...)
-	}
-	return widgets
-}
-
-func (pg *Send) validateDestinationAddress(ignoreEmpty bool) bool {
+func (pg *SendPage) validateDestinationAddress(ignoreEmpty bool) bool {
 	pg.destinationAddressErrorLabel.Text = ""
 
 	destinationAddress := pg.destinationAddressEditor.Text()
@@ -454,7 +467,7 @@ func (pg *Send) validateDestinationAddress(ignoreEmpty bool) bool {
 	return true
 }
 
-func (pg *Send) validateAmount(ignoreEmpty bool) bool {
+func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 	pg.sendAmountErrorLabel.Text = ""
 
 	amount := pg.sendAmountEditor.Text()
@@ -472,63 +485,10 @@ func (pg *Send) validateAmount(ignoreEmpty bool) bool {
 			return false
 		}
 	}
-
 	return true
 }
 
-func (pg *Send) validate(ignoreEmpty bool) bool {
-	isAddressValid := pg.validateDestinationAddress(ignoreEmpty)
-	isAmountValid := pg.validateAmount(ignoreEmpty)
-
-	if !isAddressValid || !isAmountValid || pg.calculateErrorLabel.Text != "" {
-		pg.nextButtonMaterial.Background = pg.theme.Color.Hint
-		return false
-	}
-
-	pg.nextButtonMaterial.Background = pg.theme.Color.Primary
-	return true
-}
-
-func (pg *Send) watchForBroadcastResult(broadcastResult *wallet.Broadcast) {
-	if broadcastResult == nil {
-		return
-	}
-
-	txHash := broadcastResult.TxHash
-	err := broadcastResult.Err
-
-	if err != nil {
-		pg.sendErrorLabel.Text = fmt.Sprintf("error broadcasting transaction: %s", err.Error())
-	} else if txHash != "" {
-		pg.txHashLabel.Text = fmt.Sprintf("The transaction was published successfully. Hash: %s", txHash)
-		pg.destinationAddressEditor.SetText("")
-		pg.sendAmountEditor.SetText("")
-		pg.isConfirmationModalOpen = false
-	}
-	pg.isBroadcastingTransaction = false
-}
-
-func (pg *Send) watchAndUpdateValues(gtx *layout.Context, broadcastResult *wallet.Broadcast) {
-	pg.watchForBroadcastResult(broadcastResult)
-
-	pg.confirmButtonMaterial.Text = "Send"
-	pg.confirmButtonMaterial.Background = pg.theme.Color.Primary
-
-	if pg.isBroadcastingTransaction {
-		pg.confirmButtonMaterial.Text = "Sending..."
-		pg.confirmButtonMaterial.Background = pg.theme.Color.Background
-	}
-
-	for range pg.destinationAddressEditor.Events(gtx) {
-		go pg.calculateValues()
-	}
-
-	for range pg.sendAmountEditor.Events(gtx) {
-		go pg.calculateValues()
-	}
-}
-
-func (pg *Send) calculateValues() {
+func (pg *SendPage) calculateValues() {
 	pg.transactionFeeValueLabel.Text = "0 DCR"
 	pg.totalCostValueLabel.Text = "0 DCR "
 	pg.calculateErrorLabel.Text = ""
@@ -572,60 +532,21 @@ func (pg *Send) calculateValues() {
 	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(remainingBalance).String()
 }
 
-func (win *Window) SendPage() {
-	if win.walletInfo.LoadedWallets == 0 {
-		win.Page(func() {
-			win.outputs.noWallet.Layout(win.gtx)
-		})
+func (pg *SendPage) watchForBroadcastResult() {
+	if pg.broadcastResult == nil {
 		return
 	}
 
-	selectedWallet := win.walletInfo.Wallets[win.selected]
-	selectedAccount := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount]
+	txHash := pg.broadcastResult.TxHash
+	err := pg.broadcastResult.Err
 
-	if sendPage == nil {
-		sendPage = win.NewSendPage()
-		sendPage.wallet = win.wallet
-
-		sendPage.selectedWallet = selectedWallet
-		sendPage.selectedAccount = selectedAccount
-
-		sendPage.wallet.CreateTransaction(selectedWallet.ID, selectedAccount.Number)
+	if err != nil {
+		pg.sendErrorText = fmt.Sprintf("error broadcasting transaction: %s", err.Error())
+	} else if txHash != "" {
+		pg.txHashText = fmt.Sprintf("The transaction was published successfully. Hash: %s", txHash)
+		pg.destinationAddressEditor.SetText("")
+		pg.sendAmountEditor.SetText("")
+		pg.isConfirmationModalOpen = false
 	}
-
-	if sendPage.selectedWallet.ID != selectedWallet.ID || sendPage.selectedAccount.Number != selectedAccount.Number {
-		sendPage.selectedWallet = selectedWallet
-		sendPage.selectedAccount = selectedAccount
-
-		sendPage.wallet.CreateTransaction(selectedWallet.ID, selectedAccount.Number)
-	}
-
-	if win.txAuthor != nil {
-		sendPage.txAuthor = win.txAuthor
-		win.txAuthor = nil
-	}
-
-	sendPage.validate(true)
-	sendPage.watchAndUpdateValues(win.gtx, win.broadcastResult)
-	if win.broadcastResult != nil {
-		win.broadcastResult = nil
-	}
-
-	body := func() {
-		layout.Stack{}.Layout(win.gtx,
-			layout.Expanded(func() {
-				layout.Flex{}.Layout(win.gtx,
-					layout.Rigid(func() {
-						win.combined.sel.Layout(win.gtx, func() {
-
-						})
-					}),
-					layout.Rigid(func() {
-						sendPage.Draw(win.gtx)
-					}),
-				)
-			}),
-		)
-	}
-	win.TabbedPage(body)
+	pg.isBroadcastingTransaction = false
 }

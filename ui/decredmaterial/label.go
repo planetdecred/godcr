@@ -63,6 +63,13 @@ func (t *Theme) Caption(txt string) Label {
 	return t.Label(t.TextSize.Scale(12.0/16.0), txt)
 }
 
+func (t *Theme) ErrorLabel(txt string) Label {
+	label := t.Caption(txt)
+	label.Color = t.Color.Danger
+
+	return label
+}
+
 func (t *Theme) Label(size unit.Value, txt string) Label {
 	return Label{
 		Text:     txt,

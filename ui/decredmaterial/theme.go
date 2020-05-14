@@ -9,6 +9,7 @@ import (
 	"gioui.org/f32"
 	"gioui.org/font"
 	"gioui.org/layout"
+	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -130,6 +131,37 @@ func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 		}),
 		layout.Stacked(w),
 	)
+}
+
+func (t *Theme) alert(gtx *layout.Context, txt string, bgColor color.RGBA) {
+	layout.Stack{}.Layout(gtx,
+		layout.Expanded(func() {
+			rr := float32(gtx.Px(unit.Dp(2)))
+			clip.Rect{
+				Rect: f32.Rectangle{Max: f32.Point{
+					X: float32(gtx.Constraints.Width.Min),
+					Y: float32(gtx.Constraints.Height.Min),
+				}},
+				NE: rr, NW: rr, SE: rr, SW: rr,
+			}.Op(gtx.Ops).Add(gtx.Ops)
+			fill(gtx, bgColor)
+		}),
+		layout.Stacked(func() {
+			layout.UniformInset(unit.Dp(8)).Layout(gtx, func() {
+				lbl := t.Body2(txt)
+				lbl.Color = t.Color.Surface
+				lbl.Layout(gtx)
+			})
+		}),
+	)
+}
+
+func (t *Theme) ErrorAlert(gtx *layout.Context, txt string) {
+	t.alert(gtx, txt, t.Color.Danger)
+}
+
+func (t *Theme) SuccessAlert(gtx *layout.Context, txt string) {
+	t.alert(gtx, txt, t.Color.Success)
 }
 
 func mustIcon(ic *Icon, err error) *Icon {

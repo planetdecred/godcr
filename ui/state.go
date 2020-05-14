@@ -51,9 +51,11 @@ func (win *Window) updateStates(update interface{}) {
 	case *wallet.Signature:
 		win.signatureResult = update.(*wallet.Signature)
 	case *dcrlibwallet.TxAuthor:
-		win.txAuthor = update.(*dcrlibwallet.TxAuthor)
+		txAuthor := update.(*dcrlibwallet.TxAuthor)
+		win.txAuthor = *txAuthor
 	case *wallet.Broadcast:
-		win.broadcastResult = update.(*wallet.Broadcast)
+		broadcastResult := update.(*wallet.Broadcast)
+		win.broadcastResult = *broadcastResult
 	}
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
