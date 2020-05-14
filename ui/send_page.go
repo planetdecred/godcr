@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"image/color"
 	"strconv"
+	"time"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -31,6 +33,9 @@ type SendPage struct {
 	closeConfirmationModalButtonWidget *widget.Button
 	confirmButtonWidget                *widget.Button
 
+	copyIconMaterial decredmaterial.IconButton
+	copyIconWidget   *widget.Button
+
 	destinationAddressErrorLabel decredmaterial.Label
 	sendAmountErrorLabel         decredmaterial.Label
 	transactionFeeValueLabel     decredmaterial.Label
@@ -47,6 +52,7 @@ type SendPage struct {
 
 	sendErrorText string
 	txHashText    string
+	txHash        string
 
 	editorLine    *decredmaterial.Line
 	passwordModal *decredmaterial.Password
@@ -55,6 +61,7 @@ type SendPage struct {
 	isPasswordModalOpen       bool
 	isBroadcastingTransaction bool
 	hasSetWallet              bool
+	hasCopiedTxHash           bool
 }
 
 const PageSend = "send"
@@ -72,11 +79,12 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		nextButtonWidget:                   new(widget.Button),
 		closeConfirmationModalButtonWidget: new(widget.Button),
 		confirmButtonWidget:                new(widget.Button),
+		copyIconWidget:                     new(widget.Button),
 
 		destinationAddressErrorLabel: common.theme.ErrorLabel(""),
 		sendAmountErrorLabel:         common.theme.ErrorLabel(""),
 		sendErrorText:                "",
-		txHashText:                   "your transaction was published successfully",
+		txHashText:                   "",
 
 		destinationAddressEditorMaterial:     common.theme.Editor("Destination Address"),
 		closeConfirmationModalButtonMaterial: common.theme.Button("Close"),
@@ -87,10 +95,12 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		transactionFeeValueLabel:             common.theme.Body2("0 DCR"),
 		totalCostValueLabel:                  common.theme.Body2("0 DCR"),
 		balanceAfterSendValueLabel:           common.theme.Body2("0 DCR"),
+		copyIconMaterial:                     common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy))),
 
 		isConfirmationModalOpen: false,
 		isPasswordModalOpen:     false,
 		hasSetWallet:            false,
+		hasCopiedTxHash:         false,
 
 		passwordModal: common.theme.Password(),
 
@@ -103,6 +113,10 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		},
 	}
 	page.closeConfirmationModalButtonMaterial.Background = common.theme.Color.Gray
+	page.copyIconMaterial.Background = common.theme.Color.Background
+	page.copyIconMaterial.Size = unit.Dp(30)
+	page.copyIconMaterial.Color = common.theme.Color.Text
+	page.copyIconMaterial.Padding = unit.Dp(5)
 
 	return func() {
 		page.Layout(common)
@@ -117,9 +131,19 @@ func (pg *SendPage) Handle(common pageCommon) {
 	pg.confirmButtonMaterial.Text = "Send"
 	pg.confirmButtonMaterial.Background = pg.theme.Color.Primary
 
+	if pg.hasCopiedTxHash {
+		time.AfterFunc(3*time.Second, func() {
+			pg.hasCopiedTxHash = false
+		})
+	}
+
 	if pg.isBroadcastingTransaction {
 		pg.confirmButtonMaterial.Text = "Sending..."
 		pg.confirmButtonMaterial.Background = pg.theme.Color.Background
+	}
+
+	for pg.copyIconWidget.Clicked(common.gtx) {
+		clipboard.WriteAll(pg.txHash)
 	}
 
 	for pg.pasteAddressButtonWidget.Clicked(common.gtx) {
@@ -172,16 +196,10 @@ func (pg *SendPage) Layout(common pageCommon) {
 			pg.theme.H5("Send DCR").Layout(common.gtx)
 		},
 		func() {
-			if pg.txHashText != "" {
-				layout.Flex{Axis: layout.Horizontal}.Layout(common.gtx,
-					layout.Rigid(func() {
-						pg.theme.SuccessAlert(common.gtx, pg.txHashText)
-					}),
-					layout.Rigid(func() {
-
-					}),
-				)
-			}
+			pg.drawSuccessSection(common.gtx)
+		},
+		func() {
+			pg.drawCopiedLabelSection(common.gtx)
 		},
 		func() {
 			pg.drawSelectedAccountSection(common.gtx)
@@ -216,6 +234,36 @@ func (pg *SendPage) Layout(common pageCommon) {
 		if pg.isPasswordModalOpen {
 			pg.drawPasswordModal(common.gtx)
 		}
+	}
+}
+
+func (pg *SendPage) drawSuccessSection(gtx *layout.Context) {
+	if pg.txHashText != "" {
+		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Rigid(func() {
+				pg.theme.SuccessAlert(gtx, pg.txHashText)
+			}),
+			layout.Rigid(func() {
+				inset := layout.Inset{
+					Left: unit.Dp(3),
+				}
+				inset.Layout(gtx, func() {
+					pg.copyIconMaterial.Layout(gtx, pg.copyIconWidget)
+				})
+			}),
+		)
+	}
+}
+
+func (pg *SendPage) drawCopiedLabelSection(gtx *layout.Context) {
+	if pg.hasCopiedTxHash {
+		layout.Flex{}.Layout(gtx,
+			layout.Flexed(0.35, func() {
+			}),
+			layout.Flexed(1, func() {
+				pg.theme.Caption("copied").Layout(gtx)
+			}),
+		)
 	}
 }
 
@@ -543,7 +591,8 @@ func (pg *SendPage) watchForBroadcastResult() {
 	if err != nil {
 		pg.sendErrorText = fmt.Sprintf("error broadcasting transaction: %s", err.Error())
 	} else if txHash != "" {
-		pg.txHashText = fmt.Sprintf("The transaction was published successfully. Hash: %s", txHash)
+		pg.txHash = txHash
+		pg.txHashText = fmt.Sprintf("Successfull. Hash: %s", txHash)
 		pg.destinationAddressEditor.SetText("")
 		pg.sendAmountEditor.SetText("")
 		pg.isConfirmationModalOpen = false
