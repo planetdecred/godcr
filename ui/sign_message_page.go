@@ -29,15 +29,18 @@ type SignMessagePage struct {
 	addressEditorMaterial decredmaterial.Editor
 	messageEditorMaterial decredmaterial.Editor
 
+	addressEditorWidget *widget.Editor
+	messageEditorWidget *widget.Editor
+
 	clearButtonMaterial decredmaterial.Button
 	signButtonMaterial  decredmaterial.Button
 	copyButtonMaterial  decredmaterial.Button
 
 	passwordModal *decredmaterial.Password
 
-	copyButtonWidget  *widget.Button
 	clearButtonWidget *widget.Button
 	signButtonWidget  *widget.Button
+	copyButtonWidget  *widget.Button
 }
 
 var signMessagePage *SignMessagePage
@@ -94,7 +97,7 @@ func (pg *SignMessagePage) Draw(gtx *layout.Context) {
 func (pg *SignMessagePage) drawAddressEditor(gtx *layout.Context) {
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Flexed(editorWidthRatio, func() {
-			pg.addressEditorMaterial.Layout(gtx)
+			pg.addressEditorMaterial.Layout(gtx, pg.addressEditorWidget)
 		}),
 	)
 
@@ -111,7 +114,7 @@ func (pg *SignMessagePage) drawAddressEditor(gtx *layout.Context) {
 func (pg *SignMessagePage) drawMessageEditor(gtx *layout.Context) {
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Flexed(editorWidthRatio, func() {
-			pg.messageEditorMaterial.Layout(gtx)
+			pg.messageEditorMaterial.Layout(gtx, pg.messageEditorWidget)
 		}),
 	)
 	if pg.messageErrorLabel.Text != "" {
@@ -158,7 +161,7 @@ func (pg *SignMessagePage) drawResult(gtx *layout.Context) {
 }
 
 func (pg *SignMessagePage) updateColors() {
-	if pg.isSigningMessage || pg.addressEditorMaterial.Text() == "" || pg.messageEditorMaterial.Text() == "" {
+	if pg.isSigningMessage || pg.addressEditorWidget.Text() == "" || pg.messageEditorWidget.Text() == "" {
 		pg.signButtonMaterial.Background = pg.theme.Color.Hint
 	} else {
 		pg.signButtonMaterial.Background = pg.theme.Color.Primary
@@ -186,7 +189,7 @@ func (pg *SignMessagePage) confirm(password []byte) {
 	pg.isSigningMessage = true
 
 	pg.signButtonMaterial.Text = "Signing..."
-	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorMaterial.Text(), pg.messageEditorMaterial.Text())
+	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorWidget.Text(), pg.messageEditorWidget.Text())
 }
 
 func (pg *SignMessagePage) cancel() {
@@ -205,17 +208,17 @@ func (pg *SignMessagePage) validate(ignoreEmpty bool) bool {
 
 func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
 	pg.addressErrorLabel.Text = ""
-	address := pg.addressEditorMaterial.Text()
+	address := pg.addressEditorWidget.Text()
 
 	if address == "" && !ignoreEmpty {
-		pg.addressEditorMaterial.ErrorLabel.Text = "please enter a valid address"
+		pg.addressErrorLabel.Text = "please enter a valid address"
 		return false
 	}
 
 	if address != "" {
 		isValid, _ := pg.wallet.IsAddressValid(address)
 		if !isValid {
-			pg.addressEditorMaterial.ErrorLabel.Text = "invalid address"
+			pg.addressErrorLabel.Text = "invalid address"
 			return false
 		}
 	}
@@ -223,7 +226,7 @@ func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
 }
 
 func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
-	message := pg.messageEditorMaterial.Text()
+	message := pg.messageEditorWidget.Text()
 	if message == "" && !ignoreEmpty {
 		pg.messageErrorLabel.Text = "please enter a message to sign"
 		return false
@@ -232,8 +235,8 @@ func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
 }
 
 func (pg *SignMessagePage) clearForm() {
-	pg.addressEditorMaterial.Clear()
-	pg.messageEditorMaterial.Clear()
+	pg.addressEditorWidget.SetText("")
+	pg.messageEditorWidget.SetText("")
 	pg.errorLabel.Text = ""
 }
 
@@ -252,14 +255,14 @@ func (win *Window) newSignMessagePage() *SignMessagePage {
 	pg.messageErrorLabel = pg.theme.Caption("")
 
 	pg.addressEditorMaterial = pg.theme.Editor("Address")
-	pg.addressEditorMaterial.SingleLine = true
-	pg.addressEditorMaterial.IsVisible = true
-	pg.addressEditorMaterial.IsRequired = true
+	pg.addressEditorWidget = &widget.Editor{
+		SingleLine: true,
+	}
 
 	pg.messageEditorMaterial = pg.theme.Editor("Message")
-	pg.messageEditorMaterial.SingleLine = true
-	pg.messageEditorMaterial.IsVisible = true
-	pg.messageEditorMaterial.IsRequired = true
+	pg.messageEditorWidget = &widget.Editor{
+		SingleLine: true,
+	}
 
 	pg.clearButtonMaterial = pg.theme.Button("Clear all")
 	pg.clearButtonWidget = new(widget.Button)

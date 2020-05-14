@@ -3,6 +3,7 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/unit"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
 )
 
 func (win *Window) CreateDiag() {
@@ -23,10 +24,10 @@ func (win *Window) CreateDiag() {
 							d.Layout(win.gtx)
 						}),
 						layout.Rigid(func() {
-							win.outputs.spendingPassword.Layout(win.gtx)
+							win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
 						}),
 						layout.Rigid(func() {
-							win.outputs.matchSpending.Layout(win.gtx)
+							win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
 						}),
 						layout.Rigid(func() {
 							win.Err()
@@ -59,7 +60,7 @@ func (win *Window) DeleteDiag() {
 							d.Layout(win.gtx)
 						}),
 						layout.Rigid(func() {
-							win.outputs.spendingPassword.Layout(win.gtx)
+							win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
 						}),
 						layout.Rigid(func() {
 							win.Err()
@@ -89,10 +90,10 @@ func (win *Window) RestoreDiag() {
 					d.Layout(win.gtx)
 				}),
 				layout.Rigid(func() {
-					win.outputs.spendingPassword.Layout(win.gtx)
+					win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
 				}),
 				layout.Rigid(func() {
-					win.outputs.matchSpending.Layout(win.gtx)
+					win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
 				}),
 				layout.Rigid(func() {
 					win.Err()
@@ -119,10 +120,10 @@ func (win *Window) AddAccountDiag() {
 				d.Layout(win.gtx)
 			}),
 			layout.Rigid(func() {
-				win.outputs.dialog.Layout(win.gtx)
+				win.outputs.dialog.Layout(win.gtx, &win.inputs.dialog)
 			}),
 			layout.Rigid(func() {
-				win.outputs.spendingPassword.Layout(win.gtx)
+				win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
 			}),
 			layout.Rigid(func() {
 				win.Err()
@@ -187,29 +188,114 @@ func (win *Window) verifyMessageDiag() {
 					win.vFlexSB(
 						rigid(func() {
 							inset := layout.Inset{
-								Top:    unit.Dp(10),
-								Bottom: unit.Dp(10),
+								Top: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
-								win.outputs.addressInput.Layout(win.gtx)
+								win.vFlexSB(
+									rigid(func() {
+										win.theme.H6("Enter Address").Layout(win.gtx)
+									}),
+									rigid(func() {
+										win.hFlexSB(
+											rigid(func() {
+												decredmaterial.Card{}.Layout(win.gtx, func() {
+													win.hFlexSB(
+														layout.Flexed(0.9, func() {
+															win.outputs.addressInput.Layout(win.gtx, &win.inputs.addressInput)
+														}),
+													)
+												})
+											}),
+											rigid(func() {
+												inset := layout.Inset{
+													Left: unit.Dp(10),
+												}
+												inset.Layout(win.gtx, func() {
+													if win.inputs.addressInput.Text() == "" {
+														win.outputs.pasteAddr.Layout(win.gtx, &win.inputs.pasteAddr)
+													} else {
+														win.outputs.clearAddr.Layout(win.gtx, &win.inputs.clearAddr)
+													}
+												})
+											}),
+										)
+									}),
+								)
 							})
-						}),
-						rigid(func() {
-							win.outputs.signInput.Layout(win.gtx)
 						}),
 						rigid(func() {
 							inset := layout.Inset{
 								Top:    unit.Dp(10),
-								Bottom: unit.Dp(20),
+								Bottom: unit.Dp(10),
 							}
 							inset.Layout(win.gtx, func() {
-								win.outputs.messageInput.Layout(win.gtx)
+								win.vFlexSB(
+									rigid(func() {
+										win.theme.H6("Enter Signature").Layout(win.gtx)
+									}),
+									rigid(func() {
+										win.hFlexSB(
+											rigid(func() {
+												decredmaterial.Card{}.Layout(win.gtx, func() {
+													win.hFlexSB(
+														layout.Flexed(0.9, func() {
+															win.outputs.signInput.Layout(win.gtx, &win.inputs.signInput)
+														}),
+													)
+												})
+											}),
+											rigid(func() {
+												inset := layout.Inset{
+													Left: unit.Dp(10),
+												}
+												inset.Layout(win.gtx, func() {
+													if win.inputs.signInput.Text() == "" {
+														win.outputs.pasteSign.Layout(win.gtx, &win.inputs.pasteSign)
+													} else {
+														win.outputs.clearSign.Layout(win.gtx, &win.inputs.clearSign)
+													}
+												})
+											}),
+										)
+									}),
+								)
 							})
+						}),
+						rigid(func() {
+							win.theme.H6("Enter Message").Layout(win.gtx)
+						}),
+						rigid(func() {
+							win.hFlexSB(
+								rigid(func() {
+									decredmaterial.Card{}.Layout(win.gtx, func() {
+										win.hFlexSB(
+											layout.Flexed(0.9, func() {
+												win.outputs.messageInput.Layout(win.gtx, &win.inputs.messageInput)
+											}),
+										)
+									})
+								}),
+								rigid(func() {
+									inset := layout.Inset{
+										Left:   unit.Dp(10),
+										Bottom: unit.Dp(10),
+									}
+									inset.Layout(win.gtx, func() {
+										if win.inputs.messageInput.Text() == "" {
+											win.outputs.pasteMsg.Layout(win.gtx, &win.inputs.pasteMsg)
+										} else {
+											win.outputs.clearMsg.Layout(win.gtx, &win.inputs.clearMsg)
+										}
+									})
+								}),
+							)
 						}),
 						rigid(func() {
 							layout.Flex{}.Layout(win.gtx,
 								layout.Flexed(.6, func() {
-									win.outputs.verifyMessage.Layout(win.gtx)
+									layout.Inset{Bottom: unit.Dp(5), Top: unit.Dp(10)}.Layout(win.gtx, func() {
+										win.outputs.verifyMessage.Layout(win.gtx)
+									})
 								}),
 								layout.Flexed(.4, func() {
 									layout.Flex{}.Layout(win.gtx,
@@ -298,7 +384,7 @@ func (win *Window) editPasswordDiag() {
 									rigid(func() {
 										win.hFlexSB(
 											layout.Flexed(1, func() {
-												win.outputs.oldSpendingPassword.Layout(win.gtx)
+												win.outputs.oldSpendingPassword.Layout(win.gtx, &win.inputs.oldSpendingPassword)
 											}),
 										)
 									}),
@@ -316,7 +402,7 @@ func (win *Window) editPasswordDiag() {
 								rigid(func() {
 									win.hFlexSB(
 										layout.Flexed(1, func() {
-											win.outputs.spendingPassword.Layout(win.gtx)
+											win.outputs.spendingPassword.Layout(win.gtx, &win.inputs.spendingPassword)
 										}),
 									)
 								}),
@@ -328,7 +414,7 @@ func (win *Window) editPasswordDiag() {
 						rigid(func() {
 							win.hFlexSB(
 								layout.Flexed(1, func() {
-									win.outputs.matchSpending.Layout(win.gtx)
+									win.outputs.matchSpending.Layout(win.gtx, &win.inputs.matchSpending)
 								}),
 							)
 						}),

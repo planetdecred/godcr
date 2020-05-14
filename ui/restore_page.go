@@ -72,15 +72,13 @@ func inputsGroup(win *Window, l *layout.List, len int, startIndex int) {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Left: unit.Dp(20), Bottom: unit.Dp(20)}.Layout(win.gtx, func() {
-							win.gtx.Constraints.Width.Min = win.gtx.Px(unit.Dp(150))
-							win.gtx.Constraints.Width.Max = win.gtx.Constraints.Width.Min
-							win.outputs.seedEditors[i+startIndex].Layout(win.gtx)
+							win.outputs.seedEditors[i+startIndex].Layout(win.gtx, &win.inputs.seedEditors.editors[i+startIndex])
 						})
 					}),
 				)
 			}),
 			layout.Rigid(func() {
-				autoComplete(win, win.outputs.seedEditors[i+startIndex].Focused())
+				autoComplete(win, win.inputs.seedEditors.editors[i+startIndex].Focused())
 			}),
 		)
 	})
