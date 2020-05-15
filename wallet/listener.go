@@ -31,6 +31,9 @@ const (
 
 	// BlockAttached indicates a block attached signal
 	BlockAttached
+
+	// BlockConfirmed indicates a block update signal
+	BlockConfirmed
 )
 
 const (
@@ -57,8 +60,8 @@ type (
 		Stage          SyncProgressStage
 		ProgressReport interface{}
 		ConnectedPeers int32
-		BlockUpdate    NewBlock
-		BlockConfirmed TxConfirmed
+		BlockInfo      NewBlock
+		ConfirmedTxn   TxConfirmed
 	}
 )
 

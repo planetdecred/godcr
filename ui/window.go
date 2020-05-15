@@ -25,6 +25,7 @@ type Window struct {
 	walletInfo         *wallet.MultiWalletInfo
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions *wallet.Transactions
+	walletTransaction  *wallet.Transaction
 
 	current string
 	dialog  layout.Widget
@@ -142,9 +143,11 @@ func (win *Window) Loop(shutdown chan int) {
 			case wallet.BlockAttached:
 				if win.walletInfo.Synced {
 					win.wallet.GetMultiWalletInfo()
+					win.updateSyncProgress(update.BlockInfo)
 				}
+			case wallet.BlockConfirmed:
+				win.updateSyncProgress(update.ConfirmedTxn)
 			}
-			win.updateSyncProgress(update.BlockConfirmed)
 
 		case e := <-win.window.Events():
 			switch evt := e.(type) {

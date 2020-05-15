@@ -2,11 +2,14 @@ package ui
 
 import (
 	"fmt"
+	"image"
 	"sort"
 	"strconv"
 	"time"
 
 	"gioui.org/f32"
+	"gioui.org/gesture"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
@@ -30,10 +33,12 @@ type transactionsPage struct {
 	container                                   layout.Flex
 	txsList                                     layout.List
 	walletTransactions                          **wallet.Transactions
+	walletTransaction                           **wallet.Transaction
 	filterSorter                                string
 	filterSortW, filterDirectionW               *widget.Enum
 	filterDirection, filterSort                 []decredmaterial.RadioButton
 	defaultFilterSorter, defaultFilterDirection string
+	toTxnDetails                                map[string]*gesture.Click
 
 	rowDirectionWidth,
 	rowDateWidth,
@@ -52,6 +57,7 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		container:              layout.Flex{Axis: layout.Vertical},
 		txsList:                layout.List{Axis: layout.Vertical},
 		walletTransactions:     &win.walletTransactions,
+		walletTransaction:      &win.walletTransaction,
 		filterDirectionW:       new(widget.Enum),
 		filterSortW:            new(widget.Enum),
 		defaultFilterSorter:    "0",
@@ -89,6 +95,7 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 	}
 
 	return func() {
+		page.updateTotransactionDetailsButtons()
 		page.Layout(common)
 		page.Handle(common)
 	}
@@ -127,6 +134,11 @@ func (page *transactionsPage) Layout(common pageCommon) {
 									return
 								}
 								page.txnRowInfo(&common, walTxs[index])
+
+								click := page.toTxnDetails[walTxs[index].Txn.Hash]
+								pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
+								click.Add(gtx.Ops)
+								page.goToTxnDetails(&common, &walTxs[index], click)
 							})
 						}),
 					)
@@ -281,5 +293,26 @@ func (page *transactionsPage) sortTransactions(common *pageCommon) {
 			}
 			return frontTime.Before(backTime)
 		})
+	}
+}
+
+func (page *transactionsPage) updateTotransactionDetailsButtons() {
+	if (*page.walletTransactions).Total != len(page.toTxnDetails) {
+		page.toTxnDetails = make(map[string]*gesture.Click, (*page.walletTransactions).Total)
+
+		for _, walTxs := range (*page.walletTransactions).Txs {
+			for _, txn := range walTxs {
+				page.toTxnDetails[txn.Txn.Hash] = &gesture.Click{}
+			}
+		}
+	}
+}
+
+func (page *transactionsPage) goToTxnDetails(c *pageCommon, txn *wallet.Transaction, click *gesture.Click) {
+	for _, e := range click.Events(c.gtx) {
+		if e.Type == gesture.TypeClick {
+			*page.walletTransaction = txn
+			*c.page = PageTransactionDetails
+		}
 	}
 }
