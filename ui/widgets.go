@@ -41,11 +41,6 @@ type inputs struct {
 
 type combined struct {
 	sel *decredmaterial.Select
-
-	transaction struct {
-		status, direction *decredmaterial.Icon
-		amount, time      decredmaterial.Label
-	}
 }
 
 type outputs struct {
