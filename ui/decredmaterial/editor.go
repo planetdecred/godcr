@@ -92,7 +92,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
-	if e.editor.Focused() || e.editor.Len() != 0 {
+	if e.editor.Focused() || editor.Len() != 0 {
 		e.TitleLabel.Text = e.Hint
 		e.LineColor = color.RGBA{0, 137, 123, 255}
 		e.Hint = ""
