@@ -16,16 +16,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const (
-	PageTransactionDetails = "transaction"
-	pageContentInset       = 30
-	rowGroupInset          = 20
-)
-
-type transactionWdg struct {
-	status, direction *decredmaterial.Icon
-	amount, time      decredmaterial.Label
-}
+const PageTransactionDetails = "transaction"
 
 type transactionPage struct {
 	transactionPageContainer            layout.List
@@ -37,6 +28,8 @@ type transactionPage struct {
 	expandInputs, expandOutputs, viewTxnOnDcrdataW,
 	backButton widget.Button
 	viewTxnOnDcrdata decredmaterial.Button
+
+	pageContentInset, rowGroupInset float32
 }
 
 func (win *Window) TransactionPage(common pageCommon) layout.Widget {
@@ -65,6 +58,8 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 		},
 		backButtonW:      common.theme.PlainIconButton(common.icons.navigationArrowBack),
 		viewTxnOnDcrdata: common.theme.Button("View on dcrdata"),
+		pageContentInset: 30,
+		rowGroupInset:    20,
 	}
 	page.backButtonW.Color = common.theme.Color.Hint
 	page.backButtonW.Size = unit.Dp(32)
@@ -79,29 +74,29 @@ func (page *transactionPage) Layout(common pageCommon) {
 	gtx := common.gtx
 	widgets := []func(){
 		func() {
-			layout.Inset{Top: unit.Dp(rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
 				page.txnBalanceAndStatus(&common)
 			})
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
 				page.txnTypeAndID(&common)
 			})
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
 				page.txnInputs(&common)
 			})
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
 				page.txnOutputs(&common)
 			})
 		},
 	}
 
 	common.Layout(gtx, func() {
-		layout.UniformInset(unit.Dp(pageContentInset)).Layout(gtx, func() {
+		layout.UniformInset(unit.Dp(page.pageContentInset)).Layout(gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func() {
 					page.header(&common)
@@ -140,31 +135,9 @@ func (page *transactionPage) header(common *pageCommon) {
 	txt.Layout(common.gtx)
 }
 
-func (page *transactionPage) initTxnWidgets(common *pageCommon, txWidgets *transactionWdg) {
-	transaction := *page.txnInfo
-	txWidgets.amount = common.theme.Label(unit.Dp(16), transaction.Balance)
-	txWidgets.time = common.theme.Body1("Pending")
-
-	if transaction.Status == "confirmed" {
-		txWidgets.time.Text = dcrlibwallet.ExtractDateOrTime(transaction.Txn.Timestamp)
-		txWidgets.status, _ = decredmaterial.NewIcon(icons.ActionCheckCircle)
-		txWidgets.status.Color = common.theme.Color.Success
-	} else {
-		txWidgets.status, _ = decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)
-	}
-
-	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
-		txWidgets.direction, _ = decredmaterial.NewIcon(icons.ContentRemove)
-		txWidgets.direction.Color = common.theme.Color.Danger
-	} else {
-		txWidgets.direction = common.icons.contentAdd
-		txWidgets.direction.Color = common.theme.Color.Success
-	}
-}
-
 func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 	txnWidgets := transactionWdg{}
-	page.initTxnWidgets(common, &txnWidgets)
+	initTxnWidgets(common, *page.txnInfo, &txnWidgets)
 
 	vertFlex.Layout(common.gtx,
 		layout.Rigid(func() {
@@ -215,7 +188,7 @@ func (page *transactionPage) txnTypeAndID(common *pageCommon) {
 
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
-			layout.Inset{Bottom: unit.Dp(rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Bottom: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
 				row("Transaction ID", common.theme.Body1(transaction.Txn.Hash))
 			})
 		}),
