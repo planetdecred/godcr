@@ -32,19 +32,15 @@ type SignMessagePage struct {
 	addressEditorWidget *widget.Editor
 	messageEditorWidget *widget.Editor
 
-	clearButtonMaterial          decredmaterial.Button
-	signButtonMaterial           decredmaterial.Button
-	copyButtonMaterial           decredmaterial.Button
-	pasteInAddressButtonMaterial decredmaterial.Button
-	pasteInMessageButtonMaterial decredmaterial.Button
+	clearButtonMaterial decredmaterial.Button
+	signButtonMaterial  decredmaterial.Button
+	copyButtonMaterial  decredmaterial.Button
 
 	passwordModal *decredmaterial.Password
 
-	clearButtonWidget          *widget.Button
-	signButtonWidget           *widget.Button
-	copyButtonWidget           *widget.Button
-	pasteInAddressButtonWidget *widget.Button
-	pasteInMessageButtonWidget *widget.Button
+	clearButtonWidget *widget.Button
+	signButtonWidget  *widget.Button
+	copyButtonWidget  *widget.Button
 }
 
 var signMessagePage *SignMessagePage
@@ -103,9 +99,6 @@ func (pg *SignMessagePage) drawAddressEditor(gtx *layout.Context) {
 		layout.Flexed(editorWidthRatio, func() {
 			pg.addressEditorMaterial.Layout(gtx, pg.addressEditorWidget)
 		}),
-		layout.Rigid(func() {
-			pg.pasteInAddressButtonMaterial.Layout(gtx, pg.pasteInAddressButtonWidget)
-		}),
 	)
 
 	if pg.addressErrorLabel.Text != "" {
@@ -122,9 +115,6 @@ func (pg *SignMessagePage) drawMessageEditor(gtx *layout.Context) {
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Flexed(editorWidthRatio, func() {
 			pg.messageEditorMaterial.Layout(gtx, pg.messageEditorWidget)
-		}),
-		layout.Rigid(func() {
-			pg.pasteInMessageButtonMaterial.Layout(gtx, pg.pasteInMessageButtonWidget)
 		}),
 	)
 	if pg.messageErrorLabel.Text != "" {
@@ -189,14 +179,6 @@ func (pg *SignMessagePage) handleEvents(gtx *layout.Context) {
 		}
 	}
 
-	for pg.pasteInAddressButtonWidget.Clicked(gtx) {
-		pg.addressEditorWidget.Insert(GetClipboardContent())
-	}
-
-	for pg.pasteInMessageButtonWidget.Clicked(gtx) {
-		pg.messageEditorWidget.Insert(GetClipboardContent())
-	}
-
 	for pg.copyButtonWidget.Clicked(gtx) {
 		clipboard.WriteAll(pg.signedMessageLabel.Text)
 	}
@@ -229,14 +211,14 @@ func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
 	address := pg.addressEditorWidget.Text()
 
 	if address == "" && !ignoreEmpty {
-		pg.addressErrorLabel.Text = "please enter a valid address"
+		pg.addressEditorMaterial.ErrorLabel.Text = "Please enter a valid address"
 		return false
 	}
 
 	if address != "" {
 		isValid, _ := pg.wallet.IsAddressValid(address)
 		if !isValid {
-			pg.addressErrorLabel.Text = "invalid address"
+			pg.addressEditorMaterial.ErrorLabel.Text = "Invalid address"
 			return false
 		}
 	}
@@ -246,7 +228,7 @@ func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
 func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
 	message := pg.messageEditorWidget.Text()
 	if message == "" && !ignoreEmpty {
-		pg.messageErrorLabel.Text = "please enter a message to sign"
+		pg.messageEditorMaterial.ErrorLabel.Text = "Please enter a message to sign"
 		return false
 	}
 	return true
@@ -273,11 +255,15 @@ func (win *Window) newSignMessagePage() *SignMessagePage {
 	pg.messageErrorLabel = pg.theme.Caption("")
 
 	pg.addressEditorMaterial = pg.theme.Editor("Address")
+	pg.addressEditorMaterial.IsVisible = true
+	pg.addressEditorMaterial.IsRequired = true
 	pg.addressEditorWidget = &widget.Editor{
 		SingleLine: true,
 	}
 
 	pg.messageEditorMaterial = pg.theme.Editor("Message")
+	pg.messageEditorMaterial.IsVisible = true
+	pg.messageEditorMaterial.IsRequired = true
 	pg.messageEditorWidget = &widget.Editor{
 		SingleLine: true,
 	}
@@ -288,19 +274,9 @@ func (win *Window) newSignMessagePage() *SignMessagePage {
 	pg.signButtonMaterial = pg.theme.Button("Sign")
 	pg.signButtonWidget = new(widget.Button)
 
-	pg.pasteInAddressButtonMaterial = pg.theme.Button("Paste")
-	pg.pasteInAddressButtonWidget = new(widget.Button)
-
 	pg.copyButtonMaterial = pg.theme.Button("Copy")
 	pg.copyButtonWidget = new(widget.Button)
 
-	pg.pasteInMessageButtonMaterial = pg.theme.Button("Paste")
-	pg.pasteInMessageButtonWidget = new(widget.Button)
-
-	pg.pasteInMessageButtonMaterial.Background = pg.theme.Color.Surface
-	pg.pasteInMessageButtonMaterial.Color = pg.theme.Color.Primary
-	pg.pasteInAddressButtonMaterial.Background = pg.theme.Color.Surface
-	pg.pasteInAddressButtonMaterial.Color = pg.theme.Color.Primary
 	pg.clearButtonMaterial.Background = pg.theme.Color.Background
 	pg.clearButtonMaterial.Color = pg.theme.Color.Gray
 	pg.addressErrorLabel.Color = pg.theme.Color.Danger

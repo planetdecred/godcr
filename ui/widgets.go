@@ -1,3 +1,4 @@
+//widget
 package ui
 
 import (
@@ -112,50 +113,31 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.copy.Size = unit.Dp(30)
 	win.outputs.icons.copy.Background = theme.Color.Background
 	win.outputs.icons.copy.Color = theme.Color.Text
-	win.outputs.icons.pasteAddr = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteAddr.Padding = unit.Dp(5)
-	win.outputs.icons.pasteAddr.Size = unit.Dp(30)
-	win.outputs.icons.pasteAddr.Background = theme.Color.Background
-	win.outputs.icons.pasteAddr.Color = theme.Color.Text
-	win.outputs.icons.pasteMsg = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteMsg.Padding = unit.Dp(5)
-	win.outputs.icons.pasteMsg.Size = unit.Dp(30)
-	win.outputs.icons.pasteMsg.Background = theme.Color.Background
-	win.outputs.icons.pasteMsg.Color = theme.Color.Text
-	win.outputs.icons.pasteSign = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)))
-	win.outputs.icons.pasteSign.Padding = unit.Dp(5)
-	win.outputs.icons.pasteSign.Size = unit.Dp(30)
-	win.outputs.icons.pasteSign.Background = theme.Color.Background
-	win.outputs.icons.pasteSign.Color = theme.Color.Text
-	win.outputs.icons.clearSign = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearSign.Padding = unit.Dp(5)
-	win.outputs.icons.clearSign.Size = unit.Dp(30)
-	win.outputs.icons.clearSign.Background = theme.Color.Background
-	win.outputs.icons.clearSign.Color = theme.Color.Text
-	win.outputs.icons.clearAddr = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearAddr.Padding = unit.Dp(5)
-	win.outputs.icons.clearAddr.Size = unit.Dp(30)
-	win.outputs.icons.clearAddr.Background = theme.Color.Background
-	win.outputs.icons.clearAddr.Color = theme.Color.Text
-	win.outputs.icons.clearMsg = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentClear)))
-	win.outputs.icons.clearMsg.Padding = unit.Dp(5)
-	win.outputs.icons.clearMsg.Size = unit.Dp(30)
-	win.outputs.icons.clearMsg.Background = theme.Color.Background
-	win.outputs.icons.clearMsg.Color = theme.Color.Text
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
+	win.outputs.spendingPassword.IsRequired = true
 	win.inputs.spendingPassword.SingleLine = true
+
 	win.outputs.passwordBar = theme.ProgressBar(0)
+
 	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
+	win.outputs.oldSpendingPassword.IsRequired = true
 	win.inputs.oldSpendingPassword.SingleLine = true
 
 	win.outputs.matchSpending = theme.Editor("Enter password again")
+	win.outputs.matchSpending.IsRequired = true
 	win.inputs.matchSpending.SingleLine = true
 
 	// verify message widgets
 	win.outputs.addressInput = theme.Editor("Address")
+	win.outputs.addressInput.IsRequired = true
+	win.outputs.addressInput.IsVisible = true
 	win.outputs.signInput = theme.Editor("Signature")
+	win.outputs.signInput.IsRequired = true
+	win.outputs.signInput.IsVisible = true
 	win.outputs.messageInput = theme.Editor("Message")
+	win.outputs.messageInput.IsRequired = true
+	win.outputs.messageInput.IsVisible = true
 	win.outputs.verifyBtn = theme.Button("Verify")
 	win.outputs.verifyBtn.TextSize = unit.Dp(13)
 	win.outputs.clearBtn = theme.Button("Clear All")
@@ -229,7 +211,9 @@ func (win *Window) initWidgets() {
 	win.outputs.verifyInfo = win.outputs.icons.verifyInfo
 
 	for i := 0; i <= 32; i++ {
-		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
+		e := theme.Editor(fmt.Sprintf("Input word %d...", i+1))
+		e.IsTitleLabel = false
+		win.outputs.seedEditors = append(win.outputs.seedEditors, e)
 		win.inputs.seedEditors.focusIndex = -1
 		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
 	}

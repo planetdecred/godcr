@@ -7,7 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	_ "image/png"
+	_ "image/png" //makes png images a decodable format
 
 	"gioui.org/f32"
 	"gioui.org/layout"
