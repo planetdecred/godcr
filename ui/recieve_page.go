@@ -146,9 +146,9 @@ func (p *receivePage) rightNav() {
 				}
 			}),
 			layout.Rigid(func() {
-				layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(p.gtx, func() {
-					p.infoBtn.Layout(p.gtx, &p.infoBtnW)
-				})
+				// layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(p.gtx, func() {
+				// 	p.infoBtn.Layout(p.gtx, &p.infoBtnW)
+				// })
 			}),
 			layout.Rigid(func() {
 				if p.isInfo {
