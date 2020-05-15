@@ -211,14 +211,14 @@ func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
 	address := pg.addressEditorWidget.Text()
 
 	if address == "" && !ignoreEmpty {
-		pg.addressErrorLabel.Text = "please enter a valid address"
+		pg.addressEditorMaterial.ErrorLabel.Text = "Please enter a valid address"
 		return false
 	}
 
 	if address != "" {
 		isValid, _ := pg.wallet.IsAddressValid(address)
 		if !isValid {
-			pg.addressErrorLabel.Text = "invalid address"
+			pg.addressEditorMaterial.ErrorLabel.Text = "Invalid address"
 			return false
 		}
 	}
@@ -228,7 +228,7 @@ func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
 func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
 	message := pg.messageEditorWidget.Text()
 	if message == "" && !ignoreEmpty {
-		pg.messageErrorLabel.Text = "please enter a message to sign"
+		pg.messageEditorMaterial.ErrorLabel.Text = "Please enter a message to sign"
 		return false
 	}
 	return true
@@ -255,11 +255,15 @@ func (win *Window) newSignMessagePage() *SignMessagePage {
 	pg.messageErrorLabel = pg.theme.Caption("")
 
 	pg.addressEditorMaterial = pg.theme.Editor("Address")
+	pg.addressEditorMaterial.IsVisible = true
+	pg.addressEditorMaterial.IsRequired = true
 	pg.addressEditorWidget = &widget.Editor{
 		SingleLine: true,
 	}
 
 	pg.messageEditorMaterial = pg.theme.Editor("Message")
+	pg.messageEditorMaterial.IsVisible = true
+	pg.messageEditorMaterial.IsRequired = true
 	pg.messageEditorWidget = &widget.Editor{
 		SingleLine: true,
 	}

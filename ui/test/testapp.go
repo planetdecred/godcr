@@ -35,6 +35,7 @@ type TestStruct struct {
 	gtx    *layout.Context
 
 	customEditorInput struct {
+		test1W, test2W, test3W, test4W         widget.Editor
 		test1btn, test2btn, test3btn, test4btn widget.Button
 		radiobtn                               widget.Enum
 		checkbox                               widget.CheckBox
@@ -87,7 +88,7 @@ func (t *TestStruct) initWidgets() {
 
 	t.customEditorOutput.test2 = theme.Editor("Enter Hint Text2")
 	t.customEditorOutput.test2.IsVisible = true
-	t.customEditorOutput.test2.SingleLine = true
+	t.customEditorInput.test1W.SingleLine = true
 
 	t.customEditorOutput.test3 = theme.Editor("Enter Hint Text3")
 	t.customEditorOutput.test3.IsRequired = true
@@ -118,39 +119,39 @@ func (t *TestStruct) TestPage() {
 func (t *TestStruct) testPageContents() {
 	t.handleInput()
 	pageContent := []func(){
-		// func() {
-		// 	t.theme.H4("Decrematerial Test Page").Layout(t.gtx)
-		// },
-		// func() {
-		// 	t.gtx.Constraints.Width.Min = t.gtx.Px(unit.Dp(450))
-		// 	t.gtx.Constraints.Width.Max = t.gtx.Constraints.Width.Min
-		// 	t.customEditorOutput.test1.Layout(t.gtx)
-		// },
-		// func() {
-		// 	t.customEditorOutput.test2.Layout(t.gtx)
-		// },
-		// func() {
-		// 	t.customEditorOutput.test3.Layout(t.gtx)
-		// },
-		// func() {
-		// 	// t.customEditorOutput.test4.Layout(t.gtx)
-		// },
-		// func() {
-		// 	layout.Flex{}.Layout(t.gtx,
-		// 		layout.Rigid(func() {
-		// 			t.customEditorOutput.test1btn.Layout(t.gtx, &t.customEditorInput.test1btn)
-		// 		}),
-		// 		layout.Rigid(func() {
-		// 			t.customEditorOutput.test2btn.Layout(t.gtx, &t.customEditorInput.test2btn)
-		// 		}),
-		// 		layout.Rigid(func() {
-		// 			t.customEditorOutput.test3btn.Layout(t.gtx, &t.customEditorInput.test3btn)
-		// 		}),
-		// 		layout.Rigid(func() {
-		// 			t.customEditorOutput.test4btn.Layout(t.gtx, &t.customEditorInput.test4btn)
-		// 		}),
-		// 	)
-		// },
+		func() {
+			t.theme.H4("Decrematerial Test Page").Layout(t.gtx)
+		},
+		func() {
+			t.gtx.Constraints.Width.Min = t.gtx.Px(unit.Dp(450))
+			t.gtx.Constraints.Width.Max = t.gtx.Constraints.Width.Min
+			t.customEditorOutput.test1.Layout(t.gtx, &t.customEditorInput.test1W)
+		},
+		func() {
+			t.customEditorOutput.test2.Layout(t.gtx, &t.customEditorInput.test2W)
+		},
+		func() {
+			t.customEditorOutput.test3.Layout(t.gtx, &t.customEditorInput.test3W)
+		},
+		func() {
+			t.customEditorOutput.test4.Layout(t.gtx, &t.customEditorInput.test4W)
+		},
+		func() {
+			layout.Flex{}.Layout(t.gtx,
+				layout.Rigid(func() {
+					t.customEditorOutput.test1btn.Layout(t.gtx, &t.customEditorInput.test1btn)
+				}),
+				layout.Rigid(func() {
+					t.customEditorOutput.test2btn.Layout(t.gtx, &t.customEditorInput.test2btn)
+				}),
+				layout.Rigid(func() {
+					t.customEditorOutput.test3btn.Layout(t.gtx, &t.customEditorInput.test3btn)
+				}),
+				layout.Rigid(func() {
+					t.customEditorOutput.test4btn.Layout(t.gtx, &t.customEditorInput.test4btn)
+				}),
+			)
+		},
 		func() {
 			t.gtx.Constraints.Height.Max = 20
 			t.gtx.Constraints.Width.Max = t.gtx.Px(unit.Dp(550))
@@ -183,27 +184,27 @@ func (t *TestStruct) testPageContents() {
 }
 
 func (t *TestStruct) handleInput() {
-	// if t.customEditorInput.test1btn.Clicked(t.gtx) {
-	// 	txt := t.customEditorOutput.test1.Text()
-	// 	if txt == "" {
-	// 		t.customEditorOutput.test1.ErrorLabel.Text = "This field is required and cannot be empty."
-	// 		return
-	// 	}
-	// 	t.customEditorOutput.testOutput.Text = txt
-	// }
-	// if t.customEditorInput.test2btn.Clicked(t.gtx) {
-	// 	txt := t.customEditorOutput.test2.Text()
-	// 	t.customEditorOutput.testOutput.Text = txt
-	// }
-	// if t.customEditorInput.test3btn.Clicked(t.gtx) {
-	// 	txt := t.customEditorOutput.test3.Text()
-	// 	if txt == "" {
-	// 		t.customEditorOutput.test3.LineColor = t.theme.Color.Danger
-	// 	}
-	// 	t.customEditorOutput.testOutput.Text = txt
-	// }
-	// if t.customEditorInput.test4btn.Clicked(t.gtx) {
-	// 	txt := t.customEditorOutput.test4.Text()
-	// 	t.customEditorOutput.testOutput.Text = txt
-	// }
+	if t.customEditorInput.test1btn.Clicked(t.gtx) {
+		txt := t.customEditorInput.test1W.Text()
+		if txt == "" {
+			t.customEditorOutput.test1.ErrorLabel.Text = "This field is required and cannot be empty."
+			return
+		}
+		t.customEditorOutput.testOutput.Text = txt
+	}
+	if t.customEditorInput.test2btn.Clicked(t.gtx) {
+		txt := t.customEditorInput.test2W.Text()
+		t.customEditorOutput.testOutput.Text = txt
+	}
+	if t.customEditorInput.test3btn.Clicked(t.gtx) {
+		txt := t.customEditorInput.test3W.Text()
+		if txt == "" {
+			t.customEditorOutput.test3.LineColor = t.theme.Color.Danger
+		}
+		t.customEditorOutput.testOutput.Text = txt
+	}
+	if t.customEditorInput.test4btn.Clicked(t.gtx) {
+		txt := t.customEditorInput.test3W.Text()
+		t.customEditorOutput.testOutput.Text = txt
+	}
 }

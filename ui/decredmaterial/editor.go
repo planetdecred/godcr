@@ -120,7 +120,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 								inset.Layout(gtx, func() {
 									layout.Flex{}.Layout(gtx,
 										layout.Flexed(e.flexWidth, func() {
-											e.EditorWidget(gtx, editor)
+											e.editorWidget(gtx, editor)
 										}),
 									)
 								})
@@ -158,7 +158,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 	})
 }
 
-func (e Editor) EditorWidget(gtx *layout.Context, editor *widget.Editor) {
+func (e Editor) editorWidget(gtx *layout.Context, editor *widget.Editor) {
 	var stack op.StackOp
 	stack.Push(gtx.Ops)
 	var macro op.MacroOp
@@ -202,34 +202,6 @@ func (e Editor) editorLine(gtx *layout.Context) {
 			paint.PaintOp{Rect: rect}.Add(gtx.Ops)
 		}),
 	)
-}
-
-func (e Editor) Text() string {
-	if e.IsRequired && e.editor.Len() == 0 && !e.editor.Focused() {
-		e.ErrorLabel.Text = "Field is required and cannot be empty."
-		e.LineColor = color.RGBA{255, 0, 0, 255}
-		return ""
-	}
-	return e.editor.Text()
-}
-
-func (e Editor) SetText(text string) {
-	if text == "" {
-		return
-	}
-	e.editor.SetText(text)
-}
-
-func (e Editor) Len() int {
-	return e.editor.Len()
-}
-
-func (e Editor) Clear() {
-	e.editor.SetText("")
-}
-
-func (e Editor) Focused() bool {
-	return e.editor.Focused()
 }
 
 func (e Editor) handleEvents(gtx *layout.Context) {

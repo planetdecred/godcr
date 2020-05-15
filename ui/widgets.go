@@ -26,19 +26,6 @@ type inputs struct {
 	addressInput, messageInput, signInput                                widget.Editor
 	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                      widget.Button
 	restoreDiag, addAcctDiag, savePassword                               widget.Button
-	// =======
-	// 	createDiag, deleteDiag, cancelDialog                               widget.Button
-	// 	createWallet, restoreWallet, deleteWallet, renameWallet            widget.Button
-	// 	addAccount, toggleWalletRename                                     widget.Button
-	// 	toOverview, toWallets, toTransactions, toSend, toSettings          widget.Button
-	// 	toRestoreWallet                                                    widget.Button
-	// 	toReceive                                                          widget.Button
-	// 	toTransactionsFilters                                              widget.Button
-	// 	applyFiltersTransactions                                           widget.Button
-	// 	sync, syncHeader, hideMsgInfo, changePasswordDiag, signMessageDiag widget.Button
-	// 	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                    widget.Button
-	// 	restoreDiag, addAcctDiag, savePassword                             widget.Button
-	// >>>>>>> add settext(), fix editor on other pages
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -128,18 +115,26 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.copy.Color = theme.Color.Text
 
 	win.outputs.spendingPassword = theme.Editor("Enter password")
+	win.outputs.spendingPassword.IsRequired = true
 	win.inputs.spendingPassword.SingleLine = true
+
 	win.outputs.passwordBar = theme.ProgressBar(0)
+
 	win.outputs.oldSpendingPassword = theme.Editor("Enter old password")
+	win.outputs.oldSpendingPassword.IsRequired = true
 	win.inputs.oldSpendingPassword.SingleLine = true
 
 	win.outputs.matchSpending = theme.Editor("Enter password again")
+	win.outputs.matchSpending.IsRequired = true
 	win.inputs.matchSpending.SingleLine = true
 
 	// verify message widgets
 	win.outputs.addressInput = theme.Editor("Address")
+	win.outputs.addressInput.IsRequired = true
 	win.outputs.signInput = theme.Editor("Signature")
+	win.outputs.signInput.IsRequired = true
 	win.outputs.messageInput = theme.Editor("Message")
+	win.outputs.messageInput.IsRequired = true
 	win.outputs.verifyBtn = theme.Button("Verify")
 	win.outputs.verifyBtn.TextSize = unit.Dp(13)
 	win.outputs.clearBtn = theme.Button("Clear All")
@@ -213,7 +208,9 @@ func (win *Window) initWidgets() {
 	win.outputs.verifyInfo = win.outputs.icons.verifyInfo
 
 	for i := 0; i <= 32; i++ {
-		win.outputs.seedEditors = append(win.outputs.seedEditors, theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
+		e := theme.Editor(fmt.Sprintf("Input word %d...", i+1))
+		e.IsTitleLabel = false
+		win.outputs.seedEditors = append(win.outputs.seedEditors, e)
 		win.inputs.seedEditors.focusIndex = -1
 		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
