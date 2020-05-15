@@ -75,7 +75,7 @@ func (win *Window) addPages() {
 	})
 
 	accountsTab := decredmaterial.NewTabs()
-	accountsTab.Position = decredmaterial.Left
+	accountsTab.Position = decredmaterial.Top
 	accountsTab.Separator = false
 	common := pageCommon{
 		wallet:          win.wallet,
@@ -135,7 +135,6 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 		}
 	}
 	page.accountsTab.SetTabs(accounts)
-	page.accountsTab.Position = decredmaterial.Top
 	if page.accountsTab.Changed() {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
