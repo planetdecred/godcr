@@ -14,6 +14,7 @@ type pageIcons struct {
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle *decredmaterial.Icon
 	overviewIcon, walletIcon image.Image
+	navigationArrowBack      *decredmaterial.Icon
 }
 
 type pageCommon struct {
@@ -41,6 +42,7 @@ func (win *Window) addPages() {
 		contentRemove:              mustIcon(decredmaterial.NewIcon(icons.ContentRemove)),
 		toggleRadioButtonUnchecked: mustIcon(decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)),
 		actionCheckCircle:          mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
+		navigationArrowBack:        mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
@@ -83,6 +85,7 @@ func (win *Window) addPages() {
 	win.pages[PageReceive] = win.Receive
 	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
+	win.pages[PageTransactionDetails] = win.TransactionPage(common)
 	win.pages[PageSignMessage] = win.SignMessagePage
 
 }

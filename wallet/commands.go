@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 )
@@ -131,14 +132,14 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
 	}()
 }
 
-// transactionStatus accepts the bestBlockHeight, transactionBlockHeight and returns a transaction status
-// which could be confirmed or pending
-func transactionStatus(bestBlockHeight, txnBlockHeight int32) string {
+// transactionStatus accepts the bestBlockHeight, transactionBlockHeight returns a transaction status
+// which could be confirmed/pending and confirmations count
+func transactionStatus(bestBlockHeight, txnBlockHeight int32) (string, int32) {
 	confirmations := bestBlockHeight - txnBlockHeight + 1
 	if txnBlockHeight != -1 && confirmations > dcrlibwallet.DefaultRequiredConfirmations {
-		return "confirmed"
+		return "confirmed", confirmations
 	}
-	return "pending"
+	return "pending", confirmations
 }
 
 // GetAllTransactions collects a per-wallet slice of transactions fitting the parameters.
@@ -156,6 +157,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		var recentTxs []Transaction
 		transactions := make(map[int][]Transaction)
 		bestBestBlock := wal.multi.GetBestBlock()
+		totalTxn := 0
 
 		for _, wall := range wallets {
 			txs, err := wall.GetTransactionsRaw(offset, limit, txfilter, true)
@@ -164,18 +166,21 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				wal.Send <- resp
 				return
 			}
-
 			for _, txnRaw := range txs {
+				totalTxn++
+				status, confirmations := transactionStatus(bestBestBlock.Height, txnRaw.BlockHeight)
 				txn := Transaction{
-					Txn:        txnRaw,
-					Status:     transactionStatus(bestBestBlock.Height, txnRaw.BlockHeight),
-					Balance:    dcrutil.Amount(txnRaw.Amount).String(),
-					WalletName: wallets[txnRaw.WalletID].Name,
+					Txn:           txnRaw,
+					Status:        status,
+					Balance:       dcrutil.Amount(txnRaw.Amount).String(),
+					WalletName:    wallets[txnRaw.WalletID].Name,
+					Confirmations: confirmations,
 				}
 				recentTxs = append(recentTxs, txn)
 				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
 			}
 		}
+
 		sort.SliceStable(recentTxs, func(i, j int) bool {
 			backTime := time.Unix(recentTxs[j].Txn.Timestamp, 0)
 			frontTime := time.Unix(recentTxs[i].Txn.Timestamp, 0)
@@ -188,8 +193,42 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 
 		resp.Resp = &Transactions{
+			Total:  totalTxn,
 			Txs:    transactions,
 			Recent: recentTxs,
+		}
+		wal.Send <- resp
+	}()
+}
+
+// GetTransaction get transaction information by wallet ID and transaction hash
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
+	go func() {
+		var resp Response
+		wall := wal.multi.WalletWithID(walletID)
+
+		hash, err := chainhash.NewHashFromStr(txnHash)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+
+		txn, err := wall.GetTransactionRaw(hash[:])
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+		bestBestBlock := wal.multi.GetBestBlock()
+		status, confirmations := transactionStatus(bestBestBlock.Height, txn.BlockHeight)
+		resp.Resp = &Transaction{
+			Txn:           *txn,
+			Status:        status,
+			Balance:       dcrutil.Amount(txn.Amount).String(),
+			WalletName:    wall.Name,
+			Confirmations: confirmations,
 		}
 		wal.Send <- resp
 	}()
