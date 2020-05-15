@@ -94,7 +94,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 	}
 	if e.editor.Focused() || e.editor.Len() != 0 {
 		e.TitleLabel.Text = e.Hint
-		e.LineColor = color.RGBA{0, 137, 123, 255}
+		e.LineColor = color.RGBA{41, 112, 255, 255}
 		e.Hint = ""
 	}
 
@@ -103,7 +103,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 			layout.Rigid(func() {
 				if e.IsTitleLabel {
 					if e.editor.Focused() {
-						e.TitleLabel.Color = color.RGBA{0, 137, 123, 255}
+						e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
 					}
 					e.TitleLabel.Layout(gtx)
 				}
