@@ -131,10 +131,13 @@ func (win *Window) initWidgets() {
 	// verify message widgets
 	win.outputs.addressInput = theme.Editor("Address")
 	win.outputs.addressInput.IsRequired = true
+	win.outputs.addressInput.IsVisible = true
 	win.outputs.signInput = theme.Editor("Signature")
 	win.outputs.signInput.IsRequired = true
+	win.outputs.signInput.IsVisible = true
 	win.outputs.messageInput = theme.Editor("Message")
 	win.outputs.messageInput.IsRequired = true
+	win.outputs.messageInput.IsVisible = true
 	win.outputs.verifyBtn = theme.Button("Verify")
 	win.outputs.verifyBtn.TextSize = unit.Dp(13)
 	win.outputs.clearBtn = theme.Button("Clear All")
