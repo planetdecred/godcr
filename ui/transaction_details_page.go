@@ -16,7 +16,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageTransactionDetails = "transaction"
+const PageTransactionDetails = "transactiondetails"
 
 type transactionPage struct {
 	transactionPageContainer            layout.List

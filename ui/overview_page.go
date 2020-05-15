@@ -171,6 +171,7 @@ func (page overviewPage) recentTransactionsColumn() {
 					dcrlibwallet.ExtractDateOrTime(txn.Txn.Timestamp))),
 				status: theme.Body1(txn.Status),
 			}
+
 			transactionRows = append(transactionRows, func() {
 				page.recentTransactionRow(txnWidgets)
 			})

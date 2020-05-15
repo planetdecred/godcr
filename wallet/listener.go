@@ -60,7 +60,8 @@ type (
 		Stage          SyncProgressStage
 		ProgressReport interface{}
 		ConnectedPeers int32
-		ProcessTxn     interface{}
+		BlockInfo      NewBlock
+		ConfirmedTxn   TxConfirmed
 	}
 )
 
