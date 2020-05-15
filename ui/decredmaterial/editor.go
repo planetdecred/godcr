@@ -92,7 +92,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
-	if e.editor.Focused() || editor.Len() != 0 {
+	if e.editor.Focused() || e.editor.Len() != 0 {
 		e.TitleLabel.Text = e.Hint
 		e.LineColor = color.RGBA{0, 137, 123, 255}
 		e.Hint = ""
@@ -120,7 +120,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 								inset.Layout(gtx, func() {
 									layout.Flex{}.Layout(gtx,
 										layout.Flexed(e.flexWidth, func() {
-											e.editorWidget(gtx, editor)
+											e.editorWidget(gtx)
 										}),
 									)
 								})
@@ -158,7 +158,7 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 	})
 }
 
-func (e Editor) editorWidget(gtx *layout.Context, editor *widget.Editor) {
+func (e Editor) editorWidget(gtx *layout.Context) {
 	var stack op.StackOp
 	stack.Push(gtx.Ops)
 	var macro op.MacroOp
