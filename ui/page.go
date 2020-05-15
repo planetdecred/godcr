@@ -87,7 +87,6 @@ func (win *Window) addPages() {
 	win.pages[PageSend] = win.SendPage
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
 	win.pages[PageSignMessage] = win.SignMessagePage
-
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {

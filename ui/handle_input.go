@@ -227,42 +227,6 @@ func (win *Window) HandleInputs() {
 		}
 	}
 
-	data, err := clipboard.ReadAll()
-	if err != nil {
-		win.err = err.Error()
-	}
-
-	//signature control
-	if win.inputs.clearSign.Clicked(win.gtx) {
-		win.err = ""
-		win.inputs.signInput.SetText("")
-		return
-	}
-	if win.inputs.pasteSign.Clicked(win.gtx) {
-		win.inputs.signInput.SetText(data)
-		return
-	}
-	//address control
-	if win.inputs.clearAddr.Clicked(win.gtx) {
-		win.err = ""
-		win.inputs.addressInput.SetText("")
-		return
-	}
-	if win.inputs.pasteAddr.Clicked(win.gtx) {
-		win.inputs.addressInput.SetText(data)
-		return
-	}
-	//mesage control
-	if win.inputs.clearMsg.Clicked(win.gtx) {
-		win.err = ""
-		win.inputs.messageInput.SetText("")
-		return
-	}
-	if win.inputs.pasteMsg.Clicked(win.gtx) {
-		win.inputs.messageInput.SetText(data)
-		return
-	}
-
 	if win.inputs.clearBtn.Clicked(win.gtx) {
 		win.resetVerifyFields()
 		return
