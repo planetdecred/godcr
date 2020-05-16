@@ -122,11 +122,6 @@ func (win *Window) Header() {
 				win.outputs.toRestoreWallet.Layout(win.gtx, &win.inputs.toRestoreWallet)
 			})
 		}),
-		layout.Flexed(0.4, func() {
-			layout.Center.Layout(win.gtx, func() {
-				win.outputs.syncHeader.Layout(win.gtx, &win.inputs.syncHeader)
-			})
-		}),
 	)
 }
 
