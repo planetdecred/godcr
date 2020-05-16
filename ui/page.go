@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -12,21 +13,23 @@ import (
 type pageIcons struct {
 	contentAdd, contentClear, contentCreate, navigationCheck,
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
-	actionCheckCircle *decredmaterial.Icon
+	actionCheckCircle, contentCopy, actionInfo, navigationMore,
+	navigationArrowBack *decredmaterial.Icon
 	overviewIcon, walletIcon image.Image
-	navigationArrowBack      *decredmaterial.Icon
 }
 
 type pageCommon struct {
-	wallet         *wallet.Wallet
-	info           *wallet.MultiWalletInfo
-	selectedWallet *int
-	gtx            *layout.Context
-	theme          *decredmaterial.Theme
-	icons          pageIcons
-	page           *string
-	navTab         *decredmaterial.Tabs
-	walletsTab     *decredmaterial.Tabs
+	wallet          *wallet.Wallet
+	info            *wallet.MultiWalletInfo
+	selectedWallet  *int
+	selectedAccount *int
+	gtx             *layout.Context
+	theme           *decredmaterial.Theme
+	icons           pageIcons
+	page            *string
+	navTab          *decredmaterial.Tabs
+	walletsTab      *decredmaterial.Tabs
+	accountsTab     *decredmaterial.Tabs
 }
 
 func (win *Window) addPages() {
@@ -35,14 +38,17 @@ func (win *Window) addPages() {
 		contentClear:               mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
 		contentCreate:              mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
 		navigationCheck:            mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
-		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
-		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 		contentSend:                mustIcon(decredmaterial.NewIcon(icons.ContentSend)),
 		contentAddBox:              mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)),
 		contentRemove:              mustIcon(decredmaterial.NewIcon(icons.ContentRemove)),
 		toggleRadioButtonUnchecked: mustIcon(decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)),
 		actionCheckCircle:          mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 		navigationArrowBack:        mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)),
+		contentCopy:                mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
+		actionInfo:                 mustIcon(decredmaterial.NewIcon(icons.ActionInfo)),
+		navigationMore:             mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
+		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
+		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 	}
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
@@ -59,21 +65,30 @@ func (win *Window) addPages() {
 			Icon:  icons.overviewIcon,
 		},
 		{
+			Label: win.theme.Body1("Receive"),
+			Icon:  icons.overviewIcon,
+		},
+		{
 			Label: win.theme.Body1("Settings"),
 			Icon:  icons.overviewIcon,
 		},
 	})
 
+	accountsTab := decredmaterial.NewTabs()
+	accountsTab.Position = decredmaterial.Top
+	accountsTab.Separator = false
 	common := pageCommon{
-		wallet:         win.wallet,
-		info:           win.walletInfo,
-		selectedWallet: &win.selected,
-		gtx:            win.gtx,
-		theme:          win.theme,
-		icons:          icons,
-		page:           &win.current,
-		navTab:         tabs,
-		walletsTab:     decredmaterial.NewTabs(),
+		wallet:          win.wallet,
+		info:            win.walletInfo,
+		selectedWallet:  &win.selected,
+		selectedAccount: &win.selectedAccount,
+		gtx:             win.gtx,
+		theme:           win.theme,
+		icons:           icons,
+		page:            &win.current,
+		navTab:          tabs,
+		walletsTab:      decredmaterial.NewTabs(),
+		accountsTab:     accountsTab,
 		//cancelDialogW:  win.theme.PlainIconButton(icons.contentClear),
 	}
 
@@ -82,7 +97,7 @@ func (win *Window) addPages() {
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage
 	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageReceive] = win.Receive
+	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
@@ -90,7 +105,7 @@ func (win *Window) addPages() {
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
-	navs := []string{PageOverview, PageWallet, PageTransactions, PageOverview}
+	navs := []string{PageOverview, PageWallet, PageTransactions, PageReceive, PageOverview}
 	toMax(gtx)
 	page.navTab.Separator = true
 	page.navTab.Layout(gtx, body)
@@ -109,12 +124,56 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	}
 	page.walletsTab.SetTabs(wallets)
 	page.walletsTab.Position = decredmaterial.Top
+	if page.accountsTab.Changed() {
+		*page.selectedAccount = page.accountsTab.Selected
+	}
+
+	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
+	for i := range page.info.Wallets[*page.selectedWallet].Accounts {
+		accounts[i] = decredmaterial.TabItem{
+			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
+		}
+	}
+	page.accountsTab.SetTabs(accounts)
+	if page.accountsTab.Changed() {
+		*page.selectedAccount = page.accountsTab.Selected
+	}
+	page.accountsTab.Separator = false
+
 	bd := func() {
 		if page.walletsTab.Changed() {
 			*page.selectedWallet = page.walletsTab.Selected
+			*page.selectedAccount = 0
+			page.accountsTab.Selected = 0
 		}
 		page.walletsTab.Separator = false
 		page.walletsTab.Layout(gtx, body)
 	}
 	page.Layout(gtx, bd)
+}
+
+func (page pageCommon) accountTab(gtx *layout.Context, body layout.Widget) {
+	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
+	for i, account := range page.info.Wallets[*page.selectedWallet].Accounts {
+		if account.Name == "imported" {
+			continue
+		}
+		accounts[i] = decredmaterial.TabItem{
+			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
+		}
+	}
+	page.accountsTab.SetTabs(accounts)
+	if page.accountsTab.Changed() {
+		*page.selectedAccount = page.accountsTab.Selected
+	}
+	layout.Flex{}.Layout(gtx,
+		layout.Rigid(func() {
+			layout.Inset{Top: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func() {
+				page.theme.H6("Accounts: ").Layout(gtx)
+			})
+		}),
+		layout.Rigid(func() {
+			page.accountsTab.Layout(gtx, body)
+		}),
+	)
 }
