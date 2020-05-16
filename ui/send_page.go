@@ -12,7 +12,7 @@ func (win *Window) SendPage() {
 
 		})
 
-		win.selectedAcountColumn()
+		// win.selectedAcountColumn()
 	}
 	win.TabbedPage(bd)
 }
