@@ -20,6 +20,7 @@ import (
 type SendPage struct {
 	theme           *decredmaterial.Theme
 	wallet          *wallet.Wallet
+	wallets         []wallet.InfoShort
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
 
@@ -32,6 +33,7 @@ type SendPage struct {
 	nextButtonWidget                   *widget.Button
 	closeConfirmationModalButtonWidget *widget.Button
 	confirmButtonWidget                *widget.Button
+	selectAccountButtonWidget          *widget.Button
 
 	copyIconMaterial decredmaterial.IconButton
 	copyIconWidget   *widget.Button
@@ -49,19 +51,22 @@ type SendPage struct {
 	nextButtonMaterial                   decredmaterial.Button
 	closeConfirmationModalButtonMaterial decredmaterial.Button
 	confirmButtonMaterial                decredmaterial.Button
+	selectAccountButtonMaterial          decredmaterial.Button
 
 	sendErrorText string
 	txHashText    string
 	txHash        string
 
-	editorLine    *decredmaterial.Line
-	passwordModal *decredmaterial.Password
+	editorLine           *decredmaterial.Line
+	passwordModal        *decredmaterial.Password
+	accountSelectorModal *decredmaterial.AccountSelector
 
-	isConfirmationModalOpen   bool
-	isPasswordModalOpen       bool
-	isBroadcastingTransaction bool
-	hasSetWallet              bool
-	hasCopiedTxHash           bool
+	isConfirmationModalOpen    bool
+	isPasswordModalOpen        bool
+	isBroadcastingTransaction  bool
+	hasSetWallet               bool
+	hasCopiedTxHash            bool
+	isAccountSelectorModalOpen bool
 }
 
 const PageSend = "send"
@@ -70,6 +75,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page := &SendPage{
 		theme:           common.theme,
 		wallet:          common.wallet,
+		wallets:         common.info.Wallets,
 		txAuthor:        &win.txAuthor,
 		broadcastResult: &win.broadcastResult,
 
@@ -80,6 +86,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		closeConfirmationModalButtonWidget: new(widget.Button),
 		confirmButtonWidget:                new(widget.Button),
 		copyIconWidget:                     new(widget.Button),
+		selectAccountButtonWidget:          new(widget.Button),
 
 		destinationAddressErrorLabel: common.theme.ErrorLabel(""),
 		sendAmountErrorLabel:         common.theme.ErrorLabel(""),
@@ -96,11 +103,13 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		totalCostValueLabel:                  common.theme.Body2("0 DCR"),
 		balanceAfterSendValueLabel:           common.theme.Body2("0 DCR"),
 		copyIconMaterial:                     common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy))),
+		selectAccountButtonMaterial:          common.theme.Button("Select Account"),
 
-		isConfirmationModalOpen: false,
-		isPasswordModalOpen:     false,
-		hasSetWallet:            false,
-		hasCopiedTxHash:         false,
+		isConfirmationModalOpen:    false,
+		isPasswordModalOpen:        false,
+		hasSetWallet:               false,
+		hasCopiedTxHash:            false,
+		isAccountSelectorModalOpen: false,
 
 		passwordModal: common.theme.Password(),
 
@@ -117,6 +126,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.copyIconMaterial.Size = unit.Dp(30)
 	page.copyIconMaterial.Color = common.theme.Color.Text
 	page.copyIconMaterial.Padding = unit.Dp(5)
+
+	page.destinationAddressEditor.SetText("TsfQTCMEHKum1qv58zMhTTn2kATv3r8VjgT")
 
 	return func() {
 		page.Layout(common)
@@ -160,6 +171,10 @@ func (pg *SendPage) Handle(common pageCommon) {
 		pg.isPasswordModalOpen = true
 	}
 
+	for pg.selectAccountButtonWidget.Clicked(common.gtx) {
+		pg.isAccountSelectorModalOpen = true
+	}
+
 	for pg.closeConfirmationModalButtonWidget.Clicked(common.gtx) {
 		pg.sendErrorText = ""
 		pg.isConfirmationModalOpen = false
@@ -183,7 +198,13 @@ func (pg *SendPage) Layout(common pageCommon) {
 	selectedWallet := common.info.Wallets[*common.selectedWallet]
 	selectedAccount := selectedWallet.Accounts[0]
 
-	if !pg.hasSetWallet || (pg.selectedWallet.ID != selectedWallet.ID || pg.selectedAccount.Number != selectedAccount.Number) {
+	pg.wallets = common.info.Wallets
+
+	if pg.accountSelectorModal == nil && len(common.info.Wallets) > 0 {
+		pg.accountSelectorModal = pg.theme.AccountSelector(pg.wallets)
+	}
+
+	if !pg.hasSetWallet {
 		pg.selectedWallet = selectedWallet
 		pg.selectedAccount = selectedAccount
 
@@ -235,6 +256,10 @@ func (pg *SendPage) Layout(common pageCommon) {
 			pg.drawPasswordModal(common.gtx)
 		}
 	}
+
+	if pg.isAccountSelectorModalOpen {
+		pg.drawAccountSelectorModal(common.gtx)
+	}
 }
 
 func (pg *SendPage) drawSuccessSection(gtx *layout.Context) {
@@ -268,40 +293,37 @@ func (pg *SendPage) drawCopiedLabelSection(gtx *layout.Context) {
 }
 
 func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
-	layout.Flex{}.Layout(gtx,
-		layout.Flexed(0.22, func() {
-		}),
-		layout.Flexed(1, func() {
-			layout.Stack{}.Layout(gtx,
-				layout.Stacked(func() {
-					selectedDetails := func() {
-						layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
-							layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func() {
-									layout.Flex{}.Layout(gtx,
-										layout.Rigid(func() {
-											layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
-												pg.theme.Body2(pg.selectedAccount.Name).Layout(gtx)
-											})
-										}),
-										layout.Rigid(func() {
-											layout.Inset{Left: unit.Dp(20)}.Layout(gtx, func() {
-												pg.theme.Body2(dcrutil.Amount(pg.selectedAccount.SpendableBalance).String()).Layout(gtx)
-											})
-										}),
-									)
-								}),
+	layout.Stack{}.Layout(gtx,
+		layout.Stacked(func() {
+			selectedDetails := func() {
+				layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
+					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func() {
+							layout.Flex{}.Layout(gtx,
 								layout.Rigid(func() {
 									layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
-										pg.theme.Body2(pg.selectedWallet.Name).Layout(gtx)
+										pg.theme.Body2(pg.selectedAccount.Name).Layout(gtx)
+									})
+								}),
+								layout.Rigid(func() {
+									layout.Inset{Left: unit.Dp(20)}.Layout(gtx, func() {
+										pg.theme.Body2(dcrutil.Amount(pg.selectedAccount.SpendableBalance).String()).Layout(gtx)
 									})
 								}),
 							)
-						})
-					}
-					decredmaterial.Card{}.Layout(gtx, selectedDetails)
-				}),
-			)
+						}),
+						layout.Rigid(func() {
+							layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
+								pg.theme.Body2(pg.selectedWallet.Name).Layout(gtx)
+							})
+						}),
+						layout.Rigid(func() {
+							pg.selectAccountButtonMaterial.Layout(gtx, pg.selectAccountButtonWidget)
+						}),
+					)
+				})
+			}
+			decredmaterial.Card{}.Layout(gtx, selectedDetails)
 		}),
 	)
 }
@@ -401,11 +423,17 @@ func (pg *SendPage) tableLayoutFunc(gtx *layout.Context, leftLabel, rightLabel d
 	)
 }
 
+func (pg *SendPage) drawAccountSelectorModal(gtx *layout.Context) {
+	pg.accountSelectorModal.Layout(gtx, func(selectedWallet wallet.InfoShort, selectedAccount wallet.Account) {
+		pg.selectedWallet = selectedWallet
+		pg.selectedAccount = selectedAccount
+
+		pg.isAccountSelectorModalOpen = false
+	})
+}
+
 func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
 	w := []func(){
-		func() {
-			pg.theme.H4("Confirm to send").Layout(gtx)
-		},
 		func() {
 			if pg.sendErrorText != "" {
 				pg.theme.ErrorAlert(gtx, pg.sendErrorText)
@@ -453,7 +481,7 @@ func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
 				}),
 				layout.Rigid(func() {
 					inset := layout.Inset{
-						Left: unit.Dp(15),
+						Left: unit.Dp(5),
 					}
 					inset.Layout(gtx, func() {
 						pg.closeConfirmationModalButtonMaterial.Layout(gtx, pg.closeConfirmationModalButtonWidget)
@@ -462,24 +490,17 @@ func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
 			)
 		},
 	}
-
-	pg.theme.Modal(gtx, func() {
-		(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(w), func(i int) {
-			layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
-		})
-	})
+	pg.theme.Modal(gtx, "Confirm Send Transaction", w)
 }
 
 func (pg *SendPage) drawPasswordModal(gtx *layout.Context) {
-	pg.theme.Modal(gtx, func() {
-		pg.passwordModal.Layout(gtx, func(password []byte) {
-			pg.isBroadcastingTransaction = true
-			pg.isPasswordModalOpen = false
+	pg.passwordModal.Layout(gtx, func(password []byte) {
+		pg.isBroadcastingTransaction = true
+		pg.isPasswordModalOpen = false
 
-			pg.wallet.BroadcastTransaction(pg.txAuthor, password)
-		}, func() {
-			pg.isPasswordModalOpen = false
-		})
+		pg.wallet.BroadcastTransaction(pg.txAuthor, password)
+	}, func() {
+		pg.isPasswordModalOpen = false
 	})
 }
 

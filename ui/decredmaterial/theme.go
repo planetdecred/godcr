@@ -86,7 +86,7 @@ func NewTheme() *Theme {
 	return t
 }
 
-func (t *Theme) Modal(gtx *layout.Context, w layout.Widget) {
+func (t *Theme) Modal(gtx *layout.Context, title string, wd []func()) {
 	overlayColor := t.Color.Black
 	overlayColor.A = 200
 
@@ -95,17 +95,21 @@ func (t *Theme) Modal(gtx *layout.Context, w layout.Widget) {
 			fillMax(gtx, overlayColor)
 		}),
 		layout.Stacked(func() {
-			inset := layout.Inset{
-				Top: unit.Dp(50),
+			w := []func(){
+				func() {
+					t.H4(title).Layout(gtx)
+				},
+				func() {
+					t.Line().Draw(gtx)
+				},
 			}
-			inset.Layout(gtx, func() {
+			w = append(w, wd...)
+
+			layout.UniformInset(unit.Dp(60)).Layout(gtx, func() {
 				fillMax(gtx, t.Color.Surface)
-				inset := layout.Inset{
-					Top:   unit.Dp(7),
-					Left:  unit.Dp(25),
-					Right: unit.Dp(25),
-				}
-				inset.Layout(gtx, w)
+				(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(w), func(i int) {
+					layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
+				})
 			})
 		}),
 	)
@@ -169,6 +173,13 @@ func mustIcon(ic *Icon, err error) *Icon {
 		panic(err)
 	}
 	return ic
+}
+
+func mustDcrIcon(icon image.Image, err error) image.Image {
+	if err != nil {
+		panic(err)
+	}
+	return icon
 }
 
 func rgb(c uint32) color.RGBA {

@@ -9,8 +9,6 @@ import (
 type Password struct {
 	theme *Theme
 
-	titleLabel Label
-
 	passwordEditorMaterial Editor
 	passwordEditorWidget   *widget.Editor
 
@@ -19,6 +17,8 @@ type Password struct {
 
 	cancelButtonMaterial Button
 	cancelButtonWidget   *widget.Button
+
+	line *Line
 }
 
 // Password initializes and returns an instance of Password
@@ -28,8 +28,7 @@ func (t *Theme) Password() *Password {
 	cancelButtonMaterial.Color = t.Color.Primary
 
 	p := &Password{
-		theme:      t,
-		titleLabel: t.H5("Enter password to confirm"),
+		theme: t,
 
 		passwordEditorMaterial: t.Editor("Password"),
 		passwordEditorWidget:   new(widget.Editor),
@@ -39,6 +38,8 @@ func (t *Theme) Password() *Password {
 
 		cancelButtonWidget:  new(widget.Button),
 		confirmButtonWidget: new(widget.Button),
+
+		line: t.Line(),
 	}
 
 	return p
@@ -48,15 +49,23 @@ func (t *Theme) Password() *Password {
 // is clicked, and the form passes validation. The entered password is passed as an argument to the confirm func.
 // The cancel func is called when the cancel button is clicked
 func (p *Password) Layout(gtx *layout.Context, confirm func([]byte), cancel func()) {
+	if !p.passwordEditorWidget.Focused() {
+		p.passwordEditorWidget.Focus()
+	}
+
 	p.handleEvents(gtx, confirm, cancel)
 	p.updateColors()
 
 	widgets := []func(){
 		func() {
-			p.titleLabel.Layout(gtx)
-		},
-		func() {
 			p.passwordEditorMaterial.Layout(gtx, p.passwordEditorWidget)
+
+			inset := layout.Inset{
+				Top: unit.Dp(20),
+			}
+			inset.Layout(gtx, func() {
+				p.line.Draw(gtx)
+			})
 		},
 		func() {
 			inset := layout.Inset{
@@ -79,13 +88,7 @@ func (p *Password) Layout(gtx *layout.Context, confirm func([]byte), cancel func
 			})
 		},
 	}
-
-	p.theme.Modal(gtx, func() {
-		list := layout.List{Axis: layout.Vertical}
-		list.Layout(gtx, len(widgets), func(i int) {
-			layout.UniformInset(unit.Dp(0)).Layout(gtx, widgets[i])
-		})
-	})
+	p.theme.Modal(gtx, "Enter password to confirm", widgets)
 }
 
 func (p *Password) updateColors() {
