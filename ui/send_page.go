@@ -2,14 +2,12 @@ package ui
 
 import (
 	"fmt"
-	"image/color"
 	"strconv"
 	"time"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -29,35 +27,29 @@ type SendPage struct {
 
 	destinationAddressEditor           *widget.Editor
 	sendAmountEditor                   *widget.Editor
-	pasteAddressButtonWidget           *widget.Button
 	nextButtonWidget                   *widget.Button
 	closeConfirmationModalButtonWidget *widget.Button
 	confirmButtonWidget                *widget.Button
 	selectAccountButtonWidget          *widget.Button
+	copyIconWidget                     *widget.Button
 
-	copyIconMaterial decredmaterial.IconButton
-	copyIconWidget   *widget.Button
-
-	destinationAddressErrorLabel decredmaterial.Label
-	sendAmountErrorLabel         decredmaterial.Label
-	transactionFeeValueLabel     decredmaterial.Label
-	totalCostValueLabel          decredmaterial.Label
-	balanceAfterSendValueLabel   decredmaterial.Label
-	calculateErrorLabel          decredmaterial.Label
+	transactionFeeValueLabel   decredmaterial.Label
+	totalCostValueLabel        decredmaterial.Label
+	balanceAfterSendValueLabel decredmaterial.Label
+	calculateErrorLabel        decredmaterial.Label
 
 	destinationAddressEditorMaterial     decredmaterial.Editor
 	sendAmountEditorMaterial             decredmaterial.Editor
-	pasteAddressButtonMaterial           decredmaterial.IconButton
 	nextButtonMaterial                   decredmaterial.Button
 	closeConfirmationModalButtonMaterial decredmaterial.Button
 	confirmButtonMaterial                decredmaterial.Button
 	selectAccountButtonMaterial          decredmaterial.Button
+	copyIconMaterial                     decredmaterial.IconButton
 
 	sendErrorText string
 	txHashText    string
 	txHash        string
 
-	editorLine           *decredmaterial.Line
 	passwordModal        *decredmaterial.Password
 	accountSelectorModal *decredmaterial.AccountSelector
 
@@ -81,22 +73,15 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 		destinationAddressEditor:           new(widget.Editor),
 		sendAmountEditor:                   new(widget.Editor),
-		pasteAddressButtonWidget:           new(widget.Button),
 		nextButtonWidget:                   new(widget.Button),
 		closeConfirmationModalButtonWidget: new(widget.Button),
 		confirmButtonWidget:                new(widget.Button),
-		copyIconWidget:                     new(widget.Button),
 		selectAccountButtonWidget:          new(widget.Button),
 
-		destinationAddressErrorLabel: common.theme.ErrorLabel(""),
-		sendAmountErrorLabel:         common.theme.ErrorLabel(""),
-		sendErrorText:                "",
-		txHashText:                   "",
+		sendErrorText: "",
+		txHashText:    "",
 
-		destinationAddressEditorMaterial:     common.theme.Editor("Destination Address"),
 		closeConfirmationModalButtonMaterial: common.theme.Button("Close"),
-		sendAmountEditorMaterial:             common.theme.Editor("Amount to be sent"),
-		editorLine:                           common.theme.Line(),
 		nextButtonMaterial:                   common.theme.Button("Next"),
 		confirmButtonMaterial:                common.theme.Button("Confirm"),
 		transactionFeeValueLabel:             common.theme.Body2("0 DCR"),
@@ -112,21 +97,18 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		isAccountSelectorModalOpen: false,
 
 		passwordModal: common.theme.Password(),
-
-		pasteAddressButtonMaterial: decredmaterial.IconButton{
-			Icon:       mustIcon(decredmaterial.NewIcon(icons.ContentContentPaste)),
-			Size:       unit.Dp(30),
-			Background: color.RGBA{},
-			Color:      common.theme.Color.Text,
-			Padding:    unit.Dp(5),
-		},
 	}
-	page.closeConfirmationModalButtonMaterial.Background = common.theme.Color.Gray
-	page.copyIconMaterial.Background = common.theme.Color.Background
-	page.copyIconMaterial.Size = unit.Dp(30)
-	page.copyIconMaterial.Color = common.theme.Color.Text
-	page.copyIconMaterial.Padding = unit.Dp(5)
 
+	page.destinationAddressEditorMaterial = common.theme.Editor("Destination Address")
+	page.destinationAddressEditorMaterial.SetRequiredErrorText("")
+	page.destinationAddressEditorMaterial.IsRequired = true
+	page.destinationAddressEditorMaterial.IsVisible = true
+
+	page.sendAmountEditorMaterial = common.theme.Editor("Amount to be sent")
+	page.sendAmountEditorMaterial.SetRequiredErrorText("")
+	page.sendAmountEditorMaterial.IsRequired = true
+
+	page.closeConfirmationModalButtonMaterial.Background = common.theme.Color.Gray
 	page.destinationAddressEditor.SetText("TsfQTCMEHKum1qv58zMhTTn2kATv3r8VjgT")
 
 	return func() {
@@ -151,14 +133,6 @@ func (pg *SendPage) Handle(common pageCommon) {
 	if pg.isBroadcastingTransaction {
 		pg.confirmButtonMaterial.Text = "Sending..."
 		pg.confirmButtonMaterial.Background = pg.theme.Color.Background
-	}
-
-	for pg.copyIconWidget.Clicked(common.gtx) {
-		clipboard.WriteAll(pg.txHash)
-	}
-
-	for pg.pasteAddressButtonWidget.Clicked(common.gtx) {
-		pg.destinationAddressEditor.Insert(GetClipboardContent())
 	}
 
 	for pg.nextButtonWidget.Clicked(common.gtx) {
@@ -226,10 +200,10 @@ func (pg *SendPage) Layout(common pageCommon) {
 			pg.drawSelectedAccountSection(common.gtx)
 		},
 		func() {
-			pg.drawDestinationAddressSection(common.gtx)
+			pg.destinationAddressEditorMaterial.Layout(common.gtx, pg.destinationAddressEditor)
 		},
 		func() {
-			pg.drawSendAmountSection(common.gtx)
+			pg.sendAmountEditorMaterial.Layout(common.gtx, pg.sendAmountEditor)
 		},
 		func() {
 			pg.drawTransactionDetailWidgets(common.gtx)
@@ -328,64 +302,6 @@ func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
 	)
 }
 
-func (pg *SendPage) drawDestinationAddressSection(gtx *layout.Context) {
-	pg.theme.Body2("Destination Address").Layout(gtx)
-
-	inset := layout.Inset{
-		Top: unit.Dp(20),
-	}
-
-	inset.Layout(gtx, func() {
-		pg.destinationAddressEditorMaterial.Layout(gtx, pg.destinationAddressEditor)
-		inset := layout.Inset{
-			Left: unit.Dp(float32(gtx.Constraints.Width.Max - 30)),
-		}
-		inset.Layout(gtx, func() {
-			pg.pasteAddressButtonMaterial.Layout(gtx, pg.pasteAddressButtonWidget)
-		})
-
-		inset = layout.Inset{
-			Top: unit.Dp(25),
-		}
-		inset.Layout(gtx, func() {
-			pg.editorLine.Draw(gtx)
-		})
-	})
-
-	inset = layout.Inset{
-		Top: unit.Dp(48),
-	}
-	inset.Layout(gtx, func() {
-		pg.destinationAddressErrorLabel.Layout(gtx)
-	})
-}
-
-func (pg *SendPage) drawSendAmountSection(gtx *layout.Context) {
-	pg.theme.Body2("Amount").Layout(gtx)
-	inset := layout.Inset{
-		Top: unit.Dp(20),
-	}
-	inset.Layout(gtx, func() {
-		pg.sendAmountEditorMaterial.Layout(gtx, pg.sendAmountEditor)
-
-		inset := layout.Inset{
-			Top: unit.Dp(25),
-		}
-		inset.Layout(gtx, func() {
-			pg.editorLine.Draw(gtx)
-		})
-	})
-
-	if pg.sendAmountErrorLabel.Text != "" {
-		inset := layout.Inset{
-			Top: unit.Dp(48),
-		}
-		inset.Layout(gtx, func() {
-			pg.sendAmountErrorLabel.Layout(gtx)
-		})
-	}
-}
-
 func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
 	w := []func(){
 		func() {
@@ -436,6 +352,7 @@ func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
 	w := []func(){
 		func() {
 			if pg.sendErrorText != "" {
+				gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 				pg.theme.ErrorAlert(gtx, pg.sendErrorText)
 			}
 		},
@@ -518,31 +435,30 @@ func (pg *SendPage) validate(ignoreEmpty bool) bool {
 }
 
 func (pg *SendPage) validateDestinationAddress(ignoreEmpty bool) bool {
-	pg.destinationAddressErrorLabel.Text = ""
-
+	pg.destinationAddressEditorMaterial.ClearError()
 	destinationAddress := pg.destinationAddressEditor.Text()
 	if destinationAddress == "" && !ignoreEmpty {
-		pg.destinationAddressErrorLabel.Text = "please enter a destination address"
+		pg.destinationAddressEditorMaterial.SetError("please enter a destination address")
 		return false
 	}
 
 	if destinationAddress != "" {
 		isValid, _ := pg.wallet.IsAddressValid(destinationAddress)
 		if !isValid {
-			pg.destinationAddressErrorLabel.Text = "invalid address"
+			pg.destinationAddressEditorMaterial.SetError("invalid address")
 			return false
 		}
 	}
+
 	return true
 }
 
 func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
-	pg.sendAmountErrorLabel.Text = ""
-
+	pg.sendAmountEditorMaterial.ClearError()
 	amount := pg.sendAmountEditor.Text()
 	if amount == "" {
 		if !ignoreEmpty {
-			pg.sendAmountErrorLabel.Text = "please enter a send amount"
+			pg.sendAmountEditorMaterial.SetError("please enter a send amount")
 		}
 		return false
 	}
@@ -550,10 +466,11 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 	if amount != "" {
 		_, err := strconv.ParseFloat(amount, 64)
 		if err != nil {
-			pg.sendAmountErrorLabel.Text = "please enter a valid amount"
+			pg.sendAmountEditorMaterial.SetError("please enter a valid amount")
 			return false
 		}
 	}
+
 	return true
 }
 

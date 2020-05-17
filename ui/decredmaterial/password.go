@@ -17,8 +17,6 @@ type Password struct {
 
 	cancelButtonMaterial Button
 	cancelButtonWidget   *widget.Button
-
-	line *Line
 }
 
 // Password initializes and returns an instance of Password
@@ -38,8 +36,6 @@ func (t *Theme) Password() *Password {
 
 		cancelButtonWidget:  new(widget.Button),
 		confirmButtonWidget: new(widget.Button),
-
-		line: t.Line(),
 	}
 
 	return p
@@ -59,13 +55,6 @@ func (p *Password) Layout(gtx *layout.Context, confirm func([]byte), cancel func
 	widgets := []func(){
 		func() {
 			p.passwordEditorMaterial.Layout(gtx, p.passwordEditorWidget)
-
-			inset := layout.Inset{
-				Top: unit.Dp(20),
-			}
-			inset.Layout(gtx, func() {
-				p.line.Draw(gtx)
-			})
 		},
 		func() {
 			inset := layout.Inset{

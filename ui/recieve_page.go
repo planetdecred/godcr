@@ -7,6 +7,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -166,7 +167,7 @@ func (p *receivePage) selectedAccountColumn(common pageCommon) {
 
 	account := common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount]
 	p.selectedAccountNameLabel.Text = account.Name
-	p.selectedAccountBalanceLabel.Text = account.SpendableBalance
+	p.selectedAccountBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
 
 	selectedDetails := func() {
 		layout.UniformInset(unit.Dp(10)).Layout(p.gtx, func() {
@@ -252,58 +253,18 @@ func (p *receivePage) generateNewAddress() {
 	)
 }
 
-func (win *Window) selectedAcountColumn() {
-	info := win.walletInfo.Wallets[win.selected]
-	win.outputs.selectedWalletNameLabel.Text = info.Name
-	win.outputs.selectedWalletBalLabel.Text = info.Balance
-
-	account := win.walletInfo.Wallets[win.selected].Accounts[win.selectedAccount]
-	win.outputs.selectedAccountNameLabel.Text = account.Name
-	win.outputs.selectedAccountBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
-
-	layout.Flex{}.Layout(win.gtx,
-		layout.Flexed(0.22, func() {
-		}),
-		layout.Flexed(1, func() {
-			layout.Stack{}.Layout(win.gtx,
-				layout.Stacked(func() {
-					selectedDetails := func() {
-						layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-							layout.Flex{Axis: layout.Vertical}.Layout(win.gtx,
-								layout.Rigid(func() {
-									layout.Flex{}.Layout(win.gtx,
-										layout.Rigid(func() {
-											layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
-												win.outputs.selectedAccountNameLabel.Layout(win.gtx)
-											})
-										}),
-										layout.Rigid(func() {
-											layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
-												win.outputs.selectedAccountBalanceLabel.Layout(win.gtx)
-											})
-										}),
-									)
-								}),
-								layout.Rigid(func() {
-									layout.Inset{Left: unit.Dp(20)}.Layout(win.gtx, func() {
-										layout.Flex{}.Layout(win.gtx,
-											layout.Rigid(func() {
-												layout.Inset{Bottom: unit.Dp(5)}.Layout(win.gtx, func() {
-													win.outputs.selectedWalletNameLabel.Layout(win.gtx)
-												})
-											}),
-											layout.Rigid(func() {
-												layout.Inset{Left: unit.Dp(22)}.Layout(win.gtx, func() {
-													win.outputs.selectedWalletBalLabel.Layout(win.gtx)
-												})
-											}),
-										)
-									})
-								}),
-							)
-						})
-					}
-					decredmaterial.Card{}.Layout(win.gtx, selectedDetails)
+func (p *receivePage) infoDiag() {
+	infoDetails := func() {
+		layout.UniformInset(unit.Dp(10)).Layout(p.gtx, func() {
+			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(p.gtx,
+				layout.Rigid(func() {
+					layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
+						p.pageInfo.Layout(p.gtx)
+					})
+				}),
+				layout.Rigid(func() {
+					p.minInfo.TextSize = syncButtonTextSize
+					p.minInfo.Layout(p.gtx, &p.minInfoW)
 				}),
 			)
 		})

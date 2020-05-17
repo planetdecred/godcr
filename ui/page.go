@@ -118,7 +118,7 @@ func (win *Window) addPages() {
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
-	navs := []string{PageOverview, PageWallet, PageTransactions, PageReceive, PageOverview}
+	navs := []string{PageOverview, PageWallet, PageSend, PageTransactions, PageReceive, PageOverview}
 	toMax(gtx)
 	page.navTab.Separator = true
 	page.navTab.Layout(gtx, body)

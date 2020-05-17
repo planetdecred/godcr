@@ -151,6 +151,7 @@ func (t *Theme) alert(gtx *layout.Context, txt string, bgColor color.RGBA) {
 			fill(gtx, bgColor)
 		}),
 		layout.Stacked(func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 			layout.UniformInset(unit.Dp(8)).Layout(gtx, func() {
 				lbl := t.Body2(txt)
 				lbl.Color = t.Color.Surface
