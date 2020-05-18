@@ -20,7 +20,7 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button
 	toRestoreWallet                                                      widget.Button
-	sync, syncHeader, hideMsgInfo, changePasswordDiag, signMessageDiag   widget.Button
+	hideMsgInfo, changePasswordDiag, signMessageDiag                     widget.Button
 	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
 	addressInput, messageInput, signInput                                widget.Editor
@@ -59,16 +59,16 @@ type outputs struct {
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
 	clearBtn, verifyBtn, verifyMessDiag                                        decredmaterial.Button
 
-	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag  decredmaterial.Button
-	toggleWalletRename, renameWallet, syncHeader                                   decredmaterial.IconButton
-	sync, moreDiag, hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag decredmaterial.Button
-	addAccount, newAddressDiag                                                     decredmaterial.Button
-	info, more, copy, verifyInfo                                                   decredmaterial.IconButton
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                 decredmaterial.IconButton
-	passwordBar                                                                    *decredmaterial.ProgressBar
+	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
+	toggleWalletRename, renameWallet                                              decredmaterial.IconButton
+	hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag                decredmaterial.Button
+	addAccount, newAddressDiag                                                    decredmaterial.Button
+	info, more, copy, verifyInfo                                                  decredmaterial.IconButton
+	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                decredmaterial.IconButton
+	passwordBar                                                                   *decredmaterial.ProgressBar
 
-	tabs                                                              []decredmaterial.TabItem
-	notImplemented, noWallet, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
+	tabs                                                    []decredmaterial.TabItem
+	notImplemented, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -190,14 +190,9 @@ func (win *Window) initWidgets() {
 	win.outputs.toSend = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentSend)))
 	win.outputs.toReceive = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)))
 
-	win.outputs.noWallet = theme.H3("No wallet loaded")
-
 	win.outputs.err = theme.Caption("")
 	win.outputs.err.Color = theme.Color.Danger
 	win.outputs.verifyMessage = win.theme.H6("")
-	win.outputs.sync = theme.Button("Reconnect")
-	win.outputs.syncHeader = win.outputs.icons.sync
-	win.outputs.moreDiag = theme.Button("more")
 	win.outputs.hideMsgInfo = theme.Button("Got it")
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
@@ -217,7 +212,6 @@ func (win *Window) initWidgets() {
 		win.inputs.seedEditors.focusIndex = -1
 		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
-	win.outputs.sync = theme.Button("Reconnect")
 
 	win.outputs.addAcctDiag = win.outputs.icons.add
 	win.outputs.addAccount = theme.Button("add")

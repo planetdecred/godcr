@@ -95,7 +95,7 @@ func (win *Window) addPages() {
 	win.pages = make(map[string]layout.Widget)
 
 	win.pages[PageWallet] = win.WalletPage(common)
-	win.pages[PageOverview] = win.OverviewPage
+	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)
 	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageRestore] = win.RestorePage
