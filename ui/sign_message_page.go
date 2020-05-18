@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -12,9 +14,10 @@ import (
 const PageSignMessage = "sign_message"
 
 type SignMessagePage struct {
-	theme    *decredmaterial.Theme
-	wallet   *wallet.Wallet
-	walletID int
+	theme      *decredmaterial.Theme
+	wallet     *wallet.Wallet
+	walletID   int
+	errChannel chan error
 
 	isPasswordModalOpen bool
 	isSigningMessage    bool
@@ -41,6 +44,8 @@ type SignMessagePage struct {
 	clearButtonWidget *widget.Button
 	signButtonWidget  *widget.Button
 	copyButtonWidget  *widget.Button
+
+	result **wallet.Signature
 }
 
 var signMessagePage *SignMessagePage
@@ -49,10 +54,24 @@ const (
 	editorWidthRatio = 0.99
 )
 
-func (pg *SignMessagePage) Draw(gtx *layout.Context) {
+func (pg *SignMessagePage) Draw(common pageCommon) {
+	gtx := common.gtx
 	pg.handleEvents(gtx)
 	pg.updateColors()
 	pg.validate(true)
+	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
+	pg.errChannel = common.errorChannels[PageSignMessage]
+
+	if *signMessagePage.result != nil {
+		if (*signMessagePage.result).Err != nil {
+			signMessagePage.errorLabel.Text = (*signMessagePage.result).Err.Error()
+		} else {
+			signMessagePage.signedMessageLabel.Text = (*signMessagePage.result).Signature
+		}
+		*signMessagePage.result = nil
+		signMessagePage.isSigningMessage = false
+		signMessagePage.signButtonMaterial.Text = "Sign"
+	}
 
 	w := []func(){
 		func() {
@@ -189,7 +208,7 @@ func (pg *SignMessagePage) confirm(password []byte) {
 	pg.isSigningMessage = true
 
 	pg.signButtonMaterial.Text = "Signing..."
-	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorWidget.Text(), pg.messageEditorWidget.Text())
+	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorWidget.Text(), pg.messageEditorWidget.Text(), pg.errChannel)
 }
 
 func (pg *SignMessagePage) cancel() {
@@ -240,6 +259,14 @@ func (pg *SignMessagePage) clearForm() {
 	pg.errorLabel.Text = ""
 }
 
+func (pg *SignMessagePage) handle() {
+	select {
+	case err := <-pg.errChannel:
+		fmt.Printf("SIGNMESSAGE PAGE ERROR! %v", err)
+	default:
+	}
+}
+
 func (win *Window) newSignMessagePage() *SignMessagePage {
 	pg := &SignMessagePage{}
 	pg.theme = win.theme
@@ -286,27 +313,21 @@ func (win *Window) newSignMessagePage() *SignMessagePage {
 	return pg
 }
 
-func (win *Window) SignMessagePage() {
+func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	if signMessagePage == nil {
 		signMessagePage = win.newSignMessagePage()
-	}
-	signMessagePage.walletID = win.walletInfo.Wallets[win.selected].ID
-
-	if win.signatureResult != nil {
-		if win.signatureResult.Err != nil {
-			signMessagePage.errorLabel.Text = win.signatureResult.Err.Error()
-		} else {
-			signMessagePage.signedMessageLabel.Text = win.signatureResult.Signature
-		}
-		win.signatureResult = nil
-		signMessagePage.isSigningMessage = false
-		signMessagePage.signButtonMaterial.Text = "Sign"
+		signMessagePage.errChannel = common.errorChannels[PageSignMessage]
+		signMessagePage.result = &win.signatureResult
 	}
 
 	body := func() {
 		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-			signMessagePage.Draw(win.gtx)
+			signMessagePage.Draw(common)
 		})
 	}
-	win.Page(body)
+
+	return func() {
+		common.Layout(win.gtx, body)
+		signMessagePage.handle()
+	}
 }
