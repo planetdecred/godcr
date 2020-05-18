@@ -36,7 +36,6 @@ type SendPage struct {
 	transactionFeeValueLabel   decredmaterial.Label
 	totalCostValueLabel        decredmaterial.Label
 	balanceAfterSendValueLabel decredmaterial.Label
-	calculateErrorLabel        decredmaterial.Label
 
 	destinationAddressEditorMaterial     decredmaterial.Editor
 	sendAmountEditorMaterial             decredmaterial.Editor
@@ -46,9 +45,10 @@ type SendPage struct {
 	selectAccountButtonMaterial          decredmaterial.Button
 	copyIconMaterial                     decredmaterial.IconButton
 
-	sendErrorText string
-	txHashText    string
-	txHash        string
+	sendErrorText      string
+	txHashText         string
+	txHash             string
+	calculateErrorText string
 
 	passwordModal        *decredmaterial.Password
 	accountSelectorModal *decredmaterial.AccountSelector
@@ -136,7 +136,7 @@ func (pg *SendPage) Handle(common pageCommon) {
 	}
 
 	for pg.nextButtonWidget.Clicked(common.gtx) {
-		if pg.validate(false) && pg.calculateErrorLabel.Text == "" {
+		if pg.validate(false) && pg.calculateErrorText == "" {
 			pg.isConfirmationModalOpen = true
 		}
 	}
@@ -209,7 +209,10 @@ func (pg *SendPage) Layout(common pageCommon) {
 			pg.drawTransactionDetailWidgets(common.gtx)
 		},
 		func() {
-
+			if pg.calculateErrorText != "" {
+				common.gtx.Constraints.Width.Min = common.gtx.Constraints.Width.Max
+				pg.theme.ErrorAlert(common.gtx, pg.calculateErrorText)
+			}
 		},
 		func() {
 			pg.nextButtonMaterial.Layout(common.gtx, pg.nextButtonWidget)
@@ -344,6 +347,7 @@ func (pg *SendPage) drawAccountSelectorModal(gtx *layout.Context) {
 		pg.selectedWallet = selectedWallet
 		pg.selectedAccount = selectedAccount
 
+		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number)
 		pg.isAccountSelectorModalOpen = false
 	})
 }
@@ -425,7 +429,7 @@ func (pg *SendPage) validate(ignoreEmpty bool) bool {
 	isAddressValid := pg.validateDestinationAddress(ignoreEmpty)
 	isAmountValid := pg.validateAmount(ignoreEmpty)
 
-	if !isAddressValid || !isAmountValid || pg.calculateErrorLabel.Text != "" {
+	if !isAddressValid || !isAmountValid || pg.calculateErrorText != "" {
 		pg.nextButtonMaterial.Background = pg.theme.Color.Hint
 		return false
 	}
@@ -477,7 +481,7 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 func (pg *SendPage) calculateValues() {
 	pg.transactionFeeValueLabel.Text = "0 DCR"
 	pg.totalCostValueLabel.Text = "0 DCR "
-	pg.calculateErrorLabel.Text = ""
+	pg.calculateErrorText = ""
 
 	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(pg.selectedWallet.SpendableBalance).String()
 
@@ -492,7 +496,7 @@ func (pg *SendPage) calculateValues() {
 
 	amount, err := dcrutil.NewAmount(amountDCR)
 	if err != nil {
-		pg.calculateErrorLabel.Text = fmt.Sprintf("error estimating transaction fee: %s", err)
+		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
 		return
 	}
 
@@ -505,7 +509,7 @@ func (pg *SendPage) calculateValues() {
 	// calculate transaction fee
 	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
 	if err != nil {
-		pg.calculateErrorLabel.Text = fmt.Sprintf("error estimating transaction fee: %s", err)
+		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
 		return
 	}
 
