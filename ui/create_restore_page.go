@@ -130,7 +130,7 @@ func (pg *createRestore) layout() {
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
 			layout.Flexed(1, func() {
 				layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func() {
-					layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
+					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 						layout.Rigid(func() {
 							layout.W.Layout(pg.gtx, func() {
 								if pg.walletExists {
@@ -259,9 +259,11 @@ func (pg *createRestore) Restore() layout.Widget {
 				layout.Center.Layout(pg.gtx, func() {
 					layout.Flex{}.Layout(pg.gtx,
 						layout.Rigid(func() {
+							pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
 							pg.inputsGroup(inputGroupContainerLeft, 16, 0)
 						}),
 						layout.Rigid(func() {
+							//fmt.Printf("max %v min %v \n", pg.gtx.Constraints.Width.Max, pg.gtx.Constraints.Width.Min)
 							pg.inputsGroup(inputGroupContainerRight, 17, 16)
 						}),
 					)
@@ -279,14 +281,10 @@ func (pg *createRestore) Restore() layout.Widget {
 }
 
 func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) {
-	pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max / 2
 	l.Layout(pg.gtx, len, func(i int) {
 		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 			layout.Rigid(func() {
 				layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(pg.gtx,
-					layout.Rigid(func() {
-						pg.theme.Label(unit.Dp(16), fmt.Sprintf("Word #%d", i+startIndex+1)).Layout(pg.gtx)
-					}),
 					layout.Rigid(func() {
 						layout.Inset{Left: unit.Dp(20), Bottom: unit.Dp(20)}.Layout(pg.gtx, func() {
 							pg.seedEditors[i+startIndex].Layout(pg.gtx, &pg.seedEditorWidgets.editors[i+startIndex])
