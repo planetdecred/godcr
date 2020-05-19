@@ -305,6 +305,13 @@ func (page *transactionPage) Handler(common pageCommon) {
 		page.viewTxnOnBrowser(&common)
 	}
 	if page.backButton.Clicked(common.gtx) {
-		*common.page = PageTransactions
+		switch common.navTab.Selected {
+		case 0:
+			*common.page = PageOverview
+			return
+		default:
+			*common.page = PageTransactions
+			return
+		}
 	}
 }
