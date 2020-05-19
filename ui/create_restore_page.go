@@ -293,7 +293,9 @@ func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) {
 				)
 			}),
 			layout.Rigid(func() {
-				pg.autoComplete(i, startIndex)
+				layout.Inset{Top: unit.Dp(2)}.Layout(pg.gtx, func() {
+					pg.autoComplete(i, startIndex)
+				})
 			}),
 		)
 	})
