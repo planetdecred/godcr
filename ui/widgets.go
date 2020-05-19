@@ -82,8 +82,6 @@ type outputs struct {
 func (win *Window) initWidgets() {
 	theme := win.theme
 
-	win.inputs.collapsible = theme.Collapsible("Collapsible", decredmaterial.LayoutVertical)
-
 	win.combined.sel = theme.Select()
 
 	win.outputs.ic.clear = mustIcon(decredmaterial.NewIcon(icons.ContentClear))
