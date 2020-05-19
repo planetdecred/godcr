@@ -344,7 +344,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 	}()
 }
 
-func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message string) {
+func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message string, errChan chan error) {
 	go func() {
 		var resp Response
 
@@ -355,13 +355,15 @@ func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message
 					Message: "No wallet found",
 				},
 			}
-
 			wal.Send <- resp
 			return
 		}
 
 		signedMessageBytes, err := wall.SignMessage(passphrase, address, message)
 		if err != nil {
+			go func() {
+				errChan <- err
+			}()
 			resp.Resp = &Signature{
 				Err: fmt.Errorf("error signing message: %s", err.Error()),
 			}

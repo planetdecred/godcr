@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"image/color"
 	"strings"
 	"time"
@@ -404,7 +403,6 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.signMessageDiag.Clicked(win.gtx) {
-		fmt.Println("Ddd")
 		win.current = PageSignMessage
 		return
 	}
