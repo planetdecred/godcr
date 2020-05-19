@@ -107,6 +107,9 @@ func (t *TestStruct) initWidgets() {
 	t.customEditorOutput.checkbox = theme.CheckBox("test checkbox")
 	t.customEditorOutput.progressBar = theme.ProgressBar(60)
 
+
+	t.collapsible = theme.Collapsible()
+
 }
 
 func (t *TestStruct) TestPage() {
@@ -177,6 +180,27 @@ func (t *TestStruct) testPageContents() {
 		},
 		func() {
 			t.customEditorOutput.testOutput.Layout(t.gtx)
+		},
+
+		func() {
+			headerFunc := func(gtx *layout.Context) {
+				t.theme.Body1("Collapsible Widget").Layout(gtx)
+			}
+
+			contentFunc := func(gtx *layout.Context) {
+				layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(){
+						t.theme.Body2("Hidden item 1").Layout(gtx)
+					}),
+					layout.Rigid(func(){
+						t.theme.Body2("Hidden item 2").Layout(gtx)
+					}),
+					layout.Rigid(func(){
+						t.theme.Body2("Hidden item 3").Layout(gtx)
+					}),
+				)
+			}
+			t.collapsible.Layout(t.gtx, headerFunc, contentFunc)
 		},
 	}
 
