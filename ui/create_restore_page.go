@@ -37,14 +37,15 @@ type (
 )
 
 type createRestore struct {
-	gtx             *layout.Context
-	theme           *decredmaterial.Theme
-	wal             *wallet.Wallet
-	keyEvent        chan *key.Event
-	err             func()
-	walletExists    bool
-	showRestore     bool
-	showPassword    bool
+	gtx          *layout.Context
+	theme        *decredmaterial.Theme
+	wal          *wallet.Wallet
+	keyEvent     chan *key.Event
+	errChan      chan error
+	walletExists bool
+	showRestore  bool
+	showPassword bool
+	states       *states
 
 	closeCreateRestore    decredmaterial.IconButton
 	backToMain            decredmaterial.IconButton
@@ -57,6 +58,7 @@ type createRestore struct {
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
 	addWallet             decredmaterial.Button
+	errLabel              decredmaterial.Label
 
 	seedEditorWidgets           seedEditors
 	seedSuggestionButtonWidgets []seedSuggestions
@@ -76,7 +78,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		theme:                       common.theme,
 		wal:                         common.wallet,
 		keyEvent:                    common.keyEvents,
-		err:                         win.Err,
+		errChan:                     common.errorChannels[PageCreateRestore],
+		states:                      common.states,
 		walletExists:                win.walletInfo.LoadedWallets > 0,
 		toCreateWalletWidget:        new(widget.Button),
 		backCreateRestoreWidget:     new(widget.Button),
@@ -86,6 +89,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		matchSpendingPasswordWidget: new(widget.Editor),
 		addWalletWidget:             new(widget.Button),
 
+		errLabel:              common.theme.Body1(""),
 		spendingPassword:      common.theme.Editor("Enter password"),
 		matchSpendingPassword: common.theme.Editor("Enter password again"),
 		addWallet:             common.theme.Button("create wallet"),
@@ -105,12 +109,12 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.backToMain = common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)))
 	pg.backToMain.Background = color.RGBA{}
 	pg.backToMain.Color = common.theme.Color.Hint
-	pg.backToMain.Animated = false
 
 	pg.hidePasswordModal = common.theme.Button("cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
 	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
+	pg.errLabel.Color = pg.theme.Color.Danger
 	for i := 0; i <= 32; i++ {
 		pg.seedEditors = append(pg.seedEditors, common.theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
 		pg.seedEditorWidgets.focusIndex = -1
@@ -166,7 +170,7 @@ func (pg *createRestore) layout() {
 									pg.matchSpendingPassword.Layout(pg.gtx, pg.matchSpendingPasswordWidget)
 								}),
 								layout.Rigid(func() {
-									// win.Err()
+									pg.errLabel.Layout(pg.gtx)
 								}),
 							)
 						})
@@ -251,7 +255,7 @@ func (pg *createRestore) Restore() layout.Widget {
 			layout.Rigid(func() {
 				layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(10)}.Layout(pg.gtx, func() {
 					layout.Center.Layout(pg.gtx, func() {
-						pg.err()
+						pg.errLabel.Layout(pg.gtx)
 					})
 				})
 			}),
@@ -384,7 +388,7 @@ func (pg *createRestore) validatePassword() string {
 	pass := pg.spendingPasswordWidget.Text()
 	if pass == "" {
 		pg.spendingPassword.HintColor = pg.theme.Color.Danger
-		// win.err = "Wallet password required and cannot be empty."
+		pg.errLabel.Text = fmt.Sprintf("wallet password required and cannot be empty")
 		return ""
 	}
 
@@ -400,14 +404,12 @@ func (pg *createRestore) validatePasswords() string {
 	match := pg.matchSpendingPasswordWidget.Text()
 	if match == "" {
 		pg.matchSpendingPassword.HintColor = pg.theme.Color.Danger
-		// win.err = "Enter new wallet password again and it cannot be empty."
-		fmt.Printf("Enter new wallet password again and it cannot be empty.\n")
+		pg.errLabel.Text = fmt.Sprintf("enter new wallet password again and it cannot be empty")
 		return ""
 	}
 
 	if match != pass {
-		// win.err = "New wallet passwords does no match. Try again."
-		fmt.Printf("New wallet passwords does no match. Try again. \n")
+		pg.errLabel.Text = fmt.Sprintf("new wallet passwords does not match")
 		return ""
 	}
 
@@ -421,7 +423,7 @@ func (pg *createRestore) resetPasswords() {
 
 func (pg *createRestore) validateSeeds() string {
 	text := ""
-	// win.err = ""
+	pg.errLabel.Text = ""
 
 	for i, editor := range pg.seedEditorWidgets.editors {
 		if editor.Text() == "" {
@@ -435,7 +437,7 @@ func (pg *createRestore) validateSeeds() string {
 
 	if !dcrlibwallet.VerifySeed(text) {
 		fmt.Printf("Invalid Seed Error \n")
-		// win.err = "Invalid seed phrase"
+		pg.errLabel.Text = fmt.Sprintf("invalid seed phrase")
 		return ""
 	}
 
@@ -447,6 +449,9 @@ func (pg *createRestore) handle(common pageCommon, win *Window) {
 
 	for pg.toggleDisplayRestoreWidget.Clicked(gtx) {
 		pg.showRestore = !pg.showRestore
+		if !pg.showRestore {
+			pg.errLabel.Text = ""
+		}
 	}
 
 	for pg.backCreateRestoreWidget.Clicked(gtx) {
@@ -458,8 +463,16 @@ func (pg *createRestore) handle(common pageCommon, win *Window) {
 	}
 
 	for pg.togglePasswordModalWidget.Clicked(gtx) {
+		if pg.showRestore {
+			seeds := pg.validateSeeds()
+			if seeds == "" {
+				pg.errLabel.Text = fmt.Sprintf("seeds fields can not be empty")
+				return
+			}
+		}
 		pg.showPassword = !pg.showPassword
 		if !pg.showPassword {
+			pg.errLabel.Text = ""
 			pg.resetPasswords()
 		}
 	}
@@ -471,15 +484,15 @@ func (pg *createRestore) handle(common pageCommon, win *Window) {
 		}
 
 		if pg.showRestore {
-			pg.wal.RestoreWallet(pg.validateSeeds(), pass)
-			win.states.loading = true
+			pg.wal.RestoreWallet(pg.validateSeeds(), pass, pg.errChan)
+			pg.states.loading = true
 			log.Debug("Restore Wallet clicked")
 			return
 		}
-		pg.wal.CreateWallet(pass)
+		pg.wal.CreateWallet(pass, pg.errChan)
 		pg.resetPasswords()
 		log.Debug("Create Wallet clicked")
-		win.states.loading = true
+		pg.states.loading = true
 		return
 	}
 
@@ -495,6 +508,8 @@ func (pg *createRestore) handle(common pageCommon, win *Window) {
 				}
 			}
 		}
+	case err := <-pg.errChan:
+		pg.errLabel.Text = err.Error()
 	default:
 	}
 

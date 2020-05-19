@@ -338,4 +338,3 @@ func (win *Window) resetSeeds() {
 		win.inputs.seedEditors.editors[i].SetText("")
 	}
 }
-

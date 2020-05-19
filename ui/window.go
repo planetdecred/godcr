@@ -44,7 +44,7 @@ type Window struct {
 
 	combined
 	outputs
-	pages map[string]layout.Widget
+	pages     map[string]layout.Widget
 	keyEvents chan *key.Event
 }
 
@@ -114,6 +114,7 @@ func (win *Window) Loop(shutdown chan int) {
 					log.Warn("Attemping to get multiwallet info")
 					win.wallet.GetMultiWalletInfo()
 				}
+
 				win.window.Invalidate()
 				break
 			}
@@ -158,10 +159,11 @@ func (win *Window) Loop(shutdown chan int) {
 				win.gtx.Reset(evt.Config, evt.Size)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
+				s := win.states
 				if win.walletInfo.LoadedWallets == 0 {
 					win.current = PageCreateRestore
 				}
-				s := win.states
+
 				if s.loading {
 					win.Loading()
 				} else if s.dialog {

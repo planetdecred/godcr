@@ -17,6 +17,9 @@ type states struct {
 func (win *Window) updateStates(update interface{}) {
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
+		if win.walletInfo.LoadedWallets == 0 && e.LoadedWallets > 0 {
+			win.current = PageOverview
+		}
 		*win.walletInfo = e
 		if len(win.outputs.tabs) != win.walletInfo.LoadedWallets {
 			win.reloadTabs()
