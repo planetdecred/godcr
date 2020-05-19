@@ -49,6 +49,8 @@ type TestStruct struct {
 		checkbox                               decredmaterial.CheckBox
 		progressBar                            *decredmaterial.ProgressBar
 	}
+
+	collapsible *decredmaterial.Collapsible
 }
 
 func CreateWindow() (*TestStruct, error) {
