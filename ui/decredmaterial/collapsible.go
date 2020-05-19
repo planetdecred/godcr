@@ -12,39 +12,32 @@ import (
 	"gioui.org/widget"
 )
 
-type Direction int
-
 type Collapsible struct {
 	isOpen                bool
-	axis                  Direction
 	buttonWidget          *widget.Button
-	textLabel             Label
 	outline               Outline
 	openIcon              *Icon
 	closeIcon             *Icon
 	headerBackgroundColor color.RGBA
 }
 
-const (
-	LayoutVertical Direction = iota
-	LayoutHorizontal
-)
-
-func (t *Theme) Collapsible(text string, axis Direction) *Collapsible {
+func (t *Theme) Collapsible() *Collapsible {
 	c := &Collapsible{
-		axis:                  axis,
-		textLabel:             t.Body2(text),
-		buttonWidget:          new(widget.Button),
+		isOpen:                false,
 		headerBackgroundColor: t.Color.Hint,
 		outline:               t.Outline(),
 		openIcon:              t.chevronUpIcon,
 		closeIcon:             t.chevronDownIcon,
 	}
 
+	if c.buttonWidget == nil {
+		c.buttonWidget = new(widget.Button)
+	}
+
 	return c
 }
 
-func (c *Collapsible) layoutHeader(gtx *layout.Context) {
+func (c *Collapsible) layoutHeader(gtx *layout.Context, headerFunc func(*layout.Context)) {
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
 			rr := float32(gtx.Px(unit.Dp(4)))
@@ -60,24 +53,21 @@ func (c *Collapsible) layoutHeader(gtx *layout.Context) {
 		layout.Stacked(func() {
 			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
 			c.outline.Layout(gtx, func() {
-				layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
+				layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
 					layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func() {
-							c.textLabel.Layout(gtx)
+							icon := c.closeIcon
+							if c.isOpen {
+								icon = c.openIcon
+							}
+							icon.Layout(gtx, unit.Dp(20))
 						}),
 						layout.Rigid(func() {
-							gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-							layout.NE.Layout(gtx, func() {
-								icon := c.closeIcon
-								if c.isOpen {
-									icon = c.openIcon
-								}
-								inset := layout.Inset{
-									Right: unit.Dp(10),
-								}
-								inset.Layout(gtx, func() {
-									icon.Layout(gtx, unit.Dp(20))
-								})
+							inset := layout.Inset{
+								Left: unit.Dp(20),
+							}
+							inset.Layout(gtx, func(){
+								headerFunc(gtx)
 							})
 						}),
 					)
@@ -89,21 +79,14 @@ func (c *Collapsible) layoutHeader(gtx *layout.Context) {
 	)
 }
 
-func (c *Collapsible) Layout(gtx *layout.Context, contentFunc func(*layout.Context)) {
+func (c *Collapsible) Layout(gtx *layout.Context, headerFunc, contentFunc func(*layout.Context)) {
 	for c.buttonWidget.Clicked(gtx) {
 		c.isOpen = !c.isOpen
 	}
 
-	var axis layout.Axis
-	if c.axis == LayoutHorizontal {
-		axis = layout.Horizontal
-	} else {
-		axis = layout.Vertical
-	}
-
-	layout.Flex{Axis: axis}.Layout(gtx,
+	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
-			c.layoutHeader(gtx)
+			c.layoutHeader(gtx, headerFunc)
 		}),
 		layout.Rigid(func() {
 			if c.isOpen {
