@@ -17,7 +17,6 @@ type inputs struct {
 	addAccount, toggleWalletRename                                       widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button
-	toRestoreWallet                                                      widget.Button
 	changePasswordDiag, signMessageDiag                                  widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
 	verifyMessDiag                                                       widget.Button
@@ -25,14 +24,6 @@ type inputs struct {
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
-	}
-	seedEditors struct {
-		focusIndex int
-		editors    []widget.Editor
-	}
-	seedsSuggestions []struct {
-		text   string
-		button widget.Button
 	}
 }
 

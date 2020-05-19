@@ -39,10 +39,10 @@ type (
 type createRestore struct {
 	gtx          *layout.Context
 	theme        *decredmaterial.Theme
+	info  		 *wallet.MultiWalletInfo
 	wal          *wallet.Wallet
 	keyEvent     chan *key.Event
 	errChan      chan error
-	walletExists bool
 	showRestore  bool
 	showPassword bool
 	states       *states
@@ -77,10 +77,10 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		gtx:                         common.gtx,
 		theme:                       common.theme,
 		wal:                         common.wallet,
+		info: 						 common.info,
 		keyEvent:                    common.keyEvents,
 		errChan:                     common.errorChannels[PageCreateRestore],
 		states:                      common.states,
-		walletExists:                win.walletInfo.LoadedWallets > 0,
 		toCreateWalletWidget:        new(widget.Button),
 		backCreateRestoreWidget:     new(widget.Button),
 		toggleDisplayRestoreWidget:  new(widget.Button),
@@ -123,7 +123,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	return func() {
 		pg.layout()
-		pg.handle(common, win)
+		pg.handle(common)
 	}
 }
 
@@ -137,7 +137,7 @@ func (pg *createRestore) layout() {
 					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 						layout.Rigid(func() {
 							layout.W.Layout(pg.gtx, func() {
-								if pg.walletExists {
+								if pg.info.LoadedWallets > 0 {
 									pg.closeCreateRestore.Layout(pg.gtx, pg.backCreateRestoreWidget)
 								}
 							})
@@ -207,7 +207,7 @@ func (pg *createRestore) mainContent() layout.Widget {
 				layout.Center.Layout(pg.gtx, func() {
 					title := pg.theme.H3("")
 					title.Alignment = text.Middle
-					if pg.walletExists {
+					if pg.info.LoadedWallets > 0 {
 						title.Text = "Create or Restore Wallet"
 					} else {
 						title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
@@ -444,7 +444,7 @@ func (pg *createRestore) validateSeeds() string {
 	return text
 }
 
-func (pg *createRestore) handle(common pageCommon, win *Window) {
+func (pg *createRestore) handle(common pageCommon) {
 	gtx := common.gtx
 
 	for pg.toggleDisplayRestoreWidget.Clicked(gtx) {

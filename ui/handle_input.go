@@ -333,8 +333,3 @@ func (win *Window) resetButton() {
 	win.outputs.savePassword.Background = win.theme.Color.Primary
 }
 
-func (win *Window) resetSeeds() {
-	for i := 0; i < len(win.inputs.seedEditors.editors); i++ {
-		win.inputs.seedEditors.editors[i].SetText("")
-	}
-}

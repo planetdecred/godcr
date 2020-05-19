@@ -179,7 +179,6 @@ func (win *Window) Loop(shutdown chan int) {
 			case key.Event:
 				go func() {
 					win.keyEvents <- &evt
-					return
 				}()
 			case nil:
 				// Ignore

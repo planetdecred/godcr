@@ -37,7 +37,7 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.dialog = false
 		win.states.createRestoreWallet = false
 	case wallet.Restored:
-		win.resetSeeds()
+		// win.resetSeeds()
 		win.current = PageWallet
 		win.states.dialog = false
 		win.states.createRestoreWallet = false
