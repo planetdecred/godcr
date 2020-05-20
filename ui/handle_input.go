@@ -68,39 +68,6 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
-	for _, evt := range win.inputs.addressInput.Events(win.gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			win.err = ""
-			win.outputs.verifyMessage.Text = ""
-			win.outputs.addressInput.HintColor = win.theme.Color.Hint
-			return
-		}
-		log.Debug("address evt", evt)
-	}
-
-	for _, evt := range win.inputs.signInput.Events(win.gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			win.err = ""
-			win.outputs.verifyMessage.Text = ""
-			win.outputs.signInput.HintColor = win.theme.Color.Hint
-			return
-		}
-		log.Debug("sign evt", evt)
-	}
-
-	for _, evt := range win.inputs.messageInput.Events(win.gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			win.err = ""
-			win.outputs.verifyMessage.Text = ""
-			win.outputs.messageInput.HintColor = win.theme.Color.Hint
-			return
-		}
-		log.Debug("Match evt", evt)
-	}
-
 	// CREATE WALLET
 	if win.inputs.createDiag.Clicked(win.gtx) {
 		win.dialog = win.CreateDiag
@@ -182,61 +149,8 @@ func (win *Window) HandleInputs() {
 	// VERIFY MESSAGE
 
 	if win.inputs.verifyMessDiag.Clicked(win.gtx) {
-		win.err = ""
-		win.states.dialog = true
-		win.dialog = win.verifyMessageDiag
+		win.current = PageVerifyMessage
 		return
-	}
-
-	if strings.Trim(win.inputs.addressInput.Text(), " ") == "" || strings.Trim(win.inputs.signInput.Text(), " ") == "" || strings.Trim(win.inputs.messageInput.Text(), " ") == "" {
-		win.outputs.verifyBtn.Background = win.theme.Color.Hint
-		win.outputs.verifyMessage.Text = ""
-		if win.inputs.verifyBtn.Clicked(win.gtx) {
-			return
-		}
-	} else {
-		win.outputs.verifyBtn.Background = win.theme.Color.Primary
-		if win.inputs.verifyBtn.Clicked(win.gtx) {
-			addr := win.inputs.addressInput.Text()
-			if addr == "" {
-				return
-			}
-			sign := win.inputs.signInput.Text()
-			if sign == "" {
-				return
-			}
-			msg := win.inputs.messageInput.Text()
-			if msg == "" {
-				return
-			}
-
-			valid, err := win.wallet.VerifyMessage(addr, msg, sign)
-			if err != nil {
-				win.err = err.Error()
-				return
-			}
-			if !valid {
-				win.outputs.verifyMessage.Text = "Invalid Signature"
-				win.outputs.verifyMessage.Color = win.theme.Color.Danger
-				return
-			}
-
-			win.outputs.verifyMessage.Text = "Valid Signature"
-			win.outputs.verifyMessage.Color = win.theme.Color.Success
-		}
-	}
-
-	if win.inputs.clearBtn.Clicked(win.gtx) {
-		win.resetVerifyFields()
-		return
-	}
-
-	if win.inputs.verifyInfo.Clicked(win.gtx) {
-		win.dialog = win.msgInfoDiag
-	}
-
-	if win.inputs.hideMsgInfo.Clicked(win.gtx) {
-		win.dialog = win.verifyMessageDiag
 	}
 
 	// CHANGE WALLET PASSWORD
@@ -345,7 +259,6 @@ func (win *Window) HandleInputs() {
 	if win.inputs.cancelDialog.Clicked(win.gtx) {
 		win.states.dialog = false
 		win.err = ""
-		win.resetVerifyFields()
 		win.resetButton()
 		win.resetPasswords()
 		log.Debug("Cancel dialog clicked")
@@ -459,14 +372,6 @@ func (win *Window) resetPasswords() {
 	win.outputs.oldSpendingPassword.HintColor = win.theme.Color.InvText
 	win.inputs.oldSpendingPassword.SetText("")
 	win.outputs.passwordBar.Progress = 0
-}
-
-func (win *Window) resetVerifyFields() {
-	win.err = ""
-	win.inputs.addressInput.SetText("")
-	win.inputs.signInput.SetText("")
-	win.inputs.messageInput.SetText("")
-	win.outputs.verifyMessage.Text = ""
 }
 
 func (win *Window) resetButton() {
