@@ -239,8 +239,5 @@ func (e *Editor) ClearError() {
 }
 
 func (e *Editor) IsDirty() bool {
-	if e.ErrorLabel.Text == "" {
-		return false
-	}
-	return true
+	return e.ErrorLabel.Text == ""
 }
