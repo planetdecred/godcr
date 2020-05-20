@@ -188,13 +188,13 @@ func (t *TestStruct) testPageContents() {
 
 			contentFunc := func(gtx *layout.Context) {
 				layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(){
+					layout.Rigid(func() {
 						t.theme.Body2("Hidden item 1").Layout(gtx)
 					}),
-					layout.Rigid(func(){
+					layout.Rigid(func() {
 						t.theme.Body2("Hidden item 2").Layout(gtx)
 					}),
-					layout.Rigid(func(){
+					layout.Rigid(func() {
 						t.theme.Body2("Hidden item 3").Layout(gtx)
 					}),
 				)

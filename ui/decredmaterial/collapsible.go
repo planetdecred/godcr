@@ -62,11 +62,11 @@ func (c *Collapsible) layoutHeader(gtx *layout.Context, headerFunc func(*layout.
 							}
 							icon.Layout(gtx, unit.Dp(20))
 						}),
-						layout.Rigid(func(){
+						layout.Rigid(func() {
 							inset := layout.Inset{
 								Left: unit.Dp(20),
 							}
-							inset.Layout(gtx, func(){
+							inset.Layout(gtx, func() {
 								headerFunc(gtx)
 							})
 						}),
