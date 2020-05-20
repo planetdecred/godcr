@@ -15,10 +15,9 @@ const PageVerifyMessage = "verifymessage"
 type verifyMessagePage struct {
 	addressInput, messageInput, signInput    decredmaterial.Editor
 	addressInputW, messageInputW, signInputW *widget.Editor
-
-	clearBtnW, verifyBtnW widget.Button
-	clearBtn, verifyBtn   decredmaterial.Button
-	verifyMessage         decredmaterial.Label
+	clearBtnW, verifyBtnW                    widget.Button
+	clearBtn, verifyBtn                      decredmaterial.Button
+	verifyMessage                            decredmaterial.Label
 }
 
 func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
@@ -151,30 +150,20 @@ func (page *verifyMessagePage) validateInputs(c *pageCommon) bool {
 	return true
 }
 
+func (page *verifyMessagePage) handlerEditorEvents(c *pageCommon, w *widget.Editor) {
+	for _, evt := range w.Events(c.gtx) {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			page.validateInputs(c)
+			return
+		}
+	}
+}
+
 func (page *verifyMessagePage) Handle(c pageCommon) {
-	for _, evt := range page.addressInputW.Events(c.gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			page.validateInputs(&c)
-			return
-		}
-	}
-
-	for _, evt := range page.messageInputW.Events(c.gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			page.validateInputs(&c)
-			return
-		}
-	}
-
-	for _, evt := range page.signInputW.Events(c.gtx) {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			page.validateInputs(&c)
-			return
-		}
-	}
+	page.handlerEditorEvents(&c, page.addressInputW)
+	page.handlerEditorEvents(&c, page.messageInputW)
+	page.handlerEditorEvents(&c, page.signInputW)
 
 	if page.verifyBtnW.Clicked(c.gtx) && page.validateInputs(&c) {
 		page.verifyMessage.Text = ""
