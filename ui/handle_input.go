@@ -67,7 +67,6 @@ func (win *Window) HandleInputs() {
 		log.Debug("Match evt", evt)
 	}
 
-
 	// RENAME WALLET
 	if win.inputs.toggleWalletRename.Clicked(win.gtx) {
 		if win.states.renamingWallet {

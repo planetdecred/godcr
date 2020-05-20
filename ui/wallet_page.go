@@ -49,8 +49,10 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		addAcctW:                 common.theme.IconButton(common.icons.contentAdd),
 		deleteW:                  common.theme.DangerButton("Delete Wallet"),
 		gotoSignMessagePageBtn:   win.outputs.signMessageDiag,
+		signMessageDiag:          &win.inputs.signMessageDiag,
 		gotoVerifyMessagePageBtn: win.outputs.verifyMessDiag,
-		addWalletW:             common.theme.Button("Add Wallet"),
+		addWalletW:               common.theme.Button("Add Wallet"),
+		verifyMessageDiag:        &win.inputs.verifyMessDiag,
 	}
 
 	return func() {

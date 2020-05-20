@@ -20,7 +20,7 @@ type inputs struct {
 	changePasswordDiag, signMessageDiag                                  widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
 	verifyMessDiag                                                       widget.Button
-	restoreDiag, addAcctDiag, savePassword                               widget.Button
+	addAcctDiag, savePassword                                            widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
@@ -42,14 +42,14 @@ type outputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings            decredmaterial.IconButton
 	toReceive                                                            decredmaterial.IconButton
 	cancelDiag, addAcctDiag                                              decredmaterial.IconButton
-	verifyMessDiag                                  decredmaterial.Button
+	verifyMessDiag                                                       decredmaterial.Button
 
-	deleteWallet, deleteDiag, gotItDiag 								 decredmaterial.Button
-	toggleWalletRename, renameWallet                                              decredmaterial.IconButton
-	hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag                decredmaterial.Button
-	addAccount, newAddressDiag                                                    decredmaterial.Button
-	info, more, copy                                                              decredmaterial.IconButton
-	passwordBar                                                                   *decredmaterial.ProgressBar
+	deleteWallet, deleteDiag, gotItDiag                            decredmaterial.Button
+	toggleWalletRename, renameWallet                               decredmaterial.IconButton
+	hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag decredmaterial.Button
+	addAccount, newAddressDiag                                     decredmaterial.Button
+	info, more, copy                                               decredmaterial.IconButton
+	passwordBar                                                    *decredmaterial.ProgressBar
 
 	tabs                                     []decredmaterial.TabItem
 	notImplemented, pageTitle, pageInfo, err decredmaterial.Label

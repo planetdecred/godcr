@@ -20,11 +20,6 @@ import (
 
 const PageCreateRestore = "createrestore"
 
-var (
-	inputGroupContainerLeft  = &layout.List{Axis: layout.Vertical}
-	inputGroupContainerRight = &layout.List{Axis: layout.Vertical}
-)
-
 type (
 	seedEditors struct {
 		focusIndex int
@@ -44,8 +39,9 @@ type createRestore struct {
 	keyEvent     chan *key.Event
 	errChan      chan error
 	showRestore  bool
+	restoring    bool
 	showPassword bool
-	states       *states
+	seedPhrase   string
 
 	closeCreateRestore    decredmaterial.IconButton
 	hideRestoreWallet     decredmaterial.IconButton
@@ -63,13 +59,17 @@ type createRestore struct {
 	seedEditorWidgets           seedEditors
 	seedSuggestionButtonWidgets []seedSuggestions
 	toCreateWalletWidget        *widget.Button
-	togglePasswordModalWidget   *widget.Button
+	showPasswordModalWidget     *widget.Button
+	hidePasswordModalWidget     *widget.Button
 	backCreateRestoreWidget     *widget.Button
 	showRestoreWidget           *widget.Button
 	hideRestoreWidget           *widget.Button
 	spendingPasswordWidget      *widget.Editor
 	matchSpendingPasswordWidget *widget.Editor
 	addWalletWidget             *widget.Button
+
+	seedListLeft  *layout.List
+	seedListRight *layout.List
 }
 
 // Loading lays out the loading widget with a faded background
@@ -81,12 +81,12 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		info:                        common.info,
 		keyEvent:                    common.keyEvents,
 		errChan:                     common.errorChannels[PageCreateRestore],
-		states:                      common.states,
 		toCreateWalletWidget:        new(widget.Button),
 		backCreateRestoreWidget:     new(widget.Button),
 		showRestoreWidget:           new(widget.Button),
 		hideRestoreWidget:           new(widget.Button),
-		togglePasswordModalWidget:   new(widget.Button),
+		showPasswordModalWidget:     new(widget.Button),
+		hidePasswordModalWidget:     new(widget.Button),
 		spendingPasswordWidget:      new(widget.Editor),
 		matchSpendingPasswordWidget: new(widget.Editor),
 		addWalletWidget:             new(widget.Button),
@@ -123,13 +123,15 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		pg.seedEditorWidgets.editors = append(pg.seedEditorWidgets.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
 
+	pg.seedListLeft, pg.seedListRight = &layout.List{Axis: layout.Vertical}, &layout.List{Axis: layout.Vertical}
+
 	return func() {
-		pg.layout()
+		pg.layout(common)
 		pg.handle(common)
 	}
 }
 
-func (pg *createRestore) layout() {
+func (pg *createRestore) layout(common pageCommon) {
 	pg.theme.Surface(pg.gtx, func() {
 		toMax(pg.gtx)
 		pd := unit.Dp(15)
@@ -138,7 +140,9 @@ func (pg *createRestore) layout() {
 				layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 						layout.Flexed(1, func() {
-							if pg.showRestore {
+							if common.states.creating {
+								pg.processing()()
+							} else if pg.showRestore {
 								pg.Restore()()
 							} else {
 								pg.mainContent()()
@@ -184,7 +188,7 @@ func (pg *createRestore) layout() {
 							}),
 							layout.Rigid(func() {
 								layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
-									pg.hidePasswordModal.Layout(pg.gtx, pg.togglePasswordModalWidget)
+									pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
 								})
 							}),
 						)
@@ -266,11 +270,11 @@ func (pg *createRestore) Restore() layout.Widget {
 					layout.Flex{}.Layout(pg.gtx,
 						layout.Rigid(func() {
 							pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
-							pg.inputsGroup(inputGroupContainerLeft, 16, 0)
+							pg.inputsGroup(pg.seedListLeft, 16, 0)
 						}),
 						layout.Rigid(func() {
 							//fmt.Printf("max %v min %v \n", pg.gtx.Constraints.Width.Max, pg.gtx.Constraints.Width.Min)
-							pg.inputsGroup(inputGroupContainerRight, 17, 16)
+							pg.inputsGroup(pg.seedListRight, 17, 16)
 						}),
 					)
 				})
@@ -278,11 +282,29 @@ func (pg *createRestore) Restore() layout.Widget {
 			layout.Rigid(func() {
 				layout.Center.Layout(pg.gtx, func() {
 					layout.Inset{Top: unit.Dp(15), Bottom: unit.Dp(15)}.Layout(pg.gtx, func() {
-						pg.showPasswordModal.Layout(pg.gtx, pg.togglePasswordModalWidget)
+						pg.showPasswordModal.Layout(pg.gtx, pg.showPasswordModalWidget)
 					})
 				})
 			}),
 		)
+	}
+}
+
+func (pg *createRestore) processing() layout.Widget {
+	return func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+			layout.Flexed(1, func() {
+				layout.Center.Layout(pg.gtx, func() {
+					message := pg.theme.H3("")
+					message.Alignment = text.Middle
+					if pg.restoring {
+						message.Text = "restoring wallet..."
+					} else {
+						message.Text = "creating wallet..."
+					}
+					message.Layout(pg.gtx)
+				})
+			}))
 	}
 }
 
@@ -423,27 +445,37 @@ func (pg *createRestore) resetPasswords() {
 	pg.matchSpendingPasswordWidget.SetText("")
 }
 
-func (pg *createRestore) validateSeeds() string {
-	text := ""
+func (pg *createRestore) validateSeeds() bool {
+	pg.seedPhrase = ""
 	pg.errLabel.Text = ""
 
 	for i, editor := range pg.seedEditorWidgets.editors {
 		if editor.Text() == "" {
 			pg.seedEditors[i].HintColor = pg.theme.Color.Danger
-			return ""
+			pg.errLabel.Text = "all seed fields are required"
+			return false
 		}
 
-		text += editor.Text() + " "
-	}
-	fmt.Printf("validateSeeds %v \n", text)
-
-	if !dcrlibwallet.VerifySeed(text) {
-		fmt.Printf("Invalid Seed Error \n")
-		pg.errLabel.Text = fmt.Sprintf("invalid seed phrase")
-		return ""
+		pg.seedPhrase += editor.Text() + " "
 	}
 
-	return text
+	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
+		pg.errLabel.Text = "invalid seed phrase"
+		return false
+	}
+
+	return true
+}
+
+func (pg *createRestore) resetSeeds() {
+	for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
+		pg.seedEditorWidgets.editors[i].SetText("")
+	}
+}
+
+func (pg *createRestore) resetPage() {
+	pg.showPassword = false
+	pg.showRestore = false
 }
 
 func (pg *createRestore) handle(common pageCommon) {
@@ -451,14 +483,17 @@ func (pg *createRestore) handle(common pageCommon) {
 
 	for pg.hideRestoreWidget.Clicked(gtx) {
 		pg.showRestore = false
+		pg.restoring = false
 		pg.errLabel.Text = ""
 	}
 
 	for pg.showRestoreWidget.Clicked(gtx) {
+		pg.restoring = true
 		pg.showRestore = true
 	}
 
 	for pg.backCreateRestoreWidget.Clicked(gtx) {
+		pg.resetSeeds()
 		*common.page = PageWallet
 	}
 
@@ -466,19 +501,19 @@ func (pg *createRestore) handle(common pageCommon) {
 		pg.showPassword = true
 	}
 
-	for pg.togglePasswordModalWidget.Clicked(gtx) {
+	for pg.showPasswordModalWidget.Clicked(gtx) {
 		if pg.showRestore {
-			seeds := pg.validateSeeds()
-			if seeds == "" {
-				pg.errLabel.Text = fmt.Sprintf("seeds fields can not be empty")
+			if !pg.validateSeeds() {
 				return
 			}
 		}
-		pg.showPassword = !pg.showPassword
-		if !pg.showPassword {
-			pg.errLabel.Text = ""
-			pg.resetPasswords()
-		}
+		pg.showPassword = true
+	}
+
+	for pg.hidePasswordModalWidget.Clicked(gtx) {
+		pg.showPassword = false
+		pg.errLabel.Text = ""
+		pg.resetPasswords()
 	}
 
 	if pg.addWalletWidget.Clicked(gtx) {
@@ -488,15 +523,13 @@ func (pg *createRestore) handle(common pageCommon) {
 		}
 
 		if pg.showRestore {
-			pg.wal.RestoreWallet(pg.validateSeeds(), pass, pg.errChan)
-			pg.states.loading = true
-			log.Debug("Restore Wallet clicked")
-			return
+			pg.wal.RestoreWallet(pg.seedPhrase, pass, pg.errChan)
+		} else {
+			pg.wal.CreateWallet(pass, pg.errChan)
 		}
-		pg.wal.CreateWallet(pass, pg.errChan)
+		common.states.creating = true
 		pg.resetPasswords()
-		log.Debug("Create Wallet clicked")
-		pg.states.loading = true
+		pg.resetPage()
 		return
 	}
 
