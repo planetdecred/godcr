@@ -39,7 +39,7 @@ type (
 type createRestore struct {
 	gtx          *layout.Context
 	theme        *decredmaterial.Theme
-	info  		 *wallet.MultiWalletInfo
+	info         *wallet.MultiWalletInfo
 	wal          *wallet.Wallet
 	keyEvent     chan *key.Event
 	errChan      chan error
@@ -48,7 +48,7 @@ type createRestore struct {
 	states       *states
 
 	closeCreateRestore    decredmaterial.IconButton
-	backToMain            decredmaterial.IconButton
+	hideRestoreWallet     decredmaterial.IconButton
 	create                decredmaterial.Button
 	showPasswordModal     decredmaterial.Button
 	hidePasswordModal     decredmaterial.Button
@@ -65,7 +65,8 @@ type createRestore struct {
 	toCreateWalletWidget        *widget.Button
 	togglePasswordModalWidget   *widget.Button
 	backCreateRestoreWidget     *widget.Button
-	toggleDisplayRestoreWidget  *widget.Button
+	showRestoreWidget           *widget.Button
+	hideRestoreWidget           *widget.Button
 	spendingPasswordWidget      *widget.Editor
 	matchSpendingPasswordWidget *widget.Editor
 	addWalletWidget             *widget.Button
@@ -77,13 +78,14 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		gtx:                         common.gtx,
 		theme:                       common.theme,
 		wal:                         common.wallet,
-		info: 						 common.info,
+		info:                        common.info,
 		keyEvent:                    common.keyEvents,
 		errChan:                     common.errorChannels[PageCreateRestore],
 		states:                      common.states,
 		toCreateWalletWidget:        new(widget.Button),
 		backCreateRestoreWidget:     new(widget.Button),
-		toggleDisplayRestoreWidget:  new(widget.Button),
+		showRestoreWidget:           new(widget.Button),
+		hideRestoreWidget:           new(widget.Button),
 		togglePasswordModalWidget:   new(widget.Button),
 		spendingPasswordWidget:      new(widget.Editor),
 		matchSpendingPasswordWidget: new(widget.Editor),
@@ -104,11 +106,11 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	pg.closeCreateRestore = common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)))
 	pg.closeCreateRestore.Background = color.RGBA{}
-	pg.closeCreateRestore.Color = common.theme.Color.Primary
+	pg.closeCreateRestore.Color = common.theme.Color.Hint
 
-	pg.backToMain = common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)))
-	pg.backToMain.Background = color.RGBA{}
-	pg.backToMain.Color = common.theme.Color.Hint
+	pg.hideRestoreWallet = common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)))
+	pg.hideRestoreWallet.Background = color.RGBA{}
+	pg.hideRestoreWallet.Color = common.theme.Color.Hint
 
 	pg.hidePasswordModal = common.theme.Button("cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
@@ -135,13 +137,6 @@ func (pg *createRestore) layout() {
 			layout.Flexed(1, func() {
 				layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-						layout.Rigid(func() {
-							layout.W.Layout(pg.gtx, func() {
-								if pg.info.LoadedWallets > 0 {
-									pg.closeCreateRestore.Layout(pg.gtx, pg.backCreateRestoreWidget)
-								}
-							})
-						}),
 						layout.Flexed(1, func() {
 							if pg.showRestore {
 								pg.Restore()()
@@ -203,6 +198,13 @@ func (pg *createRestore) layout() {
 func (pg *createRestore) mainContent() layout.Widget {
 	return func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+			layout.Rigid(func() {
+				layout.W.Layout(pg.gtx, func() {
+					if pg.info.LoadedWallets > 0 {
+						pg.closeCreateRestore.Layout(pg.gtx, pg.backCreateRestoreWidget)
+					}
+				})
+			}),
 			layout.Flexed(1, func() {
 				layout.Center.Layout(pg.gtx, func() {
 					title := pg.theme.H3("")
@@ -225,7 +227,7 @@ func (pg *createRestore) mainContent() layout.Widget {
 					}),
 					layout.Rigid(func() {
 						layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func() {
-							pg.showRestoreWallet.Layout(pg.gtx, pg.toggleDisplayRestoreWidget)
+							pg.showRestoreWallet.Layout(pg.gtx, pg.showRestoreWidget)
 						})
 					}),
 				)
@@ -239,7 +241,7 @@ func (pg *createRestore) Restore() layout.Widget {
 		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 			layout.Rigid(func() {
 				layout.W.Layout(pg.gtx, func() {
-					pg.backToMain.Layout(pg.gtx, pg.toggleDisplayRestoreWidget)
+					pg.hideRestoreWallet.Layout(pg.gtx, pg.hideRestoreWidget)
 				})
 			}),
 			layout.Rigid(func() {
@@ -447,15 +449,17 @@ func (pg *createRestore) validateSeeds() string {
 func (pg *createRestore) handle(common pageCommon) {
 	gtx := common.gtx
 
-	for pg.toggleDisplayRestoreWidget.Clicked(gtx) {
-		pg.showRestore = !pg.showRestore
-		if !pg.showRestore {
-			pg.errLabel.Text = ""
-		}
+	for pg.hideRestoreWidget.Clicked(gtx) {
+		pg.showRestore = false
+		pg.errLabel.Text = ""
+	}
+
+	for pg.showRestoreWidget.Clicked(gtx) {
+		pg.showRestore = true
 	}
 
 	for pg.backCreateRestoreWidget.Clicked(gtx) {
-		fmt.Printf("clicked back button")
+		*common.page = PageWallet
 	}
 
 	for pg.toCreateWalletWidget.Clicked(gtx) {

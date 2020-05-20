@@ -332,4 +332,3 @@ func (win *Window) resetButton() {
 	win.outputs.savePassword.Text = "Change"
 	win.outputs.savePassword.Background = win.theme.Color.Primary
 }
-
