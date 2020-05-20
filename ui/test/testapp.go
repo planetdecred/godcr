@@ -107,7 +107,6 @@ func (t *TestStruct) initWidgets() {
 	t.customEditorOutput.checkbox = theme.CheckBox("test checkbox")
 	t.customEditorOutput.progressBar = theme.ProgressBar(60)
 
-
 	t.collapsible = theme.Collapsible()
 
 }
