@@ -152,17 +152,17 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	if win.inputs.deleteWallet.Clicked(win.gtx) {
-		pass := win.validatePassword()
-		if pass == "" {
-			return
-		}
-		win.wallet.DeleteWallet(win.walletInfo.Wallets[win.selected].ID, pass)
-		win.resetPasswords()
-		win.states.loading = true
-		log.Debug("Delete Wallet clicked")
-		return
-	}
+	// if win.inputs.deleteWallet.Clicked(win.gtx) {
+	// 	pass := win.validatePassword()
+	// 	if pass == "" {
+	// 		return
+	// 	}
+	// 	win.wallet.DeleteWallet(win.walletInfo.Wallets[win.selected].ID, pass)
+	// 	win.resetPasswords()
+	// 	win.states.loading = true
+	// 	log.Debug("Delete Wallet clicked")
+	// 	return
+	// }
 
 	// ADD ACCOUNT
 
