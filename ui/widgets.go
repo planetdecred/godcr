@@ -20,11 +20,9 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button
 	toRestoreWallet                                                      widget.Button
-	hideMsgInfo, changePasswordDiag, signMessageDiag                     widget.Button
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign       widget.Button
+	changePasswordDiag, signMessageDiag                                  widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
-	addressInput, messageInput, signInput                                widget.Editor
-	clearBtn, verifyBtn, verifyMessDiag, verifyInfo                      widget.Button
+	verifyMessDiag                                                       widget.Button
 	restoreDiag, addAcctDiag, savePassword                               widget.Button
 
 	receiveIcons struct {
@@ -49,26 +47,23 @@ type outputs struct {
 		create, clear, done *decredmaterial.Icon
 	}
 	icons struct {
-		add, check, cancel, sync, info, more, copy, verifyInfo         decredmaterial.IconButton
-		pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign decredmaterial.IconButton
+		add, check, cancel, sync, info, more, copy decredmaterial.IconButton
 	}
-	addressInput, messageInput, signInput                                      decredmaterial.Editor
 	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
 	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
 	toReceive                                                                  decredmaterial.IconButton
 	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
-	clearBtn, verifyBtn, verifyMessDiag                                        decredmaterial.Button
+	verifyMessDiag                                                             decredmaterial.Button
 
 	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
 	toggleWalletRename, renameWallet                                              decredmaterial.IconButton
 	hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag                decredmaterial.Button
 	addAccount, newAddressDiag                                                    decredmaterial.Button
-	info, more, copy, verifyInfo                                                  decredmaterial.IconButton
-	pasteAddr, pasteMsg, pasteSign, clearAddr, clearMsg, clearSign                decredmaterial.IconButton
+	info, more, copy                                                              decredmaterial.IconButton
 	passwordBar                                                                   *decredmaterial.ProgressBar
 
-	tabs                                                    []decredmaterial.TabItem
-	notImplemented, pageTitle, pageInfo, verifyMessage, err decredmaterial.Label
+	tabs                                     []decredmaterial.TabItem
+	notImplemented, pageTitle, pageInfo, err decredmaterial.Label
 
 	seedEditors      []decredmaterial.Editor
 	seedsSuggestions []decredmaterial.Button
@@ -105,9 +100,6 @@ func (win *Window) initWidgets() {
 	win.outputs.icons.info = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionInfo)))
 	win.outputs.icons.info.Padding = unit.Dp(5)
 	win.outputs.icons.info.Size = unit.Dp(35)
-	win.outputs.icons.verifyInfo = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionInfo)))
-	win.outputs.icons.verifyInfo.Padding = unit.Dp(5)
-	win.outputs.icons.verifyInfo.Size = unit.Dp(35)
 	win.outputs.icons.copy = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy)))
 	win.outputs.icons.copy.Padding = unit.Dp(5)
 	win.outputs.icons.copy.Size = unit.Dp(30)
@@ -128,23 +120,7 @@ func (win *Window) initWidgets() {
 	win.outputs.matchSpending.IsRequired = true
 	win.inputs.matchSpending.SingleLine = true
 
-	// verify message widgets
-	win.outputs.addressInput = theme.Editor("Address")
-	win.outputs.addressInput.IsRequired = true
-	win.outputs.addressInput.IsVisible = true
-	win.outputs.signInput = theme.Editor("Signature")
-	win.outputs.signInput.IsRequired = true
-	win.outputs.signInput.IsVisible = true
-	win.outputs.messageInput = theme.Editor("Message")
-	win.outputs.messageInput.IsRequired = true
-	win.outputs.messageInput.IsVisible = true
-	win.outputs.verifyBtn = theme.Button("Verify")
-	win.outputs.verifyBtn.TextSize = unit.Dp(13)
-	win.outputs.clearBtn = theme.Button("Clear All")
-	win.outputs.clearBtn.Background = color.RGBA{0, 0, 0, 0}
-	win.outputs.clearBtn.Color = win.theme.Color.Primary
-	win.outputs.clearBtn.TextSize = unit.Dp(13)
-
+	// verify message
 	win.outputs.verifyMessDiag = theme.Button("Verify Message")
 	win.outputs.signMessageDiag = theme.Button("Sign Message")
 
@@ -192,18 +168,10 @@ func (win *Window) initWidgets() {
 
 	win.outputs.err = theme.Caption("")
 	win.outputs.err.Color = theme.Color.Danger
-	win.outputs.verifyMessage = win.theme.H6("")
 	win.outputs.hideMsgInfo = theme.Button("Got it")
 	win.outputs.more = win.outputs.icons.more
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.copy = win.outputs.icons.copy
-	win.outputs.pasteAddr = win.outputs.icons.pasteAddr
-	win.outputs.pasteMsg = win.outputs.icons.pasteMsg
-	win.outputs.pasteSign = win.outputs.icons.pasteSign
-	win.outputs.clearAddr = win.outputs.icons.clearAddr
-	win.outputs.clearMsg = win.outputs.icons.clearMsg
-	win.outputs.clearSign = win.outputs.icons.clearSign
-	win.outputs.verifyInfo = win.outputs.icons.verifyInfo
 
 	for i := 0; i <= 32; i++ {
 		e := theme.Editor(fmt.Sprintf("Input word %d...", i+1))

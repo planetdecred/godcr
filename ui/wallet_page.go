@@ -27,6 +27,8 @@ type walletPage struct {
 	editorW                                            decredmaterial.Editor
 	deleteW                                            decredmaterial.Button
 	gotoSignMessagePageBtn                             decredmaterial.Button
+	gotoVerifyMessagePageBtn                           decredmaterial.Button
+	verifyMessageDiag                                  *widget.Button
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -37,14 +39,16 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
-		beginRenameW:           common.theme.PlainIconButton(common.icons.contentCreate),
-		cancelRenameW:          common.theme.PlainIconButton(common.icons.contentClear),
-		renameW:                common.theme.PlainIconButton(common.icons.navigationCheck),
-		editorW:                common.theme.Editor("Enter wallet name"),
-		addAcctW:               common.theme.IconButton(common.icons.contentAdd),
-		deleteW:                common.theme.DangerButton("Delete Wallet"),
-		gotoSignMessagePageBtn: win.outputs.signMessageDiag,
-		signMessageDiag:        &win.inputs.signMessageDiag,
+		beginRenameW:             common.theme.PlainIconButton(common.icons.contentCreate),
+		cancelRenameW:            common.theme.PlainIconButton(common.icons.contentClear),
+		renameW:                  common.theme.PlainIconButton(common.icons.navigationCheck),
+		editorW:                  common.theme.Editor("Enter wallet name"),
+		addAcctW:                 common.theme.IconButton(common.icons.contentAdd),
+		deleteW:                  common.theme.DangerButton("Delete Wallet"),
+		gotoSignMessagePageBtn:   win.outputs.signMessageDiag,
+		signMessageDiag:          &win.inputs.signMessageDiag,
+		gotoVerifyMessagePageBtn: win.outputs.verifyMessDiag,
+		verifyMessageDiag:        &win.inputs.verifyMessDiag,
 	}
 
 	return func() {
@@ -139,6 +143,13 @@ func (page *walletPage) Layout(common pageCommon) {
 					}
 					inset.Layout(gtx, func() {
 						page.gotoSignMessagePageBtn.Layout(gtx, page.signMessageDiag)
+					})
+				}),
+				layout.Rigid(func() {
+					layout.Inset{
+						Left: unit.Dp(5),
+					}.Layout(gtx, func() {
+						page.gotoVerifyMessagePageBtn.Layout(gtx, page.verifyMessageDiag)
 					})
 				}),
 			)
