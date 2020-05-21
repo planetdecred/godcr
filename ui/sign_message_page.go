@@ -27,6 +27,9 @@ type signMessagePage struct {
 	passwordModal                                             *decredmaterial.Password
 	clearButtonW, signButtonW, copyButtonW                    *widget.Button
 	result                                                    **wallet.Signature
+
+	backButtonW widget.Button
+	backButton  decredmaterial.IconButton
 }
 
 func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
@@ -72,7 +75,11 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		copyButton:  common.theme.Button("Copy"),
 		copyButtonW: new(widget.Button),
 		result:      &win.signatureResult,
+
+		backButton: common.theme.PlainIconButton(common.icons.navigationArrowBack),
 	}
+	pg.backButton.Color = common.theme.Color.Hint
+	pg.backButton.Size = unit.Dp(32)
 
 	return func() {
 		pg.Layout(common)
@@ -100,7 +107,12 @@ func (pg *signMessagePage) Layout(common pageCommon) {
 
 	w := []func(){
 		func() {
-			pg.titleLabel.Layout(gtx)
+			layout.W.Layout(gtx, func() {
+				pg.backButton.Layout(gtx, &pg.backButtonW)
+			})
+			layout.Inset{Left: unit.Dp(44)}.Layout(gtx, func() {
+				pg.titleLabel.Layout(gtx)
+			})
 		},
 		func() {
 			inset := layout.Inset{
@@ -211,6 +223,11 @@ func (pg *signMessagePage) handle(common pageCommon) {
 		*pg.result = nil
 		pg.isSigningMessage = false
 		pg.signButton.Text = "Sign"
+	}
+
+	if pg.backButtonW.Clicked(gtx) {
+		pg.clearForm()
+		*common.page = PageWallet
 	}
 }
 
