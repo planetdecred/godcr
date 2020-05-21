@@ -13,64 +13,89 @@ import (
 
 const PageSignMessage = "sign_message"
 
-type SignMessagePage struct {
-	theme      *decredmaterial.Theme
+type signMessagePage struct {
+	container  layout.List
 	wallet     *wallet.Wallet
 	walletID   int
 	errChannel chan error
 
-	isPasswordModalOpen bool
-	isSigningMessage    bool
-
-	titleLabel         decredmaterial.Label
-	subtitleLabel      decredmaterial.Label
-	addressErrorLabel  decredmaterial.Label
-	messageErrorLabel  decredmaterial.Label
-	errorLabel         decredmaterial.Label
-	signedMessageLabel decredmaterial.Label
-
-	addressEditorMaterial decredmaterial.Editor
-	messageEditorMaterial decredmaterial.Editor
-
-	addressEditorWidget *widget.Editor
-	messageEditorWidget *widget.Editor
-
-	clearButtonMaterial decredmaterial.Button
-	signButtonMaterial  decredmaterial.Button
-	copyButtonMaterial  decredmaterial.Button
-
-	passwordModal *decredmaterial.Password
-
-	clearButtonWidget *widget.Button
-	signButtonWidget  *widget.Button
-	copyButtonWidget  *widget.Button
-
-	result **wallet.Signature
+	isPasswordModalOpen, isSigningMessage                     bool
+	titleLabel, subtitleLabel, errorLabel, signedMessageLabel decredmaterial.Label
+	addressEditor, messageEditor                              decredmaterial.Editor
+	addressEditorW, messageEditorW                            *widget.Editor
+	clearButton, signButton, copyButton                       decredmaterial.Button
+	passwordModal                                             *decredmaterial.Password
+	clearButtonW, signButtonW, copyButtonW                    *widget.Button
+	result                                                    **wallet.Signature
 }
 
-var signMessagePage *SignMessagePage
+func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
+	addressEditor := common.theme.Editor("Address")
+	addressEditor.IsVisible = true
+	addressEditor.IsRequired = true
+	messageEditor := common.theme.Editor("Message")
+	messageEditor.IsVisible = true
+	messageEditor.IsRequired = true
+	clearButton := common.theme.Button("Clear all")
+	clearButton.Background = common.theme.Color.Background
+	clearButton.Color = common.theme.Color.Gray
+	errorLabel := common.theme.Caption("")
+	errorLabel.Color = common.theme.Color.Danger
 
-const (
-	editorWidthRatio = 0.99
-)
+	pg := &signMessagePage{
+		container: layout.List{
+			Axis: layout.Vertical,
+		},
+		wallet:        common.wallet,
+		passwordModal: common.theme.Password(),
 
-func (pg *SignMessagePage) Draw(common pageCommon) {
+		titleLabel:         common.theme.H5("Sign Message"),
+		subtitleLabel:      common.theme.Body2("Enter the address and message you want to sign"),
+		signedMessageLabel: common.theme.H5(""),
+		errorLabel:         errorLabel,
+		addressEditor:      addressEditor,
+		addressEditorW: &widget.Editor{
+			SingleLine: true,
+		},
+
+		messageEditor: messageEditor,
+		messageEditorW: &widget.Editor{
+			SingleLine: true,
+		},
+
+		clearButton:  clearButton,
+		clearButtonW: new(widget.Button),
+
+		signButton:  common.theme.Button("Sign"),
+		signButtonW: new(widget.Button),
+
+		copyButton:  common.theme.Button("Copy"),
+		copyButtonW: new(widget.Button),
+		result:      &win.signatureResult,
+	}
+
+	return func() {
+		pg.Layout(common)
+		pg.handle(common)
+		pg.updateColors(common)
+		pg.validate(true)
+	}
+}
+
+func (pg *signMessagePage) Layout(common pageCommon) {
 	gtx := common.gtx
-	pg.handleEvents(gtx)
-	pg.updateColors()
-	pg.validate(true)
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	pg.errChannel = common.errorChannels[PageSignMessage]
 
-	if *signMessagePage.result != nil {
-		if (*signMessagePage.result).Err != nil {
-			signMessagePage.errorLabel.Text = (*signMessagePage.result).Err.Error()
+	if *pg.result != nil {
+		if (*pg.result).Err != nil {
+			pg.errorLabel.Text = (*pg.result).Err.Error()
 		} else {
-			signMessagePage.signedMessageLabel.Text = (*signMessagePage.result).Signature
+			pg.signedMessageLabel.Text = (*pg.result).Signature
 		}
-		*signMessagePage.result = nil
-		signMessagePage.isSigningMessage = false
-		signMessagePage.signButtonMaterial.Text = "Sign"
+		*pg.result = nil
+		pg.isSigningMessage = false
+		pg.signButton.Text = "Sign"
 	}
 
 	w := []func(){
@@ -80,7 +105,7 @@ func (pg *SignMessagePage) Draw(common pageCommon) {
 		func() {
 			inset := layout.Inset{
 				Top:    unit.Dp(5),
-				Bottom: unit.Dp(15),
+				Bottom: unit.Dp(10),
 			}
 			inset.Layout(gtx, func() {
 				pg.subtitleLabel.Layout(gtx)
@@ -90,10 +115,10 @@ func (pg *SignMessagePage) Draw(common pageCommon) {
 			pg.errorLabel.Layout(gtx)
 		},
 		func() {
-			pg.drawAddressEditor(gtx)
+			pg.addressEditor.Layout(gtx, pg.addressEditorW)
 		},
 		func() {
-			pg.drawMessageEditor(gtx)
+			pg.messageEditor.Layout(gtx, pg.messageEditorW)
 		},
 		func() {
 			pg.drawButtonsRow(gtx)
@@ -103,50 +128,19 @@ func (pg *SignMessagePage) Draw(common pageCommon) {
 		},
 	}
 
-	list := layout.List{Axis: layout.Vertical}
-	list.Layout(gtx, len(w), func(i int) {
-		layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
+	common.Layout(gtx, func() {
+		pg.container.Layout(gtx, len(w), func(i int) {
+			layout.UniformInset(unit.Dp(5)).Layout(gtx, w[i])
+		})
 	})
 
 	if pg.isPasswordModalOpen {
+		pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 		pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
 	}
 }
 
-func (pg *SignMessagePage) drawAddressEditor(gtx *layout.Context) {
-	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Flexed(editorWidthRatio, func() {
-			pg.addressEditorMaterial.Layout(gtx, pg.addressEditorWidget)
-		}),
-	)
-
-	if pg.addressErrorLabel.Text != "" {
-		inset := layout.Inset{
-			Top: unit.Dp(25),
-		}
-		inset.Layout(gtx, func() {
-			pg.addressErrorLabel.Layout(gtx)
-		})
-	}
-}
-
-func (pg *SignMessagePage) drawMessageEditor(gtx *layout.Context) {
-	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Flexed(editorWidthRatio, func() {
-			pg.messageEditorMaterial.Layout(gtx, pg.messageEditorWidget)
-		}),
-	)
-	if pg.messageErrorLabel.Text != "" {
-		inset := layout.Inset{
-			Top: unit.Dp(25),
-		}
-		inset.Layout(gtx, func() {
-			pg.messageErrorLabel.Layout(gtx)
-		})
-	}
-}
-
-func (pg *SignMessagePage) drawButtonsRow(gtx *layout.Context) {
+func (pg *signMessagePage) drawButtonsRow(gtx *layout.Context) {
 	layout.E.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func() {
@@ -154,17 +148,17 @@ func (pg *SignMessagePage) drawButtonsRow(gtx *layout.Context) {
 					Right: unit.Dp(5),
 				}
 				inset.Layout(gtx, func() {
-					pg.clearButtonMaterial.Layout(gtx, pg.clearButtonWidget)
+					pg.clearButton.Layout(gtx, pg.clearButtonW)
 				})
 			}),
 			layout.Rigid(func() {
-				pg.signButtonMaterial.Layout(gtx, pg.signButtonWidget)
+				pg.signButton.Layout(gtx, pg.signButtonW)
 			}),
 		)
 	})
 }
 
-func (pg *SignMessagePage) drawResult(gtx *layout.Context) {
+func (pg *signMessagePage) drawResult(gtx *layout.Context) {
 	if pg.signedMessageLabel.Text == "" {
 		return
 	}
@@ -174,160 +168,103 @@ func (pg *SignMessagePage) drawResult(gtx *layout.Context) {
 			pg.signedMessageLabel.Layout(gtx)
 		}),
 		layout.Rigid(func() {
-			pg.copyButtonMaterial.Layout(gtx, pg.copyButtonWidget)
+			pg.copyButton.Layout(gtx, pg.copyButtonW)
 		}),
 	)
 }
 
-func (pg *SignMessagePage) updateColors() {
-	if pg.isSigningMessage || pg.addressEditorWidget.Text() == "" || pg.messageEditorWidget.Text() == "" {
-		pg.signButtonMaterial.Background = pg.theme.Color.Hint
+func (pg *signMessagePage) updateColors(common pageCommon) {
+	if pg.isSigningMessage || pg.addressEditorW.Text() == "" || pg.messageEditorW.Text() == "" {
+		pg.signButton.Background = common.theme.Color.Hint
 	} else {
-		pg.signButtonMaterial.Background = pg.theme.Color.Primary
+		pg.signButton.Background = common.theme.Color.Primary
 	}
 }
 
-func (pg *SignMessagePage) handleEvents(gtx *layout.Context) {
-	for pg.clearButtonWidget.Clicked(gtx) {
+func (pg *signMessagePage) handle(common pageCommon) {
+	gtx := common.gtx
+	for pg.clearButtonW.Clicked(gtx) {
 		pg.clearForm()
 	}
 
-	for pg.signButtonWidget.Clicked(gtx) {
+	for pg.signButtonW.Clicked(gtx) {
 		if !pg.isSigningMessage && pg.validate(false) {
 			pg.isPasswordModalOpen = true
 		}
 	}
 
-	for pg.copyButtonWidget.Clicked(gtx) {
+	for pg.copyButtonW.Clicked(gtx) {
 		clipboard.WriteAll(pg.signedMessageLabel.Text)
+	}
+	select {
+	case err := <-pg.errChannel:
+		fmt.Printf("SIGNMESSAGE PAGE ERROR! %v", err)
+	default:
+	}
+
+	if *pg.result != nil {
+		if (*pg.result).Err != nil {
+			pg.errorLabel.Text = (*pg.result).Err.Error()
+		} else {
+			pg.signedMessageLabel.Text = (*pg.result).Signature
+		}
+		*pg.result = nil
+		pg.isSigningMessage = false
+		pg.signButton.Text = "Sign"
 	}
 }
 
-func (pg *SignMessagePage) confirm(password []byte) {
+func (pg *signMessagePage) confirm(password []byte) {
 	pg.isPasswordModalOpen = false
 	pg.isSigningMessage = true
 
-	pg.signButtonMaterial.Text = "Signing..."
-	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorWidget.Text(), pg.messageEditorWidget.Text(), pg.errChannel)
+	pg.signButton.Text = "Signing..."
+	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorW.Text(), pg.messageEditorW.Text(), pg.errChannel)
 }
 
-func (pg *SignMessagePage) cancel() {
+func (pg *signMessagePage) cancel() {
 	pg.isPasswordModalOpen = false
 }
 
-func (pg *SignMessagePage) validate(ignoreEmpty bool) bool {
+func (pg *signMessagePage) validate(ignoreEmpty bool) bool {
 	isAddressValid := pg.validateAddress(ignoreEmpty)
 	isMessageValid := pg.validateMessage(ignoreEmpty)
-
 	if !isAddressValid || !isMessageValid {
 		return false
 	}
 	return true
 }
 
-func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
-	pg.addressErrorLabel.Text = ""
-	address := pg.addressEditorWidget.Text()
+func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
+	address := pg.addressEditorW.Text()
+	pg.addressEditor.ErrorLabel.Text = ""
 
 	if address == "" && !ignoreEmpty {
-		pg.addressEditorMaterial.ErrorLabel.Text = "Please enter a valid address"
+		pg.addressEditor.ErrorLabel.Text = "Please enter a valid address"
 		return false
 	}
 
 	if address != "" {
 		isValid, _ := pg.wallet.IsAddressValid(address)
 		if !isValid {
-			pg.addressEditorMaterial.ErrorLabel.Text = "Invalid address"
+			pg.addressEditor.ErrorLabel.Text = "Invalid address"
 			return false
 		}
 	}
 	return true
 }
 
-func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
-	message := pg.messageEditorWidget.Text()
+func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
+	message := pg.messageEditorW.Text()
 	if message == "" && !ignoreEmpty {
-		pg.messageEditorMaterial.ErrorLabel.Text = "Please enter a message to sign"
+		pg.messageEditor.ErrorLabel.Text = "Please enter a message to sign"
 		return false
 	}
 	return true
 }
 
-func (pg *SignMessagePage) clearForm() {
-	pg.addressEditorWidget.SetText("")
-	pg.messageEditorWidget.SetText("")
+func (pg *signMessagePage) clearForm() {
+	pg.addressEditorW.SetText("")
+	pg.messageEditorW.SetText("")
 	pg.errorLabel.Text = ""
-}
-
-func (pg *SignMessagePage) handle() {
-	select {
-	case err := <-pg.errChannel:
-		fmt.Printf("SIGNMESSAGE PAGE ERROR! %v", err)
-	default:
-	}
-}
-
-func (win *Window) newSignMessagePage() *SignMessagePage {
-	pg := &SignMessagePage{}
-	pg.theme = win.theme
-	pg.wallet = win.wallet
-
-	pg.passwordModal = pg.theme.Password()
-
-	pg.titleLabel = pg.theme.H5("Sign Message")
-	pg.subtitleLabel = pg.theme.Body2("Enter the address and message you want to sign")
-	pg.errorLabel = pg.theme.Caption("")
-	pg.addressErrorLabel = pg.theme.Caption("")
-	pg.signedMessageLabel = pg.theme.H5("")
-	pg.messageErrorLabel = pg.theme.Caption("")
-
-	pg.addressEditorMaterial = pg.theme.Editor("Address")
-	pg.addressEditorMaterial.IsVisible = true
-	pg.addressEditorMaterial.IsRequired = true
-	pg.addressEditorWidget = &widget.Editor{
-		SingleLine: true,
-	}
-
-	pg.messageEditorMaterial = pg.theme.Editor("Message")
-	pg.messageEditorMaterial.IsVisible = true
-	pg.messageEditorMaterial.IsRequired = true
-	pg.messageEditorWidget = &widget.Editor{
-		SingleLine: true,
-	}
-
-	pg.clearButtonMaterial = pg.theme.Button("Clear all")
-	pg.clearButtonWidget = new(widget.Button)
-
-	pg.signButtonMaterial = pg.theme.Button("Sign")
-	pg.signButtonWidget = new(widget.Button)
-
-	pg.copyButtonMaterial = pg.theme.Button("Copy")
-	pg.copyButtonWidget = new(widget.Button)
-
-	pg.clearButtonMaterial.Background = pg.theme.Color.Background
-	pg.clearButtonMaterial.Color = pg.theme.Color.Gray
-	pg.addressErrorLabel.Color = pg.theme.Color.Danger
-	pg.errorLabel.Color = pg.theme.Color.Danger
-	pg.messageErrorLabel.Color = pg.theme.Color.Danger
-
-	return pg
-}
-
-func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
-	if signMessagePage == nil {
-		signMessagePage = win.newSignMessagePage()
-		signMessagePage.errChannel = common.errorChannels[PageSignMessage]
-		signMessagePage.result = &win.signatureResult
-	}
-
-	body := func() {
-		layout.UniformInset(unit.Dp(10)).Layout(win.gtx, func() {
-			signMessagePage.Draw(common)
-		})
-	}
-
-	return func() {
-		common.Layout(win.gtx, body)
-		signMessagePage.handle()
-	}
 }
