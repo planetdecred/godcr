@@ -101,6 +101,7 @@ func (win *Window) addPages() {
 			PageSignMessage:   make(chan error),
 			PageCreateRestore: make(chan error),
 			PageSendTxAuthorErrChan: make(chan error),
+			PageSendTxAuthorErrChan:  make(chan error),
 			PageSendBroadcastErrChan: make(chan error),
 		},
 		keyEvents: win.keyEvents,

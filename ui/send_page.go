@@ -16,14 +16,14 @@ import (
 )
 
 type SendPage struct {
-	pageContainer layout.List
+	pageContainer   layout.List
 	theme           *decredmaterial.Theme
 	wallet          *wallet.Wallet
 	wallets         []wallet.InfoShort
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
 
-	txAuthorErrChan chan error
+	txAuthorErrChan  chan error
 	broadcastErrChan chan error
 
 	selectedWallet  wallet.InfoShort
@@ -45,28 +45,28 @@ type SendPage struct {
 	nextButtonMaterial                   decredmaterial.Button
 	closeConfirmationModalButtonMaterial decredmaterial.Button
 	confirmButtonMaterial                decredmaterial.Button
-	accountsTab 						 *decredmaterial.Tabs 
-	walletsTab 							 *decredmaterial.Tabs
+	accountsTab                          *decredmaterial.Tabs
+	walletsTab                           *decredmaterial.Tabs
 
-	copyIconMaterial                     decredmaterial.IconButton
+	copyIconMaterial decredmaterial.IconButton
 
 	sendErrorText      string
 	txHashText         string
 	txHash             string
 	calculateErrorText string
 
-	passwordModal        *decredmaterial.Password
+	passwordModal *decredmaterial.Password
 
-	isConfirmationModalOpen    bool
-	isPasswordModalOpen        bool
-	isBroadcastingTransaction  bool
-	hasInitializedTxAuthor     bool
-	hasCopiedTxHash            bool
+	isConfirmationModalOpen   bool
+	isPasswordModalOpen       bool
+	isBroadcastingTransaction bool
+	hasInitializedTxAuthor    bool
+	hasCopiedTxHash           bool
 }
 
 const (
-	PageSend = "send"
-	PageSendTxAuthorErrChan = "send-txauthor-err"
+	PageSend                 = "send"
+	PageSendTxAuthorErrChan  = "send-txauthor-err"
 	PageSendBroadcastErrChan = "send-broadcast-err"
 )
 
@@ -76,7 +76,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
-		
+
 		theme:           common.theme,
 		wallet:          common.wallet,
 		wallets:         common.info.Wallets,
@@ -99,15 +99,15 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		totalCostValueLabel:                  common.theme.Body2("0 DCR"),
 		balanceAfterSendValueLabel:           common.theme.Body2("0 DCR"),
 		copyIconMaterial:                     common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy))),
-	
-		isConfirmationModalOpen:    false,
-		isPasswordModalOpen:        false,
-		hasInitializedTxAuthor:     false,
-		hasCopiedTxHash:            false,
+
+		isConfirmationModalOpen: false,
+		isPasswordModalOpen:     false,
+		hasInitializedTxAuthor:  false,
+		hasCopiedTxHash:         false,
 
 		passwordModal: common.theme.Password(),
-		accountsTab: decredmaterial.NewTabs(),
-		walletsTab: decredmaterial.NewTabs(),
+		accountsTab:   decredmaterial.NewTabs(),
+		walletsTab:    decredmaterial.NewTabs(),
 	}
 
 	page.walletsTab.Position = decredmaterial.Top
@@ -143,7 +143,7 @@ func (pg *SendPage) Handle(common pageCommon) {
 		pg.selectedAccount = pg.selectedWallet.Accounts[0]
 		pg.accountsTab.Selected = 0
 
-		pg.setAccountTabs(common)
+		pg.setAccountTabs()
 		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
 	}
 
@@ -188,9 +188,9 @@ func (pg *SendPage) Handle(common pageCommon) {
 	}
 
 	select {
-	case err := <- pg.txAuthorErrChan:
+	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
-	case err := <- pg.broadcastErrChan:
+	case err := <-pg.broadcastErrChan:
 		pg.sendErrorText = err.Error()
 	default:
 	}
@@ -204,21 +204,21 @@ func (pg *SendPage) drawWalletsTab(common pageCommon, body func()) {
 		}
 	}
 	pg.walletsTab.SetTabs(wallets)
-	
-	pg.setAccountTabs(common)
-	pg.walletsTab.Layout(common.gtx, func(){
+
+	pg.setAccountTabs()
+	pg.walletsTab.Layout(common.gtx, func() {
 		pg.accountsTab.Layout(common.gtx, body)
 	})
 }
 
-func (pg *SendPage) setAccountTabs(common pageCommon) {
+func (pg *SendPage) setAccountTabs() {
 	accounts := make([]decredmaterial.TabItem, len(pg.selectedWallet.Accounts))
 	for i := range pg.selectedWallet.Accounts {
 		if pg.selectedWallet.Accounts[i].Name == "imported" {
 			continue
 		}
 		accounts[i] = decredmaterial.TabItem{
-			Label:  pg.theme.Body1(pg.selectedWallet.Accounts[i].Name),
+			Label: pg.theme.Body1(pg.selectedWallet.Accounts[i].Name),
 		}
 	}
 	pg.accountsTab.SetTabs(accounts)
@@ -234,10 +234,10 @@ func (pg *SendPage) Layout(common pageCommon) {
 	pg.txAuthorErrChan = common.errorChannels[PageSendTxAuthorErrChan]
 	pg.broadcastErrChan = common.errorChannels[PageSendBroadcastErrChan]
 
-	if !pg.hasInitializedTxAuthor {	
+	if !pg.hasInitializedTxAuthor {
 		pg.selectedWallet = pg.wallets[*common.selectedWallet]
 		pg.selectedAccount = pg.selectedWallet.Accounts[0]
-		
+
 		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
 		pg.hasInitializedTxAuthor = true
 	}
@@ -289,16 +289,15 @@ func (pg *SendPage) drawPageContents(common pageCommon) {
 		},
 	}
 
-	w := func(){
+	w := func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
-			layout.Rigid(func(){
-				layout.UniformInset(unit.Dp(7)).Layout(common.gtx, func(){
+			layout.Rigid(func() {
+				layout.UniformInset(unit.Dp(7)).Layout(common.gtx, func() {
 					pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
 						layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
 					})
 				})
 			}),
-			
 		)
 	}
 	pg.drawWalletsTab(common, w)

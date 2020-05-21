@@ -153,7 +153,7 @@ func (wal *Wallet) BroadcastTransaction(txAuthor *dcrlibwallet.TxAuthor, passphr
 
 		hash, err := chainhash.NewHash(txHash)
 		if err != nil {
-			errChan <-  fmt.Errorf("error parsing successful transaction hash: %s", err.Error())
+			errChan <- fmt.Errorf("error parsing successful transaction hash: %s", err.Error())
 			return
 		}
 
