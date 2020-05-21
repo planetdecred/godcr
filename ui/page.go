@@ -65,7 +65,7 @@ func (win *Window) addPages() {
 			Icon:  icons.walletIcon,
 		},
 		{
-			Label: win.theme.Body1("Send DCR"),
+			Label: win.theme.Body1("Send"),
 			Icon:  icons.overviewIcon,
 		},
 		{
@@ -100,6 +100,8 @@ func (win *Window) addPages() {
 		errorChannels: map[string]chan error{
 			PageSignMessage:   make(chan error),
 			PageCreateRestore: make(chan error),
+			PageSendTxAuthorErrChan: make(chan error),
+			PageSendBroadcastErrChan: make(chan error),
 		},
 		keyEvents: win.keyEvents,
 		states:    &win.states,

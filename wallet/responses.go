@@ -137,11 +137,9 @@ type TxHash struct {
 
 type TxAuthor struct {
 	TxAuthor int
-	Err      error
 }
 
 // Broadcast is sent when the Wallet  broadcasts a transaction
 type Broadcast struct {
 	TxHash string
-	Err    error
 }

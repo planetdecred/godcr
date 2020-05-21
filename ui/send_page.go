@@ -16,11 +16,15 @@ import (
 )
 
 type SendPage struct {
+	pageContainer layout.List
 	theme           *decredmaterial.Theme
 	wallet          *wallet.Wallet
 	wallets         []wallet.InfoShort
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
+
+	txAuthorErrChan chan error
+	broadcastErrChan chan error
 
 	selectedWallet  wallet.InfoShort
 	selectedAccount wallet.Account
@@ -30,7 +34,6 @@ type SendPage struct {
 	nextButtonWidget                   *widget.Button
 	closeConfirmationModalButtonWidget *widget.Button
 	confirmButtonWidget                *widget.Button
-	selectAccountButtonWidget          *widget.Button
 	copyIconWidget                     *widget.Button
 
 	transactionFeeValueLabel   decredmaterial.Label
@@ -42,7 +45,9 @@ type SendPage struct {
 	nextButtonMaterial                   decredmaterial.Button
 	closeConfirmationModalButtonMaterial decredmaterial.Button
 	confirmButtonMaterial                decredmaterial.Button
-	selectAccountButtonMaterial          decredmaterial.Button
+	accountsTab 						 *decredmaterial.Tabs 
+	walletsTab 							 *decredmaterial.Tabs
+
 	copyIconMaterial                     decredmaterial.IconButton
 
 	sendErrorText      string
@@ -51,20 +56,27 @@ type SendPage struct {
 	calculateErrorText string
 
 	passwordModal        *decredmaterial.Password
-	accountSelectorModal *decredmaterial.AccountSelector
 
 	isConfirmationModalOpen    bool
 	isPasswordModalOpen        bool
 	isBroadcastingTransaction  bool
-	hasSetWallet               bool
+	hasInitializedTxAuthor     bool
 	hasCopiedTxHash            bool
-	isAccountSelectorModalOpen bool
 }
 
-const PageSend = "send"
+const (
+	PageSend = "send"
+	PageSendTxAuthorErrChan = "send-txauthor-err"
+	PageSendBroadcastErrChan = "send-broadcast-err"
+)
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page := &SendPage{
+		pageContainer: layout.List{
+			Axis:      layout.Vertical,
+			Alignment: layout.Middle,
+		},
+		
 		theme:           common.theme,
 		wallet:          common.wallet,
 		wallets:         common.info.Wallets,
@@ -76,7 +88,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		nextButtonWidget:                   new(widget.Button),
 		closeConfirmationModalButtonWidget: new(widget.Button),
 		confirmButtonWidget:                new(widget.Button),
-		selectAccountButtonWidget:          new(widget.Button),
 
 		sendErrorText: "",
 		txHashText:    "",
@@ -88,16 +99,19 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		totalCostValueLabel:                  common.theme.Body2("0 DCR"),
 		balanceAfterSendValueLabel:           common.theme.Body2("0 DCR"),
 		copyIconMaterial:                     common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy))),
-		selectAccountButtonMaterial:          common.theme.Button("Select Account"),
-
+	
 		isConfirmationModalOpen:    false,
 		isPasswordModalOpen:        false,
-		hasSetWallet:               false,
+		hasInitializedTxAuthor:     false,
 		hasCopiedTxHash:            false,
-		isAccountSelectorModalOpen: false,
 
 		passwordModal: common.theme.Password(),
+		accountsTab: decredmaterial.NewTabs(),
+		walletsTab: decredmaterial.NewTabs(),
 	}
+
+	page.walletsTab.Position = decredmaterial.Top
+	page.accountsTab.Position = decredmaterial.Top
 
 	page.destinationAddressEditorMaterial = common.theme.Editor("Destination Address")
 	page.destinationAddressEditorMaterial.SetRequiredErrorText("")
@@ -124,6 +138,20 @@ func (pg *SendPage) Handle(common pageCommon) {
 	pg.confirmButtonMaterial.Text = "Send"
 	pg.confirmButtonMaterial.Background = pg.theme.Color.Primary
 
+	if pg.walletsTab.Changed() {
+		pg.selectedWallet = pg.wallets[pg.walletsTab.Selected]
+		pg.selectedAccount = pg.selectedWallet.Accounts[0]
+		pg.accountsTab.Selected = 0
+
+		pg.setAccountTabs(common)
+		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
+	}
+
+	if pg.accountsTab.Changed() {
+		pg.selectedAccount = pg.selectedWallet.Accounts[pg.accountsTab.Selected]
+		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
+	}
+
 	if pg.hasCopiedTxHash {
 		time.AfterFunc(3*time.Second, func() {
 			pg.hasCopiedTxHash = false
@@ -142,11 +170,8 @@ func (pg *SendPage) Handle(common pageCommon) {
 	}
 
 	for pg.confirmButtonWidget.Clicked(common.gtx) {
+		pg.sendErrorText = ""
 		pg.isPasswordModalOpen = true
-	}
-
-	for pg.selectAccountButtonWidget.Clicked(common.gtx) {
-		pg.isAccountSelectorModalOpen = true
 	}
 
 	for pg.closeConfirmationModalButtonWidget.Clicked(common.gtx) {
@@ -161,6 +186,42 @@ func (pg *SendPage) Handle(common pageCommon) {
 	for range pg.sendAmountEditor.Events(common.gtx) {
 		go pg.calculateValues()
 	}
+
+	select {
+	case err := <- pg.txAuthorErrChan:
+		pg.calculateErrorText = err.Error()
+	case err := <- pg.broadcastErrChan:
+		pg.sendErrorText = err.Error()
+	default:
+	}
+}
+
+func (pg *SendPage) drawWalletsTab(common pageCommon, body func()) {
+	wallets := make([]decredmaterial.TabItem, len(pg.wallets))
+	for i := range pg.wallets {
+		wallets[i] = decredmaterial.TabItem{
+			Label: pg.theme.Body1(pg.wallets[i].Name),
+		}
+	}
+	pg.walletsTab.SetTabs(wallets)
+	
+	pg.setAccountTabs(common)
+	pg.walletsTab.Layout(common.gtx, func(){
+		pg.accountsTab.Layout(common.gtx, body)
+	})
+}
+
+func (pg *SendPage) setAccountTabs(common pageCommon) {
+	accounts := make([]decredmaterial.TabItem, len(pg.selectedWallet.Accounts))
+	for i := range pg.selectedWallet.Accounts {
+		if pg.selectedWallet.Accounts[i].Name == "imported" {
+			continue
+		}
+		accounts[i] = decredmaterial.TabItem{
+			Label:  pg.theme.Body1(pg.selectedWallet.Accounts[i].Name),
+		}
+	}
+	pg.accountsTab.SetTabs(accounts)
 }
 
 func (pg *SendPage) Layout(common pageCommon) {
@@ -169,26 +230,35 @@ func (pg *SendPage) Layout(common pageCommon) {
 		return
 	}
 
-	selectedWallet := common.info.Wallets[*common.selectedWallet]
-	selectedAccount := selectedWallet.Accounts[0]
-
 	pg.wallets = common.info.Wallets
+	pg.txAuthorErrChan = common.errorChannels[PageSendTxAuthorErrChan]
+	pg.broadcastErrChan = common.errorChannels[PageSendBroadcastErrChan]
 
-	if pg.accountSelectorModal == nil && len(common.info.Wallets) > 0 {
-		pg.accountSelectorModal = pg.theme.AccountSelector(pg.wallets)
+	if !pg.hasInitializedTxAuthor {	
+		pg.selectedWallet = pg.wallets[*common.selectedWallet]
+		pg.selectedAccount = pg.selectedWallet.Accounts[0]
+		
+		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
+		pg.hasInitializedTxAuthor = true
 	}
 
-	if !pg.hasSetWallet {
-		pg.selectedWallet = selectedWallet
-		pg.selectedAccount = selectedAccount
+	common.Layout(common.gtx, func() {
+		pg.drawPageContents(common)
+	})
 
-		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number)
-		pg.hasSetWallet = true
+	if pg.isConfirmationModalOpen {
+		pg.drawConfirmationModal(common.gtx)
+
+		if pg.isPasswordModalOpen {
+			pg.drawPasswordModal(common.gtx)
+		}
 	}
+}
 
-	w := []func(){
+func (pg *SendPage) drawPageContents(common pageCommon) {
+	pageContent := []func(){
 		func() {
-			pg.theme.H5("Send DCR").Layout(common.gtx)
+			pg.theme.H5("Send").Layout(common.gtx)
 		},
 		func() {
 			pg.drawSuccessSection(common.gtx)
@@ -219,24 +289,19 @@ func (pg *SendPage) Layout(common pageCommon) {
 		},
 	}
 
-	common.LayoutWithWallets(common.gtx, func() {
-		list := layout.List{Axis: layout.Vertical}
-		list.Layout(common.gtx, len(w), func(i int) {
-			layout.UniformInset(unit.Dp(7)).Layout(common.gtx, w[i])
-		})
-	})
-
-	if pg.isConfirmationModalOpen {
-		pg.drawConfirmationModal(common.gtx)
-
-		if pg.isPasswordModalOpen {
-			pg.drawPasswordModal(common.gtx)
-		}
+	w := func(){
+		layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
+			layout.Rigid(func(){
+				layout.UniformInset(unit.Dp(7)).Layout(common.gtx, func(){
+					pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
+						layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
+					})
+				})
+			}),
+			
+		)
 	}
-
-	if pg.isAccountSelectorModalOpen {
-		pg.drawAccountSelectorModal(common.gtx)
-	}
+	pg.drawWalletsTab(common, w)
 }
 
 func (pg *SendPage) drawSuccessSection(gtx *layout.Context) {
@@ -294,9 +359,6 @@ func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
 								pg.theme.Body2(pg.selectedWallet.Name).Layout(gtx)
 							})
 						}),
-						layout.Rigid(func() {
-							pg.selectAccountButtonMaterial.Layout(gtx, pg.selectAccountButtonWidget)
-						}),
 					)
 				})
 			}
@@ -340,16 +402,6 @@ func (pg *SendPage) tableLayoutFunc(gtx *layout.Context, leftLabel, rightLabel d
 			)
 		}),
 	)
-}
-
-func (pg *SendPage) drawAccountSelectorModal(gtx *layout.Context) {
-	pg.accountSelectorModal.Layout(gtx, func(selectedWallet wallet.InfoShort, selectedAccount wallet.Account) {
-		pg.selectedWallet = selectedWallet
-		pg.selectedAccount = selectedAccount
-
-		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number)
-		pg.isAccountSelectorModalOpen = false
-	})
 }
 
 func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
@@ -419,7 +471,7 @@ func (pg *SendPage) drawPasswordModal(gtx *layout.Context) {
 		pg.isBroadcastingTransaction = true
 		pg.isPasswordModalOpen = false
 
-		pg.wallet.BroadcastTransaction(pg.txAuthor, password)
+		pg.wallet.BroadcastTransaction(pg.txAuthor, password, pg.broadcastErrChan)
 	}, func() {
 		pg.isPasswordModalOpen = false
 	})
@@ -490,10 +542,6 @@ func (pg *SendPage) calculateValues() {
 	}
 
 	amountDCR, _ := strconv.ParseFloat(pg.sendAmountEditor.Text(), 64)
-	if amountDCR <= 0 {
-		return
-	}
-
 	amount, err := dcrutil.NewAmount(amountDCR)
 	if err != nil {
 		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
@@ -528,11 +576,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 	}
 
 	txHash := pg.broadcastResult.TxHash
-	err := pg.broadcastResult.Err
-
-	if err != nil {
-		pg.sendErrorText = fmt.Sprintf("error broadcasting transaction: %s", err.Error())
-	} else if txHash != "" {
+	if txHash != "" {
 		pg.txHash = txHash
 		pg.txHashText = fmt.Sprintf("Successful. Hash: %s", txHash)
 		pg.destinationAddressEditor.SetText("")

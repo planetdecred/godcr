@@ -104,26 +104,23 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass string) {
 // CreateTransaction creates a TxAuthor with the given parameters.
 // The created TxAuthor will have to have a destination added before broadcasting.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) CreateTransaction(walletID int, accountID int32) {
+func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan error) {
 	go func() {
 		var resp Response
 		wallets, err := wal.wallets()
 		if err != nil {
-			resp.Err = err
-			wal.Send <- resp
+			errChan <- err
 			return
 		}
 
 		if _, err := wallets[walletID].GetAccount(accountID, wal.confirms); err != nil {
-			resp.Err = err
-			wal.Send <- resp
+			errChan <- err
 			return
 		}
 
 		txAuthor := wallets[walletID].NewUnsignedTx(accountID, wal.confirms)
 		if txAuthor == nil {
-			resp.Err = err
-			wal.Send <- resp
+			errChan <- err
 			return
 		}
 
@@ -144,25 +141,19 @@ func transactionStatus(bestBlockHeight, txnBlockHeight int32) (string, int32) {
 
 // BroadcastTransaction broadcasts the transaction built with txAuthor to the network.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) BroadcastTransaction(txAuthor *dcrlibwallet.TxAuthor, passphrase []byte) {
+func (wal *Wallet) BroadcastTransaction(txAuthor *dcrlibwallet.TxAuthor, passphrase []byte, errChan chan error) {
 	go func() {
 		var resp Response
 
 		txHash, err := txAuthor.Broadcast(passphrase)
 		if err != nil {
-			resp.Resp = &Broadcast{
-				Err: err,
-			}
-			wal.Send <- resp
+			errChan <- fmt.Errorf("error broadcasting transaction: %s", err.Error())
 			return
 		}
 
 		hash, err := chainhash.NewHash(txHash)
 		if err != nil {
-			resp.Resp = &Broadcast{
-				Err: fmt.Errorf("error parsing successful transaction hash: %s", err.Error()),
-			}
-			wal.Send <- resp
+			errChan <-  fmt.Errorf("error parsing successful transaction hash: %s", err.Error())
 			return
 		}
 
