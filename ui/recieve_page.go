@@ -135,7 +135,6 @@ func (p *receivePage) ReceivePageContents(common pageCommon) {
 
 func (p *receivePage) rightNav() {
 	layout.Center.Layout(p.gtx, func() {
-
 		layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(p.gtx,
 			layout.Rigid(func() {
 				p.moreBtn.Layout(p.gtx, &p.moreBtnW)
@@ -226,12 +225,12 @@ func (p *receivePage) qrCodeAddressColumn(common pageCommon) {
 
 func (p *receivePage) receiveAddressColumn() {
 	layout.Flex{}.Layout(p.gtx,
-		layout.Rigid(func() {
+		layout.Flexed(.6, func() {
 			p.receiveAddressLabel.Text = p.addrs
 			p.receiveAddressLabel.Layout(p.gtx)
 		}),
 		layout.Rigid(func() {
-			layout.Inset{Left: unit.Dp(16)}.Layout(p.gtx, func() {
+			layout.Inset{Left: unit.Dp(10)}.Layout(p.gtx, func() {
 				p.copyBtn.Layout(p.gtx, &p.copyBtnW)
 			})
 		}),
