@@ -62,7 +62,11 @@ func (c *Collapsible) Layout(gtx *layout.Context, headerFunc, contentFunc func(*
 
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
-			layout.Inset{Bottom: unit.Dp(10)}.Layout(gtx, func() {
+			c.line.Width = gtx.Constraints.Width.Max
+			c.line.Layout(gtx)
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func() {
 				c.layoutHeader(gtx, headerFunc)
 			})
 		}),
@@ -70,10 +74,6 @@ func (c *Collapsible) Layout(gtx *layout.Context, headerFunc, contentFunc func(*
 			if c.isExpanded {
 				contentFunc(gtx)
 			}
-		}),
-		layout.Rigid(func() {
-			c.line.Width = gtx.Constraints.Width.Max
-			c.line.Layout(gtx)
 		}),
 	)
 }
