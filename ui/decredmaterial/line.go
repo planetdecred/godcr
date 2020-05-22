@@ -1,18 +1,20 @@
 package decredmaterial
 
 import (
+	"image"
 	"image/color"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op"
+	//"gioui.org/op"
 	"gioui.org/op/paint"
 )
 
 type (
 	// Line represents a rectangle widget with an initial thickness of 1
 	Line struct {
-		Height float32
+		Height int
+		Width  int
 		Color  color.RGBA
 	}
 )
@@ -28,18 +30,16 @@ func (t *Theme) Line() *Line {
 	}
 }
 
-// Draw renders the line widget
-func (l *Line) Draw(ctx *layout.Context) {
-	rect := f32.Rectangle{
+// Layout renders the line widget
+func (l *Line) Layout(gtx *layout.Context) {
+	paint.ColorOp{Color: l.Color}.Add(gtx.Ops)
+	paint.PaintOp{Rect: f32.Rectangle{
 		Max: f32.Point{
-			X: float32(ctx.Constraints.Width.Max),
-			Y: l.Height,
+			X: float32(l.Width),
+			Y: float32(l.Height),
 		},
+	}}.Add(gtx.Ops)
+	gtx.Dimensions = layout.Dimensions{
+		Size: image.Point{X: l.Width, Y: l.Height},
 	}
-	op.TransformOp{}.Offset(f32.Point{
-		X: 0,
-		Y: 0,
-	}).Add(ctx.Ops)
-	paint.ColorOp{Color: l.Color}.Add(ctx.Ops)
-	paint.PaintOp{Rect: rect}.Add(ctx.Ops)
 }

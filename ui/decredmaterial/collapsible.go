@@ -4,94 +4,76 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/op/clip"
 	"gioui.org/unit"
 	"gioui.org/widget"
 )
 
 type Collapsible struct {
-	isOpen                bool
+	isExpanded            bool
 	buttonWidget          *widget.Button
-	outline               Outline
-	openIcon              *Icon
-	closeIcon             *Icon
+	line                  *Line
+	expandedIcon          *Icon
+	collapsedIcon         *Icon
 	headerBackgroundColor color.RGBA
 }
 
 func (t *Theme) Collapsible() *Collapsible {
 	c := &Collapsible{
-		isOpen:                false,
+		isExpanded:            false,
 		headerBackgroundColor: t.Color.Hint,
-		outline:               t.Outline(),
-		openIcon:              t.chevronUpIcon,
-		closeIcon:             t.chevronDownIcon,
+		expandedIcon:          t.chevronUpIcon,
+		collapsedIcon:         t.chevronDownIcon,
+		line:                  t.Line(),
+		buttonWidget:          new(widget.Button),
 	}
 
-	if c.buttonWidget == nil {
-		c.buttonWidget = new(widget.Button)
-	}
+	c.line.Color = t.Color.Gray
+	c.line.Color.A = 140
 
 	return c
 }
 
 func (c *Collapsible) layoutHeader(gtx *layout.Context, headerFunc func(*layout.Context)) {
-	layout.Stack{}.Layout(gtx,
-		layout.Expanded(func() {
-			rr := float32(gtx.Px(unit.Dp(4)))
-			clip.Rect{
-				Rect: f32.Rectangle{Max: f32.Point{
-					X: float32(gtx.Constraints.Width.Min),
-					Y: float32(gtx.Constraints.Height.Min),
-				}},
-				NE: rr, NW: rr, SE: rr, SW: rr,
-			}.Op(gtx.Ops).Add(gtx.Ops)
-			fill(gtx, c.headerBackgroundColor)
+	icon := c.collapsedIcon
+	if c.isExpanded {
+		icon = c.expandedIcon
+	}
+
+	layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func() {
+			headerFunc(gtx)
 		}),
-		layout.Stacked(func() {
-			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-			c.outline.Layout(gtx, func() {
-				layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
-					layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func() {
-							icon := c.closeIcon
-							if c.isOpen {
-								icon = c.openIcon
-							}
-							icon.Layout(gtx, unit.Dp(20))
-						}),
-						layout.Rigid(func() {
-							inset := layout.Inset{
-								Left: unit.Dp(20),
-							}
-							inset.Layout(gtx, func() {
-								headerFunc(gtx)
-							})
-						}),
-					)
-				})
+		layout.Rigid(func() {
+			layout.Inset{Right: unit.Dp(20)}.Layout(gtx, func() {
+				icon.Layout(gtx, unit.Dp(20))
 			})
-			pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
-			c.buttonWidget.Layout(gtx)
 		}),
 	)
+	pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
+	c.buttonWidget.Layout(gtx)
 }
 
 func (c *Collapsible) Layout(gtx *layout.Context, headerFunc, contentFunc func(*layout.Context)) {
 	for c.buttonWidget.Clicked(gtx) {
-		c.isOpen = !c.isOpen
+		c.isExpanded = !c.isExpanded
 	}
 
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
-			c.layoutHeader(gtx, headerFunc)
+			layout.Inset{Bottom: unit.Dp(10)}.Layout(gtx, func() {
+				c.layoutHeader(gtx, headerFunc)
+			})
 		}),
 		layout.Rigid(func() {
-			if c.isOpen {
+			if c.isExpanded {
 				contentFunc(gtx)
 			}
+		}),
+		layout.Rigid(func() {
+			c.line.Width = gtx.Constraints.Width.Max
+			c.line.Layout(gtx)
 		}),
 	)
 }
