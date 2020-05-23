@@ -31,9 +31,8 @@ type walletPage struct {
 	current wallet.InfoShort
 	wallet  *wallet.Wallet
 	sub     struct {
-		main, delete, rename, sign, verify widget.Button
-		renameW, signW, verifyW, deleteW   decredmaterial.Button
-		mainW                              decredmaterial.IconButton
+		main, delete, rename, sign, verify, addWallet       widget.Button
+		mainW, deleteW, signW, verifyW, addWalletW, renameW decredmaterial.IconButton
 	}
 	signP                                          signMessagePage
 	verifyPg                                       verifyMessagePage
@@ -68,10 +67,16 @@ func WalletPage(common pageCommon) layout.Widget {
 	page.sub.mainW.Color = common.theme.Color.Text
 	page.sub.mainW.Padding = unit.Dp(0)
 	page.sub.mainW.Size = unit.Dp(30)
-	page.sub.deleteW = common.theme.DangerButton("Delete Wallet")
-	page.sub.signW = common.theme.Button("sign Message")
-	page.sub.verifyW = common.theme.Button("Verify Message")
-	page.sub.renameW = common.theme.Button("Rename")
+	page.sub.deleteW = common.theme.IconButton(common.icons.ActionDelete)
+	page.sub.signW = common.theme.IconButton(common.icons.CommunicationComment)
+	page.sub.verifyW = common.theme.IconButton(common.icons.verifyAction)
+	page.sub.addWalletW = common.theme.IconButton(common.icons.contentAdd)
+	page.sub.renameW = common.theme.IconButton(common.icons.EditorModeEdit)
+	page.sub.deleteW.Background = common.theme.Color.Danger
+	page.sub.deleteW.Size, page.sub.signW.Size, page.sub.verifyW.Size = unit.Dp(30), unit.Dp(30), unit.Dp(30)
+	page.sub.renameW.Size, page.sub.addWalletW.Size = unit.Dp(30), unit.Dp(30)
+	page.sub.deleteW.Padding, page.sub.signW.Padding, page.sub.verifyW.Padding = unit.Dp(5), unit.Dp(5), unit.Dp(5)
+	page.sub.renameW.Padding, page.sub.addWalletW.Padding = unit.Dp(5), unit.Dp(5)
 
 	page.SignMessagePage(common)
 	page.VerifyMessagePage(common)
@@ -109,6 +114,31 @@ func (page *walletPage) Layout(common pageCommon) {
 func (page *walletPage) subMain(common pageCommon) {
 	gtx := common.gtx
 	page.current = common.info.Wallets[*common.selectedWallet]
+
+	body := func() {
+		layout.Stack{}.Layout(gtx,
+			layout.Expanded(func() {
+				layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func() {
+					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Flexed(0.88, func() {
+							page.topRow(common)
+						}),
+						layout.Flexed(0.12, func() {
+							page.bottomRow(common)
+						}),
+					)
+				})
+			}),
+		)
+	}
+
+	common.LayoutWithWallets(gtx, func() {
+		layout.UniformInset(unit.Dp(5)).Layout(gtx, body)
+	})
+}
+
+func (page *walletPage) topRow(common pageCommon) {
+	gtx := common.gtx
 	wdgs := []func(){
 		func() {
 			horFlex.Layout(gtx,
@@ -159,24 +189,23 @@ func (page *walletPage) subMain(common pageCommon) {
 				layout.UniformInset(unit.Dp(5)).Layout(gtx, a)
 			})
 		},
-		func() {
-			layout.Flex{}.Layout(gtx,
-				layout.Rigid(func() {
-					page.sub.deleteW.Layout(gtx, &page.sub.delete)
-				}),
-				layout.Rigid(func() {
-					page.sub.signW.Layout(gtx, &page.sub.sign)
-				}),
-				layout.Rigid(func() {
-					page.sub.verifyW.Layout(gtx, &page.sub.verify)
-				}),
-			)
-		},
 	}
-	common.LayoutWithWallets(gtx, func() {
-		page.container.Layout(common.gtx, len(wdgs), func(i int) {
-			wdgs[i]()
-		})
+
+	page.container.Layout(gtx, len(wdgs), func(i int) {
+		layout.Inset{Left: unit.Dp(3)}.Layout(gtx, wdgs[i])
+	})
+}
+
+func (page *walletPage) bottomRow(common pageCommon) {
+	gtx := common.gtx
+	layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
+		layout.Flex{}.Layout(gtx,
+			layout.Rigid(page.newItem(&common, page.sub.addWalletW, &page.sub.addWallet, "Add wallet")),
+			layout.Rigid(page.newItem(&common, page.sub.renameW, &page.sub.rename, "Rename wallet")),
+			layout.Rigid(page.newItem(&common, page.sub.signW, &page.sub.sign, "Sign message")),
+			layout.Rigid(page.newItem(&common, page.sub.verifyW, &page.sub.verify, "Verify message")),
+			layout.Rigid(page.newItem(&common, page.sub.deleteW, &page.sub.delete, "Delete wallet")),
+		)
 	})
 }
 
@@ -223,4 +252,19 @@ func (page *walletPage) returnBtn(common pageCommon) {
 	layout.NW.Layout(common.gtx, func() {
 		page.sub.mainW.Layout(common.gtx, &page.sub.main)
 	})
+}
+
+func (page *walletPage) newItem(common *pageCommon, out decredmaterial.IconButton, in *widget.Button, label string) layout.Widget {
+	return func() {
+		layout.Inset{Right: unit.Dp(10)}.Layout(common.gtx, func() {
+			layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(common.gtx,
+				layout.Rigid(func() {
+					out.Layout(common.gtx, in)
+				}),
+				layout.Rigid(func() {
+					common.theme.Caption(label).Layout(common.gtx)
+				}),
+			)
+		})
+	}
 }

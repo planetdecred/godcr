@@ -4,6 +4,7 @@ package ui
 //clean up the delete wallet deletePg page
 import (
 	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -104,7 +105,7 @@ func (page *walletPage) handleDelete(common pageCommon) {
 	case err := <-page.deletePg.errChannel:
 		fmt.Printf("DELETEWALLET PAGE ERROR! %v", err)
 		if err.Error() == "invalid_passphrase" {
-			page.deletePg.errorLabel.Text = "Wallet passphrase is incorect."
+			page.deletePg.errorLabel.Text = "Wallet passphrase is incorrect."
 		} else {
 			page.deletePg.errorLabel.Text = err.Error()
 		}
