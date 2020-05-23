@@ -31,13 +31,14 @@ type walletPage struct {
 	current wallet.InfoShort
 	wallet  *wallet.Wallet
 	sub     struct {
-		main, delete, rename, cancelDelete, sign widget.Button
-		deleteW, renameW, cancelDeleteW, signW   decredmaterial.Button
-		mainW                                    decredmaterial.IconButton
-		pageInfo                                 decredmaterial.Label
-		passwordModal                            *decredmaterial.Password
+		main, delete, rename, cancelDelete, sign, verify widget.Button
+		deleteW, renameW, cancelDeleteW, signW, verifyW  decredmaterial.Button
+		mainW                                            decredmaterial.IconButton
+		pageInfo                                         decredmaterial.Label
+		passwordModal                                    *decredmaterial.Password
 	}
 	signP                                          signMessagePage
+	verifyPg                                       verifyMessagePage
 	container, accountsList                        layout.List
 	rename, delete, addAcct                        widget.Button
 	deleteW, gotoVerifyMessagePageBtn              decredmaterial.Button
@@ -74,17 +75,20 @@ func WalletPage(common pageCommon) layout.Widget {
 	page.sub.mainW.Size = unit.Dp(30)
 	page.sub.deleteW = common.theme.DangerButton("Delete Wallet")
 	page.sub.signW = common.theme.Button("sign Message")
+	page.sub.verifyW = common.theme.Button("Verify Message")
 	page.sub.cancelDeleteW = common.theme.Button("Cancel Wallet Delet")
 	page.sub.renameW = common.theme.Button("Rename")
 	page.sub.pageInfo = common.theme.Body1("")
 	page.sub.passwordModal = common.theme.Password()
 
 	page.SignMessagePage(common)
+	page.VerifyMessagePage(common)
 
 	return func() {
 		page.Layout(common)
 		page.Handle(common)
 		page.handleSign(common)
+		page.handleVerify(common)
 	}
 }
 
@@ -95,11 +99,6 @@ func (page *walletPage) Layout(common pageCommon) {
 		//page.renaming = false
 	}
 
-	// if *common.err != nil {
-	// 	page.errorLabel.Text = (*common.err).Error()
-	// 	*common.err = nil
-	// }
-
 	switch page.subPage {
 	case subWalletMain:
 		page.subMain(common)
@@ -109,6 +108,8 @@ func (page *walletPage) Layout(common pageCommon) {
 		page.subDelete(common)
 	case subWalletSign:
 		page.subSign(common)
+	case subWalletVerify:
+		page.subVerify(common)
 	}
 
 }
@@ -118,24 +119,6 @@ func (page *walletPage) subMain(common pageCommon) {
 	page.current = common.info.Wallets[*common.selectedWallet]
 	wdgs := []func(){
 		func() {
-			// <<<<<<< HEAD
-			// 			if page.renaming {
-			// 				horFlex.Layout(gtx,
-			// 					rigid(func() {
-			// 						gtx.Constraints.Width.Min = gtx.Px(unit.Dp(350))
-			// 						gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
-			// 						page.editorW.Layout(gtx, &page.editor)
-			// 					}),
-			// 					rigid(func() {
-			// 						page.renameW.Layout(gtx, &page.rename)
-			// 					}),
-			// 					rigid(func() {
-			// 						layout.Center.Layout(gtx, func() {
-			// 							page.cancelRenameW.Layout(gtx, &page.cancelRename)
-			// 						})
-			// 					}),
-			// 				)
-			// 			} else {
 			horFlex.Layout(gtx,
 				rigid(func() {
 					common.theme.H1(page.current.Name).Layout(common.gtx)
@@ -146,10 +129,6 @@ func (page *walletPage) subMain(common pageCommon) {
 					})
 				}),
 			)
-			// 			}
-			// =======
-			// common.theme.H3(current.Name).Layout(common.gtx)
-			// >>>>>>> rogue/wallets
 		},
 		func() {
 			common.theme.H5("Total Balance: " + page.current.Balance).Layout(gtx)
@@ -197,6 +176,9 @@ func (page *walletPage) subMain(common pageCommon) {
 					page.sub.signW.Layout(gtx, &page.sub.sign)
 				}),
 				layout.Rigid(func() {
+					page.sub.verifyW.Layout(gtx, &page.sub.verify)
+				}),
+				layout.Rigid(func() {
 					//page.deleteW.Layout(gtx, &page.delete)
 				}),
 				layout.Rigid(func() {
@@ -226,7 +208,6 @@ func (page *walletPage) subMain(common pageCommon) {
 
 func (page *walletPage) subRename(common pageCommon) {
 	gtx := common.gtx
-	// current := common.info.Wallets[*common.selectedWallet]
 	common.Layout(gtx, func() {
 		common.theme.H3(page.current.Name).Layout(common.gtx)
 	})
@@ -282,16 +263,6 @@ func (page *walletPage) Handle(common pageCommon) {
 	// current := common.info.Wallets[*common.selectedWallet]
 
 	// Subs
-	if page.sub.delete.Clicked(gtx) {
-		page.subPage = subWalletDelete
-		return
-	}
-
-	if page.sub.sign.Clicked(gtx) {
-		page.subPage = subWalletSign
-		return
-	}
-
 	if page.sub.main.Clicked(gtx) {
 		page.subPage = subWalletMain
 		return
@@ -302,6 +273,21 @@ func (page *walletPage) Handle(common pageCommon) {
 		return
 	}
 
+	if page.sub.delete.Clicked(gtx) {
+		page.subPage = subWalletDelete
+		return
+	}
+
+	if page.sub.sign.Clicked(gtx) {
+		page.subPage = subWalletSign
+		return
+	}
+
+	if page.sub.verify.Clicked(gtx) {
+		page.subPage = subWalletVerify
+		return
+	}
+
 	if page.delete.Clicked(gtx) {
 		page.isPasswordModalOpen = true
 	}
@@ -309,6 +295,12 @@ func (page *walletPage) Handle(common pageCommon) {
 	if page.addWallet.Clicked(gtx) {
 		*common.page = PageCreateRestore
 	}
+}
+
+func (page *walletPage) returnBtn(common pageCommon) {
+	layout.NW.Layout(common.gtx, func() {
+		page.sub.mainW.Layout(common.gtx, &page.sub.main)
+	})
 }
 
 func (pg *walletPage) confirm(password []byte) {
