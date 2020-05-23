@@ -269,7 +269,7 @@ func (win *Window) HandleInputs() {
 	}
 
 	if win.inputs.signMessageDiag.Clicked(win.gtx) {
-		win.current = PageSignMessage
+		// win.current = PageSignMessage
 		return
 	}
 }

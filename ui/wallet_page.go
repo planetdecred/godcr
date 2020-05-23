@@ -3,6 +3,8 @@ package ui
 // add all the sub pages to the wallet page.
 //clean up the delete wallet sub page
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -29,21 +31,22 @@ type walletPage struct {
 	current wallet.InfoShort
 	wallet  *wallet.Wallet
 	sub     struct {
-		main, delete, rename, cancelDelete widget.Button
-		deleteW, renameW, cancelDeleteW    decredmaterial.Button
-		mainW                              decredmaterial.IconButton
-		pageInfo                           decredmaterial.Label
-		passwordModal                      *decredmaterial.Password
+		main, delete, rename, cancelDelete, sign widget.Button
+		deleteW, renameW, cancelDeleteW, signW   decredmaterial.Button
+		mainW                                    decredmaterial.IconButton
+		pageInfo                                 decredmaterial.Label
+		passwordModal                            *decredmaterial.Password
 	}
+	signP                                          signMessagePage
 	container, accountsList                        layout.List
-	rename, delete, addAcct widget.Button
-	signMessageDiag, verifyMessageDiag                        *widget.Button
-	deleteW, gotoSignMessagePageBtn, gotoVerifyMessagePageBtn                                        decredmaterial.Button
+	rename, delete, addAcct                        widget.Button
+	deleteW, gotoVerifyMessagePageBtn              decredmaterial.Button
 	renameW, beginRenameW, cancelRenameW, addAcctW decredmaterial.IconButton
 	editor, password                               widget.Editor
 	editorW, passwordW                             decredmaterial.Editor
 	errorLabel                                     decredmaterial.Label
 	isPasswordModalOpen                            bool
+	signatureResult                                *wallet.Signature
 }
 
 func WalletPage(common pageCommon) layout.Widget {
@@ -63,25 +66,25 @@ func WalletPage(common pageCommon) layout.Widget {
 		passwordW:     common.theme.Editor("Enter Wallet Password"),
 		addAcctW:      common.theme.IconButton(common.icons.contentAdd),
 		deleteW:       common.theme.DangerButton("Confirm Delete Wallet"),
-		gotoSignMessagePageBtn:   win.outputs.signMessageDiag,
-		signMessageDiag:          &win.inputs.signMessageDiag,
-		gotoVerifyMessagePageBtn: win.outputs.verifyMessDiag,
-		addWalletW:               common.theme.Button("Add Wallet"),
-		verifyMessageDiag:        &win.inputs.verifyMessDiag,
 	}
-
 	page.sub.mainW = common.theme.IconButton(common.icons.navigationArrowBack)
+	page.sub.mainW.Background = color.RGBA{}
+	page.sub.mainW.Color = common.theme.Color.Text
+	page.sub.mainW.Padding = unit.Dp(0)
+	page.sub.mainW.Size = unit.Dp(30)
 	page.sub.deleteW = common.theme.DangerButton("Delete Wallet")
+	page.sub.signW = common.theme.Button("sign Message")
 	page.sub.cancelDeleteW = common.theme.Button("Cancel Wallet Delet")
-	// page.sub.cancelDeleteW.Background = common.theme.Color.Text
-	// page.sub.cancelDeleteW.Color = common.theme.Color.Primary
 	page.sub.renameW = common.theme.Button("Rename")
 	page.sub.pageInfo = common.theme.Body1("")
 	page.sub.passwordModal = common.theme.Password()
 
+	page.SignMessagePage(common)
+
 	return func() {
 		page.Layout(common)
 		page.Handle(common)
+		page.handleSign(common)
 	}
 }
 
@@ -104,6 +107,8 @@ func (page *walletPage) Layout(common pageCommon) {
 		page.subRename(common)
 	case subWalletDelete:
 		page.subDelete(common)
+	case subWalletSign:
+		page.subSign(common)
 	}
 
 }
@@ -189,13 +194,16 @@ func (page *walletPage) subMain(common pageCommon) {
 					page.sub.deleteW.Layout(gtx, &page.sub.delete)
 				}),
 				layout.Rigid(func() {
+					page.sub.signW.Layout(gtx, &page.sub.sign)
+				}),
+				layout.Rigid(func() {
 					//page.deleteW.Layout(gtx, &page.delete)
 				}),
 				layout.Rigid(func() {
 					layout.Inset{
 						Left: unit.Dp(5),
 					}.Layout(gtx, func() {
-						page.gotoVerifyMessagePageBtn.Layout(gtx, page.verifyMessageDiag)
+						// page.gotoVerifyMessagePageBtn.Layout(gtx, page.signMessageDiag)
 					})
 				}),
 				layout.Rigid(func() {
@@ -276,6 +284,11 @@ func (page *walletPage) Handle(common pageCommon) {
 	// Subs
 	if page.sub.delete.Clicked(gtx) {
 		page.subPage = subWalletDelete
+		return
+	}
+
+	if page.sub.sign.Clicked(gtx) {
+		page.subPage = subWalletSign
 		return
 	}
 

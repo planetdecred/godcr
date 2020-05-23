@@ -22,6 +22,7 @@ type pageIcons struct {
 type pageCommon struct {
 	wallet          *wallet.Wallet
 	info            *wallet.MultiWalletInfo
+	signatureResult *wallet.Signature
 	selectedWallet  *int
 	selectedAccount *int
 	gtx             *layout.Context
@@ -90,6 +91,7 @@ func (win *Window) addPages() {
 		info:            win.walletInfo,
 		selectedWallet:  &win.selected,
 		selectedAccount: &win.selectedAccount,
+		signatureResult: win.signatureResult,
 		gtx:             win.gtx,
 		theme:           win.theme,
 		icons:           icons,
@@ -113,7 +115,7 @@ func (win *Window) addPages() {
 	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageSend] = win.SendPage(common)
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
-	win.pages[PageSignMessage] = win.SignMessagePage(common)
+	// win.pages[PageSignMessage] = win.SignMessagePage(common)
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 }
 
