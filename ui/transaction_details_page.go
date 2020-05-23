@@ -13,23 +13,24 @@ import (
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const PageTransactionDetails = "transactiondetails"
 
 type transactionPage struct {
-	transactionPageContainer            layout.List
-	transactionInputsContainer          layout.List
-	transactionOutputsContainer         layout.List
-	expandMore, expandLess, backButtonW decredmaterial.IconButton
-	txnInfo                             **wallet.Transaction
-	isTxnInputsShow, isTxnOutputsShow   bool
-	expandInputs, expandOutputs, viewTxnOnDcrdataW,
+	transactionPageContainer    layout.List
+	transactionInputsContainer  layout.List
+	transactionOutputsContainer layout.List
+	backButtonW                 decredmaterial.IconButton
+	txnInfo                     **wallet.Transaction
+	viewTxnOnDcrdataW,
 	backButton widget.Button
 	viewTxnOnDcrdata decredmaterial.Button
 
 	pageContentInset, rowGroupInset float32
+
+	outputsCollapsible *decredmaterial.Collapsible
+	inputsCollapsible  *decredmaterial.Collapsible
 }
 
 func (win *Window) TransactionPage(common pageCommon) layout.Widget {
@@ -44,18 +45,10 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 			Axis: layout.Vertical,
 		},
 		txnInfo: &win.walletTransaction,
-		expandMore: decredmaterial.IconButton{
-			Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandMore)),
-			Size:    unit.Dp(25),
-			Color:   common.theme.Color.Text,
-			Padding: unit.Dp(0),
-		},
-		expandLess: decredmaterial.IconButton{
-			Icon:    mustIcon(decredmaterial.NewIcon(icons.NavigationExpandLess)),
-			Size:    unit.Dp(25),
-			Color:   common.theme.Color.Text,
-			Padding: unit.Dp(0),
-		},
+
+		outputsCollapsible: common.theme.Collapsible(),
+		inputsCollapsible:  common.theme.Collapsible(),
+
 		backButtonW:      common.theme.PlainIconButton(common.icons.navigationArrowBack),
 		viewTxnOnDcrdata: common.theme.Button("View on dcrdata"),
 		pageContentInset: 30,
@@ -210,39 +203,34 @@ func (page *transactionPage) txnTypeAndID(common *pageCommon) {
 
 func (page *transactionPage) txnInputs(common *pageCommon) {
 	transaction := *page.txnInfo
+	collapsibleHeader := func(gtx *layout.Context) {
+		common.theme.Body1(fmt.Sprintf("%d Inputs consumed", len(transaction.Txn.Inputs))).Layout(gtx)
+	}
 
-	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
-		layout.Rigid(func() {
-			txt := fmt.Sprintf("%d Inputs consumed", len(transaction.Txn.Inputs))
-			page.txnIORowHeader(common, txt, &page.expandInputs, page.isTxnInputsShow)
-		}),
-		layout.Rigid(func() {
-			if page.isTxnInputsShow {
-				page.transactionInputsContainer.Layout(common.gtx, len(transaction.Txn.Inputs), func(i int) {
-					page.txnIORow(common, dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String(),
-						transaction.Txn.Inputs[i].PreviousOutpoint)
-				})
-			}
-		}),
-	)
+	collapsibleBody := func(gtx *layout.Context) {
+		page.transactionInputsContainer.Layout(common.gtx, len(transaction.Txn.Inputs), func(i int) {
+			page.txnIORow(common, dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String(),
+				transaction.Txn.Inputs[i].PreviousOutpoint)
+		})
+	}
+
+	page.inputsCollapsible.Layout(common.gtx, collapsibleHeader, collapsibleBody)
 }
 
 func (page *transactionPage) txnOutputs(common *pageCommon) {
 	transaction := *page.txnInfo
-	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
-		layout.Rigid(func() {
-			txt := fmt.Sprintf("%d Outputs created", len(transaction.Txn.Outputs))
-			page.txnIORowHeader(common, txt, &page.expandOutputs, page.isTxnOutputsShow)
-		}),
-		layout.Rigid(func() {
-			if page.isTxnOutputsShow {
-				page.transactionOutputsContainer.Layout(common.gtx, len(transaction.Txn.Outputs), func(i int) {
-					page.txnIORow(common, dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String(),
-						transaction.Txn.Outputs[i].Address)
-				})
-			}
-		}),
-	)
+	collapsibleHeader := func(gtx *layout.Context) {
+		common.theme.Body1(fmt.Sprintf("%d Outputs created", len(transaction.Txn.Outputs))).Layout(gtx)
+	}
+
+	collapsibleBody := func(gtx *layout.Context) {
+		page.transactionOutputsContainer.Layout(common.gtx, len(transaction.Txn.Outputs), func(i int) {
+			page.txnIORow(common, dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String(),
+				transaction.Txn.Outputs[i].Address)
+		})
+	}
+
+	page.outputsCollapsible.Layout(common.gtx, collapsibleHeader, collapsibleBody)
 }
 
 func (page *transactionPage) txnIORow(common *pageCommon, amount string, hash string) {
@@ -258,21 +246,6 @@ func (page *transactionPage) txnIORow(common *pageCommon, amount string, hash st
 			}),
 		)
 	})
-}
-
-func (page *transactionPage) txnIORowHeader(common *pageCommon, str string, in *widget.Button, isShow bool) {
-	layout.Flex{Spacing: layout.SpaceBetween}.Layout(common.gtx,
-		layout.Rigid(func() {
-			common.theme.Body1(str).Layout(common.gtx)
-		}),
-		layout.Rigid(func() {
-			if isShow {
-				page.expandLess.Layout(common.gtx, in)
-				return
-			}
-			page.expandMore.Layout(common.gtx, in)
-		}),
-	)
 }
 
 func (page *transactionPage) viewTxnOnBrowser(common *pageCommon) {
@@ -295,12 +268,6 @@ func (page *transactionPage) viewTxnOnBrowser(common *pageCommon) {
 }
 
 func (page *transactionPage) Handler(common pageCommon) {
-	if page.expandInputs.Clicked(common.gtx) {
-		page.isTxnInputsShow = !page.isTxnInputsShow
-	}
-	if page.expandOutputs.Clicked(common.gtx) {
-		page.isTxnOutputsShow = !page.isTxnOutputsShow
-	}
 	if page.viewTxnOnDcrdataW.Clicked(common.gtx) {
 		page.viewTxnOnBrowser(&common)
 	}
