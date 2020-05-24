@@ -15,8 +15,8 @@ type pageIcons struct {
 	contentAdd, contentClear, contentCreate, navigationCheck,
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
-	navigationArrowBack, verifyAction, ActionDelete,
-	CommunicationComment, EditorModeEdit *decredmaterial.Icon
+	navigationArrowBack, verifyAction, actionDelete, actionLock,
+	communicationComment, editorModeEdit *decredmaterial.Icon
 	overviewIcon, walletIcon image.Image
 }
 
@@ -53,10 +53,11 @@ func (win *Window) addPages() {
 		contentCopy:                mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
 		actionInfo:                 mustIcon(decredmaterial.NewIcon(icons.ActionInfo)),
 		navigationMore:             mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
-		ActionDelete:               mustIcon(decredmaterial.NewIcon(icons.ActionDelete)),
-		CommunicationComment:       mustIcon(decredmaterial.NewIcon(icons.CommunicationComment)),
+		actionDelete:               mustIcon(decredmaterial.NewIcon(icons.ActionDelete)),
+		communicationComment:       mustIcon(decredmaterial.NewIcon(icons.CommunicationComment)),
 		verifyAction:               mustIcon(decredmaterial.NewIcon(icons.ActionVerifiedUser)),
-		EditorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
+		editorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
+		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
 		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
 		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 	}

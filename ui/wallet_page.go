@@ -31,19 +31,21 @@ type walletPage struct {
 	current wallet.InfoShort
 	wallet  *wallet.Wallet
 	sub     struct {
-		main, delete, rename, sign, verify, addWallet       widget.Button
-		mainW, deleteW, signW, verifyW, addWalletW, renameW decredmaterial.IconButton
+		main, delete, rename, sign, verify, addWallet, changePass widget.Button
+		mainW, deleteW, signW, verifyW, addWalletW, renameW,
+		changePassW decredmaterial.IconButton
 	}
-	signP                                          signMessagePage
-	verifyPg                                       verifyMessagePage
-	deletePg                                       deleteWalletPage
-	container, accountsList                        layout.List
-	rename, delete, addAcct                        widget.Button
-	line                                           *decredmaterial.Line
-	renameW, beginRenameW, cancelRenameW, addAcctW decredmaterial.IconButton
-	editor, password                               widget.Editor
-	editorW, passwordW                             decredmaterial.Editor
-	signatureResult                                *wallet.Signature
+	signP                   signMessagePage
+	verifyPg                verifyMessagePage
+	deletePg                deleteWalletPage
+	renamePg                renameWalletPage
+	container, accountsList layout.List
+	rename, delete, addAcct widget.Button
+	line                    *decredmaterial.Line
+	addAcctW                decredmaterial.IconButton
+	editor, password        widget.Editor
+	editorW, passwordW      decredmaterial.Editor
+	signatureResult         *wallet.Signature
 }
 
 func WalletPage(common pageCommon) layout.Widget {
@@ -54,15 +56,10 @@ func WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
-
-		wallet:        common.wallet,
-		beginRenameW:  common.theme.PlainIconButton(common.icons.contentCreate),
-		cancelRenameW: common.theme.PlainIconButton(common.icons.contentClear),
-		renameW:       common.theme.PlainIconButton(common.icons.navigationCheck),
-		editorW:       common.theme.Editor("Enter wallet name"),
-		passwordW:     common.theme.Editor("Enter Wallet Password"),
-		addAcctW:      common.theme.IconButton(common.icons.contentAdd),
-		line:          common.theme.Line(),
+		wallet:    common.wallet,
+		passwordW: common.theme.Editor("Enter Wallet Password"),
+		addAcctW:  common.theme.IconButton(common.icons.contentAdd),
+		line:      common.theme.Line(),
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.sub.mainW = common.theme.IconButton(common.icons.navigationArrowBack)
@@ -70,20 +67,24 @@ func WalletPage(common pageCommon) layout.Widget {
 	page.sub.mainW.Color = common.theme.Color.Text
 	page.sub.mainW.Padding = unit.Dp(0)
 	page.sub.mainW.Size = unit.Dp(30)
-	page.sub.deleteW = common.theme.IconButton(common.icons.ActionDelete)
-	page.sub.signW = common.theme.IconButton(common.icons.CommunicationComment)
+	page.sub.deleteW = common.theme.IconButton(common.icons.actionDelete)
+	page.sub.signW = common.theme.IconButton(common.icons.communicationComment)
 	page.sub.verifyW = common.theme.IconButton(common.icons.verifyAction)
 	page.sub.addWalletW = common.theme.IconButton(common.icons.contentAdd)
-	page.sub.renameW = common.theme.IconButton(common.icons.EditorModeEdit)
+	page.sub.renameW = common.theme.IconButton(common.icons.editorModeEdit)
+	page.sub.changePassW = common.theme.IconButton(common.icons.actionLock)
 	page.sub.deleteW.Background = common.theme.Color.Danger
 	page.sub.deleteW.Size, page.sub.signW.Size, page.sub.verifyW.Size = unit.Dp(30), unit.Dp(30), unit.Dp(30)
 	page.sub.renameW.Size, page.sub.addWalletW.Size, page.addAcctW.Size = unit.Dp(30), unit.Dp(30), unit.Dp(30)
+	page.sub.changePassW.Size = unit.Dp(30)
 	page.sub.deleteW.Padding, page.sub.signW.Padding, page.sub.verifyW.Padding = unit.Dp(5), unit.Dp(5), unit.Dp(5)
 	page.sub.renameW.Padding, page.sub.addWalletW.Padding, page.addAcctW.Padding = unit.Dp(5), unit.Dp(5), unit.Dp(5)
+	page.sub.changePassW.Padding = unit.Dp(5)
 
 	page.SignMessagePage(common)
 	page.VerifyMessagePage(common)
 	page.DeleteWalletPage(common)
+	page.RenameWalletPage(common)
 
 	return func() {
 		page.Layout(common)
@@ -91,6 +92,7 @@ func WalletPage(common pageCommon) layout.Widget {
 		page.handleSign(common)
 		page.handleVerify(common)
 		page.handleDelete(common)
+		page.handleRename(common)
 	}
 }
 
@@ -212,15 +214,9 @@ func (page *walletPage) bottomRow(common pageCommon) {
 			layout.Rigid(page.newItem(&common, page.sub.renameW, &page.sub.rename, "Rename wallet")),
 			layout.Rigid(page.newItem(&common, page.sub.signW, &page.sub.sign, "Sign message")),
 			layout.Rigid(page.newItem(&common, page.sub.verifyW, &page.sub.verify, "Verify message")),
+			layout.Rigid(page.newItem(&common, page.sub.changePassW, &page.sub.changePass, "Change passphrase")),
 			layout.Rigid(page.newItem(&common, page.sub.deleteW, &page.sub.delete, "Delete wallet")),
 		)
-	})
-}
-
-func (page *walletPage) subRename(common pageCommon) {
-	gtx := common.gtx
-	common.Layout(gtx, func() {
-		common.theme.H3(page.current.Name).Layout(common.gtx)
 	})
 }
 
