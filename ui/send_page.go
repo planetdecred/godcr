@@ -51,6 +51,7 @@ type SendPage struct {
 
 	copyIconMaterial decredmaterial.IconButton
 
+	remainingBalance   int64
 	sendErrorText      string
 	txHashText         string
 	txHash             string
@@ -126,7 +127,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.sendAmountEditorMaterial.IsRequired = true
 
 	page.closeConfirmationModalButtonMaterial.Background = common.theme.Color.Gray
-	page.destinationAddressEditor.SetText("TsfQTCMEHKum1qv58zMhTTn2kATv3r8VjgT")
+	page.destinationAddressEditor.SetText("")
 
 	page.copyIconMaterial.Background = common.theme.Color.Background
 	page.copyIconMaterial.Color = common.theme.Color.Text
@@ -584,11 +585,11 @@ func (pg *SendPage) calculateValues() {
 
 	txFee := feeAndSize.Fee.AtomValue
 	totalCost := txFee + amountAtoms
-	remainingBalance := pg.selectedWallet.SpendableBalance - totalCost
 
+	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
 	pg.transactionFeeValueLabel.Text = dcrutil.Amount(txFee).String()
 	pg.totalCostValueLabel.Text = dcrutil.Amount(totalCost).String()
-	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(remainingBalance).String()
+	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(pg.remainingBalance).String()
 }
 
 func (pg *SendPage) watchForBroadcastResult() {
@@ -596,13 +597,18 @@ func (pg *SendPage) watchForBroadcastResult() {
 		return
 	}
 
-	txHash := pg.broadcastResult.TxHash
-	if txHash != "" {
-		pg.txHash = txHash
-		pg.txHashText = fmt.Sprintf("Successful. Hash: %s", txHash)
+	if pg.broadcastResult.TxHash != "" {
+		if pg.remainingBalance != -1 {
+			pg.selectedAccount.SpendableBalance = pg.remainingBalance 
+		}
+		pg.remainingBalance = -1
+
+		pg.txHash = pg.broadcastResult.TxHash
+		pg.txHashText = fmt.Sprintf("Successful. Hash: %s", pg.broadcastResult.TxHash)
 		pg.destinationAddressEditor.SetText("")
 		pg.sendAmountEditor.SetText("")
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
+		pg.broadcastResult.TxHash = ""
 	}
 }
