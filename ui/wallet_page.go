@@ -3,7 +3,6 @@ package ui
 // add all the sub pages to the wallet page.
 //clean up the delete wallet sub page
 import (
-	"fmt"
 	"image/color"
 
 	"gioui.org/layout"
