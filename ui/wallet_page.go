@@ -43,8 +43,6 @@ type walletPage struct {
 	rename, delete, addAcct widget.Button
 	line                    *decredmaterial.Line
 	addAcctW                decredmaterial.IconButton
-	password                widget.Editor
-	passwordW               decredmaterial.Editor
 }
 
 func WalletPage(common pageCommon) layout.Widget {
@@ -55,10 +53,9 @@ func WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
-		wallet:    common.wallet,
-		passwordW: common.theme.Editor("Enter Wallet Password"),
-		addAcctW:  common.theme.IconButton(common.icons.contentAdd),
-		line:      common.theme.Line(),
+		wallet:   common.wallet,
+		addAcctW: common.theme.IconButton(common.icons.contentAdd),
+		line:     common.theme.Line(),
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.sub.mainW = common.theme.IconButton(common.icons.navigationArrowBack)
