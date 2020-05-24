@@ -599,7 +599,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 
 	if pg.broadcastResult.TxHash != "" {
 		if pg.remainingBalance != -1 {
-			pg.selectedAccount.SpendableBalance = pg.remainingBalance 
+			pg.selectedAccount.SpendableBalance = pg.remainingBalance
 		}
 		pg.remainingBalance = -1
 
