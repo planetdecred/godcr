@@ -3,7 +3,6 @@ package ui
 // add all the renamePg pages to the wallet page.
 //clean up the delete wallet renamePg page
 import (
-	"fmt"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -31,6 +30,7 @@ func (page *walletPage) RenameWalletPage(common pageCommon) {
 func (page *walletPage) subRename(common pageCommon) {
 	gtx := common.gtx
 	list := layout.List{Axis: layout.Vertical}
+	page.update(common)
 	wdgs := []func(){
 		func() {
 			page.returnBtn(common)
@@ -55,16 +55,16 @@ func (page *walletPage) subRename(common pageCommon) {
 			)
 		},
 		func() {
-			page.renamePg.editorW.Layout(gtx, &page.renamePg.editor)
-		},
-		func() {
 			inset := layout.Inset{
 				Top:    unit.Dp(20),
-				Bottom: unit.Dp(5),
+				Bottom: unit.Dp(20),
 			}
 			inset.Layout(gtx, func() {
-				page.renamePg.renameW.Layout(gtx, &page.renamePg.rename)
+				page.renamePg.editorW.Layout(gtx, &page.renamePg.editor)
 			})
+		},
+		func() {
+			page.renamePg.renameW.Layout(gtx, &page.renamePg.rename)
 		},
 		func() {
 			layout.Center.Layout(common.gtx, func() {
@@ -88,13 +88,26 @@ func (page *walletPage) handleRename(common pageCommon) {
 	gtx := common.gtx
 	if page.renamePg.rename.Clicked(gtx) {
 		name := page.renamePg.editor.Text()
+		if name == "" {
+			return
+		}
+
 		err := common.wallet.RenameWallet(page.current.ID, name)
 		if err != nil {
 			log.Error(err)
 			page.renamePg.errorLabel.Text = err.Error()
-		} else {
-			common.info.Wallets[*common.selectedWallet].Name = name
-			page.subPage = subWalletMain
+			return
 		}
+
+		common.info.Wallets[*common.selectedWallet].Name = name
+		page.subPage = subWalletMain
+	}
+}
+
+func (page *walletPage) update(common pageCommon) {
+	if page.renamePg.editor.Text() == "" {
+		page.renamePg.renameW.Background = common.theme.Color.Hint
+	} else {
+		page.renamePg.renameW.Background = common.theme.Color.Primary
 	}
 }
