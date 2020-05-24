@@ -3,6 +3,7 @@ package ui
 // add all the sub pages to the wallet page.
 //clean up the delete wallet sub page
 import (
+	"fmt"
 	"image/color"
 
 	"gioui.org/layout"
@@ -30,6 +31,7 @@ type walletPage struct {
 	subPage int
 	current wallet.InfoShort
 	wallet  *wallet.Wallet
+	result  **wallet.Signature
 	sub     struct {
 		main, delete, rename, sign, verify, addWallet, changePass widget.Button
 		mainW, deleteW, signW, verifyW, addWalletW, renameW,
@@ -45,7 +47,7 @@ type walletPage struct {
 	addAcctW                decredmaterial.IconButton
 }
 
-func WalletPage(common pageCommon) layout.Widget {
+func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	page := &walletPage{
 		container: layout.List{
 			Axis: layout.Vertical,
@@ -56,6 +58,7 @@ func WalletPage(common pageCommon) layout.Widget {
 		wallet:   common.wallet,
 		addAcctW: common.theme.IconButton(common.icons.contentAdd),
 		line:     common.theme.Line(),
+		result:   &win.signatureResult,
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.sub.mainW = common.theme.IconButton(common.icons.navigationArrowBack)
@@ -94,10 +97,6 @@ func WalletPage(common pageCommon) layout.Widget {
 
 // Layout lays out the widgets for the main wallets page.
 func (page *walletPage) Layout(common pageCommon) {
-	if common.walletsTab.Changed() { // reset everything
-		page.subPage = subWalletMain
-	}
-
 	switch page.subPage {
 	case subWalletMain:
 		page.subMain(common)
@@ -219,7 +218,9 @@ func (page *walletPage) bottomRow(common pageCommon) {
 // Handle handles all widget inputs on the main wallets page.
 func (page *walletPage) Handle(common pageCommon) {
 	gtx := common.gtx
-
+	if common.walletsTab.Changed() || common.navTab.Changed() { // reset everything
+		page.subPage = subWalletMain
+	}
 	// Subs
 	if page.sub.main.Clicked(gtx) {
 		page.deletePg.errorLabel.Text = ""
