@@ -39,6 +39,7 @@ type walletPage struct {
 	deletePg                                       deleteWalletPage
 	container, accountsList                        layout.List
 	rename, delete, addAcct                        widget.Button
+	line                                           *decredmaterial.Line
 	renameW, beginRenameW, cancelRenameW, addAcctW decredmaterial.IconButton
 	editor, password                               widget.Editor
 	editorW, passwordW                             decredmaterial.Editor
@@ -61,7 +62,9 @@ func WalletPage(common pageCommon) layout.Widget {
 		editorW:       common.theme.Editor("Enter wallet name"),
 		passwordW:     common.theme.Editor("Enter Wallet Password"),
 		addAcctW:      common.theme.IconButton(common.icons.contentAdd),
+		line:          common.theme.Line(),
 	}
+	page.line.Color = common.theme.Color.Gray
 	page.sub.mainW = common.theme.IconButton(common.icons.navigationArrowBack)
 	page.sub.mainW.Background = color.RGBA{}
 	page.sub.mainW.Color = common.theme.Color.Text
@@ -74,9 +77,9 @@ func WalletPage(common pageCommon) layout.Widget {
 	page.sub.renameW = common.theme.IconButton(common.icons.EditorModeEdit)
 	page.sub.deleteW.Background = common.theme.Color.Danger
 	page.sub.deleteW.Size, page.sub.signW.Size, page.sub.verifyW.Size = unit.Dp(30), unit.Dp(30), unit.Dp(30)
-	page.sub.renameW.Size, page.sub.addWalletW.Size = unit.Dp(30), unit.Dp(30)
+	page.sub.renameW.Size, page.sub.addWalletW.Size, page.addAcctW.Size = unit.Dp(30), unit.Dp(30), unit.Dp(30)
 	page.sub.deleteW.Padding, page.sub.signW.Padding, page.sub.verifyW.Padding = unit.Dp(5), unit.Dp(5), unit.Dp(5)
-	page.sub.renameW.Padding, page.sub.addWalletW.Padding = unit.Dp(5), unit.Dp(5)
+	page.sub.renameW.Padding, page.sub.addWalletW.Padding, page.addAcctW.Padding = unit.Dp(5), unit.Dp(5), unit.Dp(5)
 
 	page.SignMessagePage(common)
 	page.VerifyMessagePage(common)
@@ -143,7 +146,7 @@ func (page *walletPage) topRow(common pageCommon) {
 		func() {
 			horFlex.Layout(gtx,
 				rigid(func() {
-					common.theme.H1(page.current.Name).Layout(common.gtx)
+					common.theme.H4(page.current.Name).Layout(common.gtx)
 				}),
 				rigid(func() {
 					layout.Center.Layout(gtx, func() {
@@ -153,15 +156,15 @@ func (page *walletPage) topRow(common pageCommon) {
 			)
 		},
 		func() {
-			common.theme.H5("Total Balance: " + page.current.Balance).Layout(gtx)
+			common.theme.H6("Total Balance: " + page.current.Balance).Layout(gtx)
 		},
 		func() {
 			horFlex.Layout(gtx,
 				rigid(func() {
-					common.theme.H5("Accounts").Layout(gtx)
+					common.theme.H6("Accounts").Layout(gtx)
 				}),
 				rigid(func() {
-					layout.S.Layout(gtx, func() {
+					layout.Inset{Left: unit.Dp(3)}.Layout(common.gtx, func() {
 						page.addAcctW.Layout(gtx, &page.addAcct)
 					})
 				}),
@@ -183,6 +186,11 @@ func (page *walletPage) topRow(common pageCommon) {
 						}),
 						layout.Rigid(func() {
 							common.theme.Body1("HD Path: " + acct.HDPath).Layout(gtx)
+						}),
+						layout.Rigid(func() {
+							gtx.Constraints.Width.Min = gtx.Px(unit.Dp(350))
+							gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
+							page.line.Layout(gtx)
 						}),
 					)
 				}
@@ -256,13 +264,15 @@ func (page *walletPage) returnBtn(common pageCommon) {
 
 func (page *walletPage) newItem(common *pageCommon, out decredmaterial.IconButton, in *widget.Button, label string) layout.Widget {
 	return func() {
-		layout.Inset{Right: unit.Dp(10)}.Layout(common.gtx, func() {
+		layout.Inset{Right: unit.Dp(15), Top: unit.Dp(5)}.Layout(common.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(common.gtx,
 				layout.Rigid(func() {
 					out.Layout(common.gtx, in)
 				}),
 				layout.Rigid(func() {
-					common.theme.Caption(label).Layout(common.gtx)
+					layout.Inset{Top: unit.Dp(3)}.Layout(common.gtx, func() {
+						common.theme.Caption(label).Layout(common.gtx)
+					})
 				}),
 			)
 		})
