@@ -118,7 +118,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	pg.errLabel.Color = pg.theme.Color.Danger
 	for i := 0; i <= 32; i++ {
-		pg.seedEditors = append(pg.seedEditors, common.theme.Editor(fmt.Sprintf("Input word %d...", i+1)))
+		pg.seedEditors = append(pg.seedEditors, common.theme.Editor(fmt.Sprintf("%d", i+1)))
 		pg.seedEditorWidgets.focusIndex = -1
 		pg.seedEditorWidgets.editors = append(pg.seedEditorWidgets.editors, widget.Editor{SingleLine: true, Submit: true})
 	}
@@ -143,7 +143,7 @@ func (pg *createRestore) layout(common pageCommon) {
 							if common.states.creating {
 								pg.processing()()
 							} else if pg.showRestore {
-								pg.Restore()()
+								pg.restore()()
 							} else {
 								pg.mainContent()()
 							}
@@ -159,7 +159,11 @@ func (pg *createRestore) layout(common pageCommon) {
 						layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func() {
 							layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
 								layout.Rigid(func() {
-									d := pg.theme.H3("Create Wallet")
+									modalTitle := "Create Wallet"
+									if pg.showRestore {
+										modalTitle = "Restore Wallet"
+									}
+									d := pg.theme.H3(modalTitle)
 									d.Layout(pg.gtx)
 								}),
 								layout.Rigid(func() {
@@ -240,7 +244,7 @@ func (pg *createRestore) mainContent() layout.Widget {
 	}
 }
 
-func (pg *createRestore) Restore() layout.Widget {
+func (pg *createRestore) restore() layout.Widget {
 	return func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 			layout.Rigid(func() {
@@ -273,7 +277,6 @@ func (pg *createRestore) Restore() layout.Widget {
 							pg.inputsGroup(pg.seedListLeft, 16, 0)
 						}),
 						layout.Rigid(func() {
-							//fmt.Printf("max %v min %v \n", pg.gtx.Constraints.Width.Max, pg.gtx.Constraints.Width.Min)
 							pg.inputsGroup(pg.seedListRight, 17, 16)
 						}),
 					)
@@ -321,7 +324,7 @@ func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) {
 				)
 			}),
 			layout.Rigid(func() {
-				layout.Inset{Top: unit.Dp(2)}.Layout(pg.gtx, func() {
+				layout.Inset{Top: unit.Dp(2), Left: unit.Dp(20)}.Layout(pg.gtx, func() {
 					pg.autoComplete(i, startIndex)
 				})
 			}),
