@@ -18,6 +18,9 @@ type verifyMessagePage struct {
 	clearBtnW, verifyBtnW                    widget.Button
 	clearBtn, verifyBtn                      decredmaterial.Button
 	verifyMessage                            decredmaterial.Label
+
+	backButtonW widget.Button
+	backButton  decredmaterial.IconButton
 }
 
 func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
@@ -37,6 +40,7 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 		signInputW: &widget.Editor{
 			SingleLine: true,
 		},
+		backButton: c.theme.PlainIconButton(c.icons.navigationArrowBack),
 	}
 	page.messageInput.IsRequired, page.addressInput.IsRequired, page.signInput.IsRequired = true, true, true
 	page.messageInput.IsVisible, page.addressInput.IsVisible, page.signInput.IsVisible = true, true, true
@@ -44,16 +48,18 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	page.verifyBtn.Background = c.theme.Color.Hint
 	page.clearBtn.Background = color.RGBA{0, 0, 0, 0}
 	page.clearBtn.Color = win.theme.Color.Primary
+	page.backButton.Color = c.theme.Color.Hint
+	page.backButton.Size = unit.Dp(32)
 
 	return func() {
 		page.Layout(c)
-		page.Handle(c)
+		page.handler(c)
 	}
 }
 
 func (page *verifyMessagePage) Layout(c pageCommon) {
 	body := func() {
-		layout.UniformInset(unit.Dp(20)).Layout(c.gtx, func() {
+		layout.UniformInset(unit.Dp(5)).Layout(c.gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
 				layout.Rigid(page.header(&c)),
 				layout.Rigid(func() {
@@ -80,7 +86,12 @@ func (page *verifyMessagePage) header(c *pageCommon) layout.Widget {
 		layout.Inset{Bottom: unit.Dp(30)}.Layout(c.gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
 				layout.Rigid(func() {
-					c.theme.H5("Verify Wallet Message").Layout(c.gtx)
+					layout.W.Layout(c.gtx, func() {
+						page.backButton.Layout(c.gtx, &page.backButtonW)
+					})
+					layout.Inset{Left: unit.Dp(44)}.Layout(c.gtx, func() {
+						c.theme.H5("Verify Wallet Message").Layout(c.gtx)
+					})
 				}),
 				layout.Rigid(func() {
 					layout.Inset{Top: unit.Dp(15)}.Layout(c.gtx, func() {})
@@ -160,7 +171,15 @@ func (page *verifyMessagePage) handlerEditorEvents(c *pageCommon, w *widget.Edit
 	}
 }
 
-func (page *verifyMessagePage) Handle(c pageCommon) {
+func (page *verifyMessagePage) clearInputs(c *pageCommon) {
+	page.verifyBtn.Background = c.theme.Color.Hint
+	page.addressInputW.SetText("")
+	page.signInputW.SetText("")
+	page.messageInputW.SetText("")
+	page.verifyMessage.Text = ""
+}
+
+func (page *verifyMessagePage) handler(c pageCommon) {
 	page.handlerEditorEvents(&c, page.addressInputW)
 	page.handlerEditorEvents(&c, page.messageInputW)
 	page.handlerEditorEvents(&c, page.signInputW)
@@ -186,10 +205,11 @@ func (page *verifyMessagePage) Handle(c pageCommon) {
 	}
 
 	if page.clearBtnW.Clicked(c.gtx) {
-		page.verifyBtn.Background = c.theme.Color.Hint
-		page.addressInputW.SetText("")
-		page.signInputW.SetText("")
-		page.messageInputW.SetText("")
-		page.verifyMessage.Text = ""
+		page.clearInputs(&c)
+	}
+
+	if page.backButtonW.Clicked(c.gtx) {
+		page.clearInputs(&c)
+		*c.page = PageWallet
 	}
 }
