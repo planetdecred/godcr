@@ -43,9 +43,8 @@ type walletPage struct {
 	rename, delete, addAcct widget.Button
 	line                    *decredmaterial.Line
 	addAcctW                decredmaterial.IconButton
-	editor, password        widget.Editor
-	editorW, passwordW      decredmaterial.Editor
-	signatureResult         *wallet.Signature
+	password                widget.Editor
+	passwordW               decredmaterial.Editor
 }
 
 func WalletPage(common pageCommon) layout.Widget {
