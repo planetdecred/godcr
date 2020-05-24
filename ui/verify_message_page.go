@@ -53,7 +53,7 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 
 	return func() {
 		page.Layout(c)
-		page.Handle(c)
+		page.handler(c)
 	}
 }
 
@@ -179,7 +179,7 @@ func (page *verifyMessagePage) clearInputs(c *pageCommon) {
 	page.verifyMessage.Text = ""
 }
 
-func (page *verifyMessagePage) Handle(c pageCommon) {
+func (page *verifyMessagePage) handler(c pageCommon) {
 	page.handlerEditorEvents(&c, page.addressInputW)
 	page.handlerEditorEvents(&c, page.messageInputW)
 	page.handlerEditorEvents(&c, page.signInputW)
