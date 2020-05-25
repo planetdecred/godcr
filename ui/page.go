@@ -3,6 +3,7 @@ package ui
 import (
 	"image"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -31,6 +32,8 @@ type pageCommon struct {
 	walletsTab      *decredmaterial.Tabs
 	accountsTab     *decredmaterial.Tabs
 	errorChannels   map[string]chan error
+	keyEvents       chan *key.Event
+	states          *states
 }
 
 func (win *Window) addPages() {
@@ -91,17 +94,19 @@ func (win *Window) addPages() {
 		walletsTab:      decredmaterial.NewTabs(),
 		accountsTab:     accountsTab,
 		errorChannels: map[string]chan error{
-			PageSignMessage: make(chan error),
+			PageSignMessage:   make(chan error),
+			PageCreateRestore: make(chan error),
 		},
-		//cancelDialogW:  win.theme.PlainIconButton(icons.contentClear),
+		keyEvents: win.keyEvents,
+		states:    &win.states,
 	}
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)
+	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
 	win.pages[PageReceive] = win.ReceivePage(common)
-	win.pages[PageRestore] = win.RestorePage
 	win.pages[PageSend] = win.SendPage
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
 	win.pages[PageSignMessage] = win.SignMessagePage(common)
