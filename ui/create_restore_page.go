@@ -153,52 +153,42 @@ func (pg *createRestore) layout(common pageCommon) {
 			}),
 		)
 		if pg.showPassword {
-			pg.theme.Modal(pg.gtx, func() {
-				layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
-					layout.Flexed(1, func() {
-						layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func() {
-							layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
-								layout.Rigid(func() {
-									modalTitle := "Create Wallet"
-									if pg.showRestore {
-										modalTitle = "Restore Wallet"
-									}
-									d := pg.theme.H3(modalTitle)
-									d.Layout(pg.gtx)
-								}),
-								layout.Rigid(func() {
-									pg.spendingPassword.Layout(pg.gtx, pg.spendingPasswordWidget)
-								}),
-								layout.Rigid(func() {
-									pg.matchSpendingPassword.Layout(pg.gtx, pg.matchSpendingPasswordWidget)
-								}),
-								layout.Rigid(func() {
-									pg.errLabel.Layout(pg.gtx)
-								}),
-							)
-						})
-					}),
-					layout.Rigid(func() {
-						if pg.showRestore {
-							pg.addWallet.Text = "restore wallet"
-						} else {
-							pg.addWallet.Text = "create new wallet"
-						}
-						layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
-							layout.Rigid(func() {
-								layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
-									pg.addWallet.Layout(pg.gtx, pg.addWalletWidget)
-								})
-							}),
-							layout.Rigid(func() {
-								layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
-									pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
-								})
-							}),
-						)
-					}),
-				)
-			})
+			modalTitle := "Create Wallet"
+			if pg.showRestore {
+				modalTitle = "Restore Wallet"
+			}
+
+			w := []func(){
+				func() {
+					pg.spendingPassword.Layout(pg.gtx, pg.spendingPasswordWidget)
+				},
+				func() {
+					pg.matchSpendingPassword.Layout(pg.gtx, pg.matchSpendingPasswordWidget)
+				},
+				func() {
+					pg.errLabel.Layout(pg.gtx)
+				},
+				func() {
+					if pg.showRestore {
+						pg.addWallet.Text = "restore wallet"
+					} else {
+						pg.addWallet.Text = "create new wallet"
+					}
+					layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+						layout.Rigid(func() {
+							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+								pg.addWallet.Layout(pg.gtx, pg.addWalletWidget)
+							})
+						}),
+						layout.Rigid(func() {
+							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+								pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
+							})
+						}),
+					)
+				},
+			}
+			pg.theme.Modal(pg.gtx, modalTitle, w)
 		}
 	})
 }

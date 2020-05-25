@@ -100,7 +100,7 @@ func (t *Theme) Modal(gtx *layout.Context, title string, wd []func()) {
 					t.H4(title).Layout(gtx)
 				},
 				func() {
-					t.Line().Draw(gtx)
+					t.Line().Layout(gtx)
 				},
 			}
 			w = append(w, wd...)
