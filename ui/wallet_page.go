@@ -25,7 +25,6 @@ const (
 )
 
 type walletPage struct {
-
 	subPage int
 	current wallet.InfoShort
 	wallet  *wallet.Wallet
@@ -348,6 +347,11 @@ func (page *walletPage) Handle(common pageCommon) {
 
 	if page.icons.rename.Clicked(gtx) {
 		page.subPage = subWalletRename
+		return
+	}
+
+	if page.icons.addWallet.Clicked(gtx) {
+		*common.page = PageCreateRestore
 		return
 	}
 
