@@ -119,8 +119,8 @@ func (win *Window) addPages() {
 	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageSend] = win.SendPage(common)
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
-	// win.pages[PageSignMessage] = win.SignMessagePage(common)
-	// win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
+	win.pages[PageSignMessage] = win.SignMessagePage(common)
+	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
