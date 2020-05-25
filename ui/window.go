@@ -44,7 +44,8 @@ type Window struct {
 
 	combined
 	outputs
-	pages map[string]layout.Widget
+	pages     map[string]layout.Widget
+	keyEvents chan *key.Event
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -73,6 +74,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	// win.tabs.Flex.Spacing = layout.SpaceBetween
 	win.current = PageOverview
 	win.dialog = func() {}
+	win.keyEvents = make(chan *key.Event)
 
 	win.initWidgets()
 	win.addPages()
@@ -112,6 +114,7 @@ func (win *Window) Loop(shutdown chan int) {
 					log.Warn("Attemping to get multiwallet info")
 					win.wallet.GetMultiWalletInfo()
 				}
+
 				win.window.Invalidate()
 				break
 			}
@@ -157,6 +160,10 @@ func (win *Window) Loop(shutdown chan int) {
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
+				if win.walletInfo.LoadedWallets == 0 {
+					win.current = PageCreateRestore
+				}
+
 				if s.loading {
 					win.Loading()
 				} else if s.dialog {
@@ -170,7 +177,9 @@ func (win *Window) Loop(shutdown chan int) {
 				win.HandleInputs()
 				evt.Frame(win.gtx.Ops)
 			case key.Event:
-				win.KeysEventsHandler(&evt)
+				go func() {
+					win.keyEvents <- &evt
+				}()
 			case nil:
 				// Ignore
 			default:

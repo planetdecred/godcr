@@ -21,7 +21,7 @@ type walletPage struct {
 	container, accountsList                            layout.List
 	renaming, deleting                                 bool
 	rename, delete, beginRename, cancelRename, addAcct widget.Button
-	signMessageDiag                                    *widget.Button
+	signMessageDiag, addWallet                         *widget.Button
 	renameW, beginRenameW, cancelRenameW, addAcctW     decredmaterial.IconButton
 	editor                                             widget.Editor
 	editorW                                            decredmaterial.Editor
@@ -29,6 +29,7 @@ type walletPage struct {
 	gotoSignMessagePageBtn                             decredmaterial.Button
 	gotoVerifyMessagePageBtn                           decredmaterial.Button
 	verifyMessageDiag                                  *widget.Button
+	addWalletW                                         decredmaterial.Button
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -39,6 +40,8 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
+		addWallet: new(widget.Button),
+
 		beginRenameW:             common.theme.PlainIconButton(common.icons.contentCreate),
 		cancelRenameW:            common.theme.PlainIconButton(common.icons.contentClear),
 		renameW:                  common.theme.PlainIconButton(common.icons.navigationCheck),
@@ -48,6 +51,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		gotoSignMessagePageBtn:   win.outputs.signMessageDiag,
 		signMessageDiag:          &win.inputs.signMessageDiag,
 		gotoVerifyMessagePageBtn: win.outputs.verifyMessDiag,
+		addWalletW:               common.theme.Button("Add Wallet"),
 		verifyMessageDiag:        &win.inputs.verifyMessDiag,
 	}
 
@@ -152,6 +156,14 @@ func (page *walletPage) Layout(common pageCommon) {
 						page.gotoVerifyMessagePageBtn.Layout(gtx, page.verifyMessageDiag)
 					})
 				}),
+				layout.Rigid(func() {
+					inset := layout.Inset{
+						Left: unit.Dp(5),
+					}
+					inset.Layout(gtx, func() {
+						page.addWalletW.Layout(gtx, page.addWallet)
+					})
+				}),
 			)
 		},
 	}
@@ -184,5 +196,9 @@ func (page *walletPage) Handle(common pageCommon) {
 			common.info.Wallets[*common.selectedWallet].Name = name
 			page.renaming = false
 		}
+	}
+
+	if page.addWallet.Clicked(gtx) {
+		*common.page = PageCreateRestore
 	}
 }

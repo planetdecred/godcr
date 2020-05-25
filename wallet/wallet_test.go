@@ -40,7 +40,12 @@ var _ = BeforeSuite(func() {
 	wal.LoadWallets()
 	resp := <-wal.Send
 	Expect(resp.Resp).To(BeAssignableToTypeOf(LoadedWallets{}))
-	wal.CreateWallet("password")
+	tempChan := make(chan error)
+	wal.CreateWallet("password", tempChan)
+	go func() {
+		err := <-tempChan
+		Expect(err).To(BeNil())
+	}()
 	resp = <-wal.Send
 	Expect(resp.Resp).To(BeAssignableToTypeOf(CreatedSeed{}))
 })

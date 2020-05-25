@@ -205,11 +205,11 @@ func (e Editor) editorLine(gtx *layout.Context) {
 }
 
 func (e Editor) handleEvents(gtx *layout.Context) {
-	data, err := clipboard.ReadAll()
-	if err != nil {
-		panic(err)
-	}
 	for e.pasteBtnWidget.Clicked(gtx) {
+		data, err := clipboard.ReadAll()
+		if err != nil {
+			panic(err)
+		}
 		e.editor.SetText(data)
 	}
 	for e.clearBtnWidget.Clicked(gtx) {

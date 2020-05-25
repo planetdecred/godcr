@@ -1,8 +1,6 @@
-//widget
 package ui
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 
@@ -14,27 +12,18 @@ import (
 )
 
 type inputs struct {
-	createDiag, deleteDiag, cancelDialog                                 widget.Button
-	createWallet, restoreWallet, deleteWallet, renameWallet              widget.Button
+	deleteDiag, cancelDialog                                             widget.Button
+	deleteWallet, renameWallet                                           widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button
-	toRestoreWallet                                                      widget.Button
 	changePasswordDiag, signMessageDiag                                  widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
 	verifyMessDiag                                                       widget.Button
-	restoreDiag, addAcctDiag, savePassword                               widget.Button
+	addAcctDiag, savePassword                                            widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
-	}
-	seedEditors struct {
-		focusIndex int
-		editors    []widget.Editor
-	}
-	seedsSuggestions []struct {
-		text   string
-		button widget.Button
 	}
 }
 
@@ -49,24 +38,21 @@ type outputs struct {
 	icons struct {
 		add, check, cancel, sync, info, more, copy decredmaterial.IconButton
 	}
-	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename       decredmaterial.Editor
-	toOverview, toWallets, toTransactions, toRestoreWallet, toSend, toSettings decredmaterial.IconButton
-	toReceive                                                                  decredmaterial.IconButton
-	createDiag, cancelDiag, addAcctDiag                                        decredmaterial.IconButton
-	verifyMessDiag                                                             decredmaterial.Button
+	spendingPassword, matchSpending, oldSpendingPassword, dialog, rename decredmaterial.Editor
+	toOverview, toWallets, toTransactions, toSend, toSettings            decredmaterial.IconButton
+	toReceive                                                            decredmaterial.IconButton
+	cancelDiag, addAcctDiag                                              decredmaterial.IconButton
+	verifyMessDiag                                                       decredmaterial.Button
 
-	createWallet, restoreDiag, restoreWallet, deleteWallet, deleteDiag, gotItDiag decredmaterial.Button
-	toggleWalletRename, renameWallet                                              decredmaterial.IconButton
-	hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag                decredmaterial.Button
-	addAccount, newAddressDiag                                                    decredmaterial.Button
-	info, more, copy                                                              decredmaterial.IconButton
-	passwordBar                                                                   *decredmaterial.ProgressBar
+	deleteWallet, deleteDiag, gotItDiag                            decredmaterial.Button
+	toggleWalletRename, renameWallet                               decredmaterial.IconButton
+	hideMsgInfo, savePassword, changePasswordDiag, signMessageDiag decredmaterial.Button
+	addAccount, newAddressDiag                                     decredmaterial.Button
+	info, more, copy                                               decredmaterial.IconButton
+	passwordBar                                                    *decredmaterial.ProgressBar
 
 	tabs                                     []decredmaterial.TabItem
 	notImplemented, pageTitle, pageInfo, err decredmaterial.Label
-
-	seedEditors      []decredmaterial.Editor
-	seedsSuggestions []decredmaterial.Button
 
 	//receive page labels
 	selectedAccountNameLabel, selectedAccountBalanceLabel           decredmaterial.Label
@@ -124,14 +110,6 @@ func (win *Window) initWidgets() {
 	win.outputs.verifyMessDiag = theme.Button("Verify Message")
 	win.outputs.signMessageDiag = theme.Button("Sign Message")
 
-	//
-	win.outputs.createDiag = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentCreate)))
-	win.outputs.createWallet = theme.Button("create")
-
-	win.outputs.toRestoreWallet = theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionRestorePage)))
-	win.outputs.restoreDiag = theme.Button("Restore wallet")
-	win.outputs.restoreWallet = theme.Button("Restore")
-
 	win.outputs.deleteDiag = theme.DangerButton("Delete Wallet")
 	win.outputs.deleteWallet = theme.DangerButton("delete")
 
@@ -173,13 +151,14 @@ func (win *Window) initWidgets() {
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.copy = win.outputs.icons.copy
 
-	for i := 0; i <= 32; i++ {
-		e := theme.Editor(fmt.Sprintf("Input word %d...", i+1))
-		e.IsTitleLabel = false
-		win.outputs.seedEditors = append(win.outputs.seedEditors, e)
-		win.inputs.seedEditors.focusIndex = -1
-		win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
-	}
+	//for i := 0; i <= 32; i++ {
+	//	e := theme.Editor(fmt.Sprintf("Input word %d...", i+1))
+	//	e.IsTitleLabel = false
+	//	win.outputs.seedEditors = append(win.outputs.seedEditors, e)
+	//	win.inputs.seedEditors.focusIndex = -1
+	//	win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
+	//}
+	// win.outputs.sync = theme.Button("Reconnect")
 
 	win.outputs.addAcctDiag = win.outputs.icons.add
 	win.outputs.addAccount = theme.Button("add")

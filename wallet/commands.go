@@ -15,11 +15,14 @@ import (
 
 // CreateWallet creates a new wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) CreateWallet(passphrase string) {
+func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
 		wall, err := wal.multi.CreateNewWallet(passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
+			go func() {
+				errChan <- err
+			}()
 			resp.Err = err
 			wal.Send <- ResponseError(MultiWalletError{
 				Message: "Could not create wallet",
@@ -36,11 +39,14 @@ func (wal *Wallet) CreateWallet(passphrase string) {
 
 // RestoreWallet restores a wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) RestoreWallet(seed, passphrase string) {
+func (wal *Wallet) RestoreWallet(seed, passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
 		_, err := wal.multi.RestoreWallet(seed, passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
+			go func() {
+				errChan <- err
+			}()
 			resp.Err = err
 			wal.Send <- ResponseError(MultiWalletError{
 				Message: "Could not restore wallet",
