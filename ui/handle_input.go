@@ -193,7 +193,6 @@ func (win *Window) HandleInputs() {
 	}
 
 	// RECEIVE PAGE
-
 	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
 		newAddr = !newAddr
 	}
