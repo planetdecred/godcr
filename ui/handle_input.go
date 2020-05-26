@@ -144,26 +144,6 @@ func (win *Window) HandleInputs() {
 		win.resetPasswords()
 	}
 
-	// DELETE WALLET
-
-	if win.inputs.deleteDiag.Clicked(win.gtx) {
-		win.states.dialog = true
-		win.dialog = win.DeleteDiag
-		return
-	}
-
-	// if win.inputs.deleteWallet.Clicked(win.gtx) {
-	// 	pass := win.validatePassword()
-	// 	if pass == "" {
-	// 		return
-	// 	}
-	// 	win.wallet.DeleteWallet(win.walletInfo.Wallets[win.selected].ID, pass)
-	// 	win.resetPasswords()
-	// 	win.states.loading = true
-	// 	log.Debug("Delete Wallet clicked")
-	// 	return
-	// }
-
 	// ADD ACCOUNT
 
 	if win.inputs.addAcctDiag.Clicked(win.gtx) {
@@ -182,12 +162,6 @@ func (win *Window) HandleInputs() {
 	}
 
 	// NAVIGATION
-
-	if win.inputs.toWallets.Clicked(win.gtx) {
-		//win.current = win.WalletsPage
-		win.current = PageWallet
-		return
-	}
 
 	if win.inputs.toOverview.Clicked(win.gtx) {
 		win.current = PageOverview
@@ -219,10 +193,6 @@ func (win *Window) HandleInputs() {
 	}
 
 	// RECEIVE PAGE
-	if win.inputs.receiveIcons.info.Clicked(win.gtx) {
-		win.states.dialog = true
-		win.dialog = win.infoDiag
-	}
 
 	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
 		newAddr = !newAddr
@@ -266,11 +236,6 @@ func (win *Window) HandleInputs() {
 		}
 
 		win.outputs.passwordBar.Progress = strength * 100
-	}
-
-	if win.inputs.signMessageDiag.Clicked(win.gtx) {
-		// win.current = PageSignMessage
-		return
 	}
 }
 

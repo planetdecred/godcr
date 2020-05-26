@@ -67,6 +67,8 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		errChannel:    common.errorChannels[PageWallet],
 	}
 	page.line.Color = common.theme.Color.Gray
+	page.line.Height = 1
+	// page.line.Width = 250
 	page.errorLabel.Color = common.theme.Color.Danger
 
 	page.icons.addAcctW = common.theme.IconButton(common.icons.contentAdd)
@@ -147,7 +149,7 @@ func (page *walletPage) topRow(common pageCommon) {
 		func() {
 			horFlex.Layout(gtx,
 				rigid(func() {
-					common.theme.H4(page.current.Name).Layout(common.gtx)
+					common.theme.H5(page.current.Name).Layout(common.gtx)
 				}),
 			)
 		},
@@ -184,8 +186,7 @@ func (page *walletPage) topRow(common pageCommon) {
 							common.theme.Body1("HD Path: " + acct.HDPath).Layout(gtx)
 						}),
 						layout.Rigid(func() {
-							gtx.Constraints.Width.Min = gtx.Px(unit.Dp(350))
-							gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
+							page.line.Width = gtx.Px(unit.Dp(350))
 							page.line.Layout(gtx)
 						}),
 					)
@@ -204,12 +205,12 @@ func (page *walletPage) bottomRow(common pageCommon) {
 	gtx := common.gtx
 	layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
 		layout.Flex{}.Layout(gtx,
-			layout.Rigid(page.newItem(&common, page.icons.addWalletW, &page.icons.addWallet, "Add wallet")),
-			layout.Rigid(page.newItem(&common, page.icons.renameW, &page.icons.rename, "Rename wallet")),
-			layout.Rigid(page.newItem(&common, page.icons.signW, &page.icons.sign, "Sign message")),
-			layout.Rigid(page.newItem(&common, page.icons.verifyW, &page.icons.verify, "Verify message")),
-			layout.Rigid(page.newItem(&common, page.icons.changePassW, &page.icons.changePass, "Change passphrase")),
-			layout.Rigid(page.newItem(&common, page.icons.deleteW, &page.icons.delete, "Delete wallet")),
+			layout.Rigid(page.newRow(&common, page.icons.addWalletW, &page.icons.addWallet, "Add wallet")),
+			layout.Rigid(page.newRow(&common, page.icons.renameW, &page.icons.rename, "Rename wallet")),
+			layout.Rigid(page.newRow(&common, page.icons.signW, &page.icons.sign, "Sign message")),
+			layout.Rigid(page.newRow(&common, page.icons.verifyW, &page.icons.verify, "Verify message")),
+			layout.Rigid(page.newRow(&common, page.icons.changePassW, &page.icons.changePass, "Change passphrase")),
+			layout.Rigid(page.newRow(&common, page.icons.deleteW, &page.icons.delete, "Delete wallet")),
 		)
 	})
 }
@@ -414,7 +415,7 @@ func (page *walletPage) returnBtn(common pageCommon) {
 	})
 }
 
-func (page *walletPage) newItem(common *pageCommon, out decredmaterial.IconButton, in *widget.Button, label string) layout.Widget {
+func (page *walletPage) newRow(common *pageCommon, out decredmaterial.IconButton, in *widget.Button, label string) layout.Widget {
 	return func() {
 		layout.Inset{Right: unit.Dp(15), Top: unit.Dp(5)}.Layout(common.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(common.gtx,
