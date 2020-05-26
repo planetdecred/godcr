@@ -12,8 +12,8 @@ import (
 )
 
 type inputs struct {
-	deleteDiag, cancelDialog                                             widget.Button
-	deleteWallet, renameWallet                                           widget.Button
+	cancelDialog                                                         widget.Button
+	renameWallet                                                         widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button

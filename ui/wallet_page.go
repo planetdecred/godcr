@@ -24,6 +24,11 @@ const (
 	subWalletAddAcct
 )
 
+var (
+	iconPadding = unit.Dp(5)
+	iconSize    = unit.Dp(30)
+)
+
 type walletPage struct {
 	subPage int
 	current wallet.InfoShort
@@ -68,36 +73,35 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.line.Height = 1
-	// page.line.Width = 250
 	page.errorLabel.Color = common.theme.Color.Danger
 
 	page.icons.addAcctW = common.theme.IconButton(common.icons.contentAdd)
-	page.icons.addAcctW.Padding = unit.Dp(5)
-	page.icons.addAcctW.Size = unit.Dp(30)
+	page.icons.addAcctW.Padding = iconPadding
+	page.icons.addAcctW.Size = iconSize
 	page.icons.mainW = common.theme.IconButton(common.icons.navigationArrowBack)
 	page.icons.mainW.Background = color.RGBA{}
 	page.icons.mainW.Color = common.theme.Color.Hint
 	page.icons.mainW.Padding = unit.Dp(0)
-	page.icons.mainW.Size = unit.Dp(30)
+	page.icons.mainW.Size = iconSize
 	page.icons.deleteW = common.theme.IconButton(common.icons.actionDelete)
-	page.icons.deleteW.Size = unit.Dp(30)
-	page.icons.deleteW.Padding = unit.Dp(5)
+	page.icons.deleteW.Size = iconSize
+	page.icons.deleteW.Padding = iconPadding
 	page.icons.deleteW.Background = common.theme.Color.Danger
 	page.icons.signW = common.theme.IconButton(common.icons.communicationComment)
-	page.icons.signW.Size = unit.Dp(30)
-	page.icons.signW.Padding = unit.Dp(5)
+	page.icons.signW.Size = iconSize
+	page.icons.signW.Padding = iconPadding
 	page.icons.verifyW = common.theme.IconButton(common.icons.verifyAction)
-	page.icons.verifyW.Size = unit.Dp(30)
-	page.icons.verifyW.Padding = unit.Dp(5)
+	page.icons.verifyW.Size = iconSize
+	page.icons.verifyW.Padding = iconPadding
 	page.icons.addWalletW = common.theme.IconButton(common.icons.contentAdd)
-	page.icons.addWalletW.Size = unit.Dp(30)
-	page.icons.addWalletW.Padding = unit.Dp(5)
+	page.icons.addWalletW.Size = iconSize
+	page.icons.addWalletW.Padding = iconPadding
 	page.icons.renameW = common.theme.IconButton(common.icons.editorModeEdit)
-	page.icons.renameW.Size = unit.Dp(30)
-	page.icons.renameW.Padding = unit.Dp(5)
+	page.icons.renameW.Size = iconSize
+	page.icons.renameW.Padding = iconPadding
 	page.icons.changePassW = common.theme.IconButton(common.icons.actionLock)
-	page.icons.changePassW.Size = unit.Dp(30)
-	page.icons.changePassW.Padding = unit.Dp(5)
+	page.icons.changePassW.Size = iconSize
+	page.icons.changePassW.Padding = iconPadding
 
 	return func() {
 		page.Layout(common)
