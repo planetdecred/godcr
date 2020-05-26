@@ -373,7 +373,7 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 			pg.seedSuggestionButtonWidgets = nil
 			pg.seedSuggestionButtons = nil
 			pg.seedEditorWidgets.focusIndex = i
-
+			pg.initSeedSuggestionButtons(editor)
 			return
 		}
 
@@ -382,30 +382,33 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 			case widget.ChangeEvent:
 				pg.seedSuggestionButtonWidgets = nil
 				pg.seedSuggestionButtons = nil
-
-				if strings.Trim(editor.Text(), " ") == "" {
-					return
-				}
-
-				for _, word := range dcrlibwallet.PGPWordList() {
-					if strings.HasPrefix(strings.ToLower(word), strings.ToLower(editor.Text())) {
-						if len(pg.seedSuggestionButtonWidgets) < 2 {
-							var btn struct {
-								text   string
-								button widget.Button
-							}
-
-							btn.text = word
-							pg.seedSuggestionButtonWidgets = append(pg.seedSuggestionButtonWidgets, btn)
-							pg.seedSuggestionButtons = append(pg.seedSuggestionButtons, pg.theme.Button(word))
-						}
-					}
-				}
+				pg.initSeedSuggestionButtons(editor)
 
 			case widget.SubmitEvent:
 				if i < len(pg.seedEditorWidgets.editors)-1 {
 					pg.seedEditorWidgets.editors[i+1].Focus()
 				}
+			}
+		}
+	}
+}
+
+func (pg *createRestore) initSeedSuggestionButtons(editor *widget.Editor) {
+	if strings.Trim(editor.Text(), " ") == "" {
+		return
+	}
+
+	for _, word := range dcrlibwallet.PGPWordList() {
+		if strings.HasPrefix(strings.ToLower(word), strings.ToLower(editor.Text())) {
+			if len(pg.seedSuggestionButtonWidgets) < 2 {
+				var btn struct {
+					text   string
+					button widget.Button
+				}
+
+				btn.text = word
+				pg.seedSuggestionButtonWidgets = append(pg.seedSuggestionButtonWidgets, btn)
+				pg.seedSuggestionButtons = append(pg.seedSuggestionButtons, pg.theme.Button(word))
 			}
 		}
 	}
