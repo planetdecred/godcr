@@ -24,9 +24,6 @@ type SendPage struct {
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
 
-	txAuthorErrChan  chan error
-	broadcastErrChan chan error
-
 	selectedWallet  wallet.InfoShort
 	selectedAccount wallet.Account
 
@@ -64,12 +61,13 @@ type SendPage struct {
 	isBroadcastingTransaction bool
 	hasInitializedTxAuthor    bool
 	hasCopiedTxHash           bool
+
+	txAuthorErrChan chan error 
+	broadcastErrChan chan error
 }
 
 const (
 	PageSend                 = "send"
-	PageSendTxAuthorErrChan  = "send-txauthor-err"
-	PageSendBroadcastErrChan = "send-broadcast-err"
 )
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -112,6 +110,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		passwordModal: common.theme.Password(),
 		accountsTab:   decredmaterial.NewTabs(),
 		walletsTab:    decredmaterial.NewTabs(),
+
+		broadcastErrChan: make(chan error),
+		txAuthorErrChan: make(chan error),
 	}
 
 	page.walletsTab.Position = decredmaterial.Top
@@ -257,9 +258,6 @@ func (pg *SendPage) Layout(common pageCommon) {
 	}
 
 	pg.wallets = common.info.Wallets
-	pg.txAuthorErrChan = common.errorChannels[PageSendTxAuthorErrChan]
-	pg.broadcastErrChan = common.errorChannels[PageSendBroadcastErrChan]
-
 	if !pg.hasInitializedTxAuthor {
 		pg.selectedWallet = pg.wallets[*common.selectedWallet]
 		pg.selectedAccount = pg.selectedWallet.Accounts[0]

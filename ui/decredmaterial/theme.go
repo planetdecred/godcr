@@ -176,13 +176,6 @@ func mustIcon(ic *Icon, err error) *Icon {
 	return ic
 }
 
-func mustDcrIcon(icon image.Image, err error) image.Image {
-	if err != nil {
-		panic(err)
-	}
-	return icon
-}
-
 func rgb(c uint32) color.RGBA {
 	return argb(0xff000000 | c)
 }
