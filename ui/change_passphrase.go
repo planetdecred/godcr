@@ -91,7 +91,7 @@ func (page *walletPassphrasePage) Layout(common pageCommon) {
 			page.oldPass.Layout(gtx, &page.oldPassW)
 		},
 		func() {
-			page.passwordStrength(common)
+			// page.passwordStrength(common)
 		},
 		func() {
 			page.newPass.Layout(gtx, &page.newPassW)
