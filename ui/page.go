@@ -17,7 +17,7 @@ type pageIcons struct {
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
 	communicationComment, editorModeEdit *decredmaterial.Icon
-	overviewIcon, walletIcon, receiveIcon, transactionIcon image.Image
+	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon image.Image
 }
 
 type pageCommon struct {
@@ -75,7 +75,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			Label: win.theme.Body1("Send"),
-			Icon:  icons.overviewIcon,
+			Icon:  icons.sendIcon,
 		},
 		{
 			Label: win.theme.Body1("Transactions"),
