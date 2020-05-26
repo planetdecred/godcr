@@ -58,7 +58,7 @@ type Window struct {
 // than once.
 func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image) (*Window, error) {
 	win := new(Window)
-	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
+	win.window = app.NewWindow(app.Title("godcr"))
 	theme := decredmaterial.NewTheme()
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")

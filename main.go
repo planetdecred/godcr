@@ -53,6 +53,9 @@ func main() {
 
 	decredIcons := make(map[string]image.Image)
 	err = pkger.Walk("/ui/assets/decredicons", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			panic(err)
+		}
 		if info.IsDir() || !strings.HasSuffix(path, ".png") {
 			return nil
 		}

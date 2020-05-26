@@ -57,8 +57,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		verifyAction:               mustIcon(decredmaterial.NewIcon(icons.ActionVerifiedUser)),
 		editorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
 		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
-		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
-		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
 		overviewIcon:  				decredIcons["overview"],
 		walletIcon:  				decredIcons["wallet"],
 		receiveIcon:  				decredIcons["receive"],
