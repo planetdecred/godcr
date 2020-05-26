@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"image"
 	"time"
 
 	"gioui.org/app"
@@ -55,7 +56,7 @@ type Window struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet) (*Window, error) {
+func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image) (*Window, error) {
 	win := new(Window)
 	win.window = app.NewWindow(app.Title("GoDcr - decred wallet"))
 	theme := decredmaterial.NewTheme()
@@ -78,7 +79,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.keyEvents = make(chan *key.Event)
 
 	win.initWidgets()
-	win.addPages()
+	win.addPages(decredIcons)
 	return win, nil
 }
 

@@ -3,7 +3,6 @@
 package decredmaterial
 
 import (
-	"bytes"
 	"image"
 	"image/color"
 	"image/draw"
@@ -32,11 +31,6 @@ func NewIcon(data []byte) (*Icon, error) {
 		return nil, err
 	}
 	return &Icon{src: data, Color: rgb(0x000000)}, nil
-}
-
-func NewDcrIcon(dcrIcon []byte) (image.Image, error) {
-	icon, _, err := image.Decode(bytes.NewReader(dcrIcon))
-	return icon, err
 }
 
 func (ic *Icon) Layout(gtx *layout.Context, sz unit.Value) {

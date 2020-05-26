@@ -17,7 +17,7 @@ type pageIcons struct {
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
 	communicationComment, editorModeEdit *decredmaterial.Icon
-	overviewIcon, walletIcon image.Image
+	overviewIcon, walletIcon, receiveIcon, transactionIcon image.Image
 }
 
 type pageCommon struct {
@@ -37,7 +37,7 @@ type pageCommon struct {
 	states          *states
 }
 
-func (win *Window) addPages() {
+func (win *Window) addPages(decredIcons map[string]image.Image) {
 	icons := pageIcons{
 		contentAdd:                 mustIcon(decredmaterial.NewIcon(icons.ContentAdd)),
 		contentClear:               mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
@@ -59,7 +59,12 @@ func (win *Window) addPages() {
 		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
 		overviewIcon:               mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.OverviewIcon)),
 		walletIcon:                 mustDcrIcon(decredmaterial.NewDcrIcon(decredmaterial.WalletIcon)),
+		overviewIcon:  				decredIcons["overview"],
+		walletIcon:  				decredIcons["wallet"],
+		receiveIcon:  				decredIcons["receive"],
+		transactionIcon:  			decredIcons["transaction"],
 	}
+
 	tabs := decredmaterial.NewTabs()
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
@@ -76,15 +81,11 @@ func (win *Window) addPages() {
 		},
 		{
 			Label: win.theme.Body1("Transactions"),
-			Icon:  icons.overviewIcon,
+			Icon:  icons.transactionIcon,
 		},
 		{
 			Label: win.theme.Body1("Receive"),
-			Icon:  icons.overviewIcon,
-		},
-		{
-			Label: win.theme.Body1("Settings"),
-			Icon:  icons.overviewIcon,
+			Icon:  icons.receiveIcon,
 		},
 	})
 
