@@ -149,7 +149,7 @@ func (page *walletPassphrasePage) handle(common pageCommon) {
 		page.errorLabel.Color = common.theme.Color.Success
 		page.savePassword.Text = "Changed"
 		page.savePassword.Background = common.theme.Color.Success
-		page.resetFields(common)
+		page.resetFields()
 	}
 
 	if strings.Trim(page.newPassW.Text(), " ") != "" {
@@ -211,7 +211,7 @@ func (page *walletPassphrasePage) handlerEditorEvents(common pageCommon, w *widg
 	}
 }
 
-func (page *walletPassphrasePage) resetFields(common pageCommon) {
+func (page *walletPassphrasePage) resetFields() {
 	page.oldPassW.SetText("")
 	page.newPassW.SetText("")
 	page.confPassW.SetText("")

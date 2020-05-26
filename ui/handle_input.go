@@ -183,15 +183,6 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	if win.inputs.cancelDialog.Clicked(win.gtx) {
-		win.states.dialog = false
-		win.err = ""
-		win.resetButton()
-		win.resetPasswords()
-		log.Debug("Cancel dialog clicked")
-		return
-	}
-
 	// RECEIVE PAGE
 	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
 		newAddr = !newAddr
