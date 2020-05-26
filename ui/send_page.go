@@ -62,12 +62,12 @@ type SendPage struct {
 	hasInitializedTxAuthor    bool
 	hasCopiedTxHash           bool
 
-	txAuthorErrChan chan error 
+	txAuthorErrChan  chan error
 	broadcastErrChan chan error
 }
 
 const (
-	PageSend                 = "send"
+	PageSend = "send"
 )
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -112,7 +112,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		walletsTab:    decredmaterial.NewTabs(),
 
 		broadcastErrChan: make(chan error),
-		txAuthorErrChan: make(chan error),
+		txAuthorErrChan:  make(chan error),
 	}
 
 	page.walletsTab.Position = decredmaterial.Top

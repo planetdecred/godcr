@@ -98,8 +98,8 @@ func (win *Window) addPages() {
 		walletsTab:      decredmaterial.NewTabs(),
 		accountsTab:     accountsTab,
 		errorChannels: map[string]chan error{
-			PageSignMessage:          make(chan error),
-			PageCreateRestore:        make(chan error),
+			PageSignMessage:   make(chan error),
+			PageCreateRestore: make(chan error),
 		},
 		keyEvents: win.keyEvents,
 		states:    &win.states,
