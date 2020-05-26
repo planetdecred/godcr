@@ -41,6 +41,8 @@ type Editor struct {
 	//IsTitleLabel if true makes the title lable visible.
 	IsTitleLabel bool
 
+	requiredErrorText string
+
 	pasteBtnMaterial IconButton
 	pasteBtnWidget   *widget.Button
 
@@ -55,16 +57,17 @@ func (t *Theme) Editor(hint string) Editor {
 	errorLabel.Color = t.Color.Danger
 
 	return Editor{
-		TextSize:     t.TextSize,
-		Color:        t.Color.Text,
-		shaper:       t.Shaper,
-		Hint:         hint,
-		HintColor:    t.Color.Hint,
-		TitleLabel:   t.Body2(""),
-		flexWidth:    1,
-		IsTitleLabel: true,
-		LineColor:    t.Color.Text,
-		ErrorLabel:   errorLabel,
+		TextSize:          t.TextSize,
+		Color:             t.Color.Text,
+		shaper:            t.Shaper,
+		Hint:              hint,
+		HintColor:         t.Color.Hint,
+		TitleLabel:        t.Body2(""),
+		flexWidth:         1,
+		IsTitleLabel:      true,
+		LineColor:         t.Color.Text,
+		ErrorLabel:        errorLabel,
+		requiredErrorText: "Field is required",
 
 		pasteBtnMaterial: IconButton{
 			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
@@ -98,6 +101,10 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 		e.Hint = ""
 	}
 
+	if e.IsRequired && !e.editor.Focused() && e.editor.Len() == 0 {
+		e.ErrorLabel.Text = e.requiredErrorText
+	}
+
 	layout.UniformInset(unit.Dp(2)).Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
@@ -129,11 +136,13 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 								e.editorLine(gtx)
 							}),
 							layout.Rigid(func() {
-								if e.IsRequired {
-									if !e.editor.Focused() && e.editor.Len() == 0 {
-										e.ErrorLabel.Text = "Field is required"
+								if e.ErrorLabel.Text != "" {
+									inset := layout.Inset{
+										Top: unit.Dp(3),
 									}
-									e.ErrorLabel.Layout(gtx)
+									inset.Layout(gtx, func() {
+										e.ErrorLabel.Layout(gtx)
+									})
 								}
 							}),
 						)
@@ -215,4 +224,20 @@ func (e Editor) handleEvents(gtx *layout.Context) {
 	for e.clearBtnWidget.Clicked(gtx) {
 		e.editor.SetText("")
 	}
+}
+
+func (e *Editor) SetRequiredErrorText(txt string) {
+	e.requiredErrorText = txt
+}
+
+func (e *Editor) SetError(errorText string) {
+	e.ErrorLabel.Text = errorText
+}
+
+func (e *Editor) ClearError() {
+	e.ErrorLabel.Text = ""
+}
+
+func (e *Editor) IsDirty() bool {
+	return e.ErrorLabel.Text == ""
 }

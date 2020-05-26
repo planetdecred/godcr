@@ -5,9 +5,11 @@ go 1.13
 require (
 	gioui.org v0.0.0-20200403084947-efce78d414f3
 	github.com/atotto/clipboard v0.1.2
+	github.com/btcsuite/golangcrypto v0.0.0-20150304025918-53f62d9b43e8 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
+	github.com/decred/dcrutil v0.8.0
 	github.com/decred/slog v1.0.0
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jrick/logrotate v1.0.0

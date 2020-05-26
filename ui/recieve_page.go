@@ -9,6 +9,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/atotto/clipboard"
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/skip2/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -166,7 +167,7 @@ func (p *receivePage) selectedAccountColumn(common pageCommon) {
 
 	account := common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount]
 	p.selectedAccountNameLabel.Text = account.Name
-	p.selectedAccountBalanceLabel.Text = account.SpendableBalance
+	p.selectedAccountBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
 
 	selectedDetails := func() {
 		layout.UniformInset(unit.Dp(10)).Layout(p.gtx, func() {

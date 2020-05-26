@@ -65,6 +65,10 @@ func (win *Window) addPages() {
 			Icon:  icons.walletIcon,
 		},
 		{
+			Label: win.theme.Body1("Send"),
+			Icon:  icons.overviewIcon,
+		},
+		{
 			Label: win.theme.Body1("Transactions"),
 			Icon:  icons.overviewIcon,
 		},
@@ -107,14 +111,14 @@ func (win *Window) addPages() {
 	win.pages[PageTransactions] = win.TransactionsPage(common)
 	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
 	win.pages[PageReceive] = win.ReceivePage(common)
-	win.pages[PageSend] = win.SendPage
+	win.pages[PageSend] = win.SendPage(common)
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
 	win.pages[PageSignMessage] = win.SignMessagePage(common)
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
-	navs := []string{PageOverview, PageWallet, PageTransactions, PageReceive, PageOverview}
+	navs := []string{PageOverview, PageWallet, PageSend, PageTransactions, PageReceive, PageOverview}
 	toMax(gtx)
 	page.navTab.Separator = true
 	page.navTab.Layout(gtx, body)

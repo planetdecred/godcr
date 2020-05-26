@@ -9,6 +9,7 @@ import (
 	"gioui.org/f32"
 	"gioui.org/font"
 	"gioui.org/layout"
+	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -85,7 +86,7 @@ func NewTheme() *Theme {
 	return t
 }
 
-func (t *Theme) Modal(gtx *layout.Context, w layout.Widget) {
+func (t *Theme) Modal(gtx *layout.Context, title string, wd []func()) {
 	overlayColor := t.Color.Black
 	overlayColor.A = 200
 
@@ -94,17 +95,21 @@ func (t *Theme) Modal(gtx *layout.Context, w layout.Widget) {
 			fillMax(gtx, overlayColor)
 		}),
 		layout.Stacked(func() {
-			inset := layout.Inset{
-				Top: unit.Dp(50),
+			w := []func(){
+				func() {
+					t.H4(title).Layout(gtx)
+				},
+				func() {
+					t.Line().Layout(gtx)
+				},
 			}
-			inset.Layout(gtx, func() {
+			w = append(w, wd...)
+
+			layout.UniformInset(unit.Dp(60)).Layout(gtx, func() {
 				fillMax(gtx, t.Color.Surface)
-				inset := layout.Inset{
-					Top:   unit.Dp(7),
-					Left:  unit.Dp(25),
-					Right: unit.Dp(25),
-				}
-				inset.Layout(gtx, w)
+				(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(w), func(i int) {
+					layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
+				})
 			})
 		}),
 	)
@@ -130,6 +135,38 @@ func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 		}),
 		layout.Stacked(w),
 	)
+}
+
+func (t *Theme) alert(gtx *layout.Context, txt string, bgColor color.RGBA) {
+	layout.Stack{}.Layout(gtx,
+		layout.Expanded(func() {
+			rr := float32(gtx.Px(unit.Dp(2)))
+			clip.Rect{
+				Rect: f32.Rectangle{Max: f32.Point{
+					X: float32(gtx.Constraints.Width.Min),
+					Y: float32(gtx.Constraints.Height.Min),
+				}},
+				NE: rr, NW: rr, SE: rr, SW: rr,
+			}.Op(gtx.Ops).Add(gtx.Ops)
+			fill(gtx, bgColor)
+		}),
+		layout.Stacked(func() {
+			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+			layout.UniformInset(unit.Dp(8)).Layout(gtx, func() {
+				lbl := t.Body2(txt)
+				lbl.Color = t.Color.Surface
+				lbl.Layout(gtx)
+			})
+		}),
+	)
+}
+
+func (t *Theme) ErrorAlert(gtx *layout.Context, txt string) {
+	t.alert(gtx, txt, t.Color.Danger)
+}
+
+func (t *Theme) SuccessAlert(gtx *layout.Context, txt string) {
+	t.alert(gtx, txt, t.Color.Success)
 }
 
 func mustIcon(ic *Icon, err error) *Icon {
