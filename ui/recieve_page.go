@@ -122,9 +122,6 @@ func (p *receivePage) ReceivePageContents(common pageCommon) {
 							}),
 						)
 					},
-					func() {
-						// win.Err()
-					},
 				}
 				p.pageContainer.Layout(p.gtx, len(pageContent), func(i int) {
 					layout.Inset{Left: unit.Dp(3)}.Layout(p.gtx, pageContent[i])

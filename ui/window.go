@@ -73,7 +73,6 @@ func CreateWindow(wal *wallet.Wallet) (*Window, error) {
 	win.states.loading = true
 	win.tabs = decredmaterial.NewTabs()
 	win.tabs.Position = decredmaterial.Left
-	// win.tabs.Flex.Spacing = layout.SpaceBetween
 	win.current = PageOverview
 	win.dialog = func() {}
 	win.keyEvents = make(chan *key.Event)
@@ -120,7 +119,6 @@ func (win *Window) Loop(shutdown chan int) {
 				win.window.Invalidate()
 				break
 			}
-			//log.Debugf("Updating with %+v", e.Resp)
 			win.updateStates(e.Resp)
 
 		case update := <-win.wallet.Sync:

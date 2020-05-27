@@ -7,6 +7,7 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	// "gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -49,7 +50,7 @@ type walletPage struct {
 	editorW                         decredmaterial.Editor
 	passwordModal                   *decredmaterial.Password
 	isPasswordModalOpen             bool
-	errChannel                      chan error
+	errChann                        chan error
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -69,7 +70,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		deleteW:       common.theme.DangerButton("Confirm Delete Wallet"),
 		cancelDeleteW: common.theme.Button("Cancel Wallet Delete"),
 		passwordModal: common.theme.Password(),
-		errChannel:    common.errorChannels[PageWallet],
+		errChann:      common.errorChannels[PageWallet],
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.line.Height = 1
@@ -118,6 +119,9 @@ func (page *walletPage) Layout(common pageCommon) {
 		page.subRename(common)
 	case subWalletDelete:
 		page.subDelete(common)
+	}
+	if common.states.deleted {
+		page.subPage = subWalletMain
 	}
 }
 
@@ -222,7 +226,6 @@ func (page *walletPage) bottomRow(common pageCommon) {
 func (page *walletPage) subRename(common pageCommon) {
 	gtx := common.gtx
 	list := layout.List{Axis: layout.Vertical}
-	// page.update(common)
 	wdgs := []func(){
 		func() {
 			page.returnBtn(common)
@@ -343,6 +346,7 @@ func (page *walletPage) Handle(common pageCommon) {
 	if common.walletsTab.Changed() || common.navTab.Changed() { // reset everything
 		page.subPage = subWalletMain
 	}
+
 	// Subs
 	if page.icons.main.Clicked(gtx) {
 		page.errorLabel.Text = ""
@@ -401,8 +405,9 @@ func (page *walletPage) Handle(common pageCommon) {
 		page.errorLabel.Text = ""
 		page.isPasswordModalOpen = true
 	}
+
 	select {
-	case err := <-page.errChannel:
+	case err := <-page.errChann:
 		fmt.Printf("WALLET PAGE ERROR! %v", err)
 		if err.Error() == "invalid_passphrase" {
 			page.errorLabel.Text = "Wallet passphrase is incorrect."
@@ -438,7 +443,7 @@ func (page *walletPage) newRow(common *pageCommon, out decredmaterial.IconButton
 
 func (page *walletPage) confirm(password []byte) {
 	page.isPasswordModalOpen = false
-	page.errChannel = page.wallet.DeleteWallet(page.current.ID, password)
+	page.wallet.DeleteWallet(page.current.ID, password, page.errChann)
 }
 
 func (page *walletPage) cancel() {

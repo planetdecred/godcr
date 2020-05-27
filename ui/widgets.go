@@ -151,15 +151,6 @@ func (win *Window) initWidgets() {
 	win.outputs.info = win.outputs.icons.info
 	win.outputs.copy = win.outputs.icons.copy
 
-	//for i := 0; i <= 32; i++ {
-	//	e := theme.Editor(fmt.Sprintf("Input word %d...", i+1))
-	//	e.IsTitleLabel = false
-	//	win.outputs.seedEditors = append(win.outputs.seedEditors, e)
-	//	win.inputs.seedEditors.focusIndex = -1
-	//	win.inputs.seedEditors.editors = append(win.inputs.seedEditors.editors, widget.Editor{SingleLine: true, Submit: true})
-	//}
-	// win.outputs.sync = theme.Button("Reconnect")
-
 	win.outputs.addAcctDiag = win.outputs.icons.add
 	win.outputs.addAccount = theme.Button("add")
 	win.outputs.addAcctDiag.Size = unit.Dp(24)
