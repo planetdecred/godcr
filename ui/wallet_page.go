@@ -7,7 +7,6 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
-	// "gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -408,7 +407,6 @@ func (page *walletPage) Handle(common pageCommon) {
 
 	select {
 	case err := <-page.errChann:
-		fmt.Printf("WALLET PAGE ERROR! %v", err)
 		if err.Error() == "invalid_passphrase" {
 			page.errorLabel.Text = "Wallet passphrase is incorrect."
 		} else {
