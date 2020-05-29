@@ -57,10 +57,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		verifyAction:               mustIcon(decredmaterial.NewIcon(icons.ActionVerifiedUser)),
 		editorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
 		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
-		overviewIcon:  				decredIcons["overview"],
-		walletIcon:  				decredIcons["wallet"],
-		receiveIcon:  				decredIcons["receive"],
-		transactionIcon:  			decredIcons["transaction"],
+		overviewIcon:               decredIcons["overview"],
+		walletIcon:                 decredIcons["wallet"],
+		receiveIcon:                decredIcons["receive"],
+		transactionIcon:            decredIcons["transaction"],
+		sendIcon:                   decredIcons["send"],
 	}
 
 	tabs := decredmaterial.NewTabs()
