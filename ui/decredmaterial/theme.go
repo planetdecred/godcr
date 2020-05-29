@@ -13,6 +13,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
+	"gioui.org/widget"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -93,6 +94,7 @@ func (t *Theme) Modal(gtx *layout.Context, title string, wd []func()) {
 	layout.Stack{}.Layout(gtx,
 		layout.Expanded(func() {
 			fillMax(gtx, overlayColor)
+			new(widget.Button).Layout(gtx)
 		}),
 		layout.Stacked(func() {
 			w := []func(){
