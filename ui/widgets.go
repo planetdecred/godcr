@@ -12,14 +12,11 @@ import (
 )
 
 type inputs struct {
-	cancelDialog                                                         widget.Button
 	renameWallet                                                         widget.Button
 	addAccount, toggleWalletRename                                       widget.Button
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button
-	changePasswordDiag, signMessageDiag                                  widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
-	verifyMessDiag                                                       widget.Button
 	addAcctDiag, savePassword                                            widget.Button
 
 	receiveIcons struct {

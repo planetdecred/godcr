@@ -99,51 +99,6 @@ func (win *Window) HandleInputs() {
 		}
 	}
 
-	// VERIFY MESSAGE
-
-	if win.inputs.verifyMessDiag.Clicked(win.gtx) {
-		win.current = PageVerifyMessage
-		return
-	}
-
-	// CHANGE WALLET PASSWORD
-
-	for win.inputs.changePasswordDiag.Clicked(win.gtx) {
-		win.err = ""
-		win.dialog = win.editPasswordDiag
-		win.states.dialog = true
-	}
-
-	for win.inputs.savePassword.Clicked(win.gtx) {
-		op := win.inputs.oldSpendingPassword.Text()
-		if op == "" {
-			win.outputs.oldSpendingPassword.HintColor = win.theme.Color.Danger
-			win.err = "Old Wallet password required and cannot be empty"
-			return
-		}
-		np := win.validatePasswords()
-		if np == "" {
-			return
-		}
-
-		err := win.wallet.ChangeWalletPassphrase(win.walletInfo.Wallets[win.selected].ID, op, np)
-		if err != nil {
-			log.Debug("Error changing wallet password " + err.Error())
-			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-				win.err = "Passphrase is incorrect"
-			} else {
-				win.err = err.Error()
-			}
-			return
-		}
-
-		win.err = "Password changed successfully"
-		win.outputs.err.Color = win.theme.Color.Success
-		win.outputs.savePassword.Text = "Changed"
-		win.outputs.savePassword.Background = win.theme.Color.Success
-		win.resetPasswords()
-	}
-
 	// ADD ACCOUNT
 
 	if win.inputs.addAcctDiag.Clicked(win.gtx) {
@@ -183,17 +138,7 @@ func (win *Window) HandleInputs() {
 		return
 	}
 
-	if win.inputs.cancelDialog.Clicked(win.gtx) {
-		win.states.dialog = false
-		win.err = ""
-		win.resetButton()
-		win.resetPasswords()
-		log.Debug("Cancel dialog clicked")
-		return
-	}
-
 	// RECEIVE PAGE
-
 	if win.inputs.receiveIcons.more.Clicked(win.gtx) {
 		newAddr = !newAddr
 	}
