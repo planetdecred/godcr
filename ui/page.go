@@ -122,6 +122,7 @@ func (win *Window) addPages() {
 	win.pages[PageTransactionDetails] = win.TransactionPage(common)
 	win.pages[PageSignMessage] = win.SignMessagePage(common)
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
+	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
