@@ -94,17 +94,6 @@ func (pg *signMessagePage) Layout(common pageCommon) {
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	pg.errChannel = common.errorChannels[PageSignMessage]
 
-	if *pg.result != nil {
-		if (*pg.result).Err != nil {
-			pg.errorLabel.Text = (*pg.result).Err.Error()
-		} else {
-			pg.signedMessageLabel.Text = (*pg.result).Signature
-		}
-		*pg.result = nil
-		pg.isSigningMessage = false
-		pg.signButton.Text = "Sign"
-	}
-
 	w := []func(){
 		func() {
 			layout.W.Layout(gtx, func() {

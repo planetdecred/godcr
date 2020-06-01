@@ -47,7 +47,7 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	page.verifyBtn.TextSize, page.clearBtn.TextSize, page.clearBtn.TextSize = unit.Dp(13), unit.Dp(13), unit.Dp(13)
 	page.verifyBtn.Background = c.theme.Color.Hint
 	page.clearBtn.Background = color.RGBA{0, 0, 0, 0}
-	page.clearBtn.Color = win.theme.Color.Primary
+	page.clearBtn.Color = c.theme.Color.Primary
 	page.backButton.Color = c.theme.Color.Hint
 	page.backButton.Size = unit.Dp(32)
 
