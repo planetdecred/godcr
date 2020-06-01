@@ -27,11 +27,12 @@ var (
 )
 
 type walletPage struct {
-	subPage int
-	current wallet.InfoShort
-	wallet  *wallet.Wallet
-	result  **wallet.Signature
-	icons   struct {
+	walletInfo *wallet.MultiWalletInfo
+	subPage    int
+	current    wallet.InfoShort
+	wallet     *wallet.Wallet
+	result     **wallet.Signature
+	icons      struct {
 		main, delete, rename, sign, verify, addWallet, changePass,
 		addAcct widget.Button
 		mainW, deleteW, signW, verifyW, addWalletW, renameW,
@@ -52,6 +53,7 @@ type walletPage struct {
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	page := &walletPage{
+		walletInfo: win.walletInfo,
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -210,6 +212,13 @@ func (page *walletPage) topRow(common pageCommon) {
 
 func (page *walletPage) bottomRow(common pageCommon) {
 	gtx := common.gtx
+
+	if page.walletInfo.Synced || page.walletInfo.Syncing {
+		page.icons.addWalletW.Background = common.theme.Color.Hint
+	} else {
+		page.icons.addWalletW.Background = common.theme.Color.Primary
+	}
+
 	layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
 		layout.Flex{}.Layout(gtx,
 			layout.Rigid(page.newRow(&common, page.icons.addWalletW, &page.icons.addWallet, "Add wallet")),
@@ -358,7 +367,7 @@ func (page *walletPage) Handle(common pageCommon) {
 		return
 	}
 
-	if page.icons.addWallet.Clicked(gtx) {
+	if page.icons.addWallet.Clicked(gtx) && !(page.walletInfo.Synced || page.walletInfo.Syncing) {
 		*common.page = PageCreateRestore
 		return
 	}
