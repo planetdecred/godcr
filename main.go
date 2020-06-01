@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"os"
+	"strings"
 	"sync"
 
 	app "gioui.org/app"
@@ -48,6 +51,28 @@ func main() {
 		}
 	}
 
+	decredIcons := make(map[string]image.Image)
+	err = pkger.Walk("/ui/assets/decredicons", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			panic(err)
+		}
+		if info.IsDir() || !strings.HasSuffix(path, ".png") {
+			return nil
+		}
+
+		f, _ := pkger.Open(path)
+		img, _, err := image.Decode(f)
+		if err != nil {
+			return err
+		}
+		split := strings.Split(info.Name(), ".")
+		decredIcons[split[0]] = img
+		return nil
+	})
+	if err != nil {
+		log.Warn(err)
+	}
+
 	var confirms int32 = dcrlibwallet.DefaultRequiredConfirmations
 
 	if cfg.SpendUnconfirmed {
@@ -71,7 +96,7 @@ func main() {
 		wg.Done()
 	}()
 
-	win, err := ui.CreateWindow(wal)
+	win, err := ui.CreateWindow(wal, decredIcons)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
