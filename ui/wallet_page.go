@@ -368,6 +368,11 @@ func (page *walletPage) Handle(common pageCommon) {
 		return
 	}
 
+	if page.icons.changePass.Clicked(gtx) {
+		*common.page = PageWalletPassphrase
+		return
+	}
+
 	if page.icons.sign.Clicked(gtx) {
 		*common.page = PageSignMessage
 	}
@@ -375,10 +380,6 @@ func (page *walletPage) Handle(common pageCommon) {
 	if page.icons.verify.Clicked(gtx) {
 		*common.page = PageVerifyMessage
 		return
-	}
-
-	if page.walletPasshrase.Clicked(gtx) {
-		*common.page = PageWalletPassphrase
 	}
 
 	if page.rename.Clicked(gtx) {
