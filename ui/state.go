@@ -12,6 +12,7 @@ type states struct {
 	dialog         bool // true if the window dialog modal is open
 	renamingWallet bool // true if the wallets-page is renaming a wallet
 	creating       bool // true if a wallet is being created or restored
+	deleted        bool // true if a wallet is has being deleted
 }
 
 // updateStates changes the wallet state based on the received update
@@ -44,8 +45,11 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
-		win.selected = 0
+		win.current = PageWallet
 		win.states.dialog = false
+		win.states.deleted = true
+		win.reloadTabs()
+		win.window.Invalidate()
 	case wallet.AddedAccount:
 		win.states.dialog = false
 	case *wallet.Signature:
