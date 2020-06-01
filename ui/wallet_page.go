@@ -1,7 +1,5 @@
 package ui
 
-// add all the sub pages to the wallet page.
-//clean up the delete wallet sub page
 import (
 	"image/color"
 
@@ -49,6 +47,7 @@ type walletPage struct {
 	passwordModal                   *decredmaterial.Password
 	isPasswordModalOpen             bool
 	errChann                        chan error
+	iconPadding, iconSize           unit.Value
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -69,6 +68,8 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		cancelDeleteW: common.theme.Button("Cancel Wallet Delete"),
 		passwordModal: common.theme.Password(),
 		errChann:      common.errorChannels[PageWallet],
+		iconPadding:   unit.Dp(5),
+		iconSize:      unit.Dp(30),
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.line.Height = 1
