@@ -2,6 +2,7 @@ package ui
 
 import (
 	"image/color"
+	"time"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -49,6 +50,7 @@ type walletPage struct {
 	isPasswordModalOpen             bool
 	errChann                        chan error
 	iconPadding, iconSize           unit.Value
+	errorText                       string
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -72,6 +74,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		errChann:      common.errorChannels[PageWallet],
 		iconPadding:   unit.Dp(5),
 		iconSize:      unit.Dp(30),
+		errorText:     "",
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.line.Height = 1
@@ -155,6 +158,9 @@ func (page *walletPage) subMain(common pageCommon) {
 func (page *walletPage) topRow(common pageCommon) {
 	gtx := common.gtx
 	wdgs := []func(){
+		func() {
+			page.alert(common)
+		},
 		func() {
 			horFlex.Layout(gtx,
 				rigid(func() {
@@ -367,8 +373,17 @@ func (page *walletPage) Handle(common pageCommon) {
 		return
 	}
 
-	if page.icons.addWallet.Clicked(gtx) && !(page.walletInfo.Synced || page.walletInfo.Syncing) {
-		*common.page = PageCreateRestore
+	if page.icons.addWallet.Clicked(gtx) {
+		if !(page.walletInfo.Synced || page.walletInfo.Syncing) {
+			*common.page = PageCreateRestore
+			return
+		}
+		if page.errorText == "" {
+			page.errorText = "You have to stop sync to create a new wallet"
+			time.AfterFunc(time.Second*2, func() {
+				page.errorText = ""
+			})
+		}
 		return
 	}
 
@@ -460,4 +475,10 @@ func (page *walletPage) confirm(password []byte) {
 
 func (page *walletPage) cancel() {
 	page.isPasswordModalOpen = false
+}
+
+func (page *walletPage) alert(common pageCommon) {
+	if page.errorText != "" {
+		common.theme.ErrorAlert(common.gtx, page.errorText)
+	}
 }
