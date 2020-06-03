@@ -123,6 +123,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSignMessage] = win.SignMessagePage(common)
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
+	win.pages[PageWalletAccounts] = win.WalletAccountPage(common)
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
