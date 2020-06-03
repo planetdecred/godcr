@@ -27,22 +27,26 @@ type (
 		editors    []widget.Editor
 	}
 	seedSuggestions struct {
-		text   string
-		button widget.Button
+		button *widget.Button
+		skin   decredmaterial.Button
 	}
 )
 
 type createRestore struct {
-	gtx          *layout.Context
-	theme        *decredmaterial.Theme
-	info         *wallet.MultiWalletInfo
-	wal          *wallet.Wallet
-	keyEvent     chan *key.Event
-	errChan      chan error
-	showRestore  bool
-	restoring    bool
-	showPassword bool
-	seedPhrase   string
+	gtx             *layout.Context
+	theme           *decredmaterial.Theme
+	info            *wallet.MultiWalletInfo
+	wal             *wallet.Wallet
+	keyEvent        chan *key.Event
+	errChan         chan error
+	showRestore     bool
+	restoring       bool
+	showPassword    bool
+	seedPhrase      string
+	suggestionLimit int
+	suggestions     []string
+	allSuggestions  []string
+	seedClicked     bool
 
 	closeCreateRestore    decredmaterial.IconButton
 	hideRestoreWallet     decredmaterial.IconButton
@@ -58,7 +62,6 @@ type createRestore struct {
 	errLabel              decredmaterial.Label
 
 	seedEditorWidgets           seedEditors
-	seedSuggestionButtonWidgets []seedSuggestions
 	toCreateWalletWidget        *widget.Button
 	showPasswordModalWidget     *widget.Button
 	hidePasswordModalWidget     *widget.Button
@@ -69,8 +72,11 @@ type createRestore struct {
 	matchSpendingPasswordWidget *editor.Editor
 	addWalletWidget             *widget.Button
 
-	seedListLeft  *layout.List
-	seedListRight *layout.List
+	seedListLeft     *layout.List
+	seedListRight    *layout.List
+	autoCompleteList *layout.List
+
+	seedSuggestions []seedSuggestions
 }
 
 // Loading lays out the loading widget with a faded background
@@ -96,6 +102,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		spendingPassword:      common.theme.Editor("Enter password"),
 		matchSpendingPassword: common.theme.Editor("Enter password again"),
 		addWallet:             common.theme.Button("create wallet"),
+
+		suggestionLimit: 3,
 	}
 
 	pg.matchSpendingPasswordWidget.SingleLine = true
@@ -118,15 +126,28 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.errLabel.Color = pg.theme.Color.Danger
+
 	for i := 0; i <= 32; i++ {
 		pg.seedEditors = append(pg.seedEditors, common.theme.Editor(fmt.Sprintf("%d", i+1)))
-		pg.seedEditorWidgets.focusIndex = -1
 		pg.seedEditorWidgets.editors = append(pg.seedEditorWidgets.editors, widget.Editor{SingleLine: true, Submit: true})
+	}
+	pg.seedEditorWidgets.focusIndex = -1
+
+	// init suggestion buttons
+	for i := 0; i < pg.suggestionLimit; i++ {
+		pg.seedSuggestions = append(pg.seedSuggestions, seedSuggestions{
+			button: new(widget.Button),
+			skin:   win.theme.Button(""),
+		})
 	}
 
 	pg.seedListLeft, pg.seedListRight = &layout.List{Axis: layout.Vertical}, &layout.List{Axis: layout.Vertical}
 	pg.spendingPasswordWidget.Mask, pg.matchSpendingPasswordWidget.Mask = '*', '*'
 	pg.spendingPasswordWidget.SingleLine, pg.matchSpendingPasswordWidget.SingleLine = true, true
+
+	pg.autoCompleteList = &layout.List{Axis: layout.Horizontal}
+
+	pg.allSuggestions = dcrlibwallet.PGPWordList()
 
 	return func() {
 		pg.layout(common)
@@ -326,85 +347,91 @@ func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) {
 }
 
 func (pg *createRestore) autoComplete(index, startIndex int) {
-	if !pg.seedEditorWidgets.editors[index+startIndex].Focused() {
+	if index+startIndex != pg.seedEditorWidgets.focusIndex {
 		return
 	}
 
-	(&layout.List{Axis: layout.Horizontal}).Layout(pg.gtx, len(pg.seedSuggestionButtonWidgets), func(i int) {
+	pg.autoCompleteList.Layout(pg.gtx, len(pg.suggestions), func(i int) {
 		layout.Inset{Right: unit.Dp(4)}.Layout(pg.gtx, func() {
-			pg.seedSuggestionButtons[i].Layout(pg.gtx, &pg.seedSuggestionButtonWidgets[i].button)
+			pg.seedSuggestions[i].skin.Layout(pg.gtx, pg.seedSuggestions[i].button)
 		})
 	})
 }
 
-func (pg *createRestore) onSuggestionSeedsClicked() {
-	for i := 0; i < len(pg.seedSuggestionButtonWidgets); i++ {
-		btn := pg.seedSuggestionButtonWidgets[i]
-		if btn.button.Clicked(pg.gtx) {
-			for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
-				editor := &pg.seedEditorWidgets.editors[i]
-				if editor.Focused() {
-					editor.SetText(btn.text)
-					editor.Move(len(btn.text))
+func currentFocus(focusedList []int) int {
+	f := 0
+	for i, e := range focusedList {
+		if i == 0 || e > f {
+			f = e
+		}
+	}
+	return f
+}
 
-					if i < len(pg.seedEditorWidgets.editors)-1 {
-						pg.seedEditorWidgets.editors[i+1].Focus()
-					} else {
-						pg.seedEditorWidgets.focusIndex = -1
-					}
-				}
-			}
+func (pg *createRestore) onSuggestionSeedsClicked() {
+	index := pg.seedEditorWidgets.focusIndex
+	for _, b := range pg.seedSuggestions {
+		for b.button.Clicked(pg.gtx) {
+			pg.seedEditorWidgets.editors[index].SetText(b.skin.Text)
+			pg.seedEditorWidgets.editors[index].Move(len(b.skin.Text))
+			pg.seedClicked = true
 		}
 	}
 }
 
 func (pg *createRestore) editorSeedsEventsHandler() {
+	var focused []int
+
 	for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
 		editor := &pg.seedEditorWidgets.editors[i]
 
-		if editor.Focused() && pg.seedEditorWidgets.focusIndex != i {
-			pg.seedSuggestionButtonWidgets = nil
-			pg.seedSuggestionButtons = nil
-			pg.seedEditorWidgets.focusIndex = i
-			pg.initSeedSuggestionButtons(editor)
-			return
+		if editor.Focused() && editor.Text() == "" {
+			focused = append(focused, i)
 		}
 
 		for _, e := range editor.Events(pg.gtx) {
 			switch e.(type) {
 			case widget.ChangeEvent:
-				pg.seedSuggestionButtonWidgets = nil
-				pg.seedSuggestionButtons = nil
-				pg.initSeedSuggestionButtons(editor)
-
-			case widget.SubmitEvent:
-				if i < len(pg.seedEditorWidgets.editors)-1 {
-					pg.seedEditorWidgets.editors[i+1].Focus()
+				// hide suggestions if seed clicked
+				if pg.seedClicked {
+					pg.seedEditorWidgets.focusIndex = -1
+					pg.seedClicked = false
+				} else {
+					pg.seedEditorWidgets.focusIndex = i
 				}
+
+				pg.suggestions = pg.suggestionSeeds(editor.Text())
+				for k, s := range pg.suggestions {
+					pg.seedSuggestions[k].skin.Text = s
+				}
+			case widget.SubmitEvent:
 			}
+		}
+	}
+
+	if focused != nil {
+		if len(focused) > 1 && pg.seedEditorWidgets.focusIndex != currentFocus(focused) {
+			pg.seedEditorWidgets.focusIndex = -1
+		} else if len(focused) == 1 && pg.seedEditorWidgets.focusIndex != focused[0] {
+			pg.seedEditorWidgets.focusIndex = -1
 		}
 	}
 }
 
-func (pg *createRestore) initSeedSuggestionButtons(editor *widget.Editor) {
-	if strings.Trim(editor.Text(), " ") == "" {
-		return
+func (pg createRestore) suggestionSeeds(text string) []string {
+	var seeds []string
+	if text == "" {
+		return seeds
 	}
 
-	for _, word := range dcrlibwallet.PGPWordList() {
-		if strings.HasPrefix(strings.ToLower(word), strings.ToLower(editor.Text())) {
-			if len(pg.seedSuggestionButtonWidgets) < 2 {
-				var btn struct {
-					text   string
-					button widget.Button
-				}
-
-				btn.text = word
-				pg.seedSuggestionButtonWidgets = append(pg.seedSuggestionButtonWidgets, btn)
-				pg.seedSuggestionButtons = append(pg.seedSuggestionButtons, pg.theme.Button(word))
+	for _, word := range pg.allSuggestions {
+		if strings.HasPrefix(strings.ToLower(word), strings.ToLower(text)) {
+			if len(seeds) < pg.suggestionLimit {
+				seeds = append(seeds, word)
 			}
 		}
 	}
+	return seeds
 }
 
 func (pg *createRestore) validatePassword() string {
@@ -536,12 +563,11 @@ func (pg *createRestore) handle(common pageCommon) {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab {
-			for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
-				editor := &pg.seedEditorWidgets.editors[i]
-				if editor.Focused() && pg.seedSuggestionButtonWidgets != nil {
-					editor.SetText(pg.seedSuggestionButtonWidgets[0].text)
-					editor.Move(len(pg.seedSuggestionButtonWidgets[0].text))
-				}
+			if len(pg.suggestions) == 1 {
+				focus := pg.seedEditorWidgets.focusIndex
+				pg.seedEditorWidgets.editors[focus].SetText(pg.suggestions[0])
+				pg.seedClicked = true
+				pg.seedEditorWidgets.editors[focus].Move(len(pg.suggestions[0]))
 			}
 		}
 	case err := <-pg.errChan:
