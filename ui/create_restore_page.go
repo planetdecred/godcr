@@ -55,7 +55,6 @@ type createRestore struct {
 	hidePasswordModal     decredmaterial.Button
 	showRestoreWallet     decredmaterial.Button
 	seedEditors           []decredmaterial.Editor
-	seedSuggestionButtons []decredmaterial.Button
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
 	addWallet             decredmaterial.Button
