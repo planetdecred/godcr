@@ -379,14 +379,8 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 }
 
 func (pg *createRestore) editorSeedsEventsHandler() {
-	var focused []int
-
 	for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
 		editor := &pg.seedEditorWidgets.editors[i]
-
-		if editor.Focused() && editor.Text() == "" {
-			focused = append(focused, i)
-		}
 
 		for _, e := range editor.Events(pg.gtx) {
 			switch e.(type) {
@@ -405,14 +399,6 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 				}
 			case widget.SubmitEvent:
 			}
-		}
-	}
-
-	if focused != nil {
-		if len(focused) > 1 && pg.seedEditorWidgets.focusIndex != currentFocus(focused) {
-			pg.seedEditorWidgets.focusIndex = -1
-		} else if len(focused) == 1 && pg.seedEditorWidgets.focusIndex != focused[0] {
-			pg.seedEditorWidgets.focusIndex = -1
 		}
 	}
 }
