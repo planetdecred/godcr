@@ -47,6 +47,9 @@ type createRestore struct {
 	suggestions     []string
 	allSuggestions  []string
 	seedClicked     bool
+	lastOffsetRight int
+	lastOffsetLeft  int
+	focused         []int
 
 	closeCreateRestore    decredmaterial.IconButton
 	hideRestoreWallet     decredmaterial.IconButton
@@ -147,6 +150,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.autoCompleteList = &layout.List{Axis: layout.Horizontal}
 
 	pg.allSuggestions = dcrlibwallet.PGPWordList()
+	pg.lastOffsetRight = pg.seedListRight.Position.Offset
+	pg.lastOffsetLeft = pg.seedListLeft.Position.Offset
 
 	return func() {
 		pg.layout(common)
@@ -378,13 +383,68 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 	}
 }
 
+// scrollUp scrolls up the editor list to display seed suggestions if focused editor is the last
+func (pg *createRestore) scrollUp() {
+	if !pg.seedListLeft.Position.BeforeEnd {
+		pg.seedListLeft.Position.Offset += 100
+		pg.lastOffsetLeft += 100
+	}
+
+	if !pg.seedListRight.Position.BeforeEnd {
+		pg.seedListRight.Position.Offset += 100
+		pg.lastOffsetRight += 100
+	}
+}
+
+func (pg *createRestore) hideSuggestionsOnScroll() {
+	leftOffset := pg.seedListLeft.Position.Offset
+	rightOffset := pg.seedListRight.Position.Offset
+	if leftOffset > pg.lastOffsetLeft || leftOffset < pg.lastOffsetLeft {
+		if pg.seedListLeft.Position.BeforeEnd {
+			pg.seedEditorWidgets.focusIndex = -1
+			pg.lastOffsetLeft = leftOffset
+		}
+	}
+	if rightOffset > pg.lastOffsetRight || rightOffset < pg.lastOffsetRight {
+		if pg.seedListRight.Position.BeforeEnd {
+			pg.seedEditorWidgets.focusIndex = -1
+			pg.lastOffsetRight = rightOffset
+		}
+	}
+}
+
+func diff(a, b []int) []int {
+	temp := map[int]int{}
+	for _, s := range a {
+		temp[s]++
+	}
+	for _, s := range b {
+		temp[s]--
+	}
+
+	var f []int
+	for s, v := range temp {
+		if v != 0 {
+			f = append(f, s)
+		}
+	}
+	return f
+}
+
 func (pg *createRestore) editorSeedsEventsHandler() {
+	var focused []int
+
 	for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
 		editor := &pg.seedEditorWidgets.editors[i]
+
+		if editor.Focused() {
+			focused = append(focused, i)
+		}
 
 		for _, e := range editor.Events(pg.gtx) {
 			switch e.(type) {
 			case widget.ChangeEvent:
+				pg.scrollUp()
 				// hide suggestions if seed clicked
 				if pg.seedClicked {
 					pg.seedEditorWidgets.focusIndex = -1
@@ -397,10 +457,15 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 				for k, s := range pg.suggestions {
 					pg.seedSuggestions[k].skin.Text = s
 				}
-			case widget.SubmitEvent:
 			}
 		}
 	}
+
+	if len(diff(pg.focused, focused)) > 0 {
+		pg.seedEditorWidgets.focusIndex = -1
+	}
+	pg.focused = focused
+	pg.hideSuggestionsOnScroll()
 }
 
 func (pg createRestore) suggestionSeeds(text string) []string {
