@@ -14,6 +14,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/atotto/clipboard"
+	"github.com/raedahgroup/godcr/ui/decredmaterial/editor"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -87,6 +88,42 @@ func (t *Theme) Editor(hint string) Editor {
 		pasteBtnWidget: new(widget.Button),
 		clearBtnWidget: new(widget.Button),
 	}
+}
+
+func (e Editor) LayoutPasswordEditor(gtx *layout.Context, editor *editor.Editor) {
+	layout.UniformInset(unit.Dp(2)).Layout(gtx, func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func() {
+				var stack op.StackOp
+				stack.Push(gtx.Ops)
+				var macro op.MacroOp
+				macro.Record(gtx.Ops)
+				paint.ColorOp{Color: e.HintColor}.Add(gtx.Ops)
+				tl := widget.Label{Alignment: editor.Alignment}
+				tl.Layout(gtx, e.shaper, e.Font, e.TextSize, e.Hint)
+				macro.Stop()
+				if w := gtx.Dimensions.Size.X; gtx.Constraints.Width.Min < w {
+					gtx.Constraints.Width.Min = w
+				}
+				if h := gtx.Dimensions.Size.Y; gtx.Constraints.Height.Min < h {
+					gtx.Constraints.Height.Min = h
+				}
+				editor.Layout(gtx, e.shaper, e.Font, e.TextSize)
+				if editor.Len() > 0 {
+					paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
+					editor.PaintText(gtx)
+				} else {
+					macro.Add()
+				}
+				paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
+				editor.PaintCaret(gtx)
+				stack.Pop()
+			}),
+			layout.Rigid(func() {
+				e.editorLine(gtx)
+			}),
+		)
+	})
 }
 
 func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
