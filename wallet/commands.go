@@ -341,6 +341,14 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			}
 			i++
 		}
+
+		// sort infos by wallet ids
+		if len(infos) > 0 {
+			sort.SliceStable(infos, func(i, j int) bool {
+				return infos[i].ID < infos[j].ID
+			})
+		}
+
 		best := wal.multi.GetBestBlock()
 
 		if best == nil {
