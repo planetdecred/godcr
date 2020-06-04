@@ -79,12 +79,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			Icon:  icons.sendIcon,
 		},
 		{
-			Label: win.theme.Body1("Transactions"),
-			Icon:  icons.transactionIcon,
-		},
-		{
 			Label: win.theme.Body1("Receive"),
 			Icon:  icons.receiveIcon,
+		},
+		{
+			Label: win.theme.Body1("Transactions"),
+			Icon:  icons.transactionIcon,
 		},
 	})
 
