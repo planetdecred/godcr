@@ -4,13 +4,15 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
+	"github.com/raedahgroup/godcr/ui/decredmaterial/editor"
 )
 
 type Password struct {
 	theme *Theme
 
 	passwordEditorMaterial Editor
-	passwordEditorWidget   *widget.Editor
+	passwordEditorWidget   *editor.Editor
 
 	confirmButtonMaterial Button
 	confirmButtonWidget   *widget.Button
@@ -29,13 +31,17 @@ func (t *Theme) Password() *Password {
 		theme: t,
 
 		passwordEditorMaterial: t.Editor("Password"),
-		passwordEditorWidget:   new(widget.Editor),
 
 		cancelButtonMaterial:  cancelButtonMaterial,
 		confirmButtonMaterial: t.Button("Confirm"),
 
 		cancelButtonWidget:  new(widget.Button),
 		confirmButtonWidget: new(widget.Button),
+	}
+
+	p.passwordEditorWidget = &editor.Editor{
+		SingleLine: true,
+		Mask:       '*',
 	}
 
 	return p
@@ -54,7 +60,7 @@ func (p *Password) Layout(gtx *layout.Context, confirm func([]byte), cancel func
 
 	widgets := []func(){
 		func() {
-			p.passwordEditorMaterial.Layout(gtx, p.passwordEditorWidget)
+			p.passwordEditorMaterial.LayoutPasswordEditor(gtx, p.passwordEditorWidget)
 		},
 		func() {
 			inset := layout.Inset{
