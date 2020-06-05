@@ -8,6 +8,7 @@ import (
 	"gioui.org/io/key"
 
 	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/raedahgroup/godcr/ui/decredmaterial/editor"
 	"github.com/raedahgroup/godcr/wallet"
 
 	"gioui.org/layout"
@@ -64,8 +65,8 @@ type createRestore struct {
 	backCreateRestoreWidget     *widget.Button
 	showRestoreWidget           *widget.Button
 	hideRestoreWidget           *widget.Button
-	spendingPasswordWidget      *widget.Editor
-	matchSpendingPasswordWidget *widget.Editor
+	spendingPasswordWidget      *editor.Editor
+	matchSpendingPasswordWidget *editor.Editor
 	addWalletWidget             *widget.Button
 
 	seedListLeft  *layout.List
@@ -87,8 +88,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		hideRestoreWidget:           new(widget.Button),
 		showPasswordModalWidget:     new(widget.Button),
 		hidePasswordModalWidget:     new(widget.Button),
-		spendingPasswordWidget:      new(widget.Editor),
-		matchSpendingPasswordWidget: new(widget.Editor),
+		spendingPasswordWidget:      new(editor.Editor),
+		matchSpendingPasswordWidget: new(editor.Editor),
 		addWalletWidget:             new(widget.Button),
 
 		errLabel:              common.theme.Body1(""),
@@ -124,6 +125,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	}
 
 	pg.seedListLeft, pg.seedListRight = &layout.List{Axis: layout.Vertical}, &layout.List{Axis: layout.Vertical}
+	pg.spendingPasswordWidget.Mask, pg.matchSpendingPasswordWidget.Mask = '*', '*'
+	pg.spendingPasswordWidget.SingleLine, pg.matchSpendingPasswordWidget.SingleLine = true, true
 
 	return func() {
 		pg.layout(common)
@@ -160,10 +163,10 @@ func (pg *createRestore) layout(common pageCommon) {
 
 			w := []func(){
 				func() {
-					pg.spendingPassword.Layout(pg.gtx, pg.spendingPasswordWidget)
+					pg.spendingPassword.LayoutPasswordEditor(pg.gtx, pg.spendingPasswordWidget)
 				},
 				func() {
-					pg.matchSpendingPassword.Layout(pg.gtx, pg.matchSpendingPasswordWidget)
+					pg.matchSpendingPassword.LayoutPasswordEditor(pg.gtx, pg.matchSpendingPasswordWidget)
 				},
 				func() {
 					pg.errLabel.Layout(pg.gtx)
