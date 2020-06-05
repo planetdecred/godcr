@@ -117,19 +117,26 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan
 			return
 		}
 
-		if _, err := wallets[walletID].GetAccount(accountID, wal.confirms); err != nil {
-			errChan <- err
-			return
+		for _, wallet := range wallets {
+			if wallet.ID == walletID {
+				if _, err := wallet.GetAccount(accountID, wal.confirms); err != nil {
+					errChan <- err
+					return
+				}
+
+				txAuthor := wallet.NewUnsignedTx(accountID, wal.confirms)
+				if txAuthor == nil {
+					errChan <- err
+					return
+				}
+
+				resp.Resp = txAuthor
+				wal.Send <- resp
+				return
+			}
 		}
 
-		txAuthor := wallets[walletID].NewUnsignedTx(accountID, wal.confirms)
-		if txAuthor == nil {
-			errChan <- err
-			return
-		}
-
-		resp.Resp = txAuthor
-		wal.Send <- resp
+		errChan <- fmt.Errorf("unknown wallet with ID: %d", walletID)
 	}()
 }
 
@@ -340,13 +347,6 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 			}
 			i++
-		}
-
-		// sort infos by wallet ids
-		if len(infos) > 0 {
-			sort.SliceStable(infos, func(i, j int) bool {
-				return infos[i].ID < infos[j].ID
-			})
 		}
 
 		best := wal.multi.GetBestBlock()
