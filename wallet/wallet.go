@@ -113,7 +113,7 @@ func (wal *Wallet) wallets() ([]dcrlibwallet.Wallet, error) {
 	}
 
 	// sort wallet by ids
-	if wallets != nil && len(wallets) > 0 {
+	if len(wallets) > 0 {
 		sort.SliceStable(wallets, func(i, j int) bool {
 			return wallets[i].ID < wallets[j].ID
 		})
