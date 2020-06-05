@@ -379,6 +379,9 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 			pg.seedEditorWidgets.editors[index].SetText(b.skin.Text)
 			pg.seedEditorWidgets.editors[index].Move(len(b.skin.Text))
 			pg.seedClicked = true
+			if index != 32 {
+				pg.seedEditorWidgets.editors[index+1].Focus()
+			}
 		}
 	}
 }
@@ -456,6 +459,10 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 				pg.suggestions = pg.suggestionSeeds(editor.Text())
 				for k, s := range pg.suggestions {
 					pg.seedSuggestions[k].skin.Text = s
+				}
+			case widget.SubmitEvent:
+				if i != 32 {
+					pg.seedEditorWidgets.editors[i+1].Focus()
 				}
 			}
 		}
@@ -600,6 +607,7 @@ func (pg *createRestore) handle(common pageCommon) {
 
 		if pg.showRestore {
 			pg.wal.RestoreWallet(pg.seedPhrase, pass, pg.errChan)
+			pg.resetSeeds()
 		} else {
 			pg.wal.CreateWallet(pass, pg.errChan)
 		}
