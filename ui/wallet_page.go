@@ -121,6 +121,7 @@ func (page *walletPage) Layout(common pageCommon) {
 	}
 	if common.states.deleted {
 		page.subPage = subWalletMain
+		common.states.deleted = false
 	}
 }
 
@@ -333,9 +334,7 @@ func (page *walletPage) subDelete(common pageCommon) {
 		})
 	})
 	if page.isPasswordModalOpen {
-		common.Layout(gtx, func() {
-			page.passwordModal.Layout(gtx, page.confirm, page.cancel)
-		})
+		page.passwordModal.Layout(gtx, page.confirm, page.cancel)
 	}
 }
 
