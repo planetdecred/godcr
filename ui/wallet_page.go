@@ -2,6 +2,7 @@ package ui
 
 import (
 	"image/color"
+	"time"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -27,11 +28,12 @@ var (
 )
 
 type walletPage struct {
-	subPage int
-	current wallet.InfoShort
-	wallet  *wallet.Wallet
-	result  **wallet.Signature
-	icons   struct {
+	walletInfo *wallet.MultiWalletInfo
+	subPage    int
+	current    wallet.InfoShort
+	wallet     *wallet.Wallet
+	result     **wallet.Signature
+	icons      struct {
 		main, delete, rename, sign, verify, addWallet, changePass,
 		addAcct widget.Button
 		mainW, deleteW, signW, verifyW, addWalletW, renameW,
@@ -48,10 +50,12 @@ type walletPage struct {
 	isPasswordModalOpen             bool
 	errChann                        chan error
 	iconPadding, iconSize           unit.Value
+	errorText                       string
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	page := &walletPage{
+		walletInfo: win.walletInfo,
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -70,6 +74,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		errChann:      common.errorChannels[PageWallet],
 		iconPadding:   unit.Dp(5),
 		iconSize:      unit.Dp(30),
+		errorText:     "",
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.line.Height = 1
@@ -155,6 +160,9 @@ func (page *walletPage) topRow(common pageCommon) {
 	gtx := common.gtx
 	wdgs := []func(){
 		func() {
+			page.alert(common)
+		},
+		func() {
 			horFlex.Layout(gtx,
 				rigid(func() {
 					common.theme.H5(page.current.Name).Layout(common.gtx)
@@ -211,6 +219,13 @@ func (page *walletPage) topRow(common pageCommon) {
 
 func (page *walletPage) bottomRow(common pageCommon) {
 	gtx := common.gtx
+
+	if page.walletInfo.Synced || page.walletInfo.Syncing {
+		page.icons.addWalletW.Background = common.theme.Color.Hint
+	} else {
+		page.icons.addWalletW.Background = common.theme.Color.Primary
+	}
+
 	layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
 		layout.Flex{}.Layout(gtx,
 			layout.Rigid(page.newRow(&common, page.icons.addWalletW, &page.icons.addWallet, "Add wallet")),
@@ -358,7 +373,16 @@ func (page *walletPage) Handle(common pageCommon) {
 	}
 
 	if page.icons.addWallet.Clicked(gtx) {
-		*common.page = PageCreateRestore
+		if !(page.walletInfo.Synced || page.walletInfo.Syncing) {
+			*common.page = PageCreateRestore
+			return
+		}
+		if page.errorText == "" {
+			page.errorText = "You have to stop sync to create a new wallet"
+			time.AfterFunc(time.Second*2, func() {
+				page.errorText = ""
+			})
+		}
 		return
 	}
 
@@ -450,4 +474,10 @@ func (page *walletPage) confirm(password []byte) {
 
 func (page *walletPage) cancel() {
 	page.isPasswordModalOpen = false
+}
+
+func (page *walletPage) alert(common pageCommon) {
+	if page.errorText != "" {
+		common.theme.ErrorAlert(common.gtx, page.errorText)
+	}
 }
