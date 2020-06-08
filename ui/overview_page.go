@@ -56,6 +56,7 @@ type walletSyncDetails struct {
 type transactionWidgets struct {
 	wallet      decredmaterial.Label
 	balance     string
+	direction   *decredmaterial.Icon
 	mainBalance decredmaterial.Label
 	subBalance  decredmaterial.Label
 	date        decredmaterial.Label
@@ -180,7 +181,7 @@ func (page *overviewPage) Layout(c pageCommon) {
 			})
 		},
 		func() {
-			page.recentTransactionsColumn()
+			page.recentTransactionsColumn(c)
 		},
 		func() {
 			layout.Inset{Bottom: page.containerPadding}.Layout(gtx, func() {
@@ -207,7 +208,7 @@ func (page *overviewPage) syncDetail(name, status, headersFetched, progress stri
 }
 
 // recentTransactionsColumn lays out the list of recent transactions.
-func (page *overviewPage) recentTransactionsColumn() {
+func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 	theme := page.theme
 	gtx := page.gtx
 	var transactionRows []func()
@@ -223,6 +224,14 @@ func (page *overviewPage) recentTransactionsColumn() {
 					dcrlibwallet.ExtractDateOrTime(txn.Txn.Timestamp))),
 				status: theme.Body1(txn.Status),
 			}
+			if txn.Txn.Direction == dcrlibwallet.TxDirectionSent {
+				txnWidgets.direction = c.icons.contentRemove
+				txnWidgets.direction.Color = c.theme.Color.Danger
+			} else {
+				txnWidgets.direction = c.icons.contentAdd
+				txnWidgets.direction.Color = c.theme.Color.Success
+			}
+
 			click := page.toTransactionDetails[txn.Txn.Hash]
 
 			transactionRows = append(transactionRows, func() {
@@ -280,6 +289,11 @@ func (page *overviewPage) recentTransactionRow(txn transactionWidgets) {
 	gtx := page.gtx
 	margin := layout.UniformInset(page.transactionsRowMargin)
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(func() {
+			layout.Inset{Top: unit.Dp(12), Right: unit.Dp(25)}.Layout(gtx, func() {
+				txn.direction.Layout(gtx, unit.Dp(16))
+			})
+		}),
 		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
 				page.layoutBalance(txn.balance, txn.mainBalance, txn.subBalance)
