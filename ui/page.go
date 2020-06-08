@@ -167,6 +167,9 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 			*page.selectedAccount = 0
 			page.accountsTab.Selected = 0
 		}
+		if *page.selectedWallet == 0 {
+			page.walletsTab.Selected = *page.selectedWallet
+		}
 		page.walletsTab.Separator = false
 		page.walletsTab.Layout(gtx, body)
 	}

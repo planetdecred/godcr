@@ -45,10 +45,10 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
+		win.selected = 0
 		win.current = PageWallet
 		win.states.dialog = false
 		win.states.deleted = true
-		win.reloadTabs()
 		win.window.Invalidate()
 	case wallet.AddedAccount:
 		win.states.dialog = false
