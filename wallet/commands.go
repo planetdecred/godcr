@@ -101,6 +101,7 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 				Resp: AddedAccount{},
 				Err:  ErrIDNotExist,
 			}
+			return
 		}
 
 		id, err := wall.NextAccount(name, pass)
