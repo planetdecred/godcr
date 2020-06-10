@@ -144,7 +144,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 func (pg *SendPage) Handle(common pageCommon) {
 	pg.validate(true)
 	pg.watchForBroadcastResult()
-	pg.walletBalance(pg.selectedWallet.SpendableBalance)
+	pg.balanceAfterSend(pg.selectedWallet.SpendableBalance)
 	if pg.walletsTab.Changed() {
 		pg.selectedWallet = pg.wallets[pg.walletsTab.Selected]
 		pg.selectedAccount = pg.selectedWallet.Accounts[0]
@@ -556,7 +556,7 @@ func (pg *SendPage) calculateValues() {
 	pg.totalCostValueLabel.Text = "0 DCR"
 	pg.calculateErrorText = ""
 
-	pg.walletBalance(pg.selectedWallet.SpendableBalance)
+	pg.balanceAfterSend(pg.selectedWallet.SpendableBalance)
 	if pg.txAuthor == nil || !pg.validate(true) {
 		return
 	}
@@ -586,10 +586,10 @@ func (pg *SendPage) calculateValues() {
 	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
 	pg.transactionFeeValueLabel.Text = dcrutil.Amount(txFee).String()
 	pg.totalCostValueLabel.Text = dcrutil.Amount(totalCost).String()
-	pg.walletBalance(pg.remainingBalance)
+	pg.balanceAfterSend(pg.remainingBalance)
 }
 
-func (pg *SendPage) walletBalance(balance int64) {
+func (pg *SendPage) balanceAfterSend(balance int64) {
 	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(balance).String()
 }
 
