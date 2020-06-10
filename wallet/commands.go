@@ -297,7 +297,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		i := 0
-		for id, wall := range wallets {
+		for _, wall := range wallets {
 			iter, err := wall.AccountsIterator(wal.confirms)
 			if err != nil {
 				resp.Err = err
@@ -312,7 +312,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					var er error
 					addr, er = wall.CurrentAddress(acct.Number)
 					if er != nil {
-						log.Error("Could not get current address for wallet ", id, "account", acct.Number)
+						log.Error("Could not get current address for wallet ", wall.ID, "account", acct.Number)
 					}
 				}
 				accts = append(accts, Account{
