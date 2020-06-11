@@ -56,7 +56,7 @@ type createRestore struct {
 	hideRestoreWallet  decredmaterial.IconButton
 	create             decredmaterial.Button
 	showPasswordModal  decredmaterial.Button
-	hideModal          decredmaterial.Button
+	hidePasswordModal  decredmaterial.Button
 	showRestoreWallet  decredmaterial.Button
 	showReset          decredmaterial.Button
 	hideResetModal     decredmaterial.Button
@@ -70,7 +70,7 @@ type createRestore struct {
 	seedEditorWidgets           seedEditors
 	toCreateWalletWidget        *widget.Button
 	showPasswordModalWidget     *widget.Button
-	hideModalWidget             *widget.Button
+	hidePasswordModalWidget     *widget.Button
 	backCreateRestoreWidget     *widget.Button
 	showRestoreWidget           *widget.Button
 	hideRestoreWidget           *widget.Button
@@ -101,7 +101,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		showRestoreWidget:           new(widget.Button),
 		hideRestoreWidget:           new(widget.Button),
 		showPasswordModalWidget:     new(widget.Button),
-		hideModalWidget:             new(widget.Button),
+		hidePasswordModalWidget:     new(widget.Button),
 		spendingPasswordWidget:      new(editor.Editor),
 		matchSpendingPasswordWidget: new(editor.Editor),
 		addWalletWidget:             new(widget.Button),
@@ -131,9 +131,9 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.hideRestoreWallet.Background = color.RGBA{}
 	pg.hideRestoreWallet.Color = common.theme.Color.Hint
 
-	pg.hideModal = common.theme.Button("cancel")
-	pg.hideModal.Color = common.theme.Color.Danger
-	pg.hideModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
+	pg.hidePasswordModal = common.theme.Button("cancel")
+	pg.hidePasswordModal.Color = common.theme.Color.Danger
+	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.showReset = common.theme.Button("reset")
 	pg.showReset.Color = common.theme.Color.Hint
@@ -222,8 +222,8 @@ func (pg *createRestore) layout(common pageCommon) {
 						}),
 						layout.Rigid(func() {
 							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
-								pg.hideModal.Color = common.theme.Color.Primary
-								pg.hideModal.Layout(pg.gtx, pg.hideModalWidget)
+								pg.hidePasswordModal.Color = common.theme.Color.Primary
+								pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
 							})
 						}),
 					)
@@ -632,7 +632,7 @@ func (pg *createRestore) handle(common pageCommon) {
 		pg.showPassword = true
 	}
 
-	for pg.hideModalWidget.Clicked(gtx) {
+	for pg.hidePasswordModalWidget.Clicked(gtx) {
 		pg.showPassword = false
 		pg.showWarning = false
 		pg.errLabel.Text = ""
