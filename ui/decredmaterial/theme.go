@@ -103,7 +103,6 @@ func (t *Theme) Modal(gtx *layout.Context, title string, wd []func()) {
 				},
 				func() {
 					line := t.Line()
-					// line.Color = t.Color.Text
 					line.Width = gtx.Constraints.Width.Max
 					line.Layout(gtx)
 				},
