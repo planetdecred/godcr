@@ -102,14 +102,17 @@ func (t *Theme) Modal(gtx *layout.Context, title string, wd []func()) {
 					t.H4(title).Layout(gtx)
 				},
 				func() {
-					t.Line().Layout(gtx)
+					line := t.Line()
+					// line.Color = t.Color.Text
+					line.Width = gtx.Constraints.Width.Max
+					line.Layout(gtx)
 				},
 			}
 			w = append(w, wd...)
 
 			layout.UniformInset(unit.Dp(60)).Layout(gtx, func() {
 				fillMax(gtx, t.Color.Surface)
-				(&layout.List{Axis: layout.Vertical}).Layout(gtx, len(w), func(i int) {
+				(&layout.List{Axis: layout.Vertical, Alignment: layout.Middle}).Layout(gtx, len(w), func(i int) {
 					layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
 				})
 			})
