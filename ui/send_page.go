@@ -152,6 +152,10 @@ func (pg *SendPage) Handle(common pageCommon) {
 
 		pg.setAccountTabs()
 		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
+
+		pg.sendAmountEditor.SetText("")
+		pg.calculateErrorText = ""
+		pg.sendErrorText = ""
 	}
 
 	if pg.accountsTab.Changed() {
