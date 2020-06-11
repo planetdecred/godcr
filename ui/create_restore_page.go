@@ -42,6 +42,7 @@ type createRestore struct {
 	showRestore     bool
 	restoring       bool
 	showPassword    bool
+	showWarning     bool
 	seedPhrase      string
 	suggestionLimit int
 	suggestions     []string
@@ -51,12 +52,16 @@ type createRestore struct {
 	lastOffsetLeft  int
 	focused         []int
 
-	closeCreateRestore    decredmaterial.IconButton
-	hideRestoreWallet     decredmaterial.IconButton
-	create                decredmaterial.Button
-	showPasswordModal     decredmaterial.Button
-	hidePasswordModal     decredmaterial.Button
-	showRestoreWallet     decredmaterial.Button
+	closeCreateRestore decredmaterial.IconButton
+	hideRestoreWallet  decredmaterial.IconButton
+	create             decredmaterial.Button
+	showPasswordModal  decredmaterial.Button
+	hidePasswordModal  decredmaterial.Button
+	showRestoreWallet  decredmaterial.Button
+	showresetModal     decredmaterial.Button
+	resetSeedFields    decredmaterial.Button
+	hideResetModal     decredmaterial.Button
+
 	seedEditors           []decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
@@ -73,6 +78,9 @@ type createRestore struct {
 	spendingPasswordWidget      *editor.Editor
 	matchSpendingPasswordWidget *editor.Editor
 	addWalletWidget             *widget.Button
+	showResetModalWidget        *widget.Button
+	hideResetModalWidget        *widget.Button
+	resetSeedFieldsWidget       *widget.Button
 
 	seedListLeft     *layout.List
 	seedListRight    *layout.List
@@ -99,13 +107,16 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		spendingPasswordWidget:      new(editor.Editor),
 		matchSpendingPasswordWidget: new(editor.Editor),
 		addWalletWidget:             new(widget.Button),
+		showResetModalWidget:        new(widget.Button),
+		hideResetModalWidget:        new(widget.Button),
+		resetSeedFieldsWidget:       new(widget.Button),
 
 		errLabel:              common.theme.Body1(""),
 		spendingPassword:      common.theme.Editor("Enter password"),
 		matchSpendingPassword: common.theme.Editor("Enter password again"),
 		addWallet:             common.theme.Button("create wallet"),
-
-		suggestionLimit: 3,
+		hideResetModal:        common.theme.Button("cancel"),
+		suggestionLimit:       3,
 	}
 
 	pg.matchSpendingPasswordWidget.SingleLine = true
@@ -126,6 +137,14 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.hidePasswordModal = common.theme.Button("cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
 	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
+
+	pg.showresetModal = common.theme.Button("reset")
+	pg.showresetModal.Color = common.theme.Color.Hint
+	pg.showresetModal.Background = color.RGBA{}
+
+	pg.resetSeedFields = common.theme.Button("yes, reset")
+	pg.resetSeedFields.Color = common.theme.Color.Danger
+	pg.resetSeedFields.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.errLabel.Color = pg.theme.Color.Danger
 
@@ -210,12 +229,47 @@ func (pg *createRestore) layout(common pageCommon) {
 						}),
 						layout.Rigid(func() {
 							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+								pg.hidePasswordModal.Color = common.theme.Color.Primary
 								pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
 							})
 						}),
 					)
 				},
 			}
+			pg.theme.Modal(pg.gtx, modalTitle, w)
+		}
+
+		if pg.showWarning {
+			modalTitle := "Reset Seed Input"
+			var msg = "You are about clearing all the seed input fields. Are you sure you want to proceed with this action?"
+			w := []func(){
+				func() {
+					txt := common.theme.H6(msg)
+					txt.Color = common.theme.Color.Danger
+					txt.Alignment = text.Middle
+					txt.Layout(pg.gtx)
+				},
+				func() {
+					layout.Center.Layout(pg.gtx, func() {
+
+						layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+							layout.Rigid(func() {
+								layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+									pg.resetSeedFields.Layout(pg.gtx, pg.resetSeedFieldsWidget)
+								})
+							}),
+							layout.Rigid(func() {
+								layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+									pg.hidePasswordModal.Background = common.theme.Color.Primary
+									pg.hidePasswordModal.Color = color.RGBA{255, 255, 255, 255}
+									pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
+								})
+							}),
+						)
+					})
+				},
+			}
+
 			pg.theme.Modal(pg.gtx, modalTitle, w)
 		}
 	})
@@ -302,9 +356,16 @@ func (pg *createRestore) restore() layout.Widget {
 			}),
 			layout.Rigid(func() {
 				layout.Center.Layout(pg.gtx, func() {
-					layout.Inset{Top: unit.Dp(15), Bottom: unit.Dp(15)}.Layout(pg.gtx, func() {
-						pg.showPasswordModal.Layout(pg.gtx, pg.showPasswordModalWidget)
-					})
+					layout.Flex{Alignment: layout.Middle}.Layout(pg.gtx,
+						layout.Rigid(func() {
+							layout.Inset{Top: unit.Dp(15), Bottom: unit.Dp(15), Right: unit.Dp(10)}.Layout(pg.gtx, func() {
+								pg.showPasswordModal.Layout(pg.gtx, pg.showPasswordModalWidget)
+							})
+						}),
+						layout.Rigid(func() {
+							pg.showresetModal.Layout(pg.gtx, pg.showResetModalWidget)
+						}),
+					)
 				})
 			}),
 		)
@@ -595,8 +656,19 @@ func (pg *createRestore) handle(common pageCommon) {
 
 	for pg.hidePasswordModalWidget.Clicked(gtx) {
 		pg.showPassword = false
+		pg.showWarning = false
 		pg.errLabel.Text = ""
 		pg.resetPasswords()
+	}
+
+	for pg.showResetModalWidget.Clicked(gtx) {
+		pg.showWarning = true
+	}
+
+	for pg.resetSeedFieldsWidget.Clicked(gtx) {
+		pg.resetSeeds()
+		pg.seedEditorWidgets.focusIndex = -1
+		pg.showWarning = false
 	}
 
 	if pg.addWalletWidget.Clicked(gtx) {
