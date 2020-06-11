@@ -136,19 +136,26 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan
 			return
 		}
 
-		if _, err := wallets[walletID].GetAccount(accountID, wal.confirms); err != nil {
-			errChan <- err
-			return
+		for _, wallet := range wallets {
+			if wallet.ID == walletID {
+				if _, err := wallet.GetAccount(accountID, wal.confirms); err != nil {
+					errChan <- err
+					return
+				}
+
+				txAuthor := wallet.NewUnsignedTx(accountID, wal.confirms)
+				if txAuthor == nil {
+					errChan <- err
+					return
+				}
+
+				resp.Resp = txAuthor
+				wal.Send <- resp
+				return
+			}
 		}
 
-		txAuthor := wallets[walletID].NewUnsignedTx(accountID, wal.confirms)
-		if txAuthor == nil {
-			errChan <- err
-			return
-		}
-
-		resp.Resp = txAuthor
-		wal.Send <- resp
+		errChan <- fmt.Errorf("unknown wallet with ID: %d", walletID)
 	}()
 }
 
@@ -218,7 +225,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 					Txn:           txnRaw,
 					Status:        status,
 					Balance:       dcrutil.Amount(txnRaw.Amount).String(),
-					WalletName:    wallets[txnRaw.WalletID].Name,
+					WalletName:    wall.Name,
 					Confirmations: confirmations,
 				}
 				recentTxs = append(recentTxs, txn)
@@ -309,7 +316,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		var completeTotal int64
 		infos := make([]InfoShort, len(wallets))
 		i := 0
-		for id, wall := range wallets {
+		for _, wall := range wallets {
 			iter, err := wall.AccountsIterator(wal.confirms)
 			if err != nil {
 				resp.Err = err
@@ -324,7 +331,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					var er error
 					addr, er = wall.CurrentAddress(acct.Number)
 					if er != nil {
-						log.Error("Could not get current address for wallet ", id, "account", acct.Number)
+						log.Error("Could not get current address for wallet ", wall.ID, "account", acct.Number)
 					}
 				}
 				accts = append(accts, Account{
@@ -360,6 +367,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 			}
 			i++
 		}
+
 		best := wal.multi.GetBestBlock()
 
 		if best == nil {

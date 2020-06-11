@@ -4,6 +4,7 @@ package wallet
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/raedahgroup/dcrlibwallet"
 )
@@ -91,15 +92,14 @@ func (wal *Wallet) LoadWallets() {
 }
 
 // wallets returns an up-to-date map of all opened wallets
-func (wal *Wallet) wallets() (map[int]*dcrlibwallet.Wallet, error) {
+func (wal *Wallet) wallets() ([]dcrlibwallet.Wallet, error) {
 	if wal.multi == nil {
 		return nil, MultiWalletError{
 			Message: "No MultiWallet loaded",
 		}
 	}
 
-	wallets := make(map[int]*dcrlibwallet.Wallet, len(wal.multi.OpenedWalletIDsRaw()))
-
+	wallets := []dcrlibwallet.Wallet{}
 	for _, j := range wal.multi.OpenedWalletIDsRaw() {
 		w := wal.multi.WalletWithID(j)
 		if w == nil {
@@ -109,8 +109,16 @@ func (wal *Wallet) wallets() (map[int]*dcrlibwallet.Wallet, error) {
 				Affected: []int{j},
 			}
 		}
-		wallets[j] = w
+		wallets = append(wallets, *w)
 	}
+
+	// sort wallet by ids
+	if len(wallets) > 0 {
+		sort.SliceStable(wallets, func(i, j int) bool {
+			return wallets[i].ID < wallets[j].ID
+		})
+	}
+
 	return wallets, nil
 }
 
