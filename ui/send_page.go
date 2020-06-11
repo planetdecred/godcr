@@ -144,7 +144,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 func (pg *SendPage) Handle(common pageCommon) {
 	pg.validate(true)
 	pg.watchForBroadcastResult()
-	pg.balanceAfterSend(pg.selectedWallet.SpendableBalance)
+
 	if pg.walletsTab.Changed() {
 		pg.selectedWallet = pg.wallets[pg.walletsTab.Selected]
 		pg.selectedAccount = pg.selectedWallet.Accounts[0]
@@ -197,6 +197,10 @@ func (pg *SendPage) Handle(common pageCommon) {
 
 	for range pg.destinationAddressEditor.Events(common.gtx) {
 		go pg.calculateValues()
+	}
+
+	if pg.destinationAddressEditor.Len() == 0 || pg.sendAmountEditor.Len() == 0 {
+		pg.balanceAfterSend(pg.selectedAccount.SpendableBalance)
 	}
 
 	for range pg.sendAmountEditor.Events(common.gtx) {
@@ -560,7 +564,6 @@ func (pg *SendPage) calculateValues() {
 	pg.totalCostValueLabel.Text = "0 DCR"
 	pg.calculateErrorText = ""
 
-	pg.balanceAfterSend(pg.selectedWallet.SpendableBalance)
 	if pg.txAuthor == nil || !pg.validate(true) {
 		return
 	}
