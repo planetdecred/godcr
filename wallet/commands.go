@@ -206,7 +206,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 					Txn:           txnRaw,
 					Status:        status,
 					Balance:       dcrutil.Amount(txnRaw.Amount).String(),
-					WalletName:    wallets[txnRaw.WalletID].Name,
+					WalletName:    wall.Name,
 					Confirmations: confirmations,
 				}
 				recentTxs = append(recentTxs, txn)
