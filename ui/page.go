@@ -104,9 +104,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		walletsTab:      decredmaterial.NewTabs(),
 		accountsTab:     accountsTab,
 		errorChannels: map[string]chan error{
-			PageSignMessage:   make(chan error),
-			PageCreateRestore: make(chan error),
-			PageWallet:        make(chan error),
+			PageSignMessage:    make(chan error),
+			PageCreateRestore:  make(chan error),
+			PageWallet:         make(chan error),
+			PageWalletAccounts: make(chan error),
 		},
 		keyEvents: win.keyEvents,
 		states:    &win.states,
@@ -123,6 +124,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSignMessage] = win.SignMessagePage(common)
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
+	win.pages[PageWalletAccounts] = win.WalletAccountPage(common)
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {

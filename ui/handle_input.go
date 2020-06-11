@@ -99,23 +99,6 @@ func (win *Window) HandleInputs() {
 		}
 	}
 
-	// ADD ACCOUNT
-
-	if win.inputs.addAcctDiag.Clicked(win.gtx) {
-		win.outputs.dialog.Hint = "Enter account name"
-		win.dialog = win.AddAccountDiag
-		win.states.dialog = true
-	}
-
-	if win.inputs.addAccount.Clicked(win.gtx) {
-		pass := win.validatePassword()
-		if pass == "" {
-			return
-		}
-		win.wallet.AddAccount(win.walletInfo.Wallets[win.selected].ID, win.inputs.dialog.Text(), pass)
-		win.states.loading = true
-	}
-
 	// NAVIGATION
 
 	if win.inputs.toOverview.Clicked(win.gtx) {

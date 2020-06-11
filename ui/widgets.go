@@ -16,7 +16,6 @@ type inputs struct {
 	toOverview, toWallets, toTransactions, toSend, toSettings            widget.Button
 	toReceive                                                            widget.Button
 	spendingPassword, matchSpending, oldSpendingPassword, rename, dialog widget.Editor
-	addAcctDiag, savePassword                                            widget.Button
 
 	receiveIcons struct {
 		info, more, copy, gotItDiag, newAddressDiag widget.Button
