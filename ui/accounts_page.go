@@ -139,7 +139,7 @@ func (page *walletAccountPage) createAccount(common pageCommon) {
 func (page *walletAccountPage) handle(common pageCommon) {
 	gtx := common.gtx
 
-	page.handlerEditorEvents(common, &page.accountNameW)
+	page.handleEditorEvents(common, &page.accountNameW)
 
 	if page.createW.Clicked(gtx) && page.validateInputs(common) {
 		page.isPassword = true
@@ -165,7 +165,7 @@ func (page *walletAccountPage) validateInputs(common pageCommon) bool {
 	return true
 }
 
-func (page *walletAccountPage) handlerEditorEvents(common pageCommon, w *widget.Editor) {
+func (page *walletAccountPage) handleEditorEvents(common pageCommon, w *widget.Editor) {
 	for _, evt := range w.Events(common.gtx) {
 		switch evt.(type) {
 		case widget.ChangeEvent:
