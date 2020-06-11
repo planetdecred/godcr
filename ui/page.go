@@ -16,7 +16,7 @@ type pageIcons struct {
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
-	communicationComment, editorModeEdit *decredmaterial.Icon
+	communicationComment, editorModeEdit, actionBackup *decredmaterial.Icon
 	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon image.Image
 }
 
@@ -57,6 +57,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		verifyAction:               mustIcon(decredmaterial.NewIcon(icons.ActionVerifiedUser)),
 		editorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
 		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
+		actionBackup:               mustIcon(decredmaterial.NewIcon(icons.ActionSettingsBackupRestore)),
 		overviewIcon:               decredIcons["overview"],
 		walletIcon:                 decredIcons["wallet"],
 		receiveIcon:                decredIcons["receive"],
@@ -125,6 +126,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
 	win.pages[PageWalletAccounts] = win.WalletAccountPage(common)
+	win.pages[PageSeedBackup] = win.BackupPage(common)
 }
 
 func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
