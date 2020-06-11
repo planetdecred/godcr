@@ -142,7 +142,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.showresetModal.Color = common.theme.Color.Hint
 	pg.showresetModal.Background = color.RGBA{}
 
-	pg.resetSeedFields = common.theme.Button("yes reset")
+	pg.resetSeedFields = common.theme.Button("yes, reset")
 	pg.resetSeedFields.Color = common.theme.Color.Danger
 	pg.resetSeedFields.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
@@ -663,6 +663,12 @@ func (pg *createRestore) handle(common pageCommon) {
 
 	for pg.showResetModalWidget.Clicked(gtx) {
 		pg.showWarning = true
+	}
+
+	for pg.resetSeedFieldsWidget.Clicked(gtx) {
+		pg.resetSeeds()
+		pg.seedEditorWidgets.focusIndex = -1
+		pg.showWarning = false
 	}
 
 	if pg.addWalletWidget.Clicked(gtx) {
