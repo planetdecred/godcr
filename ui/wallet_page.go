@@ -405,6 +405,11 @@ func (page *walletPage) Handle(common pageCommon) {
 		return
 	}
 
+	if page.icons.addAcct.Clicked(gtx) {
+		*common.page = PageWalletAccounts
+		return
+	}
+
 	if page.rename.Clicked(gtx) {
 		name := page.editor.Text()
 		if name == "" {

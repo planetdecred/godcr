@@ -88,20 +88,39 @@ func (wal *Wallet) DeleteWallet(walletID int, passphrase []byte, errChan chan er
 
 // AddAccount adds an account to a wallet.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) AddAccount(walletID int, name string, pass string) {
+func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan chan error) {
 	go func() {
+		var resp Response
 		wall := wal.multi.WalletWithID(walletID)
 		if wall == nil {
+			go func() {
+				errChan <- ErrIDNotExist
+			}()
+			resp.Err = ErrIDNotExist
 			wal.Send <- Response{
 				Resp: AddedAccount{},
 				Err:  ErrIDNotExist,
 			}
+			return
 		}
-		id, err := wall.NextAccount(name, []byte(pass))
-		wal.Send <- Response{
-			Resp: AddedAccount{ID: id},
-			Err:  err,
+
+		id, err := wall.NextAccount(name, pass)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not create account",
+				Affected: []int{walletID},
+				Err:      err,
+			})
+			return
 		}
+		resp.Resp = AddedAccount{
+			ID: id,
+		}
+		wal.Send <- resp
 	}()
 }
 

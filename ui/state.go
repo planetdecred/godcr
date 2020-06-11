@@ -51,7 +51,10 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.deleted = true
 		win.window.Invalidate()
 	case wallet.AddedAccount:
+		win.current = PageWallet
 		win.states.dialog = false
+		win.states.creating = false
+		win.window.Invalidate()
 	case *wallet.Signature:
 		win.signatureResult = update.(*wallet.Signature)
 	case *dcrlibwallet.TxAuthor:

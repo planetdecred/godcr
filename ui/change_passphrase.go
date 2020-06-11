@@ -44,6 +44,7 @@ func (win *Window) WalletPassphrasePage(common pageCommon) layout.Widget {
 	page.confPass.IsRequired = true
 	page.confPassW.SingleLine = true
 	page.savePassword.TextSize = unit.Dp(11)
+	page.savePassword.Background = common.theme.Color.Hint
 	page.passwordBar = common.theme.ProgressBar(0)
 	page.errorLabel.Color = common.theme.Color.Danger
 
