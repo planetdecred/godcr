@@ -59,7 +59,6 @@ type createRestore struct {
 	hidePasswordModal  decredmaterial.Button
 	showRestoreWallet  decredmaterial.Button
 	showReset          decredmaterial.Button
-	hideResetModal     decredmaterial.Button
 
 	seedEditors           []decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
@@ -78,7 +77,6 @@ type createRestore struct {
 	matchSpendingPasswordWidget *editor.Editor
 	addWalletWidget             *widget.Button
 	showResetWidget             *widget.Button
-	hideResetModalWidget        *widget.Button
 
 	seedListLeft     *layout.List
 	seedListRight    *layout.List
@@ -106,13 +104,11 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		matchSpendingPasswordWidget: new(editor.Editor),
 		addWalletWidget:             new(widget.Button),
 		showResetWidget:             new(widget.Button),
-		hideResetModalWidget:        new(widget.Button),
 
 		errLabel:              common.theme.Body1(""),
 		spendingPassword:      common.theme.Editor("Enter password"),
 		matchSpendingPassword: common.theme.Editor("Enter password again"),
 		addWallet:             common.theme.Button("create wallet"),
-		hideResetModal:        common.theme.Button("cancel"),
 		suggestionLimit:       3,
 	}
 
