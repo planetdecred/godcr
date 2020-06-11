@@ -56,10 +56,9 @@ type createRestore struct {
 	hideRestoreWallet  decredmaterial.IconButton
 	create             decredmaterial.Button
 	showPasswordModal  decredmaterial.Button
-	hidePasswordModal  decredmaterial.Button
+	hideModal          decredmaterial.Button
 	showRestoreWallet  decredmaterial.Button
-	showresetModal     decredmaterial.Button
-	resetSeedFields    decredmaterial.Button
+	showReset          decredmaterial.Button
 	hideResetModal     decredmaterial.Button
 
 	seedEditors           []decredmaterial.Editor
@@ -71,16 +70,15 @@ type createRestore struct {
 	seedEditorWidgets           seedEditors
 	toCreateWalletWidget        *widget.Button
 	showPasswordModalWidget     *widget.Button
-	hidePasswordModalWidget     *widget.Button
+	hideModalWidget             *widget.Button
 	backCreateRestoreWidget     *widget.Button
 	showRestoreWidget           *widget.Button
 	hideRestoreWidget           *widget.Button
 	spendingPasswordWidget      *editor.Editor
 	matchSpendingPasswordWidget *editor.Editor
 	addWalletWidget             *widget.Button
-	showResetModalWidget        *widget.Button
+	showResetWidget             *widget.Button
 	hideResetModalWidget        *widget.Button
-	resetSeedFieldsWidget       *widget.Button
 
 	seedListLeft     *layout.List
 	seedListRight    *layout.List
@@ -103,13 +101,12 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		showRestoreWidget:           new(widget.Button),
 		hideRestoreWidget:           new(widget.Button),
 		showPasswordModalWidget:     new(widget.Button),
-		hidePasswordModalWidget:     new(widget.Button),
+		hideModalWidget:             new(widget.Button),
 		spendingPasswordWidget:      new(editor.Editor),
 		matchSpendingPasswordWidget: new(editor.Editor),
 		addWalletWidget:             new(widget.Button),
-		showResetModalWidget:        new(widget.Button),
+		showResetWidget:             new(widget.Button),
 		hideResetModalWidget:        new(widget.Button),
-		resetSeedFieldsWidget:       new(widget.Button),
 
 		errLabel:              common.theme.Body1(""),
 		spendingPassword:      common.theme.Editor("Enter password"),
@@ -134,16 +131,13 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.hideRestoreWallet.Background = color.RGBA{}
 	pg.hideRestoreWallet.Color = common.theme.Color.Hint
 
-	pg.hidePasswordModal = common.theme.Button("cancel")
-	pg.hidePasswordModal.Color = common.theme.Color.Danger
-	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
+	pg.hideModal = common.theme.Button("cancel")
+	pg.hideModal.Color = common.theme.Color.Danger
+	pg.hideModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
-	pg.showresetModal = common.theme.Button("reset")
-	pg.showresetModal.Color = common.theme.Color.Hint
-	pg.showresetModal.Background = color.RGBA{}
-
-	pg.resetSeedFields = common.theme.Button("Yes Reset")
-	pg.resetSeedFields.Background = common.theme.Color.Danger
+	pg.showReset = common.theme.Button("reset")
+	pg.showReset.Color = common.theme.Color.Hint
+	pg.showReset.Background = color.RGBA{}
 
 	pg.errLabel.Color = pg.theme.Color.Danger
 
@@ -228,41 +222,13 @@ func (pg *createRestore) layout(common pageCommon) {
 						}),
 						layout.Rigid(func() {
 							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
-								pg.hidePasswordModal.Color = common.theme.Color.Primary
-								pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
+								pg.hideModal.Color = common.theme.Color.Primary
+								pg.hideModal.Layout(pg.gtx, pg.hideModalWidget)
 							})
 						}),
 					)
 				},
 			}
-			pg.theme.Modal(pg.gtx, modalTitle, w)
-		}
-
-		if pg.showWarning {
-			modalTitle := "Warning !!!"
-			var msg = "You are about clearing all the seed input fields. \nAre you sure you want to proceed with this action?."
-			w := []func(){
-				func() {
-					txt := common.theme.Body1(msg)
-					txt.Color = common.theme.Color.Danger
-					txt.Layout(pg.gtx)
-				},
-				func() {
-					layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
-						layout.Rigid(func() {
-							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
-								pg.resetSeedFields.Layout(pg.gtx, pg.resetSeedFieldsWidget)
-							})
-						}),
-						layout.Rigid(func() {
-							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
-								pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
-							})
-						}),
-					)
-				},
-			}
-
 			pg.theme.Modal(pg.gtx, modalTitle, w)
 		}
 	})
@@ -348,6 +314,14 @@ func (pg *createRestore) restore() layout.Widget {
 				})
 			}),
 			layout.Rigid(func() {
+				var msg = "You are about clearing all the seed input fields. Are you sure you want to proceed with this action?."
+
+				if pg.showWarning {
+					pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
+					pg.theme.ErrorAlert(pg.gtx, msg)
+				}
+			}),
+			layout.Rigid(func() {
 				layout.Center.Layout(pg.gtx, func() {
 					layout.Flex{Alignment: layout.Middle}.Layout(pg.gtx,
 						layout.Rigid(func() {
@@ -356,7 +330,7 @@ func (pg *createRestore) restore() layout.Widget {
 							})
 						}),
 						layout.Rigid(func() {
-							pg.showresetModal.Layout(pg.gtx, pg.showResetModalWidget)
+							pg.showReset.Layout(pg.gtx, pg.showResetWidget)
 						}),
 					)
 				})
@@ -502,6 +476,10 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 			switch e.(type) {
 			case widget.ChangeEvent:
 				pg.scrollUp()
+				pg.showWarning = false
+				pg.resetBtn()
+				pg.errLabel.Text = ""
+
 				// hide suggestions if seed clicked
 				if pg.seedClicked {
 					pg.seedEditorWidgets.focusIndex = -1
@@ -615,6 +593,13 @@ func (pg *createRestore) resetPage() {
 	pg.showRestore = false
 }
 
+func (pg *createRestore) resetBtn() {
+	pg.showReset.Text = "reset"
+	pg.showReset.Color = pg.theme.Color.Hint
+	pg.showReset.Background = color.RGBA{}
+	pg.seedEditorWidgets.focusIndex = -1
+}
+
 func (pg *createRestore) handle(common pageCommon) {
 	gtx := common.gtx
 
@@ -647,15 +632,24 @@ func (pg *createRestore) handle(common pageCommon) {
 		pg.showPassword = true
 	}
 
-	for pg.hidePasswordModalWidget.Clicked(gtx) {
+	for pg.hideModalWidget.Clicked(gtx) {
 		pg.showPassword = false
 		pg.showWarning = false
 		pg.errLabel.Text = ""
 		pg.resetPasswords()
 	}
 
-	for pg.showResetModalWidget.Clicked(gtx) {
+	for !pg.showWarning && pg.showResetWidget.Clicked(gtx) {
 		pg.showWarning = true
+		pg.showReset.Text = "Yes reset"
+		pg.showReset.Color = color.RGBA{255, 255, 255, 255}
+		pg.showReset.Background = pg.theme.Color.Danger
+	}
+
+	if pg.showWarning && pg.showResetWidget.Clicked(gtx) {
+		pg.resetSeeds()
+		pg.showWarning = false
+		pg.resetBtn()
 	}
 
 	if pg.addWalletWidget.Clicked(gtx) {
