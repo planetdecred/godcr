@@ -1,51 +1,67 @@
 package ui
 
 import (
+	"strings"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/wallet"
 )
+
+var testPhrase = "tissue recover scorecard Istanbul solo dinosaur framework forever freedom typewriter spheroid " +
+	"Capricorn standard paperweight drainage informant steamship gossamer klaxon conformist quota provincial erase " +
+	"paperweight soybean universe blowtorch sandalwood drumbeat dictator unearth bravado lockup"
 
 const (
 	PageSeedBackup = "seedbackup"
-	infoView = "info"
-	seedView  = "seed"
-	verifyView = "verify"
+	infoView       = iota
+	seedView
+	verifyView
 )
 
 type backupPage struct {
-	gtx        *layout.Context
-	theme      *decredmaterial.Theme
-	backButton decredmaterial.IconButton
-	titleLabel decredmaterial.Label
+	gtx   *layout.Context
+	theme *decredmaterial.Theme
+	wal   *wallet.Wallet
+	info  *wallet.MultiWalletInfo
+
+	backButton     decredmaterial.IconButton
+	titleLabel     decredmaterial.Label
 	viewSeedPhrase decredmaterial.Button
+	checkBoxes     []decredmaterial.CheckBox
 
-	backButtonWidget *widget.Button
+	backButtonWidget     *widget.Button
 	viewSeedPhraseWidget *widget.Button
+	checkBoxWidgets      []*widget.CheckBox
 
-	container *layout.List
-	active    string
-	checkBoxWidgets []*widget.CheckBox
-	checkBoxes []decredmaterial.CheckBox
+	container      *layout.List
+	infoList       *layout.List
+	seedPhraseList *layout.List
 
-	infoList  *layout.List
+	seedPhrase     []string
+	active         int
+	selectedWallet int
 }
 
 func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	b := &backupPage{
 		gtx:   c.gtx,
 		theme: c.theme,
+		wal:   c.wallet,
+		info:  c.info,
 
-		viewSeedPhrase:   c.theme.Button("View seed phrase"),
-		backButton:       c.theme.PlainIconButton(c.icons.navigationArrowBack),
-		titleLabel:       c.theme.H5("Keep in mind"),
+		viewSeedPhrase: c.theme.Button("View seed phrase"),
+		backButton:     c.theme.PlainIconButton(c.icons.navigationArrowBack),
+		titleLabel:     c.theme.H5("Keep in mind"),
 
-		backButtonWidget: new(widget.Button),
+		backButtonWidget:     new(widget.Button),
 		viewSeedPhraseWidget: new(widget.Button),
-		container:        &layout.List{Axis: layout.Vertical},
+		container:            &layout.List{Axis: layout.Vertical},
 
-		active: infoView,
+		active:         infoView,
+		selectedWallet: *c.selectedWallet,
 	}
 
 	b.backButton.Color = c.theme.Color.Hint
@@ -71,6 +87,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	}
 
 	b.infoList = &layout.List{Axis: layout.Vertical}
+	b.seedPhraseList = &layout.List{Axis: layout.Vertical}
 
 	return func() {
 		b.layout()
@@ -88,6 +105,8 @@ func (pg *backupPage) layout() {
 					pg.infoView()()
 				case seedView:
 					pg.seedView()()
+				case verifyView:
+					pg.verifyView()()
 				}
 			}),
 		)
@@ -112,25 +131,16 @@ func (pg *backupPage) pageTitle() layout.Widget {
 	}
 }
 
-func (pg *backupPage) infoContent() layout.Widget {
-	gtx := pg.gtx
-	return func() {
-		pg.infoList.Layout(gtx, len(pg.checkBoxWidgets), func(i int) {
-			layout.Inset{Bottom: unit.Dp(20)}.Layout(gtx, func() {
-				pg.checkBoxes[i].Layout(pg.gtx, pg.checkBoxWidgets[i])
-			})
-		})
-	}
-}
-
-func (pg *backupPage) infoView() layout.Widget {
+func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 	return func() {
 		pg.gtx.Constraints.Height.Min = pg.gtx.Constraints.Height.Max
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
 			layout.Rigid(func() {
 				layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 					layout.Rigid(pg.pageTitle()),
-					layout.Rigid(pg.infoContent()),
+					layout.Rigid(func() {
+						content()
+					}),
 				)
 			}),
 			layout.Rigid(func() {
@@ -143,9 +153,51 @@ func (pg *backupPage) infoView() layout.Widget {
 	}
 }
 
+func (pg *backupPage) infoView() layout.Widget {
+	return func() {
+		pg.viewTemplate(func() {
+			pg.infoList.Layout(pg.gtx, len(pg.checkBoxWidgets), func(i int) {
+				layout.Inset{Bottom: unit.Dp(20)}.Layout(pg.gtx, func() {
+					pg.checkBoxes[i].Layout(pg.gtx, pg.checkBoxWidgets[i])
+				})
+			})
+		})()
+	}
+}
+
 func (pg *backupPage) seedView() layout.Widget {
 	return func() {
+		pg.viewTemplate(
+			func() {
+				layout.Center.Layout(pg.gtx, func() {
+					layout.Flex{}.Layout(pg.gtx,
+						layout.Rigid(func() {
+							pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
+							(&layout.List{Axis: layout.Vertical}).Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+								if i < 17 {
+									pg.theme.Body2(pg.seedPhrase[i]).Layout(pg.gtx)
+								}
+							})
+						}),
+						layout.Rigid(func() {
+							(&layout.List{Axis: layout.Vertical}).Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+								if i > 16 {
+									pg.theme.Body2(pg.seedPhrase[i]).Layout(pg.gtx)
+								}
+							})
+						}),
+					)
+				})
+			},
+		)()
+	}
+}
 
+func (pg *backupPage) verifyView() layout.Widget {
+	return func() {
+		pg.viewTemplate(func() {
+			pg.theme.Body2("verify view").Layout(pg.gtx)
+		})()
 	}
 }
 
@@ -160,12 +212,22 @@ func (pg *backupPage) verifyCheckBoxes() bool {
 
 func (pg *backupPage) handle(c pageCommon) {
 	if pg.backButtonWidget.Clicked(pg.gtx) {
-		*c.page = PageWallet
+		if pg.active == 1 {
+			*c.page = PageWallet
+		} else {
+			pg.viewSeedPhrase.Text = "View seed phrase"
+			pg.active -= 1
+		}
 	}
 
 	if pg.viewSeedPhraseWidget.Clicked(pg.gtx) {
-		if pg.viewSeedPhraseWidget.Clicked(pg.gtx) {
-			pg.active = seedView
+		if pg.verifyCheckBoxes() && pg.active == 1 {
+			// seedPhrase := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[pg.selectedWallet].ID)
+			pg.seedPhrase = strings.Split(testPhrase, " ")
+			pg.viewSeedPhrase.Text = "I have written down all 33 words"
+			pg.active += 1
+		} else if pg.active != verifyView {
+			pg.active += 1
 		}
 	}
 }

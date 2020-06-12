@@ -135,6 +135,7 @@ func (page *walletPage) Layout(common pageCommon) {
 
 func (page *walletPage) subMain(common pageCommon) {
 	gtx := common.gtx
+
 	page.current = common.info.Wallets[*common.selectedWallet]
 
 	body := func() {

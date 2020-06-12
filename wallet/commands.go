@@ -500,6 +500,12 @@ func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
 }
 
+func (wal *Wallet) GetWalletSeedPhrase(walletID int) string {
+	wallet := wal.multi.WalletWithID(walletID)
+	fmt.Printf("wallet bro %+v", wallet)
+	return wallet.Seed
+}
+
 func calculateDaysBehind(lastHeaderTime int64) string {
 	diff := time.Since(time.Unix(lastHeaderTime, 0))
 	daysBehind := int(math.Round(diff.Hours() / 24))
