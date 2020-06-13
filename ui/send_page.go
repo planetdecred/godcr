@@ -27,13 +27,13 @@ type amountValue struct {
 }
 
 type SendPage struct {
-	pageContainer   layout.List
-	theme           *decredmaterial.Theme
-	wallet          *wallet.Wallet
-	wallets         []wallet.InfoShort
+	pageContainer layout.List
+	theme         *decredmaterial.Theme
+
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
 
+	wallet          *wallet.Wallet
 	selectedWallet  wallet.InfoShort
 	selectedAccount wallet.Account
 
@@ -50,8 +50,6 @@ type SendPage struct {
 	nextButtonMaterial                   decredmaterial.Button
 	closeConfirmationModalButtonMaterial decredmaterial.Button
 	confirmButtonMaterial                decredmaterial.Button
-	accountsTab                          *decredmaterial.Tabs
-	walletsTab                           *decredmaterial.Tabs
 
 	copyIconMaterial decredmaterial.IconButton
 	currencySwap     decredmaterial.IconButton
@@ -94,7 +92,7 @@ type SendPage struct {
 	isConfirmationModalOpen   bool
 	isPasswordModalOpen       bool
 	isBroadcastingTransaction bool
-	hasInitializedTxAuthor    bool
+	shouldInitializeTxAuthor  bool
 	hasCopiedTxHash           bool
 
 	txAuthorErrChan  chan error
@@ -114,7 +112,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 		theme:           common.theme,
 		wallet:          common.wallet,
-		wallets:         common.info.Wallets,
 		txAuthor:        &win.txAuthor,
 		broadcastResult: &win.broadcastResult,
 
@@ -139,20 +136,13 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 		isConfirmationModalOpen:   false,
 		isPasswordModalOpen:       false,
-		hasInitializedTxAuthor:    false,
 		hasCopiedTxHash:           false,
 		isBroadcastingTransaction: false,
 
-		passwordModal: common.theme.Password(),
-		accountsTab:   decredmaterial.NewTabs(),
-		walletsTab:    decredmaterial.NewTabs(),
-
+		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
 	}
-
-	page.walletsTab.Position = decredmaterial.Top
-	page.accountsTab.Position = decredmaterial.Top
 
 	page.balanceAfterSendValue = "- DCR"
 
@@ -183,13 +173,18 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	return func() {
 		page.Layout(common)
+		page.drawConfirmationModal(common)
+		page.drawPasswordModal(common)
 		page.Handle(common)
 	}
 }
 
-func (pg *SendPage) Handle(common pageCommon) {
-	pg.validate(true)
-	pg.watchForBroadcastResult()
+func (pg *SendPage) Handle(c pageCommon) {
+	if len(c.info.Wallets) == 0 {
+		return
+	}
+
+	gtx := c.gtx
 
 	if pg.LastTradeRate == "" && pg.count == 0 {
 		pg.count = 1
@@ -201,23 +196,26 @@ func (pg *SendPage) Handle(common pageCommon) {
 		pg.calculateValues()
 	}
 
-	if pg.walletsTab.Changed() {
-		pg.selectedWallet = pg.wallets[pg.walletsTab.Selected]
-		pg.selectedAccount = pg.selectedWallet.Accounts[0]
-		pg.accountsTab.Selected = 0
+	if pg.selectedAccount.CurrentAddress != c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount].CurrentAddress {
+		pg.shouldInitializeTxAuthor = true
+		pg.selectedAccount = c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount]
+	}
 
-		pg.setAccountTabs()
-		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
+	if pg.selectedWallet.ID != c.info.Wallets[*c.selectedWallet].ID {
+		pg.shouldInitializeTxAuthor = true
+		pg.selectedWallet = c.info.Wallets[*c.selectedWallet]
+	}
 
+	if pg.shouldInitializeTxAuthor {
+		pg.shouldInitializeTxAuthor = false
 		pg.sendAmountEditor.SetText("")
 		pg.calculateErrorText = ""
 		pg.sendErrorText = ""
+		c.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
 	}
 
-	if pg.accountsTab.Changed() {
-		pg.selectedAccount = pg.selectedWallet.Accounts[pg.accountsTab.Selected]
-		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
-	}
+	pg.validate(true)
+	pg.watchForBroadcastResult()
 
 	if pg.hasCopiedTxHash {
 		time.AfterFunc(3*time.Second, func() {
@@ -235,23 +233,23 @@ func (pg *SendPage) Handle(common pageCommon) {
 		pg.confirmButtonMaterial.Background = pg.theme.Color.Primary
 	}
 
-	for pg.nextButtonWidget.Clicked(common.gtx) {
+	for pg.nextButtonWidget.Clicked(gtx) {
 		if pg.validate(false) && pg.calculateErrorText == "" {
 			pg.isConfirmationModalOpen = true
 		}
 	}
 
-	for pg.confirmButtonWidget.Clicked(common.gtx) {
+	for pg.confirmButtonWidget.Clicked(gtx) {
 		pg.sendErrorText = ""
 		pg.isPasswordModalOpen = true
 	}
 
-	for pg.closeConfirmationModalButtonWidget.Clicked(common.gtx) {
+	for pg.closeConfirmationModalButtonWidget.Clicked(gtx) {
 		pg.sendErrorText = ""
 		pg.isConfirmationModalOpen = false
 	}
 
-	for pg.currencySwapWidget.Clicked(common.gtx) {
+	for pg.currencySwapWidget.Clicked(gtx) {
 		if pg.LastTradeRate != "" {
 			if pg.activeExchange == "DCR" {
 				pg.activeExchange = "USD"
@@ -265,7 +263,7 @@ func (pg *SendPage) Handle(common pageCommon) {
 		pg.calculateValues()
 	}
 
-	for _, evt := range pg.destinationAddressEditor.Events(common.gtx) {
+	for _, evt := range pg.destinationAddressEditor.Events(gtx) {
 		go pg.calculateValues()
 		pg.changeEvt(evt)
 	}
@@ -274,12 +272,12 @@ func (pg *SendPage) Handle(common pageCommon) {
 		pg.balanceAfterSend(pg.selectedAccount.SpendableBalance)
 	}
 
-	for _, evt := range pg.sendAmountEditor.Events(common.gtx) {
+	for _, evt := range pg.sendAmountEditor.Events(gtx) {
 		go pg.calculateValues()
 		pg.changeEvt(evt)
 	}
 
-	for pg.copyIconWidget.Clicked(common.gtx) {
+	for pg.copyIconWidget.Clicked(gtx) {
 		clipboard.WriteAll(pg.txHash)
 		pg.hasCopiedTxHash = true
 	}
@@ -294,72 +292,16 @@ func (pg *SendPage) Handle(common pageCommon) {
 	}
 }
 
-func (pg *SendPage) drawWalletsTab(common pageCommon, body func()) {
-	wallets := make([]decredmaterial.TabItem, len(pg.wallets))
-	for i := range pg.wallets {
-		wallets[i] = decredmaterial.TabItem{
-			Label: pg.theme.Body1(pg.wallets[i].Name),
-		}
-	}
-	pg.walletsTab.SetTabs(wallets)
-
-	pg.setAccountTabs()
-	pg.walletsTab.Layout(common.gtx, func() {
-		layout.Flex{Axis: layout.Horizontal}.Layout(common.gtx,
-			layout.Rigid(func() {
-				layout.Inset{Top: unit.Dp(10), Right: unit.Dp(10)}.Layout(common.gtx, func() {
-					pg.theme.H6("Accounts: ").Layout(common.gtx)
-				})
-			}),
-			layout.Rigid(func() {
-				pg.accountsTab.Layout(common.gtx, body)
-			}),
-		)
-	})
-}
-
-func (pg *SendPage) setAccountTabs() {
-	accounts := make([]decredmaterial.TabItem, len(pg.selectedWallet.Accounts))
-	for i := range pg.selectedWallet.Accounts {
-		if pg.selectedWallet.Accounts[i].Name == "imported" {
-			continue
-		}
-		accounts[i] = decredmaterial.TabItem{
-			Label: pg.theme.Body1(pg.selectedWallet.Accounts[i].Name),
-		}
-	}
-	pg.accountsTab.SetTabs(accounts)
-}
-
 func (pg *SendPage) Layout(common pageCommon) {
 	if len(common.info.Wallets) == 0 {
-		// show no wallets message
+		common.Layout(common.gtx, func() {
+			layout.Center.Layout(common.gtx, func() {
+				common.theme.H3("No wallet loaded").Layout(common.gtx)
+			})
+		})
 		return
 	}
 
-	pg.wallets = common.info.Wallets
-	if !pg.hasInitializedTxAuthor {
-		pg.selectedWallet = pg.wallets[*common.selectedWallet]
-		pg.selectedAccount = pg.selectedWallet.Accounts[0]
-
-		pg.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
-		pg.hasInitializedTxAuthor = true
-	}
-
-	common.Layout(common.gtx, func() {
-		pg.drawPageContents(common)
-	})
-
-	if pg.isConfirmationModalOpen {
-		pg.drawConfirmationModal(common.gtx)
-
-		if pg.isPasswordModalOpen {
-			pg.drawPasswordModal(common.gtx)
-		}
-	}
-}
-
-func (pg *SendPage) drawPageContents(common pageCommon) {
 	pageContent := []func(){
 		func() {
 			pg.drawSuccessSection(common.gtx)
@@ -391,23 +333,15 @@ func (pg *SendPage) drawPageContents(common pageCommon) {
 		},
 	}
 
-	w := func() {
-		inset := layout.Inset{
-			Left: unit.Dp(-110),
-		}
-		inset.Layout(common.gtx, func() {
-			layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
-				layout.Rigid(func() {
-					layout.UniformInset(unit.Dp(7)).Layout(common.gtx, func() {
-						pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
-							layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
-						})
-					})
-				}),
-			)
+	common.LayoutWithWallets(common.gtx, func() {
+		common.accountTab(common.gtx, func() {
+			layout.UniformInset(unit.Dp(7)).Layout(common.gtx, func() {
+				pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
+					layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
+				})
+			})
 		})
-	}
-	pg.drawWalletsTab(common, w)
+	})
 }
 
 func (pg *SendPage) drawSuccessSection(gtx *layout.Context) {
@@ -553,7 +487,11 @@ func (pg *SendPage) sendAmountLayout(gtx *layout.Context) {
 	)
 }
 
-func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
+func (pg *SendPage) drawConfirmationModal(c pageCommon) {
+	if !pg.isConfirmationModalOpen {
+		return
+	}
+	gtx := c.gtx
 	w := []func(){
 		func() {
 			if pg.sendErrorText != "" {
@@ -615,7 +553,11 @@ func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
 	pg.theme.Modal(gtx, "Confirm Send Transaction", w)
 }
 
-func (pg *SendPage) drawPasswordModal(gtx *layout.Context) {
+func (pg *SendPage) drawPasswordModal(c pageCommon) {
+	if !(pg.isConfirmationModalOpen && pg.isPasswordModalOpen) {
+		return
+	}
+	gtx := c.gtx
 	pg.passwordModal.Layout(gtx, func(password []byte) {
 		pg.isBroadcastingTransaction = true
 		pg.isPasswordModalOpen = false
