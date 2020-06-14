@@ -502,8 +502,11 @@ func (wal *Wallet) CancelSync() {
 
 func (wal *Wallet) GetWalletSeedPhrase(walletID int) string {
 	wallet := wal.multi.WalletWithID(walletID)
-	fmt.Printf("wallet bro %+v", wallet)
 	return wallet.Seed
+}
+
+func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string) error {
+	return wal.multi.VerifySeedForWallet(walletID, seedPhrase)
 }
 
 func calculateDaysBehind(lastHeaderTime int64) string {

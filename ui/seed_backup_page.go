@@ -158,7 +158,7 @@ func (pg *backupPage) layout() {
 func (pg *backupPage) pageTitle() layout.Widget {
 	gtx := pg.gtx
 	return func() {
-		layout.Inset{Bottom: unit.Dp(50), Top: unit.Dp(20)}.Layout(pg.gtx, func() {
+		layout.Inset{Bottom: unit.Dp(20), Top: unit.Dp(20)}.Layout(pg.gtx, func() {
 			layout.Flex{Axis: layout.Horizontal, Alignment: layout.Start}.Layout(gtx,
 				layout.Rigid(func() {
 					pg.backButton.Layout(gtx, pg.backButtonWidget)
@@ -175,9 +175,8 @@ func (pg *backupPage) pageTitle() layout.Widget {
 
 func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 	return func() {
-		pg.gtx.Constraints.Height.Min = pg.gtx.Constraints.Height.Max
-		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
-			layout.Rigid(func() {
+		layout.Stack{}.Layout(pg.gtx,
+			layout.Stacked(func() {
 				layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 					layout.Rigid(pg.pageTitle()),
 					layout.Rigid(func() {
@@ -185,12 +184,16 @@ func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 					}),
 				)
 			}),
-			layout.Rigid(func() {
-				pg.action.Background = pg.theme.Color.Hint
-				if pg.verifyCheckBoxes() {
-					pg.action.Background = pg.theme.Color.Primary
-				}
-				pg.action.Layout(pg.gtx, pg.actionWidget)
+			layout.Stacked(func() {
+				pg.gtx.Constraints.Height.Min = pg.gtx.Constraints.Height.Max
+				layout.S.Layout(pg.gtx, func() {
+					pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
+					pg.action.Background = pg.theme.Color.Hint
+					if pg.verifyCheckBoxes() {
+						pg.action.Background = pg.theme.Color.Primary
+					}
+					pg.action.Layout(pg.gtx, pg.actionWidget)
+				})
 			}),
 		)
 	}
@@ -239,24 +242,26 @@ func (pg *backupPage) seedView() layout.Widget {
 func (pg *backupPage) verifyView() layout.Widget {
 	return func() {
 		pg.viewTemplate(func() {
-			pg.verifyList.Layout(pg.gtx, len(pg.suggestions), func(i int) {
-				s := pg.suggestions[i]
-				suggestionButtons := s.buttons
+			layout.Inset{Bottom: unit.Dp(38)}.Layout(pg.gtx, func() {
+				pg.verifyList.Layout(pg.gtx, len(pg.suggestions), func(i int) {
+					s := pg.suggestions[i]
+					suggestionButtons := s.buttons
 
-				layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-					layout.Rigid(func() {
-						pg.theme.Body1(fmt.Sprintf("%d. %s", i+1, pg.selectedSeeds[i])).Layout(pg.gtx)
-					}),
-					layout.Rigid(func() {
-						pg.suggestionList.Layout(pg.gtx, len(suggestionButtons), func(i int) {
-							suggestionButtons[i].skin.Background = pg.theme.Color.Hint
-							if s.selected == i {
-								suggestionButtons[i].skin.Background = pg.theme.Color.Primary
-							}
-							suggestionButtons[i].skin.Layout(pg.gtx, suggestionButtons[i].button)
-						})
-					}),
-				)
+					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+						layout.Rigid(func() {
+							pg.theme.Body1(fmt.Sprintf("%d. %s", i+1, pg.selectedSeeds[i])).Layout(pg.gtx)
+						}),
+						layout.Rigid(func() {
+							pg.suggestionList.Layout(pg.gtx, len(suggestionButtons), func(i int) {
+								suggestionButtons[i].skin.Background = pg.theme.Color.Hint
+								if s.selected == i {
+									suggestionButtons[i].skin.Background = pg.theme.Color.Primary
+								}
+								suggestionButtons[i].skin.Layout(pg.gtx, suggestionButtons[i].button)
+							})
+						}),
+					)
+				})
 			})
 		})()
 	}
@@ -284,12 +289,14 @@ func (pg *backupPage) randomSeeds() []string {
 func (pg *backupPage) populateSuggestionSeeds() {
 	rand.Seed(time.Now().Unix())
 
-	for k, s := range pg.suggestions {
-		seeds := pg.randomSeeds()
-		for i := range s.buttons {
-			s.buttons[i].skin.Text = seeds[i]
+	if len(pg.seedPhrase) > 0 {
+		for k, s := range pg.suggestions {
+			seeds := pg.randomSeeds()
+			for i := range s.buttons {
+				s.buttons[i].skin.Text = seeds[i]
+			}
+			s.buttons[rand.Intn(len(seeds))].skin.Text = pg.seedPhrase[k]
 		}
-		s.buttons[rand.Intn(len(seeds))].skin.Text = pg.seedPhrase[k]
 	}
 }
 
@@ -304,13 +311,24 @@ func (pg *backupPage) handle(c pageCommon) {
 
 	if pg.actionWidget.Clicked(pg.gtx) && pg.verifyCheckBoxes() {
 		if pg.active == 1 {
-			// seedPhrase := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[pg.selectedWallet].ID)
-			pg.seedPhrase = strings.Split(testPhrase, " ")
+			s := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[pg.selectedWallet].ID)
+			pg.seedPhrase = strings.Split(s, " ")
 			pg.populateSuggestionSeeds()
 			pg.action.Text = "I have written down all 33 words"
 			pg.active += 1
 		} else if pg.active != verifyView {
 			pg.active += 1
+		} else if pg.active == verifyView {
+			s := strings.Join(pg.selectedSeeds, " ")
+			if !dcrlibwallet.VerifySeed(s) {
+				return
+			}
+			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[pg.selectedWallet].ID, s)
+			if err != nil {
+				fmt.Printf("error verifying seed!!")
+			} else {
+				fmt.Printf("verify success!! \n")
+			}
 		}
 	}
 
