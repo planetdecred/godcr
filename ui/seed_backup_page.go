@@ -44,14 +44,14 @@ type backupPage struct {
 	wal   *wallet.Wallet
 	info  *wallet.MultiWalletInfo
 
-	backButton     decredmaterial.IconButton
-	titleLabel     decredmaterial.Label
-	viewSeedPhrase decredmaterial.Button
-	checkBoxes     []decredmaterial.CheckBox
+	backButton decredmaterial.IconButton
+	titleLabel decredmaterial.Label
+	action     decredmaterial.Button
+	checkBoxes []decredmaterial.CheckBox
 
-	backButtonWidget     *widget.Button
-	viewSeedPhraseWidget *widget.Button
-	checkBoxWidgets      []*widget.CheckBox
+	backButtonWidget *widget.Button
+	actionWidget     *widget.Button
+	checkBoxWidgets  []*widget.CheckBox
 
 	container           *layout.List
 	infoList            *layout.List
@@ -76,13 +76,13 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 		wal:   c.wallet,
 		info:  c.info,
 
-		viewSeedPhrase: c.theme.Button("View seed phrase"),
-		backButton:     c.theme.PlainIconButton(c.icons.navigationArrowBack),
-		titleLabel:     c.theme.H5("Keep in mind"),
+		action:     c.theme.Button("View seed phrase"),
+		backButton: c.theme.PlainIconButton(c.icons.navigationArrowBack),
+		titleLabel: c.theme.H5("Keep in mind"),
 
-		backButtonWidget:     new(widget.Button),
-		viewSeedPhraseWidget: new(widget.Button),
-		container:            &layout.List{Axis: layout.Vertical},
+		backButtonWidget: new(widget.Button),
+		actionWidget:     new(widget.Button),
+		container:        &layout.List{Axis: layout.Vertical},
 
 		active:         infoView,
 		selectedWallet: *c.selectedWallet,
@@ -92,7 +92,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	b.backButton.Color = c.theme.Color.Hint
 	b.backButton.Size = unit.Dp(32)
 
-	b.viewSeedPhrase.Background = c.theme.Color.Hint
+	b.action.Background = c.theme.Color.Hint
 
 	b.checkBoxes = []decredmaterial.CheckBox{
 		c.theme.CheckBox("The 33-word seed phrase is EXTREMELY IMPORTANT."),
@@ -186,10 +186,11 @@ func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 				)
 			}),
 			layout.Rigid(func() {
+				pg.action.Background = pg.theme.Color.Hint
 				if pg.verifyCheckBoxes() {
-					pg.viewSeedPhrase.Background = pg.theme.Color.Primary
+					pg.action.Background = pg.theme.Color.Primary
 				}
-				pg.viewSeedPhrase.Layout(pg.gtx, pg.viewSeedPhraseWidget)
+				pg.action.Layout(pg.gtx, pg.actionWidget)
 			}),
 		)
 	}
@@ -301,12 +302,12 @@ func (pg *backupPage) handle(c pageCommon) {
 		}
 	}
 
-	if pg.viewSeedPhraseWidget.Clicked(pg.gtx) {
-		if pg.verifyCheckBoxes() && pg.active == 1 {
+	if pg.actionWidget.Clicked(pg.gtx) && pg.verifyCheckBoxes() {
+		if pg.active == 1 {
 			// seedPhrase := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[pg.selectedWallet].ID)
 			pg.seedPhrase = strings.Split(testPhrase, " ")
 			pg.populateSuggestionSeeds()
-			pg.viewSeedPhrase.Text = "I have written down all 33 words"
+			pg.action.Text = "I have written down all 33 words"
 			pg.active += 1
 		} else if pg.active != verifyView {
 			pg.active += 1
