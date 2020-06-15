@@ -8,10 +8,9 @@ import (
 
 // states represents a combination of booleans that determine what the wallet is displaying.
 type states struct {
-	loading        bool // true if the window is in the middle of an operation that cannot be stopped
-	renamingWallet bool // true if the wallets-page is renaming a wallet
-	creating       bool // true if a wallet is being created or restored
-	deleted        bool // true if a wallet is has being deleted
+	loading  bool // true if the window is in the middle of an operation that cannot be stopped
+	creating bool // true if a wallet is being created or restored
+	deleted  bool // true if a wallet is has being deleted
 }
 
 // updateStates changes the wallet state based on the received update
