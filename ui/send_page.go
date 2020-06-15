@@ -3,11 +3,11 @@ package ui
 import (
 	"fmt"
 	"image/color"
+	"net/http"
 	"strconv"
 	"time"
-    "net/http"
-    // "io/ioutil"
- "encoding/json"
+	// "io/ioutil"
+	"encoding/json"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -43,11 +43,30 @@ type SendPage struct {
 	copyIconWidget                     *widget.Button
 	currencySwapWidget                 widget.Button
 
-	transactionFeeValueLabel   decredmaterial.Label
-	totalCostValueLabel        decredmaterial.Label
+	activeTransactionFeeValueLabel   decredmaterial.Label
+	inactiveTransactionFeeValueLabel decredmaterial.Label
+
+	activeTransactionFeeValue   string
+	inactiveTransactionFeeValue string
+
+	activeTotalCostValue   string
+	inactiveTotalCostValue string
+
+	balanceAfterSendValue string
+
+	activeTotalCostValueLabel   decredmaterial.Label
+	inactiveTotalCostValueLabel decredmaterial.Label
+
 	balanceAfterSendValueLabel decredmaterial.Label
-	txFeeLabelUSD decredmaterial.Label
-	totalCostLabelUSD decredmaterial.Label
+
+	// activeExchLabel decredmaterial.Label
+	// inactiveExchLabel decredmaterial.Label
+
+	// transactionFeeValueLabel   decredmaterial.Label
+	// totalCostValueLabel        decredmaterial.Label
+	// balanceAfterSendValueLabel decredmaterial.Label
+	// txFeeLabelUSD decredmaterial.Label
+	// totalCostLabelUSD decredmaterial.Label
 
 	destinationAddressEditorMaterial     decredmaterial.Editor
 	sendAmountEditorMaterial             decredmaterial.Editor
@@ -65,9 +84,10 @@ type SendPage struct {
 	txHashText         string
 	txHash             string
 	calculateErrorText string
-	topTitle           string
-	bottomTitle        string
+	activeAmount       string
+	inactiveAmount     string
 	selectedExchange   string
+	unselectedExchange string
 
 	passwordModal *decredmaterial.Password
 
@@ -107,21 +127,22 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		confirmButtonWidget:                new(widget.Button),
 		copyIconWidget:                     new(widget.Button),
 
-		sendErrorText:    "",
-		txHashText:       "",
-		selectedExchange: "DCR",
-		topTitle:         "0",
-		bottomTitle:      "0",
+		sendErrorText: "",
+		txHashText:    "",
+
+		selectedExchange:   "DCR",
+		unselectedExchange: "USD",
 
 		closeConfirmationModalButtonMaterial: common.theme.Button("Close"),
 		nextButtonMaterial:                   common.theme.Button("Next"),
 		confirmButtonMaterial:                common.theme.Button("Confirm"),
-		transactionFeeValueLabel:             common.theme.Body2("- DCR"),
-		totalCostValueLabel:                  common.theme.Body2("- DCR"),
+		activeTransactionFeeValueLabel:       common.theme.Body2("- DCR"),
+		activeTotalCostValueLabel:            common.theme.Body2("- DCR"),
 		balanceAfterSendValueLabel:           common.theme.Body2("- DCR"),
-		txFeeLabelUSD: common.theme.Body2("(- USD)"),
-		totalCostLabelUSD: common.theme.Body2("(- USD)"),
-		copyIconMaterial:                     common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy))),
+		inactiveTransactionFeeValueLabel:     common.theme.Body2("(- USD)"),
+		inactiveTotalCostValueLabel:          common.theme.Body2("(- USD)"),
+
+		copyIconMaterial: common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy))),
 
 		isConfirmationModalOpen:   false,
 		isPasswordModalOpen:       false,
@@ -140,8 +161,19 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.walletsTab.Position = decredmaterial.Top
 	page.accountsTab.Position = decredmaterial.Top
 
-	page.txFeeLabelUSD.Color = common.theme.Color.Hint
-	page.totalCostLabelUSD.Color = common.theme.Color.Hint
+	page.activeAmount = "- " + page.selectedExchange
+	page.inactiveAmount = "- " + page.unselectedExchange
+
+	page.activeTransactionFeeValue = "- " + page.selectedExchange
+	page.inactiveTransactionFeeValue = fmt.Sprintf("(- %s)", page.unselectedExchange)
+
+	page.activeTotalCostValue = "- " + page.selectedExchange
+	page.inactiveTotalCostValue = fmt.Sprintf("(- %s)", page.unselectedExchange)
+
+	page.balanceAfterSendValue = "- " + page.selectedExchange
+
+	page.inactiveTransactionFeeValueLabel.Color = common.theme.Color.Hint
+	page.inactiveTotalCostValueLabel.Color = common.theme.Color.Hint
 
 	page.destinationAddressEditorMaterial = common.theme.Editor("Destination Address")
 	page.destinationAddressEditorMaterial.SetRequiredErrorText("")
@@ -151,6 +183,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.sendAmountEditorMaterial = common.theme.Editor("Amount to be sent")
 	page.sendAmountEditorMaterial.SetRequiredErrorText("")
 	page.sendAmountEditorMaterial.IsRequired = true
+	// page.sendAmountEditorMaterial.IsTitleLabel = false
 
 	page.closeConfirmationModalButtonMaterial.Background = common.theme.Color.Gray
 	page.destinationAddressEditor.SetText("")
@@ -229,9 +262,12 @@ func (pg *SendPage) Handle(common pageCommon) {
 	for pg.currencySwapWidget.Clicked(common.gtx) {
 		if pg.selectedExchange == "DCR" {
 			pg.selectedExchange = "USD"
+			pg.unselectedExchange = "DCR"
 		} else {
 			pg.selectedExchange = "DCR"
+			pg.unselectedExchange = "USD"
 		}
+		pg.calculateValues()
 	}
 
 	for range pg.destinationAddressEditor.Events(common.gtx) {
@@ -252,11 +288,11 @@ func (pg *SendPage) Handle(common pageCommon) {
 	}
 	// switch {
 	// case pg.selectedExchange == "DCR":
-	// 	pg.topTitle = pg.bottomTitle
-	// 	pg.bottomTitle = pg.bottomTitle
+	// 	pg.activeAmount = pg.inactiveAmount
+	// 	pg.inactiveAmount = pg.inactiveAmount
 	// case pg.selectedExchange == "USD":
-	// 	pg.topTitle = "0"
-	// 	pg.bottomTitle = "0"
+	// 	pg.activeAmount = "0"
+	// 	pg.inactiveAmount = "0"
 	// }
 
 	select {
@@ -307,6 +343,8 @@ func (pg *SendPage) setAccountTabs() {
 }
 
 func (pg *SendPage) Layout(common pageCommon) {
+	go pg.getUSDValues(&pg.data)
+
 	if len(common.info.Wallets) == 0 {
 		// show no wallets message
 		return
@@ -349,20 +387,26 @@ func (pg *SendPage) drawPageContents(common pageCommon) {
 			pg.destinationAddressEditorMaterial.Layout(common.gtx, pg.destinationAddressEditor)
 		},
 		func() {
-			layout.Flex{}.Layout(common.gtx,
-				layout.Rigid(func() {
-					pg.DCRToUSDLayout(common.gtx)
-				}),
-				layout.Rigid(func() {
-					if pg.sendAmountEditor.Focused() {
-						pg.sendAmountEditorMaterial.Hint = pg.selectedExchange
-					} else {
-						pg.sendAmountEditorMaterial.Hint = "Amount to be sent"
-					}
-					pg.sendAmountEditorMaterial.Layout(common.gtx, pg.sendAmountEditor)
-				}),
-			)
+			pg.DCRToUSDLayout(common.gtx)
 		},
+		func() {
+			pg.sendAmountEditorMaterial.Layout(common.gtx, pg.sendAmountEditor)
+		},
+		// func() {
+		// 	layout.Flex{}.Layout(common.gtx,
+		// 		layout.Rigid(func() {
+		// 			pg.DCRToUSDLayout(common.gtx)
+		// 		}),
+		// 		layout.Rigid(func() {
+		// 			if pg.sendAmountEditor.Focused() {
+		// 				pg.sendAmountEditorMaterial.Hint = ""
+		// 			} else {
+		// 				pg.sendAmountEditorMaterial.Hint = "Amount to be sent"
+		// 			}
+		// 			pg.sendAmountEditorMaterial.Layout(common.gtx, pg.sendAmountEditor)
+		// 		}),
+		// 	)
+		// },
 		func() {
 			pg.drawTransactionDetailWidgets(common.gtx)
 		},
@@ -459,13 +503,13 @@ func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
 func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
 	w := []func(){
 		func() {
-			pg.tableLayoutFunc(gtx, pg.theme.Body2("Transaction Fee"), pg.transactionFeeValueLabel, pg.txFeeLabelUSD)
+			pg.tableLayoutFunc(gtx, pg.theme.Body2("Transaction Fee"), pg.activeTransactionFeeValue, pg.inactiveTransactionFeeValue)
 		},
 		func() {
-			pg.tableLayoutFunc(gtx, pg.theme.Body2("Total Cost"), pg.totalCostValueLabel, pg.totalCostLabelUSD)
+			pg.tableLayoutFunc(gtx, pg.theme.Body2("Total Cost"), pg.activeTotalCostValue, pg.inactiveTotalCostValue)
 		},
 		func() {
-			pg.tableLayoutFunc(gtx, pg.theme.Body2("Balance after send"), pg.balanceAfterSendValueLabel, pg.theme.Body2(""))
+			pg.tableLayoutFunc(gtx, pg.theme.Body2("Balance after send"), "", "")
 		},
 	}
 
@@ -478,55 +522,50 @@ func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
 	})
 }
 
-func (pg *SendPage) tableLayoutFunc(gtx *layout.Context, leftLabel, rightLabel, USDLabel decredmaterial.Label) {
-	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+func (pg *SendPage) tableLayoutFunc(gtx *layout.Context, leftLabel decredmaterial.Label, active, inactive string) {
+	layout.Flex{}.Layout(gtx,
 		layout.Rigid(func() {
 			leftLabel.Layout(gtx)
 		}),
 		layout.Flexed(1, func() {
-			layout.Stack{Alignment: layout.NE}.Layout(gtx,
-				layout.Stacked(func() {
-					rightLabel.Layout(gtx)
-				}),
-			)
-		}),
-		layout.Rigid(func(){
-					USDLabel.Layout(gtx)
+			layout.E.Layout(gtx, func() {
+				layout.Flex{}.Layout(gtx,
+					layout.Rigid(func() {
+						pg.theme.Body1(active).Layout(gtx)
+					}),
+					layout.Rigid(func() {
+						b := pg.theme.Body1(inactive)
+						b.Color = pg.theme.Color.Hint
+						b.Layout(gtx)
+					}),
+				)
+			})
 		}),
 	)
 }
 
 func (pg *SendPage) DCRToUSDLayout(gtx *layout.Context) {
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func() {
-			pg.theme.H6(pg.topTitle).Layout(gtx)
-		}),
-		layout.Rigid(func() {
-			layout.Inset{Left: unit.Dp(3)}.Layout(gtx, func() {
-				pg.currencySwap.Layout(gtx, &pg.currencySwapWidget)
+	layout.Flex{}.Layout(gtx,
+		layout.Flexed(1, func() {
+			layout.W.Layout(gtx, func() {
+				layout.Flex{}.Layout(gtx,
+					layout.Rigid(func() {
+						pg.theme.Body1(pg.activeAmount).Layout(gtx)
+
+					}),
+					layout.Rigid(func() {
+						layout.Inset{Left: unit.Dp(3)}.Layout(gtx, func() {
+							pg.currencySwap.Layout(gtx, &pg.currencySwapWidget)
+						})
+					}),
+					layout.Rigid(func() {
+						pg.theme.Body2(pg.inactiveAmount).Layout(gtx)
+					}),
+				)
 			})
-		}),
-		layout.Rigid(func() {
-			pg.theme.Body2(pg.bottomTitle).Layout(gtx)
 		}),
 	)
 }
-
-// func (pg *SendPage) USDToDCRLayout(gtx *layout.Context) {
-// 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 		layout.Rigid(func() {
-// 			pg.sendValueLabelUTC.Layout(gtx)
-// 		}),
-// 		layout.Rigid(func() {
-// 			layout.Inset{Left: unit.Dp(3)}.Layout(gtx, func() {
-// 				pg.currencySwap.Layout(gtx, &pg.currencySwapWidget)
-// 			})
-// 		}),
-// 		layout.Rigid(func() {
-// 			pg.sendValueLabelDCR.Layout(gtx)
-// 		}),
-// 	)
-// }
 
 func (pg *SendPage) drawConfirmationModal(gtx *layout.Context) {
 	w := []func(){
@@ -654,16 +693,19 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 }
 
 func (pg *SendPage) calculateValues() {
-<<<<<<< HEAD
-	pg.transactionFeeValueLabel.Text = "0 DCR"
-	pg.totalCostValueLabel.Text = "0 DCR"
-=======
-	pg.transactionFeeValueLabel.Text = "- DCR"
-	pg.totalCostValueLabel.Text = "- DCR"
-	pg.txFeeLabelUSD.Text = "(- USD)"
-	pg.totalCostLabelUSD.Text = "(- USD)"
->>>>>>> initial commit
+	// pg.activeTransactionFeeValueLabel.Text = "- DCR"
+	// pg.activeTotalCostValueLabel.Text = "- DCR"
+	// pg.inactiveTransactionFeeValueLabel.Text = "(- USD)"
+	// pg.inactiveTotalCostValueLabel.Text = "(- USD)"
+
+	pg.activeTransactionFeeValue = fmt.Sprintf("- %s", pg.selectedExchange)
+	pg.activeTotalCostValue = fmt.Sprintf("- %s", pg.selectedExchange)
+	pg.inactiveTransactionFeeValue = fmt.Sprintf("(- %s)", pg.unselectedExchange)
+	pg.inactiveTotalCostValue = fmt.Sprintf("(- %s)", pg.unselectedExchange)
+
 	pg.calculateErrorText = ""
+	pg.activeAmount = fmt.Sprintf("- %s", pg.selectedExchange)
+	pg.inactiveAmount = fmt.Sprintf("- %s", pg.unselectedExchange)
 
 	if pg.txAuthor == nil || !pg.validate(true) {
 		return
@@ -691,10 +733,7 @@ func (pg *SendPage) calculateValues() {
 	txFee := feeAndSize.Fee.AtomValue
 	totalCost := txFee + amountAtoms
 
-	pg.calculatedUSDValues(amountAtoms, txFee)
-	fmt.Println(pg.data.LastTradeRate)
-
-
+	// pg.calculatedUSDValues(amountAtoms, txFee)
 
 	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
 	pg.transactionFeeValueLabel.Text = dcrutil.Amount(txFee).String()
@@ -710,33 +749,64 @@ func (pg *SendPage) calculatedUSDValues(amountAtoms, txFee int64) {
  pg.getUSDValues(&pg.data)
 	amount, err := strconv.ParseFloat(pg.data.LastTradeRate, 64)
 	if err != nil {
-	    panic(err)
-	}
-	usd, err := dcrutil.NewAmount(amount)
-	if err != nil {
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
-		return
-	}
-	usdex := int64(usd)
-
-	if pg.selectedExchange == "USD" {
-		pg.topTitle = dcrutil.Amount(amountAtoms).String()
-		pg.bottomTitle = strconv.Itoa(int(usdex * amountAtoms))
-	}else{
-		pg.topTitle = strconv.Itoa(int(usdex * amountAtoms))
-		pg.bottomTitle = strconv.Itoa(int(amountAtoms))
+		panic(err)
 	}
 
-	usdRate := usdex * txFee
-	pg.txFeeLabelUSD.Text = strconv.Itoa(int(usdRate))
-	pg.totalCostLabelUSD.Text = strconv.Itoa(int(usdRate + usdex))
+	totalAmountUSD := amountDCR * amountUSD
+	txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * amountDCR
+
+	switch {
+	case pg.selectedExchange == "DCR":
+		pg.activeAmount = dcrutil.Amount(amountAtoms).String()
+		pg.inactiveAmount = fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD, 'f', 5, 64))
+		pg.activeTransactionFeeValue = dcrutil.Amount(txFee).String()
+		pg.inactiveTransactionFeeValue = fmt.Sprintf("(%f USD)", txFeeValueUSD)
+		pg.activeTotalCostValue = dcrutil.Amount(totalCost).String()
+		pg.inactiveTotalCostValue = fmt.Sprintf("(%s USD)", strconv.FormatFloat(totalAmountUSD+txFeeValueUSD, 'f', 5, 64))
+
+	case pg.selectedExchange == "USD":
+		pg.activeAmount = fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD, 'f', 5, 64))
+		pg.inactiveAmount = dcrutil.Amount(amountAtoms).String()
+		pg.activeTransactionFeeValue = fmt.Sprintf("%f USD", txFeeValueUSD)
+		pg.inactiveTransactionFeeValue = fmt.Sprintf("(%s)", dcrutil.Amount(txFee).String())
+		pg.activeTotalCostValue = fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD+txFeeValueUSD, 'f', 5, 64))
+		pg.inactiveTotalCostValue = fmt.Sprintf("(%s )", dcrutil.Amount(totalCost).String())
+	}
+
+	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
+	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(pg.remainingBalance).String()
 }
+
+// func (pg *SendPage) calculatedUSDValues(amountAtoms, txFee int64) {
+// 	amount, err := strconv.ParseFloat("16.0000", 64)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	// usd, err := dcrutil.NewAmount(amount)
+// 	// if err != nil {
+// 	// 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+// 	// 	return
+// 	// }
+// 	// usdex := int64(usd)
+
+// 	// if pg.selectedExchange == "DCR" {
+// 	// 	pg.activeAmount = dcrutil.Amount(amountAtoms).String()
+// 	// 	pg.inactiveAmount = fmt.Sprintf("%s USD", strconv.Itoa(int(usdex*amountAtoms)))
+// 	// } else {
+// 	// 	pg.activeAmount = fmt.Sprintf("%s USD", strconv.Itoa(int(usdex*amountAtoms)))
+// 	// 	pg.inactiveAmount = strconv.Itoa(int(amountAtoms))
+// 	// }
+
+// 	// usdRate := usdex * txFee
+// 	// pg.inactiveTransactionFeeValueLabel.Text = fmt.Sprintf("(%s USD)", strconv.Itoa(int(usdRate)))
+// 	// pg.inactiveTotalCostValueLabel.Text = fmt.Sprintf("(%s USD)", strconv.Itoa(int(usdRate+usdex)))
+// }
 
 func (pg *SendPage) getUSDValues(target interface{}) {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println(err.Error())
+		// fmt.Println(err.Error())
 		return
 	}
 
@@ -744,7 +814,6 @@ func (pg *SendPage) getUSDValues(target interface{}) {
 
 	json.NewDecoder(resp.Body).Decode(target)
 }
-
 
 func (pg *SendPage) watchForBroadcastResult() {
 	if pg.broadcastResult == nil {
