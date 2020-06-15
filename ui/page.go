@@ -206,3 +206,10 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 		)
 	})
 }
+
+func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
+	if err != nil {
+		panic(err)
+	}
+	return ic
+}
