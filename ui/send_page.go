@@ -170,7 +170,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.activeTotalCostValue = "- " + page.selectedExchange
 	page.inactiveTotalCostValue = fmt.Sprintf("(- %s)", page.unselectedExchange)
 
-	page.balanceAfterSendValue = "- " + page.selectedExchange
+	page.balanceAfterSendValue = "- DCR"
 
 	page.inactiveTransactionFeeValueLabel.Color = common.theme.Color.Hint
 	page.inactiveTotalCostValueLabel.Color = common.theme.Color.Hint
@@ -509,7 +509,7 @@ func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
 			pg.tableLayoutFunc(gtx, pg.theme.Body2("Total Cost"), pg.activeTotalCostValue, pg.inactiveTotalCostValue)
 		},
 		func() {
-			pg.tableLayoutFunc(gtx, pg.theme.Body2("Balance after send"), "", "")
+			pg.tableLayoutFunc(gtx, pg.theme.Body2("Balance after send"), pg.balanceAfterSendValue, "")
 		},
 	}
 
@@ -693,11 +693,6 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 }
 
 func (pg *SendPage) calculateValues() {
-	// pg.activeTransactionFeeValueLabel.Text = "- DCR"
-	// pg.activeTotalCostValueLabel.Text = "- DCR"
-	// pg.inactiveTransactionFeeValueLabel.Text = "(- USD)"
-	// pg.inactiveTotalCostValueLabel.Text = "(- USD)"
-
 	pg.activeTransactionFeeValue = fmt.Sprintf("- %s", pg.selectedExchange)
 	pg.activeTotalCostValue = fmt.Sprintf("- %s", pg.selectedExchange)
 	pg.inactiveTransactionFeeValue = fmt.Sprintf("(- %s)", pg.unselectedExchange)
@@ -734,26 +729,13 @@ func (pg *SendPage) calculateValues() {
 	totalCost := txFee + amountAtoms
 
 	// pg.calculatedUSDValues(amountAtoms, txFee)
-
-	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
-	pg.transactionFeeValueLabel.Text = dcrutil.Amount(txFee).String()
-	pg.totalCostValueLabel.Text = dcrutil.Amount(totalCost).String()
-	pg.balanceAfterSend(pg.remainingBalance)
-}
-
-func (pg *SendPage) balanceAfterSend(balance int64) {
-	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(balance).String()
-}
-
-func (pg *SendPage) calculatedUSDValues(amountAtoms, txFee int64) {
- pg.getUSDValues(&pg.data)
-	amount, err := strconv.ParseFloat(pg.data.LastTradeRate, 64)
+	amountUSD, err := strconv.ParseFloat(pg.data.LastTradeRate, 64)
 	if err != nil {
 		panic(err)
 	}
 
 	totalAmountUSD := amountDCR * amountUSD
-	txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * amountDCR
+	txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * amountUSD
 
 	switch {
 	case pg.selectedExchange == "DCR":
@@ -774,33 +756,12 @@ func (pg *SendPage) calculatedUSDValues(amountAtoms, txFee int64) {
 	}
 
 	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
-	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(pg.remainingBalance).String()
+	pg.balanceAfterSend(pg.remainingBalance)
 }
 
-// func (pg *SendPage) calculatedUSDValues(amountAtoms, txFee int64) {
-// 	amount, err := strconv.ParseFloat("16.0000", 64)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	// usd, err := dcrutil.NewAmount(amount)
-// 	// if err != nil {
-// 	// 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
-// 	// 	return
-// 	// }
-// 	// usdex := int64(usd)
-
-// 	// if pg.selectedExchange == "DCR" {
-// 	// 	pg.activeAmount = dcrutil.Amount(amountAtoms).String()
-// 	// 	pg.inactiveAmount = fmt.Sprintf("%s USD", strconv.Itoa(int(usdex*amountAtoms)))
-// 	// } else {
-// 	// 	pg.activeAmount = fmt.Sprintf("%s USD", strconv.Itoa(int(usdex*amountAtoms)))
-// 	// 	pg.inactiveAmount = strconv.Itoa(int(amountAtoms))
-// 	// }
-
-// 	// usdRate := usdex * txFee
-// 	// pg.inactiveTransactionFeeValueLabel.Text = fmt.Sprintf("(%s USD)", strconv.Itoa(int(usdRate)))
-// 	// pg.inactiveTotalCostValueLabel.Text = fmt.Sprintf("(%s USD)", strconv.Itoa(int(usdRate+usdex)))
-// }
+func (pg *SendPage) balanceAfterSend(balance int64) {
+	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(balance).String()
+}
 
 func (pg *SendPage) getUSDValues(target interface{}) {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
