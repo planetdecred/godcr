@@ -199,6 +199,10 @@ func (pg *SendPage) Handle(common pageCommon) {
 		go pg.calculateValues()
 	}
 
+	if pg.destinationAddressEditor.Len() == 0 || pg.sendAmountEditor.Len() == 0 {
+		pg.balanceAfterSend(pg.selectedAccount.SpendableBalance)
+	}
+
 	for range pg.sendAmountEditor.Events(common.gtx) {
 		go pg.calculateValues()
 	}
@@ -557,10 +561,8 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 
 func (pg *SendPage) calculateValues() {
 	pg.transactionFeeValueLabel.Text = "0 DCR"
-	pg.totalCostValueLabel.Text = "0 DCR "
+	pg.totalCostValueLabel.Text = "0 DCR"
 	pg.calculateErrorText = ""
-
-	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(pg.selectedWallet.SpendableBalance).String()
 
 	if pg.txAuthor == nil || !pg.validate(true) {
 		return
@@ -591,7 +593,11 @@ func (pg *SendPage) calculateValues() {
 	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
 	pg.transactionFeeValueLabel.Text = dcrutil.Amount(txFee).String()
 	pg.totalCostValueLabel.Text = dcrutil.Amount(totalCost).String()
-	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(pg.remainingBalance).String()
+	pg.balanceAfterSend(pg.remainingBalance)
+}
+
+func (pg *SendPage) balanceAfterSend(balance int64) {
+	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(balance).String()
 }
 
 func (pg *SendPage) watchForBroadcastResult() {
