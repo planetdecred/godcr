@@ -42,14 +42,6 @@ type SendPage struct {
 	copyIconWidget                     *widget.Button
 	currencySwapWidget                 widget.Button
 
-	activeTransactionFeeValueLabel   decredmaterial.Label
-	inactiveTransactionFeeValueLabel decredmaterial.Label
-
-	activeTotalCostValueLabel   decredmaterial.Label
-	inactiveTotalCostValueLabel decredmaterial.Label
-
-	balanceAfterSendValueLabel decredmaterial.Label
-
 	destinationAddressEditorMaterial     decredmaterial.Editor
 	sendAmountEditorMaterial             decredmaterial.Editor
 	nextButtonMaterial                   decredmaterial.Button
@@ -149,9 +141,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.accountsTab.Position = decredmaterial.Top
 
 	page.balanceAfterSendValue = "- DCR"
-
-	page.inactiveTransactionFeeValueLabel.Color = common.theme.Color.Hint
-	page.inactiveTotalCostValueLabel.Color = common.theme.Color.Hint
 
 	page.destinationAddressEditorMaterial = common.theme.Editor("Destination Address")
 	page.destinationAddressEditorMaterial.SetRequiredErrorText("")
