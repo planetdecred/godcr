@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"gioui.org/text"
 	"math/rand"
 	"strings"
 	"time"
@@ -228,30 +229,38 @@ func (pg *backupPage) seedView() layout.Widget {
 					layout.Flex{}.Layout(pg.gtx,
 						layout.Rigid(func() {
 							pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
-							pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
-								if i < 17 {
-									layout.Inset{
-										Bottom: unit.Dp(10),
-										Left: unit.Dp(20),
-										Right: unit.Dp(20),
-									}.Layout(pg.gtx, func() {
-										pg.theme.Body2(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i])).Layout(pg.gtx)
-									})
-								}
-							})
+							layout.Flex{
+								Axis:      layout.Vertical,
+							}.Layout(pg.gtx, layout.Rigid(func() {
+								pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+									if i < 17 {
+										layout.Inset{
+											Bottom: unit.Dp(10),
+										}.Layout(pg.gtx, func() {
+											seedLabel := pg.theme.Body2(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
+											seedLabel.Alignment = text.Middle
+											seedLabel.Layout(pg.gtx)
+										})
+									}
+								})
+							}))
 						}),
 						layout.Rigid(func() {
-							pg.seedPhraseListRight.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
-								if i > 16 {
-									layout.Inset{
-										Bottom: unit.Dp(10),
-										Left: unit.Dp(20),
-										Right: unit.Dp(20),
-									}.Layout(pg.gtx, func() {
-										pg.theme.Body2(fmt.Sprintf("%d  %s", i+1, pg.seedPhrase[i])).Layout(pg.gtx)
-									})
-								}
-							})
+							layout.Flex{
+								Axis:      layout.Vertical,
+							}.Layout(pg.gtx, layout.Rigid(func() {
+								pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+									if i > 16 {
+										layout.Inset{
+											Bottom: unit.Dp(10),
+										}.Layout(pg.gtx, func() {
+											seedLabel := pg.theme.Body2(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
+											seedLabel.Alignment = text.Middle
+											seedLabel.Layout(pg.gtx)
+										})
+									}
+								})
+							}))
 						}),
 					)
 				})
