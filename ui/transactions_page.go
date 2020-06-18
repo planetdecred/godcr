@@ -38,7 +38,7 @@ type transactionsPage struct {
 	filterSortW, filterDirectionW               *widget.Enum
 	filterDirection, filterSort                 []decredmaterial.RadioButton
 	defaultFilterSorter, defaultFilterDirection string
-	toTxnDetails                                map[string]*gesture.Click
+	toTxnDetails                                []*gesture.Click
 
 	rowDirectionWidth,
 	rowDateWidth,
@@ -95,7 +95,6 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 	}
 
 	return func() {
-		page.updateTotransactionDetailsButtons()
 		page.Layout(common)
 		page.Handle(common)
 	}
@@ -121,6 +120,7 @@ func (page *transactionsPage) Layout(common pageCommon) {
 						layout.Flexed(1, func() {
 							walletID := common.info.Wallets[*common.selectedWallet].ID
 							walTxs := (*page.walletTransactions).Txs[walletID]
+							page.updateTotransactionDetailsButtons(&walTxs)
 
 							if len(walTxs) == 0 {
 								txt := common.theme.Body1("No transactions")
@@ -128,6 +128,7 @@ func (page *transactionsPage) Layout(common pageCommon) {
 								txt.Layout(gtx)
 								return
 							}
+
 							directionFilter, _ := strconv.Atoi(page.filterDirectionW.Value(gtx))
 							page.txsList.Layout(gtx, len(walTxs), func(index int) {
 								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
@@ -135,7 +136,7 @@ func (page *transactionsPage) Layout(common pageCommon) {
 								}
 								page.txnRowInfo(&common, walTxs[index])
 
-								click := page.toTxnDetails[walTxs[index].Txn.Hash]
+								click := page.toTxnDetails[index]
 								pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
 								click.Add(gtx.Ops)
 								page.goToTxnDetails(&common, &walTxs[index], click)
@@ -296,14 +297,11 @@ func (page *transactionsPage) sortTransactions(common *pageCommon) {
 	}
 }
 
-func (page *transactionsPage) updateTotransactionDetailsButtons() {
-	if (*page.walletTransactions).Total != len(page.toTxnDetails) {
-		page.toTxnDetails = make(map[string]*gesture.Click, (*page.walletTransactions).Total)
-
-		for _, walTxs := range (*page.walletTransactions).Txs {
-			for _, txn := range walTxs {
-				page.toTxnDetails[txn.Txn.Hash] = &gesture.Click{}
-			}
+func (page *transactionsPage) updateTotransactionDetailsButtons(walTxs *[]wallet.Transaction) {
+	if len(*walTxs) != len(page.toTxnDetails) {
+		page.toTxnDetails = make([]*gesture.Click, len(*walTxs))
+		for index := range *walTxs {
+			page.toTxnDetails[index] = &gesture.Click{}
 		}
 	}
 }
