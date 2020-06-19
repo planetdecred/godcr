@@ -294,11 +294,6 @@ func (pg *SendPage) Handle(c pageCommon) {
 
 func (pg *SendPage) Layout(common pageCommon) {
 	if len(common.info.Wallets) == 0 {
-		common.Layout(common.gtx, func() {
-			layout.Center.Layout(common.gtx, func() {
-				common.theme.H3("No wallet loaded").Layout(common.gtx)
-			})
-		})
 		return
 	}
 
@@ -335,7 +330,7 @@ func (pg *SendPage) Layout(common pageCommon) {
 
 	common.LayoutWithWallets(common.gtx, func() {
 		common.accountTab(common.gtx, func() {
-			layout.UniformInset(unit.Dp(7)).Layout(common.gtx, func() {
+			layout.Inset{Right: unit.Dp(110)}.Layout(common.gtx, func() {
 				pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
 					layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
 				})
