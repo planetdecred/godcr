@@ -740,7 +740,7 @@ func (pg *SendPage) calculateValues() {
 }
 
 func (pg *SendPage) balanceAfterSend(balance int64) {
-	pg.balanceAfterSendValueLabel.Text = dcrutil.Amount(balance).String()
+	pg.balanceAfterSendValue = dcrutil.Amount(balance).String()
 }
 
 func (pg *SendPage) getUSDValues(target interface{}) {
