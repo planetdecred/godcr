@@ -160,7 +160,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.copyIconMaterial.Size = unit.Dp(35)
 	page.copyIconMaterial.Padding = unit.Dp(5)
 
-	page.currencySwap = common.theme.IconButton(common.icons.actionSwapHoriz)
+	page.currencySwap = common.theme.IconButton(common.icons.actionSwapVert)
 	page.currencySwap.Background = color.RGBA{}
 	page.currencySwap.Color = common.theme.Color.Text
 	page.currencySwap.Padding = unit.Dp(0)
@@ -703,14 +703,14 @@ func (pg *SendPage) calculateValues() {
 		amountUSD, _ = strconv.ParseFloat(pg.data.LastTradeRate, 64)
 	}
 
-	// calculate total tx amount in USD
-	totalAmountUSD := amountDCR * amountUSD
-	txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * amountUSD
-
-	totalAmountUSDTostring := fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD, 'f', 7, 64))
-
 	switch {
 	case pg.activeExchange == "DCR" && pg.data.LastTradeRate != "":
+		// calculate total tx amount in USD
+		totalAmountUSD := amountDCR * amountUSD
+		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * amountUSD
+
+		totalAmountUSDTostring := fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD, 'f', 7, 64))
+
 		pg.activeTotalAmount = dcrutil.Amount(amountAtoms).String()
 		pg.inactiveTotalAmount = totalAmountUSDTostring
 		pg.activeTransactionFeeValue = dcrutil.Amount(txFee).String()
@@ -719,11 +719,22 @@ func (pg *SendPage) calculateValues() {
 		pg.inactiveTotalCostValue = fmt.Sprintf("(%s USD)", strconv.FormatFloat(totalAmountUSD+txFeeValueUSD, 'f', 7, 64))
 
 	case pg.activeExchange == "USD" && pg.data.LastTradeRate != "":
+		// calculate total tx amount in DCR
+		totalAmountDCR := amountDCR / amountUSD
+		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() / amountUSD
+
+		totalAmountUSDTostring := fmt.Sprintf("%s USD", pg.sendAmountEditor.Text())
+		amount, err := dcrutil.NewAmount(totalAmountDCR)
+		if err != nil {
+			pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+			return
+		}
+
 		pg.activeTotalAmount = totalAmountUSDTostring
-		pg.inactiveTotalAmount = dcrutil.Amount(amountAtoms).String()
+		pg.inactiveTotalAmount = dcrutil.Amount(int64(amount)).String()
 		pg.activeTransactionFeeValue = fmt.Sprintf("%f USD", txFeeValueUSD)
 		pg.inactiveTransactionFeeValue = fmt.Sprintf("(%s)", dcrutil.Amount(txFee).String())
-		pg.activeTotalCostValue = fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD+txFeeValueUSD, 'f', 7, 64))
+		pg.activeTotalCostValue = fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountDCR+txFeeValueUSD, 'f', 7, 64))
 		pg.inactiveTotalCostValue = fmt.Sprintf("(%s )", dcrutil.Amount(totalCost).String())
 
 	default:

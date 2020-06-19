@@ -18,6 +18,7 @@ type pageIcons struct {
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
 	actionSwapHoriz *decredmaterial.Icon
+
 	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon image.Image
 }
 
@@ -59,11 +60,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		editorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
 		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
 <<<<<<< HEAD
+<<<<<<< HEAD
 		actionBackup:               mustIcon(decredmaterial.NewIcon(icons.ActionSettingsBackupRestore)),
 		actionCheck:                mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 =======
 		actionSwapHoriz:            mustIcon(decredmaterial.NewIcon(icons.ActionSwapHoriz)),
 >>>>>>> initial commit
+=======
+		actionSwapVert:             mustIcon(decredmaterial.NewIcon(icons.ActionSwapVert)),
+>>>>>>> fix usd-dcr conversion, change icon
 		overviewIcon:               decredIcons["overview"],
 		walletIcon:                 decredIcons["wallet"],
 		receiveIcon:                decredIcons["receive"],
