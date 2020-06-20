@@ -72,6 +72,7 @@ type SendPage struct {
 	inactiveTotalCostValue string
 
 	balanceAfterSendValue string
+	amountAtoms           int64
 
 	passwordModal *decredmaterial.Password
 
@@ -681,38 +682,39 @@ func (pg *SendPage) calculateValues() {
 		return
 	}
 
-	amountDCR, _ := strconv.ParseFloat(pg.sendAmountEditor.Text(), 64)
-	amount, err := dcrutil.NewAmount(amountDCR)
-	if err != nil {
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
-		return
-	}
-	amountAtoms := int64(amount)
+	inputValue, _ := strconv.ParseFloat(pg.sendAmountEditor.Text(), 64)
 
-	// set destination address
-	pg.txAuthor.RemoveSendDestination(0)
-	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Text(), amountAtoms, false)
-
-	// calculate transaction fee
-	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
-	if err != nil {
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
-		return
-	}
-
-	txFee := feeAndSize.Fee.AtomValue
-	totalCost := txFee + amountAtoms
-
-	var amountUSD float64
+	var usdExchangeRate, amountUSDtoDCR float64
 	if pg.data.LastTradeRate != "" {
-		amountUSD, _ = strconv.ParseFloat(pg.data.LastTradeRate, 64)
+		usdExchangeRate, _ = strconv.ParseFloat(pg.data.LastTradeRate, 64)
+		amountUSDtoDCR = inputValue / usdExchangeRate
 	}
+
+	var amountAtoms int64
+	if pg.activeExchange == "USD" && pg.data.LastTradeRate != "" {
+		amountAtoms = pg.setDestinationAddr(amountUSDtoDCR)
+		if amountAtoms == 0 {
+			return
+		}
+	} else {
+		amountAtoms = pg.setDestinationAddr(inputValue)
+		if amountAtoms == 0 {
+			return
+		}
+	}
+
+	txFee := pg.getTxFee()
+	if txFee == 0 {
+		return
+	}
+
+	totalCostDCR := txFee + amountAtoms
 
 	switch {
 	case pg.activeExchange == "DCR" && pg.data.LastTradeRate != "":
 		// calculate total tx amount in USD
-		totalAmountUSD := amountDCR * amountUSD
-		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * amountUSD
+		totalAmountUSD := inputValue * usdExchangeRate
+		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * usdExchangeRate
 
 		totalAmountUSDTostring := fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD, 'f', 7, 64))
 
@@ -720,43 +722,60 @@ func (pg *SendPage) calculateValues() {
 		pg.inactiveTotalAmount = totalAmountUSDTostring
 		pg.activeTransactionFeeValue = dcrutil.Amount(txFee).String()
 		pg.inactiveTransactionFeeValue = fmt.Sprintf("(%f USD)", txFeeValueUSD)
-		pg.activeTotalCostValue = dcrutil.Amount(totalCost).String()
+		pg.activeTotalCostValue = dcrutil.Amount(totalCostDCR).String()
 		pg.inactiveTotalCostValue = fmt.Sprintf("(%s USD)", strconv.FormatFloat(totalAmountUSD+txFeeValueUSD, 'f', 7, 64))
 
 	case pg.activeExchange == "USD" && pg.data.LastTradeRate != "":
 		// calculate total tx amount in DCR
-		totalAmountDCR := amountDCR / amountUSD
-		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() / amountUSD
-
+		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * usdExchangeRate
 		totalAmountUSDTostring := fmt.Sprintf("%s USD", pg.sendAmountEditor.Text())
-		amount, err := dcrutil.NewAmount(totalAmountDCR)
-		if err != nil {
-			pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
-			return
-		}
 
 		pg.activeTotalAmount = totalAmountUSDTostring
-		pg.inactiveTotalAmount = dcrutil.Amount(int64(amount)).String()
+		pg.inactiveTotalAmount = dcrutil.Amount(amountAtoms).String()
 		pg.activeTransactionFeeValue = fmt.Sprintf("%f USD", txFeeValueUSD)
 		pg.inactiveTransactionFeeValue = fmt.Sprintf("(%s)", dcrutil.Amount(txFee).String())
-		pg.activeTotalCostValue = fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountDCR+txFeeValueUSD, 'f', 7, 64))
-		pg.inactiveTotalCostValue = fmt.Sprintf("(%s )", dcrutil.Amount(totalCost).String())
+		pg.activeTotalCostValue = fmt.Sprintf("%s USD", strconv.FormatFloat(inputValue+txFeeValueUSD, 'f', 7, 64))
+		pg.inactiveTotalCostValue = fmt.Sprintf("(%s )", dcrutil.Amount(totalCostDCR).String())
 
 	default:
 		pg.activeTotalAmount = dcrutil.Amount(amountAtoms).String()
 		pg.inactiveTotalAmount = "No Exchange was fetched"
 		pg.activeTransactionFeeValue = dcrutil.Amount(txFee).String()
 		pg.inactiveTransactionFeeValue = ""
-		pg.activeTotalCostValue = dcrutil.Amount(totalCost).String()
+		pg.activeTotalCostValue = dcrutil.Amount(totalCostDCR).String()
 		pg.inactiveTotalCostValue = ""
 	}
 
-	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
-	pg.balanceAfterSend(pg.remainingBalance)
+	pg.balanceAfterSend(totalCostDCR)
 }
 
-func (pg *SendPage) balanceAfterSend(balance int64) {
-	pg.balanceAfterSendValue = dcrutil.Amount(balance).String()
+func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
+	amount, err := dcrutil.NewAmount(sendAmount)
+	if err != nil {
+		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+		return 0
+	}
+
+	amountAtoms := int64(amount)
+	pg.txAuthor.RemoveSendDestination(0)
+	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Text(), amountAtoms, false)
+	return amountAtoms
+}
+
+func (pg *SendPage) getTxFee() int64 {
+	// calculate transaction fee
+	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
+	if err != nil {
+		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+		return 0
+	}
+
+	return feeAndSize.Fee.AtomValue
+}
+
+func (pg *SendPage) balanceAfterSend(totalCostDCR int64) {
+	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCostDCR
+	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
 }
 
 func (pg *SendPage) getUSDValues(target interface{}) {
