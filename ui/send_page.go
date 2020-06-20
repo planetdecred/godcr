@@ -350,10 +350,7 @@ func (pg *SendPage) drawPageContents(common pageCommon) {
 			pg.destinationAddressEditorMaterial.Layout(common.gtx, pg.destinationAddressEditor)
 		},
 		func() {
-			pg.DCRToUSDLayout(common.gtx)
-		},
-		func() {
-			pg.sendAmountEditorMaterial.Layout(common.gtx, pg.sendAmountEditor)
+			pg.sendAmountLayout(common.gtx)
 		},
 		func() {
 			pg.drawTransactionDetailWidgets(common.gtx)
@@ -497,19 +494,27 @@ func (pg *SendPage) tableLayoutFunc(gtx *layout.Context, leftLabel decredmateria
 	)
 }
 
-func (pg *SendPage) DCRToUSDLayout(gtx *layout.Context) {
+func (pg *SendPage) sendAmountLayout(gtx *layout.Context) {
 	layout.Flex{}.Layout(gtx,
 		layout.Flexed(1, func() {
 			layout.W.Layout(gtx, func() {
 				layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func() {
 						pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
-
 					}),
 					layout.Rigid(func() {
-						layout.Inset{Left: unit.Dp(7)}.Layout(gtx, func() {
-							pg.currencySwap.Layout(gtx, &pg.currencySwapWidget)
-						})
+						layout.Flex{}.Layout(gtx,
+							layout.Rigid(func() {
+								layout.Inset{Left: unit.Dp(10), Top: unit.Dp(10), Bottom: unit.Dp(10)}.Layout(gtx, func() {
+									pg.currencySwap.Layout(gtx, &pg.currencySwapWidget)
+								})
+							}),
+							layout.Rigid(func() {
+								layout.Inset{Left: unit.Dp(7)}.Layout(gtx, func() {
+									pg.sendAmountEditorMaterial.Layout(gtx, pg.sendAmountEditor)
+								})
+							}),
+						)
 					}),
 					layout.Rigid(func() {
 						txt := pg.theme.Body2(pg.inactiveTotalAmount)
