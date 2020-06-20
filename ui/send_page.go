@@ -72,7 +72,6 @@ type SendPage struct {
 	inactiveTotalCostValue string
 
 	balanceAfterSendValue string
-	amountAtoms           int64
 
 	passwordModal *decredmaterial.Password
 
