@@ -178,7 +178,7 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	page.Layout(gtx, bd)
 }
 
-func (page pageCommon) accountTab(gtx *layout.Context, body layout.Widget) {
+func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widget) {
 	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
 	for i, account := range page.info.Wallets[*page.selectedWallet].Accounts {
 		if account.Name == "imported" {
@@ -192,14 +192,17 @@ func (page pageCommon) accountTab(gtx *layout.Context, body layout.Widget) {
 	if page.accountsTab.Changed() {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
-	layout.Flex{}.Layout(gtx,
-		layout.Rigid(func() {
-			layout.Inset{Top: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func() {
-				page.theme.H6("Accounts: ").Layout(gtx)
-			})
-		}),
-		layout.Rigid(func() {
-			page.accountsTab.Layout(gtx, body)
-		}),
-	)
+
+	page.LayoutWithWallets(gtx, func() {
+		layout.Flex{}.Layout(gtx,
+			layout.Rigid(func() {
+				layout.Inset{Top: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func() {
+					page.theme.H6("Accounts: ").Layout(gtx)
+				})
+			}),
+			layout.Rigid(func() {
+				page.accountsTab.Layout(gtx, body)
+			}),
+		)
+	})
 }
