@@ -262,10 +262,9 @@ func (page *transactionsPage) Handle(common pageCommon) {
 
 func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidgets *transactionWdg) {
 	txWidgets.amount = common.theme.Label(unit.Dp(16), transaction.Balance)
-	txWidgets.time = common.theme.Body1("Pending")
+	txWidgets.time = common.theme.Body1(dcrlibwallet.ExtractDateOrTime(transaction.Txn.Timestamp))
 
 	if transaction.Status == "confirmed" {
-		txWidgets.time.Text = dcrlibwallet.ExtractDateOrTime(transaction.Txn.Timestamp)
 		txWidgets.status = common.icons.actionCheckCircle
 		txWidgets.status.Color = common.theme.Color.Success
 	} else {
