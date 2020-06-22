@@ -328,12 +328,10 @@ func (pg *SendPage) Layout(common pageCommon) {
 		},
 	}
 
-	common.LayoutWithWallets(common.gtx, func() {
-		common.accountTab(common.gtx, func() {
-			layout.Inset{Right: unit.Dp(110)}.Layout(common.gtx, func() {
-				pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
-					layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
-				})
+	common.LayoutWithAccounts(common.gtx, func() {
+		layout.Inset{Right: unit.Dp(110)}.Layout(common.gtx, func() {
+			pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
+				layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
 			})
 		})
 	})
