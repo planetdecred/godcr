@@ -56,7 +56,7 @@ type backupPage struct {
 
 	container           *layout.List
 	infoList            *layout.List
-	viewList 			*layout.List
+	viewList            *layout.List
 	seedPhraseListLeft  *layout.List
 	seedPhraseListRight *layout.List
 	verifyList          *layout.List
@@ -85,8 +85,8 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 		actionWidget:     new(widget.Button),
 		container:        &layout.List{Axis: layout.Vertical},
 
-		active:         infoView,
-		selectedSeeds:  make([]string, 33),
+		active:        infoView,
+		selectedSeeds: make([]string, 33),
 	}
 
 	b.backButton.Color = c.theme.Color.Hint
@@ -273,29 +273,54 @@ func (pg *backupPage) seedView() layout.Widget {
 func (pg *backupPage) verifyView() layout.Widget {
 	return func() {
 		pg.viewTemplate(func() {
-			layout.Inset{Bottom: unit.Dp(38)}.Layout(pg.gtx, func() {
+			toMax(pg.gtx)
+			layout.Inset{Bottom: unit.Dp(40)}.Layout(pg.gtx, func() {
 				pg.verifyList.Layout(pg.gtx, len(pg.suggestions), func(i int) {
 					s := pg.suggestions[i]
-					suggestionButtons := s.buttons
-
-					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-						layout.Rigid(func() {
-							pg.theme.Body1(fmt.Sprintf("%d. %s", i+1, pg.selectedSeeds[i])).Layout(pg.gtx)
-						}),
-						layout.Rigid(func() {
-							pg.suggestionList.Layout(pg.gtx, len(suggestionButtons), func(i int) {
-								suggestionButtons[i].skin.Background = pg.theme.Color.Hint
-								if s.selected == i {
-									suggestionButtons[i].skin.Background = pg.theme.Color.Primary
-								}
-								suggestionButtons[i].skin.Layout(pg.gtx, suggestionButtons[i].button)
-							})
-						}),
-					)
+					layout.Center.Layout(pg.gtx, func() {
+						layout.Inset{Bottom: unit.Dp(30)}.Layout(pg.gtx, func() {
+							layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+								layout.Rigid(func() {
+									layout.Inset{Left:  unit.Dp(15), Bottom: unit.Dp(15)}.Layout(pg.gtx, func() {
+										selected := pg.selectedSeeds[i]
+										if pg.selectedSeeds[i] == "" {
+											selected = "-"
+										}
+										pg.theme.H6(fmt.Sprintf("%d. %s", i+1, selected)).Layout(pg.gtx)
+									})
+								}),
+								layout.Rigid(func() {
+									layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+										layout.Flexed(0.3, func() {
+											pg.suggestionButtonGroup(s, 0)
+										}),
+										layout.Flexed(0.3, func() {
+											pg.suggestionButtonGroup(s, 1)
+										}),
+										layout.Flexed(0.3, func() {
+											pg.suggestionButtonGroup(s, 2)
+										}),
+									)
+								}),
+							)
+						})
+					})
 				})
 			})
 		})()
 	}
+}
+
+func (pg *backupPage) suggestionButtonGroup(sg seedGroup, buttonIndex int) {
+	button := sg.buttons[buttonIndex]
+	button.skin.Background = pg.theme.Color.Hint
+	button.skin.TextSize = unit.Dp(18)
+	if sg.selected == buttonIndex {
+		button.skin.Background = pg.theme.Color.Primary
+	}
+	layout.Inset{Right: unit.Dp(15), Left: unit.Dp(15)}.Layout(pg.gtx, func() {
+		button.skin.Layout(pg.gtx, sg.buttons[buttonIndex].button)
+	})
 }
 
 func (pg *backupPage) verifyCheckBoxes() bool {
@@ -338,6 +363,9 @@ func (pg *backupPage) handle(c pageCommon) {
 		pg.selectedSeeds = make([]string, 33)
 		for _, cb := range pg.checkBoxWidgets {
 			cb.SetChecked(false)
+		}
+		for i, _ := range pg.suggestions {
+			pg.suggestions[i].selected = -1
 		}
 	}
 

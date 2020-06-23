@@ -50,7 +50,7 @@ type InfoShort struct {
 	DaysBehind       string
 	Status           string
 	IsWaiting        bool
-	Seed 			 string
+	Seed             string
 }
 
 // Account represents information about a wallet's account

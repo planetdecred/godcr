@@ -366,7 +366,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				BlockTimestamp:   wall.GetBestBlockTimeStamp(),
 				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
-				Seed: 			  wall.Seed,
+				Seed:             wall.Seed,
 			}
 			i++
 		}
