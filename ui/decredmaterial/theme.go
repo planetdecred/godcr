@@ -6,10 +6,6 @@ import (
 	"image"
 	"image/color"
 
-	"golang.org/x/image/draw"
-
-	"gioui.org/widget/material"
-
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
@@ -17,6 +13,11 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
+	"gioui.org/widget/material"
+
+	"golang.org/x/image/draw"
+
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -37,6 +38,12 @@ var (
 type (
 	C = layout.Context
 	D = layout.Dimensions
+)
+
+const (
+	modalTopInset           = 50
+	modalSideInset          = 100
+	estimatedModalRowHeight = 50
 )
 
 type Theme struct {
@@ -103,13 +110,12 @@ func (t *Theme) Modal(gtx layout.Context, title string, wd []func(gtx C) D) layo
 
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			new(widget.Clickable).Layout(gtx)
 			return fillMax(gtx, overlayColor)
 		}),
 		layout.Stacked(func(gtx C) D {
 			w := []func(gtx C) D{
 				func(gtx C) D {
-					return t.H4(title).Layout(gtx)
+					return t.H6(title).Layout(gtx)
 				},
 				func(gtx C) D {
 					line := t.Line()
@@ -119,7 +125,12 @@ func (t *Theme) Modal(gtx layout.Context, title string, wd []func(gtx C) D) layo
 			}
 			w = append(w, wd...)
 
-			return layout.UniformInset(unit.Dp(60)).Layout(gtx, func(gtx C) D {
+			return layout.Inset{
+				Top:    unit.Dp(modalTopInset),
+				Bottom: unit.Dp(100),
+				Left:   unit.Dp(modalSideInset),
+				Right:  unit.Dp(modalSideInset),
+			}.Layout(gtx, func(gtx C) D {
 				fillMax(gtx, t.Color.Surface)
 				return (&layout.List{Axis: layout.Vertical, Alignment: layout.Middle}).Layout(gtx, len(w), func(gtx C, i int) D {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
