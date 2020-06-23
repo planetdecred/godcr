@@ -221,9 +221,8 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 				balance:     txn.Balance,
 				mainBalance: theme.Body1(""),
 				subBalance:  theme.Caption(""),
-				date: theme.Body1(fmt.Sprintf("%v",
-					dcrlibwallet.ExtractDateOrTime(txn.Txn.Timestamp))),
-				status: theme.Body1(txn.Status),
+				date:        theme.Body1(txn.DateTime),
+				status:      theme.Body1(txn.Status),
 			}
 			if txn.Txn.Direction == dcrlibwallet.TxDirectionSent {
 				txnWidgets.direction = c.icons.contentRemove
