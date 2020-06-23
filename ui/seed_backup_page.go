@@ -56,6 +56,7 @@ type backupPage struct {
 
 	container           *layout.List
 	infoList            *layout.List
+	viewList 			*layout.List
 	seedPhraseListLeft  *layout.List
 	seedPhraseListRight *layout.List
 	verifyList          *layout.List
@@ -125,6 +126,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	}
 
 	b.infoList = &layout.List{Axis: layout.Vertical}
+	b.viewList = &layout.List{Axis: layout.Vertical}
 	b.seedPhraseListLeft = &layout.List{Axis: layout.Vertical}
 	b.seedPhraseListRight = &layout.List{Axis: layout.Vertical}
 	b.verifyList = &layout.List{Axis: layout.Vertical}
@@ -226,43 +228,42 @@ func (pg *backupPage) seedView() layout.Widget {
 			func() {
 				pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
 				layout.Center.Layout(pg.gtx, func() {
-					layout.Flex{}.Layout(pg.gtx,
-						layout.Rigid(func() {
-							pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
-							layout.Flex{
-								Axis:      layout.Vertical,
-							}.Layout(pg.gtx, layout.Rigid(func() {
-								pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
-									if i < 17 {
-										layout.Inset{
-											Bottom: unit.Dp(10),
-										}.Layout(pg.gtx, func() {
-											seedLabel := pg.theme.Body2(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
-											seedLabel.Alignment = text.Middle
-											seedLabel.Layout(pg.gtx)
+					layout.Inset{Bottom: unit.Dp(60)}.Layout(pg.gtx, func() {
+						pg.viewList.Layout(pg.gtx, 1, func(i int) {
+							layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+								layout.Rigid(func() {
+									pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
+									layout.Inset{Right: unit.Dp(30), Left: unit.Dp(30)}.Layout(pg.gtx, func() {
+										pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+											if i < 17 {
+												layout.Inset{
+													Bottom: unit.Dp(10),
+												}.Layout(pg.gtx, func() {
+													seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
+													seedLabel.Layout(pg.gtx)
+												})
+											}
 										})
-									}
-								})
-							}))
-						}),
-						layout.Rigid(func() {
-							layout.Flex{
-								Axis:      layout.Vertical,
-							}.Layout(pg.gtx, layout.Rigid(func() {
-								pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
-									if i > 16 {
-										layout.Inset{
-											Bottom: unit.Dp(10),
-										}.Layout(pg.gtx, func() {
-											seedLabel := pg.theme.Body2(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
-											seedLabel.Alignment = text.Middle
-											seedLabel.Layout(pg.gtx)
+									})
+								}),
+								layout.Rigid(func() {
+									layout.Inset{Right: unit.Dp(30), Left: unit.Dp(30)}.Layout(pg.gtx, func() {
+										pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+											if i > 16 {
+												layout.Inset{
+													Bottom: unit.Dp(10),
+												}.Layout(pg.gtx, func() {
+													seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
+													seedLabel.Alignment = text.Middle
+													seedLabel.Layout(pg.gtx)
+												})
+											}
 										})
-									}
-								})
-							}))
-						}),
-					)
+									})
+								}),
+							)
+						})
+					})
 				})
 			},
 		)()
