@@ -2,7 +2,6 @@ package ui
 
 import (
 	"github.com/raedahgroup/dcrlibwallet"
-	//"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 )
 

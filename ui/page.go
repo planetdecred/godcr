@@ -207,6 +207,11 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 	})
 }
 
+func toMax(gtx *layout.Context) {
+	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
+	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
+}
+
 func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
 	if err != nil {
 		panic(err)
