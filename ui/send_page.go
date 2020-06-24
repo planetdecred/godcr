@@ -1,10 +1,8 @@
 package ui
 
 import (
-	"encoding/json"
 	"fmt"
 	"image/color"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -18,10 +16,6 @@ import (
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
-
-type data struct {
-	LastTradeRate string
-}
 
 type SendPage struct {
 	pageContainer   layout.List
@@ -73,6 +67,8 @@ type SendPage struct {
 
 	balanceAfterSendValue string
 
+	LastTradeRate string
+
 	passwordModal *decredmaterial.Password
 
 	isConfirmationModalOpen   bool
@@ -83,8 +79,6 @@ type SendPage struct {
 
 	txAuthorErrChan  chan error
 	broadcastErrChan chan error
-
-	data data
 }
 
 const (
@@ -227,7 +221,7 @@ func (pg *SendPage) Handle(common pageCommon) {
 	}
 
 	for pg.currencySwapWidget.Clicked(common.gtx) {
-		if pg.data.LastTradeRate != "" {
+		if pg.LastTradeRate != "" {
 			if pg.activeExchange == "DCR" {
 				pg.activeExchange = "USD"
 				pg.inactiveExchange = "DCR"
@@ -305,7 +299,6 @@ func (pg *SendPage) setAccountTabs() {
 }
 
 func (pg *SendPage) Layout(common pageCommon) {
-	go pg.getUSDValues(&pg.data)
 	pg.calculateValues()
 
 	if len(common.info.Wallets) == 0 {
@@ -467,7 +460,7 @@ func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
 	})
 }
 
-func (pg *SendPage) tableLayoutFunc(gtx *layout.Context, leftLabel decredmaterial.Label, active, inactive string) {
+func (pg *SendPage) tableLayout(gtx *layout.Context, leftLabel decredmaterial.Label, active, inactive string) {
 	layout.Flex{}.Layout(gtx,
 		layout.Rigid(func() {
 			leftLabel.Layout(gtx)
@@ -518,7 +511,7 @@ func (pg *SendPage) sendAmountLayout(gtx *layout.Context) {
 					}),
 					layout.Rigid(func() {
 						txt := pg.theme.Body2(pg.inactiveTotalAmount)
-						if pg.data.LastTradeRate == "" {
+						if pg.LastTradeRate == "" {
 							txt.Color = pg.theme.Color.Danger
 						}
 						txt.Layout(gtx)
@@ -666,9 +659,10 @@ func (pg *SendPage) calculateValues() {
 	pg.calculateErrorText = ""
 	pg.activeTotalAmount = defaultActiveValues
 	pg.inactiveTotalAmount = fmt.Sprintf("- %s", pg.inactiveExchange)
+	pg.wallet.GetUSDExchangeValues(&pg)
 
 	// default values when exchange is not available
-	if pg.data.LastTradeRate == "" {
+	if pg.LastTradeRate == "" {
 		pg.activeTransactionFeeValue = defaultActiveValues
 		pg.activeTotalCostValue = defaultActiveValues
 		pg.inactiveTransactionFeeValue = ""
@@ -684,13 +678,13 @@ func (pg *SendPage) calculateValues() {
 	inputValue, _ := strconv.ParseFloat(pg.sendAmountEditor.Text(), 64)
 
 	var usdExchangeRate, amountUSDtoDCR float64
-	if pg.data.LastTradeRate != "" {
-		usdExchangeRate, _ = strconv.ParseFloat(pg.data.LastTradeRate, 64)
+	if pg.LastTradeRate != "" {
+		usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
 		amountUSDtoDCR = inputValue / usdExchangeRate
 	}
 
 	var amountAtoms int64
-	if pg.activeExchange == "USD" && pg.data.LastTradeRate != "" {
+	if pg.activeExchange == "USD" && pg.LastTradeRate != "" {
 		amountAtoms = pg.setDestinationAddr(amountUSDtoDCR)
 		if amountAtoms == 0 {
 			return
@@ -710,7 +704,7 @@ func (pg *SendPage) calculateValues() {
 	totalCostDCR := txFee + amountAtoms
 
 	switch {
-	case pg.activeExchange == "DCR" && pg.data.LastTradeRate != "":
+	case pg.activeExchange == "DCR" && pg.LastTradeRate != "":
 		// calculate total tx amount in USD
 		totalAmountUSD := inputValue * usdExchangeRate
 		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * usdExchangeRate
@@ -724,7 +718,7 @@ func (pg *SendPage) calculateValues() {
 		pg.activeTotalCostValue = dcrutil.Amount(totalCostDCR).String()
 		pg.inactiveTotalCostValue = fmt.Sprintf("(%s USD)", strconv.FormatFloat(totalAmountUSD+txFeeValueUSD, 'f', 7, 64))
 
-	case pg.activeExchange == "USD" && pg.data.LastTradeRate != "":
+	case pg.activeExchange == "USD" && pg.LastTradeRate != "":
 		// calculate total tx amount in DCR
 		txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * usdExchangeRate
 		totalAmountUSDTostring := fmt.Sprintf("%s USD", pg.sendAmountEditor.Text())
@@ -775,18 +769,6 @@ func (pg *SendPage) getTxFee() int64 {
 func (pg *SendPage) balanceAfterSend(totalCostDCR int64) {
 	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCostDCR
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
-}
-
-func (pg *SendPage) getUSDValues(target interface{}) {
-	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
-	resp, err := http.Get(url)
-	if err != nil {
-		return
-	}
-
-	defer resp.Body.Close()
-
-	json.NewDecoder(resp.Body).Decode(target)
 }
 
 func (pg *SendPage) watchForBroadcastResult() {

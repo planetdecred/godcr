@@ -2,8 +2,10 @@ package wallet
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math"
+	"net/http"
 	"sort"
 	"strconv"
 	"time"
@@ -489,6 +491,19 @@ func (wal *Wallet) VerifyMessage(address string, message string, signature strin
 	}
 
 	return wall.VerifyMessage(address, message, signature)
+}
+
+//GetUSDExchangeValues gets the exchange rate of DCR - USDT
+func (wal *Wallet) GetUSDExchangeValues(target interface{}) {
+	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
+	resp, err := http.Get(url)
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	json.NewDecoder(resp.Body).Decode(target)
 }
 
 // StartSync starts the multiwallet SPV sync
