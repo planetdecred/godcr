@@ -227,6 +227,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 					Balance:       dcrutil.Amount(txnRaw.Amount).String(),
 					WalletName:    wall.Name,
 					Confirmations: confirmations,
+					DateTime:      dcrlibwallet.ExtractDateOrTime(txnRaw.Timestamp),
 				}
 				recentTxs = append(recentTxs, txn)
 				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
@@ -281,6 +282,7 @@ func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
 			Balance:       dcrutil.Amount(txn.Amount).String(),
 			WalletName:    wall.Name,
 			Confirmations: confirmations,
+			DateTime:      dcrlibwallet.ExtractDateOrTime(txn.Timestamp),
 		}
 		wal.Send <- resp
 	}()

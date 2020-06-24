@@ -101,6 +101,7 @@ type Transaction struct {
 	Balance       string
 	WalletName    string
 	Confirmations int32
+	DateTime      string
 }
 
 // Transactions is sent in response to Wallet.GetAllTransactions

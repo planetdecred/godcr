@@ -73,7 +73,7 @@ type overviewPage struct {
 	walletTransaction             **wallet.Transaction
 	toTransactions, sync          decredmaterial.Button
 	toTransactionsW, syncW        widget.Button
-	toTransactionDetails          map[string]*gesture.Click
+	toTransactionDetails          []*gesture.Click
 
 	text                      overviewPageText
 	syncButtonHeight          int
@@ -145,7 +145,6 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	return func() {
 		page.Layout(c)
 		page.Handler(c)
-		page.updateToTransactionDetailsButtons()
 	}
 }
 
@@ -214,15 +213,16 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 	var transactionRows []func()
 
 	if len((*page.walletTransactions).Txs) > 0 {
-		for _, txn := range (*page.walletTransactions).Recent {
+		page.updateToTransactionDetailsButtons()
+
+		for index, txn := range (*page.walletTransactions).Recent {
 			txnWidgets := transactionWidgets{
 				wallet:      theme.Body1(txn.WalletName),
 				balance:     txn.Balance,
 				mainBalance: theme.Body1(""),
 				subBalance:  theme.Caption(""),
-				date: theme.Body1(fmt.Sprintf("%v",
-					dcrlibwallet.ExtractDateOrTime(txn.Txn.Timestamp))),
-				status: theme.Body1(txn.Status),
+				date:        theme.Body1(txn.DateTime),
+				status:      theme.Body1(txn.Status),
 			}
 			if txn.Txn.Direction == dcrlibwallet.TxDirectionSent {
 				txnWidgets.direction = c.icons.contentRemove
@@ -232,7 +232,7 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 				txnWidgets.direction.Color = c.theme.Color.Success
 			}
 
-			click := page.toTransactionDetails[txn.Txn.Hash]
+			click := page.toTransactionDetails[index]
 
 			transactionRows = append(transactionRows, func() {
 				page.recentTransactionRow(txnWidgets)
@@ -569,23 +569,10 @@ func (page *overviewPage) breakBalance(balance string) (b1, b2 string) {
 
 func (page *overviewPage) updateToTransactionDetailsButtons() {
 	recentTxs := (*page.walletTransactions).Recent
-	shouldInit := false
-
 	if len(recentTxs) != len(page.toTransactionDetails) {
-		shouldInit = true
-	}
-
-	// When new block is added, check first block in recentTxs against map of toTransactionDetails
-	if len(page.toTransactionDetails) > 0 {
-		if _, found := page.toTransactionDetails[recentTxs[0].Txn.Hash]; !found {
-			shouldInit = true
-		}
-	}
-
-	if shouldInit {
-		page.toTransactionDetails = make(map[string]*gesture.Click, len(recentTxs))
-		for _, txn := range recentTxs {
-			page.toTransactionDetails[txn.Txn.Hash] = &gesture.Click{}
+		page.toTransactionDetails = make([]*gesture.Click, len(recentTxs))
+		for i := range recentTxs {
+			page.toTransactionDetails[i] = &gesture.Click{}
 		}
 	}
 }
@@ -606,16 +593,13 @@ func (page *overviewPage) Handler(c pageCommon) {
 		*c.page = PageTransactions
 	}
 
-	for has, click := range page.toTransactionDetails {
+	for index, click := range page.toTransactionDetails {
 		for _, e := range click.Events(page.gtx) {
 			if e.Type == gesture.TypeClick {
-				for _, txn := range (*page.walletTransactions).Recent {
-					if has == txn.Txn.Hash {
-						*page.walletTransaction = &txn
-						*c.page = PageTransactionDetails
-						return
-					}
-				}
+				txn := (*page.walletTransactions).Recent[index]
+				*page.walletTransaction = &txn
+				*c.page = PageTransactionDetails
+				return
 			}
 		}
 	}
