@@ -441,13 +441,13 @@ func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
 func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
 	w := []func(){
 		func() {
-			pg.tableLayoutFunc(gtx, pg.theme.Body2("Transaction Fee"), pg.activeTransactionFeeValue, pg.inactiveTransactionFeeValue)
+			pg.tableLayout(gtx, pg.theme.Body2("Transaction Fee"), pg.activeTransactionFeeValue, pg.inactiveTransactionFeeValue)
 		},
 		func() {
-			pg.tableLayoutFunc(gtx, pg.theme.Body2("Total Cost"), pg.activeTotalCostValue, pg.inactiveTotalCostValue)
+			pg.tableLayout(gtx, pg.theme.Body2("Total Cost"), pg.activeTotalCostValue, pg.inactiveTotalCostValue)
 		},
 		func() {
-			pg.tableLayoutFunc(gtx, pg.theme.Body2("Balance after send"), pg.balanceAfterSendValue, "")
+			pg.tableLayout(gtx, pg.theme.Body2("Balance after send"), pg.balanceAfterSendValue, "")
 		},
 	}
 
