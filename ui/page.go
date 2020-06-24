@@ -165,7 +165,10 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	}
 
 	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
-	for i := range page.info.Wallets[*page.selectedWallet].Accounts {
+	for i, acct := range page.info.Wallets[*page.selectedWallet].Accounts {
+		if acct.Name == "imported" {
+			continue
+		}
 		accounts[i] = decredmaterial.TabItem{
 			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
 		}
