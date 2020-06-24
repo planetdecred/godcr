@@ -243,6 +243,7 @@ func (pg *SendPage) Handle(common pageCommon) {
 	}
 
 	for range pg.sendAmountEditor.Events(common.gtx) {
+		go pg.wallet.GetUSDExchangeValues(&pg)
 		go pg.calculateValues()
 	}
 
@@ -650,6 +651,7 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 func (pg *SendPage) calculateValues() {
 	defaultActiveValues := fmt.Sprintf("- %s", pg.activeExchange)
 	defaultInactiveValues := fmt.Sprintf("(- %s)", pg.inactiveExchange)
+	noExchangeText := "Exchange rate not fetched"
 
 	pg.activeTransactionFeeValue = defaultActiveValues
 	pg.activeTotalCostValue = defaultActiveValues
@@ -659,7 +661,6 @@ func (pg *SendPage) calculateValues() {
 	pg.calculateErrorText = ""
 	pg.activeTotalAmount = defaultActiveValues
 	pg.inactiveTotalAmount = fmt.Sprintf("- %s", pg.inactiveExchange)
-	pg.wallet.GetUSDExchangeValues(&pg)
 
 	// default values when exchange is not available
 	if pg.LastTradeRate == "" {
@@ -668,7 +669,7 @@ func (pg *SendPage) calculateValues() {
 		pg.inactiveTransactionFeeValue = ""
 		pg.inactiveTotalCostValue = ""
 		pg.activeTotalAmount = defaultActiveValues
-		pg.inactiveTotalAmount = "No Exchange was fetched"
+		pg.inactiveTotalAmount = noExchangeText
 	}
 
 	if pg.txAuthor == nil || !pg.validate(true) {
@@ -732,7 +733,7 @@ func (pg *SendPage) calculateValues() {
 
 	default:
 		pg.activeTotalAmount = dcrutil.Amount(amountAtoms).String()
-		pg.inactiveTotalAmount = "No Exchange was fetched"
+		pg.inactiveTotalAmount = noExchangeText
 		pg.activeTransactionFeeValue = dcrutil.Amount(txFee).String()
 		pg.inactiveTransactionFeeValue = ""
 		pg.activeTotalCostValue = dcrutil.Amount(totalCostDCR).String()
