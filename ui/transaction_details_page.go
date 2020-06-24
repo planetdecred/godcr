@@ -191,7 +191,11 @@ func (page *transactionPage) txnTypeAndID(common *pageCommon) {
 					row("To", common.theme.H6(transaction.WalletName))
 				}),
 				layout.Rigid(func() {
-					row("Included in block", common.theme.H6(fmt.Sprintf("%d", transaction.Txn.BlockHeight)))
+					txt := ""
+					if transaction.Txn.BlockHeight != -1 {
+						txt = fmt.Sprintf("%d", transaction.Txn.BlockHeight)
+					}
+					row("Included in block", common.theme.H6(txt))
 				}),
 				layout.Rigid(func() {
 					row("Type", common.theme.H6(transaction.Txn.Type))
