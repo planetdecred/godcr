@@ -2,10 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"gioui.org/text"
 	"math/rand"
 	"strings"
 	"time"
+
+	"gioui.org/text"
 
 	"github.com/raedahgroup/dcrlibwallet"
 
@@ -45,10 +46,12 @@ type backupPage struct {
 	wal   *wallet.Wallet
 	info  *wallet.MultiWalletInfo
 
-	backButton decredmaterial.IconButton
-	titleLabel decredmaterial.Label
-	action     decredmaterial.Button
-	checkBoxes []decredmaterial.CheckBox
+	backButton  decredmaterial.IconButton
+	title       decredmaterial.Label
+	steps       decredmaterial.Label
+	instruction decredmaterial.Label
+	action      decredmaterial.Button
+	checkBoxes  []decredmaterial.CheckBox
 
 	backButtonWidget *widget.Button
 	actionWidget     *widget.Button
@@ -77,9 +80,11 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 		wal:   c.wallet,
 		info:  c.info,
 
-		action:     c.theme.Button("View seed phrase"),
-		backButton: c.theme.PlainIconButton(c.icons.navigationArrowBack),
-		titleLabel: c.theme.H5("Keep in mind"),
+		action:      c.theme.Button("View seed phrase"),
+		backButton:  c.theme.PlainIconButton(c.icons.navigationArrowBack),
+		title:       c.theme.H5("Keep in mind"),
+		steps:       c.theme.Body1("Step 1/2"),
+		instruction: c.theme.H6("Write down all 33 words in the correct order"),
 
 		backButtonWidget: new(widget.Button),
 		actionWidget:     new(widget.Button),
@@ -89,6 +94,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 		selectedSeeds: make([]string, 33),
 	}
 
+	b.steps.Color = c.theme.Color.Hint
 	b.backButton.Color = c.theme.Color.Hint
 	b.backButton.Size = unit.Dp(32)
 
@@ -102,6 +108,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 		c.theme.CheckBox("Anyone with your seed phrase can steal your funds. DO NOT show it to anyone."),
 	}
 
+	b.instruction.Alignment = text.Middle
 	b.allSuggestions = dcrlibwallet.PGPWordList()
 
 	for _, cb := range b.checkBoxes {
@@ -159,15 +166,34 @@ func (pg *backupPage) layout() {
 func (pg *backupPage) pageTitle() layout.Widget {
 	gtx := pg.gtx
 	return func() {
-		layout.Inset{Bottom: unit.Dp(20), Top: unit.Dp(20)}.Layout(pg.gtx, func() {
+		layout.Inset{Bottom: unit.Dp(20), Top: unit.Dp(20)}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Horizontal, Alignment: layout.Start}.Layout(gtx,
 				layout.Rigid(func() {
 					pg.backButton.Layout(gtx, pg.backButtonWidget)
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(10)}.Layout(gtx, func() {
-						pg.titleLabel.Layout(gtx)
-					})
+					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func() {
+							layout.Inset{Left: unit.Dp(10)}.Layout(gtx, func() {
+								pg.title.Layout(gtx)
+							})
+						}),
+						layout.Rigid(func() {
+							if pg.active != infoView {
+								layout.Inset{Left: unit.Dp(10)}.Layout(gtx, func() {
+									pg.steps.Layout(gtx)
+								})
+							}
+						}),
+						layout.Rigid(func() {
+							pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
+							if pg.active != infoView {
+								layout.Inset{Right: unit.Dp(50), Top: unit.Dp(20)}.Layout(gtx, func() {
+									pg.instruction.Layout(gtx)
+								})
+							}
+						}),
+					)
 				}),
 			)
 		})
@@ -233,32 +259,30 @@ func (pg *backupPage) seedView() layout.Widget {
 							layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
 								layout.Rigid(func() {
 									pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
-									layout.Inset{Right: unit.Dp(30), Left: unit.Dp(30)}.Layout(pg.gtx, func() {
-										pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
-											if i < 17 {
-												layout.Inset{
-													Bottom: unit.Dp(10),
-												}.Layout(pg.gtx, func() {
-													seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
-													seedLabel.Layout(pg.gtx)
-												})
-											}
-										})
+									pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+										if i < 17 {
+											layout.Inset{
+												Bottom: unit.Dp(10),
+												Right:  unit.Dp(20),
+											}.Layout(pg.gtx, func() {
+												seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
+												seedLabel.Layout(pg.gtx)
+											})
+										}
 									})
 								}),
 								layout.Rigid(func() {
-									layout.Inset{Right: unit.Dp(30), Left: unit.Dp(30)}.Layout(pg.gtx, func() {
-										pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
-											if i > 16 {
-												layout.Inset{
-													Bottom: unit.Dp(10),
-												}.Layout(pg.gtx, func() {
-													seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
-													seedLabel.Alignment = text.Middle
-													seedLabel.Layout(pg.gtx)
-												})
-											}
-										})
+									pg.seedPhraseListLeft.Layout(pg.gtx, len(pg.seedPhrase), func(i int) {
+										if i > 16 {
+											layout.Inset{
+												Bottom: unit.Dp(10),
+												Left:   unit.Dp(20),
+											}.Layout(pg.gtx, func() {
+												seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", i+1, pg.seedPhrase[i]))
+												seedLabel.Alignment = text.Middle
+												seedLabel.Layout(pg.gtx)
+											})
+										}
 									})
 								}),
 							)
@@ -281,7 +305,7 @@ func (pg *backupPage) verifyView() layout.Widget {
 						layout.Inset{Bottom: unit.Dp(30)}.Layout(pg.gtx, func() {
 							layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 								layout.Rigid(func() {
-									layout.Inset{Left:  unit.Dp(15), Bottom: unit.Dp(15)}.Layout(pg.gtx, func() {
+									layout.Inset{Left: unit.Dp(15), Bottom: unit.Dp(15)}.Layout(pg.gtx, func() {
 										selected := pg.selectedSeeds[i]
 										if pg.selectedSeeds[i] == "" {
 											selected = "-"
@@ -355,6 +379,24 @@ func (pg *backupPage) populateSuggestionSeeds() {
 	}
 }
 
+func (pg *backupPage) updateViewTexts() {
+	switch pg.active {
+	case infoView:
+		pg.title.Text = "Keep in mind"
+		pg.action.Text = "View seed phrase"
+	case seedView:
+		pg.title.Text = "Write down seed phrase"
+		pg.action.Text = "I have written down all 33 words"
+		pg.steps.Text = fmt.Sprintf("Steps %d/2", seedView-1)
+		pg.instruction.Text = "Write down all 33 words in the correct order"
+	case verifyView:
+		pg.title.Text = "Verify seed phrase"
+		pg.action.Text = "Verify"
+		pg.steps.Text = fmt.Sprintf("Steps %d/2", verifyView-1)
+		pg.instruction.Text = "Select the correct words to verify"
+	}
+}
+
 func (pg *backupPage) handle(c pageCommon) {
 	if pg.backButtonWidget.Clicked(pg.gtx) {
 		*c.page = PageWallet
@@ -367,6 +409,7 @@ func (pg *backupPage) handle(c pageCommon) {
 		for i, _ := range pg.suggestions {
 			pg.suggestions[i].selected = -1
 		}
+		pg.updateViewTexts()
 	}
 
 	if pg.actionWidget.Clicked(pg.gtx) && pg.verifyCheckBoxes() {
@@ -374,7 +417,6 @@ func (pg *backupPage) handle(c pageCommon) {
 			s := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID)
 			pg.seedPhrase = strings.Split(s, " ")
 			pg.populateSuggestionSeeds()
-			pg.action.Text = "I have written down all 33 words"
 			pg.active += 1
 		} else if pg.active != verifyView {
 			pg.active += 1
@@ -390,6 +432,7 @@ func (pg *backupPage) handle(c pageCommon) {
 				fmt.Printf("verify success!! \n")
 			}
 		}
+		pg.updateViewTexts()
 	}
 
 	for i := range pg.suggestions {

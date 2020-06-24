@@ -238,7 +238,12 @@ func (page *walletPage) bottomRow(common pageCommon) {
 			layout.Rigid(page.newRow(&common, page.icons.verifyW, &page.icons.verify, "Verify message")),
 			layout.Rigid(page.newRow(&common, page.icons.changePassW, &page.icons.changePass, "Change passphrase")),
 			layout.Rigid(page.newRow(&common, page.icons.deleteW, &page.icons.delete, "Delete wallet")),
-			layout.Rigid(page.newRow(&common, page.icons.backupW, &page.icons.backup, "Backup Seed")),
+			layout.Rigid(
+				func() {
+					if len(page.current.Seed) > 0 {
+						page.newRow(&common, page.icons.backupW, &page.icons.backup, "Backup Seed")()
+					}
+				}),
 		)
 	})
 }
