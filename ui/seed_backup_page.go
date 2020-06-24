@@ -4,6 +4,7 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"math/rand"
 	"strings"
 	"time"
@@ -57,12 +58,12 @@ type backupPage struct {
 	successInfo    decredmaterial.Label
 	action         decredmaterial.Button
 	checkBoxes     []decredmaterial.CheckBox
+	checkIcon      *decredmaterial.Icon
 
 	backButtonWidget *widget.Button
 	actionWidget     *widget.Button
 	checkBoxWidgets  []*widget.CheckBox
 
-	container           *layout.List
 	infoList            *layout.List
 	viewList            *layout.List
 	seedPhraseListLeft  *layout.List
@@ -77,7 +78,6 @@ type backupPage struct {
 	allSuggestions []string
 	active         int
 	error          string
-	success        string
 }
 
 func (win *Window) BackupPage(c pageCommon) layout.Widget {
@@ -94,15 +94,16 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 		instruction:    c.theme.H6("Write down all 33 words in the correct order"),
 		successMessage: c.theme.H4("Your seed phrase backup is verified"),
 		successInfo:    c.theme.Body2("Be sure to store your seed phrase backup in a secure location."),
+		checkIcon:      c.icons.actionCheckCircle,
 
 		backButtonWidget: new(widget.Button),
 		actionWidget:     new(widget.Button),
-		container:        &layout.List{Axis: layout.Vertical},
 
 		active:        infoView,
 		selectedSeeds: make([]string, 0, 33),
 	}
 
+	b.checkIcon.Color = c.theme.Color.Success
 	b.steps.Color = c.theme.Color.Hint
 	b.successMessage.Alignment = text.Middle
 	b.successInfo.Alignment = text.Middle
@@ -167,13 +168,14 @@ func (pg *backupPage) layout() {
 				pg.action.Background = pg.theme.Color.Hint
 				switch pg.active {
 				case infoView:
-					//if pg.verifyCheckBoxes() {
-					//	pg.action.Background = pg.theme.Color.Primary
-					//}
-					//pg.infoView()()
-					pg.successView()()
+					if pg.verifyCheckBoxes() {
+						pg.action.Background = pg.theme.Color.Primary
+					}
+					pg.action.Color = pg.theme.Color.InvText
+					pg.infoView()()
 				case seedView:
 					pg.action.Background = pg.theme.Color.Primary
+					pg.action.Color = pg.theme.Color.InvText
 					pg.seedView()()
 				case verifyView:
 					if checkSlice(pg.selectedSeeds) {
@@ -181,6 +183,8 @@ func (pg *backupPage) layout() {
 					}
 					pg.verifyView()()
 				case successView:
+					pg.action.Background = color.RGBA{}
+					pg.action.Color = pg.theme.Color.Primary
 					pg.successView()()
 				}
 			}),
@@ -231,7 +235,11 @@ func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 			layout.Stack{}.Layout(pg.gtx,
 				layout.Stacked(func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-						layout.Rigid(pg.pageTitle()),
+						layout.Rigid(func() {
+							if pg.active != successView {
+								pg.pageTitle()()
+							}
+						}),
 						layout.Rigid(func() {
 							layout.Inset{Bottom: unit.Dp(50)}.Layout(pg.gtx, func() {
 								content()
@@ -347,12 +355,22 @@ func (pg *backupPage) verifyView() layout.Widget {
 func (pg *backupPage) successView() layout.Widget {
 	return func() {
 		pg.viewTemplate(func() {
-			toMax(pg.gtx)
 			layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 				layout.Rigid(func() {
 					pg.gtx.Constraints.Height.Min = pg.gtx.Constraints.Height.Max
 					layout.Center.Layout(pg.gtx, func() {
 						layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+							layout.Rigid(func() {
+								pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
+								layout.Inset{Bottom: unit.Dp(50), Right: unit.Dp(50)}.Layout(pg.gtx, func() {
+									layout.Center.Layout(pg.gtx, func() {
+										layout.UniformInset(unit.Dp(20)).Layout(pg.gtx, func() {
+											pg.checkIcon.Color = pg.theme.Color.Success
+											pg.checkIcon.Layout(pg.gtx, unit.Px(float32(150)))
+										})
+									})
+								})
+							}),
 							layout.Rigid(func() {
 								pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
 								pg.successMessage.Layout(pg.gtx)
@@ -438,6 +456,8 @@ func (pg *backupPage) updateViewTexts() {
 		pg.action.Text = "Verify"
 		pg.steps.Text = fmt.Sprintf("Steps %d/2", verifyView-1)
 		pg.instruction.Text = "Select the correct words to verify"
+	case successView:
+		pg.action.Text = "Back to Wallets"
 	}
 }
 
@@ -458,22 +478,26 @@ func checkSlice(s []string) bool {
 	return true
 }
 
+func (pg *backupPage) resetPage(c pageCommon) {
+	*c.page = PageWallet
+	pg.active = infoView
+	pg.seedPhrase = []string{}
+	pg.selectedSeeds = make([]string, 33)
+	for _, cb := range pg.checkBoxWidgets {
+		cb.SetChecked(false)
+	}
+	for i := range pg.suggestions {
+		pg.suggestions[i].selected = -1
+	}
+	for i := range pg.selectedSeeds {
+		pg.selectedSeeds[i] = "-"
+	}
+	pg.updateViewTexts()
+}
+
 func (pg *backupPage) handle(c pageCommon) {
 	if pg.backButtonWidget.Clicked(pg.gtx) {
-		*c.page = PageWallet
-		pg.active = infoView
-		pg.seedPhrase = []string{}
-		pg.selectedSeeds = make([]string, 33)
-		for _, cb := range pg.checkBoxWidgets {
-			cb.SetChecked(false)
-		}
-		for i := range pg.suggestions {
-			pg.suggestions[i].selected = -1
-		}
-		for i := range pg.selectedSeeds {
-			pg.selectedSeeds[i] = "-"
-		}
-		pg.updateViewTexts()
+		pg.resetPage(c)
 	}
 
 	if pg.actionWidget.Clicked(pg.gtx) && pg.verifyCheckBoxes() {
@@ -487,21 +511,23 @@ func (pg *backupPage) handle(c pageCommon) {
 			if !checkSlice(pg.selectedSeeds) {
 				return
 			}
-
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
 				pg.error = "Failed to verify. Please go through every word and try again."
 				pg.clearError()
 				return
 			}
+
 			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s)
 			if err != nil {
 				pg.error = "Failed to verify. Please go through every word and try again."
 				pg.clearError()
 				return
-			} else {
-				pg.active++
 			}
+			pg.info.Wallets[*c.selectedWallet].Seed = ""
+			pg.active++
+		case successView:
+			pg.resetPage(c)
 		default:
 			pg.active++
 		}

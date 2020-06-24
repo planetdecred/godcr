@@ -16,7 +16,7 @@ type pageIcons struct {
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
-	communicationComment, editorModeEdit, actionBackup *decredmaterial.Icon
+	communicationComment, editorModeEdit, actionBackup, actionCheck *decredmaterial.Icon
 	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon image.Image
 }
 
@@ -58,6 +58,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		editorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
 		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
 		actionBackup:               mustIcon(decredmaterial.NewIcon(icons.ActionSettingsBackupRestore)),
+		actionCheck:                mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 		overviewIcon:               decredIcons["overview"],
 		walletIcon:                 decredIcons["wallet"],
 		receiveIcon:                decredIcons["receive"],
