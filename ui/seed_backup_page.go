@@ -456,11 +456,9 @@ func (pg *backupPage) updateViewTexts() {
 }
 
 func (pg *backupPage) clearError() {
-	go func() {
-		time.AfterFunc(time.Second*3, func() {
-			pg.error = ""
-		})
-	}()
+	time.AfterFunc(time.Second * 3, func() {
+		pg.error = ""
+	})
 }
 
 func checkSlice(s []string) bool {
