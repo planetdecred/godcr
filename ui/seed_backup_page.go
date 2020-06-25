@@ -189,7 +189,7 @@ func (pg *backupPage) layout() {
 func (pg *backupPage) pageTitle() layout.Widget {
 	gtx := pg.gtx
 	return func() {
-		layout.Inset{Bottom: unit.Dp(20), Top: unit.Dp(20)}.Layout(gtx, func() {
+		layout.Inset{Bottom: unit.Dp(5), Top: unit.Dp(20)}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Horizontal, Alignment: layout.Start}.Layout(gtx,
 				layout.Rigid(func() {
 					pg.backButton.Layout(gtx, pg.backButtonWidget)
