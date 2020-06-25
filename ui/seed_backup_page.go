@@ -252,7 +252,7 @@ func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 				}),
 				layout.Stacked(func() {
 					if len(pg.error) > 0 {
-						layout.Inset{Top: unit.Dp(20)}.Layout(pg.gtx, func() {
+						layout.Inset{Top: unit.Dp(75)}.Layout(pg.gtx, func() {
 							pg.theme.ErrorAlert(pg.gtx, pg.error)
 						})
 					}
@@ -500,9 +500,9 @@ func (pg *backupPage) handle(c pageCommon) {
 			pg.populateSuggestionSeeds()
 			pg.active++
 		case verifyView:
-			if !checkSlice(pg.selectedSeeds) {
-				return
-			}
+			//if !checkSlice(pg.selectedSeeds) {
+			//	return
+			//}
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
 				pg.error = "Failed to verify. Please go through every word and try again."
