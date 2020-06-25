@@ -456,7 +456,7 @@ func (pg *backupPage) updateViewTexts() {
 }
 
 func (pg *backupPage) clearError() {
-	time.AfterFunc(time.Second * 3, func() {
+	time.AfterFunc(time.Second*3, func() {
 		pg.error = ""
 	})
 }
