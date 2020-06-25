@@ -1,7 +1,5 @@
 package ui
 
-// todo: remove testPhrase
-
 import (
 	"fmt"
 	"image/color"
@@ -19,10 +17,6 @@ import (
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 )
-
-var testPhrase = "tissue recover scorecard Istanbul solo dinosaur framework forever freedom typewriter spheroid " +
-	"Capricorn standard paperweight drainage informant steamship gossamer klaxon conformist quota provincial erase " +
-	"paperweight soybean universe blowtorch sandalwood drumbeat dictator unearth bravado lockup"
 
 const (
 	PageSeedBackup = "seedbackup"
