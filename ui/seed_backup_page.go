@@ -500,9 +500,9 @@ func (pg *backupPage) handle(c pageCommon) {
 			pg.populateSuggestionSeeds()
 			pg.active++
 		case verifyView:
-			//if !checkSlice(pg.selectedSeeds) {
-			//	return
-			//}
+			if !checkSlice(pg.selectedSeeds) {
+				return
+			}
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
 				pg.error = "Failed to verify. Please go through every word and try again."
