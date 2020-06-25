@@ -163,8 +163,8 @@ func (page *walletPage) topRow(common pageCommon) {
 			page.alert(common)
 		},
 		func() {
-			horFlex.Layout(gtx,
-				rigid(func() {
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func() {
 					common.theme.H5(page.current.Name).Layout(common.gtx)
 				}),
 			)
@@ -173,11 +173,11 @@ func (page *walletPage) topRow(common pageCommon) {
 			common.theme.H6("Total Balance: " + page.current.Balance).Layout(gtx)
 		},
 		func() {
-			horFlex.Layout(gtx,
-				rigid(func() {
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func() {
 					common.theme.H6("Accounts").Layout(gtx)
 				}),
-				rigid(func() {
+				layout.Rigid(func() {
 					layout.Inset{Left: unit.Dp(3)}.Layout(common.gtx, func() {
 						page.icons.addAcctW.Layout(gtx, &page.icons.addAcct)
 					})

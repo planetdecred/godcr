@@ -132,7 +132,7 @@ func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, *page.txnInfo, &txnWidgets)
 
-	vertFlex.Layout(common.gtx,
+	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
 		layout.Rigid(func() {
 			layout.Inset{Left: unit.Dp(-4), Top: unit.Dp(4)}.Layout(common.gtx, func() {
 				txnWidgets.direction.Layout(common.gtx, unit.Dp(28))
