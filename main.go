@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"image"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
+
+	_ "net/http/pprof"
 
 	app "gioui.org/app"
 	"gioui.org/font"
@@ -25,6 +28,13 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
 		return
+	}
+
+	if cfg.Profile > 0 {
+		go func() {
+			log.Info(fmt.Sprintf("Starting profiling server on port %d", cfg.Profile))
+			log.Error(http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", cfg.Profile), nil))
+		}()
 	}
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)

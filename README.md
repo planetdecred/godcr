@@ -19,6 +19,20 @@ In the root directory, run
 
 Then `go build`.
 
+## Profiling 
+Godcr uses [pprof](https://github.com/google/pprof) for profiling. It creates a web server which you can use to save your profiles. To setup a profiling web server, run godcr with the --profile flag and pass a server port to it as an argument.
+
+So, after running the build command above, run the command
+
+`./godcr --profile=6060`
+
+You should now have a local web server running on 127.0.0.1:6060.
+
+To save a profile, you can simply use
+
+`curl -O localhost:6060/debug/pprof/profile`
+
+
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/raedahgroup/godcr/blob/master/.github/CONTRIBUTING.md)
