@@ -29,8 +29,6 @@ type Window struct {
 	walletTransaction  *wallet.Transaction
 
 	current string
-	dialog  layout.Widget
-	tabs    *decredmaterial.Tabs
 
 	signatureResult *wallet.Signature
 
@@ -41,12 +39,8 @@ type Window struct {
 	selected int
 	states
 
-	inputs
-
 	err string
 
-	combined
-	outputs
 	pages     map[string]layout.Widget
 	keyEvents chan *key.Event
 }
@@ -72,13 +66,9 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image) (*Wind
 
 	win.wallet = wal
 	win.states.loading = true
-	win.tabs = decredmaterial.NewTabs()
-	win.tabs.Position = decredmaterial.Left
 	win.current = PageOverview
-	win.dialog = func() {}
 	win.keyEvents = make(chan *key.Event)
 
-	win.initWidgets()
 	win.addPages(decredIcons)
 	return win, nil
 }
@@ -167,15 +157,10 @@ func (win *Window) Loop(shutdown chan int) {
 
 				if s.loading {
 					win.Loading()
-				} else if s.dialog {
-					decredmaterial.Modal{Direction: layout.Center}.Layout(win.gtx, func() {
-						win.theme.Background(win.gtx, win.pages[win.current])
-					}, win.dialog)
 				} else {
 					win.theme.Background(win.gtx, win.pages[win.current])
 				}
 
-				win.HandleInputs()
 				evt.Frame(win.gtx.Ops)
 			case key.Event:
 				go func() {
