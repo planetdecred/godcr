@@ -36,6 +36,13 @@ type (
 		selected int
 		buttons  []buttonGroup
 	}
+
+	viewText struct {
+		title       string
+		action      string
+		steps       string
+		instruction string
+	}
 )
 
 type backupPage struct {
@@ -154,31 +161,39 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	}
 }
 
+func (pg *backupPage) activeButton() {
+	pg.action.Background = pg.theme.Color.Primary
+	pg.action.Color = pg.theme.Color.InvText
+}
+
+func (pg *backupPage) clearButton() {
+	pg.action.Background = color.RGBA{}
+	pg.action.Color = pg.theme.Color.Primary
+}
+
 func (pg *backupPage) layout() {
 	pg.theme.Surface(pg.gtx, func() {
 		toMax(pg.gtx)
 		layout.Flex{Axis: layout.Vertical, Alignment: layout.Start}.Layout(pg.gtx,
 			layout.Rigid(func() {
 				pg.action.Background = pg.theme.Color.Hint
+				pg.action.Color = pg.theme.Color.InvText
 				switch pg.active {
 				case infoView:
 					if pg.verifyCheckBoxes() {
-						pg.action.Background = pg.theme.Color.Primary
+						pg.activeButton()
 					}
-					pg.action.Color = pg.theme.Color.InvText
 					pg.infoView()()
 				case seedView:
-					pg.action.Background = pg.theme.Color.Primary
-					pg.action.Color = pg.theme.Color.InvText
+					pg.activeButton()
 					pg.seedView()()
 				case verifyView:
 					if checkSlice(pg.selectedSeeds) {
-						pg.action.Background = pg.theme.Color.Primary
+						pg.activeButton()
 					}
 					pg.verifyView()()
 				case successView:
-					pg.action.Background = color.RGBA{}
-					pg.action.Color = pg.theme.Color.Primary
+					pg.activeButton()
 					pg.successView()()
 				}
 			}),
@@ -435,24 +450,41 @@ func (pg *backupPage) populateSuggestionSeeds() {
 	}
 }
 
-func (pg *backupPage) updateViewTexts() {
-	switch pg.active {
+func viewTexts(active int) viewText {
+	switch active {
 	case infoView:
-		pg.title.Text = "Keep in mind"
-		pg.action.Text = "View seed phrase"
+		return viewText{
+			title:  "Keep in mind",
+			action: "View seed phrase",
+		}
 	case seedView:
-		pg.title.Text = "Write down seed phrase"
-		pg.action.Text = "I have written down all 33 words"
-		pg.steps.Text = fmt.Sprintf("Steps %d/2", seedView-1)
-		pg.instruction.Text = "Write down all 33 words in the correct order"
+		return viewText{
+			title:       "Write down seed phrase",
+			action:      "I have written down all 33 words",
+			steps:       fmt.Sprintf("Steps %d/2", seedView-1),
+			instruction: "Write down all 33 words in the correct order",
+		}
 	case verifyView:
-		pg.title.Text = "Verify seed phrase"
-		pg.action.Text = "Verify"
-		pg.steps.Text = fmt.Sprintf("Steps %d/2", verifyView-1)
-		pg.instruction.Text = "Select the correct words to verify"
+		return viewText{
+			title:       "Verify seed phrase",
+			action:      "Verify",
+			steps:       fmt.Sprintf("Steps %d/2", verifyView-1),
+			instruction: "Select the correct words to verify",
+		}
 	case successView:
-		pg.action.Text = "Back to Wallets"
+		return viewText{
+			action: "Back to Wallets",
+		}
 	}
+	return viewText{}
+}
+
+func (pg *backupPage) updateViewTexts() {
+	t := viewTexts(pg.active)
+	pg.title.Text = t.title
+	pg.action.Text = t.action
+	pg.steps.Text = t.steps
+	pg.instruction.Text = t.instruction
 }
 
 func (pg *backupPage) clearError() {
@@ -503,16 +535,17 @@ func (pg *backupPage) handle(c pageCommon) {
 			if !checkSlice(pg.selectedSeeds) {
 				return
 			}
+			errMessage := "Failed to verify. Please go through every word and try again."
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
-				pg.error = "Failed to verify. Please go through every word and try again."
+				pg.error = errMessage
 				pg.clearError()
 				return
 			}
 
 			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s)
 			if err != nil {
-				pg.error = "Failed to verify. Please go through every word and try again."
+				pg.error = errMessage
 				pg.clearError()
 				return
 			}
