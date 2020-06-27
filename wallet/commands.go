@@ -366,6 +366,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				BlockTimestamp:   wall.GetBestBlockTimeStamp(),
 				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
+				Seed:             wall.Seed,
 			}
 			i++
 		}
@@ -498,6 +499,15 @@ func (wal *Wallet) StartSync() error {
 // CancelSync cancels the SPV sync
 func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
+}
+
+func (wal *Wallet) GetWalletSeedPhrase(walletID int) string {
+	wallet := wal.multi.WalletWithID(walletID)
+	return wallet.Seed
+}
+
+func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string) error {
+	return wal.multi.VerifySeedForWallet(walletID, seedPhrase)
 }
 
 func calculateDaysBehind(lastHeaderTime int64) string {

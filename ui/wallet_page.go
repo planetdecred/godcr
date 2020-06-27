@@ -35,9 +35,9 @@ type walletPage struct {
 	result     **wallet.Signature
 	icons      struct {
 		main, delete, rename, sign, verify, addWallet, changePass,
-		addAcct widget.Button
+		addAcct, backup widget.Button
 		mainW, deleteW, signW, verifyW, addWalletW, renameW,
-		changePassW, addAcctW decredmaterial.IconButton
+		changePassW, addAcctW, backupW decredmaterial.IconButton
 	}
 	container, accountsList         layout.List
 	delete, addAcct, rename         widget.Button
@@ -107,6 +107,9 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	page.icons.changePassW = common.theme.IconButton(common.icons.actionLock)
 	page.icons.changePassW.Size = iconSize
 	page.icons.changePassW.Padding = iconPadding
+	page.icons.backupW = common.theme.IconButton(common.icons.actionBackup)
+	page.icons.backupW.Size = iconSize
+	page.icons.backupW.Padding = iconPadding
 
 	return func() {
 		page.Layout(common)
@@ -132,6 +135,7 @@ func (page *walletPage) Layout(common pageCommon) {
 
 func (page *walletPage) subMain(common pageCommon) {
 	gtx := common.gtx
+
 	page.current = common.info.Wallets[*common.selectedWallet]
 
 	body := func() {
@@ -234,6 +238,12 @@ func (page *walletPage) bottomRow(common pageCommon) {
 			layout.Rigid(page.newRow(&common, page.icons.verifyW, &page.icons.verify, "Verify message")),
 			layout.Rigid(page.newRow(&common, page.icons.changePassW, &page.icons.changePass, "Change passphrase")),
 			layout.Rigid(page.newRow(&common, page.icons.deleteW, &page.icons.delete, "Delete wallet")),
+			layout.Rigid(
+				func() {
+					if len(page.current.Seed) > 0 {
+						page.newRow(&common, page.icons.backupW, &page.icons.backup, "Backup Seed")()
+					}
+				}),
 		)
 	})
 }
@@ -436,6 +446,10 @@ func (page *walletPage) Handle(common pageCommon) {
 	if page.delete.Clicked(gtx) {
 		page.errorLabel.Text = ""
 		page.isPasswordModalOpen = true
+	}
+
+	if page.icons.backup.Clicked(gtx) {
+		*common.page = PageSeedBackup
 	}
 
 	select {
