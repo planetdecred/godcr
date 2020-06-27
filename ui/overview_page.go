@@ -74,6 +74,9 @@ type overviewPage struct {
 	walletTransaction      **wallet.Transaction
 	toTransactions, sync   decredmaterial.Button
 	toTransactionsW, syncW widget.Button
+	syncStatusIcon, syncedIcon,
+	notSyncedIcon, walletStatusIcon,
+	syncingIcon *decredmaterial.Icon
 	toTransactionDetails   []*gesture.Click
 
 	text             overviewPageText
@@ -103,7 +106,16 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonWidth:  115,
 		moreButtonHeight: 70,
 
-		gray: color.RGBA{137, 151, 165, 255},
+		padding:                   unit.Dp(5),
+		containerPadding:          unit.Dp(20),
+		pageMarginTop:             unit.Dp(50),
+		columnMargin:              unit.Dp(30),
+		transactionsRowMargin:     unit.Dp(10),
+		noPadding:                 unit.Dp(0),
+		walletSyncBoxContentWidth: unit.Dp(280),
+		iconPadding:               unit.Dp(0),
+		iconSize:                  unit.Dp(30),
+		gray:                      color.RGBA{137, 151, 165, 255},
 	}
 	page.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -123,7 +135,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		notSyncedStatus:      "Not Synced",
 		syncedStatus:         "Synced",
 		fetchingBlockHeaders: "Fetching block headers",
-		reconnect:            "Reconnect",
+		reconnect:            "Connect",
 		disconnect:           "Disconnect",
 		cancel:               "Cancel",
 	}
@@ -132,6 +144,18 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	page.toTransactions.Color = c.theme.Color.Primary
 	page.sync = c.theme.Button(page.text.reconnect)
 	page.sync.TextSize = values.TextSize10
+
+	page.sync.Background = c.theme.Color.Background
+	page.sync.Color = c.theme.Color.Text
+
+	page.syncedIcon = c.icons.actionCheckCircle
+	page.syncedIcon.Color = c.theme.Color.Success
+
+	page.syncingIcon = c.icons.actionHourglassEmpty
+	page.syncingIcon.Color = c.theme.Color.Primary
+
+	page.notSyncedIcon = c.icons.navigationCancel
+	page.notSyncedIcon.Color = c.theme.Color.Danger
 
 	return func() {
 		page.Layout(c)
@@ -393,22 +417,50 @@ func (page *overviewPage) syncBoxTitleRow(inset layout.Inset) {
 	if page.walletInfo.Synced || page.walletInfo.Syncing {
 		statusLabel.Text = page.text.onlineStatus
 	}
-	page.endToEndRow(inset, statusTitleLabel, statusLabel)
+
+	gtx := page.gtx
+	inset.Layout(gtx, func() {
+		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Rigid(func() {
+				layout.Inset{Top: unit.Dp(12), Right: unit.Dp(25)}.Layout(gtx, func() {
+					// page.syncIcon.Layout(gtx, iconSize)
+				})
+			}),
+			layout.Rigid(func() {
+				statusTitleLabel.Layout(gtx)
+			}),
+			layout.Flexed(1, func() {
+				layout.E.Layout(gtx, func() {
+					statusLabel.Layout(gtx)
+				})
+			}),
+		)
+	})
+	// page.endToEndRow(inset, statusTitleLabel, statusLabel)
 }
 
 // syncStatusTextRow lays out sync status text and sync button.
 func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 	gtx := page.gtx
+	syncStatusLabel := page.theme.H6(page.text.notSyncedStatus)
+	page.syncStatusIcon = page.notSyncedIcon
+	if page.walletInfo.Syncing {
+		syncStatusLabel.Text = page.text.syncingStatus
+		page.syncStatusIcon = page.syncingIcon
+	} else if page.walletInfo.Synced {
+		syncStatusLabel.Text = page.text.syncedStatus
+		page.syncStatusIcon = page.syncedIcon
+	}
+
 	inset.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Rigid(func() {
+				layout.Inset{Right: unit.Dp(40)}.Layout(gtx, func() {
+					page.syncStatusIcon.Layout(gtx, page.iconSize)
+				})
+			}),
 			layout.Flexed(0.5, func() {
 				layout.W.Layout(gtx, func() {
-					syncStatusLabel := page.theme.H6(page.text.notSyncedStatus)
-					if page.walletInfo.Syncing {
-						syncStatusLabel.Text = page.text.syncingStatus
-					} else if page.walletInfo.Synced {
-						syncStatusLabel.Text = page.text.syncedStatus
-					}
 					syncStatusLabel.Layout(page.gtx)
 				})
 			}),
@@ -573,11 +625,9 @@ func (page *overviewPage) Handler(c pageCommon) {
 	if page.syncW.Clicked(page.gtx) {
 		if page.walletInfo.Synced || page.walletInfo.Syncing {
 			c.wallet.CancelSync()
-			page.sync.Background = c.theme.Color.Primary
 			page.sync.Text = page.text.reconnect
 		} else {
 			c.wallet.StartSync()
-			page.sync.Background = c.theme.Color.Danger
 			page.sync.Text = page.text.cancel
 		}
 	}
