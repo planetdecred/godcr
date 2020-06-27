@@ -9,6 +9,7 @@ import (
 	"github.com/raedahgroup/godcr/ui/values"
 
 	"gioui.org/gesture"
+	// "gioui.org/text"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 
@@ -42,7 +43,9 @@ type overviewPageText struct {
 	disconnect,
 	noWallet,
 	cancel,
-	viewAllTx string
+	viewAllTx,
+	connectedPeersInfo,
+	noConnectedPeers string
 }
 
 // walletSyncDetails contains sync data for each wallet when a sync
@@ -125,6 +128,8 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		stepsTitle:           "Step",
 		transactionsTitle:    "Recent Transactions",
 		connectedPeersTitle:  "Connected peers count",
+		connectedPeersInfo:   "Connected to",
+		noConnectedPeers:     "No connected peers",
 		headersFetchedTitle:  "Block header fetched",
 		syncingProgressTitle: "Syncing progress",
 		latestBlockTitle:     "Last Block Height",
@@ -194,7 +199,6 @@ func (page *overviewPage) Layout(c pageCommon) {
 
 	pageContent := []func(){
 		func() {
-			// layout.Inset{Top: page.pageMarginTop}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func() {
 					mainBalance := theme.H4("")
@@ -205,7 +209,6 @@ func (page *overviewPage) Layout(c pageCommon) {
 					theme.Caption(page.text.balanceTitle).Layout(gtx)
 				}),
 			)
-			// })
 		},
 		func() {
 			page.recentTransactionsColumn(c)
@@ -360,7 +363,6 @@ func (page *overviewPage) syncStatusColumn() {
 	gtx := page.gtx
 	uniform := layout.UniformInset(page.padding)
 	page.drawlayout(func() {
-		// layout.Inset{Top: page.columnMargin}.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
 				page.syncBoxTitleRow(uniform)
@@ -377,7 +379,6 @@ func (page *overviewPage) syncStatusColumn() {
 			}),
 		)
 	})
-	// })
 }
 
 // syncingContent lays out sync status content when the wallet is syncing
@@ -397,16 +398,73 @@ func (page *overviewPage) syncActiveContent(uniform layout.Inset) {
 
 // syncDormantContent lays out sync status content when the wallet is synced or not connected
 func (page *overviewPage) syncDormantContent(uniform layout.Inset) {
-	layout.Flex{Axis: layout.Vertical}.Layout(page.gtx,
+	layout.Inset{Left: unit.Dp(45)}.Layout(page.gtx, func() {
+		layout.Flex{Axis: layout.Vertical}.Layout(page.gtx,
+			layout.Rigid(func() {
+				layout.Inset{Bottom: unit.Dp(12)}.Layout(page.gtx, func() {
+					page.blockInfoRow()
+				})
+			}),
+			layout.Rigid(func() {
+				if page.walletInfo.Synced {
+					page.connectionPeer()
+				} else {
+					latestBlockTitleLabel := page.theme.Body1(page.text.noConnectedPeers)
+					latestBlockTitleLabel.Color = page.gray
+					latestBlockTitleLabel.Layout(page.gtx)
+				}
+			}),
+		)
+	})
+}
+
+func (page *overviewPage) blockInfoRow() {
+	layout.Flex{Axis: layout.Horizontal}.Layout(page.gtx,
 		layout.Rigid(func() {
 			latestBlockTitleLabel := page.theme.Body1(page.text.latestBlockTitle)
-			blockLabel := page.theme.Body1(fmt.Sprintf("%v", page.walletInfo.BestBlockHeight))
-			page.endToEndRow(uniform, latestBlockTitleLabel, blockLabel)
+			latestBlockTitleLabel.Color = page.gray
+			latestBlockTitleLabel.Layout(page.gtx)
 		}),
 		layout.Rigid(func() {
-			lastSyncedLabel := page.theme.Body1(page.text.lastSyncedTitle)
-			blockLabel := page.theme.Body1(fmt.Sprintf("%v ago", page.walletInfo.LastSyncTime))
-			page.endToEndRow(uniform, lastSyncedLabel, blockLabel)
+			layout.Inset{Left: page.padding, Right: page.padding}.Layout(page.gtx, func() {
+				page.theme.Body1(fmt.Sprintf("%v", page.walletInfo.BestBlockHeight)).Layout(page.gtx)
+			})
+		}),
+		layout.Rigid(func() {
+			page.walletStatusIcon.Color = page.gray
+			layout.Inset{Right: unit.Dp(9), Top: unit.Dp(8)}.Layout(page.gtx, func() {
+				page.walletStatusIcon.Layout(page.gtx, page.padding)
+			})
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Right: page.padding}.Layout(page.gtx, func() {
+				page.theme.Body1(fmt.Sprintf("%v", page.walletInfo.LastSyncTime)).Layout(page.gtx)
+			})
+		}),
+		layout.Rigid(func() {
+			lastSyncedLabel := page.theme.Body1("ago")
+			lastSyncedLabel.Color = page.gray
+			lastSyncedLabel.Layout(page.gtx)
+		}),
+	)
+}
+
+func (page *overviewPage) connectionPeer() {
+	layout.Flex{Axis: layout.Horizontal}.Layout(page.gtx,
+		layout.Rigid(func() {
+			connectedPeersInfoLabel := page.theme.Body1(page.text.connectedPeersInfo)
+			connectedPeersInfoLabel.Color = page.gray
+			connectedPeersInfoLabel.Layout(page.gtx)
+		}),
+		layout.Rigid(func() {
+			layout.Inset{Left: page.padding, Right: page.padding}.Layout(page.gtx, func() {
+				page.theme.Body1(fmt.Sprintf("%d", page.walletSyncStatus.ConnectedPeers)).Layout(page.gtx)
+			})
+		}),
+		layout.Rigid(func() {
+			peersLabel := page.theme.Body1("peers")
+			peersLabel.Color = page.gray
+			peersLabel.Layout(page.gtx)
 		}),
 	)
 }
@@ -461,7 +519,6 @@ func (page *overviewPage) syncBoxTitleRow(inset layout.Inset) {
 			}),
 		)
 	})
-	// page.endToEndRow(inset, statusTitleLabel, statusLabel)
 }
 
 // syncStatusTextRow lays out sync status text and sync button.
