@@ -3,8 +3,8 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/raedahgroup/godcr/ui/values"
 
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
@@ -44,12 +44,12 @@ func (win *Window) WalletAccountPage(common pageCommon) layout.Widget {
 	}
 	page.accountName.IsRequired = true
 	page.accountNameW.SingleLine = true
-	page.create.TextSize = unit.Dp(11)
+	page.create.TextSize = values.TextSize12
 	page.errorLabel.Color = common.theme.Color.Danger
 
 	page.create.Background = common.theme.Color.Hint
 	page.backButton.Color = common.theme.Color.Hint
-	page.backButton.Size = unit.Dp(32)
+	page.backButton.Size = values.MarginPadding30
 
 	return func() {
 		page.Layout(common)
@@ -88,19 +88,19 @@ func (page *walletAccountPage) createAccount(common pageCommon) {
 			layout.W.Layout(common.gtx, func() {
 				page.backButton.Layout(common.gtx, &page.backButtonW)
 			})
-			layout.Inset{Left: unit.Dp(44)}.Layout(common.gtx, func() {
+			layout.Inset{Left: values.MarginPadding45}.Layout(common.gtx, func() {
 				common.theme.H5("Create Wallet Acount").Layout(gtx)
 			})
 		},
 		func() {
 			layout.Flex{}.Layout(gtx,
 				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func() {
+					layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func() {
 						common.theme.Body1("Are about changing an Account in").Layout(gtx)
 					})
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(5)}.Layout(gtx, func() {
+					layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
 						txt := common.theme.H5(common.info.Wallets[*common.selectedWallet].Name)
 						txt.Color = common.theme.Color.Danger
 						txt.Layout(gtx)
@@ -115,7 +115,7 @@ func (page *walletAccountPage) createAccount(common pageCommon) {
 			page.accountName.Layout(gtx, &page.accountNameW)
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(20)}.Layout(gtx, func() {
+			layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func() {
 				page.create.Layout(gtx, &page.createW)
 			})
 		},
@@ -123,7 +123,7 @@ func (page *walletAccountPage) createAccount(common pageCommon) {
 
 	common.Layout(gtx, func() {
 		page.container.Layout(gtx, len(wdgs), func(i int) {
-			layout.UniformInset(unit.Dp(3)).Layout(gtx, wdgs[i])
+			layout.UniformInset(values.MarginPadding5).Layout(gtx, wdgs[i])
 		})
 	})
 

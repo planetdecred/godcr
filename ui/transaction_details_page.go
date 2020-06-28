@@ -2,13 +2,13 @@ package ui
 
 import (
 	"fmt"
-	"github.com/raedahgroup/godcr/ui/values"
 	"os/exec"
 	"runtime"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -52,7 +52,7 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 		viewTxnOnDcrdata: common.theme.Button("View on dcrdata"),
 	}
 	page.backButtonW.Color = common.theme.Color.Hint
-	page.backButtonW.Size = unit.Dp(32)
+	page.backButtonW.Size = values.MarginPadding30
 
 	return func() {
 		page.Layout(common)
@@ -130,11 +130,11 @@ func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 
 	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
 		layout.Rigid(func() {
-			layout.Inset{Left: unit.Dp(-4), Top: unit.Dp(4)}.Layout(common.gtx, func() {
-				txnWidgets.direction.Layout(common.gtx, unit.Dp(28))
+			layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(common.gtx, func() {
+				txnWidgets.direction.Layout(common.gtx, values.MarginPadding30)
 			})
-			layout.Inset{Left: unit.Dp(28)}.Layout(common.gtx, func() {
-				txnWidgets.amount.TextSize = unit.Dp(28)
+			layout.Inset{Left: values.MarginPadding30}.Layout(common.gtx, func() {
+				txnWidgets.amount.TextSize = values.TextSize28
 				txnWidgets.amount.Layout(common.gtx)
 			})
 		}),
@@ -142,10 +142,10 @@ func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 			txnWidgets.time.Layout(common.gtx)
 		}),
 		layout.Rigid(func() {
-			layout.Inset{Top: unit.Dp(3)}.Layout(common.gtx, func() {
-				txnWidgets.status.Layout(common.gtx, unit.Dp(16))
+			layout.Inset{Top: values.MarginPadding5}.Layout(common.gtx, func() {
+				txnWidgets.status.Layout(common.gtx, values.MarginPadding15)
 			})
-			layout.Inset{Left: unit.Dp(18)}.Layout(common.gtx, func() {
+			layout.Inset{Left: values.MarginPadding20}.Layout(common.gtx, func() {
 				txt := common.theme.Body1((*page.txnInfo).Status)
 				txt.Color = txnWidgets.status.Color
 				txt.Layout(common.gtx)
@@ -234,13 +234,13 @@ func (page *transactionPage) txnOutputs(common *pageCommon) {
 }
 
 func (page *transactionPage) txnIORow(common *pageCommon, amount string, hash string) {
-	layout.Inset{Bottom: unit.Dp(5)}.Layout(common.gtx, func() {
+	layout.Inset{Bottom: values.MarginPadding5}.Layout(common.gtx, func() {
 		layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(common.gtx,
 			layout.Rigid(func() {
-				common.theme.Label(unit.Dp(13), amount).Layout(common.gtx)
+				common.theme.Label(values.MarginPadding15, amount).Layout(common.gtx)
 			}),
 			layout.Rigid(func() {
-				txt := common.theme.Label(unit.Dp(13), hash)
+				txt := common.theme.Label(values.MarginPadding15, hash)
 				txt.Color = common.theme.Color.Primary
 				txt.Layout(common.gtx)
 			}),

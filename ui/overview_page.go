@@ -13,7 +13,6 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -75,13 +74,12 @@ type overviewPage struct {
 	toTransactionsW, syncW        widget.Button
 	toTransactionDetails          []*gesture.Click
 
-	text                      overviewPageText
-	syncButtonHeight          int
-	syncButtonWidth           int
-	moreButtonWidth           int
-	moreButtonHeight          int
-	walletSyncBoxContentWidth unit.Value
-	gray                      color.RGBA
+	text             overviewPageText
+	syncButtonHeight int
+	syncButtonWidth  int
+	moreButtonWidth  int
+	moreButtonHeight int
+	gray             color.RGBA
 }
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
@@ -101,8 +99,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonWidth:  115,
 		moreButtonHeight: 70,
 
-		walletSyncBoxContentWidth: unit.Dp(280),
-		gray:                      color.RGBA{137, 151, 165, 255},
+		gray: color.RGBA{137, 151, 165, 255},
 	}
 	page.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -126,9 +123,9 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		disconnect:           "Disconnect",
 		cancel:               "Cancel",
 	}
-	page.toTransactions.TextSize = unit.Dp(10)
+	page.toTransactions.TextSize = values.TextSize10
 	page.sync = c.theme.Button(page.text.reconnect)
-	page.sync.TextSize = unit.Dp(10)
+	page.sync.TextSize = values.TextSize10
 
 	return func() {
 		page.Layout(c)
@@ -413,6 +410,7 @@ func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 				// stack a button on a card widget to produce a transparent button.
 				layout.E.Layout(gtx, func() {
 					gtx.Constraints.Width.Min = page.syncButtonWidth
+					gtx.Constraints.Width.Min = page.syncButtonWidth
 					gtx.Constraints.Height.Max = page.syncButtonHeight
 					if page.walletInfo.Synced {
 						page.sync.Text = page.text.disconnect
@@ -504,7 +502,7 @@ func (page *overviewPage) walletSyncRow(inset layout.Inset) {
 func (page *overviewPage) walletSyncBox(inset layout.Inset, details walletSyncDetails) {
 	gtx := page.gtx
 	layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func() {
-		gtx.Constraints.Width.Min = gtx.Px(page.walletSyncBoxContentWidth)
+		gtx.Constraints.Width.Min = gtx.Px(values.WalletSyncBoxContentWidth)
 		gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
 		decredmaterial.Card{}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/f32"
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
@@ -14,7 +16,6 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/paint"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -44,12 +45,7 @@ type transactionsPage struct {
 	rowDateWidth,
 	rowStatusWidth,
 	rowAmountWidth,
-	rowFeeWidth,
-	txsRowLabelSize,
-	txsPageInsetTop,
-	txsPageInsetLeft,
-	txsPageInsetRight,
-	txsPageInsetBottom float32
+	rowFeeWidth float32
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
@@ -67,11 +63,6 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		rowStatusWidth:         .2,
 		rowAmountWidth:         .3,
 		rowFeeWidth:            .26,
-		txsRowLabelSize:        16,
-		txsPageInsetTop:        15,
-		txsPageInsetLeft:       15,
-		txsPageInsetRight:      15,
-		txsPageInsetBottom:     15,
 	}
 
 	page.filterSorter = page.defaultFilterSorter
@@ -85,13 +76,13 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		page.filterDirection = append(
 			page.filterDirection,
 			common.theme.RadioButton(fmt.Sprint(i), txFilterDirection[i]))
-		page.filterDirection[i].Size = unit.Dp(20)
+		page.filterDirection[i].Size = values.MarginPadding20
 	}
 
 	for i := 0; i < len(txFilterSorts); i++ {
 		page.filterSort = append(page.filterSort,
 			common.theme.RadioButton(fmt.Sprint(i), txFilterSorts[i]))
-		page.filterSort[i].Size = unit.Dp(20)
+		page.filterSort[i].Size = values.MarginPadding20
 	}
 
 	return func() {
@@ -107,13 +98,13 @@ func (page *transactionsPage) Layout(common pageCommon) {
 			layout.Rigid(page.txsFilters(&common)),
 			layout.Flexed(1, func() {
 				layout.Inset{
-					Left:  unit.Dp(page.txsPageInsetLeft),
-					Right: unit.Dp(page.txsPageInsetRight)}.Layout(gtx, func() {
+					Left:  values.MarginPadding15,
+					Right: values.MarginPadding15}.Layout(gtx, func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func() {
 							layout.Inset{
-								Top:    unit.Dp(page.txsPageInsetTop),
-								Bottom: unit.Dp(page.txsPageInsetBottom)}.Layout(gtx, func() {
+								Top:    values.MarginPadding15,
+								Bottom: values.MarginPadding15}.Layout(gtx, func() {
 								page.txnRowHeader(&common)
 							})
 						}),
@@ -154,23 +145,23 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	gtx := common.gtx
 	return func() {
 		layout.Inset{
-			Top:    unit.Dp(page.txsPageInsetTop),
-			Left:   unit.Dp(page.txsPageInsetLeft),
-			Bottom: unit.Dp(page.txsPageInsetBottom)}.Layout(gtx, func() {
+			Top:    values.MarginPadding15,
+			Left:   values.MarginPadding15,
+			Bottom: values.MarginPadding15}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func() {
 					(&layout.List{Axis: layout.Horizontal}).
 						Layout(gtx, len(page.filterSort), func(index int) {
-							layout.Inset{Right: unit.Dp(page.txsPageInsetRight)}.Layout(gtx, func() {
+							layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func() {
 								page.filterSort[index].Layout(gtx, page.filterSortW)
 							})
 						})
 				}),
 				layout.Rigid(func() {
 					layout.Inset{
-						Left:  unit.Dp(35),
-						Right: unit.Dp(35),
-						Top:   unit.Dp(3)}.Layout(gtx, func() {
+						Left:  values.MarginPadding35,
+						Right: values.MarginPadding35,
+						Top:   values.MarginPadding5}.Layout(gtx, func() {
 						rect := f32.Rectangle{Max: f32.Point{X: 1, Y: 35}}
 						op.TransformOp{}.Offset(f32.Point{X: 0, Y: 0}).Add(gtx.Ops)
 						paint.ColorOp{Color: common.theme.Color.Hint}.Add(gtx.Ops)
@@ -180,7 +171,7 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 				layout.Rigid(func() {
 					(&layout.List{Axis: layout.Horizontal}).
 						Layout(gtx, len(page.filterDirection), func(index int) {
-							layout.Inset{Right: unit.Dp(page.txsPageInsetRight)}.Layout(gtx, func() {
+							layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func() {
 								page.filterDirection[index].Layout(gtx, page.filterDirectionW)
 							})
 						})
@@ -192,7 +183,7 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 
 func (page *transactionsPage) txnRowHeader(common *pageCommon) {
 	gtx := common.gtx
-	txt := common.theme.Label(unit.Dp(page.txsRowLabelSize), "#")
+	txt := common.theme.Label(values.MarginPadding15, "#")
 	txt.Color = common.theme.Color.Hint
 
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -224,11 +215,11 @@ func (page *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
 
-	layout.Inset{Bottom: unit.Dp(page.txsPageInsetBottom)}.Layout(gtx, func() {
+	layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(page.rowDirectionWidth, func() {
-				layout.Inset{Top: unit.Dp(3)}.Layout(gtx, func() {
-					txnWidgets.direction.Layout(gtx, unit.Dp(16))
+				layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func() {
+					txnWidgets.direction.Layout(gtx, values.MarginPadding15)
 				})
 			}),
 			layout.Flexed(page.rowDateWidth, func() {
@@ -261,7 +252,7 @@ func (page *transactionsPage) Handle(common pageCommon) {
 }
 
 func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidgets *transactionWdg) {
-	txWidgets.amount = common.theme.Label(unit.Dp(16), transaction.Balance)
+	txWidgets.amount = common.theme.Label(values.MarginPadding15, transaction.Balance)
 	txWidgets.time = common.theme.Body1(transaction.DateTime)
 
 	if transaction.Status == "confirmed" {

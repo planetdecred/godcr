@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"strings"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/io/key"
 
 	"github.com/raedahgroup/dcrlibwallet"
@@ -13,7 +15,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -181,7 +182,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 func (pg *createRestore) layout(common pageCommon) {
 	pg.theme.Surface(pg.gtx, func() {
 		toMax(pg.gtx)
-		pd := unit.Dp(15)
+		pd := values.MarginPadding15
 		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
 			layout.Flexed(1, func() {
 				layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func() {
@@ -223,12 +224,12 @@ func (pg *createRestore) layout(common pageCommon) {
 					}
 					layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
 						layout.Rigid(func() {
-							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+							layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
 								pg.addWallet.Layout(pg.gtx, pg.addWalletWidget)
 							})
 						}),
 						layout.Rigid(func() {
-							layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+							layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
 								pg.hidePasswordModal.Color = common.theme.Color.Primary
 								pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
 							})
@@ -254,12 +255,12 @@ func (pg *createRestore) layout(common pageCommon) {
 
 						layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
 							layout.Rigid(func() {
-								layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+								layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
 									pg.resetSeedFields.Layout(pg.gtx, pg.resetSeedFieldsWidget)
 								})
 							}),
 							layout.Rigid(func() {
-								layout.UniformInset(unit.Dp(5)).Layout(pg.gtx, func() {
+								layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
 									pg.hidePasswordModal.Background = common.theme.Color.Primary
 									pg.hidePasswordModal.Color = color.RGBA{255, 255, 255, 255}
 									pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
@@ -298,7 +299,7 @@ func (pg *createRestore) mainContent() layout.Widget {
 				})
 			}),
 			layout.Rigid(func() {
-				btnPadding := unit.Dp(10)
+				btnPadding := values.MarginPadding10
 				layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 					layout.Rigid(func() {
 						layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func() {
@@ -335,7 +336,7 @@ func (pg *createRestore) restore() layout.Widget {
 				txt.Layout(pg.gtx)
 			}),
 			layout.Rigid(func() {
-				layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(10)}.Layout(pg.gtx, func() {
+				layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(pg.gtx, func() {
 					layout.Center.Layout(pg.gtx, func() {
 						pg.errLabel.Layout(pg.gtx)
 					})
@@ -358,7 +359,8 @@ func (pg *createRestore) restore() layout.Widget {
 				layout.Center.Layout(pg.gtx, func() {
 					layout.Flex{Alignment: layout.Middle}.Layout(pg.gtx,
 						layout.Rigid(func() {
-							layout.Inset{Top: unit.Dp(15), Bottom: unit.Dp(15), Right: unit.Dp(10)}.Layout(pg.gtx, func() {
+							layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15,
+								Right: values.MarginPadding10}.Layout(pg.gtx, func() {
 								pg.showPasswordModal.Layout(pg.gtx, pg.showPasswordModalWidget)
 							})
 						}),
@@ -396,14 +398,14 @@ func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) {
 			layout.Rigid(func() {
 				layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(pg.gtx,
 					layout.Rigid(func() {
-						layout.Inset{Left: unit.Dp(20), Bottom: unit.Dp(20)}.Layout(pg.gtx, func() {
+						layout.Inset{Left: values.MarginPadding20, Bottom: values.MarginPadding20}.Layout(pg.gtx, func() {
 							pg.seedEditors[i+startIndex].Layout(pg.gtx, &pg.seedEditorWidgets.editors[i+startIndex])
 						})
 					}),
 				)
 			}),
 			layout.Rigid(func() {
-				layout.Inset{Top: unit.Dp(2), Left: unit.Dp(20)}.Layout(pg.gtx, func() {
+				layout.Inset{Top: values.MarginPadding5, Left: values.MarginPadding20}.Layout(pg.gtx, func() {
 					pg.autoComplete(i, startIndex)
 				})
 			}),
@@ -417,7 +419,7 @@ func (pg *createRestore) autoComplete(index, startIndex int) {
 	}
 
 	pg.autoCompleteList.Layout(pg.gtx, len(pg.suggestions), func(i int) {
-		layout.Inset{Right: unit.Dp(4)}.Layout(pg.gtx, func() {
+		layout.Inset{Right: values.MarginPadding5}.Layout(pg.gtx, func() {
 			pg.seedSuggestions[i].skin.Layout(pg.gtx, pg.seedSuggestions[i].button)
 		})
 	})

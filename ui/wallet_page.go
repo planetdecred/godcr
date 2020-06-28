@@ -4,8 +4,9 @@ import (
 	"image/color"
 	"time"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
@@ -20,11 +21,6 @@ const (
 	subWalletChangePass
 	subWalletBackup
 	subWalletAddAcct
-)
-
-var (
-	iconPadding = unit.Dp(5)
-	iconSize    = unit.Dp(30)
 )
 
 type walletPage struct {
@@ -49,7 +45,6 @@ type walletPage struct {
 	passwordModal                   *decredmaterial.Password
 	isPasswordModalOpen             bool
 	errChann                        chan error
-	iconPadding, iconSize           unit.Value
 	errorText                       string
 }
 
@@ -72,13 +67,14 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		cancelDeleteW: common.theme.Button("Cancel Wallet Delete"),
 		passwordModal: common.theme.Password(),
 		errChann:      common.errorChannels[PageWallet],
-		iconPadding:   unit.Dp(5),
-		iconSize:      unit.Dp(30),
 		errorText:     "",
 	}
 	page.line.Color = common.theme.Color.Gray
 	page.line.Height = 1
 	page.errorLabel.Color = common.theme.Color.Danger
+
+	var iconPadding = values.MarginPadding5
+	var iconSize = values.MarginPadding30
 
 	page.icons.addAcctW = common.theme.IconButton(common.icons.contentAdd)
 	page.icons.addAcctW.Padding = iconPadding
@@ -86,7 +82,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	page.icons.mainW = common.theme.IconButton(common.icons.navigationArrowBack)
 	page.icons.mainW.Background = color.RGBA{}
 	page.icons.mainW.Color = common.theme.Color.Hint
-	page.icons.mainW.Padding = unit.Dp(0)
+	page.icons.mainW.Padding = values.MarginPadding0
 	page.icons.mainW.Size = iconSize
 	page.icons.deleteW = common.theme.IconButton(common.icons.actionDelete)
 	page.icons.deleteW.Size = iconSize
@@ -141,7 +137,7 @@ func (page *walletPage) subMain(common pageCommon) {
 	body := func() {
 		layout.Stack{}.Layout(gtx,
 			layout.Expanded(func() {
-				layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func() {
+				layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Flexed(0.88, func() {
 							page.topRow(common)
@@ -180,7 +176,7 @@ func (page *walletPage) topRow(common pageCommon) {
 					common.theme.H6("Accounts").Layout(gtx)
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(3)}.Layout(common.gtx, func() {
+					layout.Inset{Left: values.MarginPadding5}.Layout(common.gtx, func() {
 						page.icons.addAcctW.Layout(gtx, &page.icons.addAcct)
 					})
 				}),
@@ -204,18 +200,18 @@ func (page *walletPage) topRow(common pageCommon) {
 							common.theme.Body1("HD Path: " + acct.HDPath).Layout(gtx)
 						}),
 						layout.Rigid(func() {
-							page.line.Width = gtx.Px(unit.Dp(350))
+							page.line.Width = gtx.Px(values.AccountLineWidth)
 							page.line.Layout(gtx)
 						}),
 					)
 				}
-				layout.UniformInset(unit.Dp(5)).Layout(gtx, a)
+				layout.UniformInset(values.MarginPadding5).Layout(gtx, a)
 			})
 		},
 	}
 
 	page.container.Layout(gtx, len(wdgs), func(i int) {
-		layout.Inset{Left: unit.Dp(3)}.Layout(gtx, wdgs[i])
+		layout.Inset{Left: values.MarginPadding5}.Layout(gtx, wdgs[i])
 	})
 }
 
@@ -228,7 +224,7 @@ func (page *walletPage) bottomRow(common pageCommon) {
 		page.icons.addWalletW.Background = common.theme.Color.Primary
 	}
 
-	layout.UniformInset(unit.Dp(5)).Layout(gtx, func() {
+	layout.UniformInset(values.MarginPadding5).Layout(gtx, func() {
 		layout.Flex{}.Layout(gtx,
 			layout.Rigid(page.newRow(&common, page.icons.addWalletW, &page.icons.addWallet, "Add wallet")),
 			layout.Rigid(page.newRow(&common, page.icons.renameW, &page.icons.rename, "Rename wallet")),
@@ -252,19 +248,19 @@ func (page *walletPage) subRename(common pageCommon) {
 	wdgs := []func(){
 		func() {
 			page.returnBtn(common)
-			layout.Inset{Left: unit.Dp(50)}.Layout(gtx, func() {
+			layout.Inset{Left: values.MarginPadding50}.Layout(gtx, func() {
 				common.theme.H5("Rename Wallet").Layout(gtx)
 			})
 		},
 		func() {
 			layout.Flex{}.Layout(gtx,
 				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func() {
+					layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func() {
 						common.theme.Body1("Your are about to rename").Layout(gtx)
 					})
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(5)}.Layout(gtx, func() {
+					layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
 						txt := common.theme.H5(page.current.Name)
 						txt.Color = common.theme.Color.Danger
 						txt.Layout(gtx)
@@ -274,8 +270,8 @@ func (page *walletPage) subRename(common pageCommon) {
 		},
 		func() {
 			inset := layout.Inset{
-				Top:    unit.Dp(20),
-				Bottom: unit.Dp(20),
+				Top:    values.MarginPadding20,
+				Bottom: values.MarginPadding20,
 			}
 			inset.Layout(gtx, func() {
 				page.editorW.Layout(gtx, &page.editor)
@@ -286,7 +282,7 @@ func (page *walletPage) subRename(common pageCommon) {
 		},
 		func() {
 			layout.Center.Layout(common.gtx, func() {
-				layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func() {
+				layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func() {
 					page.errorLabel.Layout(gtx)
 				})
 			})
@@ -309,19 +305,19 @@ func (page *walletPage) subDelete(common pageCommon) {
 		func() {
 			layout.Flex{}.Layout(gtx,
 				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func() {
+					layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func() {
 						common.theme.Body1("Are you sure you want to delete ").Layout(gtx)
 					})
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(5)}.Layout(gtx, func() {
+					layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
 						txt := common.theme.H5(page.current.Name)
 						txt.Color = common.theme.Color.Danger
 						txt.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(5)}.Layout(gtx, func() {
+					layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
 						common.theme.H5("?").Layout(gtx)
 					})
 				}),
@@ -329,8 +325,8 @@ func (page *walletPage) subDelete(common pageCommon) {
 		},
 		func() {
 			inset := layout.Inset{
-				Top:    unit.Dp(20),
-				Bottom: unit.Dp(5),
+				Top:    values.MarginPadding20,
+				Bottom: values.MarginPadding5,
 			}
 			inset.Layout(gtx, func() {
 				page.cancelDeleteW.Layout(gtx, &page.icons.main)
@@ -341,7 +337,7 @@ func (page *walletPage) subDelete(common pageCommon) {
 		},
 		func() {
 			layout.Center.Layout(common.gtx, func() {
-				layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func() {
+				layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func() {
 					page.errorLabel.Layout(gtx)
 				})
 			})
@@ -465,13 +461,13 @@ func (page *walletPage) returnBtn(common pageCommon) {
 
 func (page *walletPage) newRow(common *pageCommon, out decredmaterial.IconButton, in *widget.Button, label string) layout.Widget {
 	return func() {
-		layout.Inset{Right: unit.Dp(15), Top: unit.Dp(5)}.Layout(common.gtx, func() {
+		layout.Inset{Right: values.MarginPadding15, Top: values.MarginPadding5}.Layout(common.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(common.gtx,
 				layout.Rigid(func() {
 					out.Layout(common.gtx, in)
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(3)}.Layout(common.gtx, func() {
+					layout.Inset{Top: values.MarginPadding5}.Layout(common.gtx, func() {
 						common.theme.Caption(label).Layout(common.gtx)
 					})
 				}),

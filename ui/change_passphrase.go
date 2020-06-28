@@ -4,8 +4,9 @@ import (
 	"image/color"
 	"strings"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/dcrlibwallet"
@@ -43,13 +44,13 @@ func (win *Window) WalletPassphrasePage(common pageCommon) layout.Widget {
 	page.newPassW.SingleLine = true
 	page.confPass.IsRequired = true
 	page.confPassW.SingleLine = true
-	page.savePassword.TextSize = unit.Dp(11)
+	page.savePassword.TextSize = values.TextSize12
 	page.savePassword.Background = common.theme.Color.Hint
 	page.passwordBar = common.theme.ProgressBar(0)
 	page.errorLabel.Color = common.theme.Color.Danger
 
 	page.backButton.Color = common.theme.Color.Hint
-	page.backButton.Size = unit.Dp(32)
+	page.backButton.Size = values.MarginPadding30
 
 	return func() {
 		page.Layout(common)
@@ -65,19 +66,19 @@ func (page *walletPassphrasePage) Layout(common pageCommon) {
 			layout.W.Layout(common.gtx, func() {
 				page.backButton.Layout(common.gtx, &page.backButtonW)
 			})
-			layout.Inset{Left: unit.Dp(44)}.Layout(common.gtx, func() {
+			layout.Inset{Left: values.MarginPadding45}.Layout(common.gtx, func() {
 				common.theme.H5("Change Wallet Password").Layout(gtx)
 			})
 		},
 		func() {
 			layout.Flex{}.Layout(gtx,
 				layout.Rigid(func() {
-					layout.Inset{Top: unit.Dp(8)}.Layout(gtx, func() {
+					layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func() {
 						common.theme.Body1("Are about changing the passphrase for").Layout(gtx)
 					})
 				}),
 				layout.Rigid(func() {
-					layout.Inset{Left: unit.Dp(5)}.Layout(gtx, func() {
+					layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
 						txt := common.theme.H5(common.info.Wallets[*common.selectedWallet].Name)
 						txt.Color = common.theme.Color.Danger
 						txt.Layout(gtx)
@@ -101,7 +102,7 @@ func (page *walletPassphrasePage) Layout(common pageCommon) {
 			page.confPass.Layout(gtx, &page.confPassW)
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(20)}.Layout(gtx, func() {
+			layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func() {
 				page.savePassword.Layout(gtx, &page.savePasswordW)
 			})
 		},
@@ -109,13 +110,13 @@ func (page *walletPassphrasePage) Layout(common pageCommon) {
 
 	common.Layout(gtx, func() {
 		page.container.Layout(gtx, len(wdgs), func(i int) {
-			layout.UniformInset(unit.Dp(3)).Layout(gtx, wdgs[i])
+			layout.UniformInset(values.MarginPadding5).Layout(gtx, wdgs[i])
 		})
 	})
 }
 
 func (page *walletPassphrasePage) passwordStrength(common pageCommon) {
-	layout.Inset{Top: unit.Dp(10)}.Layout(common.gtx, func() {
+	layout.Inset{Top: values.MarginPadding10}.Layout(common.gtx, func() {
 		common.gtx.Constraints.Height.Max = 20
 		page.passwordBar.Layout(common.gtx)
 	})

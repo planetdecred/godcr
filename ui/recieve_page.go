@@ -1,12 +1,12 @@
 package ui
 
 import (
-	"github.com/raedahgroup/godcr/ui/values"
 	"time"
+
+	"github.com/raedahgroup/godcr/ui/values"
 
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/atotto/clipboard"
@@ -36,14 +36,11 @@ type receivePage struct {
 
 func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	moreBtn := common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)))
-	moreBtn.Padding = unit.Dp(5)
-	moreBtn.Size = unit.Dp(35)
+	moreBtn.Padding, moreBtn.Size = values.MarginPadding5, values.MarginPadding35
 	infoBtn := common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ActionInfo)))
-	infoBtn.Padding = unit.Dp(5)
-	infoBtn.Size = unit.Dp(35)
+	infoBtn.Padding, infoBtn.Size = values.MarginPadding5, values.MarginPadding35
 	copyBtn := common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.ContentContentCopy)))
-	copyBtn.Padding = unit.Dp(5)
-	copyBtn.Size = unit.Dp(30)
+	copyBtn.Padding, copyBtn.Size = values.MarginPadding5, values.MarginPadding35
 	copyBtn.Background = common.theme.Color.Background
 	copyBtn.Color = common.theme.Color.Text
 	receiveAddressLabel := common.theme.H6("")
@@ -79,7 +76,7 @@ func (p *receivePage) Layout(common pageCommon) {
 	body := func() {
 		layout.Stack{Alignment: layout.NE}.Layout(p.gtx,
 			layout.Expanded(func() {
-				layout.Inset{Top: unit.Dp(15)}.Layout(p.gtx, func() {
+				layout.Inset{Top: values.MarginPadding15}.Layout(p.gtx, func() {
 					layout.Flex{}.Layout(p.gtx,
 						layout.Flexed(1, func() {
 							p.ReceivePageContents(common)
@@ -88,7 +85,7 @@ func (p *receivePage) Layout(common pageCommon) {
 				})
 			}),
 			layout.Stacked(func() {
-				layout.Inset{Right: unit.Dp(30)}.Layout(p.gtx, func() {
+				layout.Inset{Right: values.MarginPadding30}.Layout(p.gtx, func() {
 					p.rightNav()
 				})
 			}),
@@ -161,17 +158,17 @@ func (p *receivePage) selectedAccountColumn(common pageCommon) {
 	p.selectedAccountBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
 
 	selectedDetails := func() {
-		layout.UniformInset(unit.Dp(10)).Layout(p.gtx, func() {
+		layout.UniformInset(values.MarginPadding10).Layout(p.gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(p.gtx,
 				layout.Rigid(func() {
 					layout.Flex{}.Layout(p.gtx,
 						layout.Rigid(func() {
-							layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
+							layout.Inset{Bottom: values.MarginPadding5}.Layout(p.gtx, func() {
 								p.selectedAccountNameLabel.Layout(p.gtx)
 							})
 						}),
 						layout.Rigid(func() {
-							layout.Inset{Left: unit.Dp(20)}.Layout(p.gtx, func() {
+							layout.Inset{Left: values.MarginPadding20}.Layout(p.gtx, func() {
 								p.selectedAccountBalanceLabel.Layout(p.gtx)
 							})
 						}),
@@ -180,12 +177,12 @@ func (p *receivePage) selectedAccountColumn(common pageCommon) {
 				layout.Rigid(func() {
 					layout.Flex{}.Layout(p.gtx,
 						layout.Rigid(func() {
-							layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
+							layout.Inset{Bottom: values.MarginPadding5}.Layout(p.gtx, func() {
 								p.selectedWalletNameLabel.Layout(p.gtx)
 							})
 						}),
 						layout.Rigid(func() {
-							layout.Inset{Left: unit.Dp(22)}.Layout(p.gtx, func() {
+							layout.Inset{Left: values.MarginPadding20}.Layout(p.gtx, func() {
 								p.selectedWalletBalLabel.Layout(p.gtx)
 							})
 						}),
@@ -206,7 +203,7 @@ func (p *receivePage) qrCodeAddressColumn(common pageCommon) {
 	}
 
 	qrCode.DisableBorder = true
-	layout.Inset{Top: unit.Dp(16), Bottom: unit.Dp(10)}.Layout(p.gtx, func() {
+	layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding10}.Layout(p.gtx, func() {
 		img := common.theme.Image(paint.NewImageOp(qrCode.Image(520)))
 		img.Src.Rect.Max.X = 521
 		img.Src.Rect.Max.Y = 521
@@ -222,7 +219,7 @@ func (p *receivePage) receiveAddressColumn() {
 			p.receiveAddressLabel.Layout(p.gtx)
 		}),
 		layout.Rigid(func() {
-			layout.Inset{Left: unit.Dp(10)}.Layout(p.gtx, func() {
+			layout.Inset{Left: values.MarginPadding10}.Layout(p.gtx, func() {
 				p.copyBtn.Layout(p.gtx, &p.copyBtnW)
 			})
 		}),
@@ -233,11 +230,11 @@ func (p *receivePage) generateNewAddress() {
 	layout.Flex{}.Layout(p.gtx,
 		layout.Rigid(func() {
 			inset := layout.Inset{
-				Top:    unit.Dp(5),
-				Bottom: unit.Dp(5),
+				Top:    values.MarginPadding5,
+				Bottom: values.MarginPadding5,
 			}
 			inset.Layout(p.gtx, func() {
-				p.newAddrBtn.TextSize = values.MarginPadding10
+				p.newAddrBtn.TextSize = values.TextSize10
 				p.newAddrBtn.Layout(p.gtx, &p.newAddrBtnW)
 			})
 		}),
@@ -246,15 +243,15 @@ func (p *receivePage) generateNewAddress() {
 
 func (p *receivePage) infoDiag() {
 	infoDetails := func() {
-		layout.UniformInset(unit.Dp(10)).Layout(p.gtx, func() {
+		layout.UniformInset(values.MarginPadding10).Layout(p.gtx, func() {
 			layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceEvenly}.Layout(p.gtx,
 				layout.Rigid(func() {
-					layout.Inset{Bottom: unit.Dp(5)}.Layout(p.gtx, func() {
+					layout.Inset{Bottom: values.MarginPadding5}.Layout(p.gtx, func() {
 						p.pageInfo.Layout(p.gtx)
 					})
 				}),
 				layout.Rigid(func() {
-					p.minInfo.TextSize = values.MarginPadding10
+					p.minInfo.TextSize = values.TextSize10
 					p.minInfo.Layout(p.gtx, &p.minInfoW)
 				}),
 			)
