@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/raedahgroup/godcr/ui/values"
 	"time"
 
 	"gioui.org/layout"
@@ -236,7 +237,7 @@ func (p *receivePage) generateNewAddress() {
 				Bottom: unit.Dp(5),
 			}
 			inset.Layout(p.gtx, func() {
-				p.newAddrBtn.TextSize = syncButtonTextSize
+				p.newAddrBtn.TextSize = values.MarginPadding10
 				p.newAddrBtn.Layout(p.gtx, &p.newAddrBtnW)
 			})
 		}),
@@ -253,7 +254,7 @@ func (p *receivePage) infoDiag() {
 					})
 				}),
 				layout.Rigid(func() {
-					p.minInfo.TextSize = syncButtonTextSize
+					p.minInfo.TextSize = values.MarginPadding10
 					p.minInfo.Layout(p.gtx, &p.minInfoW)
 				}),
 			)

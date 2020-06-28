@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/raedahgroup/godcr/ui/values"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -131,7 +132,7 @@ func (pg *signMessagePage) Layout(common pageCommon) {
 
 	common.Layout(gtx, func() {
 		pg.container.Layout(gtx, len(w), func(i int) {
-			layout.UniformInset(unit.Dp(5)).Layout(gtx, w[i])
+			w[i]()
 		})
 	})
 
@@ -146,7 +147,7 @@ func (pg *signMessagePage) drawButtonsRow(gtx *layout.Context) {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func() {
 				inset := layout.Inset{
-					Right: unit.Dp(5),
+					Right: values.MarginPadding5,
 				}
 				inset.Layout(gtx, func() {
 					pg.clearButton.Layout(gtx, pg.clearButtonW)

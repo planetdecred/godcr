@@ -122,10 +122,8 @@ func (page *walletAccountPage) createAccount(common pageCommon) {
 	}
 
 	common.Layout(gtx, func() {
-		layout.UniformInset(unit.Dp(20)).Layout(gtx, func() {
-			page.container.Layout(gtx, len(wdgs), func(i int) {
-				layout.UniformInset(unit.Dp(3)).Layout(gtx, wdgs[i])
-			})
+		page.container.Layout(gtx, len(wdgs), func(i int) {
+			layout.UniformInset(unit.Dp(3)).Layout(gtx, wdgs[i])
 		})
 	})
 

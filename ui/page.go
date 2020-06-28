@@ -3,6 +3,8 @@ package ui
 import (
 	"image"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -137,7 +139,12 @@ func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
 	navs := []string{PageOverview, PageWallet, PageSend, PageReceive, PageTransactions}
 	toMax(gtx)
 	page.navTab.Separator = true
-	page.navTab.Layout(gtx, body)
+	page.navTab.Layout(gtx, func() {
+		p := values.MarginPadding10
+		layout.Inset{Top: p, Left: p, Right: p}.Layout(page.gtx, func() {
+			body()
+		})
+	})
 
 	if page.navTab.Changed() {
 		*page.page = navs[page.navTab.Selected]

@@ -155,9 +155,7 @@ func (page *walletPage) subMain(common pageCommon) {
 		)
 	}
 
-	common.LayoutWithWallets(gtx, func() {
-		layout.UniformInset(unit.Dp(5)).Layout(gtx, body)
-	})
+	common.LayoutWithWallets(gtx, body)
 }
 
 func (page *walletPage) topRow(common pageCommon) {
@@ -295,10 +293,8 @@ func (page *walletPage) subRename(common pageCommon) {
 		},
 	}
 	common.Layout(gtx, func() {
-		layout.UniformInset(unit.Dp(20)).Layout(gtx, func() {
-			list.Layout(gtx, len(wdgs), func(i int) {
-				wdgs[i]()
-			})
+		list.Layout(gtx, len(wdgs), func(i int) {
+			wdgs[i]()
 		})
 	})
 }
@@ -352,10 +348,8 @@ func (page *walletPage) subDelete(common pageCommon) {
 		},
 	}
 	common.Layout(gtx, func() {
-		layout.UniformInset(unit.Dp(20)).Layout(gtx, func() {
-			list.Layout(gtx, len(wdgs), func(i int) {
-				wdgs[i]()
-			})
+		list.Layout(gtx, len(wdgs), func(i int) {
+			wdgs[i]()
 		})
 	})
 	if page.isPasswordModalOpen {
