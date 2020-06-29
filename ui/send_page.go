@@ -17,6 +17,16 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
+type amountValue struct {
+	totalAmountUSDTostring      string
+	activeTotalAmount           string
+	inactiveTotalAmount         string
+	activeTransactionFeeValue   string
+	inactiveTransactionFeeValue string
+	activeTotalCostValue        string
+	inactiveTotalCostValue      string
+}
+
 type SendPage struct {
 	pageContainer   layout.List
 	theme           *decredmaterial.Theme
@@ -47,8 +57,18 @@ type SendPage struct {
 	copyIconMaterial decredmaterial.IconButton
 	currencySwap     decredmaterial.IconButton
 
-	remainingBalance   int64
-	count              int
+	remainingBalance int64
+	amountAtoms      int64
+	totalCostDCR     int64
+	txFee            int64
+
+	usdExchangeRate float64
+	inputAmount     float64
+	amountUSDtoDCR  float64
+	amountDCRtoUSD  float64
+
+	count int
+
 	sendErrorText      string
 	txHashText         string
 	txHash             string
@@ -109,8 +129,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		sendErrorText: "",
 		txHashText:    "",
 
-		activeExchange:   "DCR",
-		inactiveExchange: "USD",
+		activeExchange:   "USD",
+		inactiveExchange: "DCR",
 
 		closeConfirmationModalButtonMaterial: common.theme.Button("Close"),
 		nextButtonMaterial:                   common.theme.Button("Next"),
@@ -173,7 +193,13 @@ func (pg *SendPage) Handle(common pageCommon) {
 
 	if pg.LastTradeRate == "" && pg.count == 0 {
 		pg.count = 1
+		pg.calculateValues()
 		go pg.wallet.GetUSDExchangeValues(&pg)
+	}
+
+	if pg.LastTradeRate != "" && pg.count == 1 {
+		pg.count = 0
+		pg.calculateValues()
 	}
 
 	if pg.walletsTab.Changed() {
@@ -240,8 +266,9 @@ func (pg *SendPage) Handle(common pageCommon) {
 		pg.calculateValues()
 	}
 
-	for range pg.destinationAddressEditor.Events(common.gtx) {
+	for _, evt := range pg.destinationAddressEditor.Events(common.gtx) {
 		go pg.calculateValues()
+		pg.changeEvt(evt)
 	}
 
 	if pg.destinationAddressEditor.Len() == 0 || pg.sendAmountEditor.Len() == 0 {
@@ -250,10 +277,7 @@ func (pg *SendPage) Handle(common pageCommon) {
 
 	for _, evt := range pg.sendAmountEditor.Events(common.gtx) {
 		go pg.calculateValues()
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			go pg.wallet.GetUSDExchangeValues(&pg)
-		}
+		pg.changeEvt(evt)
 	}
 
 	for pg.copyIconWidget.Clicked(common.gtx) {
@@ -309,8 +333,6 @@ func (pg *SendPage) setAccountTabs() {
 }
 
 func (pg *SendPage) Layout(common pageCommon) {
-	pg.calculateValues()
-
 	if len(common.info.Wallets) == 0 {
 		// show no wallets message
 		return
@@ -685,44 +707,35 @@ func (pg *SendPage) calculateValues() {
 		return
 	}
 
-	inputAmount, _ := strconv.ParseFloat(pg.sendAmountEditor.Text(), 64)
+	pg.inputAmount, _ = strconv.ParseFloat(pg.sendAmountEditor.Text(), 64)
 
-	var usdExchangeRate, amountUSDtoDCR float64
 	if pg.LastTradeRate != "" {
-		usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
-		amountUSDtoDCR = inputAmount / usdExchangeRate
+		pg.usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
+		pg.amountUSDtoDCR = pg.inputAmount / pg.usdExchangeRate
+		pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
 	}
 
-	var amountAtoms int64
 	if pg.activeExchange == "USD" && pg.LastTradeRate != "" {
-		amountAtoms = pg.setDestinationAddr(amountUSDtoDCR)
-		if amountAtoms == 0 {
+		pg.amountAtoms = pg.setDestinationAddr(pg.amountUSDtoDCR)
+		if pg.amountAtoms == 0 {
 			return
 		}
 	} else {
-		amountAtoms = pg.setDestinationAddr(inputAmount)
-		if amountAtoms == 0 {
+		pg.amountAtoms = pg.setDestinationAddr(pg.inputAmount)
+		if pg.amountAtoms == 0 {
 			return
 		}
 	}
 
-	txFee := pg.getTxFee()
-	if txFee == 0 {
+	pg.txFee = pg.getTxFee()
+	if pg.txFee == 0 {
 		return
 	}
 
-	totalCostDCR := txFee + amountAtoms
+	pg.totalCostDCR = pg.txFee + pg.amountAtoms
 
-	switch {
-	case pg.activeExchange == "DCR" && pg.LastTradeRate != "":
-		pg.setDCRValues(usdExchangeRate, inputAmount, totalCostDCR, txFee, amountAtoms)
-	case pg.activeExchange == "USD" && pg.LastTradeRate != "":
-		pg.setUSDValues(usdExchangeRate, inputAmount, totalCostDCR, txFee, amountAtoms)
-	default:
-		pg.updateDefaultValues(totalCostDCR, txFee, amountAtoms, noExchangeText)
-	}
-
-	pg.balanceAfterSend(totalCostDCR)
+	pg.updateDefaultValues()
+	pg.balanceAfterSend(pg.totalCostDCR)
 }
 
 func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
@@ -732,47 +745,52 @@ func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
 		return 0
 	}
 
-	amountAtoms := int64(amount)
+	pg.amountAtoms = int64(amount)
 	pg.txAuthor.RemoveSendDestination(0)
-	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Text(), amountAtoms, false)
-	return amountAtoms
+	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Text(), pg.amountAtoms, false)
+	return pg.amountAtoms
 }
 
-func (pg *SendPage) setUSDValues(usdExchangeRate, inputAmount float64, totalCostDCR, txFee, amountAtoms int64) {
-	// calculate total tx amount in DCR
-	txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * usdExchangeRate
-	totalAmountUSDTostring := fmt.Sprintf("%s USD", pg.sendAmountEditor.Text())
-
-	pg.activeTotalAmount = totalAmountUSDTostring
-	pg.inactiveTotalAmount = dcrutil.Amount(amountAtoms).String()
-	pg.activeTransactionFeeValue = fmt.Sprintf("%f USD", txFeeValueUSD)
-	pg.inactiveTransactionFeeValue = fmt.Sprintf("(%s)", dcrutil.Amount(txFee).String())
-	pg.activeTotalCostValue = fmt.Sprintf("%s USD", strconv.FormatFloat(inputAmount+txFeeValueUSD, 'f', 7, 64))
-	pg.inactiveTotalCostValue = fmt.Sprintf("(%s )", dcrutil.Amount(totalCostDCR).String())
+func (pg *SendPage) amountValues(activeExch, exchRate string) amountValue {
+	txFeeValueUSD := dcrutil.Amount(pg.txFee).ToCoin() * pg.usdExchangeRate
+	fmt.Println(pg.activeExchange)
+	switch {
+	case pg.activeExchange == "USD" && pg.LastTradeRate != "":
+		return amountValue{
+			activeTotalAmount:           fmt.Sprintf("%s USD", pg.sendAmountEditor.Text()),
+			inactiveTotalAmount:         dcrutil.Amount(pg.amountAtoms).String(),
+			activeTransactionFeeValue:   fmt.Sprintf("%f USD", txFeeValueUSD),
+			inactiveTransactionFeeValue: fmt.Sprintf("(%s)", dcrutil.Amount(pg.txFee).String()),
+			activeTotalCostValue:        fmt.Sprintf("%s USD", strconv.FormatFloat(pg.inputAmount+txFeeValueUSD, 'f', 7, 64)),
+			inactiveTotalCostValue:      fmt.Sprintf("(%s )", dcrutil.Amount(pg.totalCostDCR).String()),
+		}
+	case pg.activeExchange == "DCR" && pg.LastTradeRate != "":
+		return amountValue{
+			activeTotalAmount:           dcrutil.Amount(pg.amountAtoms).String(),
+			inactiveTotalAmount:         fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 7, 64)),
+			activeTransactionFeeValue:   dcrutil.Amount(pg.txFee).String(),
+			inactiveTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
+			activeTotalCostValue:        dcrutil.Amount(pg.totalCostDCR).String(),
+			inactiveTotalCostValue:      fmt.Sprintf("(%s USD)", strconv.FormatFloat(pg.amountDCRtoUSD+txFeeValueUSD, 'f', 7, 64)),
+		}
+	default:
+		return amountValue{
+			activeTotalAmount:         dcrutil.Amount(pg.amountAtoms).String(),
+			inactiveTotalAmount:       "Exchange rate not fetched",
+			activeTransactionFeeValue: dcrutil.Amount(pg.txFee).String(),
+			activeTotalCostValue: dcrutil.Amount(pg.totalCostDCR).String(),
+		}
+	}
 }
 
-func (pg *SendPage) setDCRValues(usdExchangeRate, inputAmount float64, totalCostDCR, txFee, amountAtoms int64) {
-	// calculate total tx amount in USD
-	totalAmountUSD := inputAmount * usdExchangeRate
-	txFeeValueUSD := dcrutil.Amount(txFee).ToCoin() * usdExchangeRate
-
-	totalAmountUSDTostring := fmt.Sprintf("%s USD", strconv.FormatFloat(totalAmountUSD, 'f', 7, 64))
-
-	pg.activeTotalAmount = dcrutil.Amount(amountAtoms).String()
-	pg.inactiveTotalAmount = totalAmountUSDTostring
-	pg.activeTransactionFeeValue = dcrutil.Amount(txFee).String()
-	pg.inactiveTransactionFeeValue = fmt.Sprintf("(%f USD)", txFeeValueUSD)
-	pg.activeTotalCostValue = dcrutil.Amount(totalCostDCR).String()
-	pg.inactiveTotalCostValue = fmt.Sprintf("(%s USD)", strconv.FormatFloat(totalAmountUSD+txFeeValueUSD, 'f', 7, 64))
-}
-
-func (pg *SendPage) updateDefaultValues(totalCostDCR, txFee, amountAtoms int64, noExchangeText string) {
-	pg.activeTotalAmount = dcrutil.Amount(amountAtoms).String()
-	pg.inactiveTotalAmount = noExchangeText
-	pg.activeTransactionFeeValue = dcrutil.Amount(txFee).String()
-	pg.inactiveTransactionFeeValue = ""
-	pg.activeTotalCostValue = dcrutil.Amount(totalCostDCR).String()
-	pg.inactiveTotalCostValue = ""
+func (pg *SendPage) updateDefaultValues() {
+	v := pg.amountValues(pg.activeExchange, pg.LastTradeRate)
+	pg.activeTotalAmount = v.activeTotalAmount
+	pg.inactiveTotalAmount = v.inactiveTotalAmount
+	pg.activeTransactionFeeValue = v.activeTransactionFeeValue
+	pg.inactiveTransactionFeeValue = v.inactiveTransactionFeeValue
+	pg.activeTotalCostValue = v.activeTotalCostValue
+	pg.inactiveTotalCostValue = v.inactiveTotalCostValue
 }
 
 func (pg *SendPage) getTxFee() int64 {
@@ -786,8 +804,8 @@ func (pg *SendPage) getTxFee() int64 {
 	return feeAndSize.Fee.AtomValue
 }
 
-func (pg *SendPage) balanceAfterSend(totalCostDCR int64) {
-	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCostDCR
+func (pg *SendPage) balanceAfterSend(totalCost int64) {
+	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
 }
 
@@ -809,5 +827,12 @@ func (pg *SendPage) watchForBroadcastResult() {
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
+	}
+}
+
+func (pg *SendPage) changeEvt(evt widget.EditorEvent) {
+	switch evt.(type) {
+	case widget.ChangeEvent:
+		go pg.wallet.GetUSDExchangeValues(&pg)
 	}
 }
