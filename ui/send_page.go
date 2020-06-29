@@ -18,7 +18,6 @@ import (
 )
 
 type amountValue struct {
-	totalAmountUSDTostring      string
 	activeTotalAmount           string
 	inactiveTotalAmount         string
 	activeTransactionFeeValue   string
@@ -751,9 +750,8 @@ func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
 	return pg.amountAtoms
 }
 
-func (pg *SendPage) amountValues(activeExch, exchRate string) amountValue {
+func (pg *SendPage) amountValues() amountValue {
 	txFeeValueUSD := dcrutil.Amount(pg.txFee).ToCoin() * pg.usdExchangeRate
-	fmt.Println(pg.activeExchange)
 	switch {
 	case pg.activeExchange == "USD" && pg.LastTradeRate != "":
 		return amountValue{
@@ -778,13 +776,13 @@ func (pg *SendPage) amountValues(activeExch, exchRate string) amountValue {
 			activeTotalAmount:         dcrutil.Amount(pg.amountAtoms).String(),
 			inactiveTotalAmount:       "Exchange rate not fetched",
 			activeTransactionFeeValue: dcrutil.Amount(pg.txFee).String(),
-			activeTotalCostValue: dcrutil.Amount(pg.totalCostDCR).String(),
+			activeTotalCostValue:      dcrutil.Amount(pg.totalCostDCR).String(),
 		}
 	}
 }
 
 func (pg *SendPage) updateDefaultValues() {
-	v := pg.amountValues(pg.activeExchange, pg.LastTradeRate)
+	v := pg.amountValues()
 	pg.activeTotalAmount = v.activeTotalAmount
 	pg.inactiveTotalAmount = v.inactiveTotalAmount
 	pg.activeTransactionFeeValue = v.activeTransactionFeeValue
