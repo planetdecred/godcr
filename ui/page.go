@@ -203,6 +203,7 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 	}
 
 	page.LayoutWithWallets(gtx, func() {
+		bodyWidth := gtx.Constraints.Width.Max
 		layout.Flex{}.Layout(gtx,
 			layout.Rigid(func() {
 				layout.Inset{Top: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func() {
@@ -210,7 +211,10 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 				})
 			}),
 			layout.Rigid(func() {
-				page.accountsTab.Layout(gtx, body)
+				page.accountsTab.Layout(gtx, func() {
+					leftInset := unit.Dp(-float32(bodyWidth-gtx.Constraints.Width.Max) / 2)
+					layout.Inset{Left: leftInset}.Layout(gtx, body)
+				})
 			}),
 		)
 	})

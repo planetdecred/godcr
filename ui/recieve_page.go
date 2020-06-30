@@ -76,29 +76,23 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 
 func (p *receivePage) Layout(common pageCommon) {
 	body := func() {
-		inset := layout.Inset{
-			Left: unit.Dp(-110),
-		}
-		inset.Layout(common.gtx, func() {
-			layout.Stack{Alignment: layout.NE}.Layout(p.gtx,
-				layout.Expanded(func() {
-					layout.Inset{Top: unit.Dp(15)}.Layout(p.gtx, func() {
-						layout.Flex{}.Layout(p.gtx,
-							layout.Flexed(1, func() {
-								p.ReceivePageContents(common)
-							}),
-						)
-					})
-				}),
-				layout.Stacked(func() {
-					layout.Inset{Right: unit.Dp(30)}.Layout(p.gtx, func() {
-						p.rightNav()
-					})
-				}),
-			)
-		})
+		layout.Stack{Alignment: layout.NE}.Layout(p.gtx,
+			layout.Expanded(func() {
+				layout.Inset{Top: unit.Dp(15)}.Layout(p.gtx, func() {
+					layout.Flex{}.Layout(p.gtx,
+						layout.Flexed(1, func() {
+							p.ReceivePageContents(common)
+						}),
+					)
+				})
+			}),
+			layout.Stacked(func() {
+				layout.Inset{Right: unit.Dp(30)}.Layout(p.gtx, func() {
+					p.rightNav()
+				})
+			}),
+		)
 	}
-
 	common.LayoutWithAccounts(p.gtx, body)
 }
 
