@@ -3,7 +3,9 @@
 package wallet
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"sort"
 
 	"github.com/raedahgroup/dcrlibwallet"
@@ -151,4 +153,17 @@ func (wal *Wallet) GetBlockExplorerURL(txnHash string) string {
 	default:
 		return ""
 	}
+}
+
+//GetUSDExchangeValues gets the exchange rate of DCR - USDT from a specified endpoint
+func (wal *Wallet) GetUSDExchangeValues(target interface{}) {
+	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
+	resp, err := http.Get(url)
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	json.NewDecoder(resp.Body).Decode(target)
 }

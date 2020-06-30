@@ -16,7 +16,9 @@ type pageIcons struct {
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
-	communicationComment, editorModeEdit, actionBackup, actionCheck *decredmaterial.Icon
+	communicationComment, editorModeEdit, actionBackup, actionCheck,
+	actionSwapVert *decredmaterial.Icon
+
 	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon image.Image
 }
 
@@ -59,6 +61,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
 		actionBackup:               mustIcon(decredmaterial.NewIcon(icons.ActionSettingsBackupRestore)),
 		actionCheck:                mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
+		actionSwapVert:             mustIcon(decredmaterial.NewIcon(icons.ActionSwapVert)),
 		overviewIcon:               decredIcons["overview"],
 		walletIcon:                 decredIcons["wallet"],
 		receiveIcon:                decredIcons["receive"],
@@ -155,7 +158,10 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	}
 
 	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
-	for i := range page.info.Wallets[*page.selectedWallet].Accounts {
+	for i, acct := range page.info.Wallets[*page.selectedWallet].Accounts {
+		if acct.Name == "imported" {
+			continue
+		}
 		accounts[i] = decredmaterial.TabItem{
 			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
 		}
