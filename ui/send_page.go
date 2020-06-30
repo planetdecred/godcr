@@ -128,8 +128,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		sendErrorText: "",
 		txHashText:    "",
 
-		activeExchange:   "USD",
-		inactiveExchange: "DCR",
+		activeExchange:   "DCR",
+		inactiveExchange: "USD",
 
 		closeConfirmationModalButtonMaterial: common.theme.Button("Close"),
 		nextButtonMaterial:                   common.theme.Button("Next"),
@@ -179,6 +179,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.currencySwap.Color = common.theme.Color.Text
 	page.currencySwap.Padding = unit.Dp(0)
 	page.currencySwap.Size = unit.Dp(30)
+	go common.wallet.GetUSDExchangeValues(&page)
 
 	return func() {
 		page.Layout(common)
@@ -193,11 +194,10 @@ func (pg *SendPage) Handle(common pageCommon) {
 	if pg.LastTradeRate == "" && pg.count == 0 {
 		pg.count = 1
 		pg.calculateValues()
-		go pg.wallet.GetUSDExchangeValues(&pg)
 	}
 
-	if pg.LastTradeRate != "" && pg.count == 1 {
-		pg.count = 0
+	if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
+		pg.count = 2
 		pg.calculateValues()
 	}
 
