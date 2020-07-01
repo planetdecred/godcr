@@ -3,8 +3,9 @@ package ui
 import (
 	"fmt"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -79,7 +80,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		backButton: common.theme.PlainIconButton(common.icons.navigationArrowBack),
 	}
 	pg.backButton.Color = common.theme.Color.Hint
-	pg.backButton.Size = unit.Dp(32)
+	pg.backButton.Size = values.MarginPadding30
 
 	return func() {
 		pg.Layout(common)
@@ -99,14 +100,14 @@ func (pg *signMessagePage) Layout(common pageCommon) {
 			layout.W.Layout(gtx, func() {
 				pg.backButton.Layout(gtx, &pg.backButtonW)
 			})
-			layout.Inset{Left: unit.Dp(44)}.Layout(gtx, func() {
+			layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func() {
 				pg.titleLabel.Layout(gtx)
 			})
 		},
 		func() {
 			inset := layout.Inset{
-				Top:    unit.Dp(5),
-				Bottom: unit.Dp(10),
+				Top:    values.MarginPadding5,
+				Bottom: values.MarginPadding10,
 			}
 			inset.Layout(gtx, func() {
 				pg.subtitleLabel.Layout(gtx)
@@ -131,7 +132,7 @@ func (pg *signMessagePage) Layout(common pageCommon) {
 
 	common.Layout(gtx, func() {
 		pg.container.Layout(gtx, len(w), func(i int) {
-			layout.UniformInset(unit.Dp(5)).Layout(gtx, w[i])
+			w[i]()
 		})
 	})
 
@@ -146,7 +147,7 @@ func (pg *signMessagePage) drawButtonsRow(gtx *layout.Context) {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func() {
 				inset := layout.Inset{
-					Right: unit.Dp(5),
+					Right: values.MarginPadding5,
 				}
 				inset.Layout(gtx, func() {
 					pg.clearButton.Layout(gtx, pg.clearButtonW)
