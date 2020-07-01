@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/text"
 
 	"github.com/raedahgroup/dcrlibwallet"
@@ -111,7 +113,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	b.successInfo.Color = b.theme.Color.Hint
 
 	b.backButton.Color = c.theme.Color.Hint
-	b.backButton.Size = unit.Dp(32)
+	b.backButton.Size = values.MarginPadding30
 
 	b.action.Background = c.theme.Color.Hint
 
@@ -204,7 +206,7 @@ func (pg *backupPage) layout() {
 func (pg *backupPage) pageTitle() layout.Widget {
 	gtx := pg.gtx
 	return func() {
-		layout.Inset{Bottom: unit.Dp(5), Top: unit.Dp(20)}.Layout(gtx, func() {
+		layout.Inset{Bottom: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Horizontal, Alignment: layout.Start}.Layout(gtx,
 				layout.Rigid(func() {
 					pg.backButton.Layout(gtx, pg.backButtonWidget)
@@ -212,13 +214,13 @@ func (pg *backupPage) pageTitle() layout.Widget {
 				layout.Rigid(func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func() {
-							layout.Inset{Left: unit.Dp(10)}.Layout(gtx, func() {
+							layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func() {
 								pg.title.Layout(gtx)
 							})
 						}),
 						layout.Rigid(func() {
 							if pg.active != infoView {
-								layout.Inset{Left: unit.Dp(10)}.Layout(gtx, func() {
+								layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func() {
 									pg.steps.Layout(gtx)
 								})
 							}
@@ -226,7 +228,7 @@ func (pg *backupPage) pageTitle() layout.Widget {
 						layout.Rigid(func() {
 							pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
 							if pg.active != infoView {
-								layout.Inset{Right: unit.Dp(30), Top: unit.Dp(20)}.Layout(gtx, func() {
+								layout.Inset{Right: values.MarginPadding30, Top: values.MarginPadding20}.Layout(gtx, func() {
 									pg.instruction.Layout(gtx)
 								})
 							}
@@ -240,7 +242,7 @@ func (pg *backupPage) pageTitle() layout.Widget {
 
 func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 	return func() {
-		layout.Inset{Left: unit.Dp(10), Right: unit.Dp(10)}.Layout(pg.gtx, func() {
+		layout.Inset{Left: values.MarginPadding10, Right: values.MarginPadding10}.Layout(pg.gtx, func() {
 			layout.Stack{}.Layout(pg.gtx,
 				layout.Stacked(func() {
 					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
@@ -250,7 +252,7 @@ func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 							}
 						}),
 						layout.Rigid(func() {
-							layout.Inset{Bottom: unit.Dp(50)}.Layout(pg.gtx, func() {
+							layout.Inset{Bottom: values.MarginPadding50}.Layout(pg.gtx, func() {
 								content()
 							})
 						}),
@@ -260,14 +262,14 @@ func (pg *backupPage) viewTemplate(content layout.Widget) layout.Widget {
 					pg.gtx.Constraints.Height.Min = pg.gtx.Constraints.Height.Max
 					layout.S.Layout(pg.gtx, func() {
 						pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
-						layout.Inset{Bottom: unit.Dp(10)}.Layout(pg.gtx, func() {
+						layout.Inset{Bottom: values.MarginPadding10}.Layout(pg.gtx, func() {
 							pg.action.Layout(pg.gtx, pg.actionWidget)
 						})
 					})
 				}),
 				layout.Stacked(func() {
 					if len(pg.error) > 0 {
-						layout.Inset{Top: unit.Dp(75)}.Layout(pg.gtx, func() {
+						layout.Inset{Top: values.MarginPadding75}.Layout(pg.gtx, func() {
 							pg.theme.ErrorAlert(pg.gtx, pg.error)
 						})
 					}
@@ -283,9 +285,9 @@ func (pg *backupPage) infoView() layout.Widget {
 			pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
 			pg.gtx.Constraints.Height.Min = pg.gtx.Constraints.Height.Max
 			layout.Center.Layout(pg.gtx, func() {
-				layout.Inset{Bottom: unit.Dp(60)}.Layout(pg.gtx, func() {
+				layout.Inset{Bottom: values.MarginPadding60}.Layout(pg.gtx, func() {
 					pg.infoList.Layout(pg.gtx, len(pg.checkBoxWidgets), func(i int) {
-						layout.Inset{Bottom: unit.Dp(20)}.Layout(pg.gtx, func() {
+						layout.Inset{Bottom: values.MarginPadding20}.Layout(pg.gtx, func() {
 							pg.checkBoxes[i].Layout(pg.gtx, pg.checkBoxWidgets[i])
 						})
 					})
@@ -333,10 +335,10 @@ func (pg *backupPage) verifyView() layout.Widget {
 			pg.verifyList.Layout(pg.gtx, len(pg.suggestions), func(i int) {
 				s := pg.suggestions[i]
 				layout.Center.Layout(pg.gtx, func() {
-					layout.Inset{Bottom: unit.Dp(30)}.Layout(pg.gtx, func() {
+					layout.Inset{Bottom: values.MarginPadding30}.Layout(pg.gtx, func() {
 						layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 							layout.Rigid(func() {
-								layout.Inset{Left: unit.Dp(15), Bottom: unit.Dp(15)}.Layout(pg.gtx, func() {
+								layout.Inset{Left: values.MarginPadding15, Bottom: values.MarginPadding15}.Layout(pg.gtx, func() {
 									pg.theme.H6(fmt.Sprintf("%d. %s", i+1, pg.selectedSeeds[i])).Layout(pg.gtx)
 								})
 							}),
@@ -371,9 +373,12 @@ func (pg *backupPage) successView() layout.Widget {
 						layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
 							layout.Rigid(func() {
 								pg.gtx.Constraints.Width.Min = pg.gtx.Constraints.Width.Max
-								layout.Inset{Bottom: unit.Dp(50), Right: unit.Dp(50)}.Layout(pg.gtx, func() {
+								layout.Inset{
+									Bottom: values.MarginPadding50,
+									Right:  values.MarginPadding50,
+								}.Layout(pg.gtx, func() {
 									layout.Center.Layout(pg.gtx, func() {
-										layout.UniformInset(unit.Dp(20)).Layout(pg.gtx, func() {
+										layout.UniformInset(values.MarginPadding20).Layout(pg.gtx, func() {
 											pg.checkIcon.Color = pg.theme.Color.Success
 											pg.checkIcon.Layout(pg.gtx, unit.Px(float32(150)))
 										})
@@ -397,7 +402,7 @@ func (pg *backupPage) successView() layout.Widget {
 }
 
 func (pg *backupPage) seedText(index int) {
-	layout.Inset{Bottom: unit.Dp(10), Left: unit.Dp(20)}.Layout(pg.gtx,
+	layout.Inset{Bottom: values.MarginPadding10, Left: values.MarginPadding20}.Layout(pg.gtx,
 		func() {
 			seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", index+1, pg.seedPhrase[index]))
 			seedLabel.Alignment = text.Middle
@@ -409,11 +414,11 @@ func (pg *backupPage) seedText(index int) {
 func (pg *backupPage) suggestionButtonGroup(sg seedGroup, buttonIndex int) {
 	button := sg.buttons[buttonIndex]
 	button.skin.Background = pg.theme.Color.Hint
-	button.skin.TextSize = unit.Dp(18)
+	button.skin.TextSize = values.TextSize18
 	if sg.selected == buttonIndex {
 		button.skin.Background = pg.theme.Color.Primary
 	}
-	layout.Inset{Right: unit.Dp(15), Left: unit.Dp(15)}.Layout(pg.gtx, func() {
+	layout.Inset{Right: values.MarginPadding15, Left: values.MarginPadding15}.Layout(pg.gtx, func() {
 		button.skin.Layout(pg.gtx, sg.buttons[buttonIndex].button)
 	})
 }

@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
@@ -161,14 +162,14 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	page.copyIconMaterial.Background = common.theme.Color.Background
 	page.copyIconMaterial.Color = common.theme.Color.Text
-	page.copyIconMaterial.Size = unit.Dp(35)
-	page.copyIconMaterial.Padding = unit.Dp(5)
+	page.copyIconMaterial.Size = values.MarginPadding35
+	page.copyIconMaterial.Padding = values.MarginPadding5
 
 	page.currencySwap = common.theme.IconButton(common.icons.actionSwapVert)
 	page.currencySwap.Background = color.RGBA{}
 	page.currencySwap.Color = common.theme.Color.Text
-	page.currencySwap.Padding = unit.Dp(0)
-	page.currencySwap.Size = unit.Dp(30)
+	page.currencySwap.Padding = values.MarginPadding0
+	page.currencySwap.Size = values.MarginPadding30
 	go common.wallet.GetUSDExchangeValues(&page)
 
 	return func() {
@@ -329,9 +330,9 @@ func (pg *SendPage) Layout(common pageCommon) {
 	}
 
 	common.LayoutWithAccounts(common.gtx, func() {
-		layout.UniformInset(unit.Dp(10)).Layout(common.gtx, func() {
+		layout.UniformInset(values.MarginPadding10).Layout(common.gtx, func() {
 			pg.pageContainer.Layout(common.gtx, len(pageContent), func(i int) {
-				layout.Inset{Top: unit.Dp(5)}.Layout(common.gtx, pageContent[i])
+				layout.Inset{Top: values.MarginPadding5}.Layout(common.gtx, pageContent[i])
 			})
 		})
 	})
@@ -345,7 +346,7 @@ func (pg *SendPage) drawSuccessSection(gtx *layout.Context) {
 			}),
 			layout.Rigid(func() {
 				inset := layout.Inset{
-					Left: unit.Dp(3),
+					Left: values.MarginPadding5,
 				}
 				inset.Layout(gtx, func() {
 					pg.copyIconMaterial.Layout(gtx, pg.copyIconWidget)
@@ -366,24 +367,24 @@ func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
 		layout.Stack{}.Layout(gtx,
 			layout.Stacked(func() {
 				selectedDetails := func() {
-					layout.UniformInset(unit.Dp(10)).Layout(gtx, func() {
+					layout.UniformInset(values.MarginPadding10).Layout(gtx, func() {
 						layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func() {
 								layout.Flex{}.Layout(gtx,
 									layout.Rigid(func() {
-										layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
+										layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func() {
 											pg.theme.Body2(pg.selectedAccount.Name).Layout(gtx)
 										})
 									}),
 									layout.Rigid(func() {
-										layout.Inset{Left: unit.Dp(20)}.Layout(gtx, func() {
+										layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func() {
 											pg.theme.Body2(dcrutil.Amount(pg.selectedAccount.SpendableBalance).String()).Layout(gtx)
 										})
 									}),
 								)
 							}),
 							layout.Rigid(func() {
-								layout.Inset{Bottom: unit.Dp(5)}.Layout(gtx, func() {
+								layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func() {
 									pg.theme.Body2(pg.selectedWallet.Name).Layout(gtx)
 								})
 							}),
@@ -412,7 +413,7 @@ func (pg *SendPage) drawTransactionDetailWidgets(gtx *layout.Context) {
 	list := layout.List{Axis: layout.Vertical}
 	list.Layout(gtx, len(w), func(i int) {
 		inset := layout.Inset{
-			Top: unit.Dp(10),
+			Top: values.MarginPadding10,
 		}
 		inset.Layout(gtx, w[i])
 	})
@@ -433,7 +434,7 @@ func (pg *SendPage) tableLayout(gtx *layout.Context, leftLabel decredmaterial.La
 						b := pg.theme.Body1(inactive)
 						b.Color = pg.theme.Color.Hint
 						inset := layout.Inset{
-							Left: unit.Dp(5),
+							Left: values.MarginPadding5,
 						}
 						inset.Layout(gtx, func() {
 							b.Layout(gtx)
@@ -456,12 +457,13 @@ func (pg *SendPage) sendAmountLayout(gtx *layout.Context) {
 					layout.Rigid(func() {
 						layout.Flex{}.Layout(gtx,
 							layout.Rigid(func() {
-								layout.Inset{Left: unit.Dp(10), Top: unit.Dp(10), Bottom: unit.Dp(10)}.Layout(gtx, func() {
+								m := values.MarginPadding10
+								layout.Inset{Left: m, Top: m, Bottom: m}.Layout(gtx, func() {
 									pg.currencySwap.Layout(gtx, &pg.currencySwapWidget)
 								})
 							}),
 							layout.Rigid(func() {
-								layout.Inset{Left: unit.Dp(7)}.Layout(gtx, func() {
+								layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
 									pg.sendAmountEditorMaterial.Layout(gtx, pg.sendAmountEditor)
 								})
 							}),
@@ -534,7 +536,7 @@ func (pg *SendPage) drawConfirmationModal(c pageCommon) {
 				}),
 				layout.Rigid(func() {
 					inset := layout.Inset{
-						Left: unit.Dp(5),
+						Left: values.MarginPadding5,
 					}
 					inset.Layout(gtx, func() {
 						pg.closeConfirmationModalButtonMaterial.Layout(gtx, pg.closeConfirmationModalButtonWidget)

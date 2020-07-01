@@ -5,9 +5,10 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -26,8 +27,6 @@ type transactionPage struct {
 	viewTxnOnDcrdataW,
 	backButton widget.Button
 	viewTxnOnDcrdata decredmaterial.Button
-
-	pageContentInset, rowGroupInset float32
 
 	outputsCollapsible *decredmaterial.Collapsible
 	inputsCollapsible  *decredmaterial.Collapsible
@@ -51,11 +50,9 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 
 		backButtonW:      common.theme.PlainIconButton(common.icons.navigationArrowBack),
 		viewTxnOnDcrdata: common.theme.Button("View on dcrdata"),
-		pageContentInset: 30,
-		rowGroupInset:    20,
 	}
 	page.backButtonW.Color = common.theme.Color.Hint
-	page.backButtonW.Size = unit.Dp(32)
+	page.backButtonW.Size = values.MarginPadding30
 
 	return func() {
 		page.Layout(common)
@@ -65,51 +62,50 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 
 func (page *transactionPage) Layout(common pageCommon) {
 	gtx := common.gtx
+	margin := values.MarginPadding20
 	widgets := []func(){
 		func() {
-			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: margin}.Layout(gtx, func() {
 				page.txnBalanceAndStatus(&common)
 			})
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: margin}.Layout(gtx, func() {
 				page.txnTypeAndID(&common)
 			})
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: margin}.Layout(gtx, func() {
 				page.txnInputs(&common)
 			})
 		},
 		func() {
-			layout.Inset{Top: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Top: margin}.Layout(gtx, func() {
 				page.txnOutputs(&common)
 			})
 		},
 	}
 
 	common.Layout(gtx, func() {
-		layout.UniformInset(unit.Dp(page.pageContentInset)).Layout(gtx, func() {
-			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func() {
-					page.header(&common)
-				}),
-				layout.Flexed(1, func() {
-					if *page.txnInfo == nil {
-						return
-					}
-					page.transactionPageContainer.Layout(gtx, len(widgets), func(i int) {
-						layout.Inset{}.Layout(gtx, widgets[i])
-					})
-				}),
-				layout.Rigid(func() {
-					if *page.txnInfo == nil {
-						return
-					}
-					page.viewTxnOnDcrdata.Layout(gtx, &page.viewTxnOnDcrdataW)
-				}),
-			)
-		})
+		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func() {
+				page.header(&common)
+			}),
+			layout.Flexed(1, func() {
+				if *page.txnInfo == nil {
+					return
+				}
+				page.transactionPageContainer.Layout(gtx, len(widgets), func(i int) {
+					layout.Inset{}.Layout(gtx, widgets[i])
+				})
+			}),
+			layout.Rigid(func() {
+				if *page.txnInfo == nil {
+					return
+				}
+				page.viewTxnOnDcrdata.Layout(gtx, &page.viewTxnOnDcrdataW)
+			}),
+		)
 	})
 }
 
@@ -134,11 +130,11 @@ func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 
 	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
 		layout.Rigid(func() {
-			layout.Inset{Left: unit.Dp(-4), Top: unit.Dp(4)}.Layout(common.gtx, func() {
-				txnWidgets.direction.Layout(common.gtx, unit.Dp(28))
+			layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(common.gtx, func() {
+				txnWidgets.direction.Layout(common.gtx, values.MarginPadding30)
 			})
-			layout.Inset{Left: unit.Dp(28)}.Layout(common.gtx, func() {
-				txnWidgets.amount.TextSize = unit.Dp(28)
+			layout.Inset{Left: values.MarginPadding30}.Layout(common.gtx, func() {
+				txnWidgets.amount.TextSize = values.TextSize28
 				txnWidgets.amount.Layout(common.gtx)
 			})
 		}),
@@ -146,10 +142,10 @@ func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
 			txnWidgets.time.Layout(common.gtx)
 		}),
 		layout.Rigid(func() {
-			layout.Inset{Top: unit.Dp(3)}.Layout(common.gtx, func() {
-				txnWidgets.status.Layout(common.gtx, unit.Dp(16))
+			layout.Inset{Top: values.MarginPadding5}.Layout(common.gtx, func() {
+				txnWidgets.status.Layout(common.gtx, values.MarginPadding15)
 			})
-			layout.Inset{Left: unit.Dp(18)}.Layout(common.gtx, func() {
+			layout.Inset{Left: values.MarginPadding20}.Layout(common.gtx, func() {
 				txt := common.theme.Body1((*page.txnInfo).Status)
 				txt.Color = txnWidgets.status.Color
 				txt.Layout(common.gtx)
@@ -181,7 +177,7 @@ func (page *transactionPage) txnTypeAndID(common *pageCommon) {
 
 	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func() {
-			layout.Inset{Bottom: unit.Dp(page.rowGroupInset)}.Layout(gtx, func() {
+			layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func() {
 				row("Transaction ID", common.theme.Body1(transaction.Txn.Hash))
 			})
 		}),
@@ -238,13 +234,13 @@ func (page *transactionPage) txnOutputs(common *pageCommon) {
 }
 
 func (page *transactionPage) txnIORow(common *pageCommon, amount string, hash string) {
-	layout.Inset{Bottom: unit.Dp(5)}.Layout(common.gtx, func() {
+	layout.Inset{Bottom: values.MarginPadding5}.Layout(common.gtx, func() {
 		layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(common.gtx,
 			layout.Rigid(func() {
-				common.theme.Label(unit.Dp(13), amount).Layout(common.gtx)
+				common.theme.Label(values.MarginPadding15, amount).Layout(common.gtx)
 			}),
 			layout.Rigid(func() {
-				txt := common.theme.Label(unit.Dp(13), hash)
+				txt := common.theme.Label(values.MarginPadding15, hash)
 				txt.Color = common.theme.Color.Primary
 				txt.Layout(common.gtx)
 			}),
