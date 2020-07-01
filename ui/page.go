@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -205,8 +204,7 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 		}
 	}
 
-	title := page.theme.Label(unit.Dp(18), "Accounts:")
-	page.accountsTab.SetTitle(&title)
+	page.accountsTab.SetTitle(page.theme.Label(values.TextSize18, "Accounts:"))
 
 	page.accountsTab.SetTabs(accounts)
 	if page.accountsTab.Changed() {

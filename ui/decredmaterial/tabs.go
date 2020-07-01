@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 
+	"github.com/raedahgroup/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"gioui.org/font"
@@ -169,7 +170,7 @@ type Tabs struct {
 	Selected    int
 	changed     bool
 	btns        []*widget.Button
-	title       *Label
+	title       Label
 	list        *layout.List
 	Position    Position
 	Separator   bool
@@ -226,15 +227,15 @@ func (t *Tabs) scrollButton(gtx *layout.Context, right bool, button *widget.Butt
 }
 
 // SetTitle setting the title of the tabs
-func (t *Tabs) SetTitle(title *Label) {
+func (t *Tabs) SetTitle(title Label) {
 	t.title = title
 }
 
 // tabsTitle lays out the title of the tab when Position is Horizontal.
 func (t *Tabs) tabsTitle(gtx *layout.Context) layout.FlexChild {
 	return layout.Rigid(func() {
-		if (t.Position == Top || t.Position == Bottom) && t.title != nil {
-			layout.Inset{Top: unit.Dp(10), Right: unit.Dp(5)}.Layout(gtx, func() {
+		if (t.Position == Top || t.Position == Bottom) && t.title.shaper != nil {
+			layout.Inset{Top: values.MarginPadding10, Right: values.MarginPadding5}.Layout(gtx, func() {
 				t.title.Layout(gtx)
 			})
 		}
