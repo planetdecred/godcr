@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/raedahgroup/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"gioui.org/font"
@@ -170,7 +169,6 @@ type Tabs struct {
 	Selected    int
 	previousSelected int
 	events           []widget.ChangeEvent
-	prevEvents       int
 	changed     bool
 	btns        []*widget.Button
 	title       Label
@@ -296,7 +294,6 @@ func (t *Tabs) ChangeTab(index int) {
 		t.events = append(t.events, widget.ChangeEvent{})
 		t.previousSelected = index
 	}
-	return
 }
 
 // ChangeEvent returns the last change event
