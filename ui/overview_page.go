@@ -66,15 +66,15 @@ type overviewPage struct {
 	listContainer, walletSyncList *layout.List
 	gtx                           *layout.Context
 	theme                         *decredmaterial.Theme
-	tab  					      *decredmaterial.Tabs
+	tab                           *decredmaterial.Tabs
 
-	walletInfo                    *wallet.MultiWalletInfo
-	walletSyncStatus              *wallet.SyncStatus
-	walletTransactions            **wallet.Transactions
-	walletTransaction             **wallet.Transaction
-	toTransactions, sync          decredmaterial.Button
-	toTransactionsW, syncW        widget.Button
-	toTransactionDetails          []*gesture.Click
+	walletInfo             *wallet.MultiWalletInfo
+	walletSyncStatus       *wallet.SyncStatus
+	walletTransactions     **wallet.Transactions
+	walletTransaction      **wallet.Transaction
+	toTransactions, sync   decredmaterial.Button
+	toTransactionsW, syncW widget.Button
+	toTransactionDetails   []*gesture.Click
 
 	text             overviewPageText
 	syncButtonHeight int
@@ -86,9 +86,9 @@ type overviewPage struct {
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	page := overviewPage{
-		gtx:                c.gtx,
-		theme:              c.theme,
-		tab:				c.navTab,
+		gtx:   c.gtx,
+		theme: c.theme,
+		tab:   c.navTab,
 
 		walletInfo:         win.walletInfo,
 		walletSyncStatus:   win.walletSyncStatus,
@@ -127,7 +127,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		disconnect:           "Disconnect",
 		cancel:               "Cancel",
 	}
-	page.toTransactions.TextSize = values.TextSize10
+	page.toTransactions.TextSize = values.TextSize14
 	page.toTransactions.Background = color.RGBA{}
 	page.toTransactions.Color = c.theme.Color.Primary
 	page.sync = c.theme.Button(page.text.reconnect)
