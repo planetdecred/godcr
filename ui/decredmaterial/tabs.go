@@ -168,6 +168,9 @@ type Tabs struct {
 	Size        float32
 	items       []TabItem
 	Selected    int
+	previousSelected int
+	events           []widget.ChangeEvent
+	prevEvents       int
 	changed     bool
 	btns        []*widget.Button
 	title       Label
@@ -196,11 +199,6 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 			t.btns[i] = new(widget.Button)
 		}
 	}
-}
-
-// Changed returns the changed state of the tab.
-func (t *Tabs) Changed() bool {
-	return t.changed
 }
 
 // scrollButton lays out the right and left scroll buttons of the tab when Position is Horizontal.
@@ -291,6 +289,33 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 	return widgets
 }
 
+// ChangeTab changes the position of the selected tab
+func (t *Tabs) ChangeTab(index int) {
+	t.Selected = index
+	if t.previousSelected != t.Selected {
+		t.events = append(t.events, widget.ChangeEvent{})
+		t.previousSelected = index
+	}
+	return
+}
+
+// ChangeEvent returns the last change event
+func (t *Tabs) ChangeEvent(gtx *layout.Context) []widget.ChangeEvent {
+	t.processChangeEvent(gtx)
+	events := t.events
+	t.events = nil
+	return events
+}
+
+func (t *Tabs) processChangeEvent(gtx *layout.Context) {
+	for i := range t.btns {
+		if t.btns[i].Clicked(gtx) {
+			t.ChangeTab(i)
+			return
+		}
+	}
+}
+
 func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	switch t.Position {
 	case Top, Bottom:
@@ -313,12 +338,10 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 		t.list.Position.Offset -= 60
 	}
 
-	t.changed = false
-	for i := range t.btns {
-		if t.btns[i].Clicked(gtx) {
-			t.changed = true
-			t.Selected = i
-			return
-		}
+	if t.previousSelected != t.Selected {
+		t.changed = true
+		t.previousSelected = t.Selected
 	}
+
+	t.processChangeEvent(gtx)
 }
