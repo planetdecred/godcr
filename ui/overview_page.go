@@ -9,13 +9,12 @@ import (
 	"github.com/raedahgroup/godcr/ui/values"
 
 	"gioui.org/gesture"
-	// "gioui.org/text"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
@@ -529,7 +528,6 @@ func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 	syncStatusIcon := page.notSyncedIcon
 	if page.walletInfo.Syncing {
 		syncStatusLabel.Text = page.text.syncingStatus
-		// syncStatusIcon = page.syncingIcon
 	} else if page.walletInfo.Synced {
 		syncStatusLabel.Text = page.text.syncedStatus
 		syncStatusIcon = page.syncedIcon
@@ -538,15 +536,15 @@ func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 	inset.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func() {
-				layout.Inset{Right: unit.Dp(40)}.Layout(gtx, func() {
-					if page.walletInfo.Syncing {
-						img := page.theme.Image(paint.NewImageOp(page.syncingIcon))
-						img.Scale = 80 / 36
-						img.Layout(gtx)
-					} else {
+				if page.walletInfo.Syncing {
+					layout.Inset{Right: unit.Dp(20)}.Layout(gtx, func() {
+						page.theme.ImageIcon(gtx, page.syncingIcon, 50)
+					})
+				} else {
+					layout.Inset{Right: unit.Dp(40)}.Layout(gtx, func() {
 						syncStatusIcon.Layout(gtx, page.iconSize)
-					}
-				})
+					})
+				}
 			}),
 			layout.Flexed(0.5, func() {
 				layout.W.Layout(gtx, func() {
