@@ -73,16 +73,17 @@ type overviewPage struct {
 	theme                         *decredmaterial.Theme
 	tab                           *decredmaterial.Tabs
 
-	walletInfo             *wallet.MultiWalletInfo
-	walletSyncStatus       *wallet.SyncStatus
-	walletTransactions     **wallet.Transactions
-	walletTransaction      **wallet.Transaction
-	toTransactions, sync   decredmaterial.Button
-	toTransactionsW, syncW widget.Button
-	syncStatusIcon, syncedIcon,
-	notSyncedIcon, walletStatusIcon,
-	syncingIcon *decredmaterial.Icon
-	toTransactionDetails   []*gesture.Click
+	walletInfo                    *wallet.MultiWalletInfo
+	walletSyncStatus              *wallet.SyncStatus
+	walletTransactions            **wallet.Transactions
+	walletTransaction             **wallet.Transaction
+	toTransactions, sync          decredmaterial.Button
+	toTransactionsW, syncW        widget.Button
+	syncedIcon, notSyncedIcon,
+	walletStatusIcon *decredmaterial.Icon
+	syncingIcon          image.Image
+	toTransactionDetails []*gesture.Click
+	line                 *decredmaterial.Line
 
 	text             overviewPageText
 	syncButtonHeight int
@@ -111,16 +112,9 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonWidth:  115,
 		moreButtonHeight: 70,
 
-		padding:                   unit.Dp(5),
-		containerPadding:          unit.Dp(20),
-		pageMarginTop:             unit.Dp(50),
-		columnMargin:              unit.Dp(30),
-		transactionsRowMargin:     unit.Dp(10),
-		noPadding:                 unit.Dp(0),
-		walletSyncBoxContentWidth: unit.Dp(280),
-		iconPadding:               unit.Dp(0),
-		iconSize:                  unit.Dp(25),
-		gray:                      color.RGBA{137, 151, 165, 255},
+		iconPadding: unit.Dp(0),
+		iconSize:    unit.Dp(25),
+		gray:        color.RGBA{137, 151, 165, 255},
 	}
 	page.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -222,16 +216,9 @@ func (page *overviewPage) Layout(c pageCommon) {
 
 	c.Layout(c.gtx, func() {
 		page.listContainer.Layout(gtx, len(pageContent), func(i int) {
-			layout.UniformInset(page.padding).Layout(gtx, pageContent[i])
+			layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
 		})
 	})
-}
-
-func (page *overviewPage) drawlayout(body layout.Widget) {
-	decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(page.gtx, func() {
-		layout.UniformInset(page.containerPadding).Layout(page.gtx, body)
-	})
-
 }
 
 // syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
@@ -322,8 +309,8 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 // recentTransactionRow lays out a single row of a recent transaction.
 func (page *overviewPage) recentTransactionRow(txn transactionWidgets) {
 	gtx := page.gtx
-	margin := layout.UniformInset(page.transactionsRowMargin)
-	var flexWidth float32 = 0.25
+	margin := layout.UniformInset(values.MarginPadding10)
+	var flexWidth float32 = 0.24
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Flexed(.1, func() {
 			layout.Inset{Top: unit.Dp(12)}.Layout(gtx, func() {
@@ -356,7 +343,7 @@ func (page *overviewPage) recentTransactionRow(txn transactionWidgets) {
 // syncStatusColumn lays out content for displaying sync status.
 func (page *overviewPage) syncStatusColumn() {
 	gtx := page.gtx
-	uniform := layout.UniformInset(page.padding)
+	uniform := layout.UniformInset(values.MarginPadding5)
 	page.drawlayout(func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
@@ -373,6 +360,13 @@ func (page *overviewPage) syncStatusColumn() {
 				}
 			}),
 		)
+	})
+}
+
+// drawlayout wraps the page tx and sync section in a card layout
+func (page *overviewPage) drawlayout(body layout.Widget) {
+	decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(page.gtx, func() {
+		layout.UniformInset(values.MarginPadding20).Layout(page.gtx, body)
 	})
 }
 
@@ -421,18 +415,18 @@ func (page *overviewPage) blockInfoRow() {
 			latestBlockTitleLabel.Layout(page.gtx)
 		}),
 		layout.Rigid(func() {
-			layout.Inset{Left: page.padding, Right: page.padding}.Layout(page.gtx, func() {
+			layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(page.gtx, func() {
 				page.theme.Body1(fmt.Sprintf("%v", page.walletInfo.BestBlockHeight)).Layout(page.gtx)
 			})
 		}),
 		layout.Rigid(func() {
 			page.walletStatusIcon.Color = page.gray
 			layout.Inset{Right: unit.Dp(9), Top: unit.Dp(8)}.Layout(page.gtx, func() {
-				page.walletStatusIcon.Layout(page.gtx, page.padding)
+				page.walletStatusIcon.Layout(page.gtx, values.MarginPadding5)
 			})
 		}),
 		layout.Rigid(func() {
-			layout.Inset{Right: page.padding}.Layout(page.gtx, func() {
+			layout.Inset{Right: values.MarginPadding5}.Layout(page.gtx, func() {
 				page.theme.Body1(fmt.Sprintf("%v", page.walletInfo.LastSyncTime)).Layout(page.gtx)
 			})
 		}),
@@ -452,7 +446,7 @@ func (page *overviewPage) connectionPeer() {
 			connectedPeersInfoLabel.Layout(page.gtx)
 		}),
 		layout.Rigid(func() {
-			layout.Inset{Left: page.padding, Right: page.padding}.Layout(page.gtx, func() {
+			layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(page.gtx, func() {
 				page.theme.Body1(fmt.Sprintf("%d", page.walletSyncStatus.ConnectedPeers)).Layout(page.gtx)
 			})
 		}),

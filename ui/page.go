@@ -17,7 +17,7 @@ type pageIcons struct {
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
-	communicationComment, editorModeEdit, , actionBackup, actionCheck,
+	communicationComment, editorModeEdit, actionBackup, actionCheck,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *decredmaterial.Icon
 
 	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon, syncingIcon image.Image
