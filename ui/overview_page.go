@@ -161,7 +161,6 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	page.syncedIcon.Color = c.theme.Color.Success
 
 	page.syncingIcon = c.icons.syncingIcon
-	// page.syncingIcon.Color = c.theme.Color.Primary
 
 	page.notSyncedIcon = c.icons.navigationCancel
 	page.notSyncedIcon.Color = c.theme.Color.Danger
@@ -356,7 +355,7 @@ func (page *overviewPage) syncStatusColumn() {
 				if page.walletInfo.Syncing {
 					page.syncActiveContent(uniform)
 				} else {
-					page.syncDormantContent(uniform)
+					page.syncDormantContent()
 				}
 			}),
 		)
@@ -386,7 +385,7 @@ func (page *overviewPage) syncActiveContent(uniform layout.Inset) {
 }
 
 // syncDormantContent lays out sync status content when the wallet is synced or not connected
-func (page *overviewPage) syncDormantContent(uniform layout.Inset) {
+func (page *overviewPage) syncDormantContent() {
 	layout.Inset{Left: unit.Dp(45)}.Layout(page.gtx, func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(page.gtx,
 			layout.Rigid(func() {
