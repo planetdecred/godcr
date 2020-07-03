@@ -322,37 +322,32 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 // recentTransactionRow lays out a single row of a recent transaction.
 func (page *overviewPage) recentTransactionRow(txn transactionWidgets) {
 	gtx := page.gtx
-	margin := layout.UniformInset(values.MarginPadding10)
+	margin := layout.UniformInset(page.transactionsRowMargin)
+	var flexWidth float32 = 0.25
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Rigid(func() {
-			layout.Inset{Top: values.MarginPadding10, Right: values.MarginPadding25}.Layout(gtx, func() {
-				txn.direction.Layout(gtx, values.MarginPadding15)
+		layout.Flexed(.1, func() {
+			layout.Inset{Top: unit.Dp(12)}.Layout(gtx, func() {
+				txn.direction.Layout(gtx, unit.Dp(16))
 			})
 		}),
-		layout.Rigid(func() {
+		layout.Flexed(flexWidth, func() {
 			margin.Layout(gtx, func() {
 				page.layoutBalance(txn.balance, txn.mainBalance, txn.subBalance)
 			})
 		}),
-		layout.Flexed(1, func() {
-			layout.E.Layout(gtx, func() {
-				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func() {
-						margin.Layout(gtx, func() {
-							txn.wallet.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func() {
-						margin.Layout(gtx, func() {
-							txn.date.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func() {
-						margin.Layout(gtx, func() {
-							txn.status.Layout(gtx)
-						})
-					}),
-				)
+		layout.Flexed(flexWidth, func() {
+			margin.Layout(gtx, func() {
+				txn.wallet.Layout(gtx)
+			})
+		}),
+		layout.Flexed(flexWidth, func() {
+			margin.Layout(gtx, func() {
+				txn.date.Layout(gtx)
+			})
+		}),
+		layout.Flexed(flexWidth, func() {
+			margin.Layout(gtx, func() {
+				txn.status.Layout(gtx)
 			})
 		}),
 	)

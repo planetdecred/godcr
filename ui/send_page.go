@@ -391,7 +391,7 @@ func (pg *SendPage) drawSelectedAccountSection(gtx *layout.Context) {
 						)
 					})
 				}
-				decredmaterial.Card{}.Layout(gtx, selectedDetails)
+				decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, selectedDetails)
 			}),
 		)
 	})
