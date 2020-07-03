@@ -8,6 +8,7 @@ import (
 
 type Card struct {
 	layout.Inset
+	Color color.RGBA
 }
 
 func (c Card) Layout(gtx *layout.Context, w layout.Widget) {
@@ -19,7 +20,7 @@ func (c Card) Layout(gtx *layout.Context, w layout.Widget) {
 			c.Inset.Layout(gtx, func() {
 				layout.Stack{}.Layout(gtx,
 					layout.Expanded(func() {
-						fill(gtx, argb(0x0fffffff))
+						fill(gtx, c.Color)
 					}),
 					layout.Stacked(w),
 				)

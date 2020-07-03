@@ -20,7 +20,7 @@ type pageIcons struct {
 	communicationComment, editorModeEdit, , actionBackup, actionCheck,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *decredmaterial.Icon
 
-	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon image.Image
+	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon, syncingIcon image.Image
 }
 
 type pageCommon struct {
@@ -71,6 +71,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		receiveIcon:                decredIcons["receive"],
 		transactionIcon:            decredIcons["transaction"],
 		sendIcon:                   decredIcons["send"],
+		syncingIcon:                decredIcons["syncing"],
 	}
 
 	tabs := decredmaterial.NewTabs()

@@ -13,6 +13,7 @@ import (
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/raedahgroup/dcrlibwallet"
@@ -166,8 +167,8 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	page.syncedIcon = c.icons.actionCheckCircle
 	page.syncedIcon.Color = c.theme.Color.Success
 
-	page.syncingIcon = c.icons.notificationSync
-	page.syncingIcon.Color = c.theme.Color.Primary
+	page.syncingIcon = c.icons.syncingIcon
+	// page.syncingIcon.Color = c.theme.Color.Primary
 
 	page.notSyncedIcon = c.icons.navigationCancel
 	page.notSyncedIcon.Color = c.theme.Color.Danger
@@ -228,7 +229,7 @@ func (page *overviewPage) Layout(c pageCommon) {
 }
 
 func (page *overviewPage) drawlayout(body layout.Widget) {
-	decredmaterial.Card{}.Layout(page.gtx, func() {
+	decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(page.gtx, func() {
 		layout.UniformInset(page.containerPadding).Layout(page.gtx, body)
 	})
 
@@ -528,7 +529,7 @@ func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 	syncStatusIcon := page.notSyncedIcon
 	if page.walletInfo.Syncing {
 		syncStatusLabel.Text = page.text.syncingStatus
-		syncStatusIcon = page.syncingIcon
+		// syncStatusIcon = page.syncingIcon
 	} else if page.walletInfo.Synced {
 		syncStatusLabel.Text = page.text.syncedStatus
 		syncStatusIcon = page.syncedIcon
@@ -538,7 +539,13 @@ func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func() {
 				layout.Inset{Right: unit.Dp(40)}.Layout(gtx, func() {
-					syncStatusIcon.Layout(gtx, page.iconSize)
+					if page.walletInfo.Syncing {
+						img := page.theme.Image(paint.NewImageOp(page.syncingIcon))
+						img.Scale = 80 / 36
+						img.Layout(gtx)
+					} else {
+						syncStatusIcon.Layout(gtx, page.iconSize)
+					}
 				})
 			}),
 			layout.Flexed(0.5, func() {
