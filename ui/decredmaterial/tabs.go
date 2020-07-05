@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 
+	"github.com/raedahgroup/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"gioui.org/font"
@@ -169,6 +170,7 @@ type Tabs struct {
 	Selected    int
 	changed     bool
 	btns        []*widget.Button
+	title       Label
 	list        *layout.List
 	Position    Position
 	Separator   bool
@@ -224,18 +226,33 @@ func (t *Tabs) scrollButton(gtx *layout.Context, right bool, button *widget.Butt
 	})
 }
 
+// SetTitle setting the title of the tabs
+func (t *Tabs) SetTitle(title Label) {
+	t.title = title
+}
+
+// tabsTitle lays out the title of the tab when Position is Horizontal.
+func (t *Tabs) tabsTitle(gtx *layout.Context) layout.FlexChild {
+	return layout.Rigid(func() {
+		if (t.Position == Top || t.Position == Bottom) && t.title.shaper != nil {
+			layout.Inset{Top: values.MarginPadding10, Right: values.MarginPadding5}.Layout(gtx, func() {
+				t.title.Layout(gtx)
+			})
+		}
+	})
+}
+
 // contentTabPosition determines the order of the tab and page content depending on the tab Position.
 func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widgets []layout.FlexChild) {
 	var content, tab layout.FlexChild
 
 	widgets = make([]layout.FlexChild, 2)
-	content = layout.Flexed(1, func() {
-		layout.Inset{Left: unit.Dp(5)}.Layout(gtx, body)
-	})
+	content = layout.Flexed(1, body)
 	tab = layout.Rigid(func() {
 		layout.Stack{}.Layout(gtx,
 			layout.Stacked(func() {
 				layout.Flex{Axis: t.list.Axis, Spacing: layout.SpaceBetween}.Layout(gtx,
+					t.tabsTitle(gtx),
 					t.scrollButton(gtx, false, t.scrollLeft),
 					layout.Flexed(1, func() {
 						t.list.Layout(gtx, len(t.btns), func(i int) {

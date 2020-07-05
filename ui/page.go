@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -204,26 +203,16 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
 		}
 	}
+
+	page.accountsTab.SetTitle(page.theme.Label(values.TextSize18, "Accounts:"))
+
 	page.accountsTab.SetTabs(accounts)
 	if page.accountsTab.Changed() {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 
 	page.LayoutWithWallets(gtx, func() {
-		bodyWidth := gtx.Constraints.Width.Max
-		layout.Flex{}.Layout(gtx,
-			layout.Rigid(func() {
-				layout.Inset{Top: unit.Dp(10), Right: unit.Dp(10)}.Layout(gtx, func() {
-					page.theme.H6("Accounts: ").Layout(gtx)
-				})
-			}),
-			layout.Rigid(func() {
-				page.accountsTab.Layout(gtx, func() {
-					leftInset := unit.Dp(-float32(bodyWidth-gtx.Constraints.Width.Max) / 2)
-					layout.Inset{Left: leftInset}.Layout(gtx, body)
-				})
-			}),
-		)
+		page.accountsTab.Layout(gtx, body)
 	})
 }
 
