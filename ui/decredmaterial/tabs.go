@@ -5,6 +5,7 @@ import (
 	"image/color"
 
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/image/draw"
 
 	"gioui.org/font"
 	"gioui.org/text"
@@ -15,7 +16,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"golang.org/x/image/draw"
+
+	"github.com/raedahgroup/godcr/ui/values"
 )
 
 const (
@@ -163,20 +165,19 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 // Tabs displays succession of TabItems. Using the Position option, Tabs can be displayed on any four sides
 // of a rendered page.
 type Tabs struct {
-	flex        layout.Flex
-	Size        float32
-	items       []TabItem
-	Selected    int
+	flex             layout.Flex
+	Size             float32
+	items            []TabItem
+	Selected         int
 	previousSelected int
 	events           []widget.ChangeEvent
-	changed     bool
-	btns        []*widget.Button
-	title       Label
-	list        *layout.List
-	Position    Position
-	Separator   bool
-	scrollLeft  *widget.Button
-	scrollRight *widget.Button
+	btns             []*widget.Button
+	title            Label
+	list             *layout.List
+	Position         Position
+	Separator        bool
+	scrollLeft       *widget.Button
+	scrollRight      *widget.Button
 }
 
 func NewTabs() *Tabs {
@@ -333,11 +334,6 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 
 	for t.scrollLeft.Clicked(gtx) {
 		t.list.Position.Offset -= 60
-	}
-
-	if t.previousSelected != t.Selected {
-		t.changed = true
-		t.previousSelected = t.Selected
 	}
 
 	t.processChangeEvent(gtx)
