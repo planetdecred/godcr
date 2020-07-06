@@ -96,7 +96,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		walletTransaction:  &win.walletTransaction,
 		listContainer:      &layout.List{Axis: layout.Vertical},
 		walletSyncList:     &layout.List{Axis: layout.Horizontal},
-		toTransactions:     c.theme.Button("see all"),
+		toTransactions:     c.theme.Button("See all"),
 
 		syncButtonHeight: 70,
 		syncButtonWidth:  145,
