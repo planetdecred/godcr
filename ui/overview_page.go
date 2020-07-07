@@ -70,12 +70,12 @@ type overviewPage struct {
 	theme                         *decredmaterial.Theme
 	tab                           *decredmaterial.Tabs
 
-	walletInfo                    *wallet.MultiWalletInfo
-	walletSyncStatus              *wallet.SyncStatus
-	walletTransactions            **wallet.Transactions
-	walletTransaction             **wallet.Transaction
-	toTransactions, sync          decredmaterial.Button
-	toTransactionsW, syncW        widget.Button
+	walletInfo             *wallet.MultiWalletInfo
+	walletSyncStatus       *wallet.SyncStatus
+	walletTransactions     **wallet.Transactions
+	walletTransaction      **wallet.Transaction
+	toTransactions, sync   decredmaterial.Button
+	toTransactionsW, syncW widget.Button
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon *decredmaterial.Icon
 	syncingIcon          image.Image
@@ -134,7 +134,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		reconnect:            "Connect",
 		disconnect:           "Disconnect",
 		cancel:               "Cancel",
-		viewAllTx:            "See All",
+		viewAllTx:            "See all",
 	}
 
 	page.toTransactions = c.theme.Button(page.text.viewAllTx)
