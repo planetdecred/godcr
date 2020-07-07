@@ -143,7 +143,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	}
 
 	page.toTransactions = c.theme.Button(page.text.viewAllTx)
-	page.toTransactions.TextSize = unit.Dp(14)
+	page.toTransactions.TextSize = values.TextSize14
 	page.toTransactions.Background = color.RGBA{}
 	page.toTransactions.Color = c.theme.Color.Primary
 	page.toTransactions.Inset = layout.Inset{
@@ -276,7 +276,6 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 		})
 	}
 
-	// layout.Inset{Top: page.columnMargin}.Layout(gtx, func() {
 	page.drawlayout(func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func() {
@@ -284,9 +283,15 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 			}),
 			layout.Rigid(func() {
 				list := &layout.List{Axis: layout.Vertical}
-				list.Layout(page.gtx, len(transactionRows), func(i int) {
-					layout.Inset{Top: values.MarginPadding5}.Layout(page.gtx, transactionRows[i])
-				})
+				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(1, func() {
+						layout.Center.Layout(page.gtx, func() {
+							list.Layout(page.gtx, len(transactionRows), func(i int) {
+								layout.Inset{Top: values.MarginPadding5}.Layout(page.gtx, transactionRows[i])
+							})
+						})
+					}),
+				)
 			}),
 			layout.Rigid(func() {
 				page.line.Width = gtx.Constraints.Width.Max
@@ -309,14 +314,14 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 func (page *overviewPage) recentTransactionRow(txn transactionWidgets) {
 	gtx := page.gtx
 	margin := layout.UniformInset(values.MarginPadding10)
-	var flexWidth float32 = 0.24
+	var flexWidth float32 = 0.17
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Flexed(.1, func() {
+		layout.Flexed(.03, func() {
 			layout.Inset{Top: unit.Dp(12)}.Layout(gtx, func() {
 				txn.direction.Layout(gtx, unit.Dp(16))
 			})
 		}),
-		layout.Flexed(flexWidth, func() {
+		layout.Flexed(0.15, func() {
 			margin.Layout(gtx, func() {
 				page.layoutBalance(txn.balance, txn.mainBalance, txn.subBalance)
 			})
@@ -477,7 +482,7 @@ func (page *overviewPage) endToEndRow(inset layout.Inset, leftLabel, rightLabel 
 // syncBoxTitleRow lays out widgets in the title row inside the sync status box.
 func (page *overviewPage) syncBoxTitleRow(inset layout.Inset) {
 	statusTitleLabel := page.theme.Caption(page.text.statusTitle)
-	statusTitleLabel.Color = page.gray
+	statusTitleLabel.Color = page.theme.Color.Text
 	statusLabel := page.theme.Body1(page.text.offlineStatus)
 	page.walletStatusIcon.Color = page.theme.Color.Danger
 	if page.walletInfo.Synced || page.walletInfo.Syncing {
