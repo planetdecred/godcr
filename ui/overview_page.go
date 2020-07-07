@@ -6,17 +6,15 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/raedahgroup/godcr/ui/values"
-
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-
 	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/raedahgroup/godcr/wallet"
 )
 
