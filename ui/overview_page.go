@@ -66,13 +66,15 @@ type overviewPage struct {
 	listContainer, walletSyncList *layout.List
 	gtx                           *layout.Context
 	theme                         *decredmaterial.Theme
-	walletInfo                    *wallet.MultiWalletInfo
-	walletSyncStatus              *wallet.SyncStatus
-	walletTransactions            **wallet.Transactions
-	walletTransaction             **wallet.Transaction
-	toTransactions, sync          decredmaterial.Button
-	toTransactionsW, syncW        widget.Button
-	toTransactionDetails          []*gesture.Click
+	tab                           *decredmaterial.Tabs
+
+	walletInfo             *wallet.MultiWalletInfo
+	walletSyncStatus       *wallet.SyncStatus
+	walletTransactions     **wallet.Transactions
+	walletTransaction      **wallet.Transaction
+	toTransactions, sync   decredmaterial.Button
+	toTransactionsW, syncW widget.Button
+	toTransactionDetails   []*gesture.Click
 
 	text             overviewPageText
 	syncButtonHeight int
@@ -84,15 +86,17 @@ type overviewPage struct {
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	page := overviewPage{
-		gtx:                c.gtx,
-		theme:              c.theme,
+		gtx:   c.gtx,
+		theme: c.theme,
+		tab:   c.navTab,
+
 		walletInfo:         win.walletInfo,
 		walletSyncStatus:   win.walletSyncStatus,
 		walletTransactions: &win.walletTransactions,
 		walletTransaction:  &win.walletTransaction,
 		listContainer:      &layout.List{Axis: layout.Vertical},
 		walletSyncList:     &layout.List{Axis: layout.Horizontal},
-		toTransactions:     c.theme.Button("more"),
+		toTransactions:     c.theme.Button("See all"),
 
 		syncButtonHeight: 70,
 		syncButtonWidth:  145,
@@ -123,7 +127,9 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		disconnect:           "Disconnect",
 		cancel:               "Cancel",
 	}
-	page.toTransactions.TextSize = values.TextSize10
+	page.toTransactions.TextSize = values.TextSize14
+	page.toTransactions.Background = color.RGBA{}
+	page.toTransactions.Color = c.theme.Color.Primary
 	page.sync = c.theme.Button(page.text.reconnect)
 	page.sync.TextSize = values.TextSize10
 
@@ -249,7 +255,7 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 				})
 			}),
 			layout.Rigid(func() {
-				if len(transactionRows) > 5 {
+				if (*page.walletTransactions).Total > 5 {
 					layout.Center.Layout(page.gtx, func() {
 						layout.Inset{Top: values.MarginPadding5}.Layout(page.gtx, func() {
 							layout.Stack{}.Layout(page.gtx,
@@ -576,7 +582,7 @@ func (page *overviewPage) Handler(c pageCommon) {
 		}
 	}
 	if page.toTransactionsW.Clicked(page.gtx) {
-		*c.page = PageTransactions
+		page.tab.ChangeTab(4)
 	}
 
 	for index, click := range page.toTransactionDetails {

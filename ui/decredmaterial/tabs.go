@@ -4,8 +4,8 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/raedahgroup/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/image/draw"
 
 	"gioui.org/font"
 	"gioui.org/text"
@@ -16,7 +16,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"golang.org/x/image/draw"
+
+	"github.com/raedahgroup/godcr/ui/values"
 )
 
 const (
@@ -164,18 +165,19 @@ func (t *TabItem) Layout(gtx *layout.Context, selected int, btn *widget.Button, 
 // Tabs displays succession of TabItems. Using the Position option, Tabs can be displayed on any four sides
 // of a rendered page.
 type Tabs struct {
-	flex        layout.Flex
-	Size        float32
-	items       []TabItem
-	Selected    int
-	changed     bool
-	btns        []*widget.Button
-	title       Label
-	list        *layout.List
-	Position    Position
-	Separator   bool
-	scrollLeft  *widget.Button
-	scrollRight *widget.Button
+	flex             layout.Flex
+	Size             float32
+	items            []TabItem
+	Selected         int
+	previousSelected int
+	events           []widget.ChangeEvent
+	btns             []*widget.Button
+	title            Label
+	list             *layout.List
+	Position         Position
+	Separator        bool
+	scrollLeft       *widget.Button
+	scrollRight      *widget.Button
 }
 
 func NewTabs() *Tabs {
@@ -196,11 +198,6 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 			t.btns[i] = new(widget.Button)
 		}
 	}
-}
-
-// Changed returns the changed state of the tab.
-func (t *Tabs) Changed() bool {
-	return t.changed
 }
 
 // scrollButton lays out the right and left scroll buttons of the tab when Position is Horizontal.
@@ -291,6 +288,32 @@ func (t *Tabs) contentTabPosition(gtx *layout.Context, body layout.Widget) (widg
 	return widgets
 }
 
+// ChangeTab changes the position of the selected tab
+func (t *Tabs) ChangeTab(index int) {
+	t.Selected = index
+	if t.previousSelected != t.Selected {
+		t.events = append(t.events, widget.ChangeEvent{})
+		t.previousSelected = index
+	}
+}
+
+// ChangeEvent returns the last change event
+func (t *Tabs) ChangeEvent(gtx *layout.Context) []widget.ChangeEvent {
+	t.processChangeEvent(gtx)
+	events := t.events
+	t.events = nil
+	return events
+}
+
+func (t *Tabs) processChangeEvent(gtx *layout.Context) {
+	for i := range t.btns {
+		if t.btns[i].Clicked(gtx) {
+			t.ChangeTab(i)
+			return
+		}
+	}
+}
+
 func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 	switch t.Position {
 	case Top, Bottom:
@@ -313,12 +336,5 @@ func (t *Tabs) Layout(gtx *layout.Context, body layout.Widget) {
 		t.list.Position.Offset -= 60
 	}
 
-	t.changed = false
-	for i := range t.btns {
-		if t.btns[i].Clicked(gtx) {
-			t.changed = true
-			t.Selected = i
-			return
-		}
-	}
+	t.processChangeEvent(gtx)
 }

@@ -356,7 +356,12 @@ func (page *walletPage) subDelete(common pageCommon) {
 // Handle handles all widget inputs on the main wallets page.
 func (page *walletPage) Handle(common pageCommon) {
 	gtx := common.gtx
-	if common.walletsTab.Changed() || common.navTab.Changed() { // reset everything
+
+	for range common.walletsTab.ChangeEvent(gtx) {
+		page.subPage = subWalletMain
+	}
+
+	for range common.navTab.ChangeEvent(gtx) {
 		page.subPage = subWalletMain
 	}
 

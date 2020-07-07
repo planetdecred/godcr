@@ -145,7 +145,7 @@ func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
 		})
 	})
 
-	if page.navTab.Changed() {
+	for range page.navTab.ChangeEvent(gtx) {
 		*page.page = navs[page.navTab.Selected]
 	}
 }
@@ -159,7 +159,7 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	}
 	page.walletsTab.SetTabs(wallets)
 	page.walletsTab.Position = decredmaterial.Top
-	if page.accountsTab.Changed() {
+	for range page.accountsTab.ChangeEvent(gtx) {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 
@@ -173,13 +173,13 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 		}
 	}
 	page.accountsTab.SetTabs(accounts)
-	if page.accountsTab.Changed() {
+	for range page.accountsTab.ChangeEvent(gtx) {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 	page.accountsTab.Separator = false
 
 	bd := func() {
-		if page.walletsTab.Changed() {
+		for range page.walletsTab.ChangeEvent(gtx) {
 			*page.selectedWallet = page.walletsTab.Selected
 			*page.selectedAccount = 0
 			page.accountsTab.Selected = 0
@@ -207,7 +207,7 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 	page.accountsTab.SetTitle(page.theme.Label(values.TextSize18, "Accounts:"))
 
 	page.accountsTab.SetTabs(accounts)
-	if page.accountsTab.Changed() {
+	for range page.accountsTab.ChangeEvent(gtx) {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 
