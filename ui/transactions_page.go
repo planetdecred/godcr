@@ -97,45 +97,43 @@ func (page *transactionsPage) Layout(common pageCommon) {
 		page.container.Layout(gtx,
 			layout.Rigid(page.txsFilters(&common)),
 			layout.Flexed(1, func() {
-				layout.Center.Layout(gtx, func() {
-					layout.Inset{
-						Left:  values.MarginPadding15,
-						Right: values.MarginPadding15}.Layout(gtx, func() {
-						layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func() {
-								layout.Inset{
-									Top:    values.MarginPadding15,
-									Bottom: values.MarginPadding15}.Layout(gtx, func() {
-									page.txnRowHeader(&common)
-								})
-							}),
-							layout.Flexed(1, func() {
-								walletID := common.info.Wallets[*common.selectedWallet].ID
-								walTxs := (*page.walletTransactions).Txs[walletID]
-								page.updateTotransactionDetailsButtons(&walTxs)
+				layout.Inset{
+					Left:  values.MarginPadding15,
+					Right: values.MarginPadding15}.Layout(gtx, func() {
+					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func() {
+							layout.Inset{
+								Top:    values.MarginPadding15,
+								Bottom: values.MarginPadding15}.Layout(gtx, func() {
+								page.txnRowHeader(&common)
+							})
+						}),
+						layout.Flexed(1, func() {
+							walletID := common.info.Wallets[*common.selectedWallet].ID
+							walTxs := (*page.walletTransactions).Txs[walletID]
+							page.updateTotransactionDetailsButtons(&walTxs)
 
-								if len(walTxs) == 0 {
-									txt := common.theme.Body1("No transactions")
-									txt.Alignment = text.Middle
-									txt.Layout(gtx)
+							if len(walTxs) == 0 {
+								txt := common.theme.Body1("No transactions")
+								txt.Alignment = text.Middle
+								txt.Layout(gtx)
+								return
+							}
+
+							directionFilter, _ := strconv.Atoi(page.filterDirectionW.Value(gtx))
+							page.txsList.Layout(gtx, len(walTxs), func(index int) {
+								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
 									return
 								}
+								page.txnRowInfo(&common, walTxs[index])
 
-								directionFilter, _ := strconv.Atoi(page.filterDirectionW.Value(gtx))
-								page.txsList.Layout(gtx, len(walTxs), func(index int) {
-									if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
-										return
-									}
-									page.txnRowInfo(&common, walTxs[index])
-
-									click := page.toTxnDetails[index]
-									pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
-									click.Add(gtx.Ops)
-									page.goToTxnDetails(&common, &walTxs[index], click)
-								})
-							}),
-						)
-					})
+								click := page.toTxnDetails[index]
+								pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
+								click.Add(gtx.Ops)
+								page.goToTxnDetails(&common, &walTxs[index], click)
+							})
+						}),
+					)
 				})
 			}),
 		)

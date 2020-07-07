@@ -88,7 +88,6 @@ type overviewPage struct {
 	moreButtonWidth  int
 	moreButtonHeight int
 	gray             color.RGBA
-	lightGray        color.RGBA
 }
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
@@ -110,8 +109,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonWidth:  115,
 		moreButtonHeight: 70,
 
-		gray:      color.RGBA{137, 151, 165, 255},
-		lightGray: color.RGBA{245, 245, 245, 255},
+		gray: color.RGBA{137, 151, 165, 255},
 	}
 	page.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -642,7 +640,7 @@ func (page *overviewPage) walletSyncBox(inset layout.Inset, details walletSyncDe
 	layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func() {
 		gtx.Constraints.Width.Min = gtx.Px(values.WalletSyncBoxContentWidth)
 		gtx.Constraints.Width.Max = gtx.Constraints.Width.Min
-		decredmaterial.Card{Color: page.lightGray}.Layout(gtx, func() {
+		decredmaterial.Card{Color: page.theme.Color.Background}.Layout(gtx, func() {
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func() {
 					page.endToEndRow(inset, details.name, details.status)
