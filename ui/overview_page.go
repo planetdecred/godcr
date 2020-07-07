@@ -266,13 +266,11 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 		}
 	} else {
 		transactionRows = append(transactionRows, func() {
-			layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Flexed(1, func() {
-				layout.Center.Layout(gtx, func() {
-					label := theme.Caption(page.text.noTransaction)
-					label.Color = page.gray
-					label.Layout(gtx)
-				})
-			}))
+			page.centralize(func() {
+				label := theme.Caption(page.text.noTransaction)
+				label.Color = page.gray
+				label.Layout(gtx)
+			})
 		})
 	}
 
@@ -283,60 +281,65 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) {
 			}),
 			layout.Rigid(func() {
 				list := &layout.List{Axis: layout.Vertical}
-				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, func() {
-						layout.Center.Layout(page.gtx, func() {
-							list.Layout(page.gtx, len(transactionRows), func(i int) {
-								layout.Inset{Top: values.MarginPadding5}.Layout(page.gtx, transactionRows[i])
-							})
-						})
-					}),
-				)
+				page.centralize(func() {
+					list.Layout(page.gtx, len(transactionRows), func(i int) {
+						layout.Inset{Top: values.MarginPadding5}.Layout(page.gtx, transactionRows[i])
+					})
+				})
+
 			}),
 			layout.Rigid(func() {
 				page.line.Width = gtx.Constraints.Width.Max
 				page.line.Layout(gtx)
 			}),
 			layout.Rigid(func() {
-				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, func() {
-						layout.Center.Layout(page.gtx, func() {
-							page.toTransactions.Layout(gtx, &page.toTransactionsW)
-						})
-					}),
-				)
+				page.centralize(func() {
+					page.toTransactions.Layout(gtx, &page.toTransactionsW)
+				})
 			}),
 		)
 	})
+}
+
+func (page *overviewPage) centralize(content layout.Widget) {
+	layout.Flex{Axis: layout.Horizontal}.Layout(page.gtx,
+		layout.Flexed(1, func() {
+			layout.Center.Layout(page.gtx, content)
+		}),
+	)
 }
 
 // recentTransactionRow lays out a single row of a recent transaction.
 func (page *overviewPage) recentTransactionRow(txn transactionWidgets) {
 	gtx := page.gtx
 	margin := layout.UniformInset(values.MarginPadding10)
-	var flexWidth float32 = 0.17
+
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Flexed(.03, func() {
+		layout.Rigid(func() {
+			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(50))
 			layout.Inset{Top: unit.Dp(12)}.Layout(gtx, func() {
 				txn.direction.Layout(gtx, unit.Dp(16))
 			})
 		}),
-		layout.Flexed(0.15, func() {
+		layout.Rigid(func() {
+			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(100))
 			margin.Layout(gtx, func() {
 				page.layoutBalance(txn.balance, txn.mainBalance, txn.subBalance)
 			})
 		}),
-		layout.Flexed(flexWidth, func() {
+		layout.Rigid(func() {
+			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(100))
 			margin.Layout(gtx, func() {
 				txn.wallet.Layout(gtx)
 			})
 		}),
-		layout.Flexed(flexWidth, func() {
+		layout.Rigid(func() {
+			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(100))
 			margin.Layout(gtx, func() {
 				txn.date.Layout(gtx)
 			})
 		}),
-		layout.Flexed(flexWidth, func() {
+		layout.Rigid(func() {
 			margin.Layout(gtx, func() {
 				txn.status.Layout(gtx)
 			})
@@ -463,12 +466,12 @@ func (page *overviewPage) connectionPeer() {
 }
 
 // endToEndRow layouts out its content on both ends of its horizontal layout.
-func (page *overviewPage) endToEndRow(inset layout.Inset, leftLabel, rightLabel decredmaterial.Label) {
+func (page *overviewPage) endToEndRow(inset layout.Inset, LeftLabel, rightLabel decredmaterial.Label) {
 	gtx := page.gtx
 	inset.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func() {
-				leftLabel.Layout(gtx)
+				LeftLabel.Layout(gtx)
 			}),
 			layout.Flexed(1, func() {
 				layout.E.Layout(gtx, func() {
@@ -577,7 +580,7 @@ func (page *overviewPage) progressStatusRow(inset layout.Inset) {
 	}
 
 	percentageLabel := page.theme.Body1(fmt.Sprintf("%v%%", page.walletSyncStatus.Progress))
-	timeLeftLabel := page.theme.Body1(fmt.Sprintf("%v left", timeLeft))
+	timeLeftLabel := page.theme.Body1(fmt.Sprintf("%v Left", timeLeft))
 	page.endToEndRow(inset, percentageLabel, timeLeftLabel)
 }
 
