@@ -14,7 +14,6 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/paint"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -98,43 +97,45 @@ func (page *transactionsPage) Layout(common pageCommon) {
 		page.container.Layout(gtx,
 			layout.Rigid(page.txsFilters(&common)),
 			layout.Flexed(1, func() {
-				layout.Inset{
-					Left:  values.MarginPadding15,
-					Right: values.MarginPadding15}.Layout(gtx, func() {
-					layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func() {
-							layout.Inset{
-								Top:    values.MarginPadding15,
-								Bottom: values.MarginPadding15}.Layout(gtx, func() {
-								page.txnRowHeader(&common)
-							})
-						}),
-						layout.Flexed(1, func() {
-							walletID := common.info.Wallets[*common.selectedWallet].ID
-							walTxs := (*page.walletTransactions).Txs[walletID]
-							page.updateTotransactionDetailsButtons(&walTxs)
+				layout.Center.Layout(gtx, func() {
+					layout.Inset{
+						Left:  values.MarginPadding15,
+						Right: values.MarginPadding15}.Layout(gtx, func() {
+						layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func() {
+								layout.Inset{
+									Top:    values.MarginPadding15,
+									Bottom: values.MarginPadding15}.Layout(gtx, func() {
+									page.txnRowHeader(&common)
+								})
+							}),
+							layout.Flexed(1, func() {
+								walletID := common.info.Wallets[*common.selectedWallet].ID
+								walTxs := (*page.walletTransactions).Txs[walletID]
+								page.updateTotransactionDetailsButtons(&walTxs)
 
-							if len(walTxs) == 0 {
-								txt := common.theme.Body1("No transactions")
-								txt.Alignment = text.Middle
-								txt.Layout(gtx)
-								return
-							}
-
-							directionFilter, _ := strconv.Atoi(page.filterDirectionW.Value(gtx))
-							page.txsList.Layout(gtx, len(walTxs), func(index int) {
-								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
+								if len(walTxs) == 0 {
+									txt := common.theme.Body1("No transactions")
+									txt.Alignment = text.Middle
+									txt.Layout(gtx)
 									return
 								}
-								page.txnRowInfo(&common, walTxs[index])
 
-								click := page.toTxnDetails[index]
-								pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
-								click.Add(gtx.Ops)
-								page.goToTxnDetails(&common, &walTxs[index], click)
-							})
-						}),
-					)
+								directionFilter, _ := strconv.Atoi(page.filterDirectionW.Value(gtx))
+								page.txsList.Layout(gtx, len(walTxs), func(index int) {
+									if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
+										return
+									}
+									page.txnRowInfo(&common, walTxs[index])
+
+									click := page.toTxnDetails[index]
+									pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
+									click.Add(gtx.Ops)
+									page.goToTxnDetails(&common, &walTxs[index], click)
+								})
+							}),
+						)
+					})
 				})
 			}),
 		)
@@ -189,28 +190,28 @@ func (page *transactionsPage) txnRowHeader(common *pageCommon) {
 
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func() {
-			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(70))
+			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding60)
 			txt.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			txt.Alignment = text.Middle
 			txt.Text = "Date (UTC)"
-			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(120))
+			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
 			txt.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			txt.Text = "Status"
-			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(130))
+			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
 			txt.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			txt.Text = "Amount"
-			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(150))
+			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding150)
 			txt.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			txt.Text = "Fee"
-			gtx.Constraints.Width.Min = gtx.Px(unit.Dp(170))
+			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding150)
 			txt.Layout(gtx)
 		}),
 	)
@@ -224,31 +225,31 @@ func (page *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.
 	layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func() {
 		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func() {
-				gtx.Constraints.Width.Min = gtx.Px(unit.Dp(70))
+				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding60)
 				layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func() {
 					txnWidgets.direction.Layout(gtx, values.MarginPadding15)
 				})
 			}),
 			layout.Rigid(func() {
 				txnWidgets.time.Alignment = text.Middle
-				gtx.Constraints.Width.Min = gtx.Px(unit.Dp(120))
+				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
 				txnWidgets.time.Layout(gtx)
 			}),
 			layout.Rigid(func() {
 				txt := common.theme.Body1(transaction.Status)
 				txt.Alignment = text.Middle
-				gtx.Constraints.Width.Min = gtx.Px(unit.Dp(130))
+				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
 				txt.Layout(gtx)
 			}),
 			layout.Rigid(func() {
 				txnWidgets.amount.Alignment = text.End
-				gtx.Constraints.Width.Min = gtx.Px(unit.Dp(130))
+				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
 				txnWidgets.amount.Layout(gtx)
 			}),
 			layout.Rigid(func() {
 				txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
 				txt.Alignment = text.End
-				gtx.Constraints.Width.Min = gtx.Px(unit.Dp(150))
+				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding150)
 				txt.Layout(gtx)
 			}),
 		)
