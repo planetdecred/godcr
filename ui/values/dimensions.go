@@ -31,5 +31,7 @@ var (
 	TextSize14 = unit.Dp(14)
 	TextSize16 = unit.Dp(16)
 	TextSize18 = unit.Dp(18)
+	TextSize22 = unit.Dp(22)
+	TextSize24 = unit.Dp(24)
 	TextSize28 = unit.Dp(28)
 )
