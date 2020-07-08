@@ -14,7 +14,10 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
+
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/image/draw"
 )
 
 var (
@@ -139,6 +142,16 @@ func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
 		}),
 		layout.Stacked(w),
 	)
+}
+
+func (t *Theme) ImageIcon(gtx *layout.Context, icon image.Image, size int) {
+	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: size, Y: size}})
+	draw.ApproxBiLinear.Scale(img, img.Bounds(), icon, icon.Bounds(), draw.Src, nil)
+	iconOp := paint.NewImageOp(img)
+
+	i := material.Image{Src: iconOp}
+	i.Scale = float32(size) / float32(gtx.Px(unit.Dp(float32(size))))
+	i.Layout(gtx)
 }
 
 func (t *Theme) alert(gtx *layout.Context, txt string, bgColor color.RGBA) {
