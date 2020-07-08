@@ -191,7 +191,7 @@ func (p *receivePage) selectedAccountColumn(common pageCommon) {
 			)
 		})
 	}
-	decredmaterial.Card{}.Layout(p.gtx, selectedDetails)
+	decredmaterial.Card{Color: common.theme.Color.Surface}.Layout(p.gtx, selectedDetails)
 }
 
 func (p *receivePage) qrCodeAddressColumn(common pageCommon) {

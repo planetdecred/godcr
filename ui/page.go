@@ -18,9 +18,9 @@ type pageIcons struct {
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
-	actionSwapVert *decredmaterial.Icon
+	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *decredmaterial.Icon
 
-	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon image.Image
+	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon, syncingIcon image.Image
 }
 
 type pageCommon struct {
@@ -63,11 +63,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		actionBackup:               mustIcon(decredmaterial.NewIcon(icons.ActionSettingsBackupRestore)),
 		actionCheck:                mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
 		actionSwapVert:             mustIcon(decredmaterial.NewIcon(icons.ActionSwapVert)),
+		navigationCancel:           mustIcon(decredmaterial.NewIcon(icons.NavigationCancel)),
+		notificationSync:           mustIcon(decredmaterial.NewIcon(icons.NotificationSync)),
+		imageBrightness1:           mustIcon(decredmaterial.NewIcon(icons.ImageBrightness1)),
 		overviewIcon:               decredIcons["overview"],
 		walletIcon:                 decredIcons["wallet"],
 		receiveIcon:                decredIcons["receive"],
 		transactionIcon:            decredIcons["transaction"],
 		sendIcon:                   decredIcons["send"],
+		syncingIcon:                decredIcons["syncing"],
 	}
 
 	tabs := decredmaterial.NewTabs()
