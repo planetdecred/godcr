@@ -540,9 +540,9 @@ func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func() {
 								m := values.MarginPadding5
-								if pg.sendAmountEditor.Len() > 0 {
-									m = values.MarginPadding0
-								}
+								// if pg.sendAmountEditor.Len() > 0 {
+								// 	m = values.MarginPadding0
+								// }
 								layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func() {
 									pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
 								})
@@ -999,7 +999,9 @@ func (pg *SendPage) changeEvt(evt widget.EditorEvent) {
 	textLength := pg.sendAmountEditor.Len()
 	switch evt.(type) {
 	case widget.ChangeEvent:
-		textLength = textLength + 1
+		if textLength == 0 {
+			textLength = textLength + 1
+		}
 		switch {
 		case pg.width <= 120:
 			pg.width = textLength * 27
