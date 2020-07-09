@@ -36,3 +36,7 @@ To save a profile, you can simply use
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/raedahgroup/godcr/blob/master/.github/CONTRIBUTING.md)
+
+## Other
+
+Earlier experimental work with other user interface toolkits can be found at [godcr-old](https://github.com/raedahgroup/godcr-old).
