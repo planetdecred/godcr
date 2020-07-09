@@ -540,9 +540,9 @@ func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func() {
 								m := values.MarginPadding5
-								// if pg.sendAmountEditor.Len() > 0 {
-								// 	m = values.MarginPadding0
-								// }
+								if pg.sendAmountEditor.Len() > 0 {
+									m = values.EditorWidth
+								}
 								layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func() {
 									pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
 								})
@@ -558,7 +558,7 @@ func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
 								})
 							}),
 							layout.Rigid(func() {
-								pg.line.Width = gtx.Constraints.Width.Max
+								pg.line.Width = gtx.Constraints.Width.Max - 100
 								layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func() {
 									pg.line.Layout(gtx)
 								})
@@ -996,18 +996,19 @@ func (pg *SendPage) watchForBroadcastResult() {
 }
 
 func (pg *SendPage) changeEvt(evt widget.EditorEvent) {
+	// this adjusts the width of the amount editor per text input.
 	textLength := pg.sendAmountEditor.Len()
 	switch evt.(type) {
 	case widget.ChangeEvent:
-		if textLength == 0 {
-			textLength = textLength + 1
-		}
+		textLength = textLength + 1
 		switch {
-		case pg.width <= 120:
+		case pg.width <= 80:
 			pg.width = textLength * 27
-		case pg.width > 120 && pg.width < 220:
+		case pg.width > 80 && pg.width < 140:
+			pg.width = textLength * 26
+		case pg.width > 140 && pg.width < 280:
 			pg.width = textLength * 25
-		case pg.width >= 220:
+		case pg.width >= 280:
 			pg.width = textLength * 24
 		}
 		go pg.wallet.GetUSDExchangeValues(&pg)
