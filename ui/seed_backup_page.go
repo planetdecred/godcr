@@ -128,12 +128,8 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	b.instruction.Alignment = text.Middle
 	b.allSuggestions = dcrlibwallet.PGPWordList()
 
-	for _, cb := range b.checkBoxes {
-		cb.IconColor = c.theme.Color.Success
-		cb.Color = c.theme.Color.Success
-	}
-
 	for i := 0; i < len(b.checkBoxes); i++ {
+		b.checkBoxes[i].SetIcons(c.icons.actionCheckCircle, c.icons.toggleRadioButtonUnchecked)
 		b.checkBoxWidgets = append(b.checkBoxWidgets, new(widget.CheckBox))
 	}
 
@@ -288,6 +284,11 @@ func (pg *backupPage) infoView() layout.Widget {
 				layout.Inset{Bottom: values.MarginPadding60}.Layout(pg.gtx, func() {
 					pg.infoList.Layout(pg.gtx, len(pg.checkBoxWidgets), func(i int) {
 						layout.Inset{Bottom: values.MarginPadding20}.Layout(pg.gtx, func() {
+							if pg.checkBoxWidgets[i].Checked(pg.gtx) {
+								pg.checkBoxes[i].IconColor = pg.theme.Color.Success
+							} else {
+								pg.checkBoxes[i].IconColor = pg.theme.Color.Gray
+							}
 							pg.checkBoxes[i].Layout(pg.gtx, pg.checkBoxWidgets[i])
 						})
 					})

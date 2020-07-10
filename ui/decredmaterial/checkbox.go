@@ -31,3 +31,12 @@ func (c CheckBox) Layout(gtx *layout.Context, checkBox *widget.CheckBox) {
 	c.layout(gtx, checkBox.Checked(gtx))
 	checkBox.Layout(gtx)
 }
+
+func (c *CheckBox) SetIcons(checked *Icon, unchecked *Icon) {
+	if checked != nil {
+		c.checkedStateIcon = checked
+	}
+	if unchecked != nil {
+		c.uncheckedStateIcon = unchecked
+	}
+}
