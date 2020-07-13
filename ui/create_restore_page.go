@@ -24,16 +24,12 @@ const PageCreateRestore = "createrestore"
 type (
 	seedEditors struct {
 		focusIndex int
-		editors    []widget.Editor
-	}
-	seedSuggestions struct {
-		button *widget.Button
-		skin   decredmaterial.Button
+		editors    []decredmaterial.Editor
 	}
 )
 
 type createRestore struct {
-	gtx             *layout.Context
+	gtx             layout.Context
 	theme           *decredmaterial.Theme
 	info            *wallet.MultiWalletInfo
 	wal             *wallet.Wallet
@@ -54,117 +50,96 @@ type createRestore struct {
 
 	closeCreateRestore decredmaterial.IconButton
 	hideRestoreWallet  decredmaterial.IconButton
+	back               decredmaterial.IconButton
 	create             decredmaterial.Button
 	showPasswordModal  decredmaterial.Button
 	hidePasswordModal  decredmaterial.Button
 	showRestoreWallet  decredmaterial.Button
-	showresetModal     decredmaterial.Button
+	showResetModal     decredmaterial.Button
 	resetSeedFields    decredmaterial.Button
 	hideResetModal     decredmaterial.Button
 
-	seedEditors           []decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
 	addWallet             decredmaterial.Button
 	errLabel              decredmaterial.Label
 
-	seedEditorWidgets           seedEditors
-	toCreateWalletWidget        *widget.Button
-	showPasswordModalWidget     *widget.Button
-	hidePasswordModalWidget     *widget.Button
-	backCreateRestoreWidget     *widget.Button
-	showRestoreWidget           *widget.Button
-	hideRestoreWidget           *widget.Button
-	spendingPasswordWidget      *editor.Editor
-	matchSpendingPasswordWidget *editor.Editor
-	addWalletWidget             *widget.Button
-	showResetModalWidget        *widget.Button
-	hideResetModalWidget        *widget.Button
-	resetSeedFieldsWidget       *widget.Button
+	seedEditors seedEditors
 
 	seedListLeft     *layout.List
 	seedListRight    *layout.List
 	autoCompleteList *layout.List
 
-	seedSuggestions []seedSuggestions
+	seedSuggestions []decredmaterial.Button
 }
 
 // Loading lays out the loading widget with a faded background
 func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg := createRestore{
-		gtx:                         common.gtx,
-		theme:                       common.theme,
-		wal:                         common.wallet,
-		info:                        common.info,
-		keyEvent:                    common.keyEvents,
-		errChan:                     common.errorChannels[PageCreateRestore],
-		toCreateWalletWidget:        new(widget.Button),
-		backCreateRestoreWidget:     new(widget.Button),
-		showRestoreWidget:           new(widget.Button),
-		hideRestoreWidget:           new(widget.Button),
-		showPasswordModalWidget:     new(widget.Button),
-		hidePasswordModalWidget:     new(widget.Button),
-		spendingPasswordWidget:      new(editor.Editor),
-		matchSpendingPasswordWidget: new(editor.Editor),
-		addWalletWidget:             new(widget.Button),
-		showResetModalWidget:        new(widget.Button),
-		hideResetModalWidget:        new(widget.Button),
-		resetSeedFieldsWidget:       new(widget.Button),
+		gtx:      common.gtx,
+		theme:    common.theme,
+		wal:      common.wallet,
+		info:     common.info,
+		keyEvent: common.keyEvents,
+		errChan:  common.errorChannels[PageCreateRestore],
 
 		errLabel:              common.theme.Body1(""),
-		spendingPassword:      common.theme.Editor("Enter password"),
-		matchSpendingPassword: common.theme.Editor("Enter password again"),
-		addWallet:             common.theme.Button("create wallet"),
-		hideResetModal:        common.theme.Button("cancel"),
+		spendingPassword:      common.theme.Editor(new(widget.Editor), "Enter password"),
+		matchSpendingPassword: common.theme.Editor(new(widget.Editor), "Enter password again"),
+		addWallet:             common.theme.Button(new(widget.Clickable), "create wallet"),
+		hideResetModal:        common.theme.Button(new(widget.Clickable), "cancel"),
 		suggestionLimit:       3,
 	}
 
-	pg.matchSpendingPasswordWidget.SingleLine = true
-	pg.create = common.theme.Button("create wallet")
-	pg.showPasswordModal = common.theme.Button("proceed")
-	pg.showRestoreWallet = common.theme.Button("Restore an existing wallet")
+	pg.matchSpendingPassword.Editor.SingleLine = true
+	pg.create = common.theme.Button(new(widget.Clickable), "create wallet")
+	pg.showPasswordModal = common.theme.Button(new(widget.Clickable), "proceed")
+	pg.showRestoreWallet = common.theme.Button(new(widget.Clickable), "Restore an existing wallet")
 	pg.showRestoreWallet.Background = color.RGBA{}
 	pg.showRestoreWallet.Color = common.theme.Color.Hint
 
-	pg.closeCreateRestore = common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)))
+	pg.closeCreateRestore = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
 	pg.closeCreateRestore.Background = color.RGBA{}
 	pg.closeCreateRestore.Color = common.theme.Color.Hint
 
-	pg.hideRestoreWallet = common.theme.IconButton(mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)))
+	pg.hideRestoreWallet = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
 	pg.hideRestoreWallet.Background = color.RGBA{}
 	pg.hideRestoreWallet.Color = common.theme.Color.Hint
 
-	pg.hidePasswordModal = common.theme.Button("cancel")
+	pg.back = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
+	pg.back.Background = color.RGBA{}
+	pg.back.Color = common.theme.Color.Hint
+
+	pg.hidePasswordModal = common.theme.Button(new(widget.Clickable), "cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
 	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
-	pg.showresetModal = common.theme.Button("reset")
-	pg.showresetModal.Color = common.theme.Color.Hint
-	pg.showresetModal.Background = color.RGBA{}
+	pg.showResetModal = common.theme.Button(new(widget.Clickable), "reset")
+	pg.showResetModal.Color = common.theme.Color.Hint
+	pg.showResetModal.Background = color.RGBA{}
 
-	pg.resetSeedFields = common.theme.Button("yes, reset")
+	pg.resetSeedFields = common.theme.Button(new(widget.Clickable), "yes, reset")
 	pg.resetSeedFields.Color = common.theme.Color.Danger
 	pg.resetSeedFields.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.errLabel.Color = pg.theme.Color.Danger
 
 	for i := 0; i <= 32; i++ {
-		pg.seedEditors = append(pg.seedEditors, common.theme.Editor(fmt.Sprintf("%d", i+1)))
-		pg.seedEditorWidgets.editors = append(pg.seedEditorWidgets.editors, widget.Editor{SingleLine: true, Submit: true})
+		// pg.seedEditors = append(pg.seedEditors, common.theme.Editor(new(widget.Editor), fmt.Sprintf("%d", i+1)))
+		widgetEditor := new(widget.Editor)
+		widgetEditor.SingleLine, widgetEditor.Submit = true, true
+		pg.seedEditors.editors = append(pg.seedEditors.editors, win.theme.Editor(widgetEditor, fmt.Sprintf("%d", i+1)))
 	}
-	pg.seedEditorWidgets.focusIndex = -1
+	pg.seedEditors.focusIndex = -1
 
 	// init suggestion buttons
 	for i := 0; i < pg.suggestionLimit; i++ {
-		pg.seedSuggestions = append(pg.seedSuggestions, seedSuggestions{
-			button: new(widget.Button),
-			skin:   win.theme.Button(""),
-		})
+		pg.seedSuggestions = append(pg.seedSuggestions, win.theme.Button(new(widget.Clickable), ""))
 	}
 
 	pg.seedListLeft, pg.seedListRight = &layout.List{Axis: layout.Vertical}, &layout.List{Axis: layout.Vertical}
-	pg.spendingPasswordWidget.Mask, pg.matchSpendingPasswordWidget.Mask = '*', '*'
-	pg.spendingPasswordWidget.SingleLine, pg.matchSpendingPasswordWidget.SingleLine = true, true
+	pg.spendingPassword.Editor.Mask, pg.matchSpendingPassword.Editor.Mask = '*', '*'
+	pg.spendingPassword.Editor.SingleLine, pg.matchSpendingPassword.Editor.SingleLine = true, true
 
 	pg.autoCompleteList = &layout.List{Axis: layout.Horizontal}
 
@@ -172,254 +147,254 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.lastOffsetRight = pg.seedListRight.Position.Offset
 	pg.lastOffsetLeft = pg.seedListLeft.Position.Offset
 
-	return func() {
-		pg.layout(common)
+	return func(gtx C) D {
 		pg.handle(common)
+		return pg.layout(common)
 	}
 }
 
-func (pg *createRestore) layout(common pageCommon) {
-	pg.theme.Surface(pg.gtx, func() {
+func (pg *createRestore) layout(common pageCommon) layout.Dimensions {
+	return pg.theme.Surface(pg.gtx, func(gtx C) D {
 		toMax(pg.gtx)
 		pd := values.MarginPadding15
-		layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
-			layout.Flexed(1, func() {
-				layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func() {
-					layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-						layout.Flexed(1, func() {
+		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+						layout.Flexed(1, func(gtx C) D {
 							if common.states.creating {
-								pg.processing()()
+								return pg.processing()
 							} else if pg.showRestore {
-								pg.restore()()
+								return pg.restore()
 							} else {
-								pg.mainContent()()
+								return pg.mainContent()
 							}
 						}),
 					)
 				})
 			}),
-		)
-		if pg.showPassword {
-			modalTitle := "Create Wallet"
-			if pg.showRestore {
-				modalTitle = "Restore Wallet"
-			}
-
-			w := []func(){
-				func() {
-					pg.spendingPassword.LayoutPasswordEditor(pg.gtx, pg.spendingPasswordWidget)
-				},
-				func() {
-					pg.matchSpendingPassword.LayoutPasswordEditor(pg.gtx, pg.matchSpendingPasswordWidget)
-				},
-				func() {
-					pg.errLabel.Layout(pg.gtx)
-				},
-				func() {
+			layout.Rigid(func(gtx C) D {
+				if pg.showPassword {
+					modalTitle := "Create Wallet"
 					if pg.showRestore {
-						pg.addWallet.Text = "restore wallet"
-					} else {
-						pg.addWallet.Text = "create new wallet"
+						modalTitle = "Restore Wallet"
 					}
-					layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
-						layout.Rigid(func() {
-							layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
-								pg.addWallet.Layout(pg.gtx, pg.addWalletWidget)
+
+					w := []func(gtx C) D{
+						func(gtx C) D {
+							return pg.spendingPassword.Layout(pg.gtx)
+						},
+						func(gtx C) D {
+							return pg.matchSpendingPassword.Layout(pg.gtx)
+						},
+						func(gtx C) D {
+							return pg.errLabel.Layout(pg.gtx)
+						},
+						func(gtx C) D {
+							if pg.showRestore {
+								pg.addWallet.Text = "restore wallet"
+							} else {
+								pg.addWallet.Text = "create new wallet"
+							}
+							return layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+								layout.Rigid(func(gtx C) D {
+									return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
+										return pg.addWallet.Layout(pg.gtx)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
+										pg.hidePasswordModal.Color = common.theme.Color.Primary
+										return pg.hidePasswordModal.Layout(pg.gtx)
+									})
+								}),
+							)
+						},
+					}
+					return pg.theme.Modal(pg.gtx, modalTitle, w)
+				}
+				return layout.Dimensions{}
+			}),
+			layout.Rigid(func(gtx C) D {
+				if pg.showWarning {
+					modalTitle := "Reset Seed Input"
+					var msg = "You are about clearing all the seed input fields. Are you sure you want to proceed with this action?"
+					w := []func(gtx C) D{
+						func(gtx C) D {
+							txt := common.theme.H6(msg)
+							txt.Color = common.theme.Color.Danger
+							txt.Alignment = text.Middle
+							return txt.Layout(pg.gtx)
+						},
+						func(gtx C) D {
+							return layout.Center.Layout(pg.gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
+											return pg.resetSeedFields.Layout(pg.gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
+											pg.hidePasswordModal.Background = common.theme.Color.Primary
+											pg.hidePasswordModal.Color = color.RGBA{255, 255, 255, 255}
+											return pg.hidePasswordModal.Layout(pg.gtx)
+										})
+									}),
+								)
 							})
-						}),
-						layout.Rigid(func() {
-							layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
-								pg.hidePasswordModal.Color = common.theme.Color.Primary
-								pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
-							})
-						}),
-					)
-				},
-			}
-			pg.theme.Modal(pg.gtx, modalTitle, w)
-		}
-
-		if pg.showWarning {
-			modalTitle := "Reset Seed Input"
-			var msg = "You are about clearing all the seed input fields. Are you sure you want to proceed with this action?"
-			w := []func(){
-				func() {
-					txt := common.theme.H6(msg)
-					txt.Color = common.theme.Color.Danger
-					txt.Alignment = text.Middle
-					txt.Layout(pg.gtx)
-				},
-				func() {
-					layout.Center.Layout(pg.gtx, func() {
-
-						layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
-							layout.Rigid(func() {
-								layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
-									pg.resetSeedFields.Layout(pg.gtx, pg.resetSeedFieldsWidget)
-								})
-							}),
-							layout.Rigid(func() {
-								layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func() {
-									pg.hidePasswordModal.Background = common.theme.Color.Primary
-									pg.hidePasswordModal.Color = color.RGBA{255, 255, 255, 255}
-									pg.hidePasswordModal.Layout(pg.gtx, pg.hidePasswordModalWidget)
-								})
-							}),
-						)
-					})
-				},
-			}
-
-			pg.theme.Modal(pg.gtx, modalTitle, w)
-		}
+						},
+					}
+					return pg.theme.Modal(pg.gtx, modalTitle, w)
+				}
+				return layout.Dimensions{}
+			}),
+		)
+		return dims
 	})
 }
 
-func (pg *createRestore) mainContent() layout.Widget {
-	return func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-			layout.Rigid(func() {
-				layout.W.Layout(pg.gtx, func() {
-					if pg.info.LoadedWallets > 0 {
-						pg.closeCreateRestore.Layout(pg.gtx, pg.backCreateRestoreWidget)
-					}
+func (pg *createRestore) mainContent() layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.W.Layout(pg.gtx, func(gtx C) D {
+				if pg.info.LoadedWallets > 0 {
+					return pg.closeCreateRestore.Layout(pg.gtx)
+				}
+				return layout.Dimensions{}
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+				title := pg.theme.H3("")
+				title.Alignment = text.Middle
+				if pg.info.LoadedWallets > 0 {
+					title.Text = "Create or Restore Wallet"
+				} else {
+					title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
+				}
+				return title.Layout(pg.gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			btnPadding := values.MarginPadding10
+			return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func(gtx C) D {
+						return pg.create.Layout(pg.gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func(gtx C) D {
+						return pg.showRestoreWallet.Layout(pg.gtx)
+					})
+				}),
+			)
+		}),
+	)
+}
+
+func (pg *createRestore) restore() layout.Dimensions {
+	dims := layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.W.Layout(pg.gtx, func(gtx C) D {
+				return pg.hideRestoreWallet.Layout(pg.gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			txt := pg.theme.H3("Restore from seed phrase")
+			txt.Alignment = text.Middle
+			return txt.Layout(pg.gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			txt := pg.theme.H6("Enter your seed phrase in the correct order")
+			txt.Alignment = text.Middle
+			return txt.Layout(pg.gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(pg.gtx, func(gtx C) D {
+				return layout.Center.Layout(pg.gtx, func(gtx C) D {
+					return pg.errLabel.Layout(pg.gtx)
 				})
-			}),
-			layout.Flexed(1, func() {
-				layout.Center.Layout(pg.gtx, func() {
-					title := pg.theme.H3("")
-					title.Alignment = text.Middle
-					if pg.info.LoadedWallets > 0 {
-						title.Text = "Create or Restore Wallet"
-					} else {
-						title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
-					}
-					title.Layout(pg.gtx)
-				})
-			}),
-			layout.Rigid(func() {
-				btnPadding := values.MarginPadding10
-				layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-					layout.Rigid(func() {
-						layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func() {
-							pg.create.Layout(pg.gtx, pg.toCreateWalletWidget)
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(pg.gtx,
+					layout.Rigid(func(gtx C) D {
+						pg.gtx.Constraints.Max.X = pg.gtx.Constraints.Max.X / 2
+						return pg.inputsGroup(pg.seedListLeft, 16, 0)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.inputsGroup(pg.seedListRight, 17, 16)
+					}),
+				)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+				return layout.Flex{Alignment: layout.Middle}.Layout(pg.gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15,
+							Right: values.MarginPadding10}.Layout(pg.gtx, func(gtx C) D {
+							return pg.showPasswordModal.Layout(pg.gtx)
 						})
 					}),
-					layout.Rigid(func() {
-						layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func() {
-							pg.showRestoreWallet.Layout(pg.gtx, pg.showRestoreWidget)
+					layout.Rigid(func(gtx C) D {
+						return pg.showResetModal.Layout(pg.gtx)
+					}),
+				)
+			})
+		}),
+	)
+	return dims
+}
+
+func (pg *createRestore) processing() layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+				message := pg.theme.H3("")
+				message.Alignment = text.Middle
+				if pg.restoring {
+					message.Text = "restoring wallet..."
+				} else {
+					message.Text = "creating wallet..."
+				}
+				return message.Layout(pg.gtx)
+			})
+		}))
+}
+
+func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) layout.Dimensions {
+	return l.Layout(pg.gtx, len, func(gtx C, i int) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(pg.gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Left: values.MarginPadding20, Bottom: values.MarginPadding20}.Layout(pg.gtx, func(gtx C) D {
+							return pg.seedEditors.editors[i+startIndex].Layout(pg.gtx)
 						})
 					}),
 				)
 			}),
-		)
-	}
-}
-
-func (pg *createRestore) restore() layout.Widget {
-	return func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-			layout.Rigid(func() {
-				layout.W.Layout(pg.gtx, func() {
-					pg.hideRestoreWallet.Layout(pg.gtx, pg.hideRestoreWidget)
-				})
-			}),
-			layout.Rigid(func() {
-				txt := pg.theme.H3("Restore from seed phrase")
-				txt.Alignment = text.Middle
-				txt.Layout(pg.gtx)
-			}),
-			layout.Rigid(func() {
-				txt := pg.theme.H6("Enter your seed phrase in the correct order")
-				txt.Alignment = text.Middle
-				txt.Layout(pg.gtx)
-			}),
-			layout.Rigid(func() {
-				layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(pg.gtx, func() {
-					layout.Center.Layout(pg.gtx, func() {
-						pg.errLabel.Layout(pg.gtx)
-					})
-				})
-			}),
-			layout.Flexed(1, func() {
-				layout.Center.Layout(pg.gtx, func() {
-					layout.Flex{}.Layout(pg.gtx,
-						layout.Rigid(func() {
-							pg.gtx.Constraints.Width.Max = pg.gtx.Constraints.Width.Max / 2
-							pg.inputsGroup(pg.seedListLeft, 16, 0)
-						}),
-						layout.Rigid(func() {
-							pg.inputsGroup(pg.seedListRight, 17, 16)
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func() {
-				layout.Center.Layout(pg.gtx, func() {
-					layout.Flex{Alignment: layout.Middle}.Layout(pg.gtx,
-						layout.Rigid(func() {
-							layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15,
-								Right: values.MarginPadding10}.Layout(pg.gtx, func() {
-								pg.showPasswordModal.Layout(pg.gtx, pg.showPasswordModalWidget)
-							})
-						}),
-						layout.Rigid(func() {
-							pg.showresetModal.Layout(pg.gtx, pg.showResetModalWidget)
-						}),
-					)
-				})
-			}),
-		)
-	}
-}
-
-func (pg *createRestore) processing() layout.Widget {
-	return func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-			layout.Flexed(1, func() {
-				layout.Center.Layout(pg.gtx, func() {
-					message := pg.theme.H3("")
-					message.Alignment = text.Middle
-					if pg.restoring {
-						message.Text = "restoring wallet..."
-					} else {
-						message.Text = "creating wallet..."
-					}
-					message.Layout(pg.gtx)
-				})
-			}))
-	}
-}
-
-func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) {
-	l.Layout(pg.gtx, len, func(i int) {
-		layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
-			layout.Rigid(func() {
-				layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(pg.gtx,
-					layout.Rigid(func() {
-						layout.Inset{Left: values.MarginPadding20, Bottom: values.MarginPadding20}.Layout(pg.gtx, func() {
-							pg.seedEditors[i+startIndex].Layout(pg.gtx, &pg.seedEditorWidgets.editors[i+startIndex])
-						})
-					}),
-				)
-			}),
-			layout.Rigid(func() {
-				layout.Inset{Top: values.MarginPadding5, Left: values.MarginPadding20}.Layout(pg.gtx, func() {
-					pg.autoComplete(i, startIndex)
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5, Left: values.MarginPadding20}.Layout(pg.gtx, func(gtx C) D {
+					return pg.autoComplete(i, startIndex)
 				})
 			}),
 		)
 	})
 }
 
-func (pg *createRestore) autoComplete(index, startIndex int) {
-	if index+startIndex != pg.seedEditorWidgets.focusIndex {
-		return
+func (pg *createRestore) autoComplete(index, startIndex int) layout.Dimensions {
+	if index+startIndex != pg.seedEditors.focusIndex {
+		return layout.Dimensions{}
 	}
 
-	pg.autoCompleteList.Layout(pg.gtx, len(pg.suggestions), func(i int) {
-		layout.Inset{Right: values.MarginPadding5}.Layout(pg.gtx, func() {
-			pg.seedSuggestions[i].skin.Layout(pg.gtx, pg.seedSuggestions[i].button)
+	return pg.autoCompleteList.Layout(pg.gtx, len(pg.suggestions), func(gtx C, i int) D {
+		return layout.Inset{Right: values.MarginPadding5}.Layout(pg.gtx, func(gtx C) D {
+			return pg.seedSuggestions[i].Layout(pg.gtx)
 		})
 	})
 }
@@ -435,14 +410,14 @@ func currentFocus(focusedList []int) int {
 }
 
 func (pg *createRestore) onSuggestionSeedsClicked() {
-	index := pg.seedEditorWidgets.focusIndex
+	index := pg.seedEditors.focusIndex
 	for _, b := range pg.seedSuggestions {
-		for b.button.Clicked(pg.gtx) {
-			pg.seedEditorWidgets.editors[index].SetText(b.skin.Text)
-			pg.seedEditorWidgets.editors[index].Move(len(b.skin.Text))
+		for b.Button.Clicked() {
+			pg.seedEditors.editors[index].Editor.SetText(b.Text)
+			pg.seedEditors.editors[index].Editor.Move(len(b.Text))
 			pg.seedClicked = true
 			if index != 32 {
-				pg.seedEditorWidgets.editors[index+1].Focus()
+				pg.seedEditors.editors[index+1].Editor.Focus()
 			}
 		}
 	}
@@ -466,13 +441,13 @@ func (pg *createRestore) hideSuggestionsOnScroll() {
 	rightOffset := pg.seedListRight.Position.Offset
 	if leftOffset > pg.lastOffsetLeft || leftOffset < pg.lastOffsetLeft {
 		if pg.seedListLeft.Position.BeforeEnd {
-			pg.seedEditorWidgets.focusIndex = -1
+			pg.seedEditors.focusIndex = -1
 			pg.lastOffsetLeft = leftOffset
 		}
 	}
 	if rightOffset > pg.lastOffsetRight || rightOffset < pg.lastOffsetRight {
 		if pg.seedListRight.Position.BeforeEnd {
-			pg.seedEditorWidgets.focusIndex = -1
+			pg.seedEditors.focusIndex = -1
 			pg.lastOffsetRight = rightOffset
 		}
 	}
@@ -499,39 +474,39 @@ func diff(a, b []int) []int {
 func (pg *createRestore) editorSeedsEventsHandler() {
 	var focused []int
 
-	for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
-		editor := &pg.seedEditorWidgets.editors[i]
+	for i := 0; i < len(pg.seedEditors.editors); i++ {
+		editor := &pg.seedEditors.editors[i]
 
-		if editor.Focused() {
+		if editor.Editor.Focused() {
 			focused = append(focused, i)
 		}
 
-		for _, e := range editor.Events(pg.gtx) {
+		for _, e := range editor.Editor.Events() {
 			switch e.(type) {
 			case widget.ChangeEvent:
 				pg.scrollUp()
 				// hide suggestions if seed clicked
 				if pg.seedClicked {
-					pg.seedEditorWidgets.focusIndex = -1
+					pg.seedEditors.focusIndex = -1
 					pg.seedClicked = false
 				} else {
-					pg.seedEditorWidgets.focusIndex = i
+					pg.seedEditors.focusIndex = i
 				}
 
-				pg.suggestions = pg.suggestionSeeds(editor.Text())
+				pg.suggestions = pg.suggestionSeeds(editor.Editor.Text())
 				for k, s := range pg.suggestions {
-					pg.seedSuggestions[k].skin.Text = s
+					pg.seedSuggestions[k].Text = s
 				}
 			case widget.SubmitEvent:
 				if i != 32 {
-					pg.seedEditorWidgets.editors[i+1].Focus()
+					pg.seedEditors.editors[i+1].Editor.Focus()
 				}
 			}
 		}
 	}
 
 	if len(diff(pg.focused, focused)) > 0 {
-		pg.seedEditorWidgets.focusIndex = -1
+		pg.seedEditors.focusIndex = -1
 	}
 	pg.focused = focused
 	pg.hideSuggestionsOnScroll()
@@ -554,7 +529,7 @@ func (pg createRestore) suggestionSeeds(text string) []string {
 }
 
 func (pg *createRestore) validatePassword() string {
-	pass := pg.spendingPasswordWidget.Text()
+	pass := pg.spendingPassword.Editor.Text()
 	if pass == "" {
 		pg.spendingPassword.HintColor = pg.theme.Color.Danger
 		pg.errLabel.Text = fmt.Sprintf("wallet password required and cannot be empty")
@@ -570,7 +545,7 @@ func (pg *createRestore) validatePasswords() string {
 		return ""
 	}
 
-	match := pg.matchSpendingPasswordWidget.Text()
+	match := pg.matchSpendingPassword.Editor.Text()
 	if match == "" {
 		pg.matchSpendingPassword.HintColor = pg.theme.Color.Danger
 		pg.errLabel.Text = fmt.Sprintf("enter new wallet password again and it cannot be empty")
@@ -586,22 +561,22 @@ func (pg *createRestore) validatePasswords() string {
 }
 
 func (pg *createRestore) resetPasswords() {
-	pg.spendingPasswordWidget.SetText("")
-	pg.matchSpendingPasswordWidget.SetText("")
+	pg.spendingPassword.Editor.SetText("")
+	pg.matchSpendingPassword.Editor.SetText("")
 }
 
 func (pg *createRestore) validateSeeds() bool {
 	pg.seedPhrase = ""
 	pg.errLabel.Text = ""
 
-	for i, editor := range pg.seedEditorWidgets.editors {
-		if editor.Text() == "" {
-			pg.seedEditors[i].HintColor = pg.theme.Color.Danger
+	for i, editor := range pg.seedEditors.editors {
+		if editor.Editor.Text() == "" {
+			pg.seedEditors.editors[i].HintColor = pg.theme.Color.Danger
 			pg.errLabel.Text = "all seed fields are required"
 			return false
 		}
 
-		pg.seedPhrase += editor.Text() + " "
+		pg.seedPhrase += editor.Editor.Text() + " "
 	}
 
 	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
@@ -613,8 +588,8 @@ func (pg *createRestore) validateSeeds() bool {
 }
 
 func (pg *createRestore) resetSeeds() {
-	for i := 0; i < len(pg.seedEditorWidgets.editors); i++ {
-		pg.seedEditorWidgets.editors[i].SetText("")
+	for i := 0; i < len(pg.seedEditors.editors); i++ {
+		pg.seedEditors.editors[i].Editor.SetText("")
 	}
 }
 
@@ -624,29 +599,27 @@ func (pg *createRestore) resetPage() {
 }
 
 func (pg *createRestore) handle(common pageCommon) {
-	gtx := common.gtx
-
-	for pg.hideRestoreWidget.Clicked(gtx) {
+	for pg.hideRestoreWallet.Button.Clicked() {
 		pg.showRestore = false
 		pg.restoring = false
 		pg.errLabel.Text = ""
 	}
 
-	for pg.showRestoreWidget.Clicked(gtx) {
+	for pg.showRestoreWallet.Button.Clicked() {
 		pg.restoring = true
 		pg.showRestore = true
 	}
 
-	for pg.backCreateRestoreWidget.Clicked(gtx) {
+	for pg.back.Button.Clicked() {
 		pg.resetSeeds()
 		*common.page = PageWallet
 	}
 
-	for pg.toCreateWalletWidget.Clicked(gtx) {
+	for pg.create.Button.Clicked() {
 		pg.showPassword = true
 	}
 
-	for pg.showPasswordModalWidget.Clicked(gtx) {
+	for pg.showPasswordModal.Button.Clicked() {
 		if pg.showRestore {
 			if !pg.validateSeeds() {
 				return
@@ -655,24 +628,24 @@ func (pg *createRestore) handle(common pageCommon) {
 		pg.showPassword = true
 	}
 
-	for pg.hidePasswordModalWidget.Clicked(gtx) {
+	for pg.hidePasswordModal.Button.Clicked() {
 		pg.showPassword = false
 		pg.showWarning = false
 		pg.errLabel.Text = ""
 		pg.resetPasswords()
 	}
 
-	for pg.showResetModalWidget.Clicked(gtx) {
+	for pg.showResetModal.Button.Clicked() {
 		pg.showWarning = true
 	}
 
-	for pg.resetSeedFieldsWidget.Clicked(gtx) {
+	for pg.resetSeedFields.Button.Clicked() {
 		pg.resetSeeds()
-		pg.seedEditorWidgets.focusIndex = -1
+		pg.seedEditors.focusIndex = -1
 		pg.showWarning = false
 	}
 
-	if pg.addWalletWidget.Clicked(gtx) {
+	if pg.addWallet.Button.Clicked() {
 		pass := pg.validatePasswords()
 		if pass == "" {
 			return
@@ -695,10 +668,10 @@ func (pg *createRestore) handle(common pageCommon) {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab {
 			if len(pg.suggestions) == 1 {
-				focus := pg.seedEditorWidgets.focusIndex
-				pg.seedEditorWidgets.editors[focus].SetText(pg.suggestions[0])
+				focus := pg.seedEditors.focusIndex
+				pg.seedEditors.editors[focus].Editor.SetText(pg.suggestions[0])
 				pg.seedClicked = true
-				pg.seedEditorWidgets.editors[focus].Move(len(pg.suggestions[0]))
+				pg.seedEditors.editors[focus].Editor.Move(len(pg.suggestions[0]))
 			}
 		}
 	case err := <-pg.errChan:

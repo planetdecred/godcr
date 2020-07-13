@@ -27,7 +27,7 @@ func (t *Theme) IconButton(button *widget.Clickable, icon *widget.Icon) IconButt
 	return IconButton{material.IconButton(t.Base, button, icon)}
 }
 
-func (t *Theme) PlainIconButton( button *widget.Clickable, icon *widget.Icon) IconButton {
+func (t *Theme) PlainIconButton(button *widget.Clickable, icon *widget.Icon) IconButton {
 	btn := IconButton{material.IconButton(t.Base, button, icon)}
 	btn.Background = color.RGBA{}
 	return btn

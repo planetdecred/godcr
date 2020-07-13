@@ -139,8 +139,8 @@ func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
 	)
 }
 
-func (t *Theme) Surface(gtx layout.Context, w layout.Widget) {
-	layout.Stack{
+func (t *Theme) Surface(gtx layout.Context, w layout.Widget) layout.Dimensions {
+	return layout.Stack{
 		Alignment: layout.Center,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {

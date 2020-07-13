@@ -14,37 +14,27 @@ import (
 const PageVerifyMessage = "verifymessage"
 
 type verifyMessagePage struct {
-	addressInput, messageInput, signInput    decredmaterial.Editor
-	addressInputW, messageInputW, signInputW *widget.Editor
-	clearBtnW, verifyBtnW                    widget.Button
-	clearBtn, verifyBtn                      decredmaterial.Button
-	verifyMessage                            decredmaterial.Label
+	addressInput, messageInput, signInput decredmaterial.Editor
+	clearBtn, verifyBtn                   decredmaterial.Button
+	verifyMessage                         decredmaterial.Label
 
-	backButtonW widget.Button
-	backButton  decredmaterial.IconButton
+	backButton decredmaterial.IconButton
 }
 
 func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	page := &verifyMessagePage{
-		addressInput:  c.theme.Editor("Address"),
-		messageInput:  c.theme.Editor("Message"),
-		signInput:     c.theme.Editor("Signature"),
+		addressInput:  c.theme.Editor(new(widget.Editor), "Address"),
+		messageInput:  c.theme.Editor(new(widget.Editor), "Message"),
+		signInput:     c.theme.Editor(new(widget.Editor), "Signature"),
 		verifyMessage: c.theme.H6(""),
-		verifyBtn:     c.theme.Button("Verify"),
-		clearBtn:      c.theme.Button("Clear All"),
-		messageInputW: &widget.Editor{
-			SingleLine: true,
-		},
-		addressInputW: &widget.Editor{
-			SingleLine: true,
-		},
-		signInputW: &widget.Editor{
-			SingleLine: true,
-		},
-		backButton: c.theme.PlainIconButton(c.icons.navigationArrowBack),
+		verifyBtn:     c.theme.Button(new(widget.Clickable), "Verify"),
+		clearBtn:      c.theme.Button(new(widget.Clickable), "Clear All"),
+		backButton:    c.theme.PlainIconButton(new(widget.Clickable), c.icons.navigationArrowBack),
 	}
+
 	page.messageInput.IsRequired, page.addressInput.IsRequired, page.signInput.IsRequired = true, true, true
 	page.messageInput.IsVisible, page.addressInput.IsVisible, page.signInput.IsVisible = true, true, true
+	page.messageInput.Editor.SingleLine, page.addressInput.Editor.SingleLine, page.messageInput.Editor.SingleLine = true, true, true
 	page.verifyBtn.TextSize, page.clearBtn.TextSize, page.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
 	page.verifyBtn.Background = c.theme.Color.Hint
 	page.clearBtn.Background = color.RGBA{0, 0, 0, 0}
@@ -52,90 +42,97 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	page.backButton.Color = c.theme.Color.Hint
 	page.backButton.Size = values.MarginPadding30
 
-	return func() {
-		page.Layout(c)
+	return func(gtx C) D {
 		page.handler(c)
+		return page.Layout(c)
 	}
 }
 
-func (page *verifyMessagePage) Layout(c pageCommon) {
-	body := func() {
-		layout.UniformInset(values.MarginPadding5).Layout(c.gtx, func() {
-			layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
+func (page *verifyMessagePage) Layout(c pageCommon) layout.Dimensions {
+	body := func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding5).Layout(c.gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
 				layout.Rigid(page.header(&c)),
-				layout.Rigid(func() {
-					layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
-						layout.Rigid(page.inputRow(&c, page.addressInput, page.addressInputW)),
-						layout.Rigid(page.inputRow(&c, page.signInput, page.signInputW)),
-						layout.Rigid(page.inputRow(&c, page.messageInput, page.messageInputW)),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
+						layout.Rigid(page.inputRow(&c, page.addressInput)),
+						layout.Rigid(page.inputRow(&c, page.signInput)),
+						layout.Rigid(page.inputRow(&c, page.messageInput)),
 						layout.Rigid(page.verifyAndClearButtons(&c)),
 					)
 				}),
 			)
 		})
 	}
-
-	c.Layout(c.gtx, body)
+	return c.Layout(c.gtx, body)
 }
 
 func (page *verifyMessagePage) header(c *pageCommon) layout.Widget {
-	return func() {
+	return func(gtx C) D {
 		var msg = "After you or your counterparty has genrated a signature, you can use this form to verify the signature." +
 			"\nOnce you have entered the address, the message and the corresponding signature, you will see VALID if the signature" +
 			"appropriately matches \nthe address and message otherwise INVALID."
 
-		layout.Inset{Bottom: values.MarginPadding30}.Layout(c.gtx, func() {
-			layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
-				layout.Rigid(func() {
-					layout.W.Layout(c.gtx, func() {
-						page.backButton.Layout(c.gtx, &page.backButtonW)
-					})
-					layout.Inset{Left: values.MarginPadding45}.Layout(c.gtx, func() {
-						c.theme.H5("Verify Wallet Message").Layout(c.gtx)
+		return layout.Inset{Bottom: values.MarginPadding30}.Layout(c.gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(c.gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.W.Layout(c.gtx, func(gtx C) D {
+								return page.backButton.Layout(c.gtx)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding45}.Layout(c.gtx, func(gtx C) D {
+								return c.theme.H5("Verify Wallet Message").Layout(c.gtx)
+							})
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding15}.Layout(c.gtx, func(gtx C) D {
+						return layout.Dimensions{}
 					})
 				}),
-				layout.Rigid(func() {
-					layout.Inset{Top: values.MarginPadding15}.Layout(c.gtx, func() {})
-				}),
-				layout.Rigid(func() {
+				layout.Rigid(func(gtx C) D {
 					txt := c.theme.Label(values.MarginPadding10, msg)
-					txt.Layout(c.gtx)
+					return txt.Layout(c.gtx)
 				}),
 			)
 		})
 	}
 }
 
-func (page *verifyMessagePage) inputRow(c *pageCommon, out decredmaterial.Editor, in *widget.Editor) layout.Widget {
-	return func() {
-		layout.Inset{Bottom: values.MarginPadding15}.Layout(c.gtx, func() {
-			out.Layout(c.gtx, in)
+func (page *verifyMessagePage) inputRow(c *pageCommon, editor decredmaterial.Editor) layout.Widget {
+	return func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding15}.Layout(c.gtx, func(gtx C) D {
+			return editor.Layout(c.gtx)
 		})
 	}
 }
 
 func (page *verifyMessagePage) verifyAndClearButtons(c *pageCommon) layout.Widget {
-	gtx := c.gtx
-	return func() {
-		layout.Flex{}.Layout(gtx,
-			layout.Flexed(.6, func() {
-				layout.Inset{Bottom: values.MarginPadding5, Top: values.MarginPadding10}.Layout(gtx, func() {
-					page.verifyMessage.Layout(gtx)
+	return func(gtx C) D {
+		dims := layout.Flex{}.Layout(gtx,
+			layout.Flexed(.6, func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding5, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return page.verifyMessage.Layout(gtx)
 				})
 			}),
-			layout.Flexed(.4, func() {
-				layout.Flex{}.Layout(gtx,
-					layout.Flexed(.5, func() {
-						layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func() {
-							page.clearBtn.Layout(gtx, &page.clearBtnW)
+			layout.Flexed(.4, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Flexed(.5, func(gtx C) D {
+						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return page.clearBtn.Layout(gtx)
 						})
 					}),
-					layout.Flexed(.5, func() {
-						page.verifyBtn.Layout(gtx, &page.verifyBtnW)
+					layout.Flexed(.5, func(gtx C) D {
+						return page.verifyBtn.Layout(gtx)
 					}),
 				)
 			}),
 		)
+		return dims
 	}
 }
 
@@ -143,18 +140,18 @@ func (page *verifyMessagePage) validateInputs(c *pageCommon) bool {
 	page.addressInput.ErrorLabel.Text = ""
 	page.verifyBtn.Background = c.theme.Color.Hint
 
-	if strings.Trim(page.addressInputW.Text(), " ") == "" {
+	if strings.Trim(page.addressInput.Editor.Text(), " ") == "" {
 		page.addressInput.ErrorLabel.Text = "Please enter a valid address"
 		return false
 	}
-	if isValid, _ := c.wallet.IsAddressValid(page.addressInputW.Text()); !isValid {
+	if isValid, _ := c.wallet.IsAddressValid(page.addressInput.Editor.Text()); !isValid {
 		page.addressInput.ErrorLabel.Text = "Invalid address"
 		return false
 	}
-	if strings.Trim(page.messageInputW.Text(), " ") == "" {
+	if strings.Trim(page.messageInput.Editor.Text(), " ") == "" {
 		return false
 	}
-	if strings.Trim(page.signInputW.Text(), " ") == "" {
+	if strings.Trim(page.signInput.Editor.Text(), " ") == "" {
 		return false
 	}
 
@@ -163,7 +160,7 @@ func (page *verifyMessagePage) validateInputs(c *pageCommon) bool {
 }
 
 func (page *verifyMessagePage) handlerEditorEvents(c *pageCommon, w *widget.Editor) {
-	for _, evt := range w.Events(c.gtx) {
+	for _, evt := range w.Events() {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			page.validateInputs(c)
@@ -174,20 +171,20 @@ func (page *verifyMessagePage) handlerEditorEvents(c *pageCommon, w *widget.Edit
 
 func (page *verifyMessagePage) clearInputs(c *pageCommon) {
 	page.verifyBtn.Background = c.theme.Color.Hint
-	page.addressInputW.SetText("")
-	page.signInputW.SetText("")
-	page.messageInputW.SetText("")
+	page.addressInput.Editor.SetText("")
+	page.signInput.Editor.SetText("")
+	page.messageInput.Editor.SetText("")
 	page.verifyMessage.Text = ""
 }
 
 func (page *verifyMessagePage) handler(c pageCommon) {
-	page.handlerEditorEvents(&c, page.addressInputW)
-	page.handlerEditorEvents(&c, page.messageInputW)
-	page.handlerEditorEvents(&c, page.signInputW)
+	page.handlerEditorEvents(&c, page.addressInput.Editor)
+	page.handlerEditorEvents(&c, page.messageInput.Editor)
+	page.handlerEditorEvents(&c, page.signInput.Editor)
 
-	if page.verifyBtnW.Clicked(c.gtx) && page.validateInputs(&c) {
+	if page.verifyBtn.Button.Clicked() && page.validateInputs(&c) {
 		page.verifyMessage.Text = ""
-		valid, err := c.wallet.VerifyMessage(page.addressInputW.Text(), page.messageInputW.Text(), page.signInputW.Text())
+		valid, err := c.wallet.VerifyMessage(page.addressInput.Editor.Text(), page.messageInput.Editor.Text(), page.signInput.Editor.Text())
 
 		if err != nil {
 			page.verifyMessage.Color = c.theme.Color.Danger
@@ -205,11 +202,11 @@ func (page *verifyMessagePage) handler(c pageCommon) {
 		page.verifyMessage.Color = c.theme.Color.Success
 	}
 
-	if page.clearBtnW.Clicked(c.gtx) {
+	if page.clearBtn.Button.Clicked() {
 		page.clearInputs(&c)
 	}
 
-	if page.backButtonW.Clicked(c.gtx) {
+	if page.backButton.Button.Clicked() {
 		page.clearInputs(&c)
 		*c.page = PageWallet
 	}

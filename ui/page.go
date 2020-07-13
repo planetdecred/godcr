@@ -1,8 +1,9 @@
 package ui
 
 import (
-	"gioui.org/widget"
 	"image"
+
+	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr/ui/values"
 
@@ -149,7 +150,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 
 	toMax(gtx)
 	page.navTab.Separator = true
-	page.navTab.Layout(gtx, func(gtx C) D {
+	return page.navTab.Layout(gtx, func(gtx C) D {
 		p := values.MarginPadding10
 		return layout.Inset{Top: p, Left: p, Right: p}.Layout(gtx, func(gtx C) D {
 			return body(gtx)
@@ -197,7 +198,7 @@ func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget)
 		page.walletsTab.Separator = false
 		return page.walletsTab.Layout(gtx, body)
 	}
-	page.Layout(gtx, bd)
+	return page.Layout(gtx, bd)
 }
 
 func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -218,7 +219,7 @@ func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 
-	page.LayoutWithWallets(gtx, func(gtx C) D {
+	return page.LayoutWithWallets(gtx, func(gtx C) D {
 		return page.accountsTab.Layout(gtx, body)
 	})
 }

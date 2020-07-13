@@ -66,7 +66,7 @@ type transactionWidgets struct {
 
 type overviewPage struct {
 	listContainer, walletSyncList *layout.List
-	gtx                           *layout.Context
+	gtx                           layout.Context
 	theme                         *decredmaterial.Theme
 	tab                           *decredmaterial.Tabs
 
@@ -75,11 +75,11 @@ type overviewPage struct {
 	walletTransactions     **wallet.Transactions
 	walletTransaction      **wallet.Transaction
 	toTransactions, sync   decredmaterial.Button
-	toTransactionsW, syncW widget.Button
+	toTransactionsW, syncW widget.Clickable
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon *decredmaterial.Icon
 	syncingIcon          image.Image
-	toTransactionDetails []*gesture.Click
+	toTransactionDetails   []*gesture.Click
 	line                 *decredmaterial.Line
 
 	text             overviewPageText
@@ -102,6 +102,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		walletTransaction:  &win.walletTransaction,
 		listContainer:      &layout.List{Axis: layout.Vertical},
 		walletSyncList:     &layout.List{Axis: layout.Horizontal},
+		toTransactions:     c.theme.Button(new(widget.Clickable), "See all"),
 		line:               c.theme.Line(),
 
 		syncButtonHeight: 70,
