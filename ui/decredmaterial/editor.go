@@ -33,6 +33,8 @@ type Editor struct {
 	IsRequired bool
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
+	//IsUnderline if true makes the title lable visible.
+	IsUnderline bool
 
 	requiredErrorText string
 
@@ -55,6 +57,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		TitleLabel:        t.Body2(""),
 		flexWidth:         0,
 		IsTitleLabel:      true,
+		IsUnderline:       true,
 		LineColor:         t.Color.Text,
 		ErrorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
@@ -131,7 +134,9 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 									)
 								}),
 								layout.Rigid(func(gtx C) D {
+									if e.IsUnderline {
 									return e.editorLine(gtx)
+								}
 								}),
 								layout.Rigid(func(gtx C) D {
 									if e.ErrorLabel.Text != "" {

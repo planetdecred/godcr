@@ -45,6 +45,7 @@ type SendPage struct {
 	closeConfirmationModalButton decredmaterial.Button
 	confirmButton                decredmaterial.Button
 	maxButton                    decredmaterial.Button
+	sendToButton                 decredmaterial.Button
 
 	copyIcon     decredmaterial.IconButton
 	currencySwap decredmaterial.IconButton
@@ -140,6 +141,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.destinationAddressEditor.SetRequiredErrorText("")
 	page.destinationAddressEditor.IsRequired = true
 	page.destinationAddressEditor.IsVisible = true
+	page.destinationAddressEditorMaterial.IsTitleLabel = false
+	page.destinationAddressEditorMaterial.IsUnderline = false
 
 	page.sendAmountEditor = common.theme.Editor(new(widget.Editor), "Amount to be sent")
 	page.sendAmountEditor.SetRequiredErrorText("")
@@ -148,6 +151,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	page.closeConfirmationModalButton.Background = common.theme.Color.Gray
 	page.destinationAddressEditor.Editor.SetText("")
+	page.destinationAddressEditor.SingleLine = true
 
 	page.copyIcon.Background = common.theme.Color.Background
 	page.copyIcon.Color = common.theme.Color.Text
@@ -161,10 +165,13 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.currencySwap.Size = values.MarginPadding30
 
 	page.maxButton.Background = common.theme.Color.Black
-	page.maxButton.Inset = layout.Inset{
-		Top: values.MarginPadding5, Bottom: values.MarginPadding5,
-		Left: values.MarginPadding5, Right: values.MarginPadding5,
-	}
+	page.maxButton.Inset = layout.UniformInset(values.MarginPadding0)
+
+	page.sendToButton = common.theme.Button(new(widget.Clickable), "Send to account")
+	page.sendToButton.TextSize = values.TextSize14
+	page.sendToButton.Background = color.RGBA{}
+	page.sendToButton.Color = common.theme.Color.Primary
+	page.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
 	go common.wallet.GetUSDExchangeValues(&page)
 
 	return func(gtx C) D {
@@ -499,28 +506,65 @@ func (pg *SendPage) tableLayout(gtx layout.Context, leftLabel decredmaterial.Lab
 
 // =======
 func (pg *SendPage) destinationAddrLayout(gtx layout.Context) layout.Dimensions { {
+	main := layout.UniformInset(values.MarginPadding20)
+	sub := layout.UniformInset(values.MarginPadding0)
 	inset := layout.Inset{
 		Bottom: values.MarginPadding10,
 		Top:    values.MarginPadding10,
 	}
-	return inset.Layout(pg.gtx, func() {
-		pg.sectionLayout(func() {
+	inset.Layout(pg.gtx, func() {
+		pg.sectionLayout(main, func() {
+			layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+				layout.Rigid(func() {
+					pg.sendToAddressLayout()
+				}),
+				layout.Rigid(func() {
+					pg.sectionOutlineLayout(func() {
+						pg.sectionLayout(sub, func() {
 			return pg.destinationAddressEditorMaterial.Layout(pg.gtx, pg.destinationAddressEditor)
+						})
+					})
+				}),
+			)
 		})
 	})
 }
 
 func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
+		main := layout.UniformInset(values.MarginPadding20)
 	return pg.sectionLayout(func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,		
+			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func() {
 				return pg.spendableBalanceLayout()
 			}),
-			layout.Rigid(func(gtx C) D {
+			layout.Rigid(func() {
+				pg.sectionOutlineLayout(func() {
+					pg.sectionLayout(main, func() {
 				return pg.amountInputLayout()
+					})
+				})
 			}),
 		)
 	})
+}
+
+func (pg *SendPage) sendToAddressLayout() {
+	gtx := pg.gtx
+	layout.Flex{}.Layout(gtx,
+		layout.Rigid(func() {
+			amt := pg.theme.Body2("To")
+			amt.Color = pg.theme.Color.Gray
+			amt.Layout(gtx)
+		}),
+		layout.Flexed(1, func() {
+			layout.E.Layout(gtx, func() {
+				layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func() {
+					pg.sendToButton.Layout(gtx, pg.sendToBtnWidget)
+				})
+			})
+		}),
+	)
 }
 
 func (pg *SendPage) spendableBalanceLayout(gtx layout.Context) layout.Dimensions {
@@ -891,8 +935,15 @@ func (pg *SendPage) changeEvt(evt widget.EditorEvent) {
 }
 
 // drawlayout wraps the page tx and sync section in a card layout
-func (pg *SendPage) sectionLayout(body layout.Widget) {
+func (pg *SendPage) sectionLayout(inset layout.Inset, body layout.Widget) {
 	decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(pg.gtx, func() {
-		layout.UniformInset(values.MarginPadding20).Layout(pg.gtx, body)
+		inset.Layout(pg.gtx, body)
+	})
+}
+
+// drawlayout wraps the page tx and sync section in a card layout
+func (pg *SendPage) sectionOutlineLayout(body layout.Widget) {
+	decredmaterial.Card{Color: pg.theme.Color.Hint}.Layout(pg.gtx, func() {
+		layout.UniformInset(values.OutLinePadding).Layout(pg.gtx, body)
 	})
 }

@@ -30,4 +30,5 @@ var (
 	CopyBtnAlignment          = unit.Dp(-5)
 	WalletSyncBoxContentWidth = unit.Dp(280)
 	AccountLineWidth          = unit.Dp(350)
+	OutLinePadding            = unit.Dp(1)
 )
