@@ -40,11 +40,11 @@ type SendPage struct {
 
 	destinationAddressEditor           *widget.Editor
 	sendAmountEditor                   *widget.Editor
-	nextButtonWidget                   *widget.Button
-	closeConfirmationModalButtonWidget *widget.Button
-	confirmButtonWidget                *widget.Button
-	copyIconWidget                     *widget.Button
-	currencySwapWidget                 widget.Button
+	nextButtonWidget                   *widget.Clickable
+	closeConfirmationModalButtonWidget *widget.Clickable
+	confirmButtonWidget                *widget.Clickable
+	copyIconWidget                     *widget.Clickable
+	currencySwapWidget                 widget.Clickable
 
 	destinationAddressEditorMaterial     decredmaterial.Editor
 	sendAmountEditorMaterial             decredmaterial.Editor
@@ -118,10 +118,10 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 		destinationAddressEditor:           new(widget.Editor),
 		sendAmountEditor:                   new(widget.Editor),
-		nextButtonWidget:                   new(widget.Button),
-		closeConfirmationModalButtonWidget: new(widget.Button),
-		confirmButtonWidget:                new(widget.Button),
-		copyIconWidget:                     new(widget.Button),
+		nextButtonWidget:                   new(widget.Clickable),
+		closeConfirmationModalButtonWidget: new(widget.Clickable),
+		confirmButtonWidget:                new(widget.Clickable),
+		copyIconWidget:                     new(widget.Clickable),
 
 		sendErrorText: "",
 		txHashText:    "",

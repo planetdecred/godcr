@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"gioui.org/widget"
 	"image"
 
 	"github.com/raedahgroup/godcr/ui/values"
@@ -18,7 +19,7 @@ type pageIcons struct {
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, verifyAction, actionDelete, actionLock,
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
-	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *decredmaterial.Icon
+	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
 
 	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon, syncingIcon image.Image
 }
@@ -28,7 +29,7 @@ type pageCommon struct {
 	info            *wallet.MultiWalletInfo
 	selectedWallet  *int
 	selectedAccount *int
-	gtx             *layout.Context
+	gtx             layout.Context
 	theme           *decredmaterial.Theme
 	icons           pageIcons
 	page            *string
@@ -40,32 +41,34 @@ type pageCommon struct {
 	states          *states
 }
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
 func (win *Window) addPages(decredIcons map[string]image.Image) {
 	icons := pageIcons{
-		contentAdd:                 mustIcon(decredmaterial.NewIcon(icons.ContentAdd)),
-		contentClear:               mustIcon(decredmaterial.NewIcon(icons.ContentClear)),
-		contentCreate:              mustIcon(decredmaterial.NewIcon(icons.ContentCreate)),
-		navigationCheck:            mustIcon(decredmaterial.NewIcon(icons.NavigationCheck)),
-		contentSend:                mustIcon(decredmaterial.NewIcon(icons.ContentSend)),
-		contentAddBox:              mustIcon(decredmaterial.NewIcon(icons.ContentAddBox)),
-		contentRemove:              mustIcon(decredmaterial.NewIcon(icons.ContentRemove)),
-		toggleRadioButtonUnchecked: mustIcon(decredmaterial.NewIcon(icons.ToggleRadioButtonUnchecked)),
-		actionCheckCircle:          mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
-		navigationArrowBack:        mustIcon(decredmaterial.NewIcon(icons.NavigationArrowBack)),
-		contentCopy:                mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
-		actionInfo:                 mustIcon(decredmaterial.NewIcon(icons.ActionInfo)),
-		navigationMore:             mustIcon(decredmaterial.NewIcon(icons.NavigationMoreVert)),
-		actionDelete:               mustIcon(decredmaterial.NewIcon(icons.ActionDelete)),
-		communicationComment:       mustIcon(decredmaterial.NewIcon(icons.CommunicationComment)),
-		verifyAction:               mustIcon(decredmaterial.NewIcon(icons.ActionVerifiedUser)),
-		editorModeEdit:             mustIcon(decredmaterial.NewIcon(icons.EditorModeEdit)),
-		actionLock:                 mustIcon(decredmaterial.NewIcon(icons.ActionLock)),
-		actionBackup:               mustIcon(decredmaterial.NewIcon(icons.ActionSettingsBackupRestore)),
-		actionCheck:                mustIcon(decredmaterial.NewIcon(icons.ActionCheckCircle)),
-		actionSwapVert:             mustIcon(decredmaterial.NewIcon(icons.ActionSwapVert)),
-		navigationCancel:           mustIcon(decredmaterial.NewIcon(icons.NavigationCancel)),
-		notificationSync:           mustIcon(decredmaterial.NewIcon(icons.NotificationSync)),
-		imageBrightness1:           mustIcon(decredmaterial.NewIcon(icons.ImageBrightness1)),
+		contentAdd:                 mustIcon(widget.NewIcon(icons.ContentAdd)),
+		contentClear:               mustIcon(widget.NewIcon(icons.ContentClear)),
+		contentCreate:              mustIcon(widget.NewIcon(icons.ContentCreate)),
+		navigationCheck:            mustIcon(widget.NewIcon(icons.NavigationCheck)),
+		contentSend:                mustIcon(widget.NewIcon(icons.ContentSend)),
+		contentAddBox:              mustIcon(widget.NewIcon(icons.ContentAddBox)),
+		contentRemove:              mustIcon(widget.NewIcon(icons.ContentRemove)),
+		toggleRadioButtonUnchecked: mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked)),
+		actionCheckCircle:          mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
+		navigationArrowBack:        mustIcon(widget.NewIcon(icons.NavigationArrowBack)),
+		contentCopy:                mustIcon(widget.NewIcon(icons.NavigationMoreVert)),
+		actionInfo:                 mustIcon(widget.NewIcon(icons.ActionInfo)),
+		navigationMore:             mustIcon(widget.NewIcon(icons.NavigationMoreVert)),
+		actionDelete:               mustIcon(widget.NewIcon(icons.ActionDelete)),
+		communicationComment:       mustIcon(widget.NewIcon(icons.CommunicationComment)),
+		verifyAction:               mustIcon(widget.NewIcon(icons.ActionVerifiedUser)),
+		editorModeEdit:             mustIcon(widget.NewIcon(icons.EditorModeEdit)),
+		actionLock:                 mustIcon(widget.NewIcon(icons.ActionLock)),
+		actionBackup:               mustIcon(widget.NewIcon(icons.ActionSettingsBackupRestore)),
+		actionCheck:                mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
+		actionSwapVert:             mustIcon(widget.NewIcon(icons.ActionSwapVert)),
 		overviewIcon:               decredIcons["overview"],
 		walletIcon:                 decredIcons["wallet"],
 		receiveIcon:                decredIcons["receive"],
@@ -74,7 +77,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		syncingIcon:                decredIcons["syncing"],
 	}
 
-	tabs := decredmaterial.NewTabs()
+	tabs := decredmaterial.NewTabs(win.theme)
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
 			Label: win.theme.Body1("Overview"),
@@ -98,7 +101,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 	})
 
-	accountsTab := decredmaterial.NewTabs()
+	accountsTab := decredmaterial.NewTabs(win.theme)
 	accountsTab.Position = decredmaterial.Top
 	accountsTab.Separator = false
 	common := pageCommon{
@@ -111,7 +114,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		icons:           icons,
 		page:            &win.current,
 		navTab:          tabs,
-		walletsTab:      decredmaterial.NewTabs(),
+		walletsTab:      decredmaterial.NewTabs(win.theme),
 		accountsTab:     accountsTab,
 		errorChannels: map[string]chan error{
 			PageSignMessage:    make(chan error),
@@ -138,23 +141,23 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSeedBackup] = win.BackupPage(common)
 }
 
-func (page pageCommon) Layout(gtx *layout.Context, body layout.Widget) {
+func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	navs := []string{PageOverview, PageWallet, PageSend, PageReceive, PageTransactions}
-	toMax(gtx)
-	page.navTab.Separator = true
-	page.navTab.Layout(gtx, func() {
-		p := values.MarginPadding10
-		layout.Inset{Top: p, Left: p, Right: p}.Layout(page.gtx, func() {
-			body()
-		})
-	})
-
 	for range page.navTab.ChangeEvent(gtx) {
 		*page.page = navs[page.navTab.Selected]
 	}
+
+	toMax(gtx)
+	page.navTab.Separator = true
+	page.navTab.Layout(gtx, func(gtx C) D {
+		p := values.MarginPadding10
+		return layout.Inset{Top: p, Left: p, Right: p}.Layout(gtx, func(gtx C) D {
+			return body(gtx)
+		})
+	})
 }
 
-func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget) {
+func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
 	for i := range page.info.Wallets {
 		wallets[i] = decredmaterial.TabItem{
@@ -182,7 +185,7 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 	}
 	page.accountsTab.Separator = false
 
-	bd := func() {
+	bd := func(gtx C) D {
 		for range page.walletsTab.ChangeEvent(gtx) {
 			*page.selectedWallet = page.walletsTab.Selected
 			*page.selectedAccount = 0
@@ -192,12 +195,12 @@ func (page pageCommon) LayoutWithWallets(gtx *layout.Context, body layout.Widget
 			page.walletsTab.Selected = *page.selectedWallet
 		}
 		page.walletsTab.Separator = false
-		page.walletsTab.Layout(gtx, body)
+		return page.walletsTab.Layout(gtx, body)
 	}
 	page.Layout(gtx, bd)
 }
 
-func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widget) {
+func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
 	for i, account := range page.info.Wallets[*page.selectedWallet].Accounts {
 		if account.Name == "imported" {
@@ -215,17 +218,17 @@ func (page pageCommon) LayoutWithAccounts(gtx *layout.Context, body layout.Widge
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 
-	page.LayoutWithWallets(gtx, func() {
-		page.accountsTab.Layout(gtx, body)
+	page.LayoutWithWallets(gtx, func(gtx C) D {
+		return page.accountsTab.Layout(gtx, body)
 	})
 }
 
-func toMax(gtx *layout.Context) {
-	gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-	gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
+func toMax(gtx layout.Context) {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 }
 
-func mustIcon(ic *decredmaterial.Icon, err error) *decredmaterial.Icon {
+func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}

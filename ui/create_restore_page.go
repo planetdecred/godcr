@@ -10,7 +10,6 @@ import (
 	"gioui.org/io/key"
 
 	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/ui/decredmaterial/editor"
 	"github.com/raedahgroup/godcr/wallet"
 
 	"gioui.org/layout"

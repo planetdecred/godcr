@@ -23,11 +23,11 @@ func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	return Button{material.Button(t.Base, button, txt)}
 }
 
-func (t *Theme) IconButton(icon *widget.Icon, button *widget.Clickable) IconButton {
+func (t *Theme) IconButton(button *widget.Clickable, icon *widget.Icon) IconButton {
 	return IconButton{material.IconButton(t.Base, button, icon)}
 }
 
-func (t *Theme) PlainIconButton(icon *widget.Icon, button *widget.Clickable) IconButton {
+func (t *Theme) PlainIconButton( button *widget.Clickable, icon *widget.Icon) IconButton {
 	btn := IconButton{material.IconButton(t.Base, button, icon)}
 	btn.Background = color.RGBA{}
 	return btn

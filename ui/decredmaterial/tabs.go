@@ -191,7 +191,7 @@ func NewTabs(th *Theme) *Tabs {
 		Position:    Left,
 		scrollLeft:  new(widget.Clickable),
 		scrollRight: new(widget.Clickable),
-		iconButton:  th.IconButton(new(widget.Icon), new(widget.Clickable)),
+		iconButton:  th.IconButton(new(widget.Clickable), new(widget.Icon)),
 	}
 }
 
@@ -328,7 +328,17 @@ func (t *Tabs) processChangeEvent(gtx layout.Context) {
 	}
 }
 
-func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) {
+func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	for t.scrollRight.Clicked() {
+		t.list.Position.Offset += 60
+	}
+
+	for t.scrollLeft.Clicked() {
+		t.list.Position.Offset -= 60
+	}
+
+	t.processChangeEvent(gtx)
+
 	switch t.Position {
 	case Top, Bottom:
 		t.list.Axis = layout.Horizontal
@@ -340,15 +350,5 @@ func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) {
 
 	widgets := t.contentTabPosition(gtx, body)
 	t.flex.Spacing = layout.SpaceBetween
-	t.flex.Layout(gtx, widgets...)
-
-	for t.scrollRight.Clicked() {
-		t.list.Position.Offset += 60
-	}
-
-	for t.scrollLeft.Clicked() {
-		t.list.Position.Offset -= 60
-	}
-
-	t.processChangeEvent(gtx)
+	return t.flex.Layout(gtx, widgets...)
 }
