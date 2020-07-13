@@ -10,12 +10,9 @@ import (
 
 	_ "net/http/pprof"
 
-	app "gioui.org/app"
-	"gioui.org/font"
+	"gioui.org/app"
 	"gioui.org/font/gofont"
 	"gioui.org/font/opentype"
-	"gioui.org/text"
-
 	"github.com/markbates/pkger"
 
 	"github.com/raedahgroup/dcrlibwallet"
@@ -41,7 +38,7 @@ func main() {
 	sans, err := pkger.Open("/ui/assets/fonts/source_sans_pro_regular.otf")
 	if err != nil {
 		log.Warn("Failed to load font Source Sans Pro. Using gofont")
-		gofont.Register()
+		gofont.Collection()
 	} else {
 		stat, err := sans.Stat()
 		if err != nil {
@@ -54,10 +51,10 @@ func main() {
 			log.Warn(err)
 		}
 		if fnt != nil {
-			font.Register(text.Font{}, fnt)
+			// font.Register(text.Font{}, fnt)
 		} else {
 			log.Warn("Failed to load font Source Sans Pro. Using gofont")
-			gofont.Register()
+			gofont.Collection()
 		}
 	}
 

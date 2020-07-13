@@ -3,32 +3,24 @@
 package decredmaterial
 
 import (
+	"image"
 	"image/color"
+
+	"gioui.org/widget/material"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/atotto/clipboard"
-	"github.com/raedahgroup/godcr/ui/decredmaterial/editor"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 type Editor struct {
-	Font     text.Font
-	TextSize unit.Value
-	// Color is the text color.
-	Color color.RGBA
-	// Hint contains the text displayed when the editor is empty.
-	Hint string
-	// HintColor is the color of hint text.
-	HintColor color.RGBA
-
-	shaper text.Shaper
+	material.EditorStyle
 
 	TitleLabel Label
 	ErrorLabel Label
@@ -39,30 +31,29 @@ type Editor struct {
 	IsVisible bool
 	//IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
-	//IsTitleLabel if true makes the title lable visible.
+	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
 
 	requiredErrorText string
 
 	pasteBtnMaterial IconButton
-	pasteBtnWidget   *widget.Button
-
-	clearBtMaterial IconButton
-	clearBtnWidget  *widget.Button
+	clearBtMaterial  IconButton
 
 	editor *widget.Editor
 }
 
-func (t *Theme) Editor(hint string) Editor {
+func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	errorLabel := t.Caption("")
 	errorLabel.Color = t.Color.Danger
 
+	m := material.Editor(t.Base, editor, hint)
+	m.TextSize = t.TextSize
+	m.Color = t.Color.Text
+	m.Hint = hint
+	m.HintColor = t.Color.Hint
+
 	return Editor{
-		TextSize:          t.TextSize,
-		Color:             t.Color.Text,
-		shaper:            t.Shaper,
-		Hint:              hint,
-		HintColor:         t.Color.Hint,
+		EditorStyle:       m,
 		TitleLabel:        t.Body2(""),
 		flexWidth:         1,
 		IsTitleLabel:      true,
@@ -71,131 +62,100 @@ func (t *Theme) Editor(hint string) Editor {
 		requiredErrorText: "Field is required",
 
 		pasteBtnMaterial: IconButton{
-			Icon:       mustIcon(NewIcon(icons.ContentContentPaste)),
-			Size:       unit.Dp(30),
-			Background: color.RGBA{},
-			Color:      t.Color.Text,
-			Padding:    unit.Dp(5),
+			material.IconButtonStyle{
+				Icon:       mustIcon(widget.NewIcon(icons.ContentContentPaste)),
+				Size:       unit.Dp(30),
+				Background: color.RGBA{},
+				Color:      t.Color.Text,
+				Inset:      layout.UniformInset(unit.Dp(5)),
+				Button:     new(widget.Clickable),
+			},
 		},
 
 		clearBtMaterial: IconButton{
-			Icon:       mustIcon(NewIcon(icons.ContentClear)),
-			Size:       unit.Dp(30),
-			Background: color.RGBA{},
-			Color:      t.Color.Text,
-			Padding:    unit.Dp(5),
+			material.IconButtonStyle{
+				Icon:       mustIcon(widget.NewIcon(icons.ContentClear)),
+				Size:       unit.Dp(30),
+				Background: color.RGBA{},
+				Color:      t.Color.Text,
+				Inset:      layout.UniformInset(unit.Dp(5)),
+				Button:     new(widget.Clickable),
+			},
 		},
-		pasteBtnWidget: new(widget.Button),
-		clearBtnWidget: new(widget.Button),
 	}
 }
 
-func (e Editor) LayoutPasswordEditor(gtx *layout.Context, editor *editor.Editor) {
-	layout.UniformInset(unit.Dp(2)).Layout(gtx, func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func() {
-				var stack op.StackOp
-				stack.Push(gtx.Ops)
-				var macro op.MacroOp
-				macro.Record(gtx.Ops)
-				paint.ColorOp{Color: e.HintColor}.Add(gtx.Ops)
-				tl := widget.Label{Alignment: editor.Alignment}
-				tl.Layout(gtx, e.shaper, e.Font, e.TextSize, e.Hint)
-				macro.Stop()
-				if w := gtx.Dimensions.Size.X; gtx.Constraints.Width.Min < w {
-					gtx.Constraints.Width.Min = w
-				}
-				if h := gtx.Dimensions.Size.Y; gtx.Constraints.Height.Min < h {
-					gtx.Constraints.Height.Min = h
-				}
-				editor.Layout(gtx, e.shaper, e.Font, e.TextSize)
-				if editor.Len() > 0 {
-					paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-					editor.PaintText(gtx)
-				} else {
-					macro.Add()
-				}
-				paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-				editor.PaintCaret(gtx)
-				stack.Pop()
-			}),
-			layout.Rigid(func() {
-				e.editorLine(gtx)
-			}),
-		)
-	})
-}
-
-func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
-	e.editor = editor
+func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	e.handleEvents(gtx)
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
-	if e.editor.Focused() || e.editor.Len() != 0 {
+	if e.Editor.Focused() || e.Editor.Len() != 0 {
 		e.TitleLabel.Text = e.Hint
 		e.LineColor = color.RGBA{41, 112, 255, 255}
 		e.Hint = ""
 	}
 
-	if e.IsRequired && !e.editor.Focused() && e.editor.Len() == 0 {
+	if e.IsRequired && !e.Editor.Focused() && e.Editor.Len() == 0 {
 		e.ErrorLabel.Text = e.requiredErrorText
 	}
 
-	layout.UniformInset(unit.Dp(2)).Layout(gtx, func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func() {
+	return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
 				if e.IsTitleLabel {
-					if e.editor.Focused() {
+					if e.Editor.Focused() {
 						e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
 					}
-					e.TitleLabel.Layout(gtx)
+					return e.TitleLabel.Layout(gtx)
 				}
+				return layout.Dimensions{}
 			}),
-			layout.Rigid(func() {
-				layout.Flex{}.Layout(gtx,
-					layout.Rigid(func() {
-						layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func() {
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
 								inset := layout.Inset{
 									Top:    unit.Dp(4),
 									Bottom: unit.Dp(4),
 								}
-								inset.Layout(gtx, func() {
-									layout.Flex{}.Layout(gtx,
-										layout.Flexed(e.flexWidth, func() {
-											e.editorWidget(gtx)
+								return inset.Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(e.flexWidth, func(gtx C) D {
+											return e.EditorStyle.Layout(gtx)
 										}),
 									)
 								})
 							}),
-							layout.Rigid(func() {
-								e.editorLine(gtx)
+							layout.Rigid(func(gtx C) D {
+								return e.editorLine(gtx)
 							}),
-							layout.Rigid(func() {
+							layout.Rigid(func(gtx C) D {
 								if e.ErrorLabel.Text != "" {
 									inset := layout.Inset{
 										Top: unit.Dp(3),
 									}
-									inset.Layout(gtx, func() {
-										e.ErrorLabel.Layout(gtx)
+									return inset.Layout(gtx, func(gtx C) D {
+										return e.ErrorLabel.Layout(gtx)
 									})
 								}
+								return layout.Dimensions{}
 							}),
 						)
 					}),
-					layout.Rigid(func() {
+					layout.Rigid(func(gtx C) D {
 						inset := layout.Inset{
 							Left: unit.Dp(10),
 						}
-						inset.Layout(gtx, func() {
+						return inset.Layout(gtx, func(gtx C) D {
 							if e.IsVisible {
-								if e.editor.Text() == "" {
-									e.pasteBtnMaterial.Layout(gtx, e.pasteBtnWidget)
-								} else {
-									e.clearBtMaterial.Layout(gtx, e.clearBtnWidget)
+								if e.Editor.Text() == "" {
+									return e.pasteBtnMaterial.Layout(gtx)
 								}
+								return e.clearBtMaterial.Layout(gtx)
 							}
+							return layout.Dimensions{}
 						})
 					}),
 				)
@@ -204,61 +164,36 @@ func (e Editor) Layout(gtx *layout.Context, editor *widget.Editor) {
 	})
 }
 
-func (e Editor) editorWidget(gtx *layout.Context) {
-	var stack op.StackOp
-	stack.Push(gtx.Ops)
-	var macro op.MacroOp
-	macro.Record(gtx.Ops)
-	paint.ColorOp{Color: e.HintColor}.Add(gtx.Ops)
-	tl := widget.Label{Alignment: e.editor.Alignment}
-	tl.Layout(gtx, e.shaper, e.Font, e.TextSize, e.Hint)
-	macro.Stop()
-	if w := gtx.Dimensions.Size.X; gtx.Constraints.Width.Min < w {
-		gtx.Constraints.Width.Min = w
-	}
-	if h := gtx.Dimensions.Size.Y; gtx.Constraints.Height.Min < h {
-		gtx.Constraints.Height.Min = h
-	}
-	e.editor.Layout(gtx, e.shaper, e.Font, e.TextSize)
-	if e.editor.Len() > 0 {
-		paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-		e.editor.PaintText(gtx)
-	} else {
-		macro.Add()
-	}
-	paint.ColorOp{Color: e.Color}.Add(gtx.Ops)
-	e.editor.PaintCaret(gtx)
-	stack.Pop()
-}
-
-func (e Editor) editorLine(gtx *layout.Context) {
-	layout.Flex{}.Layout(gtx,
-		layout.Flexed(e.flexWidth, func() {
-			rect := f32.Rectangle{
-				Max: f32.Point{
-					X: float32(gtx.Constraints.Width.Max),
-					Y: 2,
-				},
+func (e Editor) editorLine(gtx C) D {
+	return layout.Flex{}.Layout(gtx,
+		layout.Flexed(e.flexWidth, func(gtx C) D {
+			dims := image.Point{
+				X: gtx.Constraints.Max.X,
+				Y: 2,
 			}
-			op.TransformOp{}.Offset(f32.Point{
+			rect := f32.Rectangle{
+				Max: layout.FPt(dims),
+			}
+			op.Offset(f32.Point{
 				X: 0,
 				Y: 0,
 			}).Add(gtx.Ops)
 			paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
 			paint.PaintOp{Rect: rect}.Add(gtx.Ops)
+			return layout.Dimensions{Size: dims}
 		}),
 	)
 }
 
-func (e Editor) handleEvents(gtx *layout.Context) {
-	for e.pasteBtnWidget.Clicked(gtx) {
+func (e Editor) handleEvents(gtx layout.Context) {
+	for e.pasteBtnMaterial.Button.Clicked() {
 		data, err := clipboard.ReadAll()
 		if err != nil {
 			panic(err)
 		}
 		e.editor.SetText(data)
 	}
-	for e.clearBtnWidget.Clicked(gtx) {
+	for e.clearBtMaterial.Button.Clicked() {
 		e.editor.SetText("")
 	}
 }

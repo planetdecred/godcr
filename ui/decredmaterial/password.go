@@ -4,44 +4,31 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-
-	"github.com/raedahgroup/godcr/ui/decredmaterial/editor"
 )
 
 type Password struct {
-	theme *Theme
-
-	passwordEditorMaterial Editor
-	passwordEditorWidget   *editor.Editor
-
-	confirmButtonMaterial Button
-	confirmButtonWidget   *widget.Button
-
-	cancelButtonMaterial Button
-	cancelButtonWidget   *widget.Button
+	theme          *Theme
+	passwordEditor Editor
+	confirmButton  Button
+	cancelButton   Button
 }
 
 // Password initializes and returns an instance of Password
 func (t *Theme) Password() *Password {
-	cancelButtonMaterial := t.Button("Cancel")
-	cancelButtonMaterial.Background = t.Color.Surface
-	cancelButtonMaterial.Color = t.Color.Primary
+	cancelButton := t.Button(new(widget.Clickable), "Cancel")
+	cancelButton.Background = t.Color.Surface
+	cancelButton.Color = t.Color.Primary
+	confirmButton := t.Button(new(widget.Clickable), "Confirm")
 
-	p := &Password{
-		theme: t,
-
-		passwordEditorMaterial: t.Editor("Password"),
-
-		cancelButtonMaterial:  cancelButtonMaterial,
-		confirmButtonMaterial: t.Button("Confirm"),
-
-		cancelButtonWidget:  new(widget.Button),
-		confirmButtonWidget: new(widget.Button),
-	}
-
-	p.passwordEditorWidget = &editor.Editor{
+	editorWidget := &widget.Editor{
 		SingleLine: true,
 		Mask:       '*',
+	}
+	p := &Password{
+		theme:          t,
+		passwordEditor: t.Editor(editorWidget, "Password"),
+		cancelButton:   cancelButton,
+		confirmButton:  confirmButton,
 	}
 
 	return p
@@ -50,64 +37,64 @@ func (t *Theme) Password() *Password {
 // Layout renders the widget to screen. The confirm function passed by the calling page is called when the confirm button
 // is clicked, and the form passes validation. The entered password is passed as an argument to the confirm func.
 // The cancel func is called when the cancel button is clicked
-func (p *Password) Layout(gtx *layout.Context, confirm func([]byte), cancel func()) {
-	if !p.passwordEditorWidget.Focused() {
-		p.passwordEditorWidget.Focus()
+func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func()) layout.Dimensions {
+	if !p.passwordEditor.Editor.Focused() {
+		p.passwordEditor.Editor.Focus()
 	}
 
 	p.handleEvents(gtx, confirm, cancel)
 	p.updateColors()
 
-	widgets := []func(){
-		func() {
-			p.passwordEditorMaterial.LayoutPasswordEditor(gtx, p.passwordEditorWidget)
+	widgets := []func(gtx C) D{
+		func(gtx C) D {
+			return p.passwordEditor.Layout(gtx)
 		},
-		func() {
+		func(gtx C) D {
 			inset := layout.Inset{
 				Top: unit.Dp(20),
 			}
-			inset.Layout(gtx, func() {
-				layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func() {
-						p.confirmButtonMaterial.Layout(gtx, p.confirmButtonWidget)
+			return inset.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return p.confirmButton.Layout(gtx)
 					}),
-					layout.Rigid(func() {
+					layout.Rigid(func(gtx C) D {
 						inset := layout.Inset{
 							Left: unit.Dp(10),
 						}
-						inset.Layout(gtx, func() {
-							p.cancelButtonMaterial.Layout(gtx, p.cancelButtonWidget)
+						return inset.Layout(gtx, func(gtx C) D {
+							return p.cancelButton.Layout(gtx)
 						})
 					}),
 				)
 			})
 		},
 	}
-	p.theme.Modal(gtx, "Enter password to confirm", widgets)
+	return p.theme.Modal(gtx, "Enter password to confirm", widgets)
 }
 
 func (p *Password) updateColors() {
-	p.confirmButtonMaterial.Background = p.theme.Color.Hint
+	p.confirmButton.Background = p.theme.Color.Hint
 
-	if p.passwordEditorWidget.Len() > 0 {
-		p.confirmButtonMaterial.Background = p.theme.Color.Primary
+	if p.passwordEditor.Editor.Len() > 0 {
+		p.confirmButton.Background = p.theme.Color.Primary
 	}
 }
 
-func (p *Password) handleEvents(gtx *layout.Context, confirm func([]byte), cancel func()) {
-	for p.confirmButtonWidget.Clicked(gtx) {
-		if p.passwordEditorWidget.Len() > 0 {
-			confirm([]byte(p.passwordEditorWidget.Text()))
+func (p *Password) handleEvents(gtx layout.Context, confirm func([]byte), cancel func()) {
+	for p.confirmButton.Button.Clicked() {
+		if p.passwordEditor.Editor.Len() > 0 {
+			confirm([]byte(p.passwordEditor.Editor.Text()))
 			p.reset()
 		}
 	}
 
-	for p.cancelButtonWidget.Clicked(gtx) {
+	for p.cancelButton.Button.Clicked() {
 		p.reset()
 		cancel()
 	}
 }
 
 func (p *Password) reset() {
-	p.passwordEditorWidget.SetText("")
+	p.passwordEditor.Editor.SetText("")
 }

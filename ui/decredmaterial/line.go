@@ -30,7 +30,7 @@ func (t *Theme) Line() *Line {
 }
 
 // Layout renders the line widget
-func (l *Line) Layout(gtx *layout.Context) {
+func (l *Line) Layout(gtx C) D {
 	paint.ColorOp{Color: l.Color}.Add(gtx.Ops)
 	paint.PaintOp{Rect: f32.Rectangle{
 		Max: f32.Point{
@@ -38,7 +38,7 @@ func (l *Line) Layout(gtx *layout.Context) {
 			Y: float32(l.Height),
 		},
 	}}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{
-		Size: image.Point{X: l.Width, Y: l.Height},
-	}
+	dims := image.Point{X: l.Width, Y: l.Height}
+	gtx.Constraints.Max = dims
+	return layout.Dimensions{Size: dims}
 }

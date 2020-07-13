@@ -6,18 +6,16 @@ import (
 	"image"
 	"image/color"
 
+	"gioui.org/widget/material"
+
 	"gioui.org/f32"
-	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
-
 	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/image/draw"
 )
 
 var (
@@ -34,8 +32,14 @@ var (
 	green = rgb(0x41bf53)
 )
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
 type Theme struct {
 	Shaper text.Shaper
+	Base   *material.Theme
 	Color  struct {
 		Primary    color.RGBA
 		Secondary  color.RGBA
@@ -51,21 +55,22 @@ type Theme struct {
 		Black      color.RGBA
 	}
 	Icon struct {
-		ContentCreate *Icon
-		ContentAdd    *Icon
+		ContentCreate *widget.Icon
+		ContentAdd    *widget.Icon
 	}
 	TextSize              unit.Value
-	checkBoxCheckedIcon   *Icon
-	checkBoxUncheckedIcon *Icon
-	radioCheckedIcon      *Icon
-	radioUncheckedIcon    *Icon
-	chevronUpIcon         *Icon
-	chevronDownIcon       *Icon
+	checkBoxCheckedIcon   *widget.Icon
+	checkBoxUncheckedIcon *widget.Icon
+	radioCheckedIcon      *widget.Icon
+	radioUncheckedIcon    *widget.Icon
+	chevronUpIcon         *widget.Icon
+	chevronDownIcon       *widget.Icon
 }
 
-func NewTheme() *Theme {
+func NewTheme(fontCollection []text.FontFace) *Theme {
 	t := &Theme{
-		Shaper: font.Default(),
+		Shaper: text.NewCache(fontCollection),
+		Base:   material.NewTheme(fontCollection),
 	}
 	t.Color.Primary = keyblue
 	t.Color.Text = darkblue
@@ -80,113 +85,104 @@ func NewTheme() *Theme {
 	t.Color.Black = rgb(0x000000)
 	t.TextSize = unit.Sp(16)
 
-	t.checkBoxCheckedIcon = mustIcon(NewIcon(icons.ToggleCheckBox))
-	t.checkBoxUncheckedIcon = mustIcon(NewIcon(icons.ToggleCheckBoxOutlineBlank))
-	t.radioCheckedIcon = mustIcon(NewIcon(icons.ToggleRadioButtonChecked))
-	t.radioUncheckedIcon = mustIcon(NewIcon(icons.ToggleRadioButtonUnchecked))
-	t.chevronUpIcon = mustIcon(NewIcon(icons.NavigationExpandLess))
-	t.chevronDownIcon = mustIcon(NewIcon(icons.NavigationExpandMore))
+	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
+	t.checkBoxUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
+	t.radioCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))
+	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
+	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
+	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
 
 	return t
 }
 
-func (t *Theme) Modal(gtx *layout.Context, title string, wd []func()) {
+func (t *Theme) Modal(gtx layout.Context, title string, wd []func(gtx C) D) layout.Dimensions {
 	overlayColor := t.Color.Black
 	overlayColor.A = 200
 
-	layout.Stack{}.Layout(gtx,
-		layout.Expanded(func() {
-			fillMax(gtx, overlayColor)
-			new(widget.Button).Layout(gtx)
+	dims := layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			new(widget.Clickable).Layout(gtx)
+			return fillMax(gtx, overlayColor)
 		}),
-		layout.Stacked(func() {
-			w := []func(){
-				func() {
-					t.H4(title).Layout(gtx)
+		layout.Stacked(func(gtx C) D {
+			w := []func(gtx C) D{
+				func(gtx C) D {
+					return t.H4(title).Layout(gtx)
 				},
-				func() {
+				func(gtx C) D {
 					line := t.Line()
-					line.Width = gtx.Constraints.Width.Max
-					line.Layout(gtx)
+					line.Width = gtx.Constraints.Max.X
+					return line.Layout(gtx)
 				},
 			}
 			w = append(w, wd...)
 
-			layout.UniformInset(unit.Dp(60)).Layout(gtx, func() {
+			return layout.UniformInset(unit.Dp(60)).Layout(gtx, func(gtx C) D {
 				fillMax(gtx, t.Color.Surface)
-				(&layout.List{Axis: layout.Vertical, Alignment: layout.Middle}).Layout(gtx, len(w), func(i int) {
-					layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
+				return (&layout.List{Axis: layout.Vertical, Alignment: layout.Middle}).Layout(gtx, len(w), func(gtx C, i int) D {
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
 				})
 			})
 		}),
 	)
+	return dims
 }
 
-func (t *Theme) Background(gtx *layout.Context, w layout.Widget) {
+func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.Center,
 	}.Layout(gtx,
-		layout.Expanded(func() {
-			fill(gtx, t.Color.Background)
+		layout.Expanded(func(gtx C) D {
+			return fill(gtx, t.Color.Background)
 		}),
 		layout.Stacked(w),
 	)
 }
 
-func (t *Theme) Surface(gtx *layout.Context, w layout.Widget) {
+func (t *Theme) Surface(gtx layout.Context, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.Center,
 	}.Layout(gtx,
-		layout.Expanded(func() {
-			fill(gtx, t.Color.Surface)
+		layout.Expanded(func(gtx C) D {
+			return fill(gtx, t.Color.Surface)
 		}),
 		layout.Stacked(w),
 	)
 }
 
-func (t *Theme) ImageIcon(gtx *layout.Context, icon image.Image, size int) {
-	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: size, Y: size}})
-	draw.ApproxBiLinear.Scale(img, img.Bounds(), icon, icon.Bounds(), draw.Src, nil)
-	iconOp := paint.NewImageOp(img)
-
-	i := material.Image{Src: iconOp}
-	i.Scale = float32(size) / float32(gtx.Px(unit.Dp(float32(size))))
-	i.Layout(gtx)
-}
-
-func (t *Theme) alert(gtx *layout.Context, txt string, bgColor color.RGBA) {
+func (t *Theme) alert(gtx layout.Context, txt string, bgColor color.RGBA) {
 	layout.Stack{}.Layout(gtx,
-		layout.Expanded(func() {
+		layout.Expanded(func(gtx C) D {
 			rr := float32(gtx.Px(unit.Dp(2)))
-			clip.Rect{
+			clip.RRect{
 				Rect: f32.Rectangle{Max: f32.Point{
-					X: float32(gtx.Constraints.Width.Min),
-					Y: float32(gtx.Constraints.Height.Min),
+					X: float32(gtx.Constraints.Min.X),
+					Y: float32(gtx.Constraints.Min.Y),
 				}},
 				NE: rr, NW: rr, SE: rr, SW: rr,
-			}.Op(gtx.Ops).Add(gtx.Ops)
-			fill(gtx, bgColor)
+			}.Add(gtx.Ops)
+			return fill(gtx, bgColor)
 		}),
-		layout.Stacked(func() {
-			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-			layout.UniformInset(unit.Dp(8)).Layout(gtx, func() {
+		layout.Stacked(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx C) D {
 				lbl := t.Body2(txt)
 				lbl.Color = t.Color.Surface
-				lbl.Layout(gtx)
+				return lbl.Layout(gtx)
 			})
 		}),
 	)
 }
 
-func (t *Theme) ErrorAlert(gtx *layout.Context, txt string) {
+func (t *Theme) ErrorAlert(gtx layout.Context, txt string) {
 	t.alert(gtx, txt, t.Color.Danger)
 }
 
-func (t *Theme) SuccessAlert(gtx *layout.Context, txt string) {
+func (t *Theme) SuccessAlert(gtx layout.Context, txt string) {
 	t.alert(gtx, txt, t.Color.Success)
 }
 
-func mustIcon(ic *Icon, err error) *Icon {
+func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}
@@ -201,24 +197,28 @@ func argb(c uint32) color.RGBA {
 	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
 }
 
-func fillMax(gtx *layout.Context, col color.RGBA) {
-	cs := gtx.Constraints
-	d := image.Point{X: cs.Width.Max, Y: cs.Height.Max}
-	dr := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-	}
-	paint.ColorOp{Color: col}.Add(gtx.Ops)
-	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{Size: d}
+func toPointF(p image.Point) f32.Point {
+	return f32.Point{X: float32(p.X), Y: float32(p.Y)}
 }
 
-func fill(gtx *layout.Context, col color.RGBA) {
+func fillMax(gtx layout.Context, col color.RGBA) layout.Dimensions {
 	cs := gtx.Constraints
-	d := image.Point{X: cs.Width.Min, Y: cs.Height.Min}
+	d := image.Point{X: cs.Max.X, Y: cs.Max.Y}
 	dr := f32.Rectangle{
 		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 	}
 	paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	gtx.Dimensions = layout.Dimensions{Size: d}
+	return layout.Dimensions{Size: d}
+}
+
+func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
+	cs := gtx.Constraints
+	d := image.Point{X: cs.Min.X, Y: cs.Min.Y}
+	dr := f32.Rectangle{
+		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
+	}
+	paint.ColorOp{Color: col}.Add(gtx.Ops)
+	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
+	return layout.Dimensions{Size: d}
 }
