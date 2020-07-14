@@ -9,7 +9,10 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
+
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -111,18 +114,18 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	}
 
 	win.pages = make(map[string]layout.Widget)
-	win.pages[PageWallet] = win.WalletPage(common)
-	win.pages[PageOverview] = win.OverviewPage(common)
-	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
-	win.pages[PageReceive] = win.ReceivePage(common)
-	win.pages[PageSend] = win.SendPage(common)
-	win.pages[PageTransactionDetails] = win.TransactionPage(common)
-	win.pages[PageSignMessage] = win.SignMessagePage(common)
-	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
-	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
-	win.pages[PageWalletAccounts] = win.WalletAccountPage(common)
-	win.pages[PageSeedBackup] = win.BackupPage(common)
+	win.pages[PageWallet] = win.WalletPage(page)
+	win.pages[PageOverview] = win.OverviewPage(page)
+	win.pages[PageTransactions] = win.TransactionsPage(page)
+	win.pages[PageCreateRestore] = win.CreateRestorePage(page)
+	win.pages[PageReceive] = win.ReceivePage(page)
+	win.pages[PageSend] = win.SendPage(page)
+	win.pages[PageTransactionDetails] = win.TransactionPage(page)
+	win.pages[PageSignMessage] = win.SignMessagePage(page)
+	win.pages[PageVerifyMessage] = win.VerifyMessagePage(page)
+	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(page)
+	win.pages[PageWalletAccounts] = win.WalletAccountPage(page)
+	win.pages[PageSeedBackup] = win.BackupPage(page)
 }
 
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -185,6 +188,47 @@ func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget
 	return page.LayoutWithWallets(gtx, func(gtx C) D {
 		return page.accountTabs.Layout(gtx, body)
 	})
+}
+
+func (page pageCommon) selectedAccountLayout(gtx *layout.Context) {
+	current := page.info.Wallets[*page.selectedWallet]
+	account := page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount]
+
+	selectedDetails := func() {
+		layout.UniformInset(values.MarginPadding10).Layout(gtx, func() {
+			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func() {
+					layout.Flex{}.Layout(gtx,
+						layout.Rigid(func() {
+							layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func() {
+								page.theme.H6(account.Name).Layout(gtx)
+							})
+						}),
+						layout.Rigid(func() {
+							layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func() {
+								page.theme.H6(dcrutil.Amount(account.SpendableBalance).String()).Layout(gtx)
+							})
+						}),
+					)
+				}),
+				layout.Rigid(func() {
+					layout.Flex{}.Layout(gtx,
+						layout.Rigid(func() {
+							layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func() {
+								page.theme.Body2(current.Name).Layout(gtx)
+							})
+						}),
+						layout.Rigid(func() {
+							layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func() {
+								page.theme.Body2(current.Balance).Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		})
+	}
+	decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, selectedDetails)
 }
 
 func toMax(gtx layout.Context) {
