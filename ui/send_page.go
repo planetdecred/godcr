@@ -42,10 +42,10 @@ type SendPage struct {
 	sendAmountEditor             decredmaterial.Editor
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
-	confirmButton               decredmaterial.Button
+	confirmButton                decredmaterial.Button
 
-	copyIcon decredmaterial.IconButton
-	currencySwap     decredmaterial.IconButton
+	copyIcon     decredmaterial.IconButton
+	currencySwap decredmaterial.IconButton
 
 	remainingBalance int64
 	amountAtoms      int64
@@ -107,7 +107,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		wallet:          common.wallet,
 		txAuthor:        &win.txAuthor,
 		broadcastResult: &win.broadcastResult,
-
 
 		sendErrorText: "",
 		txHashText:    "",

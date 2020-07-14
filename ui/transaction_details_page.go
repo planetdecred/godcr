@@ -24,9 +24,7 @@ type transactionPage struct {
 	transactionOutputsContainer layout.List
 	backButton                  decredmaterial.IconButton
 	txnInfo                     **wallet.Transaction
-	viewTxnOnDcrdataW,
-	// backButton widget.Clickable
-	viewTxnOnDcrdata decredmaterial.Button
+	viewTxnOnDcrdata            decredmaterial.Button
 
 	outputsCollapsible *decredmaterial.Collapsible
 	inputsCollapsible  *decredmaterial.Collapsible

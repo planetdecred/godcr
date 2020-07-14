@@ -27,7 +27,7 @@ type signMessagePage struct {
 	passwordModal                                             *decredmaterial.Password
 	result                                                    **wallet.Signature
 
-	backButton  decredmaterial.IconButton
+	backButton decredmaterial.IconButton
 }
 
 func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
@@ -58,7 +58,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
 
-		clearButton:  clearButton,
+		clearButton: clearButton,
 		signButton:  common.theme.Button(new(widget.Clickable), "Sign"),
 		copyButton:  common.theme.Button(new(widget.Clickable), "Copy"),
 		result:      &win.signatureResult,
