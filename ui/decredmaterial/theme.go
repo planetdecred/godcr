@@ -150,8 +150,8 @@ func (t *Theme) Surface(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	)
 }
 
-func (t *Theme) alert(gtx layout.Context, txt string, bgColor color.RGBA) {
-	layout.Stack{}.Layout(gtx,
+func (t *Theme) alert(gtx layout.Context, txt string, bgColor color.RGBA) layout.Dimensions {
+	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			rr := float32(gtx.Px(unit.Dp(2)))
 			clip.RRect{
@@ -174,12 +174,12 @@ func (t *Theme) alert(gtx layout.Context, txt string, bgColor color.RGBA) {
 	)
 }
 
-func (t *Theme) ErrorAlert(gtx layout.Context, txt string) {
-	t.alert(gtx, txt, t.Color.Danger)
+func (t *Theme) ErrorAlert(gtx layout.Context, txt string) layout.Dimensions {
+	return t.alert(gtx, txt, t.Color.Danger)
 }
 
-func (t *Theme) SuccessAlert(gtx layout.Context, txt string) {
-	t.alert(gtx, txt, t.Color.Success)
+func (t *Theme) SuccessAlert(gtx layout.Context, txt string) layout.Dimensions {
+	return t.alert(gtx, txt, t.Color.Success)
 }
 
 func mustIcon(ic *widget.Icon, err error) *widget.Icon {

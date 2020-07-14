@@ -25,8 +25,8 @@ type receivePage struct {
 	isNewAddr, isInfo bool
 	addrs             string
 
-	newAddrBtn, minInfo                                 decredmaterial.Button
-	copyBtn, infoBtn, moreBtn                           decredmaterial.IconButton
+	newAddrBtn, minInfo       decredmaterial.Button
+	copyBtn, infoBtn, moreBtn decredmaterial.IconButton
 	// copyBtnW, infoBtnW, moreBtnW, minInfoW, newAddrBtnW widget.Clickable
 
 	selectedAccountNameLabel, selectedAccountBalanceLabel decredmaterial.Label
@@ -233,7 +233,7 @@ func (p *receivePage) receiveAddressColumn() layout.Dimensions {
 	)
 }
 
-func (p *receivePage) generateNewAddress() layout.Dimensions{
+func (p *receivePage) generateNewAddress() layout.Dimensions {
 	return layout.Flex{}.Layout(p.gtx,
 		layout.Rigid(func(gtx C) D {
 			inset := layout.Inset{
