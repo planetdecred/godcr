@@ -206,6 +206,12 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.selectedWallet = c.info.Wallets[*c.selectedWallet]
 	}
 
+	if pg.broadcastResult.TxHash != "" {
+		time.AfterFunc(time.Second*3, func() {
+			pg.sendSuccessText = ""
+		})
+	}
+
 	if pg.shouldInitializeTxAuthor {
 		pg.shouldInitializeTxAuthor = false
 		pg.sendAmountEditor.Editor.SetText("")
@@ -884,10 +890,6 @@ func (pg *SendPage) watchForBroadcastResult() {
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
-
-		time.AfterFunc(time.Second*3, func() {
-			pg.sendSuccessText = ""
-		})
 	}
 }
 
