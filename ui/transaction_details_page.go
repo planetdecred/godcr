@@ -22,10 +22,10 @@ type transactionPage struct {
 	transactionPageContainer    layout.List
 	transactionInputsContainer  layout.List
 	transactionOutputsContainer layout.List
-	backButtonW                 decredmaterial.IconButton
+	backButton                  decredmaterial.IconButton
 	txnInfo                     **wallet.Transaction
 	viewTxnOnDcrdataW,
-	backButton widget.Button
+	// backButton widget.Clickable
 	viewTxnOnDcrdata decredmaterial.Button
 
 	outputsCollapsible *decredmaterial.Collapsible
@@ -48,201 +48,207 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 		outputsCollapsible: common.theme.Collapsible(),
 		inputsCollapsible:  common.theme.Collapsible(),
 
-		backButtonW:      common.theme.PlainIconButton(common.icons.navigationArrowBack),
-		viewTxnOnDcrdata: common.theme.Button("View on dcrdata"),
+		backButton:       common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
+		viewTxnOnDcrdata: common.theme.Button(new(widget.Clickable), "View on dcrdata"),
 	}
-	page.backButtonW.Color = common.theme.Color.Hint
-	page.backButtonW.Size = values.MarginPadding30
+	page.backButton.Color = common.theme.Color.Hint
+	page.backButton.Size = values.MarginPadding30
 
-	return func() {
-		page.Layout(common)
+	return func(gtx C) D {
 		page.Handler(common)
+		return page.Layout(common)
 	}
 }
 
-func (page *transactionPage) Layout(common pageCommon) {
+func (page *transactionPage) Layout(common pageCommon) layout.Dimensions {
 	gtx := common.gtx
 	margin := values.MarginPadding20
-	widgets := []func(){
-		func() {
-			layout.Inset{Top: margin}.Layout(gtx, func() {
-				page.txnBalanceAndStatus(&common)
+	widgets := []func(gtx C) D{
+		func(gtx C) D {
+			return layout.Inset{Top: margin}.Layout(gtx, func(gtx C) D {
+				return page.txnBalanceAndStatus(&common)
 			})
 		},
-		func() {
-			layout.Inset{Top: margin}.Layout(gtx, func() {
-				page.txnTypeAndID(&common)
+		func(gtx C) D {
+			return layout.Inset{Top: margin}.Layout(gtx, func(gtx C) D {
+				return page.txnTypeAndID(&common)
 			})
 		},
-		func() {
-			layout.Inset{Top: margin}.Layout(gtx, func() {
-				page.txnInputs(&common)
+		func(gtx C) D {
+			return layout.Inset{Top: margin}.Layout(gtx, func(gtx C) D {
+				return page.txnInputs(&common)
 			})
 		},
-		func() {
-			layout.Inset{Top: margin}.Layout(gtx, func() {
-				page.txnOutputs(&common)
+		func(gtx C) D {
+			return layout.Inset{Top: margin}.Layout(gtx, func(gtx C) D {
+				return page.txnOutputs(&common)
 			})
 		},
 	}
 
-	common.Layout(gtx, func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func() {
-				page.header(&common)
+	return common.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return page.header(&common)
 			}),
-			layout.Flexed(1, func() {
+			layout.Flexed(1, func(gtx C) D {
 				if *page.txnInfo == nil {
-					return
+					return layout.Dimensions{}
 				}
-				page.transactionPageContainer.Layout(gtx, len(widgets), func(i int) {
-					layout.Inset{}.Layout(gtx, widgets[i])
+				return page.transactionPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+					return layout.Inset{}.Layout(gtx, widgets[i])
 				})
 			}),
-			layout.Rigid(func() {
+			layout.Rigid(func(gtx C) D {
 				if *page.txnInfo == nil {
-					return
+					return layout.Dimensions{}
 				}
-				page.viewTxnOnDcrdata.Layout(gtx, &page.viewTxnOnDcrdataW)
+				return page.viewTxnOnDcrdata.Layout(gtx)
 			}),
 		)
 	})
 }
 
-func (page *transactionPage) header(common *pageCommon) {
-	layout.W.Layout(common.gtx, func() {
-		page.backButtonW.Layout(common.gtx, &page.backButton)
-	})
-	txt := common.theme.H4("")
-	if *page.txnInfo != nil {
-		txt.Text = dcrlibwallet.TransactionDirectionName((*page.txnInfo).Txn.Direction)
-	} else {
-		txt.Text = "Not found"
-	}
-
-	txt.Alignment = text.Middle
-	txt.Layout(common.gtx)
-}
-
-func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) {
-	txnWidgets := transactionWdg{}
-	initTxnWidgets(common, *page.txnInfo, &txnWidgets)
-
-	layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
-		layout.Rigid(func() {
-			layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(common.gtx, func() {
-				txnWidgets.direction.Layout(common.gtx, values.MarginPadding30)
-			})
-			layout.Inset{Left: values.MarginPadding30}.Layout(common.gtx, func() {
-				txnWidgets.amount.TextSize = values.TextSize28
-				txnWidgets.amount.Layout(common.gtx)
+func (page *transactionPage) header(common *pageCommon) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.W.Layout(common.gtx, func(gtx C) D {
+				return page.backButton.Layout(common.gtx)
 			})
 		}),
-		layout.Rigid(func() {
-			txnWidgets.time.Layout(common.gtx)
-		}),
-		layout.Rigid(func() {
-			layout.Inset{Top: values.MarginPadding5}.Layout(common.gtx, func() {
-				txnWidgets.status.Layout(common.gtx, values.MarginPadding15)
-			})
-			layout.Inset{Left: values.MarginPadding20}.Layout(common.gtx, func() {
-				txt := common.theme.Body1((*page.txnInfo).Status)
-				txt.Color = txnWidgets.status.Color
-				txt.Layout(common.gtx)
-			})
-		}),
-		layout.Rigid(func() {
-			txt := common.theme.Body1(fmt.Sprintf("%d confirmations", (*page.txnInfo).Confirmations))
-			txt.Color = common.theme.Color.Primary
-			txt.Layout(common.gtx)
+		layout.Rigid(func(gtx C) D {
+			txt := common.theme.H4("")
+			if *page.txnInfo != nil {
+				txt.Text = dcrlibwallet.TransactionDirectionName((*page.txnInfo).Txn.Direction)
+			} else {
+				txt.Text = "Not found"
+			}
+
+			txt.Alignment = text.Middle
+			return txt.Layout(common.gtx)
 		}),
 	)
 }
 
-func (page *transactionPage) txnTypeAndID(common *pageCommon) {
+func (page *transactionPage) txnBalanceAndStatus(common *pageCommon) layout.Dimensions {
+	txnWidgets := transactionWdg{}
+	initTxnWidgets(common, *page.txnInfo, &txnWidgets)
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(common.gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(common.gtx, func(gtx C) D {
+				return txnWidgets.direction.Layout(common.gtx, values.MarginPadding30)
+			})
+			return layout.Inset{Left: values.MarginPadding30}.Layout(common.gtx, func(gtx C) D {
+				txnWidgets.amount.TextSize = values.TextSize28
+				return txnWidgets.amount.Layout(common.gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return txnWidgets.time.Layout(common.gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding5}.Layout(common.gtx, func(gtx C) D {
+				return txnWidgets.status.Layout(common.gtx, values.MarginPadding15)
+			})
+			return layout.Inset{Left: values.MarginPadding20}.Layout(common.gtx, func(gtx C) D {
+				txt := common.theme.Body1((*page.txnInfo).Status)
+				txt.Color = txnWidgets.status.Color
+				return txt.Layout(common.gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			txt := common.theme.Body1(fmt.Sprintf("%d confirmations", (*page.txnInfo).Confirmations))
+			txt.Color = common.theme.Color.Primary
+			return txt.Layout(common.gtx)
+		}),
+	)
+}
+
+func (page *transactionPage) txnTypeAndID(common *pageCommon) layout.Dimensions {
 	transaction := *page.txnInfo
 	gtx := common.gtx
-	row := func(label string, t decredmaterial.Label) {
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func() {
+	row := func(label string, t decredmaterial.Label) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
 				lb := common.theme.Body1(label)
 				lb.Color = common.theme.Color.Hint
-				lb.Layout(gtx)
+				return lb.Layout(gtx)
 			}),
-			layout.Rigid(func() {
-				t.Layout(gtx)
+			layout.Rigid(func(gtx C) D {
+				return t.Layout(gtx)
 			}),
 		)
 	}
 
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func() {
-			layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func() {
-				row("Transaction ID", common.theme.Body1(transaction.Txn.Hash))
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+				return row("Transaction ID", common.theme.Body1(transaction.Txn.Hash))
 			})
 		}),
-		layout.Rigid(func() {
-			layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-				layout.Rigid(func() {
-					row("To", common.theme.H6(transaction.WalletName))
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return row("To", common.theme.H6(transaction.WalletName))
 				}),
-				layout.Rigid(func() {
+				layout.Rigid(func(gtx C) D {
 					txt := ""
 					if transaction.Txn.BlockHeight != -1 {
 						txt = fmt.Sprintf("%d", transaction.Txn.BlockHeight)
 					}
-					row("Included in block", common.theme.H6(txt))
+					return row("Included in block", common.theme.H6(txt))
 				}),
-				layout.Rigid(func() {
-					row("Type", common.theme.H6(transaction.Txn.Type))
+				layout.Rigid(func(gtx C) D {
+					return row("Type", common.theme.H6(transaction.Txn.Type))
 				}),
 			)
 		}),
 	)
 }
 
-func (page *transactionPage) txnInputs(common *pageCommon) {
+func (page *transactionPage) txnInputs(common *pageCommon) layout.Dimensions {
 	transaction := *page.txnInfo
-	collapsibleHeader := func(gtx *layout.Context) {
-		common.theme.Body1(fmt.Sprintf("%d Inputs consumed", len(transaction.Txn.Inputs))).Layout(gtx)
+	collapsibleHeader := func(gtx C) D {
+		return common.theme.Body1(fmt.Sprintf("%d Inputs consumed", len(transaction.Txn.Inputs))).Layout(gtx)
 	}
 
-	collapsibleBody := func(gtx *layout.Context) {
-		page.transactionInputsContainer.Layout(common.gtx, len(transaction.Txn.Inputs), func(i int) {
-			page.txnIORow(common, dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String(),
+	collapsibleBody := func(gtx C) D {
+		return page.transactionInputsContainer.Layout(common.gtx, len(transaction.Txn.Inputs), func(gtx C, i int) D {
+			return page.txnIORow(common, dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String(),
 				transaction.Txn.Inputs[i].PreviousOutpoint)
 		})
 	}
 
-	page.inputsCollapsible.Layout(common.gtx, collapsibleHeader, collapsibleBody)
+	return page.inputsCollapsible.Layout(common.gtx, collapsibleHeader, collapsibleBody)
 }
 
-func (page *transactionPage) txnOutputs(common *pageCommon) {
+func (page *transactionPage) txnOutputs(common *pageCommon) layout.Dimensions {
 	transaction := *page.txnInfo
-	collapsibleHeader := func(gtx *layout.Context) {
-		common.theme.Body1(fmt.Sprintf("%d Outputs created", len(transaction.Txn.Outputs))).Layout(gtx)
+	collapsibleHeader := func(gtx C) D {
+		return common.theme.Body1(fmt.Sprintf("%d Outputs created", len(transaction.Txn.Outputs))).Layout(gtx)
 	}
 
-	collapsibleBody := func(gtx *layout.Context) {
-		page.transactionOutputsContainer.Layout(common.gtx, len(transaction.Txn.Outputs), func(i int) {
-			page.txnIORow(common, dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String(),
+	collapsibleBody := func(gtx C) D {
+		return page.transactionOutputsContainer.Layout(common.gtx, len(transaction.Txn.Outputs), func(gtx C, i int) D {
+			return page.txnIORow(common, dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String(),
 				transaction.Txn.Outputs[i].Address)
 		})
 	}
 
-	page.outputsCollapsible.Layout(common.gtx, collapsibleHeader, collapsibleBody)
+	return page.outputsCollapsible.Layout(common.gtx, collapsibleHeader, collapsibleBody)
 }
 
-func (page *transactionPage) txnIORow(common *pageCommon, amount string, hash string) {
-	layout.Inset{Bottom: values.MarginPadding5}.Layout(common.gtx, func() {
-		layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(common.gtx,
-			layout.Rigid(func() {
-				common.theme.Label(values.MarginPadding15, amount).Layout(common.gtx)
+func (page *transactionPage) txnIORow(common *pageCommon, amount string, hash string) layout.Dimensions {
+	return layout.Inset{Bottom: values.MarginPadding5}.Layout(common.gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(common.gtx,
+			layout.Rigid(func(gtx C) D {
+				return common.theme.Label(values.MarginPadding15, amount).Layout(common.gtx)
 			}),
-			layout.Rigid(func() {
+			layout.Rigid(func(gtx C) D {
 				txt := common.theme.Label(values.MarginPadding15, hash)
 				txt.Color = common.theme.Color.Primary
-				txt.Layout(common.gtx)
+				return txt.Layout(common.gtx)
 			}),
 		)
 	})
@@ -268,10 +274,10 @@ func (page *transactionPage) viewTxnOnBrowser(common *pageCommon) {
 }
 
 func (page *transactionPage) Handler(common pageCommon) {
-	if page.viewTxnOnDcrdataW.Clicked(common.gtx) {
+	if page.viewTxnOnDcrdata.Button.Clicked() {
 		page.viewTxnOnBrowser(&common)
 	}
-	if page.backButton.Clicked(common.gtx) {
+	if page.backButton.Button.Clicked() {
 		switch common.navTab.Selected {
 		case 0:
 			*common.page = PageOverview
