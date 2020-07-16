@@ -159,8 +159,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		page.Handle(common)
-		page.drawConfirmationModal(gtx, common)
-		page.drawPasswordModal(gtx, common)
+		// page.drawConfirmationModal(gtx, common)
+		// page.drawPasswordModal(gtx, common)
 		return page.Layout(gtx, common)
 	}
 }
@@ -281,33 +281,33 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		return layout.Dimensions{}
 	}
 
-	pageContent := []func(ctx C) D{
-		func(ctx C) D {
+	pageContent := []func(gtx C) D{
+		func(gtx C) D {
 			return pg.drawSuccessSection(gtx)
 		},
-		func(ctx C) D {
+		func(gtx C) D {
 			return pg.drawCopiedLabelSection(gtx)
 		},
-		func(ctx C) D {
+		func(gtx C) D {
 			return pg.drawSelectedAccountSection(gtx)
 		},
-		func(ctx C) D {
+		func(gtx C) D {
 			return pg.destinationAddressEditor.Layout(gtx)
 		},
-		func(ctx C) D {
+		func(gtx C) D {
 			return pg.sendAmountLayout(gtx)
 		},
-		func(ctx C) D {
+		func(gtx C) D {
 			return pg.drawTransactionDetailWidgets(gtx)
 		},
-		func(ctx C) D {
+		func(gtx C) D {
 			if pg.calculateErrorText != "" {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return pg.theme.ErrorAlert(gtx, pg.calculateErrorText)
 			}
 			return layout.Dimensions{}
 		},
-		func(ctx C) D {
+		func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return pg.nextButton.Layout(gtx)
 		},
