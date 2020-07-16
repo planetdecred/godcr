@@ -168,6 +168,7 @@ type Tabs struct {
 	items            []TabItem
 	Selected         int
 	previousSelected int
+	prevEvents   int
 	events           []widget.ChangeEvent
 	// btns             []*widget.Clickable
 	title       Label
@@ -299,6 +300,9 @@ func (t *Tabs) contentTabPosition(gtx layout.Context, body layout.Widget) (widge
 
 // ChangeTab changes the position of the selected tab
 func (t *Tabs) ChangeTab(index int) {
+	n := copy(t.events, t.events[t.prevEvents:])
+	t.events = t.events[:n]
+	t.prevEvents = n
 	t.Selected = index
 	if t.previousSelected != t.Selected {
 		t.events = append(t.events, widget.ChangeEvent{})
@@ -307,11 +311,16 @@ func (t *Tabs) ChangeTab(index int) {
 }
 
 // ChangeEvent returns the last change event
-func (t *Tabs) ChangeEvent() []widget.ChangeEvent {
-	t.processChangeEvent()
-	events := t.events
-	t.events = nil
-	return events
+func (t *Tabs) ChangeEvent() bool {
+	if len(t.events) == 0 {
+		return false
+	}
+	n := copy(t.events, t.events[1:])
+	t.events = t.events[:n]
+	if t.prevEvents > 0 {
+		t.prevEvents--
+	}
+	return true
 }
 
 func (t *Tabs) processChangeEvent() {
@@ -324,6 +333,8 @@ func (t *Tabs) processChangeEvent() {
 }
 
 func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	t.processChangeEvent()
+
 	for t.scrollRight.Clicked() {
 		t.list.Position.Offset += 60
 	}
@@ -331,8 +342,6 @@ func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions 
 	for t.scrollLeft.Clicked() {
 		t.list.Position.Offset -= 60
 	}
-
-	t.processChangeEvent()
 
 	switch t.Position {
 	case Top, Bottom:

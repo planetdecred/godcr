@@ -351,11 +351,11 @@ func (pg *walletPage) subDelete(gtx layout.Context, common pageCommon) layout.Di
 
 // Handle handles all widget inputs on the main wallets pg.
 func (pg *walletPage) Handle(common pageCommon) {
-	for range common.walletsTab.ChangeEvent() {
-		pg.subPage = subWalletMain
-	}
+	//if common.walletsTab.Selected != 1 {
+	//	pg.subPage = subWalletMain
+	//}
 
-	for range common.navTab.ChangeEvent() {
+	if common.navTab.Selected != 1 {
 		pg.subPage = subWalletMain
 	}
 
