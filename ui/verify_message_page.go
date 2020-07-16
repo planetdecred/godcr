@@ -14,7 +14,6 @@ import (
 const PageVerifyMessage = "verifymessage"
 
 type verifyMessagePage struct {
-	gtx                                   layout.Context
 	addressInput, messageInput, signInput decredmaterial.Editor
 	clearBtn, verifyBtn                   decredmaterial.Button
 	verifyMessage                         decredmaterial.Label
@@ -44,18 +43,16 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	pg.backButton.Size = values.MarginPadding30
 
 	return func(gtx C) D {
-		pg.gtx = gtx
 		pg.handler(c)
-		return pg.Layout(c)
+		return pg.Layout(gtx, c)
 	}
 }
 
-func (pg *verifyMessagePage) Layout(c pageCommon) layout.Dimensions {
-	gtx := pg.gtx
+func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	body := func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.header(&c)),
+				layout.Rigid(pg.header(gtx, &c)),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(pg.inputRow(&c, pg.addressInput)),
@@ -70,7 +67,7 @@ func (pg *verifyMessagePage) Layout(c pageCommon) layout.Dimensions {
 	return c.Layout(gtx, body)
 }
 
-func (pg *verifyMessagePage) header(c *pageCommon) layout.Widget {
+func (pg *verifyMessagePage) header(gtx layout.Context, c *pageCommon) layout.Widget {
 	return func(gtx C) D {
 		var msg = "After you or your counterparty has genrated a signature, you can use this form to verify the signature." +
 			"\nOnce you have entered the address, the message and the corresponding signature, you will see VALID if the signature" +

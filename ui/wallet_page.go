@@ -21,7 +21,6 @@ const (
 )
 
 type walletPage struct {
-	gtx        layout.Context
 	walletInfo *wallet.MultiWalletInfo
 	subPage    int
 	current    wallet.InfoShort
@@ -103,17 +102,16 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.icons.backup.Inset = layout.UniformInset(iconPadding)
 
 	return func(gtx C) D {
-		pg.gtx = gtx
 		pg.Handle(common)
 		if pg.isPasswordModalOpen {
 			pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
 		}
-		return pg.Layout(common)
+		return pg.Layout(gtx, common)
 	}
 }
 
 // Layout lays out the widgets for the main wallets pg.
-func (pg *walletPage) Layout(common pageCommon) layout.Dimensions {
+func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	if common.states.deleted {
 		pg.subPage = subWalletMain
 		common.states.deleted = false
@@ -121,16 +119,16 @@ func (pg *walletPage) Layout(common pageCommon) layout.Dimensions {
 
 	switch pg.subPage {
 	case subWalletMain:
-		return pg.subMain(common)
+		return pg.subMain(gtx, common)
 	case subWalletRename:
-		return pg.subRename(common)
+		return pg.subRename(gtx, common)
 	case subWalletDelete:
-		return pg.subDelete(common)
+		return pg.subDelete(gtx, common)
 	}
-	return pg.subMain(common)
+	return pg.subMain(gtx, common)
 }
 
-func (pg *walletPage) subMain(common pageCommon) layout.Dimensions {
+func (pg *walletPage) subMain(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.current = common.info.Wallets[*common.selectedWallet]
 
 	body := func(gtx C) D {
@@ -139,10 +137,10 @@ func (pg *walletPage) subMain(common pageCommon) layout.Dimensions {
 				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Flexed(0.88, func(gtx C) D {
-							return pg.topRow(common)
+							return pg.topRow(gtx, common)
 						}),
 						layout.Flexed(0.12, func(gtx C) D {
-							return pg.bottomRow(common)
+							return pg.bottomRow(gtx, common)
 						}),
 					)
 				})
@@ -150,13 +148,13 @@ func (pg *walletPage) subMain(common pageCommon) layout.Dimensions {
 		)
 	}
 
-	return common.LayoutWithWallets(pg.gtx, body)
+	return common.LayoutWithWallets(gtx, body)
 }
 
-func (pg *walletPage) topRow(common pageCommon) layout.Dimensions {
+func (pg *walletPage) topRow(gtx layout.Context, common pageCommon) layout.Dimensions {
 	wdgs := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.alert(common)
+			return pg.alert(gtx, common)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -208,19 +206,19 @@ func (pg *walletPage) topRow(common pageCommon) layout.Dimensions {
 		},
 	}
 
-	return pg.container.Layout(pg.gtx, len(wdgs), func(gtx C, i int) D {
+	return pg.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
 		return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, wdgs[i])
 	})
 }
 
-func (pg *walletPage) bottomRow(common pageCommon) layout.Dimensions {
+func (pg *walletPage) bottomRow(gtx layout.Context, common pageCommon) layout.Dimensions {
 	if pg.walletInfo.Synced || pg.walletInfo.Syncing {
 		pg.icons.addWallet.Background = common.theme.Color.Hint
 	} else {
 		pg.icons.addWallet.Background = common.theme.Color.Primary
 	}
 
-	return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
+	return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(pg.newRow(&common, pg.icons.addWallet, "Add wallet")),
 			layout.Rigid(pg.newRow(&common, pg.icons.rename, "Rename wallet")),
@@ -239,13 +237,13 @@ func (pg *walletPage) bottomRow(common pageCommon) layout.Dimensions {
 	})
 }
 
-func (pg *walletPage) subRename(common pageCommon) layout.Dimensions {
+func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Dimensions {
 	list := layout.List{Axis: layout.Vertical}
 	wdgs := []func(gtx C) D{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.returnBtn(common)
+					return pg.returnBtn(gtx, common)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding50}.Layout(gtx, func(gtx C) D {
@@ -283,21 +281,21 @@ func (pg *walletPage) subRename(common pageCommon) layout.Dimensions {
 			return pg.rename.Layout(gtx)
 		},
 		func(gtx C) D {
-			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 					return pg.errorLabel.Layout(gtx)
 				})
 			})
 		},
 	}
-	return common.Layout(pg.gtx, func(gtx C) D {
+	return common.Layout(gtx, func(gtx C) D {
 		return list.Layout(gtx, len(wdgs), func(gtx C, i int) D {
 			return wdgs[i](gtx)
 		})
 	})
 }
 
-func (pg *walletPage) subDelete(common pageCommon) layout.Dimensions {
+func (pg *walletPage) subDelete(gtx layout.Context, common pageCommon) layout.Dimensions {
 	list := layout.List{Axis: layout.Vertical}
 	wdgs := []func(gtx C) D{
 		func(gtx C) D {
@@ -337,14 +335,14 @@ func (pg *walletPage) subDelete(common pageCommon) layout.Dimensions {
 			return pg.delete.Layout(gtx)
 		},
 		func(gtx C) D {
-			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 					return pg.errorLabel.Layout(gtx)
 				})
 			})
 		},
 	}
-	return common.Layout(pg.gtx, func(gtx C) D {
+	return common.Layout(gtx, func(gtx C) D {
 		return list.Layout(gtx, len(wdgs), func(gtx C, i int) D {
 			return wdgs[i](gtx)
 		})
@@ -353,13 +351,11 @@ func (pg *walletPage) subDelete(common pageCommon) layout.Dimensions {
 
 // Handle handles all widget inputs on the main wallets pg.
 func (pg *walletPage) Handle(common pageCommon) {
-	gtx := pg.gtx
-
-	for range common.walletsTab.ChangeEvent(gtx) {
+	for range common.walletsTab.ChangeEvent() {
 		pg.subPage = subWalletMain
 	}
 
-	for range common.navTab.ChangeEvent(gtx) {
+	for range common.navTab.ChangeEvent() {
 		pg.subPage = subWalletMain
 	}
 
@@ -456,9 +452,9 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 }
 
-func (pg *walletPage) returnBtn(common pageCommon) layout.Dimensions {
-	return layout.W.Layout(pg.gtx, func(gtx C) D {
-		return pg.icons.main.Layout(pg.gtx)
+func (pg *walletPage) returnBtn(gtx layout.Context, common pageCommon) layout.Dimensions {
+	return layout.W.Layout(gtx, func(gtx C) D {
+		return pg.icons.main.Layout(gtx)
 	})
 }
 
@@ -488,9 +484,9 @@ func (pg *walletPage) cancel() {
 	pg.isPasswordModalOpen = false
 }
 
-func (pg *walletPage) alert(common pageCommon) layout.Dimensions {
+func (pg *walletPage) alert(gtx layout.Context, common pageCommon) layout.Dimensions {
 	if pg.errorText != "" {
-		return common.theme.ErrorAlert(pg.gtx, pg.errorText)
+		return common.theme.ErrorAlert(gtx, pg.errorText)
 	}
 	return layout.Dimensions{}
 }

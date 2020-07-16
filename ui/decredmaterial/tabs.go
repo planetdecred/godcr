@@ -7,8 +7,6 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/image/draw"
 
-	"gioui.org/text"
-
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -32,8 +30,9 @@ type Position int
 
 // TabItem displays a single child of a tab. Label and Icon in TabItem are optional.
 type TabItem struct {
-	Label
-	Button
+	Title  string
+	label  Label
+	button Button
 	Icon   image.Image
 	iconOp paint.ImageOp
 	index  int
@@ -118,11 +117,7 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
-					if t.Label.Text == "" {
-						t.Label.Alignment = text.Middle
-						return t.Label.Layout(gtx)
-					}
-					return layout.Dimensions{}
+					return t.label.Layout(gtx)
 				}),
 			)
 		})
@@ -130,7 +125,7 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 	return dims
 }
 
-func (t *TabItem) Layout(gtx layout.Context, selected int, btn *widget.Clickable, tabPosition Position) layout.Dimensions {
+func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position) layout.Dimensions {
 	var tabWidth, tabHeight int
 	var iconTextDims layout.Dimensions
 
@@ -147,7 +142,7 @@ func (t *TabItem) Layout(gtx layout.Context, selected int, btn *widget.Clickable
 				gtx.Constraints.Min.X = adaptiveTabWidth
 			}
 			tabWidth, tabHeight = tabIndicatorDimensions(iconTextDims, tabPosition)
-			return t.Button.Layout(gtx)
+			return t.button.Layout(gtx)
 		}),
 		layout.Expanded(func(gtx C) D {
 			if selected != t.index {
@@ -174,15 +169,15 @@ type Tabs struct {
 	Selected         int
 	previousSelected int
 	events           []widget.ChangeEvent
-	btns             []*widget.Clickable
-	title            Label
-	list             *layout.List
-	Position         Position
-	Separator        bool
-	iconButton       IconButton
-	scrollLeft       *widget.Clickable
-	scrollRight      *widget.Clickable
-	theme            *Theme
+	// btns             []*widget.Clickable
+	title       Label
+	list        *layout.List
+	Position    Position
+	Separator   bool
+	iconButton  IconButton
+	scrollLeft  *widget.Clickable
+	scrollRight *widget.Clickable
+	theme       *Theme
 }
 
 func NewTabs(th *Theme) *Tabs {
@@ -201,14 +196,12 @@ func NewTabs(th *Theme) *Tabs {
 func (t *Tabs) SetTabs(tabs []TabItem) {
 	t.items = tabs
 
-	if len(t.items) != len(t.btns) {
-		t.btns = make([]*widget.Clickable, len(t.items))
-		for i := range t.btns {
-			t.btns[i] = new(widget.Clickable)
-			skin := t.theme.Button(t.btns[i], "")
-			skin.Background = color.RGBA{}
-			tabs[i].Button = skin
-		}
+	for i := range tabs {
+		l := t.theme.Body1(t.items[i].Title)
+		t.items[i].label = l
+		b := t.theme.Button(new(widget.Clickable), "")
+		b.Background = color.RGBA{}
+		tabs[i].button = b
 	}
 }
 
@@ -266,9 +259,9 @@ func (t *Tabs) contentTabPosition(gtx layout.Context, body layout.Widget) (widge
 					t.tabsTitle(gtx),
 					t.scrollButton(gtx, false, t.scrollLeft),
 					layout.Flexed(1, func(gtx C) D {
-						return t.list.Layout(gtx, len(t.btns), func(gtx C, i int) D {
+						return t.list.Layout(gtx, len(t.items), func(gtx C, i int) D {
 							t.items[i].index = i
-							return t.items[i].Layout(gtx, t.Selected, t.btns[i], t.Position)
+							return t.items[i].Layout(gtx, t.Selected, t.Position)
 						})
 					}),
 					t.scrollButton(gtx, true, t.scrollRight),
@@ -314,16 +307,16 @@ func (t *Tabs) ChangeTab(index int) {
 }
 
 // ChangeEvent returns the last change event
-func (t *Tabs) ChangeEvent(gtx layout.Context) []widget.ChangeEvent {
-	t.processChangeEvent(gtx)
+func (t *Tabs) ChangeEvent() []widget.ChangeEvent {
+	t.processChangeEvent()
 	events := t.events
 	t.events = nil
 	return events
 }
 
-func (t *Tabs) processChangeEvent(gtx layout.Context) {
-	for i := range t.btns {
-		if t.btns[i].Clicked() {
+func (t *Tabs) processChangeEvent() {
+	for i := range t.items {
+		if t.items[i].button.Button.Clicked() {
 			t.ChangeTab(i)
 			return
 		}
@@ -339,7 +332,7 @@ func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions 
 		t.list.Position.Offset -= 60
 	}
 
-	t.processChangeEvent(gtx)
+	t.processChangeEvent()
 
 	switch t.Position {
 	case Top, Bottom:

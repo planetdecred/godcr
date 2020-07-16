@@ -86,15 +86,12 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 	}
 
 	return func(gtx C) D {
-		pg.gtx = gtx
 		pg.Handle(common)
-		return pg.Layout(common)
+		return pg.Layout(gtx, common)
 	}
 }
 
-func (pg *transactionsPage) Layout(common pageCommon) layout.Dimensions {
-	gtx := pg.gtx
-
+func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	container := func(gtx C) D {
 		return pg.container.Layout(gtx,
 			layout.Rigid(pg.txsFilters(&common)),
@@ -107,7 +104,7 @@ func (pg *transactionsPage) Layout(common pageCommon) layout.Dimensions {
 							return layout.Inset{
 								Top:    values.MarginPadding15,
 								Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return pg.txnRowHeader(&common)
+								return pg.txnRowHeader(gtx, &common)
 							})
 						}),
 						layout.Flexed(1, func(gtx C) D {
@@ -130,8 +127,8 @@ func (pg *transactionsPage) Layout(common pageCommon) layout.Dimensions {
 								click := pg.toTxnDetails[index]
 								pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 								click.Add(gtx.Ops)
-								pg.goToTxnDetails(&common, &walTxs[index], click)
-								return pg.txnRowInfo(&common, walTxs[index])
+								pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
+								return pg.txnRowInfo(gtx, &common, walTxs[index])
 							})
 						}),
 					)
@@ -184,9 +181,7 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	}
 }
 
-func (pg *transactionsPage) txnRowHeader(common *pageCommon) layout.Dimensions {
-	gtx := pg.gtx
-
+func (pg *transactionsPage) txnRowHeader(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	txt := common.theme.Label(values.MarginPadding15, "#")
 	txt.Color = common.theme.Color.Hint
 
@@ -215,8 +210,7 @@ func (pg *transactionsPage) txnRowHeader(common *pageCommon) layout.Dimensions {
 	)
 }
 
-func (pg *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.Transaction) layout.Dimensions {
-	gtx := pg.gtx
+func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, transaction wallet.Transaction) layout.Dimensions {
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
 
@@ -302,8 +296,8 @@ func (pg *transactionsPage) updateTotransactionDetailsButtons(walTxs *[]wallet.T
 	}
 }
 
-func (pg *transactionsPage) goToTxnDetails(c *pageCommon, txn *wallet.Transaction, click *gesture.Click) {
-	for _, e := range click.Events(pg.gtx) {
+func (pg *transactionsPage) goToTxnDetails(gtx layout.Context, c *pageCommon, txn *wallet.Transaction, click *gesture.Click) {
+	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			*pg.walletTransaction = txn
 			*c.page = PageTransactionDetails

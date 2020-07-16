@@ -81,23 +81,23 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	tabs := decredmaterial.NewTabs(win.theme)
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
-			Label: win.theme.Body1("Overview"),
+			Title: "Overview",
 			Icon:  ic.overviewIcon,
 		},
 		{
-			Label: win.theme.Body1("Wallets"),
+			Title: "Wallets",
 			Icon:  ic.walletIcon,
 		},
 		{
-			Label: win.theme.Body1("Send"),
+			Title: "Send",
 			Icon:  ic.sendIcon,
 		},
 		{
-			Label: win.theme.Body1("Receive"),
+			Title: "Receive",
 			Icon:  ic.receiveIcon,
 		},
 		{
-			Label: win.theme.Body1("Transactions"),
+			Title: "Transactions",
 			Icon:  ic.transactionIcon,
 		},
 	})
@@ -145,13 +145,9 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	navs := []string{PageOverview, PageWallet, PageSend, PageReceive, PageTransactions}
-	for range page.navTab.ChangeEvent(gtx) {
+	for range page.navTab.ChangeEvent() {
 		*page.page = navs[page.navTab.Selected]
 	}
-
-	//return layout.Inset{Right: values.MarginPadding10, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-	//	return body(gtx)
-	//})
 
 	page.navTab.Separator = true
 	return page.navTab.Layout(gtx, func(gtx C) D {
@@ -166,12 +162,12 @@ func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget)
 	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
 	for i := range page.info.Wallets {
 		wallets[i] = decredmaterial.TabItem{
-			Label: page.theme.Body1(page.info.Wallets[i].Name),
+			Title: page.info.Wallets[i].Name,
 		}
 	}
 	page.walletsTab.SetTabs(wallets)
 	page.walletsTab.Position = decredmaterial.Top
-	for range page.accountsTab.ChangeEvent(gtx) {
+	for range page.accountsTab.ChangeEvent() {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 
@@ -181,17 +177,17 @@ func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget)
 			continue
 		}
 		accounts[i] = decredmaterial.TabItem{
-			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
+			Title: page.info.Wallets[*page.selectedWallet].Accounts[i].Name,
 		}
 	}
 	page.accountsTab.SetTabs(accounts)
-	for range page.accountsTab.ChangeEvent(gtx) {
+	for range page.accountsTab.ChangeEvent() {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 	page.accountsTab.Separator = false
 
 	bd := func(gtx C) D {
-		for range page.walletsTab.ChangeEvent(gtx) {
+		for range page.walletsTab.ChangeEvent() {
 			*page.selectedWallet = page.walletsTab.Selected
 			*page.selectedAccount = 0
 			page.accountsTab.Selected = 0
@@ -212,14 +208,14 @@ func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget
 			continue
 		}
 		accounts[i] = decredmaterial.TabItem{
-			Label: page.theme.Body1(page.info.Wallets[*page.selectedWallet].Accounts[i].Name),
+			Title: page.info.Wallets[*page.selectedWallet].Accounts[i].Name,
 		}
 	}
 
 	page.accountsTab.SetTitle(page.theme.Label(values.TextSize18, "Accounts:"))
 
 	page.accountsTab.SetTabs(accounts)
-	for range page.accountsTab.ChangeEvent(gtx) {
+	for range page.accountsTab.ChangeEvent() {
 		*page.selectedAccount = page.accountsTab.Selected
 	}
 
