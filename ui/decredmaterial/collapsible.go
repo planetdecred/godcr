@@ -1,10 +1,8 @@
 package decredmaterial
 
 import (
-	"image"
 	"image/color"
 
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -51,8 +49,8 @@ func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.
 			})
 		}),
 	)
-	pointer.Rect(image.Rectangle{Max: dims.Size}).Add(gtx.Ops)
-	return c.buttonWidget.Layout(gtx)
+
+	return dims
 }
 
 func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(C) D) layout.Dimensions {
@@ -67,12 +65,20 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
-				return c.layoutHeader(gtx, header)
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return c.layoutHeader(gtx, header)
+					}),
+					layout.Expanded(c.buttonWidget.Layout),
+				)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			if c.isExpanded {
-				return content(gtx)
+				return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
+					return content(gtx)
+				})
 			}
 			return layout.Dimensions{}
 		}),
