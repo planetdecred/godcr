@@ -49,7 +49,7 @@ type transactionsPage struct {
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
-	page := transactionsPage{
+	pg := transactionsPage{
 		container:              layout.Flex{Axis: layout.Vertical},
 		txsList:                layout.List{Axis: layout.Vertical},
 		walletTransactions:     &win.walletTransactions,
@@ -65,37 +65,39 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		rowFeeWidth:            .26,
 	}
 
-	page.filterSorter = page.defaultFilterSorter
-	page.filterDirectionW.Value = page.defaultFilterDirection
-	page.filterSortW.Value = page.defaultFilterSorter
+	pg.filterSorter = pg.defaultFilterSorter
+	pg.filterDirectionW.Value = pg.defaultFilterDirection
+	pg.filterSortW.Value = pg.defaultFilterSorter
 
 	txFilterDirection := []string{"All", "Sent", "Received", "Transfer"}
 	txFilterSorts := []string{"Newest", "Oldest"}
 
 	for i := 0; i < len(txFilterDirection); i++ {
-		page.filterDirection = append(
-			page.filterDirection,
-			common.theme.RadioButton(page.filterDirectionW, fmt.Sprint(i), txFilterDirection[i]))
-		page.filterDirection[i].Size = values.MarginPadding20
+		pg.filterDirection = append(
+			pg.filterDirection,
+			common.theme.RadioButton(pg.filterDirectionW, fmt.Sprint(i), txFilterDirection[i]))
+		pg.filterDirection[i].Size = values.MarginPadding20
 	}
 
 	for i := 0; i < len(txFilterSorts); i++ {
-		page.filterSort = append(page.filterSort,
-			common.theme.RadioButton(page.filterSortW, fmt.Sprint(i), txFilterSorts[i]))
-		page.filterSort[i].Size = values.MarginPadding20
+		pg.filterSort = append(pg.filterSort,
+			common.theme.RadioButton(pg.filterSortW, fmt.Sprint(i), txFilterSorts[i]))
+		pg.filterSort[i].Size = values.MarginPadding20
 	}
 
 	return func(gtx C) D {
-		page.Handle(common)
-		return page.Layout(common)
+		pg.gtx = gtx
+		pg.Handle(common)
+		return pg.Layout(common)
 	}
 }
 
-func (page *transactionsPage) Layout(common pageCommon) layout.Dimensions {
-	gtx := common.gtx
+func (pg *transactionsPage) Layout(common pageCommon) layout.Dimensions {
+	gtx := pg.gtx
+
 	container := func(gtx C) D {
-		return page.container.Layout(gtx,
-			layout.Rigid(page.txsFilters(&common)),
+		return pg.container.Layout(gtx,
+			layout.Rigid(pg.txsFilters(&common)),
 			layout.Flexed(1, func(gtx C) D {
 				return layout.Inset{
 					Left:  values.MarginPadding15,
@@ -105,13 +107,13 @@ func (page *transactionsPage) Layout(common pageCommon) layout.Dimensions {
 							return layout.Inset{
 								Top:    values.MarginPadding15,
 								Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return page.txnRowHeader(&common)
+								return pg.txnRowHeader(&common)
 							})
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							walletID := common.info.Wallets[*common.selectedWallet].ID
-							walTxs := (*page.walletTransactions).Txs[walletID]
-							page.updateTotransactionDetailsButtons(&walTxs)
+							walTxs := (*pg.walletTransactions).Txs[walletID]
+							pg.updateTotransactionDetailsButtons(&walTxs)
 
 							if len(walTxs) == 0 {
 								txt := common.theme.Body1("No transactions")
@@ -119,17 +121,17 @@ func (page *transactionsPage) Layout(common pageCommon) layout.Dimensions {
 								return txt.Layout(gtx)
 							}
 
-							directionFilter, _ := strconv.Atoi(page.filterDirectionW.Value)
-							return page.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
+							directionFilter, _ := strconv.Atoi(pg.filterDirectionW.Value)
+							return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
 								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
 									return layout.Dimensions{}
 								}
 
-								click := page.toTxnDetails[index]
+								click := pg.toTxnDetails[index]
 								pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 								click.Add(gtx.Ops)
-								page.goToTxnDetails(&common, &walTxs[index], click)
-								return page.txnRowInfo(&common, walTxs[index])
+								pg.goToTxnDetails(&common, &walTxs[index], click)
+								return pg.txnRowInfo(&common, walTxs[index])
 							})
 						}),
 					)
@@ -140,7 +142,7 @@ func (page *transactionsPage) Layout(common pageCommon) layout.Dimensions {
 	return common.LayoutWithWallets(gtx, container)
 }
 
-func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
+func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	return func(gtx C) D {
 		return layout.Inset{
 			Top:    values.MarginPadding15,
@@ -149,9 +151,9 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return (&layout.List{Axis: layout.Horizontal}).
-						Layout(gtx, len(page.filterSort), func(gtx C, index int) D {
+						Layout(gtx, len(pg.filterSort), func(gtx C, index int) D {
 							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return page.filterSort[index].Layout(gtx)
+								return pg.filterSort[index].Layout(gtx)
 							})
 						})
 				}),
@@ -171,9 +173,9 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 				}),
 				layout.Rigid(func(gtx C) D {
 					return (&layout.List{Axis: layout.Horizontal}).
-						Layout(gtx, len(page.filterDirection), func(gtx C, index int) D {
+						Layout(gtx, len(pg.filterDirection), func(gtx C, index int) D {
 							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return page.filterDirection[index].Layout(gtx)
+								return pg.filterDirection[index].Layout(gtx)
 							})
 						})
 				}),
@@ -182,8 +184,9 @@ func (page *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	}
 }
 
-func (page *transactionsPage) txnRowHeader(common *pageCommon) layout.Dimensions {
-	gtx := common.gtx
+func (pg *transactionsPage) txnRowHeader(common *pageCommon) layout.Dimensions {
+	gtx := pg.gtx
+
 	txt := common.theme.Label(values.MarginPadding15, "#")
 	txt.Color = common.theme.Color.Hint
 
@@ -195,29 +198,25 @@ func (page *transactionsPage) txnRowHeader(common *pageCommon) layout.Dimensions
 		layout.Rigid(func() {
 			txt.Alignment = text.Middle
 			txt.Text = "Date (UTC)"
-			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
-			txt.Layout(gtx)
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			txt.Text = "Status"
-			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
-			txt.Layout(gtx)
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			txt.Text = "Amount"
-			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding150)
-			txt.Layout(gtx)
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func() {
 			txt.Text = "Fee"
-			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding150)
-			txt.Layout(gtx)
+			return txt.Layout(gtx)
 		}),
 	)
 }
 
-func (page *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.Transaction) layout.Dimensions {
-	gtx := common.gtx
+func (pg *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.Transaction) layout.Dimensions {
+	gtx := pg.gtx
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
 
@@ -231,34 +230,30 @@ func (page *transactionsPage) txnRowInfo(common *pageCommon, transaction wallet.
 			}),
 			layout.Rigid(func() {
 				txnWidgets.time.Alignment = text.Middle
-				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
-				txnWidgets.time.Layout(gtx)
+				return txnWidgets.time.Layout(gtx)
 			}),
 			layout.Rigid(func() {
 				txt := common.theme.Body1(transaction.Status)
 				txt.Alignment = text.Middle
-				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
-				txt.Layout(gtx)
+				return txt.Layout(gtx)
 			}),
 			layout.Rigid(func() {
 				txnWidgets.amount.Alignment = text.End
-				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding120)
-				txnWidgets.amount.Layout(gtx)
+				return txnWidgets.amount.Layout(gtx)
 			}),
 			layout.Rigid(func() {
 				txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
 				txt.Alignment = text.End
-				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding150)
-				txt.Layout(gtx)
+				return txt.Layout(gtx)
 			}),
 		)
 	})
 }
 
-func (page *transactionsPage) Handle(common pageCommon) {
-	if page.filterSorter != page.filterSortW.Value {
-		page.filterSorter = page.filterSortW.Value
-		page.sortTransactions(&common)
+func (pg *transactionsPage) Handle(common pageCommon) {
+	if pg.filterSorter != pg.filterSortW.Value {
+		pg.filterSorter = pg.filterSortW.Value
+		pg.sortTransactions(&common)
 	}
 }
 
@@ -282,11 +277,11 @@ func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidge
 	}
 }
 
-func (page *transactionsPage) sortTransactions(common *pageCommon) {
-	newestFirst := page.filterSorter == page.defaultFilterSorter
+func (pg *transactionsPage) sortTransactions(common *pageCommon) {
+	newestFirst := pg.filterSorter == pg.defaultFilterSorter
 
 	for _, wal := range common.info.Wallets {
-		transactions := (*page.walletTransactions).Txs[wal.ID]
+		transactions := (*pg.walletTransactions).Txs[wal.ID]
 		sort.SliceStable(transactions, func(i, j int) bool {
 			backTime := time.Unix(transactions[j].Txn.Timestamp, 0)
 			frontTime := time.Unix(transactions[i].Txn.Timestamp, 0)
@@ -298,19 +293,19 @@ func (page *transactionsPage) sortTransactions(common *pageCommon) {
 	}
 }
 
-func (page *transactionsPage) updateTotransactionDetailsButtons(walTxs *[]wallet.Transaction) {
-	if len(*walTxs) != len(page.toTxnDetails) {
-		page.toTxnDetails = make([]*gesture.Click, len(*walTxs))
+func (pg *transactionsPage) updateTotransactionDetailsButtons(walTxs *[]wallet.Transaction) {
+	if len(*walTxs) != len(pg.toTxnDetails) {
+		pg.toTxnDetails = make([]*gesture.Click, len(*walTxs))
 		for index := range *walTxs {
-			page.toTxnDetails[index] = &gesture.Click{}
+			pg.toTxnDetails[index] = &gesture.Click{}
 		}
 	}
 }
 
-func (page *transactionsPage) goToTxnDetails(c *pageCommon, txn *wallet.Transaction, click *gesture.Click) {
-	for _, e := range click.Events(c.gtx) {
+func (pg *transactionsPage) goToTxnDetails(c *pageCommon, txn *wallet.Transaction, click *gesture.Click) {
+	for _, e := range click.Events(pg.gtx) {
 		if e.Type == gesture.TypeClick {
-			*page.walletTransaction = txn
+			*pg.walletTransaction = txn
 			*c.page = PageTransactionDetails
 		}
 	}

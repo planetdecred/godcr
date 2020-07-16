@@ -39,6 +39,5 @@ func (l *Line) Layout(gtx C) D {
 		},
 	}}.Add(gtx.Ops)
 	dims := image.Point{X: l.Width, Y: l.Height}
-	gtx.Constraints.Max = dims
 	return layout.Dimensions{Size: dims}
 }

@@ -76,23 +76,28 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 			pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 			pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
 		}
-		return pg.Layout(common)
+		return pg.Layout(gtx, common)
 	}
 }
 
-func (pg *signMessagePage) Layout(common pageCommon) layout.Dimensions {
-	gtx := common.gtx
+func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	pg.errChannel = common.errorChannels[PageSignMessage]
 
 	w := []func(gtx C) D{
 		func(gtx C) D {
-			return layout.W.Layout(gtx, func(gtx C) D {
-				return pg.backButton.Layout(gtx)
-			})
-			return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
-				return pg.titleLabel.Layout(gtx)
-			})
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.W.Layout(gtx, func(gtx C) D {
+						return pg.backButton.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+						return pg.titleLabel.Layout(gtx)
+					})
+				}),
+			)
 		},
 		func(gtx C) D {
 			inset := layout.Inset{

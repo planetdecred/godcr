@@ -41,12 +41,12 @@ type TabItem struct {
 
 // tabIndicatorDimensions defines the width and height of the active tab item indicator depending
 // on the tab Position.
-func tabIndicatorDimensions(ctx layout.Context, tabPosition Position) (width, height int) {
+func tabIndicatorDimensions(dims layout.Dimensions, tabPosition Position) (width, height int) {
 	switch tabPosition {
 	case Top, Bottom:
-		width, height = ctx.Constraints.Max.X, 4
+		width, height = dims.Size.X, 4
 	default:
-		width, height = 5, ctx.Constraints.Max.Y
+		width, height = 5, dims.Size.Y
 	}
 	return
 }
@@ -132,20 +132,21 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 
 func (t *TabItem) Layout(gtx layout.Context, selected int, btn *widget.Clickable, tabPosition Position) layout.Dimensions {
 	var tabWidth, tabHeight int
+	var iconTextDims layout.Dimensions
 
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
-			dims := t.iconText(gtx, tabPosition)
-			if dims.Size.X > adaptiveTabWidth {
-				adaptiveTabWidth = dims.Size.X
+			iconTextDims = t.iconText(gtx, tabPosition)
+			if iconTextDims.Size.X > adaptiveTabWidth {
+				adaptiveTabWidth = iconTextDims.Size.X
 			}
-			return dims
+			return iconTextDims
 		}),
 		layout.Expanded(func(gtx C) D {
 			if tabPosition == Left || tabPosition == Right {
 				gtx.Constraints.Min.X = adaptiveTabWidth
 			}
-			tabWidth, tabHeight = tabIndicatorDimensions(gtx, tabPosition)
+			tabWidth, tabHeight = tabIndicatorDimensions(iconTextDims, tabPosition)
 			return t.Button.Layout(gtx)
 		}),
 		layout.Expanded(func(gtx C) D {
@@ -192,6 +193,7 @@ func NewTabs(th *Theme) *Tabs {
 		scrollLeft:  new(widget.Clickable),
 		scrollRight: new(widget.Clickable),
 		iconButton:  th.IconButton(new(widget.Clickable), new(widget.Icon)),
+		flex:        layout.Flex{},
 	}
 }
 

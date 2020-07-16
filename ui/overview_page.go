@@ -66,7 +66,6 @@ type transactionWidgets struct {
 
 type overviewPage struct {
 	listContainer, walletSyncList *layout.List
-	gtx                           layout.Context
 	theme                         *decredmaterial.Theme
 	tab                           *decredmaterial.Tabs
 
@@ -91,8 +90,7 @@ type overviewPage struct {
 }
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
-	page := overviewPage{
-		gtx:   c.gtx,
+	pg := overviewPage{
 		theme: c.theme,
 		tab:   c.navTab,
 
@@ -112,7 +110,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 
 		gray: color.RGBA{137, 151, 165, 255},
 	}
-	page.text = overviewPageText{
+	pg.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
 		statusTitle:          "Wallet Status",
 		stepsTitle:           "Step",
@@ -174,12 +172,12 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	}
 }
 
-// Layout lays out the entire content for overview page.
-func (page *overviewPage) Layout(c pageCommon) layout.Dimensions {
+// Layout lays out the entire content for overview pg.
+func (pg *overviewPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	if c.info.LoadedWallets == 0 {
-		return c.Layout(c.gtx, func(gtx C) D {
-			return layout.Center.Layout(c.gtx, func(gtx C) D {
-				return c.theme.H3(page.text.noWallet).Layout(c.gtx)
+		return c.Layout(gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return c.theme.H3(pg.text.noWallet).Layout(gtx)
 			})
 		})
 		return
@@ -203,11 +201,11 @@ func (page *overviewPage) Layout(c pageCommon) layout.Dimensions {
 			)
 		},
 		func(gtx C) D {
-			return page.recentTransactionsColumn(c)
+			return pg.recentTransactionsColumn(gtx, c)
 		},
 		func(gtx C) D {
 			return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-				return page.syncStatusColumn()
+				return pg.syncStatusColumn(gtx)
 			})
 		},
 	}
@@ -220,25 +218,24 @@ func (page *overviewPage) Layout(c pageCommon) layout.Dimensions {
 }
 
 // syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
-func (page *overviewPage) syncDetail(name, status, headersFetched, progress string) walletSyncDetails {
+func (pg *overviewPage) syncDetail(name, status, headersFetched, progress string) walletSyncDetails {
 	return walletSyncDetails{
-		name:               page.theme.Caption(name),
-		status:             page.theme.Caption(status),
-		blockHeaderFetched: page.theme.Caption(headersFetched),
-		syncingProgress:    page.theme.Caption(progress),
+		name:               pg.theme.Caption(name),
+		status:             pg.theme.Caption(status),
+		blockHeaderFetched: pg.theme.Caption(headersFetched),
+		syncingProgress:    pg.theme.Caption(progress),
 	}
 }
 
 // recentTransactionsColumn lays out the list of recent transactions.
-func (page *overviewPage) recentTransactionsColumn(c pageCommon) layout.Dimensions {
-	theme := page.theme
-	gtx := page.gtx
+func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommon) layout.Dimensions {
+	theme := pg.theme
 	var transactionRows []func(gtx C) D
 
-	if len((*page.walletTransactions).Txs) > 0 {
-		page.updateToTransactionDetailsButtons()
+	if len((*pg.walletTransactions).Txs) > 0 {
+		pg.updateToTransactionDetailsButtons()
 
-		for index, txn := range (*page.walletTransactions).Recent {
+		for index, txn := range (*pg.walletTransactions).Recent {
 			txnWidgets := transactionWidgets{
 				wallet:      theme.Body1(txn.WalletName),
 				balance:     txn.Balance,
@@ -255,12 +252,12 @@ func (page *overviewPage) recentTransactionsColumn(c pageCommon) layout.Dimensio
 				txnWidgets.direction.Color = c.theme.Color.Success
 			}
 
-			click := page.toTransactionDetails[index]
+			click := pg.toTransactionDetails[index]
 
 			transactionRows = append(transactionRows, func(gtx C) D {
 				pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 				click.Add(gtx.Ops)
-				return page.recentTransactionRow(txnWidgets)
+				return pg.recentTransactionRow(gtx, txnWidgets)
 			})
 		}
 	} else {
@@ -309,8 +306,7 @@ func (page *overviewPage) centralize(content layout.Widget) {
 }
 
 // recentTransactionRow lays out a single row of a recent transaction.
-func (page *overviewPage) recentTransactionRow(txn transactionWidgets) layout.Dimensions {
-	gtx := page.gtx
+func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transactionWidgets) layout.Dimensions {
 	margin := layout.UniformInset(values.MarginPadding10)
 
 	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -348,8 +344,7 @@ func (page *overviewPage) recentTransactionRow(txn transactionWidgets) layout.Di
 }
 
 // syncStatusColumn lays out content for displaying sync status.
-func (page *overviewPage) syncStatusColumn() layout.Dimensions {
-	gtx := page.gtx
+func (pg *overviewPage) syncStatusColumn(gtx layout.Context) layout.Dimensions {
 	uniform := layout.UniformInset(values.MarginPadding5)
 	page.drawlayout(func() {
 		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -357,13 +352,13 @@ func (page *overviewPage) syncStatusColumn() layout.Dimensions {
 				page.syncBoxTitleRow(uniform)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return page.syncStatusTextRow(uniform)
+				return pg.syncStatusTextRow(gtx, uniform)
 			}),
 			layout.Rigid(func(gtx C) D {
-				if page.walletInfo.Syncing {
-					return page.syncActiveContent(uniform)
+				if pg.walletInfo.Syncing {
+					return pg.syncActiveContent(gtx, uniform)
 				} else {
-					return page.syncDormantContent(uniform)
+					return pg.syncDormantContent(gtx, uniform)
 				}
 			}),
 		)
@@ -378,16 +373,16 @@ func (page *overviewPage) drawlayout(body layout.Widget) {
 }
 
 // syncingContent lays out sync status content when the wallet is syncing
-func (page *overviewPage) syncActiveContent(uniform layout.Inset) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(page.gtx,
+func (pg *overviewPage) syncActiveContent(gtx layout.Context, uniform layout.Inset) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return page.progressBarRow(uniform)
+			return pg.progressBarRow(gtx, uniform)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.progressStatusRow(uniform)
+			return pg.progressStatusRow(gtx, uniform)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.walletSyncRow(uniform)
+			return pg.walletSyncRow(gtx, uniform)
 		}),
 	)
 }
@@ -551,13 +546,13 @@ func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 			layout.Flexed(1, func(gtx C) D {
 				// stack a button on a card widget to produce a transparent button.
 				return layout.E.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = page.syncButtonWidth
-					gtx.Constraints.Min.X = page.syncButtonWidth
-					gtx.Constraints.Max.Y = page.syncButtonHeight
-					if page.walletInfo.Synced {
-						page.sync.Text = page.text.disconnect
+					gtx.Constraints.Min.X = pg.syncButtonWidth
+					gtx.Constraints.Min.X = pg.syncButtonWidth
+					gtx.Constraints.Max.Y = pg.syncButtonHeight
+					if pg.walletInfo.Synced {
+						pg.sync.Text = pg.text.disconnect
 					}
-					return page.sync.Layout(gtx)
+					return pg.sync.Layout(gtx)
 				})
 			}),
 		)
@@ -565,17 +560,18 @@ func (page *overviewPage) syncStatusTextRow(inset layout.Inset) {
 }
 
 // syncBoxTitleRow lays out the progress bar.
-func (page *overviewPage) progressBarRow(inset layout.Inset) layout.Dimensions {
-	return inset.Layout(page.gtx, func(gtx C) D {
-		progress := page.walletSyncStatus.Progress
-		page.gtx.Constraints.Max.Y = 20
-		return page.theme.ProgressBar(int(progress)).Layout(page.gtx)
+func (pg *overviewPage) progressBarRow(gtx layout.Context, inset layout.Inset) layout.Dimensions {
+	return inset.Layout(gtx, func(gtx C) D {
+		progress := pg.walletSyncStatus.Progress
+		p := pg.theme.ProgressBar(int(progress))
+		p.Color = pg.theme.Color.Success
+		return p.Layout(gtx)
 	})
 }
 
 // syncBoxTitleRow lays out the progress status when the wallet is syncing.
-func (page *overviewPage) progressStatusRow(inset layout.Inset) layout.Dimensions {
-	timeLeft := page.walletSyncStatus.RemainingTime
+func (pg *overviewPage) progressStatusRow(gtx layout.Context, inset layout.Inset) layout.Dimensions {
+	timeLeft := pg.walletSyncStatus.RemainingTime
 	if timeLeft == "" {
 		timeLeft = "0s"
 	}
@@ -588,49 +584,48 @@ func (page *overviewPage) progressStatusRow(inset layout.Inset) layout.Dimension
 }
 
 //	walletSyncRow layouts a list of wallet sync boxes horizontally.
-func (page *overviewPage) walletSyncRow(inset layout.Inset) layout.Dimensions {
-	gtx := page.gtx
+func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) layout.Dimensions {
 	return layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				completedSteps := page.walletSyncStatus.Steps
-				totalSteps := page.walletSyncStatus.TotalSteps
-				completedStepsLabel := page.theme.Caption(fmt.Sprintf("%s %d/%d", page.text.stepsTitle, completedSteps, totalSteps))
-				completedStepsLabel.Color = page.gray
-				headersFetchedLabel := page.theme.Body1(fmt.Sprintf("%s. %v%%", page.text.fetchingBlockHeaders,
-					page.walletSyncStatus.HeadersFetchProgress))
-				headersFetchedLabel.Color = page.gray
-				return page.endToEndRow(inset, completedStepsLabel, headersFetchedLabel)
+				completedSteps := pg.walletSyncStatus.Steps
+				totalSteps := pg.walletSyncStatus.TotalSteps
+				completedStepsLabel := pg.theme.Caption(fmt.Sprintf("%s %d/%d", pg.text.stepsTitle, completedSteps, totalSteps))
+				completedStepsLabel.Color = pg.gray
+				headersFetchedLabel := pg.theme.Body1(fmt.Sprintf("%s. %v%%", pg.text.fetchingBlockHeaders,
+					pg.walletSyncStatus.HeadersFetchProgress))
+				headersFetchedLabel.Color = pg.gray
+				return pg.endToEndRow(gtx, inset, completedStepsLabel, headersFetchedLabel)
 			}),
 			layout.Rigid(func(gtx C) D {
-				connectedPeersTitleLabel := page.theme.Caption(page.text.connectedPeersTitle)
-				connectedPeersTitleLabel.Color = page.gray
-				connectedPeersLabel := page.theme.Body1(fmt.Sprintf("%d", page.walletSyncStatus.ConnectedPeers))
-				return page.endToEndRow(inset, connectedPeersTitleLabel, connectedPeersLabel)
+				connectedPeersTitleLabel := pg.theme.Caption(pg.text.connectedPeersTitle)
+				connectedPeersTitleLabel.Color = pg.gray
+				connectedPeersLabel := pg.theme.Body1(fmt.Sprintf("%d", pg.walletSyncStatus.ConnectedPeers))
+				return pg.endToEndRow(gtx, inset, connectedPeersTitleLabel, connectedPeersLabel)
 			}),
 			layout.Rigid(func(gtx C) D {
 				var overallBlockHeight int32
 				var walletSyncBoxes []func(gtx C) D
 
-				if page.walletSyncStatus != nil {
-					overallBlockHeight = page.walletSyncStatus.HeadersToFetch
+				if pg.walletSyncStatus != nil {
+					overallBlockHeight = pg.walletSyncStatus.HeadersToFetch
 				}
 
-				for i := 0; i < len(page.walletInfo.Wallets); i++ {
-					w := page.walletInfo.Wallets[i]
+				for i := 0; i < len(pg.walletInfo.Wallets); i++ {
+					w := pg.walletInfo.Wallets[i]
 					if w.BestBlockHeight > overallBlockHeight {
 						overallBlockHeight = w.BestBlockHeight
 					}
 					blockHeightProgress := fmt.Sprintf("%v of %v", w.BestBlockHeight, overallBlockHeight)
-					details := page.syncDetail(w.Name, w.Status, blockHeightProgress, w.DaysBehind)
+					details := pg.syncDetail(w.Name, w.Status, blockHeightProgress, w.DaysBehind)
 					uniform := layout.UniformInset(values.MarginPadding5)
 					walletSyncBoxes = append(walletSyncBoxes,
 						func(gtx C) D {
-							return page.walletSyncBox(uniform, details)
+							return pg.walletSyncBox(gtx, uniform, details)
 						})
 				}
 
-				return page.walletSyncList.Layout(gtx, len(walletSyncBoxes), func(gtx C, i int) D {
+				return pg.walletSyncList.Layout(gtx, len(walletSyncBoxes), func(gtx C, i int) D {
 					if i == 0 {
 						return walletSyncBoxes[i](gtx)
 					} else {
@@ -654,14 +649,14 @@ func (page *overviewPage) walletSyncBox(inset layout.Inset, details walletSyncDe
 					page.endToEndRow(inset, details.name, details.status)
 				}),
 				layout.Rigid(func(gtx C) D {
-					headersFetchedTitleLabel := page.theme.Caption(page.text.headersFetchedTitle)
-					headersFetchedTitleLabel.Color = page.gray
-					return page.endToEndRow(inset, headersFetchedTitleLabel, details.blockHeaderFetched)
+					headersFetchedTitleLabel := pg.theme.Caption(pg.text.headersFetchedTitle)
+					headersFetchedTitleLabel.Color = pg.gray
+					return pg.endToEndRow(gtx, inset, headersFetchedTitleLabel, details.blockHeaderFetched)
 				}),
 				layout.Rigid(func(gtx C) D {
-					progressTitleLabel := page.theme.Caption(page.text.syncingProgressTitle)
-					progressTitleLabel.Color = page.gray
-					return page.endToEndRow(inset, progressTitleLabel, details.syncingProgress)
+					progressTitleLabel := pg.theme.Caption(pg.text.syncingProgressTitle)
+					progressTitleLabel.Color = pg.gray
+					return pg.endToEndRow(gtx, inset, progressTitleLabel, details.syncingProgress)
 				}),
 			)
 		})
@@ -670,22 +665,22 @@ func (page *overviewPage) walletSyncBox(inset layout.Inset, details walletSyncDe
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func (page *overviewPage) layoutBalance(amount string, main, sub decredmaterial.Label) layout.Dimensions {
-	mainText, subText := page.breakBalance(amount)
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(page.gtx,
+func (pg *overviewPage) layoutBalance(gtx layout.Context, amount string, main, sub decredmaterial.Label) layout.Dimensions {
+	mainText, subText := pg.breakBalance(amount)
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			main.Text = mainText
-			return main.Layout(page.gtx)
+			return main.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			sub.Text = subText
-			return sub.Layout(page.gtx)
+			return sub.Layout(gtx)
 		}),
 	)
 }
 
 // breakBalance takes the balance string and returns it in two slices
-func (page *overviewPage) breakBalance(balance string) (b1, b2 string) {
+func (pg *overviewPage) breakBalance(balance string) (b1, b2 string) {
 	balanceParts := strings.Split(balance, ".")
 	if len(balanceParts) == 1 {
 		return balanceParts[0], ""
@@ -697,19 +692,19 @@ func (page *overviewPage) breakBalance(balance string) (b1, b2 string) {
 	return
 }
 
-func (page *overviewPage) updateToTransactionDetailsButtons() {
-	recentTxs := (*page.walletTransactions).Recent
-	if len(recentTxs) != len(page.toTransactionDetails) {
-		page.toTransactionDetails = make([]*gesture.Click, len(recentTxs))
+func (pg *overviewPage) updateToTransactionDetailsButtons() {
+	recentTxs := (*pg.walletTransactions).Recent
+	if len(recentTxs) != len(pg.toTransactionDetails) {
+		pg.toTransactionDetails = make([]*gesture.Click, len(recentTxs))
 		for i := range recentTxs {
-			page.toTransactionDetails[i] = &gesture.Click{}
+			pg.toTransactionDetails[i] = &gesture.Click{}
 		}
 	}
 }
 
-func (page *overviewPage) Handler(c pageCommon) {
-	if page.sync.Button.Clicked() {
-		if page.walletInfo.Synced || page.walletInfo.Syncing {
+func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
+	if pg.sync.Button.Clicked() {
+		if pg.walletInfo.Synced || pg.walletInfo.Syncing {
 			c.wallet.CancelSync()
 			page.sync.Text = page.text.reconnect
 		} else {
@@ -717,15 +712,15 @@ func (page *overviewPage) Handler(c pageCommon) {
 			page.sync.Text = page.text.cancel
 		}
 	}
-	if page.toTransactions.Button.Clicked() {
-		page.tab.ChangeTab(4)
+	if pg.toTransactions.Button.Clicked() {
+		pg.tab.ChangeTab(4)
 	}
 
-	for index, click := range page.toTransactionDetails {
-		for _, e := range click.Events(page.gtx) {
+	for index, click := range pg.toTransactionDetails {
+		for _, e := range click.Events(gtx) {
 			if e.Type == gesture.TypeClick {
-				txn := (*page.walletTransactions).Recent[index]
-				*page.walletTransaction = &txn
+				txn := (*pg.walletTransactions).Recent[index]
+				*pg.walletTransaction = &txn
 				*c.page = PageTransactionDetails
 				return
 			}

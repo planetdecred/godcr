@@ -30,16 +30,16 @@ type pageCommon struct {
 	info            *wallet.MultiWalletInfo
 	selectedWallet  *int
 	selectedAccount *int
-	gtx             layout.Context
-	theme           *decredmaterial.Theme
-	icons           pageIcons
-	page            *string
-	navTab          *decredmaterial.Tabs
-	walletsTab      *decredmaterial.Tabs
-	accountsTab     *decredmaterial.Tabs
-	errorChannels   map[string]chan error
-	keyEvents       chan *key.Event
-	states          *states
+	// gtx             layout.Context
+	theme         *decredmaterial.Theme
+	icons         pageIcons
+	page          *string
+	navTab        *decredmaterial.Tabs
+	walletsTab    *decredmaterial.Tabs
+	accountsTab   *decredmaterial.Tabs
+	errorChannels map[string]chan error
+	keyEvents     chan *key.Event
+	states        *states
 }
 
 type (
@@ -48,7 +48,7 @@ type (
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
-	icons := pageIcons{
+	ic := pageIcons{
 		contentAdd:                 mustIcon(widget.NewIcon(icons.ContentAdd)),
 		contentClear:               mustIcon(widget.NewIcon(icons.ContentClear)),
 		contentCreate:              mustIcon(widget.NewIcon(icons.ContentCreate)),
@@ -82,23 +82,23 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	tabs.SetTabs([]decredmaterial.TabItem{
 		{
 			Label: win.theme.Body1("Overview"),
-			Icon:  icons.overviewIcon,
+			Icon:  ic.overviewIcon,
 		},
 		{
 			Label: win.theme.Body1("Wallets"),
-			Icon:  icons.walletIcon,
+			Icon:  ic.walletIcon,
 		},
 		{
 			Label: win.theme.Body1("Send"),
-			Icon:  icons.sendIcon,
+			Icon:  ic.sendIcon,
 		},
 		{
 			Label: win.theme.Body1("Receive"),
-			Icon:  icons.receiveIcon,
+			Icon:  ic.receiveIcon,
 		},
 		{
 			Label: win.theme.Body1("Transactions"),
-			Icon:  icons.transactionIcon,
+			Icon:  ic.transactionIcon,
 		},
 	})
 
@@ -110,9 +110,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		info:            win.walletInfo,
 		selectedWallet:  &win.selected,
 		selectedAccount: &win.selectedAccount,
-		gtx:             win.gtx,
 		theme:           win.theme,
-		icons:           icons,
+		icons:           ic,
 		page:            &win.current,
 		navTab:          tabs,
 		walletsTab:      decredmaterial.NewTabs(win.theme),
@@ -143,12 +142,17 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 }
 
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	navs := []string{PageOverview, PageWallet, PageSend, PageReceive, PageTransactions}
 	for range page.navTab.ChangeEvent(gtx) {
 		*page.page = navs[page.navTab.Selected]
 	}
 
-	toMax(gtx)
+	//return layout.Inset{Right: values.MarginPadding10, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+	//	return body(gtx)
+	//})
+
 	page.navTab.Separator = true
 	return page.navTab.Layout(gtx, func(gtx C) D {
 		p := values.MarginPadding10

@@ -159,9 +159,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		page.Handle(common)
-		page.drawConfirmationModal(common)
-		page.drawPasswordModal(common)
-		return page.Layout(common)
+		page.drawConfirmationModal(gtx, common)
+		page.drawPasswordModal(gtx, common)
+		return page.Layout(gtx, common)
 	}
 }
 
@@ -276,47 +276,47 @@ func (pg *SendPage) Handle(c pageCommon) {
 	}
 }
 
-func (pg *SendPage) Layout(common pageCommon) layout.Dimensions {
+func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	if len(common.info.Wallets) == 0 {
 		return layout.Dimensions{}
 	}
 
 	pageContent := []func(ctx C) D{
 		func(ctx C) D {
-			return pg.drawSuccessSection(common.gtx)
+			return pg.drawSuccessSection(gtx)
 		},
 		func(ctx C) D {
-			return pg.drawCopiedLabelSection(common.gtx)
+			return pg.drawCopiedLabelSection(gtx)
 		},
 		func(ctx C) D {
-			return pg.drawSelectedAccountSection(common.gtx)
+			return pg.drawSelectedAccountSection(gtx)
 		},
 		func(ctx C) D {
-			return pg.destinationAddressEditor.Layout(common.gtx)
+			return pg.destinationAddressEditor.Layout(gtx)
 		},
 		func(ctx C) D {
-			return pg.sendAmountLayout(common.gtx)
+			return pg.sendAmountLayout(gtx)
 		},
 		func(ctx C) D {
-			return pg.drawTransactionDetailWidgets(common.gtx)
+			return pg.drawTransactionDetailWidgets(gtx)
 		},
 		func(ctx C) D {
 			if pg.calculateErrorText != "" {
-				common.gtx.Constraints.Min.X = common.gtx.Constraints.Max.X
-				return pg.theme.ErrorAlert(common.gtx, pg.calculateErrorText)
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return pg.theme.ErrorAlert(gtx, pg.calculateErrorText)
 			}
 			return layout.Dimensions{}
 		},
 		func(ctx C) D {
-			common.gtx.Constraints.Min.X = common.gtx.Constraints.Max.X
-			return pg.nextButton.Layout(common.gtx)
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return pg.nextButton.Layout(gtx)
 		},
 	}
 
-	return common.LayoutWithAccounts(common.gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding10).Layout(common.gtx, func(gtx C) D {
-			return pg.pageContainer.Layout(common.gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.Inset{Top: values.MarginPadding5}.Layout(common.gtx, pageContent[i])
+	return common.LayoutWithAccounts(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+			return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, pageContent[i])
 			})
 		})
 	})
@@ -468,11 +468,11 @@ func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *SendPage) drawConfirmationModal(c pageCommon) layout.Dimensions {
+func (pg *SendPage) drawConfirmationModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	if !pg.isConfirmationModalOpen {
 		return layout.Dimensions{}
 	}
-	gtx := c.gtx
+
 	w := []func(gtx C) D{
 		func(gtx C) D {
 			if pg.sendErrorText != "" {
@@ -535,11 +535,10 @@ func (pg *SendPage) drawConfirmationModal(c pageCommon) layout.Dimensions {
 	return pg.theme.Modal(gtx, "Confirm Send Transaction", w)
 }
 
-func (pg *SendPage) drawPasswordModal(c pageCommon) {
+func (pg *SendPage) drawPasswordModal(gtx layout.Context, c pageCommon) {
 	if !(pg.isConfirmationModalOpen && pg.isPasswordModalOpen) {
 		return
 	}
-	gtx := c.gtx
 	pg.passwordModal.Layout(gtx, func(password []byte) {
 		pg.isBroadcastingTransaction = true
 		pg.isPasswordModalOpen = false

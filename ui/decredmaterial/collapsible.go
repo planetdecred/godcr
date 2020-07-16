@@ -41,7 +41,7 @@ func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.
 		icon = c.expandedIcon
 	}
 
-	layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+	dims := layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return header(gtx)
 		}),
@@ -51,7 +51,7 @@ func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.
 			})
 		}),
 	)
-	pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+	pointer.Rect(image.Rectangle{Max: dims.Size}).Add(gtx.Ops)
 	return c.buttonWidget.Layout(gtx)
 }
 

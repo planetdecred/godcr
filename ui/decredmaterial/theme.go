@@ -130,7 +130,7 @@ func (t *Theme) Modal(gtx layout.Context, title string, wd []func(gtx C) D) layo
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
 	layout.Stack{
-		Alignment: layout.Center,
+		Alignment: layout.N,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return fill(gtx, t.Color.Background)

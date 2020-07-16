@@ -29,7 +29,6 @@ type (
 )
 
 type createRestore struct {
-	gtx             layout.Context
 	theme           *decredmaterial.Theme
 	info            *wallet.MultiWalletInfo
 	wal             *wallet.Wallet
@@ -76,7 +75,6 @@ type createRestore struct {
 // Loading lays out the loading widget with a faded background
 func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg := createRestore{
-		gtx:      common.gtx,
 		theme:    common.theme,
 		wal:      common.wallet,
 		info:     common.info,
@@ -149,25 +147,25 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		pg.handle(common)
-		return pg.layout(common)
+		return pg.layout(gtx, common)
 	}
 }
 
-func (pg *createRestore) layout(common pageCommon) layout.Dimensions {
-	return pg.theme.Surface(pg.gtx, func(gtx C) D {
-		toMax(pg.gtx)
+func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	return pg.theme.Surface(gtx, func(gtx C) D {
+		toMax(gtx)
 		pd := values.MarginPadding15
-		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(pg.gtx,
+		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
-				return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(pg.gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+				return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Flexed(1, func(gtx C) D {
 							if common.states.creating {
-								return pg.processing()
+								return pg.processing(gtx)
 							} else if pg.showRestore {
-								return pg.restore()
+								return pg.restore(gtx)
 							} else {
-								return pg.mainContent()
+								return pg.mainContent(gtx)
 							}
 						}),
 					)
@@ -182,13 +180,13 @@ func (pg *createRestore) layout(common pageCommon) layout.Dimensions {
 
 					w := []func(gtx C) D{
 						func(gtx C) D {
-							return pg.spendingPassword.Layout(pg.gtx)
+							return pg.spendingPassword.Layout(gtx)
 						},
 						func(gtx C) D {
-							return pg.matchSpendingPassword.Layout(pg.gtx)
+							return pg.matchSpendingPassword.Layout(gtx)
 						},
 						func(gtx C) D {
-							return pg.errLabel.Layout(pg.gtx)
+							return pg.errLabel.Layout(gtx)
 						},
 						func(gtx C) D {
 							if pg.showRestore {
@@ -196,22 +194,22 @@ func (pg *createRestore) layout(common pageCommon) layout.Dimensions {
 							} else {
 								pg.addWallet.Text = "create new wallet"
 							}
-							return layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
-										return pg.addWallet.Layout(pg.gtx)
+									return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+										return pg.addWallet.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
+									return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 										pg.hidePasswordModal.Color = common.theme.Color.Primary
-										return pg.hidePasswordModal.Layout(pg.gtx)
+										return pg.hidePasswordModal.Layout(gtx)
 									})
 								}),
 							)
 						},
 					}
-					return pg.theme.Modal(pg.gtx, modalTitle, w)
+					return pg.theme.Modal(gtx, modalTitle, w)
 				}
 				return layout.Dimensions{}
 			}),
@@ -224,28 +222,28 @@ func (pg *createRestore) layout(common pageCommon) layout.Dimensions {
 							txt := common.theme.H6(msg)
 							txt.Color = common.theme.Color.Danger
 							txt.Alignment = text.Middle
-							return txt.Layout(pg.gtx)
+							return txt.Layout(gtx)
 						},
 						func(gtx C) D {
-							return layout.Center.Layout(pg.gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Horizontal}.Layout(pg.gtx,
+							return layout.Center.Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
-											return pg.resetSeedFields.Layout(pg.gtx)
+										return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+											return pg.resetSeedFields.Layout(gtx)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
-										return layout.UniformInset(values.MarginPadding5).Layout(pg.gtx, func(gtx C) D {
+										return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 											pg.hidePasswordModal.Background = common.theme.Color.Primary
 											pg.hidePasswordModal.Color = color.RGBA{255, 255, 255, 255}
-											return pg.hidePasswordModal.Layout(pg.gtx)
+											return pg.hidePasswordModal.Layout(gtx)
 										})
 									}),
 								)
 							})
 						},
 					}
-					return pg.theme.Modal(pg.gtx, modalTitle, w)
+					return pg.theme.Modal(gtx, modalTitle, w)
 				}
 				return layout.Dimensions{}
 			}),
@@ -254,18 +252,18 @@ func (pg *createRestore) layout(common pageCommon) layout.Dimensions {
 	})
 }
 
-func (pg *createRestore) mainContent() layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return layout.W.Layout(pg.gtx, func(gtx C) D {
+			return layout.W.Layout(gtx, func(gtx C) D {
 				if pg.info.LoadedWallets > 0 {
-					return pg.closeCreateRestore.Layout(pg.gtx)
+					return pg.closeCreateRestore.Layout(gtx)
 				}
 				return layout.Dimensions{}
 			})
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
 				title := pg.theme.H3("")
 				title.Alignment = text.Middle
 				if pg.info.LoadedWallets > 0 {
@@ -273,20 +271,20 @@ func (pg *createRestore) mainContent() layout.Dimensions {
 				} else {
 					title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
 				}
-				return title.Layout(pg.gtx)
+				return title.Layout(gtx)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			btnPadding := values.MarginPadding10
-			return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func(gtx C) D {
-						return pg.create.Layout(pg.gtx)
+					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+						return pg.create.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(pg.gtx, func(gtx C) D {
-						return pg.showRestoreWallet.Layout(pg.gtx)
+					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+						return pg.showRestoreWallet.Layout(gtx)
 					})
 				}),
 			)
@@ -294,54 +292,54 @@ func (pg *createRestore) mainContent() layout.Dimensions {
 	)
 }
 
-func (pg *createRestore) restore() layout.Dimensions {
-	dims := layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
+	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return layout.W.Layout(pg.gtx, func(gtx C) D {
-				return pg.hideRestoreWallet.Layout(pg.gtx)
+			return layout.W.Layout(gtx, func(gtx C) D {
+				return pg.hideRestoreWallet.Layout(gtx)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			txt := pg.theme.H3("Restore from seed phrase")
 			txt.Alignment = text.Middle
-			return txt.Layout(pg.gtx)
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			txt := pg.theme.H6("Enter your seed phrase in the correct order")
 			txt.Alignment = text.Middle
-			return txt.Layout(pg.gtx)
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(pg.gtx, func(gtx C) D {
-				return layout.Center.Layout(pg.gtx, func(gtx C) D {
-					return pg.errLabel.Layout(pg.gtx)
+			return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return pg.errLabel.Layout(gtx)
 				})
 			})
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.Center.Layout(pg.gtx, func(gtx C) D {
-				return layout.Flex{}.Layout(pg.gtx,
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						pg.gtx.Constraints.Max.X = pg.gtx.Constraints.Max.X / 2
-						return pg.inputsGroup(pg.seedListLeft, 16, 0)
+						gtx.Constraints.Max.X = gtx.Constraints.Max.X / 2
+						return pg.inputsGroup(gtx, pg.seedListLeft, 16, 0)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.inputsGroup(pg.seedListRight, 17, 16)
+						return pg.inputsGroup(gtx, pg.seedListRight, 17, 16)
 					}),
 				)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Center.Layout(pg.gtx, func(gtx C) D {
-				return layout.Flex{Alignment: layout.Middle}.Layout(pg.gtx,
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15,
-							Right: values.MarginPadding10}.Layout(pg.gtx, func(gtx C) D {
-							return pg.showPasswordModal.Layout(pg.gtx)
+							Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return pg.showPasswordModal.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.showResetModal.Layout(pg.gtx)
+						return pg.showResetModal.Layout(gtx)
 					}),
 				)
 			})
@@ -350,10 +348,10 @@ func (pg *createRestore) restore() layout.Dimensions {
 	return dims
 }
 
-func (pg *createRestore) processing() layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+func (pg *createRestore) processing(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
-			return layout.Center.Layout(pg.gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
 				message := pg.theme.H3("")
 				message.Alignment = text.Middle
 				if pg.restoring {
@@ -361,52 +359,42 @@ func (pg *createRestore) processing() layout.Dimensions {
 				} else {
 					message.Text = "creating wallet..."
 				}
-				return message.Layout(pg.gtx)
+				return message.Layout(gtx)
 			})
 		}))
 }
 
-func (pg *createRestore) inputsGroup(l *layout.List, len int, startIndex int) layout.Dimensions {
-	return l.Layout(pg.gtx, len, func(gtx C, i int) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(pg.gtx,
+func (pg *createRestore) inputsGroup(gtx layout.Context, l *layout.List, len int, startIndex int) layout.Dimensions {
+	return l.Layout(gtx, len, func(gtx C, i int) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(pg.gtx,
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Left: values.MarginPadding20, Bottom: values.MarginPadding20}.Layout(pg.gtx, func(gtx C) D {
-							return pg.seedEditors.editors[i+startIndex].Layout(pg.gtx)
+						return layout.Inset{Left: values.MarginPadding20, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+							return pg.seedEditors.editors[i+startIndex].Layout(gtx)
 						})
 					}),
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding5, Left: values.MarginPadding20}.Layout(pg.gtx, func(gtx C) D {
-					return pg.autoComplete(i, startIndex)
+				return layout.Inset{Top: values.MarginPadding5, Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+					return pg.autoComplete(gtx, i, startIndex)
 				})
 			}),
 		)
 	})
 }
 
-func (pg *createRestore) autoComplete(index, startIndex int) layout.Dimensions {
+func (pg *createRestore) autoComplete(gtx layout.Context, index, startIndex int) layout.Dimensions {
 	if index+startIndex != pg.seedEditors.focusIndex {
 		return layout.Dimensions{}
 	}
 
-	return pg.autoCompleteList.Layout(pg.gtx, len(pg.suggestions), func(gtx C, i int) D {
-		return layout.Inset{Right: values.MarginPadding5}.Layout(pg.gtx, func(gtx C) D {
-			return pg.seedSuggestions[i].Layout(pg.gtx)
+	return pg.autoCompleteList.Layout(gtx, len(pg.suggestions), func(gtx C, i int) D {
+		return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return pg.seedSuggestions[i].Layout(gtx)
 		})
 	})
-}
-
-func currentFocus(focusedList []int) int {
-	f := 0
-	for i, e := range focusedList {
-		if i == 0 || e > f {
-			f = e
-		}
-	}
-	return f
 }
 
 func (pg *createRestore) onSuggestionSeedsClicked() {

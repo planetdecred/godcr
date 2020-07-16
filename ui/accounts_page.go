@@ -51,12 +51,12 @@ func (win *Window) WalletAccountPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		page.handle(common)
-		return page.Layout(common)
+		return page.Layout(gtx, common)
 	}
 }
 
 // Layout lays out the widgets for the change wallet passphrase page.
-func (page *walletAccountPage) Layout(common pageCommon) layout.Dimensions {
+func (page *walletAccountPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	select {
 	case err := <-page.errChan:
 		page.state = false
@@ -68,7 +68,7 @@ func (page *walletAccountPage) Layout(common pageCommon) layout.Dimensions {
 	default:
 	}
 
-	return layout.Flex{}.Layout(common.gtx,
+	return layout.Flex{}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
 			if page.state {
 				return page.processing(common)(gtx)
@@ -77,14 +77,13 @@ func (page *walletAccountPage) Layout(common pageCommon) layout.Dimensions {
 					page.walletID = common.info.Wallets[*common.selectedWallet].ID
 					page.passwordModal.Layout(gtx, page.confirm, page.cancel)
 				}
-				return page.createAccount(common)
+				return page.createAccount(gtx, common)
 			}
 		}),
 	)
 }
 
-func (page *walletAccountPage) createAccount(common pageCommon) layout.Dimensions {
-	gtx := common.gtx
+func (page *walletAccountPage) createAccount(gtx layout.Context, common pageCommon) layout.Dimensions {
 	wdgs := []func(gtx C) D{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
