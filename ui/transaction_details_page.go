@@ -178,7 +178,7 @@ func (pg *transactionPage) txnBalanceAndStatus(gtx layout.Context, common *pageC
 func (pg *transactionPage) txnTypeAndID(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	transaction := *pg.txnInfo
 
-	row := func(label string, t decredmaterial.Label) layout.Dimensions {
+	column := func(gtx layout.Context, label string, t decredmaterial.Label) layout.Dimensions {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				lb := common.theme.Body1(label)
@@ -194,23 +194,23 @@ func (pg *transactionPage) txnTypeAndID(gtx layout.Context, common *pageCommon) 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-				return row("Transaction ID", common.theme.Body1(transaction.Txn.Hash))
+				return column(gtx, "Transaction ID", common.theme.Body1(transaction.Txn.Hash))
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return row("To", common.theme.H6(transaction.WalletName))
+					return column(gtx, "To", common.theme.H6(transaction.WalletName))
 				}),
 				layout.Rigid(func(gtx C) D {
 					txt := ""
 					if transaction.Txn.BlockHeight != -1 {
 						txt = fmt.Sprintf("%d", transaction.Txn.BlockHeight)
 					}
-					return row("Included in block", common.theme.H6(txt))
+					return column(gtx, "Included in block", common.theme.H6(txt))
 				}),
 				layout.Rigid(func(gtx C) D {
-					return row("Type", common.theme.H6(transaction.Txn.Type))
+					return column(gtx, "Type", common.theme.H6(transaction.Txn.Type))
 				}),
 			)
 		}),

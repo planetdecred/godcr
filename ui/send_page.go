@@ -159,8 +159,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		page.Handle(common)
-		// page.drawConfirmationModal(gtx, common)
-		// page.drawPasswordModal(gtx, common)
+		page.drawConfirmationModal(gtx, common)
+		page.drawPasswordModal(gtx, common)
 		return page.Layout(gtx, common)
 	}
 }

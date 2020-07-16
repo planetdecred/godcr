@@ -57,6 +57,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		signedMessageLabel: common.theme.H5(""),
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
+		messageEditor:      messageEditor,
 
 		clearButton: clearButton,
 		signButton:  common.theme.Button(new(widget.Clickable), "Sign"),

@@ -106,16 +106,16 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 	dims := layout.Flex{}.Layout(gtx, layout.Rigid(func(gtx C) D {
 		return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: widgetAxis, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					if t.Icon != nil {
-						layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-							dim := gtx.Px(unit.Dp(20))
-							gtx.Constraints.Max = image.Point{X: dim, Y: dim}
-							return t.layoutIcon(gtx)
-						})
-					}
-					return layout.Dimensions{}
-				}),
+				//layout.Rigid(func(gtx C) D {
+				//	if t.Icon != nil {
+				//		layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
+				//			dim := gtx.Px(unit.Dp(20))
+				//			gtx.Constraints.Max = image.Point{X: dim, Y: dim}
+				//			return t.layoutIcon(gtx)
+				//		})
+				//	}
+				//	return layout.Dimensions{}
+				//}),
 				layout.Rigid(func(gtx C) D {
 					return t.label.Layout(gtx)
 				}),
@@ -142,7 +142,8 @@ func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position)
 				gtx.Constraints.Min.X = adaptiveTabWidth
 			}
 			tabWidth, tabHeight = tabIndicatorDimensions(iconTextDims, tabPosition)
-			return t.button.Layout(gtx)
+			b := t.button.Layout(gtx)
+			return b
 		}),
 		layout.Expanded(func(gtx C) D {
 			if selected != t.index {
@@ -168,7 +169,7 @@ type Tabs struct {
 	items            []TabItem
 	Selected         int
 	previousSelected int
-	prevEvents   int
+	prevEvents       int
 	events           []widget.ChangeEvent
 	// btns             []*widget.Clickable
 	title       Label
@@ -207,7 +208,7 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 }
 
 // scrollButton lays out the right and left scroll buttons of the tab when Position is Horizontal.
-func (t *Tabs) scrollButton(gtx layout.Context, right bool, button *widget.Clickable) layout.FlexChild {
+func (t *Tabs) scrollButton(right bool, button *widget.Clickable) layout.FlexChild {
 	show := false
 	icon := mustIcon(widget.NewIcon(icons.NavigationChevronLeft))
 	if right && t.list.Position.BeforeEnd {
@@ -218,11 +219,12 @@ func (t *Tabs) scrollButton(gtx layout.Context, right bool, button *widget.Click
 	if !right && t.list.Position.Offset > 0 {
 		show = true
 	}
-	return layout.Rigid(func(ctx C) D {
+	return layout.Rigid(func(gtx C) D {
 		if (t.Position == Top || t.Position == Bottom) && show {
 			t.iconButton.Icon = icon
-			t.iconButton.Size = unit.Dp(35)
+			t.iconButton.Size = unit.Dp(20)
 			t.iconButton.Color = rgb(0xbbbbbb)
+			t.iconButton.Background = color.RGBA{}
 			t.iconButton.Button = button
 			return t.iconButton.Layout(gtx)
 		}
@@ -236,10 +238,10 @@ func (t *Tabs) SetTitle(title Label) {
 }
 
 // tabsTitle lays out the title of the tab when Position is Horizontal.
-func (t *Tabs) tabsTitle(gtx layout.Context) layout.FlexChild {
+func (t *Tabs) tabsTitle() layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		if (t.Position == Top || t.Position == Bottom) && t.title.Text != "" {
-			layout.Inset{Top: values.MarginPadding10, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 				return t.title.Layout(gtx)
 			})
 		}
@@ -248,7 +250,7 @@ func (t *Tabs) tabsTitle(gtx layout.Context) layout.FlexChild {
 }
 
 // contentTabPosition determines the order of the tab and page content depending on the tab Position.
-func (t *Tabs) contentTabPosition(gtx layout.Context, body layout.Widget) (widgets []layout.FlexChild) {
+func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChild) {
 	var content, tab layout.FlexChild
 
 	widgets = make([]layout.FlexChild, 2)
@@ -257,15 +259,15 @@ func (t *Tabs) contentTabPosition(gtx layout.Context, body layout.Widget) (widge
 		dims := layout.Stack{}.Layout(gtx,
 			layout.Stacked(func(gtx C) D {
 				return layout.Flex{Axis: t.list.Axis, Spacing: layout.SpaceBetween}.Layout(gtx,
-					t.tabsTitle(gtx),
-					t.scrollButton(gtx, false, t.scrollLeft),
+					t.tabsTitle(),
+					t.scrollButton(false, t.scrollLeft),
 					layout.Flexed(1, func(gtx C) D {
 						return t.list.Layout(gtx, len(t.items), func(gtx C, i int) D {
 							t.items[i].index = i
 							return t.items[i].Layout(gtx, t.Selected, t.Position)
 						})
 					}),
-					t.scrollButton(gtx, true, t.scrollRight),
+					t.scrollButton(true, t.scrollRight),
 				)
 			}),
 			layout.Expanded(func(gtx C) D {
@@ -352,7 +354,7 @@ func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions 
 		t.flex.Axis = layout.Horizontal
 	}
 
-	widgets := t.contentTabPosition(gtx, body)
+	widgets := t.contentTabPosition(body)
 	t.flex.Spacing = layout.SpaceBetween
 	return t.flex.Layout(gtx, widgets...)
 }
