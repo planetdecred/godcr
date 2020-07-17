@@ -1,10 +1,8 @@
 package decredmaterial
 
 import (
-	"image"
 	"image/color"
 
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -12,10 +10,10 @@ import (
 
 type Collapsible struct {
 	isExpanded            bool
-	buttonWidget          *widget.Button
+	buttonWidget          *widget.Clickable
 	line                  *Line
-	expandedIcon          *Icon
-	collapsedIcon         *Icon
+	expandedIcon          *widget.Icon
+	collapsedIcon         *widget.Icon
 	headerBackgroundColor color.RGBA
 }
 
@@ -26,7 +24,7 @@ func (t *Theme) Collapsible() *Collapsible {
 		expandedIcon:          t.chevronUpIcon,
 		collapsedIcon:         t.chevronDownIcon,
 		line:                  t.Line(),
-		buttonWidget:          new(widget.Button),
+		buttonWidget:          new(widget.Clickable),
 	}
 
 	c.line.Color = t.Color.Gray
@@ -35,45 +33,55 @@ func (t *Theme) Collapsible() *Collapsible {
 	return c
 }
 
-func (c *Collapsible) layoutHeader(gtx *layout.Context, headerFunc func(*layout.Context)) {
+func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.Dimensions {
 	icon := c.collapsedIcon
 	if c.isExpanded {
 		icon = c.expandedIcon
 	}
 
-	layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func() {
-			headerFunc(gtx)
+	dims := layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return header(gtx)
 		}),
-		layout.Rigid(func() {
-			layout.Inset{Right: unit.Dp(20)}.Layout(gtx, func() {
-				icon.Layout(gtx, unit.Dp(20))
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Right: unit.Dp(20)}.Layout(gtx, func(C) D {
+				return icon.Layout(gtx, unit.Dp(20))
 			})
 		}),
 	)
-	pointer.Rect(image.Rectangle{Max: gtx.Dimensions.Size}).Add(gtx.Ops)
-	c.buttonWidget.Layout(gtx)
+
+	return dims
 }
 
-func (c *Collapsible) Layout(gtx *layout.Context, headerFunc, contentFunc func(*layout.Context)) {
-	for c.buttonWidget.Clicked(gtx) {
+func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(C) D) layout.Dimensions {
+	for c.buttonWidget.Clicked() {
 		c.isExpanded = !c.isExpanded
 	}
 
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func() {
-			c.line.Width = gtx.Constraints.Width.Max
-			c.line.Layout(gtx)
+	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			c.line.Width = gtx.Constraints.Max.X
+			return c.line.Layout(gtx)
 		}),
-		layout.Rigid(func() {
-			layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func() {
-				c.layoutHeader(gtx, headerFunc)
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return c.layoutHeader(gtx, header)
+					}),
+					layout.Expanded(c.buttonWidget.Layout),
+				)
 			})
 		}),
-		layout.Rigid(func() {
+		layout.Rigid(func(gtx C) D {
 			if c.isExpanded {
-				contentFunc(gtx)
+				return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
+					return content(gtx)
+				})
 			}
+			return layout.Dimensions{}
 		}),
 	)
+	return dims
 }

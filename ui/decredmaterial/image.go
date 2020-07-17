@@ -29,17 +29,15 @@ func (t *Theme) Image(img paint.ImageOp) Image {
 	}
 }
 
-func (im Image) Layout(gtx *layout.Context) {
+func (im Image) Layout(gtx layout.Context) layout.Dimensions {
 	size := im.Src.Rect.Size()
 	wf, hf := float32(size.X), float32(size.Y)
 	w, h := gtx.Px(unit.Dp(wf*im.Scale)), gtx.Px(unit.Dp(hf*im.Scale))
-	cs := gtx.Constraints
-	d := image.Point{X: cs.Width.Constrain(w), Y: cs.Height.Constrain(h)}
-	var s op.StackOp
-	s.Push(gtx.Ops)
-	clip.Rect{Rect: f32.Rectangle{Max: toPointF(d)}}.Op(gtx.Ops).Add(gtx.Ops)
+	d := gtx.Constraints.Constrain(image.Point{X: w, Y: h})
+	var s = op.Push(gtx.Ops)
+	clip.RRect{Rect: f32.Rectangle{Max: toPointF(d)}}.Add(gtx.Ops)
 	im.Src.Add(gtx.Ops)
 	paint.PaintOp{Rect: f32.Rectangle{Max: f32.Point{X: float32(w), Y: float32(h)}}}.Add(gtx.Ops)
 	s.Pop()
-	gtx.Dimensions = layout.Dimensions{Size: d}
+	return layout.Dimensions{Size: d}
 }

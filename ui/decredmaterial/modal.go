@@ -12,17 +12,18 @@ type Modal struct {
 }
 
 // Layout the modal
-func (m Modal) Layout(gtx *layout.Context, background, dialog layout.Widget) {
-	layout.Stack{Alignment: m.Direction}.Layout(gtx,
+func (m Modal) Layout(gtx layout.Context, background, dialog layout.Widget) layout.Dimensions {
+	dims := layout.Stack{Alignment: m.Direction}.Layout(gtx,
 		layout.Stacked(background),
-		layout.Expanded(func() {
-			fill(gtx, argb(0x7F444444))
+		layout.Expanded(func(gtx C) D {
+			return fill(gtx, argb(0x7F444444))
 		}),
-		layout.Stacked(func() {
-			gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-			gtx.Constraints.Height.Min = gtx.Constraints.Height.Max
-			new(widget.Button).Layout(gtx)
+		layout.Stacked(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return new(widget.Clickable).Layout(gtx)
 		}),
 		layout.Stacked(dialog),
 	)
+	return dims
 }

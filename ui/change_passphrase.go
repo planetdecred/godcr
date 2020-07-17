@@ -16,214 +16,216 @@ import (
 const PageWalletPassphrase = "walletPassphrase"
 
 type walletPassphrasePage struct {
-	container                     layout.List
-	newPassW, confPassW, oldPassW widget.Editor
-	newPass, confPass, oldPass    decredmaterial.Editor
-	passwordBar                   *decredmaterial.ProgressBar
-	backButtonW, savePasswordW    widget.Button
-	backButton                    decredmaterial.IconButton
-	savePassword                  decredmaterial.Button
-	errorLabel                    decredmaterial.Label
+	container                  layout.List
+	newPass, confPass, oldPass decredmaterial.Editor
+	passwordBar                decredmaterial.ProgressBarStyle
+	backButton                 decredmaterial.IconButton
+	savePassword               decredmaterial.Button
+	errorLabel                 decredmaterial.Label
 }
 
 func (win *Window) WalletPassphrasePage(common pageCommon) layout.Widget {
-	page := &walletPassphrasePage{
+	pg := &walletPassphrasePage{
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
-		oldPass:      common.theme.Editor("Enter old password"),
-		newPass:      common.theme.Editor("Enter new password"),
-		confPass:     common.theme.Editor("Confirm new password"),
-		savePassword: common.theme.Button("Change"),
+		oldPass:      common.theme.Editor(new(widget.Editor), "Enter old password"),
+		newPass:      common.theme.Editor(new(widget.Editor), "Enter new password"),
+		confPass:     common.theme.Editor(new(widget.Editor), "Confirm new password"),
+		savePassword: common.theme.Button(new(widget.Clickable), "Change"),
 		errorLabel:   common.theme.Caption(""),
-		backButton:   common.theme.PlainIconButton(common.icons.navigationArrowBack),
+		backButton:   common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 	}
-	page.oldPass.IsRequired = true
-	page.oldPassW.SingleLine = true
-	page.newPass.IsRequired = true
-	page.newPassW.SingleLine = true
-	page.confPass.IsRequired = true
-	page.confPassW.SingleLine = true
-	page.savePassword.TextSize = values.TextSize12
-	page.savePassword.Background = common.theme.Color.Hint
-	page.passwordBar = common.theme.ProgressBar(0)
-	page.errorLabel.Color = common.theme.Color.Danger
+	pg.oldPass.IsRequired = true
+	pg.oldPass.Editor.SingleLine = true
+	pg.newPass.IsRequired = true
+	pg.newPass.Editor.SingleLine = true
+	pg.confPass.IsRequired = true
+	pg.confPass.Editor.SingleLine = true
+	pg.savePassword.TextSize = values.TextSize12
+	pg.savePassword.Background = common.theme.Color.Hint
+	pg.passwordBar = common.theme.ProgressBar(0)
+	pg.errorLabel.Color = common.theme.Color.Danger
 
-	page.backButton.Color = common.theme.Color.Hint
-	page.backButton.Size = values.MarginPadding30
+	pg.backButton.Color = common.theme.Color.Hint
+	pg.backButton.Size = values.MarginPadding30
 
-	return func() {
-		page.Layout(common)
-		page.handle(common)
+	return func(gtx C) D {
+		pg.handle(common)
+		return pg.Layout(gtx, common)
 	}
 }
 
-// Layout lays out the widgets for the change wallet passphrase page.
-func (page *walletPassphrasePage) Layout(common pageCommon) {
-	gtx := common.gtx
-	wdgs := []func(){
-		func() {
-			layout.W.Layout(common.gtx, func() {
-				page.backButton.Layout(common.gtx, &page.backButtonW)
-			})
-			layout.Inset{Left: values.MarginPadding45}.Layout(common.gtx, func() {
-				common.theme.H5("Change Wallet Password").Layout(gtx)
-			})
-		},
-		func() {
-			layout.Flex{}.Layout(gtx,
-				layout.Rigid(func() {
-					layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func() {
-						common.theme.Body1("Are about changing the passphrase for").Layout(gtx)
+// Layout lays out the widgets for the change wallet passphrase pg.
+func (pg *walletPassphrasePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	wdgs := []func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.W.Layout(gtx, func(gtx C) D {
+						return pg.backButton.Layout(gtx)
 					})
 				}),
-				layout.Rigid(func() {
-					layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
-						txt := common.theme.H5(common.info.Wallets[*common.selectedWallet].Name)
-						txt.Color = common.theme.Color.Danger
-						txt.Layout(gtx)
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+						return common.theme.H5("Change Wallet Password").Layout(gtx)
 					})
 				}),
 			)
 		},
-		func() {
-			page.errorLabel.Layout(gtx)
+		func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return common.theme.Body1("Are about changing the passphrase for").Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						txt := common.theme.H5(common.info.Wallets[*common.selectedWallet].Name)
+						txt.Color = common.theme.Color.Danger
+						return txt.Layout(gtx)
+					})
+				}),
+			)
 		},
-		func() {
-			page.oldPass.Layout(gtx, &page.oldPassW)
+		func(gtx C) D {
+			return pg.errorLabel.Layout(gtx)
 		},
-		func() {
-			// page.passwordStrength(common)
+		func(gtx C) D {
+			return pg.oldPass.Layout(gtx)
 		},
-		func() {
-			page.newPass.Layout(gtx, &page.newPassW)
+		func(gtx C) D {
+			// pg.passwordStrength(common)
+			return layout.Dimensions{}
 		},
-		func() {
-			page.confPass.Layout(gtx, &page.confPassW)
+		func(gtx C) D {
+			return pg.newPass.Layout(gtx)
 		},
-		func() {
-			layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func() {
-				page.savePassword.Layout(gtx, &page.savePasswordW)
+		func(gtx C) D {
+			return pg.confPass.Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+				return pg.savePassword.Layout(gtx)
 			})
 		},
 	}
 
-	common.Layout(gtx, func() {
-		page.container.Layout(gtx, len(wdgs), func(i int) {
-			layout.UniformInset(values.MarginPadding5).Layout(gtx, wdgs[i])
+	return common.Layout(gtx, func(gtx C) D {
+		return pg.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, wdgs[i])
 		})
 	})
 }
 
-func (page *walletPassphrasePage) passwordStrength(common pageCommon) {
-	layout.Inset{Top: values.MarginPadding10}.Layout(common.gtx, func() {
-		common.gtx.Constraints.Height.Max = 20
-		page.passwordBar.Layout(common.gtx)
+func (pg *walletPassphrasePage) passwordStrength(gtx layout.Context, common pageCommon) {
+	layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Max.Y = 20
+		return pg.passwordBar.Layout(gtx)
 	})
 }
 
-// Handle handles all widget inputs on the main wallets page.
-func (page *walletPassphrasePage) handle(common pageCommon) {
-	gtx := common.gtx
+// Handle handles all widget inputs on the main wallets pg.
+func (pg *walletPassphrasePage) handle(common pageCommon) {
+	pg.handlerEditorEvents(common, pg.confPass.Editor)
+	pg.handlerEditorEvents(common, pg.newPass.Editor)
+	pg.handlerEditorEvents(common, pg.oldPass.Editor)
 
-	page.handlerEditorEvents(common, &page.confPassW)
-	page.handlerEditorEvents(common, &page.newPassW)
-	page.handlerEditorEvents(common, &page.oldPassW)
-
-	if page.savePasswordW.Clicked(gtx) && page.validateInputs(common) {
-		op := page.oldPassW.Text()
-		np := page.newPassW.Text()
+	if pg.savePassword.Button.Clicked() && pg.validateInputs(common) {
+		op := pg.oldPass.Editor.Text()
+		np := pg.newPass.Editor.Text()
 
 		err := common.wallet.ChangeWalletPassphrase(common.info.Wallets[*common.selectedWallet].ID, op, np)
 		if err != nil {
 			log.Debug("Error changing wallet password " + err.Error())
 			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-				page.errorLabel.Text = "Passphrase is incorrect"
+				pg.errorLabel.Text = "Passphrase is incorrect"
 			} else {
-				page.errorLabel.Text = err.Error()
+				pg.errorLabel.Text = err.Error()
 			}
 			return
 		}
 
-		page.errorLabel.Text = "Password changed successfully"
-		page.errorLabel.Color = common.theme.Color.Success
-		page.savePassword.Text = "Changed"
-		page.savePassword.Background = common.theme.Color.Success
-		page.resetFields()
+		pg.errorLabel.Text = "Password changed successfully"
+		pg.errorLabel.Color = common.theme.Color.Success
+		pg.savePassword.Text = "Changed"
+		pg.savePassword.Background = common.theme.Color.Success
+		pg.resetFields()
 	}
 
-	if strings.Trim(page.newPassW.Text(), " ") != "" {
-		strength := dcrlibwallet.ShannonEntropy(page.newPassW.Text()) / 4.0
+	if strings.Trim(pg.newPass.Editor.Text(), " ") != "" {
+		strength := dcrlibwallet.ShannonEntropy(pg.newPass.Editor.Text()) / 4.0
 		switch {
 		case strength > 0.6:
-			page.passwordBar.ProgressColor = common.theme.Color.Success
+			pg.passwordBar.Color = common.theme.Color.Success
 		case strength > 0.3 && strength <= 0.6:
-			page.passwordBar.ProgressColor = color.RGBA{248, 231, 27, 255}
+			pg.passwordBar.Color = color.RGBA{248, 231, 27, 255}
 		default:
-			page.passwordBar.ProgressColor = common.theme.Color.Danger
+			pg.passwordBar.Color = common.theme.Color.Danger
 		}
 
-		page.passwordBar.Progress = strength * 100
+		pg.passwordBar.Progress = int(strength * 100)
 	}
 
-	if page.backButtonW.Clicked(common.gtx) {
-		page.clear(common)
+	if pg.backButton.Button.Clicked() {
+		pg.clear(common)
 		*common.page = PageWallet
 	}
 }
 
-func (page *walletPassphrasePage) validateInputs(common pageCommon) bool {
-	page.errorLabel.Text = ""
-	page.oldPass.ErrorLabel.Text = ""
-	page.newPass.ErrorLabel.Text = ""
-	page.confPass.ErrorLabel.Text = ""
-	page.savePassword.Background = common.theme.Color.Hint
+func (pg *walletPassphrasePage) validateInputs(common pageCommon) bool {
+	pg.errorLabel.Text = ""
+	pg.oldPass.ErrorLabel.Text = ""
+	pg.newPass.ErrorLabel.Text = ""
+	pg.confPass.ErrorLabel.Text = ""
+	pg.savePassword.Background = common.theme.Color.Hint
 
-	if page.oldPassW.Text() == "" {
-		page.oldPass.ErrorLabel.Text = "Please wallet old password"
+	if pg.oldPass.Editor.Text() == "" {
+		pg.oldPass.ErrorLabel.Text = "Please wallet old password"
 		return false
 	}
-	if page.newPassW.Text() == "" {
-		page.newPass.ErrorLabel.Text = "Please wallet new password"
+	if pg.newPass.Editor.Text() == "" {
+		pg.newPass.ErrorLabel.Text = "Please wallet new password"
 		return false
 	}
-	if page.confPassW.Text() == "" {
-		page.confPass.ErrorLabel.Text = "Please wallet new password again"
-		return false
-	}
-
-	if page.confPassW.Text() != page.newPassW.Text() {
-		page.errorLabel.Text = "New wallet passwords does no match. Try again."
+	if pg.confPass.Editor.Text() == "" {
+		pg.confPass.ErrorLabel.Text = "Please wallet new password again"
 		return false
 	}
 
-	page.savePassword.Background = common.theme.Color.Primary
+	if pg.confPass.Editor.Text() != pg.newPass.Editor.Text() {
+		pg.errorLabel.Text = "New wallet passwords does no match. Try again."
+		return false
+	}
+
+	pg.savePassword.Background = common.theme.Color.Primary
 	return true
 }
 
-func (page *walletPassphrasePage) handlerEditorEvents(common pageCommon, w *widget.Editor) {
-	for _, evt := range w.Events(common.gtx) {
+func (pg *walletPassphrasePage) handlerEditorEvents(common pageCommon, w *widget.Editor) {
+	for _, evt := range w.Events() {
 		switch evt.(type) {
 		case widget.ChangeEvent:
-			page.validateInputs(common)
+			pg.validateInputs(common)
 			return
 		}
 	}
 }
 
-func (page *walletPassphrasePage) resetFields() {
-	page.oldPassW.SetText("")
-	page.newPassW.SetText("")
-	page.confPassW.SetText("")
-	page.passwordBar.Progress = 0
+func (pg *walletPassphrasePage) resetFields() {
+	pg.oldPass.Editor.SetText("")
+	pg.newPass.Editor.SetText("")
+	pg.confPass.Editor.SetText("")
+	pg.passwordBar.Progress = 0
 }
 
-func (page *walletPassphrasePage) clear(common pageCommon) {
-	page.savePassword.Background = common.theme.Color.Hint
-	page.oldPassW.SetText("")
-	page.newPassW.SetText("")
-	page.confPassW.SetText("")
-	page.errorLabel.Text = ""
-	page.savePassword.Text = "Change"
-	page.passwordBar.Progress = 0
+func (pg *walletPassphrasePage) clear(common pageCommon) {
+	pg.savePassword.Background = common.theme.Color.Hint
+	pg.oldPass.Editor.SetText("")
+	pg.newPass.Editor.SetText("")
+	pg.confPass.Editor.SetText("")
+	pg.errorLabel.Text = ""
+	pg.savePassword.Text = "Change"
+	pg.passwordBar.Progress = 0
 }
