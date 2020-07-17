@@ -4,9 +4,6 @@ import (
 	"image"
 	"image/color"
 
-	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/image/draw"
-
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -14,6 +11,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/raedahgroup/godcr/ui/values"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const (
@@ -83,15 +81,8 @@ func line(gtx layout.Context, width, height int, col color.RGBA) layout.Dimensio
 
 // layoutIcon lays out the icon of a tab item
 func (t *TabItem) layoutIcon(gtx layout.Context) layout.Dimensions {
-	sz := gtx.Constraints.Min.X
-	if t.iconOp.Size().X != sz {
-		img := image.NewRGBA(image.Rectangle{Max: image.Point{X: sz, Y: sz}})
-		draw.ApproxBiLinear.Scale(img, img.Bounds(), t.Icon, t.Icon.Bounds(), draw.Src, nil)
-		t.iconOp = paint.NewImageOp(img)
-	}
-
 	img := widget.Image{Src: t.iconOp}
-	img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+	img.Scale = 0.05
 	return img.Layout(gtx)
 }
 
@@ -106,16 +97,13 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 	dims := layout.Flex{}.Layout(gtx, layout.Rigid(func(gtx C) D {
 		return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: widgetAxis, Alignment: layout.Middle}.Layout(gtx,
-				//layout.Rigid(func(gtx C) D {
-				//	if t.Icon != nil {
-				//		layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-				//			dim := gtx.Px(unit.Dp(20))
-				//			gtx.Constraints.Max = image.Point{X: dim, Y: dim}
-				//			return t.layoutIcon(gtx)
-				//		})
-				//	}
-				//	return layout.Dimensions{}
-				//}),
+				layout.Rigid(func(gtx C) D {
+					return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
+						dim := gtx.Px(unit.Dp(20))
+						gtx.Constraints.Max = image.Point{X: dim, Y: dim}
+						return t.layoutIcon(gtx)
+					})
+				}),
 				layout.Rigid(func(gtx C) D {
 					return t.label.Layout(gtx)
 				}),
@@ -125,11 +113,23 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 	return dims
 }
 
+func NewTabItem(title string, icon *image.Image) TabItem {
+	tabItem := TabItem{
+		Title: title,
+	}
+
+	if icon != nil {
+		tabItem.iconOp = paint.NewImageOp(*icon)
+	}
+
+	return tabItem
+}
+
 func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position) layout.Dimensions {
 	var tabWidth, tabHeight int
 	var iconTextDims layout.Dimensions
 
-	dims := layout.Stack{}.Layout(gtx,
+	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			iconTextDims = t.iconText(gtx, tabPosition)
 			if iconTextDims.Size.X > adaptiveTabWidth {
@@ -158,7 +158,6 @@ func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position)
 			})
 		}),
 	)
-	return dims
 }
 
 // Tabs displays succession of TabItems. Using the Position option, Tabs can be displayed on any four sides

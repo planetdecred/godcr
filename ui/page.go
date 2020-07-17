@@ -82,26 +82,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 	tabs := decredmaterial.NewTabs(win.theme)
 	tabs.SetTabs([]decredmaterial.TabItem{
-		{
-			Title: "Overview",
-			Icon:  ic.overviewIcon,
-		},
-		{
-			Title: "Wallets",
-			Icon:  ic.walletIcon,
-		},
-		{
-			Title: "Send",
-			Icon:  ic.sendIcon,
-		},
-		{
-			Title: "Receive",
-			Icon:  ic.receiveIcon,
-		},
-		{
-			Title: "Transactions",
-			Icon:  ic.transactionIcon,
-		},
+		decredmaterial.NewTabItem("Overview", &ic.overviewIcon),
+		decredmaterial.NewTabItem("Wallets", &ic.walletIcon),
+		decredmaterial.NewTabItem("Send", &ic.sendIcon),
+		decredmaterial.NewTabItem("Receive", &ic.receiveIcon),
+		decredmaterial.NewTabItem("Transactions", &ic.transactionIcon),
 	})
 
 	accountsTab := decredmaterial.NewTabs(win.theme)
