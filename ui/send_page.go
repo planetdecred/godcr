@@ -159,8 +159,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		page.Handle(common)
-		page.drawConfirmationModal(gtx, common)
-		page.drawPasswordModal(gtx, common)
+		page.drawConfirmationModal(gtx)
+		page.drawPasswordModal(gtx)
 		return page.Layout(gtx, common)
 	}
 }
@@ -468,7 +468,7 @@ func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *SendPage) drawConfirmationModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions {
 	if !pg.isConfirmationModalOpen {
 		return layout.Dimensions{}
 	}
@@ -535,7 +535,7 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context, c pageCommon) layo
 	return pg.theme.Modal(gtx, "Confirm Send Transaction", w)
 }
 
-func (pg *SendPage) drawPasswordModal(gtx layout.Context, c pageCommon) {
+func (pg *SendPage) drawPasswordModal(gtx layout.Context) {
 	if !(pg.isConfirmationModalOpen && pg.isPasswordModalOpen) {
 		return
 	}

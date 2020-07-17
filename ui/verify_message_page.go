@@ -52,13 +52,13 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dim
 	body := func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.header(gtx, &c)),
+				layout.Rigid(pg.header(&c)),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(pg.inputRow(&c, pg.addressInput)),
-						layout.Rigid(pg.inputRow(&c, pg.signInput)),
-						layout.Rigid(pg.inputRow(&c, pg.messageInput)),
-						layout.Rigid(pg.verifyAndClearButtons(&c)),
+						layout.Rigid(pg.inputRow(pg.addressInput)),
+						layout.Rigid(pg.inputRow(pg.signInput)),
+						layout.Rigid(pg.inputRow(pg.messageInput)),
+						layout.Rigid(pg.verifyAndClearButtons()),
 					)
 				}),
 			)
@@ -67,7 +67,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dim
 	return c.Layout(gtx, body)
 }
 
-func (pg *verifyMessagePage) header(gtx layout.Context, c *pageCommon) layout.Widget {
+func (pg *verifyMessagePage) header(c *pageCommon) layout.Widget {
 	return func(gtx C) D {
 		var msg = "After you or your counterparty has genrated a signature, you can use this form to verify the signature." +
 			"\nOnce you have entered the address, the message and the corresponding signature, you will see VALID if the signature" +
@@ -103,7 +103,7 @@ func (pg *verifyMessagePage) header(gtx layout.Context, c *pageCommon) layout.Wi
 	}
 }
 
-func (pg *verifyMessagePage) inputRow(c *pageCommon, editor decredmaterial.Editor) layout.Widget {
+func (pg *verifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widget {
 	return func(gtx C) D {
 		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 			return editor.Layout(gtx)
@@ -111,7 +111,7 @@ func (pg *verifyMessagePage) inputRow(c *pageCommon, editor decredmaterial.Edito
 	}
 }
 
-func (pg *verifyMessagePage) verifyAndClearButtons(c *pageCommon) layout.Widget {
+func (pg *verifyMessagePage) verifyAndClearButtons() layout.Widget {
 	return func(gtx C) D {
 		dims := layout.Flex{}.Layout(gtx,
 			layout.Flexed(.6, func(gtx C) D {

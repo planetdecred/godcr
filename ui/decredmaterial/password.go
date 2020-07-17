@@ -42,7 +42,7 @@ func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func(
 		p.passwordEditor.Editor.Focus()
 	}
 
-	p.handleEvents(gtx, confirm, cancel)
+	p.handleEvents(confirm, cancel)
 	p.updateColors()
 
 	widgets := []func(gtx C) D{
@@ -81,7 +81,7 @@ func (p *Password) updateColors() {
 	}
 }
 
-func (p *Password) handleEvents(gtx layout.Context, confirm func([]byte), cancel func()) {
+func (p *Password) handleEvents(confirm func([]byte), cancel func()) {
 	for p.confirmButton.Button.Clicked() {
 		if p.passwordEditor.Editor.Len() > 0 {
 			confirm([]byte(p.passwordEditor.Editor.Text()))

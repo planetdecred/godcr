@@ -243,7 +243,7 @@ func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Di
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.returnBtn(gtx, common)
+					return pg.returnBtn(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding50}.Layout(gtx, func(gtx C) D {
@@ -452,7 +452,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 }
 
-func (pg *walletPage) returnBtn(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *walletPage) returnBtn(gtx layout.Context) layout.Dimensions {
 	return layout.W.Layout(gtx, func(gtx C) D {
 		return pg.icons.main.Layout(gtx)
 	})

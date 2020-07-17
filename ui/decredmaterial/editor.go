@@ -86,7 +86,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 }
 
 func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
-	e.handleEvents(gtx)
+	e.handleEvents()
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
@@ -185,7 +185,7 @@ func (e Editor) editorLine(gtx C) D {
 	)
 }
 
-func (e Editor) handleEvents(gtx layout.Context) {
+func (e Editor) handleEvents() {
 	for e.pasteBtnMaterial.Button.Clicked() {
 		data, err := clipboard.ReadAll()
 		if err != nil {

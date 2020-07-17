@@ -2,10 +2,11 @@ package ui
 
 import (
 	"errors"
-	"gioui.org/font/gofont"
-	"gioui.org/op"
 	"image"
 	"time"
+
+	"gioui.org/font/gofont"
+	"gioui.org/op"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
