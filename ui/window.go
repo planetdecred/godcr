@@ -23,8 +23,7 @@ import (
 type Window struct {
 	window *app.Window
 	theme  *decredmaterial.Theme
-	ops *op.Ops
-	gtx layout.Context
+	ops    *op.Ops
 
 	wallet             *wallet.Wallet
 	walletInfo         *wallet.MultiWalletInfo
@@ -151,7 +150,7 @@ func (win *Window) Loop(shutdown chan int) {
 				close(shutdown)
 				return
 			case system.FrameEvent:
-				win.gtx = layout.NewContext(win.ops, evt)
+				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
@@ -160,9 +159,9 @@ func (win *Window) Loop(shutdown chan int) {
 				}
 
 				if s.loading {
-					win.Loading()
+					win.Loading(gtx)
 				} else {
-					win.theme.Background(win.gtx, win.pages[win.current])
+					win.theme.Background(gtx, win.pages[win.current])
 				}
 
 				evt.Frame(win.ops)

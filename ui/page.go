@@ -30,15 +30,15 @@ type pageCommon struct {
 	info            *wallet.MultiWalletInfo
 	selectedWallet  *int
 	selectedAccount *int
-	theme         *decredmaterial.Theme
-	icons         pageIcons
-	page          *string
-	navTab        *decredmaterial.Tabs
-	walletsTab    *decredmaterial.Tabs
-	accountsTab   *decredmaterial.Tabs
-	errorChannels map[string]chan error
-	keyEvents     chan *key.Event
-	states        *states
+	theme           *decredmaterial.Theme
+	icons           pageIcons
+	page            *string
+	navTab          *decredmaterial.Tabs
+	walletsTab      *decredmaterial.Tabs
+	accountsTab     *decredmaterial.Tabs
+	errorChannels   map[string]chan error
+	keyEvents       chan *key.Event
+	states          *states
 }
 
 type (

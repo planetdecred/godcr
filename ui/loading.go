@@ -7,11 +7,11 @@ import (
 )
 
 // Loading lays out the loading widget with a faded background
-func (win *Window) Loading() {
-	layout.Center.Layout(win.gtx, func(gtx layout.Context) layout.Dimensions {
+func (win *Window) Loading(gtx layout.Context) {
+	layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		lbl := win.theme.H1("Loading")
 		lbl.Alignment = text.Middle
 		return lbl.Layout(gtx)
 	})
-	new(widget.Clickable).Layout(win.gtx)
+	new(widget.Clickable).Layout(gtx)
 }
