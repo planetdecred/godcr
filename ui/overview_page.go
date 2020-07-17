@@ -350,9 +350,8 @@ func (pg *overviewPage) syncStatusColumn(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				if pg.walletInfo.Syncing {
 					return pg.syncActiveContent(gtx, uniform)
-				} else {
-					return pg.syncDormantContent(gtx)
 				}
+				return pg.syncDormantContent(gtx)
 			}),
 		)
 	})
@@ -392,11 +391,10 @@ func (pg *overviewPage) syncDormantContent(gtx layout.Context) layout.Dimensions
 			layout.Rigid(func(gtx C) D {
 				if pg.walletInfo.Synced {
 					return pg.connectionPeer(gtx)
-				} else {
-					latestBlockTitleLabel := pg.theme.Body1(pg.text.noConnectedPeers)
-					latestBlockTitleLabel.Color = pg.gray
-					return latestBlockTitleLabel.Layout(gtx)
 				}
+				latestBlockTitleLabel := pg.theme.Body1(pg.text.noConnectedPeers)
+				latestBlockTitleLabel.Color = pg.gray
+				return latestBlockTitleLabel.Layout(gtx)
 			}),
 		)
 	})
@@ -521,11 +519,10 @@ func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 					return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return pg.theme.ImageIcon(gtx, pg.syncingIcon, 50)
 					})
-				} else {
-					return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-						return syncStatusIcon.Layout(gtx, values.MarginPadding25)
-					})
 				}
+				return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+					return syncStatusIcon.Layout(gtx, values.MarginPadding25)
+				})
 			}),
 			layout.Flexed(0.5, func(gtx C) D {
 				return layout.W.Layout(gtx, func(gtx C) D {
@@ -615,9 +612,8 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 				return pg.walletSyncList.Layout(gtx, len(walletSyncBoxes), func(gtx C, i int) D {
 					if i == 0 {
 						return walletSyncBoxes[i](gtx)
-					} else {
-						return layout.Inset{Left: values.MarginPadding30}.Layout(gtx, walletSyncBoxes[i])
 					}
+					return layout.Inset{Left: values.MarginPadding30}.Layout(gtx, walletSyncBoxes[i])
 				})
 			}),
 		)

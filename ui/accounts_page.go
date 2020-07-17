@@ -72,13 +72,12 @@ func (page *walletAccountPage) Layout(gtx layout.Context, common pageCommon) lay
 		layout.Flexed(1, func(gtx C) D {
 			if page.state {
 				return page.processing(common)(gtx)
-			} else {
-				if page.isPassword {
-					page.walletID = common.info.Wallets[*common.selectedWallet].ID
-					page.passwordModal.Layout(gtx, page.confirm, page.cancel)
-				}
-				return page.createAccount(gtx, common)
 			}
+			if page.isPassword {
+				page.walletID = common.info.Wallets[*common.selectedWallet].ID
+				page.passwordModal.Layout(gtx, page.confirm, page.cancel)
+			}
+			return page.createAccount(gtx, common)
 		}),
 	)
 }
