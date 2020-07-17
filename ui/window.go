@@ -23,7 +23,6 @@ import (
 type Window struct {
 	window *app.Window
 	theme  *decredmaterial.Theme
-	// gtx    *layout.Context
 	ops *op.Ops
 	gtx layout.Context
 

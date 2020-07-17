@@ -30,7 +30,6 @@ type pageCommon struct {
 	info            *wallet.MultiWalletInfo
 	selectedWallet  *int
 	selectedAccount *int
-	// gtx             layout.Context
 	theme         *decredmaterial.Theme
 	icons         pageIcons
 	page          *string
