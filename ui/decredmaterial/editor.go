@@ -38,8 +38,6 @@ type Editor struct {
 
 	pasteBtnMaterial IconButton
 	clearBtMaterial  IconButton
-
-	editor *widget.Editor
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -191,10 +189,10 @@ func (e Editor) handleEvents() {
 		if err != nil {
 			panic(err)
 		}
-		e.editor.SetText(data)
+		e.Editor.SetText(data)
 	}
 	for e.clearBtMaterial.Button.Clicked() {
-		e.editor.SetText("")
+		e.Editor.SetText("")
 	}
 }
 
