@@ -13,19 +13,17 @@ import (
 const PageWalletAccounts = "walletAccounts"
 
 type walletAccountPage struct {
-	walletID             int
-	wallet               *wallet.Wallet
-	container            layout.List
-	accountNameW         widget.Editor
-	accountName          decredmaterial.Editor
-	backButtonW, createW widget.Button
-	backButton           decredmaterial.IconButton
-	create               decredmaterial.Button
-	errorLabel           decredmaterial.Label
-	passwordModal        *decredmaterial.Password
-	isPassword           bool
-	state                bool
-	errChan              chan error
+	walletID      int
+	wallet        *wallet.Wallet
+	container     layout.List
+	accountName   decredmaterial.Editor
+	backButton    decredmaterial.IconButton
+	create        decredmaterial.Button
+	errorLabel    decredmaterial.Label
+	passwordModal *decredmaterial.Password
+	isPassword    bool
+	state         bool
+	errChan       chan error
 }
 
 func (win *Window) WalletAccountPage(common pageCommon) layout.Widget {
@@ -35,15 +33,15 @@ func (win *Window) WalletAccountPage(common pageCommon) layout.Widget {
 		},
 		wallet:        common.wallet,
 		passwordModal: common.theme.Password(),
-		accountName:   common.theme.Editor("Enter Account Name"),
-		create:        common.theme.Button("Create"),
+		accountName:   common.theme.Editor(new(widget.Editor), "Enter Account Name"),
+		create:        common.theme.Button(new(widget.Clickable), "Create"),
 		errorLabel:    common.theme.Caption(""),
-		backButton:    common.theme.PlainIconButton(common.icons.navigationArrowBack),
+		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		state:         common.states.creating,
 		errChan:       common.errorChannels[PageWalletAccounts],
 	}
 	page.accountName.IsRequired = true
-	page.accountNameW.SingleLine = true
+	page.accountName.Editor.SingleLine = true
 	page.create.TextSize = values.TextSize12
 	page.errorLabel.Color = common.theme.Color.Danger
 
@@ -51,14 +49,14 @@ func (win *Window) WalletAccountPage(common pageCommon) layout.Widget {
 	page.backButton.Color = common.theme.Color.Hint
 	page.backButton.Size = values.MarginPadding30
 
-	return func() {
-		page.Layout(common)
+	return func(gtx C) D {
 		page.handle(common)
+		return page.Layout(gtx, common)
 	}
 }
 
 // Layout lays out the widgets for the change wallet passphrase page.
-func (page *walletAccountPage) Layout(common pageCommon) {
+func (page *walletAccountPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	select {
 	case err := <-page.errChan:
 		page.state = false
@@ -70,80 +68,82 @@ func (page *walletAccountPage) Layout(common pageCommon) {
 	default:
 	}
 
-	layout.Flex{}.Layout(common.gtx,
-		layout.Flexed(1, func() {
+	return layout.Flex{}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
 			if page.state {
-				page.processing(common)()
-			} else {
-				page.createAccount(common)
+				return page.processing(common)(gtx)
 			}
+			if page.isPassword {
+				page.walletID = common.info.Wallets[*common.selectedWallet].ID
+				page.passwordModal.Layout(gtx, page.confirm, page.cancel)
+			}
+			return page.createAccount(gtx, common)
 		}),
 	)
 }
 
-func (page *walletAccountPage) createAccount(common pageCommon) {
-	gtx := common.gtx
-	wdgs := []func(){
-		func() {
-			layout.W.Layout(common.gtx, func() {
-				page.backButton.Layout(common.gtx, &page.backButtonW)
-			})
-			layout.Inset{Left: values.MarginPadding45}.Layout(common.gtx, func() {
-				common.theme.H5("Create Wallet Acount").Layout(gtx)
-			})
-		},
-		func() {
-			layout.Flex{}.Layout(gtx,
-				layout.Rigid(func() {
-					layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func() {
-						common.theme.Body1("Are about changing an Account in").Layout(gtx)
+func (page *walletAccountPage) createAccount(gtx layout.Context, common pageCommon) layout.Dimensions {
+	wdgs := []func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.W.Layout(gtx, func(gtx C) D {
+						return page.backButton.Layout(gtx)
 					})
 				}),
-				layout.Rigid(func() {
-					layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func() {
-						txt := common.theme.H5(common.info.Wallets[*common.selectedWallet].Name)
-						txt.Color = common.theme.Color.Danger
-						txt.Layout(gtx)
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+						return common.theme.H5("Create Wallet Acount").Layout(gtx)
 					})
 				}),
 			)
 		},
-		func() {
-			page.errorLabel.Layout(gtx)
+		func(gtx C) D {
+			dims := layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return common.theme.Body1("Are about changing an Account in").Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						txt := common.theme.H5(common.info.Wallets[*common.selectedWallet].Name)
+						txt.Color = common.theme.Color.Danger
+						return txt.Layout(gtx)
+					})
+				}),
+			)
+			return dims
 		},
-		func() {
-			page.accountName.Layout(gtx, &page.accountNameW)
+		func(gtx C) D {
+			return page.errorLabel.Layout(gtx)
 		},
-		func() {
-			layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func() {
-				page.create.Layout(gtx, &page.createW)
+		func(gtx C) D {
+			return page.accountName.Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+				return page.create.Layout(gtx)
 			})
 		},
 	}
 
-	common.Layout(gtx, func() {
-		page.container.Layout(gtx, len(wdgs), func(i int) {
-			layout.UniformInset(values.MarginPadding5).Layout(gtx, wdgs[i])
+	return common.Layout(gtx, func(gtx C) D {
+		return page.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, wdgs[i])
 		})
 	})
-
-	if page.isPassword {
-		page.walletID = common.info.Wallets[*common.selectedWallet].ID
-		page.passwordModal.Layout(gtx, page.confirm, page.cancel)
-	}
 }
 
 // Handle handles all widget inputs on the main wallets page.
 func (page *walletAccountPage) handle(common pageCommon) {
-	gtx := common.gtx
+	page.handleEditorEvents(common, page.accountName.Editor)
 
-	page.handleEditorEvents(common, &page.accountNameW)
-
-	if page.createW.Clicked(gtx) && page.validateInputs(common) {
+	if page.create.Button.Clicked() && page.validateInputs(common) {
 		page.isPassword = true
 	}
 
-	if page.backButtonW.Clicked(common.gtx) {
+	if page.backButton.Button.Clicked() {
 		page.clear(common)
 		*common.page = PageWallet
 	}
@@ -154,7 +154,7 @@ func (page *walletAccountPage) validateInputs(common pageCommon) bool {
 	page.accountName.ErrorLabel.Text = ""
 	page.create.Background = common.theme.Color.Hint
 
-	if page.accountNameW.Text() == "" {
+	if page.accountName.Editor.Text() == "" {
 		page.accountName.ErrorLabel.Text = "Please wallet old password"
 		return false
 	}
@@ -164,7 +164,7 @@ func (page *walletAccountPage) validateInputs(common pageCommon) bool {
 }
 
 func (page *walletAccountPage) handleEditorEvents(common pageCommon, w *widget.Editor) {
-	for _, evt := range w.Events(common.gtx) {
+	for _, evt := range w.Events() {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			page.validateInputs(common)
@@ -176,7 +176,7 @@ func (page *walletAccountPage) handleEditorEvents(common pageCommon, w *widget.E
 func (page *walletAccountPage) confirm(passphrase []byte) {
 	page.isPassword = false
 
-	page.wallet.AddAccount(page.walletID, page.accountNameW.Text(), passphrase, page.errChan)
+	page.wallet.AddAccount(page.walletID, page.accountName.Editor.Text(), passphrase, page.errChan)
 	page.state = true
 }
 
@@ -185,15 +185,13 @@ func (page *walletAccountPage) cancel() {
 }
 
 func (page *walletAccountPage) processing(common pageCommon) layout.Widget {
-	gtx := common.gtx
-
-	return func() {
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Flexed(1, func() {
-				layout.Center.Layout(gtx, func() {
+	return func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
 					message := common.theme.H3("Creating Account...")
 					message.Alignment = text.Middle
-					message.Layout(gtx)
+					return message.Layout(gtx)
 				})
 			}),
 		)
@@ -202,6 +200,6 @@ func (page *walletAccountPage) processing(common pageCommon) layout.Widget {
 
 func (page *walletAccountPage) clear(common pageCommon) {
 	page.create.Background = common.theme.Color.Hint
-	page.accountNameW.SetText("")
+	page.accountName.Editor.SetText("")
 	page.errorLabel.Text = ""
 }

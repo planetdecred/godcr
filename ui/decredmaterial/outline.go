@@ -21,42 +21,42 @@ func (t *Theme) Outline() Outline {
 	}
 }
 
-func (o Outline) Layout(gtx *layout.Context, w layout.Widget) {
+func (o Outline) Layout(gtx layout.Context, w layout.Widget) {
 	var minHeight int
 
 	layout.Stack{}.Layout(gtx,
-		layout.Expanded(func() {
+		layout.Expanded(func(gtx C) D {
 			borderRadius := float32(gtx.Px(unit.Dp(4)))
-			clip.Rect{
+			clip.RRect{
 				Rect: f32.Rectangle{Max: f32.Point{
-					X: float32(gtx.Constraints.Width.Min),
-					Y: float32(gtx.Constraints.Height.Min),
+					X: float32(gtx.Constraints.Min.X),
+					Y: float32(gtx.Constraints.Min.Y),
 				}},
 				NE: borderRadius, NW: borderRadius, SE: borderRadius, SW: borderRadius,
-			}.Op(gtx.Ops).Add(gtx.Ops)
+			}.Add(gtx.Ops)
 			fill(gtx, o.BorderColor)
-			minHeight = gtx.Constraints.Height.Min
+			minHeight = gtx.Constraints.Min.Y
 
-			layout.Center.Layout(gtx, func() {
-				layout.UniformInset(unit.Dp(1)).Layout(gtx, func() {
-					gtx.Constraints.Height.Min = minHeight - o.Weight
-					gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-					clip.Rect{
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(unit.Dp(1)).Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.Y = minHeight - o.Weight
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					clip.RRect{
 						Rect: f32.Rectangle{Max: f32.Point{
-							X: float32(gtx.Constraints.Width.Min),
-							Y: float32(gtx.Constraints.Height.Min),
+							X: float32(gtx.Constraints.Min.X),
+							Y: float32(gtx.Constraints.Min.Y),
 						}},
 						NE: borderRadius, NW: borderRadius, SE: borderRadius, SW: borderRadius,
-					}.Op(gtx.Ops).Add(gtx.Ops)
-					fill(gtx, rgb(0xffffff))
+					}.Add(gtx.Ops)
+					return fill(gtx, rgb(0xffffff))
 				})
 			})
 		}),
-		layout.Stacked(func() {
-			layout.Center.Layout(gtx, func() {
-				layout.UniformInset(unit.Dp(8)).Layout(gtx, func() {
-					gtx.Constraints.Width.Min = gtx.Constraints.Width.Max
-					w()
+		layout.Stacked(func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return w(gtx)
 				})
 			})
 		}),

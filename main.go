@@ -10,12 +10,7 @@ import (
 
 	_ "net/http/pprof"
 
-	app "gioui.org/app"
-	"gioui.org/font"
-	"gioui.org/font/gofont"
-	"gioui.org/font/opentype"
-	"gioui.org/text"
-
+	"gioui.org/app"
 	"github.com/markbates/pkger"
 
 	"github.com/raedahgroup/dcrlibwallet"
@@ -38,28 +33,6 @@ func main() {
 	}
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
-	sans, err := pkger.Open("/ui/assets/fonts/source_sans_pro_regular.otf")
-	if err != nil {
-		log.Warn("Failed to load font Source Sans Pro. Using gofont")
-		gofont.Register()
-	} else {
-		stat, err := sans.Stat()
-		if err != nil {
-			log.Warn(err)
-		}
-		bytes := make([]byte, stat.Size())
-		sans.Read(bytes)
-		fnt, err := opentype.Parse(bytes)
-		if err != nil {
-			log.Warn(err)
-		}
-		if fnt != nil {
-			font.Register(text.Font{}, fnt)
-		} else {
-			log.Warn("Failed to load font Source Sans Pro. Using gofont")
-			gofont.Register()
-		}
-	}
 
 	decredIcons := make(map[string]image.Image)
 	err = pkger.Walk("/ui/assets/decredicons", func(path string, info os.FileInfo, err error) error {

@@ -3,7 +3,7 @@ module github.com/raedahgroup/godcr
 go 1.13
 
 require (
-	gioui.org v0.0.0-20200403084947-efce78d414f3
+	gioui.org v0.0.0-20200709163356-5a6ad65b8536
 	github.com/atotto/clipboard v0.1.2
 	github.com/btcsuite/golangcrypto v0.0.0-20150304025918-53f62d9b43e8 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
@@ -18,7 +18,7 @@ require (
 	github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
-	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
+	golang.org/x/image v0.0.0-20200618115811-c13761719519
 )
 
 // TODO: Remove and use an actual release of dcrlibwallet

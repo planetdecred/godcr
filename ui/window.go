@@ -5,6 +5,9 @@ import (
 	"image"
 	"time"
 
+	"gioui.org/font/gofont"
+	"gioui.org/op"
+
 	"gioui.org/app"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
@@ -20,7 +23,7 @@ import (
 type Window struct {
 	window *app.Window
 	theme  *decredmaterial.Theme
-	gtx    *layout.Context
+	ops    *op.Ops
 
 	wallet             *wallet.Wallet
 	walletInfo         *wallet.MultiWalletInfo
@@ -53,12 +56,12 @@ type Window struct {
 func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image) (*Window, error) {
 	win := new(Window)
 	win.window = app.NewWindow(app.Title("godcr"))
-	theme := decredmaterial.NewTheme()
+	theme := decredmaterial.NewTheme(gofont.Collection())
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
 	}
 	win.theme = theme
-	win.gtx = layout.NewContext(win.window.Queue())
+	win.ops = &op.Ops{}
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	win.walletSyncStatus = new(wallet.SyncStatus)
@@ -81,9 +84,9 @@ func (win *Window) unloaded() {
 		case system.DestroyEvent:
 			return
 		case system.FrameEvent:
-			win.gtx.Reset(evt.Config, evt.Size)
-			lbl.Layout(win.gtx)
-			evt.Frame(win.gtx.Ops)
+			gtx := layout.NewContext(win.ops, evt)
+			lbl.Layout(gtx)
+			evt.Frame(win.ops)
 		}
 	}
 }
@@ -147,7 +150,7 @@ func (win *Window) Loop(shutdown chan int) {
 				close(shutdown)
 				return
 			case system.FrameEvent:
-				win.gtx.Reset(evt.Config, evt.Size)
+				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
@@ -156,12 +159,12 @@ func (win *Window) Loop(shutdown chan int) {
 				}
 
 				if s.loading {
-					win.Loading()
+					win.Loading(gtx)
 				} else {
-					win.theme.Background(win.gtx, win.pages[win.current])
+					win.theme.Background(gtx, win.pages[win.current])
 				}
 
-				evt.Frame(win.gtx.Ops)
+				evt.Frame(win.ops)
 			case key.Event:
 				go func() {
 					win.keyEvents <- &evt

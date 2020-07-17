@@ -11,17 +11,21 @@ type Card struct {
 	Color color.RGBA
 }
 
-func (c Card) Layout(gtx *layout.Context, w layout.Widget) {
-	layout.Stack{}.Layout(gtx,
-		layout.Stacked(func() {
-			c.Inset.Layout(gtx, func() {
-				layout.Stack{}.Layout(gtx,
-					layout.Expanded(func() {
-						fill(gtx, c.Color)
+func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
+	dims := layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return fill(gtx, color.RGBA{A: 64})
+		}),
+		layout.Stacked(func(gtx C) D {
+			return c.Inset.Layout(gtx, func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Expanded(func(gtx C) D {
+						return fill(gtx, c.Color)
 					}),
 					layout.Stacked(w),
 				)
 			})
 		}),
 	)
+	return dims
 }

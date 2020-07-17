@@ -23,24 +23,23 @@ type signMessagePage struct {
 	isPasswordModalOpen, isSigningMessage                     bool
 	titleLabel, subtitleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor                              decredmaterial.Editor
-	addressEditorW, messageEditorW                            *widget.Editor
 	clearButton, signButton, copyButton                       decredmaterial.Button
 	passwordModal                                             *decredmaterial.Password
-	clearButtonW, signButtonW, copyButtonW                    *widget.Button
 	result                                                    **wallet.Signature
 
-	backButtonW widget.Button
-	backButton  decredmaterial.IconButton
+	backButton decredmaterial.IconButton
 }
 
 func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
-	addressEditor := common.theme.Editor("Address")
+	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
 	addressEditor.IsVisible = true
 	addressEditor.IsRequired = true
-	messageEditor := common.theme.Editor("Message")
+	addressEditor.Editor.SingleLine = true
+	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
 	messageEditor.IsVisible = true
 	messageEditor.IsRequired = true
-	clearButton := common.theme.Button("Clear all")
+	messageEditor.Editor.SingleLine = true
+	clearButton := common.theme.Button(new(widget.Clickable), "Clear all")
 	clearButton.Background = common.theme.Color.Background
 	clearButton.Color = common.theme.Color.Gray
 	errorLabel := common.theme.Caption("")
@@ -58,125 +57,117 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		signedMessageLabel: common.theme.H5(""),
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
-		addressEditorW: &widget.Editor{
-			SingleLine: true,
-		},
+		messageEditor:      messageEditor,
 
-		messageEditor: messageEditor,
-		messageEditorW: &widget.Editor{
-			SingleLine: true,
-		},
-
-		clearButton:  clearButton,
-		clearButtonW: new(widget.Button),
-
-		signButton:  common.theme.Button("Sign"),
-		signButtonW: new(widget.Button),
-
-		copyButton:  common.theme.Button("Copy"),
-		copyButtonW: new(widget.Button),
+		clearButton: clearButton,
+		signButton:  common.theme.Button(new(widget.Clickable), "Sign"),
+		copyButton:  common.theme.Button(new(widget.Clickable), "Copy"),
 		result:      &win.signatureResult,
 
-		backButton: common.theme.PlainIconButton(common.icons.navigationArrowBack),
+		backButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 	}
 	pg.backButton.Color = common.theme.Color.Hint
 	pg.backButton.Size = values.MarginPadding30
 
-	return func() {
-		pg.Layout(common)
+	return func(gtx C) D {
 		pg.handle(common)
 		pg.updateColors(common)
 		pg.validate(true)
+		if pg.isPasswordModalOpen {
+			pg.walletID = common.info.Wallets[*common.selectedWallet].ID
+			pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
+		}
+		return pg.Layout(gtx, common)
 	}
 }
 
-func (pg *signMessagePage) Layout(common pageCommon) {
-	gtx := common.gtx
+func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	pg.errChannel = common.errorChannels[PageSignMessage]
 
-	w := []func(){
-		func() {
-			layout.W.Layout(gtx, func() {
-				pg.backButton.Layout(gtx, &pg.backButtonW)
-			})
-			layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func() {
-				pg.titleLabel.Layout(gtx)
-			})
+	w := []func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.W.Layout(gtx, func(gtx C) D {
+						return pg.backButton.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+						return pg.titleLabel.Layout(gtx)
+					})
+				}),
+			)
 		},
-		func() {
+		func(gtx C) D {
 			inset := layout.Inset{
 				Top:    values.MarginPadding5,
 				Bottom: values.MarginPadding10,
 			}
-			inset.Layout(gtx, func() {
-				pg.subtitleLabel.Layout(gtx)
+			return inset.Layout(gtx, func(gtx C) D {
+				return pg.subtitleLabel.Layout(gtx)
 			})
 		},
-		func() {
-			pg.errorLabel.Layout(gtx)
+		func(gtx C) D {
+			return pg.errorLabel.Layout(gtx)
 		},
-		func() {
-			pg.addressEditor.Layout(gtx, pg.addressEditorW)
+		func(gtx C) D {
+			return pg.addressEditor.Layout(gtx)
 		},
-		func() {
-			pg.messageEditor.Layout(gtx, pg.messageEditorW)
+		func(gtx C) D {
+			return pg.messageEditor.Layout(gtx)
 		},
-		func() {
-			pg.drawButtonsRow(gtx)
+		func(gtx C) D {
+			return pg.drawButtonsRow(gtx)
 		},
-		func() {
-			pg.drawResult(gtx)
+		func(gtx C) D {
+			return pg.drawResult(gtx)
 		},
 	}
 
-	common.Layout(gtx, func() {
-		pg.container.Layout(gtx, len(w), func(i int) {
-			w[i]()
+	return common.Layout(gtx, func(gtx C) D {
+		return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
+			return w[i](gtx)
 		})
 	})
-
-	if pg.isPasswordModalOpen {
-		pg.walletID = common.info.Wallets[*common.selectedWallet].ID
-		pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
-	}
 }
 
-func (pg *signMessagePage) drawButtonsRow(gtx *layout.Context) {
-	layout.E.Layout(gtx, func() {
-		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func() {
+func (pg *signMessagePage) drawButtonsRow(gtx layout.Context) layout.Dimensions {
+	return layout.E.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
 				inset := layout.Inset{
 					Right: values.MarginPadding5,
 				}
-				inset.Layout(gtx, func() {
-					pg.clearButton.Layout(gtx, pg.clearButtonW)
+				return inset.Layout(gtx, func(gtx C) D {
+					return pg.clearButton.Layout(gtx)
 				})
 			}),
-			layout.Rigid(func() {
-				pg.signButton.Layout(gtx, pg.signButtonW)
+			layout.Rigid(func(gtx C) D {
+				return pg.signButton.Layout(gtx)
 			}),
 		)
 	})
 }
 
-func (pg *signMessagePage) drawResult(gtx *layout.Context) {
+func (pg *signMessagePage) drawResult(gtx layout.Context) layout.Dimensions {
 	if pg.signedMessageLabel.Text == "" {
-		return
+		return layout.Dimensions{}
 	}
 
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func() {
-			pg.signedMessageLabel.Layout(gtx)
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return pg.signedMessageLabel.Layout(gtx)
 		}),
-		layout.Rigid(func() {
-			pg.copyButton.Layout(gtx, pg.copyButtonW)
+		layout.Rigid(func(gtx C) D {
+			return pg.copyButton.Layout(gtx)
 		}),
 	)
 }
 
 func (pg *signMessagePage) updateColors(common pageCommon) {
-	if pg.isSigningMessage || pg.addressEditorW.Text() == "" || pg.messageEditorW.Text() == "" {
+	if pg.isSigningMessage || pg.addressEditor.Editor.Text() == "" || pg.messageEditor.Editor.Text() == "" {
 		pg.signButton.Background = common.theme.Color.Hint
 	} else {
 		pg.signButton.Background = common.theme.Color.Primary
@@ -184,18 +175,17 @@ func (pg *signMessagePage) updateColors(common pageCommon) {
 }
 
 func (pg *signMessagePage) handle(common pageCommon) {
-	gtx := common.gtx
-	for pg.clearButtonW.Clicked(gtx) {
+	for pg.clearButton.Button.Clicked() {
 		pg.clearForm()
 	}
 
-	for pg.signButtonW.Clicked(gtx) {
+	for pg.signButton.Button.Clicked() {
 		if !pg.isSigningMessage && pg.validate(false) {
 			pg.isPasswordModalOpen = true
 		}
 	}
 
-	for pg.copyButtonW.Clicked(gtx) {
+	for pg.copyButton.Button.Clicked() {
 		clipboard.WriteAll(pg.signedMessageLabel.Text)
 	}
 	select {
@@ -215,7 +205,7 @@ func (pg *signMessagePage) handle(common pageCommon) {
 		pg.signButton.Text = "Sign"
 	}
 
-	if pg.backButtonW.Clicked(gtx) {
+	if pg.backButton.Button.Clicked() {
 		pg.clearForm()
 		*common.page = PageWallet
 	}
@@ -226,7 +216,7 @@ func (pg *signMessagePage) confirm(password []byte) {
 	pg.isSigningMessage = true
 
 	pg.signButton.Text = "Signing..."
-	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditorW.Text(), pg.messageEditorW.Text(), pg.errChannel)
+	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.errChannel)
 }
 
 func (pg *signMessagePage) cancel() {
@@ -243,7 +233,7 @@ func (pg *signMessagePage) validate(ignoreEmpty bool) bool {
 }
 
 func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
-	address := pg.addressEditorW.Text()
+	address := pg.addressEditor.Editor.Text()
 	pg.addressEditor.ErrorLabel.Text = ""
 
 	if address == "" && !ignoreEmpty {
@@ -262,7 +252,7 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 }
 
 func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
-	message := pg.messageEditorW.Text()
+	message := pg.messageEditor.Editor.Text()
 	if message == "" && !ignoreEmpty {
 		pg.messageEditor.ErrorLabel.Text = "Please enter a message to sign"
 		return false
@@ -271,7 +261,7 @@ func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
 }
 
 func (pg *signMessagePage) clearForm() {
-	pg.addressEditorW.SetText("")
-	pg.messageEditorW.SetText("")
+	pg.addressEditor.Editor.SetText("")
+	pg.messageEditor.Editor.SetText("")
 	pg.errorLabel.Text = ""
 }
