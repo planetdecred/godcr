@@ -185,25 +185,25 @@ func (pg *transactionsPage) txnRowHeader(gtx layout.Context, common *pageCommon)
 	txt := common.theme.Label(values.MarginPadding15, "#")
 	txt.Color = common.theme.Color.Hint
 
-	layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Rigid(func() {
-			gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding60)
-			txt.Layout(gtx)
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding60)
+			return txt.Layout(gtx)
 		}),
-		layout.Rigid(func() {
+		layout.Rigid(func(gtx C) D {
 			txt.Alignment = text.Middle
 			txt.Text = "Date (UTC)"
 			return txt.Layout(gtx)
 		}),
-		layout.Rigid(func() {
+		layout.Rigid(func(gtx C) D {
 			txt.Text = "Status"
 			return txt.Layout(gtx)
 		}),
-		layout.Rigid(func() {
+		layout.Rigid(func(gtx C) D {
 			txt.Text = "Amount"
 			return txt.Layout(gtx)
 		}),
-		layout.Rigid(func() {
+		layout.Rigid(func(gtx C) D {
 			txt.Text = "Fee"
 			return txt.Layout(gtx)
 		}),
@@ -214,28 +214,28 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
 
-	layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func() {
-		layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func() {
-				gtx.Constraints.Width.Min = gtx.Px(values.MarginPadding60)
-				layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func() {
-					txnWidgets.direction.Layout(gtx, values.MarginPadding15)
+	return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding60)
+				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+					return txnWidgets.direction.Layout(gtx, values.MarginPadding15)
 				})
 			}),
-			layout.Rigid(func() {
+			layout.Rigid(func(gtx C) D {
 				txnWidgets.time.Alignment = text.Middle
 				return txnWidgets.time.Layout(gtx)
 			}),
-			layout.Rigid(func() {
+			layout.Rigid(func(gtx C) D {
 				txt := common.theme.Body1(transaction.Status)
 				txt.Alignment = text.Middle
 				return txt.Layout(gtx)
 			}),
-			layout.Rigid(func() {
+			layout.Rigid(func(gtx C) D {
 				txnWidgets.amount.Alignment = text.End
 				return txnWidgets.amount.Layout(gtx)
 			}),
-			layout.Rigid(func() {
+			layout.Rigid(func(gtx C) D {
 				txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
 				txt.Alignment = text.End
 				return txt.Layout(gtx)

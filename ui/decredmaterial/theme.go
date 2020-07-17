@@ -6,6 +6,8 @@ import (
 	"image"
 	"image/color"
 
+	"golang.org/x/image/draw"
+
 	"gioui.org/widget/material"
 
 	"gioui.org/f32"
@@ -148,6 +150,16 @@ func (t *Theme) Surface(gtx layout.Context, w layout.Widget) layout.Dimensions {
 		}),
 		layout.Stacked(w),
 	)
+}
+
+func (t *Theme) ImageIcon(gtx layout.Context, icon image.Image, size int) layout.Dimensions {
+	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: size, Y: size}})
+	draw.ApproxBiLinear.Scale(img, img.Bounds(), icon, icon.Bounds(), draw.Src, nil)
+	iconOp := paint.NewImageOp(img)
+
+	i := Image{Src: iconOp}
+	i.Scale = float32(size) / float32(gtx.Px(unit.Dp(float32(size))))
+	return i.Layout(gtx)
 }
 
 func (t *Theme) alert(gtx layout.Context, txt string, bgColor color.RGBA) layout.Dimensions {
