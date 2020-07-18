@@ -22,9 +22,11 @@ import (
 type Editor struct {
 	material.EditorStyle
 
-	TitleLabel Label
-	ErrorLabel Label
-	LineColor  color.RGBA
+	StartHint        string
+	TitleLabel       Label
+	ErrorLabel       Label
+	LineColor        color.RGBA
+	LineColorFocused color.RGBA
 
 	flexWidth float32
 	//IsVisible if true, displays the paste and clear button.
@@ -38,6 +40,9 @@ type Editor struct {
 
 	pasteBtnMaterial IconButton
 	clearBtMaterial  IconButton
+
+	hasCalculated                                   bool
+	titleLabelDims, editorDims, lineDims, errorDims layout.Dimensions
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -47,17 +52,19 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	m := material.Editor(t.Base, editor, hint)
 	m.TextSize = t.TextSize
 	m.Color = t.Color.Text
-	m.Hint = hint
 	m.HintColor = t.Color.Hint
 
-	return Editor{
+	e := Editor{
 		EditorStyle:       m,
 		TitleLabel:        t.Body2(""),
+		StartHint:         hint,
 		flexWidth:         1,
 		IsTitleLabel:      true,
 		LineColor:         t.Color.Text,
+		LineColorFocused:  t.Color.Primary,
 		ErrorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
+		hasCalculated:     false,
 
 		pasteBtnMaterial: IconButton{
 			material.IconButtonStyle{
@@ -81,88 +88,112 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 			},
 		},
 	}
+	e.TitleLabel.Text = m.Hint
+
+	return e
 }
 
-func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
+func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
 	e.handleEvents()
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
+
 	if e.Editor.Focused() || e.Editor.Len() != 0 {
-		e.TitleLabel.Text = e.Hint
-		e.LineColor = color.RGBA{41, 112, 255, 255}
 		e.Hint = ""
+	}
+
+	if !e.Editor.Focused() {
+		e.Hint = e.StartHint
 	}
 
 	if e.IsRequired && !e.Editor.Focused() && e.Editor.Len() == 0 {
 		e.ErrorLabel.Text = e.requiredErrorText
 	}
 
-	return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+	if !e.hasCalculated {
+		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				if e.IsTitleLabel {
-					if e.Editor.Focused() {
-						e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
-					}
-					return e.TitleLabel.Layout(gtx)
-				}
-				return layout.Dimensions{}
+				e.titleLabelDims = e.TitleLabel.Layout(gtx)
+				return e.titleLabelDims
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								inset := layout.Inset{
-									Top:    unit.Dp(4),
-									Bottom: unit.Dp(4),
-								}
-								return inset.Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Flexed(e.flexWidth, func(gtx C) D {
-											return e.EditorStyle.Layout(gtx)
-										}),
-									)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return e.editorLine(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if e.ErrorLabel.Text != "" {
-									inset := layout.Inset{
-										Top: unit.Dp(3),
-									}
-									return inset.Layout(gtx, func(gtx C) D {
-										return e.ErrorLabel.Layout(gtx)
-									})
-								}
-								return layout.Dimensions{}
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Left: unit.Dp(10),
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							if e.IsVisible {
-								if e.Editor.Text() == "" {
-									return e.pasteBtnMaterial.Layout(gtx)
-								}
-								return e.clearBtMaterial.Layout(gtx)
-							}
-							return layout.Dimensions{}
-						})
-					}),
-				)
+				e.editorDims = e.EditorStyle.Layout(gtx)
+				return e.editorDims
+			}),
+			layout.Rigid(func(gtx C) D {
+				e.lineDims = layout.Inset{
+					Top:    unit.Dp(4),
+					Bottom: unit.Dp(4),
+				}.Layout(gtx, func(gtx C) D {
+					return e.editorLine(gtx)
+				})
+				return e.lineDims
 			}),
 		)
-	})
+		e.hasCalculated = true
+	}
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			if e.IsTitleLabel && (e.Editor.Focused() || e.Editor.Len() != 0) {
+				if e.Editor.Focused() {
+					e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
+				}
+				e.TitleLabel.Layout(gtx)
+			}
+			return e.titleLabelDims
+		}),
+		layout.Rigid(func(gtx C) D {
+			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Flexed(0.9, func(gtx C) D {
+					return e.EditorStyle.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Top: unit.Dp(-15),
+					}.Layout(gtx, func(gtx C) D {
+						if e.IsVisible {
+							if e.Editor.Text() == "" {
+								return e.pasteBtnMaterial.Layout(gtx)
+							}
+							return e.clearBtMaterial.Layout(gtx)
+						}
+						return layout.Dimensions{}
+					})
+				}),
+			)
+			return e.editorDims
+		}),
+		layout.Rigid(func(gtx C) D {
+			layout.Inset{
+				Top:    unit.Dp(4),
+				Bottom: unit.Dp(4),
+			}.Layout(gtx, func(gtx C) D {
+				return e.editorLine(gtx)
+			})
+			return e.lineDims
+		}),
+		layout.Rigid(func(gtx C) D {
+			if e.ErrorLabel.Text != "" {
+				inset := layout.Inset{
+					Top: unit.Dp(3),
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return e.ErrorLabel.Layout(gtx)
+				})
+			}
+			return layout.Dimensions{}
+		}),
+	)
 }
 
 func (e Editor) editorLine(gtx C) D {
+	col := e.LineColor
+	if e.Editor.Focused() {
+		col = e.LineColorFocused
+	}
+
 	return layout.Flex{}.Layout(gtx,
 		layout.Flexed(e.flexWidth, func(gtx C) D {
 			dims := image.Point{
@@ -176,14 +207,14 @@ func (e Editor) editorLine(gtx C) D {
 				X: 0,
 				Y: 0,
 			}).Add(gtx.Ops)
-			paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
+			paint.ColorOp{Color: col}.Add(gtx.Ops)
 			paint.PaintOp{Rect: rect}.Add(gtx.Ops)
 			return layout.Dimensions{Size: dims}
 		}),
 	)
 }
 
-func (e Editor) handleEvents() {
+func (e *Editor) handleEvents() {
 	for e.pasteBtnMaterial.Button.Clicked() {
 		data, err := clipboard.ReadAll()
 		if err != nil {

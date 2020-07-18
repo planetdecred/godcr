@@ -136,11 +136,12 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.destinationAddressEditor.SetRequiredErrorText("")
 	page.destinationAddressEditor.IsRequired = true
 	page.destinationAddressEditor.IsVisible = true
+	page.sendAmountEditor.IsTitleLabel = true
 
 	page.sendAmountEditor = common.theme.Editor(new(widget.Editor), "Amount to be sent")
 	page.sendAmountEditor.SetRequiredErrorText("")
 	page.sendAmountEditor.IsRequired = true
-	page.sendAmountEditor.IsTitleLabel = false
+	page.sendAmountEditor.IsTitleLabel = true
 
 	page.closeConfirmationModalButton.Background = common.theme.Color.Gray
 	page.destinationAddressEditor.Editor.SetText("")
