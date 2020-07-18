@@ -1,9 +1,8 @@
 package ui
 
 import (
-	"image"
-
 	"gioui.org/widget"
+	"image"
 
 	"github.com/raedahgroup/godcr/ui/values"
 
@@ -104,6 +103,25 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 	})
 
+	wTab := decredmaterial.NewTabs(win.theme)
+	wTab.SetTabs([]decredmaterial.TabItem{
+		{
+			Title: "1",
+		},
+		{
+			Title: "2",
+		},
+		{
+			Title: "3",
+		},
+		{
+			Title: "4",
+		},
+		{
+			Title: "5",
+		},
+	})
+
 	accountsTab := decredmaterial.NewTabs(win.theme)
 	accountsTab.Position = decredmaterial.Top
 	accountsTab.Separator = false
@@ -116,7 +134,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		icons:           ic,
 		page:            &win.current,
 		navTab:          tabs,
-		walletsTab:      decredmaterial.NewTabs(win.theme),
+		walletsTab:      wTab,
 		accountsTab:     accountsTab,
 		errorChannels: map[string]chan error{
 			PageSignMessage:    make(chan error),
@@ -143,7 +161,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSeedBackup] = win.BackupPage(common)
 }
 
-func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (page *pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	navs := []string{PageOverview, PageWallet, PageSend, PageReceive, PageTransactions}
@@ -161,13 +179,14 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 }
 
 func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
-	for i := range page.info.Wallets {
-		wallets[i] = decredmaterial.TabItem{
-			Title: page.info.Wallets[i].Name,
-		}
-	}
-	page.walletsTab.SetTabs(wallets)
+	// wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
+	// for i := range page.info.Wallets {
+	// 	wallets[i] = decredmaterial.TabItem{
+	// 		Title: page.info.Wallets[i].Name,
+	// 	}
+	// }
+	// page.walletsTab.SetTabs(wallets)
+
 	page.walletsTab.Position = decredmaterial.Top
 	if page.accountsTab.ChangeEvent() {
 		*page.selectedAccount = page.accountsTab.Selected
