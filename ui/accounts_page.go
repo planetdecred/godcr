@@ -73,10 +73,6 @@ func (page *walletAccountPage) Layout(gtx layout.Context, common pageCommon) lay
 			if page.state {
 				return page.processing(common)(gtx)
 			}
-			if page.isPassword {
-				page.walletID = common.info.Wallets[*common.selectedWallet].ID
-				page.passwordModal.Layout(gtx, page.confirm, page.cancel)
-			}
 			return page.createAccount(gtx, common)
 		}),
 	)
@@ -128,11 +124,18 @@ func (page *walletAccountPage) createAccount(gtx layout.Context, common pageComm
 		},
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
+	dims := common.Layout(gtx, func(gtx C) D {
 		return page.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
 			return layout.UniformInset(values.MarginPadding5).Layout(gtx, wdgs[i])
 		})
 	})
+
+	if page.isPassword {
+		page.walletID = common.info.Wallets[*common.selectedWallet].ID
+		return common.Modal(gtx, dims, page.passwordModal.Layout(gtx, page.confirm, page.cancel))
+	}
+
+	return dims
 }
 
 // Handle handles all widget inputs on the main wallets page.
