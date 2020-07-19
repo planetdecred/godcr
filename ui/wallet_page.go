@@ -103,9 +103,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		pg.Handle(common)
-		if pg.isPasswordModalOpen {
-			pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
-		}
 		return pg.Layout(gtx, common)
 	}
 }
@@ -117,15 +114,23 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		common.states.deleted = false
 	}
 
+	var dims layout.Dimensions
+
 	switch pg.subPage {
 	case subWalletMain:
-		return pg.subMain(gtx, common)
+		dims = pg.subMain(gtx, common)
 	case subWalletRename:
-		return pg.subRename(gtx, common)
+		dims = pg.subRename(gtx, common)
 	case subWalletDelete:
-		return pg.subDelete(gtx, common)
+		dims = pg.subDelete(gtx, common)
+	default:
+		dims = pg.subMain(gtx, common)
 	}
-	return pg.subMain(gtx, common)
+
+	if pg.isPasswordModalOpen {
+		return common.Modal(gtx, dims, pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel))
+	}
+	return dims
 }
 
 func (pg *walletPage) subMain(gtx layout.Context, common pageCommon) layout.Dimensions {
