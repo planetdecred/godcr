@@ -73,10 +73,6 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		pg.handle(common)
 		pg.updateColors(common)
 		pg.validate(true)
-		if pg.isPasswordModalOpen {
-			pg.walletID = common.info.Wallets[*common.selectedWallet].ID
-			pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel)
-		}
 		return pg.Layout(gtx, common)
 	}
 }
@@ -126,11 +122,18 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 		},
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
+	body := common.Layout(gtx, func(gtx C) D {
 		return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
 			return w[i](gtx)
 		})
 	})
+
+	if pg.isPasswordModalOpen {
+		pg.walletID = common.info.Wallets[*common.selectedWallet].ID
+		return common.Modal(gtx, body, pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel))
+	}
+
+	return body
 }
 
 func (pg *signMessagePage) drawButtonsRow(gtx layout.Context) layout.Dimensions {

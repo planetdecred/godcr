@@ -145,6 +145,18 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 	})
 }
 
+func (page pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
+	dims := layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return body
+		}),
+		layout.Stacked(func(gtx C) D {
+			return modal
+		}),
+	)
+	return dims
+}
+
 func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
 	for i := range page.info.Wallets {

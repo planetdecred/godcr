@@ -159,8 +159,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		page.Handle(common)
-		page.drawConfirmationModal(gtx)
-		page.drawPasswordModal(gtx)
 		return page.Layout(gtx, common)
 	}
 }
@@ -313,13 +311,21 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		},
 	}
 
-	return common.LayoutWithAccounts(gtx, func(gtx C) D {
+	dims := common.LayoutWithAccounts(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 			return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, pageContent[i])
 			})
 		})
 	})
+
+	if pg.isConfirmationModalOpen && pg.isPasswordModalOpen {
+		return common.Modal(gtx, dims, pg.drawPasswordModal(gtx))
+	} else if pg.isConfirmationModalOpen {
+		return common.Modal(gtx, dims, pg.drawConfirmationModal(gtx))
+	}
+
+	return dims
 }
 
 func (pg *SendPage) drawSuccessSection(gtx layout.Context) layout.Dimensions {
@@ -535,11 +541,8 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 	return pg.theme.Modal(gtx, "Confirm Send Transaction", w)
 }
 
-func (pg *SendPage) drawPasswordModal(gtx layout.Context) {
-	if !(pg.isConfirmationModalOpen && pg.isPasswordModalOpen) {
-		return
-	}
-	pg.passwordModal.Layout(gtx, func(password []byte) {
+func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
+	return pg.passwordModal.Layout(gtx, func(password []byte) {
 		pg.isBroadcastingTransaction = true
 		pg.isPasswordModalOpen = false
 
