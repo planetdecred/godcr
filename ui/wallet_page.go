@@ -114,7 +114,8 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		common.states.deleted = false
 	}
 
-	dims := layout.Dimensions{}
+	var dims layout.Dimensions
+
 	switch pg.subPage {
 	case subWalletMain:
 		dims = pg.subMain(gtx, common)
