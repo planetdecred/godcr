@@ -3,7 +3,7 @@ module github.com/raedahgroup/godcr
 go 1.13
 
 require (
-	gioui.org v0.0.0-20200709163356-5a6ad65b8536
+	gioui.org v0.0.0-20200716125251-47efa26cfc05
 	github.com/atotto/clipboard v0.1.2
 	github.com/btcsuite/golangcrypto v0.0.0-20150304025918-53f62d9b43e8 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
