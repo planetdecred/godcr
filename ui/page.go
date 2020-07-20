@@ -39,7 +39,6 @@ type pageCommon struct {
 	errorChannels   map[string]chan error
 	keyEvents       chan *key.Event
 	states          *states
-	prevTabs        int
 }
 
 type (
