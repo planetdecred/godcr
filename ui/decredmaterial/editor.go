@@ -93,6 +93,31 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	return e
 }
 
+func (e *Editor) calculateDims(gtx layout.Context) {
+	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			e.titleLabelDims = e.TitleLabel.Layout(gtx)
+			return e.titleLabelDims
+		}),
+		layout.Rigid(func(gtx C) D {
+			e.editorDims = e.EditorStyle.Layout(gtx)
+			return e.editorDims
+		}),
+		layout.Rigid(func(gtx C) D {
+			e.lineDims = layout.Inset{
+				Top:    unit.Dp(4),
+				Bottom: unit.Dp(4),
+			}.Layout(gtx, func(gtx C) D {
+				return e.editorLine(gtx)
+			})
+			return e.lineDims
+		}),
+	)
+}
+
+// Layout renders the editor to screen. The editor line is able to retain
+// it's relative position whether or not the hint or title labels are displayed
+// or not because their dimensions are pre-calculated before hand
 func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
 	e.handleEvents()
 	if e.IsVisible {
@@ -112,25 +137,7 @@ func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if !e.hasCalculated {
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				e.titleLabelDims = e.TitleLabel.Layout(gtx)
-				return e.titleLabelDims
-			}),
-			layout.Rigid(func(gtx C) D {
-				e.editorDims = e.EditorStyle.Layout(gtx)
-				return e.editorDims
-			}),
-			layout.Rigid(func(gtx C) D {
-				e.lineDims = layout.Inset{
-					Top:    unit.Dp(4),
-					Bottom: unit.Dp(4),
-				}.Layout(gtx, func(gtx C) D {
-					return e.editorLine(gtx)
-				})
-				return e.lineDims
-			}),
-		)
+		e.calculateDims(gtx)
 		e.hasCalculated = true
 	}
 
