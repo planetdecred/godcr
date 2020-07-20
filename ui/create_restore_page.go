@@ -49,7 +49,6 @@ type createRestore struct {
 
 	closeCreateRestore decredmaterial.IconButton
 	hideRestoreWallet  decredmaterial.IconButton
-	back               decredmaterial.IconButton
 	create             decredmaterial.Button
 	showPasswordModal  decredmaterial.Button
 	hidePasswordModal  decredmaterial.Button
@@ -103,10 +102,6 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.hideRestoreWallet = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
 	pg.hideRestoreWallet.Background = color.RGBA{}
 	pg.hideRestoreWallet.Color = common.theme.Color.Hint
-
-	pg.back = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
-	pg.back.Background = color.RGBA{}
-	pg.back.Color = common.theme.Color.Hint
 
 	pg.hidePasswordModal = common.theme.Button(new(widget.Clickable), "cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
@@ -271,7 +266,9 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 				} else {
 					title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
 				}
-				return title.Layout(gtx)
+				return pg.centralize(gtx, func(gtx C) D {
+					return title.Layout(gtx)
+				})
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -279,11 +276,13 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return pg.create.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return pg.showRestoreWallet.Layout(gtx)
 					})
 				}),
@@ -302,16 +301,20 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			txt := pg.theme.H3("Restore from seed phrase")
 			txt.Alignment = text.Middle
-			return txt.Layout(gtx)
+			return pg.centralize(gtx, func(gtx C) D {
+				return txt.Layout(gtx)
+			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			txt := pg.theme.H6("Enter your seed phrase in the correct order")
 			txt.Alignment = text.Middle
-			return txt.Layout(gtx)
+			return pg.centralize(gtx, func(gtx C) D {
+				return txt.Layout(gtx)
+			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				return layout.Center.Layout(gtx, func(gtx C) D {
+				return pg.centralize(gtx, func(gtx C) D {
 					return pg.errLabel.Layout(gtx)
 				})
 			})
@@ -330,7 +333,7 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
+			return pg.centralize(gtx, func(gtx C) D {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15,
@@ -586,6 +589,14 @@ func (pg *createRestore) resetPage() {
 	pg.showRestore = false
 }
 
+func (pg *createRestore) centralize(gtx layout.Context, content layout.Widget) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Center.Layout(gtx, content)
+		}),
+	)
+}
+
 func (pg *createRestore) handle(common pageCommon) {
 	for pg.hideRestoreWallet.Button.Clicked() {
 		pg.showRestore = false
@@ -598,7 +609,7 @@ func (pg *createRestore) handle(common pageCommon) {
 		pg.showRestore = true
 	}
 
-	for pg.back.Button.Clicked() {
+	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
 		*common.page = PageWallet
 	}
