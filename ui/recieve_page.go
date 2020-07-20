@@ -35,11 +35,11 @@ type receivePage struct {
 
 func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	moreBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationMoreVert)))
-	moreBtn.Inset, moreBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding35
+	moreBtn.Inset, moreBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 	infoBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo)))
-	infoBtn.Inset, infoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding35
+	infoBtn.Inset, infoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 	copyBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy)))
-	copyBtn.Inset, copyBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding35
+	copyBtn.Inset, copyBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 	copyBtn.Background = common.theme.Color.Background
 	copyBtn.Color = common.theme.Color.Text
 	receiveAddressLabel := common.theme.H6("")
@@ -223,7 +223,7 @@ func (pg *receivePage) receiveAddressColumn(gtx layout.Context) layout.Dimension
 			return pg.receiveAddressLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding10, Top: values.CopyBtnAlignment}.Layout(gtx, func(gtx C) D {
 				return pg.copyBtn.Layout(gtx)
 			})
 		}),

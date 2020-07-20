@@ -68,7 +68,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.errorLabel.Color = common.theme.Color.Danger
 
 	var iconPadding = values.MarginPadding5
-	var iconSize = values.MarginPadding30
+	var iconSize = values.MarginPadding20
 
 	pg.icons.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 	pg.icons.addAcct.Inset = layout.UniformInset(iconPadding)

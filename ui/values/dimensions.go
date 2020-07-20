@@ -27,6 +27,7 @@ var (
 	TextSize18 = unit.Dp(18)
 	TextSize28 = unit.Dp(28)
 
+	CopyBtnAlignment          = unit.Dp(-5)
 	WalletSyncBoxContentWidth = unit.Dp(280)
 	AccountLineWidth          = unit.Dp(350)
 )
