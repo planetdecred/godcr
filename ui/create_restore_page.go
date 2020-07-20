@@ -49,7 +49,6 @@ type createRestore struct {
 
 	closeCreateRestore decredmaterial.IconButton
 	hideRestoreWallet  decredmaterial.IconButton
-	back               decredmaterial.IconButton
 	create             decredmaterial.Button
 	showPasswordModal  decredmaterial.Button
 	hidePasswordModal  decredmaterial.Button
@@ -103,10 +102,6 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.hideRestoreWallet = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
 	pg.hideRestoreWallet.Background = color.RGBA{}
 	pg.hideRestoreWallet.Color = common.theme.Color.Hint
-
-	pg.back = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
-	pg.back.Background = color.RGBA{}
-	pg.back.Color = common.theme.Color.Hint
 
 	pg.hidePasswordModal = common.theme.Button(new(widget.Clickable), "cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
@@ -598,7 +593,7 @@ func (pg *createRestore) handle(common pageCommon) {
 		pg.showRestore = true
 	}
 
-	for pg.back.Button.Clicked() {
+	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
 		*common.page = PageWallet
 	}
