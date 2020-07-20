@@ -193,10 +193,6 @@ func NewTabs(th *Theme) *Tabs {
 	}
 }
 
-func (t *Tabs) Tabs() int {
-	return len(t.items)
-}
-
 // SetTabs creates a button widget for each tab item.
 func (t *Tabs) SetTabs(tabs []TabItem) {
 	t.items = tabs
