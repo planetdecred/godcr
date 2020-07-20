@@ -266,7 +266,9 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 				} else {
 					title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
 				}
-				return title.Layout(gtx)
+				return pg.centralize(gtx, func(gtx C) D {
+					return title.Layout(gtx)
+				})
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -274,11 +276,13 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return pg.create.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return pg.showRestoreWallet.Layout(gtx)
 					})
 				}),
@@ -325,7 +329,7 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
+			return pg.centralize(gtx, func(gtx C) D {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15,
@@ -579,6 +583,14 @@ func (pg *createRestore) resetSeeds() {
 func (pg *createRestore) resetPage() {
 	pg.showPassword = false
 	pg.showRestore = false
+}
+
+func (pg *createRestore) centralize(gtx layout.Context, content layout.Widget) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Center.Layout(gtx, content)
+		}),
+	)
 }
 
 func (pg *createRestore) handle(common pageCommon) {
