@@ -301,16 +301,20 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			txt := pg.theme.H3("Restore from seed phrase")
 			txt.Alignment = text.Middle
-			return txt.Layout(gtx)
+			return pg.centralize(gtx, func(gtx C) D {
+				return txt.Layout(gtx)
+			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			txt := pg.theme.H6("Enter your seed phrase in the correct order")
 			txt.Alignment = text.Middle
-			return txt.Layout(gtx)
+			return pg.centralize(gtx, func(gtx C) D {
+				return txt.Layout(gtx)
+			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				return layout.Center.Layout(gtx, func(gtx C) D {
+				return pg.centralize(gtx, func(gtx C) D {
 					return pg.errLabel.Layout(gtx)
 				})
 			})
