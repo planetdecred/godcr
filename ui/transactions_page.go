@@ -40,12 +40,6 @@ type transactionsPage struct {
 	filterDirection, filterSort                 []decredmaterial.RadioButton
 	defaultFilterSorter, defaultFilterDirection string
 	toTxnDetails                                []*gesture.Click
-
-	rowDirectionWidth,
-	rowDateWidth,
-	rowStatusWidth,
-	rowAmountWidth,
-	rowFeeWidth float32
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
@@ -58,11 +52,6 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		filterSortW:            new(widget.Enum),
 		defaultFilterSorter:    "0",
 		defaultFilterDirection: "0",
-		rowDirectionWidth:      .04,
-		rowDateWidth:           .2,
-		rowStatusWidth:         .2,
-		rowAmountWidth:         .3,
-		rowFeeWidth:            .26,
 	}
 
 	pg.filterSorter = pg.defaultFilterSorter
@@ -191,19 +180,23 @@ func (pg *transactionsPage) txnRowHeader(gtx layout.Context, common *pageCommon)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
 			txt.Alignment = text.Middle
 			txt.Text = "Date (UTC)"
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
 			txt.Text = "Status"
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
 			txt.Text = "Amount"
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
 			txt.Text = "Fee"
 			return txt.Layout(gtx)
 		}),
@@ -217,27 +210,30 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 	return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding60)
-				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
 					return txnWidgets.direction.Layout(gtx, values.MarginPadding15)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				txnWidgets.time.Alignment = text.Middle
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
 				return txnWidgets.time.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				txt := common.theme.Body1(transaction.Status)
 				txt.Alignment = text.Middle
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
 				return txt.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				txnWidgets.amount.Alignment = text.End
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
 				return txnWidgets.amount.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
 				txt.Alignment = text.End
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
 				return txt.Layout(gtx)
 			}),
 		)
