@@ -34,8 +34,8 @@ type pageCommon struct {
 	icons           pageIcons
 	page            *string
 	navTab          *decredmaterial.Tabs
-	walletsTab      *decredmaterial.Tabs
-	accountsTab     *decredmaterial.Tabs
+	walletTabs      *decredmaterial.Tabs
+	accountTabs     *decredmaterial.Tabs
 	errorChannels   map[string]chan error
 	keyEvents       chan *key.Event
 	states          *states
@@ -89,9 +89,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		decredmaterial.NewTabItem("Transactions", &ic.transactionIcon),
 	})
 
-	accountsTab := decredmaterial.NewTabs(win.theme)
-	accountsTab.Position = decredmaterial.Top
-	accountsTab.Separator = false
 	common := pageCommon{
 		wallet:          win.wallet,
 		info:            win.walletInfo,
@@ -101,8 +98,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		icons:           ic,
 		page:            &win.current,
 		navTab:          tabs,
-		walletsTab:      decredmaterial.NewTabs(win.theme),
-		accountsTab:     accountsTab,
+		walletTabs:      win.walletTabs,
+		accountTabs:     win.accountTabs,
 		errorChannels: map[string]chan error{
 			PageSignMessage:    make(chan error),
 			PageCreateRestore:  make(chan error),
@@ -158,68 +155,35 @@ func (page pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal l
 }
 
 func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	wallets := make([]decredmaterial.TabItem, len(page.info.Wallets))
-	for i := range page.info.Wallets {
-		wallets[i] = decredmaterial.TabItem{
-			Title: page.info.Wallets[i].Name,
-		}
-	}
-	page.walletsTab.SetTabs(wallets)
-	page.walletsTab.Position = decredmaterial.Top
-	if page.accountsTab.ChangeEvent() {
-		*page.selectedAccount = page.accountsTab.Selected
-	}
-
-	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
-	for i, acct := range page.info.Wallets[*page.selectedWallet].Accounts {
-		if acct.Name == "imported" {
-			continue
-		}
-		accounts[i] = decredmaterial.TabItem{
-			Title: page.info.Wallets[*page.selectedWallet].Accounts[i].Name,
-		}
-	}
-	page.accountsTab.SetTabs(accounts)
-	if page.accountsTab.ChangeEvent() {
-		*page.selectedAccount = page.accountsTab.Selected
-	}
-	page.accountsTab.Separator = false
-
 	bd := func(gtx C) D {
-		if page.walletsTab.ChangeEvent() {
-			*page.selectedWallet = page.walletsTab.Selected
+		if page.walletTabs.ChangeEvent() {
+			*page.selectedWallet = page.walletTabs.Selected
 			*page.selectedAccount = 0
-			page.accountsTab.Selected = 0
+			page.accountTabs.Selected = 0
+
+			accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
+			for i, account := range page.info.Wallets[*page.selectedWallet].Accounts {
+				if account.Name == "imported" {
+					continue
+				}
+				accounts[i] = decredmaterial.TabItem{
+					Title: page.info.Wallets[*page.selectedWallet].Accounts[i].Name,
+				}
+			}
+			page.accountTabs.SetTabs(accounts)
 		}
-		if *page.selectedWallet == 0 {
-			page.walletsTab.Selected = *page.selectedWallet
-		}
-		page.walletsTab.Separator = false
-		return page.walletsTab.Layout(gtx, body)
+		return page.walletTabs.Layout(gtx, body)
 	}
 	return page.Layout(gtx, bd)
 }
 
 func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
-	for i, account := range page.info.Wallets[*page.selectedWallet].Accounts {
-		if account.Name == "imported" {
-			continue
-		}
-		accounts[i] = decredmaterial.TabItem{
-			Title: page.info.Wallets[*page.selectedWallet].Accounts[i].Name,
-		}
-	}
-
-	page.accountsTab.SetTitle(page.theme.Label(values.TextSize18, "Accounts:"))
-
-	page.accountsTab.SetTabs(accounts)
-	if page.accountsTab.ChangeEvent() {
-		*page.selectedAccount = page.accountsTab.Selected
+	if page.accountTabs.ChangeEvent() {
+		*page.selectedAccount = page.accountTabs.Selected
 	}
 
 	return page.LayoutWithWallets(gtx, func(gtx C) D {
-		return page.accountsTab.Layout(gtx, body)
+		return page.accountTabs.Layout(gtx, body)
 	})
 }
 
