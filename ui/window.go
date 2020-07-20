@@ -5,6 +5,8 @@ import (
 	"image"
 	"time"
 
+	"github.com/raedahgroup/godcr/ui/values"
+
 	"gioui.org/font/gofont"
 	"gioui.org/op"
 
@@ -44,8 +46,9 @@ type Window struct {
 
 	err string
 
-	pages     map[string]layout.Widget
-	keyEvents chan *key.Event
+	pages                   map[string]layout.Widget
+	walletTabs, accountTabs *decredmaterial.Tabs
+	keyEvents               chan *key.Event
 }
 
 // CreateWindow creates and initializes a new window with start
@@ -71,6 +74,13 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image) (*Wind
 	win.states.loading = true
 	win.current = PageOverview
 	win.keyEvents = make(chan *key.Event)
+
+	win.walletTabs, win.accountTabs = decredmaterial.NewTabs(win.theme), decredmaterial.NewTabs(win.theme)
+	win.walletTabs.Position, win.accountTabs.Position = decredmaterial.Top, decredmaterial.Top
+	win.walletTabs.Separator, win.walletTabs.Separator = false, false
+	win.accountTabs.SetTitle(win.theme.Label(values.TextSize18, "Accounts:"))
+	win.walletTabs.SetTabs([]decredmaterial.TabItem{})
+	win.accountTabs.SetTabs([]decredmaterial.TabItem{})
 
 	win.addPages(decredIcons)
 	return win, nil

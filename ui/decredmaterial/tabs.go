@@ -240,7 +240,7 @@ func (t *Tabs) SetTitle(title Label) {
 func (t *Tabs) tabsTitle() layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		if (t.Position == Top || t.Position == Bottom) && t.title.Text != "" {
-			return layout.Inset{Top: values.MarginPadding10, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding20, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 				return t.title.Layout(gtx)
 			})
 		}

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 )
 
@@ -21,6 +22,29 @@ func (win *Window) updateStates(update interface{}) {
 		}
 		*win.walletInfo = e
 		win.states.loading = false
+
+		// set wallets and accounts tab when wallet info is updated
+		go func() {
+			wallets := make([]decredmaterial.TabItem, len(e.Wallets))
+			for i := range e.Wallets {
+				wallets[i] = decredmaterial.TabItem{
+					Title: e.Wallets[i].Name,
+				}
+			}
+			win.walletTabs.SetTabs(wallets)
+
+			accounts := make([]decredmaterial.TabItem, len(e.Wallets[win.selected].Accounts))
+			for i, account := range e.Wallets[win.selected].Accounts {
+				if account.Name == "imported" {
+					continue
+				}
+				accounts[i] = decredmaterial.TabItem{
+					Title: e.Wallets[win.selected].Accounts[i].Name,
+				}
+			}
+			win.accountTabs.SetTabs(accounts)
+		}()
+
 		return
 	case *wallet.Transactions:
 		win.walletTransactions = e
