@@ -5,6 +5,7 @@ package decredmaterial
 import (
 	"image"
 	"image/color"
+	"strings"
 
 	"gioui.org/widget/material"
 
@@ -12,16 +13,19 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/atotto/clipboard"
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/image/math/fixed"
 )
 
 type Editor struct {
 	material.EditorStyle
 
+	shaper           text.Shaper
 	StartHint        string
 	TitleLabel       Label
 	ErrorLabel       Label
@@ -33,8 +37,6 @@ type Editor struct {
 	IsVisible bool
 	//IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
-	//IsTitleLabel if true makes the title label visible.
-	IsTitleLabel bool
 
 	requiredErrorText string
 
@@ -42,10 +44,11 @@ type Editor struct {
 	clearBtMaterial  IconButton
 
 	hasCalculated                                   bool
+	editorLineHeight                                int
 	titleLabelDims, editorDims, lineDims, errorDims layout.Dimensions
 }
 
-func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
+func (t *Theme) Editor(editor *widget.Editor, hint string) *Editor {
 	errorLabel := t.Caption("")
 	errorLabel.Color = t.Color.Danger
 
@@ -56,10 +59,10 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 
 	e := Editor{
 		EditorStyle:       m,
+		shaper:            t.Shaper,
 		TitleLabel:        t.Body2(""),
 		StartHint:         hint,
 		flexWidth:         1,
-		IsTitleLabel:      true,
 		LineColor:         t.Color.Text,
 		LineColorFocused:  t.Color.Primary,
 		ErrorLabel:        errorLabel,
@@ -90,7 +93,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	}
 	e.TitleLabel.Text = m.Hint
 
-	return e
+	return &e
 }
 
 func (e *Editor) calculateDims(gtx layout.Context) {
@@ -101,6 +104,7 @@ func (e *Editor) calculateDims(gtx layout.Context) {
 		}),
 		layout.Rigid(func(gtx C) D {
 			e.editorDims = e.EditorStyle.Layout(gtx)
+			e.editorLineHeight = e.editorDims.Size.Y
 			return e.editorDims
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -115,10 +119,25 @@ func (e *Editor) calculateDims(gtx layout.Context) {
 	)
 }
 
+func (e *Editor) calculateEditorHeight(gtx layout.Context) {
+	r := strings.NewReader(e.Editor.Text())
+	lines, _ := e.shaper.Layout(e.Font, fixed.I(gtx.Px(e.TextSize)), gtx.Constraints.Max.X, r)
+	e.editorDims.Size.Y = e.editorLineHeight * len(lines)
+}
+
 // Layout renders the editor to screen. The editor line is able to retain
 // it's relative position whether or not the hint or title labels are displayed
 // or not because their dimensions are pre-calculated before hand
 func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
+	if !e.hasCalculated {
+		e.calculateDims(gtx)
+		e.hasCalculated = true
+	}
+
+	if !e.Editor.SingleLine {
+		e.calculateEditorHeight(gtx)
+	}
+
 	e.handleEvents()
 	if e.IsVisible {
 		e.flexWidth = 0.93
@@ -136,17 +155,10 @@ func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.ErrorLabel.Text = e.requiredErrorText
 	}
 
-	if !e.hasCalculated {
-		e.calculateDims(gtx)
-		e.hasCalculated = true
-	}
-
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			if e.IsTitleLabel && (e.Editor.Focused() || e.Editor.Len() != 0) {
-				if e.Editor.Focused() {
-					e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
-				}
+			if e.Editor.Focused() || e.Editor.Len() != 0 {
+				e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
 				e.TitleLabel.Layout(gtx)
 			}
 			return e.titleLabelDims

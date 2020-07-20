@@ -14,7 +14,7 @@ import (
 const PageVerifyMessage = "verifymessage"
 
 type verifyMessagePage struct {
-	addressInput, messageInput, signInput decredmaterial.Editor
+	addressInput, messageInput, signInput *decredmaterial.Editor
 	clearBtn, verifyBtn                   decredmaterial.Button
 	verifyMessage                         decredmaterial.Label
 
@@ -103,7 +103,7 @@ func (pg *verifyMessagePage) header(c *pageCommon) layout.Widget {
 	}
 }
 
-func (pg *verifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widget {
+func (pg *verifyMessagePage) inputRow(editor *decredmaterial.Editor) layout.Widget {
 	return func(gtx C) D {
 		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 			return editor.Layout(gtx)

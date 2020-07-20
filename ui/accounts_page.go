@@ -16,7 +16,7 @@ type walletAccountPage struct {
 	walletID      int
 	wallet        *wallet.Wallet
 	container     layout.List
-	accountName   decredmaterial.Editor
+	accountName   *decredmaterial.Editor
 	backButton    decredmaterial.IconButton
 	create        decredmaterial.Button
 	errorLabel    decredmaterial.Label

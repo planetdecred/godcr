@@ -35,7 +35,7 @@ type walletPage struct {
 	rename, delete, cancelDelete decredmaterial.Button
 	errorLabel                   decredmaterial.Label
 	editor                       widget.Editor
-	editorW                      decredmaterial.Editor
+	editorW                      *decredmaterial.Editor
 	passwordModal                *decredmaterial.Password
 	isPasswordModalOpen          bool
 	errChann                     chan error

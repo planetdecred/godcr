@@ -17,7 +17,7 @@ const PageWalletPassphrase = "walletPassphrase"
 
 type walletPassphrasePage struct {
 	container                  layout.List
-	newPass, confPass, oldPass decredmaterial.Editor
+	newPass, confPass, oldPass *decredmaterial.Editor
 	passwordBar                decredmaterial.ProgressBarStyle
 	backButton                 decredmaterial.IconButton
 	savePassword               decredmaterial.Button
