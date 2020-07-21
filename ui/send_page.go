@@ -9,6 +9,7 @@ import (
 	"github.com/raedahgroup/godcr/ui/values"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
@@ -134,6 +135,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	page.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Destination Address")
 	page.destinationAddressEditor.SetRequiredErrorText("")
+	page.destinationAddressEditor.TextSize = unit.Dp(13)
 	page.destinationAddressEditor.IsRequired = true
 	page.destinationAddressEditor.IsVisible = true
 
@@ -290,10 +292,10 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 			return pg.drawSelectedAccountSection(gtx)
 		},
 		func(gtx C) D {
-			return pg.destinationAddressEditor.Layout(gtx)
+			return pg.wrapInput(gtx, func(gtx C) D { return pg.destinationAddressEditor.Layout(gtx) })
 		},
 		func(gtx C) D {
-			return pg.sendAmountLayout(gtx)
+			return pg.wrapInput(gtx, func(gtx C) D { return pg.sendAmountLayout(gtx) })
 		},
 		func(gtx C) D {
 			return pg.drawTransactionDetailWidgets(gtx)
@@ -345,6 +347,11 @@ func (pg *SendPage) drawSuccessSection(gtx layout.Context) layout.Dimensions {
 		)
 	}
 	return layout.Dimensions{}
+}
+
+func (pg *SendPage) wrapInput(gtx layout.Context, wg layout.Widget) layout.Dimensions {
+	gtx.Constraints.Max.X = 580
+	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, wg)
 }
 
 func (pg *SendPage) drawCopiedLabelSection(gtx layout.Context) layout.Dimensions {
