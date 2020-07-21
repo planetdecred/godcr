@@ -49,6 +49,7 @@ func (win *Window) WalletPassphrasePage(common pageCommon) layout.Widget {
 
 	pg.backButton.Color = common.theme.Color.Hint
 	pg.backButton.Size = values.MarginPadding30
+	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		pg.handle(common)

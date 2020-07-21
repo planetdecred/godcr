@@ -41,6 +41,7 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	pg.clearBtn.Color = c.theme.Color.Primary
 	pg.backButton.Color = c.theme.Color.Hint
 	pg.backButton.Size = values.MarginPadding30
+	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		pg.handler(c)

@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"image/color"
+	// "image/color"
 	"time"
 
 	"github.com/raedahgroup/godcr/ui/values"
@@ -73,11 +73,11 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.icons.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 	pg.icons.addAcct.Inset = layout.UniformInset(iconPadding)
 	pg.icons.addAcct.Size = iconSize
-	pg.icons.main = common.theme.IconButton(new(widget.Clickable), common.icons.navigationArrowBack)
-	pg.icons.main.Background = color.RGBA{}
+	pg.icons.main = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
 	pg.icons.main.Color = common.theme.Color.Hint
-	pg.icons.main.Inset = layout.UniformInset(iconPadding)
-	pg.icons.main.Size = iconSize
+	pg.icons.main.Inset = layout.UniformInset(values.MarginPadding0)
+
+	pg.icons.main.Size = values.MarginPadding30
 	pg.icons.delete = common.theme.IconButton(new(widget.Clickable), common.icons.actionDelete)
 	pg.icons.delete.Size = iconSize
 	pg.icons.delete.Inset = layout.UniformInset(iconPadding)
@@ -246,7 +246,7 @@ func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Di
 	list := layout.List{Axis: layout.Vertical}
 	wdgs := []func(gtx C) D{
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.returnBtn(gtx)
 				}),
@@ -260,12 +260,12 @@ func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Di
 		func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Top: values.TextSize12}.Layout(gtx, func(gtx C) D {
 						return common.theme.Body1("Your are about to rename").Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						txt := common.theme.H5(pg.current.Name)
 						txt.Color = common.theme.Color.Danger
 						return txt.Layout(gtx)
