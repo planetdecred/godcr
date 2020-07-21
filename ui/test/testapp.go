@@ -34,7 +34,7 @@ type TestStruct struct {
 	theme  *decredmaterial.Theme
 
 	customEditorOutput struct {
-		test1, test2, test3, test4             decredmaterial.Editor
+		test1, test2, test3, test4             *decredmaterial.Editor
 		test1btn, test2btn, test3btn, test4btn decredmaterial.Button
 		testOutput                             decredmaterial.Label
 		radiobtn                               decredmaterial.RadioButton
