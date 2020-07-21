@@ -187,7 +187,7 @@ func toPointF(p image.Point) f32.Point {
 	return f32.Point{X: float32(p.X), Y: float32(p.Y)}
 }
 
-func fillMax(gtx layout.Context, col color.RGBA) layout.Dimensions {
+func fillMax(gtx layout.Context, col color.RGBA) {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Max.X, Y: cs.Max.Y}
 	dr := f32.Rectangle{
@@ -195,7 +195,6 @@ func fillMax(gtx layout.Context, col color.RGBA) layout.Dimensions {
 	}
 	paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	return layout.Dimensions{Size: d}
 }
 
 func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
