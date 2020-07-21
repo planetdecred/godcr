@@ -597,10 +597,6 @@ func (pg *SendPage) txFeeLayout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions {
-	if !pg.isConfirmationModalOpen {
-		return layout.Dimensions{}
-	}
-
 	w := []func(gtx C) D{
 		func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -672,9 +668,6 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 }
 
 func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
-	if !(pg.isPasswordModalOpen) {
-		return layout.Dimensions{}
-	}
 	return pg.passwordModal.Layout(gtx, func(password []byte) {
 		pg.isBroadcastingTransaction = true
 		pg.isPasswordModalOpen = false
