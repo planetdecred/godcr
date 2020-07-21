@@ -104,43 +104,6 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	return t
 }
 
-func (t *Theme) Modal(gtx layout.Context, title string, wd []func(gtx C) D) layout.Dimensions {
-	overlayColor := t.Color.Black
-	overlayColor.A = 200
-
-	dims := layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			return fillMax(gtx, overlayColor)
-		}),
-		layout.Stacked(func(gtx C) D {
-			w := []func(gtx C) D{
-				func(gtx C) D {
-					return t.H6(title).Layout(gtx)
-				},
-				func(gtx C) D {
-					line := t.Line()
-					line.Width = gtx.Constraints.Max.X
-					return line.Layout(gtx)
-				},
-			}
-			w = append(w, wd...)
-
-			return layout.Inset{
-				Top:    unit.Dp(modalTopInset),
-				Bottom: unit.Dp(100),
-				Left:   unit.Dp(modalSideInset),
-				Right:  unit.Dp(modalSideInset),
-			}.Layout(gtx, func(gtx C) D {
-				fillMax(gtx, t.Color.Surface)
-				return (&layout.List{Axis: layout.Vertical, Alignment: layout.Middle}).Layout(gtx, len(w), func(gtx C, i int) D {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
-				})
-			})
-		}),
-	)
-	return dims
-}
-
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.N,

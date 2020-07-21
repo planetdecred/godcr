@@ -69,6 +69,9 @@ type createRestore struct {
 	autoCompleteList *layout.List
 
 	seedSuggestions []decredmaterial.Button
+
+	createModal  *decredmaterial.Modal
+	warningModal *decredmaterial.Modal
 }
 
 // Loading lays out the loading widget with a faded background
@@ -86,6 +89,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		addWallet:             common.theme.Button(new(widget.Clickable), "create wallet"),
 		hideResetModal:        common.theme.Button(new(widget.Clickable), "cancel"),
 		suggestionLimit:       3,
+		createModal:           common.theme.Modal(""),
+		warningModal:          common.theme.Modal(""),
 	}
 
 	pg.matchSpendingPassword.Editor.SingleLine = true
@@ -168,9 +173,9 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.showPassword {
-					modalTitle := "Create Wallet"
+					pg.createModal.SetTitle("Create Wallet")
 					if pg.showRestore {
-						modalTitle = "Restore Wallet"
+						pg.createModal.SetTitle("Restore Wallet")
 					}
 
 					w := []func(gtx C) D{
@@ -204,13 +209,13 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 							)
 						},
 					}
-					return pg.theme.Modal(gtx, modalTitle, w)
+					return pg.createModal.Layout(gtx, w, 1350)
 				}
 				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.showWarning {
-					modalTitle := "Reset Seed Input"
+					pg.warningModal.SetTitle("Reset Seed Input")
 					var msg = "You are about clearing all the seed input fields. Are you sure you want to proceed with this action?"
 					w := []func(gtx C) D{
 						func(gtx C) D {
@@ -238,7 +243,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 							})
 						},
 					}
-					return pg.theme.Modal(gtx, modalTitle, w)
+					return pg.warningModal.Layout(gtx, w, 1350)
 				}
 				return layout.Dimensions{}
 			}),
