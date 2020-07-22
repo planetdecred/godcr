@@ -41,6 +41,7 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	pg.clearBtn.Color = c.theme.Color.Primary
 	pg.backButton.Color = c.theme.Color.Hint
 	pg.backButton.Size = values.MarginPadding30
+	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		pg.handler(c)
@@ -83,7 +84,7 @@ func (pg *verifyMessagePage) header(c *pageCommon) layout.Widget {
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 								return c.theme.H5("Verify Wallet Message").Layout(gtx)
 							})
 						}),

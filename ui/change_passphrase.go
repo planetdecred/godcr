@@ -49,6 +49,7 @@ func (win *Window) WalletPassphrasePage(common pageCommon) layout.Widget {
 
 	pg.backButton.Color = common.theme.Color.Hint
 	pg.backButton.Size = values.MarginPadding30
+	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -67,7 +68,7 @@ func (pg *walletPassphrasePage) Layout(gtx layout.Context, common pageCommon) la
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return common.theme.H5("Change Wallet Password").Layout(gtx)
 					})
 				}),
