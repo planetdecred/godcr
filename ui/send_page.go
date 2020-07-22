@@ -29,7 +29,6 @@ type amountValue struct {
 
 type SendPage struct {
 	pageContainer   layout.List
-	gtx             *layout.Context
 	theme           *decredmaterial.Theme
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
@@ -456,11 +455,9 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 					return pg.sendToAddressLayout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.sectionOutlineLayout(gtx, func(gtx C) D {
-						return pg.sectionLayout(gtx, sub, func(gtx C) D {
+				return pg.sectionBorder(gtx, func(gtx C) D {
 							return pg.destinationAddressEditor.Layout(gtx)
 						})
-					})
 				}),
 			)
 		})
@@ -484,11 +481,9 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				return pg.spendableBalanceLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionOutlineLayout(gtx, func(gtx C) D {
-					return pg.sectionLayout(gtx, main, func(gtx C) D {
+				return pg.sectionBorder(gtx, func(gtx C) D {
 						return pg.amountInputLayout(gtx)
 					})
-				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -715,6 +710,15 @@ func (pg *SendPage) sepratorLine(gtx layout.Context, dims layout.Dimensions) lay
 		return l.Layout(gtx)
 	})
 }
+
+// func (pg *SendPage) sectionBorder(gtx layout.Context, body layout.Widget) layout.Dimensions {
+// 	border := pg.theme.Outline()
+// 	border.BorderColor = pg.theme.Color.Hint
+// 	border.Weight = 1
+// 	return border.Layout(gtx, func(gtx C) D {
+// 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, body)
+// 	})
+// }
 
 func (pg *SendPage) validate(ignoreEmpty bool) bool {
 	isAddressValid := pg.validateDestinationAddress(ignoreEmpty)
