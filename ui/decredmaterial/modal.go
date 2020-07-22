@@ -38,7 +38,7 @@ func (m *Modal) SetTitle(title string) {
 }
 
 // Layout renders the modal widget to screen. The modal assumes the size of
-// it's content plus padding.
+// its content plus padding.
 func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) layout.Dimensions {
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {

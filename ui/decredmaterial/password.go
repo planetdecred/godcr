@@ -52,23 +52,24 @@ func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func(
 			return p.passwordEditor.Layout(gtx)
 		},
 		func(gtx C) D {
-			inset := layout.Inset{
-				Top: unit.Dp(20),
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return p.confirmButton.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Left: unit.Dp(10),
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return p.cancelButton.Layout(gtx)
-						})
-					}),
-				)
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.Inset{
+					Top: unit.Dp(20),
+				}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return p.confirmButton.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							inset := layout.Inset{
+								Left: unit.Dp(10),
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return p.cancelButton.Layout(gtx)
+							})
+						}),
+					)
+				})
 			})
 		},
 	}

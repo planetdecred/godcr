@@ -40,12 +40,6 @@ type (
 	D = layout.Dimensions
 )
 
-const (
-	modalTopInset           = 50
-	modalSideInset          = 100
-	estimatedModalRowHeight = 50
-)
-
 type Theme struct {
 	Shaper text.Shaper
 	Base   *material.Theme

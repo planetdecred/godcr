@@ -532,19 +532,21 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 			)
 		},
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.confirmButton.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					inset := layout.Inset{
-						Left: values.MarginPadding5,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return pg.closeConfirmationModalButton.Layout(gtx)
-					})
-				}),
-			)
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.confirmButton.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Left: values.MarginPadding5,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.closeConfirmationModalButton.Layout(gtx)
+						})
+					}),
+				)
+			})
 		},
 	}
 	return pg.confirmModal.Layout(gtx, w, 850)
