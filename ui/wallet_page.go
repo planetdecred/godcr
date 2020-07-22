@@ -1,7 +1,6 @@
 package ui
 
 import (
-	// "image/color"
 	"time"
 
 	"github.com/raedahgroup/godcr/ui/values"
