@@ -28,10 +28,9 @@ type amountValue struct {
 }
 
 type SendPage struct {
-	pageContainer layout.List
-	gtx           *layout.Context
-	theme         *decredmaterial.Theme
-
+	pageContainer   layout.List
+	gtx             *layout.Context
+	theme           *decredmaterial.Theme
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
 
@@ -184,58 +183,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	return func(gtx C) D {
 		pg.Handle(common)
 		return pg.Layout(gtx, common)
-		// =======
-		// 	pg.destinationAddressEditor = common.theme.Editor("Destination Address")
-		// 	pg.destinationAddressEditor.SetRequiredErrorText("")
-		// 	pg.destinationAddressEditor.IsRequired = true
-		// 	pg.destinationAddressEditor.IsVisible = true
-		// 	pg.destinationAddressEditor.IsTitleLabel = false
-		// 	pg.destinationAddressEditor.IsUnderline = false
-
-		// 	pg.sendAmountEditorMaterial = common.theme.Editor("Amount to be sent")
-		// 	pg.sendAmountEditorMaterial.SetRequiredErrorText("")
-		// 	pg.sendAmountEditorMaterial.IsRequired = true
-		// 	pg.sendAmountEditorMaterial.IsTitleLabel = false
-
-		// 	pg.closeConfirmationModalButtonMaterial.Background = common.theme.Color.Gray
-		// 	pg.destinationAddressEditor.SetText("")
-		// 	pg.destinationAddressEditor.SingleLine = true
-
-		// 	pg.copyIconMaterial.Background = common.theme.Color.Background
-		// 	pg.copyIconMaterial.Color = common.theme.Color.Text
-		// 	pg.copyIconMaterial.Size = values.MarginPadding35
-		// 	pg.copyIconMaterial.Padding = values.MarginPadding5
-
-		// 	pg.currencySwap = common.theme.IconButton(common.icons.actionSwapVert)
-		// 	pg.currencySwap.Background = color.RGBA{}
-		// 	pg.currencySwap.Color = common.theme.Color.Text
-		// 	pg.currencySwap.Padding = values.MarginPadding0
-		// 	pg.currencySwap.Size = values.MarginPadding30
-
-		// 	pg.maxButtonMaterial.Background = common.theme.Color.Black
-		// 	pg.maxButtonMaterial.Inset = layout.Inset{
-		// 		Top: values.MarginPadding5, Bottom: values.MarginPadding5,
-		// 		Left: values.MarginPadding5, Right: values.MarginPadding5,
-		// 	}
-
-		// 	pg.sendToButtonMaterial = common.theme.Button("Send to account")
-		// 	pg.sendToButtonMaterial.TextSize = values.TextSize14
-		// 	pg.sendToButtonMaterial.Background = color.RGBA{}
-		// 	pg.sendToButtonMaterial.Color = common.theme.Color.Primary
-		// 	pg.sendToButtonMaterial.Inset = layout.Inset{
-		// 		Top: values.MarginPadding0, Bottom: values.MarginPadding0,
-		// 		Left: values.MarginPadding0, Right: values.MarginPadding0,
-		// 	}
-		// 	pg.txLine.Color = common.theme.Color.Gray
-
-		// 	go common.wallet.GetUSDExchangeValues(&pg)
-
-		// 	return func(gtx C) D {
-		// 		pg.Layout(common)
-		// 		pg.drawConfirmationModal(common)
-		// 		pg.drawPasswordModal(common)
-		// 		pg.Handle(common)
-		// >>>>>>> add collapasible and line widget for txfee
 	}
 }
 
@@ -382,9 +329,15 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		func(gtx C) D {
 			return pg.destinationAddrSection(gtx)
 		},
+		// func(gtx C) D {
+		// return pg.sepratorLine(gtx)
+		// },
 		func(gtx C) D {
 			return pg.sendAmountSection(gtx)
 		},
+		// func(gtx C) D {
+		// return pg.sepratorLine(gtx)
+		// },
 		func(gtx C) D {
 			return pg.drawTransactionDetailWidgets(gtx)
 		},
@@ -490,52 +443,13 @@ func (pg *SendPage) tableLayout(gtx layout.Context, leftLabel decredmaterial.Lab
 	)
 }
 
-// <<<<<<< HEAD
-// func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
-// 	return layout.Flex{}.Layout(gtx,
-// 		layout.Flexed(1, func(gtx C) D {
-// 			return layout.W.Layout(gtx, func(gtx C) D {
-// 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 					layout.Rigid(func(gtx C) D {
-// 						return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
-// 					}),
-// 					layout.Rigid(func(gtx C) D {
-// 						return layout.Flex{}.Layout(gtx,
-// 							layout.Rigid(func(gtx C) D {
-// 								m := values.MarginPadding10
-// 								return layout.Inset{Left: m, Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-// 									return pg.currencySwap.Layout(gtx)
-// 								})
-// 							}),
-// 							layout.Rigid(func(gtx C) D {
-// 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-// 									return pg.sendAmountEditor.Layout(gtx)
-// 								})
-// 							}),
-// 						)
-// 					}),
-// 					layout.Rigid(func(gtx C) D {
-// 						txt := pg.theme.Body2(pg.inactiveTotalAmount)
-// 						if pg.LastTradeRate == "" {
-// 							txt.Color = pg.theme.Color.Danger
-// 						}
-// 						return txt.Layout(gtx)
-// 					}),
-// 				)
-// 			})
-// 		}),
-// 	)
-// }
-
-// =======
 func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
 	sub := layout.UniformInset(values.MarginPadding0)
 	inset := layout.Inset{
-		Bottom: values.MarginPadding10,
-		Top:    values.MarginPadding10,
+		Top: values.MarginPadding10,
 	}
-	return inset.Layout(gtx, func(gtx C) D {
+	dims := inset.Layout(gtx, func(gtx C) D {
 		return pg.sectionLayout(gtx, main, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -551,11 +465,20 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 			)
 		})
 	})
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return dims
+		}),
+		layout.Rigid(func(gtx C) D {
+			return pg.sepratorLine(gtx, dims)
+		}),
+	)
 }
 
 func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
-	return pg.sectionLayout(gtx, main, func(gtx C) D {
+	dims := pg.sectionLayout(gtx, main, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return pg.spendableBalanceLayout(gtx)
@@ -568,7 +491,6 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				pg.txLine.Width = gtx.Constraints.Max.Y
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 					return pg.txLine.Layout(gtx)
 				})
@@ -580,6 +502,15 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 			}),
 		)
 	})
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return dims
+		}),
+		layout.Rigid(func(gtx C) D {
+			return pg.sepratorLine(gtx, dims)
+		}),
+	)
 }
 
 func (pg *SendPage) sendToAddressLayout(gtx layout.Context) layout.Dimensions {
@@ -772,6 +703,16 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 		pg.wallet.BroadcastTransaction(pg.txAuthor, password, pg.broadcastErrChan)
 	}, func() {
 		pg.isPasswordModalOpen = false
+	})
+}
+
+func (pg *SendPage) sepratorLine(gtx layout.Context, dims layout.Dimensions) layout.Dimensions {
+	l := pg.theme.Line()
+	l.Color = pg.theme.Color.Hint
+	l.Width = dims.Size.X
+
+	return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+		return l.Layout(gtx)
 	})
 }
 
