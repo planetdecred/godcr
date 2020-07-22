@@ -68,6 +68,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	}
 	pg.backButton.Color = common.theme.Color.Hint
 	pg.backButton.Size = values.MarginPadding30
+	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -85,12 +86,12 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.W.Layout(gtx, func(gtx C) D {
+					return layout.NW.Layout(gtx, func(gtx C) D {
 						return pg.backButton.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return pg.titleLabel.Layout(gtx)
 					})
 				}),
