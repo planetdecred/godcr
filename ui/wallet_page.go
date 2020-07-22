@@ -251,7 +251,7 @@ func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Di
 					return pg.returnBtn(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding50}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return common.theme.H5("Rename Wallet").Layout(gtx)
 					})
 				}),

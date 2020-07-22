@@ -84,7 +84,7 @@ func (pg *verifyMessagePage) header(c *pageCommon) layout.Widget {
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 								return c.theme.H5("Verify Wallet Message").Layout(gtx)
 							})
 						}),

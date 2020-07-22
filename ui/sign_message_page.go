@@ -91,7 +91,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return pg.titleLabel.Layout(gtx)
 					})
 				}),
