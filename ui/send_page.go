@@ -444,7 +444,7 @@ func (pg *SendPage) tableLayout(gtx layout.Context, leftLabel decredmaterial.Lab
 
 func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
-	sub := layout.UniformInset(values.MarginPadding0)
+	// sub := layout.UniformInset(values.MarginPadding0)
 	inset := layout.Inset{
 		Top: values.MarginPadding10,
 	}
@@ -455,9 +455,9 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 					return pg.sendToAddressLayout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, func(gtx C) D {
-							return pg.destinationAddressEditor.Layout(gtx)
-						})
+					return pg.sectionBorder(gtx, func(gtx C) D {
+						return pg.destinationAddressEditor.Layout(gtx)
+					})
 				}),
 			)
 		})
@@ -482,8 +482,8 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				return pg.sectionBorder(gtx, func(gtx C) D {
-						return pg.amountInputLayout(gtx)
-					})
+					return pg.amountInputLayout(gtx)
+				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -711,14 +711,15 @@ func (pg *SendPage) sepratorLine(gtx layout.Context, dims layout.Dimensions) lay
 	})
 }
 
-// func (pg *SendPage) sectionBorder(gtx layout.Context, body layout.Widget) layout.Dimensions {
-// 	border := pg.theme.Outline()
-// 	border.BorderColor = pg.theme.Color.Hint
-// 	border.Weight = 1
-// 	return border.Layout(gtx, func(gtx C) D {
-// 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, body)
-// 	})
-// }
+func (pg *SendPage) sectionBorder(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	border := pg.theme.Outline()
+	border.BorderColor = pg.theme.Color.Hint
+	border.Weight = 1
+	d := border.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding10).Layout(gtx, body)
+	})
+	return d
+}
 
 func (pg *SendPage) validate(ignoreEmpty bool) bool {
 	isAddressValid := pg.validateDestinationAddress(ignoreEmpty)

@@ -31,5 +31,5 @@ var (
 	WalletSyncBoxContentWidth = unit.Dp(280)
 	AccountLineWidth          = unit.Dp(350)
 	OutLinePadding            = unit.Dp(1)
-	BorderWidth = unit.Px(2)
+	BorderWidth               = unit.Px(2)
 )
