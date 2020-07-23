@@ -7,8 +7,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/unit"
-	// "gioui.org/op/paint"
-	// "gioui.org/op"
 )
 
 type Outline struct {

@@ -147,7 +147,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 
 	pg.sync = c.theme.Button(new(widget.Clickable), pg.text.reconnect)
 	pg.sync.TextSize = values.TextSize10
-	pg.sync.Background = c.theme.Color.Background
+	pg.sync.Background = color.RGBA{}
 	pg.sync.Color = c.theme.Color.Text
 
 	pg.syncedIcon = c.icons.actionCheckCircle
@@ -538,7 +538,10 @@ func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 					if pg.walletInfo.Synced {
 						pg.sync.Text = pg.text.disconnect
 					}
-					return pg.sync.Layout(gtx)
+					border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.BorderWidth}
+					return border.Layout(gtx, func(gtx C) D {
+						return pg.sync.Layout(gtx)
+					})
 				})
 			}),
 		)

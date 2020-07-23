@@ -6,14 +6,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/raedahgroup/godcr/ui/values"
-
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -167,7 +168,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.currencySwap.Size = values.MarginPadding30
 
 	pg.maxButton.Background = common.theme.Color.Black
-	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
 	pg.sendToButton = common.theme.Button(new(widget.Clickable), "Send to account")
 	pg.sendToButton.TextSize = values.TextSize14
@@ -328,15 +329,9 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		func(gtx C) D {
 			return pg.destinationAddrSection(gtx)
 		},
-		// func(gtx C) D {
-		// return pg.sepratorLine(gtx)
-		// },
 		func(gtx C) D {
 			return pg.sendAmountSection(gtx)
 		},
-		// func(gtx C) D {
-		// return pg.sepratorLine(gtx)
-		// },
 		func(gtx C) D {
 			return pg.drawTransactionDetailWidgets(gtx)
 		},
@@ -444,7 +439,6 @@ func (pg *SendPage) tableLayout(gtx layout.Context, leftLabel decredmaterial.Lab
 
 func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
-	// sub := layout.UniformInset(values.MarginPadding0)
 	inset := layout.Inset{
 		Top: values.MarginPadding10,
 	}
@@ -455,8 +449,14 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 					return pg.sendToAddressLayout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.sectionBorder(gtx, func(gtx C) D {
-						return pg.destinationAddressEditor.Layout(gtx)
+					return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
+						inset := layout.Inset{
+							Left:  values.MarginPadding10,
+							Right: values.MarginPadding10,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.destinationAddressEditor.Layout(gtx)
+						})
 					})
 				}),
 			)
@@ -481,7 +481,7 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				return pg.spendableBalanceLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, func(gtx C) D {
+				return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
 					return pg.amountInputLayout(gtx)
 				})
 			}),
@@ -711,14 +711,11 @@ func (pg *SendPage) sepratorLine(gtx layout.Context, dims layout.Dimensions) lay
 	})
 }
 
-func (pg *SendPage) sectionBorder(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	border := pg.theme.Outline()
-	border.BorderColor = pg.theme.Color.Hint
-	border.Weight = 1
-	d := border.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding10).Layout(gtx, body)
+func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
+	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.BorderWidth}
+	return border.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(padding).Layout(gtx, body)
 	})
-	return d
 }
 
 func (pg *SendPage) validate(ignoreEmpty bool) bool {
