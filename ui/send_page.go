@@ -523,6 +523,7 @@ func (pg *SendPage) sendToAddressLayout(gtx layout.Context) layout.Dimensions {
 			return amt.Layout(gtx)
 		}),
 		layout.Flexed(1, func(gtx C) D {
+<<<<<<< HEAD
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 					return pg.sendToButton.Layout(gtx)
@@ -578,6 +579,53 @@ func (pg *SendPage) sendToAddressLayout(gtx layout.Context) layout.Dimensions {
 // 					}),
 // 				)
 >>>>>>> adjust input field text size and align content
+=======
+			return layout.W.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								gtx.Constraints.Max.X = pg.width
+								return pg.sendAmountEditor.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								// this adjusts space between input values and currency symbol.
+								m := values.MarginPadding5
+								e := pg.sendAmountEditor.Editor.Len()
+								if e > 0 && e < 7 {
+									m = values.EditorWidth
+								}
+								return layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+									return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
+								})
+							}),
+						)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								m := values.MarginPadding10
+								return layout.Inset{Left: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+									return pg.currencySwap.Layout(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								pg.line.Width = gtx.Constraints.Max.X - 100
+								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+									return pg.line.Layout(gtx)
+								})
+							}),
+						)
+					}),
+					layout.Rigid(func(gtx C) D {
+						txt := pg.theme.Body2(pg.inactiveTotalAmount)
+						if pg.LastTradeRate == "" {
+							txt.Color = pg.theme.Color.Danger
+						}
+						return txt.Layout(gtx)
+					}),
+				)
+>>>>>>> remove debug code
 			})
 		}),
 	)
@@ -998,11 +1046,13 @@ func (pg *SendPage) watchForBroadcastResult() {
 	}
 }
 
+// changeEvt tracks change event on the editor and adjust its width of the ssend amount input field
+// pg.width is the widith of a single text character
 func (pg *SendPage) changeEvt(evt widget.EditorEvent) {
-	// this adjusts the width of the amount editor per text input.
 	textLength := pg.sendAmountEditor.Editor.Len()
 	n := 29
 
+	// cal decrements the pg.width for a particular range of values
 	cal := func(val int) int {
 		return n - val
 	}
