@@ -5,9 +5,10 @@ import (
 	"image"
 	"time"
 
+	"gioui.org/text"
+
 	"github.com/raedahgroup/godcr/ui/values"
 
-	"gioui.org/font/gofont"
 	"gioui.org/op"
 
 	"gioui.org/app"
@@ -56,10 +57,10 @@ type Window struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image) (*Window, error) {
+func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace) (*Window, error) {
 	win := new(Window)
 	win.window = app.NewWindow(app.Title("godcr"))
-	theme := decredmaterial.NewTheme(gofont.Collection())
+	theme := decredmaterial.NewTheme(collection)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
 	}
