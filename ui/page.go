@@ -188,47 +188,6 @@ func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget
 	})
 }
 
-// func (page pageCommon) selectedAccountLayout(gtx *layout.Context, body layout.Widget) layout.Dimensions {
-// 	current := page.info.Wallets[*page.selectedWallet]
-// 	account := page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount]
-
-// 	return selectedDetails = func(gtx C) D {
-// 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-// 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 				layout.Rigid(func(gtx C) D {
-// 					return layout.Flex{}.Layout(gtx,
-// 						layout.Rigid(func(gtx C) D {
-// 							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-// 								return page.theme.H6(account.Name).Layout(gtx)
-// 							})
-// 						}),
-// 						layout.Rigid(func(gtx C) D {
-// 							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-// 								return page.theme.H6(dcrutil.Amount(account.SpendableBalance).String()).Layout(gtx)
-// 							})
-// 						}),
-// 					)
-// 				}),
-// 				layout.Rigid(func(gtx C) D {
-// 					return layout.Flex{}.Layout(gtx,
-// 						layout.Rigid(func(gtx C) D {
-// 							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-// 								return page.theme.Body2(current.Name).Layout(gtx)
-// 							})
-// 						}),
-// 						layout.Rigid(func(gtx C) D {
-// 							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-// 								return page.theme.Body2(current.Balance).Layout(gtx)
-// 							})
-// 						}),
-// 					)
-// 				}),
-// 			)
-// 		})
-// 	}
-// 	return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, selectedDetails)
-// }
-
 func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensions {
 	current := page.info.Wallets[*page.selectedWallet]
 	account := page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount]
