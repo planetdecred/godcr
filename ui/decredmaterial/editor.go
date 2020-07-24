@@ -118,13 +118,17 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 						return inset.Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									inset := layout.Inset{
-										Top:    unit.Dp(4),
-										Bottom: unit.Dp(4),
-									}
-									return inset.Layout(gtx, func(gtx C) D {
-										return e.EditorStyle.Layout(gtx)
-									})
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(1, func(gtx C) D {
+											inset := layout.Inset{
+												Top:    unit.Dp(4),
+												Bottom: unit.Dp(4),
+											}
+											return inset.Layout(gtx, func(gtx C) D {
+												return e.EditorStyle.Layout(gtx)
+											})
+										}),
+									)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return e.editorLine(gtx)
