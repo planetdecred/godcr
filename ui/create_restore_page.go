@@ -24,7 +24,7 @@ const PageCreateRestore = "createrestore"
 type (
 	seedEditors struct {
 		focusIndex int
-		editors    []*decredmaterial.Editor
+		editors    []decredmaterial.Editor
 	}
 )
 
@@ -58,8 +58,8 @@ type createRestore struct {
 	resetSeedFields    decredmaterial.Button
 	hideResetModal     decredmaterial.Button
 
-	spendingPassword      *decredmaterial.Editor
-	matchSpendingPassword *decredmaterial.Editor
+	spendingPassword      decredmaterial.Editor
+	matchSpendingPassword decredmaterial.Editor
 	addWallet             decredmaterial.Button
 	errLabel              decredmaterial.Label
 

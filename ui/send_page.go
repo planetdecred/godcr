@@ -38,8 +38,8 @@ type SendPage struct {
 	selectedWallet  wallet.InfoShort
 	selectedAccount wallet.Account
 
-	destinationAddressEditor     *decredmaterial.Editor
-	sendAmountEditor             *decredmaterial.Editor
+	destinationAddressEditor     decredmaterial.Editor
+	sendAmountEditor             decredmaterial.Editor
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
 	confirmButton                decredmaterial.Button

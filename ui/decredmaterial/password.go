@@ -8,7 +8,7 @@ import (
 
 type Password struct {
 	theme          *Theme
-	passwordEditor *Editor
+	passwordEditor Editor
 	confirmButton  Button
 	cancelButton   Button
 }

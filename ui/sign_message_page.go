@@ -22,7 +22,7 @@ type signMessagePage struct {
 
 	isPasswordModalOpen, isSigningMessage                     bool
 	titleLabel, subtitleLabel, errorLabel, signedMessageLabel decredmaterial.Label
-	addressEditor, messageEditor                              *decredmaterial.Editor
+	addressEditor, messageEditor                              decredmaterial.Editor
 	clearButton, signButton, copyButton                       decredmaterial.Button
 	passwordModal                                             *decredmaterial.Password
 	result                                                    **wallet.Signature

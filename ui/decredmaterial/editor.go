@@ -3,9 +3,9 @@
 package decredmaterial
 
 import (
+	//"fmt"
 	"image"
 	"image/color"
-	"strings"
 
 	"gioui.org/widget/material"
 
@@ -19,14 +19,12 @@ import (
 
 	"github.com/atotto/clipboard"
 	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/image/math/fixed"
 )
 
 type Editor struct {
 	material.EditorStyle
 
 	shaper           text.Shaper
-	StartHint        string
 	TitleLabel       Label
 	ErrorLabel       Label
 	LineColor        color.RGBA
@@ -42,13 +40,9 @@ type Editor struct {
 
 	pasteBtnMaterial IconButton
 	clearBtMaterial  IconButton
-
-	hasCalculated                                   bool
-	editorLineHeight                                int
-	titleLabelDims, editorDims, lineDims, errorDims layout.Dimensions
 }
 
-func (t *Theme) Editor(editor *widget.Editor, hint string) *Editor {
+func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	errorLabel := t.Caption("")
 	errorLabel.Color = t.Color.Danger
 
@@ -61,13 +55,11 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) *Editor {
 		EditorStyle:       m,
 		shaper:            t.Shaper,
 		TitleLabel:        t.Body2(""),
-		StartHint:         hint,
 		flexWidth:         1,
 		LineColor:         t.Color.Text,
 		LineColorFocused:  t.Color.Primary,
 		ErrorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
-		hasCalculated:     false,
 
 		pasteBtnMaterial: IconButton{
 			material.IconButtonStyle{
@@ -91,64 +83,25 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) *Editor {
 			},
 		},
 	}
-	e.TitleLabel.Text = m.Hint
+	e.TitleLabel.Text = hint
 
-	return &e
-}
-
-func (e *Editor) calculateDims(gtx layout.Context) {
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			e.titleLabelDims = e.TitleLabel.Layout(gtx)
-			return e.titleLabelDims
-		}),
-		layout.Rigid(func(gtx C) D {
-			e.editorDims = e.EditorStyle.Layout(gtx)
-			e.editorLineHeight = e.editorDims.Size.Y
-			return e.editorDims
-		}),
-		layout.Rigid(func(gtx C) D {
-			e.lineDims = layout.Inset{
-				Top:    unit.Dp(4),
-				Bottom: unit.Dp(4),
-			}.Layout(gtx, func(gtx C) D {
-				return e.editorLine(gtx)
-			})
-			return e.lineDims
-		}),
-	)
-}
-
-func (e *Editor) calculateEditorHeight(gtx layout.Context) {
-	r := strings.NewReader(e.Editor.Text())
-	lines, _ := e.shaper.Layout(e.Font, fixed.I(gtx.Px(e.TextSize)), gtx.Constraints.Max.X, r)
-	e.editorDims.Size.Y = e.editorLineHeight * len(lines)
+	return e
 }
 
 // Layout renders the editor to screen. The editor line is able to retain
 // it's relative position whether or not the hint or title labels are displayed
 // or not because their dimensions are pre-calculated before hand
 func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
-	if !e.hasCalculated {
-		e.calculateDims(gtx)
-		e.hasCalculated = true
-	}
-
-	if !e.Editor.SingleLine {
-		e.calculateEditorHeight(gtx)
-	}
-
 	e.handleEvents()
 	if e.IsVisible {
 		e.flexWidth = 0.93
 	}
 
 	if e.Editor.Focused() || e.Editor.Len() != 0 {
-		e.Hint = ""
-	}
-
-	if !e.Editor.Focused() {
-		e.Hint = e.StartHint
+		e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
+		e.EditorStyle.Hint = ""
+	} else {
+		e.EditorStyle.Hint = e.TitleLabel.Text
 	}
 
 	if e.IsRequired && !e.Editor.Focused() && e.Editor.Len() == 0 {
@@ -158,13 +111,17 @@ func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			if e.Editor.Focused() || e.Editor.Len() != 0 {
-				e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
-				e.TitleLabel.Layout(gtx)
+				return e.TitleLabel.Layout(gtx)
 			}
-			return e.titleLabelDims
+			return layout.Dimensions{
+				Size: image.Point{
+					Y: 17,
+					X: gtx.Constraints.Max.X,
+				},
+			}
 		}),
 		layout.Rigid(func(gtx C) D {
-			layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Flexed(0.9, func(gtx C) D {
 					return e.EditorStyle.Layout(gtx)
 				}),
@@ -182,16 +139,14 @@ func (e *Editor) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 			)
-			return e.editorDims
 		}),
 		layout.Rigid(func(gtx C) D {
-			layout.Inset{
-				Top:    unit.Dp(4),
-				Bottom: unit.Dp(4),
+			return layout.Inset{
+				Top:    unit.Dp(2),
+				Bottom: unit.Dp(2),
 			}.Layout(gtx, func(gtx C) D {
 				return e.editorLine(gtx)
 			})
-			return e.lineDims
 		}),
 		layout.Rigid(func(gtx C) D {
 			if e.ErrorLabel.Text != "" {
@@ -233,7 +188,7 @@ func (e Editor) editorLine(gtx C) D {
 	)
 }
 
-func (e *Editor) handleEvents() {
+func (e Editor) handleEvents() {
 	for e.pasteBtnMaterial.Button.Clicked() {
 		data, err := clipboard.ReadAll()
 		if err != nil {
