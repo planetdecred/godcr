@@ -353,6 +353,7 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 					l := pg.theme.Line()
 					l.Color = pg.theme.Color.Hint
 					l.Width = gtx.Constraints.Min.X
+					l.Height = 2
 
 					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						return l.Layout(gtx)
@@ -361,11 +362,12 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-					return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, pageContent[i])
-					})
+				// return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+				return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					p := values.MarginPadding10
+					return layout.Inset{Left: p, Bottom: p, Right: p}.Layout(gtx, pageContent[i])
 				})
+				// })
 			}),
 		)
 	})
@@ -453,64 +455,50 @@ func (pg *SendPage) tableLayout(gtx layout.Context, leftLabel decredmaterial.Lab
 
 func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
-	inset := layout.Inset{
-		Top: values.MarginPadding10,
-	}
-	dims := inset.Layout(gtx, func(gtx C) D {
-		return pg.sectionLayout(gtx, main, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.sendToAddressLayout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
-						inset := layout.Inset{
-							Left:  values.MarginPadding10,
-							Right: values.MarginPadding10,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return pg.destinationAddressEditor.Layout(gtx)
-						})
+	return pg.sectionLayout(gtx, main, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return pg.sendToAddressLayout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
+					inset := layout.Inset{
+						Left:  values.MarginPadding10,
+						Right: values.MarginPadding10,
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						return pg.destinationAddressEditor.Layout(gtx)
 					})
-				}),
-			)
-		})
+				})
+			}),
+		)
 	})
-
-	return dims
 }
 
 func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
-	inset := layout.Inset{
-		Top: values.MarginPadding10,
-	}
-	dims := inset.Layout(gtx, func(gtx C) D {
-		return pg.sectionLayout(gtx, main, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.spendableBalanceLayout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
-						return pg.amountInputLayout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.txLine.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						return pg.txFeeLayout(gtx)
-					})
-				}),
-			)
-		})
+	return pg.sectionLayout(gtx, main, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return pg.spendableBalanceLayout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
+					return pg.amountInputLayout(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return pg.txLine.Layout(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+					return pg.txFeeLayout(gtx)
+				})
+			}),
+		)
 	})
-
-	return dims
 }
 
 func (pg *SendPage) sendToAddressLayout(gtx layout.Context) layout.Dimensions {

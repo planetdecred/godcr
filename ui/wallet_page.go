@@ -211,7 +211,7 @@ func (pg *walletPage) topRow(gtx layout.Context, common pageCommon) layout.Dimen
 	}
 
 	return pg.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-		return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, wdgs[i])
+		return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, wdgs[i])
 	})
 }
 

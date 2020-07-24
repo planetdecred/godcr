@@ -28,6 +28,7 @@ var (
 	TextSize28 = unit.Dp(28)
 
 	CopyBtnAlignment          = unit.Dp(-5)
+	TabTopPadding             = unit.Dp(-10)
 	WalletSyncBoxContentWidth = unit.Dp(280)
 	AccountLineWidth          = unit.Dp(350)
 	OutLinePadding            = unit.Dp(1)
