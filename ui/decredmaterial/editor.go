@@ -53,7 +53,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	return Editor{
 		EditorStyle:       m,
 		TitleLabel:        t.Body2(""),
-		flexWidth:         1,
+		flexWidth:         0,
 		IsTitleLabel:      true,
 		LineColor:         t.Color.Text,
 		ErrorLabel:        errorLabel,
@@ -62,7 +62,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		pasteBtnMaterial: IconButton{
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentContentPaste)),
-				Size:       unit.Dp(30),
+				Size:       unit.Dp(25),
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
 				Inset:      layout.UniformInset(unit.Dp(5)),
@@ -73,7 +73,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		clearBtMaterial: IconButton{
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentClear)),
-				Size:       unit.Dp(30),
+				Size:       unit.Dp(25),
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
 				Inset:      layout.UniformInset(unit.Dp(5)),
@@ -86,7 +86,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	e.handleEvents()
 	if e.IsVisible {
-		e.flexWidth = 0.93
+		e.flexWidth = 20
 	}
 	if e.Editor.Focused() || e.Editor.Len() != 0 {
 		e.TitleLabel.Text = e.Hint
@@ -112,35 +112,40 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								inset := layout.Inset{
-									Top:    unit.Dp(4),
-									Bottom: unit.Dp(4),
-								}
-								return inset.Layout(gtx, func(gtx C) D {
+						inset := layout.Inset{
+							Right: unit.Dp(e.flexWidth),
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
-										layout.Flexed(e.flexWidth, func(gtx C) D {
-											return e.EditorStyle.Layout(gtx)
+										layout.Flexed(1, func(gtx C) D {
+											inset := layout.Inset{
+												Top:    unit.Dp(4),
+												Bottom: unit.Dp(4),
+											}
+											return inset.Layout(gtx, func(gtx C) D {
+												return e.EditorStyle.Layout(gtx)
+											})
 										}),
 									)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return e.editorLine(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if e.ErrorLabel.Text != "" {
-									inset := layout.Inset{
-										Top: unit.Dp(3),
+								}),
+								layout.Rigid(func(gtx C) D {
+									return e.editorLine(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									if e.ErrorLabel.Text != "" {
+										inset := layout.Inset{
+											Top: unit.Dp(3),
+										}
+										return inset.Layout(gtx, func(gtx C) D {
+											return e.ErrorLabel.Layout(gtx)
+										})
 									}
-									return inset.Layout(gtx, func(gtx C) D {
-										return e.ErrorLabel.Layout(gtx)
-									})
-								}
-								return layout.Dimensions{}
-							}),
-						)
+									return layout.Dimensions{}
+								}),
+							)
+						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						inset := layout.Inset{
@@ -164,7 +169,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 
 func (e Editor) editorLine(gtx C) D {
 	return layout.Flex{}.Layout(gtx,
-		layout.Flexed(e.flexWidth, func(gtx C) D {
+		layout.Rigid(func(gtx C) D {
 			dims := image.Point{
 				X: gtx.Constraints.Max.X,
 				Y: 2,
