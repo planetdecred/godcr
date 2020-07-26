@@ -261,7 +261,13 @@ func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChil
 					t.tabsTitle(),
 					t.scrollButton(false, t.scrollLeft),
 					layout.Flexed(1, func(gtx C) D {
-						return layout.Inset{Left: values.MarginPadding10, Top: values.TabTopPadding}.Layout(gtx, func(gtx C) D {
+						mt := values.TabTopPadding
+						ml := values.MarginPadding10
+						if t.Position == Right || t.Position == Left {
+							mt = values.MarginPadding0
+							ml = values.MarginPadding0
+						}
+						return layout.Inset{Left: ml, Top: mt}.Layout(gtx, func(gtx C) D {
 							return t.list.Layout(gtx, len(t.items), func(gtx C, i int) D {
 								t.items[i].index = i
 								return t.items[i].Layout(gtx, t.Selected, t.Position)
