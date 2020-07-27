@@ -23,28 +23,29 @@ func (win *Window) updateStates(update interface{}) {
 		*win.walletInfo = e
 		win.states.loading = false
 
-		// set wallets and accounts tab when wallet info is updated
-		go func() {
-			wallets := make([]decredmaterial.TabItem, len(e.Wallets))
-			for i := range e.Wallets {
-				wallets[i] = decredmaterial.TabItem{
-					Title: e.Wallets[i].Name,
+		if e.LoadedWallets > 0 {
+			// set wallets and accounts tab when wallet info is updated
+			go func() {
+				wallets := make([]decredmaterial.TabItem, len(e.Wallets))
+				for i := range e.Wallets {
+					wallets[i] = decredmaterial.TabItem{
+						Title: e.Wallets[i].Name,
+					}
 				}
-			}
-			win.walletTabs.SetTabs(wallets)
+				win.walletTabs.SetTabs(wallets)
 
-			accounts := make([]decredmaterial.TabItem, len(e.Wallets[win.selected].Accounts))
-			for i, account := range e.Wallets[win.selected].Accounts {
-				if account.Name == "imported" {
-					continue
+				accounts := make([]decredmaterial.TabItem, len(e.Wallets[win.selected].Accounts))
+				for i, account := range e.Wallets[win.selected].Accounts {
+					if account.Name == "imported" {
+						continue
+					}
+					accounts[i] = decredmaterial.TabItem{
+						Title: e.Wallets[win.selected].Accounts[i].Name,
+					}
 				}
-				accounts[i] = decredmaterial.TabItem{
-					Title: e.Wallets[win.selected].Accounts[i].Name,
-				}
-			}
-			win.accountTabs.SetTabs(accounts)
-		}()
-
+				win.accountTabs.SetTabs(accounts)
+			}()
+		}
 		return
 	case *wallet.Transactions:
 		win.walletTransactions = e
