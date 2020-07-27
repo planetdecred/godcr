@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 	"strconv"
 	"time"
@@ -43,6 +44,8 @@ type SendPage struct {
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
 	confirmButton                decredmaterial.Button
+
+	confirmModal *decredmaterial.Modal
 
 	copyIcon     decredmaterial.IconButton
 	currencySwap decredmaterial.IconButton
@@ -117,6 +120,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		closeConfirmationModalButton: common.theme.Button(new(widget.Clickable), "Close"),
 		nextButton:                   common.theme.Button(new(widget.Clickable), "Next"),
 		confirmButton:                common.theme.Button(new(widget.Clickable), "Confirm"),
+
+		confirmModal: common.theme.Modal("Confirm Send Transaction"),
 
 		copyIcon: common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy))),
 
@@ -481,11 +486,15 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 
 	w := []func(gtx C) D{
 		func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			if pg.sendErrorText != "" {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return pg.theme.ErrorAlert(gtx, pg.sendErrorText)
 			}
-			return layout.Dimensions{}
+			return layout.Dimensions{
+				Size: image.Point{
+					X: gtx.Constraints.Max.X,
+				},
+			}
 		},
 		func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -523,22 +532,24 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 			)
 		},
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.confirmButton.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					inset := layout.Inset{
-						Left: values.MarginPadding5,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return pg.closeConfirmationModalButton.Layout(gtx)
-					})
-				}),
-			)
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.confirmButton.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Left: values.MarginPadding5,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.closeConfirmationModalButton.Layout(gtx)
+						})
+					}),
+				)
+			})
 		},
 	}
-	return pg.theme.Modal(gtx, "Confirm Send Transaction", w)
+	return pg.confirmModal.Layout(gtx, w, 850)
 }
 
 func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {

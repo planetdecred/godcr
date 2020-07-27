@@ -6,10 +6,6 @@ import (
 	"image"
 	"image/color"
 
-	"golang.org/x/image/draw"
-
-	"gioui.org/widget/material"
-
 	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
@@ -17,6 +13,11 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
+	"gioui.org/widget/material"
+
+	"golang.org/x/image/draw"
+
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -95,39 +96,6 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
 
 	return t
-}
-
-func (t *Theme) Modal(gtx layout.Context, title string, wd []func(gtx C) D) layout.Dimensions {
-	overlayColor := t.Color.Black
-	overlayColor.A = 200
-
-	dims := layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			new(widget.Clickable).Layout(gtx)
-			return fillMax(gtx, overlayColor)
-		}),
-		layout.Stacked(func(gtx C) D {
-			w := []func(gtx C) D{
-				func(gtx C) D {
-					return t.H4(title).Layout(gtx)
-				},
-				func(gtx C) D {
-					line := t.Line()
-					line.Width = gtx.Constraints.Max.X
-					return line.Layout(gtx)
-				},
-			}
-			w = append(w, wd...)
-
-			return layout.UniformInset(unit.Dp(60)).Layout(gtx, func(gtx C) D {
-				fillMax(gtx, t.Color.Surface)
-				return (&layout.List{Axis: layout.Vertical, Alignment: layout.Middle}).Layout(gtx, len(w), func(gtx C, i int) D {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, w[i])
-				})
-			})
-		}),
-	)
-	return dims
 }
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
@@ -213,7 +181,7 @@ func toPointF(p image.Point) f32.Point {
 	return f32.Point{X: float32(p.X), Y: float32(p.Y)}
 }
 
-func fillMax(gtx layout.Context, col color.RGBA) layout.Dimensions {
+func fillMax(gtx layout.Context, col color.RGBA) {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Max.X, Y: cs.Max.Y}
 	dr := f32.Rectangle{
@@ -221,7 +189,6 @@ func fillMax(gtx layout.Context, col color.RGBA) layout.Dimensions {
 	}
 	paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	return layout.Dimensions{Size: d}
 }
 
 func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
