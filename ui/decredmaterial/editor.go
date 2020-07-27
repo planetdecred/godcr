@@ -135,8 +135,8 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 								}),
 								layout.Rigid(func(gtx C) D {
 									if e.IsUnderline {
-									return e.editorLine(gtx)
-								}
+										return e.editorLine(gtx)
+									}
 									return layout.Dimensions{}
 								}),
 								layout.Rigid(func(gtx C) D {
