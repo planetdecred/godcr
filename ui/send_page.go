@@ -362,12 +362,10 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
-				// return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 				return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
 					p := values.MarginPadding10
 					return layout.Inset{Left: p, Bottom: p, Right: p}.Layout(gtx, pageContent[i])
 				})
-				// })
 			}),
 		)
 	})
@@ -464,7 +462,7 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 				return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
 					inset := layout.Inset{
 						Left:  values.MarginPadding10,
-						Right: values.MarginPadding10,
+						Right: values.TextSize18,
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return pg.destinationAddressEditor.Layout(gtx)

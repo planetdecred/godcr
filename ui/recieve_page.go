@@ -167,7 +167,7 @@ func (pg *receivePage) receiveAddressColumn(gtx layout.Context) layout.Dimension
 			return pg.receiveAddressLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding10, Top: values.CopyBtnAlignment}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding10, Top: values.MarginPadding_5}.Layout(gtx, func(gtx C) D {
 				return pg.copyBtn.Layout(gtx)
 			})
 		}),

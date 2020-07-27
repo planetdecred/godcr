@@ -136,8 +136,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 
 	page.navTab.Separator = true
 	return page.navTab.Layout(gtx, func(gtx C) D {
-		p := values.MarginPadding5
-		return layout.Inset{Bottom: p}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 			return body(gtx)
 		})
 	})
