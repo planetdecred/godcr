@@ -209,7 +209,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 							)
 						},
 					}
-					return pg.createModal.Layout(gtx, w, 1350)
+					return pg.createModal.Layout(gtx, w, 1300)
 				}
 				return layout.Dimensions{}
 			}),
@@ -243,7 +243,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 							})
 						},
 					}
-					return pg.warningModal.Layout(gtx, w, 1350)
+					return pg.warningModal.Layout(gtx, w, 1300)
 				}
 				return layout.Dimensions{}
 			}),
