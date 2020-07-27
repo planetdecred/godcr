@@ -261,7 +261,7 @@ func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChil
 					t.tabsTitle(),
 					t.scrollButton(false, t.scrollLeft),
 					layout.Flexed(1, func(gtx C) D {
-						mt := values.MarginPadding_10
+						mt := values.MarginPaddingMinus10
 						ml := values.MarginPadding10
 						if t.Position == Right || t.Position == Left {
 							mt = values.MarginPadding0
