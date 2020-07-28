@@ -200,7 +200,7 @@ func (pg *walletPage) topRow(gtx layout.Context, common pageCommon) layout.Dimen
 							return common.theme.Body1("HD Path: " + acct.HDPath).Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
-							pg.line.Width = gtx.Px(values.AccountLineWidth)
+							pg.line.Width = gtx.Px(values.MarginPadding350)
 							return pg.line.Layout(gtx)
 						}),
 					)

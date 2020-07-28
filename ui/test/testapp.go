@@ -170,12 +170,6 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					return t.customEditorOutput.checkbox.Layout(gtx)
 				}),
-				// layout.Rigid(func() {
-				// 	t.customEditorOutput.test3btn.Layout(gtx, &t.customEditorInput.test3btn)
-				// }),
-				// layout.Rigid(func() {
-				// 	t.customEditorOutput.test4btn.Layout(gtx, &t.customEditorInput.test4btn)
-				// }),
 			)
 		},
 		func(gtx C) D {

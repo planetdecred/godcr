@@ -693,7 +693,7 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.BorderWidth}
+	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(padding).Layout(gtx, body)
 	})
@@ -918,6 +918,6 @@ func (pg *SendPage) sectionLayout(gtx layout.Context, inset layout.Inset, body l
 // drawlayout wraps the pg tx and sync section in a card layout
 func (pg *SendPage) sectionOutlineLayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return decredmaterial.Card{Color: pg.theme.Color.Hint}.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.OutLinePadding).Layout(gtx, body)
+		return layout.UniformInset(values.MarginPadding1).Layout(gtx, body)
 	})
 }

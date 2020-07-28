@@ -538,7 +538,7 @@ func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 					if pg.walletInfo.Synced {
 						pg.sync.Text = pg.text.disconnect
 					}
-					border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.BorderWidth}
+					border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
 					return border.Layout(gtx, func(gtx C) D {
 						return pg.sync.Layout(gtx)
 					})
@@ -626,7 +626,7 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 // walletSyncBox lays out the wallet syncing details of a single wallet.
 func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, details walletSyncDetails) layout.Dimensions {
 	return layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Px(values.WalletSyncBoxContentWidth)
+		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding280)
 		gtx.Constraints.Max.X = gtx.Constraints.Min.X
 		return decredmaterial.Card{Color: pg.theme.Color.Background}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

@@ -4,6 +4,8 @@ import "gioui.org/unit"
 
 var (
 	MarginPadding0       = unit.Dp(0)
+	MarginPadding1       = unit.Dp(1)
+	MarginPadding2       = unit.Dp(2)
 	MarginPadding5       = unit.Dp(5)
 	MarginPaddingMinus5  = unit.Dp(-5)
 	MarginPadding10      = unit.Dp(10)
@@ -21,6 +23,8 @@ var (
 	MarginPadding100     = unit.Dp(100)
 	MarginPadding120     = unit.Dp(120)
 	MarginPadding150     = unit.Dp(150)
+	MarginPadding280     = unit.Dp(280)
+	MarginPadding350     = unit.Dp(350)
 
 	TextSize10 = unit.Dp(10)
 	TextSize12 = unit.Dp(12)
@@ -28,9 +32,4 @@ var (
 	TextSize16 = unit.Dp(16)
 	TextSize18 = unit.Dp(18)
 	TextSize28 = unit.Dp(28)
-
-	WalletSyncBoxContentWidth = unit.Dp(280)
-	AccountLineWidth          = unit.Dp(350)
-	OutLinePadding            = unit.Dp(1)
-	BorderWidth               = unit.Px(2)
 )
