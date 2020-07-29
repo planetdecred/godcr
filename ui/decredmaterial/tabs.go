@@ -240,7 +240,7 @@ func (t *Tabs) SetTitle(title Label) {
 func (t *Tabs) tabsTitle() layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		if (t.Position == Top || t.Position == Bottom) && t.title.Text != "" {
-			return layout.Inset{Top: values.MarginPadding20, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10, Right: values.MarginPadding5, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 				return t.title.Layout(gtx)
 			})
 		}
@@ -261,9 +261,17 @@ func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChil
 					t.tabsTitle(),
 					t.scrollButton(false, t.scrollLeft),
 					layout.Flexed(1, func(gtx C) D {
-						return t.list.Layout(gtx, len(t.items), func(gtx C, i int) D {
-							t.items[i].index = i
-							return t.items[i].Layout(gtx, t.Selected, t.Position)
+						mt := values.MarginPaddingMinus10
+						ml := values.MarginPadding10
+						if t.Position == Right || t.Position == Left {
+							mt = values.MarginPadding0
+							ml = values.MarginPadding0
+						}
+						return layout.Inset{Left: ml, Top: mt}.Layout(gtx, func(gtx C) D {
+							return t.list.Layout(gtx, len(t.items), func(gtx C, i int) D {
+								t.items[i].index = i
+								return t.items[i].Layout(gtx, t.Selected, t.Position)
+							})
 						})
 					}),
 					t.scrollButton(true, t.scrollRight),

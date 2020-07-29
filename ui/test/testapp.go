@@ -40,6 +40,7 @@ type TestStruct struct {
 		radiobtn                               decredmaterial.RadioButton
 		checkbox                               decredmaterial.CheckBoxStyle
 		progressBar                            decredmaterial.ProgressBarStyle
+		outline                                decredmaterial.Outline
 	}
 
 	collapsible *decredmaterial.Collapsible
@@ -104,6 +105,8 @@ func (t *TestStruct) initWidgets() {
 	t.customEditorOutput.radiobtn = theme.RadioButton(new(widget.Enum), "btn1", "test radio button")
 	t.customEditorOutput.checkbox = theme.CheckBox(new(widget.Bool), "test checkbox")
 	t.customEditorOutput.progressBar = theme.ProgressBar(60)
+	t.customEditorOutput.outline = theme.Outline()
+	// t.customEditorOutput.outline.Color = theme.Color.Primary
 
 	t.collapsible = theme.Collapsible()
 
@@ -167,12 +170,6 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					return t.customEditorOutput.checkbox.Layout(gtx)
 				}),
-				// layout.Rigid(func() {
-				// 	t.customEditorOutput.test3btn.Layout(gtx, &t.customEditorInput.test3btn)
-				// }),
-				// layout.Rigid(func() {
-				// 	t.customEditorOutput.test4btn.Layout(gtx, &t.customEditorInput.test4btn)
-				// }),
 			)
 		},
 		func(gtx C) D {
@@ -197,6 +194,12 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 				)
 			}
 			return t.collapsible.Layout(gtx, header, content)
+		},
+
+		func(gtx C) D {
+			return t.customEditorOutput.outline.Layout(gtx, func(gtx C) D {
+				return t.customEditorOutput.testOutput.Layout(gtx)
+			})
 		},
 	}
 

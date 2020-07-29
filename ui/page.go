@@ -5,11 +5,12 @@ import (
 
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr/ui/values"
-
 	"gioui.org/io/key"
 	"gioui.org/layout"
+
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/raedahgroup/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -135,8 +136,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 
 	page.navTab.Separator = true
 	return page.navTab.Layout(gtx, func(gtx C) D {
-		p := values.MarginPadding10
-		return layout.Inset{Top: p, Left: p, Right: p}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 			return body(gtx)
 		})
 	})
@@ -185,6 +185,47 @@ func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget
 	return page.LayoutWithWallets(gtx, func(gtx C) D {
 		return page.accountTabs.Layout(gtx, body)
 	})
+}
+
+func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensions {
+	current := page.info.Wallets[*page.selectedWallet]
+	account := page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount]
+
+	selectedDetails := func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+								return page.theme.H6(account.Name).Layout(gtx)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+								return page.theme.H6(dcrutil.Amount(account.SpendableBalance).String()).Layout(gtx)
+							})
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+								return page.theme.Body2(current.Name).Layout(gtx)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+								return page.theme.Body2(current.Balance).Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		})
+	}
+	return decredmaterial.Card{}.Layout(gtx, selectedDetails)
 }
 
 func toMax(gtx layout.Context) {

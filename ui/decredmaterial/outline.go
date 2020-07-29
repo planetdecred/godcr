@@ -21,10 +21,10 @@ func (t *Theme) Outline() Outline {
 	}
 }
 
-func (o Outline) Layout(gtx layout.Context, w layout.Widget) {
+func (o Outline) Layout(gtx layout.Context, w layout.Widget) D {
 	var minHeight int
 
-	layout.Stack{}.Layout(gtx,
+	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			borderRadius := float32(gtx.Px(unit.Dp(4)))
 			clip.RRect{
@@ -61,4 +61,6 @@ func (o Outline) Layout(gtx layout.Context, w layout.Widget) {
 			})
 		}),
 	)
+
+	return dims
 }
