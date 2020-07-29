@@ -3,15 +3,13 @@ package ui
 import (
 	"time"
 
-	"github.com/raedahgroup/godcr/ui/values"
-
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
 	"github.com/atotto/clipboard"
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/skip2/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -28,9 +26,7 @@ type receivePage struct {
 	copyBtn, infoBtn, moreBtn decredmaterial.IconButton
 	// copyBtnW, infoBtnW, moreBtnW, minInfoW, newAddrBtnW widget.Clickable
 
-	selectedAccountNameLabel, selectedAccountBalanceLabel decredmaterial.Label
-	receiveAddressLabel, addressCopiedLabel, pageInfo     decredmaterial.Label
-	selectedWalletBalLabel, selectedWalletNameLabel       decredmaterial.Label
+	receiveAddressLabel, addressCopiedLabel, pageInfo decredmaterial.Label
 }
 
 func (win *Window) ReceivePage(common pageCommon) layout.Widget {
@@ -50,18 +46,14 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
-		moreBtn:                     moreBtn,
-		infoBtn:                     infoBtn,
-		copyBtn:                     copyBtn,
-		minInfo:                     common.theme.Button(new(widget.Clickable), "Got It"),
-		newAddrBtn:                  common.theme.Button(new(widget.Clickable), "Generate new address"),
-		receiveAddressLabel:         receiveAddressLabel,
-		pageInfo:                    pageInfo,
-		selectedAccountNameLabel:    common.theme.H6(""),
-		selectedWalletNameLabel:     common.theme.Body2(""),
-		selectedWalletBalLabel:      common.theme.Body2(""),
-		selectedAccountBalanceLabel: common.theme.H6(""),
-		addressCopiedLabel:          common.theme.Caption(""),
+		moreBtn:             moreBtn,
+		infoBtn:             infoBtn,
+		copyBtn:             copyBtn,
+		minInfo:             common.theme.Button(new(widget.Clickable), "Got It"),
+		newAddrBtn:          common.theme.Button(new(widget.Clickable), "Generate new address"),
+		receiveAddressLabel: receiveAddressLabel,
+		pageInfo:            pageInfo,
+		addressCopiedLabel:  common.theme.Caption(""),
 	}
 
 	return func(gtx C) D {
@@ -93,10 +85,10 @@ func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 }
 
 func (pg *receivePage) ReceivePageContents(gtx layout.Context, common pageCommon) layout.Dimensions {
-	dims := layout.Center.Layout(gtx, func(gtx C) D {
+	return layout.Center.Layout(gtx, func(gtx C) D {
 		pageContent := []func(gtx C) D{
 			func(gtx C) D {
-				return pg.selectedAccountColumn(gtx, common)
+				return common.SelectedAccountLayout(gtx)
 			},
 			func(gtx C) D {
 				return pg.qrCodeAddressColumn(gtx, common)
@@ -122,7 +114,6 @@ func (pg *receivePage) ReceivePageContents(gtx layout.Context, common pageCommon
 			return layout.Inset{}.Layout(gtx, pageContent[i])
 		})
 	})
-	return dims
 }
 
 func (pg *receivePage) rightNav(gtx layout.Context) layout.Dimensions {
@@ -137,7 +128,7 @@ func (pg *receivePage) rightNav(gtx layout.Context) layout.Dimensions {
 			return layout.Dimensions{}
 		}),
 		layout.Rigid(func(gtx C) D {
-			// layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func() {
+			// layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
 			// 	pg.infoBtn.Layout(gtx, &pg.infoBtnW)
 			// })
 			return layout.Dimensions{}
@@ -149,53 +140,6 @@ func (pg *receivePage) rightNav(gtx layout.Context) layout.Dimensions {
 			return layout.Dimensions{}
 		}),
 	)
-}
-
-func (pg *receivePage) selectedAccountColumn(gtx layout.Context, common pageCommon) layout.Dimensions {
-	current := common.info.Wallets[*common.selectedWallet]
-
-	pg.selectedWalletNameLabel.Text = current.Name
-	pg.selectedWalletBalLabel.Text = current.Balance
-
-	account := common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount]
-	pg.selectedAccountNameLabel.Text = account.Name
-	pg.selectedAccountBalanceLabel.Text = dcrutil.Amount(account.SpendableBalance).String()
-
-	selectedDetails := func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return pg.selectedAccountNameLabel.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-								return pg.selectedAccountBalanceLabel.Layout(gtx)
-							})
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return pg.selectedWalletNameLabel.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-								return pg.selectedWalletBalLabel.Layout(gtx)
-							})
-						}),
-					)
-				}),
-			)
-		})
-	}
-	return decredmaterial.Card{}.Layout(gtx, selectedDetails)
 }
 
 func (pg *receivePage) qrCodeAddressColumn(gtx layout.Context, common pageCommon) layout.Dimensions {
@@ -223,7 +167,7 @@ func (pg *receivePage) receiveAddressColumn(gtx layout.Context) layout.Dimension
 			return pg.receiveAddressLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding10, Top: values.CopyBtnAlignment}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding10, Top: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
 				return pg.copyBtn.Layout(gtx)
 			})
 		}),
