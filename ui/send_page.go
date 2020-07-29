@@ -64,8 +64,9 @@ type SendPage struct {
 	amountUSDtoDCR  float64
 	amountDCRtoUSD  float64
 
-	count int
-	width int
+	count              int
+	defualtEditorWidth int
+	nextEditorWidth    int
 
 	sendErrorText      string
 	txHashText         string
@@ -138,7 +139,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		isPasswordModalOpen:       false,
 		hasCopiedTxHash:           false,
 		isBroadcastingTransaction: false,
-		width:                     29,
 
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
@@ -168,6 +168,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	page.sendAmountEditor.Editor.SetText("0")
 	page.sendAmountEditor.TextSize = values.TextSize24
 
+<<<<<<< HEAD
 	pg.closeConfirmationModalButton.Background = common.theme.Color.Gray
 
 	pg.copyIcon.Background = common.theme.Color.Background
@@ -189,6 +190,13 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.sendToButton.Background = color.RGBA{}
 	pg.sendToButton.Color = common.theme.Color.Primary
 	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
+=======
+	// defualtEditorWidth is the editor text size values.TextSize24
+	page.defualtEditorWidth = 24
+
+	page.closeConfirmationModalButton.Background = common.theme.Color.Gray
+	page.destinationAddressEditor.Editor.SetText("")
+>>>>>>> remove switch cases used for updating editor width
 
 	pg.txLine.Color = common.theme.Color.Gray
 
@@ -293,7 +301,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 
 	for _, evt := range pg.destinationAddressEditor.Editor.Events() {
 		go pg.calculateValues()
-		pg.changeEvt(evt)
+		pg.handleEditorChange(evt)
 	}
 
 	if pg.destinationAddressEditor.Editor.Len() == 0 || pg.sendAmountEditor.Editor.Len() == 0 {
@@ -302,7 +310,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 
 	for _, evt := range pg.sendAmountEditor.Editor.Events() {
 		go pg.calculateValues()
-		pg.changeEvt(evt)
+		pg.handleEditorChange(evt)
 	}
 
 	for pg.copyIcon.Button.Clicked() {
@@ -585,14 +593,18 @@ func (pg *SendPage) sendToAddressLayout(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								gtx.Constraints.Max.X = pg.width
+								w := pg.defualtEditorWidth
+								if pg.nextEditorWidth != 0 {
+									w = pg.nextEditorWidth
+								}
+								gtx.Constraints.Max.X = w
 								return pg.sendAmountEditor.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								// this adjusts space between input values and currency symbol.
 								m := values.MarginPadding5
 								e := pg.sendAmountEditor.Editor.Len()
-								if e > 0 && e < 7 {
+								if e > 0 {
 									m = values.EditorWidth
 								}
 								return layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -1046,29 +1058,21 @@ func (pg *SendPage) watchForBroadcastResult() {
 	}
 }
 
-// changeEvt tracks change event on the editor and adjust its width of the ssend amount input field
-// pg.width is the widith of a single text character
-func (pg *SendPage) changeEvt(evt widget.EditorEvent) {
-	textLength := pg.sendAmountEditor.Editor.Len()
-	n := 29
+// handleEditorChange tracks changes on the editor and adjust its width of the send amount input field
+// it also updates the DCR - USD exchange rate value
+func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
+	editorTextLength := pg.sendAmountEditor.Editor.Len()
 
-	// cal decrements the pg.width for a particular range of values
-	cal := func(val int) int {
-		return n - val
+	// calulateNextWidth use the values of the defualtEditorWidth(the editor text size) and
+	// total number of text in the editor to determine the width of the amount field
+	calulateNextWidth := func() {
+		editorTextLength = editorTextLength + 1
+		pg.nextEditorWidth = pg.defualtEditorWidth * editorTextLength
 	}
+
 	switch evt.(type) {
 	case widget.ChangeEvent:
-		textLength = textLength + 1
-		switch {
-		case pg.width <= 80:
-			pg.width = textLength * cal(0)
-		case pg.width > 80 && pg.width < 137:
-			pg.width = textLength * cal(1)
-		case pg.width > 137 && pg.width < 167:
-			pg.width = textLength * cal(2)
-		case pg.width >= 167:
-			pg.width = textLength * cal(3)
-		}
+		calulateNextWidth()
 		go pg.wallet.GetUSDExchangeValues(&pg)
 	}
 }
