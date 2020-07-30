@@ -10,7 +10,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/atotto/clipboard"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
@@ -151,11 +150,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.closeConfirmationModalButton.Background = common.theme.Color.Gray
 	pg.destinationAddressEditor.Editor.SetText("")
 	pg.destinationAddressEditor.Editor.SingleLine = true
-
-	pg.copyIcon.Background = common.theme.Color.Background
-	pg.copyIcon.Color = common.theme.Color.Text
-	pg.copyIcon.Size = values.MarginPadding35
-	pg.copyIcon.Inset = layout.UniformInset(values.MarginPadding5)
 
 	pg.currencySwap = common.theme.IconButton(new(widget.Clickable), common.icons.actionSwapVert)
 	pg.currencySwap.Background = color.RGBA{}
