@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"image"
 	"image/color"
 	"strconv"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/raedahgroup/godcr/wallet"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 type amountValue struct {
@@ -49,7 +47,6 @@ type SendPage struct {
 
 	confirmModal *decredmaterial.Modal
 
-	copyIcon     decredmaterial.IconButton
 	currencySwap decredmaterial.IconButton
 
 	txFeeCollapsible *decredmaterial.Collapsible
@@ -68,8 +65,7 @@ type SendPage struct {
 	count int
 
 	sendErrorText      string
-	txHashText         string
-	txHash             string
+	sendSuccessText    string
 	calculateErrorText string
 
 	activeTotalAmount   string
@@ -94,14 +90,14 @@ type SendPage struct {
 	isPasswordModalOpen       bool
 	isBroadcastingTransaction bool
 	shouldInitializeTxAuthor  bool
-	hasCopiedTxHash           bool
 
 	txAuthorErrChan  chan error
 	broadcastErrChan chan error
 }
 
 const (
-	PageSend = "send"
+	PageSend               = "send"
+	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
 )
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -117,7 +113,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		broadcastResult: &win.broadcastResult,
 
 		sendErrorText: "",
-		txHashText:    "",
 
 		activeExchange:   "DCR",
 		inactiveExchange: "USD",
@@ -129,13 +124,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txFeeCollapsible:             common.theme.Collapsible(),
 		txLine:                       common.theme.Line(),
 
-		confirmModal: common.theme.Modal("Confirm Send Transaction"),
-
-		copyIcon: common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy))),
-
+		confirmModal:              common.theme.Modal("Confirm Send Transaction"),
 		isConfirmationModalOpen:   false,
 		isPasswordModalOpen:       false,
-		hasCopiedTxHash:           false,
 		isBroadcastingTransaction: false,
 
 		passwordModal:    common.theme.Password(),
@@ -226,30 +217,31 @@ func (pg *SendPage) Handle(c pageCommon) {
 	pg.validate(true)
 	pg.watchForBroadcastResult()
 
-	if pg.hasCopiedTxHash {
-		time.AfterFunc(3*time.Second, func() {
-			pg.hasCopiedTxHash = false
-		})
-	}
-
 	if pg.isBroadcastingTransaction {
 		col := pg.theme.Color.Gray
 		col.A = 150
-		pg.confirmButton.Text = "Sending..."
-		pg.confirmButton.Background = col
+
+		pg.nextButton.Text = "Sending..."
+		pg.nextButton.Background = col
 	} else {
-		pg.confirmButton.Text = "Send"
-		pg.confirmButton.Background = pg.theme.Color.Primary
+		pg.nextButton.Text = "Next"
+		pg.nextButton.Background = pg.theme.Color.Primary
+	}
+
+	if pg.sendErrorText == invalidPassphraseError {
+		pg.isConfirmationModalOpen = true
 	}
 
 	for pg.nextButton.Button.Clicked() {
 		if pg.validate(false) && pg.calculateErrorText == "" {
+			pg.sendErrorText = ""
 			pg.isConfirmationModalOpen = true
 		}
 	}
 
 	for pg.confirmButton.Button.Clicked() {
 		pg.sendErrorText = ""
+		pg.isConfirmationModalOpen = false
 		pg.isPasswordModalOpen = true
 	}
 
@@ -296,11 +288,6 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.changeEvt(evt)
 	}
 
-	for pg.copyIcon.Button.Clicked() {
-		clipboard.WriteAll(pg.txHash)
-		pg.hasCopiedTxHash = true
-	}
-
 	select {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
@@ -318,10 +305,7 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.drawSuccessSection(gtx)
-		},
-		func(gtx C) D {
-			return pg.drawCopiedLabelSection(gtx)
+			return pg.drawAlertSection(gtx)
 		},
 		func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
@@ -375,39 +359,26 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		)
 	})
 
-	if pg.isConfirmationModalOpen && pg.isPasswordModalOpen {
-		return common.Modal(gtx, dims, pg.drawPasswordModal(gtx))
-	} else if pg.isConfirmationModalOpen {
-		return common.Modal(gtx, dims, pg.drawConfirmationModal(gtx))
+	if pg.isConfirmationModalOpen {
+		common.Modal(gtx, dims, pg.drawConfirmationModal(gtx))
+	}
+
+	if pg.isPasswordModalOpen {
+		common.Modal(gtx, dims, pg.drawPasswordModal(gtx))
 	}
 
 	return dims
 }
 
-func (pg *SendPage) drawSuccessSection(gtx layout.Context) layout.Dimensions {
-	if pg.txHashText != "" {
-		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Flexed(0.99, func(gtx C) D {
-				return pg.theme.SuccessAlert(gtx, pg.txHashText)
-			}),
-			layout.Rigid(func(gtx C) D {
-				inset := layout.Inset{
-					Left: values.MarginPadding5,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return pg.copyIcon.Layout(gtx)
-				})
-			}),
-		)
-	}
-	return layout.Dimensions{}
-}
-
-func (pg *SendPage) drawCopiedLabelSection(gtx layout.Context) layout.Dimensions {
-	if pg.hasCopiedTxHash {
-		return pg.theme.Caption("copied").Layout(gtx)
-	}
-	return layout.Dimensions{}
+func (pg *SendPage) drawAlertSection(gtx layout.Context) layout.Dimensions {
+	return layout.Center.Layout(gtx, func(gtx C) D {
+		if pg.sendSuccessText != "" {
+			return pg.theme.SuccessAlert(gtx, pg.sendSuccessText)
+		} else if pg.sendErrorText != "" && pg.sendErrorText != invalidPassphraseError {
+			return pg.theme.ErrorAlert(gtx, pg.sendErrorText)
+		}
+		return layout.Dimensions{}
+	})
 }
 
 func (pg *SendPage) drawTransactionDetailWidgets(gtx layout.Context) layout.Dimensions {
@@ -627,17 +598,6 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 	w := []func(gtx C) D{
 		func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			if pg.sendErrorText != "" {
-				return pg.theme.ErrorAlert(gtx, pg.sendErrorText)
-			}
-			return layout.Dimensions{
-				Size: image.Point{
-					X: gtx.Constraints.Max.X,
-				},
-			}
-		},
-		func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
 					return pg.theme.Body1(fmt.Sprintf("Sending from %s (%s)", pg.selectedAccount.Name, pg.selectedWallet.Name)).Layout(gtx)
@@ -689,10 +649,26 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 			})
 		},
 	}
+
+	if pg.sendErrorText == invalidPassphraseError {
+		errWidget := func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Stack{Alignment: layout.Center}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return pg.theme.ErrorAlert(gtx, pg.sendErrorText)
+				}),
+			)
+		}
+		w = append([]func(gtx C) D{errWidget}, w...)
+	}
+
 	return pg.confirmModal.Layout(gtx, w, 850)
 }
 
 func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
+	if !(pg.isPasswordModalOpen) {
+		return layout.Dimensions{}
+	}
 	return pg.passwordModal.Layout(gtx, func(password []byte) {
 		pg.isBroadcastingTransaction = true
 		pg.isPasswordModalOpen = false
@@ -902,13 +878,16 @@ func (pg *SendPage) watchForBroadcastResult() {
 		}
 		pg.remainingBalance = -1
 
-		pg.txHash = pg.broadcastResult.TxHash
-		pg.txHashText = fmt.Sprintf("Successful. Hash: %s", pg.broadcastResult.TxHash)
+		pg.sendSuccessText = "Transaction Sent"
 		pg.destinationAddressEditor.Editor.SetText("")
 		pg.sendAmountEditor.Editor.SetText("")
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
+
+		time.AfterFunc(time.Second*3, func() {
+			pg.sendSuccessText = ""
+		})
 	}
 }
 
