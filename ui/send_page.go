@@ -145,8 +145,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txAuthorErrChan:  make(chan error),
 		line:             common.theme.Line(),
 	}
-	page.line.Color = common.theme.Color.Gray
-	page.line.Height = 2
+	pg.line.Color = common.theme.Color.Gray
+	pg.line.Height = 2
 
 	pg.balanceAfterSendValue = "- DCR"
 
@@ -163,12 +163,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.sendAmountEditor.SetRequiredErrorText("")
 	pg.sendAmountEditor.IsRequired = true
 	pg.sendAmountEditor.IsTitleLabel = false
-	page.sendAmountEditor.IsUnderline = false
-	page.sendAmountEditor.Editor.SingleLine = true
-	page.sendAmountEditor.Editor.SetText("0")
-	page.sendAmountEditor.TextSize = values.TextSize24
+	pg.sendAmountEditor.IsUnderline = false
+	pg.sendAmountEditor.Editor.SingleLine = true
+	pg.sendAmountEditor.Editor.SetText("0")
+	pg.sendAmountEditor.TextSize = values.TextSize24
 
-<<<<<<< HEAD
 	pg.closeConfirmationModalButton.Background = common.theme.Color.Gray
 
 	pg.copyIcon.Background = common.theme.Color.Background
@@ -190,13 +189,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.sendToButton.Background = color.RGBA{}
 	pg.sendToButton.Color = common.theme.Color.Primary
 	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
-=======
-	// defualtEditorWidth is the editor text size values.TextSize24
-	page.defualtEditorWidth = 24
 
-	page.closeConfirmationModalButton.Background = common.theme.Color.Gray
-	page.destinationAddressEditor.Editor.SetText("")
->>>>>>> remove switch cases used for updating editor width
+	// defualtEditorWidth is the editor text size values.TextSize24
+	pg.defualtEditorWidth = 24
 
 	pg.txLine.Color = common.theme.Color.Gray
 
@@ -473,7 +468,6 @@ func (pg *SendPage) tableLayout(gtx layout.Context, leftLabel decredmaterial.Lab
 	)
 }
 
-<<<<<<< HEAD
 func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
 	return pg.sectionLayout(gtx, main, func(gtx C) D {
@@ -484,8 +478,9 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 			layout.Rigid(func(gtx C) D {
 				return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
 					inset := layout.Inset{
-						Left:  values.MarginPadding10,
-						Right: values.TextSize18,
+						Left:   values.MarginPadding10,
+						Right:  values.TextSize18,
+						Bottom: values.MarginPaddingMinus5,
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return pg.destinationAddressEditor.Layout(gtx)
@@ -496,7 +491,6 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 	})
 }
 
-<<<<<<< HEAD
 func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
 	return pg.sectionLayout(gtx, main, func(gtx C) D {
@@ -505,7 +499,7 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				return pg.spendableBalanceLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
+				return pg.sectionBorder(gtx, values.MarginPadding20, func(gtx C) D {
 					return pg.amountInputLayout(gtx)
 				})
 			}),
@@ -531,113 +525,10 @@ func (pg *SendPage) sendToAddressLayout(gtx layout.Context) layout.Dimensions {
 			return amt.Layout(gtx)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-<<<<<<< HEAD
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 					return pg.sendToButton.Layout(gtx)
 				})
-
-// func (pg *SendPage) sendAmountLayout(gtx layout.Context) layout.Dimensions {
-// 	return layout.Flex{}.Layout(gtx,
-// 		layout.Flexed(1, func(gtx C) D {
-// 			return layout.W.Layout(gtx, func(gtx C) D {
-// 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 					layout.Rigid(func(gtx C) D {
-// 						return layout.Flex{}.Layout(gtx,
-// 							layout.Rigid(func(gtx C) D {
-// 								gtx.Constraints.Max.X = pg.width
-// 								return pg.sendAmountEditor.Layout(gtx)
-// 							}),
-// 							layout.Rigid(func(gtx C) D {
-// 								// this adjusts space between input and currency symbol.
-// 								m := values.MarginPadding5
-// 								e := pg.sendAmountEditor.Editor.Len()
-// 								if e > 0 && e < 7 {
-// 									m = values.EditorWidth
-// 								}
-// 								fmt.Println(pg.width)
-// 								return layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-// 									return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
-// 								})
-// 							}),
-// 						)
-// 					}),
-// 					layout.Rigid(func(gtx C) D {
-// 						return layout.Flex{}.Layout(gtx,
-// 							layout.Rigid(func(gtx C) D {
-// 								m := values.MarginPadding10
-// 								return layout.Inset{Left: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-// 									return pg.currencySwap.Layout(gtx)
-// 								})
-// 							}),
-// 							layout.Rigid(func(gtx C) D {
-// 								pg.line.Width = gtx.Constraints.Max.X - 100
-// 								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-// 									return pg.line.Layout(gtx)
-// 								})
-// 							}),
-// 						)
-// 					}),
-// 					layout.Rigid(func(gtx C) D {
-// 						txt := pg.theme.Body2(pg.inactiveTotalAmount)
-// 						if pg.LastTradeRate == "" {
-// 							txt.Color = pg.theme.Color.Danger
-// 						}
-// 						return txt.Layout(gtx)
-// 					}),
-// 				)
->>>>>>> adjust input field text size and align content
-=======
-			return layout.W.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								w := pg.defualtEditorWidth
-								if pg.nextEditorWidth != 0 {
-									w = pg.nextEditorWidth
-								}
-								gtx.Constraints.Max.X = w
-								return pg.sendAmountEditor.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								// this adjusts space between input values and currency symbol.
-								m := values.MarginPadding5
-								e := pg.sendAmountEditor.Editor.Len()
-								if e > 0 {
-									m = values.EditorWidth
-								}
-								return layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-									return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
-								})
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								m := values.MarginPadding10
-								return layout.Inset{Left: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-									return pg.currencySwap.Layout(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								pg.line.Width = gtx.Constraints.Max.X - 100
-								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-									return pg.line.Layout(gtx)
-								})
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						txt := pg.theme.Body2(pg.inactiveTotalAmount)
-						if pg.LastTradeRate == "" {
-							txt.Color = pg.theme.Color.Danger
-						}
-						return txt.Layout(gtx)
-					}),
-				)
->>>>>>> remove debug code
 			})
 		}),
 	)
@@ -685,66 +576,63 @@ func (pg *SendPage) amountInputLayout(gtx layout.Context) layout.Dimensions {
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.maxButton.Layout(gtx)
-							})
-						}),
-					)
+					return layout.W.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										w := pg.defualtEditorWidth
+										if pg.nextEditorWidth != 0 {
+											w = pg.nextEditorWidth
+										}
+										gtx.Constraints.Max.X = w
+										return pg.sendAmountEditor.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										// this adjusts space between input values and currency symbol.
+										m := values.MarginPadding5
+										e := pg.sendAmountEditor.Editor.Len()
+										if e > 0 {
+											m = values.MarginPaddingMinus5
+										}
+										return layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+											return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
+										})
+									}),
+									layout.Flexed(1, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											return pg.maxButton.Layout(gtx)
+										})
+									}),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										m := values.MarginPadding10
+										return layout.Inset{Left: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+											return pg.currencySwap.Layout(gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										pg.line.Width = gtx.Constraints.Max.X
+										return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+											return pg.line.Layout(gtx)
+										})
+									}),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.Body2(pg.inactiveTotalAmount)
+								if pg.LastTradeRate == "" {
+									txt.Color = pg.theme.Color.Danger
+								}
+								return txt.Layout(gtx)
+							}),
+						)
+					})
 				}),
-				layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Flexed(1, func(gtx C) D {
-								return layout.W.Layout(gtx, func(gtx C) D {
-									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													gtx.Constraints.Max.X = pg.width
-													return pg.sendAmountEditor.Layout(gtx)
-												}),
-												layout.Rigid(func(gtx C) D {
-													// this adjusts space between input and currency symbol.
-													m := values.MarginPadding5
-													e := pg.sendAmountEditor.Editor.Len()
-													if e > 0 && e < 7 {
-														m = values.EditorWidth
-													}
-													fmt.Println(pg.width)
-													return layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-														return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
-													})
-												}),
-											)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Flex{}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													m := values.MarginPadding10
-													return layout.Inset{Left: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-														return pg.currencySwap.Layout(gtx)
-													})
-												}),
-												layout.Rigid(func(gtx C) D {
-													pg.line.Width = gtx.Constraints.Max.X - 100
-													return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-														return pg.line.Layout(gtx)
-													})
-												}),
-											)
-										}),
-										layout.Rigid(func(gtx C) D {
-											txt := pg.theme.Body2(pg.inactiveTotalAmount)
-											if pg.LastTradeRate == "" {
-												txt.Color = pg.theme.Color.Danger
-											}
-											return txt.Layout(gtx)
-										}),
-									)
+			)
 		}),
 	)
 }
@@ -852,7 +740,7 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
+	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(padding).Layout(gtx, body)
 	})

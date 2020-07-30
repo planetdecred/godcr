@@ -538,7 +538,7 @@ func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 					if pg.walletInfo.Synced {
 						pg.sync.Text = pg.text.disconnect
 					}
-					border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
+					border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 					return border.Layout(gtx, func(gtx C) D {
 						return pg.sync.Layout(gtx)
 					})
