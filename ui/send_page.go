@@ -769,14 +769,12 @@ func (pg *SendPage) calculateValues() {
 
 	if pg.activeExchange == "USD" && pg.LastTradeRate != "" {
 		pg.amountAtoms = pg.setDestinationAddr(pg.amountUSDtoDCR)
-		if pg.amountAtoms == 0 {
-			return
-		}
 	} else {
 		pg.amountAtoms = pg.setDestinationAddr(pg.inputAmount)
-		if pg.amountAtoms == 0 {
-			return
-		}
+	}
+
+	if pg.amountAtoms == 0 {
+		return
 	}
 
 	pg.txFee = pg.getTxFee()
@@ -856,7 +854,7 @@ func (pg *SendPage) getTxFee() int64 {
 }
 
 func (pg *SendPage) balanceAfterSend(totalCost int64) {
-	pg.remainingBalance = pg.selectedWallet.SpendableBalance - totalCost
+	pg.remainingBalance = pg.selectedAccount.SpendableBalance - totalCost
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
 }
 
@@ -877,6 +875,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
+		pg.calculateValues()
 	}
 }
 
