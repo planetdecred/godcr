@@ -33,7 +33,8 @@ type Editor struct {
 	IsRequired bool
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
-	//IsUnderline if true makes the title lable visible.
+
+	//IsUnderline if true makes the editor underline visible.
 	IsUnderline bool
 
 	requiredErrorText string

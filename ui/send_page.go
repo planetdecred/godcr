@@ -18,7 +18,6 @@ import (
 )
 
 type amountValue struct {
-	activeTotalAmount           string
 	inactiveTotalAmount         string
 	activeTransactionFeeValue   string
 	inactiveTransactionFeeValue string
@@ -61,7 +60,9 @@ type SendPage struct {
 	amountUSDtoDCR  float64
 	amountDCRtoUSD  float64
 
-	count int
+	count              int
+	defualtEditorWidth int
+	nextEditorWidth    int
 
 	sendErrorText      string
 	sendSuccessText    string
@@ -84,6 +85,7 @@ type SendPage struct {
 	LastTradeRate string
 
 	passwordModal *decredmaterial.Password
+	line          *decredmaterial.Line
 
 	isConfirmationModalOpen   bool
 	isPasswordModalOpen       bool
@@ -131,7 +133,10 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
+		line:             common.theme.Line(),
 	}
+	pg.line.Color = common.theme.Color.Gray
+	pg.line.Height = 2
 
 	pg.balanceAfterSendValue = "- DCR"
 
@@ -141,15 +146,19 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.destinationAddressEditor.IsVisible = true
 	pg.destinationAddressEditor.IsTitleLabel = false
 	pg.destinationAddressEditor.IsUnderline = false
+	pg.destinationAddressEditor.Editor.SetText("")
+	pg.destinationAddressEditor.Editor.SingleLine = true
 
 	pg.sendAmountEditor = common.theme.Editor(new(widget.Editor), "Amount to be sent")
 	pg.sendAmountEditor.SetRequiredErrorText("")
 	pg.sendAmountEditor.IsRequired = true
 	pg.sendAmountEditor.IsTitleLabel = false
+	pg.sendAmountEditor.IsUnderline = false
+	pg.sendAmountEditor.Editor.SingleLine = true
+	pg.sendAmountEditor.Editor.SetText("0")
+	pg.sendAmountEditor.TextSize = values.TextSize24
 
 	pg.closeConfirmationModalButton.Background = common.theme.Color.Gray
-	pg.destinationAddressEditor.Editor.SetText("")
-	pg.destinationAddressEditor.Editor.SingleLine = true
 
 	pg.currencySwap = common.theme.IconButton(new(widget.Clickable), common.icons.actionSwapVert)
 	pg.currencySwap.Background = color.RGBA{}
@@ -165,6 +174,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.sendToButton.Background = color.RGBA{}
 	pg.sendToButton.Color = common.theme.Color.Primary
 	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
+
+	// defualtEditorWidth is the editor text size values.TextSize24
+	pg.defualtEditorWidth = 24
 
 	pg.txLine.Color = common.theme.Color.Gray
 
@@ -274,9 +286,8 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.calculateValues()
 	}
 
-	for _, evt := range pg.destinationAddressEditor.Editor.Events() {
+	for range pg.destinationAddressEditor.Editor.Events() {
 		go pg.calculateValues()
-		pg.changeEvt(evt)
 	}
 
 	if pg.destinationAddressEditor.Editor.Len() == 0 || pg.sendAmountEditor.Editor.Len() == 0 {
@@ -285,7 +296,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 
 	for _, evt := range pg.sendAmountEditor.Editor.Events() {
 		go pg.calculateValues()
-		pg.changeEvt(evt)
+		pg.handleEditorChange(evt)
 	}
 
 	select {
@@ -437,8 +448,9 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 			layout.Rigid(func(gtx C) D {
 				return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
 					inset := layout.Inset{
-						Left:  values.MarginPadding10,
-						Right: values.TextSize18,
+						Left:   values.MarginPadding10,
+						Right:  values.TextSize18,
+						Bottom: values.MarginPaddingMinus5,
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return pg.destinationAddressEditor.Layout(gtx)
@@ -457,7 +469,7 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				return pg.spendableBalanceLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
+				return pg.sectionBorder(gtx, values.MarginPadding20, func(gtx C) D {
 					return pg.amountInputLayout(gtx)
 				})
 			}),
@@ -534,38 +546,61 @@ func (pg *SendPage) amountInputLayout(gtx layout.Context) layout.Dimensions {
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.maxButton.Layout(gtx)
-							})
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							m := values.MarginPadding10
-							return layout.Inset{Left: m, Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-								return pg.currencySwap.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return pg.sendAmountEditor.Layout(gtx)
-							})
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.Body2(pg.inactiveTotalAmount)
-					if pg.LastTradeRate == "" {
-						txt.Color = pg.theme.Color.Danger
-					}
-					return txt.Layout(gtx)
+					return layout.W.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										w := pg.defualtEditorWidth
+										if pg.nextEditorWidth != 0 {
+											w = pg.nextEditorWidth
+										}
+										gtx.Constraints.Max.X = w
+										return pg.sendAmountEditor.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										// this adjusts space between input values and currency symbol.
+										m := values.MarginPadding5
+										e := pg.sendAmountEditor.Editor.Len()
+										if e > 0 {
+											m = values.MarginPaddingMinus5
+										}
+										return layout.Inset{Left: m, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+											return pg.theme.H6(pg.activeTotalAmount).Layout(gtx)
+										})
+									}),
+									layout.Flexed(1, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											return pg.maxButton.Layout(gtx)
+										})
+									}),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										m := values.MarginPadding10
+										return layout.Inset{Left: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+											return pg.currencySwap.Layout(gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										pg.line.Width = gtx.Constraints.Max.X
+										return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+											return pg.line.Layout(gtx)
+										})
+									}),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.Body2(pg.inactiveTotalAmount)
+								if pg.LastTradeRate == "" {
+									txt.Color = pg.theme.Color.Danger
+								}
+								return txt.Layout(gtx)
+							}),
+						)
+					})
 				}),
 			)
 		}),
@@ -673,7 +708,7 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
+	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(padding).Layout(gtx, body)
 	})
@@ -715,7 +750,7 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 	amount := pg.sendAmountEditor.Editor.Text()
 	if amount == "" {
 		if !ignoreEmpty {
-			pg.sendAmountEditor.SetError("please enter a send amount")
+			pg.sendAmountEditor.SetError("")
 		}
 		return false
 	}
@@ -723,7 +758,7 @@ func (pg *SendPage) validateAmount(ignoreEmpty bool) bool {
 	if amount != "" {
 		_, err := strconv.ParseFloat(amount, 64)
 		if err != nil {
-			pg.sendAmountEditor.SetError("please enter a valid amount")
+			pg.sendAmountEditor.SetError("")
 			return false
 		}
 	}
@@ -735,6 +770,7 @@ func (pg *SendPage) calculateValues() {
 	defaultActiveValues := fmt.Sprintf("- %s", pg.activeExchange)
 	defaultInactiveValues := fmt.Sprintf("(- %s)", pg.inactiveExchange)
 	noExchangeText := "Exchange rate not fetched"
+	pg.sendAmountEditor.Hint = "0"
 
 	pg.activeTransactionFeeValue = defaultActiveValues
 	pg.activeTotalCostValue = defaultActiveValues
@@ -742,8 +778,8 @@ func (pg *SendPage) calculateValues() {
 	pg.inactiveTotalCostValue = defaultInactiveValues
 
 	pg.calculateErrorText = ""
-	pg.activeTotalAmount = defaultActiveValues
-	pg.inactiveTotalAmount = fmt.Sprintf("- %s", pg.inactiveExchange)
+	pg.activeTotalAmount = pg.activeExchange
+	pg.inactiveTotalAmount = fmt.Sprintf("0 %s", pg.inactiveExchange)
 
 	// default values when exchange is not available
 	if pg.LastTradeRate == "" {
@@ -751,7 +787,7 @@ func (pg *SendPage) calculateValues() {
 		pg.activeTotalCostValue = defaultActiveValues
 		pg.inactiveTransactionFeeValue = ""
 		pg.inactiveTotalCostValue = ""
-		pg.activeTotalAmount = defaultActiveValues
+		pg.activeTotalAmount = pg.activeExchange
 		pg.inactiveTotalAmount = noExchangeText
 	}
 
@@ -806,7 +842,6 @@ func (pg *SendPage) amountValues() amountValue {
 	switch {
 	case pg.activeExchange == "USD" && pg.LastTradeRate != "":
 		return amountValue{
-			activeTotalAmount:           fmt.Sprintf("%s USD", pg.sendAmountEditor.Editor.Text()),
 			inactiveTotalAmount:         dcrutil.Amount(pg.amountAtoms).String(),
 			activeTransactionFeeValue:   fmt.Sprintf("%f USD", txFeeValueUSD),
 			inactiveTransactionFeeValue: fmt.Sprintf("(%s)", dcrutil.Amount(pg.txFee).String()),
@@ -815,7 +850,6 @@ func (pg *SendPage) amountValues() amountValue {
 		}
 	case pg.activeExchange == "DCR" && pg.LastTradeRate != "":
 		return amountValue{
-			activeTotalAmount:           dcrutil.Amount(pg.amountAtoms).String(),
 			inactiveTotalAmount:         fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 7, 64)),
 			activeTransactionFeeValue:   dcrutil.Amount(pg.txFee).String(),
 			inactiveTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
@@ -824,7 +858,6 @@ func (pg *SendPage) amountValues() amountValue {
 		}
 	default:
 		return amountValue{
-			activeTotalAmount:         dcrutil.Amount(pg.amountAtoms).String(),
 			inactiveTotalAmount:       "Exchange rate not fetched",
 			activeTransactionFeeValue: dcrutil.Amount(pg.txFee).String(),
 			activeTotalCostValue:      dcrutil.Amount(pg.totalCostDCR).String(),
@@ -834,7 +867,7 @@ func (pg *SendPage) amountValues() amountValue {
 
 func (pg *SendPage) updateDefaultValues() {
 	v := pg.amountValues()
-	pg.activeTotalAmount = v.activeTotalAmount
+	pg.activeTotalAmount = pg.activeExchange
 	pg.inactiveTotalAmount = v.inactiveTotalAmount
 	pg.activeTransactionFeeValue = v.activeTransactionFeeValue
 	pg.inactiveTransactionFeeValue = v.inactiveTransactionFeeValue
@@ -879,9 +912,21 @@ func (pg *SendPage) watchForBroadcastResult() {
 	}
 }
 
-func (pg *SendPage) changeEvt(evt widget.EditorEvent) {
+// handleEditorChange handles changes on the editor and adjust its width of the send amount input field
+// it also updates the DCR - USD exchange rate value
+func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
+	editorTextLength := pg.sendAmountEditor.Editor.Len()
+
+	// calculateNextWidth use the values of the defualtEditorWidth(the editor text size) and
+	// total number of text in the editor to determine the width of the amount field
+	calculateNextWidth := func() {
+		editorTextLength = editorTextLength + 1
+		pg.nextEditorWidth = pg.defualtEditorWidth * editorTextLength
+	}
+
 	switch evt.(type) {
 	case widget.ChangeEvent:
+		calculateNextWidth()
 		go pg.wallet.GetUSDExchangeValues(&pg)
 	}
 }
