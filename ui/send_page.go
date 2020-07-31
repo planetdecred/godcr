@@ -946,7 +946,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 	}
 }
 
-// handleEditorChange tracks changes on the editor and adjust its width of the send amount input field
+// handleEditorChange handles changes on the editor and adjust its width of the send amount input field
 // it also updates the DCR - USD exchange rate value
 func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
 	editorTextLength := pg.sendAmountEditor.Editor.Len()
