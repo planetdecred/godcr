@@ -294,9 +294,8 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.calculateValues()
 	}
 
-	for _, evt := range pg.destinationAddressEditor.Editor.Events() {
+	for range pg.destinationAddressEditor.Editor.Events() {
 		go pg.calculateValues()
-		pg.handleEditorChange(evt)
 	}
 
 	if pg.destinationAddressEditor.Editor.Len() == 0 || pg.sendAmountEditor.Editor.Len() == 0 {
@@ -951,16 +950,16 @@ func (pg *SendPage) watchForBroadcastResult() {
 func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
 	editorTextLength := pg.sendAmountEditor.Editor.Len()
 
-	// calulateNextWidth use the values of the defualtEditorWidth(the editor text size) and
+	// calculateNextWidth use the values of the defualtEditorWidth(the editor text size) and
 	// total number of text in the editor to determine the width of the amount field
-	calulateNextWidth := func() {
+	calculateNextWidth := func() {
 		editorTextLength = editorTextLength + 1
 		pg.nextEditorWidth = pg.defualtEditorWidth * editorTextLength
 	}
 
 	switch evt.(type) {
 	case widget.ChangeEvent:
-		calulateNextWidth()
+		calculateNextWidth()
 		go pg.wallet.GetUSDExchangeValues(&pg)
 	}
 }
