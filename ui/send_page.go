@@ -305,6 +305,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 	case err := <-pg.broadcastErrChan:
 		pg.sendErrorText = err.Error()
 		pg.isBroadcastingTransaction = false
+		pg.scrollToTop()
 	default:
 	}
 }
@@ -910,6 +911,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues()
 	}
+	pg.scrollToTop()
 }
 
 // handleEditorChange handles changes on the editor and adjust its width of the send amount input field
@@ -943,4 +945,9 @@ func (pg *SendPage) sectionOutlineLayout(gtx layout.Context, body layout.Widget)
 	return decredmaterial.Card{Color: pg.theme.Color.Hint}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding1).Layout(gtx, body)
 	})
+}
+
+func (pg *SendPage) scrollToTop() {
+	pg.pageContainer.Position.First = 0
+	pg.pageContainer.Position.Offset = -110
 }
