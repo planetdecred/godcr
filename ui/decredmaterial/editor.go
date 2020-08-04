@@ -116,57 +116,56 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Right: unit.Dp(e.flexWidth),
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Flexed(1, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Flexed(1, func(gtx C) D {
+										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												inset := layout.Inset{
+													Top:    unit.Dp(4),
+													Bottom: unit.Dp(4),
+												}
+												return inset.Layout(gtx, func(gtx C) D {
+													return e.EditorStyle.Layout(gtx)
+												})
+											}),
+											layout.Rigid(func(gtx C) D {
+												if e.IsUnderline {
+													return e.editorLine(gtx)
+												}
+												return layout.Dimensions{}
+											}),
+										)
+									}),
+									layout.Rigid(func(gtx C) D {
+										if e.IsVisible {
 											inset := layout.Inset{
-												Top:    unit.Dp(4),
-												Bottom: unit.Dp(4),
+												Left: unit.Dp(5),
 											}
 											return inset.Layout(gtx, func(gtx C) D {
-												return e.EditorStyle.Layout(gtx)
+												if e.Editor.Text() == "" {
+													return e.pasteBtnMaterial.Layout(gtx)
+												}
+												return e.clearBtMaterial.Layout(gtx)
 											})
-										}),
-									)
-								}),
-								layout.Rigid(func(gtx C) D {
-									if e.IsUnderline {
-										return e.editorLine(gtx)
-									}
-									return layout.Dimensions{}
-								}),
-								layout.Rigid(func(gtx C) D {
-									if e.ErrorLabel.Text != "" {
-										inset := layout.Inset{
-											Top: unit.Dp(3),
 										}
-										return inset.Layout(gtx, func(gtx C) D {
-											return e.ErrorLabel.Layout(gtx)
-										})
+										return layout.Dimensions{}
+									}),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								if e.ErrorLabel.Text != "" {
+									inset := layout.Inset{
+										Top: unit.Dp(3),
 									}
-									return layout.Dimensions{}
-								}),
-							)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Left: unit.Dp(10),
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							if e.IsVisible {
-								if e.Editor.Text() == "" {
-									return e.pasteBtnMaterial.Layout(gtx)
+									return inset.Layout(gtx, func(gtx C) D {
+										return e.ErrorLabel.Layout(gtx)
+									})
 								}
-								return e.clearBtMaterial.Layout(gtx)
-							}
-							return layout.Dimensions{}
-						})
+								return layout.Dimensions{}
+							}),
+						)
 					}),
 				)
 			}),
