@@ -33,8 +33,7 @@ type walletPage struct {
 	line                         *decredmaterial.Line
 	rename, delete, cancelDelete decredmaterial.Button
 	errorLabel                   decredmaterial.Label
-	editor                       widget.Editor
-	editorW                      decredmaterial.Editor
+	walletNameEditor             decredmaterial.Editor
 	passwordModal                *decredmaterial.Password
 	isPasswordModalOpen          bool
 	errChann                     chan error
@@ -50,17 +49,17 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
-		wallet:        common.wallet,
-		line:          common.theme.Line(),
-		editorW:       common.theme.Editor(new(widget.Editor), "New wallet name"),
-		rename:        common.theme.Button(new(widget.Clickable), "Rename Wallet"),
-		errorLabel:    common.theme.Body2(""),
-		result:        &win.signatureResult,
-		delete:        common.theme.DangerButton(new(widget.Clickable), "Confirm Delete Wallet"),
-		cancelDelete:  common.theme.Button(new(widget.Clickable), "Cancel Wallet Delete"),
-		passwordModal: common.theme.Password(),
-		errChann:      common.errorChannels[PageWallet],
-		errorText:     "",
+		wallet:           common.wallet,
+		line:             common.theme.Line(),
+		walletNameEditor: common.theme.Editor(new(widget.Editor), "New wallet name"),
+		rename:           common.theme.Button(new(widget.Clickable), "Rename Wallet"),
+		errorLabel:       common.theme.Body2(""),
+		result:           &win.signatureResult,
+		delete:           common.theme.DangerButton(new(widget.Clickable), "Confirm Delete Wallet"),
+		cancelDelete:     common.theme.Button(new(widget.Clickable), "Cancel Wallet Delete"),
+		passwordModal:    common.theme.Password(),
+		errChann:         common.errorChannels[PageWallet],
+		errorText:        "",
 	}
 	pg.line.Color = common.theme.Color.Gray
 	pg.line.Height = 1
@@ -68,6 +67,8 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	var iconPadding = values.MarginPadding5
 	var iconSize = values.MarginPadding20
+
+	pg.walletNameEditor.Editor.SingleLine = true
 
 	pg.icons.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 	pg.icons.addAcct.Inset = layout.UniformInset(iconPadding)
@@ -273,12 +274,13 @@ func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Di
 			)
 		},
 		func(gtx C) D {
+			m := values.MarginPadding20
 			inset := layout.Inset{
-				Top:    values.MarginPadding20,
-				Bottom: values.MarginPadding20,
+				Top:    m,
+				Bottom: m,
 			}
 			return inset.Layout(gtx, func(gtx C) D {
-				return pg.editorW.Layout(gtx)
+				return pg.walletNameEditor.Layout(gtx)
 			})
 		},
 		func(gtx C) D {
@@ -294,7 +296,9 @@ func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Di
 	}
 	return common.Layout(gtx, func(gtx C) D {
 		return list.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-			return wdgs[i](gtx)
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+				return wdgs[i](gtx)
+			})
 		})
 	})
 }
@@ -414,7 +418,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	if pg.rename.Button.Clicked() {
-		name := pg.editor.Text()
+		name := pg.walletNameEditor.Editor.Text()
 		if name == "" {
 			return
 		}
@@ -430,7 +434,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 		pg.subPage = subWalletMain
 	}
 
-	if pg.editor.Text() == "" {
+	if pg.walletNameEditor.Editor.Text() == "" {
 		pg.rename.Background = common.theme.Color.Hint
 	} else {
 		pg.rename.Background = common.theme.Color.Primary
