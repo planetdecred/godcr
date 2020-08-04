@@ -933,14 +933,8 @@ func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
 
 // drawlayout wraps the pg tx and sync section in a card layout
 func (pg *SendPage) sectionLayout(gtx layout.Context, inset layout.Inset, body layout.Widget) layout.Dimensions {
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
 	return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
 		return inset.Layout(gtx, body)
-	})
-}
-
-// drawlayout wraps the pg tx and sync section in a card layout
-func (pg *SendPage) sectionOutlineLayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return decredmaterial.Card{Color: pg.theme.Color.Hint}.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding1).Layout(gtx, body)
 	})
 }
