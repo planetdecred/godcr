@@ -48,6 +48,7 @@ func (win *Window) WalletAccountPage(common pageCommon) layout.Widget {
 	page.create.Background = common.theme.Color.Hint
 	page.backButton.Color = common.theme.Color.Hint
 	page.backButton.Size = values.MarginPadding30
+	page.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		page.handle(common)
@@ -88,7 +89,7 @@ func (page *walletAccountPage) createAccount(gtx layout.Context, common pageComm
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return common.theme.H5("Create Wallet Acount").Layout(gtx)
 					})
 				}),

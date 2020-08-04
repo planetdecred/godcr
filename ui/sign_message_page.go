@@ -125,7 +125,9 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 
 	body := common.Layout(gtx, func(gtx C) D {
 		return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
-			return w[i](gtx)
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+				return w[i](gtx)
+			})
 		})
 	})
 

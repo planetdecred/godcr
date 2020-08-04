@@ -352,7 +352,9 @@ func (pg *walletPage) subDelete(gtx layout.Context, common pageCommon) layout.Di
 	}
 	return common.Layout(gtx, func(gtx C) D {
 		return list.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-			return wdgs[i](gtx)
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+				return wdgs[i](gtx)
+			})
 		})
 	})
 }
