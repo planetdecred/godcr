@@ -29,6 +29,7 @@ const (
 )
 
 type Editor struct {
+	t *Theme
 	material.EditorStyle
 
 	LineStyle LineStyle
@@ -68,6 +69,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	m.HintColor = t.Color.Hint
 
 	return Editor{
+		t:                 t,
 		EditorStyle:       m,
 		TitleLabel:        t.Body2(""),
 		flexWidth:         0,
@@ -83,7 +85,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 				Size:       unit.Dp(25),
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(unit.Dp(5)),
+				Inset:      layout.UniformInset(unit.Dp(0)),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -94,7 +96,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 				Size:       unit.Dp(25),
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(unit.Dp(5)),
+				Inset:      layout.UniformInset(unit.Dp(0)),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -157,110 +159,62 @@ func (e Editor) editorLayout(gtx C) D {
 	var dims layout.Dimensions
 	switch e.LineStyle {
 	case RoundedRectangle:
-		dims = e.editorRec(gtx, func(gtx C) D {
-
-			return layout.Flex{}.Layout(gtx,
-				layout.Flexed(1, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							inset := layout.Inset{
-								Top:    unit.Dp(4),
-								Bottom: unit.Dp(4),
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								return e.EditorStyle.Layout(gtx)
-							})
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					if e.IsVisible {
-						inset := layout.Inset{
-							Left: unit.Dp(5),
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							if e.Editor.Text() == "" {
-								return e.pasteBtnMaterial.Layout(gtx)
-							}
-							return e.clearBtMaterial.Layout(gtx)
-						})
-					}
-					return layout.Dimensions{}
-				}),
-			)
+		dims = e.editorRectangle(gtx, func(gtx C) D {
+			return e.editorSection(gtx, false)
 		})
 	case SingleUnderLine:
-		dims = layout.Flex{}.Layout(gtx,
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Top:    unit.Dp(4),
-							Bottom: unit.Dp(4),
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return e.EditorStyle.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return e.editorLine(gtx)
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				if e.IsVisible {
-					inset := layout.Inset{
-						Left: unit.Dp(5),
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						if e.Editor.Text() == "" {
-							return e.pasteBtnMaterial.Layout(gtx)
-						}
-						return e.clearBtMaterial.Layout(gtx)
-					})
-				}
-				return layout.Dimensions{}
-			}),
-		)
-
+		dims = e.editorSection(gtx, true)
 	case NoLine:
-		dims = layout.Flex{}.Layout(gtx,
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Top:    unit.Dp(4),
-							Bottom: unit.Dp(4),
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return e.EditorStyle.Layout(gtx)
-						})
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				if e.IsVisible {
-					inset := layout.Inset{
-						Left: unit.Dp(5),
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						if e.Editor.Text() == "" {
-							return e.pasteBtnMaterial.Layout(gtx)
-						}
-						return e.clearBtMaterial.Layout(gtx)
-					})
-				}
-				return layout.Dimensions{}
-			}),
-		)
+		dims = e.editorSection(gtx, false)
 	}
 	return dims
 }
 
-func (e Editor) editorRec(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensions {
+	return layout.Flex{}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					inset := layout.Inset{
+						Top:    unit.Dp(4),
+						Bottom: unit.Dp(4),
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						return e.EditorStyle.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					if underline {
+						return e.editorLine(gtx)
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if e.IsVisible {
+				inset := layout.Inset{
+					Top:  unit.Dp(2),
+					Left: unit.Dp(5),
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					if e.Editor.Text() == "" {
+						return e.pasteBtnMaterial.Layout(gtx)
+					}
+					return e.clearBtMaterial.Layout(gtx)
+				})
+			}
+			return layout.Dimensions{}
+		}),
+	)
+}
+
+func (e Editor) editorRectangle(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	border := widget.Border{Color: e.LineColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding5).Layout(gtx, body)
+		mtb := values.MarginPadding2
+		mlr := values.MarginPadding5
+		return layout.Inset{Top: mtb, Bottom: mtb, Left: mlr, Right: mlr}.Layout(gtx, body)
 	})
 }
 
@@ -296,14 +250,28 @@ func (e Editor) handleEvents() {
 	for e.clearBtMaterial.Button.Clicked() {
 		e.Editor.SetText("")
 	}
+
+	// if e.ErrorLabel.Text != "" {
+	// 	e.LineColor = e.ErrorLabel.Color
+	// }
+
+	// if e.ErrorLabel.Text != "" {
+	// 	e.LineColor = e.ErrorLabel.Color
+	// }
 }
 
 func (e *Editor) SetRequiredErrorText(txt string) {
 	e.requiredErrorText = txt
+	// if e.requiredErrorText != "" {
+	// 	e.LineColor = e.t.Color.Danger
+	// }
 }
 
 func (e *Editor) SetError(errorText string) {
 	e.ErrorLabel.Text = errorText
+	// if e.ErrorLabel.Text != "" {
+	// 	e.LineColor = e.t.Color.Danger
+	// }
 }
 
 func (e *Editor) ClearError() {
@@ -312,16 +280,4 @@ func (e *Editor) ClearError() {
 
 func (e *Editor) IsDirty() bool {
 	return e.ErrorLabel.Text == ""
-}
-
-func (l LineStyle) String() string {
-	switch l {
-	case RoundedRectangle:
-		return "RoundedRectangle"
-	case SingleUnderLine:
-		return "SingleUnderLine"
-	case NoLine:
-		return "NoLine"
-	default:
-	}
 }
