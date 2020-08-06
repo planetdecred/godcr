@@ -16,11 +16,22 @@ import (
 	"gioui.org/widget"
 
 	"github.com/atotto/clipboard"
+	"github.com/raedahgroup/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
+)
+
+type LineStyle uint8
+
+const (
+	RoundedRectangle LineStyle = iota
+	SingleUnderLine
+	NoLine
 )
 
 type Editor struct {
 	material.EditorStyle
+
+	LineStyle LineStyle
 
 	TitleLabel Label
 	ErrorLabel Label
@@ -36,6 +47,9 @@ type Editor struct {
 
 	//IsUnderline if true makes the editor underline visible.
 	IsUnderline bool
+
+	//IsRoundedRectangle if true ad the editor underline visible.
+	IsRoundedRectangle bool
 
 	requiredErrorText string
 
@@ -118,41 +132,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Flexed(1, func(gtx C) D {
-										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												inset := layout.Inset{
-													Top:    unit.Dp(4),
-													Bottom: unit.Dp(4),
-												}
-												return inset.Layout(gtx, func(gtx C) D {
-													return e.EditorStyle.Layout(gtx)
-												})
-											}),
-											layout.Rigid(func(gtx C) D {
-												if e.IsUnderline {
-													return e.editorLine(gtx)
-												}
-												return layout.Dimensions{}
-											}),
-										)
-									}),
-									layout.Rigid(func(gtx C) D {
-										if e.IsVisible {
-											inset := layout.Inset{
-												Left: unit.Dp(5),
-											}
-											return inset.Layout(gtx, func(gtx C) D {
-												if e.Editor.Text() == "" {
-													return e.pasteBtnMaterial.Layout(gtx)
-												}
-												return e.clearBtMaterial.Layout(gtx)
-											})
-										}
-										return layout.Dimensions{}
-									}),
-								)
+								return e.editorLayout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								if e.ErrorLabel.Text != "" {
@@ -170,6 +150,117 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 				)
 			}),
 		)
+	})
+}
+
+func (e Editor) editorLayout(gtx C) D {
+	var dims layout.Dimensions
+	switch e.LineStyle {
+	case RoundedRectangle:
+		dims = e.editorRec(gtx, func(gtx C) D {
+
+			return layout.Flex{}.Layout(gtx,
+				layout.Flexed(1, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							inset := layout.Inset{
+								Top:    unit.Dp(4),
+								Bottom: unit.Dp(4),
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return e.EditorStyle.Layout(gtx)
+							})
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if e.IsVisible {
+						inset := layout.Inset{
+							Left: unit.Dp(5),
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							if e.Editor.Text() == "" {
+								return e.pasteBtnMaterial.Layout(gtx)
+							}
+							return e.clearBtMaterial.Layout(gtx)
+						})
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		})
+	case SingleUnderLine:
+		dims = layout.Flex{}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Top:    unit.Dp(4),
+							Bottom: unit.Dp(4),
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return e.EditorStyle.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return e.editorLine(gtx)
+					}),
+				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if e.IsVisible {
+					inset := layout.Inset{
+						Left: unit.Dp(5),
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						if e.Editor.Text() == "" {
+							return e.pasteBtnMaterial.Layout(gtx)
+						}
+						return e.clearBtMaterial.Layout(gtx)
+					})
+				}
+				return layout.Dimensions{}
+			}),
+		)
+
+	case NoLine:
+		dims = layout.Flex{}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Top:    unit.Dp(4),
+							Bottom: unit.Dp(4),
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return e.EditorStyle.Layout(gtx)
+						})
+					}),
+				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if e.IsVisible {
+					inset := layout.Inset{
+						Left: unit.Dp(5),
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						if e.Editor.Text() == "" {
+							return e.pasteBtnMaterial.Layout(gtx)
+						}
+						return e.clearBtMaterial.Layout(gtx)
+					})
+				}
+				return layout.Dimensions{}
+			}),
+		)
+	}
+	return dims
+}
+
+func (e Editor) editorRec(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	border := widget.Border{Color: e.LineColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+	return border.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding5).Layout(gtx, body)
 	})
 }
 
@@ -221,4 +312,16 @@ func (e *Editor) ClearError() {
 
 func (e *Editor) IsDirty() bool {
 	return e.ErrorLabel.Text == ""
+}
+
+func (l LineStyle) String() string {
+	switch l {
+	case RoundedRectangle:
+		return "RoundedRectangle"
+	case SingleUnderLine:
+		return "SingleUnderLine"
+	case NoLine:
+		return "NoLine"
+	default:
+	}
 }
