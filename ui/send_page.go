@@ -94,6 +94,8 @@ type SendPage struct {
 
 	txAuthorErrChan  chan error
 	broadcastErrChan chan error
+
+	borderColor color.RGBA
 }
 
 const (
@@ -138,10 +140,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.line.Color = common.theme.Color.Gray
 	pg.line.Height = 2
 
+	pg.borderColor = common.theme.Color.Hint
+
 	pg.balanceAfterSendValue = "- DCR"
 
 	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Destination Address")
-	pg.destinationAddressEditor.SetRequiredErrorText("")
 	pg.destinationAddressEditor.IsRequired = true
 	pg.destinationAddressEditor.IsVisible = true
 	pg.destinationAddressEditor.IsTitleLabel = false
@@ -299,6 +302,16 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.handleEditorChange(evt)
 	}
 
+	if pg.sendAmountEditor.Editor.Focused() {
+		if pg.calculateErrorText != "" {
+			pg.borderColor = pg.theme.Color.Danger
+		} else {
+			pg.borderColor = pg.theme.Color.Primary
+		}
+	} else {
+		pg.borderColor = pg.theme.Color.Hint
+	}
+
 	select {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
@@ -449,16 +462,7 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 				return pg.sendToAddressLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
-					inset := layout.Inset{
-						Left:   values.MarginPadding10,
-						Right:  values.TextSize18,
-						Bottom: values.MarginPaddingMinus5,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return pg.destinationAddressEditor.Layout(gtx)
-					})
-				})
+				return pg.destinationAddressEditor.Layout(gtx)
 			}),
 		)
 	})
@@ -716,7 +720,7 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+	border := widget.Border{Color: pg.borderColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(padding).Layout(gtx, body)
 	})
@@ -750,6 +754,7 @@ func (pg *SendPage) validateDestinationAddress(ignoreEmpty bool) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -835,7 +840,7 @@ func (pg *SendPage) calculateValues() {
 func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
 	amount, err := dcrutil.NewAmount(sendAmount)
 	if err != nil {
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+		pg.calculateErrorText = fmt.Sprintf("error estimating transaction amount: %s", err.Error())
 		return 0
 	}
 
@@ -887,6 +892,7 @@ func (pg *SendPage) getTxFee() int64 {
 	// calculate transaction fee
 	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
 	if err != nil {
+		// if err.Error() == "insufficient_balance"
 		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
 		return 0
 	}

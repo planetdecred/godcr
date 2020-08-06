@@ -75,7 +75,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		flexWidth:         0,
 		IsTitleLabel:      true,
 		IsUnderline:       true,
-		LineColor:         t.Color.Text,
+		LineColor:         t.Color.Hint,
 		ErrorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 
@@ -116,6 +116,11 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 
 	if e.IsRequired && !e.Editor.Focused() && e.Editor.Len() == 0 {
 		e.ErrorLabel.Text = e.requiredErrorText
+		e.LineColor = e.t.Color.Danger
+	}
+
+	if e.ErrorLabel.Text != "" && e.Editor.Focused() && e.Editor.Len() != 0 {
+		e.LineColor = e.t.Color.Danger
 	}
 
 	return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
@@ -251,27 +256,25 @@ func (e Editor) handleEvents() {
 		e.Editor.SetText("")
 	}
 
-	// if e.ErrorLabel.Text != "" {
-	// 	e.LineColor = e.ErrorLabel.Color
-	// }
+	if e.ErrorLabel.Text != "" {
+		e.LineColor = e.t.Color.Danger
+	} else {
+		e.LineColor = e.t.Color.Hint
+	}
 
-	// if e.ErrorLabel.Text != "" {
-	// 	e.LineColor = e.ErrorLabel.Color
-	// }
+	if e.requiredErrorText != "" {
+		e.LineColor = e.t.Color.Danger
+	} else {
+		e.LineColor = e.t.Color.Hint
+	}
 }
 
 func (e *Editor) SetRequiredErrorText(txt string) {
 	e.requiredErrorText = txt
-	// if e.requiredErrorText != "" {
-	// 	e.LineColor = e.t.Color.Danger
-	// }
 }
 
 func (e *Editor) SetError(errorText string) {
 	e.ErrorLabel.Text = errorText
-	// if e.ErrorLabel.Text != "" {
-	// 	e.LineColor = e.t.Color.Danger
-	// }
 }
 
 func (e *Editor) ClearError() {
