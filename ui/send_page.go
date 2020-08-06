@@ -330,17 +330,20 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 			return pg.sendAmountSection(gtx)
 		},
 		func(gtx C) D {
+			gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
 			return pg.drawTransactionDetailWidgets(gtx)
 		},
 		func(gtx C) D {
 			if pg.calculateErrorText != "" {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return pg.theme.ErrorAlert(gtx, pg.calculateErrorText)
+				return pg.centralize(gtx, func(gtx C) D {
+					return pg.theme.ErrorAlert(gtx, pg.calculateErrorText)
+				})
 			}
 			return layout.Dimensions{}
 		},
 		func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding450)
 			return pg.nextButton.Layout(gtx)
 		},
 	}
@@ -652,6 +655,11 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 			)
 		},
 		func(gtx C) D {
+			return layout.Inset{Right: values.MarginPadding15, Bottom: values.MarginPaddingMinus10}.Layout(gtx, func(gtx C) D {
+				return pg.txFeeLayout(gtx)
+			})
+		},
+		func(gtx C) D {
 			return pg.drawTransactionDetailWidgets(gtx)
 		},
 		func(gtx C) D {
@@ -933,14 +941,16 @@ func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
 
 // drawlayout wraps the pg tx and sync section in a card layout
 func (pg *SendPage) sectionLayout(gtx layout.Context, inset layout.Inset, body layout.Widget) layout.Dimensions {
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
 	return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
 		return inset.Layout(gtx, body)
 	})
 }
 
-// drawlayout wraps the pg tx and sync section in a card layout
-func (pg *SendPage) sectionOutlineLayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return decredmaterial.Card{Color: pg.theme.Color.Hint}.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding1).Layout(gtx, body)
-	})
+func (pg *SendPage) centralize(gtx layout.Context, content layout.Widget) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Center.Layout(gtx, content)
+		}),
+	)
 }
