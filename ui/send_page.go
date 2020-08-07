@@ -65,6 +65,7 @@ type SendPage struct {
 	nextEditorWidth    int
 
 	sendErrorText      string
+	amountErrorText    string
 	sendSuccessText    string
 	calculateErrorText string
 
@@ -302,7 +303,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.handleEditorChange(evt)
 	}
 
-	if pg.sendAmountEditor.Editor.Focused() {
+	if pg.sendAmountEditor.Editor.Focused() || pg.calculateErrorText != "" {
 		if pg.calculateErrorText != "" {
 			pg.borderColor = pg.theme.Color.Danger
 		} else {
@@ -479,6 +480,11 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				return pg.sectionBorder(gtx, values.MarginPadding20, func(gtx C) D {
 					return pg.amountInputLayout(gtx)
 				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				txt := pg.theme.Body2(pg.amountErrorText)
+				txt.Color = pg.theme.Color.Danger
+				return txt.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -838,9 +844,10 @@ func (pg *SendPage) calculateValues() {
 }
 
 func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
+	pg.amountErrorText = ""
 	amount, err := dcrutil.NewAmount(sendAmount)
 	if err != nil {
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction amount: %s", err.Error())
+		pg.feeEstimationError(err.Error(), "amount")
 		return 0
 	}
 
@@ -890,10 +897,10 @@ func (pg *SendPage) updateDefaultValues() {
 
 func (pg *SendPage) getTxFee() int64 {
 	// calculate transaction fee
+	pg.amountErrorText = ""
 	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
 	if err != nil {
-		// if err.Error() == "insufficient_balance"
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+		pg.feeEstimationError(err.Error(), "fee")
 		return 0
 	}
 
@@ -903,6 +910,13 @@ func (pg *SendPage) getTxFee() int64 {
 func (pg *SendPage) balanceAfterSend(totalCost int64) {
 	pg.remainingBalance = pg.selectedAccount.SpendableBalance - totalCost
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
+}
+
+func (pg *SendPage) feeEstimationError(err, errorPath string) {
+	if err == "insufficient_balance" {
+		pg.amountErrorText = "Not enough funds"
+	}
+	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }
 
 func (pg *SendPage) watchForBroadcastResult() {
