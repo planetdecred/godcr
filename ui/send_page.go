@@ -484,7 +484,10 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(pg.amountErrorText)
 				txt.Color = pg.theme.Color.Danger
-				return txt.Layout(gtx)
+				if pg.calculateErrorText != "" {
+					return txt.Layout(gtx)
+				}
+				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
