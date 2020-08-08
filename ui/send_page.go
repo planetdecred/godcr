@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"strconv"
+	"strings"
 	"time"
 
 	"gioui.org/layout"
@@ -149,7 +150,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.destinationAddressEditor.IsRequired = true
 	pg.destinationAddressEditor.IsVisible = true
 	pg.destinationAddressEditor.IsTitleLabel = false
-	pg.destinationAddressEditor.IsUnderline = false
 	pg.destinationAddressEditor.Editor.SetText("")
 	pg.destinationAddressEditor.Editor.SingleLine = true
 
@@ -484,7 +484,7 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(pg.amountErrorText)
 				txt.Color = pg.theme.Color.Danger
-				if pg.calculateErrorText != "" {
+				if pg.amountErrorText != "" {
 					return txt.Layout(gtx)
 				}
 				return layout.Dimensions{}
@@ -918,6 +918,9 @@ func (pg *SendPage) balanceAfterSend(totalCost int64) {
 func (pg *SendPage) feeEstimationError(err, errorPath string) {
 	if err == "insufficient_balance" {
 		pg.amountErrorText = "Not enough funds"
+	}
+	if strings.Contains(err, "invalid amount") {
+		pg.amountErrorText = "Invalid amount"
 	}
 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }

@@ -46,12 +46,6 @@ type Editor struct {
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
 
-	//IsUnderline if true makes the editor underline visible.
-	IsUnderline bool
-
-	//IsRoundedRectangle if true ad the editor underline visible.
-	IsRoundedRectangle bool
-
 	requiredErrorText string
 
 	pasteBtnMaterial IconButton
@@ -74,7 +68,6 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		TitleLabel:        t.Body2(""),
 		flexWidth:         0,
 		IsTitleLabel:      true,
-		IsUnderline:       true,
 		LineColor:         t.Color.Hint,
 		ErrorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
