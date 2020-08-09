@@ -66,7 +66,12 @@ var _ = Describe("Wallet", func() {
 	})
 	It("can rename a wallet", func() {
 		tempChan := make(chan error)
-		err := wal.RenameWallet(1, "random", tempChan)
+		wal.RenameWallet(1, "random", tempChan)
+		go func() {
+			err := <-tempChan
+			Expect(err).To(BeNil())
+		}()
+		resp = <-wal.Send
 		Expect(err).To(BeNil())
 	})
 	It("can get the current address", func() {
