@@ -65,7 +65,8 @@ var _ = Describe("Wallet", func() {
 		Expect(inf.Synced).To(Equal(false))
 	})
 	It("can rename a wallet", func() {
-		err := wal.RenameWallet(1, "random")
+		tempChan := make(chan error)
+		err := wal.RenameWallet(1, "random", tempChan)
 		Expect(err).To(BeNil())
 	})
 	It("can get the current address", func() {
