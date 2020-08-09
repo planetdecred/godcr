@@ -3,17 +3,11 @@
 package decredmaterial
 
 import (
-	"image"
 	"image/color"
 
-	"gioui.org/widget/material"
-
-	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op"
-	"gioui.org/op/paint"
-	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/godcr/ui/values"
@@ -75,10 +69,10 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		pasteBtnMaterial: IconButton{
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentContentPaste)),
-				Size:       unit.Dp(25),
+				Size:       values.MarginPadding25,
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(unit.Dp(0)),
+				Inset:      layout.UniformInset(values.MarginPadding0),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -86,10 +80,10 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		clearBtMaterial: IconButton{
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentClear)),
-				Size:       unit.Dp(25),
+				Size:       values.MarginPadding25,
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(unit.Dp(0)),
+				Inset:      layout.UniformInset(values.MarginPadding0),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -116,7 +110,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.LineColor = e.t.Color.Danger
 	}
 
-	return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
+	return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				if e.IsTitleLabel {
@@ -137,7 +131,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 							layout.Rigid(func(gtx C) D {
 								if e.ErrorLabel.Text != "" {
 									inset := layout.Inset{
-										Top: unit.Dp(3),
+										Top: values.MarginPadding2,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
 										return e.ErrorLabel.Layout(gtx)
@@ -173,9 +167,10 @@ func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensi
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
+					m := values.MarginPadding5
 					inset := layout.Inset{
-						Top:    unit.Dp(4),
-						Bottom: unit.Dp(4),
+						Top:    m,
+						Bottom: m,
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return e.EditorStyle.Layout(gtx)
@@ -192,8 +187,8 @@ func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensi
 		layout.Rigid(func(gtx C) D {
 			if e.IsVisible {
 				inset := layout.Inset{
-					Top:  unit.Dp(2),
-					Left: unit.Dp(5),
+					Top:  values.MarginPadding2,
+					Left: values.MarginPadding5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
 					if e.Editor.Text() == "" {
@@ -208,7 +203,7 @@ func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensi
 }
 
 func (e Editor) editorRectangle(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: e.LineColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+	border := widget.Border{Color: e.LineColor, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		mtb := values.MarginPadding2
 		mlr := values.MarginPadding5
@@ -217,24 +212,11 @@ func (e Editor) editorRectangle(gtx layout.Context, body layout.Widget) layout.D
 }
 
 func (e Editor) editorLine(gtx C) D {
-	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			dims := image.Point{
-				X: gtx.Constraints.Max.X,
-				Y: 2,
-			}
-			rect := f32.Rectangle{
-				Max: layout.FPt(dims),
-			}
-			op.Offset(f32.Point{
-				X: 0,
-				Y: 0,
-			}).Add(gtx.Ops)
-			paint.ColorOp{Color: e.LineColor}.Add(gtx.Ops)
-			paint.PaintOp{Rect: rect}.Add(gtx.Ops)
-			return layout.Dimensions{Size: dims}
-		}),
-	)
+	line := e.t.Line()
+	line.Color = e.LineColor
+	line.Height = 2
+	line.Width = gtx.Constraints.Max.X
+	return line.Layout(gtx)
 }
 
 func (e Editor) handleEvents() {

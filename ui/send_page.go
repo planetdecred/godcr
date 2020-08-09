@@ -477,7 +477,7 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				return pg.spendableBalanceLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, values.MarginPadding20, func(gtx C) D {
+				return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
 					return pg.amountInputLayout(gtx)
 				})
 			}),
@@ -495,9 +495,7 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-					return pg.txFeeLayout(gtx)
-				})
+				return pg.txFeeLayout(gtx)
 			}),
 		)
 	})
@@ -625,6 +623,7 @@ func (pg *SendPage) amountInputLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *SendPage) txFeeLayout(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
+		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding390)
 		return pg.tableLayout(gtx, pg.theme.Body2("Transaction Fee"), pg.activeTransactionFeeValue, pg.inactiveTransactionFeeValue)
 	}
 
@@ -729,7 +728,7 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: pg.borderColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+	border := widget.Border{Color: pg.borderColor, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(padding).Layout(gtx, body)
 	})
@@ -968,6 +967,7 @@ func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
 // drawlayout wraps the pg tx and sync section in a card layout
 func (pg *SendPage) sectionLayout(gtx layout.Context, inset layout.Inset, body layout.Widget) layout.Dimensions {
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
+	gtx.Constraints.Min.X = gtx.Px(values.MarginPadding450)
 	return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
 		return inset.Layout(gtx, body)
 	})
