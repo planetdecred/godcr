@@ -310,9 +310,9 @@ func (pg *SendPage) Handle(c pageCommon) {
 }
 
 func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	if len(common.info.Wallets) == 0 {
-		return layout.Dimensions{}
-	}
+	// if len(common.info.Wallets) == 0 {
+	// 	return layout.Dimensions{}
+	// }
 
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {

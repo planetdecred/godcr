@@ -85,6 +85,11 @@ type LoadedWallets struct {
 // Restored is sent when the Wallet is done restoring a wallet
 type Restored struct{}
 
+// Restored is sent when the Wallet is done restoring a wallet
+type Renamed struct {
+	ID int
+}
+
 // CreatedSeed is sent when the Wallet is done creating a wallet
 type CreatedSeed struct {
 	Seed string
