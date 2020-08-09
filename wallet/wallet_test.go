@@ -71,8 +71,8 @@ var _ = Describe("Wallet", func() {
 			err := <-tempChan
 			Expect(err).To(BeNil())
 		}()
-		resp = <-wal.Send
-		Expect(err).To(BeNil())
+		resp := <-wal.Send
+		Expect(resp.Resp).To(BeAssignableToTypeOf(Renamed{}))
 	})
 	It("can get the current address", func() {
 		addr, err := wal.CurrentAddress(1, 0)
