@@ -854,7 +854,7 @@ func (pg *SendPage) amountValues() amountValue {
 		}
 	case pg.activeExchange == "DCR" && pg.LastTradeRate != "":
 		return amountValue{
-			inactiveTotalAmount:         fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 7, 64)),
+			inactiveTotalAmount:         fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
 			activeTransactionFeeValue:   dcrutil.Amount(pg.txFee).String(),
 			inactiveTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
 			activeTotalCostValue:        dcrutil.Amount(pg.totalCostDCR).String(),
