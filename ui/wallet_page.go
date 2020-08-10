@@ -425,15 +425,11 @@ func (pg *walletPage) Handle(common pageCommon) {
 			return
 		}
 
-		err := common.wallet.RenameWallet(pg.current.ID, name)
-		if err != nil {
-			log.Error(err)
-			pg.errorLabel.Text = err.Error()
-			return
-		}
+		common.wallet.RenameWallet(pg.current.ID, name, pg.errChann)
 
 		common.info.Wallets[*common.selectedWallet].Name = name
 		pg.subPage = subWalletMain
+		pg.walletNameEditor.Editor.SetText("")
 	}
 
 	if pg.walletNameEditor.Editor.Text() == "" {
