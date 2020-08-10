@@ -728,7 +728,7 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: pg.borderColor, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
+	border := widget.Border{Color: pg.borderColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(padding).Layout(gtx, body)
 	})

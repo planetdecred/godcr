@@ -203,7 +203,7 @@ func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensi
 }
 
 func (e Editor) editorRectangle(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: e.LineColor, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
+	border := widget.Border{Color: e.LineColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		mtb := values.MarginPadding2
 		mlr := values.MarginPadding5
