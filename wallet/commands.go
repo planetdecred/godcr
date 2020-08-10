@@ -436,8 +436,26 @@ func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message
 }
 
 // RenameWallet renames the wallet identified by walletID.
-func (wal *Wallet) RenameWallet(walletID int, name string) error {
-	return wal.multi.RenameWallet(walletID, name)
+func (wal *Wallet) RenameWallet(walletID int, name string, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.RenameWallet(walletID, name)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not rename wallet",
+				Err:     err,
+			})
+			return
+		}
+		resp.Resp = Renamed{
+			ID: walletID,
+		}
+		wal.Send <- resp
+	}()
 }
 
 // RenameWallet renames the wallet identified by walletID.
