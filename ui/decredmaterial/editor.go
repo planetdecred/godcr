@@ -199,14 +199,6 @@ func (e Editor) editorRectangle(gtx layout.Context, body layout.Widget) layout.D
 	})
 }
 
-// func (e Editor) editorLine(gtx C) D {
-// 	line := e.t.Line()
-// 	line.Color = e.LineColor
-// 	line.Height = 2
-// 	line.Width = gtx.Constraints.Max.X
-// 	return line.Layout(gtx)
-// }
-
 func (e Editor) handleEvents() {
 	for e.pasteBtnMaterial.Button.Clicked() {
 		data, err := clipboard.ReadAll()
