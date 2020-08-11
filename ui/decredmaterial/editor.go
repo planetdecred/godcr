@@ -6,27 +6,17 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
 	"github.com/atotto/clipboard"
-	"github.com/raedahgroup/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
-)
-
-type LineStyle uint8
-
-const (
-	RoundedRectangle LineStyle = iota
-	SingleUnderLine
-	NoLine
 )
 
 type Editor struct {
 	t *Theme
 	material.EditorStyle
-
-	LineStyle LineStyle
 
 	TitleLabel Label
 	ErrorLabel Label
@@ -39,11 +29,16 @@ type Editor struct {
 	IsRequired bool
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
+	//Bordered if true makes the adds a border around the editor.
+	Bordered bool
 
 	requiredErrorText string
 
 	pasteBtnMaterial IconButton
 	clearBtMaterial  IconButton
+
+	m2 unit.Value
+	m5 unit.Value
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -56,23 +51,30 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	m.Hint = hint
 	m.HintColor = t.Color.Hint
 
+	var m0 = unit.Dp(0)
+	var m25 = unit.Dp(25)
+
 	return Editor{
 		t:                 t,
 		EditorStyle:       m,
 		TitleLabel:        t.Body2(""),
 		flexWidth:         0,
 		IsTitleLabel:      true,
+		Bordered:          true,
 		LineColor:         t.Color.Hint,
 		ErrorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 
+		m2: unit.Dp(2),
+		m5: unit.Dp(5),
+
 		pasteBtnMaterial: IconButton{
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentContentPaste)),
-				Size:       values.MarginPadding25,
+				Size:       m25,
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(values.MarginPadding0),
+				Inset:      layout.UniformInset(m0),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -80,10 +82,10 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		clearBtMaterial: IconButton{
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentClear)),
-				Size:       values.MarginPadding25,
+				Size:       m25,
 				Background: color.RGBA{},
 				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(values.MarginPadding0),
+				Inset:      layout.UniformInset(m0),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -110,7 +112,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.LineColor = e.t.Color.Danger
 	}
 
-	return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+	return layout.UniformInset(e.m2).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				if e.IsTitleLabel {
@@ -131,7 +133,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 							layout.Rigid(func(gtx C) D {
 								if e.ErrorLabel.Text != "" {
 									inset := layout.Inset{
-										Top: values.MarginPadding2,
+										Top: e.m2,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
 										return e.ErrorLabel.Layout(gtx)
@@ -148,18 +150,13 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (e Editor) editorLayout(gtx C) D {
-	var dims layout.Dimensions
-	switch e.LineStyle {
-	case RoundedRectangle:
-		dims = e.editorRectangle(gtx, func(gtx C) D {
+	if e.Bordered {
+		return e.editorRectangle(gtx, func(gtx C) D {
 			return e.editorSection(gtx, false)
 		})
-	case SingleUnderLine:
-		dims = e.editorSection(gtx, true)
-	case NoLine:
-		dims = e.editorSection(gtx, false)
 	}
-	return dims
+
+	return e.editorSection(gtx, false)
 }
 
 func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensions {
@@ -167,28 +164,21 @@ func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensi
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					m := values.MarginPadding5
 					inset := layout.Inset{
-						Top:    m,
-						Bottom: m,
+						Top:    e.m5,
+						Bottom: e.m5,
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return e.EditorStyle.Layout(gtx)
 					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					if underline {
-						return e.editorLine(gtx)
-					}
-					return layout.Dimensions{}
 				}),
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
 			if e.IsVisible {
 				inset := layout.Inset{
-					Top:  values.MarginPadding2,
-					Left: values.MarginPadding5,
+					Top:  e.m2,
+					Left: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
 					if e.Editor.Text() == "" {
@@ -203,21 +193,19 @@ func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensi
 }
 
 func (e Editor) editorRectangle(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: e.LineColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+	border := widget.Border{Color: e.LineColor, CornerRadius: e.m5, Width: unit.Dp(1)}
 	return border.Layout(gtx, func(gtx C) D {
-		mtb := values.MarginPadding2
-		mlr := values.MarginPadding5
-		return layout.Inset{Top: mtb, Bottom: mtb, Left: mlr, Right: mlr}.Layout(gtx, body)
+		return layout.Inset{Top: e.m2, Bottom: e.m2, Left: e.m5, Right: e.m5}.Layout(gtx, body)
 	})
 }
 
-func (e Editor) editorLine(gtx C) D {
-	line := e.t.Line()
-	line.Color = e.LineColor
-	line.Height = 2
-	line.Width = gtx.Constraints.Max.X
-	return line.Layout(gtx)
-}
+// func (e Editor) editorLine(gtx C) D {
+// 	line := e.t.Line()
+// 	line.Color = e.LineColor
+// 	line.Height = 2
+// 	line.Width = gtx.Constraints.Max.X
+// 	return line.Layout(gtx)
+// }
 
 func (e Editor) handleEvents() {
 	for e.pasteBtnMaterial.Button.Clicked() {

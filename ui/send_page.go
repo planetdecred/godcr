@@ -157,7 +157,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.sendAmountEditor.SetRequiredErrorText("")
 	pg.sendAmountEditor.IsRequired = true
 	pg.sendAmountEditor.IsTitleLabel = false
-	pg.sendAmountEditor.LineStyle = decredmaterial.NoLine
+	pg.sendAmountEditor.Bordered = false
 	pg.sendAmountEditor.Editor.SingleLine = true
 	pg.sendAmountEditor.Editor.SetText("0")
 	pg.sendAmountEditor.TextSize = values.TextSize24
