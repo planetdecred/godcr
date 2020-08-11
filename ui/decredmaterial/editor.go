@@ -152,14 +152,14 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 func (e Editor) editorLayout(gtx C) D {
 	if e.Bordered {
 		return e.editorRectangle(gtx, func(gtx C) D {
-			return e.editorSection(gtx, false)
+			return e.editorSection(gtx)
 		})
 	}
 
-	return e.editorSection(gtx, false)
+	return e.editorSection(gtx)
 }
 
-func (e Editor) editorSection(gtx layout.Context, underline bool) layout.Dimensions {
+func (e Editor) editorSection(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
