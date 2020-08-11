@@ -304,6 +304,9 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.calculateErrorText = err.Error()
 	case err := <-pg.broadcastErrChan:
 		pg.sendErrorText = err.Error()
+		time.AfterFunc(time.Millisecond*3500, func() {
+			pg.sendErrorText = ""
+		})
 		pg.isBroadcastingTransaction = false
 	default:
 	}
@@ -311,9 +314,6 @@ func (pg *SendPage) Handle(c pageCommon) {
 
 func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pageContent := []func(gtx C) D{
-		func(gtx C) D {
-			return pg.drawAlertSection(gtx)
-		},
 		func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				return common.SelectedAccountLayout(gtx)
@@ -344,44 +344,51 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		},
 	}
 
-	dims := common.LayoutWithAccounts(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				if pg.pageContainer.Position.First > 0 {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					l := pg.theme.Line()
-					l.Color = pg.theme.Color.Hint
-					l.Width = gtx.Constraints.Min.X
-					l.Height = 2
-
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return l.Layout(gtx)
-					})
-				}
-				return layout.Dimensions{}
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					p := values.MarginPadding10
-					return layout.Inset{Left: p, Bottom: p, Right: p}.Layout(gtx, pageContent[i])
-				})
-			}),
-		)
-	})
+	dims := layout.Stack{}.Layout(gtx,
+		layout.Stacked(func(gtx C) D {
+			return pg.drawAlertSection(gtx)
+		}),
+		layout.Expanded(func(gtx C) D {
+			return common.LayoutWithAccounts(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						if pg.pageContainer.Position.First > 0 {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							l := pg.theme.Line()
+							l.Color = pg.theme.Color.Hint
+							l.Width = gtx.Constraints.Min.X
+							l.Height = 2
+							return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+								return l.Layout(gtx)
+							})
+						}
+						return layout.Dimensions{}
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+							p := values.MarginPadding10
+							return layout.Inset{Left: p, Bottom: p, Right: p}.Layout(gtx, pageContent[i])
+						})
+					}),
+				)
+			})
+		}),
+	)
 
 	if pg.isConfirmationModalOpen {
-		common.Modal(gtx, dims, pg.drawConfirmationModal(gtx))
+		return common.Modal(gtx, dims, pg.drawConfirmationModal(gtx))
 	}
 
 	if pg.isPasswordModalOpen {
-		common.Modal(gtx, dims, pg.drawPasswordModal(gtx))
+		return common.Modal(gtx, dims, pg.drawPasswordModal(gtx))
 	}
 
 	return dims
 }
 
 func (pg *SendPage) drawAlertSection(gtx layout.Context) layout.Dimensions {
-	return layout.Center.Layout(gtx, func(gtx C) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.E.Layout(gtx, func(gtx C) D {
 		if pg.sendSuccessText != "" {
 			return pg.theme.SuccessAlert(gtx, pg.sendSuccessText)
 		} else if pg.sendErrorText != "" && pg.sendErrorText != invalidPassphraseError {
