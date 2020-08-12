@@ -151,15 +151,24 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 
 func (e Editor) editorLayout(gtx C) D {
 	if e.Bordered {
-		return e.editorRectangle(gtx, func(gtx C) D {
-			return e.editorSection(gtx)
+		border := widget.Border{Color: e.LineColor, CornerRadius: e.m5, Width: unit.Dp(1)}
+		return border.Layout(gtx, func(gtx C) D {
+			inset := layout.Inset{
+				Top:    e.m2,
+				Bottom: e.m2,
+				Left:   e.m5,
+				Right:  e.m5,
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return e.editor(gtx)
+			})
 		})
 	}
 
-	return e.editorSection(gtx)
+	return e.editor(gtx)
 }
 
-func (e Editor) editorSection(gtx layout.Context) layout.Dimensions {
+func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -190,13 +199,6 @@ func (e Editor) editorSection(gtx layout.Context) layout.Dimensions {
 			return layout.Dimensions{}
 		}),
 	)
-}
-
-func (e Editor) editorRectangle(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: e.LineColor, CornerRadius: e.m5, Width: unit.Dp(1)}
-	return border.Layout(gtx, func(gtx C) D {
-		return layout.Inset{Top: e.m2, Bottom: e.m2, Left: e.m5, Right: e.m5}.Layout(gtx, body)
-	})
 }
 
 func (e Editor) handleEvents() {
