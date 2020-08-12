@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 
 	"gioui.org/font/gofont"
 	"gioui.org/font/opentype"
@@ -73,14 +72,11 @@ func main() {
 	}
 
 	wal.LoadWallets()
-
-	var wg sync.WaitGroup
 	shutdown := make(chan int)
-	wg.Add(1)
 	go func() {
 		<-shutdown
 		wal.Shutdown()
-		wg.Done()
+		os.Exit(0)
 	}()
 
 	var collection []text.FontFace
@@ -109,9 +105,6 @@ func main() {
 	}
 
 	// Start the ui frontend
-	// Does not need to be added to the WaitGroup, app.Main() handles that
 	go win.Loop(shutdown)
-
 	app.Main()
-	wg.Wait()
 }
