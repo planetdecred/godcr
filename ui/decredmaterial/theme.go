@@ -133,21 +133,26 @@ func (t *Theme) ImageIcon(gtx layout.Context, icon image.Image, size int) layout
 func (t *Theme) alert(gtx layout.Context, txt string, bgColor color.RGBA) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			rr := float32(gtx.Px(unit.Dp(2)))
 			clip.RRect{
 				Rect: f32.Rectangle{Max: f32.Point{
 					X: float32(gtx.Constraints.Min.X),
 					Y: float32(gtx.Constraints.Min.Y),
 				}},
-				NE: rr, NW: rr, SE: rr, SW: rr,
 			}.Add(gtx.Ops)
 			return fill(gtx, bgColor)
 		}),
 		layout.Stacked(func(gtx C) D {
-			return layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx C) D {
-				lbl := t.Body2(txt)
-				lbl.Color = t.Color.Surface
-				return lbl.Layout(gtx)
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X / 3
+			gtx.Constraints.Max.X = gtx.Constraints.Max.X / 3
+			gtx.Constraints.Min.Y = 80
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx C) D {
+
+					lbl := t.Body2(txt)
+					lbl.Alignment = text.Start
+					lbl.Color = t.Color.Surface
+					return lbl.Layout(gtx)
+				})
 			})
 		}),
 	)
