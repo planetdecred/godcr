@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"strconv"
+	"strings"
 	"time"
 
 	"gioui.org/layout"
@@ -65,6 +66,7 @@ type SendPage struct {
 	nextEditorWidth    int
 
 	sendErrorText      string
+	amountErrorText    string
 	sendSuccessText    string
 	calculateErrorText string
 
@@ -94,6 +96,8 @@ type SendPage struct {
 
 	txAuthorErrChan  chan error
 	broadcastErrChan chan error
+
+	borderColor color.RGBA
 }
 
 const (
@@ -138,14 +142,14 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.line.Color = common.theme.Color.Gray
 	pg.line.Height = 2
 
+	pg.borderColor = common.theme.Color.Hint
+
 	pg.balanceAfterSendValue = "- DCR"
 
 	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Destination Address")
-	pg.destinationAddressEditor.SetRequiredErrorText("")
 	pg.destinationAddressEditor.IsRequired = true
 	pg.destinationAddressEditor.IsVisible = true
 	pg.destinationAddressEditor.IsTitleLabel = false
-	pg.destinationAddressEditor.IsUnderline = false
 	pg.destinationAddressEditor.Editor.SetText("")
 	pg.destinationAddressEditor.Editor.SingleLine = true
 
@@ -153,7 +157,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.sendAmountEditor.SetRequiredErrorText("")
 	pg.sendAmountEditor.IsRequired = true
 	pg.sendAmountEditor.IsTitleLabel = false
-	pg.sendAmountEditor.IsUnderline = false
+	pg.sendAmountEditor.Bordered = false
 	pg.sendAmountEditor.Editor.SingleLine = true
 	pg.sendAmountEditor.Editor.SetText("0")
 	pg.sendAmountEditor.TextSize = values.TextSize24
@@ -297,6 +301,16 @@ func (pg *SendPage) Handle(c pageCommon) {
 	for _, evt := range pg.sendAmountEditor.Editor.Events() {
 		go pg.calculateValues()
 		pg.handleEditorChange(evt)
+	}
+
+	if pg.sendAmountEditor.Editor.Focused() || pg.calculateErrorText != "" {
+		if pg.calculateErrorText != "" {
+			pg.borderColor = pg.theme.Color.Danger
+		} else {
+			pg.borderColor = pg.theme.Color.Primary
+		}
+	} else {
+		pg.borderColor = pg.theme.Color.Hint
 	}
 
 	select {
@@ -452,16 +466,7 @@ func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions
 				return pg.sendToAddressLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, values.MarginPadding0, func(gtx C) D {
-					inset := layout.Inset{
-						Left:   values.MarginPadding10,
-						Right:  values.TextSize18,
-						Bottom: values.MarginPaddingMinus5,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return pg.destinationAddressEditor.Layout(gtx)
-					})
-				})
+				return pg.destinationAddressEditor.Layout(gtx)
 			}),
 		)
 	})
@@ -475,9 +480,17 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				return pg.spendableBalanceLayout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, values.MarginPadding20, func(gtx C) D {
+				return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
 					return pg.amountInputLayout(gtx)
 				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				txt := pg.theme.Body2(pg.amountErrorText)
+				txt.Color = pg.theme.Color.Danger
+				if pg.amountErrorText != "" {
+					return txt.Layout(gtx)
+				}
+				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -485,9 +498,7 @@ func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-					return pg.txFeeLayout(gtx)
-				})
+				return pg.txFeeLayout(gtx)
 			}),
 		)
 	})
@@ -615,6 +626,7 @@ func (pg *SendPage) amountInputLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *SendPage) txFeeLayout(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
+		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding390)
 		return pg.tableLayout(gtx, pg.theme.Body2("Transaction Fee"), pg.activeTransactionFeeValue, pg.inactiveTransactionFeeValue)
 	}
 
@@ -719,7 +731,7 @@ func (pg *SendPage) drawPasswordModal(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) sectionBorder(gtx layout.Context, padding unit.Value, body layout.Widget) layout.Dimensions {
-	border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+	border := widget.Border{Color: pg.borderColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(padding).Layout(gtx, body)
 	})
@@ -753,6 +765,7 @@ func (pg *SendPage) validateDestinationAddress(ignoreEmpty bool) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -836,9 +849,10 @@ func (pg *SendPage) calculateValues() {
 }
 
 func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
+	pg.amountErrorText = ""
 	amount, err := dcrutil.NewAmount(sendAmount)
 	if err != nil {
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+		pg.feeEstimationError(err.Error(), "amount")
 		return 0
 	}
 
@@ -888,9 +902,10 @@ func (pg *SendPage) updateDefaultValues() {
 
 func (pg *SendPage) getTxFee() int64 {
 	// calculate transaction fee
+	pg.amountErrorText = ""
 	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
 	if err != nil {
-		pg.calculateErrorText = fmt.Sprintf("error estimating transaction fee: %s", err)
+		pg.feeEstimationError(err.Error(), "fee")
 		return 0
 	}
 
@@ -900,6 +915,16 @@ func (pg *SendPage) getTxFee() int64 {
 func (pg *SendPage) balanceAfterSend(totalCost int64) {
 	pg.remainingBalance = pg.selectedAccount.SpendableBalance - totalCost
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
+}
+
+func (pg *SendPage) feeEstimationError(err, errorPath string) {
+	if err == "insufficient_balance" {
+		pg.amountErrorText = "Not enough funds"
+	}
+	if strings.Contains(err, "invalid amount") {
+		pg.amountErrorText = "Invalid amount"
+	}
+	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }
 
 func (pg *SendPage) watchForBroadcastResult() {
@@ -945,6 +970,7 @@ func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
 // drawlayout wraps the pg tx and sync section in a card layout
 func (pg *SendPage) sectionLayout(gtx layout.Context, inset layout.Inset, body layout.Widget) layout.Dimensions {
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
+	gtx.Constraints.Min.X = gtx.Px(values.MarginPadding450)
 	return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
 		return inset.Layout(gtx, body)
 	})
