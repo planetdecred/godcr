@@ -459,48 +459,52 @@ func (pg *SendPage) tableLayout(gtx layout.Context, leftLabel decredmaterial.Lab
 }
 
 func (pg *SendPage) destinationAddrSection(gtx layout.Context) layout.Dimensions {
-	main := layout.UniformInset(values.MarginPadding20)
-	return pg.sectionLayout(gtx, main, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.sendToAddressLayout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.destinationAddressEditor.Layout(gtx)
-			}),
-		)
+	return pg.centralize(gtx, func(gtx C) D {
+		main := layout.UniformInset(values.MarginPadding20)
+		return pg.sectionLayout(gtx, main, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.sendToAddressLayout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.destinationAddressEditor.Layout(gtx)
+				}),
+			)
+		})
 	})
 }
 
 func (pg *SendPage) sendAmountSection(gtx layout.Context) layout.Dimensions {
-	main := layout.UniformInset(values.MarginPadding20)
-	return pg.sectionLayout(gtx, main, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.spendableBalanceLayout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
-					return pg.amountInputLayout(gtx)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				txt := pg.theme.Body2(pg.amountErrorText)
-				txt.Color = pg.theme.Color.Danger
-				if pg.amountErrorText != "" {
-					return txt.Layout(gtx)
-				}
-				return layout.Dimensions{}
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-					return pg.txLine.Layout(gtx)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.txFeeLayout(gtx)
-			}),
-		)
+	return pg.centralize(gtx, func(gtx C) D {
+		main := layout.UniformInset(values.MarginPadding20)
+		return pg.sectionLayout(gtx, main, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.spendableBalanceLayout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.sectionBorder(gtx, values.MarginPadding10, func(gtx C) D {
+						return pg.amountInputLayout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body2(pg.amountErrorText)
+					txt.Color = pg.theme.Color.Danger
+					if pg.amountErrorText != "" {
+						return txt.Layout(gtx)
+					}
+					return layout.Dimensions{}
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return pg.txLine.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.txFeeLayout(gtx)
+				}),
+			)
+		})
 	})
 }
 
