@@ -113,13 +113,15 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 	return dims
 }
 
-func NewTabItem(title string, icon *image.Image) TabItem {
+func NewTabItem(title string, icon image.Image) TabItem {
 	tabItem := TabItem{
 		Title: title,
 	}
 
 	if icon != nil {
-		tabItem.iconOp = paint.NewImageOp(*icon)
+		// 	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: 40, Y: 40}})
+		// draw.ApproxBiLinear.Scale(img, img.Bounds(), icon, icon.Bounds(), draw.Src, nil)
+		tabItem.iconOp = paint.NewImageOp(icon)
 	}
 
 	return tabItem

@@ -1,4 +1,5 @@
 godcr*
+*.exe
 _*
 *.dll
 .vscode
