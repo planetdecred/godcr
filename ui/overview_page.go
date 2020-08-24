@@ -535,9 +535,6 @@ func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 					gtx.Constraints.Min.X = pg.syncButtonWidth
 					gtx.Constraints.Min.X = pg.syncButtonWidth
 					gtx.Constraints.Max.Y = pg.syncButtonHeight
-					if pg.walletInfo.Synced {
-						pg.sync.Text = pg.text.disconnect
-					}
 					border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
 					return border.Layout(gtx, func(gtx C) D {
 						return pg.sync.Layout(gtx)
@@ -688,6 +685,10 @@ func (pg *overviewPage) updateToTransactionDetailsButtons() {
 }
 
 func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
+	if pg.walletInfo.Synced {
+		pg.sync.Text = pg.text.disconnect
+	}
+
 	if pg.sync.Button.Clicked() {
 		if pg.walletInfo.Synced || pg.walletInfo.Syncing {
 			c.wallet.CancelSync()
@@ -697,6 +698,7 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 			pg.sync.Text = pg.text.cancel
 		}
 	}
+
 	if pg.toTransactions.Button.Clicked() {
 		pg.tab.ChangeTab(4)
 	}
