@@ -4,4 +4,4 @@ _*
 .vscode
 *.coverprofile
 **/.godcr_test*
-
+pkged.go
