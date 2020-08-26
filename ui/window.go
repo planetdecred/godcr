@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"strings"
 	"time"
 
 	"gioui.org/app"
@@ -57,7 +58,13 @@ type Window struct {
 // than once.
 func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace) (*Window, error) {
 	win := new(Window)
-	win.window = app.NewWindow(app.Title(fmt.Sprintf("%s (%s)", "godcr", wal.Net)))
+	var netType string
+	if strings.Contains(wal.Net, "testnet") {
+		netType = "testnet"
+	} else {
+		netType = wal.Net
+	}
+	win.window = app.NewWindow(app.Title(fmt.Sprintf("%s (%s)", "godcr", netType)))
 	theme := decredmaterial.NewTheme(collection)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
