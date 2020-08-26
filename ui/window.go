@@ -2,22 +2,21 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"image"
+	"strings"
 	"time"
-
-	"gioui.org/text"
-
-	"github.com/raedahgroup/godcr/ui/values"
-
-	"gioui.org/op"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
+	"gioui.org/op"
+	"gioui.org/text"
 
 	"github.com/raedahgroup/dcrlibwallet"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/raedahgroup/godcr/wallet"
 )
 
@@ -59,7 +58,13 @@ type Window struct {
 // than once.
 func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace) (*Window, error) {
 	win := new(Window)
-	win.window = app.NewWindow(app.Title("godcr"))
+	var netType string
+	if strings.Contains(wal.Net, "testnet") {
+		netType = "testnet"
+	} else {
+		netType = wal.Net
+	}
+	win.window = app.NewWindow(app.Title(fmt.Sprintf("%s (%s)", "godcr", netType)))
 	theme := decredmaterial.NewTheme(collection)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")

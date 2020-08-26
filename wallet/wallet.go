@@ -16,7 +16,7 @@ const syncID = "godcr"
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi              *dcrlibwallet.MultiWallet
-	root, net          string
+	root, Net          string
 	Send               chan Response
 	Sync               chan SyncStatusUpdate
 	confirms           int32
@@ -31,7 +31,7 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 	}
 	wal := &Wallet{
 		root:     root,
-		net:      net,
+		Net:      net,
 		Sync:     make(chan SyncStatusUpdate, 2),
 		Send:     send,
 		confirms: confirms,
@@ -49,7 +49,7 @@ func (wal *Wallet) LoadWallets() {
 		resp := Response{
 			Resp: LoadedWallets{},
 		}
-		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.net)
+		multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net)
 		if err != nil {
 			resp.Err = err
 			log.Error("Wallet not loaded. Is another process using the data directory?")
@@ -125,7 +125,7 @@ func (wal *Wallet) wallets() ([]dcrlibwallet.Wallet, error) {
 }
 
 func (wal *Wallet) hdPrefix() string {
-	switch wal.net {
+	switch wal.Net {
 	case "testnet3": // should use a constant
 		return dcrlibwallet.TestnetHDPath
 	case "mainnet":
@@ -145,7 +145,7 @@ func (wal *Wallet) Shutdown() {
 // GetBlockExplorerURL accept transaction hash,
 // return the block explorer URL with respect to the network
 func (wal *Wallet) GetBlockExplorerURL(txnHash string) string {
-	switch wal.net {
+	switch wal.Net {
 	case "testnet3": // should use a constant
 		return "https://testnet.dcrdata.org/tx/" + txnHash
 	case "mainnet":
