@@ -100,6 +100,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 
 	b.backButton.Color = c.theme.Color.Hint
 	b.backButton.Size = values.MarginPadding30
+	b.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	b.action.Background = c.theme.Color.Hint
 
@@ -227,30 +228,36 @@ func (pg *backupPage) pageTitle(gtx layout.Context) layout.Dimensions {
 func (pg *backupPage) viewTemplate(gtx layout.Context, content layout.Widget) layout.Dimensions {
 	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	return layout.Inset{Left: values.MarginPadding10, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Flexed(1, func(gtx C) D {
+		return layout.Stack{}.Layout(gtx,
+			layout.Stacked(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						if pg.active != successView {
-							return pg.pageTitle(gtx)
-						}
-						return layout.Dimensions{}
+					layout.Flexed(1, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								if pg.active != successView {
+									return pg.pageTitle(gtx)
+								}
+								return layout.Dimensions{}
+							}),
+							layout.Rigid(func(gtx C) D {
+								return content(gtx)
+							}),
+						)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return content(gtx)
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return pg.action.Layout(gtx)
+						})
 					}),
 				)
 			}),
-			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-					return pg.action.Layout(gtx)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
+			layout.Stacked(func(gtx C) D {
 				if len(pg.error) > 0 {
 					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.theme.ErrorAlert(gtx, pg.error)
+						return pg.centralize(gtx, func(gtx C) D {
+							return pg.theme.ErrorAlert(gtx, pg.error)
+						})
 					})
 				}
 				return layout.Dimensions{}
@@ -261,9 +268,8 @@ func (pg *backupPage) viewTemplate(gtx layout.Context, content layout.Widget) la
 
 func (pg *backupPage) infoView(gtx layout.Context) layout.Dimensions {
 	return pg.viewTemplate(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-		return layout.Center.Layout(gtx, func(gtx C) D {
+		return pg.centralize(gtx, func(gtx C) D {
 			return layout.Inset{Bottom: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
 				return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {
 					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
@@ -277,8 +283,7 @@ func (pg *backupPage) infoView(gtx layout.Context) layout.Dimensions {
 
 func (pg *backupPage) seedView(gtx layout.Context) layout.Dimensions {
 	return pg.viewTemplate(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Center.Layout(gtx, func(gtx C) D {
+		return pg.centralize(gtx, func(gtx C) D {
 			return pg.viewList.Layout(gtx, 1, func(gtx C, i int) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
@@ -301,8 +306,7 @@ func (pg *backupPage) seedView(gtx layout.Context) layout.Dimensions {
 				)
 			})
 		})
-	},
-	)
+	})
 }
 
 func (pg *backupPage) verifyView(gtx layout.Context) layout.Dimensions {
@@ -381,6 +385,14 @@ func (pg *backupPage) seedText(gtx layout.Context, index int) layout.Dimensions 
 			seedLabel.Alignment = text.Middle
 			return seedLabel.Layout(gtx)
 		},
+	)
+}
+
+func (pg *backupPage) centralize(gtx layout.Context, content layout.Widget) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Center.Layout(gtx, content)
+		}),
 	)
 }
 
