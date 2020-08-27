@@ -62,7 +62,6 @@ type backupPage struct {
 	seedPhraseListLeft  *layout.List
 	seedPhraseListRight *layout.List
 	verifyList          *layout.List
-	suggestionList      *layout.List
 
 	suggestions []seedGroup
 
@@ -131,11 +130,10 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	}
 
 	b.infoList = &layout.List{Axis: layout.Vertical}
-	b.viewList = &layout.List{Axis: layout.Vertical}
+	b.viewList = &layout.List{Axis: layout.Horizontal}
 	b.seedPhraseListLeft = &layout.List{Axis: layout.Vertical}
 	b.seedPhraseListRight = &layout.List{Axis: layout.Vertical}
 	b.verifyList = &layout.List{Axis: layout.Vertical}
-	b.suggestionList = &layout.List{Axis: layout.Horizontal}
 
 	return func(gtx C) layout.Dimensions {
 		b.handle(c)
@@ -270,11 +268,9 @@ func (pg *backupPage) infoView(gtx layout.Context) layout.Dimensions {
 	return pg.viewTemplate(gtx, func(gtx C) D {
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 		return pg.centralize(gtx, func(gtx C) D {
-			return layout.Inset{Bottom: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
-				return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {
-					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return pg.checkBoxes[i].Layout(gtx)
-					})
+			return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {
+				return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+					return pg.checkBoxes[i].Layout(gtx)
 				})
 			})
 		})
@@ -296,11 +292,13 @@ func (pg *backupPage) seedView(gtx layout.Context) layout.Dimensions {
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.seedPhraseListRight.Layout(gtx, len(pg.seedPhrase), func(gtx C, i int) D {
-							if i > 16 {
-								return pg.seedText(gtx, i)
-							}
-							return layout.Dimensions{}
+						return layout.Inset{Left: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
+							return pg.seedPhraseListRight.Layout(gtx, len(pg.seedPhrase), func(gtx C, i int) D {
+								if i > 16 {
+									return pg.seedText(gtx, i)
+								}
+								return layout.Dimensions{}
+							})
 						})
 					}),
 				)
