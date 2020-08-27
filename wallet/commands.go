@@ -464,8 +464,40 @@ func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, ne
 }
 
 // RenameAccount renames the acct of wallet with id walletID.
-func (wal *Wallet) RenameAccount(walletID int, acct int32, name string) error {
-	return wal.multi.WalletWithID(walletID).RenameAccount(acct, name)
+func (wal *Wallet) RenameAccount(walletID int, acct int32, name string, errChan chan<- error) {
+	go func() {
+		var resp Response
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			go func() {
+				errChan <- ErrIDNotExist
+			}()
+			resp.Err = ErrIDNotExist
+			wal.Send <- Response{
+				Resp: UpdatedAccount{},
+				Err:  ErrIDNotExist,
+			}
+			return
+		}
+
+		err := wall.RenameAccount(acct, name)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not rename account",
+				Affected: []int{walletID},
+				Err:      err,
+			})
+			return
+		}
+		resp.Resp = UpdatedAccount{
+			ID: acct,
+		}
+		wal.Send <- resp
+	}()
 }
 
 // CurrentAddress returns the next address for the specified wallet account.
