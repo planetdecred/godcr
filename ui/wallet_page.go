@@ -38,6 +38,13 @@ type walletPage struct {
 	isPasswordModalOpen          bool
 	errChann                     chan error
 	errorText                    string
+
+	renameAcctIndex    int
+	renameAcctButtons  []decredmaterial.IconButton
+	renameAcctEditor   decredmaterial.Editor
+	renameAcctSubmit   decredmaterial.IconButton
+	renameAcctCancel   decredmaterial.IconButton
+	renameAcctMinwidth int
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -52,6 +59,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		wallet:           common.wallet,
 		line:             common.theme.Line(),
 		walletNameEditor: common.theme.Editor(new(widget.Editor), "New wallet name"),
+		renameAcctEditor: common.theme.Editor(new(widget.Editor), ""),
 		rename:           common.theme.Button(new(widget.Clickable), "Rename Wallet"),
 		errorLabel:       common.theme.Body2(""),
 		result:           &win.signatureResult,
@@ -60,6 +68,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		passwordModal:    common.theme.Password(),
 		errChann:         common.errorChannels[PageWallet],
 		errorText:        "",
+		renameAcctIndex:  -1,
 	}
 	pg.line.Color = common.theme.Color.Gray
 	pg.line.Height = 1
@@ -101,6 +110,22 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.icons.backup.Size = iconSize
 	pg.icons.backup.Inset = layout.UniformInset(iconPadding)
 
+	pg.renameAcctEditor.IsTitleLabel = false
+	pg.renameAcctEditor.Editor.SetText("")
+	pg.renameAcctEditor.Editor.SingleLine = true
+	pg.renameAcctEditor.TextSize = values.MarginPadding15
+	pg.renameAcctSubmit = common.theme.IconButton(new(widget.Clickable), common.icons.navigationCheck)
+	pg.renameAcctSubmit.Size = values.TextSize12
+	pg.renameAcctSubmit.Color = common.theme.Color.Success
+	pg.renameAcctSubmit.Background = common.theme.Color.Surface
+	pg.renameAcctSubmit.Inset = layout.UniformInset(values.MarginPadding5)
+	pg.renameAcctCancel = common.theme.IconButton(new(widget.Clickable), common.icons.contentClear)
+	pg.renameAcctCancel.Size = values.TextSize12
+	pg.renameAcctCancel.Color = common.theme.Color.Danger
+	pg.renameAcctCancel.Background = common.theme.Color.Surface
+	pg.renameAcctCancel.Inset = layout.UniformInset(values.MarginPadding5)
+	pg.renameAcctMinwidth = 250
+
 	return func(gtx C) D {
 		pg.Handle(common)
 		return pg.Layout(gtx, common)
@@ -112,6 +137,21 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 	if common.states.deleted {
 		pg.subPage = subWalletMain
 		common.states.deleted = false
+	}
+
+	if pg.current.ID != common.info.Wallets[*common.selectedWallet].ID {
+		pg.current = common.info.Wallets[*common.selectedWallet]
+		pg.renameAcctButtons = nil
+		pg.renameAcctIndex = -1
+
+		for i := 0; i < len(pg.current.Accounts); i++ {
+			btn := common.theme.IconButton(new(widget.Clickable), common.icons.editorModeEdit)
+			btn.Size = values.TextSize12
+			btn.Color = common.theme.Color.Primary
+			btn.Background = common.theme.Color.Surface
+			btn.Inset = layout.UniformInset(values.MarginPadding5)
+			pg.renameAcctButtons = append(pg.renameAcctButtons, btn)
+		}
 	}
 
 	var dims layout.Dimensions
@@ -134,8 +174,6 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 }
 
 func (pg *walletPage) subMain(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.current = common.info.Wallets[*common.selectedWallet]
-
 	body := func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
@@ -189,7 +227,20 @@ func (pg *walletPage) topRow(gtx layout.Context, common pageCommon) layout.Dimen
 				a := func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return common.theme.Body1(acct.Name).Layout(gtx)
+							if pg.renameAcctIndex == i {
+								return pg.renameAccountRow(gtx)
+							}
+							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return common.theme.Body1(acct.Name).Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									if pg.renameAcctButtons != nil && acct.Name != "imported" {
+										return pg.renameAcctButtons[i].Layout(gtx)
+									}
+									return layout.Dimensions{}
+								}),
+							)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return common.theme.Body1(acct.TotalBalance).Layout(gtx)
@@ -419,6 +470,29 @@ func (pg *walletPage) Handle(common pageCommon) {
 		return
 	}
 
+	for i := 0; i < len(pg.renameAcctButtons); i++ {
+		if pg.renameAcctButtons[i].Button.Clicked() {
+			pg.renameAcctIndex = i
+			pg.renameAcctEditor.Editor.SetText(pg.current.Accounts[i].Name)
+			pg.renameAcctEditor.Editor.Move(len(pg.current.Accounts[i].Name))
+			break
+		}
+	}
+
+	if pg.renameAcctSubmit.Button.Clicked() {
+		pg.errorText = ""
+		pg.wallet.RenameAccount(pg.current.ID, pg.current.Accounts[pg.renameAcctIndex].Number, pg.renameAcctEditor.Editor.Text(), pg.errChann)
+		common.info.Wallets[*common.selectedWallet].Accounts[pg.renameAcctIndex].Name = pg.renameAcctEditor.Editor.Text()
+		pg.current = common.info.Wallets[*common.selectedWallet]
+		pg.renameAcctEditor.Editor.SetText("")
+		pg.renameAcctIndex = -1
+	}
+
+	if pg.renameAcctCancel.Button.Clicked() {
+		pg.renameAcctIndex = -1
+		pg.renameAcctEditor.Editor.SetText("")
+	}
+
 	if pg.rename.Button.Clicked() {
 		name := pg.walletNameEditor.Editor.Text()
 		if name == "" {
@@ -454,6 +528,12 @@ func (pg *walletPage) Handle(common pageCommon) {
 		} else {
 			pg.errorLabel.Text = err.Error()
 		}
+		if pg.subPage == subWalletMain {
+			pg.errorText = err.Error()
+			time.AfterFunc(time.Millisecond*3500, func() {
+				pg.errorText = ""
+			})
+		}
 	default:
 	}
 }
@@ -479,6 +559,39 @@ func (pg *walletPage) newRow(common *pageCommon, button decredmaterial.IconButto
 			)
 		})
 	}
+}
+
+func (pg *walletPage) renameAccountRow(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			{ // Calculate editor width using and estimated input width.
+				editorAutoWidth := 17 * pg.renameAcctEditor.Editor.Len()
+				pageWidth := gtx.Constraints.Max.X
+				maxWidth := pageWidth - pg.renameAcctMinwidth
+				gtx.Constraints.Max.X = pg.renameAcctMinwidth
+				if editorAutoWidth >= pg.renameAcctMinwidth {
+					if editorAutoWidth > maxWidth {
+						gtx.Constraints.Max.X = maxWidth
+					} else {
+						gtx.Constraints.Max.X = editorAutoWidth
+					}
+				}
+			}
+			return pg.renameAcctEditor.Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.renameAcctSubmit.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.renameAcctCancel.Layout(gtx)
+					}),
+				)
+			})
+		}),
+	)
 }
 
 func (pg *walletPage) confirm(password []byte) {

@@ -70,6 +70,10 @@ func (win *Window) updateStates(update interface{}) {
 		win.current = PageWallet
 		win.states.creating = false
 		win.window.Invalidate()
+	case wallet.UpdatedAccount:
+		win.current = PageWallet
+		win.states.creating = false
+		win.window.Invalidate()
 	case *wallet.Signature:
 		win.signatureResult = update.(*wallet.Signature)
 	case *dcrlibwallet.TxAuthor:

@@ -76,6 +76,11 @@ type AddedAccount struct {
 	SpendableBalance int64
 }
 
+// UpdatedAccount is sent when the wallet is done updated an account
+type UpdatedAccount struct {
+	ID int32
+}
+
 // LoadedWallets is sent when then the Wallet is done loading wallets
 type LoadedWallets struct {
 	Count              int32
