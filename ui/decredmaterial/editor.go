@@ -10,7 +10,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"github.com/atotto/clipboard"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -202,13 +201,19 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 }
 
 func (e Editor) handleEvents() {
-	for e.pasteBtnMaterial.Button.Clicked() {
-		data, err := clipboard.ReadAll()
-		if err != nil {
-			panic(err)
-		}
-		e.Editor.SetText(data)
+	if e.pasteBtnMaterial.Button.Clicked() {
+		e.Editor.Focus()
+
+		go func() {
+			text := <-e.t.Clipboard
+			e.Editor.SetText(text)
+			e.Editor.Move(e.Editor.Len())
+		}()
+		go func() {
+			e.t.ReadClipboard <- ReadClipboard{}
+		}()
 	}
+
 	for e.clearBtMaterial.Button.Clicked() {
 		e.Editor.SetText("")
 	}
