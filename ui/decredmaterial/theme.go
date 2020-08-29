@@ -15,9 +15,8 @@ import (
 
 	"gioui.org/widget/material"
 
-	"golang.org/x/image/draw"
-
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/image/draw"
 )
 
 var (

@@ -16,7 +16,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-var pageContainer = &layout.List{Axis: layout.Vertical}
+var pageContainer *decredmaterial.Container
 
 func main() {
 	win, err := CreateWindow()
@@ -84,6 +84,8 @@ func (t *TestStruct) Loop() {
 
 func (t *TestStruct) initWidgets() {
 	theme := t.theme
+
+	pageContainer = theme.Container()
 
 	// Editor test
 	t.customEditorOutput.test1 = theme.Editor(new(widget.Editor), "Enter Hint Text1")
@@ -226,8 +228,80 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 		},
 
 		func(gtx C) D {
-			gtx.Constraints.Max.X = 200
-			return t.dropDown.Layout(gtx)
+			header := func(gtx layout.Context) layout.Dimensions {
+				return t.theme.Body1("Collapsible Widget").Layout(gtx)
+			}
+			content := func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return t.theme.Body2("Hidden item 1").Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return t.theme.Body2("Hidden item 2").Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return t.theme.Body2("Hidden item 3").Layout(gtx)
+					}),
+				)
+			}
+			return t.collapsible.Layout(gtx, header, content)
+		},
+
+		func(gtx C) D {
+			return t.customEditorOutput.outline.Layout(gtx, func(gtx C) D {
+				return t.customEditorOutput.testOutput.Layout(gtx)
+			})
+		},
+		func(gtx C) D {
+			return t.theme.H4("Decrematerial Test Page").Layout(gtx)
+		},
+		func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Px(unit.Dp(450))
+			gtx.Constraints.Max.X = gtx.Constraints.Min.X
+			return t.customEditorOutput.test1.Layout(gtx)
+		},
+		func(gtx C) D {
+			return t.customEditorOutput.test2.Layout(gtx)
+		},
+		func(gtx C) D {
+			return t.customEditorOutput.test3.Layout(gtx)
+		},
+		func(gtx C) D {
+			return t.customEditorOutput.test4.Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return t.customEditorOutput.test1btn.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return t.customEditorOutput.test2btn.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return t.customEditorOutput.test3btn.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return t.customEditorOutput.test4btn.Layout(gtx)
+				}),
+			)
+		},
+		func(gtx C) D {
+			gtx.Constraints.Max.Y = 20
+			gtx.Constraints.Max.X = gtx.Px(unit.Dp(550))
+			return t.customEditorOutput.progressBar.Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return t.customEditorOutput.radiobtn.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return t.customEditorOutput.checkbox.Layout(gtx)
+				}),
+			)
+		},
+		func(gtx C) D {
+			return t.customEditorOutput.testOutput.Layout(gtx)
 		},
 
 		func(gtx C) D {
@@ -243,9 +317,8 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-		return layout.Inset{Left: unit.Dp(3)}.Layout(gtx, pageContent[i])
-	})
+	pageContent = append(pageContent, pageContent...)
+	return pageContainer.Layout(gtx, pageContent)
 }
 
 func (t *TestStruct) handleInput() {
