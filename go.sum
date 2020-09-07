@@ -248,6 +248,7 @@ github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/raedahgroup/dcrcli v0.0.0-20200113191321-d41651a66ae3 h1:2kEMCCFrTdZ+sMi000zqZdHhAQxneYJ7EQW3lLdSe1o=
 github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05 h1:Z3CtKHODy+9V+jr+2uTjWcwHh9INC322Q7pApggRhj8=
 github.com/raedahgroup/dcrlibwallet v1.1.1-0.20200130094829-d902833f4f05/go.mod h1:xBEq2Lb5A1Ia6sLuZ9NZrwKm4Ob+G8OJopKRo74NgUg=
 github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c h1:b9p7k6aEKx7VVjvp+PWhc1GDWCjq8LWcm7eiCS1fFz0=
