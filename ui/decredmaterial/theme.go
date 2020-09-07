@@ -38,6 +38,8 @@ var (
 type (
 	C = layout.Context
 	D = layout.Dimensions
+
+	ReadClipboard struct{}
 )
 
 type Theme struct {
@@ -68,6 +70,9 @@ type Theme struct {
 	radioUncheckedIcon    *widget.Icon
 	chevronUpIcon         *widget.Icon
 	chevronDownIcon       *widget.Icon
+
+	Clipboard     chan string
+	ReadClipboard chan interface{}
 }
 
 func NewTheme(fontCollection []text.FontFace) *Theme {
@@ -94,7 +99,7 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
-
+	t.Clipboard = make(chan string)
 	return t
 }
 
