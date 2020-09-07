@@ -39,6 +39,7 @@ type pageCommon struct {
 	accountTabs     *decredmaterial.Tabs
 	errorChannels   map[string]chan error
 	keyEvents       chan *key.Event
+	clipboard       chan interface{}
 	states          *states
 }
 
@@ -108,6 +109,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageWalletAccounts: make(chan error),
 		},
 		keyEvents: win.keyEvents,
+		clipboard: win.clipboard,
 		states:    &win.states,
 	}
 

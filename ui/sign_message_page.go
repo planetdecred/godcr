@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/wallet"
 )
@@ -191,9 +190,12 @@ func (pg *signMessagePage) handle(common pageCommon) {
 		}
 	}
 
-	for pg.copyButton.Button.Clicked() {
-		clipboard.WriteAll(pg.signedMessageLabel.Text)
+	if pg.copyButton.Button.Clicked() {
+		go func() {
+			common.clipboard <- WriteClipboard{Text: pg.signedMessageLabel.Text}
+		}()
 	}
+
 	select {
 	case err := <-pg.errChannel:
 		fmt.Printf("SIGNMESSAGE PAGE ERROR! %v", err)

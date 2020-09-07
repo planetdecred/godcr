@@ -7,7 +7,6 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
-	"github.com/atotto/clipboard"
 	"github.com/raedahgroup/godcr/ui/decredmaterial"
 	"github.com/raedahgroup/godcr/ui/values"
 	"github.com/skip2/go-qrcode"
@@ -235,7 +234,9 @@ func (pg *receivePage) Handle(common pageCommon) {
 	}
 
 	if pg.copyBtn.Button.Clicked() {
-		clipboard.WriteAll(common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress)
+		go func() {
+			common.clipboard <- WriteClipboard{Text: common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress}
+		}()
 		pg.addressCopiedLabel.Text = "Address Copied"
 		time.AfterFunc(time.Second*3, func() {
 			pg.addressCopiedLabel.Text = ""
