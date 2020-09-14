@@ -45,8 +45,12 @@ type config struct {
 }
 
 type walletOptions struct {
-	Sync    bool `short:"S" long:"sync" description:"Sync all wallets"`
-	Balance bool `long:"balance" description:"Get total balance"`
+	Sync        bool   `short:"S" long:"sync" description:"Sync all wallets"`
+	Balance     bool   `long:"balance" description:"Get total balance"`
+	Send        string `long:"send" description:"Send a transaction"`
+	Receive     string `long:"receive" description:"Show your address to receive funds"`
+	History     bool   `long:"history" description:"Show your transaction history"`
+	Transaction string `log:"transaction" description:"Show details of a transaction"`
 }
 
 var defaultConfig = config{
