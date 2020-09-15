@@ -39,18 +39,19 @@ type config struct {
 	DebugLevel       string `short:"d" long:"debuglevel" description:"Logging level {trace, debug, info, warn, error, critical}"`
 	Quiet            bool   `short:"q" long:"quiet" description:"Easy way to set debuglevel to error"`
 	SpendUnconfirmed bool   `long:"spendunconfirmed" description:"Allow the multiwallet to use transactions that have not been confirmed"`
+	Sync             bool   `short:"S" long:"sync" description:"Sync all wallets"`
 
 	// wallet options
 	Wallet walletOptions `group:"Wallet Options"`
 }
 
 type walletOptions struct {
-	Sync        bool   `short:"S" long:"sync" description:"Sync all wallets"`
-	Balance     bool   `long:"balance" description:"Get total balance"`
-	Send        string `long:"send" description:"Send a transaction"`
-	Receive     string `long:"receive" description:"Show your address to receive funds"`
-	History     bool   `long:"history" description:"Show your transaction history"`
-	Transaction string `log:"transaction" description:"Show details of a transaction"`
+	Balance      bool   `long:"balance" description:"Get total balance"`
+	CreateWallet bool   `long:"createwallet" description:"Create new wallet"`
+	Send         string `long:"send" description:"Send a transaction"`
+	Receive      string `long:"receive" description:"Show your address to receive funds"`
+	History      bool   `long:"history" description:"Show your transaction history"`
+	Transaction  string `log:"transaction" description:"Show details of a transaction"`
 }
 
 var defaultConfig = config{
