@@ -11,9 +11,9 @@ import (
 
 	"github.com/decred/slog"
 	"github.com/jrick/logrotate/rotator"
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/ui"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 // logWriter implements an io.Writer that outputs to both standard output and

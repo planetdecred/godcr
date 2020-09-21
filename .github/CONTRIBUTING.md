@@ -1,14 +1,22 @@
 # Contributing
 
 ## Contents
-- [PR/Issues Naming Standard Format](#pr/issues-naming-standard-format)
-- [When to Search the Issue Tracker](#when-to-search-the-issue-tracker)
-- [When to Submit a New Issue](#when-to-submit-a-new-issue)
-- [When to Submit a Pull Request](#when-to-submit-a-pull-request)
-- [How to Contribute](#how-to-contribute)
-  - [Suggested Toolkit](#suggested-toolkit)
-  - [Git Workflow](#git-workflow)
-- [Go Development Tips](#go-development-tips)
+- [Contributing](#contributing)
+  - [Contents](#contents)
+  - [Guidelines](#guidelines)
+    - [PR/Issues Naming Standard Format](#prissues-naming-standard-format)
+    - [When to Search the Issue Tracker](#when-to-search-the-issue-tracker)
+    - [When to Submit a New Issue](#when-to-submit-a-new-issue)
+    - [When to Submit a Pull Request](#when-to-submit-a-pull-request)
+  - [How to Contribute](#how-to-contribute)
+    - [Suggested Toolkit](#suggested-toolkit)
+    - [Git Workflow](#git-workflow)
+          - [recommended](#recommended)
+          - [a)](#a)
+          - [b)](#b)
+          - [c)](#c)
+  - [Go Development Tips](#go-development-tips)
+    - [Further reading](#further-reading)
 
 ## Guidelines
 
@@ -52,7 +60,7 @@ Only submit a PR once the intended edits are either done or nearing completion. 
 - Visual Studio Code with Go extension plus `golangci-lint`
 ### Git Workflow
 
-1. Fork the repository on GitHub.  Just click the little Fork button at https://github.com/raedahgroup/godcr
+1. Fork the repository on GitHub.  Just click the little Fork button at https://github.com/planetdecred/godcr
 
 
 2. Clone your newly forked godcr repository
@@ -67,7 +75,7 @@ Setting your master branch to track this repository makes keeping everything up-
 The rest of this workflow guide will assume that you have completed this step.
 
 ```sh
-git remote add upstream https://github.com/raedahgroup/godcr.git
+git remote add upstream https://github.com/planetdecred/godcr.git
 git fetch upstream
 git branch -u upstream/master master
 ```

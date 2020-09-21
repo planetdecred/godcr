@@ -1,7 +1,7 @@
 package wallet
 
 import (
-	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet"
 )
 
 // Response represents a discriminated union for wallet responses.

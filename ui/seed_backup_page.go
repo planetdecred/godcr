@@ -7,17 +7,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 
 	"gioui.org/text"
 
-	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const (

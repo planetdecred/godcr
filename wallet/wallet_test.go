@@ -8,7 +8,7 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/raedahgroup/godcr/wallet"
+	. "github.com/planetdecred/godcr/wallet"
 )
 
 const (

@@ -5,17 +5,17 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 
 	"gioui.org/io/key"
 
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/wallet"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet"
 )
 
 // CreateWallet creates a new wallet with the given parameters.
@@ -18,7 +18,11 @@ import (
 func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
-		wall, err := wal.multi.CreateNewWallet(passphrase, dcrlibwallet.PassphraseTypePass)
+		log.Info(fmt.Sprintf("wallet-%d22", wal.multi.WalletsIterator().Next().ID))
+		wall, err := wal.multi.CreateNewWallet(
+			fmt.Sprintf("wallet-%d22", wal.multi.WalletsIterator().Next().ID),
+			passphrase, dcrlibwallet.PassphraseTypePass,
+		)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -31,7 +35,7 @@ func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
 			return
 		}
 		resp.Resp = CreatedSeed{
-			Seed: wall.Seed,
+			Seed: string(wall.EncryptedSeed),
 		}
 		wal.Send <- resp
 	}()
@@ -42,7 +46,7 @@ func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
 func (wal *Wallet) RestoreWallet(seed, passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
-		_, err := wal.multi.RestoreWallet(seed, passphrase, dcrlibwallet.PassphraseTypePass)
+		_, err := wal.multi.RestoreWallet("wallet", seed, passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -138,12 +142,12 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan
 
 		for _, wallet := range wallets {
 			if wallet.ID == walletID {
-				if _, err := wallet.GetAccount(accountID, wal.confirms); err != nil {
+				if _, err := wallet.GetAccount(accountID); err != nil {
 					errChan <- err
 					return
 				}
 
-				txAuthor := wallet.NewUnsignedTx(accountID, wal.confirms)
+				txAuthor := wal.multi.NewUnsignedTx(&wallet, wal.confirms)
 				if txAuthor == nil {
 					errChan <- err
 					return
@@ -319,7 +323,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		infos := make([]InfoShort, len(wallets))
 		i := 0
 		for _, wall := range wallets {
-			iter, err := wall.AccountsIterator(wal.confirms)
+			iter, err := wall.AccountsIterator()
 			if err != nil {
 				resp.Err = err
 				wal.Send <- resp
@@ -366,7 +370,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				BlockTimestamp:   wall.GetBestBlockTimeStamp(),
 				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
-				Seed:             wall.Seed,
+				Seed:             string(wall.EncryptedSeed),
 			}
 			i++
 		}
@@ -520,25 +524,12 @@ func (wal *Wallet) NextAddress(walletID int, accountID int32) (string, error) {
 
 // IsAddressValid checks if the given address is valid for the multiwallet network
 func (wal *Wallet) IsAddressValid(address string) (bool, error) {
-	wall := wal.multi.FirstOrDefaultWallet()
-	if wall == nil {
-		return false, InternalWalletError{
-			Message: "No wallet loaded",
-		}
-	}
-	return wall.IsAddressValid(address), nil
+	return wal.multi.IsAddressValid(address), nil
 }
 
 // VerifyMessage checks if the given message matches the signature for the address.
 func (wal *Wallet) VerifyMessage(address string, message string, signature string) (bool, error) {
-	wall := wal.multi.FirstOrDefaultWallet()
-	if wall == nil {
-		return false, InternalWalletError{
-			Message: "No wallet loaded",
-		}
-	}
-
-	return wall.VerifyMessage(address, message, signature)
+	return wal.multi.VerifyMessage(address, message, signature)
 }
 
 // StartSync starts the multiwallet SPV sync
@@ -552,12 +543,12 @@ func (wal *Wallet) CancelSync() {
 }
 
 func (wal *Wallet) GetWalletSeedPhrase(walletID int) string {
-	wallet := wal.multi.WalletWithID(walletID)
-	return wallet.Seed
+	return "wal.multi.NumWalletsNeedingSeedBackup()"
 }
 
 func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string) error {
-	return wal.multi.VerifySeedForWallet(walletID, seedPhrase)
+	_, err := wal.multi.VerifySeedForWallet(walletID, seedPhrase, nil)
+	return err
 }
 
 func calculateDaysBehind(lastHeaderTime int64) string {
