@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"image/color"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -819,7 +820,7 @@ func (pg *SendPage) calculateValues() {
 		pg.inactiveTotalAmount = noExchangeText
 	}
 
-	if pg.txAuthor == nil || !pg.validate(true) {
+	if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate(true) {
 		return
 	}
 
