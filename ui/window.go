@@ -33,6 +33,8 @@ type Window struct {
 	walletTransactions *wallet.Transactions
 	walletTransaction  *wallet.Transaction
 
+	walletUnspentOutputs *wallet.UnspentOutputs
+
 	current string
 
 	signatureResult *wallet.Signature
@@ -81,6 +83,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletInfo = new(wallet.MultiWalletInfo)
 	win.walletSyncStatus = new(wallet.SyncStatus)
 	win.walletTransactions = new(wallet.Transactions)
+	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
 
 	win.wallet = wal
 	win.states.loading = true
