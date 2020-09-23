@@ -53,6 +53,9 @@ func (win *Window) updateStates(update interface{}) {
 	case *wallet.Transaction:
 		win.walletTransaction = e
 		return
+	case *wallet.UnspentOutputs:
+		win.walletUnspentOutputs = e
+		return
 	case wallet.CreatedSeed:
 		win.current = PageWallet
 		win.states.creating = false

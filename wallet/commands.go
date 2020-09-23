@@ -572,3 +572,35 @@ func divMod(numerator, denominator int64) (quotient, remainder int64) {
 	remainder = numerator % denominator
 	return
 }
+
+// AllUnspentOutputs renames the acct of wallet with id walletID.
+func (wal *Wallet) AllUnspentOutputs(walletID int, acct int32) {
+	go func() {
+		var resp Response
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			resp.Err = ErrIDNotExist
+			wal.Send <- Response{
+				Resp: UnspentOutputs{},
+				Err:  ErrIDNotExist,
+			}
+			return
+		}
+
+		utxos, err := wall.UnspentOutputs(acct)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not get unspent outputs",
+				Affected: []int{walletID, int(acct)},
+				Err:      err,
+			})
+			return
+		}
+
+		resp.Resp = &UnspentOutputs{
+			List: utxos,
+		}
+		wal.Send <- resp
+	}()
+}

@@ -180,6 +180,10 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.sendToButton.Color = common.theme.Color.Primary
 	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
 
+	pg.toggleCoinCtrl = new(widget.Bool)
+	pg.inputButtonCoinCtrl = common.theme.Button(new(widget.Clickable), "Inputs")
+	pg.inputButtonCoinCtrl.Inset = layout.UniformInset(values.MarginPadding5)
+
 	// defualtEditorWidth is the editor text size values.TextSize24
 	pg.defualtEditorWidth = 24
 
@@ -312,6 +316,15 @@ func (pg *SendPage) Handle(c pageCommon) {
 		}
 	} else {
 		pg.borderColor = pg.theme.Color.Hint
+	}
+
+	if pg.toggleCoinCtrl.Changed() && !pg.toggleCoinCtrl.Value {
+		pg.txAuthor.UseInputs(nil)
+	}
+
+	if pg.inputButtonCoinCtrl.Button.Clicked() {
+		c.wallet.AllUnspentOutputs(1, 0)
+		*c.page = PageUTXO
 	}
 
 	select {
@@ -985,6 +998,34 @@ func (pg *SendPage) centralize(gtx layout.Context, content layout.Widget) layout
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
 			return layout.Center.Layout(gtx, content)
+		}),
+	)
+}
+
+func (pg *SendPage) coinControlFeatured(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return material.Switch(pg.theme.Base, pg.toggleCoinCtrl).Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: unit.Dp(16)}.Layout(gtx, func(gtx C) D {
+						return pg.theme.Body1("Coin control features").Layout(gtx)
+					})
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if !pg.toggleCoinCtrl.Value {
+				return layout.Dimensions{}
+			}
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D { return pg.inputButtonCoinCtrl.Layout(gtx) }),
+				layout.Rigid(func(gtx C) D {
+					return pg.theme.Body1("Automatically selected").Layout(gtx)
+				}),
+			)
 		}),
 	)
 }

@@ -155,3 +155,8 @@ type TxAuthor struct {
 type Broadcast struct {
 	TxHash string
 }
+
+// UnspentOutputs wraps the dcrlibwallet UTXO type and adds processed data
+type UnspentOutputs struct {
+	List []*dcrlibwallet.UnspentOutput
+}
