@@ -586,7 +586,6 @@ func (wal *Wallet) AllUnspentOutputs(walletID int, acct int32) {
 			}
 			return
 		}
-
 		utxos, err := wall.UnspentOutputs(acct)
 		if err != nil {
 			resp.Err = err
@@ -598,8 +597,17 @@ func (wal *Wallet) AllUnspentOutputs(walletID int, acct int32) {
 			return
 		}
 
+		var list []*UnspentOutput
+		for _, utxo := range utxos {
+			item := UnspentOutput{
+				UTXO:     *utxo,
+				Amount:   dcrutil.Amount(utxo.Amount).String(),
+				DateTime: dcrlibwallet.ExtractDateOrTime(utxo.ReceiveTime),
+			}
+			list = append(list, &item)
+		}
 		resp.Resp = &UnspentOutputs{
-			List: utxos,
+			List: list,
 		}
 		wal.Send <- resp
 	}()
