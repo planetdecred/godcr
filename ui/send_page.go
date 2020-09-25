@@ -323,7 +323,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 	}
 
 	if pg.inputButtonCoinCtrl.Button.Clicked() {
-		c.wallet.AllUnspentOutputs(1, 0)
+		c.wallet.AllUnspentOutputs(pg.selectedWallet.ID, pg.selectedAccount.Number)
 		*c.page = PageUTXO
 	}
 

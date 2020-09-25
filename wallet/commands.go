@@ -573,7 +573,7 @@ func divMod(numerator, denominator int64) (quotient, remainder int64) {
 	return
 }
 
-// AllUnspentOutputs renames the acct of wallet with id walletID.
+// AllUnspentOutputs get all unspent outputs by walletID and acct
 func (wal *Wallet) AllUnspentOutputs(walletID int, acct int32) {
 	go func() {
 		var resp Response
