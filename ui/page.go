@@ -85,10 +85,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	tabs := decredmaterial.NewTabs(win.theme)
 	tabs.SetTabs([]decredmaterial.TabItem{
 		decredmaterial.NewTabItem("Overview", &ic.overviewIcon),
-		decredmaterial.NewTabItem("Wallets", &ic.walletIcon),
-		decredmaterial.NewTabItem("Send", &ic.sendIcon),
-		decredmaterial.NewTabItem("Receive", &ic.receiveIcon),
 		decredmaterial.NewTabItem("Transactions", &ic.transactionIcon),
+		decredmaterial.NewTabItem("Wallets", &ic.walletIcon),
+		decredmaterial.NewTabItem("More", &ic.walletIcon),
+
 	})
 
 	common := pageCommon{
