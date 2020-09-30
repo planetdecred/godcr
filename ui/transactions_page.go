@@ -14,6 +14,7 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/paint"
 	"gioui.org/text"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -26,8 +27,9 @@ import (
 const PageTransactions = "transactions"
 
 type transactionWdg struct {
-	status, direction *widget.Icon
-	amount, time      decredmaterial.Label
+	status       *widget.Icon
+	direction    *widget.Image
+	amount, time decredmaterial.Label
 }
 
 type transactionsPage struct {
@@ -82,50 +84,34 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 
 func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	container := func(gtx C) D {
-		return pg.container.Layout(gtx,
-			layout.Rigid(pg.txsFilters(&common)),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Inset{
-					Left:  values.MarginPadding15,
-					Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{
-								Top:    values.MarginPadding15,
-								Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return pg.txnRowHeader(gtx, &common)
-							})
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							walletID := common.info.Wallets[*common.selectedWallet].ID
-							walTxs := (*pg.walletTransactions).Txs[walletID]
-							pg.updateTotransactionDetailsButtons(&walTxs)
+		walletID := common.info.Wallets[*common.selectedWallet].ID
+		walTxs := (*pg.walletTransactions).Txs[walletID]
+		pg.updateTotransactionDetailsButtons(&walTxs)
 
-							if len(walTxs) == 0 {
-								txt := common.theme.Body1("No transactions")
-								txt.Alignment = text.Middle
-								return txt.Layout(gtx)
-							}
+		directionFilter, _ := strconv.Atoi(pg.filterDirectionW.Value)
+		return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+				if len(walTxs) == 0 {
+					txt := common.theme.Body1("No transactions")
+					txt.Alignment = text.Middle
+					return txt.Layout(gtx)
+				}
 
-							directionFilter, _ := strconv.Atoi(pg.filterDirectionW.Value)
-							return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
-								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
-									return layout.Dimensions{}
-								}
+				return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
+					if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
+						return layout.Dimensions{}
+					}
 
-								click := pg.toTxnDetails[index]
-								pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-								click.Add(gtx.Ops)
-								pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
-								return pg.txnRowInfo(gtx, &common, walTxs[index])
-							})
-						}),
-					)
+					click := pg.toTxnDetails[index]
+					pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+					click.Add(gtx.Ops)
+					pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
+					return pg.txnRowInfo(gtx, &common, walTxs[index])
 				})
-			}),
-		)
+			})
+		})
 	}
-	return common.LayoutWithWallets(gtx, container)
+	return common.Layout(gtx, container)
 }
 
 func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
@@ -207,7 +193,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
 
-	return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+	/**return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
@@ -237,7 +223,35 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 				return txt.Layout(gtx)
 			}),
 		)
-	})
+	})**/
+
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return txnWidgets.direction.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: unit.Dp(15), Top: unit.Dp(5)}.Layout(gtx, func(gtx C) D {
+						/**return pg.layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)**/
+						txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
+						txt.Alignment = text.End
+						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
+						return txt.Layout(gtx)
+					})
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
+				txt := common.theme.Body1(transaction.Status)
+				txt.Alignment = text.Middle
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
+				return txt.Layout(gtx)
+			})
+		}),
+	)
 }
 
 func (pg *transactionsPage) Handle(common pageCommon) {
@@ -259,12 +273,11 @@ func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidge
 	}
 
 	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
-		txWidgets.direction = common.icons.contentRemove
-		txWidgets.direction.Color = common.theme.Color.Danger
+		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.sendIcon)}
 	} else {
-		txWidgets.direction = common.icons.contentAdd
-		txWidgets.direction.Color = common.theme.Color.Success
+		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.receiveIcon)}
 	}
+	txWidgets.direction.Scale = 0.07
 }
 
 func (pg *transactionsPage) sortTransactions(common *pageCommon) {
