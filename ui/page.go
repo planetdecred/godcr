@@ -184,9 +184,17 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSeedBackup] = win.BackupPage(common)
 }
 
+func (page pageCommon) ChangePage(pg string) {
+	*page.page = pg
+}
+
 func (page pageCommon) handleNavEvents() {
 	for page.minimizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = !*page.isNavDrawerMinimized
+		*page.isNavDrawerMinimized = true
+	}
+
+	for page.maximizeNavDrawerButton.Button.Clicked() {
+		*page.isNavDrawerMinimized = false
 	}
 
 	for i := range page.appBarNavItems {
