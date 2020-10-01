@@ -15,14 +15,10 @@ import (
 
 // CreateWallet creates a new wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
+func (wal *Wallet) CreateWallet(name, passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
-		log.Info(fmt.Sprintf("wallet-%d22", wal.multi.WalletsIterator().Next().ID))
-		wall, err := wal.multi.CreateNewWallet(
-			fmt.Sprintf("wallet-%d22", wal.multi.WalletsIterator().Next().ID),
-			passphrase, dcrlibwallet.PassphraseTypePass,
-		)
+		wall, err := wal.multi.CreateNewWallet(name, passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -134,32 +130,20 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan error) {
 	go func() {
 		var resp Response
-		wallets, err := wal.wallets()
+		wall := wal.multi.WalletWithID(walletID)
+		_, err := wall.GetAccount(accountID)
 		if err != nil {
 			errChan <- err
 			return
 		}
 
-		for _, wallet := range wallets {
-			if wallet.ID == walletID {
-				if _, err := wallet.GetAccount(accountID); err != nil {
-					errChan <- err
-					return
-				}
-
-				txAuthor := wal.multi.NewUnsignedTx(&wallet, wal.confirms)
-				if txAuthor == nil {
-					errChan <- err
-					return
-				}
-
-				resp.Resp = txAuthor
-				wal.Send <- resp
-				return
-			}
+		txAuthor := wal.multi.NewUnsignedTx(wall, accountID)
+		if txAuthor == nil {
+			errChan <- err
+			return
 		}
-
-		errChan <- fmt.Errorf("unknown wallet with ID: %d", walletID)
+		resp.Resp = txAuthor
+		wal.Send <- resp
 	}()
 }
 
@@ -542,8 +526,8 @@ func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
 }
 
-func (wal *Wallet) GetWalletSeedPhrase(walletID int) string {
-	return "wal.multi.NumWalletsNeedingSeedBackup()"
+func (wal *Wallet) GetWalletSeedPhrase(walletID int, password []byte) (string, error) {
+	return wal.multi.WalletWithID(walletID).DecryptSeed(password)
 }
 
 func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string) error {

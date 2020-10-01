@@ -41,7 +41,7 @@ var _ = BeforeSuite(func() {
 	resp := <-wal.Send
 	Expect(resp.Resp).To(BeAssignableToTypeOf(LoadedWallets{}))
 	tempChan := make(chan error)
-	wal.CreateWallet("password", tempChan)
+	wal.CreateWallet("123", "password", tempChan)
 	go func() {
 		err := <-tempChan
 		Expect(err).To(BeNil())

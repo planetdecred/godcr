@@ -63,7 +63,10 @@ type backupPage struct {
 	seedPhraseListRight *layout.List
 	verifyList          *layout.List
 
-	suggestions []seedGroup
+	suggestions         []seedGroup
+	passwordModal       *decredmaterial.Password
+	isPasswordModalOpen bool
+	selectedWallet      *int
 
 	seedPhrase     []string
 	selectedSeeds  []string
@@ -87,8 +90,10 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 		successInfo:    c.theme.Body2("Be sure to store your seed phrase backup in a secure location."),
 		checkIcon:      c.icons.actionCheckCircle,
 
-		active:        infoView,
-		selectedSeeds: make([]string, 0, 33),
+		active:         infoView,
+		selectedSeeds:  make([]string, 0, 33),
+		selectedWallet: c.selectedWallet,
+		passwordModal:  c.theme.Password(),
 	}
 
 	b.checkIcon.Color = c.theme.Color.Success
@@ -137,7 +142,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 
 	return func(gtx C) layout.Dimensions {
 		b.handle(c)
-		return b.layout(gtx)
+		return b.layout(gtx, c)
 	}
 }
 
@@ -151,7 +156,7 @@ func (pg *backupPage) clearButton() {
 	pg.action.Color = pg.theme.Color.Primary
 }
 
-func (pg *backupPage) layout(gtx layout.Context) layout.Dimensions {
+func (pg *backupPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	dims := pg.theme.Surface(gtx, func(gtx C) D {
 		toMax(gtx)
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Start}.Layout(gtx,
@@ -184,6 +189,10 @@ func (pg *backupPage) layout(gtx layout.Context) layout.Dimensions {
 			}),
 		)
 	})
+
+	if pg.isPasswordModalOpen {
+		return c.Modal(gtx, dims, pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel))
+	}
 	return dims
 }
 
@@ -507,18 +516,29 @@ func (pg *backupPage) resetPage(c pageCommon) {
 	pg.updateViewTexts()
 }
 
+func (pg *backupPage) confirm(password []byte) {
+	pg.isPasswordModalOpen = false
+	s, _ := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, password)
+	pg.seedPhrase = strings.Split(s, " ")
+	pg.populateSuggestionSeeds()
+	pg.active++
+}
+
+func (pg *backupPage) cancel() {
+	pg.isPasswordModalOpen = false
+}
+
 func (pg *backupPage) handle(c pageCommon) {
 	if pg.backButton.Button.Clicked() {
 		pg.resetPage(c)
 	}
 
 	if pg.action.Button.Clicked() && pg.verifyCheckBoxes() {
+		if len(pg.seedPhrase) == 0 {
+			pg.isPasswordModalOpen = true
+			return
+		}
 		switch pg.active {
-		case infoView:
-			s := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID)
-			pg.seedPhrase = strings.Split(s, " ")
-			pg.populateSuggestionSeeds()
-			pg.active++
 		case verifyView:
 			if !checkSlice(pg.selectedSeeds) {
 				return
