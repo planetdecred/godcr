@@ -517,8 +517,12 @@ func (pg *backupPage) resetPage(c pageCommon) {
 }
 
 func (pg *backupPage) confirm(password []byte) {
+	s, err := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, password)
+	if err != nil {
+		pg.passwordModal.WithError(err.Error())
+		return
+	}
 	pg.isPasswordModalOpen = false
-	s, _ := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, password)
 	pg.seedPhrase = strings.Split(s, " ")
 	pg.populateSuggestionSeeds()
 	pg.active++
@@ -557,7 +561,6 @@ func (pg *backupPage) handle(c pageCommon) {
 				pg.clearError()
 				return
 			}
-			pg.info.Wallets[*c.selectedWallet].Seed = ""
 			pg.active++
 		case successView:
 			pg.resetPage(c)

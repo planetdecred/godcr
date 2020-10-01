@@ -19,7 +19,7 @@ func (wal *Wallet) CreateWallet(name, passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
 		wall, err := wal.multi.CreateNewWallet(name, passphrase, dcrlibwallet.PassphraseTypePass)
-		if err != nil {
+		sendErr := func(err error) {
 			go func() {
 				errChan <- err
 			}()
@@ -28,10 +28,19 @@ func (wal *Wallet) CreateWallet(name, passphrase string, errChan chan error) {
 				Message: "Could not create wallet",
 				Err:     err,
 			})
+		}
+		if err != nil {
+			sendErr(err)
 			return
 		}
+		seeds, err := wall.DecryptSeed([]byte(passphrase))
+		if err != nil {
+			sendErr(err)
+			return
+		}
+
 		resp.Resp = CreatedSeed{
-			Seed: string(wall.EncryptedSeed),
+			Seed: seeds,
 		}
 		wal.Send <- resp
 	}()
@@ -354,7 +363,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				BlockTimestamp:   wall.GetBestBlockTimeStamp(),
 				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
-				Seed:             string(wall.EncryptedSeed),
+				Seed:             wall.EncryptedSeed,
 			}
 			i++
 		}
