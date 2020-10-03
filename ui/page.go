@@ -269,12 +269,25 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						list := layout.List{Axis: layout.Horizontal}
 						return list.Layout(gtx, len(page.appBarNavItems), func(gtx C, i int) D {
-							return layout.Inset{
-								Left: unit.Dp(10),
-							}.Layout(gtx, func(gtx C) D {
-								return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
-									return page.theme.H6(page.appBarNavItems[i].page).Layout(gtx)
-								})
+							return layout.UniformInset(unit.Dp(15)).Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										page.appBarNavItems[i].image.Scale = 0.05
+
+										return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
+											return page.appBarNavItems[i].image.Layout(gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Left: unit.Dp(10),
+										}.Layout(gtx, func(gtx C) D {
+											return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
+												return page.theme.Body1(page.appBarNavItems[i].page).Layout(gtx)
+											})
+										})
+									}),
+								)
 							})
 						})
 					})
