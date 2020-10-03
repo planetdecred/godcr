@@ -26,7 +26,7 @@ type pageIcons struct {
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
 
-	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon, syncingIcon, logo image.Image
+	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon, syncingIcon, moreIcon, logo image.Image
 }
 
 type navHandler struct {
@@ -97,21 +97,24 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 		overviewIcon:               decredIcons["overview"],
-		walletIcon:                 decredIcons["wallet"],
+		walletIcon:                 decredIcons["wallet_inactive"],
 		receiveIcon:                decredIcons["receive"],
-		transactionIcon:            decredIcons["transaction"],
+		transactionIcon:            decredIcons["transaction_inactive"],
 		sendIcon:                   decredIcons["send"],
 		syncingIcon:                decredIcons["syncing"],
+		moreIcon:                	decredIcons["more_inactive"],
 		logo:                       decredIcons["logo"],
 	}
 
 	appBarNavItems := []navHandler{
 		{
 			clickable: new(widget.Clickable),
+			image:     &widget.Image{Src: paint.NewImageOp(ic.sendIcon)},
 			page:      PageSend,
 		},
 		{
 			clickable: new(widget.Clickable),
+			image:     &widget.Image{Src: paint.NewImageOp(ic.receiveIcon)},
 			page:      PageReceive,
 		},
 	}
@@ -134,7 +137,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			image:     &widget.Image{Src: paint.NewImageOp(ic.moreIcon)},
 			page:      PageMore,
 		},
 	}
