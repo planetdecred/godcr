@@ -11,6 +11,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -346,6 +347,9 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				return common.SelectedAccountLayout(gtx)
 			})
+		},
+		func(gtx C) D {
+			return pg.coinControlFeatured(gtx, &common)
 		},
 		func(gtx C) D {
 			return pg.destinationAddrSection(gtx)
@@ -1002,7 +1006,7 @@ func (pg *SendPage) centralize(gtx layout.Context, content layout.Widget) layout
 	)
 }
 
-func (pg *SendPage) coinControlFeatured(gtx layout.Context) layout.Dimensions {
+func (pg *SendPage) coinControlFeatured(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -1023,7 +1027,16 @@ func (pg *SendPage) coinControlFeatured(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D { return pg.inputButtonCoinCtrl.Layout(gtx) }),
 				layout.Rigid(func(gtx C) D {
-					return pg.theme.Body1("Automatically selected").Layout(gtx)
+					utxos := c.selectedUTXO[pg.selectedWallet.ID][pg.selectedAccount.Number]
+					var totalAmount int64
+					for _, utxo := range utxos {
+						totalAmount += utxo.UTXO.Amount
+					}
+					txt := "Automatically selected"
+					if len(utxos) > 0 {
+						txt = fmt.Sprintf("Quantity: %d | Amount: %s", len(utxos), dcrutil.Amount(totalAmount).String())
+					}
+					return pg.theme.Body1(txt).Layout(gtx)
 				}),
 			)
 		}),
