@@ -61,6 +61,8 @@ type pageCommon struct {
 	isNavDrawerMinimized    *bool
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
+
+	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 }
 
 type (
@@ -183,6 +185,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		drawerNavItems:          drawerNavItems,
 		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
+		keyEvents:               win.keyEvents,
+		clipboard:               win.clipboard,
+		states:                  &win.states,
+
+		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 	}
 
 	isNavDrawerMinimized := false
@@ -472,6 +479,13 @@ func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget)
 func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	if page.accountTabs.ChangeEvent() {
 		*page.selectedAccount = page.accountTabs.Selected
+	}
+
+	if page.selectedUTXO[page.info.Wallets[*page.selectedWallet].ID] == nil {
+		current := page.info.Wallets[*page.selectedWallet]
+		account := page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount]
+		page.selectedUTXO[current.ID] = make(map[int32]map[string]*wallet.UnspentOutput)
+		page.selectedUTXO[current.ID][account.Number] = make(map[string]*wallet.UnspentOutput)
 	}
 
 	return page.LayoutWithWallets(gtx, func(gtx C) D {
