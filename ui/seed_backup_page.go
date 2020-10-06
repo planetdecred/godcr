@@ -73,6 +73,7 @@ type backupPage struct {
 	allSuggestions []string
 	active         int
 	error          string
+	privpass       []byte
 }
 
 func (win *Window) BackupPage(c pageCommon) layout.Widget {
@@ -504,6 +505,7 @@ func (pg *backupPage) resetPage(c pageCommon) {
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)
+	pg.privpass = nil
 	for _, cb := range pg.checkBoxes {
 		cb.CheckBox.Value = false
 	}
@@ -517,6 +519,7 @@ func (pg *backupPage) resetPage(c pageCommon) {
 }
 
 func (pg *backupPage) confirm(password []byte) {
+	pg.privpass = password
 	s, err := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, password)
 	if err != nil {
 		pg.passwordModal.WithError(err.Error())
@@ -555,12 +558,13 @@ func (pg *backupPage) handle(c pageCommon) {
 				return
 			}
 
-			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s)
+			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s, pg.privpass)
 			if err != nil {
 				pg.error = errMessage
 				pg.clearError()
 				return
 			}
+			pg.info.Wallets[*c.selectedWallet].Seed = nil
 			pg.active++
 		case successView:
 			pg.resetPage(c)

@@ -1,22 +1,14 @@
 # Contributing
 
 ## Contents
-- [Contributing](#contributing)
-  - [Contents](#contents)
-  - [Guidelines](#guidelines)
-    - [PR/Issues Naming Standard Format](#prissues-naming-standard-format)
-    - [When to Search the Issue Tracker](#when-to-search-the-issue-tracker)
-    - [When to Submit a New Issue](#when-to-submit-a-new-issue)
-    - [When to Submit a Pull Request](#when-to-submit-a-pull-request)
-  - [How to Contribute](#how-to-contribute)
-    - [Suggested Toolkit](#suggested-toolkit)
-    - [Git Workflow](#git-workflow)
-          - [recommended](#recommended)
-          - [a)](#a)
-          - [b)](#b)
-          - [c)](#c)
-  - [Go Development Tips](#go-development-tips)
-    - [Further reading](#further-reading)
+- [PR/Issues Naming Standard Format](#pr/issues-naming-standard-format)
+- [When to Search the Issue Tracker](#when-to-search-the-issue-tracker)
+- [When to Submit a New Issue](#when-to-submit-a-new-issue)
+- [When to Submit a Pull Request](#when-to-submit-a-pull-request)
+- [How to Contribute](#how-to-contribute)
+  - [Suggested Toolkit](#suggested-toolkit)
+  - [Git Workflow](#git-workflow)
+- [Go Development Tips](#go-development-tips)
 
 ## Guidelines
 

@@ -539,8 +539,8 @@ func (wal *Wallet) GetWalletSeedPhrase(walletID int, password []byte) (string, e
 	return wal.multi.WalletWithID(walletID).DecryptSeed(password)
 }
 
-func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string) error {
-	_, err := wal.multi.VerifySeedForWallet(walletID, seedPhrase, nil)
+func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string, privpass []byte) error {
+	_, err := wal.multi.VerifySeedForWallet(walletID, seedPhrase, privpass)
 	return err
 }
 
