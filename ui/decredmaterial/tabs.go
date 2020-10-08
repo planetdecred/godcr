@@ -43,7 +43,7 @@ func tabIndicatorDimensions(dims layout.Dimensions, tabPosition Position) (width
 	case Top, Bottom:
 		width, height = dims.Size.X, 4
 	default:
-		width, height = 5, dims.Size.Y
+		width, height = 0, dims.Size.Y
 	}
 	return
 }
@@ -287,7 +287,7 @@ func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChil
 					return direction.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return line(gtx, 2, gtx.Constraints.Max.Y, rgb(0xcccccc))
+								return line(gtx, 2, gtx.Constraints.Max.Y, rgb(0xefefef))
 							}),
 						)
 					})
