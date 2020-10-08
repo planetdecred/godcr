@@ -4,11 +4,11 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
 const PageVerifyMessage = "verifymessage"

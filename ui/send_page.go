@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"image/color"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -12,10 +13,10 @@ import (
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/ui/values"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 type amountValue struct {
@@ -819,7 +820,7 @@ func (pg *SendPage) calculateValues() {
 		pg.inactiveTotalAmount = noExchangeText
 	}
 
-	if pg.txAuthor == nil || !pg.validate(true) {
+	if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate(true) {
 		return
 	}
 

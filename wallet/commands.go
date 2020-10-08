@@ -10,16 +10,16 @@ import (
 
 	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet"
 )
 
 // CreateWallet creates a new wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
+func (wal *Wallet) CreateWallet(name, passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
-		wall, err := wal.multi.CreateNewWallet(passphrase, dcrlibwallet.PassphraseTypePass)
-		if err != nil {
+		wall, err := wal.multi.CreateNewWallet(name, passphrase, dcrlibwallet.PassphraseTypePass)
+		sendErr := func(err error) {
 			go func() {
 				errChan <- err
 			}()
@@ -28,10 +28,19 @@ func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
 				Message: "Could not create wallet",
 				Err:     err,
 			})
+		}
+		if err != nil {
+			sendErr(err)
 			return
 		}
+		seeds, err := wall.DecryptSeed([]byte(passphrase))
+		if err != nil {
+			sendErr(err)
+			return
+		}
+
 		resp.Resp = CreatedSeed{
-			Seed: wall.Seed,
+			Seed: seeds,
 		}
 		wal.Send <- resp
 	}()
@@ -42,7 +51,7 @@ func (wal *Wallet) CreateWallet(passphrase string, errChan chan error) {
 func (wal *Wallet) RestoreWallet(seed, passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
-		_, err := wal.multi.RestoreWallet(seed, passphrase, dcrlibwallet.PassphraseTypePass)
+		_, err := wal.multi.RestoreWallet("wallet", seed, passphrase, dcrlibwallet.PassphraseTypePass)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -130,32 +139,20 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan error) {
 	go func() {
 		var resp Response
-		wallets, err := wal.wallets()
+		wall := wal.multi.WalletWithID(walletID)
+		_, err := wall.GetAccount(accountID)
 		if err != nil {
 			errChan <- err
 			return
 		}
 
-		for _, wallet := range wallets {
-			if wallet.ID == walletID {
-				if _, err := wallet.GetAccount(accountID, wal.confirms); err != nil {
-					errChan <- err
-					return
-				}
-
-				txAuthor := wallet.NewUnsignedTx(accountID, wal.confirms)
-				if txAuthor == nil {
-					errChan <- err
-					return
-				}
-
-				resp.Resp = txAuthor
-				wal.Send <- resp
-				return
-			}
+		txAuthor := wal.multi.NewUnsignedTx(wall, accountID)
+		if txAuthor == nil {
+			errChan <- err
+			return
 		}
-
-		errChan <- fmt.Errorf("unknown wallet with ID: %d", walletID)
+		resp.Resp = txAuthor
+		wal.Send <- resp
 	}()
 }
 
@@ -319,7 +316,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		infos := make([]InfoShort, len(wallets))
 		i := 0
 		for _, wall := range wallets {
-			iter, err := wall.AccountsIterator(wal.confirms)
+			iter, err := wall.AccountsIterator()
 			if err != nil {
 				resp.Err = err
 				wal.Send <- resp
@@ -366,7 +363,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				BlockTimestamp:   wall.GetBestBlockTimeStamp(),
 				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
-				Seed:             wall.Seed,
+				Seed:             wall.EncryptedSeed,
 			}
 			i++
 		}
@@ -520,25 +517,12 @@ func (wal *Wallet) NextAddress(walletID int, accountID int32) (string, error) {
 
 // IsAddressValid checks if the given address is valid for the multiwallet network
 func (wal *Wallet) IsAddressValid(address string) (bool, error) {
-	wall := wal.multi.FirstOrDefaultWallet()
-	if wall == nil {
-		return false, InternalWalletError{
-			Message: "No wallet loaded",
-		}
-	}
-	return wall.IsAddressValid(address), nil
+	return wal.multi.IsAddressValid(address), nil
 }
 
 // VerifyMessage checks if the given message matches the signature for the address.
 func (wal *Wallet) VerifyMessage(address string, message string, signature string) (bool, error) {
-	wall := wal.multi.FirstOrDefaultWallet()
-	if wall == nil {
-		return false, InternalWalletError{
-			Message: "No wallet loaded",
-		}
-	}
-
-	return wall.VerifyMessage(address, message, signature)
+	return wal.multi.VerifyMessage(address, message, signature)
 }
 
 // StartSync starts the multiwallet SPV sync
@@ -551,13 +535,13 @@ func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
 }
 
-func (wal *Wallet) GetWalletSeedPhrase(walletID int) string {
-	wallet := wal.multi.WalletWithID(walletID)
-	return wallet.Seed
+func (wal *Wallet) GetWalletSeedPhrase(walletID int, password []byte) (string, error) {
+	return wal.multi.WalletWithID(walletID).DecryptSeed(password)
 }
 
-func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string) error {
-	return wal.multi.VerifySeedForWallet(walletID, seedPhrase)
+func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string, privpass []byte) error {
+	_, err := wal.multi.VerifySeedForWallet(walletID, seedPhrase, privpass)
+	return err
 }
 
 func calculateDaysBehind(lastHeaderTime int64) string {

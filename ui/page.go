@@ -9,9 +9,9 @@ import (
 	"gioui.org/layout"
 
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/ui/values"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 

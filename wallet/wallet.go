@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet"
 )
 
 const syncID = "godcr"

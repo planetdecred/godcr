@@ -3,7 +3,7 @@ package wallet
 import (
 	"errors"
 
-	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet"
 )
 
 var (
