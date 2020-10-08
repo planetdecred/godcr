@@ -1,7 +1,7 @@
 # godcr
 
-[![Build Status](https://github.com/raedahgroup/godcr/workflows/Build/badge.svg)](https://github.com/raedahgroup/godcr/actions)
-[![Tests Status](https://github.com/raedahgroup/godcr/workflows/Tests/badge.svg)](https://github.com/raedahgroup/godcr/actions)
+[![Build Status](https://github.com/planetdecred/godcr/workflows/Build/badge.svg)](https://github.com/planetdecred/godcr/actions)
+[![Tests Status](https://github.com/planetdecred/godcr/workflows/Tests/badge.svg)](https://github.com/planetdecred/godcr/actions)
 
 A cross-platform desktop [SPV](https://docs.decred.org/wallets/spv/) wallet for [decred](https://decred.org/) built with [gio](https://gioui.org/).
 
@@ -35,8 +35,8 @@ To save a profile, you can simply use
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/raedahgroup/godcr/blob/master/.github/CONTRIBUTING.md)
+See [CONTRIBUTING.md](https://github.com/planetdecred/godcr/blob/master/.github/CONTRIBUTING.md)
 
 ## Other
 
-Earlier experimental work with other user interface toolkits can be found at [godcr-old](https://github.com/raedahgroup/godcr-old).
+Earlier experimental work with other user interface toolkits can be found at [godcr-old](https://github.com/planetdecred/godcr-old).

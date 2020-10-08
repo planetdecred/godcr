@@ -76,6 +76,12 @@ func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func(
 	return p.modal.Layout(gtx, widgets, 1350)
 }
 
+func (p *Password) WithError(e string) {
+	p.passwordEditor.IsRequired = true
+	p.passwordEditor.IsTitleLabel = false
+	p.passwordEditor.SetError(e)
+}
+
 func (p *Password) updateColors() {
 	p.confirmButton.Background = p.theme.Color.Hint
 

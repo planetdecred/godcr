@@ -13,7 +13,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
 var pageContainer = &layout.List{Axis: layout.Vertical}

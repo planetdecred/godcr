@@ -5,17 +5,17 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 
 	"gioui.org/io/key"
 
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/wallet"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -58,6 +58,7 @@ type createRestore struct {
 	hideResetModal     decredmaterial.Button
 
 	spendingPassword      decredmaterial.Editor
+	walletName            decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
 	addWallet             decredmaterial.Button
 	errLabel              decredmaterial.Label
@@ -85,6 +86,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 		errLabel:              common.theme.Body1(""),
 		spendingPassword:      common.theme.Editor(new(widget.Editor), "Enter password"),
+		walletName:            common.theme.Editor(new(widget.Editor), "Enter wallet name"),
 		matchSpendingPassword: common.theme.Editor(new(widget.Editor), "Enter password again"),
 		addWallet:             common.theme.Button(new(widget.Clickable), "create wallet"),
 		hideResetModal:        common.theme.Button(new(widget.Clickable), "cancel"),
@@ -93,7 +95,6 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		warningModal:          common.theme.Modal(""),
 	}
 
-	pg.matchSpendingPassword.Editor.SingleLine = true
 	pg.create = common.theme.Button(new(widget.Clickable), "create wallet")
 	pg.showPasswordModal = common.theme.Button(new(widget.Clickable), "proceed")
 	pg.showRestoreWallet = common.theme.Button(new(widget.Clickable), "Restore an existing wallet")
@@ -138,6 +139,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.seedListLeft, pg.seedListRight = &layout.List{Axis: layout.Vertical}, &layout.List{Axis: layout.Vertical}
 	pg.spendingPassword.Editor.Mask, pg.matchSpendingPassword.Editor.Mask = '*', '*'
 	pg.spendingPassword.Editor.SingleLine, pg.matchSpendingPassword.Editor.SingleLine = true, true
+	pg.walletName.Editor.SingleLine = true
 
 	pg.autoCompleteList = &layout.List{Axis: layout.Horizontal}
 
@@ -179,6 +181,12 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 					}
 
 					w := []func(gtx C) D{
+						func(gtx C) D {
+							if pg.showRestore {
+								return layout.Dimensions{}
+							}
+							return pg.walletName.Layout(gtx)
+						},
 						func(gtx C) D {
 							return pg.spendingPassword.Layout(gtx)
 						},
@@ -659,7 +667,7 @@ func (pg *createRestore) handle(common pageCommon) {
 			pg.wal.RestoreWallet(pg.seedPhrase, pass, pg.errChan)
 			pg.resetSeeds()
 		} else {
-			pg.wal.CreateWallet(pass, pg.errChan)
+			pg.wal.CreateWallet(pg.walletName.Editor.Text(), pass, pg.errChan)
 		}
 		common.states.creating = true
 		pg.resetPasswords()
@@ -679,6 +687,7 @@ func (pg *createRestore) handle(common pageCommon) {
 			}
 		}
 	case err := <-pg.errChan:
+		common.states.creating = false
 		pg.errLabel.Text = err.Error()
 	default:
 	}

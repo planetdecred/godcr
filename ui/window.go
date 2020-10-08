@@ -14,10 +14,10 @@ import (
 	"gioui.org/op"
 	"gioui.org/text"
 
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/ui/values"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 // Window represents the app window (and UI in general). There should only be one.

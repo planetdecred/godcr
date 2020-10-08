@@ -1,7 +1,7 @@
 package wallet
 
 import (
-	"github.com/raedahgroup/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet"
 )
 
 // SyncProgressStage represents the spv sync stage at which the multiwallet is currently

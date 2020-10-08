@@ -17,9 +17,9 @@ import (
 
 	"gioui.org/app"
 
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/ui"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 func getAbsoultePath() (string, error) {
