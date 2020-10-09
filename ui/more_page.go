@@ -79,6 +79,7 @@ func (win *Window) MorePage(decredIcons map[string]image.Image, common pageCommo
 	pg := morePage{
 		container:              layout.Flex{Axis: layout.Vertical},
 		morePageListItems:      morePageListItems,
+		page:                   &win.current,
 	}
 
 	return func(gtx C) D {
@@ -87,7 +88,17 @@ func (win *Window) MorePage(decredIcons map[string]image.Image, common pageCommo
 	}
 }
 
+func (pg *morePage) handleClickEvents() {
+	for i := range pg.morePageListItems {
+		for pg.morePageListItems[i].clickable.Clicked() {
+			*pg.page = pg.morePageListItems[i].page
+		}
+	}
+}
+
 func (pg *morePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	pg.handleClickEvents()
+
 	container := func(gtx C) D {
 		return decredmaterial.Card{Rounded: true}.Layout(gtx, func(gtx C) D {
 			pg.layoutMoreItems(gtx, common)
