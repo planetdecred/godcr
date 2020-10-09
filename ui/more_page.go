@@ -19,7 +19,7 @@ type morePageIcons struct {
 	settingsIcon, securityIcon, politeiaIcon, helpIcon, aboutIcon, debugIcon, logo image.Image
 }
 
-type moreHandler struct {
+type morePageHandler struct {
 	clickable *widget.Clickable
 	image     *widget.Image
 	page      string
@@ -27,7 +27,8 @@ type moreHandler struct {
 
 type morePage struct {
 	container                                   layout.Flex
-	moreListItems                               []moreHandler
+	morePageListItems                           []morePageHandler
+	page                                        *string
 	icons                                       morePageIcons
 }
 
@@ -42,7 +43,7 @@ func (win *Window) MorePage(decredIcons map[string]image.Image, common pageCommo
 		debugIcon:                  decredIcons["transaction"],
 	}
 
-    moreListItems := []moreHandler{
+    morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),
 			image:     &widget.Image{Src: paint.NewImageOp(ic.settingsIcon)},
@@ -77,7 +78,7 @@ func (win *Window) MorePage(decredIcons map[string]image.Image, common pageCommo
 
 	pg := morePage{
 		container:              layout.Flex{Axis: layout.Vertical},
-		moreListItems:          moreListItems,
+		morePageListItems:      morePageListItems,
 	}
 
 	return func(gtx C) D {
@@ -100,9 +101,9 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(pg.moreListItems), func(gtx C, i int) D {
+			return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
 				return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return decredmaterial.Clickable(gtx, pg.moreListItems[i].clickable, func(gtx C) D {
+				return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
 					background := common.theme.Color.Surface
 
 					return decredmaterial.Card{Color: background, Rounded: true}.Layout(gtx, func(gtx C) D {
@@ -116,10 +117,10 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									return layout.Flex{Axis: axis}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											pg.moreListItems[i].image.Scale = 0.05
+											pg.morePageListItems[i].image.Scale = 0.05
 
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return pg.moreListItems[i].image.Layout(gtx)
+												return pg.morePageListItems[i].image.Layout(gtx)
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
@@ -127,7 +128,7 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 												Left: unit.Dp(leftInset),
 											}.Layout(gtx, func(gtx C) D {
 												return layout.Center.Layout(gtx, func(gtx C) D {
-													return common.theme.Body1(pg.moreListItems[i].page).Layout(gtx)
+													return common.theme.Body1(pg.morePageListItems[i].page).Layout(gtx)
 												})
 											})
 										}),
