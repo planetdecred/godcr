@@ -12,7 +12,7 @@ import (
 	"github.com/raedahgroup/godcr/ui/values"
 )
 
-const PageMore = "more"
+const PageMore = "More"
 
 type morePageIcons struct {
 
@@ -47,32 +47,32 @@ func (win *Window) MorePage(decredIcons map[string]image.Image, common pageCommo
 		{
 			clickable: new(widget.Clickable),
 			image:     &widget.Image{Src: paint.NewImageOp(ic.settingsIcon)},
-			page:      PageOverview,
+			page:      PageSettings,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     &widget.Image{Src: paint.NewImageOp(ic.securityIcon)},
-			page:      PageTransactions,
+			page:      PageSecurityTools,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     &widget.Image{Src: paint.NewImageOp(ic.politeiaIcon)},
-			page:      PageWallet,
+			page:      PagePoliteia,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     &widget.Image{Src: paint.NewImageOp(ic.helpIcon)},
-			page:      PageMore,
+			page:      PageHelp,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     &widget.Image{Src: paint.NewImageOp(ic.aboutIcon)},
-			page:      PageWallet,
+			page:      PageAbout,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     &widget.Image{Src: paint.NewImageOp(ic.debugIcon)},
-			page:      PageMore,
+			page:      PageDebug,
 		},
 	}
 
