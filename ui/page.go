@@ -26,12 +26,13 @@ type pageIcons struct {
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
 
-	overviewIcon, walletIcon, receiveIcon, transactionIcon, sendIcon, syncingIcon, moreIcon, logo image.Image
+	overviewIcon, overviewIconInactive, walletIcon, walletIconInactive, receiveIcon, transactionIcon, transactionIconInactive, sendIcon, syncingIcon, moreIcon, moreIconInactive, logo image.Image
 }
 
 type navHandler struct {
-	clickable *widget.Clickable
-	image     *widget.Image
+	clickable         *widget.Clickable
+	image             *widget.Image
+	imageInactive     *widget.Image
 	page      string
 	isActive  bool
 }
@@ -97,12 +98,16 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 		overviewIcon:               decredIcons["overview"],
-		walletIcon:                 decredIcons["wallet_inactive"],
+		overviewIconInactive:       decredIcons["overview_inactive"],
+		walletIcon:                 decredIcons["wallet"],
+		walletIconInactive:         decredIcons["wallet_inactive"],
 		receiveIcon:                decredIcons["receive"],
-		transactionIcon:            decredIcons["transaction_inactive"],
+		transactionIcon:            decredIcons["transaction"],
+		transactionIconInactive:    decredIcons["transaction_inactive"],
 		sendIcon:                   decredIcons["send"],
 		syncingIcon:                decredIcons["syncing"],
-		moreIcon:                	decredIcons["more_inactive"],
+		moreIcon:                   decredIcons["more"],
+		moreIconInactive:           decredIcons["more_inactive"],
 		logo:                       decredIcons["logo"],
 	}
 
@@ -122,23 +127,27 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	drawerNavItems := []navHandler{
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.overviewIcon)},
-			page:      PageOverview,
+			image:           &widget.Image{Src: paint.NewImageOp(ic.overviewIcon)},
+			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.overviewIconInactive)},
+			page:            PageOverview,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.transactionIcon)},
-			page:      PageTransactions,
+			image:           &widget.Image{Src: paint.NewImageOp(ic.transactionIcon)},
+			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.transactionIconInactive)},
+			page:            PageTransactions,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
-			page:      PageWallet,
+			image:           &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.walletIconInactive)},
+			page:            PageWallet,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.moreIcon)},
-			page:      PageMore,
+			image:           &widget.Image{Src: paint.NewImageOp(ic.moreIcon)},
+			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.moreIconInactive)},
+			page:            PageMore,
 		},
 	}
 
@@ -327,9 +336,13 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 									return layout.Flex{Axis: axis}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											page.drawerNavItems[i].image.Scale = 0.05
+											page.drawerNavItems[i].imageInactive.Scale = 0.05
 
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.drawerNavItems[i].image.Layout(gtx)
+												if page.drawerNavItems[i].page == *page.page {
+													return page.drawerNavItems[i].image.Layout(gtx)
+												}
+												return page.drawerNavItems[i].imageInactive.Layout(gtx)
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
