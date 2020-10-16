@@ -55,6 +55,8 @@ github.com/decred/dcrd/blockchain/v3 v3.0.2/go.mod h1:LD5VA95qdb+DlRiPI8VLBimDqv
 github.com/decred/dcrd/certgen v1.1.1/go.mod h1:ivkPLChfjdAgFh7ZQOtl6kJRqVkfrCq67dlq3AbZBQE=
 github.com/decred/dcrd/chaincfg v1.5.1 h1:u1Xbq0VTnAXIHW5ECqrWe0VYSgf5vWHqpSiwoLBzxAQ=
 github.com/decred/dcrd/chaincfg v1.5.1/go.mod h1:FukMzTjkwzjPU+hK7CqDMQe3NMbSZAYU5PAcsx1wlv0=
+github.com/decred/dcrd/chaincfg v1.5.2 h1:dd6l9rqcpxg2GF5neBmE2XxRc5Lqda45fWmN4XOJRW8=
+github.com/decred/dcrd/chaincfg v1.5.2/go.mod h1:FukMzTjkwzjPU+hK7CqDMQe3NMbSZAYU5PAcsx1wlv0=
 github.com/decred/dcrd/chaincfg/chainhash v1.0.1/go.mod h1:OVfvaOsNLS/A1y4Eod0Ip/Lf8qga7VXCQjUQLbkY0Go=
 github.com/decred/dcrd/chaincfg/chainhash v1.0.2 h1:rt5Vlq/jM3ZawwiacWjPa+smINyLRN07EO0cNBV6DGU=
 github.com/decred/dcrd/chaincfg/chainhash v1.0.2/go.mod h1:BpbrGgrPTr3YJYRN3Bm+D9NuaFd+zGyNeIKgrhCXK60=
