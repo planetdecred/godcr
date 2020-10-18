@@ -11,7 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageVerifyMessage = "verifymessage"
+const PageVerifyMessage = "VerifyMessage"
 
 type verifyMessagePage struct {
 	addressInput, messageInput, signInput decredmaterial.Editor

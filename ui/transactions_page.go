@@ -24,7 +24,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageTransactions = "transactions"
+const PageTransactions = "Transactions"
 
 type transactionWdg struct {
 	status       *widget.Icon

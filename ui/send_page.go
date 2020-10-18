@@ -102,7 +102,7 @@ type SendPage struct {
 }
 
 const (
-	PageSend               = "send"
+	PageSend               = "Send"
 	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
 )
 

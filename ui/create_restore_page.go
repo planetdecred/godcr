@@ -19,7 +19,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageCreateRestore = "createrestore"
+const PageCreateRestore = "CreateRestore"
 
 type (
 	seedEditors struct {

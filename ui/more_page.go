@@ -3,4 +3,4 @@ package ui
 type morePage struct {
 }
 
-const PageMore = "more"
+const PageMore = "More"
