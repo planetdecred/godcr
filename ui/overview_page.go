@@ -19,7 +19,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageOverview = "overview"
+const PageOverview = "Overview"
 
 type overviewPageText struct {
 	balanceTitle,

@@ -13,7 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageWalletPassphrase = "walletPassphrase"
+const PageWalletPassphrase = "WalletPassphrase"
 
 type walletPassphrasePage struct {
 	container                  layout.List

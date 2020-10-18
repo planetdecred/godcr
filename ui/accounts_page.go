@@ -10,7 +10,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageWalletAccounts = "walletAccounts"
+const PageWalletAccounts = "WalletAccounts"
 
 type walletAccountPage struct {
 	walletID      int
