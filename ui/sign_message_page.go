@@ -11,7 +11,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageSignMessage = "sign_message"
+const PageSignMessage = "SignMessage"
 
 type signMessagePage struct {
 	container  layout.List

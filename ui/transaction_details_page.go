@@ -16,7 +16,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageTransactionDetails = "transactiondetails"
+const PageTransactionDetails = "TransactionDetails"
 
 type transactionPage struct {
 	transactionPageContainer    layout.List

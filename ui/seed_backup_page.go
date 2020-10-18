@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	PageSeedBackup = "seedbackup"
+	PageSeedBackup = "SeedBackup"
 	infoView       = iota
 	seedView
 	verifyView

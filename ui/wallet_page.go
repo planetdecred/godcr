@@ -12,7 +12,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageWallet = "wallet"
+const PageWallet = "Wallet"
 
 const (
 	subWalletMain = iota
