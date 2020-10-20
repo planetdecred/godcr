@@ -210,3 +210,14 @@ func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
 	return layout.Dimensions{Size: d}
 }
+
+// mulAlpha scales all color components by alpha/255.
+func mulAlpha(c color.RGBA, alpha uint8) color.RGBA {
+	a := uint16(alpha)
+	return color.RGBA{
+		A: uint8(uint16(c.A) * a / 255),
+		R: uint8(uint16(c.R) * a / 255),
+		G: uint8(uint16(c.G) * a / 255),
+		B: uint8(uint16(c.B) * a / 255),
+	}
+}

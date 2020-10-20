@@ -67,7 +67,7 @@ type (
 
 const (
 	navDrawerWidth          = 190
-	navDrawerMinimizedWidth = 115
+	navDrawerMinimizedWidth = 118
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
@@ -301,7 +301,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 											})
 										}),
 									)
-							    })
+								})
 							})
 						})
 					})
