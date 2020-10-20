@@ -66,7 +66,7 @@ type (
 
 const (
 	navDrawerWidth          = 190
-	navDrawerMinimizedWidth = 115
+	navDrawerMinimizedWidth = 118
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
@@ -102,7 +102,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		transactionIcon:            decredIcons["transaction_inactive"],
 		sendIcon:                   decredIcons["send"],
 		syncingIcon:                decredIcons["syncing"],
-		moreIcon:                	decredIcons["more_inactive"],
+		moreIcon:                   decredIcons["more_inactive"],
 		logo:                       decredIcons["logo"],
 	}
 
@@ -289,7 +289,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 											})
 										}),
 									)
-							    })
+								})
 							})
 						})
 					})
