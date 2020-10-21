@@ -54,6 +54,8 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case *wallet.UnspentOutputs:
 		win.walletUnspentOutputs = e
+	case *wallet.Tickets:
+		win.walletTickets = e
 		return
 	case wallet.CreatedSeed:
 		win.notifyOnSuccess("Wallet created")
@@ -96,6 +98,7 @@ func (win *Window) updateStates(update interface{}) {
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
 	win.wallet.GetAllTransactions(0, 0, 0)
+	win.wallet.GetAllTickets()
 
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }

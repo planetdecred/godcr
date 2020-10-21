@@ -813,3 +813,79 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 		wal.Send <- resp
 	}()
 }
+
+func (wal *Wallet) NewVSPD(walletID int, accountID int32) *dcrlibwallet.VSPD {
+	return wal.multi.NewVSPD("http://localhost:8800", walletID, accountID)
+}
+
+// TicketPrice get ticket price
+func (wal *Wallet) TicketPrice(walletID int) string {
+	wall := wal.multi.WalletWithID(walletID)
+	pr, err := wall.TicketPrice()
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	return dcrutil.Amount(pr.TicketPrice).String()
+}
+
+// PurchaseTicket buy a ticket with given parameters
+func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tikets uint32, passphrase []byte, expiry uint32) (string, error) {
+	wall := wal.multi.WalletWithID(walletID)
+	request := &dcrlibwallet.PurchaseTicketsRequest{
+		Account:               uint32(accountID),
+		Passphrase:            passphrase,
+		NumTickets:            tikets,
+		Expiry:                uint32(wal.multi.GetBestBlock().Height) + expiry,
+		RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
+	}
+	hash, err := wall.PurchaseTickets(request, "")
+	if err != nil {
+		return "", err
+	}
+	return hash[0], nil
+}
+
+// GetAllTickets collects a per-wallet slice of tickets fitting the parameters.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) GetAllTickets() {
+	go func() {
+		var resp Response
+		wallets, err := wal.wallets()
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+		tickets := make(map[int][]Ticket)
+		totalTicket := 0
+
+		for _, wall := range wallets {
+			ticketsInfo, err := wall.GetTicketsForBlockHeightRange(0, wall.GetBestBlock(), math.MaxInt32)
+			if err != nil {
+				resp.Err = err
+				wal.Send <- resp
+				return
+			}
+			for _, tinfo := range ticketsInfo {
+				var amount dcrutil.Amount
+				for _, output := range tinfo.Ticket.MyOutputs {
+					amount += output.Amount
+				}
+				info := Ticket{
+					Info:     *tinfo,
+					DateTime: dcrlibwallet.ExtractDateOrTime(tinfo.Ticket.Timestamp),
+					Amount:   amount.String(),
+					Fee:      tinfo.Ticket.Fee.String(),
+				}
+				tickets[wall.ID] = append(tickets[wall.ID], info)
+			}
+		}
+
+		resp.Resp = &Tickets{
+			Total: totalTicket,
+			List:  tickets,
+		}
+		wal.Send <- resp
+	}()
+}

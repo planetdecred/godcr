@@ -183,3 +183,14 @@ type UnspentOutputs struct {
 
 // SetupAccountMixer is sent when finished setup the wallet account mixer
 type SetupAccountMixer struct{}
+
+type Ticket struct {
+	Info     dcrlibwallet.TicketInfo
+	Fee      string
+	Amount   string
+	DateTime string
+}
+type Tickets struct {
+	Total int
+	List  map[int][]Ticket
+}
