@@ -259,7 +259,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{
 			Top:    unit.Dp(7),
 			Bottom: unit.Dp(7),
-			Left:   unit.Dp(18),
+			Left:   unit.Dp(8),
 			Right:  unit.Dp(18),
 		}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -271,7 +271,9 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
-						return page.layoutBalance(gtx, page.info.TotalBalance)
+						return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx C) D {
+							return page.layoutBalance(gtx, page.info.TotalBalance)
+						})
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -350,6 +352,9 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 												Left: unit.Dp(leftInset),
 											}.Layout(gtx, func(gtx C) D {
 												return layout.Center.Layout(gtx, func(gtx C) D {
+													if *page.isNavDrawerMinimized {
+														return page.theme.Body2(page.drawerNavItems[i].page).Layout(gtx)
+													}
 													return page.theme.Body1(page.drawerNavItems[i].page).Layout(gtx)
 												})
 											})
@@ -381,7 +386,7 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 	mainText, subText := page.breakBalance(amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return page.theme.H4(mainText).Layout(gtx)
+			return page.theme.H5(mainText).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return page.theme.Body1(subText).Layout(gtx)
