@@ -110,6 +110,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		moreIconInactive:           decredIcons["more_inactive"],
 		logo:                       decredIcons["logo"],
 	}
+	win.theme.NavigationCheckIcon = ic.navigationCheck
 
 	appBarNavItems := []navHandler{
 		{
