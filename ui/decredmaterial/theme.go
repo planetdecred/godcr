@@ -70,6 +70,7 @@ type Theme struct {
 	radioUncheckedIcon    *widget.Icon
 	chevronUpIcon         *widget.Icon
 	chevronDownIcon       *widget.Icon
+	NavigationCheckIcon   *widget.Icon
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
