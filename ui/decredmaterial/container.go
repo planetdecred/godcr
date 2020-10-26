@@ -1,6 +1,8 @@
 package decredmaterial
 
 import (
+	//"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 )
@@ -11,10 +13,6 @@ type Container struct {
 
 	contentHeight float32
 }
-
-const (
-	scrollbarWidth = 10
-)
 
 // Container returns a list layout  with a visible scrollbar
 func (t *Theme) Container() *Container {
@@ -58,6 +56,8 @@ func (c *Container) layout(gtx layout.Context, w []func(gtx C) D) layout.Dimensi
 		c.container.Position.First = int(float32(len(w)) * progress)
 	}
 
+	scrollbarWidth := 0.015 * float32(gtx.Constraints.Max.X)
+
 	var visibleFraction, scrollDepth float32
 	return layout.Stack{Alignment: layout.E}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
@@ -79,7 +79,7 @@ func (c *Container) layout(gtx layout.Context, w []func(gtx C) D) layout.Dimensi
 			})
 		}),
 		layout.Stacked(func(gtx C) D {
-			gtx.Constraints.Max.X = scrollbarWidth
+			gtx.Constraints.Max.X = int(scrollbarWidth)
 			return c.scrollbar.Layout(gtx, scrollDepth, visibleFraction)
 		}),
 	)
