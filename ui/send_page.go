@@ -34,11 +34,13 @@ type SendPage struct {
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
 
-	wallet          *wallet.Wallet
-	selectedWallet  wallet.InfoShort
-	selectedAccount wallet.Account
+	wallet                 *wallet.Wallet
+	selectedWallet         wallet.InfoShort
+	selectedAccount        wallet.Account
+	unspentOutputsSelected *map[int]map[int32]map[string]*wallet.UnspentOutput
 
 	destinationAddressEditor     decredmaterial.Editor
+	customChangeAddressEditor    decredmaterial.Editor
 	sendAmountEditor             decredmaterial.Editor
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
@@ -57,6 +59,7 @@ type SendPage struct {
 	amountAtoms      int64
 	totalCostDCR     int64
 	txFee            int64
+	spendableBalance int64
 
 	usdExchangeRate float64
 	inputAmount     float64
@@ -100,6 +103,9 @@ type SendPage struct {
 	broadcastErrChan chan error
 
 	borderColor color.RGBA
+
+	toggleCoinCtrl      *widget.Bool
+	inputButtonCoinCtrl decredmaterial.Button
 }
 
 const (
@@ -114,10 +120,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 			Alignment: layout.Middle,
 		},
 
-		theme:           common.theme,
-		wallet:          common.wallet,
-		txAuthor:        &win.txAuthor,
-		broadcastResult: &win.broadcastResult,
+		theme:                  common.theme,
+		wallet:                 common.wallet,
+		txAuthor:               &win.txAuthor,
+		broadcastResult:        &win.broadcastResult,
+		unspentOutputsSelected: &common.selectedUTXO,
 
 		sendErrorText: "",
 
@@ -155,6 +162,12 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.destinationAddressEditor.Editor.SetText("")
 	pg.destinationAddressEditor.Editor.SingleLine = true
 
+	pg.customChangeAddressEditor = common.theme.Editor(new(widget.Editor), "Custom Change Address")
+	pg.customChangeAddressEditor.IsVisible = true
+	pg.customChangeAddressEditor.IsTitleLabel = false
+	pg.customChangeAddressEditor.Editor.SetText("")
+	pg.customChangeAddressEditor.Editor.SingleLine = true
+
 	pg.sendAmountEditor = common.theme.Editor(new(widget.Editor), "Amount to be sent")
 	pg.sendAmountEditor.SetRequiredErrorText("")
 	pg.sendAmountEditor.IsRequired = true
@@ -184,6 +197,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.toggleCoinCtrl = new(widget.Bool)
 	pg.inputButtonCoinCtrl = common.theme.Button(new(widget.Clickable), "Inputs")
 	pg.inputButtonCoinCtrl.Inset = layout.UniformInset(values.MarginPadding5)
+	pg.inputButtonCoinCtrl.TextSize = values.MarginPadding10
 
 	// defualtEditorWidth is the editor text size values.TextSize24
 	pg.defualtEditorWidth = 24
@@ -226,6 +240,13 @@ func (pg *SendPage) Handle(c pageCommon) {
 		time.AfterFunc(time.Second*3, func() {
 			pg.sendSuccessText = ""
 		})
+	}
+
+	if pg.toggleCoinCtrl.Value {
+		_, spendableBalance := pg.calculateBalanceUTXO()
+		pg.spendableBalance = spendableBalance
+	} else {
+		pg.spendableBalance = pg.selectedAccount.SpendableBalance
 	}
 
 	if pg.shouldInitializeTxAuthor {
@@ -301,7 +322,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 	}
 
 	if pg.destinationAddressEditor.Editor.Len() == 0 || pg.sendAmountEditor.Editor.Len() == 0 {
-		pg.balanceAfterSend(pg.selectedAccount.SpendableBalance)
+		pg.balanceAfterSend(true)
 	}
 
 	for _, evt := range pg.sendAmountEditor.Editor.Events() {
@@ -563,7 +584,7 @@ func (pg *SendPage) spendableBalanceLayout(gtx layout.Context) layout.Dimensions
 							return title.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
-							sb := dcrutil.Amount(pg.selectedAccount.SpendableBalance).String()
+							sb := dcrutil.Amount(pg.spendableBalance).String()
 							b := pg.theme.Body2(sb)
 							b.Color = pg.theme.Color.Gray
 							inset := layout.Inset{
@@ -849,6 +870,7 @@ func (pg *SendPage) calculateValues() {
 		pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
 	}
 
+	pg.setChangeDestinationAddr()
 	if pg.activeExchange == "USD" && pg.LastTradeRate != "" {
 		pg.amountAtoms = pg.setDestinationAddr(pg.amountUSDtoDCR)
 	} else {
@@ -859,7 +881,7 @@ func (pg *SendPage) calculateValues() {
 		return
 	}
 
-	pg.txFee = pg.getTxFee()
+	pg.txFee = pg.getTxFee(pg.toggleCoinCtrl.Value)
 	if pg.txFee == 0 {
 		return
 	}
@@ -867,7 +889,7 @@ func (pg *SendPage) calculateValues() {
 	pg.totalCostDCR = pg.txFee + pg.amountAtoms
 
 	pg.updateDefaultValues()
-	pg.balanceAfterSend(pg.totalCostDCR)
+	pg.balanceAfterSend(false)
 }
 
 func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
@@ -882,6 +904,13 @@ func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
 	pg.txAuthor.RemoveSendDestination(0)
 	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Editor.Text(), pg.amountAtoms, false)
 	return pg.amountAtoms
+}
+
+func (pg *SendPage) setChangeDestinationAddr() {
+	if pg.customChangeAddressEditor.Editor.Len() > 0 {
+		pg.txAuthor.RemoveChangeDestination(0)
+		pg.txAuthor.AddChangeDestination(pg.customChangeAddressEditor.Editor.Text())
+	}
 }
 
 func (pg *SendPage) amountValues() amountValue {
@@ -922,9 +951,18 @@ func (pg *SendPage) updateDefaultValues() {
 	pg.inactiveTotalCostValue = v.inactiveTotalCostValue
 }
 
-func (pg *SendPage) getTxFee() int64 {
+func (pg *SendPage) getTxFee(isCustomInputs bool) int64 {
 	// calculate transaction fee
 	pg.amountErrorText = ""
+	if isCustomInputs {
+		utxoKeys, _ := pg.calculateBalanceUTXO()
+		err := pg.txAuthor.UseInputs(utxoKeys)
+		if err != nil {
+			log.Error(err)
+			return 0
+		}
+	}
+
 	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
 	if err != nil {
 		pg.feeEstimationError(err.Error(), "fee")
@@ -934,8 +972,33 @@ func (pg *SendPage) getTxFee() int64 {
 	return feeAndSize.Fee.AtomValue
 }
 
-func (pg *SendPage) balanceAfterSend(totalCost int64) {
-	pg.remainingBalance = pg.selectedAccount.SpendableBalance - totalCost
+func (pg *SendPage) calculateBalanceUTXO() ([]string, int64) {
+	utxos := (*pg.unspentOutputsSelected)[pg.selectedWallet.ID][pg.selectedAccount.Number]
+	var utxoKeys []string
+	var totalAmount int64
+	for utxoKey, utxo := range utxos {
+		utxoKeys = append(utxoKeys, utxoKey)
+		totalAmount += utxo.UTXO.Amount
+	}
+	return utxoKeys, totalAmount
+}
+
+func (pg *SendPage) balanceAfterSend(isInputAmountEmpty bool) {
+	pg.remainingBalance = 0
+	if pg.toggleCoinCtrl.Value {
+		_, spendableBalance := pg.calculateBalanceUTXO()
+		if isInputAmountEmpty {
+			pg.remainingBalance = spendableBalance
+		} else {
+			pg.remainingBalance = spendableBalance - pg.totalCostDCR
+		}
+	} else {
+		if isInputAmountEmpty {
+			pg.remainingBalance = pg.selectedAccount.SpendableBalance
+		} else {
+			pg.remainingBalance = pg.selectedAccount.SpendableBalance - pg.totalCostDCR
+		}
+	}
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
 }
 
@@ -956,7 +1019,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 
 	if pg.broadcastResult.TxHash != "" {
 		if pg.remainingBalance != -1 {
-			pg.selectedAccount.SpendableBalance = pg.remainingBalance
+			pg.spendableBalance = pg.remainingBalance
 		}
 		pg.remainingBalance = -1
 
@@ -1007,38 +1070,59 @@ func (pg *SendPage) centralize(gtx layout.Context, content layout.Widget) layout
 }
 
 func (pg *SendPage) coinControlFeatured(gtx layout.Context, c *pageCommon) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return material.Switch(pg.theme.Base, pg.toggleCoinCtrl).Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: unit.Dp(16)}.Layout(gtx, func(gtx C) D {
-						return pg.theme.Body1("Coin control features").Layout(gtx)
-					})
-				}),
-			)
-		}),
-		layout.Rigid(func(gtx C) D {
-			if !pg.toggleCoinCtrl.Value {
-				return layout.Dimensions{}
-			}
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D { return pg.inputButtonCoinCtrl.Layout(gtx) }),
-				layout.Rigid(func(gtx C) D {
-					utxos := c.selectedUTXO[pg.selectedWallet.ID][pg.selectedAccount.Number]
-					var totalAmount int64
-					for _, utxo := range utxos {
-						totalAmount += utxo.UTXO.Amount
-					}
-					txt := "Automatically selected"
-					if len(utxos) > 0 {
-						txt = fmt.Sprintf("Quantity: %d | Amount: %s", len(utxos), dcrutil.Amount(totalAmount).String())
-					}
-					return pg.theme.Body1(txt).Layout(gtx)
-				}),
-			)
-		}),
-	)
+	main := layout.UniformInset(values.MarginPadding20)
+	return pg.sectionLayout(gtx, main, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return material.Switch(pg.theme.Base, pg.toggleCoinCtrl).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Left: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+							return pg.theme.Body1("Coin control features").Layout(gtx)
+						})
+					}),
+				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if !pg.toggleCoinCtrl.Value {
+					return layout.Dimensions{}
+				}
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Top: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(func(gtx C) D { return pg.inputButtonCoinCtrl.Layout(gtx) }),
+								layout.Rigid(func(gtx C) D {
+									utxos := c.selectedUTXO[pg.selectedWallet.ID][pg.selectedAccount.Number]
+									var totalAmount int64
+									for _, utxo := range utxos {
+										totalAmount += utxo.UTXO.Amount
+									}
+									txt := "Automatically selected"
+									if len(utxos) > 0 {
+										txt = fmt.Sprintf("Quantity: %d | Amount: %s", len(utxos), dcrutil.Amount(totalAmount).String())
+									}
+									return layout.Inset{Left: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+										return pg.theme.Body1(txt).Layout(gtx)
+									})
+								}),
+							)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Top: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							return pg.customChangeAddressEditor.Layout(gtx)
+						})
+					}),
+				)
+			}),
+		)
+	})
 }

@@ -24,7 +24,7 @@ type utxoPage struct {
 	unspentOutputs         **wallet.UnspentOutputs
 	unspentOutputsSelected *map[int]map[int32]map[string]*wallet.UnspentOutput
 	checkboxes             []decredmaterial.CheckBoxStyle
-	selecAll               decredmaterial.CheckBoxStyle
+	selecAllChexBox        decredmaterial.CheckBoxStyle
 
 	txnFee            string
 	txnAmount         string
@@ -43,7 +43,7 @@ func (win *Window) UTXOPage(common pageCommon) layout.Widget {
 		line:                   common.theme.Line(),
 		txAuthor:               &win.txAuthor,
 		unspentOutputsSelected: &common.selectedUTXO,
-		selecAll:               common.theme.CheckBox(new(widget.Bool), ""),
+		selecAllChexBox:        common.theme.CheckBox(new(widget.Bool), ""),
 	}
 	pg.line.Color = common.theme.Color.Gray
 	pg.line.Height = 1
@@ -84,9 +84,9 @@ func (pg *utxoPage) Handler(common pageCommon) {
 		*common.page = PageSend
 	}
 
-	if pg.selecAll.CheckBox.Changed() {
+	if pg.selecAllChexBox.CheckBox.Changed() {
 		for i, utxo := range (*pg.unspentOutputs).List {
-			if pg.selecAll.CheckBox.Value {
+			if pg.selecAllChexBox.CheckBox.Value {
 				pg.checkboxes[i].CheckBox.Value = true
 				(*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID][utxo.UTXO.OutputKey] = utxo
 			} else {
@@ -200,10 +200,10 @@ func (pg *utxoPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	})
 }
 
-func textData(gtx layout.Context, c *pageCommon, txt, subTxt string) layout.Dimensions {
+func textData(gtx layout.Context, c *pageCommon, txt, value string) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(c.theme.Label(values.MarginPadding15, txt).Layout),
-		layout.Rigid(c.theme.Label(values.MarginPadding15, subTxt).Layout),
+		layout.Rigid(c.theme.Label(values.MarginPadding15, value).Layout),
 	)
 }
 
@@ -214,7 +214,7 @@ func (pg *utxoPage) utxoRowHeader(gtx layout.Context, c *pageCommon) layout.Dime
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding35)
-				return pg.selecAll.Layout(gtx)
+				return pg.selecAllChexBox.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
@@ -254,7 +254,7 @@ func (pg *utxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, c *p
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			txt := c.theme.Body2(data.UTXO.Address)
+			txt := c.theme.Body2(data.UTXO.Addresses)
 			txt.MaxLines = 1
 			gtx.Constraints.Max.X = gtx.Px(values.MarginPadding200)
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding200)
