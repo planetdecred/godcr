@@ -1,7 +1,7 @@
 package decredmaterial
 
 import (
-	//"fmt"
+	"fmt"
 	"image"
 	"image/color"
 
@@ -84,7 +84,7 @@ func (c *Combo) handleEvents() {
 	}
 
 	for c.backdrop.Clicked() {
-
+		fmt.Println("ddd")
 	}
 }
 
@@ -152,7 +152,6 @@ func (c *Combo) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bo
 	min.X = 100
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			//rr := float32(5)
 			clip.RRect{
 				Rect: f32.Rectangle{Max: f32.Point{
 					X: float32(gtx.Constraints.Min.X),
@@ -195,5 +194,10 @@ func (c *Combo) Layout(gtx layout.Context) layout.Dimensions {
 		}
 	}
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(c.backdrop.Layout),
+		layout.Stacked(func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+		}),
+	)
 }

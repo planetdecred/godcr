@@ -110,8 +110,36 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 
 		directionFilter := pg.txTypeCombo.SelectedIndex()
 
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
+		dims := layout.Inset{Top: unit.Dp(50)}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Flexed(1, func(gtx C) D {
+					return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+							if len(walTxs) == 0 {
+								txt := common.theme.Body1("No transactions")
+								txt.Alignment = text.Middle
+								return txt.Layout(gtx)
+							}
+
+							return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
+								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
+									return layout.Dimensions{}
+								}
+
+								click := pg.toTxnDetails[index]
+								pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+								click.Add(gtx.Ops)
+								pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
+								return pg.txnRowInfo(gtx, &common, walTxs[index])
+							})
+						})
+					})
+				}),
+			)
+		})
+
+		layout.Stack{}.Layout(gtx,
+			layout.Stacked(func(gtx C) D {
 				return layout.Inset{
 					Bottom: unit.Dp(10),
 				}.Layout(gtx, func(gtx C) D {
@@ -141,30 +169,9 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 					)
 				})
 			}),
-			layout.Flexed(1, func(gtx C) D {
-				return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
-						if len(walTxs) == 0 {
-							txt := common.theme.Body1("No transactions")
-							txt.Alignment = text.Middle
-							return txt.Layout(gtx)
-						}
-
-						return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
-							if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
-								return layout.Dimensions{}
-							}
-
-							click := pg.toTxnDetails[index]
-							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-							click.Add(gtx.Ops)
-							pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
-							return pg.txnRowInfo(gtx, &common, walTxs[index])
-						})
-					})
-				})
-			}),
 		)
+
+		return dims
 	}
 	return common.Layout(gtx, container)
 }
