@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 // updateSyncStatus updates the sync status in the walletInfo state.

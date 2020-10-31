@@ -13,7 +13,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
 var pageContainer = &layout.List{Axis: layout.Vertical}
@@ -44,6 +44,7 @@ type TestStruct struct {
 	}
 
 	collapsible *decredmaterial.Collapsible
+	combo       *decredmaterial.Combo
 }
 
 type (
@@ -110,6 +111,18 @@ func (t *TestStruct) initWidgets() {
 
 	t.collapsible = theme.Collapsible()
 
+	comboItems := []decredmaterial.ComboItem{
+		{
+			Text: "All",
+		},
+		{
+			Text: "Not All",
+		},
+		{
+			Text: "Semi All",
+		},
+	}
+	t.combo = theme.Combo(comboItems)
 }
 
 func (t *TestStruct) TestPage(gtx layout.Context) {
@@ -174,6 +187,11 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 		},
 		func(gtx C) D {
 			return t.customEditorOutput.testOutput.Layout(gtx)
+		},
+
+		func(gtx C) D {
+			gtx.Constraints.Max.X = 200
+			return t.combo.Layout(gtx)
 		},
 
 		func(gtx C) D {

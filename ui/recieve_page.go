@@ -7,13 +7,13 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 	"github.com/skip2/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageReceive = "receive"
+const PageReceive = "Receive"
 
 type receivePage struct {
 	pageContainer layout.List

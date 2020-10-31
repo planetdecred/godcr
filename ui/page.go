@@ -12,9 +12,9 @@ import (
 	"gioui.org/unit"
 
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/ui/values"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -67,7 +67,7 @@ type (
 
 const (
 	navDrawerWidth          = 190
-	navDrawerMinimizedWidth = 115
+	navDrawerMinimizedWidth = 118
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
@@ -110,6 +110,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		moreIconInactive:           decredIcons["more_inactive"],
 		logo:                       decredIcons["logo"],
 	}
+	win.theme.NavigationCheckIcon = ic.navigationCheck
 
 	appBarNavItems := []navHandler{
 		{
@@ -301,7 +302,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 											})
 										}),
 									)
-							    })
+								})
 							})
 						})
 					})

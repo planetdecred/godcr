@@ -1,17 +1,18 @@
 package ui
 
 import (
+	"reflect"
 	"time"
 
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageWallet = "wallet"
+const PageWallet = "Wallet"
 
 const (
 	subWalletMain = iota
@@ -139,7 +140,8 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		common.states.deleted = false
 	}
 
-	if pg.current.ID != common.info.Wallets[*common.selectedWallet].ID {
+	if pg.current.ID != common.info.Wallets[*common.selectedWallet].ID ||
+		!reflect.DeepEqual(pg.current.Seed, common.info.Wallets[*common.selectedWallet].Seed) {
 		pg.current = common.info.Wallets[*common.selectedWallet]
 		pg.renameAcctButtons = nil
 		pg.renameAcctIndex = -1

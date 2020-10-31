@@ -1,9 +1,9 @@
 package ui
 
 import (
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 // states represents a combination of booleans that determine what the wallet is displaying.

@@ -4,13 +4,13 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageWalletAccounts = "walletAccounts"
+const PageWalletAccounts = "WalletAccounts"
 
 type walletAccountPage struct {
 	walletID      int

@@ -3,15 +3,15 @@ package ui
 import (
 	"fmt"
 
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageSignMessage = "sign_message"
+const PageSignMessage = "SignMessage"
 
 type signMessagePage struct {
 	container  layout.List

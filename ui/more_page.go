@@ -8,8 +8,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const PageMore = "More"

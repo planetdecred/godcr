@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"image"
 	"sort"
 	"strconv"
@@ -18,13 +17,13 @@ import (
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/raedahgroup/dcrlibwallet"
-	"github.com/raedahgroup/godcr/ui/decredmaterial"
-	"github.com/raedahgroup/godcr/ui/values"
-	"github.com/raedahgroup/godcr/wallet"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageTransactions = "transactions"
+const PageTransactions = "Transactions"
 
 type transactionWdg struct {
 	status       *widget.Icon
@@ -42,6 +41,10 @@ type transactionsPage struct {
 	filterDirection, filterSort                 []decredmaterial.RadioButton
 	defaultFilterSorter, defaultFilterDirection string
 	toTxnDetails                                []*gesture.Click
+
+	orderCombo  *decredmaterial.Combo
+	txTypeCombo *decredmaterial.Combo
+	walletCombo *decredmaterial.Combo
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
@@ -55,26 +58,24 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		defaultFilterSorter:    "0",
 		defaultFilterDirection: "0",
 	}
-
-	pg.filterSorter = pg.defaultFilterSorter
-	pg.filterDirectionW.Value = pg.defaultFilterDirection
-	pg.filterSortW.Value = pg.defaultFilterSorter
-
-	txFilterDirection := []string{"All", "Sent", "Received", "Transfer"}
-	txFilterSorts := []string{"Newest", "Oldest"}
-
-	for i := 0; i < len(txFilterDirection); i++ {
-		pg.filterDirection = append(
-			pg.filterDirection,
-			common.theme.RadioButton(pg.filterDirectionW, fmt.Sprint(i), txFilterDirection[i]))
-		pg.filterDirection[i].Size = values.MarginPadding20
-	}
-
-	for i := 0; i < len(txFilterSorts); i++ {
-		pg.filterSort = append(pg.filterSort,
-			common.theme.RadioButton(pg.filterSortW, fmt.Sprint(i), txFilterSorts[i]))
-		pg.filterSort[i].Size = values.MarginPadding20
-	}
+	pg.orderCombo = common.theme.Combo([]decredmaterial.ComboItem{{Text: "Newest"}, {Text: "Oldest"}})
+	pg.txTypeCombo = common.theme.Combo([]decredmaterial.ComboItem{
+		{
+			Text: "All",
+		},
+		{
+			Text: "Sent",
+		},
+		{
+			Text: "Received",
+		},
+		{
+			Text: "Yourself",
+		},
+		{
+			Text: "Staking",
+		},
+	})
 
 	return func(gtx C) D {
 		pg.Handle(common)
@@ -82,34 +83,88 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 	}
 }
 
+func (pg *transactionsPage) setWallets(common pageCommon) {
+	if len(common.info.Wallets) == 0 || pg.walletCombo != nil {
+		return
+	}
+
+	walletComboItems := []decredmaterial.ComboItem{}
+	for i := range common.info.Wallets {
+		item := decredmaterial.ComboItem{
+			Text: common.info.Wallets[i].Name,
+			Icon: common.icons.walletIcon,
+		}
+		walletComboItems = append(walletComboItems, item)
+	}
+	pg.walletCombo = common.theme.Combo(walletComboItems)
+
+}
+
 func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	pg.setWallets(common)
+
 	container := func(gtx C) D {
-		walletID := common.info.Wallets[*common.selectedWallet].ID
+		walletID := common.info.Wallets[pg.walletCombo.SelectedIndex()].ID
 		walTxs := (*pg.walletTransactions).Txs[walletID]
 		pg.updateTotransactionDetailsButtons(&walTxs)
 
-		directionFilter, _ := strconv.Atoi(pg.filterDirectionW.Value)
-		return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
-				if len(walTxs) == 0 {
-					txt := common.theme.Body1("No transactions")
-					txt.Alignment = text.Middle
-					return txt.Layout(gtx)
-				}
+		directionFilter := pg.txTypeCombo.SelectedIndex()
 
-				return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
-					if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
-						return layout.Dimensions{}
-					}
-
-					click := pg.toTxnDetails[index]
-					pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-					click.Add(gtx.Ops)
-					pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
-					return pg.txnRowInfo(gtx, &common, walTxs[index])
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{
+					Bottom: unit.Dp(10),
+				}.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.walletCombo.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Left: unit.Dp(5),
+									}.Layout(gtx, func(gtx C) D {
+										return pg.txTypeCombo.Layout(gtx)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Left: unit.Dp(5),
+									}.Layout(gtx, func(gtx C) D {
+										return pg.orderCombo.Layout(gtx)
+									})
+								}),
+							)
+						}),
+					)
 				})
-			})
-		})
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+						if len(walTxs) == 0 {
+							txt := common.theme.Body1("No transactions")
+							txt.Alignment = text.Middle
+							return txt.Layout(gtx)
+						}
+
+						return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
+							if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
+								return layout.Dimensions{}
+							}
+
+							click := pg.toTxnDetails[index]
+							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+							click.Add(gtx.Ops)
+							pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
+							return pg.txnRowInfo(gtx, &common, walTxs[index])
+						})
+					})
+				})
+			}),
+		)
 	}
 	return common.Layout(gtx, container)
 }
@@ -193,38 +248,6 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
 
-	/**return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-					return txnWidgets.direction.Layout(gtx, values.MarginPadding15)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				txnWidgets.time.Alignment = text.Middle
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
-				return txnWidgets.time.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				txt := common.theme.Body1(transaction.Status)
-				txt.Alignment = text.Middle
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
-				return txt.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				txnWidgets.amount.Alignment = text.End
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
-				return txnWidgets.amount.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
-				txt.Alignment = text.End
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
-				return txt.Layout(gtx)
-			}),
-		)
-	})**/
-
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -234,7 +257,6 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: unit.Dp(15), Top: unit.Dp(5)}.Layout(gtx, func(gtx C) D {
-						/**return pg.layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)**/
 						txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
 						txt.Alignment = text.End
 						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
@@ -255,8 +277,10 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 }
 
 func (pg *transactionsPage) Handle(common pageCommon) {
-	if pg.filterSorter != pg.filterSortW.Value {
-		pg.filterSorter = pg.filterSortW.Value
+	sortSelection := strconv.Itoa(pg.orderCombo.SelectedIndex())
+
+	if pg.filterSorter != sortSelection {
+		pg.filterSorter = sortSelection
 		pg.sortTransactions(&common)
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/raedahgroup/godcr/ui/values"
+	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
