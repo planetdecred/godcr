@@ -55,7 +55,12 @@ type Window struct {
 	clipboard               chan interface{}
 	toast                   chan *toast
 	modal                   chan *modalLoad
-	sysDestroyWithSync      bool
+
+	sysDestroyWithSync bool
+
+	proposals          map[int32][]dcrlibwallet.Proposal
+	proposal           *dcrlibwallet.Proposal
+	isSyncingProposals bool
 }
 
 type WriteClipboard struct {

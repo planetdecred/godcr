@@ -89,11 +89,23 @@ func (win *Window) updateStates(update interface{}) {
 		go func() {
 			win.modal <- &modalLoad{}
 		}()
+	case []dcrlibwallet.Proposal:
+		proposals := update.([]dcrlibwallet.Proposal)
+		if win.proposals == nil {
+			win.proposals = make(map[int32][]dcrlibwallet.Proposal)
+			for _, v := range proposals {
+				win.proposals[v.Category] = append(win.proposals[v.Category], v)
+			}
+		}
 	}
 
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
 	win.wallet.GetAllTransactions(0, 0, 0)
+
+	if win.proposals == nil {
+		win.wallet.GetProposals()
+	}
 
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }

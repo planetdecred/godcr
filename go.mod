@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	gioui.org v0.0.0-20200722191435-e381ff40d66b
+	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1

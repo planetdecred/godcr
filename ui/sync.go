@@ -4,6 +4,28 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
+type ProposalNotificationListeners struct {
+	win *Window
+}
+
+func (p ProposalNotificationListeners) OnNewProposal(proposalID int, censorshipToken string) {
+	p.win.wallet.GetProposalUpdate(censorshipToken, 1)
+}
+
+func (p ProposalNotificationListeners) OnProposalVoteStarted(proposalID int, censorshipToken string) {
+	p.win.wallet.GetProposalUpdate(censorshipToken, 2)
+}
+
+func (p ProposalNotificationListeners) OnProposalVoteFinished(proposalID int, censorshipToken string) {
+	p.win.wallet.GetProposalUpdate(censorshipToken, 3)
+}
+
+// SyncProposals starts syncing the multiwallet proposals
+/**func (win Window) SyncProposals() {
+	win.isSyncingProposals = true
+	win.wallet.StartProposalsSync(ProposalNotificationListeners{win: &win})
+}**/
+
 // updateSyncStatus updates the sync status in the walletInfo state.
 func (win Window) updateSyncStatus(syncing, synced bool) {
 	win.walletInfo.Syncing = syncing

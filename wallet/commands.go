@@ -156,6 +156,45 @@ func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan
 	}()
 }
 
+func (wal *Wallet) GetProposals() {
+	go func() {
+		var resp Response
+		proposals, err := wal.multi.Politeia.GetProposalsRaw(dcrlibwallet.ProposalCategoryAll, 0, 0, true)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not fetch proposals",
+				Err:     err,
+			})
+			return
+		}
+		resp.Resp = proposals
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) GetProposalUpdate(token string, updateType int) {
+	go func() {
+		var resp Response
+		proposal, err := wal.multi.Politeia.GetProposalRaw(token)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not fetch updated proposal",
+				Err:     err,
+			})
+
+			return
+		}
+
+		resp.Resp = &ProposalUpdate{
+			Proposal:   proposal,
+			UpdateType: updateType,
+		}
+		wal.Send <- resp
+	}()
+}
+
 // transactionStatus accepts the bestBlockHeight, transactionBlockHeight returns a transaction status
 // which could be confirmed/pending and confirmations count
 func transactionStatus(bestBlockHeight, txnBlockHeight int32) (string, int32) {
@@ -648,6 +687,17 @@ func (wal *Wallet) HaveAddress(walletID int, address string) (bool, error) {
 // VerifyMessage checks if the given message matches the signature for the address.
 func (wal *Wallet) VerifyMessage(address string, message string, signature string) (bool, error) {
 	return wal.multi.VerifyMessage(address, message, signature)
+}
+
+// StartProposalsSync starts the multiwallet politeia proposals sync
+func (wal *Wallet) StartProposalsSync(syncListener dcrlibwallet.ProposalSyncProgressListener) error {
+	wal.multi.Politeia.AddSyncPropogressListener(syncListener, "godcr")
+	return wal.multi.Politeia.Sync()
+}
+
+// CancelProposalsSync cancels the politeia proposals sync
+func (wal *Wallet) CancelProposalsSync() {
+	//return wal.multi.Politeia.
 }
 
 // StartSync starts the multiwallet SPV sync
