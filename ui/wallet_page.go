@@ -418,9 +418,9 @@ func (pg *walletPage) Handle(common pageCommon) {
 	//	pg.subPage = subWalletMain
 	//}
 
-	if common.navTab.Selected != 1 {
-		pg.subPage = subWalletMain
-	}
+	// if common.navTab.Selected != 1 {
+	// 	pg.subPage = subWalletMain
+	// }
 
 	// Subs
 	if pg.icons.main.Button.Clicked() || pg.cancelDelete.Button.Clicked() {
