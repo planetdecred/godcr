@@ -196,6 +196,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
 	win.pages[PageWalletAccounts] = win.WalletAccountPage(common)
 	win.pages[PageSeedBackup] = win.BackupPage(common)
+	win.pages[PageSettings] = win.SettingsPage(common)
+	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
+	win.pages[PagePoliteia] = win.PoliteiaPage(common)
+	win.pages[PageDebug] = win.DebugPage(common)
+	win.pages[PageAbout] = win.AboutPage(common)
+	win.pages[PageHelp] = win.HelpPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {
