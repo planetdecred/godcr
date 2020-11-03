@@ -30,11 +30,11 @@ type pageIcons struct {
 }
 
 type navHandler struct {
-	clickable         *widget.Clickable
-	image             *widget.Image
-	imageInactive     *widget.Image
-	page      string
-	isActive  bool
+	clickable     *widget.Clickable
+	image         *widget.Image
+	imageInactive *widget.Image
+	page          string
+	isActive      bool
 }
 
 type pageCommon struct {
@@ -66,8 +66,8 @@ type (
 )
 
 const (
-	navDrawerWidth          = 190
-	navDrawerMinimizedWidth = 118
+	navDrawerWidth          = 320
+	navDrawerMinimizedWidth = 170
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
@@ -127,28 +127,28 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 	drawerNavItems := []navHandler{
 		{
-			clickable: new(widget.Clickable),
-			image:           &widget.Image{Src: paint.NewImageOp(ic.overviewIcon)},
-			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.overviewIconInactive)},
-			page:            PageOverview,
+			clickable:     new(widget.Clickable),
+			image:         &widget.Image{Src: paint.NewImageOp(ic.overviewIcon)},
+			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.overviewIconInactive)},
+			page:          PageOverview,
 		},
 		{
-			clickable: new(widget.Clickable),
-			image:           &widget.Image{Src: paint.NewImageOp(ic.transactionIcon)},
-			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.transactionIconInactive)},
-			page:            PageTransactions,
+			clickable:     new(widget.Clickable),
+			image:         &widget.Image{Src: paint.NewImageOp(ic.transactionIcon)},
+			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.transactionIconInactive)},
+			page:          PageTransactions,
 		},
 		{
-			clickable: new(widget.Clickable),
-			image:           &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
-			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.walletIconInactive)},
-			page:            PageWallet,
+			clickable:     new(widget.Clickable),
+			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.walletIconInactive)},
+			page:          PageWallet,
 		},
 		{
-			clickable: new(widget.Clickable),
-			image:           &widget.Image{Src: paint.NewImageOp(ic.moreIcon)},
-			imageInactive:   &widget.Image{Src: paint.NewImageOp(ic.moreIconInactive)},
-			page:            PageMore,
+			clickable:     new(widget.Clickable),
+			image:         &widget.Image{Src: paint.NewImageOp(ic.moreIcon)},
+			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.moreIconInactive)},
+			page:          PageMore,
 		},
 	}
 
@@ -186,7 +186,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageMore] = win.MorePage(decredIcons,common)
+	win.pages[PageMore] = win.MorePage(decredIcons, common)
 	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
 	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageSend] = win.SendPage(common)
@@ -354,7 +354,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 											}.Layout(gtx, func(gtx C) D {
 												return layout.Center.Layout(gtx, func(gtx C) D {
 													if *page.isNavDrawerMinimized {
-														return page.theme.Body2(page.drawerNavItems[i].page).Layout(gtx)
+														return page.theme.Label(values.TextSize10, page.drawerNavItems[i].page).Layout(gtx)
 													}
 													return page.theme.Body1(page.drawerNavItems[i].page).Layout(gtx)
 												})
