@@ -32,7 +32,7 @@ func (t *Theme) Combo(items []ComboItem) *Combo {
 	c := &Combo{
 		isOpen:         false,
 		items:          make([]ComboItem, len(items)+1),
-		color:          mulAlpha(t.Color.Gray, 50),
+		color:          t.Color.Background,
 		background:     t.Color.Surface,
 		chevronIcon:    t.chevronDownIcon,
 		navigationIcon: t.NavigationCheckIcon,
@@ -196,26 +196,29 @@ func (c *Combo) comboItemMenu(gtx layout.Context) layout.Dimensions {
 		})
 	}
 
-	return c.drawlayout(gtx, true, func(gtx C) D {
-		list := &layout.List{Axis: layout.Vertical}
-		return list.Layout(gtx, len(comboItemRows), func(gtx C, i int) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(unit.Dp(0)).Layout(gtx, comboItemRows[i])
-				}),
-				layout.Rigid(func(gtx C) D {
-					// if i < len(comboItemRows)-1 {
-					// 	return layout.Inset{
-					// 		Top:    unit.Dp(10),
-					// 		Bottom: unit.Dp(10),
-					// 	}.Layout(gtx, func(gtx C) D {
-					// 		return c.line.Layout(gtx)
-					// 	})
-					// }
+	border := widget.Border{Color: c.color, CornerRadius: unit.Dp(10), Width: unit.Dp(2)}
+	return border.Layout(gtx, func(gtx C) D {
+		return c.drawlayout(gtx, true, func(gtx C) D {
+			list := &layout.List{Axis: layout.Vertical}
+			return list.Layout(gtx, len(comboItemRows), func(gtx C, i int) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.UniformInset(unit.Dp(0)).Layout(gtx, comboItemRows[i])
+					}),
+					layout.Rigid(func(gtx C) D {
+						// if i < len(comboItemRows)-1 {
+						// 	return layout.Inset{
+						// 		Top:    unit.Dp(10),
+						// 		Bottom: unit.Dp(10),
+						// 	}.Layout(gtx, func(gtx C) D {
+						// 		return c.line.Layout(gtx)
+						// 	})
+						// }
 
-					return layout.Dimensions{}
-				}),
-			)
+						return layout.Dimensions{}
+					}),
+				)
+			})
 		})
 	})
 }
