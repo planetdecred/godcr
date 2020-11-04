@@ -251,7 +251,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(unit.Dp(15)).Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 						return body(gtx)
 					})
 				}),
@@ -263,58 +263,70 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Inset{
-			Top:    unit.Dp(7),
-			Bottom: unit.Dp(7),
-			Left:   unit.Dp(8),
-			Right:  unit.Dp(18),
-		}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					img := widget.Image{Src: paint.NewImageOp(page.icons.logo)}
-					img.Scale = 0.085
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				m := values.MarginPadding5
+				return layout.Inset{
+					Top:    m,
+					Bottom: m,
+					Left:   m,
+					Right:  values.MarginPadding15,
+				}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							img := widget.Image{Src: paint.NewImageOp(page.icons.logo)}
+							img.Scale = 0.085
 
-					return img.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
-						return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx C) D {
-							return page.layoutBalance(gtx, page.info.TotalBalance)
-						})
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.E.Layout(gtx, func(gtx C) D {
-						list := layout.List{Axis: layout.Horizontal}
-						return list.Layout(gtx, len(page.appBarNavItems), func(gtx C, i int) D {
-							return layout.UniformInset(unit.Dp(15)).Layout(gtx, func(gtx C) D {
-								return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											page.appBarNavItems[i].image.Scale = 0.05
-
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.appBarNavItems[i].image.Layout(gtx)
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{
-												Left: unit.Dp(10),
-											}.Layout(gtx, func(gtx C) D {
-												return layout.Center.Layout(gtx, func(gtx C) D {
-													return page.theme.Body1(page.appBarNavItems[i].page).Layout(gtx)
-												})
-											})
-										}),
-									)
+							return img.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									return page.layoutBalance(gtx, page.info.TotalBalance)
 								})
 							})
-						})
-					})
-				}),
-			)
-		})
+						}),
+						layout.Rigid(func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.E.Layout(gtx, func(gtx C) D {
+								list := layout.List{Axis: layout.Horizontal}
+								return list.Layout(gtx, len(page.appBarNavItems), func(gtx C, i int) D {
+									return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+										return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
+											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+												layout.Rigid(func(gtx C) D {
+													page.appBarNavItems[i].image.Scale = 0.05
+
+													return layout.Center.Layout(gtx, func(gtx C) D {
+														return page.appBarNavItems[i].image.Layout(gtx)
+													})
+												}),
+												layout.Rigid(func(gtx C) D {
+													return layout.Inset{
+														Left: values.MarginPadding10,
+													}.Layout(gtx, func(gtx C) D {
+														return layout.Center.Layout(gtx, func(gtx C) D {
+															return page.theme.Body1(page.appBarNavItems[i].page).Layout(gtx)
+														})
+													})
+												}),
+											)
+										})
+									})
+								})
+							})
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				l := page.theme.Line()
+				l.Color = page.theme.Color.Background
+				l.Width = gtx.Constraints.Min.X
+				l.Height = 2
+				return l.Layout(gtx)
+			}),
+		)
 	})
 }
 
@@ -333,7 +345,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.Stack{}.Layout(gtx,
 							layout.Stacked(func(gtx C) D {
-								return layout.UniformInset(unit.Dp(15)).Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 									axis := layout.Horizontal
 									leftInset := float32(15)
 									if *page.isNavDrawerMinimized {
