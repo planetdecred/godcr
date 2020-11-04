@@ -258,7 +258,7 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 			}),
 			layout.Rigid(func(gtx C) D {
 				pg.line.Width = gtx.Constraints.Max.X
-				return layout.Inset{Top: unit.Dp(4), Bottom: unit.Dp(4)}.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return pg.line.Layout(gtx)
 				})
 			}),
@@ -267,13 +267,13 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 				return list.Layout(gtx, len(transactionRows), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return layout.UniformInset(unit.Dp(0)).Layout(gtx, transactionRows[i])
+							return layout.UniformInset(values.MarginPadding0).Layout(gtx, transactionRows[i])
 						}),
 						layout.Rigid(func(gtx C) D {
 							if i < len(transactionRows)-1 {
 								return layout.Inset{
-									Top:    unit.Dp(10),
-									Bottom: unit.Dp(10),
+									Top:    values.MarginPadding10,
+									Bottom: values.MarginPadding10,
 								}.Layout(gtx, func(gtx C) D {
 									return pg.line.Layout(gtx)
 								})
@@ -306,7 +306,7 @@ func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transaction
 					return txn.direction.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: unit.Dp(15), Top: unit.Dp(5)}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						return pg.layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)
 					})
 				}),

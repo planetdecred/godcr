@@ -16,7 +16,7 @@ type Card struct {
 }
 
 const (
-	cardRadius = 15
+	cardRadius = 10
 )
 
 func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {

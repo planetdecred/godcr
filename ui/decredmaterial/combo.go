@@ -1,13 +1,10 @@
 package decredmaterial
 
 import (
-	//"fmt"
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -18,6 +15,7 @@ type Combo struct {
 	isOpen         bool
 	selectedIndex  int
 	color          color.RGBA
+	background     color.RGBA
 	chevronIcon    *widget.Icon
 	navigationIcon *widget.Icon
 	backdrop       *widget.Clickable
@@ -35,6 +33,7 @@ func (t *Theme) Combo(items []ComboItem) *Combo {
 		isOpen:         false,
 		items:          make([]ComboItem, len(items)+1),
 		color:          mulAlpha(t.Color.Gray, 50),
+		background:     t.Color.Surface,
 		chevronIcon:    t.chevronDownIcon,
 		navigationIcon: t.NavigationCheckIcon,
 		backdrop:       new(widget.Clickable),
@@ -112,16 +111,19 @@ func (c *Combo) layoutIcon(gtx layout.Context, itemIndex int) layout.FlexChild {
 		img := widget.Image{Src: paint.NewImageOp(c.items[itemIndex].Icon)}
 		img.Scale = 0.045
 
-		return layout.Inset{Right: unit.Dp(5)}.Layout(gtx, func(gtx C) D {
-			return img.Layout(gtx)
-		})
+		return img.Layout(gtx)
 	})
 }
 
 func (c *Combo) layoutText(gtx layout.Context, index int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		gtx.Constraints.Min.X = 80
-		return c.items[index].label.Layout(gtx)
+		return layout.Inset{
+			Right: unit.Dp(15),
+			Left:  unit.Dp(5),
+		}.Layout(gtx, func(gtx C) D {
+			return c.items[index].label.Layout(gtx)
+		})
 	})
 }
 
@@ -150,17 +152,8 @@ func (c *Combo) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bo
 
 	min := gtx.Constraints.Min
 	min.X = 100
+
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			//rr := float32(5)
-			clip.RRect{
-				Rect: f32.Rectangle{Max: f32.Point{
-					X: float32(gtx.Constraints.Min.X),
-					Y: float32(gtx.Constraints.Min.Y),
-				}},
-			}.Add(gtx.Ops)
-			return fill(gtx, c.color)
-		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx C) D {
@@ -186,14 +179,56 @@ func (c *Combo) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if c.isOpen {
-		items := c.items[1:]
-		for i := range items {
-			index := i
-			children = append(children, layout.Rigid(func(gtx C) D {
-				return c.layoutOption(gtx, index+1, false)
-			}))
-		}
+		return c.comboItemMenu(gtx)
+	}
+	return c.drawlayout(gtx, false, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+	})
+}
+
+func (c *Combo) comboItemMenu(gtx layout.Context) layout.Dimensions {
+	items := c.items[1:]
+	var comboItemRows []func(gtx C) D
+	for i := range items {
+		index := i
+		comboItemRows = append(comboItemRows, func(gtx C) D {
+			return c.layoutOption(gtx, index+1, false)
+		})
 	}
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+	return c.drawlayout(gtx, true, func(gtx C) D {
+		list := &layout.List{Axis: layout.Vertical}
+		return list.Layout(gtx, len(comboItemRows), func(gtx C, i int) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.UniformInset(unit.Dp(0)).Layout(gtx, comboItemRows[i])
+				}),
+				layout.Rigid(func(gtx C) D {
+					// if i < len(comboItemRows)-1 {
+					// 	return layout.Inset{
+					// 		Top:    unit.Dp(10),
+					// 		Bottom: unit.Dp(10),
+					// 	}.Layout(gtx, func(gtx C) D {
+					// 		return c.line.Layout(gtx)
+					// 	})
+					// }
+
+					return layout.Dimensions{}
+				}),
+			)
+		})
+	})
+}
+
+// drawlayout wraps the page tx and sync section in a card layout
+func (c *Combo) drawlayout(gtx layout.Context, isPopUp bool, body layout.Widget) layout.Dimensions {
+	color := c.color
+	m := unit.Dp(5)
+	if isPopUp {
+		color = c.background
+		m = unit.Dp(15)
+	}
+	return Card{Color: color, Rounded: true}.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(m).Layout(gtx, body)
+	})
 }
