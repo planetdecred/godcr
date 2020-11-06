@@ -13,7 +13,6 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/paint"
 	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -140,7 +139,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 			}),
 			layout.Stacked(func(gtx C) D {
 				return layout.Inset{
-					Bottom: unit.Dp(10),
+					Bottom: values.MarginPadding10,
 				}.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -151,14 +150,14 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{
-										Left: unit.Dp(5),
+										Left: values.MarginPadding5,
 									}.Layout(gtx, func(gtx C) D {
 										return pg.txTypeCombo.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{
-										Left: unit.Dp(5),
+										Left: values.MarginPadding5,
 									}.Layout(gtx, func(gtx C) D {
 										return pg.orderCombo.Layout(gtx)
 									})
@@ -260,7 +259,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 					return txnWidgets.direction.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: unit.Dp(15), Top: unit.Dp(5)}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
 						txt.Alignment = text.End
 						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
@@ -270,7 +269,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 				txt := common.theme.Body1(transaction.Status)
 				txt.Alignment = text.Middle
 				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
