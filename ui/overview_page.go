@@ -5,12 +5,12 @@ import (
 	"image"
 	"image/color"
 	"strings"
+	"time"
 
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -60,6 +60,7 @@ type transactionWidgets struct {
 	wallet      decredmaterial.Label
 	balance     string
 	direction   *widget.Image
+	statusIcon  *widget.Image
 	mainBalance decredmaterial.Label
 	subBalance  decredmaterial.Label
 	date        decredmaterial.Label
@@ -216,14 +217,24 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 				mainBalance: theme.H6(""),
 				subBalance:  theme.Body2(""),
 				date:        theme.Body1(txn.DateTime),
-				status:      theme.Body1(txn.Status),
+				status:      theme.Body1(""),
 			}
 			if txn.Txn.Direction == dcrlibwallet.TxDirectionSent {
 				txnWidgets.direction = &widget.Image{Src: paint.NewImageOp(c.icons.sendIcon)}
 			} else {
 				txnWidgets.direction = &widget.Image{Src: paint.NewImageOp(c.icons.receiveIcon)}
 			}
+
+			if txn.Status == "confirmed" {
+				txnWidgets.status.Text = formatDateOrTime(txn.Txn.Timestamp)
+				txnWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(c.icons.confirmIcon)}
+			} else {
+				txnWidgets.status.Text = txn.Status
+				txnWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(c.icons.pendingIcon)}
+			}
+
 			txnWidgets.direction.Scale = 0.07
+			txnWidgets.statusIcon.Scale = 0.03
 
 			click := pg.toTransactionDetails[index]
 
@@ -313,9 +324,18 @@ func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transaction
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
-				return txn.status.Layout(gtx)
-			})
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return txn.status.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.TextSize12, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return txn.statusIcon.Layout(gtx)
+					})
+				}),
+			)
 		}),
 	)
 }
@@ -696,5 +716,15 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 				return
 			}
 		}
+	}
+}
+
+func formatDateOrTime(timestamp int64) string {
+	utcTime := time.Unix(timestamp, 0).UTC()
+	if time.Now().UTC().Sub(utcTime).Hours() < 168 {
+		return utcTime.Weekday().String()
+	} else {
+		t := strings.Split(utcTime.Format(time.UnixDate), " ")
+		return fmt.Sprintf("%s %s", t[1], t[2])
 	}
 }
