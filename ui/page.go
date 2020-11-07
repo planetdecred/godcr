@@ -36,7 +36,6 @@ type navHandler struct {
 	image         *widget.Image
 	imageInactive *widget.Image
 	page          string
-	isActive      bool
 }
 
 type pageCommon struct {

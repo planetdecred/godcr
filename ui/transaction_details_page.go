@@ -155,13 +155,13 @@ func (pg *transactionPage) txnBalanceAndStatus(gtx layout.Context, common *pageC
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return txnWidgets.status.Layout(gtx, values.MarginPadding15)
+						return txnWidgets.statusIcon.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						txt := common.theme.Body1((*pg.txnInfo).Status)
-						txt.Color = txnWidgets.status.Color
+						// txt.Color = common.theme.Color.Success
 						return txt.Layout(gtx)
 					})
 				}),
@@ -252,7 +252,6 @@ func (pg *transactionPage) txnOutputs(gtx layout.Context, common *pageCommon) la
 }
 
 func (pg *transactionPage) txnIORow(gtx layout.Context, common *pageCommon, amount string, hash string) layout.Dimensions {
-
 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -291,13 +290,6 @@ func (pg *transactionPage) Handler(common pageCommon) {
 		pg.viewTxnOnBrowser(&common)
 	}
 	if pg.backButton.Button.Clicked() {
-		switch common.navTab.Selected {
-		case 0:
-			*common.page = PageOverview
-			return
-		default:
-			*common.page = PageTransactions
-			return
-		}
+		*common.page = PageTransactions
 	}
 }

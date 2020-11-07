@@ -102,7 +102,7 @@ func (c *Combo) Changed() bool {
 	return false
 }
 
-func (c *Combo) layoutIcon(gtx layout.Context, itemIndex int) layout.FlexChild {
+func (c *Combo) layoutIcon(itemIndex int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		if c.items[itemIndex].Icon == nil {
 			return layout.Dimensions{}
@@ -115,7 +115,7 @@ func (c *Combo) layoutIcon(gtx layout.Context, itemIndex int) layout.FlexChild {
 	})
 }
 
-func (c *Combo) layoutText(gtx layout.Context, index int) layout.FlexChild {
+func (c *Combo) layoutText(index int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		gtx.Constraints.Min.X = 80
 		return layout.Inset{
@@ -127,7 +127,7 @@ func (c *Combo) layoutText(gtx layout.Context, index int) layout.FlexChild {
 	})
 }
 
-func (c *Combo) layoutActiveIcon(gtx layout.Context, index int, isFirstOption bool) layout.FlexChild {
+func (c *Combo) layoutActiveIcon(index int, isFirstOption bool) layout.FlexChild {
 	var icon *widget.Icon
 	if isFirstOption {
 		icon = c.chevronIcon
@@ -158,9 +158,9 @@ func (c *Combo) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bo
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min = min
-				iconLayout := c.layoutIcon(gtx, itemIndex)
-				textLayout := c.layoutText(gtx, itemIndex)
-				activeIconLayout := c.layoutActiveIcon(gtx, itemIndex, isFirstOption)
+				iconLayout := c.layoutIcon(itemIndex)
+				textLayout := c.layoutText(itemIndex)
+				activeIconLayout := c.layoutActiveIcon(itemIndex, isFirstOption)
 
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, iconLayout, textLayout, activeIconLayout)
 			})
