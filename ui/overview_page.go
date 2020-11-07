@@ -725,6 +725,10 @@ func formatDateOrTime(timestamp int64) string {
 		return utcTime.Weekday().String()
 	} else {
 		t := strings.Split(utcTime.Format(time.UnixDate), " ")
-		return fmt.Sprintf("%s %s", t[1], t[2])
+		t2 := t[2]
+		if t[2] == "" {
+			t2 = t[3]
+		}
+		return fmt.Sprintf("%s %s", t[1], t2)
 	}
 }

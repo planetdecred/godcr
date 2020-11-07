@@ -25,9 +25,9 @@ import (
 const PageTransactions = "Transactions"
 
 type transactionWdg struct {
-	status       *widget.Icon
-	direction    *widget.Image
-	amount, time decredmaterial.Label
+	statusIcon           *widget.Image
+	direction            *widget.Image
+	amount, time, status decredmaterial.Label
 }
 
 type transactionsPage struct {
@@ -96,7 +96,6 @@ func (pg *transactionsPage) setWallets(common pageCommon) {
 		walletComboItems = append(walletComboItems, item)
 	}
 	pg.walletCombo = common.theme.Combo(walletComboItems)
-
 }
 
 func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
@@ -269,12 +268,18 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				txt := common.theme.Body1(transaction.Status)
-				txt.Alignment = text.Middle
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
-				return txt.Layout(gtx)
-			})
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return txnWidgets.status.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.TextSize12, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return txnWidgets.statusIcon.Layout(gtx)
+					})
+				}),
+			)
 		}),
 	)
 }
@@ -291,13 +296,17 @@ func (pg *transactionsPage) Handle(common pageCommon) {
 func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidgets *transactionWdg) {
 	txWidgets.amount = common.theme.Label(values.MarginPadding15, transaction.Balance)
 	txWidgets.time = common.theme.Body1(transaction.DateTime)
+	txWidgets.status = common.theme.Body1("")
 
 	if transaction.Status == "confirmed" {
-		txWidgets.status = common.icons.actionCheckCircle
-		txWidgets.status.Color = common.theme.Color.Success
+		txWidgets.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
+		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.confirmIcon)}
 	} else {
-		txWidgets.status = common.icons.toggleRadioButtonUnchecked
+		txWidgets.status.Text = transaction.Status
+		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.pendingIcon)}
 	}
+
+	txWidgets.statusIcon.Scale = 0.03
 
 	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
 		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.sendIcon)}
