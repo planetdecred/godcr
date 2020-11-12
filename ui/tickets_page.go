@@ -340,7 +340,7 @@ func (pg *ticketPage) drawPasswordModalGetTicketFee(gtx layout.Context, c *pageC
 			pg.passwordModal.WithError(err.Error())
 			return
 		}
-		pg.feeTx, err = pg.vspd.CreateTicketFeeTx(resp.FeeAmount, resp.FeeAddress, password)
+		pg.feeTx, err = pg.vspd.CreateTicketFeeTx(resp.FeeAmount, pg.tiketHash, resp.FeeAddress, password)
 		if err != nil {
 			pg.passwordModal.WithError(err.Error())
 			return
