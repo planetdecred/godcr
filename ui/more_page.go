@@ -28,7 +28,6 @@ type morePage struct {
 	container         layout.Flex
 	morePageListItems []morePageHandler
 	page              *string
-	icons             morePageIcons
 }
 
 func (win *Window) MorePage(decredIcons map[string]image.Image, common pageCommon) layout.Widget {
