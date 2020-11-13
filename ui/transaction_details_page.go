@@ -25,6 +25,7 @@ type transactionPage struct {
 	backButton                  decredmaterial.IconButton
 	txnInfo                     **wallet.Transaction
 	viewTxnOnDcrdata            decredmaterial.Button
+	infoBtn                     decredmaterial.IconButton
 
 	outputsCollapsible *decredmaterial.Collapsible
 	inputsCollapsible  *decredmaterial.Collapsible
@@ -50,7 +51,11 @@ func (win *Window) TransactionPage(common pageCommon) layout.Widget {
 		viewTxnOnDcrdata: common.theme.Button(new(widget.Clickable), "View on dcrdata"),
 	}
 	pg.backButton.Color = common.theme.Color.Hint
-	pg.backButton.Size = values.MarginPadding30
+	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
+	pg.infoBtn.Color = common.theme.Color.Black
+	pg.infoBtn.Background = common.theme.Color.Surface
+	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		pg.Handler(common)
@@ -62,6 +67,9 @@ func (pg *transactionPage) Layout(gtx layout.Context, common pageCommon) layout.
 	margin := values.MarginPadding20
 
 	widgets := []func(gtx C) D{
+		func(gtx C) D {
+			return pg.header(gtx, &common)
+		},
 		func(gtx C) D {
 			return layout.Inset{Top: margin}.Layout(gtx, func(gtx C) D {
 				return pg.txnBalanceAndStatus(gtx, &common)
@@ -82,40 +90,52 @@ func (pg *transactionPage) Layout(gtx layout.Context, common pageCommon) layout.
 				return pg.txnOutputs(gtx, &common)
 			})
 		},
+		func(gtx C) D {
+			if *pg.txnInfo == nil {
+				return layout.Dimensions{}
+			}
+			return pg.viewTxnOnDcrdata.Layout(gtx)
+		},
 	}
 
 	return common.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.header(gtx, &common)
-			}),
-			layout.Flexed(1, func(gtx C) D {
+		return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+				// return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				// 	layout.Rigid(func(gtx C) D {
+				// 		return pg.header(gtx, &common)
+				// 	}),
+				// 	layout.Flexed(1, func(gtx C) D {
 				if *pg.txnInfo == nil {
 					return layout.Dimensions{}
 				}
 				return pg.transactionPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
 					return layout.Inset{}.Layout(gtx, widgets[i])
 				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				if *pg.txnInfo == nil {
-					return layout.Dimensions{}
-				}
-				return pg.viewTxnOnDcrdata.Layout(gtx)
-			}),
-		)
+				// 	}),
+				// 	layout.Rigid(func(gtx C) D {
+				// 		if *pg.txnInfo == nil {
+				// 			return layout.Dimensions{}
+				// 		}
+				// 		return pg.viewTxnOnDcrdata.Layout(gtx)
+				// 	}),
+				// )
+			})
+		})
 	})
 }
 
 func (pg *transactionPage) header(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.W.Layout(gtx, func(gtx C) D {
-				return pg.backButton.Layout(gtx)
+				return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+					return pg.backButton.Layout(gtx)
+				})
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			txt := common.theme.H4("")
+			txt := common.theme.H6("")
 			if *pg.txnInfo != nil {
 				txt.Text = dcrlibwallet.TransactionDirectionName((*pg.txnInfo).Txn.Direction)
 			} else {
@@ -124,6 +144,11 @@ func (pg *transactionPage) header(gtx layout.Context, common *pageCommon) layout
 
 			txt.Alignment = text.Middle
 			return txt.Layout(gtx)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return pg.infoBtn.Layout(gtx)
+			})
 		}),
 	)
 }
