@@ -28,7 +28,7 @@ type pageIcons struct {
 
 	overviewIcon, overviewIconInactive, walletIcon, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, syncingIcon, moreIcon, moreIconInactive,
-	confirmIcon, pendingIcon, logo image.Image
+	confirmIcon, pendingIcon, logo, redirectIcon image.Image
 }
 
 type navHandler struct {
@@ -112,6 +112,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		logo:                       decredIcons["logo"],
 		confirmIcon:                decredIcons["confirmed"],
 		pendingIcon:                decredIcons["pending"],
+		redirectIcon:               decredIcons["redirect"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 

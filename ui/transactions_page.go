@@ -15,7 +15,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil"
+	// "github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -213,39 +213,6 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	}
 }
 
-func (pg *transactionsPage) txnRowHeader(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	txt := common.theme.Label(values.MarginPadding15, "#")
-	txt.Color = common.theme.Color.Hint
-
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding60)
-			return txt.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
-			txt.Alignment = text.Middle
-			txt.Text = "Date (UTC)"
-			return txt.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding120)
-			txt.Text = "Status"
-			return txt.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
-			txt.Text = "Amount"
-			return txt.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
-			txt.Text = "Fee"
-			return txt.Layout(gtx)
-		}),
-	)
-}
-
 func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, transaction wallet.Transaction) layout.Dimensions {
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, &transaction, &txnWidgets)
@@ -259,10 +226,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						txt := common.theme.Body1(dcrutil.Amount(transaction.Txn.Fee).String())
-						txt.Alignment = text.End
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
-						return txt.Layout(gtx)
+						return layoutBalance(gtx, transaction.Balance, *common)
 					})
 				}),
 			)
@@ -291,29 +255,6 @@ func (pg *transactionsPage) Handle(common pageCommon) {
 		pg.filterSorter = sortSelection
 		pg.sortTransactions(&common)
 	}
-}
-
-func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidgets *transactionWdg) {
-	txWidgets.amount = common.theme.Label(values.MarginPadding15, transaction.Balance)
-	txWidgets.time = common.theme.Body1(transaction.DateTime)
-	txWidgets.status = common.theme.Body1("")
-
-	if transaction.Status == "confirmed" {
-		txWidgets.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
-		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.confirmIcon)}
-	} else {
-		txWidgets.status.Text = transaction.Status
-		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.pendingIcon)}
-	}
-
-	txWidgets.statusIcon.Scale = 0.03
-
-	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
-		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.sendIcon)}
-	} else {
-		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.receiveIcon)}
-	}
-	txWidgets.direction.Scale = 0.07
 }
 
 func (pg *transactionsPage) sortTransactions(common *pageCommon) {
@@ -348,4 +289,28 @@ func (pg *transactionsPage) goToTxnDetails(gtx layout.Context, c *pageCommon, tx
 			*c.page = PageTransactionDetails
 		}
 	}
+}
+
+func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidgets *transactionWdg) {
+	t := time.Unix(transaction.Txn.Timestamp, 0).UTC()
+	txWidgets.time = common.theme.Body1(t.Format(time.UnixDate))
+	txWidgets.status = common.theme.Body1("")
+
+	if transaction.Status == "confirmed" {
+		txWidgets.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
+		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.confirmIcon)}
+	} else {
+		txWidgets.status.Text = transaction.Status
+		txWidgets.status.Color = common.theme.Color.Gray
+		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.pendingIcon)}
+	}
+
+	txWidgets.statusIcon.Scale = 0.03
+
+	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
+		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.sendIcon)}
+	} else {
+		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.receiveIcon)}
+	}
+	txWidgets.direction.Scale = 0.055
 }
