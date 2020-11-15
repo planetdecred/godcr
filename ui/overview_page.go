@@ -212,12 +212,10 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 
 		for index, txn := range (*pg.walletTransactions).Recent {
 			txnWidgets := transactionWidgets{
-				wallet:      theme.Body1(txn.WalletName),
-				balance:     txn.Balance,
-				mainBalance: theme.H6(""),
-				subBalance:  theme.Body2(""),
-				date:        theme.Body1(txn.DateTime),
-				status:      theme.Body1(""),
+				wallet:  theme.Body1(txn.WalletName),
+				balance: txn.Balance,
+				date:    theme.Body1(txn.DateTime),
+				status:  theme.Body1(""),
 			}
 			if txn.Txn.Direction == dcrlibwallet.TxDirectionSent {
 				txnWidgets.direction = &widget.Image{Src: paint.NewImageOp(c.icons.sendIcon)}
@@ -241,7 +239,7 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 			transactionRows = append(transactionRows, func(gtx C) D {
 				pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 				click.Add(gtx.Ops)
-				return pg.recentTransactionRow(gtx, txnWidgets)
+				return pg.recentTransactionRow(gtx, txnWidgets, c)
 			})
 		}
 	} else {
@@ -269,7 +267,8 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 			}),
 			layout.Rigid(func(gtx C) D {
 				pg.line.Width = gtx.Constraints.Max.X
-				return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+				m := values.MarginPadding5
+				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 					return pg.line.Layout(gtx)
 				})
 			}),
@@ -308,7 +307,7 @@ func (pg *overviewPage) centralize(gtx layout.Context, content layout.Widget) la
 }
 
 // recentTransactionRow lays out a single row of a recent transaction.
-func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transactionWidgets) layout.Dimensions {
+func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transactionWidgets, c pageCommon) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -318,7 +317,7 @@ func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transaction
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return pg.layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)
+						return layoutBalance(gtx, txn.balance, c)
 					})
 				}),
 			)
@@ -649,35 +648,6 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 	})
 }
 
-// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
-// balance at the baseline of the row.
-func (pg *overviewPage) layoutBalance(gtx layout.Context, amount string, main, sub decredmaterial.Label) layout.Dimensions {
-	mainText, subText := pg.breakBalance(amount)
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			main.Text = mainText
-			return main.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			sub.Text = subText
-			return sub.Layout(gtx)
-		}),
-	)
-}
-
-// breakBalance takes the balance string and returns it in two slices
-func (pg *overviewPage) breakBalance(balance string) (b1, b2 string) {
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		return balanceParts[0], ""
-	}
-	b1 = balanceParts[0]
-	b2 = balanceParts[1]
-	b1 = b1 + "." + b2[:2]
-	b2 = b2[2:]
-	return
-}
-
 func (pg *overviewPage) updateToTransactionDetailsButtons() {
 	recentTxs := (*pg.walletTransactions).Recent
 	if len(recentTxs) != len(pg.toTransactionDetails) {
@@ -717,6 +687,33 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 			}
 		}
 	}
+}
+
+// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
+// balance at the baseline of the row.
+func layoutBalance(gtx layout.Context, amount string, c pageCommon) layout.Dimensions {
+	mainText, subText := breakBalance(amount)
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return c.theme.H6(mainText).Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return c.theme.Body2(subText).Layout(gtx)
+		}),
+	)
+}
+
+// breakBalance takes the balance string and returns it in two slices
+func breakBalance(balance string) (b1, b2 string) {
+	balanceParts := strings.Split(balance, ".")
+	if len(balanceParts) == 1 {
+		return balanceParts[0], ""
+	}
+	b1 = balanceParts[0]
+	b2 = balanceParts[1]
+	b1 = b1 + "." + b2[:2]
+	b2 = b2[2:]
+	return
 }
 
 func formatDateOrTime(timestamp int64) string {
