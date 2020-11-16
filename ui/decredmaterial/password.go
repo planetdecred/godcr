@@ -12,6 +12,8 @@ type Password struct {
 	confirmButton  Button
 	cancelButton   Button
 	modal          *Modal
+	titleLabel     Label
+	titleSeparator *Line
 }
 
 // Password initializes and returns an instance of Password
@@ -27,10 +29,12 @@ func (t *Theme) Password() *Password {
 	}
 	p := &Password{
 		theme:          t,
+		titleLabel:     t.H6("Enter password to confirm"),
+		titleSeparator: t.Line(),
 		passwordEditor: t.Editor(editorWidget, "Password"),
 		cancelButton:   cancelButton,
 		confirmButton:  confirmButton,
-		modal:          t.Modal("Enter password to confirm"),
+		modal:          t.Modal(),
 	}
 
 	return p
@@ -48,6 +52,13 @@ func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func(
 	p.updateColors()
 
 	widgets := []func(gtx C) D{
+		func(gtx C) D {
+			return p.titleLabel.Layout(gtx)
+		},
+		func(gtx C) D {
+			p.titleSeparator.Width = gtx.Constraints.Max.X
+			return p.titleSeparator.Layout(gtx)
+		},
 		func(gtx C) D {
 			return p.passwordEditor.Layout(gtx)
 		},
