@@ -91,8 +91,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		addWallet:             common.theme.Button(new(widget.Clickable), "create wallet"),
 		hideResetModal:        common.theme.Button(new(widget.Clickable), "cancel"),
 		suggestionLimit:       3,
-		createModal:           common.theme.Modal(""),
-		warningModal:          common.theme.Modal(""),
+		createModal:           common.theme.Modal(),
+		warningModal:          common.theme.Modal(),
 	}
 
 	pg.create = common.theme.Button(new(widget.Clickable), "create wallet")
@@ -175,10 +175,10 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.showPassword {
-					pg.createModal.SetTitle("Create Wallet")
-					if pg.showRestore {
-						pg.createModal.SetTitle("Restore Wallet")
-					}
+					// pg.createModal.SetTitle("Create Wallet")
+					// if pg.showRestore {
+					// 	pg.createModal.SetTitle("Restore Wallet")
+					// }
 
 					w := []func(gtx C) D{
 						func(gtx C) D {
@@ -223,7 +223,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.showWarning {
-					pg.warningModal.SetTitle("Reset Seed Input")
+					// pg.warningModal.SetTitle("Reset Seed Input")
 					var msg = "You are about clearing all the seed input fields. Are you sure you want to proceed with this action?"
 					w := []func(gtx C) D{
 						func(gtx C) D {

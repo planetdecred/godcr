@@ -91,7 +91,7 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xff0000)
-	t.Color.Gray = rgb(0x808080)
+	t.Color.Gray = rgb(0x596D81)
 	t.Color.Black = rgb(0x000000)
 	t.TextSize = unit.Sp(16)
 
