@@ -9,32 +9,22 @@ import (
 )
 
 type Modal struct {
-	titleLabel     Label
-	titleSeparator *Line
-
 	overlayColor    color.RGBA
 	backgroundColor color.RGBA
 	list            *layout.List
 	button          *widget.Clickable
 }
 
-func (t *Theme) Modal(title string) *Modal {
+func (t *Theme) Modal() *Modal {
 	overlayColor := t.Color.Black
 	overlayColor.A = 200
 
 	return &Modal{
-		titleLabel:     t.H6(title),
-		titleSeparator: t.Line(),
-
 		overlayColor:    overlayColor,
 		backgroundColor: t.Color.Surface,
 		list:            &layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
 		button:          new(widget.Clickable),
 	}
-}
-
-func (m *Modal) SetTitle(title string) {
-	m.titleLabel.Text = title
 }
 
 // Layout renders the modal widget to screen. The modal assumes the size of
@@ -47,15 +37,8 @@ func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) 
 		}),
 		layout.Stacked(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			widgetFuncs := []func(gtx C) D{
-				func(gtx C) D {
-					return m.titleLabel.Layout(gtx)
-				},
-				func(gtx C) D {
-					m.titleSeparator.Width = gtx.Constraints.Max.X
-					return m.titleSeparator.Layout(gtx)
-				},
-			}
+			var widgetFuncs []func(gtx C) D
+
 			widgetFuncs = append(widgetFuncs, widgets...)
 			scaled := 3840 / float32(gtx.Constraints.Max.X)
 			mg := unit.Px(float32(margin) / scaled)

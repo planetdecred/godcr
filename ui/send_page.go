@@ -130,7 +130,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txFeeCollapsible:             common.theme.Collapsible(),
 		txLine:                       common.theme.Line(),
 
-		confirmModal:              common.theme.Modal("Confirm Send Transaction"),
+		confirmModal:              common.theme.Modal(),
 		isConfirmationModalOpen:   false,
 		isPasswordModalOpen:       false,
 		isBroadcastingTransaction: false,
