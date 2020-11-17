@@ -10,8 +10,8 @@ import (
 	"gioui.org/widget"
 )
 
-type Combo struct {
-	items          []ComboItem
+type DropDown struct {
+	items          []DropDownItem
 	isOpen         bool
 	selectedIndex  int
 	color          color.RGBA
@@ -21,17 +21,17 @@ type Combo struct {
 	backdrop       *widget.Clickable
 }
 
-type ComboItem struct {
+type DropDownItem struct {
 	Text   string
 	Icon   image.Image
 	button Button
 	label  Label
 }
 
-func (t *Theme) Combo(items []ComboItem) *Combo {
-	c := &Combo{
+func (t *Theme) DropDown(items []DropDownItem) *DropDown {
+	c := &DropDown{
 		isOpen:         false,
-		items:          make([]ComboItem, len(items)+1),
+		items:          make([]DropDownItem, len(items)+1),
 		color:          t.Color.Background,
 		background:     t.Color.Surface,
 		chevronIcon:    t.chevronDownIcon,
@@ -46,7 +46,7 @@ func (t *Theme) Combo(items []ComboItem) *Combo {
 	}
 
 	if len(c.items) > 0 {
-		c.items[0] = ComboItem{
+		c.items[0] = DropDownItem{
 			Text:   items[0].Text,
 			Icon:   items[0].Icon,
 			label:  t.Body1(items[0].Text),
@@ -58,15 +58,15 @@ func (t *Theme) Combo(items []ComboItem) *Combo {
 	return c
 }
 
-func (c *Combo) Selected() string {
+func (c *DropDown) Selected() string {
 	return c.items[c.SelectedIndex()].Text
 }
 
-func (c *Combo) SelectedIndex() int {
+func (c *DropDown) SelectedIndex() int {
 	return c.selectedIndex - 1
 }
 
-func (c *Combo) handleEvents() {
+func (c *DropDown) handleEvents() {
 	for c.items[0].button.Button.Clicked() {
 		c.isOpen = !c.isOpen
 	}
@@ -87,7 +87,7 @@ func (c *Combo) handleEvents() {
 	}
 }
 
-func (c *Combo) Changed() bool {
+func (c *DropDown) Changed() bool {
 	for i := range c.items {
 		index := i
 		if index != 0 {
@@ -102,7 +102,7 @@ func (c *Combo) Changed() bool {
 	return false
 }
 
-func (c *Combo) layoutIcon(itemIndex int) layout.FlexChild {
+func (c *DropDown) layoutIcon(itemIndex int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		if c.items[itemIndex].Icon == nil {
 			return layout.Dimensions{}
@@ -115,7 +115,7 @@ func (c *Combo) layoutIcon(itemIndex int) layout.FlexChild {
 	})
 }
 
-func (c *Combo) layoutText(index int) layout.FlexChild {
+func (c *DropDown) layoutText(index int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		gtx.Constraints.Min.X = 80
 		return layout.Inset{
@@ -127,7 +127,7 @@ func (c *Combo) layoutText(index int) layout.FlexChild {
 	})
 }
 
-func (c *Combo) layoutActiveIcon(index int, isFirstOption bool) layout.FlexChild {
+func (c *DropDown) layoutActiveIcon(index int, isFirstOption bool) layout.FlexChild {
 	var icon *widget.Icon
 	if isFirstOption {
 		icon = c.chevronIcon
@@ -147,9 +147,8 @@ func (c *Combo) layoutActiveIcon(index int, isFirstOption bool) layout.FlexChild
 	})
 }
 
-func (c *Combo) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bool) layout.Dimensions {
+func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bool) layout.Dimensions {
 	btn := c.items[itemIndex].button
-
 	min := gtx.Constraints.Min
 	min.X = 100
 
@@ -169,7 +168,7 @@ func (c *Combo) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bo
 	)
 }
 
-func (c *Combo) Layout(gtx layout.Context) layout.Dimensions {
+func (c *DropDown) Layout(gtx layout.Context) layout.Dimensions {
 	c.handleEvents()
 
 	children := []layout.FlexChild{
@@ -179,52 +178,36 @@ func (c *Combo) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if c.isOpen {
-		return c.comboItemMenu(gtx)
+		return c.dropDownItemMenu(gtx)
 	}
-	return c.drawlayout(gtx, false, func(gtx C) D {
+	return c.drawLayout(gtx, false, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
 	})
 }
 
-func (c *Combo) comboItemMenu(gtx layout.Context) layout.Dimensions {
+func (c *DropDown) dropDownItemMenu(gtx layout.Context) layout.Dimensions {
 	items := c.items[1:]
-	var comboItemRows []func(gtx C) D
+	var dropDownItemRows []func(gtx C) D
 	for i := range items {
 		index := i
-		comboItemRows = append(comboItemRows, func(gtx C) D {
+		dropDownItemRows = append(dropDownItemRows, func(gtx C) D {
 			return c.layoutOption(gtx, index+1, false)
 		})
 	}
 
 	border := widget.Border{Color: c.color, CornerRadius: unit.Dp(10), Width: unit.Dp(2)}
 	return border.Layout(gtx, func(gtx C) D {
-		return c.drawlayout(gtx, true, func(gtx C) D {
+		return c.drawLayout(gtx, true, func(gtx C) D {
 			list := &layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(comboItemRows), func(gtx C, i int) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.UniformInset(unit.Dp(0)).Layout(gtx, comboItemRows[i])
-					}),
-					layout.Rigid(func(gtx C) D {
-						// if i < len(comboItemRows)-1 {
-						// 	return layout.Inset{
-						// 		Top:    unit.Dp(10),
-						// 		Bottom: unit.Dp(10),
-						// 	}.Layout(gtx, func(gtx C) D {
-						// 		return c.line.Layout(gtx)
-						// 	})
-						// }
-
-						return layout.Dimensions{}
-					}),
-				)
+			return list.Layout(gtx, len(dropDownItemRows), func(gtx C, i int) D {
+				return layout.UniformInset(unit.Dp(0)).Layout(gtx, dropDownItemRows[i])
 			})
 		})
 	})
 }
 
-// drawlayout wraps the page tx and sync section in a card layout
-func (c *Combo) drawlayout(gtx layout.Context, isPopUp bool, body layout.Widget) layout.Dimensions {
+// drawLayout wraps the page tx and sync section in a card layout
+func (c *DropDown) drawLayout(gtx layout.Context, isPopUp bool, body layout.Widget) layout.Dimensions {
 	color := c.color
 	m := unit.Dp(5)
 	if isPopUp {

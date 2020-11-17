@@ -44,7 +44,7 @@ type TestStruct struct {
 	}
 
 	collapsible *decredmaterial.Collapsible
-	combo       *decredmaterial.Combo
+	dropDown    *decredmaterial.DropDown
 }
 
 type (
@@ -111,7 +111,7 @@ func (t *TestStruct) initWidgets() {
 
 	t.collapsible = theme.Collapsible()
 
-	comboItems := []decredmaterial.ComboItem{
+	dropDownItems := []decredmaterial.DropDownItem{
 		{
 			Text: "All",
 		},
@@ -122,7 +122,7 @@ func (t *TestStruct) initWidgets() {
 			Text: "Semi All",
 		},
 	}
-	t.combo = theme.Combo(comboItems)
+	t.dropDown = theme.DropDown(dropDownItems)
 }
 
 func (t *TestStruct) TestPage(gtx layout.Context) {
@@ -191,7 +191,7 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 
 		func(gtx C) D {
 			gtx.Constraints.Max.X = 200
-			return t.combo.Layout(gtx)
+			return t.dropDown.Layout(gtx)
 		},
 
 		func(gtx C) D {
