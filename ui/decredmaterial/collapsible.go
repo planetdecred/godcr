@@ -9,9 +9,8 @@ import (
 )
 
 type Collapsible struct {
-	isExpanded   bool
-	buttonWidget *widget.Clickable
-	// line                  *Line
+	isExpanded            bool
+	buttonWidget          *widget.Clickable
 	expandIcon            *widget.Icon
 	headerBackgroundColor color.RGBA
 }
@@ -21,12 +20,8 @@ func (t *Theme) Collapsible() *Collapsible {
 		isExpanded:            false,
 		headerBackgroundColor: t.Color.Hint,
 		expandIcon:            t.navMoreIcon,
-		// line:                  t.Line(),
-		buttonWidget: new(widget.Clickable),
+		buttonWidget:          new(widget.Clickable),
 	}
-
-	// c.line.Color = t.Color.Gray
-	// c.line.Color.A = 140
 
 	return c
 }
@@ -52,10 +47,6 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 	}
 
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		// layout.Rigid(func(gtx C) D {
-		// 	c.line.Width = gtx.Constraints.Max.X
-		// 	return c.line.Layout(gtx)
-		// }),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,

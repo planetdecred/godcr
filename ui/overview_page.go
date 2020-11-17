@@ -57,14 +57,12 @@ type walletSyncDetails struct {
 }
 
 type transactionWidgets struct {
-	wallet      decredmaterial.Label
-	balance     string
-	direction   *widget.Image
-	statusIcon  *widget.Image
-	mainBalance decredmaterial.Label
-	subBalance  decredmaterial.Label
-	date        decredmaterial.Label
-	status      decredmaterial.Label
+	wallet     decredmaterial.Label
+	balance    string
+	direction  *widget.Image
+	statusIcon *widget.Image
+	date       decredmaterial.Label
+	status     decredmaterial.Label
 }
 
 type overviewPage struct {
@@ -231,6 +229,7 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 				txnWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(c.icons.pendingIcon)}
 			}
 
+			// set the direction and status icon scale/size
 			txnWidgets.direction.Scale = 0.07
 			txnWidgets.statusIcon.Scale = 0.03
 

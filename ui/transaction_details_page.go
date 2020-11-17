@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	// "time"
 
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -71,7 +70,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 		infoModal:  common.theme.Modal(),
 	}
 
-	// init suggestion buttons
+	// init blue text copy buttons
 	for i := 0; i < 100; i++ {
 		pg.copyTextBtn = append(pg.copyTextBtn, win.theme.Button(new(widget.Clickable), ""))
 	}
@@ -98,7 +97,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	widgets := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.header(gtx, &common)
+			return pg.header(gtx)
 		},
 		func(gtx C) D {
 			return pg.txnBalanceAndStatus(gtx, &common)
@@ -107,7 +106,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) 
 			return pg.divide(gtx)
 		},
 		func(gtx C) D {
-			return pg.txnTypeAndID(gtx, &common)
+			return pg.txnTypeAndID(gtx)
 		},
 		func(gtx C) D {
 			return pg.divide(gtx)
@@ -155,7 +154,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) 
 	return body
 }
 
-func (pg *transactionDetailsPage) header(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *transactionDetailsPage) header(gtx layout.Context) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
@@ -167,7 +166,7 @@ func (pg *transactionDetailsPage) header(gtx layout.Context, common *pageCommon)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					txt := common.theme.H6("")
+					txt := pg.theme.H6("")
 					if *pg.txnInfo != nil {
 						txt.Text = dcrlibwallet.TransactionDirectionName((*pg.txnInfo).Txn.Direction)
 					} else {
@@ -269,7 +268,7 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common
 	})
 }
 
-func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
 	transaction := *pg.txnInfo
 	return pg.pageSections(gtx, func(gtx C) D {
 		m := values.MarginPadding10
@@ -277,11 +276,6 @@ func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context, common *pageC
 			layout.Rigid(func(gtx C) D {
 				return pg.txnInfoSection(gtx, "From", transaction.WalletName, transaction.Txn.Inputs[0].AccountName, true, false)
 			}),
-			// layout.Rigid(func(gtx C) D {
-			// 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-			// 		return pg.txnInfoSection(gtx, "To", "", transaction.Txn.Outputs[0].Address, false, true)
-			// 	})
-			// }),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
 					return pg.txnInfoSection(gtx, "Fee", "", dcrutil.Amount(transaction.Txn.Fee).String(), false, false)
