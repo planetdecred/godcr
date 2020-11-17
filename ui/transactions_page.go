@@ -15,7 +15,6 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
-	// "github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -25,9 +24,9 @@ import (
 const PageTransactions = "Transactions"
 
 type transactionWdg struct {
-	statusIcon           *widget.Image
-	direction            *widget.Image
-	amount, time, status decredmaterial.Label
+	statusIcon   *widget.Image
+	direction    *widget.Image
+	time, status decredmaterial.Label
 }
 
 type transactionsPage struct {
@@ -41,9 +40,9 @@ type transactionsPage struct {
 	defaultFilterSorter, defaultFilterDirection string
 	toTxnDetails                                []*gesture.Click
 
-	orderCombo  *decredmaterial.Combo
-	txTypeCombo *decredmaterial.Combo
-	walletCombo *decredmaterial.Combo
+	orderDropDown  *decredmaterial.DropDown
+	txTypeDropDown *decredmaterial.DropDown
+	walletDropDown *decredmaterial.DropDown
 }
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
@@ -57,8 +56,8 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		defaultFilterSorter:    "0",
 		defaultFilterDirection: "0",
 	}
-	pg.orderCombo = common.theme.Combo([]decredmaterial.ComboItem{{Text: "Newest"}, {Text: "Oldest"}})
-	pg.txTypeCombo = common.theme.Combo([]decredmaterial.ComboItem{
+	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}})
+	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: "All",
 		},
@@ -83,30 +82,30 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 }
 
 func (pg *transactionsPage) setWallets(common pageCommon) {
-	if len(common.info.Wallets) == 0 || pg.walletCombo != nil {
+	if len(common.info.Wallets) == 0 || pg.walletDropDown != nil {
 		return
 	}
 
-	walletComboItems := []decredmaterial.ComboItem{}
+	walletDropDownItems := []decredmaterial.DropDownItem{}
 	for i := range common.info.Wallets {
-		item := decredmaterial.ComboItem{
+		item := decredmaterial.DropDownItem{
 			Text: common.info.Wallets[i].Name,
 			Icon: common.icons.walletIcon,
 		}
-		walletComboItems = append(walletComboItems, item)
+		walletDropDownItems = append(walletDropDownItems, item)
 	}
-	pg.walletCombo = common.theme.Combo(walletComboItems)
+	pg.walletDropDown = common.theme.DropDown(walletDropDownItems)
 }
 
 func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.setWallets(common)
 
 	container := func(gtx C) D {
-		walletID := common.info.Wallets[pg.walletCombo.SelectedIndex()].ID
+		walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
 		walTxs := (*pg.walletTransactions).Txs[walletID]
 		pg.updateTotransactionDetailsButtons(&walTxs)
 
-		directionFilter := pg.txTypeCombo.SelectedIndex()
+		directionFilter := pg.txTypeDropDown.SelectedIndex()
 
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
@@ -143,7 +142,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return pg.walletCombo.Layout(gtx)
+							return pg.walletDropDown.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -151,14 +150,14 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 									return layout.Inset{
 										Left: values.MarginPadding5,
 									}.Layout(gtx, func(gtx C) D {
-										return pg.txTypeCombo.Layout(gtx)
+										return pg.txTypeDropDown.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{
 										Left: values.MarginPadding5,
 									}.Layout(gtx, func(gtx C) D {
-										return pg.orderCombo.Layout(gtx)
+										return pg.orderDropDown.Layout(gtx)
 									})
 								}),
 							)
@@ -249,7 +248,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 }
 
 func (pg *transactionsPage) Handle(common pageCommon) {
-	sortSelection := strconv.Itoa(pg.orderCombo.SelectedIndex())
+	sortSelection := strconv.Itoa(pg.orderDropDown.SelectedIndex())
 
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
