@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	// "time"
 
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -26,9 +27,12 @@ type transactionDetailsPage struct {
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
+	autoCompleteList                *layout.List
 	backButton                      decredmaterial.IconButton
 	txnInfo                         **wallet.Transaction
 	minInfoBtn                      decredmaterial.Button
+	hashBtn                         decredmaterial.Button
+	copyTextBtn                     []decredmaterial.Button
 	infoBtn                         decredmaterial.IconButton
 	dot                             *widget.Icon
 	toDcrdata                       *widget.Clickable
@@ -50,6 +54,8 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 		transactionOutputsContainer: layout.List{
 			Axis: layout.Vertical,
 		},
+		autoCompleteList: &layout.List{Axis: layout.Horizontal},
+
 		txnInfo:  &win.walletTransaction,
 		theme:    common.theme,
 		showInfo: false,
@@ -59,9 +65,15 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 
 		backButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		minInfoBtn: common.theme.Button(new(widget.Clickable), "Got it"),
+		hashBtn:    common.theme.Button(new(widget.Clickable), ""),
 		toDcrdata:  new(widget.Clickable),
 		line:       common.theme.Line(),
 		infoModal:  common.theme.Modal(),
+	}
+
+	// init suggestion buttons
+	for i := 0; i < 100; i++ {
+		pg.copyTextBtn = append(pg.copyTextBtn, win.theme.Button(new(widget.Clickable), ""))
 	}
 
 	pg.line.Color = common.theme.Color.Background
@@ -178,6 +190,7 @@ func (pg *transactionDetailsPage) header(gtx layout.Context, common *pageCommon)
 func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	txnWidgets := transactionWdg{}
 	initTxnWidgets(common, *pg.txnInfo, &txnWidgets)
+
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -322,16 +335,16 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						text := t3
-						if first {
-							text = strings.Title(strings.ToLower(t3))
+						if first || !copy {
+							txt := pg.theme.Body1(strings.Title(strings.ToLower(t3)))
+							return txt.Layout(gtx)
 						}
 
-						txt := pg.theme.Body1(text)
-						if copy {
-							txt.Color = pg.theme.Color.Primary
-						}
-						return txt.Layout(gtx)
+						pg.hashBtn.Color = pg.theme.Color.Primary
+						pg.hashBtn.Background = color.RGBA{}
+						pg.hashBtn.Text = t3
+						pg.hashBtn.Inset = layout.UniformInset(values.MarginPadding0)
+						return pg.hashBtn.Layout(gtx)
 					})
 				}),
 			)
@@ -353,8 +366,8 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 			amount := dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String()
 			acctName := fmt.Sprintf("(%s)", transaction.Txn.Inputs[i].AccountName)
 			walName := transaction.WalletName
-			hash_Acct := transaction.Txn.Inputs[i].PreviousOutpoint
-			return pg.txnIORow(gtx, amount, acctName, walName, hash_Acct)
+			hashAcct := transaction.Txn.Inputs[i].PreviousOutpoint
+			return pg.txnIORow(gtx, amount, acctName, walName, hashAcct, i)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -376,8 +389,9 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 			amount := dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String()
 			acctName := fmt.Sprintf("(%s)", transaction.Txn.Outputs[i].AccountName)
 			walName := transaction.WalletName
-			hash_Acct := transaction.Txn.Outputs[i].Address
-			return pg.txnIORow(gtx, amount, acctName, walName, hash_Acct)
+			hashAcct := transaction.Txn.Outputs[i].Address
+			x := len(transaction.Txn.Inputs)
+			return pg.txnIORow(gtx, amount, acctName, walName, hashAcct, i+x)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -385,7 +399,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 	})
 }
 
-func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName, walName, hash_Acct string) layout.Dimensions {
+func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName, walName, hashAcct string, i int) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 		return decredmaterial.Card{Color: pg.theme.Color.Background, Rounded: true}.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -417,9 +431,14 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 						)
 					}),
 					layout.Rigid(func(gtx C) D {
-						txt := pg.theme.Label(values.MarginPadding15, hash_Acct)
-						txt.Color = pg.theme.Color.Primary
-						return txt.Layout(gtx)
+						pg.copyTextBtn[i].Color = pg.theme.Color.Primary
+						pg.copyTextBtn[i].Background = color.RGBA{}
+						pg.copyTextBtn[i].Text = hashAcct
+						pg.copyTextBtn[i].Inset = layout.UniformInset(values.MarginPadding0)
+
+						return layout.W.Layout(gtx, func(gtx C) D {
+							return pg.copyTextBtn[i].Layout(gtx)
+						})
 					}),
 				)
 			})
@@ -470,7 +489,6 @@ func (pg *transactionDetailsPage) infoModalLayout(gtx layout.Context, common *pa
 			return layout.NW.Layout(gtx, func(gtx C) D {
 				t := pg.theme.Body1("Tap on")
 				t.Color = common.theme.Color.Text
-				// t.Font.Weight = 900
 				return pg.theme.H6("How to copy").Layout(gtx)
 			})
 		}),
@@ -545,5 +563,20 @@ func (pg *transactionDetailsPage) Handler(common pageCommon) {
 
 	if pg.backButton.Button.Clicked() {
 		*common.page = PageTransactions
+	}
+
+	for _, b := range pg.copyTextBtn {
+		for b.Button.Clicked() {
+			t := b.Text
+			go func() {
+				common.clipboard <- WriteClipboard{Text: t}
+			}()
+		}
+	}
+
+	for pg.hashBtn.Button.Clicked() {
+		go func() {
+			common.clipboard <- WriteClipboard{Text: (*pg.txnInfo).Txn.Hash}
+		}()
 	}
 }
