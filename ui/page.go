@@ -185,11 +185,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		drawerNavItems:          drawerNavItems,
 		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
-		keyEvents:               win.keyEvents,
-		clipboard:               win.clipboard,
-		states:                  &win.states,
-
-		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 	}
 
 	isNavDrawerMinimized := false
