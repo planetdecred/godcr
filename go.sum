@@ -227,7 +227,11 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.8.1/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoTdcA=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/planetdecred/dcrlibwallet v1.5.3-0.20201113035912-7786819ad8aa h1:8EPqdu3JvHpdvLHmoGmUiZ1K6y3v7N2ljzXZ4RUxzbE=
+github.com/planetdecred/dcrlibwallet v1.5.3-0.20201113035912-7786819ad8aa/go.mod h1:m8kErCRFmU0L3mDcre+5kIOpfMEtq5gQen+ddflfFcs=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c h1:b9p7k6aEKx7VVjvp+PWhc1GDWCjq8LWcm7eiCS1fFz0=
+github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c/go.mod h1:ZBnPwcopuDqDbJ1sb2D+2rMs2oRbbpisCRHKUZ/KJQI=
 github.com/raedahgroup/dcrwallet/wallet/v3 v3.2.1-badger h1:VeMaBDPPCLtt/gT7irdR+v26LhC7m6LWdiGGJJBEVIE=
 github.com/raedahgroup/dcrwallet/wallet/v3 v3.2.1-badger/go.mod h1:SJ+++gtMdcUeqMv6iIO3gVGlGJfM+4iY2QSaAakhbUw=
 github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 h1:RYiqpb2ii2Z6J4x0wxK46kvPBbFuZcdhS+CIztmYgZs=

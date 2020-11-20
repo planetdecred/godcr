@@ -908,8 +908,8 @@ func (pg *SendPage) setDestinationAddr(sendAmount float64) int64 {
 
 func (pg *SendPage) setChangeDestinationAddr() {
 	if pg.customChangeAddressEditor.Editor.Len() > 0 {
-		pg.txAuthor.RemoveChangeDestination(0)
-		pg.txAuthor.AddChangeDestination(pg.customChangeAddressEditor.Editor.Text())
+		pg.txAuthor.RemoveChangeDestination()
+		pg.txAuthor.SetChangeDestination(pg.customChangeAddressEditor.Editor.Text())
 	}
 }
 

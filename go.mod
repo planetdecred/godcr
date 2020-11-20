@@ -12,8 +12,7 @@ require (
 	github.com/jrick/logrotate v1.0.0
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.8.1
-	github.com/planetdecred/dcrlibwallet v1.0.0
-	github.com/planetdecred/dcrlibwallet/spv v1.0.0 //indirect
+	github.com/planetdecred/dcrlibwallet v1.5.3-0.20201113035912-7786819ad8aa
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
 	github.com/stretchr/testify v1.4.0 // indirect
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
@@ -24,6 +23,5 @@ require (
 // TODO: Remove and use an actual release of dcrlibwallet
 replace (
 	github.com/decred/dcrwallet/wallet/v3 => github.com/raedahgroup/dcrwallet/wallet/v3 v3.2.1-badger
-	github.com/planetdecred/dcrlibwallet => ../../dcrlibwallet
-	github.com/planetdecred/dcrlibwallet/spv => ../../dcrlibwallet/spv
+  github.com/planetdecred/dcrlibwallet/spv => github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c
 )
