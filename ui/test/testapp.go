@@ -85,7 +85,7 @@ func (t *TestStruct) Loop() {
 func (t *TestStruct) initWidgets() {
 	theme := t.theme
 
-	pageContainer = theme.Container()
+	pageContainer = theme.Container(decredmaterial.Vertical)
 
 	// Editor test
 	t.customEditorOutput.test1 = theme.Editor(new(widget.Editor), "Enter Hint Text1")
