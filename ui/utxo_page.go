@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const PageUTXO = "unspentTransactionOutput"
@@ -24,6 +25,7 @@ type utxoPage struct {
 	unspentOutputs         **wallet.UnspentOutputs
 	unspentOutputsSelected *map[int]map[int32]map[string]*wallet.UnspentOutput
 	checkboxes             []decredmaterial.CheckBoxStyle
+	copyButtons            []decredmaterial.IconButton
 	selecAllChexBox        decredmaterial.CheckBoxStyle
 
 	txnFee            string
@@ -65,12 +67,18 @@ func (pg *utxoPage) Handler(common pageCommon) {
 
 	if len(pg.checkboxes) != len((*pg.unspentOutputs).List) {
 		pg.checkboxes = make([]decredmaterial.CheckBoxStyle, len((*pg.unspentOutputs).List))
+		pg.copyButtons = make([]decredmaterial.IconButton, len((*pg.unspentOutputs).List))
+
 		for i := 0; i < len((*pg.unspentOutputs).List); i++ {
 			utxo := (*pg.unspentOutputs).List[i]
 			pg.checkboxes[i] = common.theme.CheckBox(new(widget.Bool), "")
 			if _, ok := (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID][utxo.UTXO.OutputKey]; ok {
 				pg.checkboxes[i].CheckBox.Value = true
 			}
+			icoBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy)))
+			icoBtn.Inset, icoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
+			icoBtn.Background = common.theme.Color.Background
+			pg.copyButtons[i] = icoBtn
 		}
 		pg.calculateAmountAndFeeUTXO()
 	}
@@ -213,7 +221,6 @@ func (pg *utxoPage) utxoRowHeader(gtx layout.Context, c *pageCommon) layout.Dime
 	return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding35)
 				return pg.selecAllChexBox.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -273,6 +280,16 @@ func (pg *utxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, c *p
 			txt.Alignment = text.End
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
 			return txt.Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if pg.copyButtons[index].Button.Clicked() {
+				go func() {
+					c.clipboard <- WriteClipboard{Text: data.UTXO.Addresses}
+				}()
+			}
+			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return pg.copyButtons[index].Layout(gtx)
+			})
 		}),
 	)
 }
