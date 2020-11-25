@@ -12,7 +12,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageWallet = "wallet"
+const PageWallet = "Wallet"
 
 const (
 	subWalletMain = iota
@@ -414,14 +414,6 @@ func (pg *walletPage) subDelete(gtx layout.Context, common pageCommon) layout.Di
 
 // Handle handles all widget inputs on the main wallets pg.
 func (pg *walletPage) Handle(common pageCommon) {
-	//if common.walletsTab.Selected != 1 {
-	//	pg.subPage = subWalletMain
-	//}
-
-	if common.navTab.Selected != 1 {
-		pg.subPage = subWalletMain
-	}
-
 	// Subs
 	if pg.icons.main.Button.Clicked() || pg.cancelDelete.Button.Clicked() {
 		pg.errorLabel.Text = ""

@@ -70,6 +70,8 @@ type Theme struct {
 	radioUncheckedIcon    *widget.Icon
 	chevronUpIcon         *widget.Icon
 	chevronDownIcon       *widget.Icon
+	NavigationCheckIcon   *widget.Icon
+	navMoreIcon           *widget.Icon
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
@@ -89,7 +91,7 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xff0000)
-	t.Color.Gray = rgb(0x808080)
+	t.Color.Gray = rgb(0x596D81)
 	t.Color.Black = rgb(0x000000)
 	t.TextSize = unit.Sp(16)
 
@@ -99,6 +101,7 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
+	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
 	t.Clipboard = make(chan string)
 	return t
 }
@@ -209,4 +212,15 @@ func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
 	paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
 	return layout.Dimensions{Size: d}
+}
+
+// mulAlpha scales all color components by alpha/255.
+func mulAlpha(c color.RGBA, alpha uint8) color.RGBA {
+	a := uint16(alpha)
+	return color.RGBA{
+		A: uint8(uint16(c.A) * a / 255),
+		R: uint8(uint16(c.R) * a / 255),
+		G: uint8(uint16(c.G) * a / 255),
+		B: uint8(uint16(c.B) * a / 255),
+	}
 }

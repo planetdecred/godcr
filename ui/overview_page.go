@@ -5,10 +5,12 @@ import (
 	"image"
 	"image/color"
 	"strings"
+	"time"
 
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
+	"gioui.org/op/paint"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -17,7 +19,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageOverview = "overview"
+const PageOverview = "Overview"
 
 type overviewPageText struct {
 	balanceTitle,
@@ -55,13 +57,12 @@ type walletSyncDetails struct {
 }
 
 type transactionWidgets struct {
-	wallet      decredmaterial.Label
-	balance     string
-	direction   *widget.Icon
-	mainBalance decredmaterial.Label
-	subBalance  decredmaterial.Label
-	date        decredmaterial.Label
-	status      decredmaterial.Label
+	wallet     decredmaterial.Label
+	balance    string
+	direction  *widget.Image
+	statusIcon *widget.Image
+	date       decredmaterial.Label
+	status     decredmaterial.Label
 }
 
 type overviewPage struct {
@@ -69,11 +70,12 @@ type overviewPage struct {
 	theme                         *decredmaterial.Theme
 	tab                           *decredmaterial.Tabs
 
-	walletInfo           *wallet.MultiWalletInfo
-	walletSyncStatus     *wallet.SyncStatus
-	walletTransactions   **wallet.Transactions
-	walletTransaction    **wallet.Transaction
-	toTransactions, sync decredmaterial.Button
+	walletInfo         *wallet.MultiWalletInfo
+	walletSyncStatus   *wallet.SyncStatus
+	walletTransactions **wallet.Transactions
+	walletTransaction  **wallet.Transaction
+	toTransactions     decredmaterial.TextAndIconButton
+	sync               decredmaterial.Button
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon *widget.Icon
 	syncingIcon          image.Image
@@ -99,7 +101,6 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		walletTransaction:  &win.walletTransaction,
 		listContainer:      &layout.List{Axis: layout.Vertical},
 		walletSyncList:     &layout.List{Axis: layout.Horizontal},
-		toTransactions:     c.theme.Button(new(widget.Clickable), "See all"),
 		line:               c.theme.Line(),
 
 		syncButtonHeight: 70,
@@ -135,16 +136,11 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		viewAllTx:            "See all",
 	}
 
-	pg.toTransactions = c.theme.Button(new(widget.Clickable), pg.text.viewAllTx)
-	pg.toTransactions.TextSize = values.TextSize14
-	pg.toTransactions.Background = color.RGBA{}
+	pg.line.Color = c.theme.Color.Background
+	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), pg.text.viewAllTx, c.icons.navigationArrowForward)
 	pg.toTransactions.Color = c.theme.Color.Primary
+	pg.toTransactions.BackgroundColor = c.theme.Color.Surface
 	pg.sync = c.theme.Button(new(widget.Clickable), pg.text.reconnect)
-	pg.toTransactions.Inset = layout.Inset{
-		Top: values.MarginPadding10, Bottom: values.MarginPadding0,
-		Left: values.MarginPadding0, Right: values.MarginPadding0,
-	}
-
 	pg.sync = c.theme.Button(new(widget.Clickable), pg.text.reconnect)
 	pg.sync.TextSize = values.TextSize10
 	pg.sync.Background = color.RGBA{}
@@ -159,8 +155,6 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	pg.notSyncedIcon.Color = c.theme.Color.Danger
 
 	pg.walletStatusIcon = c.icons.imageBrightness1
-
-	pg.line.Color = c.theme.Color.Gray
 
 	return func(gtx C) D {
 		pg.Handler(gtx, c)
@@ -178,22 +172,7 @@ func (pg *overviewPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensio
 		})
 	}
 
-	walletInfo := pg.walletInfo
-	theme := pg.theme
-
 	pageContent := []func(gtx C) D{
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					mainBalance := theme.H4("")
-					subBalance := theme.H6("")
-					return pg.layoutBalance(gtx, walletInfo.TotalBalance, mainBalance, subBalance)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return theme.Caption(pg.text.balanceTitle).Layout(gtx)
-				}),
-			)
-		},
 		func(gtx C) D {
 			return pg.recentTransactionsColumn(gtx, c)
 		},
@@ -231,27 +210,35 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 
 		for index, txn := range (*pg.walletTransactions).Recent {
 			txnWidgets := transactionWidgets{
-				wallet:      theme.Body1(txn.WalletName),
-				balance:     txn.Balance,
-				mainBalance: theme.Body1(""),
-				subBalance:  theme.Caption(""),
-				date:        theme.Body1(txn.DateTime),
-				status:      theme.Body1(txn.Status),
+				wallet:  theme.Body1(txn.WalletName),
+				balance: txn.Balance,
+				date:    theme.Body1(txn.DateTime),
+				status:  theme.Body1(""),
 			}
 			if txn.Txn.Direction == dcrlibwallet.TxDirectionSent {
-				txnWidgets.direction = c.icons.contentRemove
-				txnWidgets.direction.Color = c.theme.Color.Danger
+				txnWidgets.direction = &widget.Image{Src: paint.NewImageOp(c.icons.sendIcon)}
 			} else {
-				txnWidgets.direction = c.icons.contentAdd
-				txnWidgets.direction.Color = c.theme.Color.Success
+				txnWidgets.direction = &widget.Image{Src: paint.NewImageOp(c.icons.receiveIcon)}
 			}
+
+			if txn.Status == "confirmed" {
+				txnWidgets.status.Text = formatDateOrTime(txn.Txn.Timestamp)
+				txnWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(c.icons.confirmIcon)}
+			} else {
+				txnWidgets.status.Text = txn.Status
+				txnWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(c.icons.pendingIcon)}
+			}
+
+			// set the direction and status icon scale/size
+			txnWidgets.direction.Scale = 0.07
+			txnWidgets.statusIcon.Scale = 0.03
 
 			click := pg.toTransactionDetails[index]
 
 			transactionRows = append(transactionRows, func(gtx C) D {
 				pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 				click.Add(gtx.Ops)
-				return pg.recentTransactionRow(gtx, txnWidgets)
+				return pg.recentTransactionRow(gtx, txnWidgets, c)
 			})
 		}
 	} else {
@@ -267,23 +254,43 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 	return pg.drawlayout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return theme.Caption(pg.text.transactionsTitle).Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				list := &layout.List{Axis: layout.Vertical}
-				return pg.centralize(gtx, func(gtx C) D {
-					return list.Layout(gtx, len(transactionRows), func(gtx C, i int) D {
-						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, transactionRows[i])
-					})
-				})
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return theme.Body2(pg.text.transactionsTitle).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.toTransactions.Layout(gtx)
+					}),
+				)
 			}),
 			layout.Rigid(func(gtx C) D {
 				pg.line.Width = gtx.Constraints.Max.X
-				return pg.line.Layout(gtx)
+				m := values.MarginPadding5
+				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+					return pg.line.Layout(gtx)
+				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.centralize(gtx, func(gtx C) D {
-					return pg.toTransactions.Layout(gtx)
+				list := &layout.List{Axis: layout.Vertical}
+				return list.Layout(gtx, len(transactionRows), func(gtx C, i int) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding0).Layout(gtx, transactionRows[i])
+						}),
+						layout.Rigid(func(gtx C) D {
+							if i < len(transactionRows)-1 {
+								return layout.Inset{
+									Top:    values.MarginPadding10,
+									Bottom: values.MarginPadding10,
+								}.Layout(gtx, func(gtx C) D {
+									return pg.line.Layout(gtx)
+								})
+							}
+
+							return layout.Dimensions{}
+						}),
+					)
 				})
 			}),
 		)
@@ -299,41 +306,36 @@ func (pg *overviewPage) centralize(gtx layout.Context, content layout.Widget) la
 }
 
 // recentTransactionRow lays out a single row of a recent transaction.
-func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transactionWidgets) layout.Dimensions {
-	margin := layout.UniformInset(values.MarginPadding10)
-
-	dims := layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transactionWidgets, c pageCommon) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding50)
-			return layout.Inset{Top: values.TextSize12}.Layout(gtx, func(gtx C) D {
-				return txn.direction.Layout(gtx, values.TextSize16)
-			})
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return txn.direction.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						return layoutBalance(gtx, txn.balance, c)
+					})
+				}),
+			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
-			return margin.Layout(gtx, func(gtx C) D {
-				return pg.layoutBalance(gtx, txn.balance, txn.mainBalance, txn.subBalance)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
-			return margin.Layout(gtx, func(gtx C) D {
-				return txn.wallet.Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
-			return margin.Layout(gtx, func(gtx C) D {
-				return txn.date.Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return margin.Layout(gtx, func(gtx C) D {
-				return txn.status.Layout(gtx)
-			})
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return txn.status.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.TextSize12, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return txn.statusIcon.Layout(gtx)
+					})
+				}),
+			)
 		}),
 	)
-	return dims
 }
 
 // syncStatusColumn lays out content for displaying sync status.
@@ -359,7 +361,7 @@ func (pg *overviewPage) syncStatusColumn(gtx layout.Context) layout.Dimensions {
 
 // drawlayout wraps the page tx and sync section in a card layout
 func (pg *overviewPage) drawlayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+	return decredmaterial.Card{Color: pg.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
 	})
 }
@@ -645,35 +647,6 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 	})
 }
 
-// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
-// balance at the baseline of the row.
-func (pg *overviewPage) layoutBalance(gtx layout.Context, amount string, main, sub decredmaterial.Label) layout.Dimensions {
-	mainText, subText := pg.breakBalance(amount)
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			main.Text = mainText
-			return main.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			sub.Text = subText
-			return sub.Layout(gtx)
-		}),
-	)
-}
-
-// breakBalance takes the balance string and returns it in two slices
-func (pg *overviewPage) breakBalance(balance string) (b1, b2 string) {
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		return balanceParts[0], ""
-	}
-	b1 = balanceParts[0]
-	b2 = balanceParts[1]
-	b1 = b1 + "." + b2[:2]
-	b2 = b2[2:]
-	return
-}
-
 func (pg *overviewPage) updateToTransactionDetailsButtons() {
 	recentTxs := (*pg.walletTransactions).Recent
 	if len(recentTxs) != len(pg.toTransactionDetails) {
@@ -700,7 +673,7 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.tab.ChangeTab(4)
+		c.ChangePage(PageTransactions)
 	}
 
 	for index, click := range pg.toTransactionDetails {
@@ -713,4 +686,45 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 			}
 		}
 	}
+}
+
+// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
+// balance at the baseline of the row.
+func layoutBalance(gtx layout.Context, amount string, c pageCommon) layout.Dimensions {
+	mainText, subText := breakBalance(amount)
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return c.theme.H6(mainText).Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return c.theme.Body2(subText).Layout(gtx)
+		}),
+	)
+}
+
+// breakBalance takes the balance string and returns it in two slices
+func breakBalance(balance string) (b1, b2 string) {
+	balanceParts := strings.Split(balance, ".")
+	if len(balanceParts) == 1 {
+		return balanceParts[0], ""
+	}
+	b1 = balanceParts[0]
+	b2 = balanceParts[1]
+	b1 = b1 + "." + b2[:2]
+	b2 = b2[2:]
+	return
+}
+
+func formatDateOrTime(timestamp int64) string {
+	utcTime := time.Unix(timestamp, 0).UTC()
+	if time.Now().UTC().Sub(utcTime).Hours() < 168 {
+		return utcTime.Weekday().String()
+	}
+
+	t := strings.Split(utcTime.Format(time.UnixDate), " ")
+	t2 := t[2]
+	if t[2] == "" {
+		t2 = t[3]
+	}
+	return fmt.Sprintf("%s %s", t[1], t2)
 }

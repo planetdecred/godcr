@@ -13,7 +13,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageReceive = "receive"
+const PageReceive = "Receive"
 
 type receivePage struct {
 	pageContainer layout.List

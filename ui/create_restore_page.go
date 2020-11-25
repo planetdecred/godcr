@@ -19,7 +19,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageCreateRestore = "createrestore"
+const PageCreateRestore = "CreateRestore"
 
 type (
 	seedEditors struct {
@@ -71,8 +71,10 @@ type createRestore struct {
 
 	seedSuggestions []decredmaterial.Button
 
-	createModal  *decredmaterial.Modal
-	warningModal *decredmaterial.Modal
+	createModal     *decredmaterial.Modal
+	warningModal    *decredmaterial.Modal
+	modalTitleLabel decredmaterial.Label
+	modalSeparator  *decredmaterial.Line
 }
 
 // Loading lays out the loading widget with a faded background
@@ -91,8 +93,10 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		addWallet:             common.theme.Button(new(widget.Clickable), "create wallet"),
 		hideResetModal:        common.theme.Button(new(widget.Clickable), "cancel"),
 		suggestionLimit:       3,
-		createModal:           common.theme.Modal(""),
-		warningModal:          common.theme.Modal(""),
+		createModal:           common.theme.Modal(),
+		warningModal:          common.theme.Modal(),
+		modalTitleLabel:       common.theme.H6(""),
+		modalSeparator:        common.theme.Line(),
 	}
 
 	pg.create = common.theme.Button(new(widget.Clickable), "create wallet")
@@ -175,12 +179,19 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.showPassword {
-					pg.createModal.SetTitle("Create Wallet")
+					pg.modalTitleLabel.Text = "Create Wallet"
 					if pg.showRestore {
-						pg.createModal.SetTitle("Restore Wallet")
+						pg.modalTitleLabel.Text = "Restore Wallet"
 					}
 
 					w := []func(gtx C) D{
+						func(gtx C) D {
+							return pg.modalTitleLabel.Layout(gtx)
+						},
+						func(gtx C) D {
+							pg.modalSeparator.Width = gtx.Constraints.Max.X
+							return pg.modalSeparator.Layout(gtx)
+						},
 						func(gtx C) D {
 							if pg.showRestore {
 								return layout.Dimensions{}
@@ -223,7 +234,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.showWarning {
-					pg.warningModal.SetTitle("Reset Seed Input")
+					// pg.warningModal.SetTitle("Reset Seed Input")
 					var msg = "You are about clearing all the seed input fields. Are you sure you want to proceed with this action?"
 					w := []func(gtx C) D{
 						func(gtx C) D {
