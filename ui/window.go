@@ -50,6 +50,7 @@ type Window struct {
 	walletTabs, accountTabs *decredmaterial.Tabs
 	keyEvents               chan *key.Event
 	clipboard               chan interface{}
+	sysDestroyWithSync      bool
 }
 
 type WriteClipboard struct {
@@ -149,6 +150,10 @@ func (win *Window) Loop(shutdown chan int) {
 					win.updateSyncStatus(true, false)
 				}
 			case wallet.SyncCanceled:
+				if win.sysDestroyWithSync {
+					close(shutdown)
+					return
+				}
 				win.updateSyncStatus(false, false)
 			case wallet.HeadersFetchProgress:
 				win.updateSyncProgress(update.ProgressReport)
@@ -169,8 +174,13 @@ func (win *Window) Loop(shutdown chan int) {
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
-				close(shutdown)
-				return
+				if win.walletInfo.Syncing || win.walletInfo.Synced {
+					win.sysDestroyWithSync = true
+					win.wallet.CancelSync()
+				} else {
+					close(shutdown)
+				}
+
 			case system.FrameEvent:
 				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
