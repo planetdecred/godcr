@@ -29,11 +29,9 @@ type pageIcons struct {
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
 
-	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
-	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
-	pendingIcon, logo, redirectIcon, confirmIcon *widget.Image
-
-	walletIcon, syncingIcon image.Image
+	overviewIcon, overviewIconInactive, walletIcon, walletIconInactive, receiveIcon,
+	transactionIcon, transactionIconInactive, sendIcon, syncingIcon, moreIcon, moreIconInactive,
+	confirmIcon, pendingIcon, logo, redirectIcon, importedAccountIcon, accountIcon image.Image
 }
 
 type navHandler struct {
@@ -113,22 +111,23 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 
-		overviewIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
-		overviewIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
-		walletIconInactive:      &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
-		receiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
-		transactionIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
-		transactionIconInactive: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
-		sendIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
-		moreIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
-		moreIconInactive:        &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
-		logo:                    &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
-		confirmIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
-		pendingIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
-		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
-
-		syncingIcon: decredIcons["syncing"],
-		walletIcon:  decredIcons["wallet"],
+		overviewIcon:               decredIcons["overview"],
+		overviewIconInactive:       decredIcons["overview_inactive"],
+		walletIcon:                 decredIcons["wallet"],
+		walletIconInactive:         decredIcons["wallet_inactive"],
+		receiveIcon:                decredIcons["receive"],
+		transactionIcon:            decredIcons["transaction"],
+		transactionIconInactive:    decredIcons["transaction_inactive"],
+		sendIcon:                   decredIcons["send"],
+		syncingIcon:                decredIcons["syncing"],
+		moreIcon:                   decredIcons["more"],
+		moreIconInactive:           decredIcons["more_inactive"],
+		logo:                       decredIcons["logo"],
+		confirmIcon:                decredIcons["confirmed"],
+		pendingIcon:                decredIcons["pending"],
+		redirectIcon:               decredIcons["redirect"],
+		accountIcon:                decredIcons["account"],
+		importedAccountIcon:        decredIcons["imported_account"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 

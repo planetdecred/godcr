@@ -48,21 +48,17 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
-				return layout.Stack{}.Layout(gtx,
-					layout.Stacked(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return c.layoutHeader(gtx, header)
-					}),
-					layout.Expanded(c.buttonWidget.Layout),
-				)
-			})
+			return layout.Stack{}.Layout(gtx,
+				layout.Stacked(func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return c.layoutHeader(gtx, header)
+				}),
+				layout.Expanded(c.buttonWidget.Layout),
+			)
 		}),
 		layout.Rigid(func(gtx C) D {
 			if c.isExpanded {
-				return layout.Inset{Top: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
-					return content(gtx)
-				})
+				return content(gtx)
 			}
 			return layout.Dimensions{}
 		}),
