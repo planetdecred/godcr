@@ -97,15 +97,12 @@ func (win *Window) updateStates(update interface{}) {
 				win.proposals[v.Category] = append(win.proposals[v.Category], v)
 			}
 		}
+		win.latestProposals = update.([]dcrlibwallet.Proposal)
 	}
 
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
 	win.wallet.GetAllTransactions(0, 0, 0)
-
-	if win.proposals == nil {
-		win.wallet.GetProposals()
-	}
 
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }

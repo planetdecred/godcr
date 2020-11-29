@@ -67,6 +67,9 @@ func (wal *Wallet) LoadWallets() {
 			return
 		}
 
+		// set politeia notification config option to on
+		wal.multi.SaveUserConfigValue(dcrlibwallet.PoliteiaNotificationConfigKey, true)
+
 		err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
 		if err != nil {
 			resp.Err = err

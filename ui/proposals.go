@@ -24,48 +24,67 @@ const (
 	proposalSyncPaneHeight = 100
 )
 
+type proposalNotificationListeners struct {
+	wallet *wallet.Wallet
+}
+
+func (p proposalNotificationListeners) OnNewProposal(proposalID int, censorshipToken string) {
+	p.wallet.GetProposalUpdate(censorshipToken, 1)
+}
+
+func (p proposalNotificationListeners) OnProposalVoteStarted(proposalID int, censorshipToken string) {
+	p.wallet.GetProposalUpdate(censorshipToken, 2)
+}
+
+func (p proposalNotificationListeners) OnProposalVoteFinished(proposalID int, censorshipToken string) {
+	p.wallet.GetProposalUpdate(censorshipToken, 3)
+}
+
 type ProposalsPage struct {
-	theme                       *decredmaterial.Theme
-	wallet                      *wallet.Wallet
-	pageListContainer           *layout.List
-	proposalListContainer       *layout.List
-	tabTitles                   []string
-	tabContainer                *decredmaterial.Tabs
-	outline                     decredmaterial.Outline
-	isShowingProposalDetails    bool
-	proposals                   *map[int32][]dcrlibwallet.Proposal
-	selectedProposal            **dcrlibwallet.Proposal
-	clickables                  []*gesture.Click
-	syncListener                *proposalSyncListener
-	notSyncedIcon               *widget.Icon
-	syncingIcon                 image.Image
-	notSyncedStatusLabel        decredmaterial.Label
-	fetchingTokenInventoryLabel decredmaterial.Label
-	syncButton                  decredmaterial.Button
-	cancelSyncButton            decredmaterial.Button
-	syncingLabel                decredmaterial.Label
+	theme                          *decredmaterial.Theme
+	wallet                         *wallet.Wallet
+	pageListContainer              *layout.List
+	proposalListContainer          *layout.List
+	tabTitles                      []string
+	tabContainer                   *decredmaterial.Tabs
+	outline                        decredmaterial.Outline
+	proposals                      map[int32][]dcrlibwallet.Proposal
+	latestProposals                *[]dcrlibwallet.Proposal
+	selectedProposal               **dcrlibwallet.Proposal
+	updatedProposal                *wallet.ProposalUpdate
+	clickables                     []*gesture.Click
+	isSyncing                      bool
+	hasFetchedSavedProposals       bool
+	hasRegisteredProposalListeners bool
+	notSyncingIcon                 *widget.Icon
+	syncingIcon                    image.Image
+	notSyncingStatusLabel          decredmaterial.Label
+	syncButton                     decredmaterial.Button
+	cancelSyncButton               decredmaterial.Button
+	syncingLabel                   decredmaterial.Label
 }
 
 func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 	pg := &ProposalsPage{
-		theme:                       common.theme,
-		wallet:                      win.wallet,
-		proposalListContainer:       &layout.List{Axis: layout.Vertical},
-		pageListContainer:           &layout.List{Axis: layout.Vertical},
-		tabContainer:                decredmaterial.NewTabs(common.theme),
-		tabTitles:                   []string{"In Discussion", "Voting", "Approved", "Rejected", "Abandoned"},
-		isShowingProposalDetails:    false,
-		proposals:                   &win.proposals,
-		outline:                     common.theme.Outline(),
-		selectedProposal:            &win.proposal,
-		syncListener:                &proposalSyncListener{},
-		notSyncedStatusLabel:        common.theme.H6("Not Synced"),
-		fetchingTokenInventoryLabel: common.theme.H6("Fetching token inventory..."),
-		syncingLabel:                common.theme.H6("Syncing..."),
+		theme:                 common.theme,
+		wallet:                win.wallet,
+		proposalListContainer: &layout.List{Axis: layout.Vertical},
+		pageListContainer:     &layout.List{Axis: layout.Vertical},
+		tabContainer:          decredmaterial.NewTabs(common.theme),
+		tabTitles:             []string{"In Discussion", "Voting", "Approved", "Rejected", "Abandoned"},
+		proposals:             make(map[int32][]dcrlibwallet.Proposal),
+		latestProposals:       &win.latestProposals,
+		outline:               common.theme.Outline(),
+		selectedProposal:      &win.proposal,
+		updatedProposal:       &win.updatedProposal,
+		isSyncing:             false,
+		notSyncingStatusLabel: common.theme.H6("Not Syncing"),
+		syncingLabel:          common.theme.H6("Syncing..."),
 	}
+
 	pg.tabContainer.Position = decredmaterial.Top
-	pg.notSyncedIcon = common.icons.navigationCancel
-	pg.notSyncedIcon.Color = common.theme.Color.Danger
+	pg.notSyncingIcon = common.icons.navigationCancel
+	pg.notSyncingIcon.Color = common.theme.Color.Danger
 
 	pg.syncingIcon = common.icons.syncingIcon
 
@@ -109,16 +128,49 @@ func (pg *ProposalsPage) Handler(c pageCommon) {
 	}
 
 	for pg.syncButton.Button.Clicked() {
-		if !pg.syncListener.isSyncing {
-			pg.wallet.StartProposalsSync(pg.syncListener)
+		if !pg.isSyncing {
+			pg.isSyncing = true
+			pg.wallet.StartProposalsSync()
+		}
+	}
+
+	for pg.cancelSyncButton.Button.Clicked() {
+		if pg.isSyncing {
+			pg.wallet.CancelProposalsSync()
+			pg.isSyncing = false
 		}
 	}
 }
 
+func (pg *ProposalsPage) addLatestProposals() {
+	latestProposals := *pg.latestProposals
+	for _, v := range latestProposals {
+		pg.proposals[v.Category] = append(pg.proposals[v.Category], v)
+	}
+	*pg.latestProposals = nil
+}
+
+func (pg *ProposalsPage) updateProposal() {
+	updatedProposal := *pg.updatedProposal
+	proposalGroup := pg.proposals[updatedProposal.Proposal.Category]
+
+	if updatedProposal.UpdateType == 1 {
+		pg.proposals[updatedProposal.Proposal.Category] = append(proposalGroup, *updatedProposal.Proposal)
+	} else {
+		for i := range proposalGroup {
+			if proposalGroup[i].CensorshipRecord.Token == updatedProposal.Proposal.CensorshipRecord.Token {
+				proposalGroup[i] = *updatedProposal.Proposal
+				pg.proposals[updatedProposal.Proposal.Category] = proposalGroup
+				break
+			}
+		}
+	}
+	pg.updatedProposal = &wallet.ProposalUpdate{Proposal: nil}
+}
+
 func (pg *ProposalsPage) showProposalDetails(index int, c pageCommon) {
 	category := pg.getSelectedProposalsCategory()
-	proposals := *pg.proposals
-	currentProposals := proposals[category]
+	currentProposals := pg.proposals[category]
 
 	for i := range currentProposals {
 		if currentProposals[i].Category == category && i == index {
@@ -147,8 +199,7 @@ func (pg *ProposalsPage) getSelectedProposalsCategory() int32 {
 }
 
 func (pg *ProposalsPage) getProposalsForCurrentTab() []dcrlibwallet.Proposal {
-	proposals := *pg.proposals
-	return proposals[pg.getSelectedProposalsCategory()]
+	return pg.proposals[pg.getSelectedProposalsCategory()]
 }
 
 func (pg *ProposalsPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
@@ -160,6 +211,25 @@ func (pg *ProposalsPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensi
 		}
 	}
 
+	if *pg.latestProposals != nil {
+		pg.addLatestProposals()
+	}
+
+	if !pg.hasFetchedSavedProposals {
+		pg.wallet.GetProposals()
+		pg.hasFetchedSavedProposals = true
+	}
+
+	if !pg.hasRegisteredProposalListeners {
+		pg.wallet.AddProposalNotificationListener(proposalNotificationListeners{pg.wallet})
+		pg.hasRegisteredProposalListeners = true
+	}
+
+	if pg.updatedProposal.Proposal != nil {
+		pg.updateProposal()
+		fmt.Println("ddd")
+	}
+
 	proposalListContainerHeight := gtx.Constraints.Max.Y - proposalSyncPaneHeight
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
@@ -169,8 +239,8 @@ func (pg *ProposalsPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensi
 		func(gtx C) D {
 			return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
 				return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-					if pg.syncListener.isSyncing {
-						return pg.layoutIsSyncingStatus(gtx)
+					if pg.isSyncing {
+						return pg.layoutIsSyncingSection(gtx)
 					}
 					return pg.layoutSyncStartSection(gtx)
 				})
@@ -190,11 +260,11 @@ func (pg *ProposalsPage) layoutSyncStartSection(gtx layout.Context) layout.Dimen
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
-					return pg.notSyncedIcon.Layout(gtx, unit.Dp(20))
+					return pg.notSyncingIcon.Layout(gtx, unit.Dp(20))
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.notSyncedStatusLabel.Layout(gtx)
+				return pg.notSyncingStatusLabel.Layout(gtx)
 			}),
 			layout.Flexed(1, func(gtx C) D {
 				return layout.E.Layout(gtx, func(gtx C) D {
@@ -208,80 +278,33 @@ func (pg *ProposalsPage) layoutSyncStartSection(gtx layout.Context) layout.Dimen
 	})
 }
 
-func (pg *ProposalsPage) layoutIsSyncingStatus(gtx layout.Context) layout.Dimensions {
+func (pg *ProposalsPage) layoutIsSyncingSection(gtx layout.Context) layout.Dimensions {
 	return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.layoutSyncStatus(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.progressBarRow(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.layoutSyncProgressCounter(gtx)
+				return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Right: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
+								return pg.theme.ImageIcon(gtx, pg.syncingIcon, 20)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return pg.syncingLabel.Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+								return border.Layout(gtx, func(gtx C) D {
+									return pg.cancelSyncButton.Layout(gtx)
+								})
+							})
+						}),
+					)
+				})
 			}),
 		)
 	})
-}
-
-func (pg *ProposalsPage) layoutSyncStatus(gtx layout.Context) layout.Dimensions {
-	syncStatusLabel := pg.notSyncedStatusLabel
-	btn := pg.syncButton
-	if pg.syncListener.isSyncing {
-		syncStatusLabel = pg.syncingLabel
-		btn = pg.cancelSyncButton
-	}
-
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Right: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
-				if pg.syncListener.isSyncing {
-					return pg.theme.ImageIcon(gtx, pg.syncingIcon, 20)
-				}
-
-				return pg.notSyncedIcon.Layout(gtx, unit.Dp(20))
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return syncStatusLabel.Layout(gtx)
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				border := widget.Border{Color: pg.theme.Color.Hint, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
-				return border.Layout(gtx, func(gtx C) D {
-					if pg.syncListener.isSyncing {
-						return btn.Layout(gtx)
-					}
-					return btn.Layout(gtx)
-				})
-			})
-		}),
-	)
-}
-
-// syncBoxTitleRow lays out the progress bar.
-func (pg *ProposalsPage) progressBarRow(gtx layout.Context) layout.Dimensions {
-	percentageProgress := 0
-	if pg.syncListener.progress != nil {
-		percentageProgress = int(pg.syncListener.progress.ProposalsFetchProgress)
-	}
-
-	p := pg.theme.ProgressBar(int(percentageProgress))
-	p.Color = pg.theme.Color.Success
-	return p.Layout(gtx)
-}
-
-func (pg *ProposalsPage) layoutSyncProgressCounter(gtx layout.Context) layout.Dimensions {
-	percentageProgress := 0
-	if pg.syncListener.progress != nil {
-		percentageProgress = int(pg.syncListener.progress.ProposalsFetchProgress)
-	}
-
-	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.theme.Body1(fmt.Sprintf("%d%%", percentageProgress)).Layout(gtx)
-		}),
-	)
 }
 
 func (pg *ProposalsPage) layoutProposalsList(gtx layout.Context) layout.Dimensions {
@@ -330,33 +353,6 @@ func (pg *ProposalsPage) layoutProposalHeader(gtx layout.Context, proposal dcrli
 		}),
 	)
 }
-
-type proposalSyncListener struct {
-	syncStage int
-	isSyncing bool
-	progress  *dcrlibwallet.ProposalsFetchProgressReport
-}
-
-func (p *proposalSyncListener) OnSyncStarted() {
-	p.isSyncing = true
-}
-
-func (p *proposalSyncListener) OnProposalsDiscovery() {
-	p.syncStage = dcrlibwallet.ProposalsDiscoverySyncState
-}
-
-func (p *proposalSyncListener) OnProposalsFetched(proposalsFetchProgress *dcrlibwallet.ProposalsFetchProgressReport) {
-	if p.syncStage == dcrlibwallet.ProposalsDiscoverySyncState {
-		p.syncStage = dcrlibwallet.ProposalsFetchSyncState
-	}
-	p.progress = proposalsFetchProgress
-}
-
-func (p *proposalSyncListener) OnSyncCompleted() {}
-
-func (p *proposalSyncListener) OnSyncCanceled() {}
-
-func (p *proposalSyncListener) OnSyncEndedWithError(err error) {}
 
 func calculateVotes(options []dcrlibwallet.ProposalVoteOptionResult) (float32, float32) {
 	var yes, no float32

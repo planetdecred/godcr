@@ -187,7 +187,7 @@ func (wal *Wallet) GetProposalUpdate(token string, updateType int) {
 			return
 		}
 
-		resp.Resp = &ProposalUpdate{
+		resp.Resp = ProposalUpdate{
 			Proposal:   proposal,
 			UpdateType: updateType,
 		}
@@ -690,14 +690,21 @@ func (wal *Wallet) VerifyMessage(address string, message string, signature strin
 }
 
 // StartProposalsSync starts the multiwallet politeia proposals sync
-func (wal *Wallet) StartProposalsSync(syncListener dcrlibwallet.ProposalSyncProgressListener) error {
-	wal.multi.Politeia.AddSyncPropogressListener(syncListener, "godcr")
-	return wal.multi.Politeia.Sync()
+func (wal *Wallet) StartProposalsSync() error {
+	var err error
+	go func() {
+		err = wal.multi.Politeia.Sync()
+	}()
+	return err
+}
+
+func (wal *Wallet) AddProposalNotificationListener(listener dcrlibwallet.ProposalNotificationListener) error {
+	return wal.multi.Politeia.AddNotificationListener(listener, "godcr")
 }
 
 // CancelProposalsSync cancels the politeia proposals sync
 func (wal *Wallet) CancelProposalsSync() {
-	//return wal.multi.Politeia.
+	go wal.multi.Politeia.CancelSync()
 }
 
 // StartSync starts the multiwallet SPV sync
