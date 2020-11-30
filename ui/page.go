@@ -9,7 +9,7 @@ import (
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"gioui.org/unit"
+	//"gioui.org/unit"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -54,8 +54,8 @@ type pageCommon struct {
 	clipboard       chan interface{}
 	states          *states
 
-	appBarNavItems          []navHandler
-	drawerNavItems          []navHandler
+	appBarNavItems []navHandler
+	//drawerNavItems          []navHandler
 	isNavDrawerMinimized    *bool
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
@@ -64,11 +64,6 @@ type pageCommon struct {
 type (
 	C = layout.Context
 	D = layout.Dimensions
-)
-
-const (
-	navDrawerWidth          = 320
-	navDrawerMinimizedWidth = 170
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
@@ -129,7 +124,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 	}
 
-	drawerNavItems := []navHandler{
+	/**drawerNavItems := []navHandler{
 		{
 			clickable:     new(widget.Clickable),
 			image:         &widget.Image{Src: paint.NewImageOp(ic.overviewIcon)},
@@ -154,7 +149,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.moreIconInactive)},
 			page:          PageMore,
 		},
-	}
+	}**/
+
+	tabs := decredmaterial.NewTabs(win.theme, true)
+	tabs.SetTabs([]decredmaterial.TabItem{
+		decredmaterial.NewTabItem(PageOverview, &ic.overviewIcon, &ic.overviewIconInactive),
+		decredmaterial.NewTabItem(PageTransactions, &ic.transactionIcon, &ic.transactionIconInactive),
+		decredmaterial.NewTabItem(PageWallet, &ic.walletIcon, &ic.walletIconInactive),
+		decredmaterial.NewTabItem(PageMore, &ic.moreIcon, &ic.moreIconInactive),
+	})
 
 	common := pageCommon{
 		wallet:          win.wallet,
@@ -164,6 +167,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		theme:           win.theme,
 		icons:           ic,
 		page:            &win.current,
+		navTab:          tabs,
 		walletTabs:      win.walletTabs,
 		accountTabs:     win.accountTabs,
 		errorChannels: map[string]chan error{
@@ -172,11 +176,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageWallet:         make(chan error),
 			PageWalletAccounts: make(chan error),
 		},
-		keyEvents:               win.keyEvents,
-		clipboard:               win.clipboard,
-		states:                  &win.states,
-		appBarNavItems:          appBarNavItems,
-		drawerNavItems:          drawerNavItems,
+		keyEvents:      win.keyEvents,
+		clipboard:      win.clipboard,
+		states:         &win.states,
+		appBarNavItems: appBarNavItems,
+		//drawerNavItems:          drawerNavItems,
 		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
 	}
@@ -227,17 +231,39 @@ func (page pageCommon) handleNavEvents() {
 		}
 	}
 
-	for i := range page.drawerNavItems {
+	if page.navTab.ChangeEvent() {
+		selectedID := page.navTab.SelectedID()
+		if selectedID != "" {
+			*page.page = selectedID
+		}
+	}
+
+	/**for i := range page.drawerNavItems {
 		for page.drawerNavItems[i].clickable.Clicked() {
 			*page.page = page.drawerNavItems[i].page
 		}
-	}
+	}**/
 }
 
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	page.handleNavEvents()
 
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return page.layoutAppBar(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return page.navTab.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+					return body(gtx)
+				})
+			})
+		}),
+	)
+
+	/**return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return page.layoutAppBar(gtx)
 		}),
@@ -261,7 +287,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				}),
 			)
 		}),
-	)
+	)**/
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
@@ -334,6 +360,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+/**
 func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
@@ -401,7 +428,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 	)
-}
+}**/
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.

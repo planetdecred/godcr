@@ -89,7 +89,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.clipboard = make(chan interface{})
 	win.theme.ReadClipboard = win.clipboard
 
-	win.walletTabs, win.accountTabs = decredmaterial.NewTabs(win.theme), decredmaterial.NewTabs(win.theme)
+	win.walletTabs, win.accountTabs = decredmaterial.NewTabs(win.theme, false), decredmaterial.NewTabs(win.theme, false)
 	win.walletTabs.Position, win.accountTabs.Position = decredmaterial.Top, decredmaterial.Top
 	win.walletTabs.Separator, win.walletTabs.Separator = false, false
 	win.accountTabs.SetTitle(win.theme.Label(values.TextSize18, "Accounts:"))

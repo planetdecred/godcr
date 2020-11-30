@@ -21,6 +21,11 @@ const (
 	Left
 )
 
+const (
+	navDrawerWidth          = 200
+	navDrawerMinimizedWidth = 120
+)
+
 var adaptiveTabWidth int
 
 // Position determines what side of the page the tab would be laid out
@@ -28,12 +33,14 @@ type Position int
 
 // TabItem displays a single child of a tab. Label and Icon in TabItem are optional.
 type TabItem struct {
-	Title  string
-	label  Label
-	button Button
-	Icon   image.Image
-	iconOp paint.ImageOp
-	index  int
+	ID             string
+	Title          string
+	label          Label
+	button         Button
+	Icon           image.Image
+	iconOp         paint.ImageOp
+	inactiveIconOp paint.ImageOp
+	index          int
 }
 
 // tabIndicatorDimensions defines the width and height of the active tab item indicator depending
@@ -81,6 +88,9 @@ func line(gtx layout.Context, width, height int, col color.RGBA) layout.Dimensio
 
 // layoutIcon lays out the icon of a tab item
 func (t *TabItem) layoutIcon(gtx layout.Context) layout.Dimensions {
+	//iconOp := t.iconOp
+	//if t.sele
+
 	img := widget.Image{Src: t.iconOp}
 	img.Scale = 0.05
 	return img.Layout(gtx)
@@ -88,24 +98,45 @@ func (t *TabItem) layoutIcon(gtx layout.Context) layout.Dimensions {
 
 // iconText lays out the text of a tab item and its icon if it has one. It aligns the text and the icon
 // based on the position of the tab.
-func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dimensions {
+func (t *TabItem) iconText(gtx layout.Context, tabPosition Position, isMinimized bool) layout.Dimensions {
 	widgetAxis := layout.Vertical
 	if tabPosition == Left || tabPosition == Right {
 		widgetAxis = layout.Horizontal
 	}
 
+	axis := widgetAxis
+	leftInset := float32(15)
+	if isMinimized {
+		axis = layout.Vertical
+		leftInset = 0
+	}
+
 	dims := layout.Flex{}.Layout(gtx, layout.Rigid(func(gtx C) D {
 		return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: widgetAxis, Alignment: layout.Middle}.Layout(gtx,
+
+			//gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Flex{Axis: axis, Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-						dim := gtx.Px(unit.Dp(20))
-						gtx.Constraints.Max = image.Point{X: dim, Y: dim}
-						return t.layoutIcon(gtx)
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
+							dim := gtx.Px(unit.Dp(20))
+							gtx.Constraints.Max = image.Point{X: dim, Y: dim}
+							return t.layoutIcon(gtx)
+						})
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return t.label.Layout(gtx)
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return layout.Inset{
+							Left: unit.Dp(leftInset),
+						}.Layout(gtx, func(gtx C) D {
+							lbl := t.label
+							if isMinimized {
+								lbl.TextSize = values.TextSize10
+							}
+							return lbl.Layout(gtx)
+						})
+					})
 				}),
 			)
 		})
@@ -113,25 +144,28 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position) layout.Dime
 	return dims
 }
 
-func NewTabItem(title string, icon *image.Image) TabItem {
+func NewTabItem(title string, icon, inactiveIcon *image.Image) TabItem {
 	tabItem := TabItem{
 		Title: title,
+		ID:    title,
 	}
 
 	if icon != nil {
 		tabItem.iconOp = paint.NewImageOp(*icon)
+		tabItem.inactiveIconOp = paint.NewImageOp(*inactiveIcon)
 	}
 
 	return tabItem
 }
 
-func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position) layout.Dimensions {
+func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position, width int, isMinimized bool) layout.Dimensions {
 	var tabWidth, tabHeight int
 	var iconTextDims layout.Dimensions
 
+	gtx.Constraints.Min.X = width
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
-			iconTextDims = t.iconText(gtx, tabPosition)
+			iconTextDims = t.iconText(gtx, tabPosition, isMinimized)
 			if iconTextDims.Size.X > adaptiveTabWidth {
 				adaptiveTabWidth = iconTextDims.Size.X
 			}
@@ -171,26 +205,40 @@ type Tabs struct {
 	prevEvents       int
 	events           []widget.ChangeEvent
 	// btns             []*widget.Clickable
-	title       Label
-	list        *layout.List
-	Position    Position
-	Separator   bool
-	iconButton  IconButton
-	scrollLeft  *widget.Clickable
-	scrollRight *widget.Clickable
-	theme       *Theme
+	title                   Label
+	list                    *layout.List
+	Position                Position
+	Separator               bool
+	iconButton              IconButton
+	scrollLeft              *widget.Clickable
+	scrollRight             *widget.Clickable
+	theme                   *Theme
+	Background              color.RGBA
+	isNavTabs               bool
+	isNavDrawerMinimized    bool
+	minimizeNavDrawerButton IconButton
+	maximizeNavDrawerButton IconButton
 }
 
-func NewTabs(th *Theme) *Tabs {
-	return &Tabs{
-		theme:       th,
-		list:        &layout.List{},
-		Position:    Left,
-		scrollLeft:  new(widget.Clickable),
-		scrollRight: new(widget.Clickable),
-		iconButton:  th.IconButton(new(widget.Clickable), new(widget.Icon)),
-		flex:        layout.Flex{},
+func NewTabs(th *Theme, isNavTabs bool) *Tabs {
+	t := &Tabs{
+		theme:                   th,
+		list:                    &layout.List{},
+		Position:                Left,
+		scrollLeft:              new(widget.Clickable),
+		scrollRight:             new(widget.Clickable),
+		iconButton:              th.IconButton(new(widget.Clickable), new(widget.Icon)),
+		flex:                    layout.Flex{},
+		Background:              th.Color.Surface,
+		isNavTabs:               isNavTabs,
+		isNavDrawerMinimized:    false,
+		minimizeNavDrawerButton: th.PlainIconButton(new(widget.Clickable), th.navigationArrowBack),
+		maximizeNavDrawerButton: th.PlainIconButton(new(widget.Clickable), th.navigationArrowForward),
 	}
+	t.minimizeNavDrawerButton.Color = th.Color.Gray
+	t.maximizeNavDrawerButton.Color = th.Color.Gray
+
+	return t
 }
 
 // SetTabs creates a button widget for each tab item.
@@ -204,6 +252,14 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 		b.Background = color.RGBA{}
 		tabs[i].button = b
 	}
+}
+
+// SelectedID returns the ID of the currently selected tab item
+func (t *Tabs) SelectedID() string {
+	if len(t.items) == 0 {
+		return ""
+	}
+	return t.items[t.Selected].ID
 }
 
 // scrollButton lays out the right and left scroll buttons of the tab when Position is Horizontal.
@@ -257,25 +313,47 @@ func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChil
 	tab = layout.Rigid(func(gtx C) D {
 		dims := layout.Stack{}.Layout(gtx,
 			layout.Stacked(func(gtx C) D {
-				return layout.Flex{Axis: t.list.Axis, Spacing: layout.SpaceBetween}.Layout(gtx,
-					t.tabsTitle(),
-					t.scrollButton(false, t.scrollLeft),
-					layout.Flexed(1, func(gtx C) D {
-						mt := values.MarginPaddingMinus10
-						ml := values.MarginPadding10
-						if t.Position == Right || t.Position == Left {
-							mt = values.MarginPadding0
-							ml = values.MarginPadding0
-						}
-						return layout.Inset{Left: ml, Top: mt}.Layout(gtx, func(gtx C) D {
-							return t.list.Layout(gtx, len(t.items), func(gtx C, i int) D {
-								t.items[i].index = i
-								return t.items[i].Layout(gtx, t.Selected, t.Position)
+				return Card{Color: t.Background}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: t.list.Axis, Spacing: layout.SpaceBetween}.Layout(gtx,
+						t.tabsTitle(),
+						t.scrollButton(false, t.scrollLeft),
+						layout.Flexed(1, func(gtx C) D {
+							mt := values.MarginPaddingMinus10
+							ml := values.MarginPadding10
+							if t.Position == Right || t.Position == Left {
+								mt = values.MarginPadding0
+								ml = values.MarginPadding0
+							}
+
+							return layout.Inset{Left: ml, Top: mt}.Layout(gtx, func(gtx C) D {
+								return t.list.Layout(gtx, len(t.items), func(gtx C, i int) D {
+									t.items[i].index = i
+									col := t.Background
+									if t.items[i].index == t.Selected {
+										col = t.theme.Color.Background
+									}
+
+									width := gtx.Constraints.Min.X
+									isMinimized := false
+									if t.isNavTabs {
+										if t.isNavDrawerMinimized {
+											width = navDrawerMinimizedWidth
+											isMinimized = true
+										} else {
+											width = navDrawerWidth
+											isMinimized = false
+										}
+									}
+
+									return Card{Color: col}.Layout(gtx, func(gtx C) D {
+										return t.items[i].Layout(gtx, t.Selected, t.Position, width, isMinimized)
+									})
+								})
 							})
-						})
-					}),
-					t.scrollButton(true, t.scrollRight),
-				)
+						}),
+						t.scrollButton(true, t.scrollRight),
+					)
+				})
 			}),
 			layout.Expanded(func(gtx C) D {
 				direction := layout.E
@@ -293,6 +371,16 @@ func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChil
 					})
 				}
 				return layout.Dimensions{}
+			}),
+			layout.Expanded(func(gtx C) D {
+				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+				return layout.SE.Layout(gtx, func(gtx C) D {
+					btn := t.minimizeNavDrawerButton
+					if t.isNavDrawerMinimized {
+						btn = t.maximizeNavDrawerButton
+					}
+					return btn.Layout(gtx)
+				})
 			}),
 		)
 		return dims
@@ -339,6 +427,15 @@ func (t *Tabs) processChangeEvent() {
 			return
 		}
 	}
+
+	for t.minimizeNavDrawerButton.Button.Clicked() {
+		t.isNavDrawerMinimized = true
+	}
+
+	for t.maximizeNavDrawerButton.Button.Clicked() {
+		t.isNavDrawerMinimized = false
+	}
+
 }
 
 func (t *Tabs) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {

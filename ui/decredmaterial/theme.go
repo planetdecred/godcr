@@ -63,15 +63,17 @@ type Theme struct {
 		ContentCreate *widget.Icon
 		ContentAdd    *widget.Icon
 	}
-	TextSize              unit.Value
-	checkBoxCheckedIcon   *widget.Icon
-	checkBoxUncheckedIcon *widget.Icon
-	radioCheckedIcon      *widget.Icon
-	radioUncheckedIcon    *widget.Icon
-	chevronUpIcon         *widget.Icon
-	chevronDownIcon       *widget.Icon
-	NavigationCheckIcon   *widget.Icon
-	navMoreIcon           *widget.Icon
+	TextSize               unit.Value
+	checkBoxCheckedIcon    *widget.Icon
+	checkBoxUncheckedIcon  *widget.Icon
+	radioCheckedIcon       *widget.Icon
+	radioUncheckedIcon     *widget.Icon
+	chevronUpIcon          *widget.Icon
+	chevronDownIcon        *widget.Icon
+	NavigationCheckIcon    *widget.Icon
+	navMoreIcon            *widget.Icon
+	navigationArrowBack    *widget.Icon
+	navigationArrowForward *widget.Icon
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
@@ -102,6 +104,8 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
 	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+	t.navigationArrowBack = mustIcon(widget.NewIcon(icons.NavigationArrowBack))
+	t.navigationArrowForward = mustIcon(widget.NewIcon(icons.NavigationArrowForward))
 	t.Clipboard = make(chan string)
 	return t
 }
