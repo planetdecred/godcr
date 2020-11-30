@@ -1,8 +1,6 @@
 package decredmaterial
 
 import (
-	//"fmt"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 )
@@ -74,33 +72,46 @@ func (c *Container) layout(gtx layout.Context, w []func(gtx C) D) layout.Dimensi
 	}
 
 	var visibleFraction, scrollDepth float32
-	firstChildFunc := func(gtx C) D {
-		var totalVisibleHeight float32
+	scrollbarThickness := gtx.Px(unit.Dp(12))
 
-		dims := c.container.Layout(gtx, len(w), func(gtx C, i int) D {
-			dim := layout.UniformInset(unit.Dp(5)).Layout(gtx, w[i])
-			maxLength := dim.Size.Y
-			contentLength := c.contentHeight
-			if c.axis == layout.Horizontal {
-				maxLength = dim.Size.X
-				contentLength = c.contentWidth
-			}
-			totalVisibleHeight += float32(maxLength)
-			visibleFraction = totalVisibleHeight / contentLength
-			scrollDepth = float32(c.container.Position.First) / float32(len(w))
-
-			return dim
-		})
-
-		return dims
+	inset := layout.Inset{}
+	if c.axis == layout.Vertical {
+		inset.Right = unit.Dp(float32(scrollbarThickness + 10))
 	}
 
-	secondChildFunc := func(gtx C) D {
+	contentFunc := func(gtx C) D {
+		return inset.Layout(gtx, func(gtx C) D {
+			var totalVisibleHeight float32
+
+			dims := c.container.Layout(gtx, len(w), func(gtx C, i int) D {
+				dim := layout.UniformInset(unit.Dp(5)).Layout(gtx, w[i])
+				maxLength := dim.Size.Y
+				contentLength := c.contentHeight
+				if c.axis == layout.Horizontal {
+					maxLength = dim.Size.X
+					contentLength = c.contentWidth
+				}
+				totalVisibleHeight += float32(maxLength)
+				visibleFraction = totalVisibleHeight / contentLength
+				scrollDepth = float32(c.container.Position.First) / float32(len(w))
+
+				return dim
+			})
+			return dims
+		})
+	}
+
+	scrollbarFunc := func(gtx C) D {
+		if c.axis == layout.Vertical {
+			gtx.Constraints.Max.X = scrollbarThickness
+		} else {
+			gtx.Constraints.Max.Y = scrollbarThickness * 40
+		}
 		return c.scrollbar.Layout(gtx, c.axis, scrollDepth, visibleFraction)
 	}
 
 	if c.axis == layout.Vertical {
-		return layout.Stack{Alignment: layout.E}.Layout(gtx, layout.Stacked(firstChildFunc), layout.Stacked(secondChildFunc))
+		return layout.Stack{Alignment: layout.E}.Layout(gtx, layout.Stacked(contentFunc), layout.Stacked(scrollbarFunc))
 	}
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, layout.Rigid(firstChildFunc), layout.Rigid(secondChildFunc))
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, layout.Rigid(contentFunc), layout.Rigid(scrollbarFunc))
 }

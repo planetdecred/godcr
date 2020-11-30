@@ -1,7 +1,6 @@
 package decredmaterial
 
 import (
-	//"fmt"
 	"image"
 	"image/color"
 
@@ -97,28 +96,26 @@ func (t *Theme) Scrollbar(axis layout.Axis) *Scrollbar {
 	}
 }
 
-func (s *Scrollbar) getMargins(gtx layout.Context, axis layout.Axis, progress, scale float32) (f32.Point, unit.Value, unit.Value) {
+func (s *Scrollbar) getMargins(gtx layout.Context, progress, scale float32) (f32.Point, unit.Value, unit.Value) {
 	s.Progress = progress
 	s.Scale = scale
-
 	s.Scroller.progress = s.Progress
 	s.Update(gtx)
 	if scrolled, _ := s.Scrolled(); scrolled {
 		op.InvalidateOp{}.Add(gtx.Ops)
 	}
 
-	maxScrollLength := gtx.Constraints.Max.Y
-	if axis == layout.Horizontal {
-		maxScrollLength = gtx.Constraints.Max.X
+	maxLength := gtx.Constraints.Max.Y
+	if s.axis == layout.Horizontal {
+		maxLength = gtx.Constraints.Max.X
 	}
 
-	scaledLength := (s.Scale * float32(maxScrollLength))
+	scaledLength := (s.Scale * float32(maxLength))
 	s.MinLength = unit.Dp(scaledLength / gtx.Metric.PxPerDp)
-
-	s.length = maxScrollLength
+	s.length = maxLength
 
 	var size f32.Point
-	if axis == layout.Vertical {
+	if s.axis == layout.Vertical {
 		size = f32.Point{
 			X: float32(gtx.Px(unit.Dp(float32(gtx.Constraints.Max.X)))),
 			Y: float32(gtx.Px(s.MinLength)),
@@ -130,28 +127,26 @@ func (s *Scrollbar) getMargins(gtx layout.Context, axis layout.Axis, progress, s
 		}
 	}
 
-	total := float32(gtx.Constraints.Max.X) / gtx.Metric.PxPerDp
-
 	var top, left unit.Value
-	if axis == layout.Vertical {
+	total := float32(maxLength) / gtx.Metric.PxPerDp
+	unitVal := unit.Dp(total * s.Progress)
+	if unitVal.V+s.MinLength.V > total {
+		unitVal = unit.Dp(total - s.MinLength.V)
+	}
+
+	if s.axis == layout.Vertical {
+		top = unitVal
 		left = unit.Dp(2)
-		top = unit.Dp(total * s.Progress)
-		if top.V+s.MinLength.V > total {
-			top = unit.Dp(total - s.MinLength.V)
-		}
 	} else {
+		left = unitVal
 		top = unit.Dp(2)
-		left = unit.Dp(total * s.Progress)
-		if left.V+s.MinLength.V > total {
-			left = unit.Dp(total - s.MinLength.V)
-		}
 	}
 
 	return size, top, left
 }
 
 func (s *Scrollbar) Layout(gtx layout.Context, axis layout.Axis, progress, scale float32) layout.Dimensions {
-	size, top, left := s.getMargins(gtx, axis, progress, scale)
+	size, top, left := s.getMargins(gtx, progress, scale)
 
 	// don't display scrollbar if content height or width is equal to or less than viewport size
 	if s.MinLength.V >= float32(s.length) {
@@ -187,7 +182,12 @@ func (s *Scrollbar) Layout(gtx layout.Context, axis layout.Axis, progress, scale
 				return drawRect(gtx, s.thumbColor, size, float32(gtx.Px(unit.Dp(4))))
 			})
 
-			dims.Size.X = gtx.Constraints.Max.X
+			if s.axis == layout.Vertical {
+				dims.Size.Y = gtx.Constraints.Max.Y
+			} else {
+				dims.Size.X = gtx.Constraints.Max.X
+			}
+
 			return dims
 		}),
 	)
