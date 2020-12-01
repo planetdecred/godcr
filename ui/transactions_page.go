@@ -297,19 +297,19 @@ func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidge
 
 	if transaction.Status == "confirmed" {
 		txWidgets.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
-		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.confirmIcon)}
+		txWidgets.statusIcon = common.icons.confirmIcon
 	} else {
 		txWidgets.status.Text = transaction.Status
 		txWidgets.status.Color = common.theme.Color.Gray
-		txWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(common.icons.pendingIcon)}
+		txWidgets.statusIcon = common.icons.pendingIcon
 	}
 
 	txWidgets.statusIcon.Scale = 0.03
 
 	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
-		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.sendIcon)}
+		txWidgets.direction = common.icons.sendIcon
 	} else {
-		txWidgets.direction = &widget.Image{Src: paint.NewImageOp(common.icons.receiveIcon)}
+		txWidgets.direction = common.icons.receiveIcon
 	}
 	txWidgets.direction.Scale = 0.055
 }
