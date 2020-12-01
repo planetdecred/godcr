@@ -1,9 +1,9 @@
 package ui
 
 import (
-	// "fmt"
 	"strings"
 
+	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
@@ -18,27 +18,22 @@ import (
 const PageWallet = "Wallet"
 
 type walletPage struct {
-	walletInfo *wallet.MultiWalletInfo
-	subPage    int
-	current    wallet.InfoShort
-	wallet     *wallet.Wallet
+	walletInfo    *wallet.MultiWalletInfo
+	subPage       int
+	current       wallet.InfoShort
+	wallet        *wallet.Wallet
+	walletAccount **wallet.Account
+	theme         *decredmaterial.Theme
 
-	theme      *decredmaterial.Theme
+	walletIcon                                 *widget.Image
+	accountIcon                                *widget.Image
+	addAcct                                    decredmaterial.IconButton
+	container, accountsList, walletsList, list layout.List
+	line                                       *decredmaterial.Line
+	txFeeCollapsible                           *decredmaterial.Collapsible
 
-	// result     **wallet.Signature
-	// icons      struct {
-	// 	main, delete, sign, verify, addWallet, rename,
-	// 	changePass, addAcct, backup decredmaterial.IconButton
-	// }
-	walletIcon              *widget.Image
-	accountIcon             *widget.Image
-	addAcct                 decredmaterial.IconButton
-	container, accountsList layout.List
-	line                    *decredmaterial.Line
-	txFeeCollapsible        *decredmaterial.Collapsible
-
-	// walletCollapsible walletCollapsible
 	walletCollapsible []*decredmaterial.Collapsible
+	toAcctDetails     []*gesture.Click
 
 	// rename, delete, cancelDelete decredmaterial.Button
 	// errorLabel                   decredmaterial.Label
@@ -47,13 +42,6 @@ type walletPage struct {
 	// isPasswordModalOpen          bool
 	// errChann                     chan error
 	// errorText                    string
-
-	// renameAcctIndex    int
-	// renameAcctButtons  []decredmaterial.IconButton
-	// renameAcctEditor   decredmaterial.Editor
-	// renameAcctSubmit   decredmaterial.IconButton
-	// renameAcctCancel   decredmaterial.IconButton
-	// renameAcctMinwidth int
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -66,11 +54,17 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 			Axis: layout.Vertical,
 		},
 
+		walletsList: layout.List{
+			Axis: layout.Vertical,
+		},
+		list: layout.List{
+			Axis: layout.Vertical,
+		},
 		theme:            common.theme,
 		wallet:           common.wallet,
-		txFeeCollapsible: common.theme.Collapsible(),
+		txFeeCollapsible: common.theme.Collapsible(new(widget.Clickable)),
 		line:             common.theme.Line(),
-
+		walletAccount:    &win.walletAccount,
 		// walletNameEditor: common.theme.Editor(new(widget.Editor), "New wallet name"),
 		// renameAcctEditor: common.theme.Editor(new(widget.Editor), ""),
 		// rename:           common.theme.Button(new(widget.Clickable), "Rename Wallet"),
@@ -87,7 +81,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	// init wallet collapse
 	for i := 0; i < 20; i++ {
-		pg.walletCollapsible = append(pg.walletCollapsible, win.theme.Collapsible())
+		pg.walletCollapsible = append(pg.walletCollapsible, win.theme.Collapsible(new(widget.Clickable)))
 	}
 	// pg.walletCollapsible.focusIndex = -1
 	// pg.errorLabel.Color = common.theme.Color.Danger
@@ -220,9 +214,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
 	pg.walletIcon.Scale = 0.05
 
-	var transactionRows []func(gtx C) D
-
-	for i := range common.info.Wallets {
+	return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
 		wn := common.info.Wallets[i].Name
 		wb := common.info.Wallets[i].Balance
 		accounts := common.info.Wallets[i].Accounts
@@ -284,21 +276,16 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 			})
 		}
 
-		transactionRows = append(transactionRows, func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 			return pg.sectionLayout(gtx, func(gtx C) D {
 				inset := layout.Inset{
 					Right: values.MarginPadding20,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody)
+				return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody)
 				})
 			})
 		})
-	}
-
-	list := &layout.List{Axis: layout.Vertical}
-	return list.Layout(gtx, len(transactionRows), func(gtx C, i int) D {
-		return layout.UniformInset(values.MarginPadding5).Layout(gtx, transactionRows[i])
 	})
 }
 
@@ -483,6 +470,24 @@ func (pg *walletPage) sectionLayout(gtx layout.Context, body layout.Widget) layo
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
 	})
 }
+
+// func (pg *transactionsPage) updateToWalletAccountDetailsButtons(walAccts *[]wallet.Account) {
+// 	if len(*walAccts) != len(pg.toAcctDetails) {
+// 		pg.toAcctDetails = make([]*gesture.Click, len(*walAccts))
+// 		for index := range *walTxs {
+// 			pg.toAcctDetails[index] = &gesture.Click{}
+// 		}
+// 	}
+// }
+
+// func (pg *transactionsPage) goToAcctDetails(gtx layout.Context, c *pageCommon, txn *wallet.Account, click *gesture.Click) {
+// 	for _, e := range click.Events(gtx) {
+// 		if e.Type == gesture.TypeClick {
+// 			*pg.walA = txn
+// 			*c.page = PageTransactionDetails
+// 		}
+// 	}
+// }
 
 // func (pg *walletPage) subMain(gtx layout.Context, common pageCommon) layout.Dimensions {
 // 	body := func(gtx C) D {
@@ -723,12 +728,11 @@ func (pg *walletPage) sectionLayout(gtx layout.Context, body layout.Widget) layo
 
 // Handle handles all widget inputs on the main wallets pg.
 func (pg *walletPage) Handle(common pageCommon) {
-	// for _, b := range pg.walletCollapsible {
-	// 	for b.Button.Clicked() {
-	// 		fmt.Println("clicked")
-	// 		b.Ex()
-	// 	}
-	// }
+	for _, b := range pg.walletCollapsible {
+		for b.Button.Clicked() {
+			b.IsExpanded = !b.IsExpanded
+		}
+	}
 
 	// for pg.walletCollapsible[0].Button.Clicked() {
 	// 	fmt.Println("clicked")

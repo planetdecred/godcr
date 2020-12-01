@@ -131,7 +131,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		nextButton:                   common.theme.Button(new(widget.Clickable), "Next"),
 		confirmButton:                common.theme.Button(new(widget.Clickable), "Confirm"),
 		maxButton:                    common.theme.Button(new(widget.Clickable), "MAX"),
-		txFeeCollapsible:             common.theme.Collapsible(),
+		txFeeCollapsible:             common.theme.Collapsible(new(widget.Clickable)),
 		txLine:                       common.theme.Line(),
 
 		confirmModal:              common.theme.Modal(),

@@ -58,8 +58,8 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 		theme:    common.theme,
 		showInfo: false,
 
-		outputsCollapsible: common.theme.Collapsible(),
-		inputsCollapsible:  common.theme.Collapsible(),
+		outputsCollapsible: common.theme.Collapsible(new(widget.Clickable)),
+		inputsCollapsible:  common.theme.Collapsible(new(widget.Clickable)),
 
 		backButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		minInfoBtn: common.theme.Button(new(widget.Clickable), "Got it"),

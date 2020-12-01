@@ -1,6 +1,7 @@
 package decredmaterial
 
 import (
+	// "fmt"
 	"image/color"
 
 	"gioui.org/layout"
@@ -9,18 +10,17 @@ import (
 )
 
 type Collapsible struct {
-	isExpanded            bool
-	buttonWidget          *widget.Clickable
+	IsExpanded            bool
+	Button                *widget.Clickable
 	expandIcon            *widget.Icon
 	headerBackgroundColor color.RGBA
 }
 
-func (t *Theme) Collapsible() *Collapsible {
+func (t *Theme) Collapsible(button *widget.Clickable) *Collapsible {
 	c := &Collapsible{
-		isExpanded:            false,
 		headerBackgroundColor: t.Color.Hint,
 		expandIcon:            t.navMoreIcon,
-		buttonWidget:          new(widget.Clickable),
+		Button:                button,
 	}
 
 	return c
@@ -42,8 +42,8 @@ func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.
 }
 
 func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(C) D) layout.Dimensions {
-	for c.buttonWidget.Clicked() {
-		c.isExpanded = !c.isExpanded
+	for c.Button.Clicked() {
+		c.IsExpanded = !c.IsExpanded
 	}
 
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -53,11 +53,11 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return c.layoutHeader(gtx, header)
 				}),
-				layout.Expanded(c.buttonWidget.Layout),
+				layout.Expanded(c.Button.Layout),
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if c.isExpanded {
+			if c.IsExpanded {
 				return content(gtx)
 			}
 			return layout.Dimensions{}
