@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"gioui.org/layout"
-	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/widget"
 
@@ -448,7 +447,7 @@ func (pg *transactionDetailsPage) viewTxn(gtx layout.Context, common *pageCommon
 				return pg.theme.Body1("View on dcrdata").Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				redirect := &widget.Image{Src: paint.NewImageOp(common.icons.redirectIcon)}
+				redirect := common.icons.redirectIcon
 				redirect.Scale = 0.26
 				return decredmaterial.Clickable(gtx, pg.toDcrdata, func(gtx C) D {
 					return redirect.Layout(gtx)
