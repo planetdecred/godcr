@@ -39,6 +39,7 @@ type transactionsPage struct {
 	filterDirection, filterSort                 []decredmaterial.RadioButton
 	defaultFilterSorter, defaultFilterDirection string
 	toTxnDetails                                []*gesture.Click
+	line                                        *decredmaterial.Line
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
@@ -55,7 +56,9 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		filterSortW:            new(widget.Enum),
 		defaultFilterSorter:    "0",
 		defaultFilterDirection: "0",
+		line:                   common.theme.Line(),
 	}
+	pg.line.Color = common.theme.Color.Background
 	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}})
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
@@ -129,7 +132,24 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 								pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 								click.Add(gtx.Ops)
 								pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
-								return pg.txnRowInfo(gtx, &common, walTxs[index])
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return pg.txnRowInfo(gtx, &common, walTxs[index])
+									}),
+									layout.Rigid(func(gtx C) D {
+										pg.line.Width = gtx.Constraints.Max.X
+										if index < len(walTxs)-1 {
+											return layout.Inset{
+												Top:    values.MarginPadding10,
+												Bottom: values.MarginPadding10,
+											}.Layout(gtx, func(gtx C) D {
+												return pg.line.Layout(gtx)
+											})
+										}
+
+										return layout.Dimensions{}
+									}),
+								)
 							})
 						})
 					})
