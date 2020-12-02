@@ -55,10 +55,6 @@ type pageCommon struct {
 	states          *states
 
 	appBarNavItems []navHandler
-	//drawerNavItems          []navHandler
-	isNavDrawerMinimized    *bool
-	minimizeNavDrawerButton decredmaterial.IconButton
-	maximizeNavDrawerButton decredmaterial.IconButton
 }
 
 type (
@@ -124,33 +120,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 	}
 
-	/**drawerNavItems := []navHandler{
-		{
-			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.overviewIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.overviewIconInactive)},
-			page:          PageOverview,
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.transactionIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.transactionIconInactive)},
-			page:          PageTransactions,
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.walletIconInactive)},
-			page:          PageWallet,
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.moreIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.moreIconInactive)},
-			page:          PageMore,
-		},
-	}**/
-
 	tabs := decredmaterial.NewTabs(win.theme, true)
 	tabs.SetTabs([]decredmaterial.TabItem{
 		decredmaterial.NewTabItem(PageOverview, &ic.overviewIcon, &ic.overviewIconInactive),
@@ -180,15 +149,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		clipboard:      win.clipboard,
 		states:         &win.states,
 		appBarNavItems: appBarNavItems,
-		//drawerNavItems:          drawerNavItems,
-		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
 	}
-
-	isNavDrawerMinimized := false
-	common.isNavDrawerMinimized = &isNavDrawerMinimized
-	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
-	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -217,14 +178,6 @@ func (page pageCommon) ChangePage(pg string) {
 }
 
 func (page pageCommon) handleNavEvents() {
-	for page.minimizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = true
-	}
-
-	for page.maximizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = false
-	}
-
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
 			*page.page = page.appBarNavItems[i].page
@@ -237,12 +190,6 @@ func (page pageCommon) handleNavEvents() {
 			*page.page = selectedID
 		}
 	}
-
-	/**for i := range page.drawerNavItems {
-		for page.drawerNavItems[i].clickable.Clicked() {
-			*page.page = page.drawerNavItems[i].page
-		}
-	}**/
 }
 
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -262,32 +209,6 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			})
 		}),
 	)
-
-	/**return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return page.layoutAppBar(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					width := navDrawerWidth
-					if *page.isNavDrawerMinimized {
-						width = navDrawerMinimizedWidth
-					}
-					gtx.Constraints.Max.X = width
-					return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-						page.layoutNavDrawer(gtx)
-						return layout.Dimensions{Size: gtx.Constraints.Max}
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return body(gtx)
-					})
-				}),
-			)
-		}),
-	)**/
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
@@ -295,13 +216,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				m := values.MarginPadding5
-				return layout.Inset{
-					Top:    m,
-					Bottom: m,
-					Left:   m,
-					Right:  values.MarginPadding15,
-				}.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							img := widget.Image{Src: paint.NewImageOp(page.icons.logo)}
@@ -359,76 +274,6 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 		)
 	})
 }
-
-/**
-func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
-	return layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
-				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
-					background := page.theme.Color.Surface
-					if page.drawerNavItems[i].page == *page.page {
-						background = page.theme.Color.Background
-					}
-
-					return decredmaterial.Card{Color: background}.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.Stack{}.Layout(gtx,
-							layout.Stacked(func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-									axis := layout.Horizontal
-									leftInset := float32(15)
-									if *page.isNavDrawerMinimized {
-										axis = layout.Vertical
-										leftInset = 0
-									}
-
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									return layout.Flex{Axis: axis}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											page.drawerNavItems[i].image.Scale = 0.05
-											page.drawerNavItems[i].imageInactive.Scale = 0.05
-
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												if page.drawerNavItems[i].page == *page.page {
-													return page.drawerNavItems[i].image.Layout(gtx)
-												}
-												return page.drawerNavItems[i].imageInactive.Layout(gtx)
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{
-												Left: unit.Dp(leftInset),
-											}.Layout(gtx, func(gtx C) D {
-												return layout.Center.Layout(gtx, func(gtx C) D {
-													if *page.isNavDrawerMinimized {
-														return page.theme.Label(values.TextSize10, page.drawerNavItems[i].page).Layout(gtx)
-													}
-													return page.theme.Body1(page.drawerNavItems[i].page).Layout(gtx)
-												})
-											})
-										}),
-									)
-								})
-							}),
-						)
-					})
-				})
-			})
-		}),
-		layout.Expanded(func(gtx C) D {
-			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := page.minimizeNavDrawerButton
-				if *page.isNavDrawerMinimized {
-					btn = page.maximizeNavDrawerButton
-				}
-				return btn.Layout(gtx)
-			})
-		}),
-	)
-}**/
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.

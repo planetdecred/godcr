@@ -113,8 +113,7 @@ func (t *TabItem) iconText(gtx layout.Context, tabPosition Position, isMinimized
 
 	dims := layout.Flex{}.Layout(gtx, layout.Rigid(func(gtx C) D {
 		return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-
-			//gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.Flex{Axis: axis, Alignment: layout.Middle}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Center.Layout(gtx, func(gtx C) D {
@@ -163,6 +162,7 @@ func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position,
 	var iconTextDims layout.Dimensions
 
 	gtx.Constraints.Min.X = width
+	gtx.Constraints.Max.X = width
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			iconTextDims = t.iconText(gtx, tabPosition, isMinimized)
@@ -373,14 +373,17 @@ func (t *Tabs) contentTabPosition(body layout.Widget) (widgets []layout.FlexChil
 				return layout.Dimensions{}
 			}),
 			layout.Expanded(func(gtx C) D {
-				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-				return layout.SE.Layout(gtx, func(gtx C) D {
-					btn := t.minimizeNavDrawerButton
-					if t.isNavDrawerMinimized {
-						btn = t.maximizeNavDrawerButton
-					}
-					return btn.Layout(gtx)
-				})
+				if t.isNavTabs {
+					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+					return layout.SE.Layout(gtx, func(gtx C) D {
+						btn := t.minimizeNavDrawerButton
+						if t.isNavDrawerMinimized {
+							btn = t.maximizeNavDrawerButton
+						}
+						return btn.Layout(gtx)
+					})
+				}
+				return layout.Dimensions{}
 			}),
 		)
 		return dims
