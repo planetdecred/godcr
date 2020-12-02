@@ -26,9 +26,11 @@ type pageIcons struct {
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
 
-	overviewIcon, overviewIconInactive, walletIcon, walletIconInactive, receiveIcon,
-	transactionIcon, transactionIconInactive, sendIcon, syncingIcon, moreIcon, moreIconInactive,
-	confirmIcon, pendingIcon, logo, redirectIcon image.Image
+	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
+	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
+	pendingIcon, logo, redirectIcon, confirmIcon *widget.Image
+
+	walletIcon, syncingIcon image.Image
 }
 
 type navHandler struct {
@@ -98,33 +100,35 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		navigationCancel:           mustIcon(widget.NewIcon(icons.NavigationCancel)),
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
-		overviewIcon:               decredIcons["overview"],
-		overviewIconInactive:       decredIcons["overview_inactive"],
-		walletIcon:                 decredIcons["wallet"],
-		walletIconInactive:         decredIcons["wallet_inactive"],
-		receiveIcon:                decredIcons["receive"],
-		transactionIcon:            decredIcons["transaction"],
-		transactionIconInactive:    decredIcons["transaction_inactive"],
-		sendIcon:                   decredIcons["send"],
-		syncingIcon:                decredIcons["syncing"],
-		moreIcon:                   decredIcons["more"],
-		moreIconInactive:           decredIcons["more_inactive"],
-		logo:                       decredIcons["logo"],
-		confirmIcon:                decredIcons["confirmed"],
-		pendingIcon:                decredIcons["pending"],
-		redirectIcon:               decredIcons["redirect"],
+
+		overviewIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
+		overviewIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
+		walletIconInactive:      &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
+		receiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
+		transactionIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
+		transactionIconInactive: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
+		sendIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
+		moreIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
+		moreIconInactive:        &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
+		logo:                    &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
+		confirmIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
+		pendingIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
+		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
+
+		syncingIcon: decredIcons["syncing"],
+		walletIcon:  decredIcons["wallet"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 
 	appBarNavItems := []navHandler{
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.sendIcon)},
+			image:     ic.sendIcon,
 			page:      PageSend,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.receiveIcon)},
+			image:     ic.receiveIcon,
 			page:      PageReceive,
 		},
 	}
@@ -132,26 +136,26 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	drawerNavItems := []navHandler{
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.overviewIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.overviewIconInactive)},
+			image:         ic.overviewIcon,
+			imageInactive: ic.overviewIconInactive,
 			page:          PageOverview,
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.transactionIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.transactionIconInactive)},
+			image:         ic.transactionIcon,
+			imageInactive: ic.transactionIconInactive,
 			page:          PageTransactions,
 		},
 		{
 			clickable:     new(widget.Clickable),
 			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.walletIconInactive)},
+			imageInactive: ic.walletIconInactive,
 			page:          PageWallet,
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.moreIcon)},
-			imageInactive: &widget.Image{Src: paint.NewImageOp(ic.moreIconInactive)},
+			image:         ic.moreIcon,
+			imageInactive: ic.moreIconInactive,
 			page:          PageMore,
 		},
 	}
@@ -278,7 +282,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							img := widget.Image{Src: paint.NewImageOp(page.icons.logo)}
+							img := page.icons.logo
 							img.Scale = 0.085
 
 							return img.Layout(gtx)

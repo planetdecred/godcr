@@ -10,7 +10,6 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/op/paint"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -216,17 +215,17 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 				status:  theme.Body1(""),
 			}
 			if txn.Txn.Direction == dcrlibwallet.TxDirectionSent {
-				txnWidgets.direction = &widget.Image{Src: paint.NewImageOp(c.icons.sendIcon)}
+				txnWidgets.direction = c.icons.sendIcon
 			} else {
-				txnWidgets.direction = &widget.Image{Src: paint.NewImageOp(c.icons.receiveIcon)}
+				txnWidgets.direction = c.icons.receiveIcon
 			}
 
 			if txn.Status == "confirmed" {
 				txnWidgets.status.Text = formatDateOrTime(txn.Txn.Timestamp)
-				txnWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(c.icons.confirmIcon)}
+				txnWidgets.statusIcon = c.icons.confirmIcon
 			} else {
 				txnWidgets.status.Text = txn.Status
-				txnWidgets.statusIcon = &widget.Image{Src: paint.NewImageOp(c.icons.pendingIcon)}
+				txnWidgets.statusIcon = c.icons.pendingIcon
 			}
 
 			// set the direction and status icon scale/size
