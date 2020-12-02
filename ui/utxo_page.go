@@ -164,18 +164,18 @@ func (pg *utxoPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+									layout.Flexed(0.25, func(gtx C) D {
 										utxos := (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID]
-										return textData(gtx, &c, "Quantity:  ", fmt.Sprintf("%d", len(utxos)))
+										return textData(gtx, &c, "Selected:  ", fmt.Sprintf("%d", len(utxos)))
 									}),
-									layout.Rigid(func(gtx C) D {
+									layout.Flexed(0.25, func(gtx C) D {
 										return textData(gtx, &c, "Amount:  ", pg.txnAmount)
 									}),
-									layout.Rigid(func(gtx C) D {
+									layout.Flexed(0.25, func(gtx C) D {
 										return textData(gtx, &c, "Fee:  ", pg.txnFee)
 									}),
-									layout.Rigid(func(gtx C) D {
+									layout.Flexed(0.25, func(gtx C) D {
 										return textData(gtx, &c, "After Fee:  ", pg.txnAmountAfterFee)
 									}),
 								)
@@ -199,6 +199,7 @@ func (pg *utxoPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return pg.useUTXOButton.Layout(gtx)
 						}),
 					)
@@ -209,9 +210,12 @@ func (pg *utxoPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 }
 
 func textData(gtx layout.Context, c *pageCommon, txt, value string) layout.Dimensions {
+	txt1 := c.theme.Label(values.MarginPadding15, txt)
+	txt2 := c.theme.Label(values.MarginPadding15, value)
+	txt1.MaxLines, txt2.MaxLines = 1, 1
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(c.theme.Label(values.MarginPadding15, txt).Layout),
-		layout.Rigid(c.theme.Label(values.MarginPadding15, value).Layout),
+		layout.Rigid(txt1.Layout),
+		layout.Rigid(txt2.Layout),
 	)
 }
 

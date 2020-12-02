@@ -370,7 +370,7 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 			})
 		},
 		func(gtx C) D {
-			return pg.coinControlFeatured(gtx, &common)
+			return pg.cointControlLayout(gtx, &common)
 		},
 		func(gtx C) D {
 			return pg.destinationAddrSection(gtx)
@@ -985,19 +985,10 @@ func (pg *SendPage) calculateBalanceUTXO() ([]string, int64) {
 
 func (pg *SendPage) balanceAfterSend(isInputAmountEmpty bool) {
 	pg.remainingBalance = 0
-	if pg.toggleCoinCtrl.Value {
-		_, spendableBalance := pg.calculateBalanceUTXO()
-		if isInputAmountEmpty {
-			pg.remainingBalance = spendableBalance
-		} else {
-			pg.remainingBalance = spendableBalance - pg.totalCostDCR
-		}
+	if isInputAmountEmpty {
+		pg.remainingBalance = pg.selectedAccount.SpendableBalance
 	} else {
-		if isInputAmountEmpty {
-			pg.remainingBalance = pg.selectedAccount.SpendableBalance
-		} else {
-			pg.remainingBalance = pg.selectedAccount.SpendableBalance - pg.totalCostDCR
-		}
+		pg.remainingBalance = pg.selectedAccount.SpendableBalance - pg.totalCostDCR
 	}
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
 }
@@ -1030,6 +1021,7 @@ func (pg *SendPage) watchForBroadcastResult() {
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues()
+		(*pg.unspentOutputsSelected)[pg.selectedWallet.ID][pg.selectedAccount.Number] = make(map[string]*wallet.UnspentOutput)
 	}
 }
 
@@ -1069,7 +1061,7 @@ func (pg *SendPage) centralize(gtx layout.Context, content layout.Widget) layout
 	)
 }
 
-func (pg *SendPage) coinControlFeatured(gtx layout.Context, c *pageCommon) layout.Dimensions {
+func (pg *SendPage) cointControlLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
 	return pg.sectionLayout(gtx, main, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -1105,7 +1097,7 @@ func (pg *SendPage) coinControlFeatured(gtx layout.Context, c *pageCommon) layou
 									}
 									txt := "Automatically selected"
 									if len(utxos) > 0 {
-										txt = fmt.Sprintf("Quantity: %d | Amount: %s", len(utxos), dcrutil.Amount(totalAmount).String())
+										txt = fmt.Sprintf("Selected: %d | Amount: %s", len(utxos), dcrutil.Amount(totalAmount).String())
 									}
 									return layout.Inset{Left: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 										return pg.theme.Body1(txt).Layout(gtx)

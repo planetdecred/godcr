@@ -213,6 +213,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageDebug] = win.DebugPage(common)
 	win.pages[PageAbout] = win.AboutPage(common)
 	win.pages[PageHelp] = win.HelpPage(common)
+	win.pages[PageUTXO] = win.UTXOPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {
