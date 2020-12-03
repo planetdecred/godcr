@@ -370,7 +370,7 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 			})
 		},
 		func(gtx C) D {
-			return pg.cointControlLayout(gtx, &common)
+			return pg.coinControlLayout(gtx, &common)
 		},
 		func(gtx C) D {
 			return pg.destinationAddrSection(gtx)
@@ -1061,7 +1061,7 @@ func (pg *SendPage) centralize(gtx layout.Context, content layout.Widget) layout
 	)
 }
 
-func (pg *SendPage) cointControlLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
+func (pg *SendPage) coinControlLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	main := layout.UniformInset(values.MarginPadding20)
 	return pg.sectionLayout(gtx, main, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
