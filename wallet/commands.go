@@ -572,3 +572,43 @@ func divMod(numerator, denominator int64) (quotient, remainder int64) {
 	remainder = numerator % denominator
 	return
 }
+
+// AllUnspentOutputs get all unspent outputs by walletID and acct
+func (wal *Wallet) AllUnspentOutputs(walletID int, acct int32) {
+	go func() {
+		var resp Response
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			resp.Err = ErrIDNotExist
+			wal.Send <- Response{
+				Resp: UnspentOutputs{},
+				Err:  ErrIDNotExist,
+			}
+			return
+		}
+		utxos, err := wall.UnspentOutputs(acct)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not get unspent outputs",
+				Affected: []int{walletID, int(acct)},
+				Err:      err,
+			})
+			return
+		}
+
+		var list []*UnspentOutput
+		for _, utxo := range utxos {
+			item := UnspentOutput{
+				UTXO:     *utxo,
+				Amount:   dcrutil.Amount(utxo.Amount).String(),
+				DateTime: dcrlibwallet.ExtractDateOrTime(utxo.ReceiveTime),
+			}
+			list = append(list, &item)
+		}
+		resp.Resp = &UnspentOutputs{
+			List: list,
+		}
+		wal.Send <- resp
+	}()
+}
