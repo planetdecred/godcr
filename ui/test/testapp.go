@@ -16,7 +16,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-var pageContainer, horizontalScrollContainer *decredmaterial.Container
+var pageContainer *decredmaterial.ScrollContainer
 
 func main() {
 	win, err := CreateWindow()
@@ -85,8 +85,7 @@ func (t *TestStruct) Loop() {
 func (t *TestStruct) initWidgets() {
 	theme := t.theme
 
-	pageContainer = theme.Container(decredmaterial.Vertical)
-	horizontalScrollContainer = theme.Container(decredmaterial.Horizontal)
+	pageContainer = theme.ScrollContainer()
 
 	// Editor test
 	t.customEditorOutput.test1 = theme.Editor(new(widget.Editor), "Enter Hint Text1")
@@ -178,19 +177,6 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return t.theme.H4("Decrematerial Test Page").Layout(gtx)
-		},
-		func(gtx C) D {
-			hContent := []func(gtx C) D{}
-			for i := 0; i < 30; i++ {
-				index := i
-				hContent = append(hContent, func(gtx C) D {
-					return layout.UniformInset(unit.Sp(12)).Layout(gtx,
-						t.theme.Body1(fmt.Sprintf("Item %d", index)).Layout,
-					)
-				})
-			}
-
-			return horizontalScrollContainer.Layout(gtx, hContent)
 		},
 		func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Px(unit.Dp(450))

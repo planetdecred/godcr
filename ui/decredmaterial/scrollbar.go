@@ -1,218 +1,154 @@
+// SPDX-License-Identifier: Unlicense OR MIT
+
 package decredmaterial
 
 import (
-	"image"
 	"image/color"
 
 	"gioui.org/f32"
-	"gioui.org/gesture"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
-	"gioui.org/widget"
 )
 
-const scrollbarThicknessFactor = 0.015
-
-type Scroller struct {
-	clickable widget.Clickable
-	drag      gesture.Drag
-	scrolled  bool
-	length    int
-	axis      layout.Axis
-	// progress is how far from the top our scrollbar is expressed as a fraction between 0 and 1
-	progress float32
-}
-
-// Update the internal state of the bar.
-func (s *Scroller) Update(gtx C) {
-	s.scrolled = false
-
-	defer func() {
-		if s.progress > 1 {
-			s.progress = 1
-		} else if s.progress < 0 {
-			s.progress = 0
-		}
-	}()
-
-	gestureAxis := gesture.Vertical
-	if s.axis == layout.Horizontal {
-		gestureAxis = gesture.Horizontal
-	}
-
-	if s.clickable.Clicked() {
-		if presses := s.clickable.History(); len(presses) > 0 {
-			press := presses[len(presses)-1]
-			pressPosition := press.Position.Y
-			if gestureAxis == gesture.Horizontal {
-				pressPosition = press.Position.X
-			}
-
-			s.progress = pressPosition / float32(s.length)
-			s.scrolled = true
-		}
-	}
-
-	if drags := s.drag.Events(gtx.Metric, gtx, gestureAxis); len(drags) > 0 {
-		drag := drags[len(drags)-1]
-
-		delta := drag.Position.Y
-		if gestureAxis == gesture.Horizontal {
-			delta = drag.Position.X
-		}
-
-		s.progress = (s.progress*float32(s.length) + (delta / 2)) / float32(s.length)
-		s.scrolled = true
-	}
-}
-
-// Scrolled returns true if the scroll position changed within the last frame.
-func (s Scroller) Scrolled() (didScroll bool, progress float32) {
-	return s.scrolled, s.progress
-}
-
 type Scrollbar struct {
-	*Scroller
-	Progress  float32
-	Scale     float32
-	MinLength unit.Value
-
-	trackColor color.RGBA
-	thumbColor color.RGBA
+	min      float32
+	max      float32
+	color    color.RGBA
+	float    *Float
+	position float32
 }
 
-func (t *Theme) Scrollbar(axis layout.Axis) *Scrollbar {
-	return &Scrollbar{
-		trackColor: t.Color.Gray,
-		thumbColor: t.Color.Primary,
-		Scroller: &Scroller{
-			axis: axis,
+func (t *Theme) Scrollbar(float *Float, min, max float32) Scrollbar {
+	return Scrollbar{
+		min:   min,
+		max:   max,
+		color: t.Color.Primary,
+		float: float,
+	}
+}
+
+func (s *Scrollbar) Layout(gtx layout.Context, visibleFraction float32) layout.Dimensions {
+	maxSize := gtx.Constraints.Max
+
+	scrollbarHeight := (visibleFraction * float32(maxSize.Y))
+	scrollbarThickness := float32(maxSize.X)
+
+	st := op.Push(gtx.Ops)
+	op.Offset(f32.Pt(0, 0)).Add(gtx.Ops)
+	s.float.Layout(gtx, int(scrollbarThickness), s.min, s.max)
+	thumbPos := s.float.Pos()
+	st.Pop()
+
+	s.position = thumbPos
+	color := s.color
+	if gtx.Queue == nil {
+		color = mulAlpha(color, 150)
+	}
+
+	track := f32.Rectangle{
+		Min: f32.Point{
+			Y: 0,
 		},
-		MinLength: unit.Dp(15),
+		Max: f32.Point{
+			X: scrollbarThickness,
+			Y: float32(maxSize.Y),
+		},
+	}
+	clip.RRect{Rect: track}.Add(gtx.Ops)
+	fill(gtx, mulAlpha(color, 96))
+
+	minY := thumbPos
+	maxY := thumbPos + scrollbarHeight
+	if maxY > float32(maxSize.Y) {
+		maxY = float32(maxSize.Y)
+		minY = maxY - scrollbarHeight
+	}
+
+	thumb := f32.Rectangle{
+		Min: f32.Point{
+			Y: minY,
+		},
+		Max: f32.Point{
+			Y: maxY,
+			X: scrollbarThickness,
+		},
+	}
+	rr := 0.5 * scrollbarThickness
+	clip.RRect{
+		Rect: thumb,
+		NE:   rr, NW: rr, SE: rr, SW: rr,
+	}.Add(gtx.Ops)
+	fill(gtx, color)
+
+	return layout.Dimensions{Size: maxSize}
+}
+
+func (s *Scrollbar) Position() float32 {
+	return s.position
+}
+
+type ScrollContainer struct {
+	container                       *layout.List
+	scrollbar                       Scrollbar
+	totalContentHeight              float32
+	hasCalculatedTotalContentHeight bool
+	scrollbarThicknessPercentage    float32
+}
+
+func (t *Theme) ScrollContainer() *ScrollContainer {
+	return &ScrollContainer{
+		container:                       &layout.List{Axis: layout.Vertical},
+		scrollbar:                       t.Scrollbar(new(Float), 0, 100),
+		totalContentHeight:              0,
+		hasCalculatedTotalContentHeight: false,
+		scrollbarThicknessPercentage:    1.3,
 	}
 }
 
-func (s *Scrollbar) getMargins(gtx layout.Context, progress, scale float32) (f32.Point, unit.Value, unit.Value) {
-	s.Progress = progress
-	s.Scale = scale
-	s.Scroller.progress = s.Progress
-	s.Update(gtx)
-	if scrolled, _ := s.Scrolled(); scrolled {
-		op.InvalidateOp{}.Add(gtx.Ops)
+func (s *ScrollContainer) calculateTotalContentHeight(gtx layout.Context, widgets []func(gtx C) D) {
+	for i := range widgets {
+		index := i
+		(&layout.List{Axis: layout.Vertical}).Layout(gtx, 1, func(gtx C, i int) D {
+			dim := layout.UniformInset(unit.Dp(0)).Layout(gtx, widgets[index])
+			s.totalContentHeight += float32(dim.Size.Y)
+			return layout.Dimensions{}
+		})
 	}
-
-	maxLength := gtx.Constraints.Max.Y
-	if s.axis == layout.Horizontal {
-		maxLength = gtx.Constraints.Max.X
-	}
-
-	scaledLength := (s.Scale * float32(maxLength))
-	s.MinLength = unit.Dp(scaledLength / gtx.Metric.PxPerDp)
-	s.length = maxLength
-
-	var size f32.Point
-	if s.axis == layout.Vertical {
-		size = f32.Point{
-			X: float32(gtx.Px(unit.Dp(float32(gtx.Constraints.Max.X)))),
-			Y: float32(gtx.Px(s.MinLength)),
-		}
-	} else {
-		size = f32.Point{
-			X: float32(gtx.Px(s.MinLength)),
-			Y: scrollbarThicknessFactor * float32(gtx.Constraints.Max.Y),
-		}
-	}
-
-	var top, left unit.Value
-	total := float32(maxLength) / gtx.Metric.PxPerDp
-	unitVal := unit.Dp(total * s.Progress)
-	if unitVal.V+s.MinLength.V > total {
-		unitVal = unit.Dp(total - s.MinLength.V)
-	}
-
-	if s.axis == layout.Vertical {
-		top = unitVal
-		left = unit.Dp(2)
-	} else {
-		left = unitVal
-		top = unit.Dp(2)
-	}
-
-	return size, top, left
+	s.hasCalculatedTotalContentHeight = true
 }
 
-func (s *Scrollbar) Layout(gtx layout.Context, axis layout.Axis, progress, scale float32) layout.Dimensions {
-	size, top, left := s.getMargins(gtx, progress, scale)
+func (s *ScrollContainer) Layout(gtx layout.Context, widgets []func(gtx C) D) layout.Dimensions {
+	maxSize := gtx.Constraints.Max
+	s.container.Position.First = int(float32(len(widgets)) * (s.scrollbar.Position() / float32(maxSize.Y)))
 
-	// don't display scrollbar if content height or width is equal to or less than viewport size
-	if s.MinLength.V >= float32(s.length) {
-		return layout.Dimensions{}
-	}
+	totalVisibleHeight := float32(maxSize.Y)
+	visibleFraction := totalVisibleHeight / s.totalContentHeight
 
-	clickable := &s.clickable
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(clickable.Layout),
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			clip.RRect{
-				Rect: f32.Rectangle{Max: f32.Point{
-					X: float32(gtx.Constraints.Min.X),
-					Y: float32(gtx.Constraints.Min.Y),
-				}},
-			}.Add(gtx.Ops)
-			return layout.Dimensions{Size: gtx.Constraints.Min}
-		}),
-		layout.Stacked(func(gtx C) D {
-			dims := layout.Inset{
-				Top:    top,
-				Right:  unit.Dp(2),
-				Left:   left,
-				Bottom: unit.Dp(2),
-			}.Layout(gtx, func(gtx C) D {
-				pointer.Rect(image.Rectangle{
-					Max: image.Point{
-						X: int(size.X),
-						Y: int(size.Y),
-					},
-				}).Add(gtx.Ops)
-				s.drag.Add(gtx.Ops)
-				return drawRect(gtx, s.thumbColor, size, float32(gtx.Px(unit.Dp(4))))
-			})
+	scrollbarThickness := (s.scrollbarThicknessPercentage / 100) * float32(1)
 
-			if s.axis == layout.Vertical {
-				dims.Size.Y = gtx.Constraints.Max.Y
-			} else {
-				dims.Size.X = gtx.Constraints.Max.X
+	return layout.Flex{}.Layout(gtx,
+		layout.Flexed(1-scrollbarThickness, func(gtx C) D {
+			if !s.hasCalculatedTotalContentHeight {
+				s.calculateTotalContentHeight(gtx, widgets)
+				return layout.Dimensions{}
 			}
 
-			return dims
+			return layout.Inset{
+				Right: unit.Dp(15),
+			}.Layout(gtx, func(gtx C) D {
+				return s.container.Layout(gtx, len(widgets), func(gtx C, i int) D {
+					return layout.UniformInset(unit.Dp(0)).Layout(gtx, widgets[i])
+				})
+			})
+		}),
+		layout.Flexed(scrollbarThickness, func(gtx C) D {
+			// don't display scrollbar if total content height is less than or equal to container height
+			if s.totalContentHeight <= totalVisibleHeight {
+				return layout.Dimensions{}
+			}
+			return s.scrollbar.Layout(gtx, visibleFraction)
 		}),
 	)
-}
-
-// drawRect creates a rectangle of the provided background color with
-// Dimensions specified by size and a corner radius (on all corners)
-// specified by radii.
-func drawRect(gtx C, background color.RGBA, size f32.Point, radii float32) D {
-	stack := op.Push(gtx.Ops)
-	paintOp := paint.ColorOp{Color: background}
-	paintOp.Add(gtx.Ops)
-	bounds := f32.Rectangle{
-		Max: size,
-	}
-	clip.RRect{
-		Rect: bounds,
-		NW:   radii,
-		NE:   radii,
-		SE:   radii,
-		SW:   radii,
-	}.Add(gtx.Ops)
-	paint.PaintOp{
-		Rect: bounds,
-	}.Add(gtx.Ops)
-	stack.Pop()
-	return layout.Dimensions{Size: image.Pt(int(size.X), int(size.Y))}
 }
