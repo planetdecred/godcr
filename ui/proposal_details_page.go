@@ -29,7 +29,7 @@ type ProposalPage struct {
 func (win *Window) ProposalPage(common pageCommon) layout.Widget {
 	pg := ProposalPage{
 		theme:      common.theme,
-		proposal:   &win.proposal,
+		proposal:   &win.selectedProposal,
 		backButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		legendIcon: common.icons.imageBrightness1,
 		line:       common.theme.Line(),

@@ -48,10 +48,6 @@ type ProposalsPage struct {
 	tabTitles                      []string
 	tabContainer                   *decredmaterial.Tabs
 	outline                        decredmaterial.Outline
-	proposals                      map[int32][]dcrlibwallet.Proposal
-	latestProposals                *[]dcrlibwallet.Proposal
-	selectedProposal               **dcrlibwallet.Proposal
-	updatedProposal                *wallet.ProposalUpdate
 	clickables                     []*gesture.Click
 	isSyncing                      bool
 	hasFetchedSavedProposals       bool
@@ -62,6 +58,10 @@ type ProposalsPage struct {
 	syncButton                     decredmaterial.Button
 	cancelSyncButton               decredmaterial.Button
 	syncingLabel                   decredmaterial.Label
+
+	proposals       map[int32][]dcrlibwallet.Proposal
+	latestProposals *[]dcrlibwallet.Proposal
+	updatedProposal **wallet.UpdatedProposal
 }
 
 func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
@@ -73,13 +73,12 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		tabContainer:          decredmaterial.NewTabs(common.theme),
 		tabTitles:             []string{"In Discussion", "Voting", "Approved", "Rejected", "Abandoned"},
 		proposals:             make(map[int32][]dcrlibwallet.Proposal),
-		latestProposals:       &win.latestProposals,
 		outline:               common.theme.Outline(),
-		selectedProposal:      &win.proposal,
-		updatedProposal:       &win.updatedProposal,
 		isSyncing:             false,
 		notSyncingStatusLabel: common.theme.H6("Not Syncing"),
 		syncingLabel:          common.theme.H6("Syncing..."),
+		latestProposals:       &win.latestProposals,
+		updatedProposal:       &win.updatedProposal,
 	}
 
 	pg.tabContainer.Position = decredmaterial.Top
@@ -140,6 +139,14 @@ func (pg *ProposalsPage) Handler(c pageCommon) {
 			pg.isSyncing = false
 		}
 	}
+
+	if *pg.latestProposals != nil {
+		pg.addLatestProposals()
+	}
+
+	if *pg.updatedProposal != nil {
+		pg.addUpdatedProposal()
+	}
 }
 
 func (pg *ProposalsPage) addLatestProposals() {
@@ -150,11 +157,12 @@ func (pg *ProposalsPage) addLatestProposals() {
 	*pg.latestProposals = nil
 }
 
-func (pg *ProposalsPage) updateProposal() {
+func (pg *ProposalsPage) addUpdatedProposal() {
 	updatedProposal := *pg.updatedProposal
 	proposalGroup := pg.proposals[updatedProposal.Proposal.Category]
 
 	if updatedProposal.UpdateType == 1 {
+		fmt.Println("sss")
 		pg.proposals[updatedProposal.Proposal.Category] = append(proposalGroup, *updatedProposal.Proposal)
 	} else {
 		for i := range proposalGroup {
@@ -165,20 +173,12 @@ func (pg *ProposalsPage) updateProposal() {
 			}
 		}
 	}
-	pg.updatedProposal = &wallet.ProposalUpdate{Proposal: nil}
+
+	*pg.updatedProposal = nil
 }
 
 func (pg *ProposalsPage) showProposalDetails(index int, c pageCommon) {
-	category := pg.getSelectedProposalsCategory()
-	currentProposals := pg.proposals[category]
 
-	for i := range currentProposals {
-		if currentProposals[i].Category == category && i == index {
-			*pg.selectedProposal = &currentProposals[i]
-			*c.page = PageProposalDetails
-			break
-		}
-	}
 }
 
 func (pg *ProposalsPage) getSelectedProposalsCategory() int32 {
@@ -211,10 +211,6 @@ func (pg *ProposalsPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensi
 		}
 	}
 
-	if *pg.latestProposals != nil {
-		pg.addLatestProposals()
-	}
-
 	if !pg.hasFetchedSavedProposals {
 		pg.wallet.GetProposals()
 		pg.hasFetchedSavedProposals = true
@@ -223,11 +219,6 @@ func (pg *ProposalsPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensi
 	if !pg.hasRegisteredProposalListeners {
 		pg.wallet.AddProposalNotificationListener(proposalNotificationListeners{pg.wallet})
 		pg.hasRegisteredProposalListeners = true
-	}
-
-	if pg.updatedProposal.Proposal != nil {
-		pg.updateProposal()
-		fmt.Println("ddd")
 	}
 
 	proposalListContainerHeight := gtx.Constraints.Max.Y - proposalSyncPaneHeight

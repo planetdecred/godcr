@@ -58,9 +58,9 @@ type Window struct {
 
 	sysDestroyWithSync bool
 
-	proposals          map[int32][]dcrlibwallet.Proposal
-	proposal           *dcrlibwallet.Proposal
-	isSyncingProposals bool
+	latestProposals  []dcrlibwallet.Proposal
+	updatedProposal  *wallet.UpdatedProposal
+	selectedProposal *dcrlibwallet.Proposal
 }
 
 type WriteClipboard struct {

@@ -187,7 +187,7 @@ func (wal *Wallet) GetProposalUpdate(token string, updateType int) {
 			return
 		}
 
-		resp.Resp = ProposalUpdate{
+		resp.Resp = &UpdatedProposal{
 			Proposal:   proposal,
 			UpdateType: updateType,
 		}
