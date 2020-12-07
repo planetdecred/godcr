@@ -86,7 +86,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletSyncStatus = new(wallet.SyncStatus)
 	win.walletTransactions = new(wallet.Transactions)
 	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
-
+	
 	win.wallet = wal
 	win.states.loading = true
 	win.current = PageOverview
@@ -157,10 +157,6 @@ func (win *Window) Loop(shutdown chan int) {
 					win.updateSyncStatus(true, false)
 				}
 			case wallet.SyncCanceled:
-				if win.sysDestroyWithSync {
-					close(shutdown)
-					return
-				}
 				win.updateSyncStatus(false, false)
 			case wallet.HeadersFetchProgress:
 				win.updateSyncProgress(update.ProgressReport)
@@ -181,13 +177,8 @@ func (win *Window) Loop(shutdown chan int) {
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
-				if win.walletInfo.Syncing || win.walletInfo.Synced {
-					win.sysDestroyWithSync = true
-					win.wallet.CancelSync()
-				} else {
-					close(shutdown)
-				}
-
+				close(shutdown)
+				return
 			case system.FrameEvent:
 				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())

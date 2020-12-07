@@ -112,7 +112,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		navigationCancel:           mustIcon(widget.NewIcon(icons.NavigationCancel)),
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
-<<<<<<< HEAD
 
 		overviewIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},

@@ -56,7 +56,6 @@ func (wal *Wallet) LoadWallets() {
 			wal.Send <- resp
 			return
 		}
-
 		wal.multi = multiWal
 		l := &listener{
 			Send: wal.Sync,

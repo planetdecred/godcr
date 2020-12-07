@@ -22,5 +22,5 @@ require (
 // TODO: Remove and use an actual release of dcrlibwallet
 replace (
 	github.com/decred/dcrwallet/wallet/v3 => github.com/raedahgroup/dcrwallet/wallet/v3 v3.2.1-badger
-	github.com/planetdecred/dcrlibwallet/spv => github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c
-)
+  github.com/planetdecred/dcrlibwallet/spv => github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c
+  )
