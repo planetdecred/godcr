@@ -74,6 +74,8 @@ type Theme struct {
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
+
+	dropDownMenus []*DropDown
 }
 
 func NewTheme(fontCollection []text.FontFace) *Theme {
@@ -185,5 +187,11 @@ func mulAlpha(c color.RGBA, alpha uint8) color.RGBA {
 		R: uint8(uint16(c.R) * a / 255),
 		G: uint8(uint16(c.G) * a / 255),
 		B: uint8(uint16(c.B) * a / 255),
+	}
+}
+
+func (t *Theme) HideAllDropdownMenus() {
+	for _, dropDown := range t.dropDownMenus {
+		dropDown.isOpen = false
 	}
 }
