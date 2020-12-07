@@ -1,10 +1,10 @@
 package ui
 
 import (
+	"gioui.org/widget"
 	"image"
 	"strings"
-
-	"gioui.org/widget"
+	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -40,21 +40,28 @@ type navHandler struct {
 	page          string
 }
 
+type notification struct {
+	text    string
+	success bool
+}
+
 type pageCommon struct {
-	wallet          *wallet.Wallet
-	info            *wallet.MultiWalletInfo
-	selectedWallet  *int
-	selectedAccount *int
-	theme           *decredmaterial.Theme
-	icons           pageIcons
-	page            *string
-	navTab          *decredmaterial.Tabs
-	walletTabs      *decredmaterial.Tabs
-	accountTabs     *decredmaterial.Tabs
-	errorChannels   map[string]chan error
-	keyEvents       chan *key.Event
-	clipboard       chan interface{}
-	states          *states
+	wallet           *wallet.Wallet
+	info             *wallet.MultiWalletInfo
+	selectedWallet   *int
+	selectedAccount  *int
+	theme            *decredmaterial.Theme
+	icons            pageIcons
+	page             *string
+	navTab           *decredmaterial.Tabs
+	walletTabs       *decredmaterial.Tabs
+	accountTabs      *decredmaterial.Tabs
+	errorChannels    map[string]chan error
+	keyEvents        chan *key.Event
+	clipboard        chan interface{}
+	notification     chan *notification
+	notificationLoad *notification
+	states           *states
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
@@ -180,6 +187,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
+		notification:            win.notification,
+		notificationLoad:        &notification{},
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,
 		drawerNavItems:          drawerNavItems,
@@ -264,12 +273,61 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return body(gtx)
+						return layout.Stack{}.Layout(gtx,
+							layout.Expanded(func(gtx C) D {
+								return body(gtx)
+							}),
+							layout.Stacked(func(gtx C) D {
+								toast := func(n *notification) layout.Dimensions {
+									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+										layout.Flexed(1, func(gtx C) D {
+											return layout.Center.Layout(gtx, func(gtx C) D {
+												return page.displayNotificationToast(gtx, n)
+											})
+										}),
+									)
+								}
+
+							outer:
+								for {
+									select {
+									case n := <-page.notification:
+										page.notificationLoad.success = n.success
+										page.notificationLoad.text = n.text
+									default:
+										break outer
+									}
+								}
+
+								if page.notificationLoad.text != "" {
+									time.AfterFunc(time.Second*3, func() {
+										page.notificationLoad.text = ""
+									})
+									return toast(page.notificationLoad)
+								}
+								return layout.Dimensions{}
+							}),
+						)
 					})
 				}),
 			)
 		}),
 	)
+}
+
+func (page pageCommon) displayNotificationToast(gtx layout.Context, n *notification) layout.Dimensions {
+	color := page.theme.Color.Success
+	if !n.success {
+		color = page.theme.Color.Danger
+	}
+
+	return decredmaterial.Card{Color: color, Rounded: true}.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			t := page.theme.Body1(n.text)
+			t.Color = page.theme.Color.Surface
+			return t.Layout(gtx)
+		})
+	})
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
