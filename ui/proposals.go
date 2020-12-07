@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"gioui.org/gesture"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/ararog/timeago"
 	"github.com/planetdecred/dcrlibwallet"
@@ -20,8 +20,7 @@ import (
 )
 
 const (
-	PageProposals          = "proposals"
-	proposalSyncPaneHeight = 100
+	PageProposals = "Proposals"
 )
 
 type proposalNotificationListeners struct {
@@ -38,6 +37,11 @@ func (p proposalNotificationListeners) OnProposalVoteStarted(proposalID int, cen
 
 func (p proposalNotificationListeners) OnProposalVoteFinished(proposalID int, censorshipToken string) {
 	p.wallet.GetProposalUpdate(censorshipToken, 3)
+}
+
+type proposalItem struct {
+	proposal dcrlibwallet.Proposal
+	button   *widget.Clickable
 }
 
 type ProposalsPage struct {
@@ -58,10 +62,10 @@ type ProposalsPage struct {
 	syncButton                     decredmaterial.Button
 	cancelSyncButton               decredmaterial.Button
 	syncingLabel                   decredmaterial.Label
-
-	proposals       map[int32][]dcrlibwallet.Proposal
-	latestProposals *[]dcrlibwallet.Proposal
-	updatedProposal **wallet.UpdatedProposal
+	proposals                      map[int32][]proposalItem
+	latestProposals                *[]dcrlibwallet.Proposal
+	updatedProposal                **wallet.UpdatedProposal
+	selectedProposal               **dcrlibwallet.Proposal
 }
 
 func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
@@ -72,13 +76,14 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		pageListContainer:     &layout.List{Axis: layout.Vertical},
 		tabContainer:          decredmaterial.NewTabs(common.theme),
 		tabTitles:             []string{"In Discussion", "Voting", "Approved", "Rejected", "Abandoned"},
-		proposals:             make(map[int32][]dcrlibwallet.Proposal),
+		proposals:             make(map[int32][]proposalItem),
 		outline:               common.theme.Outline(),
 		isSyncing:             false,
 		notSyncingStatusLabel: common.theme.H6("Not Syncing"),
 		syncingLabel:          common.theme.H6("Syncing..."),
 		latestProposals:       &win.latestProposals,
 		updatedProposal:       &win.updatedProposal,
+		selectedProposal:      &win.selectedProposal,
 	}
 
 	pg.tabContainer.Position = decredmaterial.Top
@@ -109,21 +114,16 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 	}
 }
 
-func (pg *ProposalsPage) SetClickables() {
-	proposals := pg.getProposalsForCurrentTab()
-	pg.clickables = make([]*gesture.Click, len(proposals))
-	for i := range proposals {
-		pg.clickables[i] = &gesture.Click{}
-	}
-}
-
 func (pg *ProposalsPage) Handler(c pageCommon) {
-	if pg.clickables == nil {
-		pg.SetClickables()
-	}
-
-	for pg.tabContainer.ChangeEvent() {
-		pg.SetClickables()
+	for proposalGroupIndex := range pg.proposals {
+		pgIndex := proposalGroupIndex
+		for proposalItemIndex := range pg.proposals[pgIndex] {
+			piIndex := proposalItemIndex
+			for pg.proposals[pgIndex][piIndex].button.Clicked() {
+				*pg.selectedProposal = &pg.proposals[pgIndex][piIndex].proposal //&proposalItem.proposal
+				*c.page = PageProposalDetails
+			}
+		}
 	}
 
 	for pg.syncButton.Button.Clicked() {
@@ -149,36 +149,36 @@ func (pg *ProposalsPage) Handler(c pageCommon) {
 	}
 }
 
+func (pg *ProposalsPage) addProposal(proposal dcrlibwallet.Proposal) {
+	proposalItem := proposalItem{
+		proposal: proposal,
+		button:   new(widget.Clickable),
+	}
+	pg.proposals[proposal.Category] = append(pg.proposals[proposal.Category], proposalItem)
+}
+
 func (pg *ProposalsPage) addLatestProposals() {
 	latestProposals := *pg.latestProposals
 	for _, v := range latestProposals {
-		pg.proposals[v.Category] = append(pg.proposals[v.Category], v)
+		pg.addProposal(v)
 	}
 	*pg.latestProposals = nil
 }
 
 func (pg *ProposalsPage) addUpdatedProposal() {
 	updatedProposal := *pg.updatedProposal
-	proposalGroup := pg.proposals[updatedProposal.Proposal.Category]
 
-	if updatedProposal.UpdateType == 1 {
-		fmt.Println("sss")
-		pg.proposals[updatedProposal.Proposal.Category] = append(proposalGroup, *updatedProposal.Proposal)
-	} else {
-		for i := range proposalGroup {
-			if proposalGroup[i].CensorshipRecord.Token == updatedProposal.Proposal.CensorshipRecord.Token {
-				proposalGroup[i] = *updatedProposal.Proposal
-				pg.proposals[updatedProposal.Proposal.Category] = proposalGroup
-				break
+	if updatedProposal.UpdateType != 1 {
+		for proposalGroupIndex, proposalGroup := range pg.proposals {
+			for proposalItemIndex, proposalItem := range proposalGroup {
+				if proposalItem.proposal.CensorshipRecord.Token == updatedProposal.Proposal.CensorshipRecord.Token {
+					pg.proposals[proposalGroupIndex] = append(pg.proposals[proposalGroupIndex][:proposalItemIndex], pg.proposals[proposalGroupIndex][proposalItemIndex+1:]...)
+				}
 			}
 		}
 	}
-
+	pg.addProposal(*updatedProposal.Proposal)
 	*pg.updatedProposal = nil
-}
-
-func (pg *ProposalsPage) showProposalDetails(index int, c pageCommon) {
-
 }
 
 func (pg *ProposalsPage) getSelectedProposalsCategory() int32 {
@@ -198,19 +198,11 @@ func (pg *ProposalsPage) getSelectedProposalsCategory() int32 {
 	}
 }
 
-func (pg *ProposalsPage) getProposalsForCurrentTab() []dcrlibwallet.Proposal {
+func (pg *ProposalsPage) getProposalsForCurrentTab() []proposalItem {
 	return pg.proposals[pg.getSelectedProposalsCategory()]
 }
 
 func (pg *ProposalsPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
-	for index, click := range pg.clickables {
-		for _, e := range click.Events(gtx) {
-			if e.Type == gesture.TypeClick {
-				pg.showProposalDetails(index, c)
-			}
-		}
-	}
-
 	if !pg.hasFetchedSavedProposals {
 		pg.wallet.GetProposals()
 		pg.hasFetchedSavedProposals = true
@@ -221,28 +213,22 @@ func (pg *ProposalsPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensi
 		pg.hasRegisteredProposalListeners = true
 	}
 
-	proposalListContainerHeight := gtx.Constraints.Max.Y - proposalSyncPaneHeight
-	pageContent := []func(gtx C) D{
-		func(gtx C) D {
-			gtx.Constraints.Max.Y = proposalListContainerHeight
-			return pg.layoutProposalsList(gtx)
-		},
-		func(gtx C) D {
-			return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-				return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-					if pg.isSyncing {
-						return pg.layoutIsSyncingSection(gtx)
-					}
-					return pg.layoutSyncStartSection(gtx)
-				})
-			})
-		},
-	}
-
 	return c.Layout(gtx, func(gtx C) D {
-		return pg.pageListContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
-		})
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return pg.layoutProposalsList(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.UniformInset(unit.Dp(0)).Layout(gtx, func(gtx C) D {
+					return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+						if pg.isSyncing {
+							return pg.layoutIsSyncingSection(gtx)
+						}
+						return pg.layoutSyncStartSection(gtx)
+					})
+				})
+			}),
+		)
 	})
 }
 
@@ -303,16 +289,12 @@ func (pg *ProposalsPage) layoutProposalsList(gtx layout.Context) layout.Dimensio
 		proposals := pg.getProposalsForCurrentTab()
 
 		return pg.proposalListContainer.Layout(gtx, len(proposals), func(gtx C, i int) D {
-			if len(pg.clickables) > 0 && len(pg.clickables) == len(proposals) {
-				click := pg.clickables[i]
-				pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-				click.Add(gtx.Ops)
-			}
-
 			return layout.UniformInset(unit.Dp(3)).Layout(gtx, func(gtx C) D {
 				return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-						return pg.layoutProposalHeader(gtx, proposals[i])
+					return material.Clickable(gtx, proposals[i].button, func(gtx C) D {
+						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
+							return pg.layoutProposalHeader(gtx, proposals[i])
+						})
 					})
 				})
 			})
@@ -320,27 +302,26 @@ func (pg *ProposalsPage) layoutProposalsList(gtx layout.Context) layout.Dimensio
 	})
 }
 
-func (pg *ProposalsPage) layoutProposalHeader(gtx layout.Context, proposal dcrlibwallet.Proposal) layout.Dimensions {
+func (pg *ProposalsPage) layoutProposalHeader(gtx layout.Context, proposalItem proposalItem) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Flexed(0.55, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return getTitleLabel(pg.theme, truncateString(proposal.Name, 60)).Layout(gtx)
+					return getTitleLabel(pg.theme, truncateString(proposalItem.proposal.Name, 60)).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return getSubtitleLabel(pg.theme, truncateString(proposal.CensorshipRecord.Token, 35)).Layout(gtx)
+					return getSubtitleLabel(pg.theme, truncateString(proposalItem.proposal.CensorshipRecord.Token, 35)).Layout(gtx)
 				}),
 			)
 		}),
 		layout.Flexed(0.45, func(gtx C) D {
-			if proposal.Category == dcrlibwallet.ProposalCategoryPre || proposal.Category == dcrlibwallet.ProposalCategoryAbandoned {
+			if proposalItem.proposal.Category == dcrlibwallet.ProposalCategoryPre || proposalItem.proposal.Category == dcrlibwallet.ProposalCategoryAbandoned {
 				return layout.E.Layout(gtx, func(gtx C) D {
-					return getSubtitleLabel(pg.theme, fmt.Sprintf("Last updated %s", timeAgo(proposal.Timestamp))).Layout(gtx)
+					return getSubtitleLabel(pg.theme, fmt.Sprintf("Last updated %s", timeAgo(proposalItem.proposal.Timestamp))).Layout(gtx)
 				})
-			} else {
-				yes, no := calculateVotes(proposal.VoteSummary.OptionsResult)
-				return pg.theme.VoteBar(yes, no).Layout(gtx)
 			}
+			yes, no := calculateVotes(proposalItem.proposal.VoteSummary.OptionsResult)
+			return pg.theme.VoteBar(yes, no).Layout(gtx)
 		}),
 	)
 }
@@ -355,7 +336,6 @@ func calculateVotes(options []dcrlibwallet.ProposalVoteOptionResult) (float32, f
 			no = float32(options[i].VotesReceived)
 		}
 	}
-
 	return yes, no
 }
 

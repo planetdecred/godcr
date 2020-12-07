@@ -87,8 +87,8 @@ type (
 )
 
 const (
-	navDrawerWidth          = 160
-	navDrawerMinimizedWidth = 80
+	navDrawerWidth          = 170
+	navDrawerMinimizedWidth = 100
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
@@ -256,7 +256,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSettings] = win.SettingsPage(common)
 	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
-	win.pages[PagePoliteia] = win.PoliteiaPage(common)
+	win.pages[PageProposals] = win.ProposalsPage(common)
+	win.pages[PageProposalDetails] = win.ProposalPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
 	win.pages[PageAbout] = win.AboutPage(common)
 	win.pages[PageHelp] = win.HelpPage(common)

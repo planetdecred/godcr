@@ -36,7 +36,12 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     common.icons.helpIcon,
+			image:     &widget.Image{Src: paint.NewImageOp(ic.politeiaIcon)},
+			page:      PageProposals,
+		},
+		{
+			clickable: new(widget.Clickable),
+			image:     &widget.Image{Src: paint.NewImageOp(ic.helpIcon)},
 			page:      PageHelp,
 		},
 		{
