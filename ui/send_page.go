@@ -33,6 +33,7 @@ type SendPage struct {
 	theme           *decredmaterial.Theme
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
+	notification    chan *notification
 
 	wallet                 *wallet.Wallet
 	selectedWallet         wallet.InfoShort
@@ -70,9 +71,7 @@ type SendPage struct {
 	defualtEditorWidth int
 	nextEditorWidth    int
 
-	sendErrorText      string
 	amountErrorText    string
-	sendSuccessText    string
 	calculateErrorText string
 
 	activeTotalAmount   string
@@ -125,8 +124,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txAuthor:               &win.txAuthor,
 		broadcastResult:        &win.broadcastResult,
 		unspentOutputsSelected: &common.selectedUTXO,
-
-		sendErrorText: "",
+		notification:           win.notification,
 
 		activeExchange:   "DCR",
 		inactiveExchange: "USD",
@@ -236,12 +234,6 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.selectedWallet = c.info.Wallets[*c.selectedWallet]
 	}
 
-	if pg.broadcastResult.TxHash != "" {
-		time.AfterFunc(time.Second*3, func() {
-			pg.sendSuccessText = ""
-		})
-	}
-
 	if pg.toggleCoinCtrl.Value {
 		_, spendableBalance := pg.calculateBalanceUTXO()
 		pg.spendableBalance = spendableBalance
@@ -253,7 +245,6 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.shouldInitializeTxAuthor = false
 		pg.sendAmountEditor.Editor.SetText("")
 		pg.calculateErrorText = ""
-		pg.sendErrorText = ""
 		c.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
 	}
 
@@ -271,25 +262,18 @@ func (pg *SendPage) Handle(c pageCommon) {
 		pg.nextButton.Background = pg.theme.Color.Primary
 	}
 
-	if pg.sendErrorText == invalidPassphraseError {
-		pg.isConfirmationModalOpen = true
-	}
-
 	for pg.nextButton.Button.Clicked() {
 		if pg.validate(false) && pg.calculateErrorText == "" {
-			pg.sendErrorText = ""
 			pg.isConfirmationModalOpen = true
 		}
 	}
 
 	for pg.confirmButton.Button.Clicked() {
-		pg.sendErrorText = ""
 		pg.isConfirmationModalOpen = false
 		pg.isPasswordModalOpen = true
 	}
 
 	for pg.closeConfirmationModalButton.Button.Clicked() {
-		pg.sendErrorText = ""
 		pg.isConfirmationModalOpen = false
 	}
 
@@ -353,10 +337,18 @@ func (pg *SendPage) Handle(c pageCommon) {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
 	case err := <-pg.broadcastErrChan:
-		pg.sendErrorText = err.Error()
-		time.AfterFunc(time.Millisecond*3500, func() {
-			pg.sendErrorText = ""
-		})
+		go func() {
+			pg.notification <- &notification{
+				text:    err.Error(),
+				success: false,
+			}
+		}()
+
+		if err.Error() == invalidPassphraseError {
+			time.AfterFunc(time.Second*3, func() {
+				pg.isConfirmationModalOpen = true
+			})
+		}
 		pg.isBroadcastingTransaction = false
 	default:
 	}
@@ -398,9 +390,6 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	}
 
 	dims := layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return pg.drawAlertSection(gtx)
-		}),
 		layout.Expanded(func(gtx C) D {
 			return common.LayoutWithAccounts(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -437,18 +426,6 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	}
 
 	return dims
-}
-
-func (pg *SendPage) drawAlertSection(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.E.Layout(gtx, func(gtx C) D {
-		if pg.sendSuccessText != "" {
-			return pg.theme.SuccessAlert(gtx, pg.sendSuccessText)
-		} else if pg.sendErrorText != "" && pg.sendErrorText != invalidPassphraseError {
-			return pg.theme.ErrorAlert(gtx, pg.sendErrorText)
-		}
-		return layout.Dimensions{}
-	})
 }
 
 func (pg *SendPage) drawTransactionDetailWidgets(gtx layout.Context) layout.Dimensions {
@@ -747,18 +724,6 @@ func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions 
 		},
 	}
 
-	if pg.sendErrorText == invalidPassphraseError {
-		errWidget := func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-				layout.Expanded(func(gtx C) D {
-					return pg.theme.ErrorAlert(gtx, pg.sendErrorText)
-				}),
-			)
-		}
-		w = append([]func(gtx C) D{errWidget}, w...)
-	}
-
 	return pg.confirmModal.Layout(gtx, w, 850)
 }
 
@@ -1014,7 +979,12 @@ func (pg *SendPage) watchForBroadcastResult() {
 		}
 		pg.remainingBalance = -1
 
-		pg.sendSuccessText = "Transaction Sent"
+		go func() {
+			pg.notification <- &notification{
+				text:    "Transaction Sent",
+				success: true,
+			}
+		}()
 		pg.destinationAddressEditor.Editor.SetText("")
 		pg.sendAmountEditor.Editor.SetText("")
 		pg.isConfirmationModalOpen = false

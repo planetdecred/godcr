@@ -1,10 +1,11 @@
 package ui
 
 import (
-	"gioui.org/widget"
 	"image"
 	"strings"
 	"time"
+
+	"gioui.org/widget"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -300,7 +301,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 								}
 
 								if page.notificationLoad.text != "" {
-									time.AfterFunc(time.Second*3, func() {
+									time.AfterFunc(time.Second*10, func() {
 										page.notificationLoad.text = ""
 									})
 									return toast(page.notificationLoad)
