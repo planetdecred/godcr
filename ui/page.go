@@ -230,6 +230,15 @@ func (page pageCommon) ChangePage(pg string) {
 	*page.page = pg
 }
 
+func (page pageCommon) Notify(text string, success bool) {
+	go func() {
+		page.notification <- &notification{
+			text:    text,
+			success: success,
+		}
+	}()
+}
+
 func (page pageCommon) handleNavEvents() {
 	for page.minimizeNavDrawerButton.Button.Clicked() {
 		*page.isNavDrawerMinimized = true
@@ -301,7 +310,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 								}
 
 								if page.notificationLoad.text != "" {
-									time.AfterFunc(time.Second*10, func() {
+									time.AfterFunc(time.Second*3, func() {
 										page.notificationLoad.text = ""
 									})
 									return toast(page.notificationLoad)

@@ -33,7 +33,6 @@ type SendPage struct {
 	theme           *decredmaterial.Theme
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
-	notification    chan *notification
 
 	wallet                 *wallet.Wallet
 	selectedWallet         wallet.InfoShort
@@ -124,7 +123,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txAuthor:               &win.txAuthor,
 		broadcastResult:        &win.broadcastResult,
 		unspentOutputsSelected: &common.selectedUTXO,
-		notification:           win.notification,
 
 		activeExchange:   "DCR",
 		inactiveExchange: "USD",
@@ -249,7 +247,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 	}
 
 	pg.validate(true)
-	pg.watchForBroadcastResult()
+	pg.watchForBroadcastResult(c)
 
 	if pg.isBroadcastingTransaction {
 		col := pg.theme.Color.Gray
@@ -337,12 +335,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
 	case err := <-pg.broadcastErrChan:
-		go func() {
-			pg.notification <- &notification{
-				text:    err.Error(),
-				success: false,
-			}
-		}()
+		c.Notify(err.Error(), false)
 
 		if err.Error() == invalidPassphraseError {
 			time.AfterFunc(time.Second*3, func() {
@@ -968,7 +961,7 @@ func (pg *SendPage) feeEstimationError(err, errorPath string) {
 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }
 
-func (pg *SendPage) watchForBroadcastResult() {
+func (pg *SendPage) watchForBroadcastResult(c pageCommon) {
 	if pg.broadcastResult == nil {
 		return
 	}
@@ -978,13 +971,8 @@ func (pg *SendPage) watchForBroadcastResult() {
 			pg.spendableBalance = pg.remainingBalance
 		}
 		pg.remainingBalance = -1
+		c.Notify("Transaction Sent", true)
 
-		go func() {
-			pg.notification <- &notification{
-				text:    "Transaction Sent",
-				success: true,
-			}
-		}()
 		pg.destinationAddressEditor.Editor.SetText("")
 		pg.sendAmountEditor.Editor.SetText("")
 		pg.isConfirmationModalOpen = false
