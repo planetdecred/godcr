@@ -222,7 +222,7 @@ func (c *DropDown) drawLayout(gtx layout.Context, isPopUp bool, body layout.Widg
 		color = c.background
 		m = unit.Dp(15)
 	}
-	return Card{Color: color, Rounded: true}.Layout(gtx, func(gtx C) D {
+	return Card{Color: color, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(m).Layout(gtx, body)
 	})
 }

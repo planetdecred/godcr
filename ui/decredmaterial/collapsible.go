@@ -62,7 +62,7 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 	c.handleEvents()
 
 	dims := layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func(gtx C) D {
-		return Card{Color: c.BackgroundColor, Rounded: true}.Layout(gtx, func(gtx C) D {
+		return Card{Color: c.BackgroundColor, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
@@ -109,7 +109,7 @@ func (c *Collapsible) moreItemMenu(gtx layout.Context, body layout.Widget) layou
 	border := widget.Border{Color: c.color, CornerRadius: unit.Dp(10), Width: unit.Dp(2)}
 	return layout.Inset{Top: unit.Dp(50)}.Layout(gtx, func(gtx C) D {
 		return border.Layout(gtx, func(gtx C) D {
-			return Card{Color: c.BackgroundColor, Rounded: true}.Layout(gtx, func(gtx C) D {
+			return Card{Color: c.BackgroundColor, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(unit.Dp(5)).Layout(gtx, body)
 			})
 		})

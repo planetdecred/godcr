@@ -72,7 +72,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 	}
 
 	body := common.Layout(gtx, func(gtx C) D {
-		return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+		return decredmaterial.Card{Color: common.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
 			// if *pg.acctInfo == nil {
 			// 	return layout.Dimensions{}
 			// }

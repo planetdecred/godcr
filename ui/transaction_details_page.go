@@ -131,7 +131,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) 
 	}
 
 	body := common.Layout(gtx, func(gtx C) D {
-		return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+		return decredmaterial.Card{Color: common.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
 			if *pg.txnInfo == nil {
 				return layout.Dimensions{}
 			}
@@ -394,7 +394,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 
 func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName, walName, hashAcct string, i int) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-		return decredmaterial.Card{Color: pg.theme.Color.Background, Rounded: true}.Layout(gtx, func(gtx C) D {
+		return decredmaterial.Card{Color: pg.theme.Color.Background, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

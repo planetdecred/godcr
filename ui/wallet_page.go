@@ -27,10 +27,12 @@ type walletPage struct {
 
 	walletIcon                                 *widget.Image
 	accountIcon                                *widget.Image
+	newWalletIcon                              *widget.Image
 	addAcct                                    decredmaterial.IconButton
 	container, accountsList, walletsList, list layout.List
 	line                                       *decredmaterial.Line
 	txFeeCollapsible                           *decredmaterial.Collapsible
+	toAddWalletPage                            *widget.Clickable
 
 	walletCollapsible []*decredmaterial.Collapsible
 	toAcctDetails     []*gesture.Click
@@ -57,6 +59,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		txFeeCollapsible: common.theme.Collapsible(new(widget.Clickable)),
 		line:             common.theme.Line(),
 		walletAccount:    &win.walletAccount,
+		toAddWalletPage:  new(widget.Clickable),
 	}
 	pg.line.Height = 1
 
@@ -96,11 +99,27 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		},
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
-		})
-	})
+	body := func(gtx C) D {
+		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
+			layout.Expanded(func(gtx C) D {
+				return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+				})
+			}),
+			layout.Stacked(func(gtx C) D {
+				icon := common.icons.newWalletIcon
+				icon.Scale = 0.26
+				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+				return layout.SE.Layout(gtx, func(gtx C) D {
+					return decredmaterial.Clickable(gtx, pg.toAddWalletPage, func(gtx C) D {
+						return icon.Layout(gtx)
+					})
+				})
+			}),
+		)
+	}
+
+	return common.Layout(gtx, body)
 }
 
 func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
@@ -315,7 +334,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 
 // drawlayout wraps the page tx and sync section in a card layout
 func (pg *walletPage) sectionLayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return decredmaterial.Card{Color: pg.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+	return decredmaterial.Card{Color: pg.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
 	})
 }
@@ -327,4 +346,9 @@ func (pg *walletPage) Handle(common pageCommon) {
 			b.IsExpanded = !b.IsExpanded
 		}
 	}
+
+	if pg.toAddWalletPage.Clicked() {
+		*common.page = PageCreateRestore
+	}
+
 }

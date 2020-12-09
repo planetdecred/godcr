@@ -360,7 +360,7 @@ func (pg *overviewPage) syncStatusColumn(gtx layout.Context) layout.Dimensions {
 
 // drawlayout wraps the page tx and sync section in a card layout
 func (pg *overviewPage) drawlayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return decredmaterial.Card{Color: pg.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+	return decredmaterial.Card{Color: pg.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
 	})
 }
