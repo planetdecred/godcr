@@ -1,15 +1,14 @@
 package ui
 
 import (
+	"gioui.org/widget"
 	"image"
 	"strings"
-	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -40,6 +39,13 @@ type navHandler struct {
 	page          string
 }
 
+type modalLoad struct {
+	template string
+	title    string
+	confirm  func()
+	cancel   func()
+}
+
 type pageCommon struct {
 	wallet          *wallet.Wallet
 	info            *wallet.MultiWalletInfo
@@ -54,9 +60,10 @@ type pageCommon struct {
 	errorChannels   map[string]chan error
 	keyEvents       chan *key.Event
 	clipboard       chan interface{}
-	toast           chan *toast
-	toastLoad       *toast
 	states          *states
+	modal           *decredmaterial.Modal
+	modalReceiver   chan *modalLoad
+	modalLoad 		*modalLoad
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
@@ -182,14 +189,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
-		toast:                   win.toast,
-		toastLoad:               &toast{},
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,
 		drawerNavItems:          drawerNavItems,
 		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
 		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		modal:                   win.theme.Modal(),
+		modalReceiver: 			 make(chan *modalLoad),
+		modalLoad:   			 &modalLoad{},
 	}
 
 	isNavDrawerMinimized := false
@@ -224,15 +232,6 @@ func (page pageCommon) ChangePage(pg string) {
 	*page.page = pg
 }
 
-func (page pageCommon) Notify(text string, success bool) {
-	go func() {
-		page.toast <- &toast{
-			text:    text,
-			success: success,
-		}
-	}()
-}
-
 func (page pageCommon) handleNavEvents() {
 	for page.minimizeNavDrawerButton.Button.Clicked() {
 		*page.isNavDrawerMinimized = true
@@ -258,64 +257,52 @@ func (page pageCommon) handleNavEvents() {
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	page.handleNavEvents()
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return page.layoutAppBar(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					width := navDrawerWidth
-					if *page.isNavDrawerMinimized {
-						width = navDrawerMinimizedWidth
-					}
-					gtx.Constraints.Max.X = width
-					return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-						page.layoutNavDrawer(gtx)
-						return layout.Dimensions{Size: gtx.Constraints.Max}
-					})
+					return page.layoutAppBar(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return layout.Stack{}.Layout(gtx,
-							layout.Expanded(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							width := navDrawerWidth
+							if *page.isNavDrawerMinimized {
+								width = navDrawerMinimizedWidth
+							}
+							gtx.Constraints.Max.X = width
+							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+								page.layoutNavDrawer(gtx)
+								return layout.Dimensions{Size: gtx.Constraints.Max}
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 								return body(gtx)
-							}),
-							layout.Stacked(func(gtx C) D {
-								toast := func(n *toast) layout.Dimensions {
-									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-										layout.Flexed(1, func(gtx C) D {
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return displayToast(page.theme, gtx, n)
-											})
-										}),
-									)
-								}
-
-							outer:
-								for {
-									select {
-									case n := <-page.toast:
-										page.toastLoad.success = n.success
-										page.toastLoad.text = n.text
-										page.toastLoad.ResetTimer()
-									default:
-										break outer
-									}
-								}
-
-								if page.toastLoad.text != "" {
-									page.toastLoad.Timer(time.Second*3, func() {
-										page.toastLoad.text = ""
-									})
-									return toast(page.toastLoad)
-								}
-								return layout.Dimensions{}
-							}),
-						)
-					})
+							})
+						}),
+					)
 				}),
 			)
+		}),
+		layout.Stacked(func(gtx C) D {
+			outer:
+			for {
+				select {
+				case load := <- page.modalReceiver:
+					page.modalLoad.title = load.title
+					page.modalLoad.confirm = load.confirm
+					page.modalLoad.cancel = load.cancel
+					page.modalLoad.template = load.template
+				default:
+					break outer
+				}
+			}
+
+			if page.modalLoad.template != "" {
+				return page.modal.Layout(gtx, modalLayout(page.theme, page.modalLoad.template), 900)
+			}
+			return layout.Dimensions{}
 		}),
 	)
 }
