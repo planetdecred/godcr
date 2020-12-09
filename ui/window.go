@@ -32,6 +32,7 @@ type Window struct {
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions *wallet.Transactions
 	walletTransaction  *wallet.Transaction
+	walletAccount      *wallet.Account
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -86,7 +87,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletSyncStatus = new(wallet.SyncStatus)
 	win.walletTransactions = new(wallet.Transactions)
 	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
-	
+
 	win.wallet = wal
 	win.states.loading = true
 	win.current = PageOverview

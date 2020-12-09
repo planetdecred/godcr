@@ -127,10 +127,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		pendingIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
 		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
 
-		syncingIcon: decredIcons["syncing"],
-		walletIcon:  decredIcons["wallet"],
-		accountIcon:                decredIcons["account"],
-		importedAccountIcon:        decredIcons["imported_account"],
+		syncingIcon:         decredIcons["syncing"],
+		walletIcon:          decredIcons["wallet"],
+		accountIcon:         decredIcons["account"],
+		importedAccountIcon: decredIcons["imported_account"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 

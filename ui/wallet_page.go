@@ -170,6 +170,13 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		}
 
 		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			pg.walletCollapsible[i].AddItems([]decredmaterial.MoreItem{
+				decredmaterial.NewMoreOptionItem("Sign message"),
+				decredmaterial.NewMoreOptionItem("Verify message"),
+				decredmaterial.NewMoreOptionItem("View property"),
+				decredmaterial.NewMoreOptionItem("Rename"),
+				decredmaterial.NewMoreOptionItem("Settings"),
+			})
 			return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody)
 		})
 	})
