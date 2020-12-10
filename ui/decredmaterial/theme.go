@@ -30,8 +30,8 @@ var (
 	// decred complemetary colors
 
 	//lightblue = rgb(0x70cbff)
-	//orange    = rgb(0xed6d47)
-	green = rgb(0x41bf53)
+	orange = rgb(0xed6d47)
+	green  = rgb(0x41bf53)
 )
 
 type (
@@ -57,6 +57,7 @@ type Theme struct {
 		Surface    color.RGBA
 		Gray       color.RGBA
 		Black      color.RGBA
+		Orange     color.RGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -94,6 +95,7 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.Color.Danger = rgb(0xff0000)
 	t.Color.Gray = rgb(0x596D81)
 	t.Color.Black = rgb(0x000000)
+	t.Color.Orange = orange
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))

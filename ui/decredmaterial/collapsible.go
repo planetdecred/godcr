@@ -70,7 +70,6 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 							layout.Rigid(func(gtx C) D {
 								return layout.Stack{}.Layout(gtx,
 									layout.Stacked(func(gtx C) D {
-										gtx.Constraints.Min.X = gtx.Constraints.Max.X - 30
 										return c.layoutHeader(gtx, header)
 									}),
 									layout.Expanded(c.Button.Layout),

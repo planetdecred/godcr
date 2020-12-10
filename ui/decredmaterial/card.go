@@ -20,7 +20,8 @@ type CornerStyle uint8
 
 const (
 	SquareEdge CornerStyle = iota
-	HalfRoundedEdge
+	HalfRoundedEdgeTop
+	HalfRoundedEdgeBottom
 	RoundedEdge
 )
 
@@ -37,7 +38,11 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 		topRadius = cardRadius
 		bottomRadius = cardRadius
 
-	case HalfRoundedEdge:
+	case HalfRoundedEdgeTop:
+		topRadius = cardRadius
+		bottomRadius = 0
+
+	case HalfRoundedEdgeBottom:
 		topRadius = 0
 		bottomRadius = cardRadius
 
