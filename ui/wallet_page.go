@@ -144,6 +144,10 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 			return pg.tableLayout(gtx, walletNameLabel, walletBalLabel, true, len(seed))
 		}
 
+		collapsibleFooter := func(gtx C) D {
+			return pg.backupSeedNotification(gtx, common)
+		}
+
 		collapsibleBody := func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -194,28 +198,14 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		}
 
 		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					pg.walletCollapsible[i].AddItems([]decredmaterial.MoreItem{
-						decredmaterial.NewMoreOptionItem("Sign message"),
-						decredmaterial.NewMoreOptionItem("Verify message"),
-						decredmaterial.NewMoreOptionItem("View property"),
-						decredmaterial.NewMoreOptionItem("Rename"),
-						decredmaterial.NewMoreOptionItem("Settings"),
-					})
-					return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody)
-				}),
-				layout.Rigid(func(gtx C) D {
-					if len(seed) > 0 {
-						return layout.Inset{Top: values.MarginPaddingMinus10}.Layout(gtx, func(gtx C) D {
-							return decredmaterial.Card{Color: pg.theme.Color.Orange, CornerStyle: decredmaterial.HalfRoundedEdgeBottom}.Layout(gtx, func(gtx C) D {
-								return pg.backupSeedNotification(gtx, common)
-							})
-						})
-					}
-					return layout.Dimensions{}
-				}),
-			)
+			pg.walletCollapsible[i].AddItems([]decredmaterial.MoreItem{
+				decredmaterial.NewMoreOptionItem("Sign message"),
+				decredmaterial.NewMoreOptionItem("Verify message"),
+				decredmaterial.NewMoreOptionItem("View property"),
+				decredmaterial.NewMoreOptionItem("Rename"),
+				decredmaterial.NewMoreOptionItem("Settings"),
+			})
+			return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleFooter)
 		})
 	})
 }

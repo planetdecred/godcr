@@ -364,7 +364,7 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
-		return pg.inputsCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
+		return pg.inputsCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody, nil)
 	})
 }
 
@@ -388,7 +388,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
-		return pg.outputsCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
+		return pg.outputsCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody, nil)
 	})
 }
 

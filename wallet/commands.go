@@ -18,7 +18,8 @@ import (
 func (wal *Wallet) CreateWallet(name, passphrase string, errChan chan error) {
 	go func() {
 		var resp Response
-		wall, err := wal.multi.CreateNewWallet(name, passphrase, dcrlibwallet.PassphraseTypePass)
+		wall, err := wal.multi.CreateWatchOnlyWallet(name, "1")
+		// wall, err := wal.multi.CreateNewWallet(name, passphrase, dcrlibwallet.PassphraseTypePass)
 		sendErr := func(err error) {
 			go func() {
 				errChan <- err

@@ -58,37 +58,51 @@ func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.
 	return dims
 }
 
-func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(C) D) layout.Dimensions {
+func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(C) D, footer func(C) D) layout.Dimensions {
 	c.handleEvents()
 
 	dims := layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func(gtx C) D {
-		return Card{Color: c.BackgroundColor, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return Card{Color: c.BackgroundColor, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return layout.Stack{}.Layout(gtx,
-									layout.Stacked(func(gtx C) D {
-										return c.layoutHeader(gtx, header)
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Stack{}.Layout(gtx,
+											layout.Stacked(func(gtx C) D {
+												return c.layoutHeader(gtx, header)
+											}),
+											layout.Expanded(c.Button.Layout),
+										)
 									}),
-									layout.Expanded(c.Button.Layout),
+									layout.Rigid(func(gtx C) D {
+										return c.MoreIcon.Layout(gtx)
+									}),
 								)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return c.MoreIcon.Layout(gtx)
+								if c.IsExpanded {
+									return content(gtx)
+								}
+								return layout.Dimensions{}
 							}),
 						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						if c.IsExpanded {
-							return content(gtx)
-						}
-						return layout.Dimensions{}
-					}),
-				)
-			})
-		})
+					})
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				if footer != nil {
+					return layout.Inset{Top: unit.Dp(-10)}.Layout(gtx, func(gtx C) D {
+						return Card{Color: c.theme.Color.Orange, CornerStyle: HalfRoundedEdgeBottom}.Layout(gtx, func(gtx C) D {
+							return footer(gtx)
+						})
+					})
+				}
+				return layout.Dimensions{}
+			}),
+		)
 	})
 
 	return layout.Stack{Alignment: layout.NE}.Layout(gtx,
