@@ -1,20 +1,20 @@
 package ui
 
 import (
-	"gioui.org/widget"
-	"image"
-	"strings"
-
+	"gioui.org/f32"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-
+	"gioui.org/widget"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"image"
+	"image/color"
+	"strings"
 )
 
 type pageIcons struct {
@@ -39,13 +39,6 @@ type navHandler struct {
 	page          string
 }
 
-type modalLoad struct {
-	template string
-	title    string
-	confirm  func()
-	cancel   func()
-}
-
 type pageCommon struct {
 	wallet          *wallet.Wallet
 	info            *wallet.MultiWalletInfo
@@ -63,13 +56,15 @@ type pageCommon struct {
 	states          *states
 	modal           *decredmaterial.Modal
 	modalReceiver   chan *modalLoad
-	modalLoad 		*modalLoad
+	modalLoad       *modalLoad
+	modalTemplate   *modalTemplate
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
 	isNavDrawerMinimized    *bool
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
+	testButton              decredmaterial.Button
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 }
@@ -196,14 +191,16 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
 		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		modal:                   win.theme.Modal(),
-		modalReceiver: 			 make(chan *modalLoad),
-		modalLoad:   			 &modalLoad{},
+		modalReceiver:           make(chan *modalLoad),
+		modalLoad:               &modalLoad{},
 	}
 
+	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
 	isNavDrawerMinimized := false
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
 	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
 	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
+	common.modalTemplate = win.LoadTemplates(win.theme)
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -259,6 +256,11 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
+			// fill the entire window with a color if a user has no wallet created
+			if *page.page == PageCreateRestore {
+				return fill(gtx, page.theme.Color.Surface)
+			}
+
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return page.layoutAppBar(gtx)
@@ -286,10 +288,17 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			)
 		}),
 		layout.Stacked(func(gtx C) D {
-			outer:
+			// stack the page content on the entire window if a user has no wallet
+			if *page.page == PageCreateRestore {
+				return body(gtx)
+			}
+			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+		outer:
 			for {
 				select {
-				case load := <- page.modalReceiver:
+				case load := <-page.modalReceiver:
 					page.modalLoad.title = load.title
 					page.modalLoad.confirm = load.confirm
 					page.modalLoad.cancel = load.cancel
@@ -300,11 +309,35 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			}
 
 			if page.modalLoad.template != "" {
-				return page.modal.Layout(gtx, modalLayout(page.theme, page.modalLoad.template), 900)
+				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, CreateWalletTemplate, page.modalLoad),
+					900)
 			}
+
 			return layout.Dimensions{}
 		}),
 	)
+}
+
+func (page pageCommon) closeModal() {
+	go func() {
+		page.modalReceiver <- &modalLoad{
+			template: "",
+			title:    "",
+			confirm:  nil,
+			cancel:   nil,
+		}
+	}()
+}
+
+func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
+	cs := gtx.Constraints
+	d := image.Point{X: cs.Min.X, Y: cs.Min.Y}
+	dr := f32.Rectangle{
+		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
+	}
+	paint.ColorOp{Color: col}.Add(gtx.Ops)
+	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
+	return layout.Dimensions{Size: d}
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
