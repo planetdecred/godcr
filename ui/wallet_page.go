@@ -2,7 +2,6 @@ package ui
 
 import (
 	"reflect"
-	"time"
 
 	"github.com/planetdecred/godcr/ui/values"
 
@@ -38,7 +37,6 @@ type walletPage struct {
 	passwordModal                *decredmaterial.Password
 	isPasswordModalOpen          bool
 	errChann                     chan error
-	errorText                    string
 
 	renameAcctIndex    int
 	renameAcctButtons  []decredmaterial.IconButton
@@ -68,7 +66,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		cancelDelete:     common.theme.Button(new(widget.Clickable), "Cancel Wallet Delete"),
 		passwordModal:    common.theme.Password(),
 		errChann:         common.errorChannels[PageWallet],
-		errorText:        "",
 		renameAcctIndex:  -1,
 	}
 	pg.line.Color = common.theme.Color.Gray
@@ -198,9 +195,6 @@ func (pg *walletPage) subMain(gtx layout.Context, common pageCommon) layout.Dime
 
 func (pg *walletPage) topRow(gtx layout.Context, common pageCommon) layout.Dimensions {
 	wdgs := []func(gtx C) D{
-		func(gtx C) D {
-			return pg.alert(gtx, common)
-		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -431,12 +425,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 			*common.page = PageCreateRestore
 			return
 		}
-		if pg.errorText == "" {
-			pg.errorText = "You have to stop sync to create a new wallet"
-			time.AfterFunc(time.Second*2, func() {
-				pg.errorText = ""
-			})
-		}
+		common.Notify("You have to stop sync to create a new wallet", false)
 		return
 	}
 
@@ -474,7 +463,6 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	if pg.renameAcctSubmit.Button.Clicked() {
-		pg.errorText = ""
 		pg.wallet.RenameAccount(pg.current.ID, pg.current.Accounts[pg.renameAcctIndex].Number, pg.renameAcctEditor.Editor.Text(), pg.errChann)
 		common.info.Wallets[*common.selectedWallet].Accounts[pg.renameAcctIndex].Name = pg.renameAcctEditor.Editor.Text()
 		pg.current = common.info.Wallets[*common.selectedWallet]
@@ -523,10 +511,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 			pg.errorLabel.Text = err.Error()
 		}
 		if pg.subPage == subWalletMain {
-			pg.errorText = err.Error()
-			time.AfterFunc(time.Millisecond*3500, func() {
-				pg.errorText = ""
-			})
+			common.Notify(err.Error(), false)
 		}
 	default:
 	}
@@ -595,11 +580,4 @@ func (pg *walletPage) confirm(password []byte) {
 
 func (pg *walletPage) cancel() {
 	pg.isPasswordModalOpen = false
-}
-
-func (pg *walletPage) alert(gtx layout.Context, common pageCommon) layout.Dimensions {
-	if pg.errorText != "" {
-		return common.theme.ErrorAlert(gtx, pg.errorText)
-	}
-	return layout.Dimensions{}
 }
