@@ -302,14 +302,13 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 					page.modalLoad.title = load.title
 					page.modalLoad.confirm = load.confirm
 					page.modalLoad.cancel = load.cancel
-					page.modalLoad.template = load.template
 				default:
 					break outer
 				}
 			}
 
-			if page.modalLoad.template != "" {
-				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, CreateWalletTemplate, page.modalLoad),
+			if page.modalLoad.confirm != nil {
+				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, page.modalLoad),
 					900)
 			}
 
@@ -321,7 +320,6 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 func (page pageCommon) closeModal() {
 	go func() {
 		page.modalReceiver <- &modalLoad{
-			template: "",
 			title:    "",
 			confirm:  nil,
 			cancel:   nil,

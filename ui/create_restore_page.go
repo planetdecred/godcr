@@ -642,7 +642,6 @@ func (pg *createRestore) handle(common pageCommon) {
 		// pg.showPassword = true
 		go func() {
 			common.modalReceiver <- &modalLoad{
-				template: CreateWalletTemplate,
 				title:    "",
 				confirm: func(wallet, pass string) {
 					pg.wal.CreateWallet(wallet, pass, pg.errChan)

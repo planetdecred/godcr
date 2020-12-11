@@ -7,8 +7,6 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const CreateWalletTemplate = "CreateWallet"
-
 type modalTemplate struct {
 	walletName    decredmaterial.Editor
 	password      decredmaterial.Editor
@@ -18,7 +16,6 @@ type modalTemplate struct {
 }
 
 type modalLoad struct {
-	template string
 	title    string
 	confirm  interface{}
 	cancel   interface{}
@@ -58,13 +55,19 @@ func (m *modalTemplate) createNewWallet(th *decredmaterial.Theme) []func(gtx C) 
 	}
 }
 
-func (m *modalTemplate) Layout(th *decredmaterial.Theme, template string, load *modalLoad) []func(gtx C) D {
+func (m *modalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	var w []func(gtx C) D
 
-	switch template {
-	case CreateWalletTemplate:
+	switch t := load.confirm.(type) {
+	case func(string, string):
 		w = m.createNewWallet(th)
-		m.handleActions(load)
+		if m.confirm.Button.Clicked() {
+			t(m.walletName.Editor.Text(), m.password.Editor.Text())
+		}
+
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
 	}
 
 	action := []func(gtx C) D{
@@ -88,19 +91,4 @@ func (m *modalTemplate) Layout(th *decredmaterial.Theme, template string, load *
 
 	w = append(w, action...)
 	return w
-}
-
-func (m *modalTemplate) handleActions(load *modalLoad) {
-	switch load.template {
-	case CreateWalletTemplate:
-		cancel := load.cancel.(func())
-		if m.cancel.Button.Clicked() {
-			cancel()
-		}
-
-		confirm := load.confirm.(func(string, string))
-		if m.confirm.Button.Clicked() {
-			confirm(m.walletName.Editor.Text(), m.password.Editor.Text())
-		}
-	}
 }
