@@ -334,6 +334,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 	select {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
+		c.Notify(pg.calculateErrorText, false)
 	case err := <-pg.broadcastErrChan:
 		c.Notify(err.Error(), false)
 
@@ -366,15 +367,6 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		func(gtx C) D {
 			gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
 			return pg.drawTransactionDetailWidgets(gtx)
-		},
-		func(gtx C) D {
-			if pg.calculateErrorText != "" {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return pg.centralize(gtx, func(gtx C) D {
-					return pg.theme.ErrorAlert(gtx, pg.calculateErrorText)
-				})
-			}
-			return layout.Dimensions{}
 		},
 		func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding450)
