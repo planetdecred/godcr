@@ -2,19 +2,22 @@ package ui
 
 import (
 	"gioui.org/f32"
+	"image"
+	"image/color"
+	"strings"
+	"time"
+
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
-	"image"
-	"image/color"
-	"strings"
 )
 
 type pageIcons struct {
@@ -53,6 +56,8 @@ type pageCommon struct {
 	errorChannels   map[string]chan error
 	keyEvents       chan *key.Event
 	clipboard       chan interface{}
+	toast           chan *toast
+	toastLoad       *toast
 	states          *states
 	modal           *decredmaterial.Modal
 	modalReceiver   chan *modalLoad
@@ -184,6 +189,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
+		toast:                   win.toast,
+		toastLoad:               &toast{},
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,
 		drawerNavItems:          drawerNavItems,
@@ -229,6 +236,15 @@ func (page pageCommon) ChangePage(pg string) {
 	*page.page = pg
 }
 
+func (page pageCommon) Notify(text string, success bool) {
+	go func() {
+		page.toast <- &toast{
+			text:    text,
+			success: success,
+		}
+	}()
+}
+
 func (page pageCommon) handleNavEvents() {
 	for page.minimizeNavDrawerButton.Button.Clicked() {
 		*page.isNavDrawerMinimized = true
@@ -261,25 +277,25 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				return fill(gtx, page.theme.Color.Surface)
 			}
 
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return page.layoutAppBar(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return page.layoutAppBar(gtx)
+					width := navDrawerWidth
+					if *page.isNavDrawerMinimized {
+						width = navDrawerMinimizedWidth
+					}
+					gtx.Constraints.Max.X = width
+					return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+						page.layoutNavDrawer(gtx)
+						return layout.Dimensions{Size: gtx.Constraints.Max}
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							width := navDrawerWidth
-							if *page.isNavDrawerMinimized {
-								width = navDrawerMinimizedWidth
-							}
-							gtx.Constraints.Max.X = width
-							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-								page.layoutNavDrawer(gtx)
-								return layout.Dimensions{Size: gtx.Constraints.Max}
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 								return body(gtx)
 							})
 						}),
@@ -312,6 +328,37 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 					900)
 			}
 
+			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+			toast := func(n *toast) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(1, func(gtx C) D {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							return displayToast(page.theme, gtx, n)
+						})
+					}),
+				)
+			}
+
+		outer:
+			for {
+				select {
+				case n := <-page.toast:
+					page.toastLoad.success = n.success
+					page.toastLoad.text = n.text
+					page.toastLoad.ResetTimer()
+				default:
+					break outer
+				}
+			}
+
+			if page.toastLoad.text != "" {
+				page.toastLoad.Timer(time.Second*3, func() {
+					page.toastLoad.text = ""
+				})
+				return toast(page.toastLoad)
+			}
 			return layout.Dimensions{}
 		}),
 	)
