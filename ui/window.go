@@ -52,7 +52,7 @@ type Window struct {
 	walletTabs, accountTabs *decredmaterial.Tabs
 	keyEvents               chan *key.Event
 	clipboard               chan interface{}
-	notification            chan *notification
+	toast                   chan *toast
 	sysDestroyWithSync      bool
 }
 
@@ -91,7 +91,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.current = PageOverview
 	win.keyEvents = make(chan *key.Event)
 	win.clipboard = make(chan interface{})
-	win.notification = make(chan *notification)
+	win.toast = make(chan *toast)
 	win.theme.ReadClipboard = win.clipboard
 
 	win.walletTabs, win.accountTabs = decredmaterial.NewTabs(win.theme), decredmaterial.NewTabs(win.theme)
@@ -221,7 +221,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.window.ReadClipboard()
 			case WriteClipboard:
 				go func() {
-					win.notification <- &notification{
+					win.toast <- &toast{
 						text:    "copied",
 						success: true,
 					}

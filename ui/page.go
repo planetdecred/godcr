@@ -5,12 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"gioui.org/widget"
-
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
+	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -25,7 +24,7 @@ type pageIcons struct {
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, navigationArrowForward, verifyAction, actionDelete, actionLock,
 	communicationComment, editorModeEdit, actionBackup, actionCheck,
-	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
+	actionSwapVert, navigationCancel, toastSync, imageBrightness1 *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
@@ -41,28 +40,23 @@ type navHandler struct {
 	page          string
 }
 
-type notification struct {
-	text    string
-	success bool
-}
-
 type pageCommon struct {
-	wallet           *wallet.Wallet
-	info             *wallet.MultiWalletInfo
-	selectedWallet   *int
-	selectedAccount  *int
-	theme            *decredmaterial.Theme
-	icons            pageIcons
-	page             *string
-	navTab           *decredmaterial.Tabs
-	walletTabs       *decredmaterial.Tabs
-	accountTabs      *decredmaterial.Tabs
-	errorChannels    map[string]chan error
-	keyEvents        chan *key.Event
-	clipboard        chan interface{}
-	notification     chan *notification
-	notificationLoad *notification
-	states           *states
+	wallet          *wallet.Wallet
+	info            *wallet.MultiWalletInfo
+	selectedWallet  *int
+	selectedAccount *int
+	theme           *decredmaterial.Theme
+	icons           pageIcons
+	page            *string
+	navTab          *decredmaterial.Tabs
+	walletTabs      *decredmaterial.Tabs
+	accountTabs     *decredmaterial.Tabs
+	errorChannels   map[string]chan error
+	keyEvents       chan *key.Event
+	clipboard       chan interface{}
+	toast           chan *toast
+	toastLoad       *toast
+	states          *states
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
@@ -108,7 +102,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		actionCheck:                mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
 		actionSwapVert:             mustIcon(widget.NewIcon(icons.ActionSwapVert)),
 		navigationCancel:           mustIcon(widget.NewIcon(icons.NavigationCancel)),
-		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
+		toastSync:                  mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 
 		overviewIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
@@ -188,8 +182,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
-		notification:            win.notification,
-		notificationLoad:        &notification{},
+		toast:                   win.toast,
+		toastLoad:               &toast{},
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,
 		drawerNavItems:          drawerNavItems,
@@ -232,7 +226,7 @@ func (page pageCommon) ChangePage(pg string) {
 
 func (page pageCommon) Notify(text string, success bool) {
 	go func() {
-		page.notification <- &notification{
+		page.toast <- &toast{
 			text:    text,
 			success: success,
 		}
@@ -288,11 +282,11 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 								return body(gtx)
 							}),
 							layout.Stacked(func(gtx C) D {
-								toast := func(n *notification) layout.Dimensions {
+								toast := func(n *toast) layout.Dimensions {
 									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 										layout.Flexed(1, func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.displayNotificationToast(gtx, n)
+												return displayToast(page.theme, gtx, n)
 											})
 										}),
 									)
@@ -301,19 +295,20 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 							outer:
 								for {
 									select {
-									case n := <-page.notification:
-										page.notificationLoad.success = n.success
-										page.notificationLoad.text = n.text
+									case n := <-page.toast:
+										page.toastLoad.success = n.success
+										page.toastLoad.text = n.text
+										page.toastLoad.ResetTimer()
 									default:
 										break outer
 									}
 								}
 
-								if page.notificationLoad.text != "" {
-									time.AfterFunc(time.Second*3, func() {
-										page.notificationLoad.text = ""
+								if page.toastLoad.text != "" {
+									page.toastLoad.Timer(time.Second*3, func() {
+										page.toastLoad.text = ""
 									})
-									return toast(page.notificationLoad)
+									return toast(page.toastLoad)
 								}
 								return layout.Dimensions{}
 							}),
@@ -323,21 +318,6 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			)
 		}),
 	)
-}
-
-func (page pageCommon) displayNotificationToast(gtx layout.Context, n *notification) layout.Dimensions {
-	color := page.theme.Color.Success
-	if !n.success {
-		color = page.theme.Color.Danger
-	}
-
-	return decredmaterial.Card{Color: color, Rounded: true}.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			t := page.theme.Body1(n.text)
-			t.Color = page.theme.Color.Surface
-			return t.Layout(gtx)
-		})
-	})
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
