@@ -3,13 +3,13 @@ package ui
 import (
 	"image"
 	"strings"
-
-	"gioui.org/widget"
+	"time"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
+	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -54,6 +54,8 @@ type pageCommon struct {
 	errorChannels   map[string]chan error
 	keyEvents       chan *key.Event
 	clipboard       chan interface{}
+	toast           chan *toast
+	toastLoad       *toast
 	states          *states
 
 	appBarNavItems          []navHandler
@@ -180,6 +182,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
+		toast:                   win.toast,
+		toastLoad:               &toast{},
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,
 		drawerNavItems:          drawerNavItems,
@@ -218,6 +222,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 func (page pageCommon) ChangePage(pg string) {
 	*page.page = pg
+}
+
+func (page pageCommon) Notify(text string, success bool) {
+	go func() {
+		page.toast <- &toast{
+			text:    text,
+			success: success,
+		}
+	}()
 }
 
 func (page pageCommon) handleNavEvents() {
@@ -264,7 +277,42 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return body(gtx)
+						return layout.Stack{}.Layout(gtx,
+							layout.Expanded(func(gtx C) D {
+								return body(gtx)
+							}),
+							layout.Stacked(func(gtx C) D {
+								toast := func(n *toast) layout.Dimensions {
+									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+										layout.Flexed(1, func(gtx C) D {
+											return layout.Center.Layout(gtx, func(gtx C) D {
+												return displayToast(page.theme, gtx, n)
+											})
+										}),
+									)
+								}
+
+							outer:
+								for {
+									select {
+									case n := <-page.toast:
+										page.toastLoad.success = n.success
+										page.toastLoad.text = n.text
+										page.toastLoad.ResetTimer()
+									default:
+										break outer
+									}
+								}
+
+								if page.toastLoad.text != "" {
+									page.toastLoad.Timer(time.Second*3, func() {
+										page.toastLoad.text = ""
+									})
+									return toast(page.toastLoad)
+								}
+								return layout.Dimensions{}
+							}),
+						)
 					})
 				}),
 			)

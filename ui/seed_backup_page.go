@@ -72,7 +72,6 @@ type backupPage struct {
 	selectedSeeds  []string
 	allSuggestions []string
 	active         int
-	error          string
 	privpass       []byte
 }
 
@@ -259,16 +258,6 @@ func (pg *backupPage) viewTemplate(gtx layout.Context, content layout.Widget) la
 						})
 					}),
 				)
-			}),
-			layout.Stacked(func(gtx C) D {
-				if len(pg.error) > 0 {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.centralize(gtx, func(gtx C) D {
-							return pg.theme.ErrorAlert(gtx, pg.error)
-						})
-					})
-				}
-				return layout.Dimensions{}
 			}),
 		)
 	})
@@ -485,12 +474,6 @@ func (pg *backupPage) updateViewTexts() {
 	pg.instruction.Text = t.instruction
 }
 
-func (pg *backupPage) clearError() {
-	time.AfterFunc(time.Second*3, func() {
-		pg.error = ""
-	})
-}
-
 func checkSlice(s []string) bool {
 	for _, v := range s {
 		if v == "-" {
@@ -553,15 +536,13 @@ func (pg *backupPage) handle(c pageCommon) {
 			errMessage := "Failed to verify. Please go through every word and try again."
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
-				pg.error = errMessage
-				pg.clearError()
+				c.Notify(errMessage, false)
 				return
 			}
 
 			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s, pg.privpass)
 			if err != nil {
-				pg.error = errMessage
-				pg.clearError()
+				c.Notify(errMessage, false)
 				return
 			}
 			pg.info.Wallets[*c.selectedWallet].Seed = nil
