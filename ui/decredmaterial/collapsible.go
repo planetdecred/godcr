@@ -1,7 +1,6 @@
 package decredmaterial
 
 import (
-	"fmt"
 	"image/color"
 
 	"gioui.org/layout"
@@ -11,23 +10,24 @@ import (
 )
 
 type Collapsible struct {
-	items           []MoreItem
-	IsExpanded      bool
-	Button          *widget.Clickable
-	MoreIcon        IconButton
-	isOpened        bool
-	BackgroundColor color.RGBA
-	color           color.RGBA
-	theme           *Theme
+	Items             []MoreItem
+	IsExpanded        bool
+	Button            *widget.Clickable
+	MoreIcon          IconButton
+	isOpened          bool
+	BackgroundColor   color.RGBA
+	color             color.RGBA
+	theme             *Theme
+	selectedMoreIndex int
 }
 
 type MoreItem struct {
 	Text   string
-	button Button
+	Button *widget.Clickable
 	label  Label
 }
 
-func (t *Theme) Collapsible(button *widget.Clickable) *Collapsible {
+func (t *Theme) Collapsible(Items []MoreItem) *Collapsible {
 	c := &Collapsible{
 		BackgroundColor: t.Color.Surface,
 		MoreIcon: IconButton{
@@ -40,9 +40,16 @@ func (t *Theme) Collapsible(button *widget.Clickable) *Collapsible {
 				Button:     new(widget.Clickable),
 			},
 		},
-		Button: button,
+		Items:  make([]MoreItem, len(Items)+1),
+		Button: new(widget.Clickable),
 		color:  t.Color.Background,
 		theme:  t,
+	}
+
+	for i := range Items {
+		Items[i].Button = new(widget.Clickable)
+		Items[i].label = c.theme.Body1(Items[i].Text)
+		c.Items[i+1] = Items[i]
 	}
 
 	return c
@@ -132,10 +139,11 @@ func (c *Collapsible) moreItemMenu(gtx layout.Context, body layout.Widget) layou
 func (c *Collapsible) moreOption(gtx layout.Context) layout.Dimensions {
 	return c.moreItemMenu(gtx, func(gtx C) D {
 		list := &layout.List{Axis: layout.Vertical}
-		return list.Layout(gtx, len(c.items), func(gtx C, i int) D {
+		Items := c.Items[1:]
+		return list.Layout(gtx, len(Items), func(gtx C, i int) D {
 			return layout.UniformInset(unit.Dp(0)).Layout(gtx, func(gtx C) D {
-				index := i
-				btn := c.items[index].button
+				index := i + 1
+				btn := c.Items[index].Button
 				min := gtx.Constraints.Min
 				min.X = 100
 
@@ -151,35 +159,29 @@ func (c *Collapsible) moreOption(gtx layout.Context) layout.Dimensions {
 										Right: unit.Dp(15),
 										Left:  unit.Dp(5),
 									}.Layout(gtx, func(gtx C) D {
-										return c.items[index].label.Layout(gtx)
+										return c.Items[index].label.Layout(gtx)
 									})
 								}),
 							)
 						})
 					}),
-					layout.Expanded(btn.Button.Layout),
+					layout.Expanded(btn.Layout),
 				)
 			})
 		})
 	})
 }
 
-func (c *Collapsible) AddItems(items []MoreItem) {
-	c.items = items
-
-	for i := range items {
-		items[i].button = c.theme.Button(new(widget.Clickable), items[i].Text)
-		items[i].label = c.theme.Body1(items[i].Text)
-		c.items[i] = items[i]
-	}
+func (c *Collapsible) SelectedIndex() int {
+	return c.selectedMoreIndex - 1
 }
 
-func NewMoreOptionItem(text string) MoreItem {
-	moreItem := MoreItem{
-		Text: text,
-	}
+func (c *Collapsible) Selected() string {
+	return c.Items[c.SelectedIndex()].Text
+}
 
-	return moreItem
+func (c *Collapsible) Hide() {
+	c.isOpened = false
 }
 
 func (c *Collapsible) handleEvents() {
@@ -187,16 +189,19 @@ func (c *Collapsible) handleEvents() {
 		c.IsExpanded = !c.IsExpanded
 	}
 
-	if len(c.items) > 0 {
+	if len(c.Items) > 0 {
 		if c.MoreIcon.Button.Clicked() {
 			c.isOpened = !c.isOpened
 		}
 	}
 
-	for i := range c.items {
-		for c.items[i].button.Button.Clicked() {
-			fmt.Println("Clicked")
-			c.isOpened = false
+	for i := range c.Items {
+		index := i
+		if index != 0 {
+			for c.Items[index].Button.Clicked() {
+				c.selectedMoreIndex = index
+				c.isOpened = false
+			}
 		}
 	}
 }

@@ -1,13 +1,13 @@
 package ui
 
 import (
+	"image/color"
 	"strings"
 
 	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
-	"image/color"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -16,6 +16,14 @@ import (
 )
 
 const PageWallet = "Wallet"
+
+type moreItemText struct {
+	signMessage,
+	verifyMessage,
+	viewProperty,
+	rename,
+	settings string
+}
 
 type walletPage struct {
 	walletInfo    *wallet.MultiWalletInfo
@@ -35,6 +43,7 @@ type walletPage struct {
 
 	walletCollapsible []*decredmaterial.Collapsible
 	toAcctDetails     []*gesture.Click
+	text              moreItemText
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -55,16 +64,40 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		},
 		theme:            common.theme,
 		wallet:           common.wallet,
-		txFeeCollapsible: common.theme.Collapsible(new(widget.Clickable)),
+		txFeeCollapsible: common.theme.Collapsible(nil),
 		line:             common.theme.Line(),
 		walletAccount:    &win.walletAccount,
 		toAddWalletPage:  new(widget.Clickable),
 	}
 	pg.line.Height = 1
 
+	pg.text = moreItemText{
+		signMessage:   "Sign message",
+		verifyMessage: "Verify message",
+		viewProperty:  "View property",
+		rename:        "Rename",
+		settings:      "Settings",
+	}
+
 	// init wallet collapse
 	for i := 0; i < 20; i++ {
-		pg.walletCollapsible = append(pg.walletCollapsible, win.theme.Collapsible(new(widget.Clickable)))
+		pg.walletCollapsible = append(pg.walletCollapsible, win.theme.Collapsible([]decredmaterial.MoreItem{
+			{
+				Text: pg.text.signMessage,
+			},
+			{
+				Text: pg.text.verifyMessage,
+			},
+			{
+				Text: pg.text.viewProperty,
+			},
+			{
+				Text: pg.text.rename,
+			},
+			{
+				Text: pg.text.settings,
+			},
+		}))
 	}
 
 	pg.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
@@ -198,13 +231,6 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		}
 
 		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-			pg.walletCollapsible[i].AddItems([]decredmaterial.MoreItem{
-				decredmaterial.NewMoreOptionItem("Sign message"),
-				decredmaterial.NewMoreOptionItem("Verify message"),
-				decredmaterial.NewMoreOptionItem("View property"),
-				decredmaterial.NewMoreOptionItem("Rename"),
-				decredmaterial.NewMoreOptionItem("Settings"),
-			})
 			return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleFooter)
 		})
 	})
@@ -417,6 +443,30 @@ func (pg *walletPage) Handle(common pageCommon) {
 	for _, b := range pg.walletCollapsible {
 		for b.Button.Clicked() {
 			b.IsExpanded = !b.IsExpanded
+		}
+
+		for i, t := range b.Items {
+			if i > 0 {
+				for t.Button.Clicked() {
+					switch b.Items[i].Text {
+					case pg.text.signMessage:
+						*common.page = PageSignMessage
+
+					case pg.text.verifyMessage:
+						*common.page = PageVerifyMessage
+
+					case pg.text.settings:
+						*common.page = PageHelp
+
+					case pg.text.rename:
+						*common.page = PageAbout
+
+					case pg.text.viewProperty:
+						*common.page = PageHelp
+					}
+					b.Hide()
+				}
+			}
 		}
 	}
 
