@@ -190,8 +190,10 @@ func mulAlpha(c color.RGBA, alpha uint8) color.RGBA {
 	}
 }
 
-func (t *Theme) HideAllDropdownMenus() {
+func (t *Theme) closeAllDropdownMenus(group uint) {
 	for _, dropDown := range t.dropDownMenus {
-		dropDown.isOpen = false
+		if dropDown.group == group {
+			dropDown.isOpen = false
+		}
 	}
 }

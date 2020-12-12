@@ -20,7 +20,8 @@ type DropDown struct {
 	navigationIcon *widget.Icon
 	backdrop       *widget.Clickable
 
-	hideAllDropdown func()
+	group            uint
+	closeAllDropdown func(group uint)
 }
 
 type DropDownItem struct {
@@ -30,7 +31,7 @@ type DropDownItem struct {
 	label  Label
 }
 
-func (t *Theme) DropDown(items []DropDownItem) *DropDown {
+func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 	c := &DropDown{
 		isOpen:         false,
 		items:          make([]DropDownItem, len(items)+1),
@@ -40,7 +41,8 @@ func (t *Theme) DropDown(items []DropDownItem) *DropDown {
 		navigationIcon: t.NavigationCheckIcon,
 		backdrop:       new(widget.Clickable),
 
-		hideAllDropdown: t.HideAllDropdownMenus,
+		group:            group,
+		closeAllDropdown: t.closeAllDropdownMenus,
 	}
 
 	for i := range items {
@@ -73,7 +75,7 @@ func (c *DropDown) SelectedIndex() int {
 
 func (c *DropDown) handleEvents() {
 	for c.items[0].button.Button.Clicked() {
-		c.hideAllDropdown()
+		c.closeAllDropdown(c.group)
 		c.isOpen = !c.isOpen
 	}
 
