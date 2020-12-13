@@ -9,6 +9,7 @@ import (
 
 const CreateWalletTemplate = "CreateWallet"
 const RenameWalletTemplate = "RenameWallet"
+const RenameAccountTemplate = "RenameAccount"
 
 type modalTemplate struct {
 	walletName    decredmaterial.Editor
@@ -118,7 +119,7 @@ func (m *modalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		}
 		template = m.createNewWallet()
 		return template
-	case RenameWalletTemplate:
+	case RenameWalletTemplate, RenameAccountTemplate:
 		t := load.confirm.(func(string))
 		if m.editorsNotEmpty(th, m.walletName.Editor) && m.confirm.Button.Clicked() {
 			t(m.walletName.Editor.Text())
@@ -128,6 +129,9 @@ func (m *modalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.renameWallet()
+		if load.template == RenameAccountTemplate {
+			m.walletName.Hint = "Account name"
+		}
 		return
 	default:
 		return

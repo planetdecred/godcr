@@ -95,9 +95,16 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.UpdatedAccount:
-		win.current = PageWallet
-		win.states.creating = false
-		win.window.Invalidate()
+		go func() {
+			win.toast <- &toast{
+				text:    "Account renamed",
+				success: true,
+			}
+		}()
+
+		go func() {
+			win.modal <- &modalLoad{}
+		}()
 	case *wallet.Signature:
 		win.signatureResult = update.(*wallet.Signature)
 	case *dcrlibwallet.TxAuthor:
