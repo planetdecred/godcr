@@ -31,9 +31,10 @@ type pageIcons struct {
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
-	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon *widget.Image
+	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
+	importedAccountIcon, accountIcon *widget.Image
 
-	walletIcon, syncingIcon, importedAccountIcon, accountIcon image.Image
+	walletIcon, syncingIcon image.Image
 }
 
 type navHandler struct {
@@ -128,11 +129,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
 		newWalletIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
 		walletAlertIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
-
-		syncingIcon:         decredIcons["syncing"],
-		walletIcon:          decredIcons["wallet"],
-		accountIcon:         decredIcons["account"],
-		importedAccountIcon: decredIcons["imported_account"],
+		accountIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
+		importedAccountIcon:     &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
+		syncingIcon:             decredIcons["syncing"],
+		walletIcon:              decredIcons["wallet"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 
@@ -232,6 +232,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageAbout] = win.AboutPage(common)
 	win.pages[PageHelp] = win.HelpPage(common)
 	win.pages[PageUTXO] = win.UTXOPage(common)
+	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {

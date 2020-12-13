@@ -1,10 +1,13 @@
 package ui
 
 import (
+	// "fmt"
+	"image"
 	"image/color"
 	"strings"
 
 	"gioui.org/gesture"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
@@ -40,10 +43,9 @@ type walletPage struct {
 	line                                       *decredmaterial.Line
 	txFeeCollapsible                           *decredmaterial.Collapsible
 	toAddWalletPage                            *widget.Clickable
-
-	walletCollapsible []*decredmaterial.Collapsible
-	toAcctDetails     []*gesture.Click
-	text              moreItemText
+	walletCollapsible                          []*decredmaterial.Collapsible
+	toAcctDetails                              []*gesture.Click
+	text                                       moreItemText
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -169,6 +171,8 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		accounts := common.info.Wallets[i].Accounts
 		seed := common.info.Wallets[i].Seed
 
+		pg.updateAcctDetailsButtons(&accounts)
+
 		collapsibleHeader := func(gtx C) D {
 			walName := strings.Title(strings.ToLower(wn))
 			walletNameLabel := pg.theme.Body1(walName)
@@ -192,12 +196,11 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 							accountsName := accounts[i].Name
 							totalBalance := accounts[i].TotalBalance
 							spendable := dcrutil.Amount(accounts[i].SpendableBalance).String()
-
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return pg.walletAccountsLayout(gtx, accountsName, totalBalance, spendable, common)
-								}),
-							)
+							click := pg.toAcctDetails[i]
+							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+							click.Add(gtx.Ops)
+							pg.goToAcctDetails(gtx, common, &accounts[i], click)
+							return pg.walletAccountsLayout(gtx, accountsName, totalBalance, spendable, common)
 						})
 					}),
 					// add to line()
@@ -318,9 +321,9 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 }
 
 func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, spendableBal string, common pageCommon) layout.Dimensions {
-	pg.accountIcon = &widget.Image{Src: paint.NewImageOp(common.icons.accountIcon)}
+	pg.accountIcon = common.icons.accountIcon
 	if name == "imported" {
-		pg.accountIcon = &widget.Image{Src: paint.NewImageOp(common.icons.importedAccountIcon)}
+		pg.accountIcon = common.icons.importedAccountIcon
 	}
 	pg.accountIcon.Scale = 0.8
 
@@ -436,6 +439,24 @@ func (pg *walletPage) sectionLayout(gtx layout.Context, body layout.Widget) layo
 	return decredmaterial.Card{Color: pg.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
 	})
+}
+
+func (pg *walletPage) updateAcctDetailsButtons(walAcct *[]wallet.Account) {
+	if len(*walAcct) != len(pg.toAcctDetails) {
+		pg.toAcctDetails = make([]*gesture.Click, len(*walAcct))
+		for i := range *walAcct {
+			pg.toAcctDetails[i] = &gesture.Click{}
+		}
+	}
+}
+
+func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acct *wallet.Account, click *gesture.Click) {
+	for _, e := range click.Events(gtx) {
+		if e.Type == gesture.TypeClick {
+			*pg.walletAccount = acct
+			*common.page = PageAccountDetails
+		}
+	}
 }
 
 // Handle handles all widget inputs on the main wallets pg.
