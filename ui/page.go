@@ -192,6 +192,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable:     new(widget.Clickable),
+			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			imageInactive: ic.walletIconInactive,
+			page:          PageTickets,
+		},
+		{
+			clickable:     new(widget.Clickable),
 			image:         ic.moreIcon,
 			imageInactive: ic.moreIconInactive,
 			page:          PageMore,
@@ -270,6 +276,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageUTXO] = win.UTXOPage(common)
 	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
 	win.pages[PagePrivacy] = win.PrivacyPage(common)
+	win.pages[PageTickets] = win.TicketPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {
