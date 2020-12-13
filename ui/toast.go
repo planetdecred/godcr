@@ -3,9 +3,10 @@ package ui
 import (
 	"time"
 
+	"github.com/planetdecred/godcr/ui/values"
+
 	"gioui.org/layout"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/values"
 )
 
 type (
@@ -23,7 +24,10 @@ func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout
 	}
 
 	return decredmaterial.Card{Color: color, Rounded: true}.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{
+			Top: values.MarginPadding7, Bottom: values.MarginPadding7,
+			Left: values.MarginPadding15, Right: values.MarginPadding15,
+		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			t := th.Body1(n.text)
 			t.Color = th.Color.Surface
 			return t.Layout(gtx)

@@ -15,7 +15,6 @@ const PageWallet = "Wallet"
 
 const (
 	subWalletMain = iota
-	subWalletRename
 	subWalletDelete
 )
 
@@ -33,7 +32,6 @@ type walletPage struct {
 	line                         *decredmaterial.Line
 	rename, delete, cancelDelete decredmaterial.Button
 	errorLabel                   decredmaterial.Label
-	walletNameEditor             decredmaterial.Editor
 	passwordModal                *decredmaterial.Password
 	isPasswordModalOpen          bool
 	errChann                     chan error
@@ -57,9 +55,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		},
 		wallet:           common.wallet,
 		line:             common.theme.Line(),
-		walletNameEditor: common.theme.Editor(new(widget.Editor), "New wallet name"),
 		renameAcctEditor: common.theme.Editor(new(widget.Editor), ""),
-		rename:           common.theme.Button(new(widget.Clickable), "Rename Wallet"),
 		errorLabel:       common.theme.Body2(""),
 		result:           &win.signatureResult,
 		delete:           common.theme.DangerButton(new(widget.Clickable), "Confirm Delete Wallet"),
@@ -74,8 +70,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	var iconPadding = values.MarginPadding5
 	var iconSize = values.MarginPadding20
-
-	pg.walletNameEditor.Editor.SingleLine = true
 
 	pg.icons.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 	pg.icons.addAcct.Inset = layout.UniformInset(iconPadding)
@@ -158,8 +152,6 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 	switch pg.subPage {
 	case subWalletMain:
 		dims = pg.subMain(gtx, common)
-	case subWalletRename:
-		dims = pg.subRename(gtx, common)
 	case subWalletDelete:
 		dims = pg.subDelete(gtx, common)
 	default:
@@ -289,67 +281,6 @@ func (pg *walletPage) bottomRow(gtx layout.Context, common pageCommon) layout.Di
 	})
 }
 
-func (pg *walletPage) subRename(gtx layout.Context, common pageCommon) layout.Dimensions {
-	list := layout.List{Axis: layout.Vertical}
-	wdgs := []func(gtx C) D{
-		func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.returnBtn(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return common.theme.H5("Rename Wallet").Layout(gtx)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.TextSize12}.Layout(gtx, func(gtx C) D {
-						return common.theme.Body1("Your are about to rename").Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						txt := common.theme.H5(pg.current.Name)
-						txt.Color = common.theme.Color.Danger
-						return txt.Layout(gtx)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			m := values.MarginPadding20
-			inset := layout.Inset{
-				Top:    m,
-				Bottom: m,
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return pg.walletNameEditor.Layout(gtx)
-			})
-		},
-		func(gtx C) D {
-			return pg.rename.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-					return pg.errorLabel.Layout(gtx)
-				})
-			})
-		},
-	}
-	return common.Layout(gtx, func(gtx C) D {
-		return list.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-				return wdgs[i](gtx)
-			})
-		})
-	})
-}
-
 func (pg *walletPage) subDelete(gtx layout.Context, common pageCommon) layout.Dimensions {
 	list := layout.List{Axis: layout.Vertical}
 	wdgs := []func(gtx C) D{
@@ -416,8 +347,19 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	if pg.icons.rename.Button.Clicked() {
-		pg.subPage = subWalletRename
-		return
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: RenameWalletTemplate,
+				title:    "Rename wallet",
+				confirm: func(name string) {
+					common.wallet.RenameWallet(pg.current.ID, name, pg.errChann)
+					// todo: handle success on page and not in state
+				},
+				confirmText: "Rename",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 	}
 
 	if pg.icons.addWallet.Button.Clicked() {
@@ -475,25 +417,6 @@ func (pg *walletPage) Handle(common pageCommon) {
 		pg.renameAcctEditor.Editor.SetText("")
 	}
 
-	if pg.rename.Button.Clicked() {
-		name := pg.walletNameEditor.Editor.Text()
-		if name == "" {
-			return
-		}
-
-		common.wallet.RenameWallet(pg.current.ID, name, pg.errChann)
-
-		common.info.Wallets[*common.selectedWallet].Name = name
-		pg.subPage = subWalletMain
-		pg.walletNameEditor.Editor.SetText("")
-	}
-
-	if pg.walletNameEditor.Editor.Text() == "" {
-		pg.rename.Background = common.theme.Color.Hint
-	} else {
-		pg.rename.Background = common.theme.Color.Primary
-	}
-
 	if pg.delete.Button.Clicked() {
 		pg.errorLabel.Text = ""
 		pg.isPasswordModalOpen = true
@@ -510,9 +433,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 		} else {
 			pg.errorLabel.Text = err.Error()
 		}
-		if pg.subPage == subWalletMain {
-			common.Notify(err.Error(), false)
-		}
+		common.Notify(pg.errorLabel.Text, false)
 	default:
 	}
 }

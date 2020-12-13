@@ -59,7 +59,28 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.CreatedSeed:
 		win.current = PageWallet
 		win.states.creating = false
+		go func() {
+			win.toast <- &toast{
+				text:    "Wallet created",
+				success: true,
+			}
+		}()
+
+		go func() {
+			win.modal <- &modalLoad{}
+		}()
 		win.window.Invalidate()
+	case wallet.Renamed:
+		go func() {
+			win.toast <- &toast{
+				text:    "Wallet renamed",
+				success: true,
+			}
+		}()
+
+		go func() {
+			win.modal <- &modalLoad{}
+		}()
 	case wallet.Restored:
 		win.current = PageWallet
 		win.states.creating = false

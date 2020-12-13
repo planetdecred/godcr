@@ -1,11 +1,12 @@
 package ui
 
 import (
-	"gioui.org/f32"
 	"image"
 	"image/color"
 	"strings"
 	"time"
+
+	"gioui.org/f32"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -198,7 +199,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
 		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		modal:                   win.theme.Modal(),
-		modalReceiver:           make(chan *modalLoad),
+		modalReceiver:           win.modal,
 		modalLoad:               &modalLoad{},
 	}
 
@@ -277,25 +278,25 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				return fill(gtx, page.theme.Color.Surface)
 			}
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return page.layoutAppBar(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					width := navDrawerWidth
-					if *page.isNavDrawerMinimized {
-						width = navDrawerMinimizedWidth
-					}
-					gtx.Constraints.Max.X = width
-					return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-						page.layoutNavDrawer(gtx)
-						return layout.Dimensions{Size: gtx.Constraints.Max}
-					})
+					return page.layoutAppBar(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							width := navDrawerWidth
+							if *page.isNavDrawerMinimized {
+								width = navDrawerMinimizedWidth
+							}
+							gtx.Constraints.Max.X = width
+							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+								page.layoutNavDrawer(gtx)
+								return layout.Dimensions{Size: gtx.Constraints.Max}
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 								return body(gtx)
 							})
 						}),
@@ -315,9 +316,13 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			for {
 				select {
 				case load := <-page.modalReceiver:
+					page.modalLoad.template = load.template
 					page.modalLoad.title = load.title
 					page.modalLoad.confirm = load.confirm
+					page.modalLoad.confirmText = load.confirmText
 					page.modalLoad.cancel = load.cancel
+					page.modalLoad.cancelText = load.cancelText
+					page.modalLoad.isReset = false
 				default:
 					break outer
 				}
@@ -335,7 +340,9 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Flexed(1, func(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
-							return displayToast(page.theme, gtx, n)
+							return layout.Inset{Top: values.MarginPadding65}.Layout(gtx, func(gtx C) D {
+								return displayToast(page.theme, gtx, n)
+							})
 						})
 					}),
 				)
@@ -367,9 +374,9 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 func (page pageCommon) closeModal() {
 	go func() {
 		page.modalReceiver <- &modalLoad{
-			title:    "",
-			confirm:  nil,
-			cancel:   nil,
+			title:   "",
+			confirm: nil,
+			cancel:  nil,
 		}
 	}()
 }

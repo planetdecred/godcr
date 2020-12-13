@@ -642,12 +642,14 @@ func (pg *createRestore) handle(common pageCommon) {
 		// pg.showPassword = true
 		go func() {
 			common.modalReceiver <- &modalLoad{
-				title:    "",
+				template: CreateWalletTemplate,
+				title:    "Create new wallet",
 				confirm: func(wallet, pass string) {
 					pg.wal.CreateWallet(wallet, pass, pg.errChan)
-					common.closeModal()
 				},
-				cancel: common.closeModal,
+				confirmText: "Create",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
 			}
 		}()
 	}
@@ -709,7 +711,11 @@ func (pg *createRestore) handle(common pageCommon) {
 		}
 	case err := <-pg.errChan:
 		common.states.creating = false
-		pg.errLabel.Text = err.Error()
+		errText := err.Error()
+		if err.Error() == "exists" {
+			errText = "Wallet name already exists"
+		}
+		common.Notify(errText, false)
 	default:
 	}
 
