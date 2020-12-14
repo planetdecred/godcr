@@ -183,10 +183,9 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		walletTabs:      win.walletTabs,
 		accountTabs:     win.accountTabs,
 		errorChannels: map[string]chan error{
-			PageSignMessage:    make(chan error),
-			PageCreateRestore:  make(chan error),
-			PageWallet:         make(chan error),
-			PageWalletAccounts: make(chan error),
+			PageSignMessage:   make(chan error),
+			PageCreateRestore: make(chan error),
+			PageWallet:        make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
@@ -208,7 +207,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
 	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
 	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
-	common.modalTemplate = win.LoadTemplates(win.theme)
+	common.modalTemplate = win.LoadModalTemplates()
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -222,7 +221,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSignMessage] = win.SignMessagePage(common)
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
-	win.pages[PageWalletAccounts] = win.WalletAccountPage(common)
 	win.pages[PageSeedBackup] = win.BackupPage(common)
 	win.pages[PageSettings] = win.SettingsPage(common)
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)

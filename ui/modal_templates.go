@@ -9,14 +9,17 @@ import (
 
 const CreateWalletTemplate = "CreateWallet"
 const RenameWalletTemplate = "RenameWallet"
+const CreateAccountTemplate = "CreateNewAccount"
 const RenameAccountTemplate = "RenameAccount"
+const PasswordTemplate = "Password"
+const ConfirmRemoveTemplate = "ConfirmRemove"
 
 type modalTemplate struct {
-	walletName    decredmaterial.Editor
-	password      decredmaterial.Editor
-	matchPassword decredmaterial.Editor
-	confirm       decredmaterial.Button
-	cancel        decredmaterial.Button
+	walletName            decredmaterial.Editor
+	spendingPassword      decredmaterial.Editor
+	matchSpendingPassword decredmaterial.Editor
+	confirm               decredmaterial.Button
+	cancel                decredmaterial.Button
 }
 
 type modalLoad struct {
@@ -29,13 +32,13 @@ type modalLoad struct {
 	isReset     bool
 }
 
-func (win *Window) LoadTemplates(th *decredmaterial.Theme) *modalTemplate {
+func (win *Window) LoadModalTemplates() *modalTemplate {
 	return &modalTemplate{
-		confirm:       th.Button(new(widget.Clickable), "Confirm"),
-		cancel:        th.Button(new(widget.Clickable), "Cancel"),
-		walletName:    th.Editor(new(widget.Editor), "Wallet name"),
-		password:      th.Editor(new(widget.Editor), "Password"),
-		matchPassword: th.Editor(new(widget.Editor), "Matching password"),
+		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
+		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
+		walletName:            win.theme.Editor(new(widget.Editor), ""),
+		spendingPassword:      win.theme.Editor(new(widget.Editor), "Spending password"),
+		matchSpendingPassword: win.theme.Editor(new(widget.Editor), "Confirm spending password"),
 	}
 }
 
@@ -45,12 +48,12 @@ func (m *modalTemplate) createNewWallet() []func(gtx C) D {
 			return m.walletName.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.password.Editor.Mask, m.password.Editor.SingleLine = '*', true
-			return m.password.Layout(gtx)
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.matchPassword.Editor.Mask, m.matchPassword.Editor.SingleLine = '*', true
-			return m.matchPassword.Layout(gtx)
+			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
+			return m.matchSpendingPassword.Layout(gtx)
 		},
 	}
 }
@@ -59,6 +62,35 @@ func (m *modalTemplate) renameWallet() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
+		},
+	}
+}
+
+func (m *modalTemplate) createNewAccount() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			return m.walletName.Layout(gtx)
+		},
+		func(gtx C) D {
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
+		},
+	}
+}
+
+func (m *modalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			return th.Body2("Make sure to have the seed phrase backed up before removing the wallet").Layout(gtx)
+		},
+	}
+}
+
+func (m *modalTemplate) Password() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
 		},
 	}
 }
@@ -107,31 +139,61 @@ func (m *modalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 func (m *modalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
 	switch load.template {
 	case CreateWalletTemplate:
-		t := load.confirm.(func(string, string))
-		if m.editorsNotEmpty(th, m.walletName.Editor, m.password.Editor, m.matchPassword.Editor) &&
-			m.passwordsMatch(th, m.password.Editor, m.matchPassword.Editor) &&
+		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
+			m.passwordsMatch(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.confirm.Button.Clicked() {
-			t(m.walletName.Editor.Text(), m.password.Editor.Text())
+			load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
 		}
-
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
+
+		m.walletName.Hint = "Wallet name"
 		template = m.createNewWallet()
 		return template
 	case RenameWalletTemplate, RenameAccountTemplate:
-		t := load.confirm.(func(string))
 		if m.editorsNotEmpty(th, m.walletName.Editor) && m.confirm.Button.Clicked() {
-			t(m.walletName.Editor.Text())
+			load.confirm.(func(string))(m.walletName.Editor.Text())
 		}
-
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
+
 		template = m.renameWallet()
+		m.walletName.Hint = "Wallet name"
 		if load.template == RenameAccountTemplate {
 			m.walletName.Hint = "Account name"
 		}
+		return
+	case CreateAccountTemplate:
+		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
+			load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+
+		template = m.createNewAccount()
+		m.walletName.Hint = "Account name"
+		return
+	case PasswordTemplate:
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
+			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+
+		template = m.Password()
+		return
+	case ConfirmRemoveTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.removeWallet(th)
 		return
 	default:
 		return
@@ -173,7 +235,7 @@ func (m *modalTemplate) passwordsMatch(th *decredmaterial.Theme, editors ...*wid
 
 // resetFields clears all modal fields when the modal is closed
 func (m *modalTemplate) resetFields() {
-	m.matchPassword.Editor.SetText("")
-	m.password.Editor.SetText("")
+	m.matchSpendingPassword.Editor.SetText("")
+	m.spendingPassword.Editor.SetText("")
 	m.walletName.Editor.SetText("")
 }

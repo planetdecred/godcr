@@ -15,7 +15,6 @@ const PageWallet = "Wallet"
 
 const (
 	subWalletMain = iota
-	subWalletDelete
 )
 
 type walletPage struct {
@@ -28,19 +27,15 @@ type walletPage struct {
 		main, delete, sign, verify, addWallet, rename,
 		changePass, addAcct, backup decredmaterial.IconButton
 	}
-	container, accountsList      layout.List
-	line                         *decredmaterial.Line
-	rename, delete, cancelDelete decredmaterial.Button
-	errorLabel                   decredmaterial.Label
-	passwordModal                *decredmaterial.Password
-	isPasswordModalOpen          bool
-	errChann                     chan error
+	container, accountsList layout.List
+	line                    *decredmaterial.Line
+	rename                  decredmaterial.Button
+	errorLabel              decredmaterial.Label
+	passwordModal           *decredmaterial.Password
+	isPasswordModalOpen     bool
+	errChann                chan error
 
-	// renameAcctIndex    int
-	renameAcctButtons []decredmaterial.IconButton
-	// renameAcctEditor   decredmaterial.Editor
-	// renameAcctSubmit   decredmaterial.IconButton
-	// renameAcctCancel   decredmaterial.IconButton
+	renameAcctButtons  []decredmaterial.IconButton
 	renameAcctMinwidth int
 }
 
@@ -57,8 +52,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		line:          common.theme.Line(),
 		errorLabel:    common.theme.Body2(""),
 		result:        &win.signatureResult,
-		delete:        common.theme.DangerButton(new(widget.Clickable), "Confirm Delete Wallet"),
-		cancelDelete:  common.theme.Button(new(widget.Clickable), "Cancel Wallet Delete"),
 		passwordModal: common.theme.Password(),
 		errChann:      common.errorChannels[PageWallet],
 	}
@@ -110,11 +103,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 // Layout lays out the widgets for the main wallets pg.
 func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	if common.states.deleted {
-		pg.subPage = subWalletMain
-		common.states.deleted = false
-	}
-
 	if pg.current.ID != common.info.Wallets[*common.selectedWallet].ID ||
 		!reflect.DeepEqual(pg.current.Seed, common.info.Wallets[*common.selectedWallet].Seed) {
 		pg.current = common.info.Wallets[*common.selectedWallet]
@@ -135,8 +123,6 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 	switch pg.subPage {
 	case subWalletMain:
 		dims = pg.subMain(gtx, common)
-	case subWalletDelete:
-		dims = pg.subDelete(gtx, common)
 	default:
 		dims = pg.subMain(gtx, common)
 	}
@@ -261,66 +247,10 @@ func (pg *walletPage) bottomRow(gtx layout.Context, common pageCommon) layout.Di
 	})
 }
 
-func (pg *walletPage) subDelete(gtx layout.Context, common pageCommon) layout.Dimensions {
-	list := layout.List{Axis: layout.Vertical}
-	wdgs := []func(gtx C) D{
-		func(gtx C) D {
-			return common.theme.H5("Delete Wallet").Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return common.theme.Body1("Are you sure you want to delete ").Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						txt := common.theme.H5(pg.current.Name)
-						txt.Color = common.theme.Color.Danger
-						return txt.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return common.theme.H5("?").Layout(gtx)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			inset := layout.Inset{
-				Top:    values.MarginPadding20,
-				Bottom: values.MarginPadding5,
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return pg.cancelDelete.Layout(gtx)
-			})
-		},
-		func(gtx C) D {
-			return pg.delete.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-					return pg.errorLabel.Layout(gtx)
-				})
-			})
-		},
-	}
-	return common.Layout(gtx, func(gtx C) D {
-		return list.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-				return wdgs[i](gtx)
-			})
-		})
-	})
-}
-
 // Handle handles all widget inputs on the main wallets pg.
 func (pg *walletPage) Handle(common pageCommon) {
 	// Subs
-	if pg.icons.main.Button.Clicked() || pg.cancelDelete.Button.Clicked() {
+	if pg.icons.main.Button.Clicked() {
 		pg.errorLabel.Text = ""
 		pg.subPage = subWalletMain
 		return
@@ -352,7 +282,31 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	if pg.icons.delete.Button.Clicked() {
-		pg.subPage = subWalletDelete
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: ConfirmRemoveTemplate,
+				title:    "Remove wallet from device",
+				confirm: func() {
+					go func() {
+						common.modalReceiver <- &modalLoad{
+							template: PasswordTemplate,
+							title:    "Remove wallet from device",
+							confirm: func(password string) {
+								go func() {
+									pg.wallet.DeleteWallet(pg.current.ID, []byte(password), pg.errChann)
+								}()
+							},
+							confirmText: "Remove",
+							cancel:      common.closeModal,
+							cancelText:  "Cancel",
+						}
+					}()
+				},
+				confirmText: "Remove",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 		return
 	}
 
@@ -371,7 +325,19 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	if pg.icons.addAcct.Button.Clicked() {
-		*common.page = PageWalletAccounts
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: CreateAccountTemplate,
+				title:    "Create new account",
+				confirm: func(name, password string) {
+					walletID := common.info.Wallets[*common.selectedWallet].ID
+					pg.wallet.AddAccount(walletID, name, []byte(password), pg.errChann)
+				},
+				confirmText: "Create",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 		return
 	}
 
@@ -385,7 +351,6 @@ func (pg *walletPage) Handle(common pageCommon) {
 						pg.wallet.RenameAccount(pg.current.ID, pg.current.Accounts[i].Number, name, pg.errChann)
 						common.info.Wallets[*common.selectedWallet].Accounts[i].Name = name
 						pg.current = common.info.Wallets[*common.selectedWallet]
-						// todo: handle success on page and not in state
 					},
 					confirmText: "Rename",
 					cancel:      common.closeModal,
@@ -394,11 +359,6 @@ func (pg *walletPage) Handle(common pageCommon) {
 			}()
 			break
 		}
-	}
-
-	if pg.delete.Button.Clicked() {
-		pg.errorLabel.Text = ""
-		pg.isPasswordModalOpen = true
 	}
 
 	if pg.icons.backup.Button.Clicked() {
