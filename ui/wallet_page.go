@@ -29,7 +29,6 @@ type walletPage struct {
 	}
 	container, accountsList layout.List
 	line                    *decredmaterial.Line
-	rename                  decredmaterial.Button
 	errorLabel              decredmaterial.Label
 	passwordModal           *decredmaterial.Password
 	isPasswordModalOpen     bool

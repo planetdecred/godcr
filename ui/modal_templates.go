@@ -14,7 +14,7 @@ const RenameAccountTemplate = "RenameAccount"
 const PasswordTemplate = "Password"
 const ConfirmRemoveTemplate = "ConfirmRemove"
 
-type modalTemplate struct {
+type ModalTemplate struct {
 	walletName            decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
@@ -32,8 +32,8 @@ type modalLoad struct {
 	isReset     bool
 }
 
-func (win *Window) LoadModalTemplates() *modalTemplate {
-	return &modalTemplate{
+func (win *Window) LoadModalTemplates() *ModalTemplate {
+	return &ModalTemplate{
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
 		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
@@ -42,7 +42,7 @@ func (win *Window) LoadModalTemplates() *modalTemplate {
 	}
 }
 
-func (m *modalTemplate) createNewWallet() []func(gtx C) D {
+func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
@@ -58,7 +58,7 @@ func (m *modalTemplate) createNewWallet() []func(gtx C) D {
 	}
 }
 
-func (m *modalTemplate) renameWallet() []func(gtx C) D {
+func (m *ModalTemplate) renameWallet() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
@@ -66,7 +66,7 @@ func (m *modalTemplate) renameWallet() []func(gtx C) D {
 	}
 }
 
-func (m *modalTemplate) createNewAccount() []func(gtx C) D {
+func (m *ModalTemplate) createNewAccount() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
@@ -78,7 +78,7 @@ func (m *modalTemplate) createNewAccount() []func(gtx C) D {
 	}
 }
 
-func (m *modalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
+func (m *ModalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			return th.Body2("Make sure to have the seed phrase backed up before removing the wallet").Layout(gtx)
@@ -86,7 +86,7 @@ func (m *modalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
 	}
 }
 
-func (m *modalTemplate) Password() []func(gtx C) D {
+func (m *ModalTemplate) Password() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
@@ -95,7 +95,7 @@ func (m *modalTemplate) Password() []func(gtx C) D {
 	}
 }
 
-func (m *modalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
+func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	if !load.isReset {
 		m.resetFields()
 		load.isReset = true
@@ -122,6 +122,10 @@ func (m *modalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 					layout.Rigid(func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 							m.confirm.Text = load.confirmText
+							m.confirm.Background, m.confirm.Color = th.Color.Primary, th.Color.Surface
+							if load.template == ConfirmRemoveTemplate {
+								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
+							}
 							return m.confirm.Layout(gtx)
 						})
 					}),
@@ -136,7 +140,7 @@ func (m *modalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 	return w
 }
 
-func (m *modalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
+func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
 	switch load.template {
 	case CreateWalletTemplate:
 		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
@@ -200,10 +204,10 @@ func (m *modalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	}
 }
 
-// editorsNotEmpty checks that the editor fields are not emtpy. It returns false if they are empty and true if they are
+// editorsNotEmpty checks that the editor fields are not empty. It returns false if they are empty and true if they are
 // not and false if it doesn't. It sets the background of the confirm button to decredmaterial Hint color if fields
 // are empty. It sets it to decredmaterial Primary color if they are not empty.
-func (m *modalTemplate) editorsNotEmpty(th *decredmaterial.Theme, editors ...*widget.Editor) bool {
+func (m *ModalTemplate) editorsNotEmpty(th *decredmaterial.Theme, editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {
 			m.confirm.Background = th.Color.Hint
@@ -218,7 +222,7 @@ func (m *modalTemplate) editorsNotEmpty(th *decredmaterial.Theme, editors ...*wi
 // passwordMatches checks that the password and matching password field matches. It returns true if it matches
 // and false if it doesn't. It sets the background of the confirm button to decredmaterial Hint color if the passwords
 // don't match. It sets it to decredmaterial Primary color if the passwords match.
-func (m *modalTemplate) passwordsMatch(th *decredmaterial.Theme, editors ...*widget.Editor) bool {
+func (m *ModalTemplate) passwordsMatch(th *decredmaterial.Theme, editors ...*widget.Editor) bool {
 	if len(editors) < 2 {
 		return false
 	}
@@ -234,7 +238,7 @@ func (m *modalTemplate) passwordsMatch(th *decredmaterial.Theme, editors ...*wid
 }
 
 // resetFields clears all modal fields when the modal is closed
-func (m *modalTemplate) resetFields() {
+func (m *ModalTemplate) resetFields() {
 	m.matchSpendingPassword.Editor.SetText("")
 	m.spendingPassword.Editor.SetText("")
 	m.walletName.Editor.SetText("")

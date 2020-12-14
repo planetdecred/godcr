@@ -63,7 +63,7 @@ type pageCommon struct {
 	modal           *decredmaterial.Modal
 	modalReceiver   chan *modalLoad
 	modalLoad       *modalLoad
-	modalTemplate   *modalTemplate
+	modalTemplate   *ModalTemplate
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
