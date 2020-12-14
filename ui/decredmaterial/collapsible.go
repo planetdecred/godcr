@@ -19,6 +19,8 @@ type Collapsible struct {
 	color             color.RGBA
 	theme             *Theme
 	selectedMoreIndex int
+	expandedIcon      *widget.Icon
+	collapsedIcon     *widget.Icon
 }
 
 type MoreItem struct {
@@ -40,10 +42,12 @@ func (t *Theme) Collapsible(Items []MoreItem) *Collapsible {
 				Button:     new(widget.Clickable),
 			},
 		},
-		Items:  make([]MoreItem, len(Items)+1),
-		Button: new(widget.Clickable),
-		color:  t.Color.Background,
-		theme:  t,
+		Items:         make([]MoreItem, len(Items)+1),
+		Button:        new(widget.Clickable),
+		color:         t.Color.Background,
+		theme:         t,
+		expandedIcon:  t.chevronUpIcon,
+		collapsedIcon: t.chevronDownIcon,
 	}
 
 	for i := range Items {
@@ -56,7 +60,19 @@ func (t *Theme) Collapsible(Items []MoreItem) *Collapsible {
 }
 
 func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.Dimensions {
+	icon := c.collapsedIcon
+	if c.IsExpanded {
+		icon = c.expandedIcon
+	}
+
 	dims := layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{
+				Right: unit.Dp(10),
+			}.Layout(gtx, func(C) D {
+				return icon.Layout(gtx, unit.Dp(20))
+			})
+		}),
 		layout.Rigid(func(gtx C) D {
 			return header(gtx)
 		}),
@@ -76,7 +92,7 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
+									layout.Flexed(0.93, func(gtx C) D {
 										return layout.Stack{}.Layout(gtx,
 											layout.Stacked(func(gtx C) D {
 												return c.layoutHeader(gtx, header)
@@ -84,8 +100,10 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 											layout.Expanded(c.Button.Layout),
 										)
 									}),
-									layout.Rigid(func(gtx C) D {
-										return c.MoreIcon.Layout(gtx)
+									layout.Flexed(0.07, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											return c.MoreIcon.Layout(gtx)
+										})
 									}),
 								)
 							}),

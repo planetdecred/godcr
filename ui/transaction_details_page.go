@@ -69,10 +69,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 		infoModal:  common.theme.Modal(),
 	}
 
-	// init blue text copy buttons
-	for i := 0; i < 100; i++ {
-		pg.copyTextBtn = append(pg.copyTextBtn, win.theme.Button(new(widget.Clickable), ""))
-	}
+	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
 	pg.line.Color = common.theme.Color.Background
 	pg.backButton.Color = common.theme.Color.Text
@@ -347,6 +344,10 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 
 
 func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
 	transaction := *pg.txnInfo
+	x := len(transaction.Txn.Inputs) + len(transaction.Txn.Outputs)
+	for i := 0; i < x; i++ {
+		pg.copyTextBtn = append(pg.copyTextBtn, pg.theme.Button(new(widget.Clickable), ""))
+	}
 
 	collapsibleHeader := func(gtx C) D {
 		t := pg.theme.Body1(fmt.Sprintf("%d Inputs consumed", len(transaction.Txn.Inputs)))

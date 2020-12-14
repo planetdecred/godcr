@@ -81,26 +81,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		settings:      "Settings",
 	}
 
-	// init wallet collapse
-	for i := 0; i < 20; i++ {
-		pg.walletCollapsible = append(pg.walletCollapsible, win.theme.Collapsible([]decredmaterial.MoreItem{
-			{
-				Text: pg.text.signMessage,
-			},
-			{
-				Text: pg.text.verifyMessage,
-			},
-			{
-				Text: pg.text.viewProperty,
-			},
-			{
-				Text: pg.text.rename,
-			},
-			{
-				Text: pg.text.settings,
-			},
-		}))
-	}
+	pg.walletCollapsible = make([]*decredmaterial.Collapsible, 0)
 
 	pg.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 	pg.addAcct.Inset = layout.UniformInset(values.MarginPadding0)
@@ -124,9 +105,29 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 	if common.info.LoadedWallets == 0 {
 		return common.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
-				return common.theme.H3("pg.text.noWallet").Layout(gtx)
+				return common.theme.H3("No wallets loaded").Layout(gtx)
 			})
 		})
+	}
+
+	for i := 0; i < common.info.LoadedWallets; i++ {
+		pg.walletCollapsible = append(pg.walletCollapsible, pg.theme.Collapsible([]decredmaterial.MoreItem{
+			{
+				Text: pg.text.signMessage,
+			},
+			{
+				Text: pg.text.verifyMessage,
+			},
+			{
+				Text: pg.text.viewProperty,
+			},
+			{
+				Text: pg.text.rename,
+			},
+			{
+				Text: pg.text.settings,
+			},
+		}))
 	}
 
 	pageContent := []func(gtx C) D{
@@ -203,7 +204,6 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 							return pg.walletAccountsLayout(gtx, accountsName, totalBalance, spendable, common)
 						})
 					}),
-					// add to line()
 					layout.Rigid(func(gtx C) D {
 						pg.line.Width = gtx.Constraints.Max.X
 						pg.line.Color = common.theme.Color.Background
@@ -309,8 +309,7 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				inset := layout.Inset{
-					Right: values.MarginPadding10,
-					Top:   m,
+					Top: m,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
 					return rightLabel.Layout(gtx)
@@ -434,7 +433,6 @@ func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageComm
 	})
 }
 
-// drawlayout wraps the page tx and sync section in a card layout
 func (pg *walletPage) sectionLayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return decredmaterial.Card{Color: pg.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
@@ -459,7 +457,6 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 	}
 }
 
-// Handle handles all widget inputs on the main wallets pg.
 func (pg *walletPage) Handle(common pageCommon) {
 	for _, b := range pg.walletCollapsible {
 		for b.Button.Clicked() {
@@ -496,6 +493,8 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	if pg.backupButton.Button.Clicked() {
+		//need have this redirect to the specific wallet to be backed up
+		//not yet implemented
 		*common.page = PageSeedBackup
 	}
 }
