@@ -1,7 +1,6 @@
 package ui
 
 import (
-	// "fmt"
 	"image"
 	"image/color"
 	"strings"
@@ -30,8 +29,6 @@ type moreItemText struct {
 
 type walletPage struct {
 	walletInfo    *wallet.MultiWalletInfo
-	subPage       int
-	current       wallet.InfoShort
 	wallet        *wallet.Wallet
 	walletAccount **wallet.Account
 	theme         *decredmaterial.Theme

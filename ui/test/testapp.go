@@ -109,7 +109,7 @@ func (t *TestStruct) initWidgets() {
 	t.customEditorOutput.outline = theme.Outline()
 	// t.customEditorOutput.outline.Color = theme.Color.Primary
 
-	t.collapsible = theme.Collapsible()
+	t.collapsible = theme.Collapsible(nil)
 
 	dropDownItems := []decredmaterial.DropDownItem{
 		{
@@ -211,7 +211,7 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 					}),
 				)
 			}
-			return t.collapsible.Layout(gtx, header, content)
+			return t.collapsible.Layout(gtx, header, content, nil)
 		},
 
 		func(gtx C) D {
