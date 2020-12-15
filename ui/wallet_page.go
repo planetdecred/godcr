@@ -115,10 +115,6 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		}
 	}
 
-	return pg.subMain(gtx, common)
-}
-
-func (pg *walletPage) subMain(gtx layout.Context, common pageCommon) layout.Dimensions {
 	body := func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {

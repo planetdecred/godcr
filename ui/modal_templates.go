@@ -5,6 +5,7 @@ import (
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const CreateWalletTemplate = "CreateWallet"
@@ -21,6 +22,7 @@ type ModalTemplate struct {
 	matchSpendingPassword decredmaterial.Editor
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
+	alert                 decredmaterial.IconButton
 }
 
 type modalLoad struct {
@@ -34,12 +36,19 @@ type modalLoad struct {
 }
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
+	icon := win.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.AlertError)))
+	icon.Size = values.MarginPadding20
+	icon.Inset = layout.UniformInset(values.MarginPadding5)
+	icon.Color = win.theme.Color.Gray
+	icon.Background = win.theme.Color.Surface
+
 	return &ModalTemplate{
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
 		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
 		spendingPassword:      win.theme.Editor(new(widget.Editor), "Spending password"),
 		matchSpendingPassword: win.theme.Editor(new(widget.Editor), "Confirm spending password"),
+		alert:                 icon,
 	}
 }
 
@@ -67,8 +76,36 @@ func (m *ModalTemplate) renameWallet() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) createNewAccount() []func(gtx C) D {
+func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C) D {
 	return []func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return m.alert.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					info := th.Body1("Accounts")
+					info.Color = th.Color.Gray
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						return info.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					info := th.Body1(" cannot ")
+					info.Color = th.Color.Black
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						return info.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					info := th.Body1("be deleted when created")
+					info.Color = th.Color.Gray
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						return info.Layout(gtx)
+					})
+				}),
+			)
+		},
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
 		},
@@ -117,7 +154,7 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 
 	title := []func(gtx C) D{
 		func(gtx C) D {
-			return th.H6(load.title).Layout(gtx)
+			return th.H5(load.title).Layout(gtx)
 		},
 	}
 
@@ -190,7 +227,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		template = m.createNewAccount()
+		template = m.createNewAccount(th)
 		m.walletName.Hint = "Account name"
 		return
 	case PasswordTemplate:
