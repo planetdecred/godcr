@@ -30,7 +30,6 @@ type walletPage struct {
 	container, accountsList layout.List
 	line                    *decredmaterial.Line
 	errorLabel              decredmaterial.Label
-	passwordModal           *decredmaterial.Password
 	isPasswordModalOpen     bool
 	errChann                chan error
 
@@ -47,12 +46,11 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
-		wallet:        common.wallet,
-		line:          common.theme.Line(),
-		errorLabel:    common.theme.Body2(""),
-		result:        &win.signatureResult,
-		passwordModal: common.theme.Password(),
-		errChann:      common.errorChannels[PageWallet],
+		wallet:     common.wallet,
+		line:       common.theme.Line(),
+		errorLabel: common.theme.Body2(""),
+		result:     &win.signatureResult,
+		errChann:   common.errorChannels[PageWallet],
 	}
 	pg.line.Color = common.theme.Color.Gray
 	pg.line.Height = 1
@@ -117,19 +115,7 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		}
 	}
 
-	var dims layout.Dimensions
-
-	switch pg.subPage {
-	case subWalletMain:
-		dims = pg.subMain(gtx, common)
-	default:
-		dims = pg.subMain(gtx, common)
-	}
-
-	if pg.isPasswordModalOpen {
-		return common.Modal(gtx, dims, pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel))
-	}
-	return dims
+	return pg.subMain(gtx, common)
 }
 
 func (pg *walletPage) subMain(gtx layout.Context, common pageCommon) layout.Dimensions {
@@ -262,7 +248,6 @@ func (pg *walletPage) Handle(common pageCommon) {
 				title:    "Rename wallet",
 				confirm: func(name string) {
 					common.wallet.RenameWallet(pg.current.ID, name, pg.errChann)
-					// todo: handle success on page and not in state
 				},
 				confirmText: "Rename",
 				cancel:      common.closeModal,
@@ -310,7 +295,43 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	if pg.icons.changePass.Button.Clicked() {
-		*common.page = PageWalletPassphrase
+		go func() {
+			walletID := common.info.Wallets[*common.selectedWallet].ID
+			common.modalReceiver <- &modalLoad{
+				template: PasswordTemplate,
+				title:    "Confirm to change",
+				confirm: func(passphrase string) {
+					err := pg.wallet.UnlockWallet(walletID, []byte(passphrase))
+					if err != nil {
+						common.Notify(err.Error(), false)
+						return
+					}
+					go func() {
+						common.modalReceiver <- &modalLoad{
+							template: ChangePasswordTemplate,
+							title:    "Change spending password",
+							confirm: func(newPassphrase string) {
+								go func() {
+									err := common.wallet.ChangeWalletPassphrase(walletID, passphrase, newPassphrase)
+									if err != nil {
+										common.Notify(err.Error(), false)
+										return
+									}
+									common.Notify("Spending password changed", true)
+									common.closeModal()
+								}()
+							},
+							confirmText: "Change",
+							cancel:      common.closeModal,
+							cancelText:  "Cancel",
+						}
+					}()
+				},
+				confirmText: "Confirm",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 		return
 	}
 

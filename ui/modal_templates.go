@@ -12,6 +12,7 @@ const RenameWalletTemplate = "RenameWallet"
 const CreateAccountTemplate = "CreateNewAccount"
 const RenameAccountTemplate = "RenameAccount"
 const PasswordTemplate = "Password"
+const ChangePasswordTemplate = "ChangePassword"
 const ConfirmRemoveTemplate = "ConfirmRemove"
 
 type ModalTemplate struct {
@@ -95,6 +96,19 @@ func (m *ModalTemplate) Password() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) changePassword() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
+		},
+		func(gtx C) D {
+			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
+			return m.matchSpendingPassword.Layout(gtx)
+		},
+	}
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	if !load.isReset {
 		m.resetFields()
@@ -122,7 +136,6 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 					layout.Rigid(func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 							m.confirm.Text = load.confirmText
-							m.confirm.Background, m.confirm.Color = th.Color.Primary, th.Color.Surface
 							if load.template == ConfirmRemoveTemplate {
 								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
 							}
@@ -190,6 +203,18 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		template = m.Password()
 		return
+	case ChangePasswordTemplate:
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
+			m.passwordsMatch(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
+			m.confirm.Button.Clicked() {
+			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+
+		template = m.changePassword()
+		return
 	case ConfirmRemoveTemplate:
 		if m.confirm.Button.Clicked() {
 			load.confirm.(func())()
@@ -208,6 +233,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 // not and false if it doesn't. It sets the background of the confirm button to decredmaterial Hint color if fields
 // are empty. It sets it to decredmaterial Primary color if they are not empty.
 func (m *ModalTemplate) editorsNotEmpty(th *decredmaterial.Theme, editors ...*widget.Editor) bool {
+	m.confirm.Color = th.Color.Surface
 	for _, e := range editors {
 		if e.Text() == "" {
 			m.confirm.Background = th.Color.Hint
@@ -233,6 +259,7 @@ func (m *ModalTemplate) passwordsMatch(th *decredmaterial.Theme, editors ...*wid
 		m.confirm.Background = th.Color.Hint
 		return false
 	}
+
 	m.confirm.Background = th.Color.Primary
 	return true
 }

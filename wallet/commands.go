@@ -497,6 +497,10 @@ func (wal *Wallet) RenameAccount(walletID int, acct int32, name string, errChan 
 	}()
 }
 
+func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
+	return wal.multi.UnlockWallet(walletID, passphrase)
+}
+
 // CurrentAddress returns the next address for the specified wallet account.
 func (wal *Wallet) CurrentAddress(walletID int, accountID int32) (string, error) {
 	wall := wal.multi.WalletWithID(walletID)
