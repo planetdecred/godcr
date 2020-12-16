@@ -59,7 +59,7 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		line:                   common.theme.Line(),
 	}
 	pg.line.Color = common.theme.Color.Background
-	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}})
+	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: "All",
@@ -76,7 +76,7 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		{
 			Text: "Staking",
 		},
-	})
+	}, 1)
 
 	return func(gtx C) D {
 		pg.Handle(common)
@@ -97,7 +97,7 @@ func (pg *transactionsPage) setWallets(common pageCommon) {
 		}
 		walletDropDownItems = append(walletDropDownItems, item)
 	}
-	pg.walletDropDown = common.theme.DropDown(walletDropDownItems)
+	pg.walletDropDown = common.theme.DropDown(walletDropDownItems, 2)
 }
 
 func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {

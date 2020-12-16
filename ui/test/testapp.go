@@ -122,7 +122,7 @@ func (t *TestStruct) initWidgets() {
 			Text: "Semi All",
 		},
 	}
-	t.dropDown = theme.DropDown(dropDownItems)
+	t.dropDown = theme.DropDown(dropDownItems, 1)
 }
 
 func (t *TestStruct) TestPage(gtx layout.Context) {
