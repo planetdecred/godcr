@@ -54,7 +54,6 @@ func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) 
 					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						return m.list.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							// fillMax(gtx, m.backgroundColor)
 							return layout.UniformInset(unit.Dp(10)).Layout(gtx, widgetFuncs[i])
 						})
 					})
