@@ -10,7 +10,6 @@ import (
 type states struct {
 	loading  bool // true if the window is in the middle of an operation that cannot be stopped
 	creating bool // true if a wallet is being created or restored
-	deleted  bool // true if a wallet is has being deleted
 }
 
 // updateStates changes the wallet state based on the received update
@@ -57,26 +56,21 @@ func (win *Window) updateStates(update interface{}) {
 		win.walletUnspentOutputs = e
 		return
 	case wallet.CreatedSeed:
+		win.notifyOnSuccess("Wallet created")
 		win.current = PageWallet
-		win.states.creating = false
-		win.window.Invalidate()
+	case wallet.Renamed:
+		win.notifyOnSuccess("Wallet renamed")
 	case wallet.Restored:
 		win.current = PageWallet
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
 		win.selected = 0
-		win.current = PageWallet
-		win.states.deleted = true
-		win.window.Invalidate()
+		win.notifyOnSuccess("Wallet removed")
 	case wallet.AddedAccount:
-		win.current = PageWallet
-		win.states.creating = false
-		win.window.Invalidate()
+		win.notifyOnSuccess("Account created")
 	case wallet.UpdatedAccount:
-		win.current = PageWallet
-		win.states.creating = false
-		win.window.Invalidate()
+		win.notifyOnSuccess("Account renamed")
 	case *wallet.Signature:
 		win.signatureResult = update.(*wallet.Signature)
 	case *dcrlibwallet.TxAuthor:
@@ -91,4 +85,17 @@ func (win *Window) updateStates(update interface{}) {
 	win.wallet.GetAllTransactions(0, 0, 0)
 
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
+}
+
+func (win *Window) notifyOnSuccess(text string) {
+	go func() {
+		win.toast <- &toast{
+			text:    text,
+			success: true,
+		}
+	}()
+
+	go func() {
+		win.modal <- &modalLoad{}
+	}()
 }

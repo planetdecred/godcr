@@ -158,7 +158,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 }
 
 func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	return pg.theme.Surface(gtx, func(gtx C) D {
+	return common.Layout(gtx, func(gtx C) D {
 		toMax(gtx)
 		pd := values.MarginPadding15
 		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -639,7 +639,19 @@ func (pg *createRestore) handle(common pageCommon) {
 	}
 
 	for pg.create.Button.Clicked() {
-		pg.showPassword = true
+		// pg.showPassword = true
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: CreateWalletTemplate,
+				title:    "Create new wallet",
+				confirm: func(wallet, pass string) {
+					pg.wal.CreateWallet(wallet, pass, pg.errChan)
+				},
+				confirmText: "Create",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 	}
 
 	for pg.showPasswordModal.Button.Clicked() {
@@ -699,7 +711,11 @@ func (pg *createRestore) handle(common pageCommon) {
 		}
 	case err := <-pg.errChan:
 		common.states.creating = false
-		pg.errLabel.Text = err.Error()
+		errText := err.Error()
+		if err.Error() == "exists" {
+			errText = "Wallet name already exists"
+		}
+		common.Notify(errText, false)
 	default:
 	}
 

@@ -53,6 +53,7 @@ type Window struct {
 	keyEvents               chan *key.Event
 	clipboard               chan interface{}
 	toast                   chan *toast
+	modal                   chan *modalLoad
 	sysDestroyWithSync      bool
 }
 
@@ -92,6 +93,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.keyEvents = make(chan *key.Event)
 	win.clipboard = make(chan interface{})
 	win.toast = make(chan *toast)
+	win.modal = make(chan *modalLoad)
 	win.theme.ReadClipboard = win.clipboard
 
 	win.walletTabs, win.accountTabs = decredmaterial.NewTabs(win.theme), decredmaterial.NewTabs(win.theme)

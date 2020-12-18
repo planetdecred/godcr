@@ -96,7 +96,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	if e.IsVisible {
 		e.flexWidth = 20
 	}
-	if e.Editor.Focused() || e.Editor.Len() != 0 {
+	if e.Editor.Focused() {
 		e.TitleLabel.Text = e.Hint
 		e.LineColor = color.RGBA{41, 112, 255, 255}
 		e.Hint = ""
@@ -108,14 +108,14 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if e.ErrorLabel.Text != "" && e.Editor.Focused() && e.Editor.Len() != 0 {
-		e.LineColor = e.t.Color.Danger
+		e.LineColor, e.TitleLabel.Color = e.t.Color.Danger, e.t.Color.Danger
 	}
 
 	return layout.UniformInset(e.m2).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				if e.IsTitleLabel {
-					if e.Editor.Focused() {
+					if e.Editor.Focused() && e.ErrorLabel.Text == "" {
 						e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
 					}
 					return e.TitleLabel.Layout(gtx)
@@ -132,7 +132,8 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 							layout.Rigid(func(gtx C) D {
 								if e.ErrorLabel.Text != "" {
 									inset := layout.Inset{
-										Top: e.m2,
+										Top:  e.m2,
+										Left: e.m5,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
 										return e.ErrorLabel.Layout(gtx)
