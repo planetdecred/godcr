@@ -2,8 +2,11 @@ package ui
 
 import (
 	"image"
+	"image/color"
 	"strings"
 	"time"
+
+	"gioui.org/f32"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -57,12 +60,17 @@ type pageCommon struct {
 	toast           chan *toast
 	toastLoad       *toast
 	states          *states
+	modal           *decredmaterial.Modal
+	modalReceiver   chan *modalLoad
+	modalLoad       *modalLoad
+	modalTemplate   *ModalTemplate
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
 	isNavDrawerMinimized    *bool
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
+	testButton              decredmaterial.Button
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 }
@@ -175,10 +183,9 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		walletTabs:      win.walletTabs,
 		accountTabs:     win.accountTabs,
 		errorChannels: map[string]chan error{
-			PageSignMessage:    make(chan error),
-			PageCreateRestore:  make(chan error),
-			PageWallet:         make(chan error),
-			PageWalletAccounts: make(chan error),
+			PageSignMessage:   make(chan error),
+			PageCreateRestore: make(chan error),
+			PageWallet:        make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
@@ -190,12 +197,17 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
 		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		modal:                   win.theme.Modal(),
+		modalReceiver:           win.modal,
+		modalLoad:               &modalLoad{},
 	}
 
+	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
 	isNavDrawerMinimized := false
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
 	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
 	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
+	common.modalTemplate = win.LoadModalTemplates()
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -208,8 +220,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageTransactionDetails] = win.TransactionDetailsPage(common)
 	win.pages[PageSignMessage] = win.SignMessagePage(common)
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
-	win.pages[PageWalletPassphrase] = win.WalletPassphrasePage(common)
-	win.pages[PageWalletAccounts] = win.WalletAccountPage(common)
 	win.pages[PageSeedBackup] = win.BackupPage(common)
 	win.pages[PageSettings] = win.SettingsPage(common)
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
@@ -258,66 +268,125 @@ func (page pageCommon) handleNavEvents() {
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	page.handleNavEvents()
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return page.layoutAppBar(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			// fill the entire window with a color if a user has no wallet created
+			if *page.page == PageCreateRestore {
+				return fill(gtx, page.theme.Color.Surface)
+			}
+
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					width := navDrawerWidth
-					if *page.isNavDrawerMinimized {
-						width = navDrawerMinimizedWidth
-					}
-					gtx.Constraints.Max.X = width
-					return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-						page.layoutNavDrawer(gtx)
-						return layout.Dimensions{Size: gtx.Constraints.Max}
-					})
+					return page.layoutAppBar(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return layout.Stack{}.Layout(gtx,
-							layout.Expanded(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							width := navDrawerWidth
+							if *page.isNavDrawerMinimized {
+								width = navDrawerMinimizedWidth
+							}
+							gtx.Constraints.Max.X = width
+							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+								page.layoutNavDrawer(gtx)
+								return layout.Dimensions{Size: gtx.Constraints.Max}
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 								return body(gtx)
-							}),
-							layout.Stacked(func(gtx C) D {
-								toast := func(n *toast) layout.Dimensions {
-									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-										layout.Flexed(1, func(gtx C) D {
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return displayToast(page.theme, gtx, n)
-											})
-										}),
-									)
-								}
-
-							outer:
-								for {
-									select {
-									case n := <-page.toast:
-										page.toastLoad.success = n.success
-										page.toastLoad.text = n.text
-										page.toastLoad.ResetTimer()
-									default:
-										break outer
-									}
-								}
-
-								if page.toastLoad.text != "" {
-									page.toastLoad.Timer(time.Second*3, func() {
-										page.toastLoad.text = ""
-									})
-									return toast(page.toastLoad)
-								}
-								return layout.Dimensions{}
-							}),
-						)
-					})
+							})
+						}),
+					)
 				}),
 			)
 		}),
+		layout.Stacked(func(gtx C) D {
+			// stack the page content on the entire window if a user has no wallet
+			if *page.page == PageCreateRestore {
+				return body(gtx)
+			}
+			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+		outer:
+			for {
+				select {
+				case load := <-page.modalReceiver:
+					page.modalLoad.template = load.template
+					page.modalLoad.title = load.title
+					page.modalLoad.confirm = load.confirm
+					page.modalLoad.confirmText = load.confirmText
+					page.modalLoad.cancel = load.cancel
+					page.modalLoad.cancelText = load.cancelText
+					page.modalLoad.isReset = false
+				default:
+					break outer
+				}
+			}
+
+			if page.modalLoad.confirm != nil {
+				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, page.modalLoad),
+					900)
+			}
+
+			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+			toast := func(n *toast) layout.Dimensions {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(1, func(gtx C) D {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding65}.Layout(gtx, func(gtx C) D {
+								return displayToast(page.theme, gtx, n)
+							})
+						})
+					}),
+				)
+			}
+
+		outer:
+			for {
+				select {
+				case n := <-page.toast:
+					page.toastLoad.success = n.success
+					page.toastLoad.text = n.text
+					page.toastLoad.ResetTimer()
+				default:
+					break outer
+				}
+			}
+
+			if page.toastLoad.text != "" {
+				page.toastLoad.Timer(time.Second*3, func() {
+					page.toastLoad.text = ""
+				})
+				return toast(page.toastLoad)
+			}
+			return layout.Dimensions{}
+		}),
 	)
+}
+
+func (page pageCommon) closeModal() {
+	go func() {
+		page.modalReceiver <- &modalLoad{
+			title:   "",
+			confirm: nil,
+			cancel:  nil,
+		}
+	}()
+}
+
+func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
+	cs := gtx.Constraints
+	d := image.Point{X: cs.Min.X, Y: cs.Min.Y}
+	dr := f32.Rectangle{
+		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
+	}
+	paint.ColorOp{Color: col}.Add(gtx.Ops)
+	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
+	return layout.Dimensions{Size: d}
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
