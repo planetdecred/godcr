@@ -193,18 +193,25 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
 	switch load.template {
 	case CreateWalletTemplate:
-		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
-			m.passwordsMatch(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
-			m.confirm.Button.Clicked() {
-			load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
+		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
+			// reset error label when password and matching password fields match
+			m.matchSpendingPassword.ErrorLabel.Text = ""
 		}
+
+		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
+			m.confirm.Button.Clicked() {
+			if m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
+				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
+			}
+		}
+
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
 
-		m.walletName.Hint = "Wallet name"
 		template = m.createNewWallet()
-		return template
+		m.walletName.Hint = "Wallet name"
+		return
 	case RenameWalletTemplate, RenameAccountTemplate:
 		if m.editorsNotEmpty(th, m.walletName.Editor) && m.confirm.Button.Clicked() {
 			load.confirm.(func(string))(m.walletName.Editor.Text())
@@ -241,11 +248,18 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.Password()
 		return
 	case ChangePasswordTemplate:
-		if m.editorsNotEmpty(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
-			m.passwordsMatch(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
-			m.confirm.Button.Clicked() {
-			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
+			// reset error label when password and matching password fields match
+			m.matchSpendingPassword.ErrorLabel.Text = ""
 		}
+
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
+			m.confirm.Button.Clicked() {
+			if m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
+				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+			}
+		}
+
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
@@ -285,19 +299,20 @@ func (m *ModalTemplate) editorsNotEmpty(th *decredmaterial.Theme, editors ...*wi
 // passwordMatches checks that the password and matching password field matches. It returns true if it matches
 // and false if it doesn't. It sets the background of the confirm button to decredmaterial Hint color if the passwords
 // don't match. It sets it to decredmaterial Primary color if the passwords match.
-func (m *ModalTemplate) passwordsMatch(th *decredmaterial.Theme, editors ...*widget.Editor) bool {
+func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 	if len(editors) < 2 {
 		return false
 	}
 
-	passWord := editors[0]
+	password := editors[0]
 	matching := editors[1]
-	if passWord.Text() != matching.Text() {
-		m.confirm.Background = th.Color.Hint
+
+	if password.Text() != matching.Text() {
+		m.matchSpendingPassword.ErrorLabel.Text = "passwords do not match"
 		return false
 	}
 
-	m.confirm.Background = th.Color.Primary
+	m.matchSpendingPassword.ErrorLabel.Text = ""
 	return true
 }
 
@@ -306,4 +321,5 @@ func (m *ModalTemplate) resetFields() {
 	m.matchSpendingPassword.Editor.SetText("")
 	m.spendingPassword.Editor.SetText("")
 	m.walletName.Editor.SetText("")
+	m.matchSpendingPassword.ErrorLabel.Text = ""
 }
