@@ -98,7 +98,7 @@ func (pg *morePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	pg.handleClickEvents()
 
 	container := func(gtx C) D {
-		return decredmaterial.Card{CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
+		return common.theme.Card().Layout(gtx, func(gtx C) D {
 			pg.layoutMoreItems(gtx, common)
 			return layout.Dimensions{Size: gtx.Constraints.Max}
 		})
@@ -114,8 +114,9 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 				return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
 						background := common.theme.Color.Surface
-
-						return decredmaterial.Card{Color: background, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
+						card := common.theme.Card()
+						card.Color = background
+						return card.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return layout.Stack{}.Layout(gtx,
 								layout.Stacked(func(gtx C) D {

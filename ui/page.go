@@ -386,7 +386,14 @@ func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
-	return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+	card := page.theme.Card()
+	card.Radius = decredmaterial.CornerRadius{
+		NE: 0,
+		NW: 0,
+		SE: 0,
+		SW: 0,
+	}
+	return card.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -633,7 +640,15 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 			)
 		})
 	}
-	return decredmaterial.Card{}.Layout(gtx, selectedDetails)
+
+	card := page.theme.Card()
+	card.Radius = decredmaterial.CornerRadius{
+		NE: 0,
+		NW: 0,
+		SE: 0,
+		SW: 0,
+	}
+	return card.Layout(gtx, selectedDetails)
 }
 
 func toMax(gtx layout.Context) {

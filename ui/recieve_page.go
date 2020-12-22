@@ -23,6 +23,7 @@ type receivePage struct {
 
 	newAddrBtn, minInfo       decredmaterial.Button
 	copyBtn, infoBtn, moreBtn decredmaterial.IconButton
+	card                      decredmaterial.Card
 	// copyBtnW, infoBtnW, moreBtnW, minInfoW, newAddrBtnW widget.Clickable
 
 	receiveAddressLabel, addressCopiedLabel, pageInfo decredmaterial.Label
@@ -53,6 +54,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		receiveAddressLabel: receiveAddressLabel,
 		pageInfo:            pageInfo,
 		addressCopiedLabel:  common.theme.Caption(""),
+		card:                common.theme.Card(),
 	}
 
 	return func(gtx C) D {
@@ -204,7 +206,8 @@ func (pg *receivePage) infoDiag(gtx layout.Context) layout.Dimensions {
 			)
 		})
 	}
-	return decredmaterial.Card{}.Layout(gtx, infoDetails)
+
+	return pg.card.Layout(gtx, infoDetails)
 }
 
 func (pg *receivePage) Handle(common pageCommon) {

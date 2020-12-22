@@ -22,6 +22,7 @@ type DropDown struct {
 
 	group            uint
 	closeAllDropdown func(group uint)
+	card           Card
 }
 
 type DropDownItem struct {
@@ -43,6 +44,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
+		card:           t.Card(),
 	}
 
 	for i := range items {
@@ -222,7 +224,8 @@ func (c *DropDown) drawLayout(gtx layout.Context, isPopUp bool, body layout.Widg
 		color = c.background
 		m = unit.Dp(15)
 	}
-	return Card{Color: color, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
+	c.card.Color = color
+	return c.card.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(m).Layout(gtx, body)
 	})
 }

@@ -9,29 +9,56 @@ import (
 	"gioui.org/widget/material"
 )
 
-type Collapsible struct {
-	Items             []MoreItem
-	IsExpanded        bool
-	Button            *widget.Clickable
-	MoreIcon          IconButton
-	isOpened          bool
-	BackgroundColor   color.RGBA
-	color             color.RGBA
-	theme             *Theme
-	selectedMoreIndex int
-	expandedIcon      *widget.Icon
-	collapsedIcon     *widget.Icon
-}
-
 type MoreItem struct {
 	Text   string
 	Button *widget.Clickable
 	label  Label
 }
 
-func (t *Theme) Collapsible(Items []MoreItem) *Collapsible {
+type Collapsible struct {
+	IsExpanded      bool
+	Button          *widget.Clickable
+	expandIcon      *widget.Icon
+	BackgroundColor color.RGBA
+	expandedIcon    *widget.Icon
+	collapsedIcon   *widget.Icon
+	card            Card
+}
+
+type CollapsibleWithOption struct {
+	Items             []MoreItem
+	Collapsible       *Collapsible
+	MoreIcon          IconButton
+	isOpened          bool
+	color             color.RGBA
+	selectedMoreIndex int
+	theme             *Theme
+}
+
+func (t *Theme) Collapsible() *Collapsible {
 	c := &Collapsible{
 		BackgroundColor: t.Color.Surface,
+		Button:          new(widget.Clickable),
+		expandedIcon:    t.chevronUpIcon,
+		collapsedIcon:   t.chevronDownIcon,
+		card:            t.Card(),
+	}
+	c.card.Color = c.BackgroundColor
+
+	return c
+}
+
+func (t *Theme) CollapsibleWithOption(Items []MoreItem) *CollapsibleWithOption {
+	c := &CollapsibleWithOption{
+		Items: make([]MoreItem, len(Items)+1),
+		color: t.Color.Background,
+		theme: t,
+		Collapsible: &Collapsible{
+			BackgroundColor: t.Color.Surface,
+			Button:          new(widget.Clickable),
+			expandedIcon:    t.chevronUpIcon,
+			collapsedIcon:   t.chevronDownIcon,
+		},
 		MoreIcon: IconButton{
 			material.IconButtonStyle{
 				Icon:       t.navMoreIcon,
@@ -42,12 +69,6 @@ func (t *Theme) Collapsible(Items []MoreItem) *Collapsible {
 				Button:     new(widget.Clickable),
 			},
 		},
-		Items:         make([]MoreItem, len(Items)+1),
-		Button:        new(widget.Clickable),
-		color:         t.Color.Background,
-		theme:         t,
-		expandedIcon:  t.chevronUpIcon,
-		collapsedIcon: t.chevronDownIcon,
 	}
 
 	for i := range Items {
@@ -59,35 +80,61 @@ func (t *Theme) Collapsible(Items []MoreItem) *Collapsible {
 	return c
 }
 
-func (c *Collapsible) layoutHeader(gtx layout.Context, header func(C) D) layout.Dimensions {
+func (c *Collapsible) collapseIconLayout(gtx layout.Context) layout.Dimensions {
 	icon := c.collapsedIcon
 	if c.IsExpanded {
 		icon = c.expandedIcon
 	}
 
-	dims := layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{
-				Right: unit.Dp(10),
-			}.Layout(gtx, func(C) D {
-				return icon.Layout(gtx, unit.Dp(20))
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return header(gtx)
-		}),
-	)
-
-	return dims
+	return layout.Inset{
+		Right: unit.Dp(10),
+	}.Layout(gtx, func(C) D {
+		return icon.Layout(gtx, unit.Dp(20))
+	})
 }
 
-func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(C) D, footer func(C) D) layout.Dimensions {
+func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(C) D) layout.Dimensions {
+	for c.Button.Clicked() {
+		c.IsExpanded = !c.IsExpanded
+	}
+
+	return c.card.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return header(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return c.collapseIconLayout(gtx)
+							}),
+						)
+					}),
+					layout.Expanded(c.Button.Layout),
+				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if c.IsExpanded {
+					return content(gtx)
+				}
+				return layout.Dimensions{}
+			}),
+		)
+	})
+}
+
+func (c *CollapsibleWithOption) Layout(gtx layout.Context, header func(C) D, content func(C) D, footer func(C) D) layout.Dimensions {
 	c.handleEvents()
 
 	dims := layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return Card{Color: c.BackgroundColor, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
+				card := c.theme.Card()
+				card.Color = c.Collapsible.BackgroundColor
+				return card.Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
@@ -95,9 +142,16 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 									layout.Flexed(0.93, func(gtx C) D {
 										return layout.Stack{}.Layout(gtx,
 											layout.Stacked(func(gtx C) D {
-												return c.layoutHeader(gtx, header)
+												return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+													layout.Rigid(func(gtx C) D {
+														return c.Collapsible.collapseIconLayout(gtx)
+													}),
+													layout.Rigid(func(gtx C) D {
+														return header(gtx)
+													}),
+												)
 											}),
-											layout.Expanded(c.Button.Layout),
+											layout.Expanded(c.Collapsible.Button.Layout),
 										)
 									}),
 									layout.Flexed(0.07, func(gtx C) D {
@@ -108,7 +162,7 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 								)
 							}),
 							layout.Rigid(func(gtx C) D {
-								if c.IsExpanded {
+								if c.Collapsible.IsExpanded {
 									return content(gtx)
 								}
 								return layout.Dimensions{}
@@ -120,7 +174,15 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 			layout.Rigid(func(gtx C) D {
 				if footer != nil {
 					return layout.Inset{Top: unit.Dp(-10)}.Layout(gtx, func(gtx C) D {
-						return Card{Color: c.theme.Color.Orange, CornerStyle: HalfRoundedEdgeBottom}.Layout(gtx, func(gtx C) D {
+						card := c.theme.Card()
+						card.Radius = CornerRadius{
+							NE: 0,
+							NW: 0,
+							SW: 10,
+							SE: 10,
+						}
+						card.Color = c.theme.Color.Orange
+						return card.Layout(gtx, func(gtx C) D {
 							return footer(gtx)
 						})
 					})
@@ -143,18 +205,20 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 	)
 }
 
-func (c *Collapsible) moreItemMenu(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (c *CollapsibleWithOption) moreItemMenu(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	border := widget.Border{Color: c.color, CornerRadius: unit.Dp(10), Width: unit.Dp(2)}
 	return layout.Inset{Top: unit.Dp(50)}.Layout(gtx, func(gtx C) D {
 		return border.Layout(gtx, func(gtx C) D {
-			return Card{Color: c.BackgroundColor, CornerStyle: RoundedEdge}.Layout(gtx, func(gtx C) D {
+			card := c.theme.Card()
+			card.Color = c.Collapsible.BackgroundColor
+			return card.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(unit.Dp(5)).Layout(gtx, body)
 			})
 		})
 	})
 }
 
-func (c *Collapsible) moreOption(gtx layout.Context) layout.Dimensions {
+func (c *CollapsibleWithOption) moreOption(gtx layout.Context) layout.Dimensions {
 	return c.moreItemMenu(gtx, func(gtx C) D {
 		list := &layout.List{Axis: layout.Vertical}
 		Items := c.Items[1:]
@@ -190,23 +254,19 @@ func (c *Collapsible) moreOption(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (c *Collapsible) SelectedIndex() int {
+func (c *CollapsibleWithOption) SelectedIndex() int {
 	return c.selectedMoreIndex - 1
 }
 
-func (c *Collapsible) Selected() string {
+func (c *CollapsibleWithOption) Selected() string {
 	return c.Items[c.SelectedIndex()].Text
 }
 
-func (c *Collapsible) Hide() {
+func (c *CollapsibleWithOption) Hide() {
 	c.isOpened = false
 }
 
-func (c *Collapsible) handleEvents() {
-	for c.Button.Clicked() {
-		c.IsExpanded = !c.IsExpanded
-	}
-
+func (c *CollapsibleWithOption) handleEvents() {
 	if len(c.Items) > 0 {
 		if c.MoreIcon.Button.Clicked() {
 			c.isOpened = !c.isOpened

@@ -38,11 +38,11 @@ type walletPage struct {
 	addAcct, backupButton                      decredmaterial.IconButton
 	container, accountsList, walletsList, list layout.List
 	line                                       *decredmaterial.Line
-	txFeeCollapsible                           *decredmaterial.Collapsible
-	toAddWalletPage                            *widget.Clickable
-	walletCollapsible                          []*decredmaterial.Collapsible
-	toAcctDetails                              []*gesture.Click
-	text                                       moreItemText
+	// txFeeCollapsible                           *decredmaterial.Collapsible
+	toAddWalletPage   *widget.Clickable
+	walletCollapsible []*decredmaterial.CollapsibleWithOption
+	toAcctDetails     []*gesture.Click
+	text              moreItemText
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -61,12 +61,12 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		list: layout.List{
 			Axis: layout.Vertical,
 		},
-		theme:            common.theme,
-		wallet:           common.wallet,
-		txFeeCollapsible: common.theme.Collapsible(nil),
-		line:             common.theme.Line(),
-		walletAccount:    &win.walletAccount,
-		toAddWalletPage:  new(widget.Clickable),
+		theme:  common.theme,
+		wallet: common.wallet,
+		// txFeeCollapsible: common.theme.Collapsible(),
+		line:            common.theme.Line(),
+		walletAccount:   &win.walletAccount,
+		toAddWalletPage: new(widget.Clickable),
 	}
 	pg.line.Height = 1
 
@@ -78,7 +78,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		settings:      "Settings",
 	}
 
-	pg.walletCollapsible = make([]*decredmaterial.Collapsible, 0)
+	pg.walletCollapsible = make([]*decredmaterial.CollapsibleWithOption, 0)
 
 	pg.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 	pg.addAcct.Inset = layout.UniformInset(values.MarginPadding0)
@@ -108,7 +108,7 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 	}
 
 	for i := 0; i < common.info.LoadedWallets; i++ {
-		pg.walletCollapsible = append(pg.walletCollapsible, pg.theme.Collapsible([]decredmaterial.MoreItem{
+		pg.walletCollapsible = append(pg.walletCollapsible, pg.theme.CollapsibleWithOption([]decredmaterial.MoreItem{
 			{
 				Text: pg.text.signMessage,
 			},
@@ -431,7 +431,7 @@ func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageComm
 }
 
 func (pg *walletPage) sectionLayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return decredmaterial.Card{Color: pg.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
+	return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
 	})
 }
@@ -456,8 +456,8 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 
 func (pg *walletPage) Handle(common pageCommon) {
 	for _, b := range pg.walletCollapsible {
-		for b.Button.Clicked() {
-			b.IsExpanded = !b.IsExpanded
+		for b.Collapsible.Button.Clicked() {
+			b.Collapsible.IsExpanded = !b.Collapsible.IsExpanded
 		}
 
 		for i, t := range b.Items {

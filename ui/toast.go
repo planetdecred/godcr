@@ -23,8 +23,10 @@ func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout
 		color = th.Color.Danger
 	}
 
-	return decredmaterial.Card{Color: color, Rounded: true}.Layout(gtx, func(gtx C) D {
-		return layout.Inset{
+	card := th.Card()
+	card.Color = color
+	return card.Layout(gtx, func(gtx C) D {
+		rreturn layout.Inset{
 			Top: values.MarginPadding7, Bottom: values.MarginPadding7,
 			Left: values.MarginPadding15, Right: values.MarginPadding15,
 		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {

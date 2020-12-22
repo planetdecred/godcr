@@ -360,7 +360,7 @@ func (pg *overviewPage) syncStatusColumn(gtx layout.Context) layout.Dimensions {
 
 // drawlayout wraps the page tx and sync section in a card layout
 func (pg *overviewPage) drawlayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return decredmaterial.Card{Color: pg.theme.Color.Surface, CornerStyle: decredmaterial.RoundedEdge}.Layout(gtx, func(gtx C) D {
+	return pg.theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
 	})
 }
@@ -626,22 +626,26 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 	return layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding280)
 		gtx.Constraints.Max.X = gtx.Constraints.Min.X
-		return decredmaterial.Card{Color: pg.theme.Color.Background}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.endToEndRow(gtx, inset, details.name, details.status)
-				}),
-				layout.Rigid(func(gtx C) D {
-					headersFetchedTitleLabel := pg.theme.Caption(pg.text.headersFetchedTitle)
-					headersFetchedTitleLabel.Color = pg.gray
-					return pg.endToEndRow(gtx, inset, headersFetchedTitleLabel, details.blockHeaderFetched)
-				}),
-				layout.Rigid(func(gtx C) D {
-					progressTitleLabel := pg.theme.Caption(pg.text.syncingProgressTitle)
-					progressTitleLabel.Color = pg.gray
-					return pg.endToEndRow(gtx, inset, progressTitleLabel, details.syncingProgress)
-				}),
-			)
+		card := pg.theme.Card()
+		card.Color = pg.theme.Color.Background
+		return card.Layout(gtx, func(gtx C) D {
+			return card.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.endToEndRow(gtx, inset, details.name, details.status)
+					}),
+					layout.Rigid(func(gtx C) D {
+						headersFetchedTitleLabel := pg.theme.Caption(pg.text.headersFetchedTitle)
+						headersFetchedTitleLabel.Color = pg.gray
+						return pg.endToEndRow(gtx, inset, headersFetchedTitleLabel, details.blockHeaderFetched)
+					}),
+					layout.Rigid(func(gtx C) D {
+						progressTitleLabel := pg.theme.Caption(pg.text.syncingProgressTitle)
+						progressTitleLabel.Color = pg.gray
+						return pg.endToEndRow(gtx, inset, progressTitleLabel, details.syncingProgress)
+					}),
+				)
+			})
 		})
 	})
 }

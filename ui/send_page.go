@@ -131,7 +131,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		nextButton:                   common.theme.Button(new(widget.Clickable), "Next"),
 		confirmButton:                common.theme.Button(new(widget.Clickable), "Confirm"),
 		maxButton:                    common.theme.Button(new(widget.Clickable), "MAX"),
-		txFeeCollapsible:             common.theme.Collapsible(nil),
+		txFeeCollapsible:             common.theme.Collapsible(),
 		txLine:                       common.theme.Line(),
 
 		confirmModal:              common.theme.Modal(),
@@ -636,7 +636,16 @@ func (pg *SendPage) txFeeLayout(gtx layout.Context) layout.Dimensions {
 	}
 
 	collapsibleBody := func(gtx C) D {
-		return decredmaterial.Card{Color: pg.theme.Color.Background}.Layout(gtx, func(gtx C) D {
+		card := pg.theme.Card()
+		card.Radius = decredmaterial.CornerRadius{
+			NE: 0,
+			NW: 0,
+			SE: 0,
+			SW: 0,
+		}
+		card.Color = pg.theme.Color.Background
+
+		return card.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				gtx.Constraints.Min.Y = 100
@@ -645,7 +654,7 @@ func (pg *SendPage) txFeeLayout(gtx layout.Context) layout.Dimensions {
 		})
 	}
 
-	return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody, nil)
+	return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
 }
 
 func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions {
@@ -998,7 +1007,7 @@ func (pg *SendPage) handleEditorChange(evt widget.EditorEvent) {
 func (pg *SendPage) sectionLayout(gtx layout.Context, inset layout.Inset, body layout.Widget) layout.Dimensions {
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
 	gtx.Constraints.Min.X = gtx.Px(values.MarginPadding450)
-	return decredmaterial.Card{Color: pg.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+	return pg.theme.Card().Layout(gtx, func(gtx C) D {
 		return inset.Layout(gtx, body)
 	})
 }
