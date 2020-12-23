@@ -81,8 +81,8 @@ type (
 )
 
 const (
-	navDrawerWidth          = 320
-	navDrawerMinimizedWidth = 170
+	navDrawerWidth          = 160
+	navDrawerMinimizedWidth = 80
 )
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
@@ -276,21 +276,11 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return page.layoutAppBar(gtx)
-				}),
+				layout.Rigid(page.layoutAppBar),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							width := navDrawerWidth
-							if *page.isNavDrawerMinimized {
-								width = navDrawerMinimizedWidth
-							}
-							gtx.Constraints.Max.X = width
-							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
-								page.layoutNavDrawer(gtx)
-								return layout.Dimensions{Size: gtx.Constraints.Max}
-							})
+							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, page.layoutNavDrawer)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -464,53 +454,45 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
 			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
+				background := page.theme.Color.Surface
+				if page.drawerNavItems[i].page == *page.page {
+					background = page.theme.Color.Background
+				}
+				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
-					background := page.theme.Color.Surface
-					if page.drawerNavItems[i].page == *page.page {
-						background = page.theme.Color.Background
-					}
-
 					return decredmaterial.Card{Color: background}.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.Stack{}.Layout(gtx,
-							layout.Stacked(func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-									axis := layout.Horizontal
-									leftInset := float32(15)
-									if *page.isNavDrawerMinimized {
-										axis = layout.Vertical
-										leftInset = 0
-									}
+						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+							axis := layout.Horizontal
+							leftInset := float32(15)
+							width := navDrawerWidth
+							if *page.isNavDrawerMinimized {
+								axis = layout.Vertical
+								txt.TextSize = values.TextSize10
+								leftInset = 0
+								width = navDrawerMinimizedWidth
+							}
 
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									return layout.Flex{Axis: axis}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											page.drawerNavItems[i].image.Scale = 0.05
-											page.drawerNavItems[i].imageInactive.Scale = 0.05
-
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												if page.drawerNavItems[i].page == *page.page {
-													return page.drawerNavItems[i].image.Layout(gtx)
-												}
-												return page.drawerNavItems[i].imageInactive.Layout(gtx)
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{
-												Left: unit.Dp(leftInset),
-											}.Layout(gtx, func(gtx C) D {
-												return layout.Center.Layout(gtx, func(gtx C) D {
-													if *page.isNavDrawerMinimized {
-														return page.theme.Label(values.TextSize10, page.drawerNavItems[i].page).Layout(gtx)
-													}
-													return page.theme.Body1(page.drawerNavItems[i].page).Layout(gtx)
-												})
-											})
-										}),
-									)
-								})
-							}),
-						)
+							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
+							return layout.Flex{Axis: axis}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									page.drawerNavItems[i].image.Scale = 0.05
+									page.drawerNavItems[i].imageInactive.Scale = 0.05
+									return layout.Center.Layout(gtx, func(gtx C) D {
+										if page.drawerNavItems[i].page == *page.page {
+											return page.drawerNavItems[i].image.Layout(gtx)
+										}
+										return page.drawerNavItems[i].imageInactive.Layout(gtx)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Left: unit.Dp(leftInset),
+									}.Layout(gtx, func(gtx C) D {
+										return layout.Center.Layout(gtx, txt.Layout)
+									})
+								}),
+							)
+						})
 					})
 				})
 			})
