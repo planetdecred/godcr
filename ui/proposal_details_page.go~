@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
-	//"regexp"
+	"regexp"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -17,6 +17,10 @@ import (
 )
 
 const PageProposalDetails = "proposaldetails"
+
+var (
+	 markdownRegex = regexp.MustCompile(`^\[[^][]+]\((https?://[^()]+)\)$`)
+)
 
 type ProposalPage struct {
 	theme    *decredmaterial.Theme
@@ -123,21 +127,24 @@ func (pg *ProposalPage) layoutProposalDescription(gtx layout.Context) layout.Dim
 	})
 }
 
-func (pg *ProposalPage) checkIfLink(word string) (bool, string, string) {
-	if strings.HasPrefix(word, "[") && strings.Contains(word, "]") {
-		link :=  getStringInBetween(word, "(", ")")
-		title := getStringInBetween(word, "[", "]")
-		
-		return true, title, link 
-	}
-	return false, "", ""
-}
-
-
 func (pg *ProposalPage) layoutWord(gtx layout.Context, word string, index int) layout.Dimensions {
-	if isLink, _, _ := pg.checkIfLink(word); isLink {
-		return pg.theme.Body2(" [] ").Layout(gtx)
-	}
+	if strings.HasPrefix(word, "[") { // possible markdown link
+			res := markdownRegex.FindStringSubmatch(word)
+			if len(res) > 0 {
+				fmt.Println("ddddd www")
+				/**if pg.pageLinks == nil {
+					c := decredmaterial.Clickable(gtx, new(widget.Clickable), func(gtx C) D {
+						return layout.Dimensions{}
+					})
+					
+					pg.pageLinks = map[string]layout.Dimensions{}
+					pg.pageLinks[word] = c
+				}
+				
+				return pg.pageLinks[word]**/
+				return pg.theme.Body2("Link ").Layout(gtx)
+			}
+		}
 	
 	lbl := pg.theme.Body2
 	if index == 0 || index % 2 == 0 {
@@ -168,24 +175,10 @@ func (pg *ProposalPage) getProposalDescriptionTextParts() [][]string {
 		if i == 0 { // row at index 0 is proposal title. Omit it
 			continue
 		}
-		
-		words := pg.splitRowWords(rows[i])			
-		rowWords = append(rowWords, words)
+		rowWords = append(rowWords, strings.Fields(rows[i]))
 	}
-	return rowWords
-}
 
-func (pg *ProposalPage) splitRowWords(row string) []string {
-	isInsideBrackets := false 
-	return strings.FieldsFunc(row, func(r rune) bool {
-		if r == '[' {
-			isInsideBrackets = !isInsideBrackets
-		}
-		if r == ']' || r == ')' {
-			isInsideBrackets = false
-		}
-		return !isInsideBrackets && r == ' '
-	})
+	return rowWords
 }
 
 func (pg *ProposalPage) layoutProposalHeader(gtx layout.Context, truncateTitle bool) layout.Dimensions {
@@ -246,18 +239,3 @@ func (pg *ProposalPage) layoutProposalDetailsSubHeaderRow(gtx layout.Context, le
 		}),
 	)
 }
-
-// GetStringInBetween Returns empty string if no start string found
-func getStringInBetween(str string, start string, end string) (result string) {
-    s := strings.Index(str, start)
-    if s == -1 {
-        return
-    }
-    s += len(start)
-    e := strings.Index(str[s:], end)
-    if e == -1 {
-        return
-    }
-    return str[s:e+1]
-}
-
