@@ -22,7 +22,7 @@ type DropDown struct {
 
 	group            uint
 	closeAllDropdown func(group uint)
-	card           Card
+	card             Card
 }
 
 type DropDownItem struct {
@@ -44,7 +44,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
-		card:           t.Card(),
+		card:             t.Card(),
 	}
 
 	for i := range items {
