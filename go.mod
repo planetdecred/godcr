@@ -4,11 +4,13 @@ go 1.13
 
 require (
 	gioui.org v0.0.0-20200722191435-e381ff40d66b
+	github.com/PuerkitoBio/goquery v1.6.0
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
 	github.com/decred/slog v1.1.0
+	github.com/gomarkdown/markdown v0.0.0-20201113031856-722100d81a8e
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
 <<<<<<< HEAD
@@ -23,6 +25,7 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
 	golang.org/x/image v0.0.0-20200618115811-c13761719519
+	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 )
 
 // TODO: Remove and use an actual release of dcrlibwallet

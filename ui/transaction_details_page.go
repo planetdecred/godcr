@@ -1,18 +1,18 @@
 package ui
 
 import (
-	"fmt"
+	//"fmt"
 	"image/color"
-	"os/exec"
-	"runtime"
-	"strings"
+	//"os/exec"
+	//"runtime"
+	//"strings"
 
 	"gioui.org/layout"
-	"gioui.org/text"
+	//"gioui.org/text"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil"
-	"github.com/planetdecred/dcrlibwallet"
+	//"github.com/decred/dcrd/dcrutil"
+	//"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -90,6 +90,15 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 	}
 }
 
+func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	return layout.Dimensions{}
+}
+
+func (pg *transactionDetailsPage) Handler(common pageCommon) {
+
+}
+
+/**
 func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	widgets := []func(gtx C) D{
 		func(gtx C) D {
@@ -591,4 +600,4 @@ func (pg *transactionDetailsPage) Handler(common pageCommon) {
 			common.clipboard <- WriteClipboard{Text: (*pg.txnInfo).Txn.Hash}
 		}()
 	}
-}
+}**/

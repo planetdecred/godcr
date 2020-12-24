@@ -6,7 +6,7 @@ import (
 	"image/color"
 	"time"
 
-	"gioui.org/gesture"
+	//"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -52,7 +52,6 @@ type ProposalsPage struct {
 	tabTitles                      []string
 	tabContainer                   *decredmaterial.Tabs
 	outline                        decredmaterial.Outline
-	clickables                     []*gesture.Click
 	isSyncing                      bool
 	hasFetchedSavedProposals       bool
 	hasRegisteredProposalListeners bool

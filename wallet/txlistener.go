@@ -1,5 +1,9 @@
 package wallet
 
+import (
+	"github.com/planetdecred/dcrlibwallet"
+)
+
 // NewTransaction is sent when a new transaction is received.
 type NewTransaction string
 
@@ -39,4 +43,8 @@ func (l *listener) OnTransactionConfirmed(walletID int, hash string, blockHeight
 			Hash:     hash,
 		},
 	}
+}
+
+func (l *listener) OnCFiltersFetchProgress(*dcrlibwallet.CFiltersFetchProgressReport) {
+
 }
