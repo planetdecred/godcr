@@ -287,7 +287,14 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, page.layoutNavDrawer)
+							card := page.theme.Card()
+							card.Radius = decredmaterial.CornerRadius{
+								NE: 0,
+								NW: 0,
+								SE: 0,
+								SW: 0,
+							}
+							return card.Layout(gtx, page.layoutNavDrawer)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -474,7 +481,15 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 				}
 				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
-					return decredmaterial.Card{Color: background}.Layout(gtx, func(gtx C) D {
+					card := page.theme.Card()
+					card.Color = background
+					card.Radius = decredmaterial.CornerRadius{
+						NE: 0,
+						NW: 0,
+						SE: 0,
+						SW: 0,
+					}
+					return card.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 							axis := layout.Horizontal
 							leftInset := float32(15)
