@@ -43,9 +43,9 @@ type TestStruct struct {
 		outline                                decredmaterial.Outline
 	}
 
-	collapsible *decredmaterial.Collapsible
+	collapsible           *decredmaterial.Collapsible
 	collapsibleWithOption *decredmaterial.CollapsibleWithOption
-	dropDown    *decredmaterial.DropDown
+	dropDown              *decredmaterial.DropDown
 }
 
 type (
@@ -111,7 +111,6 @@ func (t *TestStruct) initWidgets() {
 	// t.customEditorOutput.outline.Color = theme.Color.Primary
 
 	t.collapsible = theme.Collapsible()
-	t.collapsibleWithOption = theme.CollapsibleWithOption()
 
 	item := []decredmaterial.MoreItem{
 		{

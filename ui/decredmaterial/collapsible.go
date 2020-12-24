@@ -18,7 +18,6 @@ type MoreItem struct {
 type Collapsible struct {
 	IsExpanded      bool
 	Button          *widget.Clickable
-	expandIcon      *widget.Icon
 	BackgroundColor color.RGBA
 	expandedIcon    *widget.Icon
 	collapsedIcon   *widget.Icon
