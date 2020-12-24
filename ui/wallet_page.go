@@ -145,7 +145,7 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+					return layout.UniformInset(values.MarginPadding0).Layout(gtx, pageContent[i])
 				})
 			}),
 			layout.Stacked(func(gtx C) D {
@@ -182,7 +182,14 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 			walletNameLabel := pg.theme.Body1(walName)
 			walletBalLabel := pg.theme.Body1(wb)
 			walletBalLabel.Color = pg.theme.Color.Gray
-			return pg.tableLayout(gtx, walletNameLabel, walletBalLabel, true, len(seed))
+			m := values.MarginPadding2
+			inset := layout.Inset{
+				Top:    m,
+				Bottom: m,
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return pg.tableLayout(gtx, walletNameLabel, walletBalLabel, true, len(seed))
+			})
 		}
 
 		collapsibleFooter := func(gtx C) D {
@@ -237,7 +244,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 			})
 		}
 
-		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 			if len(seed) > 0 {
 				return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleFooter)
 			}
@@ -247,29 +254,31 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 }
 
 func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
-	return pg.sectionLayout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				txt := pg.theme.Body1("Watch-only Wallets")
-				txt.Color = pg.theme.Color.Gray
-				return txt.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				pg.line.Width = gtx.Constraints.Max.X
-				pg.line.Color = common.theme.Color.Hint
-				m := values.MarginPadding10
-				inset := layout.Inset{
-					Top:    m,
-					Bottom: m,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return pg.line.Layout(gtx)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.theme.H6("coming soon").Layout(gtx)
-			}),
-		)
+	return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+		return pg.sectionLayout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body1("Watch-only Wallets")
+					txt.Color = pg.theme.Color.Gray
+					return txt.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					pg.line.Width = gtx.Constraints.Max.X
+					pg.line.Color = common.theme.Color.Hint
+					m := values.MarginPadding10
+					inset := layout.Inset{
+						Top:    m,
+						Bottom: m,
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						return pg.line.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.theme.H6("coming soon").Layout(gtx)
+				}),
+			)
+		})
 	})
 }
 

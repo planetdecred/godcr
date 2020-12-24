@@ -109,7 +109,23 @@ func (t *TestStruct) initWidgets() {
 	t.customEditorOutput.outline = theme.Outline()
 	// t.customEditorOutput.outline.Color = theme.Color.Primary
 
-	t.collapsible = theme.Collapsible(nil)
+	t.collapsible = theme.Collapsible()
+
+	t.collapsibleWithOption = theme.CollapsibleWithOption()
+
+	item := []decredmaterial.MoreItem{
+		{
+			Text: "First item",
+		},
+		{
+			Text: "Second item",
+		},
+		{
+			Text: "Third item",
+		},
+	}
+
+	t.collapsibleWithOption = theme.CollapsibleWithOption(item)
 
 	dropDownItems := []decredmaterial.DropDownItem{
 		{
@@ -136,6 +152,26 @@ func (t *TestStruct) TestPage(gtx layout.Context) {
 
 func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 	t.handleInput()
+	header := func(gtx layout.Context) layout.Dimensions {
+		return t.theme.Body1("Collapsible Widget").Layout(gtx)
+	}
+	content := func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return t.theme.Body2("Hidden item 1").Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return t.theme.Body2("Hidden item 2").Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return t.theme.Body2("Hidden item 3").Layout(gtx)
+			}),
+		)
+	}
+	footer := func(gtx layout.Context) layout.Dimensions {
+		return t.theme.Body1("Footer content").Layout(gtx)
+	}
+
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return t.theme.H4("Decrematerial Test Page").Layout(gtx)
@@ -195,25 +231,11 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 		},
 
 		func(gtx C) D {
-			header := func(gtx layout.Context) layout.Dimensions {
-				return t.theme.Body1("Collapsible Widget").Layout(gtx)
-			}
-			content := func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return t.theme.Body2("Hidden item 1").Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return t.theme.Body2("Hidden item 2").Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return t.theme.Body2("Hidden item 3").Layout(gtx)
-					}),
-				)
-			}
-			return t.collapsible.Layout(gtx, header, content, nil)
+			return t.collapsible.Layout(gtx, header, content)
 		},
-
+		func(gtx C) D {
+			return t.collapsibleWithOption.Layout(gtx, header, content, footer)
+		},
 		func(gtx C) D {
 			return t.customEditorOutput.outline.Layout(gtx, func(gtx C) D {
 				return t.customEditorOutput.testOutput.Layout(gtx)

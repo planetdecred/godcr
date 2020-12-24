@@ -129,68 +129,68 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 func (c *CollapsibleWithOption) Layout(gtx layout.Context, header func(C) D, content func(C) D, footer func(C) D) layout.Dimensions {
 	c.handleEvents()
 
-	dims := layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				card := c.theme.Card()
-				card.Color = c.Collapsible.BackgroundColor
-				return card.Layout(gtx, func(gtx C) D {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Flexed(0.93, func(gtx C) D {
-										return layout.Stack{}.Layout(gtx,
-											layout.Stacked(func(gtx C) D {
-												return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-													layout.Rigid(func(gtx C) D {
-														return c.Collapsible.collapseIconLayout(gtx)
-													}),
-													layout.Rigid(func(gtx C) D {
-														return header(gtx)
-													}),
-												)
-											}),
-											layout.Expanded(c.Collapsible.Button.Layout),
-										)
-									}),
-									layout.Flexed(0.07, func(gtx C) D {
-										return layout.E.Layout(gtx, func(gtx C) D {
-											return c.MoreIcon.Layout(gtx)
-										})
-									}),
-								)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if c.Collapsible.IsExpanded {
-									return content(gtx)
-								}
-								return layout.Dimensions{}
-							}),
-						)
+	// dims := layout.Inset{Top: unit.Dp(15)}.Layout(gtx, func(gtx C) D {
+	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			card := c.theme.Card()
+			card.Color = c.Collapsible.BackgroundColor
+			return card.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Flexed(0.93, func(gtx C) D {
+									return layout.Stack{}.Layout(gtx,
+										layout.Stacked(func(gtx C) D {
+											return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+												layout.Rigid(func(gtx C) D {
+													return c.Collapsible.collapseIconLayout(gtx)
+												}),
+												layout.Rigid(func(gtx C) D {
+													return header(gtx)
+												}),
+											)
+										}),
+										layout.Expanded(c.Collapsible.Button.Layout),
+									)
+								}),
+								layout.Flexed(0.07, func(gtx C) D {
+									return layout.E.Layout(gtx, func(gtx C) D {
+										return c.MoreIcon.Layout(gtx)
+									})
+								}),
+							)
+						}),
+						layout.Rigid(func(gtx C) D {
+							if c.Collapsible.IsExpanded {
+								return content(gtx)
+							}
+							return layout.Dimensions{}
+						}),
+					)
+				})
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			if footer != nil {
+				return layout.Inset{Top: unit.Dp(-10)}.Layout(gtx, func(gtx C) D {
+					card := c.theme.Card()
+					card.Radius = CornerRadius{
+						NE: 0,
+						NW: 0,
+						SW: 10,
+						SE: 10,
+					}
+					card.Color = c.theme.Color.Orange
+					return card.Layout(gtx, func(gtx C) D {
+						return footer(gtx)
 					})
 				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				if footer != nil {
-					return layout.Inset{Top: unit.Dp(-10)}.Layout(gtx, func(gtx C) D {
-						card := c.theme.Card()
-						card.Radius = CornerRadius{
-							NE: 0,
-							NW: 0,
-							SW: 10,
-							SE: 10,
-						}
-						card.Color = c.theme.Color.Orange
-						return card.Layout(gtx, func(gtx C) D {
-							return footer(gtx)
-						})
-					})
-				}
-				return layout.Dimensions{}
-			}),
-		)
-	})
+			}
+			return layout.Dimensions{}
+		}),
+	)
+	// })
 
 	return layout.Stack{Alignment: layout.NE}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
