@@ -5,6 +5,8 @@ package decredmaterial
 import (
 	"image/color"
 
+	"github.com/planetdecred/godcr/ui/values"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -114,17 +116,8 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.UniformInset(e.m2).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				if e.IsTitleLabel {
-					if e.Editor.Focused() && e.ErrorLabel.Text == "" {
-						e.TitleLabel.Color = color.RGBA{41, 112, 255, 255}
-					}
-					return e.TitleLabel.Layout(gtx)
-				}
-				return layout.Dimensions{}
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return e.editorLayout(gtx)
@@ -143,6 +136,19 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 							}),
 						)
 					}),
+					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						if e.IsTitleLabel {
+							return layout.Inset{
+								Top:  values.MarginPaddingMinus10,
+								Left: values.MarginPadding10,
+							}.Layout(gtx, func(gtx C) D {
+								return Card{Color: e.t.Color.Surface}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+									return e.TitleLabel.Layout(gtx)
+								})
+							})
+						}
+						return layout.Dimensions{}
+					}),
 				)
 			}),
 		)
@@ -156,7 +162,7 @@ func (e Editor) editorLayout(gtx C) D {
 			inset := layout.Inset{
 				Top:    e.m2,
 				Bottom: e.m2,
-				Left:   e.m5,
+				Left:   values.MarginPadding10,
 				Right:  e.m5,
 			}
 			return inset.Layout(gtx, func(gtx C) D {
