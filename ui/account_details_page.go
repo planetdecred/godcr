@@ -16,12 +16,15 @@ import (
 const PageAccountDetails = "AccountDetails"
 
 type acctDetailsPage struct {
+	wallet                   *wallet.Wallet
+	current                  wallet.InfoShort
 	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
 	acctInfo                 **wallet.Account
 	line                     *decredmaterial.Line
 	editAccount              *widget.Clickable
+	errChann                 chan error
 }
 
 func (win *Window) AcctDetailsPage(common pageCommon) layout.Widget {
@@ -29,11 +32,13 @@ func (win *Window) AcctDetailsPage(common pageCommon) layout.Widget {
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
+		wallet:      common.wallet,
 		acctInfo:    &win.walletAccount,
 		theme:       common.theme,
 		backButton:  common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		line:        common.theme.Line(),
 		editAccount: new(widget.Clickable),
+		errChann:    common.errorChannels[PageAccountDetails],
 	}
 
 	pg.line.Color = common.theme.Color.Background
@@ -258,6 +263,19 @@ func (pg *acctDetailsPage) Handler(gtx layout.Context, common pageCommon) {
 	}
 
 	if pg.editAccount.Clicked() {
-		fmt.Println("edit icon was clicked")
+		pg.current = common.info.Wallets[*common.selectedWallet]
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: RenameAccountTemplate,
+				title:    "Rename account",
+				confirm: func(name string) {
+					pg.wallet.RenameAccount(pg.current.ID, (*pg.acctInfo).Number, name, pg.errChann)
+					(*pg.acctInfo).Name = name
+				},
+				confirmText: "Rename",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 	}
 }
