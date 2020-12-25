@@ -122,8 +122,8 @@ func (c *Collapsible) Layout(gtx layout.Context, header func(C) D, content func(
 func (c *CollapsibleWithOption) Layout(gtx layout.Context, header func(C) D, content func(C) D, footer func(C) D) layout.Dimensions {
 	c.handleEvents()
 
-	collapseIcon := c.theme.collapse_icon
-	expandIcon := c.theme.expand_icon
+	collapseIcon := c.theme.collapseIcon
+	expandIcon := c.theme.expandIcon
 	collapseIcon.Scale, expandIcon.Scale = 0.25, 0.25
 
 	icon := collapseIcon

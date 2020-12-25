@@ -56,7 +56,9 @@ type (
 func CreateWindow() (*TestStruct, error) {
 	win := new(TestStruct)
 	win.window = app.NewWindow(app.Title("GoDcr - Test app"))
-	theme := decredmaterial.NewTheme(gofont.Collection())
+
+	// decredIcons := make(map[string]image.Image)
+	theme := decredmaterial.NewTheme(gofont.Collection(), nil)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
 	}
