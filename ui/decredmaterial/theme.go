@@ -72,6 +72,8 @@ type Theme struct {
 	chevronDownIcon       *widget.Icon
 	NavigationCheckIcon   *widget.Icon
 	navMoreIcon           *widget.Icon
+	expand_icon           *widget.Image
+	collapse_icon         *widget.Image
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
@@ -79,7 +81,7 @@ type Theme struct {
 	dropDownMenus []*DropDown
 }
 
-func NewTheme(fontCollection []text.FontFace) *Theme {
+func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image) *Theme {
 	t := &Theme{
 		Shaper: text.NewCache(fontCollection),
 		Base:   material.NewTheme(fontCollection),
@@ -105,6 +107,10 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
 	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+
+	t.expand_icon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
+	t.collapse_icon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
+
 	t.Clipboard = make(chan string)
 	return t
 }
