@@ -98,6 +98,11 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	if e.IsVisible {
 		e.flexWidth = 20
 	}
+
+	if e.Editor.Len() > 0 {
+		e.TitleLabel.Text = e.Hint
+	}
+
 	if e.Editor.Focused() {
 		e.TitleLabel.Text = e.Hint
 		e.LineColor = color.RGBA{41, 112, 255, 255}
