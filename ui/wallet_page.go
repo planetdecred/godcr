@@ -468,7 +468,7 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 }
 
 func (pg *walletPage) Handle(common pageCommon) {
-	for _, b := range pg.walletCollapsible {
+	for index, b := range pg.walletCollapsible {
 		for b.Collapsible.Button.Clicked() {
 			b.Collapsible.IsExpanded = !b.Collapsible.IsExpanded
 		}
@@ -476,19 +476,16 @@ func (pg *walletPage) Handle(common pageCommon) {
 		for i, t := range b.Items {
 			if i > 0 {
 				for t.Button.Clicked() {
+					*common.selectedWallet = index
 					switch b.Items[i].Text {
 					case pg.text.signMessage:
 						*common.page = PageSignMessage
-
 					case pg.text.verifyMessage:
 						*common.page = PageVerifyMessage
-
 					case pg.text.settings:
 						*common.page = PageHelp
-
 					case pg.text.rename:
 						*common.page = PageAbout
-
 					case pg.text.viewProperty:
 						*common.page = PageHelp
 					}

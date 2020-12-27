@@ -262,14 +262,6 @@ func (c *CollapsibleWithOption) moreOption(gtx layout.Context) layout.Dimensions
 	})
 }
 
-func (c *CollapsibleWithOption) SelectedIndex() int {
-	return c.selectedMoreIndex - 1
-}
-
-func (c *CollapsibleWithOption) Selected() string {
-	return c.Items[c.SelectedIndex()].Text
-}
-
 func (c *CollapsibleWithOption) Hide() {
 	c.isOpened = false
 }

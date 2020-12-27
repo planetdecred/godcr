@@ -55,7 +55,6 @@ type Window struct {
 	clipboard               chan interface{}
 	toast                   chan *toast
 	modal                   chan *modalLoad
-	// sysDestroyWithSync      bool
 }
 
 type WriteClipboard struct {
