@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	PageTickets = "tickets"
+	PageTickets = "Tickets"
 	ticketsView = iota
 	payTicketView
 )
@@ -57,7 +57,7 @@ func (win *Window) TicketPage(common pageCommon) layout.Widget {
 		purchaseTicketButton: common.theme.Button(new(widget.Clickable), "Purchase"),
 		backToTicketsButton:  common.theme.Button(new(widget.Clickable), "Tickets"),
 		passwordModal:        common.theme.Password(),
-		tiketHash:            "f3d44c1073de23d7d12f1bba95b7e04d33e984b4a89f7ec081de68c77f1c6bc7",
+		tiketHash:            "",
 	}
 	pg.purchaseTicketButton.TextSize = values.TextSize12
 	pg.backToTicketsButton.TextSize = values.TextSize12
@@ -135,14 +135,16 @@ func (pg *ticketPage) LayoutTicketPurchase(gtx layout.Context, c *pageCommon) la
 		},
 		func(gtx C) D { return marginTop },
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Flexed(.5, func(gtx C) D {
-					return pg.inputNumbTickets.Layout(gtx)
-				}),
-				layout.Flexed(.5, func(gtx C) D {
-					return pg.inputExpiryBlocks.Layout(gtx)
-				}),
-			)
+			return layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Flexed(.5, func(gtx C) D {
+						return pg.inputNumbTickets.Layout(gtx)
+					}),
+					layout.Flexed(.5, func(gtx C) D {
+						return pg.inputExpiryBlocks.Layout(gtx)
+					}),
+				)
+			})
 		},
 		func(gtx C) D { return marginTop },
 		func(gtx C) D {
@@ -193,11 +195,11 @@ func (pg *ticketPage) LayoutTicketPurchase(gtx layout.Context, c *pageCommon) la
 	}
 
 	if pg.isModalGetTicketFee {
-		return c.Modal(gtx, dims, pg.drawPasswordModalGetTicketFee(gtx, c))
+		return c.Modal(gtx, dims, pg.drawPasswordModalGetTicketFee(gtx))
 	}
 
 	if pg.isModalPayFee {
-		return c.Modal(gtx, dims, pg.drawPasswordModalPayFee(gtx, c))
+		return c.Modal(gtx, dims, pg.drawPasswordModalPayFee(gtx))
 	}
 
 	return dims
@@ -333,7 +335,7 @@ func (pg *ticketPage) drawPasswordModalPurchase(gtx layout.Context, c *pageCommo
 	})
 }
 
-func (pg *ticketPage) drawPasswordModalGetTicketFee(gtx layout.Context, c *pageCommon) layout.Dimensions {
+func (pg *ticketPage) drawPasswordModalGetTicketFee(gtx layout.Context) layout.Dimensions {
 	return pg.passwordModal.Layout(gtx, func(password []byte) {
 		resp, err := pg.vspd.GetVSPFeeAddress(pg.tiketHash, password)
 		if err != nil {
@@ -351,9 +353,9 @@ func (pg *ticketPage) drawPasswordModalGetTicketFee(gtx layout.Context, c *pageC
 	})
 }
 
-func (pg *ticketPage) drawPasswordModalPayFee(gtx layout.Context, c *pageCommon) layout.Dimensions {
+func (pg *ticketPage) drawPasswordModalPayFee(gtx layout.Context) layout.Dimensions {
 	return pg.passwordModal.Layout(gtx, func(password []byte) {
-		msg, err := pg.vspd.PayVSPFee(pg.feeTx, pg.tiketHash, "resp.FeeAddress", password)
+		msg, err := pg.vspd.PayVSPFee(pg.feeTx, pg.tiketHash, "", password)
 		if err != nil {
 			pg.passwordModal.WithError(err.Error())
 			return
