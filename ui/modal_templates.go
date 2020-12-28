@@ -15,8 +15,10 @@ const RenameAccountTemplate = "RenameAccount"
 const PasswordTemplate = "Password"
 const ChangePasswordTemplate = "ChangePassword"
 const ConfirmRemoveTemplate = "ConfirmRemove"
+const InfoTemplate = "Info"
 
 type ModalTemplate struct {
+	th                    *decredmaterial.Theme
 	walletName            decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
@@ -43,6 +45,7 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 	icon.Background = win.theme.Color.Surface
 
 	return &ModalTemplate{
+		th:                    win.theme,
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
 		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
@@ -146,6 +149,18 @@ func (m *ModalTemplate) changePassword() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) verifyMessageInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Body1("After you or your counterparty has genrated a signature, you can use this form to verify the" +
+				" validity of the  signature. \n \nOnce you have entered the address, the message and the corresponding " +
+				"signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID")
+			text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	if !load.isReset {
 		m.resetFields()
@@ -163,6 +178,9 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+						if load.cancelText == "" {
+							return layout.Dimensions{}
+						}
 						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 							m.cancel.Text = load.cancelText
 							m.cancel.Background = th.Color.Surface
@@ -171,6 +189,9 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
+						if load.confirmText == "" {
+							return layout.Dimensions{}
+						}
 						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 							m.confirm.Text = load.confirmText
 							if load.template == ConfirmRemoveTemplate {
@@ -274,6 +295,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.removeWallet(th)
+		return
+	case InfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.verifyMessageInfo()
 		return
 	default:
 		return
