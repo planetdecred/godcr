@@ -43,7 +43,7 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	pg.clearBtn.Color = c.theme.Color.Primary
 
 	return func(gtx C) D {
-		pg.handler(c)
+		pg.handle(c)
 		return pg.Layout(gtx, c)
 	}
 }
