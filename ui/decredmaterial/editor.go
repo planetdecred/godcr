@@ -114,7 +114,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.LineColor = e.t.Color.Danger
 	}
 
-	if e.ErrorLabel.Text != "" && e.Editor.Focused() && e.Editor.Len() != 0 {
+	if e.ErrorLabel.Text != "" && e.Editor.Len() != 0 {
 		e.LineColor, e.TitleLabel.Color = e.t.Color.Danger, e.t.Color.Danger
 	}
 

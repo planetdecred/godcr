@@ -1,11 +1,12 @@
 package ui
 
 import (
-	"gioui.org/f32"
 	"image"
 	"image/color"
 	"strings"
 	"time"
+
+	"gioui.org/f32"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"

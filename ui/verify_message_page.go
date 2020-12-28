@@ -136,6 +136,7 @@ func (pg *verifyMessagePage) handle(c pageCommon) {
 		pg.verifyBtn.Background = c.theme.Color.Primary
 		if pg.verifyBtn.Button.Clicked() && pg.validateAddress(c) {
 			pg.verifyMessage.Text = ""
+			pg.verifyMessageStatus = nil
 			valid, err := c.wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
 			if err != nil {
 				pg.signInput.ErrorLabel.Text = "Invalid signature"
