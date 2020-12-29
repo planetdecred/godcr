@@ -24,7 +24,6 @@ type receivePage struct {
 	newAddrBtn, minInfo       decredmaterial.Button
 	copyBtn, infoBtn, moreBtn decredmaterial.IconButton
 	card                      decredmaterial.Card
-	// copyBtnW, infoBtnW, moreBtnW, minInfoW, newAddrBtnW widget.Clickable
 
 	receiveAddressLabel, addressCopiedLabel, pageInfo decredmaterial.Label
 }
@@ -129,9 +128,6 @@ func (pg *receivePage) rightNav(gtx layout.Context) layout.Dimensions {
 			return layout.Dimensions{}
 		}),
 		layout.Rigid(func(gtx C) D {
-			// layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
-			// 	pg.infoBtn.Layout(gtx, &pg.infoBtnW)
-			// })
 			return layout.Dimensions{}
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -229,7 +225,6 @@ func (pg *receivePage) Handle(common pageCommon) {
 		addr, err := common.wallet.NextAddress(wallet.ID, account.Number)
 		if err != nil {
 			log.Debug("Error generating new address" + err.Error())
-			// win.err = err.Error()
 		} else {
 			common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress = addr
 			pg.isNewAddr = false
