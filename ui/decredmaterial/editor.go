@@ -114,11 +114,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.LineColor = e.t.Color.Danger
 	}
 
-	if e.Editor.Len() == 0 {
-		e.errorLabel = e.t.Caption("")
-	}
-
-	if e.errorLabel.Text != "" && e.Editor.Len() != 0 {
+	if e.errorLabel.Text != "" {
 		e.LineColor, e.TitleLabel.Color = e.t.Color.Danger, e.t.Color.Danger
 	}
 
@@ -251,8 +247,8 @@ func (e *Editor) SetRequiredErrorText(txt string) {
 	e.requiredErrorText = txt
 }
 
-func (e *Editor) SetError(errorText string) {
-	e.errorLabel.Text = errorText
+func (e *Editor) SetError(text string) {
+	e.errorLabel.Text = text
 }
 
 func (e *Editor) ClearError() {

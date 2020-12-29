@@ -145,7 +145,7 @@ func (pg *verifyMessagePage) handle(c pageCommon) {
 	pg.verifyBtn.Background = c.theme.Color.Hint
 	if pg.inputsNotEmpty(c) {
 		pg.verifyBtn.Background = c.theme.Color.Primary
-		if pg.verifyBtn.Button.Clicked() && pg.validateAddress(c) {
+		if pg.verifyBtn.Button.Clicked() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
 			valid, err := c.wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
@@ -168,8 +168,19 @@ func (pg *verifyMessagePage) handle(c pageCommon) {
 		}
 	}
 
+	pg.handlerEditorEvents(&c, pg.addressInput.Editor)
 	if pg.clearBtn.Button.Clicked() {
 		pg.clearInputs(&c)
+	}
+}
+
+func (pg *verifyMessagePage) handlerEditorEvents(c *pageCommon, w *widget.Editor) {
+	for _, evt := range w.Events() {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			pg.validateAddress(*c)
+			return
+		}
 	}
 }
 
@@ -207,3 +218,4 @@ func (pg *verifyMessagePage) inputsNotEmpty(c pageCommon) bool {
 	pg.verifyBtn.Background = c.theme.Color.Primary
 	return true
 }
+
