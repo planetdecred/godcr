@@ -150,7 +150,7 @@ func (pg *verifyMessagePage) handle(c pageCommon) {
 			pg.verifyMessageStatus = nil
 			valid, err := c.wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
 			if err != nil {
-				pg.signInput.ErrorLabel.Text = "Invalid signature"
+				pg.signInput.SetError("Invalid signature")
 				return
 			}
 
@@ -180,13 +180,13 @@ func (pg *verifyMessagePage) clearInputs(c *pageCommon) {
 	pg.signInput.Editor.SetText("")
 	pg.messageInput.Editor.SetText("")
 	pg.verifyMessage.Text = ""
-	pg.addressInput.ErrorLabel.Text = ""
-	pg.signInput.ErrorLabel.Text = ""
+	pg.addressInput.SetError("")
+	pg.signInput.SetError("")
 }
 
 func (pg *verifyMessagePage) validateAddress(c pageCommon) bool {
 	if isValid, _ := c.wallet.IsAddressValid(pg.addressInput.Editor.Text()); !isValid {
-		pg.addressInput.ErrorLabel.Text = "Invalid address"
+		pg.addressInput.SetError("Invalid address")
 		return false
 	}
 

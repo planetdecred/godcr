@@ -20,7 +20,7 @@ type Editor struct {
 	material.EditorStyle
 
 	TitleLabel Label
-	ErrorLabel Label
+	errorLabel Label
 	LineColor  color.RGBA
 
 	flexWidth float32
@@ -63,7 +63,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		IsTitleLabel:      true,
 		Bordered:          true,
 		LineColor:         t.Color.Hint,
-		ErrorLabel:        errorLabel,
+		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 
 		m2: unit.Dp(2),
@@ -110,11 +110,15 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if e.IsRequired && !e.Editor.Focused() && e.Editor.Len() == 0 {
-		e.ErrorLabel.Text = e.requiredErrorText
+		e.errorLabel.Text = e.requiredErrorText
 		e.LineColor = e.t.Color.Danger
 	}
 
-	if e.ErrorLabel.Text != "" && e.Editor.Len() != 0 {
+	if e.Editor.Len() == 0 {
+		e.errorLabel = e.t.Caption("")
+	}
+
+	if e.errorLabel.Text != "" && e.Editor.Len() != 0 {
 		e.LineColor, e.TitleLabel.Color = e.t.Color.Danger, e.t.Color.Danger
 	}
 
@@ -128,13 +132,13 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 								return e.editorLayout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								if e.ErrorLabel.Text != "" {
+								if e.errorLabel.Text != "" {
 									inset := layout.Inset{
 										Top:  e.m2,
 										Left: e.m5,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
-										return e.ErrorLabel.Layout(gtx)
+										return e.errorLabel.Layout(gtx)
 									})
 								}
 								return layout.Dimensions{}
@@ -230,7 +234,7 @@ func (e Editor) handleEvents() {
 		e.Editor.SetText("")
 	}
 
-	if e.ErrorLabel.Text != "" {
+	if e.errorLabel.Text != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
 		e.LineColor = e.t.Color.Hint
@@ -248,13 +252,13 @@ func (e *Editor) SetRequiredErrorText(txt string) {
 }
 
 func (e *Editor) SetError(errorText string) {
-	e.ErrorLabel.Text = errorText
+	e.errorLabel.Text = errorText
 }
 
 func (e *Editor) ClearError() {
-	e.ErrorLabel.Text = ""
+	e.errorLabel.Text = ""
 }
 
 func (e *Editor) IsDirty() bool {
-	return e.ErrorLabel.Text == ""
+	return e.errorLabel.Text == ""
 }

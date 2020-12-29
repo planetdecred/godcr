@@ -216,7 +216,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	case CreateWalletTemplate:
 		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
 			// reset error label when password and matching password fields match
-			m.matchSpendingPassword.ErrorLabel.Text = ""
+			m.matchSpendingPassword.SetError("")
 		}
 
 		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
@@ -271,7 +271,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	case ChangePasswordTemplate:
 		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
 			// reset error label when password and matching password fields match
-			m.matchSpendingPassword.ErrorLabel.Text = ""
+			m.matchSpendingPassword.SetError("")
 		}
 
 		if m.editorsNotEmpty(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
@@ -335,11 +335,11 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 	matching := editors[1]
 
 	if password.Text() != matching.Text() {
-		m.matchSpendingPassword.ErrorLabel.Text = "passwords do not match"
+		m.matchSpendingPassword.SetError("passwords do not match")
 		return false
 	}
 
-	m.matchSpendingPassword.ErrorLabel.Text = ""
+	m.matchSpendingPassword.SetError("")
 	return true
 }
 
@@ -348,5 +348,5 @@ func (m *ModalTemplate) resetFields() {
 	m.matchSpendingPassword.Editor.SetText("")
 	m.spendingPassword.Editor.SetText("")
 	m.walletName.Editor.SetText("")
-	m.matchSpendingPassword.ErrorLabel.Text = ""
+	m.matchSpendingPassword.SetError("")
 }

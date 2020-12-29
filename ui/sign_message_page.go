@@ -249,17 +249,17 @@ func (pg *signMessagePage) validate(ignoreEmpty bool) bool {
 
 func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 	address := pg.addressEditor.Editor.Text()
-	pg.addressEditor.ErrorLabel.Text = ""
+	pg.addressEditor.SetError("")
 
 	if address == "" && !ignoreEmpty {
-		pg.addressEditor.ErrorLabel.Text = "Please enter a valid address"
+		pg.addressEditor.SetError("Please enter a valid address")
 		return false
 	}
 
 	if address != "" {
 		isValid, _ := pg.wallet.IsAddressValid(address)
 		if !isValid {
-			pg.addressEditor.ErrorLabel.Text = "Invalid address"
+			pg.addressEditor.SetError("Invalid address")
 			return false
 		}
 	}
@@ -269,7 +269,7 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
 	message := pg.messageEditor.Editor.Text()
 	if message == "" && !ignoreEmpty {
-		pg.messageEditor.ErrorLabel.Text = "Please enter a message to sign"
+		pg.messageEditor.SetError("Please enter a message to sign")
 		return false
 	}
 	return true
