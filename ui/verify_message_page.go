@@ -60,6 +60,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dim
 			func(gtx layout.Context) layout.Dimensions {
 				return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(pg.description()),
 						layout.Rigid(pg.inputRow(pg.addressInput)),
 						layout.Rigid(pg.inputRow(pg.signInput)),
 						layout.Rigid(pg.inputRow(pg.messageInput)),
@@ -78,6 +79,16 @@ func (pg *verifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widge
 	return func(gtx C) D {
 		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 			return editor.Layout(gtx)
+		})
+	}
+}
+
+func (pg *verifyMessagePage) description() layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		desc := pg.theme.Caption("Enter the address, signature, and message to verify:")
+		desc.Color = pg.theme.Color.Gray
+		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+			return desc.Layout(gtx)
 		})
 	}
 }
