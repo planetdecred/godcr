@@ -126,9 +126,9 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header func(C) D, con
 	expandIcon := c.theme.expandIcon
 	collapseIcon.Scale, expandIcon.Scale = 0.25, 0.25
 
-	icon := collapseIcon
+	icon := expandIcon
 	if c.Collapsible.IsExpanded {
-		icon = expandIcon
+		icon = collapseIcon
 	}
 
 	dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
