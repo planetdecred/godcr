@@ -72,6 +72,7 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.UpdatedAccount:
 		win.notifyOnSuccess("Account renamed")
 	case *wallet.Signature:
+		win.notifyOnSuccess("Message signed")
 		win.signatureResult = update.(*wallet.Signature)
 	case *dcrlibwallet.TxAuthor:
 		txAuthor := update.(*dcrlibwallet.TxAuthor)

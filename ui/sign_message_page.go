@@ -27,6 +27,9 @@ type signMessagePage struct {
 	clearButton, signButton, copyButton        decredmaterial.Button
 	passwordModal                              *decredmaterial.Password
 	result                                     **wallet.Signature
+	line                                       *decredmaterial.Line
+	copySignature                              *widget.Clickable
+	copyIcon                                   *widget.Image
 }
 
 func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
@@ -43,6 +46,8 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	clearButton.Color = common.theme.Color.Gray
 	errorLabel := common.theme.Caption("")
 	errorLabel.Color = common.theme.Color.Danger
+	copyIcon := common.icons.copyIcon
+	copyIcon.Scale = 0.25
 
 	pg := &signMessagePage{
 		container: layout.List{
@@ -52,16 +57,22 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		wallet: common.wallet,
 
 		titleLabel:         common.theme.H5("Sign Message"),
-		signedMessageLabel: common.theme.H5(""),
+		signedMessageLabel: common.theme.Body1(""),
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
 		messageEditor:      messageEditor,
 
-		clearButton: clearButton,
-		signButton:  common.theme.Button(new(widget.Clickable), "Sign message"),
-		copyButton:  common.theme.Button(new(widget.Clickable), "Copy"),
-		result:      &win.signatureResult,
+		clearButton:   clearButton,
+		signButton:    common.theme.Button(new(widget.Clickable), "Sign message"),
+		copyButton:    common.theme.Button(new(widget.Clickable), "Copy"),
+		result:        &win.signatureResult,
+		line:          common.theme.Line(),
+		copySignature: new(widget.Clickable),
+		copyIcon:      copyIcon,
 	}
+
+	pg.signedMessageLabel.Color = common.theme.Color.Gray
+	pg.line.Color = common.theme.Color.Background
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -104,7 +115,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 
 func (pg *signMessagePage) description() layout.Widget {
 	return func(gtx C) D {
-		desc := pg.theme.Caption("Enter an address and message to sign")
+		desc := pg.theme.Caption("Enter an address and message to sign:")
 		desc.Color = pg.theme.Color.Gray
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 			return desc.Layout(gtx)
@@ -151,10 +162,49 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 		}
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.signedMessageLabel.Layout(gtx)
+				m := values.MarginPadding30
+				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+					pg.line.Width = gtx.Constraints.Max.X
+					pg.line.Height = 3
+					return pg.line.Layout(gtx)
+				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.copyButton.Layout(gtx)
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						return border.Layout(gtx, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Flexed(0.9, func(gtx C) D {
+										return pg.signedMessageLabel.Layout(gtx)
+									}),
+									layout.Flexed(0.1, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+												return decredmaterial.Clickable(gtx, pg.copySignature, func(gtx C) D {
+													return pg.copyIcon.Layout(gtx)
+												})
+											})
+										})
+									}),
+								)
+							})
+						})
+					}),
+					layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{
+							Top:  values.MarginPaddingMinus10,
+							Left: values.MarginPadding10,
+						}.Layout(gtx, func(gtx C) D {
+							return pg.theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+								label := pg.theme.Body1("Signature")
+								label.Color = pg.theme.Color.Gray
+								return label.Layout(gtx)
+							})
+						})
+					}),
+				)
 			}),
 		)
 	}
@@ -175,11 +225,26 @@ func (pg *signMessagePage) handle(common pageCommon) {
 
 	for pg.signButton.Button.Clicked() {
 		if !pg.isSigningMessage && pg.validate(false) {
-			pg.isPasswordModalOpen = true
+			address := pg.addressEditor.Editor.Text()
+			message := pg.messageEditor.Editor.Text()
+
+			go func() {
+				common.modalReceiver <- &modalLoad{
+					template: PasswordTemplate,
+					title:    "Confirm to sign",
+					confirm: func(pass string) {
+						pg.signButton.Text = "Signing..."
+						pg.wallet.SignMessage(pg.walletID, []byte(pass), address, message, pg.errChannel)
+					},
+					confirmText: "Confirm",
+					cancel:      common.closeModal,
+					cancelText:  "Cancel",
+				}
+			}()
 		}
 	}
 
-	if pg.copyButton.Button.Clicked() {
+	if pg.copySignature.Clicked() {
 		go func() {
 			common.clipboard <- WriteClipboard{Text: pg.signedMessageLabel.Text}
 		}()
@@ -201,18 +266,6 @@ func (pg *signMessagePage) handle(common pageCommon) {
 		pg.isSigningMessage = false
 		pg.signButton.Text = "Sign message"
 	}
-}
-
-func (pg *signMessagePage) confirm(password []byte) {
-	pg.isPasswordModalOpen = false
-	pg.isSigningMessage = true
-
-	pg.signButton.Text = "Signing..."
-	pg.wallet.SignMessage(pg.walletID, password, pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.errChannel)
-}
-
-func (pg *signMessagePage) cancel() {
-	pg.isPasswordModalOpen = false
 }
 
 func (pg *signMessagePage) validate(ignoreEmpty bool) bool {
@@ -255,7 +308,5 @@ func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
 func (pg *signMessagePage) clearForm() {
 	pg.addressEditor.Editor.SetText("")
 	pg.messageEditor.Editor.SetText("")
-	// pg.addressEditor.SetError("")
-	// pg.messageEditor.SetError("")
 	pg.errorLabel.Text = ""
 }
