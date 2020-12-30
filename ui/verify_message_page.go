@@ -218,4 +218,3 @@ func (pg *verifyMessagePage) inputsNotEmpty(c pageCommon) bool {
 	pg.verifyBtn.Background = c.theme.Color.Primary
 	return true
 }
-
