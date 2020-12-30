@@ -23,7 +23,7 @@ type receivePage struct {
 
 	newAddrBtn, minInfo       decredmaterial.Button
 	copyBtn, infoBtn, moreBtn decredmaterial.IconButton
-	// copyBtnW, infoBtnW, moreBtnW, minInfoW, newAddrBtnW widget.Clickable
+	card                      decredmaterial.Card
 
 	receiveAddressLabel, addressCopiedLabel, pageInfo decredmaterial.Label
 }
@@ -53,6 +53,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		receiveAddressLabel: receiveAddressLabel,
 		pageInfo:            pageInfo,
 		addressCopiedLabel:  common.theme.Caption(""),
+		card:                common.theme.Card(),
 	}
 
 	return func(gtx C) D {
@@ -127,9 +128,6 @@ func (pg *receivePage) rightNav(gtx layout.Context) layout.Dimensions {
 			return layout.Dimensions{}
 		}),
 		layout.Rigid(func(gtx C) D {
-			// layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
-			// 	pg.infoBtn.Layout(gtx, &pg.infoBtnW)
-			// })
 			return layout.Dimensions{}
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -204,7 +202,8 @@ func (pg *receivePage) infoDiag(gtx layout.Context) layout.Dimensions {
 			)
 		})
 	}
-	return decredmaterial.Card{}.Layout(gtx, infoDetails)
+
+	return pg.card.Layout(gtx, infoDetails)
 }
 
 func (pg *receivePage) Handle(common pageCommon) {
@@ -226,7 +225,6 @@ func (pg *receivePage) Handle(common pageCommon) {
 		addr, err := common.wallet.NextAddress(wallet.ID, account.Number)
 		if err != nil {
 			log.Debug("Error generating new address" + err.Error())
-			// win.err = err.Error()
 		} else {
 			common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress = addr
 			pg.isNewAddr = false

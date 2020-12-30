@@ -32,6 +32,7 @@ type Window struct {
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions *wallet.Transactions
 	walletTransaction  *wallet.Transaction
+	walletAccount      *wallet.Account
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -54,7 +55,6 @@ type Window struct {
 	clipboard               chan interface{}
 	toast                   chan *toast
 	modal                   chan *modalLoad
-	sysDestroyWithSync      bool
 }
 
 type WriteClipboard struct {
@@ -75,7 +75,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 		netType = wal.Net
 	}
 	win.window = app.NewWindow(app.Title(fmt.Sprintf("%s (%s)", "godcr", netType)))
-	theme := decredmaterial.NewTheme(collection)
+	theme := decredmaterial.NewTheme(collection, decredIcons)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
 	}
@@ -157,10 +157,6 @@ func (win *Window) Loop(shutdown chan int) {
 					win.updateSyncStatus(true, false)
 				}
 			case wallet.SyncCanceled:
-				if win.sysDestroyWithSync {
-					close(shutdown)
-					return
-				}
 				win.updateSyncStatus(false, false)
 			case wallet.HeadersFetchProgress:
 				win.updateSyncProgress(update.ProgressReport)
@@ -181,13 +177,8 @@ func (win *Window) Loop(shutdown chan int) {
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
-				if win.walletInfo.Syncing || win.walletInfo.Synced {
-					win.sysDestroyWithSync = true
-					win.wallet.CancelSync()
-				} else {
-					close(shutdown)
-				}
-
+				close(shutdown)
+				return
 			case system.FrameEvent:
 				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())

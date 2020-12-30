@@ -9,10 +9,10 @@ import (
 )
 
 type Modal struct {
-	overlayColor    color.RGBA
-	backgroundColor color.RGBA
-	list            *layout.List
-	button          *widget.Clickable
+	overlayColor color.RGBA
+	list         *layout.List
+	button       *widget.Clickable
+	card         Card
 }
 
 func (t *Theme) Modal() *Modal {
@@ -20,10 +20,10 @@ func (t *Theme) Modal() *Modal {
 	overlayColor.A = 200
 
 	return &Modal{
-		overlayColor:    overlayColor,
-		backgroundColor: t.Color.Surface,
-		list:            &layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
-		button:          new(widget.Clickable),
+		overlayColor: overlayColor,
+		list:         &layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
+		button:       new(widget.Clickable),
+		card:         t.Card(),
 	}
 }
 
@@ -48,10 +48,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) 
 					Left:  mg,
 					Right: mg,
 				}.Layout(gtx, func(gtx C) D {
-					return Card{
-						Color:   m.backgroundColor,
-						Rounded: true,
-					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return m.card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						return m.list.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return layout.UniformInset(unit.Dp(10)).Layout(gtx, widgetFuncs[i])

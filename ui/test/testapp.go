@@ -43,8 +43,9 @@ type TestStruct struct {
 		outline                                decredmaterial.Outline
 	}
 
-	collapsible *decredmaterial.Collapsible
-	dropDown    *decredmaterial.DropDown
+	collapsible           *decredmaterial.Collapsible
+	collapsibleWithOption *decredmaterial.CollapsibleWithOption
+	dropDown              *decredmaterial.DropDown
 }
 
 type (
@@ -55,7 +56,8 @@ type (
 func CreateWindow() (*TestStruct, error) {
 	win := new(TestStruct)
 	win.window = app.NewWindow(app.Title("GoDcr - Test app"))
-	theme := decredmaterial.NewTheme(gofont.Collection())
+
+	theme := decredmaterial.NewTheme(gofont.Collection(), nil)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
 	}
@@ -111,6 +113,20 @@ func (t *TestStruct) initWidgets() {
 
 	t.collapsible = theme.Collapsible()
 
+	item := []decredmaterial.MoreItem{
+		{
+			Text: "First item",
+		},
+		{
+			Text: "Second item",
+		},
+		{
+			Text: "Third item",
+		},
+	}
+
+	t.collapsibleWithOption = theme.CollapsibleWithOption(item)
+
 	dropDownItems := []decredmaterial.DropDownItem{
 		{
 			Text: "All",
@@ -136,6 +152,26 @@ func (t *TestStruct) TestPage(gtx layout.Context) {
 
 func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 	t.handleInput()
+	header := func(gtx layout.Context) layout.Dimensions {
+		return t.theme.Body1("Collapsible Widget").Layout(gtx)
+	}
+	content := func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return t.theme.Body2("Hidden item 1").Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return t.theme.Body2("Hidden item 2").Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return t.theme.Body2("Hidden item 3").Layout(gtx)
+			}),
+		)
+	}
+	footer := func(gtx layout.Context) layout.Dimensions {
+		return t.theme.Body1("Footer content").Layout(gtx)
+	}
+
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return t.theme.H4("Decrematerial Test Page").Layout(gtx)
@@ -195,25 +231,11 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 		},
 
 		func(gtx C) D {
-			header := func(gtx layout.Context) layout.Dimensions {
-				return t.theme.Body1("Collapsible Widget").Layout(gtx)
-			}
-			content := func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return t.theme.Body2("Hidden item 1").Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return t.theme.Body2("Hidden item 2").Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return t.theme.Body2("Hidden item 3").Layout(gtx)
-					}),
-				)
-			}
 			return t.collapsible.Layout(gtx, header, content)
 		},
-
+		func(gtx C) D {
+			return t.collapsibleWithOption.Layout(gtx, header, content, footer)
+		},
 		func(gtx C) D {
 			return t.customEditorOutput.outline.Layout(gtx, func(gtx C) D {
 				return t.customEditorOutput.testOutput.Layout(gtx)

@@ -1,40 +1,49 @@
 package ui
 
 import (
-	"reflect"
+	"image"
+	"image/color"
+	"strings"
 
-	"github.com/planetdecred/godcr/ui/values"
-
+	"gioui.org/gesture"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
+	"gioui.org/op/paint"
 	"gioui.org/widget"
+
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageWallet = "Wallet"
 
-const (
-	subWalletMain = iota
-)
+type moreItemText struct {
+	signMessage,
+	verifyMessage,
+	viewProperty,
+	rename,
+	settings string
+}
 
 type walletPage struct {
-	walletInfo *wallet.MultiWalletInfo
-	subPage    int
-	current    wallet.InfoShort
-	wallet     *wallet.Wallet
-	result     **wallet.Signature
-	icons      struct {
-		main, delete, sign, verify, addWallet, rename,
-		changePass, addAcct, backup decredmaterial.IconButton
-	}
-	container, accountsList layout.List
-	line                    *decredmaterial.Line
-	errorLabel              decredmaterial.Label
-	isPasswordModalOpen     bool
-	errChann                chan error
+	walletInfo    *wallet.MultiWalletInfo
+	wallet        *wallet.Wallet
+	walletAccount **wallet.Account
+	theme         *decredmaterial.Theme
+	current       wallet.InfoShort
 
-	renameAcctButtons  []decredmaterial.IconButton
-	renameAcctMinwidth int
+	walletIcon                                 *widget.Image
+	accountIcon                                *widget.Image
+	addAcct, backupButton                      []decredmaterial.IconButton
+	container, accountsList, walletsList, list layout.List
+	line                                       *decredmaterial.Line
+	toAddWalletPage                            *widget.Clickable
+	walletCollapsible                          []*decredmaterial.CollapsibleWithOption
+	toAcctDetails                              []*gesture.Click
+	text                                       moreItemText
+	errChann                                   chan error
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -46,51 +55,36 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		accountsList: layout.List{
 			Axis: layout.Vertical,
 		},
-		wallet:     common.wallet,
-		line:       common.theme.Line(),
-		errorLabel: common.theme.Body2(""),
-		result:     &win.signatureResult,
-		errChann:   common.errorChannels[PageWallet],
+
+		walletsList: layout.List{
+			Axis: layout.Vertical,
+		},
+		list: layout.List{
+			Axis: layout.Vertical,
+		},
+		theme:           common.theme,
+		wallet:          common.wallet,
+		line:            common.theme.Line(),
+		walletAccount:   &win.walletAccount,
+		toAddWalletPage: new(widget.Clickable),
+		errChann:        common.errorChannels[PageWallet],
 	}
-	pg.line.Color = common.theme.Color.Gray
+
 	pg.line.Height = 1
-	pg.errorLabel.Color = common.theme.Color.Danger
 
-	var iconPadding = values.MarginPadding5
-	var iconSize = values.MarginPadding20
+	pg.text = moreItemText{
+		signMessage:   "Sign message",
+		verifyMessage: "Verify message",
+		viewProperty:  "View property",
+		rename:        "Rename",
+		settings:      "Settings",
+	}
 
-	pg.icons.addAcct = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
-	pg.icons.addAcct.Inset = layout.UniformInset(iconPadding)
-	pg.icons.addAcct.Size = iconSize
-	pg.icons.main = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
-	pg.icons.main.Color = common.theme.Color.Hint
-	pg.icons.main.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.walletCollapsible = make([]*decredmaterial.CollapsibleWithOption, 0)
 
-	pg.icons.main.Size = values.MarginPadding30
-	pg.icons.delete = common.theme.IconButton(new(widget.Clickable), common.icons.actionDelete)
-	pg.icons.delete.Size = iconSize
-	pg.icons.delete.Inset = layout.UniformInset(iconPadding)
-	pg.icons.delete.Background = common.theme.Color.Danger
-	pg.icons.sign = common.theme.IconButton(new(widget.Clickable), common.icons.communicationComment)
-	pg.icons.sign.Size = iconSize
-	pg.icons.sign.Inset = layout.UniformInset(iconPadding)
-	pg.icons.verify = common.theme.IconButton(new(widget.Clickable), common.icons.verifyAction)
-	pg.icons.verify.Size = iconSize
-	pg.icons.verify.Inset = layout.UniformInset(iconPadding)
-	pg.icons.addWallet = common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
-	pg.icons.addWallet.Size = iconSize
-	pg.icons.addWallet.Inset = layout.UniformInset(iconPadding)
-	pg.icons.rename = common.theme.IconButton(new(widget.Clickable), common.icons.editorModeEdit)
-	pg.icons.rename.Size = iconSize
-	pg.icons.rename.Inset = layout.UniformInset(iconPadding)
-	pg.icons.changePass = common.theme.IconButton(new(widget.Clickable), common.icons.actionLock)
-	pg.icons.changePass.Size = iconSize
-	pg.icons.changePass.Inset = layout.UniformInset(iconPadding)
-	pg.icons.backup = common.theme.IconButton(new(widget.Clickable), common.icons.actionBackup)
-	pg.icons.backup.Size = iconSize
-	pg.icons.backup.Inset = layout.UniformInset(iconPadding)
-
-	pg.renameAcctMinwidth = 250
+	pg.addAcct = nil
+	pg.backupButton = nil
+	pg.toAcctDetails = make([]*gesture.Click, 0)
 
 	return func(gtx C) D {
 		pg.Handle(common)
@@ -100,275 +94,418 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 // Layout lays out the widgets for the main wallets pg.
 func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	if pg.current.ID != common.info.Wallets[*common.selectedWallet].ID ||
-		!reflect.DeepEqual(pg.current.Seed, common.info.Wallets[*common.selectedWallet].Seed) {
-		pg.current = common.info.Wallets[*common.selectedWallet]
-		pg.renameAcctButtons = nil
+	if common.info.LoadedWallets == 0 {
+		return common.Layout(gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return common.theme.H3("No wallets loaded").Layout(gtx)
+			})
+		})
+	}
 
-		for i := 0; i < len(pg.current.Accounts); i++ {
-			btn := common.theme.IconButton(new(widget.Clickable), common.icons.editorModeEdit)
-			btn.Size = values.TextSize12
-			btn.Color = common.theme.Color.Primary
-			btn.Background = common.theme.Color.Surface
-			btn.Inset = layout.UniformInset(values.MarginPadding5)
-			pg.renameAcctButtons = append(pg.renameAcctButtons, btn)
-		}
+	for i := 0; i < common.info.LoadedWallets; i++ {
+		pg.walletCollapsible = append(pg.walletCollapsible, pg.theme.CollapsibleWithOption([]decredmaterial.MoreItem{
+			{
+				Text: pg.text.signMessage,
+			},
+			{
+				Text: pg.text.verifyMessage,
+			},
+			{
+				Text: pg.text.viewProperty,
+			},
+			{
+				Text: pg.text.rename,
+			},
+			{
+				Text: pg.text.settings,
+			},
+		}))
+
+		addAcctBtn := common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
+		addAcctBtn.Inset = layout.UniformInset(values.MarginPadding0)
+		addAcctBtn.Size = values.MarginPadding25
+		addAcctBtn.Background = color.RGBA{}
+		addAcctBtn.Color = common.theme.Color.Text
+		pg.addAcct = append(pg.addAcct, addAcctBtn)
+
+		backupBtn := common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowForward)
+		backupBtn.Color = common.theme.Color.Surface
+		backupBtn.Inset = layout.UniformInset(values.MarginPadding0)
+		backupBtn.Size = values.MarginPadding20
+		pg.backupButton = append(pg.backupButton, backupBtn)
+	}
+
+	pageContent := []func(gtx C) D{
+		func(gtx C) D {
+			return pg.walletSection(gtx, common)
+		},
+		func(gtx C) D {
+			return pg.watchOnlyWalletSection(gtx, common)
+		},
 	}
 
 	body := func(gtx C) D {
-		return layout.Stack{}.Layout(gtx,
+		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Flexed(0.88, func(gtx C) D {
-							return pg.topRow(gtx, common)
-						}),
-						layout.Flexed(0.12, func(gtx C) D {
-							return pg.bottomRow(gtx, common)
-						}),
-					)
+				return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+				})
+			}),
+			layout.Stacked(func(gtx C) D {
+				icon := common.icons.newWalletIcon
+				icon.Scale = 0.26
+				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+				return layout.SE.Layout(gtx, func(gtx C) D {
+					return decredmaterial.Clickable(gtx, pg.toAddWalletPage, func(gtx C) D {
+						return icon.Layout(gtx)
+					})
 				})
 			}),
 		)
 	}
 
-	return common.LayoutWithWallets(gtx, body)
+	return common.Layout(gtx, body)
 }
 
-func (pg *walletPage) topRow(gtx layout.Context, common pageCommon) layout.Dimensions {
-	wdgs := []func(gtx C) D{
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return common.theme.H5(pg.current.Name).Layout(gtx)
-				}),
-			)
-		},
-		func(gtx C) D {
-			return common.theme.H6("Total Balance: " + pg.current.Balance).Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return common.theme.H6("Accounts").Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return pg.icons.addAcct.Layout(gtx)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			return pg.accountsList.Layout(gtx, len(pg.current.Accounts), func(gtx C, i int) D {
-				acct := pg.current.Accounts[i]
-				a := func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return common.theme.Body1(acct.Name).Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									if pg.renameAcctButtons != nil && acct.Name != "imported" {
-										return pg.renameAcctButtons[i].Layout(gtx)
-									}
-									return layout.Dimensions{}
-								}),
-							)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return common.theme.Body1(acct.TotalBalance).Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return common.theme.Body1("Keys: " + acct.Keys.External + " external, " + acct.Keys.Internal + " internal, " + acct.Keys.Imported + " imported").Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return common.theme.Body1("HD Path: " + acct.HDPath).Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							pg.line.Width = gtx.Px(values.MarginPadding350)
-							return pg.line.Layout(gtx)
-						}),
-					)
-				}
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, a)
-			})
-		},
-	}
+func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
+	pg.walletIcon.Scale = 0.05
 
-	return pg.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-		return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, wdgs[i])
+	return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
+		wn := common.info.Wallets[i].Name
+		wb := common.info.Wallets[i].Balance
+		accounts := common.info.Wallets[i].Accounts
+		seed := common.info.Wallets[i].Seed
+		wIndex := i
+
+		pg.updateAcctDetailsButtons(&accounts)
+
+		collapsibleHeader := func(gtx C) D {
+			walName := strings.Title(strings.ToLower(wn))
+			walletNameLabel := pg.theme.Body1(walName)
+			walletBalLabel := pg.theme.Body1(wb)
+			walletBalLabel.Color = pg.theme.Color.Gray
+			return pg.tableLayout(gtx, walletNameLabel, walletBalLabel, true, len(seed))
+		}
+
+		collapsibleFooter := func(gtx C) D {
+			return pg.backupSeedNotification(gtx, common, i)
+		}
+
+		collapsibleBody := func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				gtx.Constraints.Min.Y = 100
+
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.accountsList.Layout(gtx, len(accounts), func(gtx C, x int) D {
+							accountsName := accounts[x].Name
+							totalBalance := accounts[x].TotalBalance
+							spendable := dcrutil.Amount(accounts[x].SpendableBalance).String()
+
+							click := pg.toAcctDetails[x]
+							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+							click.Add(gtx.Ops)
+							pg.goToAcctDetails(gtx, common, &accounts[x], wIndex, click)
+							return pg.walletAccountsLayout(gtx, accountsName, totalBalance, spendable, common)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						pg.line.Width = gtx.Constraints.Max.X
+						pg.line.Color = common.theme.Color.Background
+						m := values.MarginPadding10
+						return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+							return pg.line.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Bottom: values.MarginPadding5,
+									Right:  values.MarginPadding10,
+								}.Layout(gtx, func(gtx C) D {
+									return pg.addAcct[i].Layout(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.H6("Add new account")
+								txt.Color = common.theme.Color.Gray
+								return txt.Layout(gtx)
+							}),
+						)
+					}),
+				)
+			})
+		}
+
+		return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+			if len(seed) > 0 {
+				return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleFooter)
+			}
+			return pg.walletCollapsible[i].Layout(gtx, collapsibleHeader, collapsibleBody, nil)
+		})
 	})
 }
 
-func (pg *walletPage) bottomRow(gtx layout.Context, common pageCommon) layout.Dimensions {
-	if pg.walletInfo.Synced || pg.walletInfo.Syncing {
-		pg.icons.addWallet.Background = common.theme.Color.Hint
-	} else {
-		pg.icons.addWallet.Background = common.theme.Color.Primary
-	}
-
-	return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(pg.newRow(&common, pg.icons.addWallet, "Add wallet")),
-			layout.Rigid(pg.newRow(&common, pg.icons.rename, "Rename wallet")),
-			layout.Rigid(pg.newRow(&common, pg.icons.sign, "Sign message")),
-			layout.Rigid(pg.newRow(&common, pg.icons.verify, "Verify message")),
-			layout.Rigid(pg.newRow(&common, pg.icons.changePass, "Change passphrase")),
-			layout.Rigid(pg.newRow(&common, pg.icons.delete, "Delete wallet")),
-			layout.Rigid(
-				func(gtx C) D {
-					if len(pg.current.Seed) > 0 {
-						return pg.newRow(&common, pg.icons.backup, "Backup Seed")(gtx)
-					}
-					return layout.Dimensions{}
-				}),
+func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+	return pg.sectionLayout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				txt := pg.theme.Body1("Watch-only Wallets")
+				txt.Color = pg.theme.Color.Gray
+				return txt.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				pg.line.Width = gtx.Constraints.Max.X
+				pg.line.Color = common.theme.Color.Hint
+				m := values.MarginPadding10
+				inset := layout.Inset{
+					Top:    m,
+					Bottom: m,
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return pg.line.Layout(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return pg.theme.H6("coming soon").Layout(gtx)
+			}),
 		)
 	})
 }
 
-// Handle handles all widget inputs on the main wallets pg.
-func (pg *walletPage) Handle(common pageCommon) {
-	// Subs
-	if pg.icons.main.Button.Clicked() {
-		pg.errorLabel.Text = ""
-		pg.subPage = subWalletMain
-		return
+func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label, isIcon bool, seed int) layout.Dimensions {
+	m := values.MarginPadding0
+	if seed > 0 {
+		m = values.MarginPaddingMinus5
 	}
 
-	if pg.icons.rename.Button.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RenameWalletTemplate,
-				title:    "Rename wallet",
-				confirm: func(name string) {
-					common.wallet.RenameWallet(pg.current.ID, name, pg.errChann)
-				},
-				confirmText: "Rename",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			if isIcon {
+				inset := layout.Inset{
+					Right: values.MarginPadding10,
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return pg.walletIcon.Layout(gtx)
+				})
 			}
-		}()
-	}
-
-	if pg.icons.addWallet.Button.Clicked() {
-		if !(pg.walletInfo.Synced || pg.walletInfo.Syncing) {
-			*common.page = PageCreateRestore
-			return
-		}
-		common.Notify("You have to stop sync to create a new wallet", false)
-		return
-	}
-
-	if pg.icons.delete.Button.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ConfirmRemoveTemplate,
-				title:    "Remove wallet from device",
-				confirm: func() {
-					go func() {
-						common.modalReceiver <- &modalLoad{
-							template: PasswordTemplate,
-							title:    "Remove wallet from device",
-							confirm: func(password string) {
-								go func() {
-									pg.wallet.DeleteWallet(pg.current.ID, []byte(password), pg.errChann)
-								}()
-							},
-							confirmText: "Remove",
-							cancel:      common.closeModal,
-							cancelText:  "Cancel",
+			return layout.Dimensions{}
+		}),
+		layout.Rigid(func(gtx C) D {
+			inset := layout.Inset{
+				Top: m,
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return leftLabel.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						if isIcon {
+							if seed > 0 {
+								txt := pg.theme.Caption("Not backed up")
+								txt.Color = pg.theme.Color.Orange
+								inset := layout.Inset{
+									Bottom: values.MarginPadding5,
+								}
+								return inset.Layout(gtx, func(gtx C) D {
+									return txt.Layout(gtx)
+								})
+							}
 						}
-					}()
-				},
-				confirmText: "Remove",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
-		return
-	}
+						return layout.Dimensions{}
+					}),
+				)
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return rightLabel.Layout(gtx)
+			})
+		}),
+	)
+}
 
-	if pg.icons.changePass.Button.Clicked() {
-		go func() {
-			walletID := common.info.Wallets[*common.selectedWallet].ID
-			common.modalReceiver <- &modalLoad{
-				template: PasswordTemplate,
-				title:    "Confirm to change",
-				confirm: func(passphrase string) {
-					err := pg.wallet.UnlockWallet(walletID, []byte(passphrase))
-					if err != nil {
-						common.Notify(err.Error(), false)
-						return
+func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, spendableBal string, common pageCommon) layout.Dimensions {
+	pg.accountIcon = common.icons.accountIcon
+	if name == "imported" {
+		pg.accountIcon = common.icons.importedAccountIcon
+	}
+	pg.accountIcon.Scale = 0.8
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			pg.line.Width = gtx.Constraints.Max.X
+			pg.line.Color = common.theme.Color.Background
+			m := values.MarginPadding10
+			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+				return pg.line.Layout(gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					inset := layout.Inset{
+						Right: values.MarginPadding10,
+						Top:   values.MarginPadding15,
 					}
-					go func() {
-						common.modalReceiver <- &modalLoad{
-							template: ChangePasswordTemplate,
-							title:    "Change spending password",
-							confirm: func(newPassphrase string) {
-								go func() {
-									err := common.wallet.ChangeWalletPassphrase(walletID, passphrase, newPassphrase)
-									if err != nil {
-										common.Notify(err.Error(), false)
-										return
-									}
-									common.Notify("Spending password changed", true)
-									common.closeModal()
-								}()
-							},
-							confirmText: "Change",
-							cancel:      common.closeModal,
-							cancelText:  "Cancel",
-						}
-					}()
-				},
-				confirmText: "Confirm",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+					return inset.Layout(gtx, func(gtx C) D {
+						return pg.accountIcon.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							inset := layout.Inset{
+								Right: values.MarginPadding10,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										acctName := strings.Title(strings.ToLower(name))
+										return pg.theme.H6(acctName).Layout(gtx)
+									}),
+									layout.Flexed(1, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											inset := layout.Inset{
+												Right: values.MarginPadding10,
+											}
+											return inset.Layout(gtx, func(gtx C) D {
+												return layoutBalance(gtx, totalBal, common)
+											})
+										})
+									}),
+								)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							inset := layout.Inset{
+								Right: values.MarginPadding20,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								spendibleLabel := pg.theme.Body2("Spendable")
+								spendibleLabel.Color = pg.theme.Color.Gray
+								spendibleBalLabel := pg.theme.Body2(spendableBal)
+								spendibleBalLabel.Color = pg.theme.Color.Gray
+								return pg.tableLayout(gtx, spendibleLabel, spendibleBalLabel, false, 0)
+							})
+						}),
+					)
+				}),
+			)
+		}),
+	)
+}
+
+func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageCommon, i int) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	color := common.theme.Color.InvText
+	return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				icon := common.icons.walletAlertIcon
+				icon.Scale = 0.24
+				return icon.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				inset := layout.Inset{
+					Left: values.MarginPadding10,
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := pg.theme.Body2("Back up seed phrase")
+							txt.Color = color
+							return txt.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := pg.theme.Caption("Verify your seed phrase so you can recover your funds when needed.")
+							txt.Color = color
+							return txt.Layout(gtx)
+						}),
+					)
+				})
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				inset := layout.Inset{
+					Top: values.MarginPadding5,
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return pg.backupButton[i].Layout(gtx)
+					})
+				})
+			}),
+		)
+	})
+}
+
+func (pg *walletPage) sectionLayout(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return pg.theme.Card().Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding20).Layout(gtx, body)
+	})
+}
+
+func (pg *walletPage) updateAcctDetailsButtons(walAcct *[]wallet.Account) {
+	if len(*walAcct) != len(pg.toAcctDetails) {
+		for i := 0; i < len(*walAcct); i++ {
+			pg.toAcctDetails = append(pg.toAcctDetails, &gesture.Click{})
+		}
+	}
+}
+
+func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acct *wallet.Account, index int, click *gesture.Click) {
+	for _, e := range click.Events(gtx) {
+		if e.Type == gesture.TypeClick {
+			*pg.walletAccount = acct
+			*common.page = PageAccountDetails
+			*common.selectedWallet = index
+		}
+	}
+}
+
+func (pg *walletPage) Handle(common pageCommon) {
+	for index, b := range pg.walletCollapsible {
+		for b.Collapsible.Button.Clicked() {
+			b.Collapsible.IsExpanded = !b.Collapsible.IsExpanded
+		}
+
+		for i, t := range b.Items {
+			if i > 0 {
+				for t.Button.Clicked() {
+					*common.selectedWallet = index
+					switch b.Items[i].Text {
+					case pg.text.signMessage:
+						*common.page = PageSignMessage
+					case pg.text.verifyMessage:
+						*common.page = PageVerifyMessage
+					case pg.text.settings:
+						*common.page = PageHelp
+					case pg.text.rename:
+						*common.page = PageAbout
+					case pg.text.viewProperty:
+						*common.page = PageHelp
+					}
+					b.Hide()
+				}
 			}
-		}()
-		return
+		}
 	}
 
-	if pg.icons.sign.Button.Clicked() {
-		*common.page = PageSignMessage
-	}
-
-	if pg.icons.verify.Button.Clicked() {
-		*common.page = PageVerifyMessage
-		return
-	}
-
-	if pg.icons.addAcct.Button.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: CreateAccountTemplate,
-				title:    "Create new account",
-				confirm: func(name, password string) {
-					walletID := common.info.Wallets[*common.selectedWallet].ID
-					pg.wallet.AddAccount(walletID, name, []byte(password), pg.errChann)
-				},
-				confirmText: "Create",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
-		return
-	}
-
-	for i := 0; i < len(pg.renameAcctButtons); i++ {
-		if pg.renameAcctButtons[i].Button.Clicked() {
+	for i, b := range pg.addAcct {
+		for b.Button.Clicked() {
+			walletID := pg.walletInfo.Wallets[i].ID
 			go func() {
 				common.modalReceiver <- &modalLoad{
-					template: RenameAccountTemplate,
-					title:    "Rename account",
-					confirm: func(name string) {
-						pg.wallet.RenameAccount(pg.current.ID, pg.current.Accounts[i].Number, name, pg.errChann)
-						common.info.Wallets[*common.selectedWallet].Accounts[i].Name = name
-						pg.current = common.info.Wallets[*common.selectedWallet]
+					template: CreateAccountTemplate,
+					title:    "Create new account",
+					confirm: func(name string, passphrase string) {
+						pg.wallet.AddAccount(walletID, name, []byte(passphrase), pg.errChann)
 					},
-					confirmText: "Rename",
+					confirmText: "Create",
 					cancel:      common.closeModal,
 					cancelText:  "Cancel",
 				}
@@ -377,50 +514,27 @@ func (pg *walletPage) Handle(common pageCommon) {
 		}
 	}
 
-	if pg.icons.backup.Button.Clicked() {
-		*common.page = PageSeedBackup
-	}
-
-	select {
-	case err := <-pg.errChann:
-		if err.Error() == "invalid_passphrase" {
-			pg.errorLabel.Text = "Wallet passphrase is incorrect."
-		} else {
-			pg.errorLabel.Text = err.Error()
+	for i, b := range pg.backupButton {
+		for b.Button.Clicked() {
+			*common.selectedWallet = i
+			pg.current = pg.walletInfo.Wallets[i]
+			*common.page = PageSeedBackup
 		}
-		common.Notify(pg.errorLabel.Text, false)
-	default:
 	}
-}
 
-func (pg *walletPage) returnBtn(gtx layout.Context) layout.Dimensions {
-	return layout.W.Layout(gtx, func(gtx C) D {
-		return pg.icons.main.Layout(gtx)
-	})
-}
-
-func (pg *walletPage) newRow(common *pageCommon, button decredmaterial.IconButton, label string) layout.Widget {
-	return func(gtx C) D {
-		return layout.Inset{Right: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return button.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return common.theme.Caption(label).Layout(gtx)
-					})
-				}),
-			)
-		})
+	for pg.toAddWalletPage.Clicked() {
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: CreateWalletTemplate,
+				title:    "Create new wallet",
+				confirm: func(name string, passphrase string) {
+					pg.wallet.CreateWallet(name, passphrase, pg.errChann)
+				},
+				confirmText: "Create",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
+		break
 	}
-}
-
-func (pg *walletPage) confirm(password []byte) {
-	pg.isPasswordModalOpen = false
-	pg.wallet.DeleteWallet(pg.current.ID, password, pg.errChann)
-}
-
-func (pg *walletPage) cancel() {
-	pg.isPasswordModalOpen = false
 }

@@ -59,14 +59,13 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		messageEditor:      messageEditor,
 
 		clearButton: clearButton,
-		signButton:  common.theme.Button(new(widget.Clickable), "Sign"),
+		signButton:  common.theme.Button(new(widget.Clickable), "Sign message"),
 		copyButton:  common.theme.Button(new(widget.Clickable), "Copy"),
 		result:      &win.signatureResult,
 
 		backButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 	}
-	pg.backButton.Color = common.theme.Color.Hint
-	pg.backButton.Size = values.MarginPadding30
+	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
@@ -123,9 +122,13 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 	}
 
 	body := common.Layout(gtx, func(gtx C) D {
-		return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-				return w[i](gtx)
+		return common.theme.Card().Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+				return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
+					return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+						return w[i](gtx)
+					})
+				})
 			})
 		})
 	})
@@ -139,21 +142,25 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 }
 
 func (pg *signMessagePage) drawButtonsRow(gtx layout.Context) layout.Dimensions {
-	return layout.E.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				inset := layout.Inset{
-					Right: values.MarginPadding5,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return pg.clearButton.Layout(gtx)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.signButton.Layout(gtx)
-			}),
-		)
-	})
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Right: values.MarginPadding5,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.clearButton.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.signButton.Layout(gtx)
+					}),
+				)
+			})
+		}),
+	)
 }
 
 func (pg *signMessagePage) drawResult(gtx layout.Context) layout.Dimensions {
@@ -210,7 +217,7 @@ func (pg *signMessagePage) handle(common pageCommon) {
 		}
 		*pg.result = nil
 		pg.isSigningMessage = false
-		pg.signButton.Text = "Sign"
+		pg.signButton.Text = "Sign message"
 	}
 
 	if pg.backButton.Button.Clicked() {

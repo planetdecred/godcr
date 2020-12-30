@@ -30,8 +30,8 @@ var (
 	// decred complemetary colors
 
 	//lightblue = rgb(0x70cbff)
-	//orange    = rgb(0xed6d47)
-	green = rgb(0x41bf53)
+	orange = rgb(0xed6d47)
+	green  = rgb(0x41bf53)
 )
 
 type (
@@ -57,6 +57,7 @@ type Theme struct {
 		Surface    color.RGBA
 		Gray       color.RGBA
 		Black      color.RGBA
+		Orange     color.RGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -71,6 +72,8 @@ type Theme struct {
 	chevronDownIcon       *widget.Icon
 	NavigationCheckIcon   *widget.Icon
 	navMoreIcon           *widget.Icon
+	expandIcon            *widget.Image
+	collapseIcon          *widget.Image
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
@@ -78,7 +81,7 @@ type Theme struct {
 	dropDownMenus []*DropDown
 }
 
-func NewTheme(fontCollection []text.FontFace) *Theme {
+func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image) *Theme {
 	t := &Theme{
 		Shaper: text.NewCache(fontCollection),
 		Base:   material.NewTheme(fontCollection),
@@ -94,6 +97,7 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.Color.Danger = rgb(0xff0000)
 	t.Color.Gray = rgb(0x596D81)
 	t.Color.Black = rgb(0x000000)
+	t.Color.Orange = orange
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
@@ -103,6 +107,10 @@ func NewTheme(fontCollection []text.FontFace) *Theme {
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
 	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+
+	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
+	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
+
 	t.Clipboard = make(chan string)
 	return t
 }
