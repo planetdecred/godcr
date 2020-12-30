@@ -21,11 +21,10 @@ type signMessagePage struct {
 	walletID   int
 	errChannel chan error
 
-	isPasswordModalOpen, isSigningMessage      bool
+	isSigningMessage                           bool
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
-	passwordModal                              *decredmaterial.Password
 	result                                     **wallet.Signature
 	line                                       *decredmaterial.Line
 	copySignature                              *widget.Clickable
