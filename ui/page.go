@@ -701,7 +701,7 @@ func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dime
 		sp.back()
 	}
 
-	return decredmaterial.Card{Color: page.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+	return page.theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -718,7 +718,7 @@ func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dime
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 									return decredmaterial.Card{
-										Color: page.theme.Color.Hint,
+										Color: page.theme.Color.Background,
 									}.Layout(gtx, func(gtx C) D {
 										return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 											walletText := page.theme.Caption(sp.walletName)

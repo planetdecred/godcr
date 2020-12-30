@@ -38,9 +38,7 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	pg.messageInput.IsVisible, pg.addressInput.IsVisible, pg.signInput.IsVisible = true, true, true
 	pg.messageInput.Editor.SingleLine, pg.addressInput.Editor.SingleLine, pg.messageInput.Editor.SingleLine = true, true, true
 	pg.verifyBtn.TextSize, pg.clearBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
-	pg.verifyBtn.Background = c.theme.Color.Hint
 	pg.clearBtn.Background = color.RGBA{0, 0, 0, 0}
-	pg.clearBtn.Color = c.theme.Color.Primary
 
 	return func(gtx C) D {
 		pg.handle(c)
@@ -142,9 +140,9 @@ func (pg *verifyMessagePage) verifyMessageResponse() layout.Widget {
 }
 
 func (pg *verifyMessagePage) handle(c pageCommon) {
-	pg.verifyBtn.Background = c.theme.Color.Hint
+	pg.verifyBtn.Background, pg.clearBtn.Color = c.theme.Color.Hint, c.theme.Color.Hint
 	if pg.inputsNotEmpty(c) {
-		pg.verifyBtn.Background = c.theme.Color.Primary
+		pg.verifyBtn.Background, pg.clearBtn.Color = c.theme.Color.Primary, c.theme.Color.Primary
 		if pg.verifyBtn.Button.Clicked() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
