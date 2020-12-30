@@ -31,7 +31,8 @@ type pageIcons struct {
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
-	pendingIcon, logo, redirectIcon, confirmIcon *widget.Image
+	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
+	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -126,9 +127,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		confirmIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
 		pendingIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
 		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
-
-		syncingIcon: decredIcons["syncing"],
-		walletIcon:  decredIcons["wallet"],
+		newWalletIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
+		walletAlertIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
+		accountIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
+		importedAccountIcon:     &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
+		editIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
+		expandIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
+		collapseIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])},
+		syncingIcon:             decredIcons["syncing"],
+		walletIcon:              decredIcons["wallet"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 
@@ -183,9 +190,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		walletTabs:      win.walletTabs,
 		accountTabs:     win.accountTabs,
 		errorChannels: map[string]chan error{
-			PageSignMessage:   make(chan error),
-			PageCreateRestore: make(chan error),
-			PageWallet:        make(chan error),
+			PageSignMessage:    make(chan error),
+			PageCreateRestore:  make(chan error),
+			PageWallet:         make(chan error),
+			PageAccountDetails: make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
@@ -228,6 +236,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageAbout] = win.AboutPage(common)
 	win.pages[PageHelp] = win.HelpPage(common)
 	win.pages[PageUTXO] = win.UTXOPage(common)
+	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {
@@ -280,7 +289,14 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, page.layoutNavDrawer)
+							card := page.theme.Card()
+							card.Radius = decredmaterial.CornerRadius{
+								NE: 0,
+								NW: 0,
+								SE: 0,
+								SW: 0,
+							}
+							return card.Layout(gtx, page.layoutNavDrawer)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -380,7 +396,14 @@ func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
-	return decredmaterial.Card{Color: page.theme.Color.Surface}.Layout(gtx, func(gtx C) D {
+	card := page.theme.Card()
+	card.Radius = decredmaterial.CornerRadius{
+		NE: 0,
+		NW: 0,
+		SE: 0,
+		SW: 0,
+	}
+	return card.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -460,7 +483,15 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 				}
 				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
-					return decredmaterial.Card{Color: background}.Layout(gtx, func(gtx C) D {
+					card := page.theme.Card()
+					card.Color = background
+					card.Radius = decredmaterial.CornerRadius{
+						NE: 0,
+						NW: 0,
+						SE: 0,
+						SW: 0,
+					}
+					return card.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 							axis := layout.Horizontal
 							leftInset := float32(15)
@@ -627,7 +658,15 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 			)
 		})
 	}
-	return decredmaterial.Card{}.Layout(gtx, selectedDetails)
+
+	card := page.theme.Card()
+	card.Radius = decredmaterial.CornerRadius{
+		NE: 0,
+		NW: 0,
+		SE: 0,
+		SW: 0,
+	}
+	return card.Layout(gtx, selectedDetails)
 }
 
 func toMax(gtx layout.Context) {

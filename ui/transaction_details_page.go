@@ -69,10 +69,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 		infoModal:  common.theme.Modal(),
 	}
 
-	// init blue text copy buttons
-	for i := 0; i < 100; i++ {
-		pg.copyTextBtn = append(pg.copyTextBtn, win.theme.Button(new(widget.Clickable), ""))
-	}
+	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
 	pg.line.Color = common.theme.Color.Background
 	pg.backButton.Color = common.theme.Color.Text
@@ -131,7 +128,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) 
 	}
 
 	body := common.Layout(gtx, func(gtx C) D {
-		return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+		return common.theme.Card().Layout(gtx, func(gtx C) D {
 			if *pg.txnInfo == nil {
 				return layout.Dimensions{}
 			}
@@ -314,7 +311,15 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 
 				layout.Rigid(func(gtx C) D {
 					if t2 != "" {
 						if first {
-							return decredmaterial.Card{Color: pg.theme.Color.Background}.Layout(gtx, func(gtx C) D {
+							card := pg.theme.Card()
+							card.Radius = decredmaterial.CornerRadius{
+								NE: 0,
+								NW: 0,
+								SE: 0,
+								SW: 0,
+							}
+							card.Color = pg.theme.Color.Background
+							return card.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 									txt := pg.theme.Body2(strings.Title(strings.ToLower(t2)))
 									txt.Color = pg.theme.Color.Gray
@@ -347,6 +352,10 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 
 
 func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
 	transaction := *pg.txnInfo
+	x := len(transaction.Txn.Inputs) + len(transaction.Txn.Outputs)
+	for i := 0; i < x; i++ {
+		pg.copyTextBtn = append(pg.copyTextBtn, pg.theme.Button(new(widget.Clickable), ""))
+	}
 
 	collapsibleHeader := func(gtx C) D {
 		t := pg.theme.Body1(fmt.Sprintf("%d Inputs consumed", len(transaction.Txn.Inputs)))
@@ -394,7 +403,9 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 
 func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName, walName, hashAcct string, i int) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-		return decredmaterial.Card{Color: pg.theme.Color.Background, Rounded: true}.Layout(gtx, func(gtx C) D {
+		card := pg.theme.Card()
+		card.Color = pg.theme.Color.Background
+		return card.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -413,7 +424,15 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								return decredmaterial.Card{Color: pg.theme.Color.Background}.Layout(gtx, func(gtx C) D {
+								card := pg.theme.Card()
+								card.Radius = decredmaterial.CornerRadius{
+									NE: 0,
+									NW: 0,
+									SE: 0,
+									SW: 0,
+								}
+								card.Color = pg.theme.Color.Background
+								return card.Layout(gtx, func(gtx C) D {
 									return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 										txt := pg.theme.Body2(walName)
 										txt.Color = pg.theme.Color.Gray

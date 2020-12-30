@@ -115,7 +115,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 				return layout.Inset{
 					Top: values.MarginPadding60,
 				}.Layout(gtx, func(gtx C) D {
-					return decredmaterial.Card{Color: common.theme.Color.Surface, Rounded: true}.Layout(gtx, func(gtx C) D {
+					return common.theme.Card().Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
 							if len(walTxs) == 0 {
 								txt := common.theme.Body1("No transactions")
