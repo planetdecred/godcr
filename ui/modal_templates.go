@@ -15,7 +15,7 @@ const RenameAccountTemplate = "RenameAccount"
 const PasswordTemplate = "Password"
 const ChangePasswordTemplate = "ChangePassword"
 const ConfirmRemoveTemplate = "ConfirmRemove"
-const InfoTemplate = "Info"
+const VerifyMessageInfoTemplate = "VerifyMessageInfo"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -154,7 +154,7 @@ func (m *ModalTemplate) verifyMessageInfo() []func(gtx C) D {
 		func(gtx C) D {
 			text := m.th.Body1("After you or your counterparty has genrated a signature, you can use this form to verify the" +
 				" validity of the  signature. \n \nOnce you have entered the address, the message and the corresponding " +
-				"signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID")
+				"signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -296,7 +296,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		}
 		template = m.removeWallet(th)
 		return
-	case InfoTemplate:
+	case VerifyMessageInfoTemplate:
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}

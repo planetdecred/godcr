@@ -679,18 +679,19 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 }
 
 type SubPage struct {
-	title      string
-	walletName string
-	back       func()
-	body       layout.Widget
+	title        string
+	walletName   string
+	back         func()
+	body         layout.Widget
+	infoTemplate string
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
 			page.modalReceiver <- &modalLoad{
-				template:   InfoTemplate,
-				title:      "Verify message",
+				template:   sp.infoTemplate,
+				title:      sp.title,
 				cancel:     page.closeModal,
 				cancelText: "Got it",
 			}

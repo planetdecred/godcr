@@ -49,13 +49,13 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	body := func(gtx C) D {
 		load := SubPage{
-			"Verify message",
-			c.info.Wallets[*c.selectedWallet].Name,
-			func() {
+			title:      "Verify message",
+			walletName: c.info.Wallets[*c.selectedWallet].Name,
+			back: func() {
 				pg.clearInputs(&c)
 				*c.page = PageWallet
 			},
-			func(gtx layout.Context) layout.Dimensions {
+			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(pg.description()),
@@ -67,6 +67,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dim
 					)
 				})
 			},
+			infoTemplate: VerifyMessageInfoTemplate,
 		}
 		return c.SubPageLayout(gtx, load)
 	}
