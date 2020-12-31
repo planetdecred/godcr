@@ -126,6 +126,9 @@ type Transaction struct {
 	WalletName    string
 	Confirmations int32
 	DateTime      string
+
+	InputAccountNames  []string
+	OutputAccountNames []string
 }
 
 // Transactions is sent in response to Wallet.GetAllTransactions

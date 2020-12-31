@@ -266,7 +266,14 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 					DateTime:      dcrlibwallet.ExtractDateOrTime(txnRaw.Timestamp),
 				}
 				recentTxs = append(recentTxs, txn)
-				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
+				tx, err := wal.attachAccountNames(&txn)
+				if err != nil {
+					resp.Err = err
+					wal.Send <- resp
+					return
+				}
+
+				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], *tx)
 			}
 		}
 
@@ -312,7 +319,7 @@ func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
 		}
 		bestBestBlock := wal.multi.GetBestBlock()
 		status, confirmations := transactionStatus(bestBestBlock.Height, txn.BlockHeight)
-		resp.Resp = &Transaction{
+		tx := &Transaction{
 			Txn:           *txn,
 			Status:        status,
 			Balance:       dcrutil.Amount(txn.Amount).String(),
@@ -320,8 +327,41 @@ func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
 			Confirmations: confirmations,
 			DateTime:      dcrlibwallet.ExtractDateOrTime(txn.Timestamp),
 		}
+
+		tx, err = wal.attachAccountNames(tx)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+
+		resp.Resp = tx
 		wal.Send <- resp
 	}()
+}
+
+func (wal *Wallet) attachAccountNames(tx *Transaction) (*Transaction, error) {
+	tx.InputAccountNames = make([]string, len(tx.Txn.Inputs))
+	tx.OutputAccountNames = make([]string, len(tx.Txn.Outputs))
+
+	wallet := wal.multi.WalletWithID(tx.Txn.WalletID)
+	for i := range tx.Txn.Inputs {
+		accountName, err := wallet.AccountName(tx.Txn.Inputs[i].AccountNumber)
+		if err != nil {
+			return nil, err
+		}
+		tx.InputAccountNames[i] = accountName
+	}
+
+	for i := range tx.Txn.Outputs {
+		accountName, err := wallet.AccountName(tx.Txn.Outputs[i].AccountNumber)
+		if err != nil {
+			return nil, err
+		}
+		tx.OutputAccountNames[i] = accountName
+	}
+
+	return tx, nil
 }
 
 // WalletSyncStatus returns the sync status of a single wallet

@@ -31,8 +31,8 @@ type ProposalPage struct {
 }
 
 const (
-	spacer     = "@@@@"
-	linkTag    = "[[link"
+	spacer  = "@@@@"
+	linkTag = "[[link"
 )
 
 var (
