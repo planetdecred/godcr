@@ -5,19 +5,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os/exec"
-	//"regexp"
 	"runtime"
-	//"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	//"gioui.org/widget/material"
 
-	//"github.com/PuerkitoBio/goquery"
-	//"gitlab.com/golang-commonmark/markdown"
-	//"github.com/gomarkdown/markdown"
-	//"github.com/gomarkdown/markdown/parser"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/utils"
@@ -25,8 +18,6 @@ import (
 )
 
 const PageProposalDetails = "proposaldetails"
-
-type renderFunc func(C, []string) layout.Widget
 
 type ProposalPage struct {
 	theme      *decredmaterial.Theme
@@ -40,12 +31,8 @@ type ProposalPage struct {
 }
 
 const (
-	//markdownLinkPlaceholder = "[[link]]"
-	//markdownHeadingPlaceholder = "[[heading--"
-
 	spacer     = "@@@@"
 	linkTag    = "[[link"
-	headingTag = "[[heading"
 )
 
 var (
@@ -215,8 +202,6 @@ func (pg *ProposalPage) layoutProposalDetailsSubHeaderRow(gtx layout.Context, le
 		}),
 	)
 }
-
-var has = false
 
 func (pg *ProposalPage) getProposalText() []byte {
 	proposal := *pg.proposal

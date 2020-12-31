@@ -2,8 +2,6 @@ package utils
 
 import (
 	"fmt"
-	//"reflect"
-	//"image/color"
 	"io"
 	"strings"
 	"unicode"
