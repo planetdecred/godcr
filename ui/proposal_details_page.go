@@ -1,24 +1,32 @@
 package ui
 
 import (
+	//"bytes"
 	"encoding/base64"
 	"fmt"
 	"os/exec"
-	"regexp"
+	//"regexp"
 	"runtime"
-	"strings"
+	//"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
+	//"gioui.org/widget/material"
 
+	//"github.com/PuerkitoBio/goquery"
+	//"gitlab.com/golang-commonmark/markdown"
+	//"github.com/gomarkdown/markdown"
+	//"github.com/gomarkdown/markdown/parser"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const PageProposalDetails = "proposaldetails"
+
+type renderFunc func(C, []string) layout.Widget
 
 type ProposalPage struct {
 	theme      *decredmaterial.Theme
@@ -31,9 +39,17 @@ type ProposalPage struct {
 	container  *layout.List
 }
 
+const (
+	//markdownLinkPlaceholder = "[[link]]"
+	//markdownHeadingPlaceholder = "[[heading--"
+
+	spacer     = "@@@@"
+	linkTag    = "[[link"
+	headingTag = "[[heading"
+)
+
 var (
-	markdownRegex           = regexp.MustCompile(`\[[^][]+]\((https?://[^()]+)\)`)
-	markdownLinkPlaceholder = "[[link]]"
+	tags = []string{"li", "ul", "td", "tr", "th", "table", "strong", "p", "h1", "h2", "h3", "h4", "h5", "h6"}
 )
 
 func (win *Window) ProposalPage(common pageCommon) layout.Widget {
@@ -104,7 +120,6 @@ func (pg *ProposalPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensio
 
 func (pg *ProposalPage) layoutProposalDescription(gtx layout.Context) layout.Dimensions {
 	proposal := *pg.proposal
-
 	w := []layout.Widget{
 		func(gtx C) D {
 			return pg.layoutProposalHeader(gtx, false)
@@ -136,9 +151,8 @@ func (pg *ProposalPage) layoutProposalDescription(gtx layout.Context) layout.Dim
 		},
 	}
 
-	ws := pg.getProposalDescriptionTextParts(gtx)
-	w = append(w, ws...)
-
+	r := utils.RenderMarkdown(gtx, pg.theme, pg.getProposalText())
+	w = append(w, r.Layout()...)
 	return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
 		return layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
 	})
@@ -164,7 +178,6 @@ func (pg *ProposalPage) layoutProposalHeader(gtx layout.Context, truncateTitle b
 					return getSubtitleLabel(pg.theme, fmt.Sprintf("Last updated %s", timeAgo(proposal.Timestamp))).Layout(gtx)
 				})
 			}
-
 			return layout.Dimensions{}
 		}),
 	)
@@ -203,7 +216,9 @@ func (pg *ProposalPage) layoutProposalDetailsSubHeaderRow(gtx layout.Context, le
 	)
 }
 
-func (pg *ProposalPage) getProposalDescriptionTextParts(gtx layout.Context) []layout.Widget {
+var has = false
+
+func (pg *ProposalPage) getProposalText() []byte {
 	proposal := *pg.proposal
 
 	var desc []byte
@@ -214,83 +229,5 @@ func (pg *ProposalPage) getProposalDescriptionTextParts(gtx layout.Context) []la
 		}
 	}
 
-	return pg.PrepareText(gtx, string(desc))
-}
-
-func (pg *ProposalPage) PrepareText(gtx layout.Context, text string) []layout.Widget {
-	// first extract all links and replace them with a placeholder
-	ls := markdownRegex.FindAllStringSubmatch(text, -1)
-	links := make([]string, len(ls))
-	for i := range ls {
-		index := i
-		links[index] = ls[index][0]
-	}
-
-	// replace all links with placeholder
-	txt := markdownRegex.ReplaceAllString(text, markdownLinkPlaceholder)
-
-	prevRune := ""
-	paragraphs := strings.FieldsFunc(txt, func(r rune) bool {
-		match := string(r) == "\n" && prevRune == "\n"
-		prevRune = string(r)
-
-		return match
-	})
-
-	w := []layout.Widget{}
-	for i := range paragraphs {
-		index := i
-		words := strings.Split(paragraphs[index], " ")
-		w = append(w, func(gtx C) D {
-			dims := decredmaterial.GridWrap{
-				Axis:      layout.Horizontal,
-				Alignment: layout.End,
-			}.Layout(gtx, len(words), func(gtx C, i int) D {
-				word := words[i]
-				if words[i] == markdownLinkPlaceholder || strings.HasPrefix(words[i], markdownLinkPlaceholder) {
-					link := links[0]
-					links = links[1:]
-					word := strings.Replace(words[i], markdownLinkPlaceholder, link, -1)
-					return pg.layoutLinkWord(gtx, word)
-				}
-				return pg.theme.Body2(strings.TrimSpace(word) + " ").Layout(gtx)
-			})
-			dims.Size.Y += 20
-			return dims
-		})
-	}
-	return w
-}
-
-func (pg *ProposalPage) layoutLinkWord(gtx layout.Context, link string) layout.Dimensions {
-	text, _ := getStringInBetweenTwoString(link, "[", "]")
-	linkRef, _ := getStringInBetweenTwoString(link, "(", ")")
-
-	if pg.clickables == nil {
-		pg.clickables = map[string]*widget.Clickable{}
-	}
-
-	if _, ok := pg.clickables[linkRef]; !ok {
-		pg.clickables[linkRef] = new(widget.Clickable)
-	}
-
-	return material.Clickable(gtx, pg.clickables[linkRef], func(gtx C) D {
-		lbl := pg.theme.Body2(text + " ")
-		lbl.Color = pg.theme.Color.Primary
-		return lbl.Layout(gtx)
-	})
-}
-
-func getStringInBetweenTwoString(str string, startS string, endS string) (result string, found bool) {
-	s := strings.Index(str, startS)
-	if s == -1 {
-		return result, false
-	}
-	newS := str[s+len(startS):]
-	e := strings.Index(newS, endS)
-	if e == -1 {
-		return result, false
-	}
-	result = newS[:e]
-	return result, true
+	return desc
 }

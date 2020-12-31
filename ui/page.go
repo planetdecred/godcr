@@ -91,6 +91,10 @@ const (
 	navDrawerMinimizedWidth = 100
 )
 
+var (
+	appBarWidth = 0
+)
+
 func (win *Window) addPages(decredIcons map[string]image.Image) {
 	ic := pageIcons{
 		contentAdd:                 mustIcon(widget.NewIcon(icons.ContentAdd)),
@@ -430,7 +434,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 		SE: 0,
 		SW: 0,
 	}
-	return card.Layout(gtx, func(gtx C) D {
+	dims := card.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -497,6 +501,9 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 			}),
 		)
 	})
+	appBarWidth = dims.Size.X
+
+	return dims
 }
 
 func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {

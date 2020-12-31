@@ -13,16 +13,18 @@ require (
 	github.com/gomarkdown/markdown v0.0.0-20201113031856-722100d81a8e
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
-<<<<<<< HEAD
 	github.com/markbates/pkger v0.17.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.8.1
-=======
+	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
->>>>>>> b6529f7... add proposals page to new gui implementation
 	github.com/planetdecred/dcrlibwallet v1.5.3-0.20201113035912-7786819ad8aa
+	github.com/russross/blackfriday v2.0.0+incompatible
+	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 // indirect
+	github.com/shurcooL/markdownfmt v0.0.0-20200725144734-77d690767c81
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
+	gitlab.com/golang-commonmark/markdown v0.0.0-20191127184510-91b5b3c99c19
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
 	golang.org/x/image v0.0.0-20200618115811-c13761719519
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
