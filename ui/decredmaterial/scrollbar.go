@@ -3,6 +3,7 @@
 package decredmaterial
 
 import (
+	//"fmt"
 	"image/color"
 
 	"gioui.org/f32"
@@ -13,35 +14,33 @@ import (
 )
 
 type Scrollbar struct {
-	min      float32
-	max      float32
-	color    color.RGBA
-	float    *Float
-	position float32
+	color        color.RGBA
+	float        *Float
+	position     float32
+	topOffset    float32
+	bottomOffset float32
 }
 
 func (t *Theme) Scrollbar(float *Float, min, max float32) Scrollbar {
 	return Scrollbar{
-		min:   min,
-		max:   max,
 		color: t.Color.Primary,
 		float: float,
 	}
 }
 
-func (s *Scrollbar) Layout(gtx layout.Context, visibleFraction float32) layout.Dimensions {
+func (s *Scrollbar) Layout(gtx layout.Context, contentLength float32) layout.Dimensions {
 	maxSize := gtx.Constraints.Max
 
-	scrollbarHeight := (visibleFraction * float32(maxSize.Y))
-	scrollbarThickness := float32(maxSize.X)
+	windowLength := maxSize.Y
+	portion := float32(windowLength) / contentLength
+	scrollbarLength := int(float32(windowLength) * portion)
 
 	st := op.Push(gtx.Ops)
 	op.Offset(f32.Pt(0, 0)).Add(gtx.Ops)
-	s.float.Layout(gtx, int(scrollbarThickness), s.min, s.max)
-	thumbPos := s.float.Pos()
+	s.float.Layout(gtx, scrollbarLength, s.topOffset, s.bottomOffset)
+	s.position = s.float.Pos()
 	st.Pop()
 
-	s.position = thumbPos
 	color := s.color
 	if gtx.Queue == nil {
 		color = mulAlpha(color, 150)
@@ -52,19 +51,25 @@ func (s *Scrollbar) Layout(gtx layout.Context, visibleFraction float32) layout.D
 			Y: 0,
 		},
 		Max: f32.Point{
-			X: scrollbarThickness,
+			X: float32(maxSize.X),
 			Y: float32(maxSize.Y),
 		},
 	}
 	clip.RRect{Rect: track}.Add(gtx.Ops)
 	fill(gtx, mulAlpha(color, 96))
 
-	minY := thumbPos
-	maxY := thumbPos + scrollbarHeight
+	contentOffset := (s.position / float32(maxSize.Y)) * contentLength
+	lengthOffset := int(float64(windowLength-scrollbarLength) * (float64(contentOffset) / float64(contentLength-float32(windowLength))))
+
+	minY := float32(lengthOffset)
+	maxY := minY + float32(scrollbarLength)
 	if maxY > float32(maxSize.Y) {
 		maxY = float32(maxSize.Y)
-		minY = maxY - scrollbarHeight
+		minY = maxY - float32(scrollbarLength)
 	}
+
+	s.topOffset = minY
+	s.bottomOffset = maxY
 
 	thumb := f32.Rectangle{
 		Min: f32.Point{
@@ -72,10 +77,10 @@ func (s *Scrollbar) Layout(gtx layout.Context, visibleFraction float32) layout.D
 		},
 		Max: f32.Point{
 			Y: maxY,
-			X: scrollbarThickness,
+			X: float32(maxSize.X),
 		},
 	}
-	rr := 0.5 * scrollbarThickness
+	rr := 0.5 * float32(maxSize.X)
 	clip.RRect{
 		Rect: thumb,
 		NE:   rr, NW: rr, SE: rr, SW: rr,
@@ -124,8 +129,6 @@ func (s *ScrollContainer) Layout(gtx layout.Context, widgets []func(gtx C) D) la
 	s.container.Position.First = int(float32(len(widgets)) * (s.scrollbar.Position() / float32(maxSize.Y)))
 
 	totalVisibleHeight := float32(maxSize.Y)
-	visibleFraction := totalVisibleHeight / s.totalContentHeight
-
 	scrollbarThickness := (s.scrollbarThicknessPercentage / 100) * float32(1)
 
 	return layout.Flex{}.Layout(gtx,
@@ -148,7 +151,7 @@ func (s *ScrollContainer) Layout(gtx layout.Context, widgets []func(gtx C) D) la
 			if s.totalContentHeight <= totalVisibleHeight {
 				return layout.Dimensions{}
 			}
-			return s.scrollbar.Layout(gtx, visibleFraction)
+			return s.scrollbar.Layout(gtx, s.totalContentHeight)
 		}),
 	)
 }

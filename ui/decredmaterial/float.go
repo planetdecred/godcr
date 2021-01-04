@@ -22,16 +22,21 @@ type Float struct {
 }
 
 // Layout processes events.
-func (f *Float) Layout(gtx layout.Context, pointerMargin int, min, max float32) layout.Dimensions {
+func (f *Float) Layout(gtx layout.Context, pointerMargin int, topOffset, bottomOffset float32) layout.Dimensions {
 	size := gtx.Constraints.Max
 	f.length = float32(size.Y)
 
 	var de *pointer.Event
 	for _, e := range f.drag.Events(gtx.Metric, gtx, gesture.Vertical) {
-		if e.Type == pointer.Press || e.Type == pointer.Drag {
+		if e.Type == pointer.Press && !(e.Position.Y >= topOffset && e.Position.Y <= bottomOffset) {
+			de = &e
+		} else if e.Type == pointer.Drag {
 			de = &e
 		}
 	}
+
+	min := float32(0)
+	max := float32(size.Y)
 
 	value := f.Value
 	if de != nil {
