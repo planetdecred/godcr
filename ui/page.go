@@ -74,6 +74,9 @@ type pageCommon struct {
 	testButton              decredmaterial.Button
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
+
+	subPageBackButton decredmaterial.IconButton
+	subPageInfoButton decredmaterial.IconButton
 }
 
 type (
@@ -208,6 +211,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		modal:                   win.theme.Modal(),
 		modalReceiver:           win.modal,
 		modalLoad:               &modalLoad{},
+		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
+		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -216,6 +221,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
 	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
 	common.modalTemplate = win.LoadModalTemplates()
+	zeroInset := layout.UniformInset(values.MarginPadding0)
+	common.subPageBackButton.Color, common.subPageInfoButton.Color = common.theme.Color.Gray, common.theme.Color.Gray
+	common.subPageBackButton.Size, common.subPageInfoButton.Size = values.MarginPadding25, values.MarginPadding25
+	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -331,7 +340,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				}
 			}
 
-			if page.modalLoad.confirm != nil {
+			if page.modalLoad.cancel != nil {
 				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, page.modalLoad),
 					900)
 			}
@@ -667,6 +676,73 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 		SW: 0,
 	}
 	return card.Layout(gtx, selectedDetails)
+}
+
+type SubPage struct {
+	title        string
+	walletName   string
+	back         func()
+	body         layout.Widget
+	infoTemplate string
+}
+
+func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	if page.subPageInfoButton.Button.Clicked() {
+		go func() {
+			page.modalReceiver <- &modalLoad{
+				template:   sp.infoTemplate,
+				title:      sp.title,
+				cancel:     page.closeModal,
+				cancelText: "Got it",
+			}
+		}()
+	}
+
+	if page.subPageBackButton.Button.Clicked() {
+		sp.back()
+	}
+
+	return page.theme.Card().Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+									return page.subPageBackButton.Layout(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								return page.theme.H6(sp.title).Layout(gtx)
+							}),
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									return decredmaterial.Card{
+										Color: page.theme.Color.Background,
+									}.Layout(gtx, func(gtx C) D {
+										return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+											walletText := page.theme.Caption(sp.walletName)
+											walletText.Color = page.theme.Color.Gray
+											return walletText.Layout(gtx)
+										})
+									})
+								})
+							}),
+							layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return page.subPageInfoButton.Layout(gtx)
+								})
+							}),
+						)
+					})
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return sp.body(gtx)
+				}),
+			)
+		})
+	})
 }
 
 func toMax(gtx layout.Context) {

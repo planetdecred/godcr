@@ -15,8 +15,10 @@ const RenameAccountTemplate = "RenameAccount"
 const PasswordTemplate = "Password"
 const ChangePasswordTemplate = "ChangePassword"
 const ConfirmRemoveTemplate = "ConfirmRemove"
+const VerifyMessageInfoTemplate = "VerifyMessageInfo"
 
 type ModalTemplate struct {
+	th                    *decredmaterial.Theme
 	walletName            decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
@@ -43,6 +45,7 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 	icon.Background = win.theme.Color.Surface
 
 	return &ModalTemplate{
+		th:                    win.theme,
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
 		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
@@ -146,6 +149,18 @@ func (m *ModalTemplate) changePassword() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) verifyMessageInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Body1("After you or your counterparty has genrated a signature, you can use this form to verify the" +
+				" validity of the  signature. \n \nOnce you have entered the address, the message and the corresponding " +
+				"signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID.")
+			text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	if !load.isReset {
 		m.resetFields()
@@ -163,6 +178,9 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+						if load.cancelText == "" {
+							return layout.Dimensions{}
+						}
 						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 							m.cancel.Text = load.cancelText
 							m.cancel.Background = th.Color.Surface
@@ -171,6 +189,9 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
+						if load.confirmText == "" {
+							return layout.Dimensions{}
+						}
 						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 							m.confirm.Text = load.confirmText
 							if load.template == ConfirmRemoveTemplate {
@@ -195,7 +216,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	case CreateWalletTemplate:
 		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
 			// reset error label when password and matching password fields match
-			m.matchSpendingPassword.ErrorLabel.Text = ""
+			m.matchSpendingPassword.SetError("")
 		}
 
 		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
@@ -250,7 +271,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	case ChangePasswordTemplate:
 		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
 			// reset error label when password and matching password fields match
-			m.matchSpendingPassword.ErrorLabel.Text = ""
+			m.matchSpendingPassword.SetError("")
 		}
 
 		if m.editorsNotEmpty(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
@@ -274,6 +295,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.removeWallet(th)
+		return
+	case VerifyMessageInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.verifyMessageInfo()
 		return
 	default:
 		return
@@ -308,11 +335,11 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 	matching := editors[1]
 
 	if password.Text() != matching.Text() {
-		m.matchSpendingPassword.ErrorLabel.Text = "passwords do not match"
+		m.matchSpendingPassword.SetError("passwords do not match")
 		return false
 	}
 
-	m.matchSpendingPassword.ErrorLabel.Text = ""
+	m.matchSpendingPassword.SetError("")
 	return true
 }
 
@@ -321,5 +348,5 @@ func (m *ModalTemplate) resetFields() {
 	m.matchSpendingPassword.Editor.SetText("")
 	m.spendingPassword.Editor.SetText("")
 	m.walletName.Editor.SetText("")
-	m.matchSpendingPassword.ErrorLabel.Text = ""
+	m.matchSpendingPassword.SetError("")
 }

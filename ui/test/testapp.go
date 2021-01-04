@@ -252,7 +252,7 @@ func (t *TestStruct) handleInput() {
 	if t.customEditorOutput.test1btn.Button.Clicked() {
 		txt := t.customEditorOutput.test1.Editor.Text()
 		if txt == "" {
-			t.customEditorOutput.test1.ErrorLabel.Text = "This field is required and cannot be empty."
+			t.customEditorOutput.test1.SetError("This field is required and cannot be empty.")
 			return
 		}
 		t.customEditorOutput.testOutput.Text = txt
