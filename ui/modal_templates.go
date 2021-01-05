@@ -26,7 +26,6 @@ type ModalTemplate struct {
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
 	alert                 decredmaterial.IconButton
-	th                    *decredmaterial.Theme
 }
 
 type modalLoad struct {
@@ -167,7 +166,7 @@ func (m *ModalTemplate) signMessageInfo() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			text := m.th.Body1("Signing a message with an address' private key allows you to prove that you are the owner of a given address" +
-				"to a possible counterparty.")
+				" to a possible counterparty.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -314,6 +313,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.verifyMessageInfo()
+		return
 	case SignMessageInfoTemplate:
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
