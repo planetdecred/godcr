@@ -815,7 +815,7 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 }
 
 func (wal *Wallet) NewVSPD(walletID int, accountID int32) *dcrlibwallet.VSPD {
-	return wal.multi.NewVSPD("http://localhost:8800", walletID, accountID)
+	return wal.multi.NewVSPD("http://dev.planetdecred.org:23125", walletID, accountID)
 }
 
 // TicketPrice get ticket price

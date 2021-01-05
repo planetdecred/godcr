@@ -185,6 +185,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.updateConnectedPeers(update.ConnectedPeers)
 			case wallet.BlockAttached:
 				if win.walletInfo.Synced {
+					win.wallet.GetAllTickets()
 					win.wallet.GetMultiWalletInfo()
 					win.updateSyncProgress(update.BlockInfo)
 				}
