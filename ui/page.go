@@ -26,7 +26,7 @@ type pageIcons struct {
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, navigationArrowForward, verifyAction, actionDelete, actionLock,
-	communicationComment, editorModeEdit, actionBackup, actionCheck,
+	communicationComment, editorModeEdit, actionBackup, actionCheck, chevronRight,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
@@ -117,6 +117,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		navigationCancel:           mustIcon(widget.NewIcon(icons.NavigationCancel)),
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
+		chevronRight:               mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
@@ -203,6 +204,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageCreateRestore:  make(chan error),
 			PageWallet:         make(chan error),
 			PageAccountDetails: make(chan error),
+			PageSettings:       make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,

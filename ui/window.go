@@ -38,7 +38,8 @@ type Window struct {
 
 	current string
 
-	signatureResult *wallet.Signature
+	signatureResult    *wallet.Signature
+	unlockWalletResult *wallet.UnlockWallet
 
 	selectedAccount int
 	txAuthor        dcrlibwallet.TxAuthor

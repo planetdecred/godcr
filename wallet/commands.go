@@ -456,8 +456,26 @@ func (wal *Wallet) RenameWallet(walletID int, name string, errChan chan error) {
 }
 
 // RenameWallet renames the wallet identified by walletID.
-func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, newPrivatePassphrase string) error {
-	return wal.multi.ChangePrivatePassphraseForWallet(walletID, []byte(oldPrivatePassphrase), []byte(newPrivatePassphrase), dcrlibwallet.PassphraseTypePass)
+func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, newPrivatePassphrase string, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.ChangePrivatePassphraseForWallet(walletID, []byte(oldPrivatePassphrase), []byte(newPrivatePassphrase), dcrlibwallet.PassphraseTypePass)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Resp = &ChangePassword{
+				Err: fmt.Errorf("error changing password: %s", err.Error()),
+			}
+			wal.Send <- resp
+			return
+		}
+
+		resp.Resp = &ChangePassword{
+			ID: walletID,
+		}
+		wal.Send <- resp
+	}()
 }
 
 // RenameAccount renames the acct of wallet with id walletID.
@@ -497,8 +515,26 @@ func (wal *Wallet) RenameAccount(walletID int, acct int32, name string, errChan 
 	}()
 }
 
-func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
-	return wal.multi.UnlockWallet(walletID, passphrase)
+func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.UnlockWallet(walletID, passphrase)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Resp = &UnlockWallet{
+				Err: fmt.Errorf(err.Error()),
+			}
+			wal.Send <- resp
+			return
+		}
+
+		resp.Resp = &UnlockWallet{
+			Pass: passphrase,
+		}
+		wal.Send <- resp
+	}()
 }
 
 // CurrentAddress returns the next address for the specified wallet account.
