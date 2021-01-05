@@ -325,8 +325,8 @@ func (*Renderer) RenderHeader(w io.Writer, node ast.Node) {}
 
 func (*Renderer) RenderFooter(w io.Writer, node ast.Node) {}
 
-func (r *Renderer) Layout() []layout.Widget {
-	return r.containers
+func (r *Renderer) Layout() ([]layout.Widget, map[string]*widget.Clickable) {
+	return r.containers, r.links
 }
 
 func shouldCleanText(node ast.Node) bool {

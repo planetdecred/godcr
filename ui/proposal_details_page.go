@@ -20,24 +20,15 @@ import (
 const PageProposalDetails = "proposaldetails"
 
 type ProposalPage struct {
-	theme      *decredmaterial.Theme
-	proposal   **dcrlibwallet.Proposal
-	line       *decredmaterial.Line
-	pageLinks  map[string]layout.Dimensions
-	clickables map[string]*widget.Clickable
-	backButton decredmaterial.IconButton
-	legendIcon *widget.Icon
-	container  *layout.List
+	theme            *decredmaterial.Theme
+	proposal         **dcrlibwallet.Proposal
+	line             *decredmaterial.Line
+	clickables       map[string]*widget.Clickable
+	backButton       decredmaterial.IconButton
+	legendIcon       *widget.Icon
+	container        *layout.List
+	renderedMarkdown []layout.Widget
 }
-
-const (
-	spacer  = "@@@@"
-	linkTag = "[[link"
-)
-
-var (
-	tags = []string{"li", "ul", "td", "tr", "th", "table", "strong", "p", "h1", "h2", "h3", "h4", "h5", "h6"}
-)
 
 func (win *Window) ProposalPage(common pageCommon) layout.Widget {
 	pg := ProposalPage{
@@ -64,6 +55,7 @@ func (pg *ProposalPage) Handle(common pageCommon) {
 	}
 
 	for to, c := range pg.clickables {
+		//fmt.Println(c)
 		for c.Clicked() {
 			pg.goToURL(to)
 		}
@@ -90,7 +82,7 @@ func (pg *ProposalPage) goToURL(url string) {
 
 func (pg *ProposalPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return c.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(unit.Dp(20)).Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.W.Layout(gtx, func(gtx C) D {
@@ -138,8 +130,14 @@ func (pg *ProposalPage) layoutProposalDescription(gtx layout.Context) layout.Dim
 		},
 	}
 
-	r := utils.RenderMarkdown(gtx, pg.theme, pg.getProposalText())
-	w = append(w, r.Layout()...)
+	// add this so that the markdown document is only parsed once
+	// this fixes the issue of links not triggering when clicked
+	if pg.renderedMarkdown == nil {
+		r := utils.RenderMarkdown(gtx, pg.theme, pg.getProposalText())
+		pg.renderedMarkdown, pg.clickables = r.Layout()
+	}
+
+	w = append(w, pg.renderedMarkdown...)
 	return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
 		return layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
 	})
