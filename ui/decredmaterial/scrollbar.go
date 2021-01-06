@@ -67,10 +67,10 @@ func (s *Scrollbar) Layout(gtx layout.Context, contentLength, initialPosition fl
 	lengthOffset := int((windowLength - scrollbarLength) * (contentOffset / (contentLength - windowLength)))
 
 	minY := float32(lengthOffset)
-	maxY := minY + float32(scrollbarLength)
+	maxY := minY + scrollbarLength
 	if maxY > float32(maxSize.Y) {
 		maxY = float32(maxSize.Y)
-		minY = maxY - float32(scrollbarLength)
+		minY = maxY - scrollbarLength
 	}
 
 	thumb := f32.Rectangle{
