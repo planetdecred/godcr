@@ -19,19 +19,25 @@ type Float struct {
 	pos     float32 // position normalized to [0, 1]
 	length  float32
 	changed bool
+
+	hasScrolled bool
+}
+
+func (f *Float) Scrolled() bool {
+	return f.hasScrolled
 }
 
 // Layout processes events.
-func (f *Float) Layout(gtx layout.Context, pointerMargin int, topOffset, bottomOffset float32) layout.Dimensions {
+func (f *Float) Layout(gtx layout.Context, pointerMargin, contentLength int) layout.Dimensions {
 	size := gtx.Constraints.Max
 	f.length = float32(size.Y)
 
 	var de *pointer.Event
+	f.hasScrolled = false
 	for _, e := range f.drag.Events(gtx.Metric, gtx, gesture.Vertical) {
-		if e.Type == pointer.Press && !(e.Position.Y >= topOffset && e.Position.Y <= bottomOffset) {
+		if e.Type == pointer.Press || e.Type == pointer.Drag {
 			de = &e
-		} else if e.Type == pointer.Drag {
-			de = &e
+			f.hasScrolled = true
 		}
 	}
 
