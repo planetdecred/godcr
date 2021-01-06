@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -123,24 +122,15 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 
 func (pg *settingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return pg.pageSections(gtx, "Spending password", func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.Body2("Spending password")
-					txt.Color = pg.theme.Color.Gray
-					return txt.Layout(gtx)
+					return pg.theme.H6("Change spending password").Layout(gtx)
 				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.H6("Change spending password").Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.changePass.Layout(gtx)
-							})
-						}),
-					)
+				layout.Flexed(1, func(gtx C) D {
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return pg.changePass.Layout(gtx)
+					})
 				}),
 			)
 		})
@@ -149,24 +139,15 @@ func (pg *settingsPage) changePassphrase() layout.Widget {
 
 func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return pg.pageSections(gtx, "Notification", func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.Body2("Notification")
-					txt.Color = pg.theme.Color.Gray
-					return txt.Layout(gtx)
+					return pg.theme.H6("Incoming transactions").Layout(gtx)
 				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.H6("Incoming transactions").Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.theme.Switch(pg.notificationW).Layout(gtx)
-							})
-						}),
-					)
+				layout.Flexed(1, func(gtx C) D {
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return pg.theme.Switch(pg.notificationW).Layout(gtx)
+					})
 				}),
 			)
 		})
@@ -175,24 +156,15 @@ func (pg *settingsPage) notification() layout.Widget {
 
 func (pg *settingsPage) debug() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return pg.pageSections(gtx, "Debug", func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.Body2("Debug")
-					txt.Color = pg.theme.Color.Gray
-					return txt.Layout(gtx)
+					return pg.theme.H6("Rescan blockchain").Layout(gtx)
 				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.H6("Rescan blockchain").Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.rescan.Layout(gtx)
-							})
-						}),
-					)
+				layout.Flexed(1, func(gtx C) D {
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return pg.rescan.Layout(gtx)
+					})
 				}),
 			)
 		})
@@ -201,49 +173,49 @@ func (pg *settingsPage) debug() layout.Widget {
 
 func (pg *settingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return pg.pageSections(gtx, "Danger zone", func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.Body2("Danger zone")
-					txt.Color = pg.theme.Color.Gray
-					return txt.Layout(gtx)
+					return pg.theme.H6("Remove wallet from device").Layout(gtx)
 				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.H6("Remove wallet from device").Layout(gtx)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.deleteWallet.Layout(gtx)
-							})
-						}),
-					)
+				layout.Flexed(1, func(gtx C) D {
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return pg.deleteWallet.Layout(gtx)
+					})
 				}),
 			)
 		})
 	}
 }
 
-func (pg *settingsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *settingsPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, body)
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						txt := pg.theme.Body2(title)
+						txt.Color = pg.theme.Color.Gray
+						return txt.Layout(gtx)
+					}),
+					layout.Rigid(body),
+				)
+			})
 		})
 	})
 }
 
 func (pg *settingsPage) handle(common pageCommon) {
 	for pg.changePass.Button.Clicked() {
+		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
-			walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 			common.modalReceiver <- &modalLoad{
-				template: PasswordTemplate,
-				title:    "Confirm to change",
-				confirm: func(password string) {
-					pg.wal.UnlockWallet(walletID, []byte(password), pg.errChann)
+				template: ChangePasswordTemplate,
+				title:    "Change spending password",
+				confirm: func(oldPass, newPass string) {
+					pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errChann)
 				},
-				confirmText: "Confirm",
+				confirmText: "Change",
 				cancel:      common.closeModal,
 				cancelText:  "Cancel",
 			}
@@ -251,25 +223,25 @@ func (pg *settingsPage) handle(common pageCommon) {
 		break
 	}
 
-	if *pg.result != nil {
-		if (*pg.result).Err == nil {
-			fmt.Println(string((*pg.result).Pass))
-			walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-			oldPassword := (*pg.result).Pass
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: ChangePasswordTemplate,
-					title:    "Change spending password",
-					confirm: func(newPassword string) {
-						fmt.Println(string(oldPassword))
-						pg.wal.ChangeWalletPassphrase(walletID, string(oldPassword), newPassword, pg.errChann)
-					},
-					confirmText: "Change",
-					cancel:      common.closeModal,
-					cancelText:  "Cancel",
-				}
-			}()
-		}
-		*pg.result = nil
-	}
+	// if *pg.result != nil {
+	// 	if (*pg.result).Err == nil {
+	// 		fmt.Println(string((*pg.result).Pass))
+	// 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
+	// 		oldPassword := (*pg.result).Pass
+	// 		go func() {
+	// 			common.modalReceiver <- &modalLoad{
+	// 				template: ChangePasswordTemplate,
+	// 				title:    "Change spending password",
+	// 				confirm: func(newPassword string) {
+	// 					fmt.Println(string(oldPassword))
+	// 					pg.wal.ChangeWalletPassphrase(walletID, string(oldPassword), newPassword, pg.errChann)
+	// 				},
+	// 				confirmText: "Change",
+	// 				cancel:      common.closeModal,
+	// 				cancelText:  "Cancel",
+	// 			}
+	// 		}()
+	// 	}
+	// 	*pg.result = nil
+	// }
 }

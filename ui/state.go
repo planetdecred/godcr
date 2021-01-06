@@ -85,14 +85,11 @@ func (win *Window) updateStates(update interface{}) {
 		if result.Err != nil {
 			win.notifyOnSuccess(result.Err.Error(), false)
 		} else {
-			win.notifyOnSuccess("Spending password chnaged", true)
+			win.notifyOnSuccess("Spending password changed", true)
 		}
 	case *wallet.UnlockWallet:
 		result := update.(*wallet.UnlockWallet)
 		win.unlockWalletResult = result
-		if result.Err != nil {
-			win.notifyOnSuccess(result.Err.Error(), false)
-		}
 	}
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()

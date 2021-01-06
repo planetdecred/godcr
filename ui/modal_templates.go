@@ -3,6 +3,7 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -22,11 +23,13 @@ const PrivacyInfoTemplate = "PrivacyInfo"
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
 	walletName            decredmaterial.Editor
+	oldSpendingPassword   decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
 	alert                 decredmaterial.IconButton
+	passwordStgth         decredmaterial.ProgressBarStyle
 }
 
 type modalLoad struct {
@@ -51,9 +54,11 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
 		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
+		oldSpendingPassword:   win.theme.Editor(new(widget.Editor), "Old spending password"),
 		spendingPassword:      win.theme.Editor(new(widget.Editor), "Spending password"),
 		matchSpendingPassword: win.theme.Editor(new(widget.Editor), "Confirm spending password"),
 		alert:                 icon,
+		passwordStgth:         win.theme.ProgressBar(0),
 	}
 }
 
@@ -65,6 +70,9 @@ func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
 		func(gtx C) D {
 			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
 			return m.spendingPassword.Layout(gtx)
+		},
+		func(gtx C) D {
+			return m.passwordStgth.Layout(gtx)
 		},
 		func(gtx C) D {
 			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
@@ -141,8 +149,15 @@ func (m *ModalTemplate) Password() []func(gtx C) D {
 func (m *ModalTemplate) changePassword() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
+			m.oldSpendingPassword.Editor.Mask, m.oldSpendingPassword.Editor.SingleLine = '*', true
+			return m.oldSpendingPassword.Layout(gtx)
+		},
+		func(gtx C) D {
 			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
 			return m.spendingPassword.Layout(gtx)
+		},
+		func(gtx C) D {
+			return m.passwordStgth.Layout(gtx)
 		},
 		func(gtx C) D {
 			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
@@ -280,6 +295,8 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
+		m.passwordStrenght(th, m.spendingPassword.Editor)
+
 		template = m.createNewWallet()
 		m.walletName.Hint = "Wallet name"
 		return
@@ -324,16 +341,20 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			m.matchSpendingPassword.SetError("")
 		}
 
-		if m.editorsNotEmpty(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
+		if m.editorsNotEmpty(th, m.oldSpendingPassword.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.confirm.Button.Clicked() {
 			if m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+				load.confirm.(func(string, string))(m.oldSpendingPassword.Editor.Text(), m.spendingPassword.Editor.Text())
 			}
 		}
 
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
+
+		m.passwordStrenght(th, m.spendingPassword.Editor)
+		m.spendingPassword.Hint = "New spending password"
+		m.matchSpendingPassword.Hint = "Confirm new spending password"
 
 		template = m.changePassword()
 		return
@@ -403,6 +424,13 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 
 	m.matchSpendingPassword.SetError("")
 	return true
+}
+
+func (m *ModalTemplate) passwordStrenght(th *decredmaterial.Theme, editors ...*widget.Editor) {
+	password := editors[0]
+	strength := (dcrlibwallet.ShannonEntropy(password.Text()) / 4.0)
+	m.passwordStgth.Progress = int(strength * 100)
+	m.passwordStgth.Color = th.Color.Success
 }
 
 // resetFields clears all modal fields when the modal is closed
