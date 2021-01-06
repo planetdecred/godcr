@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"image/color"
 
 	"github.com/planetdecred/godcr/ui/values"
@@ -247,15 +246,9 @@ func (pg *signMessagePage) handle(common pageCommon) {
 		}()
 	}
 
-	select {
-	case err := <-pg.errChannel:
-		fmt.Printf("SIGNMESSAGE PAGE ERROR! %v", err)
-	default:
-	}
-
 	if *pg.result != nil {
 		if (*pg.result).Err != nil {
-			pg.errorLabel.Text = (*pg.result).Err.Error()
+			common.Notify((*pg.result).Err.Error(), false)
 		} else {
 			pg.signedMessageLabel.Text = (*pg.result).Signature
 		}
@@ -289,6 +282,15 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 			pg.addressEditor.SetError("Invalid address")
 			return false
 		}
+
+		exist, err := pg.wallet.HaveAddress(pg.walletID, address)
+		if err != nil {
+			return false
+		}
+		if !exist {
+			pg.addressEditor.SetError("Address not owned by this wallet")
+			return false
+		}
 	}
 	return true
 }
@@ -296,7 +298,6 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
 	message := pg.messageEditor.Editor.Text()
 	if message == "" && !ignoreEmpty {
-		pg.messageEditor.SetError("Please enter a message to sign")
 		return false
 	}
 	return true
