@@ -67,7 +67,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 				Size:       values.MarginPadding25,
 				Background: color.RGBA{},
 				Color:      common.theme.Color.LightGray,
-				Inset:      layout.UniformInset(values.MarginPadding25),
+				Inset:      layout.UniformInset(values.MarginPadding0),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -77,7 +77,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 				Size:       values.MarginPadding25,
 				Background: color.RGBA{},
 				Color:      common.theme.Color.LightGray,
-				Inset:      layout.UniformInset(values.MarginPadding25),
+				Inset:      layout.UniformInset(values.MarginPadding0),
 				Button:     new(widget.Clickable),
 			},
 		},
@@ -104,19 +104,18 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 				*common.page = PageWallet
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(pg.changePassphrase()),
 						layout.Rigid(pg.notification()),
-						// layout.Rigid(pg.editors(pg.messageEditor)),
-						// layout.Rigid(pg.drawButtonsRow()),
-						// layout.Rigid(pg.drawResult()),
+						layout.Rigid(pg.debug()),
+						layout.Rigid(pg.dangerZone()),
 					)
 				})
 			},
 			infoTemplate: "",
 		}
-		return common.SubPageLayout(gtx, page)
+		return common.SubPageLayoutWithoutInfo(gtx, page)
 	}
 
 	return common.Layout(gtx, body)
@@ -124,90 +123,115 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 
 func (pg *settingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				txt := pg.theme.Body2("Spending password")
-				txt.Color = pg.theme.Color.Gray
-				return txt.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return pg.theme.H6("Change spending password").Layout(gtx)
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return pg.changePass.Layout(gtx)
-						})
-					}),
-				)
-			}),
-		)
+		return pg.pageSections(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body2("Spending password")
+					txt.Color = pg.theme.Color.Gray
+					return txt.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.theme.H6("Change spending password").Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return pg.changePass.Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		})
 	}
 }
 
 func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.drawLine(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				txt := pg.theme.Body2("Notification")
-				txt.Color = pg.theme.Color.Gray
-				return txt.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return pg.theme.H6("Incoming transactions").Layout(gtx)
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return pg.theme.Switch(pg.notificationW).Layout(gtx)
-						})
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.drawLine(gtx)
-			}),
-		)
+		return pg.pageSections(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body2("Notification")
+					txt.Color = pg.theme.Color.Gray
+					return txt.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.theme.H6("Incoming transactions").Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return pg.theme.Switch(pg.notificationW).Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		})
 	}
 }
 
-func (pg *settingsPage) drawLine(gtx layout.Context) layout.Dimensions {
-	m := values.MarginPadding10
-	pg.line.Width = gtx.Constraints.Max.X
-	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-		return pg.line.Layout(gtx)
-	})
+func (pg *settingsPage) debug() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body2("Debug")
+					txt.Color = pg.theme.Color.Gray
+					return txt.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.theme.H6("Rescan blockchain").Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return pg.rescan.Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		})
+	}
 }
 
-// func (pg *settingsPage) drawRows(HeaderText, labelText string, isIconBtn bool) layout.Dimensions {
-// 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 		layout.Rigid(func(gtx C) D {
-// 			return common.theme.Body2(HeaderText).Layout(gtx)
-// 		}),
-// 		layout.Rigid(func(gtx C) D {
-// 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-// 				layout.Rigid(func(gtx C) D {
-// 					// inset := layout.Inset{
-// 					// 	Right: values.MarginPadding5,
-// 					// }
-// 					// return inset.Layout(gtx, func(gtx C) D {
-// 						return common.theme.Body2(HeaderText).Layout(gtx)
-// 					// })
-// 				}),
-// 				layout.Flex(1,func(gtx C) D {
-// 					return layout.E.Layout(gtx, func(gtx C) D {
-// 						return pg.signButton.Layout(gtx)
-// 					})
-// 				}),
-// 			)
-// 		}),
-// 	)
-// }
+func (pg *settingsPage) dangerZone() layout.Widget {
+	return func(gtx C) D {
+		return pg.pageSections(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body2("Danger zone")
+					txt.Color = pg.theme.Color.Gray
+					return txt.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.theme.H6("Remove wallet from device").Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return pg.deleteWallet.Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		})
+	}
+}
+
+func (pg *settingsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return pg.theme.Card().Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, body)
+		})
+	})
+}
 
 func (pg *settingsPage) handle(common pageCommon) {
 	for pg.changePass.Button.Clicked() {
