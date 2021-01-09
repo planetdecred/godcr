@@ -32,7 +32,8 @@ type pageIcons struct {
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
-	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon *widget.Image
+	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
+	arrowFowardIcon, transactionFingerPrintIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -117,29 +118,33 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 
-		overviewIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
-		overviewIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
-		walletIconInactive:      &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
-		receiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
-		transactionIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
-		transactionIconInactive: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
-		sendIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
-		moreIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
-		moreIconInactive:        &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
-		logo:                    &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
-		confirmIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
-		pendingIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
-		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
-		newWalletIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
-		walletAlertIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
-		accountIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
-		importedAccountIcon:     &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
-		editIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
-		expandIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
-		collapseIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])},
-		copyIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
-		syncingIcon:             decredIcons["syncing"],
-		walletIcon:              decredIcons["wallet"],
+		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
+		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
+		walletIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
+		receiveIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
+		transactionIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
+		transactionIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
+		sendIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
+		moreIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
+		moreIconInactive:           &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
+		logo:                       &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
+		confirmIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
+		pendingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
+		redirectIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
+		newWalletIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
+		walletAlertIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
+		accountIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
+		importedAccountIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
+		editIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
+		expandIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
+		collapseIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])},
+		copyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
+		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
+		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
+		arrowFowardIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
+
+		syncingIcon: decredIcons["syncing"],
+		walletIcon:  decredIcons["wallet"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 
@@ -247,6 +252,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageHelp] = win.HelpPage(common)
 	win.pages[PageUTXO] = win.UTXOPage(common)
 	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
+	win.pages[PagePrivacy] = win.PrivacyPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {
