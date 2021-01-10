@@ -306,5 +306,6 @@ func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
 func (pg *signMessagePage) clearForm() {
 	pg.addressEditor.Editor.SetText("")
 	pg.messageEditor.Editor.SetText("")
+	pg.signedMessageLabel.Text = ""
 	pg.errorLabel.Text = ""
 }
