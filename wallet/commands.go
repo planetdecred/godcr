@@ -524,6 +524,15 @@ func (wal *Wallet) IsAddressValid(address string) (bool, error) {
 	return wal.multi.IsAddressValid(address), nil
 }
 
+// HaveAddress checks if the given address is valid for the wallet
+func (wal *Wallet) HaveAddress(walletID int, address string) (bool, error) {
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
+		return false, ErrIDNotExist
+	}
+	return wall.HaveAddress(address), nil
+}
+
 // VerifyMessage checks if the given message matches the signature for the address.
 func (wal *Wallet) VerifyMessage(address string, message string, signature string) (bool, error) {
 	return wal.multi.VerifyMessage(address, message, signature)
