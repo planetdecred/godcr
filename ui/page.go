@@ -694,6 +694,32 @@ type SubPage struct {
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	return page.theme.Card().Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{
+					Left:   values.MarginPadding15,
+					Right:  values.MarginPadding15,
+					Bottom: values.MarginPadding15,
+				}.Layout(gtx, sp.body)
+			}),
+		)
+	})
+}
+
+func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	card := page.theme.Card()
+	card.Color = color.RGBA{}
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
+			layout.Rigid(sp.body),
+		)
+	})
+}
+
+func (page pageCommon) subPageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
 			page.modalReceiver <- &modalLoad{
@@ -709,45 +735,38 @@ func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dime
 		sp.back()
 	}
 
-	return page.theme.Card().Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-									return page.subPageBackButton.Layout(gtx)
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return page.theme.Card().Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+							return page.subPageBackButton.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return page.theme.H6(sp.title).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+							return decredmaterial.Card{
+								Color: page.theme.Color.Background,
+							}.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+									walletText := page.theme.Caption(sp.walletName)
+									walletText.Color = page.theme.Color.Gray
+									return walletText.Layout(gtx)
 								})
-							}),
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return page.theme.H6(sp.title).Layout(gtx)
-							}),
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									return decredmaterial.Card{
-										Color: page.theme.Color.Background,
-									}.Layout(gtx, func(gtx C) D {
-										return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-											walletText := page.theme.Caption(sp.walletName)
-											walletText.Color = page.theme.Color.Gray
-											return walletText.Layout(gtx)
-										})
-									})
-								})
-							}),
-							layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return page.subPageInfoButton.Layout(gtx)
-								})
-							}),
-						)
-					})
-				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return sp.body(gtx)
-				}),
-			)
+							})
+						})
+					}),
+					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return page.subPageInfoButton.Layout(gtx)
+						})
+					}),
+				)
+			})
 		})
 	})
 }

@@ -9,7 +9,6 @@ import (
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -24,6 +23,7 @@ type moreItemText struct {
 	signMessage,
 	verifyMessage,
 	viewProperty,
+	privacy,
 	rename,
 	settings string
 }
@@ -45,9 +45,6 @@ type walletPage struct {
 	toAcctDetails                              []*gesture.Click
 	text                                       moreItemText
 	errChann                                   chan error
-	backButton                                 decredmaterial.IconButton
-	toPrivacyPage                              decredmaterial.Button
-	walletLayoutVisibility                     bool
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -71,8 +68,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		line:            common.theme.Line(),
 		walletAccount:   &win.walletAccount,
 		toAddWalletPage: new(widget.Clickable),
-		toPrivacyPage:   common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
-		backButton:      common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		errChann:        common.errorChannels[PageWallet],
 	}
 
@@ -82,6 +77,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		signMessage:   "Sign message",
 		verifyMessage: "Verify message",
 		viewProperty:  "View property",
+		privacy:       "Privacy",
 		rename:        "Rename",
 		settings:      "Settings",
 	}
@@ -91,9 +87,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.addAcct = nil
 	pg.backupButton = nil
 	pg.toAcctDetails = make([]*gesture.Click, 0)
-	pg.toPrivacyPage.Background = pg.theme.Color.Primary
-	pg.backButton.Color = common.theme.Color.Text
-	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return func(gtx C) D {
 		pg.Handle(common)
@@ -103,10 +96,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 // Layout lays out the widgets for the main wallets pg.
 func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	if !pg.walletLayoutVisibility {
-		return pg.privacyLayout(gtx, &common)
-	}
-
 	if common.info.LoadedWallets == 0 {
 		return common.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
@@ -125,6 +114,9 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 			},
 			{
 				Text: pg.text.viewProperty,
+			},
+			{
+				Text: pg.text.privacy,
 			},
 			{
 				Text: pg.text.rename,
@@ -501,6 +493,8 @@ func (pg *walletPage) Handle(common pageCommon) {
 						*common.page = PageAbout
 					case pg.text.viewProperty:
 						*common.page = PageHelp
+					case pg.text.privacy:
+						*common.page = PagePrivacy
 					}
 					b.Hide()
 				}
@@ -550,102 +544,4 @@ func (pg *walletPage) Handle(common pageCommon) {
 		}()
 		break
 	}
-
-	if pg.backButton.Button.Clicked() {
-		pg.walletLayoutVisibility = true
-	}
-
-	if pg.toPrivacyPage.Button.Clicked() {
-		*common.page = PagePrivacy
-	}
-}
-
-func (pg *walletPage) privacyLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
-	body := c.Layout(gtx, func(gtx C) D {
-		return c.theme.Card().Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.W.Layout(gtx, func(gtx C) D {
-									return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-										return pg.backButton.Layout(gtx)
-									})
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.theme.H6("Privacy").Layout(gtx)
-							}),
-						)
-					})
-				}),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.Center.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-											c.icons.transactionFingerPrintIcon.Scale = 0.09
-											return c.icons.transactionFingerPrintIcon.Layout(gtx)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										c.icons.arrowFowardIcon.Scale = 0.18
-										return c.icons.arrowFowardIcon.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-											c.icons.mixer.Scale = 0.25
-											return c.icons.mixer.Layout(gtx)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										c.icons.arrowFowardIcon.Scale = 0.18
-										return c.icons.arrowFowardIcon.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-											c.icons.transactionIcon.Scale = 0.09
-											return c.icons.transactionIcon.Layout(gtx)
-										})
-									}),
-								)
-							}),
-							layout.Rigid(func(gtx C) D {
-								txt := pg.theme.H6("How does CoinShuffle++ mixer enhance your privacy?")
-								txt2 := pg.theme.Body1("CoinShuffle++ mixer can mix your DCRs through CoinJoin transactions.")
-								txt3 := pg.theme.Body1("Using mixed DCRs protects you from exposing your financial activities to the public (e.g. how much you own, who pays you).")
-								txt.Alignment, txt2.Alignment, txt3.Alignment = text.Middle, text.Middle, text.Middle
-
-								return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-											return txt2.Layout(gtx)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-											return txt3.Layout(gtx)
-										})
-									}),
-								)
-							}),
-						)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return pg.toPrivacyPage.Layout(gtx)
-					})
-				}),
-			)
-		})
-	})
-	return body
 }

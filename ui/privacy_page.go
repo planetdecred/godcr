@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -12,24 +13,27 @@ import (
 const PagePrivacy = "Privacy"
 
 type privacyPage struct {
-	theme         *decredmaterial.Theme
-	pageContainer layout.List
-	backButton    decredmaterial.IconButton
-	toggleMixer   *widget.Bool
-	infoBtn       decredmaterial.IconButton
-	line          *decredmaterial.Line
+	theme                                *decredmaterial.Theme
+	pageContainer                        layout.List
+	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
+	infoBtn                              decredmaterial.IconButton
+	line                                 *decredmaterial.Line
+	toPrivacySetup                       decredmaterial.Button
+	privacyPageSetupVisibility           bool
+	dangerZoneCollapsible                *decredmaterial.Collapsible
 }
 
 func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 	pg := &privacyPage{
-		theme:         common.theme,
-		pageContainer: layout.List{Axis: layout.Vertical},
-		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
-		toggleMixer:   new(widget.Bool),
-		line:          common.theme.Line(),
+		theme:                   common.theme,
+		pageContainer:           layout.List{Axis: layout.Vertical},
+		toggleMixer:             new(widget.Bool),
+		allowUnspendUnmixedAcct: new(widget.Bool),
+		line:                    common.theme.Line(),
+		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
+		dangerZoneCollapsible:   common.theme.Collapsible(),
 	}
-	pg.backButton.Color = common.theme.Color.Text
-	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.toPrivacySetup.Background = pg.theme.Color.Primary
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
 	pg.infoBtn.Color = common.theme.Color.Gray
 	pg.infoBtn.Background = common.theme.Color.Surface
@@ -43,67 +47,115 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 	}
 }
 
-func (pg *privacyPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	widgets := []func(gtx C) D{
-		func(gtx C) D {
-			return pg.header(gtx, &common)
-		},
-		pg.gutter,
-		func(gtx C) D {
-			return pg.mixerInfoLayout(gtx, &common)
-		},
-		pg.gutter,
-		func(gtx C) D {
-			return pg.mixerSettingsLayout(gtx, &common)
-		},
-		pg.gutter,
-		func(gtx C) D {
-			return pg.dangerZoneLayout(gtx, &common)
-		},
+func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+	d := func(gtx C) D {
+		load := SubPage{
+			title:      "Privacy",
+			walletName: c.info.Wallets[*c.selectedWallet].Name,
+			back: func() {
+				*c.page = PageWallet
+			},
+			body: func(gtx layout.Context) layout.Dimensions {
+				if pg.privacyPageSetupVisibility {
+					widgets := []func(gtx C) D{
+						func(gtx C) D {
+							return pg.mixerInfoLayout(gtx, &c)
+						},
+						pg.gutter,
+						func(gtx C) D {
+							return pg.mixerSettingsLayout(gtx, &c)
+						},
+						pg.gutter,
+						func(gtx C) D {
+							return pg.dangerZoneLayout(gtx, &c)
+						},
+					}
+					return pg.pageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+						return widgets[i](gtx)
+					})
+				}
+				return pg.privacyIntroLayout(gtx, &c)
+			},
+		}
+		return c.SubpageSplitLayout(gtx, load)
 	}
-
-	return common.Layout(gtx, func(gtx C) D {
-		return pg.pageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-			return widgets[i](gtx)
-		})
-	})
+	return c.Layout(gtx, d)
 }
 
-func (pg *privacyPage) header(gtx layout.Context, c *pageCommon) layout.Dimensions {
-	return c.theme.Card().Layout(gtx, func(gtx C) D {
+func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
+	return pg.theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.W.Layout(gtx, func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-							return pg.backButton.Layout(gtx)
-						})
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.H6("Privacy")
-					return txt.Layout(gtx)
-				}),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.infoBtn.Layout(gtx)
-					})
-				}),
-			)
-		})
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+										c.icons.transactionFingerPrintIcon.Scale = 0.09
+										return c.icons.transactionFingerPrintIcon.Layout(gtx)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									c.icons.arrowFowardIcon.Scale = 0.18
+									return c.icons.arrowFowardIcon.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+										c.icons.mixer.Scale = 0.25
+										return c.icons.mixer.Layout(gtx)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									c.icons.arrowFowardIcon.Scale = 0.18
+									return c.icons.arrowFowardIcon.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+										c.icons.transactionIcon.Scale = 0.09
+										return c.icons.transactionIcon.Layout(gtx)
+									})
+								}),
+							)
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := pg.theme.H6("How does CoinShuffle++ mixer enhance your privacy?")
+							txt2 := pg.theme.Body1("CoinShuffle++ mixer can mix your DCRs through CoinJoin transactions.")
+							txt3 := pg.theme.Body1("Using mixed DCRs protects you from exposing your financial activities to the public (e.g. how much you own, who pays you).")
+							txt.Alignment, txt2.Alignment, txt3.Alignment = text.Middle, text.Middle, text.Middle
+
+							return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(txt.Layout),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, txt2.Layout)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, txt3.Layout)
+								}),
+							)
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+					return pg.toPrivacySetup.Layout(gtx)
+				})
+			}),
+		)
 	})
 }
 
 func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return c.theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							c.icons.mixer.Scale = 0.06
+							c.icons.mixer.Scale = 0.05
 							return c.icons.mixer.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
@@ -132,7 +184,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 					content.Color = c.theme.Color.Background
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
@@ -173,10 +225,15 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 		pg.line.Width = gtx.Constraints.Max.X
 
 		row := func(txt1, txt2 string) D {
-			return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+			return layout.Inset{
+				Left:   values.MarginPadding15,
+				Right:  values.MarginPadding15,
+				Top:    values.MarginPadding10,
+				Bottom: values.MarginPadding10,
+			}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return c.theme.Label(values.TextSize18, txt1).Layout(gtx)
+						return c.theme.Label(values.TextSize16, txt1).Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return c.theme.Body2(txt2).Layout(gtx)
@@ -187,7 +244,7 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 					return c.theme.Body2("Mixer Settings").Layout(gtx)
 				})
 			}),
@@ -207,13 +264,25 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 func (pg *privacyPage) dangerZoneLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return c.theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.TextSize16).Layout(gtx, func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			return pg.dangerZoneCollapsible.Layout(gtx,
+				func(gtx C) D {
 					txt := pg.theme.Label(values.MarginPadding15, "Danger Zone")
 					txt.Color = c.theme.Color.Gray
 					return txt.Layout(gtx)
-				}),
+				},
+				func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Flexed(1, func(gtx C) D {
+								return c.theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return material.Switch(pg.theme.Base, pg.allowUnspendUnmixedAcct).Layout(gtx)
+							}),
+						)
+					})
+				},
 			)
 		})
 	})
@@ -226,7 +295,7 @@ func (pg *privacyPage) gutter(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *privacyPage) Handler(common pageCommon) {
-	if pg.backButton.Button.Clicked() {
-		*common.page = PageWallet
+	if pg.toPrivacySetup.Button.Clicked() {
+		pg.privacyPageSetupVisibility = true
 	}
 }
