@@ -16,6 +16,7 @@ const PasswordTemplate = "Password"
 const ChangePasswordTemplate = "ChangePassword"
 const ConfirmRemoveTemplate = "ConfirmRemove"
 const VerifyMessageInfoTemplate = "VerifyMessageInfo"
+const SignMessageInfoTemplate = "SignMessageInfo"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -155,6 +156,17 @@ func (m *ModalTemplate) verifyMessageInfo() []func(gtx C) D {
 			text := m.th.Body1("After you or your counterparty has genrated a signature, you can use this form to verify the" +
 				" validity of the  signature. \n \nOnce you have entered the address, the message and the corresponding " +
 				"signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID.")
+			text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) signMessageInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Body1("Signing a message with an address' private key allows you to prove that you are the owner of a given address" +
+				" to a possible counterparty.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -301,6 +313,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.verifyMessageInfo()
+		return
+	case SignMessageInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.signMessageInfo()
 		return
 	default:
 		return
