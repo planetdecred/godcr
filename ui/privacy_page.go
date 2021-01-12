@@ -55,6 +55,8 @@ func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimension
 			back: func() {
 				*c.page = PageWallet
 			},
+			infoTemplateTitle: "How to use the mixer?",
+			infoTemplate:      PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
 				if pg.privacyPageSetupVisibility {
 					widgets := []func(gtx C) D{

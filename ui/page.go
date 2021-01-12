@@ -686,11 +686,12 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 }
 
 type SubPage struct {
-	title        string
-	walletName   string
-	back         func()
-	body         layout.Widget
-	infoTemplate string
+	title             string
+	walletName        string
+	back              func()
+	body              layout.Widget
+	infoTemplate      string
+	infoTemplateTitle string
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -722,9 +723,13 @@ func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout
 func (page pageCommon) subPageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
+			title := sp.title
+			if sp.infoTemplateTitle != "" {
+				title = sp.infoTemplateTitle
+			}
 			page.modalReceiver <- &modalLoad{
 				template:   sp.infoTemplate,
-				title:      sp.title,
+				title:      title,
 				cancel:     page.closeModal,
 				cancelText: "Got it",
 			}

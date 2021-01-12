@@ -32,6 +32,7 @@ var (
 	MarginPadding390     = unit.Dp(390)
 	MarginPadding450     = unit.Dp(450)
 
+	TextSize8  = unit.Dp(8)
 	TextSize10 = unit.Dp(10)
 	TextSize12 = unit.Dp(12)
 	TextSize14 = unit.Dp(14)
