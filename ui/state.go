@@ -56,21 +56,22 @@ func (win *Window) updateStates(update interface{}) {
 		win.walletUnspentOutputs = e
 		return
 	case wallet.CreatedSeed:
-		win.notifyOnSuccess("Wallet created", true)
+		win.notifyOnSuccess("Wallet created")
 		win.current = PageWallet
 	case wallet.Renamed:
-		win.notifyOnSuccess("Wallet renamed", true)
+		win.notifyOnSuccess("Wallet renamed")
 	case wallet.Restored:
 		win.current = PageWallet
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
 		win.selected = 0
-		win.notifyOnSuccess("Wallet removed", true)
+		win.current = PageWallet
+		win.notifyOnSuccess("Wallet removed")
 	case wallet.AddedAccount:
-		win.notifyOnSuccess("Account created", true)
+		win.notifyOnSuccess("Account created")
 	case wallet.UpdatedAccount:
-		win.notifyOnSuccess("Account renamed", true)
+		win.notifyOnSuccess("Account renamed")
 	case *wallet.Signature:
 		win.notifyOnSuccess("Message signed")
 		win.signatureResult = update.(*wallet.Signature)
@@ -81,16 +82,9 @@ func (win *Window) updateStates(update interface{}) {
 		broadcastResult := update.(*wallet.Broadcast)
 		win.broadcastResult = *broadcastResult
 	case *wallet.ChangePassword:
-		result := update.(*wallet.ChangePassword)
-		if result.Err != nil {
-			win.notifyOnSuccess(result.Err.Error(), false)
-		} else {
-			win.notifyOnSuccess("Spending password changed", true)
-		}
-	case *wallet.UnlockWallet:
-		result := update.(*wallet.UnlockWallet)
-		win.unlockWalletResult = result
+		win.notifyOnSuccess("Spending password changed")
 	}
+
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
 	win.wallet.GetAllTransactions(0, 0, 0)
@@ -98,16 +92,15 @@ func (win *Window) updateStates(update interface{}) {
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }
 
-func (win *Window) notifyOnSuccess(text string, success bool) {
+func (win *Window) notifyOnSuccess(text string) {
 	go func() {
 		win.toast <- &toast{
 			text:    text,
-			success: success,
+			success: true,
 		}
 	}()
-	if success {
-		go func() {
-			win.modal <- &modalLoad{}
-		}()
-	}
+
+	go func() {
+		win.modal <- &modalLoad{}
+	}()
 }

@@ -27,7 +27,6 @@ type settingsPage struct {
 	chevronIcon   *widget.Icon
 	line          *decredmaterial.Line
 	errChann      chan error
-	result        **wallet.UnlockWallet
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
@@ -37,7 +36,6 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		wal:           common.wallet,
 		notificationW: new(widget.Bool),
 		line:          common.theme.Line(),
-		result:        &win.unlockWalletResult,
 		errChann:      common.errorChannels[PageSettings],
 
 		changePass: decredmaterial.IconButton{
@@ -124,9 +122,7 @@ func (pg *settingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, "Spending password", func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.theme.H6("Change spending password").Layout(gtx)
-				}),
+				layout.Rigid(pg.bottomSectionLabel("Change spending password")),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.changePass.Layout(gtx)
@@ -141,9 +137,7 @@ func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, "Notification", func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.theme.H6("Incoming transactions").Layout(gtx)
-				}),
+				layout.Rigid(pg.bottomSectionLabel("Beep for new blocks")),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.theme.Switch(pg.notificationW).Layout(gtx)
@@ -158,9 +152,7 @@ func (pg *settingsPage) debug() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, "Debug", func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.theme.H6("Rescan blockchain").Layout(gtx)
-				}),
+				layout.Rigid(pg.bottomSectionLabel("Rescan blockchain")),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.rescan.Layout(gtx)
@@ -175,9 +167,7 @@ func (pg *settingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, "Danger zone", func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.theme.H6("Remove wallet from device").Layout(gtx)
-				}),
+				layout.Rigid(pg.bottomSectionLabel("Remove wallet from device")),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.deleteWallet.Layout(gtx)
@@ -205,6 +195,12 @@ func (pg *settingsPage) pageSections(gtx layout.Context, title string, body layo
 	})
 }
 
+func (pg *settingsPage) bottomSectionLabel(title string) layout.Widget {
+	return func(gtx C) D {
+		return pg.theme.Body1(title).Layout(gtx)
+	}
+}
+
 func (pg *settingsPage) handle(common pageCommon) {
 	for pg.changePass.Button.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
@@ -223,25 +219,61 @@ func (pg *settingsPage) handle(common pageCommon) {
 		break
 	}
 
-	// if *pg.result != nil {
-	// 	if (*pg.result).Err == nil {
-	// 		fmt.Println(string((*pg.result).Pass))
-	// 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-	// 		oldPassword := (*pg.result).Pass
-	// 		go func() {
-	// 			common.modalReceiver <- &modalLoad{
-	// 				template: ChangePasswordTemplate,
-	// 				title:    "Change spending password",
-	// 				confirm: func(newPassword string) {
-	// 					fmt.Println(string(oldPassword))
-	// 					pg.wal.ChangeWalletPassphrase(walletID, string(oldPassword), newPassword, pg.errChann)
-	// 				},
-	// 				confirmText: "Change",
-	// 				cancel:      common.closeModal,
-	// 				cancelText:  "Cancel",
-	// 			}
-	// 		}()
-	// 	}
-	// 	*pg.result = nil
-	// }
+	for pg.rescan.Button.Clicked() {
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: RescanWalletTemplate,
+				title:    "Rescan blockchain",
+				confirm: func() {
+					pg.wal.RestartSpvSync()
+					e := "Rescan initiated (check in overview)"
+					common.Notify(e, true)
+					go func() {
+						common.modalReceiver <- &modalLoad{}
+					}()
+				},
+				confirmText: "Rescan",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
+		break
+	}
+
+	for pg.deleteWallet.Button.Clicked() {
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: ConfirmRemoveTemplate,
+				title:    "Remove wallet from device",
+				confirm: func() {
+					walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
+					go func() {
+						common.modalReceiver <- &modalLoad{
+							template: PasswordTemplate,
+							title:    "Confirm to remove",
+							confirm: func(pass string) {
+								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errChann)
+							},
+							confirmText: "Confirm",
+							cancel:      common.closeModal,
+							cancelText:  "Cancel",
+						}
+					}()
+				},
+				confirmText: "Remove",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
+		break
+	}
+
+	select {
+	case err := <-pg.errChann:
+		if err.Error() == "invalid_passphrase" {
+			e := "Password is incorrect"
+			common.Notify(e, false)
+		}
+	default:
+	}
 }

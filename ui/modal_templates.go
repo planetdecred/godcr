@@ -19,6 +19,7 @@ const ConfirmRemoveTemplate = "ConfirmRemove"
 const VerifyMessageInfoTemplate = "VerifyMessageInfo"
 const SignMessageInfoTemplate = "SignMessageInfo"
 const PrivacyInfoTemplate = "PrivacyInfo"
+const RescanWalletTemplate = "RescanWallet"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -183,6 +184,17 @@ func (m *ModalTemplate) signMessageInfo() []func(gtx C) D {
 		func(gtx C) D {
 			text := m.th.Body1("Signing a message with an address' private key allows you to prove that you are the owner of a given address" +
 				" to a possible counterparty.")
+				text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) rescanWallet() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Body1("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire" +
+				" blockchain for transactions")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -261,6 +273,9 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 							m.confirm.Text = load.confirmText
 							if load.template == ConfirmRemoveTemplate {
 								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
+							}
+							if load.template == RescanWalletTemplate {
+								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
 							}
 							return m.confirm.Layout(gtx)
 						})
@@ -378,6 +393,14 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.signMessageInfo()
+	case RescanWalletTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.rescanWallet()
 		return
 	case PrivacyInfoTemplate:
 		if m.cancel.Button.Clicked() {

@@ -107,14 +107,7 @@ type DeletedWallet struct {
 
 // ChangePassword is sent when the Wallet password is changed
 type ChangePassword struct {
-	ID  int
-	Err error
-}
-
-// UnlockWallet is sent when the Wallet is unlocked
-type UnlockWallet struct {
-	Pass []byte
-	Err  error
+	ID int
 }
 
 // Transaction wraps the dcrlibwallet Transaction type and adds processed data

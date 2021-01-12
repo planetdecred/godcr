@@ -464,10 +464,12 @@ func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, ne
 			go func() {
 				errChan <- err
 			}()
-			resp.Resp = &ChangePassword{
-				Err: fmt.Errorf("error changing password: %s", err.Error()),
-			}
-			wal.Send <- resp
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not change password",
+				Affected: []int{walletID},
+				Err:      err,
+			})
 			return
 		}
 
@@ -515,26 +517,8 @@ func (wal *Wallet) RenameAccount(walletID int, acct int32, name string, errChan 
 	}()
 }
 
-func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte, errChan chan error) {
-	go func() {
-		var resp Response
-		err := wal.multi.UnlockWallet(walletID, passphrase)
-		if err != nil {
-			go func() {
-				errChan <- err
-			}()
-			resp.Resp = &UnlockWallet{
-				Err: fmt.Errorf(err.Error()),
-			}
-			wal.Send <- resp
-			return
-		}
-
-		resp.Resp = &UnlockWallet{
-			Pass: passphrase,
-		}
-		wal.Send <- resp
-	}()
+func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
+	return wal.multi.UnlockWallet(walletID, passphrase)
 }
 
 // CurrentAddress returns the next address for the specified wallet account.
@@ -577,6 +561,11 @@ func (wal *Wallet) VerifyMessage(address string, message string, signature strin
 // StartSync starts the multiwallet SPV sync
 func (wal *Wallet) StartSync() error {
 	return wal.multi.SpvSync()
+}
+
+// StartSync starts the multiwallet SPV sync
+func (wal *Wallet) RestartSpvSync() error {
+	return wal.multi.RestartSpvSync()
 }
 
 // CancelSync cancels the SPV sync
