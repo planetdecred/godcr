@@ -3,8 +3,6 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
-	"image/color"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -19,17 +17,16 @@ type settingsPage struct {
 	wal        *wallet.Wallet
 
 	changePass   decredmaterial.IconButton
-	setupCoin    decredmaterial.IconButton
 	rescan       decredmaterial.IconButton
 	deleteWallet decredmaterial.IconButton
 
 	notificationW *widget.Bool
-	chevronIcon   *widget.Icon
 	line          *decredmaterial.Line
 	errChann      chan error
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
+	icon := common.icons.chevronRight
 	pg := &settingsPage{
 		theme:         common.theme,
 		walletInfo:    win.walletInfo,
@@ -38,52 +35,24 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		line:          common.theme.Line(),
 		errChann:      common.errorChannels[PageSettings],
 
-		changePass: decredmaterial.IconButton{
-			material.IconButtonStyle{
-				Icon:       common.icons.chevronRight,
-				Size:       values.MarginPadding25,
-				Background: color.RGBA{},
-				Color:      common.theme.Color.LightGray,
-				Inset:      layout.UniformInset(values.MarginPadding0),
-				Button:     new(widget.Clickable),
-			},
-		},
-		setupCoin: decredmaterial.IconButton{
-			material.IconButtonStyle{
-				Icon:       common.icons.chevronRight,
-				Size:       values.MarginPadding25,
-				Background: color.RGBA{},
-				Color:      common.theme.Color.LightGray,
-				Inset:      layout.UniformInset(values.MarginPadding0),
-				Button:     new(widget.Clickable),
-			},
-		},
-		rescan: decredmaterial.IconButton{
-			material.IconButtonStyle{
-				Icon:       common.icons.chevronRight,
-				Size:       values.MarginPadding25,
-				Background: color.RGBA{},
-				Color:      common.theme.Color.LightGray,
-				Inset:      layout.UniformInset(values.MarginPadding0),
-				Button:     new(widget.Clickable),
-			},
-		},
-		deleteWallet: decredmaterial.IconButton{
-			material.IconButtonStyle{
-				Icon:       common.icons.chevronRight,
-				Size:       values.MarginPadding25,
-				Background: color.RGBA{},
-				Color:      common.theme.Color.LightGray,
-				Inset:      layout.UniformInset(values.MarginPadding0),
-				Button:     new(widget.Clickable),
-			},
-		},
+		changePass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
+		rescan:       common.theme.PlainIconButton(new(widget.Clickable), icon),
+		deleteWallet: common.theme.PlainIconButton(new(widget.Clickable), icon),
 	}
 	pg.line.Height = 2
 	pg.line.Color = common.theme.Color.Background
 
-	pg.chevronIcon = common.icons.chevronRight
-	pg.chevronIcon.Color = common.theme.Color.Background
+	color := common.theme.Color.LightGray
+	zeroInset := layout.UniformInset(values.MarginPadding0)
+
+	pg.changePass.Color = color
+	pg.changePass.Inset = zeroInset
+
+	pg.rescan.Color = color
+	pg.rescan.Inset = zeroInset
+
+	pg.deleteWallet.Color = color
+	pg.deleteWallet.Inset = zeroInset
 
 	return func(gtx C) D {
 		pg.handle(common)

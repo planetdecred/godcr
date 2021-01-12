@@ -184,7 +184,7 @@ func (m *ModalTemplate) signMessageInfo() []func(gtx C) D {
 		func(gtx C) D {
 			text := m.th.Body1("Signing a message with an address' private key allows you to prove that you are the owner of a given address" +
 				" to a possible counterparty.")
-				text.Color = m.th.Color.Gray
+			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
 	}
@@ -393,6 +393,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.signMessageInfo()
+		return
 	case RescanWalletTemplate:
 		if m.confirm.Button.Clicked() {
 			load.confirm.(func())()
