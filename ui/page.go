@@ -34,7 +34,7 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon, alert *widget.Image
+	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -150,6 +150,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
 		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
 		alert:                      &widget.Image{Src: paint.NewImageOp(decredIcons["alert"])},
+		verifyMessageIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
+		locationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -760,6 +762,72 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 }
 
 func (page pageCommon) subpageEventHandler(sp SubPage) {
+	if page.subPageInfoButton.Button.Clicked() {
+		go func() {
+			page.modalReceiver <- &modalLoad{
+				template:   sp.infoTemplate,
+				title:      sp.title,
+				cancel:     page.closeModal,
+				cancelText: "Got it",
+			}
+		}()
+	}
+
+	if page.subPageBackButton.Button.Clicked() {
+		sp.back()
+	}
+}
+
+func (page pageCommon) SubPageLayoutWithoutInfo(gtx layout.Context, sp SubPage) layout.Dimensions {
+	page.subPageEventHandle(sp)
+
+	if page.subPageInfoButton.Button.Clicked() {
+		go func() {
+			page.modalReceiver <- &modalLoad{
+				template:   sp.infoTemplate,
+				title:      sp.title,
+				cancel:     page.closeModal,
+				cancelText: "Got it",
+			}
+		}()
+	}
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+				return page.theme.Card().Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						return page.subPageBackAndTitleLayout(gtx, sp)
+					})
+				})
+			})
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return sp.body(gtx)
+		}),
+	)
+}
+
+func (page pageCommon) subPageBackAndTitleLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+				return page.subPageBackButton.Layout(gtx)
+			})
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return page.theme.H6(sp.title).Layout(gtx)
+		}),
+		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return page.subPageInfoButton.Layout(gtx)
+			})
+		}),
+	)
+}
+
+func (page pageCommon) subPageEventHandle(sp SubPage) {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
 			page.modalReceiver <- &modalLoad{
