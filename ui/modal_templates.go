@@ -310,7 +310,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.passwordStrenght(th, m.spendingPassword.Editor)
+		m.passwordStrength(th, m.spendingPassword.Editor)
 
 		template = m.createNewWallet()
 		m.walletName.Hint = "Wallet name"
@@ -347,7 +347,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
-
+		m.spendingPassword.Hint = "Spending password"
 		template = m.Password()
 		return
 	case ChangePasswordTemplate:
@@ -367,7 +367,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.passwordStrenght(th, m.spendingPassword.Editor)
+		m.passwordStrength(th, m.spendingPassword.Editor)
 		m.spendingPassword.Hint = "New spending password"
 		m.matchSpendingPassword.Hint = "Confirm new spending password"
 
@@ -450,7 +450,7 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (m *ModalTemplate) passwordStrenght(th *decredmaterial.Theme, editors ...*widget.Editor) {
+func (m *ModalTemplate) passwordStrength(th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := (dcrlibwallet.ShannonEntropy(password.Text()) / 4.0)
 	m.passwordStgth.Progress = int(strength * 100)
@@ -463,4 +463,5 @@ func (m *ModalTemplate) resetFields() {
 	m.spendingPassword.Editor.SetText("")
 	m.walletName.Editor.SetText("")
 	m.matchSpendingPassword.SetError("")
+	m.oldSpendingPassword.Editor.SetText("")
 }

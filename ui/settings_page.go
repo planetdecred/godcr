@@ -45,14 +45,9 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	color := common.theme.Color.LightGray
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 
-	pg.changePass.Color = color
-	pg.changePass.Inset = zeroInset
-
-	pg.rescan.Color = color
-	pg.rescan.Inset = zeroInset
-
-	pg.deleteWallet.Color = color
-	pg.deleteWallet.Inset = zeroInset
+	pg.changePass.Color, pg.changePass.Inset = color, zeroInset
+	pg.rescan.Color, pg.rescan.Inset = color, zeroInset
+	pg.deleteWallet.Color, pg.deleteWallet.Inset = color, zeroInset
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -189,14 +184,23 @@ func (pg *settingsPage) handle(common pageCommon) {
 	}
 
 	for pg.rescan.Button.Clicked() {
+		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: RescanWalletTemplate,
 				title:    "Rescan blockchain",
 				confirm: func() {
-					pg.wal.RestartSpvSync()
-					e := "Rescan initiated (check in overview)"
-					common.Notify(e, true)
+					err := pg.wal.RescanBlocks(walletID)
+					if err != nil {
+						if err.Error() == "not_connected" {
+							common.Notify("Not connected to decred network", false)
+							return
+						}
+						common.Notify(err.Error(), false)
+						return
+					}
+					msg := "Rescan initiated (check in overview)"
+					common.Notify(msg, true)
 					go func() {
 						common.modalReceiver <- &modalLoad{}
 					}()

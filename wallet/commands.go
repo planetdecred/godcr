@@ -563,9 +563,9 @@ func (wal *Wallet) StartSync() error {
 	return wal.multi.SpvSync()
 }
 
-// StartSync starts the multiwallet SPV sync
-func (wal *Wallet) RestartSpvSync() error {
-	return wal.multi.RestartSpvSync()
+// RescanBlocks rescans the multiwallet
+func (wal *Wallet) RescanBlocks(walletID int) error {
+	return wal.multi.RescanBlocks(walletID)
 }
 
 // CancelSync cancels the SPV sync

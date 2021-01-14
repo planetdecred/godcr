@@ -697,7 +697,7 @@ type SubPage struct {
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
-	page.subPageEventHandle(sp)
+	page.subpageEventHandler(sp)
 
 	return page.theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -706,7 +706,7 @@ func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dime
 					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return page.subPageBackAndTitleLayout(gtx, sp)
+								return page.subpageHeader(gtx, sp)
 							}),
 							layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 								return layout.E.Layout(gtx, func(gtx C) D {
@@ -727,7 +727,7 @@ func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dime
 }
 
 func (page pageCommon) SubPageLayoutWithoutInfo(gtx layout.Context, sp SubPage) layout.Dimensions {
-	page.subPageEventHandle(sp)
+	page.subpageEventHandler(sp)
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -735,7 +735,7 @@ func (page pageCommon) SubPageLayoutWithoutInfo(gtx layout.Context, sp SubPage) 
 				return page.theme.Card().Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return page.subPageBackAndTitleLayout(gtx, sp)
+						return page.subpageHeader(gtx, sp)
 					})
 				})
 			})
@@ -746,7 +746,7 @@ func (page pageCommon) SubPageLayoutWithoutInfo(gtx layout.Context, sp SubPage) 
 	)
 }
 
-func (page pageCommon) subPageBackAndTitleLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
@@ -772,7 +772,7 @@ func (page pageCommon) subPageBackAndTitleLayout(gtx layout.Context, sp SubPage)
 	)
 }
 
-func (page pageCommon) subPageEventHandle(sp SubPage) {
+func (page pageCommon) subpageEventHandler(sp SubPage) {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
 			page.modalReceiver <- &modalLoad{

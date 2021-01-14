@@ -158,10 +158,6 @@ func (win *Window) Loop(shutdown chan int) {
 					win.updateSyncStatus(true, false)
 				}
 			case wallet.SyncCanceled:
-				if win.sysDestroyWithSync {
-					close(shutdown)
-					return
-				}
 				win.updateSyncStatus(false, false)
 			case wallet.HeadersFetchProgress:
 				win.updateSyncProgress(update.ProgressReport)
