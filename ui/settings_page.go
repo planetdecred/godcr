@@ -76,7 +76,7 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 			},
 			infoTemplate: "",
 		}
-		return common.SubPageLayoutWithoutInfo(gtx, page)
+		return common.SubpageSplitLayout(gtx, page)
 	}
 
 	return common.Layout(gtx, body)

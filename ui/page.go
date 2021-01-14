@@ -694,59 +694,42 @@ type SubPage struct {
 	body              layout.Widget
 	infoTemplate      string
 	infoTemplateTitle string
+	isInfoButton      bool
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
-	page.subpageEventHandler(sp)
-
 	return page.theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return page.subpageHeader(gtx, sp)
-							}),
-							layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return page.subPageInfoButton.Layout(gtx)
-								})
-							})
-						})
-					}),
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return page.subPageInfoButton.Layout(gtx)
-						})
-					}),
-				)
-			})
+						return page.subpageHeader(gtx, sp)
+					})
+				}),
+				layout.Rigid(sp.body),
+			)
 		})
 	})
 }
 
-func (page pageCommon) SubPageLayoutWithoutInfo(gtx layout.Context, sp SubPage) layout.Dimensions {
-	page.subpageEventHandler(sp)
-
+func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 				return page.theme.Card().Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 						return page.subpageHeader(gtx, sp)
 					})
 				})
 			})
 		}),
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return sp.body(gtx)
-		}),
+		layout.Rigid(sp.body),
 	)
 }
 
 func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
+	page.subpageEventHandler(sp)
+
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
@@ -767,6 +750,14 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 						return walletText.Layout(gtx)
 					})
 				})
+			})
+		}),
+		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				if sp.isInfoButton {
+					return page.subPageInfoButton.Layout(gtx)
+				}
+				return layout.Dimensions{}
 			})
 		}),
 	)
