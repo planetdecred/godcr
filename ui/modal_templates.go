@@ -17,6 +17,7 @@ const ChangePasswordTemplate = "ChangePassword"
 const ConfirmRemoveTemplate = "ConfirmRemove"
 const VerifyMessageInfoTemplate = "VerifyMessageInfo"
 const SignMessageInfoTemplate = "SignMessageInfo"
+const PrivacyInfoTemplate = "PrivacyInfo"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -173,6 +174,43 @@ func (m *ModalTemplate) signMessageInfo() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					ic := mustIcon(widget.NewIcon(icons.ImageLens))
+					ic.Color = m.th.Color.Gray
+					return ic.Layout(gtx, values.TextSize8)
+				}),
+				layout.Rigid(func(gtx C) D {
+					text := m.th.Body1("When you turn on the mixer, your unmixed DCRs in this wallet (unmixed balance) will be gradually mixed.")
+					text.Color = m.th.Color.Gray
+					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
+				}),
+			)
+		},
+		func(gtx C) D {
+			text := m.th.Label(values.TextSize18, "Important: keep this app opened while mixer is running.")
+			return text.Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					ic := mustIcon(widget.NewIcon(icons.ImageLens))
+					ic.Color = m.th.Color.Gray
+					return ic.Layout(gtx, values.TextSize8)
+				}),
+				layout.Rigid(func(gtx C) D {
+					text := m.th.Body1("Mixer will automatically stop when unmixed balance are fully mixed.")
+					text.Color = m.th.Color.Gray
+					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
+				}),
+			)
+		},
+	}
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	if !load.isReset {
 		m.resetFields()
@@ -319,6 +357,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.signMessageInfo()
+		return
+	case PrivacyInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.privacyInfo()
 		return
 	default:
 		return

@@ -56,16 +56,14 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dim
 				*c.page = PageWallet
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(pg.description()),
-						layout.Rigid(pg.inputRow(pg.addressInput)),
-						layout.Rigid(pg.inputRow(pg.signInput)),
-						layout.Rigid(pg.inputRow(pg.messageInput)),
-						layout.Rigid(pg.verifyAndClearButtons()),
-						layout.Rigid(pg.verifyMessageResponse()),
-					)
-				})
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(pg.description()),
+					layout.Rigid(pg.inputRow(pg.addressInput)),
+					layout.Rigid(pg.inputRow(pg.signInput)),
+					layout.Rigid(pg.inputRow(pg.messageInput)),
+					layout.Rigid(pg.verifyAndClearButtons()),
+					layout.Rigid(pg.verifyMessageResponse()),
+				)
 			},
 			infoTemplate: VerifyMessageInfoTemplate,
 		}
