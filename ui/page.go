@@ -32,7 +32,8 @@ type pageIcons struct {
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
-	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon *widget.Image
+	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
+	arrowFowardIcon, transactionFingerPrintIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -117,29 +118,33 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 
-		overviewIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
-		overviewIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
-		walletIconInactive:      &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
-		receiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
-		transactionIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
-		transactionIconInactive: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
-		sendIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
-		moreIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
-		moreIconInactive:        &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
-		logo:                    &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
-		confirmIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
-		pendingIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
-		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
-		newWalletIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
-		walletAlertIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
-		accountIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
-		importedAccountIcon:     &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
-		editIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
-		expandIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
-		collapseIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])},
-		copyIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
-		syncingIcon:             decredIcons["syncing"],
-		walletIcon:              decredIcons["wallet"],
+		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
+		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
+		walletIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
+		receiveIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
+		transactionIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
+		transactionIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
+		sendIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
+		moreIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
+		moreIconInactive:           &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
+		logo:                       &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
+		confirmIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
+		pendingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
+		redirectIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
+		newWalletIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
+		walletAlertIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
+		accountIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
+		importedAccountIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
+		editIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
+		expandIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
+		collapseIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])},
+		copyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
+		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
+		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
+		arrowFowardIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
+
+		syncingIcon: decredIcons["syncing"],
+		walletIcon:  decredIcons["wallet"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 
@@ -247,6 +252,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageHelp] = win.HelpPage(common)
 	win.pages[PageUTXO] = win.UTXOPage(common)
 	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
+	win.pages[PagePrivacy] = win.PrivacyPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {
@@ -680,19 +686,50 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 }
 
 type SubPage struct {
-	title        string
-	walletName   string
-	back         func()
-	body         layout.Widget
-	infoTemplate string
+	title             string
+	walletName        string
+	back              func()
+	body              layout.Widget
+	infoTemplate      string
+	infoTemplateTitle string
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	return page.theme.Card().Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{
+					Left:   values.MarginPadding15,
+					Right:  values.MarginPadding15,
+					Bottom: values.MarginPadding15,
+				}.Layout(gtx, sp.body)
+			}),
+		)
+	})
+}
+
+func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	card := page.theme.Card()
+	card.Color = color.RGBA{}
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
+			layout.Rigid(sp.body),
+		)
+	})
+}
+
+func (page pageCommon) subPageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
+			title := sp.title
+			if sp.infoTemplateTitle != "" {
+				title = sp.infoTemplateTitle
+			}
 			page.modalReceiver <- &modalLoad{
 				template:   sp.infoTemplate,
-				title:      sp.title,
+				title:      title,
 				cancel:     page.closeModal,
 				cancelText: "Got it",
 			}
@@ -703,45 +740,38 @@ func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dime
 		sp.back()
 	}
 
-	return page.theme.Card().Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-									return page.subPageBackButton.Layout(gtx)
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return page.theme.Card().Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+							return page.subPageBackButton.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return page.theme.H6(sp.title).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+							return decredmaterial.Card{
+								Color: page.theme.Color.Background,
+							}.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+									walletText := page.theme.Caption(sp.walletName)
+									walletText.Color = page.theme.Color.Gray
+									return walletText.Layout(gtx)
 								})
-							}),
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return page.theme.H6(sp.title).Layout(gtx)
-							}),
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									return decredmaterial.Card{
-										Color: page.theme.Color.Background,
-									}.Layout(gtx, func(gtx C) D {
-										return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-											walletText := page.theme.Caption(sp.walletName)
-											walletText.Color = page.theme.Color.Gray
-											return walletText.Layout(gtx)
-										})
-									})
-								})
-							}),
-							layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return page.subPageInfoButton.Layout(gtx)
-								})
-							}),
-						)
-					})
-				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return sp.body(gtx)
-				}),
-			)
+							})
+						})
+					}),
+					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return page.subPageInfoButton.Layout(gtx)
+						})
+					}),
+				)
+			})
 		})
 	})
 }

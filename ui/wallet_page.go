@@ -23,6 +23,7 @@ type moreItemText struct {
 	signMessage,
 	verifyMessage,
 	viewProperty,
+	privacy,
 	rename,
 	settings string
 }
@@ -76,6 +77,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		signMessage:   "Sign message",
 		verifyMessage: "Verify message",
 		viewProperty:  "View property",
+		privacy:       "Privacy",
 		rename:        "Rename",
 		settings:      "Settings",
 	}
@@ -112,6 +114,9 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 			},
 			{
 				Text: pg.text.viewProperty,
+			},
+			{
+				Text: pg.text.privacy,
 			},
 			{
 				Text: pg.text.rename,
@@ -488,6 +493,8 @@ func (pg *walletPage) Handle(common pageCommon) {
 						*common.page = PageAbout
 					case pg.text.viewProperty:
 						*common.page = PageHelp
+					case pg.text.privacy:
+						*common.page = PagePrivacy
 					}
 					b.Hide()
 				}
