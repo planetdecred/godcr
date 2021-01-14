@@ -490,7 +490,20 @@ func (pg *walletPage) Handle(common pageCommon) {
 					case pg.text.settings:
 						*common.page = PageHelp
 					case pg.text.rename:
-						*common.page = PageAbout
+						walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
+						go func() {
+							common.modalReceiver <- &modalLoad{
+								template: RenameWalletTemplate,
+								title:    "Rename wallet",
+								confirm: func(name string) {
+									pg.wallet.RenameWallet(walletID, name, pg.errChann)
+									pg.current.Name = name
+								},
+								confirmText: "Rename",
+								cancel:      common.closeModal,
+								cancelText:  "Cancel",
+							}
+						}()
 					case pg.text.viewProperty:
 						*common.page = PageHelp
 					case pg.text.privacy:
@@ -543,5 +556,16 @@ func (pg *walletPage) Handle(common pageCommon) {
 			}
 		}()
 		break
+	}
+
+	select {
+	case err := <-pg.errChann:
+		if err.Error() == "invalid_passphrase" {
+			e := "Password is incorrect"
+			common.Notify(e, false)
+			return
+		}
+		common.Notify(err.Error(), false)
+	default:
 	}
 }
