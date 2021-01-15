@@ -286,6 +286,7 @@ func (pg *privacyPage) dangerZoneLayout(gtx layout.Context, c *pageCommon) layou
 						)
 					})
 				},
+				nil,
 			)
 		})
 	})
