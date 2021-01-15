@@ -778,7 +778,7 @@ func (page pageCommon) subpageEventHandler(sp SubPage) {
 	}
 }
 
-func (page pageCommon) SubPageLayoutWithoutInfo(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (page pageCommon) SubPageLayoutWithoutWallet(gtx layout.Context, sp SubPage) layout.Dimensions {
 	page.subPageEventHandle(sp)
 
 	if page.subPageInfoButton.Button.Clicked() {
