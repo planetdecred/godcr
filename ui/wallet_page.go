@@ -293,7 +293,7 @@ func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wal
 			return layout.E.Layout(gtx, func(gtx C) D {
 				balanceLabel := pg.theme.Body1(walletInfo.Balance)
 				balanceLabel.Color = pg.theme.Color.Gray
-				return balanceLabel.Layout(gtx)
+				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
 			})
 		}),
 	)
