@@ -21,15 +21,6 @@ import (
 
 const PageWallet = "Wallet"
 
-type moreItemText struct {
-	signMessage,
-	verifyMessage,
-	viewProperty,
-	privacy,
-	rename,
-	settings string
-}
-
 type walletPage struct {
 	walletInfo                                 *wallet.MultiWalletInfo
 	wallet                                     *wallet.Wallet
@@ -68,7 +59,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	pg.line.Height = 1
 	pg.iconButton = decredmaterial.IconButton{
-		material.IconButtonStyle{
+		IconButtonStyle: material.IconButtonStyle{
 			Icon:       pg.theme.NavMoreIcon,
 			Size:       unit.Dp(25),
 			Background: color.RGBA{},
@@ -100,14 +91,15 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		})
 	}
 
-	for i := 0; i < common.info.LoadedWallets; i++ {
+	for index := 0; index < common.info.LoadedWallets; index++ {
+		i := index
 		collapsible := pg.theme.Collapsible()
 		pg.collapsibles = append(pg.collapsibles, collapsible)
 
-		if _, ok := pg.actions[common.info.Wallets[i].ID]; !ok {
+		if _, ok := pg.actions[i]; !ok {
 			iconButton := pg.iconButton
 			iconButton.Button = new(widget.Clickable)
-			pg.actions[common.info.Wallets[i].ID] = iconButton
+			pg.actions[i] = iconButton
 		}
 
 		addAcctBtn := common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
@@ -213,7 +205,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		}
 
 		collapsibleMore := func(gtx C) D {
-			return pg.actions[common.info.Wallets[i].ID].Layout(gtx)
+			return pg.actions[i].Layout(gtx)
 		}
 
 		return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {

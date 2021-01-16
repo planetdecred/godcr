@@ -31,7 +31,7 @@ func (t *Theme) Collapsible() *Collapsible {
 	return c
 }
 
-func (c *Collapsible) getHeaderParts(gtx C, header, option func(C) D) []layout.FlexChild {
+func (c *Collapsible) getHeaderParts(header, option func(C) D) []layout.FlexChild {
 	icon := c.collapsedIcon
 	if c.IsExpanded {
 		icon = c.expandedIcon
@@ -68,7 +68,7 @@ func (c *Collapsible) Layout(gtx C, header, content, option func(C) D) layout.Di
 	children := []layout.FlexChild{
 		layout.Rigid(func(gtx C) D {
 			return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, c.getHeaderParts(gtx, header, option)...)
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, c.getHeaderParts(header, option)...)
 			})
 		}),
 	}
