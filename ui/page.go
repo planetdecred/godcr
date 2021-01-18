@@ -204,7 +204,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageCreateRestore:  make(chan error),
 			PageWallet:         make(chan error),
 			PageAccountDetails: make(chan error),
-			PageSettings:       make(chan error),
+			PageWalletSettings: make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
@@ -247,6 +247,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 	win.pages[PageSeedBackup] = win.BackupPage(common)
 	win.pages[PageSettings] = win.SettingsPage(common)
+	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
 	win.pages[PagePoliteia] = win.PoliteiaPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
