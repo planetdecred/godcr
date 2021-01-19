@@ -80,7 +80,7 @@ func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimension
 				return pg.privacyIntroLayout(gtx, &c)
 			},
 		}
-		return c.SubpageSplitLayout(gtx, load)
+		return c.SubPageLayout(gtx, load)
 	}
 	return c.Layout(gtx, d)
 }

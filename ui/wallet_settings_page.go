@@ -64,18 +64,16 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 				*common.page = PageWallet
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(pg.changePassphrase()),
-						layout.Rigid(pg.notification()),
-						layout.Rigid(pg.debug()),
-						layout.Rigid(pg.dangerZone()),
-					)
-				})
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(pg.changePassphrase()),
+					layout.Rigid(pg.notification()),
+					layout.Rigid(pg.debug()),
+					layout.Rigid(pg.dangerZone()),
+				)
 			},
 			infoTemplate: "",
 		}
-		return common.SubpageSplitLayout(gtx, page)
+		return common.SubPageLayout(gtx, page)
 	}
 
 	return common.Layout(gtx, body)

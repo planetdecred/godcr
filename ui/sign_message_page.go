@@ -92,14 +92,16 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 				*common.page = PageWallet
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(pg.description()),
-						layout.Rigid(pg.editors(pg.addressEditor)),
-						layout.Rigid(pg.editors(pg.messageEditor)),
-						layout.Rigid(pg.drawButtonsRow()),
-						layout.Rigid(pg.drawResult()),
-					)
+				return common.theme.Card().Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(pg.description()),
+							layout.Rigid(pg.editors(pg.addressEditor)),
+							layout.Rigid(pg.editors(pg.messageEditor)),
+							layout.Rigid(pg.drawButtonsRow()),
+							layout.Rigid(pg.drawResult()),
+						)
+					})
 				})
 			},
 			infoTemplate: SignMessageInfoTemplate,
