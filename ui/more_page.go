@@ -98,10 +98,8 @@ func (pg *morePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	pg.handleClickEvents()
 
 	container := func(gtx C) D {
-		return common.theme.Card().Layout(gtx, func(gtx C) D {
-			pg.layoutMoreItems(gtx, common)
-			return layout.Dimensions{Size: gtx.Constraints.Max}
-		})
+		pg.layoutMoreItems(gtx, common)
+		return layout.Dimensions{Size: gtx.Constraints.Max}
 	}
 	return common.Layout(gtx, container)
 }

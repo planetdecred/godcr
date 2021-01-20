@@ -51,6 +51,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dim
 		load := SubPage{
 			title:        "Verify message",
 			isInfoButton: true,
+			isWalletName: true,
 			walletName:   c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
 				pg.clearInputs(&c)

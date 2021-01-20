@@ -86,6 +86,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 		page := SubPage{
 			title:        "Sign message",
 			isInfoButton: true,
+			isWalletName: true,
 			walletName:   common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
 				pg.clearForm()
