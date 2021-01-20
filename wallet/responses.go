@@ -131,9 +131,10 @@ type Transaction struct {
 
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
-	Total  int
-	Txs    map[int][]Transaction
-	Recent []Transaction
+	Total   int
+	Txs     map[int][]Transaction
+	Recent  []Transaction
+	Tickets map[int][]Transaction
 }
 
 // SyncStatus is sent when a wallet progress event is triggered.

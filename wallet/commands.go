@@ -204,7 +204,9 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 
 		var recentTxs []Transaction
+
 		transactions := make(map[int][]Transaction)
+		ticketTxs := make(map[int][]Transaction)
 		bestBestBlock := wal.multi.GetBestBlock()
 		totalTxn := 0
 
@@ -227,6 +229,9 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 					DateTime:      dcrlibwallet.ExtractDateOrTime(txnRaw.Timestamp),
 				}
 				recentTxs = append(recentTxs, txn)
+				if txn.Txn.Type == dcrlibwallet.TxTypeTicketPurchase {
+					ticketTxs[wall.ID] = append(ticketTxs[wall.ID], txn)
+				}
 				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
 			}
 		}
@@ -243,9 +248,10 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 
 		resp.Resp = &Transactions{
-			Total:  totalTxn,
-			Txs:    transactions,
-			Recent: recentTxs,
+			Total:   totalTxn,
+			Txs:     transactions,
+			Recent:  recentTxs,
+			Tickets: ticketTxs,
 		}
 		wal.Send <- resp
 	}()
@@ -830,12 +836,12 @@ func (wal *Wallet) TicketPrice(walletID int) string {
 }
 
 // PurchaseTicket buy a ticket with given parameters
-func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tikets uint32, passphrase []byte, expiry uint32) (string, error) {
+func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, expiry uint32) (string, error) {
 	wall := wal.multi.WalletWithID(walletID)
 	request := &dcrlibwallet.PurchaseTicketsRequest{
 		Account:               uint32(accountID),
 		Passphrase:            passphrase,
-		NumTickets:            tikets,
+		NumTickets:            tickets,
 		Expiry:                uint32(wal.multi.GetBestBlock().Height) + expiry,
 		RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
 	}
