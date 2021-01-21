@@ -19,6 +19,7 @@ type settingsPage struct {
 	currencyConversion decredmaterial.IconButton
 	connectToPeer      decredmaterial.IconButton
 	userAgent          decredmaterial.IconButton
+	changeStartupPass   decredmaterial.IconButton
 
 	spendUnconfirm  *widget.Bool
 	startupPassword *widget.Bool
@@ -149,12 +150,39 @@ func (pg *settingsPage) notification() layout.Widget {
 func (pg *settingsPage) security() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, "Security", func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel("Startup password")),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.theme.Switch(pg.startupPassword).Layout(gtx)
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(pg.bottomSectionLabel("Startup password")),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return pg.theme.Switch(pg.startupPassword).Layout(gtx)
+							})
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if pg.startupPassword.Value{
+					m := values.MarginPadding10
+					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+						pg.line.Width = gtx.Constraints.Max.X
+						return pg.line.Layout(gtx)
 					})
+				}
+				return layout.Dimensions{}
+				}),
+				layout.Rigid(func(gtx C) D {
+					if pg.startupPassword.Value{
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(pg.bottomSectionLabel("Change startup password")),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+										return pg.changeStartupPass.Layout(gtx)
+							})
+						}),
+					)
+				}
+								return layout.Dimensions{}
 				}),
 			)
 		})
@@ -232,6 +260,9 @@ func (pg *settingsPage) bottomSectionLabel(title string) layout.Widget {
 }
 
 func (pg *settingsPage) handle(common pageCommon) {
+	if pg.spendUnconfirm.Changed() {
+		pg.wal.SpendUnconfirmed(pg.spendUnconfirm.Value)
+	}
 	// for pg.changePass.Button.Clicked() {
 	// 	walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 	// 	go func() {
