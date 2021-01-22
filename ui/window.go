@@ -150,6 +150,10 @@ func (win *Window) Loop(shutdown chan int) {
 		case update := <-win.wallet.Sync:
 			switch update.Stage {
 			case wallet.SyncCompleted:
+				if win.sysDestroyWithSync {
+					close(shutdown)
+					return
+				}
 				win.updateSyncStatus(false, true)
 			case wallet.SyncStarted:
 				// dcrlibwallet triggers the SyncStart method several times
@@ -158,6 +162,10 @@ func (win *Window) Loop(shutdown chan int) {
 					win.updateSyncStatus(true, false)
 				}
 			case wallet.SyncCanceled:
+				if win.sysDestroyWithSync {
+					close(shutdown)
+					return
+				}
 				win.updateSyncStatus(false, false)
 			case wallet.HeadersFetchProgress:
 				win.updateSyncProgress(update.ProgressReport)
@@ -184,8 +192,6 @@ func (win *Window) Loop(shutdown chan int) {
 				} else {
 					close(shutdown)
 				}
-				close(shutdown)
-				return
 			case system.FrameEvent:
 				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
