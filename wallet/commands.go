@@ -456,8 +456,28 @@ func (wal *Wallet) RenameWallet(walletID int, name string, errChan chan error) {
 }
 
 // RenameWallet renames the wallet identified by walletID.
-func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, newPrivatePassphrase string) error {
-	return wal.multi.ChangePrivatePassphraseForWallet(walletID, []byte(oldPrivatePassphrase), []byte(newPrivatePassphrase), dcrlibwallet.PassphraseTypePass)
+func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, newPrivatePassphrase string, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.ChangePrivatePassphraseForWallet(walletID, []byte(oldPrivatePassphrase), []byte(newPrivatePassphrase), dcrlibwallet.PassphraseTypePass)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not change password",
+				Affected: []int{walletID},
+				Err:      err,
+			})
+			return
+		}
+
+		resp.Resp = &ChangePassword{
+			ID: walletID,
+		}
+		wal.Send <- resp
+	}()
 }
 
 // RenameAccount renames the acct of wallet with id walletID.
@@ -541,6 +561,11 @@ func (wal *Wallet) VerifyMessage(address string, message string, signature strin
 // StartSync starts the multiwallet SPV sync
 func (wal *Wallet) StartSync() error {
 	return wal.multi.SpvSync()
+}
+
+// RescanBlocks rescans the multiwallet
+func (wal *Wallet) RescanBlocks(walletID int) error {
+	return wal.multi.RescanBlocks(walletID)
 }
 
 // CancelSync cancels the SPV sync

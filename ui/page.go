@@ -26,7 +26,7 @@ type pageIcons struct {
 	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
 	actionCheckCircle, contentCopy, actionInfo, navigationMore,
 	navigationArrowBack, navigationArrowForward, verifyAction, actionDelete, actionLock,
-	communicationComment, editorModeEdit, actionBackup, actionCheck,
+	communicationComment, editorModeEdit, actionBackup, actionCheck, chevronRight,
 	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
@@ -117,6 +117,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		navigationCancel:           mustIcon(widget.NewIcon(icons.NavigationCancel)),
 		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
+		chevronRight:               mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
@@ -203,6 +204,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageCreateRestore:  make(chan error),
 			PageWallet:         make(chan error),
 			PageAccountDetails: make(chan error),
+			PageWalletSettings: make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
@@ -245,6 +247,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
 	win.pages[PageSeedBackup] = win.BackupPage(common)
 	win.pages[PageSettings] = win.SettingsPage(common)
+	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
 	win.pages[PagePoliteia] = win.PoliteiaPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
@@ -692,44 +695,62 @@ type SubPage struct {
 	body              layout.Widget
 	infoTemplate      string
 	infoTemplateTitle string
+	isInfoButton      bool
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
-	return page.theme.Card().Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{
-					Left:   values.MarginPadding15,
-					Right:  values.MarginPadding15,
-					Bottom: values.MarginPadding15,
-				}.Layout(gtx, sp.body)
-			}),
-		)
-	})
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+				return page.subpageHeader(gtx, sp)
+			})
+		}),
+		layout.Rigid(sp.body),
+	)
 }
 
-func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
-	card := page.theme.Card()
-	card.Color = color.RGBA{}
-	return card.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
-			layout.Rigid(sp.body),
-		)
-	})
+func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
+	page.subpageEventHandler(sp)
+
+	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+				return page.subPageBackButton.Layout(gtx)
+			})
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return page.theme.H6(sp.title).Layout(gtx)
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+				return decredmaterial.Card{
+					Color: page.theme.Color.Surface,
+				}.Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+						walletText := page.theme.Caption(sp.walletName)
+						walletText.Color = page.theme.Color.Gray
+						return walletText.Layout(gtx)
+					})
+				})
+			})
+		}),
+		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				if sp.isInfoButton {
+					return page.subPageInfoButton.Layout(gtx)
+				}
+				return layout.Dimensions{}
+			})
+		}),
+	)
 }
 
-func (page pageCommon) subPageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (page pageCommon) subpageEventHandler(sp SubPage) {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
-			title := sp.title
-			if sp.infoTemplateTitle != "" {
-				title = sp.infoTemplateTitle
-			}
 			page.modalReceiver <- &modalLoad{
 				template:   sp.infoTemplate,
-				title:      title,
+				title:      sp.title,
 				cancel:     page.closeModal,
 				cancelText: "Got it",
 			}
@@ -739,41 +760,6 @@ func (page pageCommon) subPageHeader(gtx layout.Context, sp SubPage) layout.Dime
 	if page.subPageBackButton.Button.Clicked() {
 		sp.back()
 	}
-
-	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return page.theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-							return page.subPageBackButton.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return page.theme.H6(sp.title).Layout(gtx)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-							return decredmaterial.Card{
-								Color: page.theme.Color.Background,
-							}.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-									walletText := page.theme.Caption(sp.walletName)
-									walletText.Color = page.theme.Color.Gray
-									return walletText.Layout(gtx)
-								})
-							})
-						})
-					}),
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return page.subPageInfoButton.Layout(gtx)
-						})
-					}),
-				)
-			})
-		})
-	})
 }
 
 func toMax(gtx layout.Context) {

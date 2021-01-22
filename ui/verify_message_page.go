@@ -49,21 +49,26 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	body := func(gtx C) D {
 		load := SubPage{
-			title:      "Verify message",
-			walletName: c.info.Wallets[*c.selectedWallet].Name,
+			title:        "Verify message",
+			isInfoButton: true,
+			walletName:   c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
 				pg.clearInputs(&c)
 				*c.page = PageWallet
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(pg.description()),
-					layout.Rigid(pg.inputRow(pg.addressInput)),
-					layout.Rigid(pg.inputRow(pg.signInput)),
-					layout.Rigid(pg.inputRow(pg.messageInput)),
-					layout.Rigid(pg.verifyAndClearButtons()),
-					layout.Rigid(pg.verifyMessageResponse()),
-				)
+				return pg.theme.Card().Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(pg.description()),
+							layout.Rigid(pg.inputRow(pg.addressInput)),
+							layout.Rigid(pg.inputRow(pg.signInput)),
+							layout.Rigid(pg.inputRow(pg.messageInput)),
+							layout.Rigid(pg.verifyAndClearButtons()),
+							layout.Rigid(pg.verifyMessageResponse()),
+						)
+					})
+				})
 			},
 			infoTemplate: VerifyMessageInfoTemplate,
 		}
