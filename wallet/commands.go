@@ -455,7 +455,7 @@ func (wal *Wallet) RenameWallet(walletID int, name string, errChan chan error) {
 	}()
 }
 
-// RenameWallet renames the wallet identified by walletID.
+// ChangeWalletPassphrase changes the spending passphrase of the wallet identified by walletID.
 func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, newPrivatePassphrase string, errChan chan error) {
 	go func() {
 		var resp Response
@@ -476,8 +476,94 @@ func (wal *Wallet) ChangeWalletPassphrase(walletID int, oldPrivatePassphrase, ne
 		resp.Resp = &ChangePassword{
 			ID: walletID,
 		}
+	}()
+}
+
+func (wal *Wallet) OpenWallets(passphrase string, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.OpenWallets([]byte(passphrase))
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not open wallets",
+				Err:     err,
+			})
+			return
+		}
+
+		resp.Resp = OpenWallet{}
 		wal.Send <- resp
 	}()
+}
+
+func (wal *Wallet) SetStartupPassphrase(passphrase string, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.SetStartupPassphrase([]byte(passphrase), dcrlibwallet.PassphraseTypePass)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not set up startup passphrase",
+				Err:     err,
+			})
+			return
+		}
+		resp.Resp = StartupPassphrase{}
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) ChangeStartupPassphrase(oldPrivatePassphrase, newPrivatePassphrase string, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.ChangeStartupPassphrase([]byte(oldPrivatePassphrase), []byte(newPrivatePassphrase), dcrlibwallet.PassphraseTypePass)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not change startup passphrase",
+				Err:     err,
+			})
+			return
+		}
+
+		resp.Resp = StartupPassphrase{}
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) RemoveStartupPassphrase(passphrase string, errChan chan error) {
+	go func() {
+		var resp Response
+		err := wal.multi.RemoveStartupPassphrase([]byte(passphrase))
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not remove startup passphrase",
+				Err:     err,
+			})
+			return
+		}
+		resp.Resp = StartupPassphrase{}
+		wal.Send <- resp
+	}()
+}
+
+// IsStartupSecuritySet checks if start up password is set
+func (wal *Wallet) IsStartupSecuritySet() bool {
+	return wal.multi.IsStartupSecuritySet()
 }
 
 // RenameAccount renames the acct of wallet with id walletID.

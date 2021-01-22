@@ -19,14 +19,15 @@ type settingsPage struct {
 	currencyConversion decredmaterial.IconButton
 	connectToPeer      decredmaterial.IconButton
 	userAgent          decredmaterial.IconButton
-	changeStartupPass   decredmaterial.IconButton
+	changeStartupPass  decredmaterial.IconButton
 
 	spendUnconfirm  *widget.Bool
 	startupPassword *widget.Bool
 	notificationW   *widget.Bool
 
-	line     *decredmaterial.Line
-	errChann chan error
+	passwordSet bool
+	line        *decredmaterial.Line
+	errChann    chan error
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
@@ -46,6 +47,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		currencyConversion: common.theme.PlainIconButton(new(widget.Clickable), icon),
 		connectToPeer:      common.theme.PlainIconButton(new(widget.Clickable), icon),
 		userAgent:          common.theme.PlainIconButton(new(widget.Clickable), icon),
+		changeStartupPass:  common.theme.PlainIconButton(new(widget.Clickable), icon),
 	}
 	pg.line.Height = 2
 	pg.line.Color = common.theme.Color.Background
@@ -56,6 +58,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	pg.currencyConversion.Color, pg.currencyConversion.Inset = color, zeroInset
 	pg.connectToPeer.Color, pg.connectToPeer.Inset = color, zeroInset
 	pg.userAgent.Color, pg.userAgent.Inset = color, zeroInset
+	pg.changeStartupPass.Color, pg.changeStartupPass.Inset = color, zeroInset
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -64,6 +67,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 }
 
 func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	pg.updateSetting()
 	body := func(gtx C) D {
 		page := SubPage{
 			title:      "Settings",
@@ -102,7 +106,7 @@ func (pg *settingsPage) general() layout.Widget {
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
-					m := values.MarginPadding10
+					m := values.MarginPadding5
 					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 						pg.line.Width = gtx.Constraints.Max.X
 						return pg.line.Layout(gtx)
@@ -162,27 +166,27 @@ func (pg *settingsPage) security() layout.Widget {
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.startupPassword.Value{
-					m := values.MarginPadding10
-					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-						pg.line.Width = gtx.Constraints.Max.X
-						return pg.line.Layout(gtx)
-					})
-				}
-				return layout.Dimensions{}
+					if pg.passwordSet {
+						m := values.MarginPadding5
+						return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+							pg.line.Width = gtx.Constraints.Max.X
+							return pg.line.Layout(gtx)
+						})
+					}
+					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.startupPassword.Value{
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(pg.bottomSectionLabel("Change startup password")),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-										return pg.changeStartupPass.Layout(gtx)
-							})
-						}),
-					)
-				}
-								return layout.Dimensions{}
+					if pg.passwordSet {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(pg.bottomSectionLabel("Change startup password")),
+							layout.Flexed(1, func(gtx C) D {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return pg.changeStartupPass.Layout(gtx)
+								})
+							}),
+						)
+					}
+					return layout.Dimensions{}
 				}),
 			)
 		})
@@ -204,7 +208,7 @@ func (pg *settingsPage) connection() layout.Widget {
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
-					m := values.MarginPadding10
+					m := values.MarginPadding5
 					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 						pg.line.Width = gtx.Constraints.Max.X
 						return pg.line.Layout(gtx)
@@ -237,7 +241,7 @@ func (pg *settingsPage) connection() layout.Widget {
 func (pg *settingsPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						txt := pg.theme.Body2(title)
@@ -263,22 +267,53 @@ func (pg *settingsPage) handle(common pageCommon) {
 	if pg.spendUnconfirm.Changed() {
 		pg.wal.SpendUnconfirmed(pg.spendUnconfirm.Value)
 	}
-	// for pg.changePass.Button.Clicked() {
-	// 	walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-	// 	go func() {
-	// 		common.modalReceiver <- &modalLoad{
-	// 			template: ChangePasswordTemplate,
-	// 			title:    "Change spending password",
-	// 			confirm: func(oldPass, newPass string) {
-	// 				// pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errChann)
-	// 			},
-	// 			confirmText: "Change",
-	// 			cancel:      common.closeModal,
-	// 			cancelText:  "Cancel",
-	// 		}
-	// 	}()
-	// 	break
-	// }
+
+	for pg.changeStartupPass.Button.Clicked() {
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: ChangeStartupPasswordTemplate,
+				title:    "Change startup password",
+				confirm: func(oldPass, newPass string) {
+					pg.wal.ChangeStartupPassphrase(oldPass, newPass, pg.errChann)
+				},
+				confirmText: "Change",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
+		break
+	}
+
+	if pg.startupPassword.Changed() {
+		if pg.startupPassword.Value {
+			go func() {
+				common.modalReceiver <- &modalLoad{
+					template: SetStartupPasswordTemplate,
+					title:    "Create a startup password",
+					confirm: func(pass string) {
+						pg.wal.SetStartupPassphrase(pass, pg.errChann)
+					},
+					confirmText: "Create",
+					cancel:      common.closeModal,
+					cancelText:  "Cancel",
+				}
+			}()
+			return
+		} else {
+			go func() {
+				common.modalReceiver <- &modalLoad{
+					template: RemoveStartupPasswordTemplate,
+					title:    "Confirm to turn off startup password",
+					confirm: func(pass string) {
+						pg.wal.RemoveStartupPassphrase(pass, pg.errChann)
+					},
+					confirmText: "Confirm",
+					cancel:      common.closeModal,
+					cancelText:  "Cancel",
+				}
+			}()
+		}
+	}
 
 	// for pg.rescan.Button.Clicked() {
 	// 	walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
@@ -338,12 +373,25 @@ func (pg *settingsPage) handle(common pageCommon) {
 	// 	break
 	// }
 
-	// select {
-	// case err := <-pg.errChann:
-	// 	if err.Error() == "invalid_passphrase" {
-	// 		e := "Password is incorrect"
-	// 		common.Notify(e, false)
-	// 	}
-	// default:
-	// }
+	select {
+	case err := <-pg.errChann:
+		if err.Error() == "invalid_passphrase" {
+			e := "Password is incorrect"
+			common.Notify(e, false)
+			return
+		}
+		common.Notify(err.Error(), false)
+	default:
+	}
+}
+
+func (pg *settingsPage) updateSetting() {
+	isSet := pg.wal.IsStartupSecuritySet()
+	if isSet {
+		pg.startupPassword.Value = true
+		pg.passwordSet = true
+	} else {
+		pg.startupPassword.Value = false
+		pg.passwordSet = false
+	}
 }

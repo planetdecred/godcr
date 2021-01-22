@@ -90,6 +90,12 @@ type LoadedWallets struct {
 // Restored is sent when the Wallet is done restoring a wallet
 type Restored struct{}
 
+// StartUpPassphrase is sent when the startup passphrase is set
+type StartupPassphrase struct{}
+
+// OpenWallet is sent when the startup passphrase is set
+type OpenWallet struct{}
+
 // Renamed is sent when the Wallet is done renaming a wallet
 type Renamed struct {
 	ID int

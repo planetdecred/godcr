@@ -205,6 +205,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageWallet:         make(chan error),
 			PageAccountDetails: make(chan error),
 			PageWalletSettings: make(chan error),
+			PageSettings:       make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,

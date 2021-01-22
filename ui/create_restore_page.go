@@ -50,6 +50,7 @@ type createRestore struct {
 	closeCreateRestore decredmaterial.IconButton
 	hideRestoreWallet  decredmaterial.IconButton
 	create             decredmaterial.Button
+	unlock             decredmaterial.Button
 	showPasswordModal  decredmaterial.Button
 	hidePasswordModal  decredmaterial.Button
 	showRestoreWallet  decredmaterial.Button
@@ -100,6 +101,9 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	}
 
 	pg.create = common.theme.Button(new(widget.Clickable), "create wallet")
+	pg.unlock = common.theme.Button(new(widget.Clickable), "unlock wallet")
+	pg.unlock.Background = common.theme.Color.Success
+
 	pg.showPasswordModal = common.theme.Button(new(widget.Clickable), "proceed")
 	pg.showRestoreWallet = common.theme.Button(new(widget.Clickable), "Restore an existing wallet")
 	pg.showRestoreWallet.Background = color.RGBA{}
@@ -298,6 +302,12 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			btnPadding := values.MarginPadding10
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return pg.unlock.Layout(gtx)
+					})
+				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -636,6 +646,21 @@ func (pg *createRestore) handle(common pageCommon) {
 	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
 		*common.page = PageWallet
+	}
+
+	for pg.unlock.Button.Clicked() {
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: UnlockWalletTemplate,
+				title:    "Enter startup wallet password",
+				confirm: func(pass string) {
+					pg.wal.OpenWallets(pass, pg.errChan)
+				},
+				confirmText: "Confirm",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 	}
 
 	for pg.create.Button.Clicked() {
