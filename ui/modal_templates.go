@@ -27,6 +27,9 @@ const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
 const UnlockWalletTemplate = "UnlockWallet"
 const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
 const UserAgentTemplate = "UserAgent"
+const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
+const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
+const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -261,6 +264,39 @@ func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) setupMixerInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			txt := m.th.Body1("Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.")
+			txt.Color = m.th.Color.Gray
+			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, txt.Layout)
+		},
+		func(gtx C) D {
+			txt := m.th.Label(values.TextSize18, "This action cannot be undone.")
+			return txt.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) setupMixerAcct() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			txt := m.th.Body1("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.")
+			txt.Color = m.th.Color.Gray
+			return txt.Layout(gtx)
+		},
+	}
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	if !load.isReset {
 		m.resetFields()
@@ -471,10 +507,34 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.matchSpendingPassword.Hint = "Confirm startup password"
 
 		template = m.setStartupPassword()
+	case ConfirmSetupMixerTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.setupMixerInfo()
+		return
+	case ConfirmSetupMixerAcctTemplate:
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
+			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.setupMixerAcct()
+		return
+	case ConfirmMixerAcctExistTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		template = m.warnExistMixerAcct()
 		return
 	default:
 		return
 	}
+	return
 }
 
 // editorsNotEmpty checks that the editor fields are not empty. It returns false if they are empty and true if they are

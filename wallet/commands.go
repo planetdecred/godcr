@@ -113,7 +113,7 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 			return
 		}
 
-		id, err := wall.NextAccount(name, pass)
+		id, err := wall.NextAccount(name)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -273,6 +273,12 @@ func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
 		}
 		bestBestBlock := wal.multi.GetBestBlock()
 		status, confirmations := transactionStatus(bestBestBlock.Height, txn.BlockHeight)
+		acct, err := wall.GetAccount(txn.Inputs[0].AccountNumber)
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
 		resp.Resp = &Transaction{
 			Txn:           *txn,
 			Status:        status,
@@ -280,6 +286,7 @@ func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
 			WalletName:    wall.Name,
 			Confirmations: confirmations,
 			DateTime:      dcrlibwallet.ExtractDateOrTime(txn.Timestamp),
+			AccountName:   acct.Name,
 		}
 		wal.Send <- resp
 	}()
@@ -747,6 +754,49 @@ func (wal *Wallet) AllUnspentOutputs(walletID int, acct int32) {
 		resp.Resp = &UnspentOutputs{
 			List: list,
 		}
+		wal.Send <- resp
+	}()
+}
+
+// ReadyToMix check the wallet is ready to mix
+func (wal *Wallet) ReadyToMix(walletID int) bool {
+	if ok, err := wal.multi.ReadyToMix(walletID); err != nil || !ok {
+		return false
+	}
+	return true
+}
+
+// SetupAccountMixer setup account mixer with the given parameters.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errChan chan error) {
+	go func() {
+		var resp Response
+
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			resp.Err = ErrIDNotExist
+			wal.Send <- Response{
+				Resp: SetupAccountMixer{},
+				Err:  ErrIDNotExist,
+			}
+			return
+		}
+
+		err := wall.SetAccountMixerConfig("mixed", "unmixed", walletPassphrase)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not set account mixer",
+				Err:      err,
+				Affected: []int{walletID},
+			})
+			return
+		}
+
+		resp.Resp = SetupAccountMixer{}
 		wal.Send <- resp
 	}()
 }
