@@ -66,6 +66,7 @@ func (win *Window) updateStates(update interface{}) {
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
 		win.selected = 0
+		win.current = PageWallet
 		win.notifyOnSuccess("Wallet removed")
 	case wallet.AddedAccount:
 		win.notifyOnSuccess("Account created")
@@ -80,7 +81,10 @@ func (win *Window) updateStates(update interface{}) {
 	case *wallet.Broadcast:
 		broadcastResult := update.(*wallet.Broadcast)
 		win.broadcastResult = *broadcastResult
+	case *wallet.ChangePassword:
+		win.notifyOnSuccess("Spending password changed")
 	}
+
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
 	win.wallet.GetAllTransactions(0, 0, 0)

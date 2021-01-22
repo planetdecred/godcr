@@ -488,7 +488,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 					case pg.text.verifyMessage:
 						*common.page = PageVerifyMessage
 					case pg.text.settings:
-						*common.page = PageHelp
+						*common.page = PageWalletSettings
 					case pg.text.rename:
 						*common.page = PageAbout
 					case pg.text.viewProperty:

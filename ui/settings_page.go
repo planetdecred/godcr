@@ -6,7 +6,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageSettings = "Settings"
+const PageSettings = "SettingsPage"
 
 type settingsPage struct {
 	dummyText decredmaterial.Label

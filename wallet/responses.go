@@ -105,6 +105,11 @@ type DeletedWallet struct {
 	ID int
 }
 
+// ChangePassword is sent when the Wallet password is changed
+type ChangePassword struct {
+	ID int
+}
+
 // Transaction wraps the dcrlibwallet Transaction type and adds processed data
 type Transaction struct {
 	Txn           dcrlibwallet.Transaction
