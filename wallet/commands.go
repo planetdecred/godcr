@@ -758,12 +758,13 @@ func (wal *Wallet) AllUnspentOutputs(walletID int, acct int32) {
 	}()
 }
 
-// ReadyToMix check the wallet is ready to mix
-func (wal *Wallet) ReadyToMix(walletID int) bool {
-	if ok, err := wal.multi.ReadyToMix(walletID); err != nil || !ok {
+// IsAccountMixerConfigSet check the wallet have account mixer config set
+func (wal *Wallet) IsAccountMixerConfigSet(walletID int) bool {
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
 		return false
 	}
-	return true
+	return wall.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
 }
 
 // SetupAccountMixer setup account mixer with the given parameters.

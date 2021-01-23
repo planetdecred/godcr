@@ -45,7 +45,7 @@ type ModalTemplate struct {
 
 type modalLoad struct {
 	template    string
-	title       string
+	title       interface{}
 	confirm     interface{}
 	confirmText string
 	cancel      interface{}
@@ -305,7 +305,14 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 
 	title := []func(gtx C) D{
 		func(gtx C) D {
-			return th.H5(load.title).Layout(gtx)
+			switch t := load.title.(type) {
+			case string:
+				return th.H5(t).Layout(gtx)
+			case func(C) D:
+				return t(gtx)
+			default:
+			}
+			return layout.Dimensions{}
 		},
 	}
 

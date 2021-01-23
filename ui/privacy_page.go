@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -21,7 +19,6 @@ type privacyPage struct {
 	infoBtn                              decredmaterial.IconButton
 	line                                 *decredmaterial.Line
 	toPrivacySetup                       decredmaterial.Button
-	privacyPageSetupVisibility           bool
 	dangerZoneCollapsible                *decredmaterial.Collapsible
 	errChann                             chan error
 }
@@ -62,7 +59,7 @@ func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimension
 			infoTemplateTitle: "How to use the mixer?",
 			infoTemplate:      PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
-				if c.wallet.ReadyToMix(c.info.Wallets[*c.selectedWallet].ID) {
+				if c.wallet.IsAccountMixerConfigSet(c.info.Wallets[*c.selectedWallet].ID) {
 					widgets := []func(gtx C) D{
 						func(gtx C) D {
 							return pg.mixerInfoLayout(gtx, &c)
@@ -332,7 +329,7 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 		confirm: func(p string) {
 			for _, acct := range common.info.Wallets[*common.selectedWallet].Accounts {
 				if acct.Name == "mixed" || acct.Name == "unmixed" {
-					go pg.showModalSetupExistAcct(common, acct.Name)
+					go pg.showModalSetupExistAcct(common)
 					return
 				}
 			}
@@ -344,15 +341,29 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 	}
 }
 
-func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon, acctName string) {
+func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		template: ConfirmMixerAcctExistTemplate,
-		title:    fmt.Sprintf("Account “%s” is taken", acctName),
+		template:    ConfirmMixerAcctExistTemplate,
+		confirmText: "Go back & rename",
+		cancel:      common.closeModal,
 		confirm: func() {
 			common.closeModal()
 			*common.page = PageWallet
 		},
-		confirmText: "Go back & rename",
-		cancel:      common.closeModal,
+		title: func(gtx layout.Context) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							common.icons.alert.Scale = 0.07
+							return common.icons.alert.Layout(gtx)
+						})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.theme.H5("Account name is taken").Layout(gtx)
+				}),
+			)
+		},
 	}
 }

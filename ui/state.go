@@ -91,8 +91,6 @@ func (win *Window) updateStates(update interface{}) {
 		}()
 	case wallet.SetupAccountMixer:
 		win.notifyOnSuccess("Mixer setup completed")
-		win.current = PagePrivacy
-		win.window.Invalidate()
 	}
 
 	win.states.loading = true
