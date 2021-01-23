@@ -10,7 +10,6 @@ require (
 	github.com/decred/slog v1.1.0
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
-	github.com/markbates/pkger v0.17.1
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/planetdecred/dcrlibwallet v1.5.3-0.20210118074103-ad5a97098112
