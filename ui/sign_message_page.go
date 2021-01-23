@@ -38,7 +38,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	messageEditor.IsVisible = true
 	messageEditor.Editor.SingleLine = true
 	clearButton := common.theme.Button(new(widget.Clickable), "Clear all")
-	clearButton.Background = color.RGBA{}
+	clearButton.Background = color.NRGBA{}
 	clearButton.Color = common.theme.Color.Gray
 	errorLabel := common.theme.Caption("")
 	errorLabel.Color = common.theme.Color.Danger

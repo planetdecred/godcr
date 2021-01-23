@@ -4,7 +4,9 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
+	"gioui.org/op"
+	"gioui.org/op/clip"
+	//"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 )
@@ -14,7 +16,7 @@ type (
 	Line struct {
 		Height int
 		Width  int
-		Color  color.RGBA
+		Color  color.NRGBA
 	}
 )
 
@@ -31,13 +33,24 @@ func (t *Theme) Line() *Line {
 
 // Layout renders the line widget
 func (l *Line) Layout(gtx C) D {
-	paint.ColorOp{Color: l.Color}.Add(gtx.Ops)
+	/**paint.ColorOp{Color: l.Color}.Add(gtx.Ops)
 	paint.PaintOp{Rect: f32.Rectangle{
 		Max: f32.Point{
 			X: float32(l.Width),
 			Y: float32(l.Height),
 		},
 	}}.Add(gtx.Ops)
-	dims := image.Point{X: l.Width, Y: l.Height}
-	return layout.Dimensions{Size: dims}
+	dims := image.Point{X: l.Width, Y: l.Height}**/
+
+	st := op.Save(gtx.Ops)
+	line := image.Rectangle{
+		Max: image.Point{
+			X: l.Width,
+			Y: l.Height,
+		},
+	}
+	clip.Rect(line).Add(gtx.Ops)
+	paint.Fill(gtx.Ops, l.Color)
+	st.Load()
+	return layout.Dimensions{Size: line.Max}
 }

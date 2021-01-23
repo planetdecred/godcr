@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gioui.org/app"
+	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -213,7 +214,7 @@ func (win *Window) Loop(shutdown chan int) {
 				go func() {
 					win.keyEvents <- &evt
 				}()
-			case system.ClipboardEvent:
+			case clipboard.Event:
 				go func() {
 					win.theme.Clipboard <- evt.Text
 				}()

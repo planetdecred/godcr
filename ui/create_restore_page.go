@@ -104,28 +104,28 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	pg.showPasswordModal = common.theme.Button(new(widget.Clickable), "proceed")
 	pg.showRestoreWallet = common.theme.Button(new(widget.Clickable), "Restore an existing wallet")
-	pg.showRestoreWallet.Background = color.RGBA{}
+	pg.showRestoreWallet.Background = color.NRGBA{}
 	pg.showRestoreWallet.Color = common.theme.Color.Hint
 
 	pg.closeCreateRestore = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
-	pg.closeCreateRestore.Background = color.RGBA{}
+	pg.closeCreateRestore.Background = color.NRGBA{}
 	pg.closeCreateRestore.Color = common.theme.Color.Hint
 
 	pg.hideRestoreWallet = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
-	pg.hideRestoreWallet.Background = color.RGBA{}
+	pg.hideRestoreWallet.Background = color.NRGBA{}
 	pg.hideRestoreWallet.Color = common.theme.Color.Hint
 
 	pg.hidePasswordModal = common.theme.Button(new(widget.Clickable), "cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
-	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
+	pg.hidePasswordModal.Background = color.NRGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.showResetModal = common.theme.Button(new(widget.Clickable), "reset")
 	pg.showResetModal.Color = common.theme.Color.Hint
-	pg.showResetModal.Background = color.RGBA{}
+	pg.showResetModal.Background = color.NRGBA{}
 
 	pg.resetSeedFields = common.theme.Button(new(widget.Clickable), "yes, reset")
 	pg.resetSeedFields.Color = common.theme.Color.Danger
-	pg.resetSeedFields.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
+	pg.resetSeedFields.Background = color.NRGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.errLabel.Color = pg.theme.Color.Danger
 
@@ -256,7 +256,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 									layout.Rigid(func(gtx C) D {
 										return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 											pg.hidePasswordModal.Background = common.theme.Color.Primary
-											pg.hidePasswordModal.Color = color.RGBA{255, 255, 255, 255}
+											pg.hidePasswordModal.Color = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
 											return pg.hidePasswordModal.Layout(gtx)
 										})
 									}),

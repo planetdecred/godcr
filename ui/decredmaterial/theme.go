@@ -8,6 +8,8 @@ import (
 
 	"gioui.org/f32"
 	"gioui.org/layout"
+	"gioui.org/op"
+	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -44,20 +46,20 @@ type Theme struct {
 	Shaper text.Shaper
 	Base   *material.Theme
 	Color  struct {
-		Primary    color.RGBA
-		Secondary  color.RGBA
-		Text       color.RGBA
-		Hint       color.RGBA
-		Overlay    color.RGBA
-		InvText    color.RGBA
-		Success    color.RGBA
-		Danger     color.RGBA
-		Background color.RGBA
-		Surface    color.RGBA
-		Gray       color.RGBA
-		Black      color.RGBA
-		Orange     color.RGBA
-		LightGray  color.RGBA
+		Primary    color.NRGBA
+		Secondary  color.NRGBA
+		Text       color.NRGBA
+		Hint       color.NRGBA
+		Overlay    color.NRGBA
+		InvText    color.NRGBA
+		Success    color.NRGBA
+		Danger     color.NRGBA
+		Background color.NRGBA
+		Surface    color.NRGBA
+		Gray       color.NRGBA
+		Black      color.NRGBA
+		Orange     color.NRGBA
+		LightGray  color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -155,43 +157,64 @@ func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	return ic
 }
 
-func rgb(c uint32) color.RGBA {
+func rgb(c uint32) color.NRGBA {
 	return argb(0xff000000 | c)
 }
 
-func argb(c uint32) color.RGBA {
-	return color.RGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
+func argb(c uint32) color.NRGBA {
+	return color.NRGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
 }
 
 func toPointF(p image.Point) f32.Point {
 	return f32.Point{X: float32(p.X), Y: float32(p.Y)}
 }
 
-func fillMax(gtx layout.Context, col color.RGBA) {
+func fillMax(gtx layout.Context, col color.NRGBA) {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Max.X, Y: cs.Max.Y}
-	dr := f32.Rectangle{
+	/**dr := f32.Rectangle{
 		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 	}
 	paint.ColorOp{Color: col}.Add(gtx.Ops)
-	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
+	paint.PaintOp{Rect: dr}.Add(gtx.Ops)**/
+
+	st := op.Save(gtx.Ops)
+	track := image.Rectangle{
+		Max: image.Point{X: d.X, Y: d.Y},
+	}
+	clip.Rect(track).Add(gtx.Ops)
+	paint.Fill(gtx.Ops, col)
+	st.Load()
 }
 
-func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
+func fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Min.X, Y: cs.Min.Y}
-	dr := f32.Rectangle{
+	/**dr := f32.Rectangle{
 		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 	}
 	paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
+	return layout.Dimensions{Size: d}**/
+	st := op.Save(gtx.Ops)
+	track := image.Rectangle{
+		Max: d,
+	}
+	clip.Rect(track).Add(gtx.Ops)
+	paint.Fill(gtx.Ops, col)
+	st.Load()
+
 	return layout.Dimensions{Size: d}
 }
 
+func Fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
+	return fill(gtx, col)
+}
+
 // mulAlpha scales all color components by alpha/255.
-func mulAlpha(c color.RGBA, alpha uint8) color.RGBA {
+func mulAlpha(c color.NRGBA, alpha uint8) color.NRGBA {
 	a := uint16(alpha)
-	return color.RGBA{
+	return color.NRGBA{
 		A: uint8(uint16(c.A) * a / 255),
 		R: uint8(uint16(c.R) * a / 255),
 		G: uint8(uint16(c.G) * a / 255),

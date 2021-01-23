@@ -152,7 +152,7 @@ func (pg *backupPage) activeButton() {
 }
 
 func (pg *backupPage) clearButton() {
-	pg.action.Background = color.RGBA{}
+	pg.action.Background = color.NRGBA{}
 	pg.action.Color = pg.theme.Color.Primary
 }
 

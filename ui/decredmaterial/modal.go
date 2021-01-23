@@ -9,7 +9,7 @@ import (
 )
 
 type Modal struct {
-	overlayColor color.RGBA
+	overlayColor color.NRGBA
 	list         *layout.List
 	button       *widget.Clickable
 	card         Card

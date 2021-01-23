@@ -31,7 +31,7 @@ func (t *Theme) IconButton(button *widget.Clickable, icon *widget.Icon) IconButt
 
 func (t *Theme) PlainIconButton(button *widget.Clickable, icon *widget.Icon) IconButton {
 	btn := IconButton{material.IconButton(t.Base, button, icon)}
-	btn.Background = color.RGBA{}
+	btn.Background = color.NRGBA{}
 	return btn
 }
 
@@ -52,8 +52,8 @@ type TextAndIconButton struct {
 	Button          *widget.Clickable
 	icon            *widget.Icon
 	text            string
-	Color           color.RGBA
-	BackgroundColor color.RGBA
+	Color           color.NRGBA
+	BackgroundColor color.NRGBA
 }
 
 func (t *Theme) TextAndIconButton(btn *widget.Clickable, text string, icon *widget.Icon) TextAndIconButton {

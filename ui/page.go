@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gioui.org/f32"
+	//"gioui.org/f32"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -417,15 +417,16 @@ func (page pageCommon) closeModal() {
 	}()
 }
 
-func fill(gtx layout.Context, col color.RGBA) layout.Dimensions {
-	cs := gtx.Constraints
+func fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
+	/**cs := gtx.Constraints
 	d := image.Point{X: cs.Min.X, Y: cs.Min.Y}
 	dr := f32.Rectangle{
 		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 	}
 	paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	return layout.Dimensions{Size: d}
+	return layout.Dimensions{Size: d}**/
+	return decredmaterial.Fill(gtx, col)
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
@@ -759,6 +760,17 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			})
 		}),
 	)
+}
+
+func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	card := page.theme.Card()
+	card.Color = color.NRGBA{}
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
+			layout.Rigid(sp.body),
+		)
+	})
 }
 
 func (page pageCommon) subpageEventHandler(sp SubPage) {

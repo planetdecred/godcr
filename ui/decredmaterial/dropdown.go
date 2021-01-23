@@ -14,8 +14,8 @@ type DropDown struct {
 	items          []DropDownItem
 	isOpen         bool
 	selectedIndex  int
-	color          color.RGBA
-	background     color.RGBA
+	color          color.NRGBA
+	background     color.NRGBA
 	chevronIcon    *widget.Icon
 	navigationIcon *widget.Icon
 	backdrop       *widget.Clickable

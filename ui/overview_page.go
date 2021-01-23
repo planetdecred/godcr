@@ -86,7 +86,7 @@ type overviewPage struct {
 	syncButtonWidth  int
 	moreButtonWidth  int
 	moreButtonHeight int
-	gray             color.RGBA
+	gray             color.NRGBA
 }
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
@@ -107,7 +107,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonWidth:  115,
 		moreButtonHeight: 70,
 
-		gray: color.RGBA{137, 151, 165, 255},
+		gray: color.NRGBA{R: 137, G: 151, B: 165, A: 255},
 	}
 	pg.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -142,7 +142,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	pg.sync = c.theme.Button(new(widget.Clickable), pg.text.reconnect)
 	pg.sync = c.theme.Button(new(widget.Clickable), pg.text.reconnect)
 	pg.sync.TextSize = values.TextSize10
-	pg.sync.Background = color.RGBA{}
+	pg.sync.Background = color.NRGBA{}
 	pg.sync.Color = c.theme.Color.Text
 
 	pg.syncedIcon = c.icons.actionCheckCircle

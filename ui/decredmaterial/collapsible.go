@@ -11,7 +11,7 @@ import (
 type Collapsible struct {
 	IsExpanded      bool
 	Button          *widget.Clickable
-	BackgroundColor color.RGBA
+	BackgroundColor color.NRGBA
 	expandedIcon    *widget.Image
 	collapsedIcon   *widget.Image
 	card            Card

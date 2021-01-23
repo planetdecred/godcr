@@ -21,7 +21,7 @@ type Editor struct {
 
 	TitleLabel Label
 	errorLabel Label
-	LineColor  color.RGBA
+	LineColor  color.NRGBA
 
 	flexWidth float32
 	//IsVisible if true, displays the paste and clear button.
@@ -73,7 +73,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentContentPaste)),
 				Size:       m25,
-				Background: color.RGBA{},
+				Background: color.NRGBA{},
 				Color:      t.Color.Text,
 				Inset:      layout.UniformInset(m0),
 				Button:     new(widget.Clickable),
@@ -84,7 +84,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 			material.IconButtonStyle{
 				Icon:       mustIcon(widget.NewIcon(icons.ContentClear)),
 				Size:       m25,
-				Background: color.RGBA{},
+				Background: color.NRGBA{},
 				Color:      t.Color.Text,
 				Inset:      layout.UniformInset(m0),
 				Button:     new(widget.Clickable),
@@ -103,7 +103,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.TitleLabel.Text = e.Hint
 	}
 
-	c := color.RGBA{41, 112, 255, 255}
+	c := color.NRGBA{R: 41, G: 112, B: 255, A: 255}
 	if e.Editor.Focused() {
 		e.TitleLabel.Text = e.Hint
 		e.TitleLabel.Color = c

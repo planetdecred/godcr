@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"strings"
 
+	"gioui.org/f32"
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
@@ -21,6 +22,17 @@ import (
 
 const PageWallet = "Wallet"
 
+type action struct {
+	button decredmaterial.IconButton
+	point  f32.Point
+}
+
+type optionMenuItem struct {
+	text   string
+	button *widget.Clickable
+	page   string
+}
+
 type walletPage struct {
 	walletInfo                                 *wallet.MultiWalletInfo
 	wallet                                     *wallet.Wallet
@@ -34,11 +46,15 @@ type walletPage struct {
 	line                                       *decredmaterial.Line
 	toAddWalletPage                            *widget.Clickable
 	collapsibles                               []*decredmaterial.Collapsible
-	actions                                    map[int]decredmaterial.IconButton
+	actions                                    map[int]action
 	toAcctDetails                              []*gesture.Click
 	iconButton                                 decredmaterial.IconButton
 	errChann                                   chan error
 	card                                       decredmaterial.Card
+	popupPoint                                 f32.Point
+	backdrop                                   *widget.Clickable
+	optionsMenuCard                            decredmaterial.Card
+	optionsMenuItems                           []optionMenuItem
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -54,6 +70,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		card:            common.theme.Card(),
 		walletAccount:   &win.walletAccount,
 		toAddWalletPage: new(widget.Clickable),
+		backdrop:        new(widget.Clickable),
 		errChann:        common.errorChannels[PageWallet],
 	}
 
@@ -62,14 +79,50 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		IconButtonStyle: material.IconButtonStyle{
 			Icon:       pg.theme.NavMoreIcon,
 			Size:       unit.Dp(25),
-			Background: color.RGBA{},
+			Background: color.NRGBA{},
 			Color:      pg.theme.Color.Text,
 			Inset:      layout.UniformInset(unit.Dp(0)),
 		},
 	}
 
+	pg.optionsMenuCard = decredmaterial.Card{Color: pg.theme.Color.Surface}
+	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{10, 10, 10, 10}
+
+	pg.optionsMenuItems = []optionMenuItem{
+		{
+			text:   "Sign message",
+			button: new(widget.Clickable),
+			page:   PageSignMessage,
+		},
+		{
+			text:   "Verify message",
+			button: new(widget.Clickable),
+			page:   PageVerifyMessage,
+		},
+		{
+			text:   "Settings",
+			button: new(widget.Clickable),
+			page:   PageHelp,
+		},
+		{
+			text:   "Rename",
+			button: new(widget.Clickable),
+			page:   PageAbout,
+		},
+		{
+			text:   "View property",
+			button: new(widget.Clickable),
+			page:   PageHelp,
+		},
+		{
+			text:   "Privacy",
+			button: new(widget.Clickable),
+			page:   PagePrivacy,
+		},
+	}
+
 	pg.collapsibles = make([]*decredmaterial.Collapsible, 0)
-	pg.actions = make(map[int]decredmaterial.IconButton)
+	pg.actions = make(map[int]action)
 
 	pg.addAcct = nil
 	pg.backupButton = nil
@@ -99,13 +152,15 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		if _, ok := pg.actions[i]; !ok {
 			iconButton := pg.iconButton
 			iconButton.Button = new(widget.Clickable)
-			pg.actions[i] = iconButton
+			pg.actions[i] = action{
+				button: iconButton,
+			}
 		}
 
 		addAcctBtn := common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 		addAcctBtn.Inset = layout.UniformInset(values.MarginPadding0)
 		addAcctBtn.Size = values.MarginPadding25
-		addAcctBtn.Background = color.RGBA{}
+		addAcctBtn.Background = color.NRGBA{}
 		addAcctBtn.Color = common.theme.Color.Text
 		pg.addAcct = append(pg.addAcct, addAcctBtn)
 
@@ -142,26 +197,72 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 					})
 				})
 			}),
+			layout.Expanded(func(gtx C) D {
+				if pg.popupPoint.Y > 0 {
+					return pg.backdrop.Layout(gtx)
+				}
+				return D{}
+			}),
+			layout.Expanded(func(gtx C) D {
+				if pg.popupPoint.Y > 0 {
+					return layout.Inset{
+						Top: unit.Dp(pg.popupPoint.Y),
+						Left: unit.Dp(pg.popupPoint.X - 20),
+					}.Layout(gtx, func(gtx C) D {
+						return pg.layoutOptionsMenu(gtx)
+					})
+				}
+				return D{}
+			}),
 		)
 	}
-
 	return common.Layout(gtx, body)
+}
+
+func (pg *walletPage) layoutOptionsMenu(gtx layout.Context) layout.Dimensions {
+	return layout.Stack{}.Layout(gtx,
+		layout.Stacked(func(gtx C) D {
+			border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
+			return border.Layout(gtx, func(gtx C) D {
+				return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+					return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
+						return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.optionsMenuItems), func(gtx C, i int) D {
+							return material.Clickable(gtx, pg.optionsMenuItems[i].button, func(gtx C) D {
+								return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx C) D {
+									return pg.theme.Body2(pg.optionsMenuItems[i].text).Layout(gtx)
+								})
+							})
+						})
+					})
+				})
+			})
+		}),
+	)
 }
 
 func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
 	pg.walletIcon.Scale = 0.05
 
+	nextTopInset := float32(0)
+	leftInset := float32(0)
 	return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
+		var headerDims, bodyDims, footerDims layout.Dimensions
+
 		accounts := common.info.Wallets[i].Accounts
 		pg.updateAcctDetailsButtons(&accounts)
 
+		collapsibleMore := func(gtx C) D {
+			return pg.actions[i].button.Layout(gtx)
+		}
+
 		collapsibleHeader := func(gtx C) D {
-			return pg.layoutCollapsibleHeader(gtx, common.info.Wallets[i])
+			headerDims = pg.layoutCollapsibleHeader(gtx, common.info.Wallets[i])
+			return headerDims
 		}
 
 		collapsibleBody := func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+			bodyDims = layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				gtx.Constraints.Min.Y = 100
 
@@ -202,13 +303,11 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 					}),
 				)
 			})
+
+			return bodyDims
 		}
 
-		collapsibleMore := func(gtx C) D {
-			return pg.actions[i].Layout(gtx)
-		}
-
-		return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		footerDims = layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			var children []layout.FlexChild
 			children = append(children, layout.Rigid(func(gtx C) D {
 				return pg.collapsibles[i].Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleMore)
@@ -227,6 +326,19 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 			}
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
 		})
+
+		currentAction := pg.actions[i]
+		if i == 0 {
+			currentAction.point.Y = float32(headerDims.Size.Y)
+			leftInset = float32(headerDims.Size.X - 15)
+			nextTopInset = float32(headerDims.Size.Y + footerDims.Size.Y)
+		} else {
+			currentAction.point.Y = nextTopInset
+			nextTopInset += float32(headerDims.Size.Y + bodyDims.Size.Y + footerDims.Size.Y)
+		}
+		currentAction.point.X = leftInset
+		pg.actions[i] = currentAction
+		return footerDims
 	})
 }
 
@@ -486,46 +598,20 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 }
 
 func (pg *walletPage) Handle(common pageCommon) {
-	for index, b := range pg.walletCollapsible {
-		for b.Collapsible.Button.Clicked() {
-			b.Collapsible.IsExpanded = !b.Collapsible.IsExpanded
-		}
+	for pg.backdrop.Clicked() {
+		pg.popupPoint = f32.Point{}
+	}
 
-		for i, t := range b.Items {
-			if i > 0 {
-				for t.Button.Clicked() {
-					*common.selectedWallet = index
-					switch b.Items[i].Text {
-					case pg.text.signMessage:
-						*common.page = PageSignMessage
-					case pg.text.verifyMessage:
-						*common.page = PageVerifyMessage
-					case pg.text.settings:
-						*common.page = PageWalletSettings
-					case pg.text.rename:
-						walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-						go func() {
-							common.modalReceiver <- &modalLoad{
-								template: RenameWalletTemplate,
-								title:    "Rename wallet",
-								confirm: func(name string) {
-									pg.wallet.RenameWallet(walletID, name, pg.errChann)
-									pg.current.Name = name
-								},
-								confirmText: "Rename",
-								cancel:      common.closeModal,
-								cancelText:  "Cancel",
-							}
-						}()
-					case pg.text.viewProperty:
-						*common.page = PageHelp
-					case pg.text.privacy:
-						*common.page = PagePrivacy
-					}
-					b.Hide()
-				}
-			}
-			break
+	for _, action := range pg.actions {
+		for action.button.Button.Clicked() {
+			pg.popupPoint = action.point
+		}
+	}
+
+	for index := range pg.optionsMenuItems {
+		for pg.optionsMenuItems[index].button.Clicked() {
+			pg.popupPoint = f32.Point{}
+			*common.page = pg.optionsMenuItems[index].page
 		}
 	}
 

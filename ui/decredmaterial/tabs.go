@@ -4,7 +4,7 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
+	//"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
@@ -66,8 +66,8 @@ func indicatorDirection(tabPosition Position) layout.Direction {
 }
 
 // line returns a rectangle using a defined width, height and color.
-func line(gtx layout.Context, width, height int, col color.RGBA) layout.Dimensions {
-	paint.ColorOp{Color: col}.Add(gtx.Ops)
+func line(gtx layout.Context, width, height int, col color.NRGBA) layout.Dimensions {
+	/**paint.ColorOp{Color: col}.Add(gtx.Ops)
 	paint.PaintOp{Rect: f32.Rectangle{
 		Max: f32.Point{
 			X: float32(width),
@@ -76,7 +76,13 @@ func line(gtx layout.Context, width, height int, col color.RGBA) layout.Dimensio
 	}}.Add(gtx.Ops)
 	return layout.Dimensions{
 		Size: image.Point{X: width, Y: height},
-	}
+	}**/
+
+	return (&Line{
+		Height: height,
+		Width:  width,
+		Color:  col,
+	}).Layout(gtx)
 }
 
 // layoutIcon lays out the icon of a tab item
@@ -201,7 +207,7 @@ func (t *Tabs) SetTabs(tabs []TabItem) {
 		l := t.theme.Body1(t.items[i].Title)
 		t.items[i].label = l
 		b := t.theme.Button(new(widget.Clickable), "")
-		b.Background = color.RGBA{}
+		b.Background = color.NRGBA{}
 		tabs[i].button = b
 	}
 }
@@ -223,7 +229,7 @@ func (t *Tabs) scrollButton(right bool, button *widget.Clickable) layout.FlexChi
 			t.iconButton.Icon = icon
 			t.iconButton.Size = unit.Dp(20)
 			t.iconButton.Color = rgb(0xbbbbbb)
-			t.iconButton.Background = color.RGBA{}
+			t.iconButton.Background = color.NRGBA{}
 			t.iconButton.Button = button
 			return t.iconButton.Layout(gtx)
 		}
