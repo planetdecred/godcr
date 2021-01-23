@@ -9,7 +9,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageSettings = "SettingsPage"
+const PageSettings = "Settings"
 
 type settingsPage struct {
 	theme      *decredmaterial.Theme
@@ -264,6 +264,8 @@ func (pg *settingsPage) bottomSectionLabel(title string) layout.Widget {
 }
 
 func (pg *settingsPage) handle(common pageCommon) {
+	not_yet_implemented := "functionality not yet implemented"
+
 	if pg.spendUnconfirm.Changed() {
 		pg.wal.SpendUnconfirmed(pg.spendUnconfirm.Value)
 	}
@@ -315,63 +317,39 @@ func (pg *settingsPage) handle(common pageCommon) {
 		}
 	}
 
-	// for pg.rescan.Button.Clicked() {
-	// 	walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-	// 	go func() {
-	// 		common.modalReceiver <- &modalLoad{
-	// 			template: RescanWalletTemplate,
-	// 			title:    "Rescan blockchain",
-	// 			confirm: func() {
-	// 				err := pg.wal.RescanBlocks(walletID)
-	// 				if err != nil {
-	// 					if err.Error() == "not_connected" {
-	// 						common.Notify("Not connected to decred network", false)
-	// 						return
-	// 					}
-	// 					common.Notify(err.Error(), false)
-	// 					return
-	// 				}
-	// 				msg := "Rescan initiated (check in overview)"
-	// 				common.Notify(msg, true)
-	// 				go func() {
-	// 					common.modalReceiver <- &modalLoad{}
-	// 				}()
-	// 			},
-	// 			confirmText: "Rescan",
-	// 			cancel:      common.closeModal,
-	// 			cancelText:  "Cancel",
-	// 		}
-	// 	}()
-	// 	break
-	// }
+	for pg.connectToPeer.Button.Clicked() {
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: ConnectToSpecificPeerTemplate,
+				title:    "Connect to specific peer",
+				confirm: func(ipAddress string) {
+					common.Notify(not_yet_implemented, true)
+					common.closeModal()
+				},
+				confirmText: "Connect",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
+		break
+	}
 
-	// for pg.deleteWallet.Button.Clicked() {
-	// 	go func() {
-	// 		common.modalReceiver <- &modalLoad{
-	// 			template: ConfirmRemoveTemplate,
-	// 			title:    "Remove wallet from device",
-	// 			confirm: func() {
-	// 				walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-	// 				go func() {
-	// 					common.modalReceiver <- &modalLoad{
-	// 						template: PasswordTemplate,
-	// 						title:    "Confirm to remove",
-	// 						confirm: func(pass string) {
-	// 							pg.wal.DeleteWallet(walletID, []byte(pass), pg.errChann)
-	// 						},
-	// 						confirmText: "Confirm",
-	// 						cancel:      common.closeModal,
-	// 						cancelText:  "Cancel",
-	// 					}
-	// 				}()
-	// 			},
-	// 			confirmText: "Remove",
-	// 			cancel:      common.closeModal,
-	// 			cancelText:  "Cancel",
-	// 		}
-	// 	}()
-	// 	break
-	// }
+	for pg.userAgent.Button.Clicked() {
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: UserAgentTemplate,
+				title:    "Set up user agent",
+				confirm: func(agent string) {
+					common.Notify(not_yet_implemented, true)
+					common.closeModal()
+				},
+				confirmText: "Set up",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
+		break
+	}
 
 	select {
 	case err := <-pg.errChann:
