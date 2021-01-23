@@ -13,7 +13,7 @@ import (
 )
 
 type Scrollbar struct {
-	color    color.RGBA
+	color    color.NRGBA
 	float    *Float
 	position float32
 }
@@ -38,10 +38,10 @@ func (s *Scrollbar) Layout(gtx layout.Context, contentLength, initialPosition fl
 
 	s.position = initialPosition * float32(maxSize.Y)
 
-	st := op.Push(gtx.Ops)
+	st := op.Save(gtx.Ops)
 	op.Offset(f32.Pt(0, 0)).Add(gtx.Ops)
 	s.float.Layout(gtx, int(scrollbarLength), int(contentLength))
-	st.Pop()
+	st.Load()
 	if s.float.Scrolled() {
 		s.position = s.float.Pos()
 	}

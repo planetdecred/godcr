@@ -60,7 +60,7 @@ func (f *Float) Layout(gtx layout.Context, pointerMargin, contentLength int) lay
 		f.pos = 1
 	}
 
-	defer op.Push(gtx.Ops).Pop()
+	defer op.Save(gtx.Ops).Load()
 	rect := image.Rectangle{Max: size}
 	rect.Min.Y -= pointerMargin
 	rect.Max.Y += pointerMargin

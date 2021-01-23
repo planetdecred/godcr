@@ -2,7 +2,6 @@ package ui
 
 import (
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -628,7 +627,7 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 func (m *ModalTemplate) passwordStrength(th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := (dcrlibwallet.ShannonEntropy(password.Text()) / 4.0)
-	m.passwordStgth.Progress = int(strength * 100)
+	m.passwordStgth.Progress = float32(strength * 100)
 	m.passwordStgth.Color = th.Color.Success
 }
 

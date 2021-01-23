@@ -51,6 +51,10 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 		},
 	}
 
+	for i := range morePageListItems {
+		morePageListItems[i].image.Scale = 1
+	}
+
 	pg := morePage{
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,
@@ -99,8 +103,6 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												pg.morePageListItems[i].image.Scale = 0.05
-
 												return layout.Center.Layout(gtx, func(gtx C) D {
 													return pg.morePageListItems[i].image.Layout(gtx)
 												})

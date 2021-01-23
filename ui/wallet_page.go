@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"strings"
 
-	"gioui.org/f32"
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
@@ -23,8 +22,8 @@ import (
 const PageWallet = "Wallet"
 
 type action struct {
-	button decredmaterial.IconButton
-	point  f32.Point
+	button   decredmaterial.IconButton
+	topInset float32
 }
 
 type optionMenuItem struct {
@@ -41,6 +40,7 @@ type walletPage struct {
 	current                                    wallet.InfoShort
 	walletIcon                                 *widget.Image
 	accountIcon                                *widget.Image
+	walletAlertIcon                            *widget.Image
 	addAcct, backupButton                      []decredmaterial.IconButton
 	container, accountsList, walletsList, list layout.List
 	line                                       *decredmaterial.Line
@@ -51,7 +51,7 @@ type walletPage struct {
 	iconButton                                 decredmaterial.IconButton
 	errChann                                   chan error
 	card                                       decredmaterial.Card
-	popupPoint                                 f32.Point
+	popupTopInset                              float32
 	backdrop                                   *widget.Clickable
 	optionsMenuCard                            decredmaterial.Card
 	optionsMenuItems                           []optionMenuItem
@@ -72,6 +72,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		toAddWalletPage: new(widget.Clickable),
 		backdrop:        new(widget.Clickable),
 		errChann:        common.errorChannels[PageWallet],
+		popupTopInset:   -1,
 	}
 
 	pg.line.Height = 1
@@ -86,7 +87,13 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	}
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.theme.Color.Surface}
-	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{10, 10, 10, 10}
+	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{5, 5, 5, 5}
+
+	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
+	pg.walletIcon.Scale = 1
+
+	pg.walletAlertIcon = common.icons.walletAlertIcon
+	pg.walletAlertIcon.Scale = 1
 
 	pg.optionsMenuItems = []optionMenuItem{
 		{
@@ -198,18 +205,18 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 				})
 			}),
 			layout.Expanded(func(gtx C) D {
-				if pg.popupPoint.Y > 0 {
+				if pg.popupTopInset > -1 {
 					return pg.backdrop.Layout(gtx)
 				}
 				return D{}
 			}),
 			layout.Expanded(func(gtx C) D {
-				if pg.popupPoint.Y > 0 {
-					return layout.Inset{
-						Top: unit.Dp(pg.popupPoint.Y),
-						Left: unit.Dp(pg.popupPoint.X - 20),
-					}.Layout(gtx, func(gtx C) D {
-						return pg.layoutOptionsMenu(gtx)
+				if pg.popupTopInset > -1 {
+					return layout.NE.Layout(gtx, func(gtx C) D {
+						return layout.Inset{
+							Top:   unit.Dp(pg.popupTopInset),
+							Right: unit.Dp(10),
+						}.Layout(gtx, pg.layoutOptionsMenu)
 					})
 				}
 				return D{}
@@ -241,11 +248,7 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
-	pg.walletIcon.Scale = 0.05
-
 	nextTopInset := float32(0)
-	leftInset := float32(0)
 	return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
 		var headerDims, bodyDims, footerDims layout.Dimensions
 
@@ -329,14 +332,12 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 
 		currentAction := pg.actions[i]
 		if i == 0 {
-			currentAction.point.Y = float32(headerDims.Size.Y)
-			leftInset = float32(headerDims.Size.X - 15)
+			currentAction.topInset = float32(headerDims.Size.Y)
 			nextTopInset = float32(headerDims.Size.Y + footerDims.Size.Y)
 		} else {
-			currentAction.point.Y = nextTopInset
+			currentAction.topInset = nextTopInset
 			nextTopInset += float32(headerDims.Size.Y + bodyDims.Size.Y + footerDims.Size.Y)
 		}
-		currentAction.point.X = leftInset
 		pg.actions[i] = currentAction
 		return footerDims
 	})
@@ -533,9 +534,7 @@ func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageComm
 	return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				icon := common.icons.walletAlertIcon
-				icon.Scale = 0.24
-				return icon.Layout(gtx)
+				return pg.walletAlertIcon.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				inset := layout.Inset{
@@ -599,19 +598,20 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 
 func (pg *walletPage) Handle(common pageCommon) {
 	for pg.backdrop.Clicked() {
-		pg.popupPoint = f32.Point{}
+		pg.popupTopInset = -1
 	}
 
-	for _, action := range pg.actions {
+	for index, action := range pg.actions {
 		for action.button.Button.Clicked() {
-			pg.popupPoint = action.point
+			pg.popupTopInset = action.topInset
+			*common.selectedWallet = index
 		}
 	}
 
 	for index := range pg.optionsMenuItems {
 		for pg.optionsMenuItems[index].button.Clicked() {
-			pg.popupPoint = f32.Point{}
 			*common.page = pg.optionsMenuItems[index].page
+			pg.popupTopInset = -1
 		}
 	}
 

@@ -26,7 +26,7 @@ func (t *Theme) Collapsible() *Collapsible {
 		expandedIcon:    t.expandIcon,
 	}
 	c.card.Color = c.BackgroundColor
-	c.collapsedIcon.Scale, c.expandedIcon.Scale = 0.25, 0.25
+	c.collapsedIcon.Scale, c.expandedIcon.Scale = 1, 1
 
 	return c
 }

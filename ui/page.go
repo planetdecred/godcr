@@ -198,6 +198,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 	}
 
+	for i := range drawerNavItems {
+		drawerNavItems[i].image.Scale = 1
+		drawerNavItems[i].imageInactive.Scale = 1
+	}
+
+	for i := range appBarNavItems {
+		appBarNavItems[i].image.Scale = 1
+	}
+
 	common := pageCommon{
 		wallet:          win.wallet,
 		info:            win.walletInfo,
@@ -418,25 +427,12 @@ func (page pageCommon) closeModal() {
 }
 
 func fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
-	/**cs := gtx.Constraints
-	d := image.Point{X: cs.Min.X, Y: cs.Min.Y}
-	dr := f32.Rectangle{
-		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
-	}
-	paint.ColorOp{Color: col}.Add(gtx.Ops)
-	paint.PaintOp{Rect: dr}.Add(gtx.Ops)
-	return layout.Dimensions{Size: d}**/
 	return decredmaterial.Fill(gtx, col)
 }
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 	card := page.theme.Card()
-	card.Radius = decredmaterial.CornerRadius{
-		NE: 0,
-		NW: 0,
-		SE: 0,
-		SW: 0,
-	}
+	card.Radius = decredmaterial.CornerRadius{0, 0, 0, 0}
 	return card.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -451,7 +447,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							img := page.icons.logo
-							img.Scale = 0.085
+							img.Scale = 1
 
 							return img.Layout(gtx)
 						}),
@@ -471,8 +467,6 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 										return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
 											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
-													page.appBarNavItems[i].image.Scale = 0.05
-
 													return layout.Center.Layout(gtx, func(gtx C) D {
 														return page.appBarNavItems[i].image.Layout(gtx)
 													})
@@ -519,12 +513,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
 					card := page.theme.Card()
 					card.Color = background
-					card.Radius = decredmaterial.CornerRadius{
-						NE: 0,
-						NW: 0,
-						SE: 0,
-						SW: 0,
-					}
+					card.Radius = decredmaterial.CornerRadius{0, 0, 0, 0}
 					return card.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 							axis := layout.Horizontal
@@ -540,13 +529,12 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									page.drawerNavItems[i].image.Scale = 0.05
-									page.drawerNavItems[i].imageInactive.Scale = 0.05
+									img := page.drawerNavItems[i].imageInactive
+									if page.drawerNavItems[i].page == *page.page {
+										img = page.drawerNavItems[i].image
+									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
-										if page.drawerNavItems[i].page == *page.page {
-											return page.drawerNavItems[i].image.Layout(gtx)
-										}
-										return page.drawerNavItems[i].imageInactive.Layout(gtx)
+										return img.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -767,7 +755,7 @@ func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout
 	card.Color = color.NRGBA{}
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return page.subPageHeader(gtx, sp) }),
+			layout.Rigid(func(gtx C) D { return page.subpageHeader(gtx, sp) }),
 			layout.Rigid(sp.body),
 		)
 	})
