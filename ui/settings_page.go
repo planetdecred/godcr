@@ -264,7 +264,7 @@ func (pg *settingsPage) bottomSectionLabel(title string) layout.Widget {
 }
 
 func (pg *settingsPage) handle(common pageCommon) {
-	not_yet_implemented := "functionality not yet implemented"
+	notImplemented := "functionality not yet implemented"
 
 	if pg.spendUnconfirm.Changed() {
 		pg.wal.SpendUnconfirmed(pg.spendUnconfirm.Value)
@@ -301,20 +301,19 @@ func (pg *settingsPage) handle(common pageCommon) {
 				}
 			}()
 			return
-		} else {
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: RemoveStartupPasswordTemplate,
-					title:    "Confirm to turn off startup password",
-					confirm: func(pass string) {
-						pg.wal.RemoveStartupPassphrase(pass, pg.errChann)
-					},
-					confirmText: "Confirm",
-					cancel:      common.closeModal,
-					cancelText:  "Cancel",
-				}
-			}()
 		}
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: RemoveStartupPasswordTemplate,
+				title:    "Confirm to turn off startup password",
+				confirm: func(pass string) {
+					pg.wal.RemoveStartupPassphrase(pass, pg.errChann)
+				},
+				confirmText: "Confirm",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 	}
 
 	for pg.connectToPeer.Button.Clicked() {
@@ -323,7 +322,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				template: ConnectToSpecificPeerTemplate,
 				title:    "Connect to specific peer",
 				confirm: func(ipAddress string) {
-					common.Notify(not_yet_implemented, true)
+					common.Notify(notImplemented, true)
 					common.closeModal()
 				},
 				confirmText: "Connect",
@@ -340,7 +339,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				template: UserAgentTemplate,
 				title:    "Set up user agent",
 				confirm: func(agent string) {
-					common.Notify(not_yet_implemented, true)
+					common.Notify(notImplemented, true)
 					common.closeModal()
 				},
 				confirmText: "Set up",

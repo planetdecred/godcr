@@ -33,7 +33,8 @@ type pageIcons struct {
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
-	arrowFowardIcon, transactionFingerPrintIcon *widget.Image
+	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
+	aboutIcon, debugIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -143,6 +144,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
 		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
 		arrowFowardIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
+		settingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
+		securityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
+		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
+		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
+		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -239,7 +245,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageMore] = win.MorePage(decredIcons, common)
+	win.pages[PageMore] = win.MorePage(common)
 	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
 	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageSend] = win.SendPage(common)
