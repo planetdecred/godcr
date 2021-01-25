@@ -12,9 +12,10 @@ import (
 const PageSettings = "Settings"
 
 type settingsPage struct {
-	theme      *decredmaterial.Theme
-	walletInfo *wallet.MultiWalletInfo
-	wal        *wallet.Wallet
+	pageContainer layout.List
+	theme         *decredmaterial.Theme
+	walletInfo    *wallet.MultiWalletInfo
+	wal           *wallet.Wallet
 
 	currencyConversion decredmaterial.IconButton
 	connectToPeer      decredmaterial.IconButton
@@ -25,14 +26,18 @@ type settingsPage struct {
 	startupPassword *widget.Bool
 	notificationW   *widget.Bool
 
-	passwordSet bool
-	line        *decredmaterial.Line
-	errChann    chan error
+	line *decredmaterial.Line
+
+	isStartupPassword bool
+	errChann          chan error
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	icon := common.icons.chevronRight
 	pg := &settingsPage{
+		pageContainer: layout.List{
+			Axis: layout.Vertical,
+		},
 		theme:      common.theme,
 		walletInfo: win.walletInfo,
 		wal:        common.wallet,
@@ -73,15 +78,19 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 			title:      "Settings",
 			walletName: "",
 			back: func() {
-				*common.page = PageWallet
+				*common.page = PageMore
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(pg.general()),
-					layout.Rigid(pg.security()),
-					layout.Rigid(pg.notification()),
-					layout.Rigid(pg.connection()),
-				)
+				pageContent := []func(gtx C) D{
+					pg.general(),
+					pg.security(),
+					pg.notification(),
+					pg.connection(),
+				}
+
+				return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					return layout.Inset{}.Layout(gtx, pageContent[i])
+				})
 			},
 			infoTemplate: "",
 		}
@@ -93,43 +102,29 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 
 func (pg *settingsPage) general() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "General", func(gtx C) D {
+		return pg.mainSection(gtx, "General", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.bottomSectionLabel("Spending unconfirmed funds")),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.theme.Switch(pg.spendUnconfirm).Layout(gtx)
-							})
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					m := values.MarginPadding5
-					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-						pg.line.Width = gtx.Constraints.Max.X
-						return pg.line.Layout(gtx)
+					return pg.subSection(gtx, "Spending unconfirmed funds", func(gtx C) D {
+						return pg.theme.Switch(pg.spendUnconfirm).Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(pg.bottomSectionLabel("Currency conversion")),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										txt := pg.theme.Body2("None")
-										txt.Color = pg.theme.Color.Gray
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return pg.currencyConversion.Layout(gtx)
-									}),
-								)
-							})
-						}),
-					)
+					return pg.lineSeparator(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.subSection(gtx, "Currency conversion", func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.Body2("None")
+								txt.Color = pg.theme.Color.Gray
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.currencyConversion.Layout(gtx)
+							}),
+						)
+					})
 				}),
 			)
 		})
@@ -138,53 +133,34 @@ func (pg *settingsPage) general() layout.Widget {
 
 func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Notification", func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel("Beep for new blocks")),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.theme.Switch(pg.notificationW).Layout(gtx)
-					})
-				}),
-			)
+		return pg.mainSection(gtx, "Notification", func(gtx C) D {
+			return pg.subSection(gtx, "Beep for new blocks", func(gtx C) D {
+				return pg.theme.Switch(pg.notificationW).Layout(gtx)
+			})
 		})
 	}
 }
 
 func (pg *settingsPage) security() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Security", func(gtx C) D {
+		return pg.mainSection(gtx, "Security", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.bottomSectionLabel("Startup password")),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.theme.Switch(pg.startupPassword).Layout(gtx)
-							})
-						}),
-					)
+					return pg.subSection(gtx, "Startup password", func(gtx C) D {
+						return pg.theme.Switch(pg.startupPassword).Layout(gtx)
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.passwordSet {
-						m := values.MarginPadding5
-						return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-							pg.line.Width = gtx.Constraints.Max.X
-							return pg.line.Layout(gtx)
-						})
+					if pg.isStartupPassword {
+						return pg.lineSeparator(gtx)
 					}
 					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.passwordSet {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(pg.bottomSectionLabel("Change startup password")),
-							layout.Flexed(1, func(gtx C) D {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return pg.changeStartupPass.Layout(gtx)
-								})
-							}),
-						)
+					if pg.isStartupPassword {
+						return pg.subSection(gtx, "Change startup password", func(gtx C) D {
+							return pg.changeStartupPass.Layout(gtx)
+						})
 					}
 					return layout.Dimensions{}
 				}),
@@ -195,24 +171,15 @@ func (pg *settingsPage) security() layout.Widget {
 
 func (pg *settingsPage) connection() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Connection", func(gtx C) D {
+		return pg.mainSection(gtx, "Connection", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(pg.bottomSectionLabel("Connect to specific peer")),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.connectToPeer.Layout(gtx)
-							})
-						}),
-					)
+					return pg.subSection(gtx, "Connect to specific peer", func(gtx C) D {
+						return pg.connectToPeer.Layout(gtx)
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					m := values.MarginPadding5
-					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-						pg.line.Width = gtx.Constraints.Max.X
-						return pg.line.Layout(gtx)
-					})
+					return pg.lineSeparator(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
@@ -238,10 +205,10 @@ func (pg *settingsPage) connection() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						txt := pg.theme.Body2(title)
@@ -257,10 +224,27 @@ func (pg *settingsPage) pageSections(gtx layout.Context, title string, body layo
 	})
 }
 
-func (pg *settingsPage) bottomSectionLabel(title string) layout.Widget {
+func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(pg.bottomSectionLabel(title)),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, body)
+		}),
+	)
+}
+
+func (pg *settingsPage) subSectionLabel(title string) layout.Widget {
 	return func(gtx C) D {
 		return pg.theme.Body1(title).Layout(gtx)
 	}
+}
+
+func (pg *settingsPage) lineSeparator(gtx layout.Context) layout.Dimensions {
+	m := values.MarginPadding10
+	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+		pg.line.Width = gtx.Constraints.Max.X
+		return pg.line.Layout(gtx)
+	})
 }
 
 func (pg *settingsPage) handle(common pageCommon) {
@@ -366,9 +350,9 @@ func (pg *settingsPage) updateSetting() {
 	isSet := pg.wal.IsStartupSecuritySet()
 	if isSet {
 		pg.startupPassword.Value = true
-		pg.passwordSet = true
+		pg.isStartupPassword = true
 	} else {
 		pg.startupPassword.Value = false
-		pg.passwordSet = false
+		pg.isStartupPassword = false
 	}
 }
