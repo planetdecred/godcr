@@ -221,7 +221,7 @@ func (e Editor) handleEvents() {
 		go func() {
 			text := <-e.t.Clipboard
 			e.Editor.SetText(text)
-			e.Editor.Move(e.Editor.Len())
+			//e.Editor.Move(e.Editor.Len())
 		}()
 		go func() {
 			e.t.ReadClipboard <- ReadClipboard{}
