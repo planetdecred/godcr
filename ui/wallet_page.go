@@ -198,31 +198,38 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 					})
 				})
 			}),
+			layout.Expanded(func(gtx C) D {
+				if pg.openPopupIndex != -1 {
+					return pg.backdrop.Layout(gtx)
+				}
+				return D{}
+			}),
 		)
 	}
 	return common.Layout(gtx, body)
 }
 
 func (pg *walletPage) layoutOptionsMenu(gtx layout.Context) layout.Dimensions {
-	return layout.Inset{Top: unit.Dp(30)}.Layout(gtx, func(gtx C) D {
-		return layout.Stack{}.Layout(gtx,
-			layout.Stacked(func(gtx C) D {
-				border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
-				return border.Layout(gtx, func(gtx C) D {
-					return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-							return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.optionsMenuItems), func(gtx C, i int) D {
-								return material.Clickable(gtx, pg.optionsMenuItems[i].button, func(gtx C) D {
-									return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx C) D {
-										return pg.theme.Body2(pg.optionsMenuItems[i].text).Layout(gtx)
-									})
-								})
+	inset := layout.Inset{
+		Top:  unit.Dp(20),
+		Left: unit.Dp(-80),
+	}
+
+	return inset.Layout(gtx, func(gtx C) D {
+		border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
+		return border.Layout(gtx, func(gtx C) D {
+			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
+					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.optionsMenuItems), func(gtx C, i int) D {
+						return material.Clickable(gtx, pg.optionsMenuItems[i].button, func(gtx C) D {
+							return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx C) D {
+								return pg.theme.Body2(pg.optionsMenuItems[i].text).Layout(gtx)
 							})
 						})
 					})
 				})
-			}),
-		)
+			})
+		})
 	})
 }
 
@@ -232,21 +239,12 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		pg.updateAcctDetailsButtons(&accounts)
 
 		collapsibleMore := func(gtx C) D {
-			return layout.Stack{}.Layout(gtx,
-				layout.Expanded(func(gtx C) D {
-					return pg.walletItems[i].moreButton.Layout(gtx)
-				}),
-				layout.Expanded(func(gtx C) D {
-					if pg.openPopupIndex == i {
-						m := op.Record(gtx.Ops)
-						dims := pg.layoutOptionsMenu(gtx)
-						dims.Size.Y = 0
-						op.Defer(gtx.Ops, m.Stop())
-						return dims
-					}
-					return D{}
-				}),
-			)
+			if pg.openPopupIndex == i {
+				m := op.Record(gtx.Ops)
+				pg.layoutOptionsMenu(gtx)
+				op.Defer(gtx.Ops, m.Stop())
+			}
+			return pg.walletItems[i].moreButton.Layout(gtx)
 		}
 
 		collapsibleHeader := func(gtx C) D {
@@ -573,24 +571,21 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 }
 
 func (pg *walletPage) Handle(common pageCommon) {
-	/**
-	for index, action := range pg.actions {
-		for action.button.Button.Clicked() {
-			pg.popupTopInset = action.topInset
+	for pg.backdrop.Clicked() {
+		pg.openPopupIndex = -1
+	}
+
+	for index := range pg.walletItems {
+		for pg.walletItems[index].moreButton.Button.Clicked() {
 			*common.selectedWallet = index
+			pg.openPopupIndex = index
 		}
 	}
 
 	for index := range pg.optionsMenuItems {
-		for pg.optionsMenuItems[index].button.Clicked() {
+		if pg.optionsMenuItems[index].button.Clicked() {
+			pg.openPopupIndex = -1
 			*common.page = pg.optionsMenuItems[index].page
-			pg.popupTopInset = -1
-		}
-	}**/
-
-	for index := range pg.walletItems {
-		for pg.walletItems[index].moreButton.Button.Clicked() {
-			pg.openPopupIndex = index
 		}
 	}
 
