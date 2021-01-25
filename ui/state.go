@@ -84,7 +84,7 @@ func (win *Window) updateStates(update interface{}) {
 	case *wallet.ChangePassword:
 		win.notifyOnSuccess("Spending password changed")
 	case *wallet.StartupPassphrase:
-		win.notifyOnSuccess("Startup password set")
+		win.notifyOnSuccess(update.(*wallet.StartupPassphrase).Msg)
 	case wallet.OpenWallet:
 		go func() {
 			win.modal <- &modalLoad{}

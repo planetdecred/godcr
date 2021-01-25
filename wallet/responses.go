@@ -91,7 +91,9 @@ type LoadedWallets struct {
 type Restored struct{}
 
 // StartUpPassphrase is sent when the startup passphrase is set
-type StartupPassphrase struct{}
+type StartupPassphrase struct {
+	Msg string
+}
 
 // OpenWallet is sent when the startup passphrase is set
 type OpenWallet struct{}

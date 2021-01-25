@@ -515,7 +515,9 @@ func (wal *Wallet) SetStartupPassphrase(passphrase string, errChan chan error) {
 			})
 			return
 		}
-		resp.Resp = StartupPassphrase{}
+		resp.Resp = &StartupPassphrase{
+			Msg: "Startup password set",
+		}
 		wal.Send <- resp
 	}()
 }
@@ -536,7 +538,9 @@ func (wal *Wallet) ChangeStartupPassphrase(oldPrivatePassphrase, newPrivatePassp
 			return
 		}
 
-		resp.Resp = StartupPassphrase{}
+		resp.Resp = &StartupPassphrase{
+			Msg: "Startup password changed",
+		}
 		wal.Send <- resp
 	}()
 }
@@ -556,7 +560,9 @@ func (wal *Wallet) RemoveStartupPassphrase(passphrase string, errChan chan error
 			})
 			return
 		}
-		resp.Resp = StartupPassphrase{}
+		resp.Resp = &StartupPassphrase{
+			Msg: "Startup password removed",
+		}
 		wal.Send <- resp
 	}()
 }

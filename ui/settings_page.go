@@ -185,7 +185,7 @@ func (pg *settingsPage) connection() layout.Widget {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(pg.bottomSectionLabel("User agent")),
+								layout.Rigid(pg.subSectionLabel("User agent")),
 								layout.Rigid(func(gtx C) D {
 									txt := pg.theme.Body2("For exchange rate fetching")
 									txt.Color = pg.theme.Color.Gray
@@ -226,7 +226,7 @@ func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layou
 
 func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(pg.bottomSectionLabel(title)),
+		layout.Rigid(pg.subSectionLabel(title)),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, body)
 		}),
