@@ -343,27 +343,12 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 
 func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		template:    ConfirmMixerAcctExistTemplate,
-		confirmText: "Go back & rename",
-		cancel:      common.closeModal,
+		customTemplate: ConfirmMixerAcctExistTemplate,
+		confirmText:    "Go back & rename",
+		cancel:         common.closeModal,
 		confirm: func() {
 			common.closeModal()
 			*common.page = PageWallet
-		},
-		title: func(gtx layout.Context) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return layout.Center.Layout(gtx, func(gtx C) D {
-							common.icons.alert.Scale = 0.07
-							return common.icons.alert.Layout(gtx)
-						})
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.theme.H5("Account name is taken").Layout(gtx)
-				}),
-			)
 		},
 	}
 }

@@ -237,11 +237,13 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
 	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
 	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
-	common.modalTemplate = win.LoadModalTemplates()
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 	common.subPageBackButton.Color, common.subPageInfoButton.Color = common.theme.Color.Gray, common.theme.Color.Gray
 	common.subPageBackButton.Size, common.subPageInfoButton.Size = values.MarginPadding25, values.MarginPadding25
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
+
+	common.modalTemplate = win.LoadModalTemplates()
+	common.modalTemplate.alertError = ic.alert
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -348,6 +350,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				select {
 				case load := <-page.modalReceiver:
 					page.modalLoad.template = load.template
+					page.modalLoad.customTemplate = load.customTemplate
 					page.modalLoad.title = load.title
 					page.modalLoad.confirm = load.confirm
 					page.modalLoad.confirmText = load.confirmText

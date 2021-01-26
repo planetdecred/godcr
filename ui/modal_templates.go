@@ -40,17 +40,19 @@ type ModalTemplate struct {
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
 	alert                 decredmaterial.IconButton
+	alertError            *widget.Image
 	passwordStgth         decredmaterial.ProgressBarStyle
 }
 
 type modalLoad struct {
-	template    string
-	title       interface{}
-	confirm     interface{}
-	confirmText string
-	cancel      interface{}
-	cancelText  string
-	isReset     bool
+	template       string
+	customTemplate string
+	title          string
+	confirm        interface{}
+	confirmText    string
+	cancel         interface{}
+	cancelText     string
+	isReset        bool
 }
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
@@ -287,17 +289,36 @@ func (m *ModalTemplate) setupMixerAcct() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) warnExistMixerAcct(load *modalLoad) []func(gtx C) D {
+	return append([]func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							m.alertError.Scale = 0.07
+							return m.alertError.Layout(gtx)
+						})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return m.th.H5("Account name is taken").Layout(gtx)
+				}),
+			)
+		},
 		func(gtx C) D {
 			txt := m.th.Body1("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.")
 			txt.Color = m.th.Color.Gray
 			return txt.Layout(gtx)
 		},
-	}
+	}, m.actions(m.th, load)...)
 }
 
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
+	if load.customTemplate != "" {
+		return m.handleCustomTemplate(load)
+	}
+
 	if !load.isReset {
 		m.resetFields()
 		load.isReset = true
@@ -305,18 +326,18 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 
 	title := []func(gtx C) D{
 		func(gtx C) D {
-			switch t := load.title.(type) {
-			case string:
-				return th.H5(t).Layout(gtx)
-			case func(C) D:
-				return t(gtx)
-			default:
-			}
-			return layout.Dimensions{}
+			return th.H5(load.title).Layout(gtx)
 		},
 	}
 
-	action := []func(gtx C) D{
+	w := m.handle(th, load)
+	w = append(title, w...)
+	w = append(w, m.actions(th, load)...)
+	return w
+}
+
+func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
+	return []func(gtx C) D{
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -350,11 +371,6 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 			})
 		},
 	}
-
-	w := m.handle(th, load)
-	w = append(title, w...)
-	w = append(w, action...)
-	return w
 }
 
 func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
@@ -532,11 +548,19 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		}
 		template = m.setupMixerAcct()
 		return
+	default:
+		return
+	}
+	return
+}
+
+func (m *ModalTemplate) handleCustomTemplate(load *modalLoad) (template []func(gtx C) D) {
+	switch load.customTemplate {
 	case ConfirmMixerAcctExistTemplate:
 		if m.confirm.Button.Clicked() {
 			load.confirm.(func())()
 		}
-		template = m.warnExistMixerAcct()
+		template = m.warnExistMixerAcct(load)
 		return
 	default:
 		return
