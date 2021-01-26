@@ -72,11 +72,10 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 }
 
 func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.updateSetting()
+	pg.updateStartupPasswordSetting()
 	body := func(gtx C) D {
 		page := SubPage{
-			title:      "Settings",
-			walletName: "",
+			title: "Settings",
 			back: func() {
 				*common.page = PageMore
 			},
@@ -92,7 +91,6 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 					return layout.Inset{}.Layout(gtx, pageContent[i])
 				})
 			},
-			infoTemplate: "",
 		}
 		return common.SubPageLayout(gtx, page)
 	}
@@ -346,7 +344,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 	}
 }
 
-func (pg *settingsPage) updateSetting() {
+func (pg *settingsPage) updateStartupPasswordSetting() {
 	isSet := pg.wal.IsStartupSecuritySet()
 	if isSet {
 		pg.startupPassword.Value = true

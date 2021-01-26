@@ -49,10 +49,8 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	body := func(gtx C) D {
 		load := SubPage{
-			title:        "Verify message",
-			isInfoButton: true,
-			isWalletName: true,
-			walletName:   c.info.Wallets[*c.selectedWallet].Name,
+			title:      "Verify message",
+			walletName: c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
 				pg.clearInputs(&c)
 				*c.page = PageWallet

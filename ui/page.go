@@ -702,8 +702,6 @@ type SubPage struct {
 	body              layout.Widget
 	infoTemplate      string
 	infoTemplateTitle string
-	isInfoButton      bool
-	isWalletName      bool
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -730,7 +728,7 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return page.theme.H6(sp.title).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if sp.isWalletName {
+			if sp.walletName == " " {
 				return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Card{
 						Color: page.theme.Color.Surface,
@@ -747,7 +745,7 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
-				if sp.isInfoButton {
+				if sp.infoTemplate == " " {
 					return page.subPageInfoButton.Layout(gtx)
 				}
 				return layout.Dimensions{}

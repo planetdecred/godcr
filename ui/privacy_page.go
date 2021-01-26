@@ -50,10 +50,8 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	d := func(gtx C) D {
 		load := SubPage{
-			title:        "Privacy",
-			walletName:   c.info.Wallets[*c.selectedWallet].Name,
-			isInfoButton: true,
-			isWalletName: true,
+			title:      "Privacy",
+			walletName: c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
 				*c.page = PageWallet
 			},
