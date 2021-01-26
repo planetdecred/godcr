@@ -5,17 +5,15 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/planetdecred/godcr/ui/values"
-
 	"gioui.org/io/key"
-
-	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/wallet"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
+
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -303,10 +301,13 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 			btnPadding := values.MarginPadding10
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return pg.unlock.Layout(gtx)
-					})
+					if pg.wal.LoadedWalletsCount() > int32(0) {
+						return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return pg.unlock.Layout(gtx)
+						})
+					}
+					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {

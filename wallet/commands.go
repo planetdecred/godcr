@@ -678,6 +678,10 @@ func (wal *Wallet) SpendUnconfirmed(value bool) {
 	wal.multi.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, value)
 }
 
+func (wal *Wallet) LoadedWalletsCount() int32 {
+	return wal.multi.LoadedWalletsCount()
+}
+
 func calculateDaysBehind(lastHeaderTime int64) string {
 	diff := time.Since(time.Unix(lastHeaderTime, 0))
 	daysBehind := int(math.Round(diff.Hours() / 24))
