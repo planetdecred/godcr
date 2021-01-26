@@ -87,7 +87,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	}
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.theme.Color.Surface}
-	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{5, 5, 5, 5}
+	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{NE: 5, NW: 5, SE: 5, SW: 5}
 
 	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
 	pg.walletIcon.Scale = 1
@@ -585,7 +585,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 	for index := range pg.optionsMenuItems {
 		if pg.optionsMenuItems[index].button.Clicked() {
 			pg.openPopupIndex = -1
-			*common.page = pg.optionsMenuItems[index].page
+			common.ChangePage(pg.optionsMenuItems[index].page)
 		}
 	}
 

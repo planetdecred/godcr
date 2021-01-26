@@ -273,7 +273,7 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 					}),
 				)
 			}
-			return t.collapsible.Layout(gtx, header, content)
+			return t.collapsible.Layout(gtx, header, content, nil)
 		},
 
 		func(gtx C) D {

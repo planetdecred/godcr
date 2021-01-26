@@ -79,6 +79,8 @@ type pageCommon struct {
 
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
+
+	windowInvalidateFunc func()
 }
 
 type (
@@ -199,12 +201,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	}
 
 	for i := range drawerNavItems {
-		drawerNavItems[i].image.Scale = 1
-		drawerNavItems[i].imageInactive.Scale = 1
+		drawerNavItems[i].image.Scale = 1.5
+		drawerNavItems[i].imageInactive.Scale = 1.5
 	}
 
 	for i := range appBarNavItems {
-		appBarNavItems[i].image.Scale = 1
+		appBarNavItems[i].image.Scale = 1.5
 	}
 
 	common := pageCommon{
@@ -241,6 +243,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		modalLoad:               &modalLoad{},
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
+		windowInvalidateFunc:    win.invalidate,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -282,6 +285,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 func (page pageCommon) ChangePage(pg string) {
 	*page.page = pg
+	page.windowInvalidateFunc()
 }
 
 func (page pageCommon) Notify(text string, success bool) {
@@ -432,7 +436,7 @@ func fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
 
 func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 	card := page.theme.Card()
-	card.Radius = decredmaterial.CornerRadius{0, 0, 0, 0}
+	card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	return card.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -447,7 +451,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							img := page.icons.logo
-							img.Scale = 1
+							img.Scale = 1.5
 
 							return img.Layout(gtx)
 						}),
@@ -513,7 +517,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
 					card := page.theme.Card()
 					card.Color = background
-					card.Radius = decredmaterial.CornerRadius{0, 0, 0, 0}
+					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 					return card.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 							axis := layout.Horizontal

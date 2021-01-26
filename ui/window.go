@@ -109,6 +109,10 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	return win, nil
 }
 
+func (win *Window) invalidate() {
+	win.window.Invalidate()
+}
+
 func (win *Window) unloaded() {
 	lbl := win.theme.H3("Multiwallet not loaded\nIs another instance open?")
 	for {
