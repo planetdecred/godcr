@@ -10,19 +10,19 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageSecurityTools = "Security_Tools"
+const PageSecurityTools = "Security Tools"
 
 type securityToolsPage struct {
-	theme       *decredmaterial.Theme
-	verifyMess  *widget.Clickable
-	validateAdd *widget.Clickable
+	theme           *decredmaterial.Theme
+	verifyMessage   *widget.Clickable
+	validateAddress *widget.Clickable
 }
 
 func (win *Window) SecurityToolsPage(common pageCommon) layout.Widget {
 	pg := &securityToolsPage{
-		theme:       common.theme,
-		verifyMess:  new(widget.Clickable),
-		validateAdd: new(widget.Clickable),
+		theme:           common.theme,
+		verifyMessage:   new(widget.Clickable),
+		validateAddress: new(widget.Clickable),
 	}
 
 	return func(gtx C) D {
@@ -47,20 +47,20 @@ func (pg *securityToolsPage) Layout(gtx layout.Context, common pageCommon) layou
 							size := image.Point{X: 15, Y: gtx.Constraints.Min.Y}
 							return layout.Dimensions{Size: size}
 						}),
-						layout.Flexed(.5, pg.validateAddress(common)),
+						layout.Flexed(.5, pg.address(common)),
 					)
 				})
 			},
 			infoTemplate: SecurityToolsInfoTemplate,
 		}
-		return common.SubPageLayoutWithoutWallet(gtx, page)
+		return common.SubPageLayout(gtx, page)
 	}
 	return common.Layout(gtx, body)
 }
 
 func (pg *securityToolsPage) message(common pageCommon) layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, common.icons.verifyMessageIcon, pg.verifyMess, func(gtx C) D {
+		return pg.pageSections(gtx, common.icons.verifyMessageIcon, pg.verifyMessage, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return common.theme.Body1("Verify Message").Layout(gtx)
@@ -70,9 +70,9 @@ func (pg *securityToolsPage) message(common pageCommon) layout.Widget {
 	}
 }
 
-func (pg *securityToolsPage) validateAddress(common pageCommon) layout.Widget {
+func (pg *securityToolsPage) address(common pageCommon) layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, common.icons.locationPinIcon, pg.validateAdd, func(gtx C) D {
+		return pg.pageSections(gtx, common.icons.locationPinIcon, pg.validateAddress, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return common.theme.Body1("Validate Address").Layout(gtx)
