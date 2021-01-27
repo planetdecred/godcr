@@ -205,3 +205,5 @@ type Tickets struct {
 	Confirmed   map[int][]Ticket
 	Unconfirmed map[int][]UnconfirmedPurchase
 }
+
+type TicketPurchase struct{}

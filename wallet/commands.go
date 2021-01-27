@@ -849,7 +849,13 @@ func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32,
 	if err != nil {
 		return "", err
 	}
+	go func() {
+		var resp Response
+		resp.Resp = &TicketPurchase{}
+		wal.Send <- resp
+	}()
 	return hash[0], nil
+	//return "", nil
 }
 
 // GetAllTickets collects a per-wallet slice of tickets fitting the parameters.
@@ -898,8 +904,8 @@ func (wal *Wallet) GetAllTickets() {
 		}
 
 		resp.Resp = &Tickets{
-			Total:     totalTicket,
-			Confirmed: tickets,
+			Total:       totalTicket,
+			Confirmed:   tickets,
 			Unconfirmed: unconfirmedTickets,
 		}
 		wal.Send <- resp
@@ -917,7 +923,7 @@ func getUnconfirmedPurchases(wall dcrlibwallet.Wallet, tickets []Ticket) (unconf
 		return ok
 	}
 
-	txs, err := wall.GetTransactionsRaw(0, 0, 0, true)
+	txs, err := wall.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterAll, true)
 	if err != nil {
 		return
 	}

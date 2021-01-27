@@ -29,7 +29,7 @@ type ticketPage struct {
 	unconfirmedList     layout.List
 
 	purchaseTicketButton decredmaterial.Button
-	inputNumbTickets     decredmaterial.Editor
+	inputNumberTickets   decredmaterial.Editor
 	inputExpiryBlocks    decredmaterial.Editor
 	tickets              **wallet.Tickets
 	transactions         **wallet.Transactions
@@ -50,12 +50,12 @@ func (win *Window) TicketPage(common pageCommon) layout.Widget {
 		unconfirmedList:      layout.List{Axis: layout.Vertical},
 		ticketPageContainer:  layout.List{Axis: layout.Vertical},
 		ticketPurchaseList:   layout.List{Axis: layout.Vertical},
-		inputNumbTickets:     common.theme.Editor(new(widget.Editor), "Enter tickets amount"),
+		inputNumberTickets:   common.theme.Editor(new(widget.Editor), "Enter tickets amount"),
 		inputExpiryBlocks:    common.theme.Editor(new(widget.Editor), "Expiry in blocks"),
 		purchaseTicketButton: common.theme.Button(new(widget.Clickable), "Purchase"),
 	}
 	pg.purchaseTicketButton.TextSize = values.TextSize12
-	pg.inputNumbTickets.Editor.SingleLine, pg.inputExpiryBlocks.Editor.SingleLine = true, true
+	pg.inputNumberTickets.Editor.SingleLine, pg.inputExpiryBlocks.Editor.SingleLine = true, true
 
 	return func(gtx C) D {
 		pg.Handler(common)
@@ -80,7 +80,7 @@ func (pg *ticketPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions
 			},
 			func(ctx layout.Context) layout.Dimensions {
 				walletID := c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID
-				if pg.tickets != nil {
+				if *pg.tickets != nil {
 					if len((*pg.tickets).Unconfirmed[walletID]) > 0 {
 						return pg.LayoutUnconfirmedPurchased(gtx, c)
 					}
@@ -148,7 +148,7 @@ func (pg *ticketPage) LayoutTicketPurchase(gtx layout.Context, c pageCommon) lay
 				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Flexed(.5, func(gtx C) D {
-							return pg.inputNumbTickets.Layout(gtx)
+							return pg.inputNumberTickets.Layout(gtx)
 						}),
 						layout.Flexed(.5, func(gtx C) D {
 							return pg.inputExpiryBlocks.Layout(gtx)
@@ -180,7 +180,7 @@ func (pg *ticketPage) walletBalance(gtx layout.Context, common pageCommon) layou
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return pg.th.H6(selectedAccount.Name).Layout(gtx)
+								return pg.th.H6("Spendable").Layout(gtx)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -194,7 +194,7 @@ func (pg *ticketPage) walletBalance(gtx layout.Context, common pageCommon) layou
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return pg.th.Body2(selectedAccount.Name).Layout(gtx)
+								return pg.th.Body2("Wallet Total").Layout(gtx)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -362,7 +362,7 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 		return
 	}
 
-	numbTicketsStr := pg.inputNumbTickets.Editor.Text()
+	numbTicketsStr := pg.inputNumberTickets.Editor.Text()
 	numbTickets, err := strconv.Atoi(numbTicketsStr)
 	if err != nil {
 		c.Notify(err.Error(), false)
@@ -382,7 +382,6 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 		c.Notify(err.Error(), false)
 		return
 	}
-	go c.wallet.GetAllTransactions(0, 0, 0)
 
 	transactionResponse, err := pg.getTicketFee(hash, password)
 	if err != nil {
@@ -399,6 +398,8 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 	}
 
 	c.Notify("success", true)
+	pg.inputExpiryBlocks.Editor.SetText("")
+	pg.inputNumberTickets.Editor.SetText("")
 	c.closeModal()
 }
 
@@ -451,7 +452,7 @@ func (pg *ticketPage) setAccounts(common pageCommon) {
 }
 
 func (pg *ticketPage) Handler(c pageCommon) {
-	for _, evt := range pg.inputNumbTickets.Editor.Events() {
+	for _, evt := range pg.inputNumberTickets.Editor.Events() {
 		switch evt.(type) {
 		case widget.ChangeEvent:
 			tkPrice := c.wallet.TicketPrice(c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID)
