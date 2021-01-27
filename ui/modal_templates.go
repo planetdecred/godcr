@@ -3,6 +3,7 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -20,6 +21,12 @@ const VerifyMessageInfoTemplate = "VerifyMessageInfo"
 const SignMessageInfoTemplate = "SignMessageInfo"
 const PrivacyInfoTemplate = "PrivacyInfo"
 const RescanWalletTemplate = "RescanWallet"
+const ChangeStartupPasswordTemplate = "ChangeStartupPassword"
+const SetStartupPasswordTemplate = "SetStartupPassword"
+const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
+const UnlockWalletTemplate = "UnlockWallet"
+const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
+const UserAgentTemplate = "UserAgent"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -153,6 +160,22 @@ func (m *ModalTemplate) changePassword() []func(gtx C) D {
 			m.oldSpendingPassword.Editor.Mask, m.oldSpendingPassword.Editor.SingleLine = '*', true
 			return m.oldSpendingPassword.Layout(gtx)
 		},
+		func(gtx C) D {
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
+		},
+		func(gtx C) D {
+			return m.passwordStgth.Layout(gtx)
+		},
+		func(gtx C) D {
+			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
+			return m.matchSpendingPassword.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) setStartupPassword() []func(gtx C) D {
+	return []func(gtx C) D{
 		func(gtx C) D {
 			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
 			return m.spendingPassword.Layout(gtx)
@@ -315,7 +338,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.createNewWallet()
 		m.walletName.Hint = "Wallet name"
 		return
-	case RenameWalletTemplate, RenameAccountTemplate:
+	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, UserAgentTemplate:
 		if m.editorsNotEmpty(th, m.walletName.Editor) && m.confirm.Button.Clicked() {
 			load.confirm.(func(string))(m.walletName.Editor.Text())
 		}
@@ -327,6 +350,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.walletName.Hint = "Wallet name"
 		if load.template == RenameAccountTemplate {
 			m.walletName.Hint = "Account name"
+		}
+		if load.template == ConnectToSpecificPeerTemplate {
+			m.walletName.Hint = "IP address"
+		}
+		if load.template == UserAgentTemplate {
+			m.walletName.Hint = "User agent"
 		}
 		return
 	case CreateAccountTemplate:
@@ -340,17 +369,22 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.createNewAccount(th)
 		m.walletName.Hint = "Account name"
 		return
-	case PasswordTemplate:
+	case PasswordTemplate, UnlockWalletTemplate, RemoveStartupPasswordTemplate:
 		if m.editorsNotEmpty(th, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
 			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
 		}
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
+
 		m.spendingPassword.Hint = "Spending password"
+		if load.template == RemoveStartupPasswordTemplate || load.template == UnlockWalletTemplate {
+			m.spendingPassword.Hint = "Startup password"
+		}
+
 		template = m.Password()
 		return
-	case ChangePasswordTemplate:
+	case ChangePasswordTemplate, ChangeStartupPasswordTemplate:
 		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
 			// reset error label when password and matching password fields match
 			m.matchSpendingPassword.SetError("")
@@ -368,8 +402,14 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		}
 
 		m.passwordStrength(th, m.spendingPassword.Editor)
+
 		m.spendingPassword.Hint = "New spending password"
 		m.matchSpendingPassword.Hint = "Confirm new spending password"
+		if load.template == ChangeStartupPasswordTemplate {
+			m.oldSpendingPassword.Hint = "Old startup password"
+			m.spendingPassword.Hint = "New startup password"
+			m.matchSpendingPassword.Hint = "Confirm new startup password"
+		}
 
 		template = m.changePassword()
 		return
@@ -408,6 +448,29 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.privacyInfo()
+		return
+	case SetStartupPasswordTemplate:
+		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
+			// reset error label when password and matching password fields match
+			m.matchSpendingPassword.SetError("")
+		}
+
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
+			m.confirm.Button.Clicked() {
+			if m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
+				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+			}
+		}
+
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+
+		m.passwordStrength(th, m.spendingPassword.Editor)
+		m.spendingPassword.Hint = "Startup password"
+		m.matchSpendingPassword.Hint = "Confirm startup password"
+
+		template = m.setStartupPassword()
 		return
 	default:
 		return

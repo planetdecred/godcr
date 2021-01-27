@@ -1,11 +1,7 @@
 package ui
 
 import (
-	"image"
-
 	"gioui.org/layout"
-	"gioui.org/op/paint"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -13,10 +9,6 @@ import (
 )
 
 const PageMore = "More"
-
-type morePageIcons struct {
-	settingsIcon, securityIcon, politeiaIcon, helpIcon, aboutIcon, debugIcon, logo image.Image
-}
 
 type morePageHandler struct {
 	clickable *widget.Clickable
@@ -30,46 +22,31 @@ type morePage struct {
 	page              *string
 }
 
-func (win *Window) MorePage(decredIcons map[string]image.Image, common pageCommon) layout.Widget {
-
-	ic := morePageIcons{
-		settingsIcon: decredIcons["overview"],
-		securityIcon: decredIcons["wallet_inactive"],
-		politeiaIcon: decredIcons["receive"],
-		helpIcon:     decredIcons["transaction_inactive"],
-		aboutIcon:    decredIcons["send"],
-		debugIcon:    decredIcons["transaction"],
-	}
-
+func (win *Window) MorePage(common pageCommon) layout.Widget {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.settingsIcon)},
+			image:     common.icons.settingsIcon,
 			page:      PageSettings,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.securityIcon)},
+			image:     common.icons.securityIcon,
 			page:      PageSecurityTools,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.politeiaIcon)},
-			page:      PagePoliteia,
-		},
-		{
-			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.helpIcon)},
+			image:     common.icons.helpIcon,
 			page:      PageHelp,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.aboutIcon)},
+			image:     common.icons.aboutIcon,
 			page:      PageAbout,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     &widget.Image{Src: paint.NewImageOp(ic.debugIcon)},
+			image:     common.icons.debugIcon,
 			page:      PageDebug,
 		},
 	}
@@ -98,10 +75,8 @@ func (pg *morePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	pg.handleClickEvents()
 
 	container := func(gtx C) D {
-		return common.theme.Card().Layout(gtx, func(gtx C) D {
-			pg.layoutMoreItems(gtx, common)
-			return layout.Dimensions{Size: gtx.Constraints.Max}
-		})
+		pg.layoutMoreItems(gtx, common)
+		return layout.Dimensions{Size: gtx.Constraints.Max}
 	}
 	return common.Layout(gtx, container)
 }
@@ -120,12 +95,9 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return layout.Stack{}.Layout(gtx,
 								layout.Stacked(func(gtx C) D {
-									return layout.UniformInset(unit.Dp(15)).Layout(gtx, func(gtx C) D {
-										axis := layout.Horizontal
-										leftInset := float32(15)
-
+									return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
-										return layout.Flex{Axis: axis}.Layout(gtx,
+										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
 												pg.morePageListItems[i].image.Scale = 0.05
 
@@ -135,10 +107,15 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 											}),
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{
-													Left: unit.Dp(leftInset),
+													Left: values.MarginPadding15,
+													Top:  values.MarginPadding2,
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
-														return common.theme.Body1(pg.morePageListItems[i].page).Layout(gtx)
+														page := pg.morePageListItems[i].page
+														if page == PageSecurityTools {
+															page = "Security Tools"
+														}
+														return common.theme.Body1(page).Layout(gtx)
 													})
 												})
 											}),

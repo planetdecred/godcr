@@ -33,7 +33,8 @@ type pageIcons struct {
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
-	arrowFowardIcon, transactionFingerPrintIcon *widget.Image
+	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
+	aboutIcon, debugIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -143,6 +144,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
 		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
 		arrowFowardIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
+		settingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
+		securityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
+		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
+		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
+		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -205,6 +211,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageWallet:         make(chan error),
 			PageAccountDetails: make(chan error),
 			PageWalletSettings: make(chan error),
+			PageSettings:       make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
@@ -238,7 +245,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageMore] = win.MorePage(decredIcons, common)
+	win.pages[PageMore] = win.MorePage(common)
 	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
 	win.pages[PageReceive] = win.ReceivePage(common)
 	win.pages[PageSend] = win.SendPage(common)
@@ -695,7 +702,6 @@ type SubPage struct {
 	body              layout.Widget
 	infoTemplate      string
 	infoTemplateTitle string
-	isInfoButton      bool
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -722,21 +728,24 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return page.theme.H6(sp.title).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return decredmaterial.Card{
-					Color: page.theme.Color.Surface,
-				}.Layout(gtx, func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-						walletText := page.theme.Caption(sp.walletName)
-						walletText.Color = page.theme.Color.Gray
-						return walletText.Layout(gtx)
+			if sp.walletName != "" {
+				return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+					return decredmaterial.Card{
+						Color: page.theme.Color.Surface,
+					}.Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+							walletText := page.theme.Caption(sp.walletName)
+							walletText.Color = page.theme.Color.Gray
+							return walletText.Layout(gtx)
+						})
 					})
 				})
-			})
+			}
+			return layout.Dimensions{}
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
-				if sp.isInfoButton {
+				if sp.infoTemplate != "" {
 					return page.subPageInfoButton.Layout(gtx)
 				}
 				return layout.Dimensions{}
