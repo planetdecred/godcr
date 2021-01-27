@@ -191,7 +191,17 @@ type Ticket struct {
 	Amount   string
 	DateTime string
 }
+
+type UnconfirmedPurchase struct {
+	Hash        string
+	Status      string
+	DateTime    string
+	BlockHeight int32
+	Amount      string
+}
+
 type Tickets struct {
-	Total int
-	List  map[int][]Ticket
+	Total       int
+	Confirmed   map[int][]Ticket
+	Unconfirmed map[int][]UnconfirmedPurchase
 }

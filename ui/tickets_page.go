@@ -29,14 +29,11 @@ type ticketPage struct {
 	unconfirmedList     layout.List
 
 	purchaseTicketButton decredmaterial.Button
-	//selectedWallet       wallet.InfoShort
-	//selectedAccount      wallet.Account
-	// shouldInitializeVSPD bool
-	inputNumbTickets  decredmaterial.Editor
-	inputExpiryBlocks decredmaterial.Editor
-	tickets           **wallet.Tickets
-	transactions      **wallet.Transactions
-	ticketPrice       string
+	inputNumbTickets     decredmaterial.Editor
+	inputExpiryBlocks    decredmaterial.Editor
+	tickets              **wallet.Tickets
+	transactions         **wallet.Transactions
+	ticketPrice          string
 
 	walletsDropdown  *decredmaterial.DropDown
 	accountsDropdown *decredmaterial.DropDown
@@ -58,40 +55,11 @@ func (win *Window) TicketPage(common pageCommon) layout.Widget {
 		purchaseTicketButton: common.theme.Button(new(widget.Clickable), "Purchase"),
 	}
 	pg.purchaseTicketButton.TextSize = values.TextSize12
-
-	pg.inputNumbTickets.IsRequired = true
-	pg.inputNumbTickets.Editor.SingleLine = true
-	pg.inputExpiryBlocks.IsRequired = true
-	pg.inputExpiryBlocks.Editor.SingleLine = true
+	pg.inputNumbTickets.Editor.SingleLine, pg.inputExpiryBlocks.Editor.SingleLine = true, true
 
 	return func(gtx C) D {
 		pg.Handler(common)
 		return pg.layout(gtx, common)
-	}
-}
-
-func (pg *ticketPage) Handler(c pageCommon) {
-	for _, evt := range pg.inputNumbTickets.Editor.Events() {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			tkPrice := c.wallet.TicketPrice(c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID)
-			pg.ticketPrice = fmt.Sprintf("Current Ticket Price: %s", tkPrice)
-		}
-	}
-
-	if pg.purchaseTicketButton.Button.Clicked() {
-		go func() {
-			c.modalReceiver <- &modalLoad{
-				template: PasswordTemplate,
-				title:    "Confirm to purchase",
-				confirm: func(pass string) {
-					go pg.purchaseTicket(c, []byte(pass))
-				},
-				confirmText: "Confirm",
-				cancel:      c.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
 	}
 }
 
@@ -112,7 +80,7 @@ func (pg *ticketPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions
 			},
 			func(ctx layout.Context) layout.Dimensions {
 				walletID := c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID
-				if len(pg.getUnconfirmedPurchases(walletID)) > 0 {
+				if len((*pg.tickets).Unconfirmed[walletID]) > 0 {
 					return pg.LayoutUnconfirmedPurchased(gtx, c)
 				}
 				return layout.Dimensions{}
@@ -259,7 +227,7 @@ func (pg *ticketPage) LayoutTicketList(gtx layout.Context, common pageCommon) la
 							return layout.Dimensions{}
 						}
 						walletID := common.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID
-						tickets := (*pg.tickets).List[walletID]
+						tickets := (*pg.tickets).Confirmed[walletID]
 						if len(tickets) == 0 {
 							return common.theme.Body2("No ticket").Layout(gtx)
 						}
@@ -277,7 +245,7 @@ func (pg *ticketPage) LayoutTicketList(gtx layout.Context, common pageCommon) la
 func (pg *ticketPage) LayoutUnconfirmedPurchased(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			tickets := pg.getUnconfirmedPurchases(common.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID)
+			tickets := (*pg.tickets).Unconfirmed[common.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID]
 			margin := values.MarginPadding20
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
@@ -348,7 +316,7 @@ func (pg *ticketPage) ticketRowInfo(gtx layout.Context, c pageCommon, ticket int
 		info := t.Info
 		blockHeight = info.BlockHeight
 		dateTime, status, hash, amount = t.DateTime, info.Status, info.Ticket.Hash.String(), t.Amount
-	case UnconfirmedPurchase:
+	case wallet.UnconfirmedPurchase:
 		blockHeight, dateTime, status, hash, amount = t.BlockHeight, t.DateTime, t.Status, t.Hash, t.Amount
 	}
 
@@ -443,53 +411,6 @@ func (pg *ticketPage) getTicketFee(ticketHash string, password []byte) (feeTrans
 	return
 }
 
-type UnconfirmedPurchase struct {
-	Hash        string
-	Status      string
-	DateTime    string
-	BlockHeight int32
-	Amount      string
-}
-
-func (pg *ticketPage) getUnconfirmedPurchases(walletID int) (unconfirmed []UnconfirmedPurchase) {
-	if (*pg.tickets) == nil {
-		return
-	}
-
-	contains := func(slice []wallet.Ticket, item string) bool {
-		set := make(map[string]struct{}, len(slice))
-		for _, s := range slice {
-			set[s.Info.Ticket.Hash.String()] = struct{}{}
-		}
-
-		_, ok := set[item]
-		return ok
-	}
-
-	ticketTxs := (*pg.transactions).Tickets[walletID]
-	if len((*pg.tickets).List[walletID]) == len(ticketTxs) {
-		return
-	}
-
-	for _, txn := range ticketTxs {
-		var amount int64
-		for _, output := range txn.Txn.Outputs {
-			amount += output.Amount
-		}
-		if !contains((*pg.tickets).List[walletID], txn.Txn.Hash) {
-			unconfirmed = append(unconfirmed, UnconfirmedPurchase{
-				Hash:        txn.Txn.Hash,
-				Status:      "UNCONFIRMED",
-				DateTime:    dcrlibwallet.ExtractDateOrTime(txn.Txn.Timestamp),
-				BlockHeight: txn.Txn.BlockHeight,
-				Amount:      dcrutil.Amount(amount).String(),
-			})
-		}
-	}
-
-	return
-}
-
 func (pg *ticketPage) setWallets(common pageCommon) {
 	if len(common.info.Wallets) == 0 || pg.walletsDropdown != nil {
 		return
@@ -522,4 +443,29 @@ func (pg *ticketPage) setAccounts(common pageCommon) {
 		accountsDropdownItems = append(accountsDropdownItems, item)
 	}
 	pg.accountsDropdown = common.theme.DropDown(accountsDropdownItems, 0)
+}
+
+func (pg *ticketPage) Handler(c pageCommon) {
+	for _, evt := range pg.inputNumbTickets.Editor.Events() {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			tkPrice := c.wallet.TicketPrice(c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID)
+			pg.ticketPrice = fmt.Sprintf("Current Ticket Price: %s", tkPrice)
+		}
+	}
+
+	if pg.purchaseTicketButton.Button.Clicked() {
+		go func() {
+			c.modalReceiver <- &modalLoad{
+				template: PasswordTemplate,
+				title:    "Confirm to purchase",
+				confirm: func(pass string) {
+					go pg.purchaseTicket(c, []byte(pass))
+				},
+				confirmText: "Confirm",
+				cancel:      c.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
+	}
 }
