@@ -80,8 +80,10 @@ func (pg *ticketPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions
 			},
 			func(ctx layout.Context) layout.Dimensions {
 				walletID := c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID
-				if len((*pg.tickets).Unconfirmed[walletID]) > 0 {
-					return pg.LayoutUnconfirmedPurchased(gtx, c)
+				if pg.tickets != nil {
+					if len((*pg.tickets).Unconfirmed[walletID]) > 0 {
+						return pg.LayoutUnconfirmedPurchased(gtx, c)
+					}
 				}
 				return layout.Dimensions{}
 			},
@@ -376,6 +378,7 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 
 	hash, err := c.wallet.PurchaseTicket(selectedWallet.ID, selectedAccount.Number, uint32(numbTickets), password, uint32(expiryBlocks))
 	if err != nil {
+		log.Error("[PurchaseTicket] err:", err)
 		c.Notify(err.Error(), false)
 		return
 	}
@@ -383,12 +386,14 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 
 	transactionResponse, err := pg.getTicketFee(hash, password)
 	if err != nil {
+		log.Error("[GetTicketFee] err:", err)
 		c.Notify(err.Error(), false)
 		return
 	}
 
 	_, err = pg.vspd.PayVSPFee(transactionResponse, hash, "", password)
 	if err != nil {
+		log.Error("[PayVSPFee] err:", err)
 		c.Notify(err.Error(), false)
 		return
 	}
