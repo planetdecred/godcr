@@ -11,7 +11,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -1028,7 +1027,7 @@ func (pg *SendPage) coinControlLayout(gtx layout.Context, c *pageCommon) layout.
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return material.Switch(pg.theme.Base, pg.toggleCoinCtrl).Layout(gtx)
+						return pg.theme.Switch(pg.toggleCoinCtrl).Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Left: values.MarginPadding15}.Layout(gtx, func(gtx C) D {

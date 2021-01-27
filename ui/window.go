@@ -145,6 +145,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.window.Invalidate()
 				break
 			}
+
 			win.updateStates(e.Resp)
 
 		case update := <-win.wallet.Sync:
