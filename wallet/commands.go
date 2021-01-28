@@ -113,7 +113,7 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 			return
 		}
 
-		id, err := wall.NextAccount(name, pass)
+		id, err := wall.NextAccount(name)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -169,28 +169,6 @@ func (wal *Wallet) GetProposals() {
 			return
 		}
 		resp.Resp = proposals
-		wal.Send <- resp
-	}()
-}
-
-func (wal *Wallet) GetProposalUpdate(token string, updateType int) {
-	go func() {
-		var resp Response
-		proposal, err := wal.multi.Politeia.GetProposalRaw(token)
-		if err != nil {
-			resp.Err = err
-			wal.Send <- ResponseError(MultiWalletError{
-				Message: "Could not fetch updated proposal",
-				Err:     err,
-			})
-
-			return
-		}
-
-		resp.Resp = &UpdatedProposal{
-			Proposal:   proposal,
-			UpdateType: updateType,
-		}
 		wal.Send <- resp
 	}()
 }
@@ -744,7 +722,7 @@ func (wal *Wallet) AddProposalNotificationListener(listener dcrlibwallet.Proposa
 
 // CancelProposalsSync cancels the politeia proposals sync
 func (wal *Wallet) CancelProposalsSync() {
-	go wal.multi.Politeia.CancelSync()
+	go wal.multi.Politeia.StopSync()
 }
 
 // StartSync starts the multiwallet SPV sync

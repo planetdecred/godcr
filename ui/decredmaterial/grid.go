@@ -194,23 +194,20 @@ func min(a, b int) int {
 func axisPoint(a layout.Axis, main, cross int) image.Point {
 	if a == layout.Horizontal {
 		return image.Point{main, cross}
-	} else {
-		return image.Point{cross, main}
 	}
+	return image.Point{cross, main}
 }
 
 func axisMain(a layout.Axis, sz image.Point) int {
 	if a == layout.Horizontal {
 		return sz.X
-	} else {
-		return sz.Y
 	}
+	return sz.Y
 }
 
 func axisCross(a layout.Axis, sz image.Point) int {
 	if a == layout.Horizontal {
 		return sz.Y
-	} else {
-		return sz.X
 	}
+	return sz.X
 }

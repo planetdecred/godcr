@@ -74,6 +74,7 @@ type pageCommon struct {
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
 	testButton              decredmaterial.Button
+	windowInvalidateFunc    func()
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
@@ -232,6 +233,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		modalLoad:               &modalLoad{},
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
+		windowInvalidateFunc:    win.window.Invalidate,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -272,6 +274,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 func (page pageCommon) ChangePage(pg string) {
 	*page.page = pg
+}
+
+func (page pageCommon) RefreshWindow() {
+	page.windowInvalidateFunc()
 }
 
 func (page pageCommon) Notify(text string, success bool) {

@@ -101,7 +101,7 @@ func (pg *ProposalPage) layoutProposalDescription(gtx layout.Context) layout.Dim
 	proposal := *pg.proposal
 	w := []layout.Widget{
 		func(gtx C) D {
-			return pg.layoutProposalHeader(gtx, false)
+			return pg.layoutProposalHeader(gtx)
 		},
 		func(gtx C) D {
 			return pg.layoutProposalDetailsSubHeader(gtx)
@@ -113,8 +113,7 @@ func (pg *ProposalPage) layoutProposalDescription(gtx layout.Context) layout.Dim
 					Top:    unit.Dp(8),
 					Bottom: unit.Dp(8),
 				}.Layout(gtx, func(gtx C) D {
-					yes, no := calculateVotes(proposal.VoteSummary.OptionsResult)
-					return pg.theme.VoteBar(yes, no).LayoutWithLegend(gtx, pg.legendIcon)
+					return pg.theme.VoteBar(float32(proposal.YesVotes), float32(proposal.NoVotes)).LayoutWithLegend(gtx, pg.legendIcon)
 				})
 			}
 			return layout.Dimensions{}
@@ -143,7 +142,7 @@ func (pg *ProposalPage) layoutProposalDescription(gtx layout.Context) layout.Dim
 	})
 }
 
-func (pg *ProposalPage) layoutProposalHeader(gtx layout.Context, truncateTitle bool) layout.Dimensions {
+func (pg *ProposalPage) layoutProposalHeader(gtx layout.Context) layout.Dimensions {
 	proposal := *pg.proposal
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -153,7 +152,7 @@ func (pg *ProposalPage) layoutProposalHeader(gtx layout.Context, truncateTitle b
 					return getTitleLabel(pg.theme, proposal.Name).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return getSubtitleLabel(pg.theme, proposal.CensorshipRecord.Token).Layout(gtx)
+					return getSubtitleLabel(pg.theme, proposal.Token).Layout(gtx)
 				}),
 			)
 		}),
@@ -203,14 +202,7 @@ func (pg *ProposalPage) layoutProposalDetailsSubHeaderRow(gtx layout.Context, le
 
 func (pg *ProposalPage) getProposalText() []byte {
 	proposal := *pg.proposal
-
-	var desc []byte
-	for i := range proposal.Files {
-		if proposal.Files[i].Name == "index.md" {
-			desc, _ = base64.StdEncoding.DecodeString(proposal.Files[i].Payload)
-			break
-		}
-	}
+	desc, _ := base64.StdEncoding.DecodeString(proposal.IndexFile)
 
 	return desc
 }

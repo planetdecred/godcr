@@ -558,7 +558,7 @@ func (pg *createRestore) validatePassword() string {
 	pass := pg.spendingPassword.Editor.Text()
 	if pass == "" {
 		pg.spendingPassword.HintColor = pg.theme.Color.Danger
-		pg.errLabel.Text = fmt.Sprintf("wallet password required and cannot be empty")
+		pg.errLabel.Text = "wallet password required and cannot be empty"
 		return ""
 	}
 
@@ -574,12 +574,12 @@ func (pg *createRestore) validatePasswords() string {
 	match := pg.matchSpendingPassword.Editor.Text()
 	if match == "" {
 		pg.matchSpendingPassword.HintColor = pg.theme.Color.Danger
-		pg.errLabel.Text = fmt.Sprintf("enter new wallet password again and it cannot be empty")
+		pg.errLabel.Text = "enter new wallet password again and it cannot be empty"
 		return ""
 	}
 
 	if match != pass {
-		pg.errLabel.Text = fmt.Sprintf("new wallet passwords does not match")
+		pg.errLabel.Text = "new wallet passwords does not match"
 		return ""
 	}
 

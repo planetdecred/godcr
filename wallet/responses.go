@@ -182,8 +182,3 @@ type UnspentOutput struct {
 type UnspentOutputs struct {
 	List []*UnspentOutput
 }
-
-type UpdatedProposal struct {
-	Proposal   *dcrlibwallet.Proposal
-	UpdateType int
-}

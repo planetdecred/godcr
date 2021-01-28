@@ -56,10 +56,7 @@ type Window struct {
 	toast                   chan *toast
 	modal                   chan *modalLoad
 
-	sysDestroyWithSync bool
-
-	latestProposals  []dcrlibwallet.Proposal
-	updatedProposal  *wallet.UpdatedProposal
+	proposals        []dcrlibwallet.Proposal
 	selectedProposal *dcrlibwallet.Proposal
 }
 

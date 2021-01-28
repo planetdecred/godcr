@@ -14,12 +14,10 @@ require (
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
 	github.com/markbates/pkger v0.17.1
-	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.8.1
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
-	github.com/planetdecred/dcrlibwallet v1.5.3-0.20201113035912-7786819ad8aa
+	github.com/planetdecred/dcrlibwallet v1.5.3-0.20210127151106-5c5bfcb04d6d
 	github.com/russross/blackfriday v2.0.0+incompatible
 	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 // indirect
 	github.com/shurcooL/markdownfmt v0.0.0-20200725144734-77d690767c81
@@ -33,7 +31,7 @@ require (
 // TODO: Remove and use an actual release of dcrlibwallet
 replace (
 	decred.org/dcrwallet => decred.org/dcrwallet v1.6.0-rc4
-	github.com/planetdecred/dcrlibwallet => ../dcrlibwallet
-//github.com/decred/dcrwallet/wallet/v3 => github.com/raedahgroup/dcrwallet/wallet/v3 v3.2.1-badger
-//github.com/planetdecred/dcrlibwallet/spv => github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c
+	//github.com/planetdecred/dcrlibwallet/spv => github.com/raedahgroup/dcrlibwallet/spv v0.0.0-20200113081741-39a55988f78c
+	github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
+	github.com/decred/dcrwallet/wallet/v3 => github.com/raedahgroup/dcrwallet/wallet/v3 v3.2.1-badger
 )

@@ -36,9 +36,6 @@ type Renderer struct {
 	// all the custom left paddings, without the fixed space from leftPad
 	padAccumulator []string
 
-	// one-shot indent for the first line of the inline content
-	indent string
-
 	links map[string]*widget.Clickable
 	//accumulatedLabels []labelWidget
 	stringBuilder strings.Builder
@@ -256,8 +253,6 @@ func (r *Renderer) renderEmptyLine() {
 }
 
 func (r *Renderer) renderList(node *ast.ListItem, entering bool) {
-	prefix := "    "
-
 	if entering {
 		r.isList = true
 		switch {
@@ -271,7 +266,7 @@ func (r *Renderer) renderList(node *ast.ListItem, entering bool) {
 				}
 				itemNumber++
 			}
-			prefix += fmt.Sprintf("%d. ", itemNumber)
+			r.prefix += fmt.Sprintf("%d. ", itemNumber)
 
 		// content of a definition
 		case node.ListFlags&ast.ListTypeDefinition != 0:
