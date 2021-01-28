@@ -685,6 +685,11 @@ func (wal *Wallet) SpendUnconfirmed(value bool) {
 	wal.multi.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, value)
 }
 
+// IsSpendUnconfirmed checks if start up password is set
+func (wal *Wallet) IsSpendUnconfirmed() bool {
+	return wal.multi.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
+}
+
 func (wal *Wallet) LoadedWalletsCount() int32 {
 	return wal.multi.LoadedWalletsCount()
 }

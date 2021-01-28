@@ -73,6 +73,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.updateStartupPasswordSetting()
+	pg.updateSpendUnconfirmedSetting()
+
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "Settings",
@@ -352,5 +354,13 @@ func (pg *settingsPage) updateStartupPasswordSetting() {
 	} else {
 		pg.startupPassword.Value = false
 		pg.isStartupPassword = false
+	}
+}
+func (pg *settingsPage) updateSpendUnconfirmedSetting() {
+	isSet := pg.wal.IsSpendUnconfirmed()
+	if isSet {
+		pg.spendUnconfirm.Value = true
+	} else {
+		pg.spendUnconfirm.Value = false
 	}
 }
