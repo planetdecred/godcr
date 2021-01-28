@@ -530,6 +530,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.matchSpendingPassword.Hint = "Confirm startup password"
 
 		template = m.setStartupPassword()
+		return
 	case ConfirmSetupMixerTemplate:
 		if m.confirm.Button.Clicked() {
 			load.confirm.(func())()
@@ -551,7 +552,6 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	default:
 		return
 	}
-	return
 }
 
 func (m *ModalTemplate) handleCustomTemplate(load *modalLoad) (template []func(gtx C) D) {
@@ -565,7 +565,6 @@ func (m *ModalTemplate) handleCustomTemplate(load *modalLoad) (template []func(g
 	default:
 		return
 	}
-	return
 }
 
 // editorsNotEmpty checks that the editor fields are not empty. It returns false if they are empty and true if they are
