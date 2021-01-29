@@ -690,6 +690,26 @@ func (wal *Wallet) IsSpendUnconfirmed() bool {
 	return wal.multi.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
 }
 
+func (wal *Wallet) BeepNewBlocks(value bool) {
+	wal.multi.SaveUserConfigValue(dcrlibwallet.BeepNewBlocksConfigKey, value)
+}
+
+func (wal *Wallet) IsBeepNewBlocks() bool {
+	return wal.multi.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
+}
+
+func (wal *Wallet) ConnectToPeer(value string) {
+	wal.multi.SaveUserConfigValue(dcrlibwallet.SpvPersistentPeerAddressesConfigKey, value)
+}
+
+func (wal *Wallet) GetConnectToPeerValue() string {
+	return wal.multi.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
+}
+
+func (wal *Wallet) RemoveConnectToPeerValue() {
+	wal.multi.DeleteUserConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
+}
+
 func (wal *Wallet) LoadedWalletsCount() int32 {
 	return wal.multi.LoadedWalletsCount()
 }

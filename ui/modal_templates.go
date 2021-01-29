@@ -26,6 +26,7 @@ const SetStartupPasswordTemplate = "SetStartupPassword"
 const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
 const UnlockWalletTemplate = "UnlockWallet"
 const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
+const ChangeSpecificPeerTemplate = "ChangeSpecificPeer"
 const UserAgentTemplate = "UserAgent"
 const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
 const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
@@ -397,7 +398,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.createNewWallet()
 		m.walletName.Hint = "Wallet name"
 		return
-	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, UserAgentTemplate:
+	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, ChangeSpecificPeerTemplate, UserAgentTemplate:
 		if m.editorsNotEmpty(th, m.walletName.Editor) && m.confirm.Button.Clicked() {
 			load.confirm.(func(string))(m.walletName.Editor.Text())
 		}

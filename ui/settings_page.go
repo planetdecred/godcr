@@ -17,18 +17,22 @@ type settingsPage struct {
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
-	currencyConversion decredmaterial.IconButton
-	connectToPeer      decredmaterial.IconButton
-	userAgent          decredmaterial.IconButton
-	changeStartupPass  decredmaterial.IconButton
+	currencyConversion  decredmaterial.IconButton
+	updateConnectToPeer decredmaterial.IconButton
+	userAgent           decredmaterial.IconButton
+	changeStartupPass   decredmaterial.IconButton
 
-	spendUnconfirm  *widget.Bool
-	startupPassword *widget.Bool
-	notificationW   *widget.Bool
+	spendUnconfirmed *widget.Bool
+	startupPassword  *widget.Bool
+	beepNewBlocks    *widget.Bool
+	connectToPeer    *widget.Bool
+
+	peerLabel decredmaterial.Label
 
 	line *decredmaterial.Line
 
 	isStartupPassword bool
+	peerAddr          string
 	errChann          chan error
 }
 
@@ -42,17 +46,18 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		walletInfo: win.walletInfo,
 		wal:        common.wallet,
 
-		spendUnconfirm:  new(widget.Bool),
-		startupPassword: new(widget.Bool),
-		notificationW:   new(widget.Bool),
+		spendUnconfirmed: new(widget.Bool),
+		startupPassword:  new(widget.Bool),
+		beepNewBlocks:    new(widget.Bool),
+		connectToPeer:    new(widget.Bool),
 
 		line:     common.theme.Line(),
 		errChann: common.errorChannels[PageSettings],
 
-		currencyConversion: common.theme.PlainIconButton(new(widget.Clickable), icon),
-		connectToPeer:      common.theme.PlainIconButton(new(widget.Clickable), icon),
-		userAgent:          common.theme.PlainIconButton(new(widget.Clickable), icon),
-		changeStartupPass:  common.theme.PlainIconButton(new(widget.Clickable), icon),
+		currencyConversion:  common.theme.PlainIconButton(new(widget.Clickable), icon),
+		updateConnectToPeer: common.theme.PlainIconButton(new(widget.Clickable), icon),
+		userAgent:           common.theme.PlainIconButton(new(widget.Clickable), icon),
+		changeStartupPass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
 	}
 	pg.line.Height = 2
 	pg.line.Color = common.theme.Color.Background
@@ -60,8 +65,11 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	color := common.theme.Color.LightGray
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 
+	pg.peerLabel = common.theme.Body1("")
+	pg.peerLabel.Color = common.theme.Color.Gray
+
 	pg.currencyConversion.Color, pg.currencyConversion.Inset = color, zeroInset
-	pg.connectToPeer.Color, pg.connectToPeer.Inset = color, zeroInset
+	pg.updateConnectToPeer.Color, pg.updateConnectToPeer.Inset = color, zeroInset
 	pg.userAgent.Color, pg.userAgent.Inset = color, zeroInset
 	pg.changeStartupPass.Color, pg.changeStartupPass.Inset = color, zeroInset
 
@@ -74,6 +82,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.updateStartupPasswordSetting()
 	pg.updateSpendUnconfirmedSetting()
+	pg.updatebeepNewBlockSetting()
+	pg.updateConnectToPeerSetting()
 
 	body := func(gtx C) D {
 		page := SubPage{
@@ -106,7 +116,7 @@ func (pg *settingsPage) general() layout.Widget {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSection(gtx, "Spending unconfirmed funds", func(gtx C) D {
-						return pg.theme.Switch(pg.spendUnconfirm).Layout(gtx)
+						return pg.theme.Switch(pg.spendUnconfirmed).Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -116,7 +126,7 @@ func (pg *settingsPage) general() layout.Widget {
 					return pg.subSection(gtx, "Currency conversion", func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								txt := pg.theme.Body2("None")
+								txt := pg.theme.Body1("None")
 								txt.Color = pg.theme.Color.Gray
 								return txt.Layout(gtx)
 							}),
@@ -135,7 +145,7 @@ func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, "Notification", func(gtx C) D {
 			return pg.subSection(gtx, "Beep for new blocks", func(gtx C) D {
-				return pg.theme.Switch(pg.notificationW).Layout(gtx)
+				return pg.theme.Switch(pg.beepNewBlocks).Layout(gtx)
 			})
 		})
 	}
@@ -175,8 +185,30 @@ func (pg *settingsPage) connection() layout.Widget {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSection(gtx, "Connect to specific peer", func(gtx C) D {
-						return pg.connectToPeer.Layout(gtx)
+						return pg.theme.Switch(pg.connectToPeer).Layout(gtx)
 					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					if pg.peerAddr != "" {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return pg.lineSeparator(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.subSection(gtx, "Change specific peer", func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return pg.peerLabel.Layout(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											return pg.updateConnectToPeer.Layout(gtx)
+										}),
+									)
+								})
+							}),
+						)
+					}
+					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.lineSeparator(gtx)
@@ -250,8 +282,12 @@ func (pg *settingsPage) lineSeparator(gtx layout.Context) layout.Dimensions {
 func (pg *settingsPage) handle(common pageCommon) {
 	notImplemented := "functionality not yet implemented"
 
-	if pg.spendUnconfirm.Changed() {
-		pg.wal.SpendUnconfirmed(pg.spendUnconfirm.Value)
+	if pg.spendUnconfirmed.Changed() {
+		pg.wal.SpendUnconfirmed(pg.spendUnconfirmed.Value)
+	}
+
+	if pg.beepNewBlocks.Changed() {
+		pg.wal.BeepNewBlocks(pg.beepNewBlocks.Value)
 	}
 
 	for pg.changeStartupPass.Button.Clicked() {
@@ -300,16 +336,38 @@ func (pg *settingsPage) handle(common pageCommon) {
 		}()
 	}
 
-	for pg.connectToPeer.Button.Clicked() {
+	if pg.connectToPeer.Changed() {
+		if pg.connectToPeer.Value {
+			go func() {
+				common.modalReceiver <- &modalLoad{
+					template: ConnectToSpecificPeerTemplate,
+					title:    "Connect to specific peer",
+					confirm: func(ipAddress string) {
+						if ipAddress != "" {
+							pg.wal.ConnectToPeer(ipAddress)
+							common.closeModal()
+						}
+					},
+					confirmText: "Connect",
+					cancel:      common.closeModal,
+					cancelText:  "Cancel",
+				}
+			}()
+			return
+		}
+		pg.wal.RemoveConnectToPeerValue()
+	}
+
+	for pg.updateConnectToPeer.Button.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
-				template: ConnectToSpecificPeerTemplate,
-				title:    "Connect to specific peer",
+				template: ChangeSpecificPeerTemplate,
+				title:    "Change specific peer",
 				confirm: func(ipAddress string) {
-					common.Notify(notImplemented, true)
+					pg.wal.ConnectToPeer(ipAddress)
 					common.closeModal()
 				},
-				confirmText: "Connect",
+				confirmText: "Done",
 				cancel:      common.closeModal,
 				cancelText:  "Cancel",
 			}
@@ -348,19 +406,35 @@ func (pg *settingsPage) handle(common pageCommon) {
 
 func (pg *settingsPage) updateStartupPasswordSetting() {
 	isSet := pg.wal.IsStartupSecuritySet()
+	pg.startupPassword.Value = false
+	pg.isStartupPassword = false
 	if isSet {
 		pg.startupPassword.Value = true
 		pg.isStartupPassword = true
-	} else {
-		pg.startupPassword.Value = false
-		pg.isStartupPassword = false
 	}
 }
+
 func (pg *settingsPage) updateSpendUnconfirmedSetting() {
 	isSet := pg.wal.IsSpendUnconfirmed()
+	pg.spendUnconfirmed.Value = false
 	if isSet {
-		pg.spendUnconfirm.Value = true
-	} else {
-		pg.spendUnconfirm.Value = false
+		pg.spendUnconfirmed.Value = true
+	}
+}
+
+func (pg *settingsPage) updatebeepNewBlockSetting() {
+	isSet := pg.wal.IsBeepNewBlocks()
+	pg.beepNewBlocks.Value = false
+	if isSet {
+		pg.beepNewBlocks.Value = true
+	}
+}
+
+func (pg *settingsPage) updateConnectToPeerSetting() {
+	pg.peerAddr = pg.wal.GetConnectToPeerValue()
+	pg.connectToPeer.Value = false
+	if pg.peerAddr != "" {
+		pg.peerLabel.Text = pg.peerAddr
+		pg.connectToPeer.Value = true
 	}
 }
