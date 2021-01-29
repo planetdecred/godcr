@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	//"gioui.org/f32"
-
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"

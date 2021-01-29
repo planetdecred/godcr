@@ -440,7 +440,7 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 	for _, b := range pg.seedSuggestions {
 		for b.Button.Clicked() {
 			pg.seedEditors.editors[index].Editor.SetText(b.Text)
-			//pg.seedEditors.editors[index].Editor.Move(len(b.Text))
+			pg.seedEditors.editors[index].Editor.MoveCaret(len(b.Text), 0)
 			pg.seedClicked = true
 			if index != 32 {
 				pg.seedEditors.editors[index+1].Editor.Focus()
@@ -732,7 +732,7 @@ func (pg *createRestore) handle(common pageCommon) {
 				focus := pg.seedEditors.focusIndex
 				pg.seedEditors.editors[focus].Editor.SetText(pg.suggestions[0])
 				pg.seedClicked = true
-				//pg.seedEditors.editors[focus].Editor.Move(len(pg.suggestions[0]))
+				pg.seedEditors.editors[focus].Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
 		}
 	case err := <-pg.errChan:

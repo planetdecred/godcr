@@ -22,11 +22,6 @@ import (
 
 const PageWallet = "Wallet"
 
-type walletItem struct {
-	moreButton  decredmaterial.IconButton
-	collapsible *decredmaterial.Collapsible
-}
-
 type optionMenuItem struct {
 	text   string
 	button *widget.Clickable
@@ -46,15 +41,16 @@ type walletPage struct {
 	container, accountsList, walletsList, list layout.List
 	line                                       *decredmaterial.Line
 	toAddWalletPage                            *widget.Clickable
-	walletItems                                []*walletItem
-	toAcctDetails                              []*gesture.Click
-	iconButton                                 decredmaterial.IconButton
-	errChann                                   chan error
-	card                                       decredmaterial.Card
-	backdrop                                   *widget.Clickable
-	optionsMenuCard                            decredmaterial.Card
-	optionsMenuItems                           []optionMenuItem
-	openPopupIndex                             int
+	//walletItems                                []*walletItem
+	collapsibles     []*decredmaterial.CollapsibleWithOption
+	toAcctDetails    []*gesture.Click
+	iconButton       decredmaterial.IconButton
+	errChann         chan error
+	card             decredmaterial.Card
+	backdrop         *widget.Clickable
+	optionsMenuCard  decredmaterial.Card
+	optionsMenuItems []optionMenuItem
+	openPopupIndex   int
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -78,7 +74,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.line.Height = 1
 	pg.iconButton = decredmaterial.IconButton{
 		IconButtonStyle: material.IconButtonStyle{
-			Icon:       pg.theme.NavMoreIcon,
+			//Icon:       pg.theme.NavMoreIcon,
 			Size:       unit.Dp(25),
 			Background: color.NRGBA{},
 			Color:      pg.theme.Color.Text,
@@ -128,7 +124,8 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		},
 	}
 
-	pg.walletItems = make([]*walletItem, 0)
+	//pg.walletItems = make([]*walletItem, 0)
+	pg.collapsibles = make([]*decredmaterial.CollapsibleWithOption, 0)
 
 	pg.addAcct = nil
 	pg.backupButton = nil
@@ -151,12 +148,7 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 	}
 
 	for index := 0; index < common.info.LoadedWallets; index++ {
-		iconButton := pg.iconButton
-		iconButton.Button = new(widget.Clickable)
-		pg.walletItems = append(pg.walletItems, &walletItem{
-			moreButton:  iconButton,
-			collapsible: pg.theme.Collapsible(),
-		})
+		pg.collapsibles = append(pg.collapsibles, pg.theme.CollapsibleWithOption())
 
 		addAcctBtn := common.theme.IconButton(new(widget.Clickable), common.icons.contentAdd)
 		addAcctBtn.Inset = layout.UniformInset(values.MarginPadding0)
@@ -238,13 +230,12 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		accounts := common.info.Wallets[i].Accounts
 		pg.updateAcctDetailsButtons(&accounts)
 
-		collapsibleMore := func(gtx C) D {
+		collapsibleMore := func(gtx C) {
 			if pg.openPopupIndex == i {
 				m := op.Record(gtx.Ops)
 				pg.layoutOptionsMenu(gtx)
 				op.Defer(gtx.Ops, m.Stop())
 			}
-			return pg.walletItems[i].moreButton.Layout(gtx)
 		}
 
 		collapsibleHeader := func(gtx C) D {
@@ -298,7 +289,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 			var children []layout.FlexChild
 			children = append(children, layout.Rigid(func(gtx C) D {
-				return pg.walletItems[i].collapsible.Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleMore)
+				return pg.collapsibles[i].Layout(gtx, collapsibleHeader, collapsibleBody, collapsibleMore)
 			}))
 
 			if len(common.info.Wallets[i].Seed) > 0 {
@@ -575,8 +566,8 @@ func (pg *walletPage) Handle(common pageCommon) {
 		pg.openPopupIndex = -1
 	}
 
-	for index := range pg.walletItems {
-		for pg.walletItems[index].moreButton.Button.Clicked() {
+	for index := range pg.collapsibles {
+		for pg.collapsibles[index].MoreTriggered() {
 			*common.selectedWallet = index
 			pg.openPopupIndex = index
 		}

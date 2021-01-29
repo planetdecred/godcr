@@ -653,7 +653,7 @@ func (pg *SendPage) txFeeLayout(gtx layout.Context) layout.Dimensions {
 		})
 	}
 
-	return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody, nil)
+	return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
 }
 
 func (pg *SendPage) drawConfirmationModal(gtx layout.Context) layout.Dimensions {

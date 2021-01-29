@@ -73,7 +73,7 @@ type Theme struct {
 	chevronUpIcon         *widget.Icon
 	chevronDownIcon       *widget.Icon
 	NavigationCheckIcon   *widget.Icon
-	NavMoreIcon           *widget.Icon
+	navMoreIcon           *widget.Icon
 	expandIcon            *widget.Image
 	collapseIcon          *widget.Image
 
@@ -109,7 +109,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
-	t.NavMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
 
 	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
 	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
@@ -143,9 +143,8 @@ func (t *Theme) Surface(gtx layout.Context, w layout.Widget) layout.Dimensions {
 func (t *Theme) ImageIcon(gtx layout.Context, icon image.Image, size int) layout.Dimensions {
 	img := image.NewRGBA(image.Rectangle{Max: image.Point{X: size, Y: size}})
 	draw.ApproxBiLinear.Scale(img, img.Bounds(), icon, icon.Bounds(), draw.Src, nil)
-	iconOp := paint.NewImageOp(img)
 
-	i := Image{Src: iconOp}
+	i := widget.Image{Src: paint.NewImageOp(img)}
 	i.Scale = float32(size) / float32(gtx.Px(unit.Dp(float32(size))))
 	return i.Layout(gtx)
 }

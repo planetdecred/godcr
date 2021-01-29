@@ -149,9 +149,9 @@ func (pg *receivePage) qrCodeAddressColumn(gtx layout.Context, common pageCommon
 
 	qrCode.DisableBorder = true
 	return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		img := common.theme.Image(paint.NewImageOp(qrCode.Image(520)))
-		//img.Src.Rect.Max.X = 521
-		//img.Src.Rect.Max.Y = 521
+		img := widget.Image{
+			Src: paint.NewImageOp(qrCode.Image(520)),
+		}
 		img.Scale = 0.5
 		return img.Layout(gtx)
 	})

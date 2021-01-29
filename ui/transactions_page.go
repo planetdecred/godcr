@@ -214,8 +214,6 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 						rect := f32.Rectangle{Max: layout.FPt(dims)}
 						rect.Size()
 						op.TransformOp{}.Add(gtx.Ops)
-						/**paint.ColorOp{Color: common.theme.Color.Hint}.Add(gtx.Ops)
-						paint.PaintOp{Rect: rect}.Add(gtx.Ops)**/
 						paint.Fill(gtx.Ops, common.theme.Color.Hint)
 						return layout.Dimensions{Size: dims}
 					})

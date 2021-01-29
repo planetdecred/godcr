@@ -273,7 +273,7 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 					}),
 				)
 			}
-			return t.collapsible.Layout(gtx, header, content, nil)
+			return t.collapsible.Layout(gtx, header, content)
 		},
 
 		func(gtx C) D {
@@ -334,7 +334,7 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 		},
 
 		func(gtx C) D {
-			return t.collapsible.Layout(gtx, header, content, nil)
+			return t.collapsible.Layout(gtx, header, content)
 		},
 		func(gtx C) D {
 			return t.customEditorOutput.outline.Layout(gtx, func(gtx C) D {
