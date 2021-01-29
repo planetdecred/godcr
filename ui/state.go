@@ -90,14 +90,7 @@ func (win *Window) updateStates(update interface{}) {
 			win.modal <- &modalLoad{}
 		}()
 	case []dcrlibwallet.Proposal:
-		proposals := update.([]dcrlibwallet.Proposal)
-		if win.proposals == nil {
-			win.proposals = make(map[int32][]dcrlibwallet.Proposal)
-			for _, v := range proposals {
-				win.proposals[v.Category] = append(win.proposals[v.Category], v)
-			}
-		}
-		win.latestProposals = update.([]dcrlibwallet.Proposal)
+		win.proposals = update.([]dcrlibwallet.Proposal)
 	}
 
 	win.states.loading = true

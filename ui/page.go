@@ -34,7 +34,7 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon *widget.Image
+	aboutIcon, debugIcon, politeiaIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -154,6 +154,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
 		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
 		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
+		politeiaIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["politeia"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],

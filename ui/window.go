@@ -55,6 +55,7 @@ type Window struct {
 	clipboard               chan interface{}
 	toast                   chan *toast
 	modal                   chan *modalLoad
+	sysDestroyWithSync      bool
 
 	proposals        []dcrlibwallet.Proposal
 	selectedProposal *dcrlibwallet.Proposal
