@@ -19,8 +19,8 @@ type privacyPage struct {
 	infoBtn                              decredmaterial.IconButton
 	line                                 *decredmaterial.Line
 	toPrivacySetup                       decredmaterial.Button
-	privacyPageSetupVisibility           bool
 	dangerZoneCollapsible                *decredmaterial.Collapsible
+	errChann                             chan error
 }
 
 func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
@@ -32,6 +32,7 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 		line:                    common.theme.Line(),
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
+		errChann:                common.errorChannels[PagePrivacy],
 	}
 	pg.toPrivacySetup.Background = pg.theme.Color.Primary
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
@@ -58,7 +59,7 @@ func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimension
 			infoTemplateTitle: "How to use the mixer?",
 			infoTemplate:      PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
-				if pg.privacyPageSetupVisibility {
+				if c.wallet.IsAccountMixerConfigSet(c.info.Wallets[*c.selectedWallet].ID) {
 					widgets := []func(gtx C) D{
 						func(gtx C) D {
 							return pg.mixerInfoLayout(gtx, &c)
@@ -298,6 +299,56 @@ func (pg *privacyPage) gutter(gtx layout.Context) layout.Dimensions {
 
 func (pg *privacyPage) Handler(common pageCommon) {
 	if pg.toPrivacySetup.Button.Clicked() {
-		pg.privacyPageSetupVisibility = true
+		go pg.showModalSetupMixerInfo(&common)
+	}
+
+	select {
+	case err := <-pg.errChann:
+		common.Notify(err.Error(), false)
+	default:
+	}
+}
+
+func (pg *privacyPage) showModalSetupMixerInfo(common *pageCommon) {
+	common.modalReceiver <- &modalLoad{
+		template: ConfirmSetupMixerTemplate,
+		title:    "Set up mixer by creating two needed accounts",
+		confirm: func() {
+			go pg.showModalSetupMixerAcct(common)
+		},
+		confirmText: "Begin setup",
+		cancel:      common.closeModal,
+		cancelText:  "Cancel",
+	}
+}
+
+func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
+	common.modalReceiver <- &modalLoad{
+		template: ConfirmSetupMixerAcctTemplate,
+		title:    "Confirm to create needed accounts",
+		confirm: func(p string) {
+			for _, acct := range common.info.Wallets[*common.selectedWallet].Accounts {
+				if acct.Name == "mixed" || acct.Name == "unmixed" {
+					go pg.showModalSetupExistAcct(common)
+					return
+				}
+			}
+			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errChann)
+		},
+		confirmText: "Confirm",
+		cancel:      common.closeModal,
+		cancelText:  "Cancel",
+	}
+}
+
+func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
+	common.modalReceiver <- &modalLoad{
+		customTemplate: ConfirmMixerAcctExistTemplate,
+		confirmText:    "Go back & rename",
+		cancel:         common.closeModal,
+		confirm: func() {
+			common.closeModal()
+			*common.page = PageWallet
+		},
 	}
 }

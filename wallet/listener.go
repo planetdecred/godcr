@@ -162,3 +162,7 @@ func (l *listener) OnSyncEndedWithError(err error) {
 	// 	Error: err,
 	// }
 }
+
+func (l *listener) OnCFiltersFetchProgress(progress *dcrlibwallet.CFiltersFetchProgressReport) {
+
+}

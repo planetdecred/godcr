@@ -27,6 +27,9 @@ const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
 const UnlockWalletTemplate = "UnlockWallet"
 const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
 const UserAgentTemplate = "UserAgent"
+const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
+const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
+const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -37,17 +40,19 @@ type ModalTemplate struct {
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
 	alert                 decredmaterial.IconButton
+	alertError            *widget.Image
 	passwordStgth         decredmaterial.ProgressBarStyle
 }
 
 type modalLoad struct {
-	template    string
-	title       string
-	confirm     interface{}
-	confirmText string
-	cancel      interface{}
-	cancelText  string
-	isReset     bool
+	template       string
+	customTemplate string
+	title          string
+	confirm        interface{}
+	confirmText    string
+	cancel         interface{}
+	cancelText     string
+	isReset        bool
 }
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
@@ -261,7 +266,59 @@ func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) setupMixerInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			txt := m.th.Body1("Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.")
+			txt.Color = m.th.Color.Gray
+			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, txt.Layout)
+		},
+		func(gtx C) D {
+			txt := m.th.Label(values.TextSize18, "This action cannot be undone.")
+			return txt.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) setupMixerAcct() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) warnExistMixerAcct(load *modalLoad) []func(gtx C) D {
+	return append([]func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							m.alertError.Scale = 0.07
+							return m.alertError.Layout(gtx)
+						})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return m.th.H5("Account name is taken").Layout(gtx)
+				}),
+			)
+		},
+		func(gtx C) D {
+			txt := m.th.Body1("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.")
+			txt.Color = m.th.Color.Gray
+			return txt.Layout(gtx)
+		},
+	}, m.actions(m.th, load)...)
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
+	if load.customTemplate != "" {
+		return m.handleCustomTemplate(load)
+	}
+
 	if !load.isReset {
 		m.resetFields()
 		load.isReset = true
@@ -273,7 +330,14 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 		},
 	}
 
-	action := []func(gtx C) D{
+	w := m.handle(th, load)
+	w = append(title, w...)
+	w = append(w, m.actions(th, load)...)
+	return w
+}
+
+func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
+	return []func(gtx C) D{
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -307,11 +371,6 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 			})
 		},
 	}
-
-	w := m.handle(th, load)
-	w = append(title, w...)
-	w = append(w, action...)
-	return w
 }
 
 func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
@@ -471,6 +530,37 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.matchSpendingPassword.Hint = "Confirm startup password"
 
 		template = m.setStartupPassword()
+		return
+	case ConfirmSetupMixerTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.setupMixerInfo()
+		return
+	case ConfirmSetupMixerAcctTemplate:
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
+			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.setupMixerAcct()
+		return
+	default:
+		return
+	}
+}
+
+func (m *ModalTemplate) handleCustomTemplate(load *modalLoad) (template []func(gtx C) D) {
+	switch load.customTemplate {
+	case ConfirmMixerAcctExistTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		template = m.warnExistMixerAcct(load)
 		return
 	default:
 		return

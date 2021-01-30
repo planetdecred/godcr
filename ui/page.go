@@ -34,7 +34,7 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon *widget.Image
+	aboutIcon, debugIcon, alert *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -149,6 +149,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
 		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
 		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
+		alert:                      &widget.Image{Src: paint.NewImageOp(decredIcons["alert"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -212,6 +213,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			PageAccountDetails: make(chan error),
 			PageWalletSettings: make(chan error),
 			PageSettings:       make(chan error),
+			PagePrivacy:        make(chan error),
 		},
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
@@ -235,11 +237,13 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
 	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
 	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
-	common.modalTemplate = win.LoadModalTemplates()
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 	common.subPageBackButton.Color, common.subPageInfoButton.Color = common.theme.Color.Gray, common.theme.Color.Gray
 	common.subPageBackButton.Size, common.subPageInfoButton.Size = values.MarginPadding25, values.MarginPadding25
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
+
+	common.modalTemplate = win.LoadModalTemplates()
+	common.modalTemplate.alertError = ic.alert
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -346,6 +350,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				select {
 				case load := <-page.modalReceiver:
 					page.modalLoad.template = load.template
+					page.modalLoad.customTemplate = load.customTemplate
 					page.modalLoad.title = load.title
 					page.modalLoad.confirm = load.confirm
 					page.modalLoad.confirmText = load.confirmText
