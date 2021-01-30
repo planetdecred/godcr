@@ -124,6 +124,7 @@ type Transaction struct {
 	Status        string
 	Balance       string
 	WalletName    string
+	AccountName   string
 	Confirmations int32
 	DateTime      string
 }
@@ -179,3 +180,6 @@ type UnspentOutput struct {
 type UnspentOutputs struct {
 	List []*UnspentOutput
 }
+
+// SetupAccountMixer is sent when finished setup the wallet account mixer
+type SetupAccountMixer struct{}

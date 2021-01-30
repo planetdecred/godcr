@@ -270,7 +270,7 @@ func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 		m := values.MarginPadding10
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.txnInfoSection(gtx, "From", transaction.WalletName, transaction.Txn.Inputs[0].AccountName, true, false)
+				return pg.txnInfoSection(gtx, "From", transaction.WalletName, transaction.AccountName, true, false)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
@@ -366,7 +366,7 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 	collapsibleBody := func(gtx C) D {
 		return pg.transactionInputsContainer.Layout(gtx, len(transaction.Txn.Inputs), func(gtx C, i int) D {
 			amount := dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String()
-			acctName := fmt.Sprintf("(%s)", transaction.Txn.Inputs[i].AccountName)
+			acctName := fmt.Sprintf("(%s)", transaction.AccountName)
 			walName := transaction.WalletName
 			hashAcct := transaction.Txn.Inputs[i].PreviousOutpoint
 			return pg.txnIORow(gtx, amount, acctName, walName, hashAcct, i)
@@ -389,7 +389,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 	collapsibleBody := func(gtx C) D {
 		return pg.transactionOutputsContainer.Layout(gtx, len(transaction.Txn.Outputs), func(gtx C, i int) D {
 			amount := dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String()
-			acctName := fmt.Sprintf("(%s)", transaction.Txn.Outputs[i].AccountName)
+			acctName := fmt.Sprintf("(%s)", transaction.AccountName)
 			walName := transaction.WalletName
 			hashAcct := transaction.Txn.Outputs[i].Address
 			x := len(transaction.Txn.Inputs)
