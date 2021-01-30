@@ -706,8 +706,20 @@ func (wal *Wallet) GetConnectToPeerValue() string {
 	return wal.multi.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
 }
 
-func (wal *Wallet) RemoveConnectToPeerValue() {
+func (wal *Wallet) RemoveConnectToPeer() {
 	wal.multi.DeleteUserConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
+}
+
+func (wal *Wallet) UserAgent(value string) {
+	wal.multi.SaveUserConfigValue(dcrlibwallet.UserAgentConfigKey, value)
+}
+
+func (wal *Wallet) GetUserAgent() string {
+	return wal.multi.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
+}
+
+func (wal *Wallet) RemoveUserAgent() {
+	wal.multi.DeleteUserConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
 }
 
 func (wal *Wallet) LoadedWalletsCount() int32 {
