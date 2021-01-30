@@ -355,7 +355,19 @@ func (pg *settingsPage) handle(common pageCommon) {
 			}()
 			return
 		}
-		pg.wal.RemoveConnectToPeerValue()
+		go func() {
+			common.modalReceiver <- &modalLoad{
+				template: RemoveSpecificPeerTemplate,
+				title:    "Turn off connect to specific peer?",
+				confirm: func() {
+					pg.wal.RemoveConnectToPeerValue()
+					common.closeModal()
+				},
+				confirmText: "Turn off",
+				cancel:      common.closeModal,
+				cancelText:  "Cancel",
+			}
+		}()
 	}
 
 	for pg.updateConnectToPeer.Button.Clicked() {

@@ -27,6 +27,7 @@ const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
 const UnlockWalletTemplate = "UnlockWallet"
 const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
 const ChangeSpecificPeerTemplate = "ChangeSpecificPeer"
+const RemoveSpecificPeerTemplate = "RemoveSpecificPeer"
 const UserAgentTemplate = "UserAgent"
 const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
 const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
@@ -146,7 +147,19 @@ func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C)
 func (m *ModalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			return th.Body2("Make sure to have the seed phrase backed up before removing the wallet").Layout(gtx)
+			info := th.Body1("Make sure to have the seed phrase backed up before removing the wallet")
+			info.Color = th.Color.Gray
+			return info.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) removeConnectToPeer(th *decredmaterial.Theme) []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			info := th.Body1("This will forget the current specified peer and disconnect from it.")
+			info.Color = th.Color.Gray
+			return info.Layout(gtx)
 		},
 	}
 }
@@ -362,7 +375,7 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 							if load.template == ConfirmRemoveTemplate {
 								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
 							}
-							if load.template == RescanWalletTemplate {
+							if load.template == RescanWalletTemplate || load.template == RemoveSpecificPeerTemplate {
 								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
 							}
 							return m.confirm.Layout(gtx)
@@ -532,6 +545,16 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		template = m.setStartupPassword()
 		return
+	case RemoveSpecificPeerTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+
+		template = m.removeConnectToPeer(th)
+		return
 	case ConfirmSetupMixerTemplate:
 		if m.confirm.Button.Clicked() {
 			load.confirm.(func())()
@@ -539,6 +562,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
+		
 		template = m.setupMixerInfo()
 		return
 	case ConfirmSetupMixerAcctTemplate:
