@@ -41,16 +41,15 @@ type walletPage struct {
 	container, accountsList, walletsList, list layout.List
 	line                                       *decredmaterial.Line
 	toAddWalletPage                            *widget.Clickable
-	//walletItems                                []*walletItem
-	collapsibles     []*decredmaterial.CollapsibleWithOption
-	toAcctDetails    []*gesture.Click
-	iconButton       decredmaterial.IconButton
-	errChann         chan error
-	card             decredmaterial.Card
-	backdrop         *widget.Clickable
-	optionsMenuCard  decredmaterial.Card
-	optionsMenuItems []optionMenuItem
-	openPopupIndex   int
+	collapsibles                               []*decredmaterial.Collapsible
+	toAcctDetails                              []*gesture.Click
+	iconButton                                 decredmaterial.IconButton
+	errChann                                   chan error
+	card                                       decredmaterial.Card
+	backdrop                                   *widget.Clickable
+	optionsMenuCard                            decredmaterial.Card
+	optionsMenuItems                           []optionMenuItem
+	openPopupIndex                             int
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -74,7 +73,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.line.Height = 1
 	pg.iconButton = decredmaterial.IconButton{
 		IconButtonStyle: material.IconButtonStyle{
-			//Icon:       pg.theme.NavMoreIcon,
 			Size:       unit.Dp(25),
 			Background: color.NRGBA{},
 			Color:      pg.theme.Color.Text,
@@ -124,8 +122,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		},
 	}
 
-	//pg.walletItems = make([]*walletItem, 0)
-	pg.collapsibles = make([]*decredmaterial.CollapsibleWithOption, 0)
+	pg.collapsibles = make([]*decredmaterial.Collapsible, 0)
 
 	pg.addAcct = nil
 	pg.backupButton = nil
@@ -230,12 +227,13 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		accounts := common.info.Wallets[i].Accounts
 		pg.updateAcctDetailsButtons(&accounts)
 
-		collapsibleMore := func(gtx C) {
+		collapsibleMore := func(gtx C) D {
 			if pg.openPopupIndex == i {
 				m := op.Record(gtx.Ops)
 				pg.layoutOptionsMenu(gtx)
 				op.Defer(gtx.Ops, m.Stop())
 			}
+			return D{}
 		}
 
 		collapsibleHeader := func(gtx C) D {
