@@ -555,7 +555,7 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			*pg.walletAccount = acct
-			*common.page = PageAccountDetails
+			common.ChangePage(PageAccountDetails)
 			*common.selectedWallet = index
 		}
 	}
@@ -603,7 +603,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 		for b.Button.Clicked() {
 			*common.selectedWallet = i
 			pg.current = pg.walletInfo.Wallets[i]
-			*common.page = PageSeedBackup
+			common.ChangePage(PageSeedBackup)
 		}
 	}
 

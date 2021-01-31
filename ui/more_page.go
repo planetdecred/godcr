@@ -67,16 +67,16 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 	}
 }
 
-func (pg *morePage) handleClickEvents() {
+func (pg *morePage) handleClickEvents(common pageCommon) {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {
-			*pg.page = pg.morePageListItems[i].page
+			common.ChangePage(pg.morePageListItems[i].page)
 		}
 	}
 }
 
 func (pg *morePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.handleClickEvents()
+	pg.handleClickEvents(common)
 
 	container := func(gtx C) D {
 		pg.layoutMoreItems(gtx, common)

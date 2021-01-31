@@ -646,7 +646,7 @@ func (pg *createRestore) handle(common pageCommon) {
 
 	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
-		*common.page = PageWallet
+		common.ChangePage(PageWallet)
 	}
 
 	for pg.unlock.Button.Clicked() {

@@ -484,7 +484,7 @@ func checkSlice(s []string) bool {
 }
 
 func (pg *backupPage) resetPage(c pageCommon) {
-	*c.page = PageWallet
+	c.ChangePage(PageWallet)
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)

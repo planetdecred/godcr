@@ -17,7 +17,7 @@ func (win *Window) updateStates(update interface{}) {
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
 		if win.walletInfo.LoadedWallets == 0 && e.LoadedWallets > 0 {
-			win.current = PageOverview
+			win.changePage(PageOverview)
 		}
 		*win.walletInfo = e
 		win.states.loading = false
@@ -57,16 +57,16 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case wallet.CreatedSeed:
 		win.notifyOnSuccess("Wallet created")
-		win.current = PageWallet
+		win.changePage(PageWallet)
 	case wallet.Renamed:
 		win.notifyOnSuccess("Wallet renamed")
 	case wallet.Restored:
-		win.current = PageWallet
+		win.changePage(PageWallet)
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
 		win.selected = 0
-		win.current = PageWallet
+		win.changePage(PageWallet)
 		win.notifyOnSuccess("Wallet removed")
 	case wallet.AddedAccount:
 		win.notifyOnSuccess("Account created")

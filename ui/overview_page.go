@@ -684,7 +684,7 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 			if e.Type == gesture.TypeClick {
 				txn := (*pg.walletTransactions).Recent[index]
 				*pg.walletTransaction = &txn
-				*c.page = PageTransactionDetails
+				c.ChangePage(PageTransactionDetails)
 				return
 			}
 		}

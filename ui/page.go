@@ -78,7 +78,8 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	windowInvalidateFunc func()
+	refreshWindow func()
+	changePage func(string)
 }
 
 type (
@@ -198,15 +199,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 	}
 
-	for i := range drawerNavItems {
-		drawerNavItems[i].image.Scale = 1.5
-		drawerNavItems[i].imageInactive.Scale = 1.5
-	}
-
-	for i := range appBarNavItems {
-		appBarNavItems[i].image.Scale = 1.5
-	}
-
 	common := pageCommon{
 		wallet:          win.wallet,
 		info:            win.walletInfo,
@@ -241,7 +233,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		modalLoad:               &modalLoad{},
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		windowInvalidateFunc:    win.invalidate,
+		refreshWindow:    win.refresh,
+		changePage: win.changePage,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -282,8 +275,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 }
 
 func (page pageCommon) ChangePage(pg string) {
-	*page.page = pg
-	page.windowInvalidateFunc()
+	page.changePage(pg)
 }
 
 func (page pageCommon) Notify(text string, success bool) {
@@ -306,13 +298,13 @@ func (page pageCommon) handleNavEvents() {
 
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
-			*page.page = page.appBarNavItems[i].page
+			page.ChangePage( page.appBarNavItems[i].page)
 		}
 	}
 
 	for i := range page.drawerNavItems {
 		for page.drawerNavItems[i].clickable.Clicked() {
-			*page.page = page.drawerNavItems[i].page
+			page.ChangePage(page.drawerNavItems[i].page )
 		}
 	}
 }
@@ -448,8 +440,9 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
+							sz := gtx.Constraints.Max.X
 							img := page.icons.logo
-							img.Scale = 1.5
+							img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
 
 							return img.Layout(gtx)
 						}),
@@ -470,6 +463,9 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
+														sz := gtx.Constraints.Max.X
+														img := page.appBarNavItems[i].image 
+														img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
 														return page.appBarNavItems[i].image.Layout(gtx)
 													})
 												}),
@@ -531,17 +527,20 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
+									sz := gtx.Constraints.Max.X 
 									img := page.drawerNavItems[i].imageInactive
 									if page.drawerNavItems[i].page == *page.page {
 										img = page.drawerNavItems[i].image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
+										img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
 										return img.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{
 										Left: unit.Dp(leftInset),
+										Top: unit.Dp(4),
 									}.Layout(gtx, func(gtx C) D {
 										return layout.Center.Layout(gtx, txt.Layout)
 									})

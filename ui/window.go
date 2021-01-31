@@ -109,8 +109,13 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	return win, nil
 }
 
-func (win *Window) invalidate() {
+func (win *Window) refresh() {
 	win.window.Invalidate()
+}
+
+func (win *Window) changePage(page string) {
+	win.current = page 
+	win.refresh()
 }
 
 func (win *Window) unloaded() {
@@ -204,7 +209,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
 				if win.walletInfo.LoadedWallets == 0 {
-					win.current = PageCreateRestore
+					win.changePage(PageCreateRestore)
 				}
 
 				if s.loading {

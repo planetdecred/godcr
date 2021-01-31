@@ -88,7 +88,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
 				pg.clearForm()
-				*common.page = PageWallet
+				common.ChangePage(PageWallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return common.theme.Card().Layout(gtx, func(gtx C) D {

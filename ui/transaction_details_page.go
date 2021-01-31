@@ -574,7 +574,7 @@ func (pg *transactionDetailsPage) Handler(common pageCommon) {
 	}
 
 	if pg.backButton.Button.Clicked() {
-		*common.page = PageTransactions
+		common.ChangePage(PageTransactions)
 	}
 
 	for _, b := range pg.copyTextBtn {
