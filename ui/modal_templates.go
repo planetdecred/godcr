@@ -435,7 +435,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		if load.template == RenameAccountTemplate {
 			m.walletName.Hint = "Account name"
 		}
-		if load.template == ConnectToSpecificPeerTemplate {
+		if load.template == ConnectToSpecificPeerTemplate || load.template == ChangeSpecificPeerTemplate {
 			m.walletName.Hint = "IP address"
 		}
 		if load.template == UserAgentTemplate {

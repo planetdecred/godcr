@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -115,7 +116,7 @@ func (pg *settingsPage) general() layout.Widget {
 		return pg.mainSection(gtx, "General", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionWithSwitch(gtx, "Spending unconfirmed funds", pg.spendUnconfirmed)
+					return pg.subSectionSwitch(gtx, "Spending unconfirmed funds", pg.spendUnconfirmed)
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
@@ -140,7 +141,7 @@ func (pg *settingsPage) general() layout.Widget {
 func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, "Notification", func(gtx C) D {
-			return pg.subSectionWithSwitch(gtx, "Beep for new blocks", pg.beepNewBlocks)
+			return pg.subSectionSwitch(gtx, "Beep for new blocks", pg.beepNewBlocks)
 		})
 	}
 }
@@ -150,7 +151,7 @@ func (pg *settingsPage) security() layout.Widget {
 		return pg.mainSection(gtx, "Security", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionWithSwitch(gtx, "Startup password", pg.startupPassword)
+					return pg.subSectionSwitch(gtx, "Startup password", pg.startupPassword)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if pg.isStartupPassword {
@@ -172,7 +173,7 @@ func (pg *settingsPage) connection() layout.Widget {
 		return pg.mainSection(gtx, "Connection", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionWithSwitch(gtx, "Connect to specific peer", pg.connectToPeer)
+					return pg.subSectionSwitch(gtx, "Connect to specific peer", pg.connectToPeer)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if pg.peerAddr != "" {
@@ -266,7 +267,7 @@ func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout
 	)
 }
 
-func (pg *settingsPage) subSectionWithSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
+func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
 	return pg.subSection(gtx, title, func(gtx C) D {
 		return pg.theme.Switch(option).Layout(gtx)
 	})
@@ -297,11 +298,11 @@ func (pg *settingsPage) lineSeparator() layout.Widget {
 
 func (pg *settingsPage) handle(common pageCommon) {
 	if pg.spendUnconfirmed.Changed() {
-		pg.wal.SpendUnconfirmed(pg.spendUnconfirmed.Value)
+		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.Value)
 	}
 
 	if pg.beepNewBlocks.Changed() {
-		pg.wal.BeepNewBlocks(pg.beepNewBlocks.Value)
+		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.Value)
 	}
 
 	for pg.changeStartupPass.Button.Clicked() {
@@ -350,6 +351,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 		}()
 	}
 
+	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey
 	if pg.connectToPeer.Changed() {
 		if pg.connectToPeer.Value {
 			go func() {
@@ -358,7 +360,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 					title:    "Connect to specific peer",
 					confirm: func(ipAddress string) {
 						if ipAddress != "" {
-							pg.wal.ConnectToPeer(ipAddress)
+							pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
 							common.closeModal()
 						}
 					},
@@ -374,7 +376,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				template: RemoveSpecificPeerTemplate,
 				title:    "Turn off connect to specific peer?",
 				confirm: func() {
-					pg.wal.RemoveConnectToPeer()
+					pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
 					common.closeModal()
 				},
 				confirmText: "Turn off",
@@ -391,7 +393,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				title:    "Change specific peer",
 				confirm: func(ipAddress string) {
 					if ipAddress != "" {
-						pg.wal.ConnectToPeer(ipAddress)
+						pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
 						common.closeModal()
 					}
 				},
@@ -403,6 +405,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 		break
 	}
 
+	userAgentKey := dcrlibwallet.UserAgentConfigKey
 	for pg.updateUserAgent.Button.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
@@ -410,7 +413,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				title:    "Change user agent",
 				confirm: func(agent string) {
 					if agent != "" {
-						pg.wal.UserAgent(agent)
+						pg.wal.SaveConfigValueForKey(userAgentKey, agent)
 						common.closeModal()
 					}
 				},
@@ -430,7 +433,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 					title:    "Set up user agent",
 					confirm: func(agent string) {
 						if agent != "" {
-							pg.wal.UserAgent(agent)
+							pg.wal.SaveConfigValueForKey(userAgentKey, agent)
 							common.closeModal()
 						}
 					},
@@ -446,7 +449,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				template: RemoveUserAgentTemplate,
 				title:    "Turn off user agent?",
 				confirm: func() {
-					pg.wal.RemoveUserAgent()
+					pg.wal.RemoveUserConfigValueForKey(userAgentKey)
 					common.closeModal()
 				},
 				confirmText: "Turn off",
@@ -477,26 +480,26 @@ func (pg *settingsPage) updateSettingOptions() {
 		pg.isStartupPassword = true
 	}
 
-	isSpendUnconfirmed := pg.wal.IsSpendUnconfirmed()
+	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)
 	pg.spendUnconfirmed.Value = false
 	if isSpendUnconfirmed {
 		pg.spendUnconfirmed.Value = true
 	}
 
-	beep := pg.wal.IsBeepNewBlocks()
+	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
 	pg.beepNewBlocks.Value = false
 	if beep {
 		pg.beepNewBlocks.Value = true
 	}
 
-	pg.peerAddr = pg.wal.GetConnectToPeerValue()
+	pg.peerAddr = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
 	pg.connectToPeer.Value = false
 	if pg.peerAddr != "" {
 		pg.peerLabel.Text = pg.peerAddr
 		pg.connectToPeer.Value = true
 	}
 
-	pg.agentValue = pg.wal.GetUserAgent()
+	pg.agentValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
 	pg.userAgent.Value = false
 	if pg.agentValue != "" {
 		pg.userAgent.Value = true

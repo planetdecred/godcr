@@ -681,45 +681,20 @@ func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string, privp
 	return err
 }
 
-func (wal *Wallet) SpendUnconfirmed(value bool) {
-	wal.multi.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, value)
+func (wal *Wallet) SaveConfigValueForKey(key string, value interface{}) {
+	wal.multi.SaveUserConfigValue(key, value)
 }
 
-// IsSpendUnconfirmed checks if start up password is set
-func (wal *Wallet) IsSpendUnconfirmed() bool {
-	return wal.multi.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
+func (wal *Wallet) ReadBoolConfigValueForKey(key string) bool {
+	return wal.multi.ReadBoolConfigValueForKey(key, false)
 }
 
-func (wal *Wallet) BeepNewBlocks(value bool) {
-	wal.multi.SaveUserConfigValue(dcrlibwallet.BeepNewBlocksConfigKey, value)
+func (wal *Wallet) ReadStringConfigValueForKey(key string) string {
+	return wal.multi.ReadStringConfigValueForKey(key)
 }
 
-func (wal *Wallet) IsBeepNewBlocks() bool {
-	return wal.multi.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
-}
-
-func (wal *Wallet) ConnectToPeer(value string) {
-	wal.multi.SaveUserConfigValue(dcrlibwallet.SpvPersistentPeerAddressesConfigKey, value)
-}
-
-func (wal *Wallet) GetConnectToPeerValue() string {
-	return wal.multi.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
-}
-
-func (wal *Wallet) RemoveConnectToPeer() {
-	wal.multi.DeleteUserConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
-}
-
-func (wal *Wallet) UserAgent(value string) {
-	wal.multi.SaveUserConfigValue(dcrlibwallet.UserAgentConfigKey, value)
-}
-
-func (wal *Wallet) GetUserAgent() string {
-	return wal.multi.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
-}
-
-func (wal *Wallet) RemoveUserAgent() {
-	wal.multi.DeleteUserConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
+func (wal *Wallet) RemoveUserConfigValueForKey(key string) {
+	wal.multi.DeleteUserConfigValueForKey(key)
 }
 
 func (wal *Wallet) LoadedWalletsCount() int32 {
