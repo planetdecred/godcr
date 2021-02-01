@@ -79,7 +79,7 @@ type pageCommon struct {
 	subPageInfoButton decredmaterial.IconButton
 
 	refreshWindow func()
-	changePage func(string)
+	changePage    func(string)
 }
 
 type (
@@ -233,8 +233,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		modalLoad:               &modalLoad{},
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		refreshWindow:    win.refresh,
-		changePage: win.changePage,
+		refreshWindow:           win.refresh,
+		changePage:              win.changePage,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -298,13 +298,13 @@ func (page pageCommon) handleNavEvents() {
 
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
-			page.ChangePage( page.appBarNavItems[i].page)
+			page.ChangePage(page.appBarNavItems[i].page)
 		}
 	}
 
 	for i := range page.drawerNavItems {
 		for page.drawerNavItems[i].clickable.Clicked() {
-			page.ChangePage(page.drawerNavItems[i].page )
+			page.ChangePage(page.drawerNavItems[i].page)
 		}
 	}
 }
@@ -464,7 +464,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 												layout.Rigid(func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
 														sz := gtx.Constraints.Max.X
-														img := page.appBarNavItems[i].image 
+														img := page.appBarNavItems[i].image
 														img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
 														return page.appBarNavItems[i].image.Layout(gtx)
 													})
@@ -527,7 +527,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									sz := gtx.Constraints.Max.X 
+									sz := gtx.Constraints.Max.X
 									img := page.drawerNavItems[i].imageInactive
 									if page.drawerNavItems[i].page == *page.page {
 										img = page.drawerNavItems[i].image
@@ -540,7 +540,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{
 										Left: unit.Dp(leftInset),
-										Top: unit.Dp(4),
+										Top:  unit.Dp(4),
 									}.Layout(gtx, func(gtx C) D {
 										return layout.Center.Layout(gtx, txt.Layout)
 									})

@@ -114,7 +114,7 @@ func (win *Window) refresh() {
 }
 
 func (win *Window) changePage(page string) {
-	win.current = page 
+	win.current = page
 	win.refresh()
 }
 
