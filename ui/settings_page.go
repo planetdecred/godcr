@@ -44,7 +44,7 @@ type settingsPage struct {
 	isStartupPassword bool
 	peerAddr          string
 	agentValue        string
-	errChann          chan error
+	errorReceiver     chan error
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
@@ -65,8 +65,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		userAgent:        new(widget.Bool),
 		chevronRightIcon: chevronRightIcon,
 
-		line:     common.theme.Line(),
-		errChann: common.errorChannels[PageSettings],
+		line:          common.theme.Line(),
+		errorReceiver: make(chan error),
 
 		currencyConversion:  new(widget.Clickable),
 		updateConnectToPeer: new(widget.Clickable),
@@ -337,7 +337,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				template: ChangeStartupPasswordTemplate,
 				title:    "Change startup password",
 				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeStartupPassphrase(oldPass, newPass, pg.errChann)
+					pg.wal.ChangeStartupPassphrase(oldPass, newPass, pg.errorReceiver)
 				},
 				confirmText: "Change",
 				cancel:      common.closeModal,
@@ -354,7 +354,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 					template: SetStartupPasswordTemplate,
 					title:    "Create a startup password",
 					confirm: func(pass string) {
-						pg.wal.SetStartupPassphrase(pass, pg.errChann)
+						pg.wal.SetStartupPassphrase(pass, pg.errorReceiver)
 					},
 					confirmText: "Create",
 					cancel:      common.closeModal,
@@ -368,7 +368,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 				template: RemoveStartupPasswordTemplate,
 				title:    "Confirm to turn off startup password",
 				confirm: func(pass string) {
-					pg.wal.RemoveStartupPassphrase(pass, pg.errChann)
+					pg.wal.RemoveStartupPassphrase(pass, pg.errorReceiver)
 				},
 				confirmText: "Confirm",
 				cancel:      common.closeModal,
@@ -461,7 +461,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 	}
 
 	select {
-	case err := <-pg.errChann:
+	case err := <-pg.errorReceiver:
 		if err.Error() == "invalid_passphrase" {
 			e := "Password is incorrect"
 			common.Notify(e, false)

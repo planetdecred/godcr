@@ -57,16 +57,15 @@ type pageCommon struct {
 	navTab          *decredmaterial.Tabs
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
-	errorChannels   map[string]chan error
-	keyEvents       chan *key.Event
-	clipboard       chan interface{}
-	toast           chan *toast
-	toastLoad       *toast
-	states          *states
-	modal           *decredmaterial.Modal
-	modalReceiver   chan *modalLoad
-	modalLoad       *modalLoad
-	modalTemplate   *ModalTemplate
+	keyEvents     chan *key.Event
+	clipboard     chan interface{}
+	toast         chan *toast
+	toastLoad     *toast
+	states        *states
+	modal         *decredmaterial.Modal
+	modalReceiver chan *modalLoad
+	modalLoad     *modalLoad
+	modalTemplate *ModalTemplate
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
@@ -213,25 +212,16 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	}
 
 	common := pageCommon{
-		wallet:          win.wallet,
-		info:            win.walletInfo,
-		selectedWallet:  &win.selected,
-		selectedAccount: &win.selectedAccount,
-		theme:           win.theme,
-		icons:           ic,
-		returnPage:      &win.previous,
-		page:            &win.current,
-		walletTabs:      win.walletTabs,
-		accountTabs:     win.accountTabs,
-		errorChannels: map[string]chan error{
-			PageSignMessage:    make(chan error),
-			PageCreateRestore:  make(chan error),
-			PageWallet:         make(chan error),
-			PageAccountDetails: make(chan error),
-			PageWalletSettings: make(chan error),
-			PageSettings:       make(chan error),
-			PagePrivacy:        make(chan error),
-		},
+		wallet:                  win.wallet,
+		info:                    win.walletInfo,
+		selectedWallet:          &win.selected,
+		selectedAccount:         &win.selectedAccount,
+		theme:                   win.theme,
+		icons:                   ic,
+		returnPage:      		 &win.previous,
+		page:                    &win.current,
+		walletTabs:              win.walletTabs,
+		accountTabs:             win.accountTabs,
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
 		toast:                   win.toast,

@@ -48,7 +48,7 @@ type walletPage struct {
 	collapsibles                               map[int]collapsible
 	toAcctDetails                              []*gesture.Click
 	iconButton                                 decredmaterial.IconButton
-	errChann                                   chan error
+	errorReceiver                              chan error
 	card                                       decredmaterial.Card
 	backdrop                                   *widget.Clickable
 	optionsMenuCard                            decredmaterial.Card
@@ -77,8 +77,8 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		card:                     common.theme.Card(),
 		walletAccount:            &win.walletAccount,
 		backdrop:                 new(widget.Clickable),
+		errorReceiver:   		  make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
-		errChann:                 common.errorChannels[PageWallet],
 		openPopupIndex:           -1,
 		common:                   &common,
 	}
@@ -793,7 +793,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 					template: CreateAccountTemplate,
 					title:    "Create new account",
 					confirm: func(name string, passphrase string) {
-						pg.wallet.AddAccount(walletID, name, []byte(passphrase), pg.errChann)
+						pg.wallet.AddAccount(walletID, name, []byte(passphrase), pg.errorReceiver)
 					},
 					confirmText: "Create",
 					cancel:      common.closeModal,
@@ -845,7 +845,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 	}
 
 	select {
-	case err := <-pg.errChann:
+	case err := <-pg.errorReceiver:
 		if err.Error() == "invalid_passphrase" {
 			e := "Password is incorrect"
 			pg.common.Notify(e, false)

@@ -14,11 +14,11 @@ import (
 const PageSignMessage = "SignMessage"
 
 type signMessagePage struct {
-	theme      *decredmaterial.Theme
-	container  layout.List
-	wallet     *wallet.Wallet
-	walletID   int
-	errChannel chan error
+	theme         *decredmaterial.Theme
+	container     layout.List
+	wallet        *wallet.Wallet
+	walletID      int
+	errorReceiver chan error
 
 	isSigningMessage                           bool
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
@@ -65,6 +65,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		line:          common.theme.Line(),
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
+		errorReceiver: make(chan error),
 	}
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
@@ -80,7 +81,6 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 
 func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
-	pg.errChannel = common.errorChannels[PageSignMessage]
 
 	body := func(gtx C) D {
 		page := SubPage{
@@ -232,7 +232,7 @@ func (pg *signMessagePage) handle(common pageCommon) {
 					title:    "Confirm to sign",
 					confirm: func(pass string) {
 						pg.signButton.Text = "Signing..."
-						pg.wallet.SignMessage(pg.walletID, []byte(pass), address, message, pg.errChannel)
+						pg.wallet.SignMessage(pg.walletID, []byte(pass), address, message, pg.errorReceiver)
 					},
 					confirmText: "Confirm",
 					cancel:      common.closeModal,

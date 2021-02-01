@@ -24,7 +24,7 @@ type privacyPage struct {
 	line                                 *decredmaterial.Line
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
-	errChann                             chan error
+	errorReceiver                        chan error
 	acctMixerStatus                      *chan *wallet.AccountMixer
 }
 
@@ -37,7 +37,7 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 		line:                    common.theme.Line(),
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
-		errChann:                common.errorChannels[PagePrivacy],
+		errorReceiver:           make(chan error),
 		acctMixerStatus:         &win.walletAcctMixerStatus,
 	}
 	pg.toPrivacySetup.Background = pg.theme.Color.Primary
@@ -357,7 +357,7 @@ func (pg *privacyPage) Handler(common pageCommon) {
 	}
 
 	select {
-	case err := <-pg.errChann:
+	case err := <-pg.errorReceiver:
 		common.Notify(err.Error(), false)
 	case stt := <-*pg.acctMixerStatus:
 		if stt.RunStatus == wallet.MixerStarted {
@@ -394,7 +394,7 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 					return
 				}
 			}
-			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errChann)
+			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errorReceiver)
 		},
 		confirmText: "Confirm",
 		cancel:      common.closeModal,
