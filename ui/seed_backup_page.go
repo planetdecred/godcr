@@ -158,7 +158,6 @@ func (pg *backupPage) clearButton() {
 
 func (pg *backupPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	dims := pg.theme.Surface(gtx, func(gtx C) D {
-		toMax(gtx)
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Start}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				pg.action.Background = pg.theme.Color.Hint
@@ -308,7 +307,6 @@ func (pg *backupPage) seedView(gtx layout.Context) layout.Dimensions {
 
 func (pg *backupPage) verifyView(gtx layout.Context) layout.Dimensions {
 	return pg.viewTemplate(gtx, func(gtx C) D {
-		toMax(gtx)
 		return pg.verifyList.Layout(gtx, len(pg.suggestions), func(gtx C, i int) D {
 			s := pg.suggestions[i]
 			return layout.Center.Layout(gtx, func(gtx C) D {

@@ -372,7 +372,7 @@ func (pg *privacyPage) Handler(common pageCommon) {
 
 func (pg *privacyPage) showModalSetupMixerInfo(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		template: ConfirmSetupMixerTemplate,
+		template: SetupMixerInfoTemplate,
 		title:    "Set up mixer by creating two needed accounts",
 		confirm: func() {
 			go pg.showModalSetupMixerAcct(common)
@@ -385,7 +385,7 @@ func (pg *privacyPage) showModalSetupMixerInfo(common *pageCommon) {
 
 func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		template: ConfirmSetupMixerAcctTemplate,
+		template: PasswordTemplate,
 		title:    "Confirm to create needed accounts",
 		confirm: func(p string) {
 			for _, acct := range common.info.Wallets[*common.selectedWallet].Accounts {
@@ -404,9 +404,9 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 
 func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		customTemplate: ConfirmMixerAcctExistTemplate,
-		confirmText:    "Go back & rename",
-		cancel:         common.closeModal,
+		template:    ConfirmMixerAcctExistTemplate,
+		confirmText: "Go back & rename",
+		cancel:      common.closeModal,
 		confirm: func() {
 			common.closeModal()
 			*common.page = PageWallet

@@ -32,7 +32,7 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
+	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	checkMarkGreenIcon, crossMarkRed, watchOnlyWalletIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
@@ -153,7 +153,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
 		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
 		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
-		alert:                      &widget.Image{Src: paint.NewImageOp(decredIcons["alert"])},
 		verifyMessageIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
 		locationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
 		alertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert-gray"])},
@@ -264,7 +263,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
 	common.modalTemplate = win.LoadModalTemplates()
-	common.modalTemplate.alertError = ic.alert
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -377,7 +375,6 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				select {
 				case load := <-page.modalReceiver:
 					page.modalLoad.template = load.template
-					page.modalLoad.customTemplate = load.customTemplate
 					page.modalLoad.title = load.title
 					page.modalLoad.confirm = load.confirm
 					page.modalLoad.confirmText = load.confirmText
@@ -799,11 +796,6 @@ func (page pageCommon) subpageEventHandler(sp SubPage) {
 	if page.subPageBackButton.Button.Clicked() {
 		sp.back()
 	}
-}
-
-func toMax(gtx layout.Context) {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 }
 
 func mustIcon(ic *widget.Icon, err error) *widget.Icon {

@@ -161,7 +161,6 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return common.Layout(gtx, func(gtx C) D {
-		toMax(gtx)
 		pd := values.MarginPadding15
 		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
