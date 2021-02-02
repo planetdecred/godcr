@@ -30,6 +30,7 @@ const UserAgentTemplate = "UserAgent"
 const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
 const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
 const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
+const SecurityToolsInfoTemplate = "SecurityToolsInfo"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -223,6 +224,16 @@ func (m *ModalTemplate) rescanWallet() []func(gtx C) D {
 		func(gtx C) D {
 			text := m.th.Body1("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire" +
 				" blockchain for transactions")
+			text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) securityToolsInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Body1("Various tools that help in different aspects of crypto currency security will be located here.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -548,6 +559,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.setupMixerAcct()
+		return
+	case SecurityToolsInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.securityToolsInfo()
 		return
 	default:
 		return
