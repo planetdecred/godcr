@@ -8,6 +8,7 @@ require (
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
 	github.com/decred/slog v1.1.0
+	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
 	github.com/markbates/pkger v0.17.1

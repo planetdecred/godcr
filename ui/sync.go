@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"github.com/gen2brain/beeep"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -40,6 +42,14 @@ func (win Window) updateSyncProgress(report interface{}) {
 			if info.ID == t.WalletID {
 				win.wallet.GetAllTransactions(0, 0, 0)
 				break
+			}
+		}
+
+		beep := win.wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+		if beep {
+			err := beeep.Beep(5, 1)
+			if err != nil {
+				log.Error(err.Error())
 			}
 		}
 	case wallet.TxConfirmed:

@@ -27,9 +27,7 @@ const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
 const UnlockWalletTemplate = "UnlockWallet"
 const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
 const ChangeSpecificPeerTemplate = "ChangeSpecificPeer"
-const RemoveSpecificPeerTemplate = "RemoveSpecificPeer"
 const UserAgentTemplate = "UserAgent"
-const RemoveUserAgentTemplate = "RemoveUserAgent"
 const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
 const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
 const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
@@ -149,26 +147,6 @@ func (m *ModalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			info := th.Body1("Make sure to have the seed phrase backed up before removing the wallet")
-			info.Color = th.Color.Gray
-			return info.Layout(gtx)
-		},
-	}
-}
-
-func (m *ModalTemplate) removeConnectToPeer(th *decredmaterial.Theme) []func(gtx C) D {
-	return []func(gtx C) D{
-		func(gtx C) D {
-			info := th.Body1("This will forget the current specified peer and disconnect from it.")
-			info.Color = th.Color.Gray
-			return info.Layout(gtx)
-		},
-	}
-}
-
-func (m *ModalTemplate) removeUserAgent(th *decredmaterial.Theme) []func(gtx C) D {
-	return []func(gtx C) D{
-		func(gtx C) D {
-			info := th.Body1("This will forget the current user agent.")
 			info.Color = th.Color.Gray
 			return info.Layout(gtx)
 		},
@@ -386,7 +364,7 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 							if load.template == ConfirmRemoveTemplate {
 								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
 							}
-							if load.template == RescanWalletTemplate || load.template == RemoveSpecificPeerTemplate || load.template == RemoveUserAgentTemplate {
+							if load.template == RescanWalletTemplate {
 								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
 							}
 							return m.confirm.Layout(gtx)
@@ -555,26 +533,6 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.matchSpendingPassword.Hint = "Confirm startup password"
 
 		template = m.setStartupPassword()
-		return
-	case RemoveSpecificPeerTemplate:
-		if m.confirm.Button.Clicked() {
-			load.confirm.(func())()
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
-
-		template = m.removeConnectToPeer(th)
-		return
-	case RemoveUserAgentTemplate:
-		if m.confirm.Button.Clicked() {
-			load.confirm.(func())()
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
-
-		template = m.removeUserAgent(th)
 		return
 	case ConfirmSetupMixerTemplate:
 		if m.confirm.Button.Clicked() {

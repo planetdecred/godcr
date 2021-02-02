@@ -29,7 +29,7 @@ type settingsPage struct {
 	connectToPeer    *widget.Bool
 	userAgent        *widget.Bool
 
-	peerLabel decredmaterial.Label
+	peerLabel, agentLabel decredmaterial.Label
 
 	line *decredmaterial.Line
 
@@ -71,6 +71,9 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 	pg.peerLabel = common.theme.Body1("")
 	pg.peerLabel.Color = common.theme.Color.Gray
+
+	pg.agentLabel = common.theme.Body1("")
+	pg.agentLabel.Color = common.theme.Color.Gray
 
 	pg.currencyConversion.Color, pg.currencyConversion.Inset = color, zeroInset
 	pg.updateConnectToPeer.Color, pg.updateConnectToPeer.Inset = color, zeroInset
@@ -206,7 +209,7 @@ func (pg *settingsPage) agent() layout.Widget {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(pg.subSectionLabel("User agent")),
+							layout.Rigid(pg.subSectionLabel("Custom user agent")),
 							layout.Rigid(func(gtx C) D {
 								txt := pg.theme.Body2("For exchange rate fetching")
 								txt.Color = pg.theme.Color.Gray
@@ -229,7 +232,14 @@ func (pg *settingsPage) agent() layout.Widget {
 				if pg.agentValue != "" {
 					return pg.conditionalDisplay(gtx, func(gtx C) D {
 						return pg.subSection(gtx, "Change user agent", func(gtx C) D {
-							return pg.updateUserAgent.Layout(gtx)
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return pg.agentLabel.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return pg.updateUserAgent.Layout(gtx)
+								}),
+							)
 						})
 					})
 				}
@@ -371,19 +381,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 			}()
 			return
 		}
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RemoveSpecificPeerTemplate,
-				title:    "Turn off connect to specific peer?",
-				confirm: func() {
-					pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
-					common.closeModal()
-				},
-				confirmText: "Turn off",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
+		pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
 	}
 
 	for pg.updateConnectToPeer.Button.Clicked() {
@@ -444,19 +442,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 			}()
 			return
 		}
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RemoveUserAgentTemplate,
-				title:    "Turn off user agent?",
-				confirm: func() {
-					pg.wal.RemoveUserConfigValueForKey(userAgentKey)
-					common.closeModal()
-				},
-				confirmText: "Turn off",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
+		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
 	}
 
 	select {
@@ -502,6 +488,7 @@ func (pg *settingsPage) updateSettingOptions() {
 	pg.agentValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
 	pg.userAgent.Value = false
 	if pg.agentValue != "" {
+		pg.agentLabel.Text = pg.agentValue
 		pg.userAgent.Value = true
 	}
 }
