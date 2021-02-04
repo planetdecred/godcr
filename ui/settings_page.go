@@ -12,16 +12,21 @@ import (
 
 const PageSettings = "Settings"
 
+type optionRowHandler struct {
+	clickable *widget.Clickable
+	icon      decredmaterial.IconButton
+}
+
 type settingsPage struct {
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
-	currencyConversion  decredmaterial.IconButton
-	updateConnectToPeer decredmaterial.IconButton
-	updateUserAgent     decredmaterial.IconButton
-	changeStartupPass   decredmaterial.IconButton
+	currencyConversion optionRowHandler
+	updateConnectToPeer      decredmaterial.IconButton
+	updateUserAgent          optionRowHandler
+	changeStartupPass  decredmaterial.IconButton
 
 	spendUnconfirmed *widget.Bool
 	startupPassword  *widget.Bool
@@ -41,6 +46,18 @@ type settingsPage struct {
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	icon := common.icons.chevronRight
+	currencyConversion := optionRowHandler{
+		clickable: new(widget.Clickable),
+		icon:      common.theme.PlainIconButton(new(widget.Clickable), icon),
+	}
+	// connectToPeer := optionRowHandler{
+	// 	clickable: new(widget.Clickable),
+	// 	icon:      common.theme.PlainIconButton(new(widget.Clickable), icon),
+	// }
+	updateUserAgent := optionRowHandler{
+		clickable: new(widget.Clickable),
+		icon:      common.theme.PlainIconButton(new(widget.Clickable), icon),
+	}
 	pg := &settingsPage{
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -58,10 +75,11 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		line:     common.theme.Line(),
 		errChann: common.errorChannels[PageSettings],
 
-		currencyConversion:  common.theme.PlainIconButton(new(widget.Clickable), icon),
+		currencyConversion: currencyConversion,
+		connectToPeer:      connectToPeer,
+		userAgent:          userAgent,
 		updateConnectToPeer: common.theme.PlainIconButton(new(widget.Clickable), icon),
-		updateUserAgent:     common.theme.PlainIconButton(new(widget.Clickable), icon),
-		changeStartupPass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
+		changeStartupPass:  common.theme.PlainIconButton(new(widget.Clickable), icon),
 	}
 	pg.line.Height = 2
 	pg.line.Color = common.theme.Color.Background
@@ -75,9 +93,9 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	pg.agentLabel = common.theme.Body1("")
 	pg.agentLabel.Color = common.theme.Color.Gray
 
-	pg.currencyConversion.Color, pg.currencyConversion.Inset = color, zeroInset
-	pg.updateConnectToPeer.Color, pg.updateConnectToPeer.Inset = color, zeroInset
-	pg.updateUserAgent.Color, pg.updateUserAgent.Inset = color, zeroInset
+	pg.currencyConversion.icon.Color, pg.currencyConversion.icon.Inset = color, zeroInset
+	pg.connectToPeer.icon.Color, pg.connectToPeer.icon.Inset = color, zeroInset
+	pg.userAgent.icon.Color, pg.userAgent.icon.Inset = color, zeroInset
 	pg.changeStartupPass.Color, pg.changeStartupPass.Inset = color, zeroInset
 
 	return func(gtx C) D {
@@ -123,17 +141,19 @@ func (pg *settingsPage) general() layout.Widget {
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
-					return pg.subSection(gtx, "Currency conversion", func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								txt := pg.theme.Body1("None")
-								txt.Color = pg.theme.Color.Gray
-								return txt.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.currencyConversion.Layout(gtx)
-							}),
-						)
+					return decredmaterial.Clickable(gtx, pg.currencyConversion.clickable, func(gtx C) D {
+						return pg.subSection(gtx, "Currency conversion", func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									txt := pg.theme.Body2("None")
+									txt.Color = pg.theme.Color.Gray
+									return txt.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return pg.currencyConversion.icon.Layout(gtx)
+								}),
+							)
+						})
 					})
 				}),
 			)
@@ -404,7 +424,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 	}
 
 	userAgentKey := dcrlibwallet.UserAgentConfigKey
-	for pg.updateUserAgent.Button.Clicked() {
+	for pg.updateUserAgent.clickable.Clicked() || pg.updateUserAgent.icon.Button.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: UserAgentTemplate,
