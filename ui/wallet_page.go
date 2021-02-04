@@ -41,7 +41,7 @@ type walletPage struct {
 	container, accountsList, walletsList, list layout.List
 	line                                       *decredmaterial.Line
 	toAddWalletPage                            *widget.Clickable
-	collapsibles                               []*decredmaterial.Collapsible
+	collapsibles                               []*decredmaterial.CollapsibleWithOption
 	toAcctDetails                              []*gesture.Click
 	iconButton                                 decredmaterial.IconButton
 	errChann                                   chan error
@@ -122,7 +122,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		},
 	}
 
-	pg.collapsibles = make([]*decredmaterial.Collapsible, 0)
+	pg.collapsibles = make([]*decredmaterial.CollapsibleWithOption, 0)
 
 	pg.addAcct = nil
 	pg.backupButton = nil
@@ -227,13 +227,12 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		accounts := common.info.Wallets[i].Accounts
 		pg.updateAcctDetailsButtons(&accounts)
 
-		collapsibleMore := func(gtx C) D {
+		collapsibleMore := func(gtx C) {
 			if pg.openPopupIndex == i {
 				m := op.Record(gtx.Ops)
 				pg.layoutOptionsMenu(gtx)
 				op.Defer(gtx.Ops, m.Stop())
 			}
-			return D{}
 		}
 
 		collapsibleHeader := func(gtx C) D {

@@ -78,8 +78,7 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	refreshWindow func()
-	changePage    func(string)
+	changePage func(string)
 }
 
 type (
@@ -233,7 +232,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		modalLoad:               &modalLoad{},
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		refreshWindow:           win.refresh,
 		changePage:              win.changePage,
 	}
 
