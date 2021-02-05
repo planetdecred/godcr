@@ -34,6 +34,12 @@ const (
 
 	// BlockConfirmed indicates a block update signal
 	BlockConfirmed
+
+	// AccountMixerStarted indicates on account mixer started
+	AccountMixerStarted
+
+	// AccountMixerEnded indicates on account mixer ended
+	AccountMixerEnded
 )
 
 const (
@@ -62,6 +68,7 @@ type (
 		ConnectedPeers int32
 		BlockInfo      NewBlock
 		ConfirmedTxn   TxConfirmed
+		AcctMixerInfo  AccountMixer
 	}
 )
 

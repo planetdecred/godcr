@@ -957,3 +957,29 @@ func getUnconfirmedPurchases(wall dcrlibwallet.Wallet, tickets []Ticket) (unconf
 
 	return
 }
+
+func (wal *Wallet) StartAccountMixer(walletID int, walletPassphrase string, errChan chan error) {
+	err := wal.multi.StartAccountMixer(walletID, walletPassphrase)
+	if err != nil {
+		go func() {
+			errChan <- err
+		}()
+	}
+}
+
+func (wal *Wallet) StopAccountMixer(walletID int, errChan chan error) {
+	err := wal.multi.StopAccountMixer(walletID)
+	if err != nil {
+		go func() {
+			errChan <- err
+		}()
+	}
+}
+
+func (wal *Wallet) IsAccountMixerActive(walletID int) bool {
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
+		return false
+	}
+	return wall.IsAccountMixerActive()
+}
