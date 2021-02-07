@@ -49,7 +49,7 @@ type SendPage struct {
 
 	confirmModal *decredmaterial.Modal
 
-	currencySwap decredmaterial.IconButton
+	currencySwap, moreOption decredmaterial.IconButton
 
 	txFeeCollapsible *decredmaterial.Collapsible
 	txLine           *decredmaterial.Line
@@ -178,6 +178,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.currencySwap.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.currencySwap.Size = values.MarginPadding30
 
+	pg.moreOption = common.theme.IconButton(new(widget.Clickable), common.icons.navMoreIcon)
+	pg.moreOption.Background = color.RGBA{}
+	pg.moreOption.Color = common.theme.Color.Text
+	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
+
 	pg.maxButton.Background = common.theme.Color.Black
 	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
@@ -205,148 +210,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	}
 }
 
-func (pg *SendPage) Handle(c pageCommon) {
-	if len(c.info.Wallets) == 0 {
-		return
-	}
-	if pg.LastTradeRate == "" && pg.count == 0 {
-		pg.count = 1
-		pg.calculateValues()
-	}
-
-	if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
-		pg.count = 2
-		pg.calculateValues()
-	}
-
-	if pg.selectedAccount.CurrentAddress != c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount].CurrentAddress {
-		pg.shouldInitializeTxAuthor = true
-		pg.selectedAccount = c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount]
-	}
-
-	if pg.selectedWallet.ID != c.info.Wallets[*c.selectedWallet].ID {
-		pg.shouldInitializeTxAuthor = true
-		pg.selectedWallet = c.info.Wallets[*c.selectedWallet]
-	}
-
-	if pg.toggleCoinCtrl.Value {
-		_, spendableBalance := pg.calculateBalanceUTXO()
-		pg.spendableBalance = spendableBalance
-	} else {
-		pg.spendableBalance = pg.selectedAccount.SpendableBalance
-	}
-
-	if pg.shouldInitializeTxAuthor {
-		pg.shouldInitializeTxAuthor = false
-		pg.sendAmountEditor.Editor.SetText("")
-		pg.calculateErrorText = ""
-		c.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
-	}
-
-	pg.validate(true)
-	pg.watchForBroadcastResult(c)
-
-	if pg.isBroadcastingTransaction {
-		col := pg.theme.Color.Gray
-		col.A = 150
-
-		pg.nextButton.Text = "Sending..."
-		pg.nextButton.Background = col
-	} else {
-		pg.nextButton.Text = "Next"
-		pg.nextButton.Background = pg.theme.Color.Primary
-	}
-
-	for pg.nextButton.Button.Clicked() {
-		if pg.validate(false) && pg.calculateErrorText == "" {
-			pg.isConfirmationModalOpen = true
-		}
-	}
-
-	for pg.confirmButton.Button.Clicked() {
-		pg.isConfirmationModalOpen = false
-		pg.isPasswordModalOpen = true
-	}
-
-	for pg.closeConfirmationModalButton.Button.Clicked() {
-		pg.isConfirmationModalOpen = false
-	}
-
-	for pg.maxButton.Button.Clicked() {
-		pg.activeExchange = "DCR"
-		amountMax, err := pg.txAuthor.EstimateMaxSendAmount()
-		if err != nil {
-			return
-		}
-		pg.sendAmountEditor.Editor.SetText(fmt.Sprintf("%.10f", amountMax.DcrValue))
-		pg.calculateValues()
-	}
-
-	for pg.currencySwap.Button.Clicked() {
-		if pg.LastTradeRate != "" {
-			if pg.activeExchange == "DCR" {
-				pg.activeExchange = "USD"
-				pg.inactiveExchange = "DCR"
-			} else {
-				pg.activeExchange = "DCR"
-				pg.inactiveExchange = "USD"
-			}
-		}
-
-		pg.calculateValues()
-	}
-
-	for range pg.destinationAddressEditor.Editor.Events() {
-		go pg.calculateValues()
-	}
-
-	if pg.destinationAddressEditor.Editor.Len() == 0 || pg.sendAmountEditor.Editor.Len() == 0 {
-		pg.balanceAfterSend(true)
-	}
-
-	for _, evt := range pg.sendAmountEditor.Editor.Events() {
-		go pg.calculateValues()
-		pg.handleEditorChange(evt)
-	}
-
-	if pg.sendAmountEditor.Editor.Focused() || pg.calculateErrorText != "" {
-		if pg.calculateErrorText != "" {
-			pg.borderColor = pg.theme.Color.Danger
-		} else {
-			pg.borderColor = pg.theme.Color.Primary
-		}
-	} else {
-		pg.borderColor = pg.theme.Color.Hint
-	}
-
-	if pg.toggleCoinCtrl.Changed() && !pg.toggleCoinCtrl.Value {
-		pg.txAuthor.UseInputs(nil)
-	}
-
-	if pg.inputButtonCoinCtrl.Button.Clicked() {
-		c.wallet.AllUnspentOutputs(pg.selectedWallet.ID, pg.selectedAccount.Number)
-		c.changePage(PageUTXO)
-	}
-
-	select {
-	case err := <-pg.txAuthorErrChan:
-		pg.calculateErrorText = err.Error()
-		c.notify(pg.calculateErrorText, false)
-	case err := <-pg.broadcastErrChan:
-		c.notify(err.Error(), false)
-
-		if err.Error() == invalidPassphraseError {
-			time.AfterFunc(time.Second*3, func() {
-				pg.isConfirmationModalOpen = true
-			})
-		}
-		pg.isBroadcastingTransaction = false
-	default:
-	}
-}
-
 func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pageContent := []func(gtx C) D{
+		func(gtx C) D {
+			return pg.topNav(gtx, common)
+		},
 		func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				return common.SelectedAccountLayout(gtx)
@@ -373,7 +241,7 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return common.LayoutWithAccounts(gtx, func(gtx C) D {
+			return common.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						if pg.pageContainer.Position.First > 0 {
@@ -408,6 +276,41 @@ func (pg *SendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	}
 
 	return dims
+}
+
+func (pg *SendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensions {
+	m := values.MarginPadding15
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					common.subPageBackButton.Icon = common.icons.contentClear
+					return common.subPageBackButton.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.H6("Send DCR")
+					txt.Color = pg.theme.Color.Text
+					return layout.Inset{Left: m}.Layout(gtx, func(gtx C) D {
+						return txt.Layout(gtx)
+					})
+				}),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return common.subPageInfoButton.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Left: m}.Layout(gtx, func(gtx C) D {
+							return pg.moreOption.Layout(gtx)
+						})
+					}),
+				)
+			})
+		}),
+	)
 }
 
 func (pg *SendPage) drawTransactionDetailWidgets(gtx layout.Context) layout.Dimensions {
@@ -1073,4 +976,148 @@ func (pg *SendPage) coinControlLayout(gtx layout.Context, c *pageCommon) layout.
 			}),
 		)
 	})
+}
+
+func (pg *SendPage) Handle(c pageCommon) {
+	if c.subPageBackButton.Button.Clicked() {
+		*c.page = PageOverview
+	}
+
+	if len(c.info.Wallets) == 0 {
+		return
+	}
+	if pg.LastTradeRate == "" && pg.count == 0 {
+		pg.count = 1
+		pg.calculateValues()
+	}
+
+	if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
+		pg.count = 2
+		pg.calculateValues()
+	}
+
+	if pg.selectedAccount.CurrentAddress != c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount].CurrentAddress {
+		pg.shouldInitializeTxAuthor = true
+		pg.selectedAccount = c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount]
+	}
+
+	if pg.selectedWallet.ID != c.info.Wallets[*c.selectedWallet].ID {
+		pg.shouldInitializeTxAuthor = true
+		pg.selectedWallet = c.info.Wallets[*c.selectedWallet]
+	}
+
+	if pg.toggleCoinCtrl.Value {
+		_, spendableBalance := pg.calculateBalanceUTXO()
+		pg.spendableBalance = spendableBalance
+	} else {
+		pg.spendableBalance = pg.selectedAccount.SpendableBalance
+	}
+
+	if pg.shouldInitializeTxAuthor {
+		pg.shouldInitializeTxAuthor = false
+		pg.sendAmountEditor.Editor.SetText("")
+		pg.calculateErrorText = ""
+		c.wallet.CreateTransaction(pg.selectedWallet.ID, pg.selectedAccount.Number, pg.txAuthorErrChan)
+	}
+
+	pg.validate(true)
+	pg.watchForBroadcastResult(c)
+
+	if pg.isBroadcastingTransaction {
+		col := pg.theme.Color.Gray
+		col.A = 150
+
+		pg.nextButton.Text = "Sending..."
+		pg.nextButton.Background = col
+	} else {
+		pg.nextButton.Text = "Next"
+		pg.nextButton.Background = pg.theme.Color.Primary
+	}
+
+	for pg.nextButton.Button.Clicked() {
+		if pg.validate(false) && pg.calculateErrorText == "" {
+			pg.isConfirmationModalOpen = true
+		}
+	}
+
+	for pg.confirmButton.Button.Clicked() {
+		pg.isConfirmationModalOpen = false
+		pg.isPasswordModalOpen = true
+	}
+
+	for pg.closeConfirmationModalButton.Button.Clicked() {
+		pg.isConfirmationModalOpen = false
+	}
+
+	for pg.maxButton.Button.Clicked() {
+		pg.activeExchange = "DCR"
+		amountMax, err := pg.txAuthor.EstimateMaxSendAmount()
+		if err != nil {
+			return
+		}
+		pg.sendAmountEditor.Editor.SetText(fmt.Sprintf("%.10f", amountMax.DcrValue))
+		pg.calculateValues()
+	}
+
+	for pg.currencySwap.Button.Clicked() {
+		if pg.LastTradeRate != "" {
+			if pg.activeExchange == "DCR" {
+				pg.activeExchange = "USD"
+				pg.inactiveExchange = "DCR"
+			} else {
+				pg.activeExchange = "DCR"
+				pg.inactiveExchange = "USD"
+			}
+		}
+
+		pg.calculateValues()
+	}
+
+	for range pg.destinationAddressEditor.Editor.Events() {
+		go pg.calculateValues()
+	}
+
+	if pg.destinationAddressEditor.Editor.Len() == 0 || pg.sendAmountEditor.Editor.Len() == 0 {
+		pg.balanceAfterSend(true)
+	}
+
+	for _, evt := range pg.sendAmountEditor.Editor.Events() {
+		go pg.calculateValues()
+		pg.handleEditorChange(evt)
+	}
+
+	if pg.sendAmountEditor.Editor.Focused() || pg.calculateErrorText != "" {
+		if pg.calculateErrorText != "" {
+			pg.borderColor = pg.theme.Color.Danger
+		} else {
+			pg.borderColor = pg.theme.Color.Primary
+		}
+	} else {
+		pg.borderColor = pg.theme.Color.Hint
+	}
+
+	if pg.toggleCoinCtrl.Changed() && !pg.toggleCoinCtrl.Value {
+		pg.txAuthor.UseInputs(nil)
+	}
+
+	if pg.inputButtonCoinCtrl.Button.Clicked() {
+		c.wallet.AllUnspentOutputs(pg.selectedWallet.ID, pg.selectedAccount.Number)
+		*c.page = PageUTXO
+	}
+
+	select {
+	case err := <-pg.txAuthorErrChan:
+		pg.calculateErrorText = err.Error()
+		c.Notify(pg.calculateErrorText, false)
+	case err := <-pg.broadcastErrChan:
+		c.Notify(err.Error(), false)
+
+		if err.Error() == invalidPassphraseError {
+			time.AfterFunc(time.Second*3, func() {
+				pg.isConfirmationModalOpen = true
+			})
+		}
+		pg.isBroadcastingTransaction = false
+	default:
+	}
 }
