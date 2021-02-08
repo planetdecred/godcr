@@ -245,7 +245,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 
 					icon := txnWidgets.direction
 					icon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-					return icon.Layout(gtx)
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, icon.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -262,7 +262,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.TextSize12, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 						sz := gtx.Constraints.Max.X
 
 						icon := txnWidgets.statusIcon
