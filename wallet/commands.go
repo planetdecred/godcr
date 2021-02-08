@@ -113,7 +113,7 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 			return
 		}
 
-		id, err := wall.NextAccount(name)
+		id, err := wall.CreateNewAccount(name, pass)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -801,8 +801,13 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 			return
 		}
 
-		err := wall.SetAccountMixerConfig("mixed", "unmixed", walletPassphrase)
-		if err != nil {
+		var err error
+		var mixedAcctNumber int32
+		var unmixedAcctNumber int32
+		mixedAcct := "mixed"
+		unmixedAcct := "unmixed"
+
+		sendErr := func(err error) {
 			go func() {
 				errChan <- err
 			}()
@@ -812,6 +817,39 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 				Err:      err,
 				Affected: []int{walletID},
 			})
+		}
+
+		if !wall.HasAccount(mixedAcct) {
+			mixedAcctNumber, err = wall.CreateNewAccount(mixedAcct, []byte(walletPassphrase))
+			if err != nil {
+				sendErr(err)
+				return
+			}
+		} else {
+			mixedAcctNumber, err = wall.AccountNumber(mixedAcct)
+			if err != nil {
+				sendErr(err)
+				return
+			}
+		}
+
+		if !wall.HasAccount(unmixedAcct) {
+			unmixedAcctNumber, err = wall.CreateNewAccount(unmixedAcct, []byte(walletPassphrase))
+			if err != nil {
+				sendErr(err)
+				return
+			}
+		} else {
+			unmixedAcctNumber, err = wall.AccountNumber(unmixedAcct)
+			if err != nil {
+				sendErr(err)
+				return
+			}
+		}
+
+		err = wall.SetAccountMixerConfig(mixedAcctNumber, unmixedAcctNumber, walletPassphrase)
+		if err != nil {
+			sendErr(err)
 			return
 		}
 

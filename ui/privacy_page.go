@@ -156,6 +156,35 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 	})
 }
 
+func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
+	txt := pg.theme.H6("Mixer")
+	subtxt := pg.theme.Body2("Ready to mix")
+	subtxt.Color = c.theme.Color.Gray
+	iconVisibility := false
+
+	if c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+		txt.Text = "Mixer is running..."
+		subtxt.Text = "Keep this app opened"
+		iconVisibility = true
+	}
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(txt.Layout),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if !iconVisibility {
+						return layout.Dimensions{}
+					}
+					c.icons.alertGray.Scale = 0.024
+					return c.icons.alertGray.Layout(gtx)
+				}),
+				layout.Rigid(subtxt.Layout),
+			)
+		}),
+	)
+}
+
 func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return c.theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -169,17 +198,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										txt := pg.theme.H6("Mixer")
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										txt := pg.theme.Body2("Ready to mix")
-										txt.Color = c.theme.Color.Gray
-										return txt.Layout(gtx)
-									}),
-								)
+								return pg.mixerInfoStatusTextLayout(gtx, c)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -220,6 +239,13 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return layoutBalance(gtx, unmixedBalance, *c)
 										}),
 									)
+								}),
+								layout.Rigid(func(gtx C) D {
+									if !c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+										return layout.Dimensions{}
+									}
+									c.icons.arrowDownIcon.Scale = 0.22
+									return layout.Center.Layout(gtx, c.icons.arrowDownIcon.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
