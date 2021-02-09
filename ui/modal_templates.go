@@ -26,6 +26,7 @@ const SetStartupPasswordTemplate = "SetStartupPassword"
 const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
 const UnlockWalletTemplate = "UnlockWallet"
 const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
+const ChangeSpecificPeerTemplate = "ChangeSpecificPeer"
 const UserAgentTemplate = "UserAgent"
 const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
 const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
@@ -146,7 +147,9 @@ func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C)
 func (m *ModalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			return th.Body2("Make sure to have the seed phrase backed up before removing the wallet").Layout(gtx)
+			info := th.Body1("Make sure to have the seed phrase backed up before removing the wallet")
+			info.Color = th.Color.Gray
+			return info.Layout(gtx)
 		},
 	}
 }
@@ -408,7 +411,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.createNewWallet()
 		m.walletName.Hint = "Wallet name"
 		return
-	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, UserAgentTemplate:
+	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, ChangeSpecificPeerTemplate, UserAgentTemplate:
 		if m.editorsNotEmpty(th, m.walletName.Editor) && m.confirm.Button.Clicked() {
 			load.confirm.(func(string))(m.walletName.Editor.Text())
 		}
@@ -421,7 +424,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		if load.template == RenameAccountTemplate {
 			m.walletName.Hint = "Account name"
 		}
-		if load.template == ConnectToSpecificPeerTemplate {
+		if load.template == ConnectToSpecificPeerTemplate || load.template == ChangeSpecificPeerTemplate {
 			m.walletName.Hint = "IP address"
 		}
 		if load.template == UserAgentTemplate {
@@ -549,6 +552,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
 		}
+
 		template = m.setupMixerInfo()
 		return
 	case ConfirmSetupMixerAcctTemplate:

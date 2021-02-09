@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -56,6 +57,12 @@ func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
 }
 
 func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+	pg.notificationW.Value = false
+	if beep {
+		pg.notificationW.Value = true
+	}
+
 	body := func(gtx C) D {
 		page := SubPage{
 			title:      "Settings",
@@ -208,6 +215,10 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 			}
 		}()
 		break
+	}
+
+	if pg.notificationW.Changed() {
+		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notificationW.Value)
 	}
 
 	for pg.deleteWallet.Button.Clicked() {

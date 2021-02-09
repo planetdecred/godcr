@@ -681,8 +681,20 @@ func (wal *Wallet) VerifyWalletSeedPhrase(walletID int, seedPhrase string, privp
 	return err
 }
 
-func (wal *Wallet) SpendUnconfirmed(value bool) {
-	wal.multi.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, value)
+func (wal *Wallet) SaveConfigValueForKey(key string, value interface{}) {
+	wal.multi.SaveUserConfigValue(key, value)
+}
+
+func (wal *Wallet) ReadBoolConfigValueForKey(key string) bool {
+	return wal.multi.ReadBoolConfigValueForKey(key, false)
+}
+
+func (wal *Wallet) ReadStringConfigValueForKey(key string) string {
+	return wal.multi.ReadStringConfigValueForKey(key)
+}
+
+func (wal *Wallet) RemoveUserConfigValueForKey(key string) {
+	wal.multi.DeleteUserConfigValueForKey(key)
 }
 
 func (wal *Wallet) LoadedWalletsCount() int32 {
