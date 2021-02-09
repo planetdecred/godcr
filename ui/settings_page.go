@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -17,18 +18,24 @@ type settingsPage struct {
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
-	currencyConversion decredmaterial.IconButton
-	connectToPeer      decredmaterial.IconButton
-	userAgent          decredmaterial.IconButton
-	changeStartupPass  decredmaterial.IconButton
+	currencyConversion  decredmaterial.IconButton
+	updateConnectToPeer decredmaterial.IconButton
+	updateUserAgent     decredmaterial.IconButton
+	changeStartupPass   decredmaterial.IconButton
 
-	spendUnconfirm  *widget.Bool
-	startupPassword *widget.Bool
-	notificationW   *widget.Bool
+	spendUnconfirmed *widget.Bool
+	startupPassword  *widget.Bool
+	beepNewBlocks    *widget.Bool
+	connectToPeer    *widget.Bool
+	userAgent        *widget.Bool
+
+	peerLabel, agentLabel decredmaterial.Label
 
 	line *decredmaterial.Line
 
 	isStartupPassword bool
+	peerAddr          string
+	agentValue        string
 	errChann          chan error
 }
 
@@ -42,17 +49,19 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		walletInfo: win.walletInfo,
 		wal:        common.wallet,
 
-		spendUnconfirm:  new(widget.Bool),
-		startupPassword: new(widget.Bool),
-		notificationW:   new(widget.Bool),
+		spendUnconfirmed: new(widget.Bool),
+		startupPassword:  new(widget.Bool),
+		beepNewBlocks:    new(widget.Bool),
+		connectToPeer:    new(widget.Bool),
+		userAgent:        new(widget.Bool),
 
 		line:     common.theme.Line(),
 		errChann: common.errorChannels[PageSettings],
 
-		currencyConversion: common.theme.PlainIconButton(new(widget.Clickable), icon),
-		connectToPeer:      common.theme.PlainIconButton(new(widget.Clickable), icon),
-		userAgent:          common.theme.PlainIconButton(new(widget.Clickable), icon),
-		changeStartupPass:  common.theme.PlainIconButton(new(widget.Clickable), icon),
+		currencyConversion:  common.theme.PlainIconButton(new(widget.Clickable), icon),
+		updateConnectToPeer: common.theme.PlainIconButton(new(widget.Clickable), icon),
+		updateUserAgent:     common.theme.PlainIconButton(new(widget.Clickable), icon),
+		changeStartupPass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
 	}
 	pg.line.Height = 2
 	pg.line.Color = common.theme.Color.Background
@@ -60,9 +69,15 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	color := common.theme.Color.LightGray
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 
+	pg.peerLabel = common.theme.Body1("")
+	pg.peerLabel.Color = common.theme.Color.Gray
+
+	pg.agentLabel = common.theme.Body1("")
+	pg.agentLabel.Color = common.theme.Color.Gray
+
 	pg.currencyConversion.Color, pg.currencyConversion.Inset = color, zeroInset
-	pg.connectToPeer.Color, pg.connectToPeer.Inset = color, zeroInset
-	pg.userAgent.Color, pg.userAgent.Inset = color, zeroInset
+	pg.updateConnectToPeer.Color, pg.updateConnectToPeer.Inset = color, zeroInset
+	pg.updateUserAgent.Color, pg.updateUserAgent.Inset = color, zeroInset
 	pg.changeStartupPass.Color, pg.changeStartupPass.Inset = color, zeroInset
 
 	return func(gtx C) D {
@@ -72,7 +87,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 }
 
 func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.updateStartupPasswordSetting()
+	pg.updateSettingOptions()
+
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "Settings",
@@ -103,18 +119,14 @@ func (pg *settingsPage) general() layout.Widget {
 		return pg.mainSection(gtx, "General", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSection(gtx, "Spending unconfirmed funds", func(gtx C) D {
-						return pg.theme.Switch(pg.spendUnconfirm).Layout(gtx)
-					})
+					return pg.subSectionSwitch(gtx, "Spending unconfirmed funds", pg.spendUnconfirmed)
 				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.lineSeparator(gtx)
-				}),
+				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSection(gtx, "Currency conversion", func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								txt := pg.theme.Body2("None")
+								txt := pg.theme.Body1("None")
 								txt.Color = pg.theme.Color.Gray
 								return txt.Layout(gtx)
 							}),
@@ -132,9 +144,7 @@ func (pg *settingsPage) general() layout.Widget {
 func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, "Notification", func(gtx C) D {
-			return pg.subSection(gtx, "Beep for new blocks", func(gtx C) D {
-				return pg.theme.Switch(pg.notificationW).Layout(gtx)
-			})
+			return pg.subSectionSwitch(gtx, "Beep for new blocks", pg.beepNewBlocks)
 		})
 	}
 }
@@ -144,20 +154,14 @@ func (pg *settingsPage) security() layout.Widget {
 		return pg.mainSection(gtx, "Security", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSection(gtx, "Startup password", func(gtx C) D {
-						return pg.theme.Switch(pg.startupPassword).Layout(gtx)
-					})
+					return pg.subSectionSwitch(gtx, "Startup password", pg.startupPassword)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if pg.isStartupPassword {
-						return pg.lineSeparator(gtx)
-					}
-					return layout.Dimensions{}
-				}),
-				layout.Rigid(func(gtx C) D {
-					if pg.isStartupPassword {
-						return pg.subSection(gtx, "Change startup password", func(gtx C) D {
-							return pg.changeStartupPass.Layout(gtx)
+						return pg.conditionalDisplay(gtx, func(gtx C) D {
+							return pg.subSection(gtx, "Change startup password", func(gtx C) D {
+								return pg.changeStartupPass.Layout(gtx)
+							})
 						})
 					}
 					return layout.Dimensions{}
@@ -172,34 +176,76 @@ func (pg *settingsPage) connection() layout.Widget {
 		return pg.mainSection(gtx, "Connection", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSection(gtx, "Connect to specific peer", func(gtx C) D {
-						return pg.connectToPeer.Layout(gtx)
-					})
+					return pg.subSectionSwitch(gtx, "Connect to specific peer", pg.connectToPeer)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.lineSeparator(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(pg.subSectionLabel("User agent")),
-								layout.Rigid(func(gtx C) D {
-									txt := pg.theme.Body2("For exchange rate fetching")
-									txt.Color = pg.theme.Color.Gray
-									return txt.Layout(gtx)
-								}),
-							)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.userAgent.Layout(gtx)
+					if pg.peerAddr != "" {
+						return pg.conditionalDisplay(gtx, func(gtx C) D {
+							return pg.subSection(gtx, "Change specific peer", func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return pg.peerLabel.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return pg.updateConnectToPeer.Layout(gtx)
+									}),
+								)
 							})
-						}),
-					)
+						})
+					}
+					return layout.Dimensions{}
 				}),
+				layout.Rigid(pg.lineSeparator()),
+				layout.Rigid(pg.agent()),
 			)
 		})
+	}
+}
+
+func (pg *settingsPage) agent() layout.Widget {
+	return func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(pg.subSectionLabel("Custom user agent")),
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.Body2("For exchange rate fetching")
+								txt.Color = pg.theme.Color.Gray
+								return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									return txt.Layout(gtx)
+								})
+							}),
+						)
+					}),
+					layout.Flexed(1, func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return pg.theme.Switch(pg.userAgent).Layout(gtx)
+							})
+						})
+					}),
+				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if pg.agentValue != "" {
+					return pg.conditionalDisplay(gtx, func(gtx C) D {
+						return pg.subSection(gtx, "Change user agent", func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return pg.agentLabel.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return pg.updateUserAgent.Layout(gtx)
+								}),
+							)
+						})
+					})
+				}
+				return layout.Dimensions{}
+			}),
+		)
 	}
 }
 
@@ -231,25 +277,42 @@ func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout
 	)
 }
 
+func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
+	return pg.subSection(gtx, title, func(gtx C) D {
+		return pg.theme.Switch(option).Layout(gtx)
+	})
+}
+
+func (pg *settingsPage) conditionalDisplay(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(pg.lineSeparator()),
+		layout.Rigid(body),
+	)
+}
+
 func (pg *settingsPage) subSectionLabel(title string) layout.Widget {
 	return func(gtx C) D {
 		return pg.theme.Body1(title).Layout(gtx)
 	}
 }
 
-func (pg *settingsPage) lineSeparator(gtx layout.Context) layout.Dimensions {
+func (pg *settingsPage) lineSeparator() layout.Widget {
 	m := values.MarginPadding10
-	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-		pg.line.Width = gtx.Constraints.Max.X
-		return pg.line.Layout(gtx)
-	})
+	return func(gtx C) D {
+		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+			pg.line.Width = gtx.Constraints.Max.X
+			return pg.line.Layout(gtx)
+		})
+	}
 }
 
 func (pg *settingsPage) handle(common pageCommon) {
-	notImplemented := "functionality not yet implemented"
+	if pg.spendUnconfirmed.Changed() {
+		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.Value)
+	}
 
-	if pg.spendUnconfirm.Changed() {
-		pg.wal.SpendUnconfirmed(pg.spendUnconfirm.Value)
+	if pg.beepNewBlocks.Changed() {
+		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.Value)
 	}
 
 	for pg.changeStartupPass.Button.Clicked() {
@@ -298,16 +361,41 @@ func (pg *settingsPage) handle(common pageCommon) {
 		}()
 	}
 
-	for pg.connectToPeer.Button.Clicked() {
+	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey
+	if pg.connectToPeer.Changed() {
+		if pg.connectToPeer.Value {
+			go func() {
+				common.modalReceiver <- &modalLoad{
+					template: ConnectToSpecificPeerTemplate,
+					title:    "Connect to specific peer",
+					confirm: func(ipAddress string) {
+						if ipAddress != "" {
+							pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
+							common.closeModal()
+						}
+					},
+					confirmText: "Connect",
+					cancel:      common.closeModal,
+					cancelText:  "Cancel",
+				}
+			}()
+			return
+		}
+		pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
+	}
+
+	for pg.updateConnectToPeer.Button.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
-				template: ConnectToSpecificPeerTemplate,
-				title:    "Connect to specific peer",
+				template: ChangeSpecificPeerTemplate,
+				title:    "Change specific peer",
 				confirm: func(ipAddress string) {
-					common.Notify(notImplemented, true)
-					common.closeModal()
+					if ipAddress != "" {
+						pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
+						common.closeModal()
+					}
 				},
-				confirmText: "Connect",
+				confirmText: "Done",
 				cancel:      common.closeModal,
 				cancelText:  "Cancel",
 			}
@@ -315,21 +403,46 @@ func (pg *settingsPage) handle(common pageCommon) {
 		break
 	}
 
-	for pg.userAgent.Button.Clicked() {
+	userAgentKey := dcrlibwallet.UserAgentConfigKey
+	for pg.updateUserAgent.Button.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: UserAgentTemplate,
-				title:    "Set up user agent",
+				title:    "Change user agent",
 				confirm: func(agent string) {
-					common.Notify(notImplemented, true)
-					common.closeModal()
+					if agent != "" {
+						pg.wal.SaveConfigValueForKey(userAgentKey, agent)
+						common.closeModal()
+					}
 				},
-				confirmText: "Set up",
+				confirmText: "Done",
 				cancel:      common.closeModal,
 				cancelText:  "Cancel",
 			}
 		}()
 		break
+	}
+
+	if pg.userAgent.Changed() {
+		if pg.userAgent.Value {
+			go func() {
+				common.modalReceiver <- &modalLoad{
+					template: UserAgentTemplate,
+					title:    "Set up user agent",
+					confirm: func(agent string) {
+						if agent != "" {
+							pg.wal.SaveConfigValueForKey(userAgentKey, agent)
+							common.closeModal()
+						}
+					},
+					confirmText: "Set up",
+					cancel:      common.closeModal,
+					cancelText:  "Cancel",
+				}
+			}()
+			return
+		}
+		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
 	}
 
 	select {
@@ -344,13 +457,38 @@ func (pg *settingsPage) handle(common pageCommon) {
 	}
 }
 
-func (pg *settingsPage) updateStartupPasswordSetting() {
-	isSet := pg.wal.IsStartupSecuritySet()
-	if isSet {
+func (pg *settingsPage) updateSettingOptions() {
+	isPassword := pg.wal.IsStartupSecuritySet()
+	pg.startupPassword.Value = false
+	pg.isStartupPassword = false
+	if isPassword {
 		pg.startupPassword.Value = true
 		pg.isStartupPassword = true
-	} else {
-		pg.startupPassword.Value = false
-		pg.isStartupPassword = false
+	}
+
+	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)
+	pg.spendUnconfirmed.Value = false
+	if isSpendUnconfirmed {
+		pg.spendUnconfirmed.Value = true
+	}
+
+	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+	pg.beepNewBlocks.Value = false
+	if beep {
+		pg.beepNewBlocks.Value = true
+	}
+
+	pg.peerAddr = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
+	pg.connectToPeer.Value = false
+	if pg.peerAddr != "" {
+		pg.peerLabel.Text = pg.peerAddr
+		pg.connectToPeer.Value = true
+	}
+
+	pg.agentValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
+	pg.userAgent.Value = false
+	if pg.agentValue != "" {
+		pg.agentLabel.Text = pg.agentValue
+		pg.userAgent.Value = true
 	}
 }
