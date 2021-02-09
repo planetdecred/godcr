@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"strings"
@@ -32,7 +33,11 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
+<<<<<<< HEAD
 	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon *widget.Image
+=======
+	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, checkMarkGreenIcon, crossMarkRed *widget.Image
+>>>>>>> Create layout and logic for validate address page
 
 	walletIcon, syncingIcon image.Image
 }
@@ -66,6 +71,7 @@ type pageCommon struct {
 	modalLoad       *modalLoad
 	modalTemplate   *ModalTemplate
 
+	navigationPages         []string
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
 	isNavDrawerMinimized    *bool
@@ -154,6 +160,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		locationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
 		alertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert-gray"])},
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
+		checkMarkGreenIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ic_checkmark_green"])},
+		crossMarkRed:               &widget.Image{Src: paint.NewImageOp(decredIcons["ic_crossmark_red"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -279,10 +287,24 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
 	win.pages[PagePrivacy] = win.PrivacyPage(common)
 	win.pages[PageTickets] = win.TicketPage(common)
+	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {
 	page.changePage(pg)
+}
+
+func (page *pageCommon) PushNavigationPage(pg string) {
+	page.navigationPages = append(page.navigationPages, pg)
+	*page.page = pg
+	fmt.Println("common page handle: PushNavigationPage", &page)
+}
+
+func (page *pageCommon) PopNavigationPage() {
+	fmt.Println("common page handle: PopNavigationPage", &page)
+	fmt.Println(page.navigationPages)
+	// page.navigationPages = page.navigationPages[:len(page.navigationPages)-1]
+	// *page.page = page.navigationPages[len(page.navigationPages)-1]
 }
 
 func (page pageCommon) Notify(text string, success bool) {
