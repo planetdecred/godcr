@@ -836,7 +836,7 @@ func (wal *Wallet) TicketPrice(walletID int) string {
 }
 
 // PurchaseTicket buy a ticket with given parameters
-func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, expiry uint32) (string, error) {
+func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, expiry uint32) ([]string, error) {
 	wall := wal.multi.WalletWithID(walletID)
 	request := &dcrlibwallet.PurchaseTicketsRequest{
 		Account:               uint32(accountID),
@@ -845,17 +845,16 @@ func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32,
 		Expiry:                uint32(wal.multi.GetBestBlock().Height) + expiry,
 		RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
 	}
-	hash, err := wall.PurchaseTickets(request, "")
+	hashes, err := wall.PurchaseTickets(request, "")
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 	go func() {
 		var resp Response
 		resp.Resp = &TicketPurchase{}
 		wal.Send <- resp
 	}()
-	return hash[0], nil
-	//return "", nil
+	return hashes, nil
 }
 
 // GetAllTickets collects a per-wallet slice of tickets fitting the parameters.

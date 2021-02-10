@@ -50,8 +50,8 @@ func (win *Window) TicketPage(common pageCommon) layout.Widget {
 		unconfirmedList:      layout.List{Axis: layout.Vertical},
 		ticketPageContainer:  layout.List{Axis: layout.Vertical},
 		ticketPurchaseList:   layout.List{Axis: layout.Vertical},
-		inputNumberTickets:   common.theme.Editor(new(widget.Editor), "Enter tickets amount"),
-		inputExpiryBlocks:    common.theme.Editor(new(widget.Editor), "Expiry in blocks"),
+		inputNumberTickets:   common.theme.Editor(new(widget.Editor), "Enter ticket(s) amount"),
+		inputExpiryBlocks:    common.theme.Editor(new(widget.Editor), "Expires in blocks"),
 		purchaseTicketButton: common.theme.Button(new(widget.Clickable), "Purchase"),
 	}
 	pg.purchaseTicketButton.TextSize = values.TextSize12
@@ -306,7 +306,6 @@ func (pg *ticketPage) ticketRowHeader(gtx layout.Context, common pageCommon) lay
 	)
 }
 
-// func (pg *ticketPage) ticketRowInfo(gtx layout.Context, c *pageCommon, ticket wallet.Ticket) layout.Dimensions {
 func (pg *ticketPage) ticketRowInfo(gtx layout.Context, c pageCommon, ticket interface{}) layout.Dimensions {
 	txt := c.theme.Label(values.MarginPadding15, "")
 	txt.MaxLines = 1
@@ -376,45 +375,39 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 		return
 	}
 
-	hash, err := c.wallet.PurchaseTicket(selectedWallet.ID, selectedAccount.Number, uint32(numbTickets), password, uint32(expiryBlocks))
+	hashes, err := c.wallet.PurchaseTicket(selectedWallet.ID, selectedAccount.Number, uint32(numbTickets), password, uint32(expiryBlocks))
 	if err != nil {
 		log.Error("[PurchaseTicket] err:", err)
 		c.Notify(err.Error(), false)
 		return
 	}
 
-	transactionResponse, err := pg.getTicketFee(hash, password)
-	if err != nil {
-		log.Error("[GetTicketFee] err:", err)
-		c.Notify(err.Error(), false)
-		return
-	}
+	for _, hash := range hashes {
+		resp, err := pg.vspd.GetVSPFeeAddress(hash, password)
+		if err != nil {
+			log.Error("[CreateTicketFeeTx] err:", err)
+			return
+		}
 
-	_, err = pg.vspd.PayVSPFee(transactionResponse, hash, "", password)
-	if err != nil {
-		log.Error("[PayVSPFee] err:", err)
-		c.Notify(err.Error(), false)
-		return
+		transactionResponse, err := pg.vspd.CreateTicketFeeTx(resp.FeeAmount, hash, resp.FeeAddress, password)
+		if err != nil {
+			log.Error("[CreateTicketFeeTx] err:", err)
+			c.Notify(err.Error(), false)
+			return
+		}
+
+		_, err = pg.vspd.PayVSPFee(transactionResponse, hash, "", password)
+		if err != nil {
+			log.Error("[PayVSPFee] err:", err)
+			c.Notify(err.Error(), false)
+			return
+		}
 	}
 
 	c.Notify("success", true)
 	pg.inputExpiryBlocks.Editor.SetText("")
 	pg.inputNumberTickets.Editor.SetText("")
 	c.closeModal()
-}
-
-func (pg *ticketPage) getTicketFee(ticketHash string, password []byte) (feeTransaction string, err error) {
-	resp, err := pg.vspd.GetVSPFeeAddress(ticketHash, password)
-	if err != nil {
-		return
-	}
-
-	feeTransaction, err = pg.vspd.CreateTicketFeeTx(resp.FeeAmount, ticketHash, resp.FeeAddress, password)
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 func (pg *ticketPage) setWallets(common pageCommon) {
@@ -443,6 +436,11 @@ func (pg *ticketPage) setAccounts(common pageCommon) {
 	var accountsDropdownItems []decredmaterial.DropDownItem
 	selectedWallet := pg.walletsDropdown.SelectedIndex()
 	for i := range common.info.Wallets[selectedWallet].Accounts {
+		accountName := common.info.Wallets[selectedWallet].Accounts[i].Name
+		if accountName == "imported" {
+			continue
+		}
+
 		item := decredmaterial.DropDownItem{
 			Text: common.info.Wallets[selectedWallet].Accounts[i].Name,
 		}
