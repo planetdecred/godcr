@@ -59,6 +59,8 @@ type Window struct {
 	modal                   chan *modalLoad
 	sysDestroyWithSync      bool
 	walletAcctMixerStatus   chan *wallet.AccountMixer
+
+	internalLog chan string
 }
 
 type WriteClipboard struct {
@@ -70,7 +72,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace) (*Window, error) {
+func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace, internalLog chan string) (*Window, error) {
 	win := new(Window)
 	var netType string
 	if strings.Contains(wal.Net, "testnet") {
@@ -108,7 +110,10 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletTabs.SetTabs([]decredmaterial.TabItem{})
 	win.accountTabs.SetTabs([]decredmaterial.TabItem{})
 
+	win.internalLog = internalLog
+
 	win.addPages(decredIcons)
+
 	return win, nil
 }
 

@@ -20,9 +20,14 @@ import (
 // the write-end pipe of an initialized log rotator.
 type logWriter struct{}
 
+var internalLog = make(chan string, 10)
+
 // Write writes the data in p to standard out and the log rotator.
-func (logWriter) Write(p []byte) (n int, err error) {
+func (l logWriter) Write(p []byte) (n int, err error) {
 	os.Stdout.Write(p)
+	go func() {
+		internalLog <- string(p)
+	}()
 	return logRotator.Write(p)
 }
 
@@ -48,17 +53,20 @@ var (
 
 	walletLog = backendLog.Logger("WALL")
 	winLog    = backendLog.Logger("UI")
+	dlwlLog   = backendLog.Logger("DLWL")
 )
 
 // Initialize package-global logger variables.
 func init() {
 	wallet.UseLogger(walletLog)
 	ui.UseLogger(winLog)
+	dcrlibwallet.UseLogger(dlwlLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
 var subsystemLoggers = map[string]slog.Logger{
 	"WALL": walletLog,
+	"DLWL": dlwlLog,
 	"UI":   winLog,
 	"GDCR": log,
 }

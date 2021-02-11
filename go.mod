@@ -26,4 +26,5 @@ require (
 replace (
 	decred.org/dcrwallet => decred.org/dcrwallet v1.6.0-rc4
 	github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
+	github.com/planetdecred/dcrlibwallet => ../dcrlibwallet
 )
