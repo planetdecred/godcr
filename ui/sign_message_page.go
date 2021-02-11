@@ -38,7 +38,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	messageEditor.IsVisible = true
 	messageEditor.Editor.SingleLine = true
 	clearButton := common.theme.Button(new(widget.Clickable), "Clear all")
-	clearButton.Background = color.RGBA{}
+	clearButton.Background = color.NRGBA{}
 	clearButton.Color = common.theme.Color.Gray
 	errorLabel := common.theme.Caption("")
 	errorLabel.Color = common.theme.Color.Danger
@@ -88,7 +88,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
 				pg.clearForm()
-				*common.page = PageWallet
+				common.ChangePage(PageWallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return common.theme.Card().Layout(gtx, func(gtx C) D {

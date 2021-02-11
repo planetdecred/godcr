@@ -99,7 +99,7 @@ type SendPage struct {
 	txAuthorErrChan  chan error
 	broadcastErrChan chan error
 
-	borderColor color.RGBA
+	borderColor color.NRGBA
 
 	toggleCoinCtrl      *widget.Bool
 	inputButtonCoinCtrl decredmaterial.Button
@@ -175,7 +175,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.closeConfirmationModalButton.Background = common.theme.Color.Gray
 
 	pg.currencySwap = common.theme.IconButton(new(widget.Clickable), common.icons.actionSwapVert)
-	pg.currencySwap.Background = color.RGBA{}
+	pg.currencySwap.Background = color.NRGBA{}
 	pg.currencySwap.Color = common.theme.Color.Text
 	pg.currencySwap.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.currencySwap.Size = values.MarginPadding30
@@ -185,7 +185,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	pg.sendToButton = common.theme.Button(new(widget.Clickable), "Send to account")
 	pg.sendToButton.TextSize = values.TextSize14
-	pg.sendToButton.Background = color.RGBA{}
+	pg.sendToButton.Background = color.NRGBA{}
 	pg.sendToButton.Color = common.theme.Color.Primary
 	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -327,7 +327,7 @@ func (pg *SendPage) Handle(c pageCommon) {
 
 	if pg.inputButtonCoinCtrl.Button.Clicked() {
 		c.wallet.AllUnspentOutputs(pg.selectedWallet.ID, pg.selectedAccount.Number)
-		*c.page = PageUTXO
+		c.ChangePage(PageUTXO)
 	}
 
 	select {

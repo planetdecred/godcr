@@ -10,6 +10,7 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -86,7 +87,7 @@ type overviewPage struct {
 	syncButtonWidth  int
 	moreButtonWidth  int
 	moreButtonHeight int
-	gray             color.RGBA
+	gray             color.NRGBA
 }
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
@@ -107,7 +108,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonWidth:  115,
 		moreButtonHeight: 70,
 
-		gray: color.RGBA{137, 151, 165, 255},
+		gray: color.NRGBA{R: 137, G: 151, B: 165, A: 255},
 	}
 	pg.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -142,7 +143,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	pg.sync = c.theme.Button(new(widget.Clickable), pg.text.reconnect)
 	pg.sync = c.theme.Button(new(widget.Clickable), pg.text.reconnect)
 	pg.sync.TextSize = values.TextSize10
-	pg.sync.Background = color.RGBA{}
+	pg.sync.Background = color.NRGBA{}
 	pg.sync.Color = c.theme.Color.Text
 
 	pg.syncedIcon = c.icons.actionCheckCircle
@@ -229,8 +230,9 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 			}
 
 			// set the direction and status icon scale/size
-			txnWidgets.direction.Scale = 0.07
-			txnWidgets.statusIcon.Scale = 0.03
+			sz := gtx.Constraints.Max.X
+			txnWidgets.direction.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+			txnWidgets.statusIcon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
 
 			click := pg.toTransactionDetails[index]
 
@@ -311,7 +313,7 @@ func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transaction
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return txn.direction.Layout(gtx)
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, txn.direction.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -328,7 +330,7 @@ func (pg *overviewPage) recentTransactionRow(gtx layout.Context, txn transaction
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.TextSize12, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 						return txn.statusIcon.Layout(gtx)
 					})
 				}),
@@ -684,7 +686,7 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 			if e.Type == gesture.TypeClick {
 				txn := (*pg.walletTransactions).Recent[index]
 				*pg.walletTransaction = &txn
-				*c.page = PageTransactionDetails
+				c.ChangePage(PageTransactionDetails)
 				return
 			}
 		}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gioui.org/app"
+	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -108,6 +109,11 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	return win, nil
 }
 
+func (win *Window) changePage(page string) {
+	win.current = page
+	win.window.Invalidate()
+}
+
 func (win *Window) unloaded() {
 	lbl := win.theme.H3("Multiwallet not loaded\nIs another instance open?")
 	for {
@@ -199,7 +205,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
 				if win.walletInfo.LoadedWallets == 0 {
-					win.current = PageCreateRestore
+					win.changePage(PageCreateRestore)
 				}
 
 				if s.loading {
@@ -213,7 +219,7 @@ func (win *Window) Loop(shutdown chan int) {
 				go func() {
 					win.keyEvents <- &evt
 				}()
-			case system.ClipboardEvent:
+			case clipboard.Event:
 				go func() {
 					win.theme.Clipboard <- evt.Text
 				}()
