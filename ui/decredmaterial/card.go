@@ -11,7 +11,7 @@ import (
 
 type Card struct {
 	layout.Inset
-	Color  color.RGBA
+	Color  color.NRGBA
 	Radius CornerRadius
 }
 

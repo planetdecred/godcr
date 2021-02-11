@@ -85,11 +85,11 @@ func (pg *utxoPage) Handler(common pageCommon) {
 
 	if pg.backButton.Button.Clicked() {
 		pg.clearPageData()
-		*common.page = PageSend
+		common.ChangePage(PageSend)
 	}
 
 	if pg.useUTXOButton.Button.Clicked() {
-		*common.page = PageSend
+		common.ChangePage(PageSend)
 	}
 
 	if pg.selecAllChexBox.CheckBox.Changed() {

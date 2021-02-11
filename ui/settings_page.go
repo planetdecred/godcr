@@ -93,7 +93,7 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 		page := SubPage{
 			title: "Settings",
 			back: func() {
-				*common.page = PageMore
+				common.ChangePage(PageMore)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{

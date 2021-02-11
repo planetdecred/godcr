@@ -74,7 +74,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 	pg.line.Color = common.theme.Color.Background
 	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
-	pg.minInfoBtn.Background = color.RGBA{}
+	pg.minInfoBtn.Background = color.NRGBA{}
 	pg.minInfoBtn.Color = common.theme.Color.Primary
 	pg.minInfoBtn.TextSize = values.MarginPadding20
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
@@ -339,7 +339,7 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 
 						}
 
 						pg.hashBtn.Color = pg.theme.Color.Primary
-						pg.hashBtn.Background = color.RGBA{}
+						pg.hashBtn.Background = color.NRGBA{}
 						pg.hashBtn.Text = t3
 						pg.hashBtn.Inset = layout.UniformInset(values.MarginPadding0)
 						return pg.hashBtn.Layout(gtx)
@@ -444,7 +444,7 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 					}),
 					layout.Rigid(func(gtx C) D {
 						pg.copyTextBtn[i].Color = pg.theme.Color.Primary
-						pg.copyTextBtn[i].Background = color.RGBA{}
+						pg.copyTextBtn[i].Background = color.NRGBA{}
 						pg.copyTextBtn[i].Text = hashAcct
 						pg.copyTextBtn[i].Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -574,7 +574,7 @@ func (pg *transactionDetailsPage) Handler(common pageCommon) {
 	}
 
 	if pg.backButton.Button.Clicked() {
-		*common.page = PageTransactions
+		common.ChangePage(PageTransactions)
 	}
 
 	for _, b := range pg.copyTextBtn {

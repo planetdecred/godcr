@@ -68,7 +68,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 			title:      "Settings",
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
-				*common.page = PageWallet
+				common.ChangePage(PageWallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

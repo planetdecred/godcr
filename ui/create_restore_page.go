@@ -104,28 +104,28 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	pg.showPasswordModal = common.theme.Button(new(widget.Clickable), "proceed")
 	pg.showRestoreWallet = common.theme.Button(new(widget.Clickable), "Restore an existing wallet")
-	pg.showRestoreWallet.Background = color.RGBA{}
+	pg.showRestoreWallet.Background = color.NRGBA{}
 	pg.showRestoreWallet.Color = common.theme.Color.Hint
 
 	pg.closeCreateRestore = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
-	pg.closeCreateRestore.Background = color.RGBA{}
+	pg.closeCreateRestore.Background = color.NRGBA{}
 	pg.closeCreateRestore.Color = common.theme.Color.Hint
 
 	pg.hideRestoreWallet = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
-	pg.hideRestoreWallet.Background = color.RGBA{}
+	pg.hideRestoreWallet.Background = color.NRGBA{}
 	pg.hideRestoreWallet.Color = common.theme.Color.Hint
 
 	pg.hidePasswordModal = common.theme.Button(new(widget.Clickable), "cancel")
 	pg.hidePasswordModal.Color = common.theme.Color.Danger
-	pg.hidePasswordModal.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
+	pg.hidePasswordModal.Background = color.NRGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.showResetModal = common.theme.Button(new(widget.Clickable), "reset")
 	pg.showResetModal.Color = common.theme.Color.Hint
-	pg.showResetModal.Background = color.RGBA{}
+	pg.showResetModal.Background = color.NRGBA{}
 
 	pg.resetSeedFields = common.theme.Button(new(widget.Clickable), "yes, reset")
 	pg.resetSeedFields.Color = common.theme.Color.Danger
-	pg.resetSeedFields.Background = color.RGBA{R: 238, G: 238, B: 238, A: 255}
+	pg.resetSeedFields.Background = color.NRGBA{R: 238, G: 238, B: 238, A: 255}
 
 	pg.errLabel.Color = pg.theme.Color.Danger
 
@@ -256,7 +256,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 									layout.Rigid(func(gtx C) D {
 										return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 											pg.hidePasswordModal.Background = common.theme.Color.Primary
-											pg.hidePasswordModal.Color = color.RGBA{255, 255, 255, 255}
+											pg.hidePasswordModal.Color = color.NRGBA{R: 255, G: 255, B: 255, A: 255}
 											return pg.hidePasswordModal.Layout(gtx)
 										})
 									}),
@@ -440,7 +440,7 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 	for _, b := range pg.seedSuggestions {
 		for b.Button.Clicked() {
 			pg.seedEditors.editors[index].Editor.SetText(b.Text)
-			pg.seedEditors.editors[index].Editor.Move(len(b.Text))
+			pg.seedEditors.editors[index].Editor.MoveCaret(len(b.Text), 0)
 			pg.seedClicked = true
 			if index != 32 {
 				pg.seedEditors.editors[index+1].Editor.Focus()
@@ -558,7 +558,7 @@ func (pg *createRestore) validatePassword() string {
 	pass := pg.spendingPassword.Editor.Text()
 	if pass == "" {
 		pg.spendingPassword.HintColor = pg.theme.Color.Danger
-		pg.errLabel.Text = fmt.Sprintf("wallet password required and cannot be empty")
+		pg.errLabel.Text = "wallet password required and cannot be empty"
 		return ""
 	}
 
@@ -574,12 +574,12 @@ func (pg *createRestore) validatePasswords() string {
 	match := pg.matchSpendingPassword.Editor.Text()
 	if match == "" {
 		pg.matchSpendingPassword.HintColor = pg.theme.Color.Danger
-		pg.errLabel.Text = fmt.Sprintf("enter new wallet password again and it cannot be empty")
+		pg.errLabel.Text = "enter new wallet password again and it cannot be empty"
 		return ""
 	}
 
 	if match != pass {
-		pg.errLabel.Text = fmt.Sprintf("new wallet passwords does not match")
+		pg.errLabel.Text = "new wallet passwords does not match"
 		return ""
 	}
 
@@ -646,7 +646,7 @@ func (pg *createRestore) handle(common pageCommon) {
 
 	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
-		*common.page = PageWallet
+		common.ChangePage(PageWallet)
 	}
 
 	for pg.unlock.Button.Clicked() {
@@ -732,7 +732,7 @@ func (pg *createRestore) handle(common pageCommon) {
 				focus := pg.seedEditors.focusIndex
 				pg.seedEditors.editors[focus].Editor.SetText(pg.suggestions[0])
 				pg.seedClicked = true
-				pg.seedEditors.editors[focus].Editor.Move(len(pg.suggestions[0]))
+				pg.seedEditors.editors[focus].Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
 		}
 	case err := <-pg.errChan:

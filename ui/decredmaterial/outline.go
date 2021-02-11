@@ -10,7 +10,7 @@ import (
 )
 
 type Outline struct {
-	BorderColor color.RGBA
+	BorderColor color.NRGBA
 	Weight      int
 }
 

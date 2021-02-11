@@ -13,6 +13,7 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/paint"
 	"gioui.org/text"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -214,8 +215,7 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 						rect := f32.Rectangle{Max: layout.FPt(dims)}
 						rect.Size()
 						op.TransformOp{}.Add(gtx.Ops)
-						paint.ColorOp{Color: common.theme.Color.Hint}.Add(gtx.Ops)
-						paint.PaintOp{Rect: rect}.Add(gtx.Ops)
+						paint.Fill(gtx.Ops, common.theme.Color.Hint)
 						return layout.Dimensions{Size: dims}
 					})
 				}),
@@ -241,7 +241,11 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return txnWidgets.direction.Layout(gtx)
+					sz := gtx.Constraints.Max.X
+
+					icon := txnWidgets.direction
+					icon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, icon.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -258,8 +262,12 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.TextSize12, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return txnWidgets.statusIcon.Layout(gtx)
+					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						sz := gtx.Constraints.Max.X
+
+						icon := txnWidgets.statusIcon
+						icon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+						return icon.Layout(gtx)
 					})
 				}),
 			)
@@ -305,7 +313,7 @@ func (pg *transactionsPage) goToTxnDetails(gtx layout.Context, c *pageCommon, tx
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			*pg.walletTransaction = txn
-			*c.page = PageTransactionDetails
+			c.ChangePage(PageTransactionDetails)
 		}
 	}
 }
@@ -324,12 +332,9 @@ func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidge
 		txWidgets.statusIcon = common.icons.pendingIcon
 	}
 
-	txWidgets.statusIcon.Scale = 0.03
-
 	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
 		txWidgets.direction = common.icons.sendIcon
 	} else {
 		txWidgets.direction = common.icons.receiveIcon
 	}
-	txWidgets.direction.Scale = 0.055
 }

@@ -51,6 +51,10 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 		},
 	}
 
+	for i := range morePageListItems {
+		morePageListItems[i].image.Scale = 1
+	}
+
 	pg := morePage{
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,
@@ -63,16 +67,16 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 	}
 }
 
-func (pg *morePage) handleClickEvents() {
+func (pg *morePage) handleClickEvents(common pageCommon) {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {
-			*pg.page = pg.morePageListItems[i].page
+			common.ChangePage(pg.morePageListItems[i].page)
 		}
 	}
 }
 
 func (pg *morePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.handleClickEvents()
+	pg.handleClickEvents(common)
 
 	container := func(gtx C) D {
 		pg.layoutMoreItems(gtx, common)
@@ -99,8 +103,6 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												pg.morePageListItems[i].image.Scale = 0.05
-
 												return layout.Center.Layout(gtx, func(gtx C) D {
 													return pg.morePageListItems[i].image.Layout(gtx)
 												})

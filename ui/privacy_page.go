@@ -54,7 +54,7 @@ func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimension
 			title:      "Privacy",
 			walletName: c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
-				*c.page = PageWallet
+				c.ChangePage(PageWallet)
 			},
 			infoTemplateTitle: "How to use the mixer?",
 			infoTemplate:      PrivacyInfoTemplate,
