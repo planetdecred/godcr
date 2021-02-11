@@ -5,7 +5,7 @@ import (
 	"image/color"
 	// "reflect"
 	// "strconv"
-	// "strings"
+	"strings"
 	// "time"
 	"image"
 
@@ -45,9 +45,16 @@ type sendPage struct {
 	selectedWallet  wallet.InfoShort
 	selectedAccount **wallet.Account
 
+	toAddress *widget.Bool
+
 	unspentOutputsSelected *map[int]map[int32]map[string]*wallet.UnspentOutput
 
-	destinationAddressEditor     decredmaterial.Editor
+	destinationAddressEditor decredmaterial.Editor
+	leftAmountEditor         decredmaterial.Editor
+	rightAmountEditor        decredmaterial.Editor
+
+	currencySwap, moreOption decredmaterial.IconButton
+
 	customChangeAddressEditor    decredmaterial.Editor
 	sendAmountEditor             decredmaterial.Editor
 	nextButton                   decredmaterial.Button
@@ -56,10 +63,10 @@ type sendPage struct {
 	maxButton                    decredmaterial.Button
 	sendToButton                 decredmaterial.Button
 
+	accountSwitch *decredmaterial.SwitchButtonText
+
 	confirmModal       *decredmaterial.Modal
 	walletAccountModal *decredmaterial.Modal
-
-	currencySwap, moreOption decredmaterial.IconButton
 
 	txFeeCollapsible *decredmaterial.Collapsible
 	txLine           *decredmaterial.Line
@@ -84,9 +91,10 @@ type sendPage struct {
 
 	activeTotalAmount   string
 	inactiveTotalAmount string
+	currencyValue       string
 
-	activeExchange   string
-	inactiveExchange string
+	activeEditorHint   string
+	inactiveEditorHint string
 
 	activeTransactionFeeValue   string
 	inactiveTransactionFeeValue string
@@ -151,9 +159,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		selectedAccount:        &win.walletAccount,
 
 		fromAccountBtn: new(widget.Clickable),
+		toAddress:      new(widget.Bool),
 
-		activeExchange:   "DCR",
-		inactiveExchange: "USD",
+		accountSwitch:      common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
+		activeEditorHint:   "Amount (DCR)",
+		inactiveEditorHint: "Amount (USD)",
 
 		closeConfirmationModalButton: common.theme.Button(new(widget.Clickable), "Close"),
 		nextButton:                   common.theme.Button(new(widget.Clickable), "Next"),
@@ -184,14 +194,30 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	pg.balanceAfterSendValue = "- DCR"
 
-	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Destination Address")
-	pg.destinationAddressEditor.IsRequired = true
-	pg.destinationAddressEditor.IsTitleLabel = false
+	pg.leftAmountEditor = common.theme.Editor(new(widget.Editor), "Amount")
+	pg.leftAmountEditor.Editor.SetText("")
+	pg.leftAmountEditor.IsCustomButton = true
+	pg.leftAmountEditor.Editor.SingleLine = true
+	pg.leftAmountEditor.CustomButton.Background = common.theme.Color.Gray
+	pg.leftAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
+	pg.leftAmountEditor.CustomButton.Text = "Max"
+	pg.leftAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
+
+	pg.rightAmountEditor = common.theme.Editor(new(widget.Editor), "")
+	pg.rightAmountEditor.Editor.SetText("")
+	pg.rightAmountEditor.IsCustomButton = true
+	pg.rightAmountEditor.Editor.SingleLine = true
+	pg.rightAmountEditor.CustomButton.Background = common.theme.Color.Gray
+	pg.rightAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
+	pg.rightAmountEditor.CustomButton.Text = "Max"
+	pg.rightAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
+
+	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Address")
+	pg.destinationAddressEditor.Editor.SingleLine, pg.destinationAddressEditor.IsVisible = true, true
 	pg.destinationAddressEditor.Editor.SetText("")
-	pg.destinationAddressEditor.Editor.SingleLine = true
 
 	pg.customChangeAddressEditor = common.theme.Editor(new(widget.Editor), "Custom Change Address")
-	pg.customChangeAddressEditor.IsTitleLabel = false
+	pg.customChangeAddressEditor.IsVisible, pg.customChangeAddressEditor.IsTitleLabel = true, true
 	pg.customChangeAddressEditor.Editor.SetText("")
 	pg.customChangeAddressEditor.Editor.SingleLine = true
 
@@ -206,14 +232,14 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	pg.closeConfirmationModalButton.Background = common.theme.Color.Gray
 
-	pg.currencySwap = common.theme.IconButton(new(widget.Clickable), common.icons.actionSwapVert)
+	pg.currencySwap = common.theme.IconButton(new(widget.Clickable), common.icons.actionSwapHoriz)
 	pg.currencySwap.Background = color.NRGBA{}
 	pg.currencySwap.Color = common.theme.Color.Text
 	pg.currencySwap.Inset = layout.UniformInset(values.MarginPadding0)
-	pg.currencySwap.Size = values.MarginPadding30
+	pg.currencySwap.Size = values.MarginPadding25
 
 	pg.moreOption = common.theme.IconButton(new(widget.Clickable), common.icons.navMoreIcon)
-	pg.moreOption.Background = color.RGBA{}
+	pg.moreOption.Background = color.NRGBA{}
 	pg.moreOption.Color = common.theme.Color.Text
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -257,9 +283,10 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		func(gtx C) D {
 			return pg.fromSection(gtx, common)
 		},
-		// func(gtx C) D {
-		// 	return pg.coinControlLayout(gtx, &common)
-		// },
+		func(gtx C) D {
+			return pg.toSection(gtx, common)
+			// 	return pg.coinControlLayout(gtx, &common)
+		},
 		// func(gtx C) D {
 		// 	return pg.destinationAddrSection(gtx)
 		// },
@@ -420,9 +447,44 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 	})
 }
 
+func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+	return pg.pageSections(gtx, "To", func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{
+					Top:    values.MarginPadding10,
+					Bottom: values.MarginPadding10,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.destinationAddressEditor.Layout(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				if strings.Contains(pg.currencyValue, "USD") {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Flexed(0.45, func(gtx C) D {
+							pg.leftAmountEditor.Hint = pg.activeEditorHint
+							return pg.leftAmountEditor.Layout(gtx)
+						}),
+						layout.Flexed(0.1, func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+								return pg.currencySwap.Layout(gtx)
+							})
+						}),
+						layout.Flexed(0.45, func(gtx C) D {
+							pg.rightAmountEditor.Hint = pg.inactiveEditorHint
+							return pg.rightAmountEditor.Layout(gtx)
+						}),
+					)
+				}
+				return pg.leftAmountEditor.Layout(gtx)
+			}),
+		)
+	})
+}
+
 func (pg *sendPage) walletAccountSection(gtx layout.Context, common pageCommon) layout.Dimensions {
 	sections := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(title)
 				txt.Color = pg.theme.Color.Text
@@ -700,14 +762,26 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.Body2(title)
-					txt.Color = pg.theme.Color.Text
-					inset := layout.Inset{
-						Bottom: values.MarginPadding10,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return txt.Layout(gtx)
-					})
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := pg.theme.Body1(title)
+							txt.Color = pg.theme.Color.Text
+							inset := layout.Inset{
+								Bottom: values.MarginPadding10,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return txt.Layout(gtx)
+							})
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							if title == "To" {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return pg.accountSwitch.Layout(gtx)
+								})
+							}
+							return layout.Dimensions{}
+						}),
+					)
 				}),
 				layout.Rigid(body),
 			)
@@ -982,8 +1056,8 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 // }
 
 // func (pg *sendPage) calculateValues() {
-// 	defaultActiveValues := fmt.Sprintf("- %s", pg.activeExchange)
-// 	defaultInactiveValues := fmt.Sprintf("(- %s)", pg.inactiveExchange)
+// 	defaultActiveValues := fmt.Sprintf("- %s", pg.activeEditorHint)
+// 	defaultInactiveValues := fmt.Sprintf("(- %s)", pg.inactiveEditorHint)
 // 	noExchangeText := "Exchange rate not fetched"
 // 	pg.sendAmountEditor.Hint = "0"
 
@@ -993,8 +1067,8 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 // 	pg.inactiveTotalCostValue = defaultInactiveValues
 
 // 	pg.calculateErrorText = ""
-// 	pg.activeTotalAmount = pg.activeExchange
-// 	pg.inactiveTotalAmount = fmt.Sprintf("0 %s", pg.inactiveExchange)
+// 	pg.activeTotalAmount = pg.activeEditorHint
+// 	pg.inactiveTotalAmount = fmt.Sprintf("0 %s", pg.inactiveEditorHint)
 
 // 	// default values when exchange is not available
 // 	if pg.LastTradeRate == "" {
@@ -1002,7 +1076,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 // 		pg.activeTotalCostValue = defaultActiveValues
 // 		pg.inactiveTransactionFeeValue = ""
 // 		pg.inactiveTotalCostValue = ""
-// 		pg.activeTotalAmount = pg.activeExchange
+// 		pg.activeTotalAmount = pg.activeEditorHint
 // 		pg.inactiveTotalAmount = noExchangeText
 // 	}
 
@@ -1019,7 +1093,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 // 	}
 
 // 	pg.setChangeDestinationAddr()
-// 	if pg.activeExchange == "USD" && pg.LastTradeRate != "" {
+// 	if pg.activeEditorHint == "USD" && pg.LastTradeRate != "" {
 // 		pg.amountAtoms = pg.setDestinationAddr(pg.amountUSDtoDCR)
 // 	} else {
 // 		pg.amountAtoms = pg.setDestinationAddr(pg.inputAmount)
@@ -1064,7 +1138,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 // func (pg *sendPage) amountValues() amountValue {
 // 	txFeeValueUSD := dcrutil.Amount(pg.txFee).ToCoin() * pg.usdExchangeRate
 // 	switch {
-// 	case pg.activeExchange == "USD" && pg.LastTradeRate != "":
+// 	case pg.activeEditorHint == "USD" && pg.LastTradeRate != "":
 // 		return amountValue{
 // 			inactiveTotalAmount:         dcrutil.Amount(pg.amountAtoms).String(),
 // 			activeTransactionFeeValue:   fmt.Sprintf("%f USD", txFeeValueUSD),
@@ -1072,7 +1146,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 // 			activeTotalCostValue:        fmt.Sprintf("%s USD", strconv.FormatFloat(pg.inputAmount+txFeeValueUSD, 'f', 7, 64)),
 // 			inactiveTotalCostValue:      fmt.Sprintf("(%s )", dcrutil.Amount(pg.totalCostDCR).String()),
 // 		}
-// 	case pg.activeExchange == "DCR" && pg.LastTradeRate != "":
+// 	case pg.activeEditorHint == "DCR" && pg.LastTradeRate != "":
 // 		return amountValue{
 // 			inactiveTotalAmount:         fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
 // 			activeTransactionFeeValue:   dcrutil.Amount(pg.txFee).String(),
@@ -1091,7 +1165,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 
 // func (pg *sendPage) updateDefaultValues() {
 // 	v := pg.amountValues()
-// 	pg.activeTotalAmount = pg.activeExchange
+// 	pg.activeTotalAmount = pg.activeEditorHint
 // 	pg.inactiveTotalAmount = v.inactiveTotalAmount
 // 	pg.activeTransactionFeeValue = v.activeTransactionFeeValue
 // 	pg.inactiveTransactionFeeValue = v.inactiveTransactionFeeValue
@@ -1151,29 +1225,11 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 // 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 // }
 
-<<<<<<< HEAD
-	if pg.broadcastResult.TxHash != "" {
-		if pg.remainingBalance != -1 {
-			pg.spendableBalance = pg.remainingBalance
-		}
-		pg.remainingBalance = -1
-		c.notify("Transaction Sent", true)
 
-		pg.destinationAddressEditor.Editor.SetText("")
-		pg.sendAmountEditor.Editor.SetText("")
-		pg.isConfirmationModalOpen = false
-		pg.isBroadcastingTransaction = false
-		pg.broadcastResult.TxHash = ""
-		pg.calculateValues()
-		(*pg.unspentOutputsSelected)[pg.selectedWallet.ID][pg.selectedAccount.Number] = make(map[string]*wallet.UnspentOutput)
-	}
-}
-=======
 // func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 // 	if pg.broadcastResult == nil {
 // 		return
 // 	}
->>>>>>> implement wallet account modal
 
 // 	if pg.broadcastResult.TxHash != "" {
 // 		if pg.remainingBalance != -1 {
@@ -1298,6 +1354,19 @@ func (pg *sendPage) Handle(c pageCommon) {
 	if len(c.info.Wallets) == 0 {
 		return
 	}
+
+	pg.currencyValue = pg.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if pg.currencyValue == "" {
+		pg.currencyValue = "None"
+	}
+
+	// for pg.accountSwitch.In.Clicked() {
+	// 		fmt.Println("jjjj")
+	// 	}
+
+	// for pg.accountSwitch.Ac.Clicked() {
+	// 		fmt.Println("yteewew")
+	// 	}
 	// if pg.LastTradeRate == "" && pg.count == 0 {
 	// 	pg.count = 1
 	// 	pg.calculateValues()
@@ -1362,7 +1431,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	// }
 
 	// for pg.maxButton.Button.Clicked() {
-	// 	pg.activeExchange = "DCR"
+	// 	pg.activeEditorHint = "DCR"
 	// 	amountMax, err := pg.txAuthor.EstimateMaxSendAmount()
 	// 	if err != nil {
 	// 		return
@@ -1373,12 +1442,12 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	// for pg.currencySwap.Button.Clicked() {
 	// 	if pg.LastTradeRate != "" {
-	// 		if pg.activeExchange == "DCR" {
-	// 			pg.activeExchange = "USD"
-	// 			pg.inactiveExchange = "DCR"
+	// 		if pg.activeEditorHint == "DCR" {
+	// 			pg.activeEditorHint = "USD"
+	// 			pg.inactiveEditorHint = "DCR"
 	// 		} else {
-	// 			pg.activeExchange = "DCR"
-	// 			pg.inactiveExchange = "USD"
+	// 			pg.activeEditorHint = "DCR"
+	// 			pg.inactiveEditorHint = "USD"
 	// 		}
 	// 	}
 

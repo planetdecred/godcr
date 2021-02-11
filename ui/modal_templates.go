@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -8,6 +10,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -36,6 +39,8 @@ const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
 const UnlockWalletRestoreTemplate = "UnlockWalletRestoreTemplate"
 
 type ModalTemplate struct {
+	wal *wallet.Wallet
+
 	th                    *decredmaterial.Theme
 	walletName            decredmaterial.Editor
 	oldSpendingPassword   decredmaterial.Editor
@@ -59,14 +64,32 @@ type modalLoad struct {
 }
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
+	editorBoarderColor := color.NRGBA{41, 112, 255, 255}
+	walletName := win.theme.Editor(new(widget.Editor), "")
+	walletName.LineColor = editorBoarderColor
+	walletName.TitleLabelColor = editorBoarderColor
+
+	oldSpendingPassword := win.theme.Editor(new(widget.Editor), "Old spending password")
+	oldSpendingPassword.LineColor = editorBoarderColor
+	oldSpendingPassword.TitleLabelColor = editorBoarderColor
+
+	spendingPassword := win.theme.Editor(new(widget.Editor), "Spending password")
+	spendingPassword.LineColor = editorBoarderColor
+	spendingPassword.TitleLabelColor = editorBoarderColor
+
+	matchSpendingPassword := win.theme.Editor(new(widget.Editor), "Confirm spending password")
+	matchSpendingPassword.LineColor = editorBoarderColor
+	matchSpendingPassword.TitleLabelColor = editorBoarderColor
+
 	return &ModalTemplate{
+		wal:                   win.wallet,
 		th:                    win.theme,
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
 		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
-		walletName:            win.theme.Editor(new(widget.Editor), ""),
-		oldSpendingPassword:   win.theme.EditorPassword(new(widget.Editor), "Old spending password"),
-		spendingPassword:      win.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		matchSpendingPassword: win.theme.EditorPassword(new(widget.Editor), "Confirm spending password"),
+		walletName:            walletName,
+		oldSpendingPassword:   oldSpendingPassword,
+		spendingPassword:      spendingPassword,
+		matchSpendingPassword: matchSpendingPassword,
 		extendedPublicKey:     win.theme.Editor(new(widget.Editor), "Extended public key"),
 		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
 		passwordStrength:      win.theme.ProgressBar(0),

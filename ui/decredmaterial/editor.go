@@ -19,15 +19,19 @@ type Editor struct {
 	t *Theme
 	material.EditorStyle
 
-	TitleLabel Label
-	errorLabel Label
-	LineColor  color.NRGBA
+	TitleLabel      Label
+	errorLabel      Label
+	LineColor       color.NRGBA
+	TitleLabelColor color.NRGBA
 
 	//IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
 	//Bordered if true makes the adds a border around the editor.
+	IsCustomButton bool
+	CustomButton   Button
+
 	Bordered bool
 	//IsPassword if true, displays the show and hide button.
 	isPassword bool
@@ -66,6 +70,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		IsTitleLabel:      true,
 		Bordered:          true,
 		LineColor:         t.Color.Hint,
+		TitleLabelColor:   t.Color.Gray,
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 
@@ -82,6 +87,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 				Button:     new(widget.Clickable),
 			},
 		},
+		CustomButton: t.Button(new(widget.Clickable), ""),
 	}
 }
 
@@ -92,11 +98,9 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 		e.TitleLabel.Text = e.Hint
 	}
 
-	c := color.NRGBA{R: 41, G: 112, B: 255, A: 255}
 	if e.Editor.Focused() {
 		e.TitleLabel.Text = e.Hint
-		e.TitleLabel.Color = c
-		e.LineColor = c
+		e.TitleLabel.Color = e.TitleLabelColor
 		e.Hint = ""
 	}
 
@@ -156,8 +160,8 @@ func (e Editor) editorLayout(gtx C) D {
 		border := widget.Border{Color: e.LineColor, CornerRadius: e.m5, Width: unit.Dp(1)}
 		return border.Layout(gtx, func(gtx C) D {
 			inset := layout.Inset{
-				Top:    e.m2,
-				Bottom: e.m2,
+				Top:    e.m5,
+				Bottom: e.m5,
 				Left:   values.MarginPadding10,
 				Right:  e.m5,
 			}
@@ -198,6 +202,18 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					}
 					e.showHidePassword.Icon = icon
 					return e.showHidePassword.Layout(gtx)
+				})
+			}
+			return layout.Dimensions{}
+		}),
+		layout.Rigid(func(gtx C) D {
+			if e.IsCustomButton {
+				inset := layout.Inset{
+					Top:  e.m5,
+					Left: e.m5,
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					return e.CustomButton.Layout(gtx)
 				})
 			}
 			return layout.Dimensions{}
