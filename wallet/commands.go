@@ -377,6 +377,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 				Seed:             wall.EncryptedSeed,
+				IsWatchingOnly:   wall.IsWatchingOnlyWallet(),
 			}
 			i++
 		}
@@ -464,6 +465,28 @@ func (wal *Wallet) RenameWallet(walletID int, name string, errChan chan error) {
 		resp.Resp = Renamed{
 			ID: walletID,
 		}
+		wal.Send <- resp
+	}()
+}
+
+// ImportWatchOnlyWallet imports a watch only wallet with the given parameters.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) ImportWatchOnlyWallet(name, extendedPublicKey string, errChan chan error) {
+	go func() {
+		var resp Response
+		_, err := wal.multi.CreateWatchOnlyWallet(name, extendedPublicKey)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not import watch only wallet",
+				Err:     err,
+			})
+			return
+		}
+		resp.Resp = ImportedWatchOnly{}
 		wal.Send <- resp
 	}()
 }
