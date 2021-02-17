@@ -12,16 +12,24 @@ import (
 
 const PageSettings = "Settings"
 
+type row struct {
+	title     string
+	clickable *widget.Clickable
+	icon      *widget.Icon
+	label     decredmaterial.Label
+}
+
 type settingsPage struct {
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
-	currencyConversion  decredmaterial.IconButton
-	updateConnectToPeer decredmaterial.IconButton
-	updateUserAgent     decredmaterial.IconButton
-	changeStartupPass   decredmaterial.IconButton
+	currencyConversion  *widget.Clickable
+	updateConnectToPeer *widget.Clickable
+	updateUserAgent     *widget.Clickable
+	changeStartupPass   *widget.Clickable
+	chevronRightIcon    *widget.Icon
 
 	spendUnconfirmed *widget.Bool
 	startupPassword  *widget.Bool
@@ -40,7 +48,8 @@ type settingsPage struct {
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
-	icon := common.icons.chevronRight
+	chevronRightIcon := common.icons.chevronRight
+
 	pg := &settingsPage{
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -54,20 +63,20 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		beepNewBlocks:    new(widget.Bool),
 		connectToPeer:    new(widget.Bool),
 		userAgent:        new(widget.Bool),
+		chevronRightIcon: chevronRightIcon,
 
 		line:     common.theme.Line(),
 		errChann: common.errorChannels[PageSettings],
 
-		currencyConversion:  common.theme.PlainIconButton(new(widget.Clickable), icon),
-		updateConnectToPeer: common.theme.PlainIconButton(new(widget.Clickable), icon),
-		updateUserAgent:     common.theme.PlainIconButton(new(widget.Clickable), icon),
-		changeStartupPass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
+		currencyConversion:  new(widget.Clickable),
+		updateConnectToPeer: new(widget.Clickable),
+		updateUserAgent:     new(widget.Clickable),
+		changeStartupPass:   new(widget.Clickable),
 	}
 	pg.line.Height = 2
 	pg.line.Color = common.theme.Color.Background
 
 	color := common.theme.Color.LightGray
-	zeroInset := layout.UniformInset(values.MarginPadding0)
 
 	pg.peerLabel = common.theme.Body1("")
 	pg.peerLabel.Color = common.theme.Color.Gray
@@ -75,10 +84,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	pg.agentLabel = common.theme.Body1("")
 	pg.agentLabel.Color = common.theme.Color.Gray
 
-	pg.currencyConversion.Color, pg.currencyConversion.Inset = color, zeroInset
-	pg.updateConnectToPeer.Color, pg.updateConnectToPeer.Inset = color, zeroInset
-	pg.updateUserAgent.Color, pg.updateUserAgent.Inset = color, zeroInset
-	pg.changeStartupPass.Color, pg.changeStartupPass.Inset = color, zeroInset
+	pg.chevronRightIcon.Color = color
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -123,18 +129,13 @@ func (pg *settingsPage) general() layout.Widget {
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
-					return pg.subSection(gtx, "Currency conversion", func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								txt := pg.theme.Body1("None")
-								txt.Color = pg.theme.Color.Gray
-								return txt.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.currencyConversion.Layout(gtx)
-							}),
-						)
-					})
+					currencyConversionRow := row{
+						title:     "Currency conversion",
+						clickable: pg.currencyConversion,
+						icon:      pg.chevronRightIcon,
+						label:     pg.theme.Body2("None"),
+					}
+					return pg.clickableRow(gtx, currencyConversionRow)
 				}),
 			)
 		})
@@ -157,14 +158,15 @@ func (pg *settingsPage) security() layout.Widget {
 					return pg.subSectionSwitch(gtx, "Startup password", pg.startupPassword)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.isStartupPassword {
-						return pg.conditionalDisplay(gtx, func(gtx C) D {
-							return pg.subSection(gtx, "Change startup password", func(gtx C) D {
-								return pg.changeStartupPass.Layout(gtx)
-							})
-						})
-					}
-					return layout.Dimensions{}
+					return pg.conditionalDisplay(gtx, pg.isStartupPassword, func(gtx C) D {
+						changeStartupPassRow := row{
+							title:     "Change startup password",
+							clickable: pg.changeStartupPass,
+							icon:      pg.chevronRightIcon,
+							label:     pg.theme.Body1(""),
+						}
+						return pg.clickableRow(gtx, changeStartupPassRow)
+					})
 				}),
 			)
 		})
@@ -179,21 +181,15 @@ func (pg *settingsPage) connection() layout.Widget {
 					return pg.subSectionSwitch(gtx, "Connect to specific peer", pg.connectToPeer)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if pg.peerAddr != "" {
-						return pg.conditionalDisplay(gtx, func(gtx C) D {
-							return pg.subSection(gtx, "Change specific peer", func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return pg.peerLabel.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return pg.updateConnectToPeer.Layout(gtx)
-									}),
-								)
-							})
-						})
+					peerAddrRow := row{
+						title:     "Change specific peer",
+						clickable: pg.updateConnectToPeer,
+						icon:      pg.chevronRightIcon,
+						label:     pg.peerLabel,
 					}
-					return layout.Dimensions{}
+					return pg.conditionalDisplay(gtx, pg.peerAddr != "", func(gtx C) D {
+						return pg.clickableRow(gtx, peerAddrRow)
+					})
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(pg.agent()),
@@ -208,16 +204,19 @@ func (pg *settingsPage) agent() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(pg.subSectionLabel("Custom user agent")),
-							layout.Rigid(func(gtx C) D {
-								txt := pg.theme.Body2("For exchange rate fetching")
-								txt.Color = pg.theme.Color.Gray
-								return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									return txt.Layout(gtx)
-								})
-							}),
-						)
+						m10 := values.MarginPadding10
+						return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(pg.subSectionLabel("Custom user agent")),
+								layout.Rigid(func(gtx C) D {
+									txt := pg.theme.Body2("For exchange rate fetching")
+									txt.Color = pg.theme.Color.Gray
+									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+										return txt.Layout(gtx)
+									})
+								}),
+							)
+						})
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
@@ -229,21 +228,15 @@ func (pg *settingsPage) agent() layout.Widget {
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
-				if pg.agentValue != "" {
-					return pg.conditionalDisplay(gtx, func(gtx C) D {
-						return pg.subSection(gtx, "Change user agent", func(gtx C) D {
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return pg.agentLabel.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return pg.updateUserAgent.Layout(gtx)
-								}),
-							)
-						})
-					})
-				}
-				return layout.Dimensions{}
+				return pg.conditionalDisplay(gtx, pg.agentValue != "", func(gtx C) D {
+					userAgentRow := row{
+						title:     "Change user agent",
+						clickable: pg.updateUserAgent,
+						icon:      pg.chevronRightIcon,
+						label:     pg.agentLabel,
+					}
+					return pg.clickableRow(gtx, userAgentRow)
+				})
 			}),
 		)
 	}
@@ -252,7 +245,8 @@ func (pg *settingsPage) agent() layout.Widget {
 func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			m15 := values.MarginPadding15
+			return layout.Inset{Top: m15, Left: m15, Right: m15}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						txt := pg.theme.Body2(title)
@@ -269,12 +263,14 @@ func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layou
 }
 
 func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
-	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(pg.subSectionLabel(title)),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, body)
-		}),
-	)
+	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(pg.subSectionLabel(title)),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.E.Layout(gtx, body)
+			}),
+		)
+	})
 }
 
 func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
@@ -283,11 +279,31 @@ func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, optio
 	})
 }
 
-func (pg *settingsPage) conditionalDisplay(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(pg.lineSeparator()),
-		layout.Rigid(body),
-	)
+func (pg *settingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensions {
+	return decredmaterial.Clickable(gtx, row.clickable, func(gtx C) D {
+		return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
+			return pg.subSection(gtx, row.title, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return row.label.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return row.icon.Layout(gtx, values.MarginPadding22)
+					}),
+				)
+			})
+		})
+	})
+}
+
+func (pg *settingsPage) conditionalDisplay(gtx layout.Context, display bool, body layout.Widget) layout.Dimensions {
+	if display {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.lineSeparator()),
+			layout.Rigid(body),
+		)
+	}
+	return layout.Dimensions{}
 }
 
 func (pg *settingsPage) subSectionLabel(title string) layout.Widget {
@@ -297,7 +313,7 @@ func (pg *settingsPage) subSectionLabel(title string) layout.Widget {
 }
 
 func (pg *settingsPage) lineSeparator() layout.Widget {
-	m := values.MarginPadding10
+	m := values.MarginPadding1
 	return func(gtx C) D {
 		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 			pg.line.Width = gtx.Constraints.Max.X
@@ -315,7 +331,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.Value)
 	}
 
-	for pg.changeStartupPass.Button.Clicked() {
+	for pg.changeStartupPass.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangeStartupPasswordTemplate,
@@ -383,8 +399,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 		}
 		pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
 	}
-
-	for pg.updateConnectToPeer.Button.Clicked() {
+	for pg.updateConnectToPeer.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangeSpecificPeerTemplate,
@@ -404,7 +419,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 	}
 
 	userAgentKey := dcrlibwallet.UserAgentConfigKey
-	for pg.updateUserAgent.Button.Clicked() {
+	for pg.updateUserAgent.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: UserAgentTemplate,
