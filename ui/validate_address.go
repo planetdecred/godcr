@@ -48,7 +48,7 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 	pg.validateBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14
 	pg.validateBtn.Background = pg.theme.Color.Primary
 	pg.clearBtn.Color = pg.theme.Color.Primary
-	pg.clearBtn.Background = color.RGBA{0, 0, 0, 0}
+	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
 
 	pg.line.Height = 2
 	pg.line.Color = common.theme.Color.Background
@@ -56,7 +56,7 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 	pg.stateValidate = none
 
 	return func(gtx C) D {
-		pg.handle(common)
+		pg.handle()
 		pg.updateColors(common)
 		return pg.Layout(gtx, common)
 	}
@@ -68,12 +68,12 @@ func (pg *validateAddressPage) Layout(gtx layout.Context, common pageCommon) lay
 		page := SubPage{
 			title: ValidateAddress,
 			back: func() {
-				*common.page = PageMore
+				common.PopNavigationPage()
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-						layout.Rigid(pg.addressSection(gtx, common)),
+						layout.Rigid(pg.addressSection(common)),
 					)
 				})
 			},
@@ -83,7 +83,7 @@ func (pg *validateAddressPage) Layout(gtx layout.Context, common pageCommon) lay
 	return common.Layout(gtx, body)
 }
 
-func (pg *validateAddressPage) addressSection(gtx layout.Context, common pageCommon) layout.Widget {
+func (pg *validateAddressPage) addressSection(common pageCommon) layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -145,77 +145,76 @@ func (pg *validateAddressPage) showDisplayResult(c pageCommon) layout.Widget {
 		return func(gtx C) D {
 			return layout.Dimensions{}
 		}
-	} else {
-		return func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.lineSeparator(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								if pg.stateValidate == invalid {
-									c.icons.crossMarkRed.Scale = 0.055
-									return c.icons.crossMarkRed.Layout(gtx)
-								}
-								c.icons.checkMarkGreenIcon.Scale = 0.055
-								return c.icons.checkMarkGreenIcon.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
+	}
+	return func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return pg.lineSeparator(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 							if pg.stateValidate == invalid {
-								txt := pg.theme.Body1("Invalid Address")
-								txt.Color = pg.theme.Color.Danger
+								c.icons.crossMarkRed.Scale = 0.5
+								return c.icons.crossMarkRed.Layout(gtx)
+							}
+							c.icons.checkMarkGreenIcon.Scale = 0.5
+							return c.icons.checkMarkGreenIcon.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						if pg.stateValidate == invalid {
+							txt := pg.theme.Body1("Invalid Address")
+							txt.Color = pg.theme.Color.Danger
+							txt.TextSize = values.TextSize16
+							return txt.Layout(gtx)
+						}
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.Body1("Valid address")
+								txt.Color = pg.theme.Color.Success
 								txt.TextSize = values.TextSize16
 								return txt.Layout(gtx)
-							}
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									txt := pg.theme.Body1("Valid address")
-									txt.Color = pg.theme.Color.Success
-									txt.TextSize = values.TextSize16
-									return txt.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											var text string
-											if pg.stateValidate == valid {
-												text = "Owned by you in"
-											} else {
-												text = "Not owned by you"
-											}
-											txt := pg.theme.Body1(text)
-											txt.TextSize = values.TextSize14
-											txt.Color = pg.theme.Color.Gray
-											return txt.Layout(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											if pg.stateValidate == valid {
-												walletName := c.info.Wallets[*c.selectedWallet].Name
-												if walletName != "" {
-													return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-														return decredmaterial.Card{
-															Color: pg.theme.Color.Surface,
-														}.Layout(gtx, func(gtx C) D {
-															walletText := pg.theme.Caption(walletName)
-															walletText.Color = pg.theme.Color.Gray
-															return walletText.Layout(gtx)
-														})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										var text string
+										if pg.stateValidate == valid {
+											text = "Owned by you in"
+										} else {
+											text = "Not owned by you"
+										}
+										txt := pg.theme.Body1(text)
+										txt.TextSize = values.TextSize14
+										txt.Color = pg.theme.Color.Gray
+										return txt.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										if pg.stateValidate == valid {
+											walletName := c.info.Wallets[*c.selectedWallet].Name
+											if walletName != "" {
+												return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+													return decredmaterial.Card{
+														Color: pg.theme.Color.Surface,
+													}.Layout(gtx, func(gtx C) D {
+														walletText := pg.theme.Caption(walletName)
+														walletText.Color = pg.theme.Color.Gray
+														return walletText.Layout(gtx)
 													})
-												}
+												})
 											}
-											return layout.Dimensions{}
-										}),
-									)
-								}),
-							)
-						}),
-					)
-				}),
-			)
-		}
+										}
+										return layout.Dimensions{}
+									}),
+								)
+							}),
+						)
+					}),
+				)
+			}),
+		)
 	}
 }
 
@@ -231,7 +230,7 @@ func (pg *validateAddressPage) pageSections(gtx layout.Context, body layout.Widg
 	})
 }
 
-func (pg *validateAddressPage) handle(common pageCommon) {
+func (pg *validateAddressPage) handle() {
 	if pg.validateBtn.Button.Clicked() {
 		pg.validateAddress()
 	}
@@ -269,10 +268,9 @@ func (pg *validateAddressPage) validateAddress() {
 		if !exist {
 			pg.stateValidate = notOwned
 			return
-		} else {
-			pg.stateValidate = valid
-			return
 		}
+		pg.stateValidate = valid
+		return
 	}
 }
 

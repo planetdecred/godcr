@@ -107,10 +107,10 @@ func (pg *securityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 
 func (pg *securityToolsPage) handle(common pageCommon) {
 	if pg.verifyMessage.Clicked() {
-		common.PushNavigationPage(PageVerifyMessage)
+		common.PushNavigationPage(PageSecurityTools, PageVerifyMessage)
 	}
 
 	if pg.validateAddress.Clicked() {
-		common.PushNavigationPage(ValidateAddress)
+		common.PushNavigationPage(PageSecurityTools, ValidateAddress)
 	}
 }

@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"strings"
@@ -57,6 +56,7 @@ type pageCommon struct {
 	theme           *decredmaterial.Theme
 	icons           pageIcons
 	page            *string
+	returnPage      *string
 	navTab          *decredmaterial.Tabs
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
@@ -71,7 +71,6 @@ type pageCommon struct {
 	modalLoad       *modalLoad
 	modalTemplate   *ModalTemplate
 
-	navigationPages         []string
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
 	isNavDrawerMinimized    *bool
@@ -84,7 +83,8 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	changePage func(string)
+	changePage         func(string)
+	pushNavigationPage func(string)
 }
 
 type (
@@ -221,6 +221,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		selectedAccount: &win.selectedAccount,
 		theme:           win.theme,
 		icons:           ic,
+		returnPage:      &win.previous,
 		page:            &win.current,
 		walletTabs:      win.walletTabs,
 		accountTabs:     win.accountTabs,
@@ -249,6 +250,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
 		changePage:              win.changePage,
+		pushNavigationPage:      win.pushNavigationPage,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -294,17 +296,14 @@ func (page pageCommon) ChangePage(pg string) {
 	page.changePage(pg)
 }
 
-func (page *pageCommon) PushNavigationPage(pg string) {
-	page.navigationPages = append(page.navigationPages, pg)
-	*page.page = pg
-	fmt.Println("common page handle: PushNavigationPage", &page)
+func (page pageCommon) PushNavigationPage(from, to string) {
+	page.returnPage = &from
+	page.pushNavigationPage(from)
+	page.changePage(to)
 }
 
-func (page *pageCommon) PopNavigationPage() {
-	fmt.Println("common page handle: PopNavigationPage", &page)
-	fmt.Println(page.navigationPages)
-	// page.navigationPages = page.navigationPages[:len(page.navigationPages)-1]
-	// *page.page = page.navigationPages[len(page.navigationPages)-1]
+func (page pageCommon) PopNavigationPage() {
+	page.changePage(*page.returnPage)
 }
 
 func (page pageCommon) Notify(text string, success bool) {
