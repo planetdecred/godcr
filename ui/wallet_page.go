@@ -22,14 +22,9 @@ import (
 
 const PageWallet = "Wallet"
 
-type optionMenuItem struct {
+type menuItem struct {
 	text   string
-	button *widget.Clickable
 	page   string
-}
-
-type addWalletMenuOption struct {
-	text   string
 	button *widget.Clickable
 	action func(pageCommon)
 }
@@ -58,13 +53,12 @@ type walletPage struct {
 	card                                       decredmaterial.Card
 	backdrop                                   *widget.Clickable
 	optionsMenuCard                            decredmaterial.Card
-	optionsMenuItems                           []optionMenuItem
+	optionsMenu                                []menuItem
+	addWalletMenu                              []menuItem
 	openPopupIndex                             int
-	addWalletMenuOptions                       []addWalletMenuOption
 	openAddWalletPopupButton                   *widget.Clickable
 	isAddWalletMenuOpen                        bool
 	watchOnlyWalletLabel                       decredmaterial.Label
-	noWatchOnlyWalletLabel                     decredmaterial.Label
 	watchOnlyWalletIcon                        *widget.Image
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
 }
@@ -93,9 +87,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.watchOnlyWalletLabel = pg.theme.Body1("Watch-only Wallets")
 	pg.watchOnlyWalletLabel.Color = pg.theme.Color.Gray
 
-	pg.noWatchOnlyWalletLabel = pg.theme.Body1("No watch only wallet loaded")
-	pg.noWatchOnlyWalletLabel.Color = pg.theme.Color.Gray
-
 	pg.line.Height = 1
 	pg.iconButton = decredmaterial.IconButton{
 		IconButtonStyle: material.IconButtonStyle{
@@ -117,7 +108,9 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	pg.watchOnlyWalletIcon = common.icons.watchOnlyWalletIcon
 
-	pg.optionsMenuItems = []optionMenuItem{
+	pg.toAcctDetails = make([]*gesture.Click, 0)
+
+	pg.optionsMenu = []menuItem{
 		{
 			text:   "Sign message",
 			button: new(widget.Clickable),
@@ -150,9 +143,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		},
 	}
 
-	pg.toAcctDetails = make([]*gesture.Click, 0)
-
-	pg.addWalletMenuOptions = []addWalletMenuOption{
+	pg.addWalletMenu = []menuItem{
 		{
 			text:   "Create a new wallet",
 			button: new(widget.Clickable),
@@ -192,10 +183,10 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 					IconButtonStyle: material.IconButtonStyle{
 						Button:     new(widget.Clickable),
 						Icon:       common.theme.NavMoreIcon,
-						Size:       unit.Dp(25),
+						Size:       values.MarginPadding25,
 						Background: color.NRGBA{},
 						Color:      common.theme.Color.Text,
-						Inset:      layout.UniformInset(unit.Dp(0)),
+						Inset:      layout.UniformInset(values.MarginPadding0),
 					},
 				}
 			}
@@ -268,10 +259,10 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.optionsMenuItems), func(gtx C, i int) D {
-						return material.Clickable(gtx, pg.optionsMenuItems[i].button, func(gtx C) D {
+					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.optionsMenu), func(gtx C, i int) D {
+						return material.Clickable(gtx, pg.optionsMenu[i].button, func(gtx C) D {
 							return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx C) D {
-								return pg.theme.Body2(pg.optionsMenuItems[i].text).Layout(gtx)
+								return pg.theme.Body2(pg.optionsMenu[i].text).Layout(gtx)
 							})
 						})
 					})
@@ -631,10 +622,10 @@ func (pg *walletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenuOptions), func(gtx C, i int) D {
-						return material.Clickable(gtx, pg.addWalletMenuOptions[i].button, func(gtx C) D {
+					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
+						return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
 							return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx C) D {
-								return pg.theme.Body2(pg.addWalletMenuOptions[i].text).Layout(gtx)
+								return pg.theme.Body2(pg.addWalletMenu[i].text).Layout(gtx)
 							})
 						})
 					})
@@ -763,18 +754,18 @@ func (pg *walletPage) Handle(common pageCommon) {
 		}
 	}
 
-	for index := range pg.optionsMenuItems {
-		if pg.optionsMenuItems[index].button.Clicked() {
+	for index := range pg.optionsMenu {
+		if pg.optionsMenu[index].button.Clicked() {
 			pg.openPopupIndex = -1
 			common.setReturnPage(PageWallet)
-			common.ChangePage(pg.optionsMenuItems[index].page)
+			common.ChangePage(pg.optionsMenu[index].page)
 		}
 	}
 
-	for index := range pg.addWalletMenuOptions {
-		for pg.addWalletMenuOptions[index].button.Clicked() {
+	for index := range pg.addWalletMenu {
+		for pg.addWalletMenu[index].button.Clicked() {
 			pg.isAddWalletMenuOpen = false
-			action := pg.addWalletMenuOptions[index].action
+			action := pg.addWalletMenu[index].action
 			if action != nil {
 				action(common)
 			}
@@ -796,4 +787,8 @@ func (pg *walletPage) Handle(common pageCommon) {
 		common.Notify(err.Error(), false)
 	default:
 	}
+}
+
+func (pg *walletPage) changePage(page string) {
+
 }
