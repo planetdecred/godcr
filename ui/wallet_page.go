@@ -55,6 +55,7 @@ type walletPage struct {
 	optionsMenuCard                            decredmaterial.Card
 	optionsMenu                                []menuItem
 	addWalletMenu                              []menuItem
+	watchOnlyWalletMenu                        []menuItem
 	openPopupIndex                             int
 	openAddWalletPopupButton                   *widget.Clickable
 	isAddWalletMenuOpen                        bool
@@ -160,6 +161,19 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		},
 	}
 
+	pg.watchOnlyWalletMenu = []menuItem{
+		{
+			text:   "Settings",
+			button: new(widget.Clickable),
+			page:   PageHelp,
+		},
+		{
+			text:   "Rename",
+			button: new(widget.Clickable),
+			page:   PageAbout,
+		},
+	}
+
 	return func(gtx C) D {
 		pg.Handle(common)
 		return pg.Layout(gtx, common)
@@ -243,14 +257,24 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 	return common.Layout(gtx, body)
 }
 
-func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int) {
+func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int, isWatchOnlyWalletMenu bool) {
 	if pg.openPopupIndex != optionsMenuIndex {
 		return
 	}
 
+	var menu []menuItem
+	var leftInset float32
+	if isWatchOnlyWalletMenu {
+		menu = pg.watchOnlyWalletMenu
+		leftInset = -35
+	} else {
+		menu = pg.optionsMenu
+		leftInset = -80
+	}
+
 	inset := layout.Inset{
 		Top:  unit.Dp(20),
-		Left: unit.Dp(-80),
+		Left: unit.Dp(leftInset),
 	}
 
 	m := op.Record(gtx.Ops)
@@ -258,12 +282,10 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-				return layout.UniformInset(unit.Dp(5)).Layout(gtx, func(gtx C) D {
-					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.optionsMenu), func(gtx C, i int) D {
-						return material.Clickable(gtx, pg.optionsMenu[i].button, func(gtx C) D {
-							return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx C) D {
-								return pg.theme.Body2(pg.optionsMenu[i].text).Layout(gtx)
-							})
+				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
+					return material.Clickable(gtx, menu[i].button, func(gtx C) D {
+						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
+							return pg.theme.Body2(menu[i].text).Layout(gtx)
 						})
 					})
 				})
@@ -283,7 +305,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		pg.updateAcctDetailsButtons(&accounts)
 
 		collapsibleMore := func(gtx C) {
-			pg.layoutOptionsMenu(gtx, i)
+			pg.layoutOptionsMenu(gtx, i, false)
 		}
 
 		collapsibleHeader := func(gtx C) D {
@@ -400,7 +422,7 @@ func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common pageComm
 							return pg.theme.Body2(spendableBalanceText).Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
-							pg.layoutOptionsMenu(gtx, i)
+							pg.layoutOptionsMenu(gtx, i, true)
 							return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, func(gtx C) D {
 								return pg.watchOnlyWalletMoreButtons[i].Layout(gtx)
 							})
@@ -621,12 +643,10 @@ func (pg *walletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 		border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-				return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-					return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
-						return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
-							return layout.UniformInset(unit.Dp(4)).Layout(gtx, func(gtx C) D {
-								return pg.theme.Body2(pg.addWalletMenu[i].text).Layout(gtx)
-							})
+				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
+					return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
+						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
+							return pg.theme.Body2(pg.addWalletMenu[i].text).Layout(gtx)
 						})
 					})
 				})
@@ -759,6 +779,13 @@ func (pg *walletPage) Handle(common pageCommon) {
 			pg.openPopupIndex = -1
 			common.setReturnPage(PageWallet)
 			common.ChangePage(pg.optionsMenu[index].page)
+		}
+	}
+
+	for index := range pg.watchOnlyWalletMenu {
+		if pg.watchOnlyWalletMenu[index].button.Clicked() {
+			pg.openPopupIndex = -1
+			common.ChangePage(pg.watchOnlyWalletMenu[index].page)
 		}
 	}
 
