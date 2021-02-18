@@ -292,7 +292,6 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 			return pg.feeSection(gtx)
 		},
 		// func(gtx C) D {
-		// 	return pg.sendAmountSection(gtx)
 		// },
 		// func(gtx C) D {
 		// 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding450)
@@ -304,33 +303,24 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		// },
 	}
 
-	dims := layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			return common.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						if pg.pageContainer.Position.First > 0 {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							l := pg.theme.Line()
-							l.Color = pg.theme.Color.Hint
-							l.Width = gtx.Constraints.Min.X
-							l.Height = 2
-							return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return l.Layout(gtx)
-							})
-						}
-						return layout.Dimensions{}
-					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-							p := values.MarginPadding10
-							return layout.Inset{Left: p, Bottom: p, Right: p}.Layout(gtx, pageContent[i])
-						})
-					}),
-				)
-			})
-		}),
-	)
+	dims := common.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return common.UniformPadding(gtx, func(gtx C) D {
+					return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pageContent[i])
+					})
+				})
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.S.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
+						return pg.balanceSection(gtx, common)
+					})
+				})
+			}),
+		)
+	})
 
 	// if pg.isConfirmationModalOpen {
 	// 	return common.Modal(gtx, dims, pg.drawConfirmationModal(gtx))
@@ -431,10 +421,11 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 
 										inset := layout.Inset{
 											Left: values.MarginPadding5,
+											Top:  values.MarginPadding2,
 										}
 										return inset.Layout(gtx, func(gtx C) D {
 											icon := common.icons.collapseIcon
-											icon.Scale = 0.25
+											icon.Scale = 0.75
 											return icon.Layout(gtx)
 										})
 									}),
@@ -539,6 +530,45 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	}
 	return pg.pageSections(gtx, "Fee", func(gtx C) D {
 		return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
+	})
+}
+
+func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+	c := pg.theme.Card()
+	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+	return c.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Flexed(0.6, func(gtx C) D {
+					inset := layout.Inset{
+						Right: values.MarginPadding15,
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								inset := layout.Inset{
+									Bottom: values.MarginPadding10,
+								}
+								return inset.Layout(gtx, func(gtx C) D {
+									return pg.contentRow(gtx, "Total cost", pg.activeTransactionFeeValue+" "+pg.inactiveTransactionFeeValue)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.contentRow(gtx, "Balance after send", "1234567")
+							}),
+						)
+					})
+				}),
+				layout.Flexed(0.3, func(gtx C) D {
+					inset := layout.Inset{
+						Top: values.MarginPadding2,
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						return pg.nextButton.Layout(gtx)
+					})
+				}),
+			)
+		})
 	})
 }
 

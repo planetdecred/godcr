@@ -267,7 +267,9 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 				return layout.Dimensions{}
 			}),
 		)
-		return dims
+		return common.UniformPadding(gtx, func(gtx C) D {
+			return dims
+		})
 	})
 }
 

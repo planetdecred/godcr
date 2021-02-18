@@ -324,9 +324,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 							return card.Layout(gtx, page.layoutNavDrawer)
 						}),
 						layout.Rigid(func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-								return body(gtx)
-							})
+							return body(gtx)
 						}),
 					)
 				}),
@@ -692,6 +690,10 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 		SW: 0,
 	}
 	return card.Layout(gtx, selectedDetails)
+}
+
+func (page pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return layout.UniformInset(values.MarginPadding15).Layout(gtx, body)
 }
 
 type SubPage struct {

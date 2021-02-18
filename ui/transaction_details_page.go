@@ -128,12 +128,14 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) 
 	}
 
 	body := common.Layout(gtx, func(gtx C) D {
-		return common.theme.Card().Layout(gtx, func(gtx C) D {
-			if *pg.txnInfo == nil {
-				return layout.Dimensions{}
-			}
-			return pg.transactionDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-				return layout.Inset{}.Layout(gtx, widgets[i])
+		return common.UniformPadding(gtx, func(gtx C) D {
+			return common.theme.Card().Layout(gtx, func(gtx C) D {
+				if *pg.txnInfo == nil {
+					return layout.Dimensions{}
+				}
+				return pg.transactionDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+					return layout.Inset{}.Layout(gtx, widgets[i])
+				})
 			})
 		})
 	})

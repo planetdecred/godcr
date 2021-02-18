@@ -82,8 +82,9 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-
-	return common.Layout(gtx, body)
+	return common.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, body)
+	})
 }
 
 func (pg *walletSettingsPage) changePassphrase() layout.Widget {

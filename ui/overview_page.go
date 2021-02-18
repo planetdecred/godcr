@@ -169,8 +169,10 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 func (pg *overviewPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	if c.info.LoadedWallets == 0 {
 		return c.Layout(gtx, func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return c.theme.H3(pg.text.noWallet).Layout(gtx)
+			return c.UniformPadding(gtx, func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return c.theme.H3(pg.text.noWallet).Layout(gtx)
+				})
 			})
 		})
 	}
@@ -187,8 +189,10 @@ func (pg *overviewPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensio
 	}
 
 	return c.Layout(gtx, func(gtx C) D {
-		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+		return c.UniformPadding(gtx, func(gtx C) D {
+			return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+			})
 		})
 	})
 }
