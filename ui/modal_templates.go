@@ -37,6 +37,7 @@ const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
 const SecurityToolsInfoTemplate = "SecurityToolsInfo"
 const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
 const UnlockWalletRestoreTemplate = "UnlockWalletRestoreTemplate"
+const SendInfoTemplate = "SendInfo"
 
 type ModalTemplate struct {
 	wal *wallet.Wallet
@@ -270,6 +271,16 @@ func (m *ModalTemplate) securityToolsInfo() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			text := m.th.Body1("Various tools that help in different aspects of crypto currency security will be located here.")
+			text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) sendInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Body1("Input or scan the destination wallet address and input the amount to send funds.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -601,6 +612,11 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.spendingPassword.Hint = "Spending password"
 
 		template = m.unlockWalletRestore(th)
+	case SendInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.sendInfo()
 		return
 	default:
 		return
