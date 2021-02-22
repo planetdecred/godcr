@@ -89,7 +89,6 @@ func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func(
 
 func (p *Password) WithError(e string) {
 	p.passwordEditor.IsRequired = true
-	p.passwordEditor.IsTitleLabel = false
 	p.passwordEditor.SetError(e)
 }
 
@@ -111,6 +110,8 @@ func (p *Password) handleEvents(confirm func([]byte), cancel func()) {
 
 	for p.cancelButton.Button.Clicked() {
 		p.reset()
+		p.passwordEditor.IsRequired = false
+		p.passwordEditor.SetError("")
 		cancel()
 	}
 }

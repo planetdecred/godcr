@@ -34,6 +34,7 @@ type Window struct {
 	walletTransactions *wallet.Transactions
 	walletTransaction  *wallet.Transaction
 	walletAccount      *wallet.Account
+	walletTickets      *wallet.Tickets
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -184,6 +185,7 @@ func (win *Window) Loop(shutdown chan int) {
 				win.updateConnectedPeers(update.ConnectedPeers)
 			case wallet.BlockAttached:
 				if win.walletInfo.Synced {
+					win.wallet.GetAllTickets()
 					win.wallet.GetMultiWalletInfo()
 					win.updateSyncProgress(update.BlockInfo)
 				}
