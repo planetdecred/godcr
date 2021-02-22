@@ -12,7 +12,7 @@ const PageMore = "More"
 
 type morePageHandler struct {
 	clickable *widget.Clickable
-	image     *widget.Image
+	image     *decredmaterial.Image
 	page      string
 }
 
@@ -49,10 +49,6 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 			image:     common.icons.debugIcon,
 			page:      PageDebug,
 		},
-	}
-
-	for i := range morePageListItems {
-		morePageListItems[i].image.Scale = 1
 	}
 
 	pg := morePage{

@@ -10,7 +10,6 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -59,8 +58,8 @@ type walletSyncDetails struct {
 type transactionWidgets struct {
 	wallet     decredmaterial.Label
 	balance    string
-	direction  *widget.Image
-	statusIcon *widget.Image
+	direction  *decredmaterial.Image
+	statusIcon *decredmaterial.Image
 	date       decredmaterial.Label
 	status     decredmaterial.Label
 }
@@ -78,7 +77,7 @@ type overviewPage struct {
 	sync               decredmaterial.Button
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon *widget.Icon
-	syncingIcon          image.Image
+	syncingIcon          *decredmaterial.Image
 	toTransactionDetails []*gesture.Click
 	line                 *decredmaterial.Line
 
@@ -230,10 +229,6 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 			}
 
 			// set the direction and status icon scale/size
-			sz := gtx.Constraints.Max.X
-			txnWidgets.direction.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-			txnWidgets.statusIcon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-
 			click := pg.toTransactionDetails[index]
 
 			transactionRows = append(transactionRows, func(gtx C) D {
@@ -520,7 +515,7 @@ func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 			layout.Rigid(func(gtx C) D {
 				if pg.walletInfo.Syncing {
 					return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-						return pg.theme.ImageIcon(gtx, pg.syncingIcon, 50)
+						return pg.syncingIcon.Layout(gtx)
 					})
 				}
 				return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {

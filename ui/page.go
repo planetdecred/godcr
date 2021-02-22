@@ -8,7 +8,6 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -32,15 +31,13 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon *widget.Image
-
-	walletIcon, syncingIcon image.Image
+	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, walletIcon, syncingIcon *decredmaterial.Image
 }
 
 type navHandler struct {
 	clickable     *widget.Clickable
-	image         *widget.Image
-	imageInactive *widget.Image
+	image         *decredmaterial.Image
+	imageInactive *decredmaterial.Image
 	page          string
 }
 
@@ -120,41 +117,41 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 		chevronRight:               mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
 
-		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
-		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
-		walletIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
-		receiveIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
-		transactionIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
-		transactionIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
-		sendIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
-		moreIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
-		moreIconInactive:           &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
-		logo:                       &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
-		confirmIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
-		pendingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
-		redirectIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
-		newWalletIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
-		walletAlertIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
-		accountIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
-		importedAccountIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
-		editIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
-		expandIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
-		collapseIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])},
-		copyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
-		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
-		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
-		arrowFowardIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
-		settingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
-		securityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
-		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
-		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
-		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
-		alert:                      &widget.Image{Src: paint.NewImageOp(decredIcons["alert"])},
-		verifyMessageIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
-		locationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
+		overviewIcon:               decredmaterial.NewImage(decredIcons["overview"]),
+		overviewIconInactive:       decredmaterial.NewImage(decredIcons["overview_inactive"]),
+		walletIconInactive:         decredmaterial.NewImage(decredIcons["wallet_inactive"]),
+		receiveIcon:                decredmaterial.NewImage(decredIcons["receive"]),
+		transactionIcon:            decredmaterial.NewImage(decredIcons["transaction"]),
+		transactionIconInactive:    decredmaterial.NewImage(decredIcons["transaction_inactive"]),
+		sendIcon:                   decredmaterial.NewImage(decredIcons["send"]),
+		moreIcon:                   decredmaterial.NewImage(decredIcons["more"]),
+		moreIconInactive:           decredmaterial.NewImage(decredIcons["more_inactive"]),
+		logo:                       decredmaterial.NewImage(decredIcons["logo"]),
+		confirmIcon:                decredmaterial.NewImage(decredIcons["confirmed"]),
+		pendingIcon:                decredmaterial.NewImage(decredIcons["pending"]),
+		redirectIcon:               decredmaterial.NewImage(decredIcons["redirect"]),
+		newWalletIcon:              decredmaterial.NewImage(decredIcons["addNewWallet"]),
+		walletAlertIcon:            decredmaterial.NewImage(decredIcons["walletAlert"]),
+		accountIcon:                decredmaterial.NewImage(decredIcons["account"]),
+		importedAccountIcon:        decredmaterial.NewImage(decredIcons["imported_account"]),
+		editIcon:                   decredmaterial.NewImage(decredIcons["editIcon"]),
+		expandIcon:                 decredmaterial.NewImage(decredIcons["expand_icon"]),
+		collapseIcon:               decredmaterial.NewImage(decredIcons["collapse_icon"]),
+		copyIcon:                   decredmaterial.NewImage(decredIcons["copy_icon"]),
+		mixer:                      decredmaterial.NewImage(decredIcons["mixer"]),
+		transactionFingerPrintIcon: decredmaterial.NewImage(decredIcons["transaction_fingerprint"]),
+		arrowFowardIcon:            decredmaterial.NewImage(decredIcons["arrow_forward"]),
+		settingsIcon:               decredmaterial.NewImage(decredIcons["settings"]),
+		securityIcon:               decredmaterial.NewImage(decredIcons["security"]),
+		helpIcon:                   decredmaterial.NewImage(decredIcons["help_icon"]),
+		aboutIcon:                  decredmaterial.NewImage(decredIcons["info_icon"]),
+		debugIcon:                  decredmaterial.NewImage(decredIcons["debug"]),
+		alert:                      decredmaterial.NewImage(decredIcons["alert"]),
+		verifyMessageIcon:          decredmaterial.NewImage(decredIcons["verify_message"]),
+		locationPinIcon:            decredmaterial.NewImage(decredIcons["location_pin"]),
 
-		syncingIcon: decredIcons["syncing"],
-		walletIcon:  decredIcons["wallet"],
+		syncingIcon: decredmaterial.NewImage(decredIcons["syncing"]),
+		walletIcon:  decredmaterial.NewImage(decredIcons["wallet"]),
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 
@@ -186,13 +183,13 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			image:         ic.walletIcon,
 			imageInactive: ic.walletIconInactive,
 			page:          PageWallet,
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			image:         ic.walletIcon,
 			imageInactive: ic.walletIconInactive,
 			page:          PageTickets,
 		},
@@ -445,11 +442,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							sz := gtx.Constraints.Max.X
-							img := page.icons.logo
-							img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-
-							return img.Layout(gtx)
+							return layout.UniformInset(values.MarginPadding10).Layout(gtx, page.icons.logo.Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -468,9 +461,6 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
-														sz := gtx.Constraints.Max.X
-														img := page.appBarNavItems[i].image
-														img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
 														return page.appBarNavItems[i].image.Layout(gtx)
 													})
 												}),
@@ -532,15 +522,11 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									sz := gtx.Constraints.Max.X
 									img := page.drawerNavItems[i].imageInactive
 									if page.drawerNavItems[i].page == *page.page {
 										img = page.drawerNavItems[i].image
 									}
-									return layout.Center.Layout(gtx, func(gtx C) D {
-										img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-										return img.Layout(gtx)
-									})
+									return img.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{

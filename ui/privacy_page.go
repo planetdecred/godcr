@@ -96,27 +96,22 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 							return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										c.icons.transactionFingerPrintIcon.Scale = 0.09
 										return c.icons.transactionFingerPrintIcon.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowFowardIcon.Scale = 0.18
 									return c.icons.arrowFowardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										c.icons.mixer.Scale = 0.25
 										return c.icons.mixer.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowFowardIcon.Scale = 0.18
 									return c.icons.arrowFowardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										c.icons.transactionIcon.Scale = 0.09
 										return c.icons.transactionIcon.Layout(gtx)
 									})
 								}),
@@ -158,7 +153,6 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							c.icons.mixer.Scale = 0.05
 							return c.icons.mixer.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {

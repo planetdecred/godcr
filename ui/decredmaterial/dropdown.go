@@ -1,11 +1,9 @@
 package decredmaterial
 
 import (
-	"image"
 	"image/color"
 
 	"gioui.org/layout"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 )
@@ -27,7 +25,7 @@ type DropDown struct {
 
 type DropDownItem struct {
 	Text   string
-	Icon   image.Image
+	Icon   *Image
 	button Button
 	label  Label
 }
@@ -118,10 +116,10 @@ func (c *DropDown) layoutIcon(itemIndex int) layout.FlexChild {
 			return layout.Dimensions{}
 		}
 
-		img := widget.Image{Src: paint.NewImageOp(c.items[itemIndex].Icon)}
-		img.Scale = 0.045
+		//img := widget.Image{Src: paint.NewImageOp(c.items[itemIndex].Icon)}
+		//img.Scale = 0.045
 
-		return img.Layout(gtx)
+		return c.items[itemIndex].Icon.Layout(gtx)
 	})
 }
 

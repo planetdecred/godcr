@@ -466,10 +466,8 @@ func (pg *transactionDetailsPage) viewTxn(gtx layout.Context, common *pageCommon
 				return pg.theme.Body1("View on dcrdata").Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				redirect := common.icons.redirectIcon
-				redirect.Scale = 0.26
 				return decredmaterial.Clickable(gtx, pg.toDcrdata, func(gtx C) D {
-					return redirect.Layout(gtx)
+					return common.icons.redirectIcon.Layout(gtx)
 				})
 			}),
 		)

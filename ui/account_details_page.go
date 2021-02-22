@@ -109,11 +109,9 @@ func (pg *acctDetailsPage) header(gtx layout.Context, common *pageCommon) layout
 					return txt.Layout(gtx)
 				}),
 				layout.Flexed(1, func(gtx C) D {
-					edit := common.icons.editIcon
-					edit.Scale = 0.25
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return decredmaterial.Clickable(gtx, pg.editAccount, func(gtx C) D {
-							return edit.Layout(gtx)
+							return common.icons.editIcon.Layout(gtx)
 						})
 					})
 				}),
@@ -156,7 +154,6 @@ func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *page
 		if (*pg.acctInfo).Name == "imported" {
 			accountIcon = common.icons.importedAccountIcon
 		}
-		accountIcon.Scale = 0.8
 
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {

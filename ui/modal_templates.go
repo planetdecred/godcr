@@ -42,7 +42,7 @@ type ModalTemplate struct {
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
 	alert                 decredmaterial.IconButton
-	alertError            *widget.Image
+	alertError            *decredmaterial.Image
 	passwordStgth         decredmaterial.ProgressBarStyle
 }
 
@@ -310,7 +310,6 @@ func (m *ModalTemplate) warnExistMixerAcct(load *modalLoad) []func(gtx C) D {
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
-							m.alertError.Scale = 0.07
 							return m.alertError.Layout(gtx)
 						})
 					})

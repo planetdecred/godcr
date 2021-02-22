@@ -9,7 +9,6 @@ import (
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -34,9 +33,7 @@ type walletPage struct {
 	walletAccount                              **wallet.Account
 	theme                                      *decredmaterial.Theme
 	current                                    wallet.InfoShort
-	walletIcon                                 *widget.Image
-	accountIcon                                *widget.Image
-	walletAlertIcon                            *widget.Image
+	accountIcon                                *decredmaterial.Image
 	addAcct, backupButton                      []decredmaterial.IconButton
 	container, accountsList, walletsList, list layout.List
 	line                                       *decredmaterial.Line
@@ -82,12 +79,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{NE: 5, NW: 5, SE: 5, SW: 5}
-
-	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
-	pg.walletIcon.Scale = 1
-
-	pg.walletAlertIcon = common.icons.walletAlertIcon
-	pg.walletAlertIcon.Scale = 1
 
 	pg.optionsMenuItems = []optionMenuItem{
 		{
@@ -178,12 +169,11 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 				})
 			}),
 			layout.Stacked(func(gtx C) D {
-				icon := common.icons.newWalletIcon
-				icon.Scale = 0.26
 				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.SE.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.toAddWalletPage, func(gtx C) D {
-						return icon.Layout(gtx)
+						return common.icons.newWalletIcon.LayoutWithScaleFactor(gtx, 50)
 					})
 				})
 			}),
@@ -236,7 +226,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 		}
 
 		collapsibleHeader := func(gtx C) D {
-			return pg.layoutCollapsibleHeader(gtx, common.info.Wallets[i])
+			return pg.layoutCollapsibleHeader(gtx, common, common.info.Wallets[i])
 		}
 
 		collapsibleBody := func(gtx C) D {
@@ -332,13 +322,13 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageComm
 	})
 }
 
-func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wallet.InfoShort) D {
+func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, common pageCommon, walletInfo wallet.InfoShort) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Right: values.MarginPadding10,
 			}.Layout(gtx, func(gtx C) D {
-				return pg.walletIcon.Layout(gtx)
+				return common.icons.walletIcon.Layout(gtx)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -366,7 +356,7 @@ func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wal
 	)
 }
 
-func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label, isIcon bool, seed int) layout.Dimensions {
+func (pg *walletPage) tableLayout(gtx layout.Context, common pageCommon, leftLabel, rightLabel decredmaterial.Label, isIcon bool, seed int) layout.Dimensions {
 	m := values.MarginPadding0
 	if seed > 0 {
 		m = values.MarginPaddingMinus5
@@ -379,7 +369,7 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 					Right: values.MarginPadding10,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					return pg.walletIcon.Layout(gtx)
+					return common.icons.walletIcon.Layout(gtx)
 				})
 			}
 			return layout.Dimensions{}
@@ -424,7 +414,6 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 	if name == "imported" {
 		pg.accountIcon = common.icons.importedAccountIcon
 	}
-	pg.accountIcon.Scale = 0.8
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -480,7 +469,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 								spendibleLabel.Color = pg.theme.Color.Gray
 								spendibleBalLabel := pg.theme.Body2(spendableBal)
 								spendibleBalLabel.Color = pg.theme.Color.Gray
-								return pg.tableLayout(gtx, spendibleLabel, spendibleBalLabel, false, 0)
+								return pg.tableLayout(gtx, common, spendibleLabel, spendibleBalLabel, false, 0)
 							})
 						}),
 					)
@@ -496,7 +485,7 @@ func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageComm
 	return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.walletAlertIcon.Layout(gtx)
+				return common.icons.walletAlertIcon.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				inset := layout.Inset{

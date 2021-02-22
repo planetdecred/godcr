@@ -7,6 +7,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type Collapsible struct {
@@ -23,8 +25,8 @@ type CollapsibleWithOption struct {
 	button          *widget.Clickable
 	BackgroundColor color.NRGBA
 	card            Card
-	expandedIcon    *widget.Image
-	collapsedIcon   *widget.Image
+	expandedIcon    *Image
+	collapsedIcon   *Image
 	moreIconButton  IconButton
 }
 
@@ -124,8 +126,9 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) 
 								layout.Stacked(func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											icon.Scale = 1
-											return icon.Layout(gtx)
+											return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+												return icon.LayoutWithScaleFactor(gtx, 15)
+											})
 										}),
 										layout.Rigid(header),
 									)

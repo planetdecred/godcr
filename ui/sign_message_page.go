@@ -27,7 +27,6 @@ type signMessagePage struct {
 	result                                     **wallet.Signature
 	line                                       *decredmaterial.Line
 	copySignature                              *widget.Clickable
-	copyIcon                                   *widget.Image
 }
 
 func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
@@ -42,8 +41,6 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	clearButton.Color = common.theme.Color.Gray
 	errorLabel := common.theme.Caption("")
 	errorLabel.Color = common.theme.Color.Danger
-	copyIcon := common.icons.copyIcon
-	copyIcon.Scale = 0.25
 
 	pg := &signMessagePage{
 		container: layout.List{
@@ -64,7 +61,6 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		result:        &win.signatureResult,
 		line:          common.theme.Line(),
 		copySignature: new(widget.Clickable),
-		copyIcon:      copyIcon,
 	}
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
@@ -98,7 +94,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 							layout.Rigid(pg.editors(pg.addressEditor)),
 							layout.Rigid(pg.editors(pg.messageEditor)),
 							layout.Rigid(pg.drawButtonsRow()),
-							layout.Rigid(pg.drawResult()),
+							layout.Rigid(pg.drawResult(common)),
 						)
 					})
 				})
@@ -153,7 +149,7 @@ func (pg *signMessagePage) drawButtonsRow() layout.Widget {
 	}
 }
 
-func (pg *signMessagePage) drawResult() layout.Widget {
+func (pg *signMessagePage) drawResult(common pageCommon) layout.Widget {
 	return func(gtx C) D {
 		if pg.signedMessageLabel.Text == "" {
 			return layout.Dimensions{}
@@ -181,7 +177,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 										return layout.E.Layout(gtx, func(gtx C) D {
 											return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 												return decredmaterial.Clickable(gtx, pg.copySignature, func(gtx C) D {
-													return pg.copyIcon.Layout(gtx)
+													return common.icons.copyIcon.Layout(gtx)
 												})
 											})
 										})
