@@ -97,9 +97,6 @@ func (win *Window) updateStates(update interface{}) {
 		win.notifyOnSuccess("Mixer setup completed")
 	case *wallet.TicketPurchase:
 		win.notifyOnSuccess("Ticket(s) purchased, attempting to pay fee")
-	case wallet.ImportedWatchOnly:
-		win.notifyOnSuccess("Watch only wallet imported")
-		win.changePage(PageWallet)
 	}
 
 	win.states.loading = true

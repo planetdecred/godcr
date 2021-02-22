@@ -62,6 +62,7 @@ type walletPage struct {
 	watchOnlyWalletLabel                       decredmaterial.Label
 	watchOnlyWalletIcon                        *widget.Image
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
+	common                                     *pageCommon
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -80,6 +81,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		openAddWalletPopupButton: new(widget.Clickable),
 		errChann:                 common.errorChannels[PageWallet],
 		openPopupIndex:           -1,
+		common:                   &common,
 	}
 
 	pg.collapsibles = make(map[int]collapsible)
@@ -712,13 +714,23 @@ func (pg *walletPage) openAddWalletPopup(common pageCommon) {
 	}()
 }
 
+func (pg *walletPage) onImportSuccess() {
+	pg.common.closeModal()
+	pg.wallet.GetMultiWalletInfo()
+	pg.common.Notify("Watch only wallet imported", true)
+}
+
+func (pg *walletPage) onImportError(err error) {
+	pg.common.Notify(err.Error(), false)
+}
+
 func (pg *walletPage) openImportWatchOnlyWalletPopup(common pageCommon) {
 	go func() {
 		common.modalReceiver <- &modalLoad{
 			template: ImportWatchOnlyWalletTemplate,
 			title:    "Import watch-only wallet",
 			confirm: func(name, extendedPubKey string) {
-				pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey, pg.errChann)
+				pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey, pg.onImportSuccess, pg.onImportError)
 			},
 			confirmText: "Import",
 			cancel:      common.closeModal,
@@ -808,14 +820,10 @@ func (pg *walletPage) Handle(common pageCommon) {
 	case err := <-pg.errChann:
 		if err.Error() == "invalid_passphrase" {
 			e := "Password is incorrect"
-			common.Notify(e, false)
+			pg.common.Notify(e, false)
 			return
 		}
-		common.Notify(err.Error(), false)
+		pg.common.Notify(err.Error(), false)
 	default:
 	}
-}
-
-func (pg *walletPage) changePage(page string) {
-
 }

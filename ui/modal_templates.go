@@ -664,4 +664,5 @@ func (m *ModalTemplate) resetFields() {
 	m.walletName.Editor.SetText("")
 	m.matchSpendingPassword.SetError("")
 	m.oldSpendingPassword.Editor.SetText("")
+	m.extendedPublicKey.Editor.SetText("")
 }

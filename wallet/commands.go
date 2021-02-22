@@ -471,23 +471,14 @@ func (wal *Wallet) RenameWallet(walletID int, name string, errChan chan error) {
 
 // ImportWatchOnlyWallet imports a watch only wallet with the given parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) ImportWatchOnlyWallet(name, extendedPublicKey string, errChan chan error) {
+func (wal *Wallet) ImportWatchOnlyWallet(name, extendedPublicKey string, successCB func(), errorCB func(error)) {
 	go func() {
-		var resp Response
 		_, err := wal.multi.CreateWatchOnlyWallet(name, extendedPublicKey)
 		if err != nil {
-			go func() {
-				errChan <- err
-			}()
-			resp.Err = err
-			wal.Send <- ResponseError(MultiWalletError{
-				Message: "Could not import watch only wallet",
-				Err:     err,
-			})
+			errorCB(fmt.Errorf("error importing watch only wallet: %s", err.Error()))
 			return
 		}
-		resp.Resp = ImportedWatchOnly{}
-		wal.Send <- resp
+		successCB()
 	}()
 }
 

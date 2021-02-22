@@ -208,4 +208,3 @@ type Tickets struct {
 }
 
 type TicketPurchase struct{}
-type ImportedWatchOnly struct{}
