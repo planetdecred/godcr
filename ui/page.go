@@ -32,11 +32,8 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-<<<<<<< HEAD
-	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon *widget.Image
-=======
-	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, checkMarkGreenIcon, crossMarkRed *widget.Image
->>>>>>> Create layout and logic for validate address page
+	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
+	checkMarkGreenIcon, crossMarkRed *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -83,8 +80,8 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	changePage         func(string)
-	pushNavigationPage func(string)
+	changePage    func(string)
+	setReturnPage func(string)
 }
 
 type (
@@ -250,7 +247,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
 		changePage:              win.changePage,
-		pushNavigationPage:      win.pushNavigationPage,
+		setReturnPage:           win.setReturnPage,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -294,16 +291,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 func (page pageCommon) ChangePage(pg string) {
 	page.changePage(pg)
-}
-
-func (page pageCommon) PushNavigationPage(from, to string) {
-	page.returnPage = &from
-	page.pushNavigationPage(from)
-	page.changePage(to)
-}
-
-func (page pageCommon) PopNavigationPage() {
-	page.changePage(*page.returnPage)
 }
 
 func (page pageCommon) Notify(text string, success bool) {

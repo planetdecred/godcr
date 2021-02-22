@@ -117,7 +117,7 @@ func (win *Window) changePage(page string) {
 	win.window.Invalidate()
 }
 
-func (win *Window) pushNavigationPage(from string) {
+func (win *Window) setReturnPage(from string) {
 	win.previous = from
 	win.window.Invalidate()
 }

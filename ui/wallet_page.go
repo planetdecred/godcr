@@ -574,7 +574,9 @@ func (pg *walletPage) Handle(common pageCommon) {
 		if pg.optionsMenuItems[index].button.Clicked() {
 			pg.openPopupIndex = -1
 			if index == 1 {
-				common.PushNavigationPage(PageWallet, PageVerifyMessage)
+				*common.returnPage = PageWallet
+				common.setReturnPage(PageWallet)
+				common.changePage(PageVerifyMessage)
 			}
 			common.ChangePage(pg.optionsMenuItems[index].page)
 		}

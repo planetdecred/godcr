@@ -47,13 +47,17 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 }
 
 func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+	var walletName = c.info.Wallets[*c.selectedWallet].Name
+	if *c.returnPage == PageSecurityTools {
+		walletName = ""
+	}
 	body := func(gtx C) D {
 		load := SubPage{
 			title:      "Verify message",
-			walletName: c.info.Wallets[*c.selectedWallet].Name,
+			walletName: walletName,
 			back: func() {
 				pg.clearInputs(&c)
-				c.PopNavigationPage()
+				c.changePage(*c.returnPage)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return pg.theme.Card().Layout(gtx, func(gtx C) D {

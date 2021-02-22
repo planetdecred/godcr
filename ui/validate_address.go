@@ -11,13 +11,13 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const ValidateAddress = "Validate Address"
+const ValidateAddress = "ValidateAddress"
 
 const (
-	none     = 0
-	valid    = 1
-	invalid  = 2
-	notOwned = 3
+	none = iota
+	valid
+	invalid
+	notOwned
 )
 
 type validateAddressPage struct {
@@ -68,7 +68,7 @@ func (pg *validateAddressPage) Layout(gtx layout.Context, common pageCommon) lay
 		page := SubPage{
 			title: ValidateAddress,
 			back: func() {
-				common.PopNavigationPage()
+				common.changePage(*common.returnPage)
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
