@@ -131,9 +131,10 @@ type Transaction struct {
 
 // Transactions is sent in response to Wallet.GetAllTransactions
 type Transactions struct {
-	Total  int
-	Txs    map[int][]Transaction
-	Recent []Transaction
+	Total   int
+	Txs     map[int][]Transaction
+	Recent  []Transaction
+	Tickets map[int][]Transaction
 }
 
 // SyncStatus is sent when a wallet progress event is triggered.
@@ -183,3 +184,26 @@ type UnspentOutputs struct {
 
 // SetupAccountMixer is sent when finished setup the wallet account mixer
 type SetupAccountMixer struct{}
+
+type Ticket struct {
+	Info     dcrlibwallet.TicketInfo
+	Fee      string
+	Amount   string
+	DateTime string
+}
+
+type UnconfirmedPurchase struct {
+	Hash        string
+	Status      string
+	DateTime    string
+	BlockHeight int32
+	Amount      string
+}
+
+type Tickets struct {
+	Total       int
+	Confirmed   map[int][]Ticket
+	Unconfirmed map[int][]UnconfirmedPurchase
+}
+
+type TicketPurchase struct{}

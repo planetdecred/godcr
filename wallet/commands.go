@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/decred/dcrd/chaincfg/chainhash"
-	"github.com/decred/dcrd/dcrutil"
+	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
 )
 
@@ -204,7 +204,9 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 
 		var recentTxs []Transaction
+
 		transactions := make(map[int][]Transaction)
+		ticketTxs := make(map[int][]Transaction)
 		bestBestBlock := wal.multi.GetBestBlock()
 		totalTxn := 0
 
@@ -227,6 +229,9 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 					DateTime:      dcrlibwallet.ExtractDateOrTime(txnRaw.Timestamp),
 				}
 				recentTxs = append(recentTxs, txn)
+				if txn.Txn.Type == dcrlibwallet.TxTypeTicketPurchase {
+					ticketTxs[wall.ID] = append(ticketTxs[wall.ID], txn)
+				}
 				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
 			}
 		}
@@ -243,9 +248,10 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 		}
 
 		resp.Resp = &Transactions{
-			Total:  totalTxn,
-			Txs:    transactions,
-			Recent: recentTxs,
+			Total:   totalTxn,
+			Txs:     transactions,
+			Recent:  recentTxs,
+			Tickets: ticketTxs,
 		}
 		wal.Send <- resp
 	}()
@@ -812,4 +818,142 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 		resp.Resp = SetupAccountMixer{}
 		wal.Send <- resp
 	}()
+}
+
+func (wal *Wallet) NewVSPD(walletID int, accountID int32) *dcrlibwallet.VSPD {
+	return wal.multi.NewVSPD("http://dev.planetdecred.org:23125", walletID, accountID)
+}
+
+// TicketPrice get ticket price
+func (wal *Wallet) TicketPrice(walletID int) string {
+	wall := wal.multi.WalletWithID(walletID)
+	pr, err := wall.TicketPrice()
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	return dcrutil.Amount(pr.TicketPrice).String()
+}
+
+// PurchaseTicket buy a ticket with given parameters
+func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, expiry uint32) ([]string, error) {
+	wall := wal.multi.WalletWithID(walletID)
+	request := &dcrlibwallet.PurchaseTicketsRequest{
+		Account:               uint32(accountID),
+		Passphrase:            passphrase,
+		NumTickets:            tickets,
+		Expiry:                uint32(wal.multi.GetBestBlock().Height) + expiry,
+		RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
+	}
+	hashes, err := wall.PurchaseTickets(request, "")
+	if err != nil {
+		return []string{}, err
+	}
+	go func() {
+		var resp Response
+		resp.Resp = &TicketPurchase{}
+		wal.Send <- resp
+	}()
+	return hashes, nil
+}
+
+// GetAllTickets collects a per-wallet slice of tickets fitting the parameters.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) GetAllTickets() {
+	go func() {
+		var resp Response
+		wallets, err := wal.wallets()
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+		tickets := make(map[int][]Ticket)
+		unconfirmedTickets := make(map[int][]UnconfirmedPurchase)
+		totalTicket := 0
+
+		for _, wall := range wallets {
+			ticketsInfo, err := wall.GetTicketsForBlockHeightRange(0, wall.GetBestBlock(), math.MaxInt32)
+			if err != nil {
+				resp.Err = err
+				wal.Send <- resp
+				return
+			}
+			for _, tinfo := range ticketsInfo {
+				var amount dcrutil.Amount
+				for _, output := range tinfo.Ticket.MyOutputs {
+					amount += output.Amount
+				}
+				info := Ticket{
+					Info:     *tinfo,
+					DateTime: dcrlibwallet.ExtractDateOrTime(tinfo.Ticket.Timestamp),
+					Amount:   amount.String(),
+					Fee:      tinfo.Ticket.Fee.String(),
+				}
+				tickets[wall.ID] = append(tickets[wall.ID], info)
+			}
+
+			unconfirmedTicketPurchases, err := getUnconfirmedPurchases(wall, tickets[wall.ID])
+			if err != nil {
+				resp.Err = err
+				wal.Send <- resp
+				return
+			}
+			unconfirmedTickets[wall.ID] = unconfirmedTicketPurchases
+		}
+
+		resp.Resp = &Tickets{
+			Total:       totalTicket,
+			Confirmed:   tickets,
+			Unconfirmed: unconfirmedTickets,
+		}
+		wal.Send <- resp
+	}()
+}
+
+func getUnconfirmedPurchases(wall dcrlibwallet.Wallet, tickets []Ticket) (unconfirmed []UnconfirmedPurchase, err error) {
+	contains := func(slice []Ticket, item string) bool {
+		set := make(map[string]struct{}, len(slice))
+		for _, s := range slice {
+			set[s.Info.Ticket.Hash.String()] = struct{}{}
+		}
+
+		_, ok := set[item]
+		return ok
+	}
+
+	txs, err := wall.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterAll, true)
+	if err != nil {
+		return
+	}
+
+	ticketTxs := make(map[int][]dcrlibwallet.Transaction)
+	for _, txn := range txs {
+		if txn.Type == dcrlibwallet.TxTypeTicketPurchase {
+			ticketTxs[wall.ID] = append(ticketTxs[wall.ID], txn)
+		}
+	}
+
+	if len(tickets) == len(ticketTxs) {
+		return
+	}
+
+	for _, txn := range ticketTxs[wall.ID] {
+		var amount int64
+		for _, output := range txn.Outputs {
+			amount += output.Amount
+		}
+
+		if !contains(tickets, txn.Hash) {
+			unconfirmed = append(unconfirmed, UnconfirmedPurchase{
+				Hash:        txn.Hash,
+				Status:      "UNCONFIRMED",
+				DateTime:    dcrlibwallet.ExtractDateOrTime(txn.Timestamp),
+				BlockHeight: txn.BlockHeight,
+				Amount:      dcrutil.Amount(amount).String(),
+			})
+		}
+	}
+
+	return
 }
