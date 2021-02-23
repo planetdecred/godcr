@@ -218,6 +218,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			clickable:     new(widget.Clickable),
 			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
 			imageInactive: ic.walletIconInactive,
+			page:          PageProposals,
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			imageInactive: ic.walletIconInactive,
 			page:          PageTickets,
 		},
 		{
@@ -313,7 +319,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSettings] = win.SettingsPage(common)
 	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
-	win.pages[PagePoliteia] = win.PoliteiaPage(common)
+	win.pages[PageProposals] = win.ProposalsPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
 	win.pages[PageLog] = win.LogPage(common)
 	win.pages[PageAbout] = win.AboutPage(common)
@@ -348,8 +354,23 @@ func (page pageCommon) closeModal() {
 	}()
 }
 
-func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) D {
+	return page.layout(gtx, body, true)
+}
+
+func (page pageCommon) LayoutWithoutPadding(gtx layout.Context, body layout.Widget) D {
+	return page.layout(gtx, body, false)
+}
+
+func (page pageCommon) layout(gtx layout.Context, body layout.Widget, padded bool) layout.Dimensions {
 	page.handleNavEvents()
+
+	var padding unit.Value
+	if padded {
+		padding = values.MarginPadding15
+	} else {
+		padding = values.MarginPadding0
+	}
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {

@@ -653,6 +653,17 @@ func (wal *Wallet) RenameAccount(walletID int, acct int32, name string, errChan 
 	}()
 }
 
+func (wal *Wallet) GetProposals(category int32, successCB func([]dcrlibwallet.Proposal), errorCB func(error)) {
+	go func() {
+		proposals, err := wal.multi.Politeia.GetProposalsRaw(category, 0, 0, true)
+		if err != nil {
+			errorCB(fmt.Errorf("error fetching proposals: %s", err.Error()))
+			return
+		}
+		successCB(proposals)
+	}()
+}
+
 func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
 	return wal.multi.UnlockWallet(walletID, passphrase)
 }
@@ -707,6 +718,10 @@ func (wal *Wallet) RescanBlocks(walletID int) error {
 // CancelSync cancels the SPV sync
 func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
+}
+
+func (wal *Wallet) SyncProposals() {
+	go wal.multi.Politeia.Sync()
 }
 
 func (wal *Wallet) GetWalletSeedPhrase(walletID int, password []byte) (string, error) {

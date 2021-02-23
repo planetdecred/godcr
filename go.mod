@@ -21,6 +21,7 @@ require (
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/text v0.3.3
+	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 )
 
 replace (
