@@ -26,6 +26,10 @@ const (
 	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
 )
 
+type httpError interface {
+	Error() string
+}
+
 type amountValue struct {
 	inactiveInputAmount         string
 	activeTransactionFeeValue   string
@@ -112,6 +116,7 @@ type sendPage struct {
 	balanceAfterSendValue string
 
 	LastTradeRate string
+	exchangeErr   string
 
 	passwordModal *decredmaterial.Password
 	line          *decredmaterial.Line
@@ -124,8 +129,11 @@ type sendPage struct {
 
 	shouldInitializeTxAuthor bool
 
-	txAuthorErrChan  chan error
+	txAuthorErrChan chan error
+
 	broadcastErrChan chan error
+
+	errChan chan error
 
 	toggleCoinCtrl      *widget.Bool
 	inputButtonCoinCtrl decredmaterial.Button
@@ -153,6 +161,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		broadcastResult:        &win.broadcastResult,
 		unspentOutputsSelected: &common.selectedUTXO,
 		selectedAccount:        &win.walletAccount,
+		errChan:                common.errorChannels[PageCreateRestore],
 
 		fromAccountBtn: new(widget.Clickable),
 		toAddress:      new(widget.Bool),
@@ -257,7 +266,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.inputButtonCoinCtrl.Inset = layout.UniformInset(values.MarginPadding5)
 	pg.inputButtonCoinCtrl.TextSize = values.MarginPadding10
 
-	go common.wallet.GetUSDExchangeValues(&pg)
+	go common.wallet.GetUSDExchangeValues(&pg, pg.errChan)
 
 	return func(gtx C) D {
 		pg.Handle(common)
@@ -973,8 +982,8 @@ func (pg *sendPage) calculateValues() {
 		return
 	}
 
+	fmt.Println("im here")
 	pg.inputAmount, _ = strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
-
 	if strings.Contains(pg.currencyValue, "USD") && pg.rightAmountEditor.Editor.Focused() {
 		pg.inputAmount, _ = strconv.ParseFloat(pg.rightAmountEditor.Editor.Text(), 64)
 	}
@@ -995,6 +1004,10 @@ func (pg *sendPage) calculateValues() {
 	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountDCRtoUSD))
 	default:
+		pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
+		if pg.rightAmountEditor.Editor.Focused() {
+			pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
+		}
 	}
 
 	if pg.amountAtoms == 0 {
@@ -1182,7 +1195,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
-		go pg.wallet.GetUSDExchangeValues(&pg)
+		go pg.wallet.GetUSDExchangeValues(&pg, pg.errChan)
 		go pg.calculateValues()
 
 		// 	if strings.Contains(pg.currencyValue, "USD") {
@@ -1227,6 +1240,10 @@ func (pg *sendPage) updateDefaultValues() {
 func (pg *sendPage) Handle(c pageCommon) {
 	if len(c.info.Wallets) == 0 {
 		return
+	}
+
+	if pg.exchangeErr != "" {
+		c.Notify(pg.exchangeErr, false)
 	}
 
 	if c.subPageBackButton.Button.Clicked() {
@@ -1380,6 +1397,12 @@ func (pg *sendPage) Handle(c pageCommon) {
 			})
 		}
 		pg.isBroadcastingTransaction = false
+	case err := <-pg.errChan:
+		errMsg := err.Error()
+		if strings.Contains(err.Error(), "host") {
+			errMsg = "Could fetch exchange: no such host"
+		}
+		c.Notify(errMsg, false)
 	default:
 	}
 }
