@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"image/color"
 	// "reflect"
-	// "strconv"
-	"strings"
-	// "time"
 	"image"
+	"strconv"
+	"strings"
+	"time"
 
+	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	// "gioui.org/unit"
-	"gioui.org/gesture"
 	"gioui.org/widget"
-	// "gioui.org/op/paint"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -23,8 +21,13 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
+const (
+	PageSend               = "Send"
+	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
+)
+
 type amountValue struct {
-	inactiveTotalAmount         string
+	inactiveInputAmount         string
 	activeTransactionFeeValue   string
 	inactiveTransactionFeeValue string
 	activeTotalCostValue        string
@@ -57,7 +60,7 @@ type sendPage struct {
 
 	currencySwap, moreOption decredmaterial.IconButton
 
-	customChangeAddressEditor    decredmaterial.Editor
+	// customChangeAddressEditor    decredmaterial.Editor
 	sendAmountEditor             decredmaterial.Editor
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
@@ -72,7 +75,6 @@ type sendPage struct {
 	walletAccountModal *decredmaterial.Modal
 
 	txFeeCollapsible *decredmaterial.Collapsible
-	txLine           *decredmaterial.Line
 
 	remainingBalance int64
 	amountAtoms      int64
@@ -85,19 +87,17 @@ type sendPage struct {
 	amountUSDtoDCR  float64
 	amountDCRtoUSD  float64
 
-	count              int
-	defualtEditorWidth int
-	nextEditorWidth    int
+	count int
 
 	amountErrorText    string
 	calculateErrorText string
 
 	activeTotalAmount   string
-	inactiveTotalAmount string
+	inactiveInputAmount string
 	currencyValue       string
 
-	activeExchangeValue   string
-	inactiveExchangeValue string
+	leftExchangeValue  string
+	rightExchangeValue string
 
 	activeTransactionFeeValue   string
 	inactiveTransactionFeeValue string
@@ -127,18 +127,11 @@ type sendPage struct {
 	txAuthorErrChan  chan error
 	broadcastErrChan chan error
 
-	borderColor color.NRGBA
-
 	toggleCoinCtrl      *widget.Bool
 	inputButtonCoinCtrl decredmaterial.Button
 
 	toAcctDetails []*gesture.Click
 }
-
-const (
-	PageSend               = "Send"
-	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
-)
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg := &sendPage{
@@ -164,9 +157,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		fromAccountBtn: new(widget.Clickable),
 		toAddress:      new(widget.Bool),
 
-		accountSwitch:         common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
-		activeExchangeValue:   "DCR",
-		inactiveExchangeValue: "USD",
+		accountSwitch:      common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
+		leftExchangeValue:  "DCR",
+		rightExchangeValue: "USD",
 
 		closeConfirmationModalButton: common.theme.Button(new(widget.Clickable), "Cancel"),
 		nextButton:                   common.theme.Button(new(widget.Clickable), "Next"),
@@ -174,7 +167,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		maxButton:                    common.theme.Button(new(widget.Clickable), "MAX"),
 		clearAllBtn:                  common.theme.Button(new(widget.Clickable), "Clear all fields"),
 		txFeeCollapsible:             common.theme.Collapsible(),
-		txLine:                       common.theme.Line(),
 
 		confirmModal:              common.theme.Modal(),
 		walletAccountModal:        common.theme.Modal(),
@@ -194,11 +186,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.line.Color = common.theme.Color.Background
 	pg.line.Height = 2
 
-	pg.borderColor = common.theme.Color.Hint
-
 	pg.balanceAfterSendValue = "- DCR"
 
-	activeEditorHint := fmt.Sprintf("Amount (%s)", pg.activeExchangeValue)
+	activeEditorHint := fmt.Sprintf("Amount (%s)", pg.leftExchangeValue)
 	pg.leftAmountEditor = common.theme.Editor(new(widget.Editor), activeEditorHint)
 	pg.leftAmountEditor.Editor.SetText("")
 	pg.leftAmountEditor.IsCustomButton = true
@@ -208,7 +198,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.leftAmountEditor.CustomButton.Text = "Max"
 	pg.leftAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	inactiveEditorHint := fmt.Sprintf("Amount (%s)", pg.inactiveExchangeValue)
+	inactiveEditorHint := fmt.Sprintf("Amount (%s)", pg.rightExchangeValue)
 	pg.rightAmountEditor = common.theme.Editor(new(widget.Editor), inactiveEditorHint)
 	pg.rightAmountEditor.Editor.SetText("")
 	pg.rightAmountEditor.IsCustomButton = true
@@ -230,19 +220,10 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.destinationAddressEditor.Editor.SingleLine, pg.destinationAddressEditor.IsVisible = true, true
 	pg.destinationAddressEditor.Editor.SetText("")
 
-	pg.customChangeAddressEditor = common.theme.Editor(new(widget.Editor), "Custom Change Address")
-	pg.customChangeAddressEditor.IsVisible, pg.customChangeAddressEditor.IsTitleLabel = true, true
-	pg.customChangeAddressEditor.Editor.SetText("")
-	pg.customChangeAddressEditor.Editor.SingleLine = true
-
-	pg.sendAmountEditor = common.theme.Editor(new(widget.Editor), "Amount to be sent")
-	pg.sendAmountEditor.SetRequiredErrorText("")
-	pg.sendAmountEditor.IsRequired = true
-	pg.sendAmountEditor.IsTitleLabel = false
-	pg.sendAmountEditor.Bordered = false
-	pg.sendAmountEditor.Editor.SingleLine = true
-	pg.sendAmountEditor.Editor.SetText("0")
-	pg.sendAmountEditor.TextSize = values.TextSize24
+	// pg.customChangeAddressEditor = common.theme.Editor(new(widget.Editor), "Custom Change Address")
+	// pg.customChangeAddressEditor.IsVisible, pg.customChangeAddressEditor.IsTitleLabel = true, true
+	// pg.customChangeAddressEditor.Editor.SetText("")
+	// pg.customChangeAddressEditor.Editor.SingleLine = true
 
 	pg.closeConfirmationModalButton.Background = color.NRGBA{}
 	pg.closeConfirmationModalButton.Color = common.theme.Color.Primary
@@ -275,11 +256,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.inputButtonCoinCtrl = common.theme.Button(new(widget.Clickable), "Inputs")
 	pg.inputButtonCoinCtrl.Inset = layout.UniformInset(values.MarginPadding5)
 	pg.inputButtonCoinCtrl.TextSize = values.MarginPadding10
-
-	// defualtEditorWidth is the editor text size values.TextSize24
-	pg.defualtEditorWidth = 24
-
-	pg.txLine.Color = common.theme.Color.Gray
 
 	go common.wallet.GetUSDExchangeValues(&pg)
 
@@ -355,10 +331,6 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	if pg.isWalletAccountModalOpen {
 		return common.Modal(gtx, dims, pg.walletAccountSection(gtx, common))
 	}
-
-	// if pg.isPasswordModalOpen {
-	// 	return common.Modal(gtx, dims, pg.drawPasswordModal(gtx))
-	// }
 
 	return dims
 }
@@ -480,7 +452,7 @@ func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dime
 				if strings.Contains(pg.currencyValue, "USD") {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Flexed(0.45, func(gtx C) D {
-							pg.leftAmountEditor.Hint = fmt.Sprintf("Amount (%s)", pg.activeExchangeValue)
+							pg.leftAmountEditor.Hint = fmt.Sprintf("Amount (%s)", pg.leftExchangeValue)
 							return pg.leftAmountEditor.Layout(gtx)
 						}),
 						layout.Flexed(0.1, func(gtx C) D {
@@ -489,7 +461,7 @@ func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dime
 							})
 						}),
 						layout.Flexed(0.45, func(gtx C) D {
-							pg.rightAmountEditor.Hint = fmt.Sprintf("Amount (%s)", pg.inactiveExchangeValue)
+							pg.rightAmountEditor.Hint = fmt.Sprintf("Amount (%s)", pg.rightExchangeValue)
 							return pg.rightAmountEditor.Layout(gtx)
 						}),
 					)
@@ -577,13 +549,13 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 								}
 								return inset.Layout(gtx, func(gtx C) D {
 									if strings.Contains(pg.currencyValue, "USD") {
-										return pg.contentRow(gtx, "Total cost", pg.activeTransactionFeeValue+" "+pg.inactiveTransactionFeeValue, "")
+										return pg.contentRow(gtx, "Total cost", pg.activeTotalCostValue+" "+pg.inactiveTotalCostValue, "")
 									}
-									return pg.contentRow(gtx, "Total cost", pg.activeTransactionFeeValue, "")
+									return pg.contentRow(gtx, "Total cost", pg.activeTotalCostValue, "")
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								return pg.contentRow(gtx, "Balance after send", "1234567", "")
+								return pg.contentRow(gtx, "Balance after send", pg.balanceAfterSendValue, "")
 							}),
 						)
 					})
@@ -932,77 +904,330 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 	)
 }
 
-func (pg *sendPage) calculateValues() {
-	defaultActiveValues := fmt.Sprintf("- %s", "DCR" /*pg.activeExchangeValue*/)
-	defaultInactiveValues := "($ -)"
-	// noExchangeText := "Exchange rate not fetched"
-	// pg.sendAmountEditor.Hint = "0"
+func (pg *sendPage) validate() bool {
+	isAddressValid := pg.validateDestinationAddress()
+	isAmountValid := pg.validateAmount()
 
-	pg.activeTransactionFeeValue = defaultActiveValues
-	// pg.activeTotalCostValue = defaultActiveValues
-	pg.inactiveTransactionFeeValue = defaultInactiveValues
-	// pg.inactiveTotalCostValue = defaultInactiveValues
+	if !isAddressValid || !isAmountValid || pg.calculateErrorText != "" {
+		pg.nextButton.Background = pg.theme.Color.Hint
+		return false
+	}
 
-	// pg.calculateErrorText = ""
-	// pg.activeTotalAmount = pg.activeExchangeValue
-	// pg.inactiveTotalAmount = fmt.Sprintf("0 %s", pg.inactiveExchangeValue)
-
-	// // default values when exchange is not available
-	// if pg.LastTradeRate == "" {
-	// 	pg.activeTransactionFeeValue = defaultActiveValues
-	// 	pg.activeTotalCostValue = defaultActiveValues
-	// 	pg.inactiveTransactionFeeValue = ""
-	// 	pg.inactiveTotalCostValue = ""
-	// 	pg.activeTotalAmount = pg.activeExchangeValue
-	// 	pg.inactiveTotalAmount = noExchangeText
-	// }
-
-	// if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate(true) {
-	// 	return
-	// }
-
-	// pg.inputAmount, _ = strconv.ParseFloat(pg.sendAmountEditor.Editor.Text(), 64)
-
-	// if pg.LastTradeRate != "" {
-	// 	pg.usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
-	// 	pg.amountUSDtoDCR = pg.inputAmount / pg.usdExchangeRate
-	// 	pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
-	// }
-
-	// pg.setChangeDestinationAddr()
-	// if pg.activeExchangeValue == "USD" && pg.LastTradeRate != "" {
-	// 	pg.amountAtoms = pg.setDestinationAddr(pg.amountUSDtoDCR)
-	// } else {
-	// 	pg.amountAtoms = pg.setDestinationAddr(pg.inputAmount)
-	// }
-
-	// if pg.amountAtoms == 0 {
-	// 	return
-	// }
-
-	// pg.txFee = pg.getTxFee(pg.toggleCoinCtrl.Value)
-	// if pg.txFee == 0 {
-	// 	return
-	// }
-
-	// pg.totalCostDCR = pg.txFee + pg.amountAtoms
-
-	// pg.updateDefaultValues()
-	// pg.balanceAfterSend(false)
+	pg.nextButton.Background = pg.theme.Color.Primary
+	return true
 }
 
-// func (pg *SendPage) updateDefaultValues() {
-// 	v := pg.amountValues()
-// 	pg.activeTotalAmount = pg.activeExchangeValue
-// 	pg.inactiveTotalAmount = v.inactiveTotalAmount
-// 	pg.activeTransactionFeeValue = v.activeTransactionFeeValue
-// 	pg.inactiveTransactionFeeValue = v.inactiveTransactionFeeValue
-// 	pg.activeTotalCostValue = v.activeTotalCostValue
-// 	pg.inactiveTotalCostValue = v.inactiveTotalCostValue
+func (pg *sendPage) validateDestinationAddress() bool {
+	if !pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
+		isValid, _ := pg.wallet.IsAddressValid(pg.destinationAddressEditor.Editor.Text())
+		if !isValid {
+			pg.destinationAddressEditor.SetError("invalid address")
+			return false
+		}
+	}
+	pg.destinationAddressEditor.SetError("")
+
+	return true
+}
+
+func (pg *sendPage) validateAmount() bool {
+	pg.leftAmountEditor.ClearError()
+	pg.rightAmountEditor.ClearError()
+	mainAmount := pg.leftAmountEditor.Editor.Text()
+	subAmount := pg.leftAmountEditor.Editor.Text()
+
+	if mainAmount != "" || subAmount != "" {
+		_, err := strconv.ParseFloat(mainAmount, 64)
+		if err != nil {
+			pg.leftAmountEditor.SetError("")
+			return false
+		}
+
+		_, err = strconv.ParseFloat(subAmount, 64)
+		if err != nil {
+			pg.rightAmountEditor.SetError("")
+			return false
+		}
+	}
+
+	return true
+}
+
+func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
+	for _, e := range editors {
+		if e.Text() == "" {
+			pg.nextButton.Background, pg.confirmButton.Background = pg.theme.Color.Hint, pg.theme.Color.Hint
+			return false
+		}
+	}
+
+	pg.nextButton.Background, pg.confirmButton.Background = pg.theme.Color.Primary, pg.theme.Color.Primary
+	return true
+}
+
+func (pg *sendPage) calculateValues() {
+	// defaultActiveValues := fmt.Sprintf("- %s", "DCR")
+	// defaultInactiveValues := "($ -)"
+
+	if !pg.validate() {
+		return
+	}
+
+	pg.inputAmount, _ = strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
+
+	if strings.Contains(pg.currencyValue, "USD") && pg.rightAmountEditor.Editor.Focused() {
+		pg.inputAmount, _ = strconv.ParseFloat(pg.rightAmountEditor.Editor.Text(), 64)
+	}
+
+	if strings.Contains(pg.currencyValue, "USD") && pg.LastTradeRate != "" {
+		pg.usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
+		pg.amountUSDtoDCR = pg.inputAmount / pg.usdExchangeRate
+		pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
+	}
+
+	switch {
+	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
+		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
+	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.rightAmountEditor.Editor.Focused():
+		pg.leftAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountDCRtoUSD))
+	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "" && pg.rightAmountEditor.Editor.Focused():
+		pg.leftAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
+	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
+		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountDCRtoUSD))
+	default:
+	}
+
+	if pg.amountAtoms == 0 {
+		return
+	}
+
+	pg.txFee = pg.getTxFee()
+	if pg.txFee == 0 {
+		return
+	}
+
+	pg.totalCostDCR = pg.txFee + pg.amountAtoms
+
+	// pg.updateDefaultValues()
+}
+
+// func (pg *sendPage) calculateValues() {
+// 	defaultActiveValues := fmt.Sprintf("- %s", "DCR" /*pg.leftExchangeValue*/)
+// 	defaultInactiveValues := "($ -)"
+
+// 	pg.activeTransactionFeeValue = defaultActiveValues
+// 	pg.activeTotalCostValue = defaultActiveValues
+// 	pg.inactiveTransactionFeeValue = defaultInactiveValues
+// 	pg.inactiveTotalCostValue = defaultInactiveValues
+
+// 	// pg.calculateErrorText = ""
+// 	// pg.activeTotalAmount = pg.leftExchangeValue
+// 	// pg.inactiveInputAmount = fmt.Sprintf("0 %s", pg.rightExchangeValue)
+
+// 	// default values when exchange is not available
+// 	if pg.LastTradeRate == "" {
+// 		pg.activeTransactionFeeValue = defaultActiveValues
+// 		pg.activeTotalCostValue = defaultActiveValues
+// 		pg.inactiveTransactionFeeValue = ""
+// 		pg.inactiveTotalCostValue = ""
+// 		// pg.activeTotalAmount = pg.leftExchangeValue
+// 		// pg.inactiveInputAmount = noExchangeText
+// 	}
+
+// 	// fmt.Println(reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}))
+// 	// fmt.Println("")
+// 	// fmt.Println(pg.validate() )
+
+// 	// if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate() {
+// 	// 	return
+// 	// }
+
+// 		fmt.Println("i am here")
+
+// 	pg.inputAmount, _ = strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
+
+// 	if pg.LastTradeRate != "" {
+// 		pg.usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
+// 		pg.amountUSDtoDCR = pg.inputAmount / pg.usdExchangeRate
+// 		pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
+// 	}
+
+// 	pg.setChangeDestinationAddr()
+
+// 	if pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" {
+// 		pg.amountAtoms = pg.setDestinationAddr(pg.amountUSDtoDCR)
+// 	} else {
+// 		pg.amountAtoms = pg.setDestinationAddr(pg.inputAmount)
+// 	}
+
+// 	if pg.amountAtoms == 0 {
+// 		return
+// 	}
+
+// 	pg.txFee = pg.getTxFee()
+// 	if pg.txFee == 0 {
+// 		return
+// 	}
+
+// 	pg.totalCostDCR = pg.txFee + pg.amountAtoms
+
+// 	pg.updateDefaultValues()
+// 	pg.balanceAfterSend(false)
 // }
 
+func (pg *sendPage) setDestinationAddr(sendAmount float64) int64 {
+	pg.amountErrorText = ""
+	amount, err := dcrutil.NewAmount(sendAmount)
+	if err != nil {
+		pg.feeEstimationError(err.Error(), "amount")
+		return 0
+	}
+
+	pg.amountAtoms = int64(amount)
+	pg.txAuthor.RemoveSendDestination(0)
+	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Editor.Text(), pg.amountAtoms, false)
+	return pg.amountAtoms
+}
+
+// func (pg *sendPage) setChangeDestinationAddr() {
+// 	if pg.customChangeAddressEditor.Editor.Len() > 0 {
+// 		pg.txAuthor.RemoveChangeDestination()
+// 		pg.txAuthor.SetChangeDestination(pg.customChangeAddressEditor.Editor.Text())
+// 	}
+// }
+
+func (pg *sendPage) amountValues() amountValue {
+	txFeeValueUSD := dcrutil.Amount(pg.txFee).ToCoin() * pg.usdExchangeRate
+	switch {
+	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "":
+		return amountValue{
+			inactiveInputAmount:         dcrutil.Amount(pg.amountAtoms).String(),
+			activeTransactionFeeValue:   fmt.Sprintf("%f USD", txFeeValueUSD),
+			inactiveTransactionFeeValue: fmt.Sprintf("(%s)", dcrutil.Amount(pg.txFee).String()),
+			activeTotalCostValue:        fmt.Sprintf("%s USD", strconv.FormatFloat(pg.inputAmount+txFeeValueUSD, 'f', 7, 64)),
+			inactiveTotalCostValue:      fmt.Sprintf("(%s )", dcrutil.Amount(pg.totalCostDCR).String()),
+		}
+	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "":
+		return amountValue{
+			inactiveInputAmount:         fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
+			activeTransactionFeeValue:   dcrutil.Amount(pg.txFee).String(),
+			inactiveTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
+			activeTotalCostValue:        dcrutil.Amount(pg.totalCostDCR).String(),
+			inactiveTotalCostValue:      fmt.Sprintf("(%s USD)", strconv.FormatFloat(pg.amountDCRtoUSD+txFeeValueUSD, 'f', 7, 64)),
+		}
+	default:
+		return amountValue{
+			inactiveInputAmount:       "Exchange rate not fetched",
+			activeTransactionFeeValue: dcrutil.Amount(pg.txFee).String(),
+			activeTotalCostValue:      dcrutil.Amount(pg.totalCostDCR).String(),
+		}
+	}
+}
+
+func (pg *sendPage) getTxFee() int64 {
+	// calculate transaction fee
+	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
+	if err != nil {
+		pg.feeEstimationError(err.Error(), "fee")
+		return 0
+	}
+
+	return feeAndSize.Fee.AtomValue
+}
+
+func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool) {
+	pg.remainingBalance = 0
+	if isInputAmountEmpty {
+		pg.remainingBalance = (*pg.selectedAccount).SpendableBalance
+	} else {
+		pg.remainingBalance = (*pg.selectedAccount).SpendableBalance - pg.totalCostDCR
+	}
+	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
+}
+
+func (pg *sendPage) feeEstimationError(err, errorPath string) {
+	if err == "insufficient_balance" {
+		pg.amountErrorText = "Not enough funds"
+	}
+	if strings.Contains(err, "invalid amount") {
+		pg.amountErrorText = "Invalid amount"
+	}
+	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
+}
+
+func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
+	if pg.broadcastResult == nil {
+		return
+	}
+
+	if pg.broadcastResult.TxHash != "" {
+		if pg.remainingBalance != -1 {
+			pg.spendableBalance = pg.remainingBalance
+		}
+		pg.remainingBalance = -1
+		c.Notify("Transaction Sent", true)
+
+		pg.destinationAddressEditor.Editor.SetText("")
+		pg.sendAmountEditor.Editor.SetText("")
+		pg.isConfirmationModalOpen = false
+		pg.isBroadcastingTransaction = false
+		pg.broadcastResult.TxHash = ""
+		pg.calculateValues()
+		(*pg.unspentOutputsSelected)[pg.selectedWallet.ID][(*pg.selectedAccount).Number] = make(map[string]*wallet.UnspentOutput)
+	}
+}
+
+// handleEditorChange handles changes on the editor and adjust its width of the send amount input field
+// it also updates the DCR - USD exchange rate value
+func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
+	switch evt.(type) {
+	case widget.ChangeEvent:
+		go pg.wallet.GetUSDExchangeValues(&pg)
+		go pg.calculateValues()
+
+		// 	if strings.Contains(pg.currencyValue, "USD") {
+		// 	if pg.rightAmountEditor.Editor.Focused(){
+		// 		// pg.rightAmountEditor.Editor.Move(pg.rightAmountEditor.Editor.NumLines())
+		// 		pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
+		// 		return
+		// 	}
+		// 	if pg.leftAmountEditor.Editor.Focused(){
+		// 		// pg.leftAmountEditor.Editor.Move(pg.leftAmountEditor.Editor.NumLines())
+		// 		pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
+		// 		return
+		// 	}
+		// }
+	}
+}
+
+func (pg *sendPage) updateDefaultValues() {
+	fmt.Println("im here")
+	if strings.Contains(pg.currencyValue, "USD") {
+		if pg.rightAmountEditor.Editor.Focused() {
+			// pg.rightAmountEditor.Editor.Move(pg.rightAmountEditor.Editor.NumLines())
+			pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
+			return
+		}
+		if pg.leftAmountEditor.Editor.Focused() {
+			// pg.leftAmountEditor.Editor.Move(pg.leftAmountEditor.Editor.NumLines())
+			pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
+			return
+		}
+	}
+
+	// v := pg.amountValues()
+	// pg.activeTotalAmount = pg.leftExchangeValue
+	// pg.rightAmountEditor.Editor.SetText(v.inactiveInputAmount)
+	// pg.activeTransactionFeeValue = v.activeTransactionFeeValue
+	// pg.inactiveTransactionFeeValue = v.inactiveTransactionFeeValue
+	// pg.activeTotalCostValue = v.activeTotalCostValue
+	// pg.inactiveTotalCostValue = v.inactiveTotalCostValue
+}
+
 func (pg *sendPage) Handle(c pageCommon) {
-	pg.calculateValues()
+	if len(c.info.Wallets) == 0 {
+		return
+	}
 
 	if c.subPageBackButton.Button.Clicked() {
 		*c.page = PageOverview
@@ -1027,28 +1252,112 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.isWalletAccountModalOpen = true
 	}
 
-	if len(c.info.Wallets) == 0 {
-		return
-	}
-
 	pg.currencyValue = pg.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if pg.currencyValue == "" {
 		pg.currencyValue = "None"
 	}
 
+	for range pg.destinationAddressEditor.Editor.Events() {
+		go pg.calculateValues()
+	}
+
 	for pg.currencySwap.Button.Clicked() {
-		// if pg.LastTradeRate != "" {
-		if pg.activeExchangeValue == "DCR" {
-			pg.activeExchangeValue = "USD"
-			pg.inactiveExchangeValue = "DCR"
+		if pg.leftExchangeValue == "DCR" {
+			pg.leftExchangeValue = "USD"
+			pg.rightExchangeValue = "DCR"
 		} else {
-			pg.activeExchangeValue = "DCR"
-			pg.inactiveExchangeValue = "USD"
+			pg.leftExchangeValue = "DCR"
+			pg.rightExchangeValue = "USD"
 		}
-		// }
 
 		pg.calculateValues()
 	}
+
+	for _, evt := range pg.leftAmountEditor.Editor.Events() {
+		pg.handleEditorChange(evt)
+	}
+
+	for _, evt := range pg.rightAmountEditor.Editor.Events() {
+		pg.handleEditorChange(evt)
+	}
+
+	// if pg.LastTradeRate == "" && pg.count == 0 {
+	// 	pg.count = 1
+	// 	pg.calculateValues()
+	// // }
+
+	// // if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
+	// // 	pg.count = 2
+	// // 	pg.calculateValues()
+	// // }
+
+	// // if (*pg.selectedAccount).CurrentAddress != c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount].CurrentAddress {
+	// // 	pg.shouldInitializeTxAuthor = true
+	// // 	pg.selectedAccount = c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount]
+	// // }
+
+	// // if pg.selectedWallet.ID != c.info.Wallets[*c.selectedWallet].ID {
+	// // 	pg.shouldInitializeTxAuthor = true
+	// // 	pg.selectedWallet = c.info.Wallets[*c.selectedWallet]
+	// // }
+
+	// // if pg.toggleCoinCtrl.Value {
+	// // 	_, spendableBalance := pg.calculateBalanceUTXO()
+	// // 	pg.spendableBalance = spendableBalance
+	// // } else {
+	// // 	pg.spendableBalance = pg.selectedAccount.SpendableBalance
+	// // }
+
+	// if pg.shouldInitializeTxAuthor {
+	// 	pg.shouldInitializeTxAuthor = false
+	// 	pg.leftAmountEditor.Editor.SetText("")
+	// 	pg.rightAmountEditor.Editor.SetText("")
+	// 	pg.calculateErrorText = ""
+	// 	c.wallet.CreateTransaction(pg.selectedWallet.ID, (*pg.selectedAccount).Number, pg.txAuthorErrChan)
+	// }
+
+	// // pg.validate(true)
+	// pg.watchForBroadcastResult(c)
+
+	// if pg.isBroadcastingTransaction {
+	// 	col := pg.theme.Color.Gray
+	// 	col.A = 150
+
+	// 	pg.nextButton.Text = "Sending..."
+	// 	pg.nextButton.Background = col
+	// } else {
+	// 	pg.nextButton.Text = "Next"
+	// 	pg.nextButton.Background = pg.theme.Color.Primary
+	// }
+
+	// for pg.nextButton.Button.Clicked() {
+	// 	// if pg.validate(false) && pg.calculateErrorText == "" {
+	// 		pg.isConfirmationModalOpen = true
+	// 	// }
+	// }
+
+	// for pg.confirmButton.Button.Clicked() {
+	// 	pg.isConfirmationModalOpen = false
+	// 	pg.isPasswordModalOpen = true
+	// }
+
+	// for pg.closeConfirmationModalButton.Button.Clicked() {
+	// 	pg.isConfirmationModalOpen = false
+	// }
+
+	// for pg.maxButton.Button.Clicked() {
+	// 	pg.activeExchange = "DCR"
+	// 	amountMax, err := pg.txAuthor.EstimateMaxSendAmount()
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	pg.sendAmountEditor.Editor.SetText(fmt.Sprintf("%.10f", amountMax.DcrValue))
+	// 	pg.calculateValues()
+	// }
+
+	// if pg.destinationAddressEditor.Editor.Len() == 0 || pg.leftAmountEditor.Editor.Len() == 0 || pg.leftAmountEditor.Editor.Len() == 0 {
+	// 	pg.balanceAfterSend(true)
+	// }
 
 	for pg.nextButton.Button.Clicked() {
 		pg.isConfirmationModalOpen = true
@@ -1056,5 +1365,21 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	for pg.closeConfirmationModalButton.Button.Clicked() {
 		pg.isConfirmationModalOpen = false
+	}
+
+	select {
+	case err := <-pg.txAuthorErrChan:
+		pg.calculateErrorText = err.Error()
+		c.Notify(pg.calculateErrorText, false)
+	case err := <-pg.broadcastErrChan:
+		c.Notify(err.Error(), false)
+
+		if err.Error() == invalidPassphraseError {
+			time.AfterFunc(time.Second*3, func() {
+				pg.isConfirmationModalOpen = true
+			})
+		}
+		pg.isBroadcastingTransaction = false
+	default:
 	}
 }
