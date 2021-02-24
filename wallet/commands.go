@@ -1043,3 +1043,7 @@ func (wal *Wallet) IsAccountMixerActive(walletID int) bool {
 	}
 	return wall.IsAccountMixerActive()
 }
+
+func (wal *Wallet) AllWallets() []*dcrlibwallet.Wallet {
+	return wal.multi.AllWallets()
+}

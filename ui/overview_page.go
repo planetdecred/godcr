@@ -87,7 +87,7 @@ type overviewPage struct {
 	syncButtonWidth  int
 	moreButtonWidth  int
 	moreButtonHeight int
-	gray             color.NRGBA
+	isCheckingLockWL bool
 }
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
@@ -108,7 +108,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonWidth:  115,
 		moreButtonHeight: 70,
 
-		gray: color.NRGBA{R: 137, G: 151, B: 165, A: 255},
+		isCheckingLockWL: false,
 	}
 	pg.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -246,7 +246,7 @@ func (pg *overviewPage) recentTransactionsColumn(gtx layout.Context, c pageCommo
 		transactionRows = append(transactionRows, func(gtx C) D {
 			return pg.centralize(gtx, func(gtx C) D {
 				label := theme.Caption(pg.text.noTransaction)
-				label.Color = pg.gray
+				label.Color = pg.theme.Color.Gray
 				return label.Layout(gtx)
 			})
 		})
@@ -396,7 +396,7 @@ func (pg *overviewPage) syncDormantContent(gtx layout.Context) layout.Dimensions
 					return pg.connectionPeer(gtx)
 				}
 				latestBlockTitleLabel := pg.theme.Body1(pg.text.noConnectedPeers)
-				latestBlockTitleLabel.Color = pg.gray
+				latestBlockTitleLabel.Color = pg.theme.Color.Gray
 				return latestBlockTitleLabel.Layout(gtx)
 			}),
 		)
@@ -407,7 +407,7 @@ func (pg *overviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			latestBlockTitleLabel := pg.theme.Body1(pg.text.latestBlockTitle)
-			latestBlockTitleLabel.Color = pg.gray
+			latestBlockTitleLabel.Color = pg.theme.Color.Gray
 			return latestBlockTitleLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -416,7 +416,7 @@ func (pg *overviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			pg.walletStatusIcon.Color = pg.gray
+			pg.walletStatusIcon.Color = pg.theme.Color.Gray
 			return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 				return pg.walletStatusIcon.Layout(gtx, values.MarginPadding5)
 			})
@@ -428,7 +428,7 @@ func (pg *overviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Rigid(func(gtx C) D {
 			lastSyncedLabel := pg.theme.Body1("ago")
-			lastSyncedLabel.Color = pg.gray
+			lastSyncedLabel.Color = pg.theme.Color.Gray
 			return lastSyncedLabel.Layout(gtx)
 		}),
 	)
@@ -438,7 +438,7 @@ func (pg *overviewPage) connectionPeer(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			connectedPeersInfoLabel := pg.theme.Body1(pg.text.connectedPeersInfo)
-			connectedPeersInfoLabel.Color = pg.gray
+			connectedPeersInfoLabel.Color = pg.theme.Color.Gray
 			return connectedPeersInfoLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -448,7 +448,7 @@ func (pg *overviewPage) connectionPeer(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Rigid(func(gtx C) D {
 			peersLabel := pg.theme.Body1("peers")
-			peersLabel.Color = pg.gray
+			peersLabel.Color = pg.theme.Color.Gray
 			return peersLabel.Layout(gtx)
 		}),
 	)
@@ -578,15 +578,15 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 				completedSteps := pg.walletSyncStatus.Steps
 				totalSteps := pg.walletSyncStatus.TotalSteps
 				completedStepsLabel := pg.theme.Caption(fmt.Sprintf("%s %d/%d", pg.text.stepsTitle, completedSteps, totalSteps))
-				completedStepsLabel.Color = pg.gray
+				completedStepsLabel.Color = pg.theme.Color.Gray
 				headersFetchedLabel := pg.theme.Body1(fmt.Sprintf("%s. %v%%", pg.text.fetchingBlockHeaders,
 					pg.walletSyncStatus.HeadersFetchProgress))
-				headersFetchedLabel.Color = pg.gray
+				headersFetchedLabel.Color = pg.theme.Color.Gray
 				return pg.endToEndRow(gtx, inset, completedStepsLabel, headersFetchedLabel)
 			}),
 			layout.Rigid(func(gtx C) D {
 				connectedPeersTitleLabel := pg.theme.Caption(pg.text.connectedPeersTitle)
-				connectedPeersTitleLabel.Color = pg.gray
+				connectedPeersTitleLabel.Color = pg.theme.Color.Gray
 				connectedPeersLabel := pg.theme.Body1(fmt.Sprintf("%d", pg.walletSyncStatus.ConnectedPeers))
 				return pg.endToEndRow(gtx, inset, connectedPeersTitleLabel, connectedPeersLabel)
 			}),
@@ -638,12 +638,12 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 					}),
 					layout.Rigid(func(gtx C) D {
 						headersFetchedTitleLabel := pg.theme.Caption(pg.text.headersFetchedTitle)
-						headersFetchedTitleLabel.Color = pg.gray
+						headersFetchedTitleLabel.Color = pg.theme.Color.Gray
 						return pg.endToEndRow(gtx, inset, headersFetchedTitleLabel, details.blockHeaderFetched)
 					}),
 					layout.Rigid(func(gtx C) D {
 						progressTitleLabel := pg.theme.Caption(pg.text.syncingProgressTitle)
-						progressTitleLabel.Color = pg.gray
+						progressTitleLabel.Color = pg.theme.Color.Gray
 						return pg.endToEndRow(gtx, inset, progressTitleLabel, details.syncingProgress)
 					}),
 				)
@@ -659,6 +659,41 @@ func (pg *overviewPage) updateToTransactionDetailsButtons() {
 		for i := range recentTxs {
 			pg.toTransactionDetails[i] = &gesture.Click{}
 		}
+	}
+}
+
+func (pg *overviewPage) checkLockWallet(c pageCommon) {
+	allWallets := c.wallet.AllWallets()
+
+	var walletsLocked []*dcrlibwallet.Wallet
+	for _, wl := range allWallets {
+		if !wl.HasDiscoveredAccounts && wl.IsLocked() {
+			walletsLocked = append(walletsLocked, wl)
+		}
+	}
+
+	if len(walletsLocked) > 0 {
+		go func() {
+			c.modalReceiver <- &modalLoad{
+				template: UnlockWalletRestoreTemplate,
+				title:    "Unlock to resume restoration",
+				confirm: func(pass string) {
+					err := c.wallet.UnlockWallet(walletsLocked[0].ID, []byte(pass))
+					if err != nil {
+						errText := err.Error()
+						if err.Error() == "invalid_passphrase" {
+							errText = "Invalid passphrase"
+						}
+						c.notify(errText, false)
+					} else {
+						c.closeModal()
+					}
+				},
+				confirmText: "Unlock",
+				cancel:      "",
+				cancelText:  "",
+			}
+		}()
 	}
 }
 
@@ -679,6 +714,11 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 
 	if pg.toTransactions.Button.Clicked() {
 		c.changePage(PageTransactions)
+	}
+
+	if !pg.isCheckingLockWL {
+		pg.checkLockWallet(c)
+		pg.isCheckingLockWL = true
 	}
 
 	for index, click := range pg.toTransactionDetails {
