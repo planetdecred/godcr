@@ -15,6 +15,7 @@ type debugPage struct {
 
 	logTitle   decredmaterial.Label
 	debugList  layout.List
+	pageFlex   layout.Flex
 	logLabels  []decredmaterial.Label
 	labelsLock sync.Mutex
 }
@@ -24,6 +25,10 @@ func (win *Window) DebugPage(common pageCommon, internalLog chan string) layout.
 		theme:    common.theme,
 		logTitle: common.theme.H5("Session log entries"),
 		debugList: layout.List{
+			ScrollToEnd: true,
+			Axis:        layout.Vertical,
+		},
+		pageFlex: layout.Flex{
 			Axis: layout.Vertical,
 		},
 		logLabels: make([]decredmaterial.Label, 0),
@@ -54,11 +59,17 @@ func (pg *debugPage) watchLogs(internalLog chan string) {
 func (pg *debugPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return common.Layout(gtx, func(gtx C) D {
 		return layout.Center.Layout(gtx, func(gtx C) D {
-			return pg.debugList.Layout(gtx, len(pg.logLabels), func(gtx layout.Context, i int) layout.Dimensions {
-				pg.labelsLock.Lock()
-				defer pg.labelsLock.Unlock()
-				return pg.logLabels[i].Layout(gtx)
-			})
+			return pg.pageFlex.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return pg.logTitle.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return pg.debugList.Layout(gtx, len(pg.logLabels), func(gtx layout.Context, i int) layout.Dimensions {
+						pg.labelsLock.Lock()
+						defer pg.labelsLock.Unlock()
+						return pg.logLabels[i].Layout(gtx)
+					})
+				}))
 		})
 	})
 }

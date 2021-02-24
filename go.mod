@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	gioui.org v0.0.0-20210228180843-e1248651c871
-	github.com/decred/dcrd/chaincfg v1.5.2
+	github.com/decred/dcrd/chaincfg v1.5.2 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
@@ -22,9 +22,7 @@ require (
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 )
 
-// TODO: Remove and use an actual release of dcrlibwallet
 replace (
 	decred.org/dcrwallet => decred.org/dcrwallet v1.6.0-rc4
 	github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
-	github.com/planetdecred/dcrlibwallet => ../dcrlibwallet
 )
