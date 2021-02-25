@@ -70,7 +70,7 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 									Right:  m10,
 									Top:    m5,
 								}.Layout(gtx, func(gtx C) D {
-									txt := s.t.Body1(s.activeTxt)
+									txt := s.t.Body2(s.activeTxt)
 									txt.Color = s.t.Color.Text
 									if !s.isActive {
 										txt.Color = s.t.Color.Gray
@@ -92,7 +92,7 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 									Right:  m10,
 									Top:    m5,
 								}.Layout(gtx, func(gtx C) D {
-									txt := s.t.Body1(s.inactivetxt)
+									txt := s.t.Body2(s.inactivetxt)
 									txt.Color = s.t.Color.Text
 									if !s.isInactive {
 										txt.Color = s.t.Color.Gray

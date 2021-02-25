@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
-	"image/color"
-	// "reflect"
 	"image"
+	"image/color"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -31,11 +31,11 @@ type httpError interface {
 }
 
 type amountValue struct {
-	inactiveInputAmount         string
-	activeTransactionFeeValue   string
-	inactiveTransactionFeeValue string
-	activeTotalCostValue        string
-	inactiveTotalCostValue      string
+	inactiveInputAmount      string
+	leftTransactionFeeValue  string
+	rightTransactionFeeValue string
+	leftTotalCostValue       string
+	rightTotalCostValue      string
 }
 
 type sendPage struct {
@@ -103,11 +103,11 @@ type sendPage struct {
 	leftExchangeValue  string
 	rightExchangeValue string
 
-	activeTransactionFeeValue   string
-	inactiveTransactionFeeValue string
+	leftTransactionFeeValue  string
+	rightTransactionFeeValue string
 
-	activeTotalCostValue   string
-	inactiveTotalCostValue string
+	leftTotalCostValue  string
+	rightTotalCostValue string
 
 	// walletName     string
 	// accountName    string
@@ -278,6 +278,7 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	if *pg.selectedAccount == nil {
 		pg.selectedWallet = common.info.Wallets[0]
 		*pg.selectedAccount = &common.info.Wallets[0].Accounts[0]
+		pg.shouldInitializeTxAuthor = true
 	}
 
 	pageContent := []func(gtx C) D{
@@ -485,12 +486,12 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				b := pg.theme.Body1(pg.activeTransactionFeeValue)
+				b := pg.theme.Body1(pg.leftTransactionFeeValue)
 				b.Color = pg.theme.Color.Text
 				return b.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				b := pg.theme.Body1(pg.inactiveTransactionFeeValue)
+				b := pg.theme.Body1(pg.rightTransactionFeeValue)
 				b.Color = pg.theme.Color.Hint
 				inset := layout.Inset{
 					Left: values.MarginPadding5,
@@ -558,9 +559,9 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 								}
 								return inset.Layout(gtx, func(gtx C) D {
 									if strings.Contains(pg.currencyValue, "USD") {
-										return pg.contentRow(gtx, "Total cost", pg.activeTotalCostValue+" "+pg.inactiveTotalCostValue, "")
+										return pg.contentRow(gtx, "Total cost", pg.leftTotalCostValue+" "+pg.rightTotalCostValue, "")
 									}
-									return pg.contentRow(gtx, "Total cost", pg.activeTotalCostValue, "")
+									return pg.contentRow(gtx, "Total cost", pg.leftTotalCostValue, "")
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -914,10 +915,11 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 }
 
 func (pg *sendPage) validate() bool {
-	isAddressValid := pg.validateDestinationAddress()
-	isAmountValid := pg.validateAmount()
-
-	if !isAddressValid || !isAmountValid || pg.calculateErrorText != "" {
+	isAmountValid := pg.validateLeftAmount()
+	if pg.rightAmountEditor.Editor.Focused() {
+		isAmountValid = pg.validateRightAmount()
+	}
+	if !pg.validateDestinationAddress() || !isAmountValid || pg.calculateErrorText != "" {
 		pg.nextButton.Background = pg.theme.Color.Hint
 		return false
 	}
@@ -927,39 +929,44 @@ func (pg *sendPage) validate() bool {
 }
 
 func (pg *sendPage) validateDestinationAddress() bool {
-	if !pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
+	if pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
 		isValid, _ := pg.wallet.IsAddressValid(pg.destinationAddressEditor.Editor.Text())
 		if !isValid {
 			pg.destinationAddressEditor.SetError("invalid address")
 			return false
 		}
+
+		pg.destinationAddressEditor.SetError("")
+		return true
 	}
 	pg.destinationAddressEditor.SetError("")
-
-	return true
+	return false
 }
 
-func (pg *sendPage) validateAmount() bool {
-	pg.leftAmountEditor.ClearError()
-	pg.rightAmountEditor.ClearError()
-	mainAmount := pg.leftAmountEditor.Editor.Text()
-	subAmount := pg.leftAmountEditor.Editor.Text()
-
-	if mainAmount != "" || subAmount != "" {
-		_, err := strconv.ParseFloat(mainAmount, 64)
+func (pg *sendPage) validateLeftAmount() bool {
+	if pg.inputsNotEmpty(pg.leftAmountEditor.Editor) {
+		_, err := strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
 		if err != nil {
-			pg.leftAmountEditor.SetError("")
 			return false
 		}
 
-		_, err = strconv.ParseFloat(subAmount, 64)
-		if err != nil {
-			pg.rightAmountEditor.SetError("")
-			return false
-		}
+		return true
 	}
 
-	return true
+	return false
+}
+
+func (pg *sendPage) validateRightAmount() bool {
+	if pg.inputsNotEmpty(pg.rightAmountEditor.Editor) {
+		_, err := strconv.ParseFloat(pg.rightAmountEditor.Editor.Text(), 64)
+		if err != nil {
+			return false
+		}
+
+		return true
+	}
+
+	return false
 }
 
 func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
@@ -969,20 +976,25 @@ func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 			return false
 		}
 	}
-
 	pg.nextButton.Background, pg.confirmButton.Background = pg.theme.Color.Primary, pg.theme.Color.Primary
 	return true
 }
 
 func (pg *sendPage) calculateValues() {
-	// defaultActiveValues := fmt.Sprintf("- %s", "DCR")
-	// defaultInactiveValues := "($ -)"
+	defaultLeftValues := fmt.Sprintf("- %s", "DCR")
+	defaultRightValues := "($ -)"
 
-	if !pg.validate() {
+	pg.leftTransactionFeeValue = defaultLeftValues
+	pg.rightTransactionFeeValue = defaultRightValues
+
+	pg.leftTotalCostValue = defaultLeftValues
+	pg.rightTotalCostValue = defaultRightValues
+	pg.calculateErrorText = ""
+
+	if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate() {
 		return
 	}
 
-	fmt.Println("im here")
 	pg.inputAmount, _ = strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
 	if strings.Contains(pg.currencyValue, "USD") && pg.rightAmountEditor.Editor.Focused() {
 		pg.inputAmount, _ = strconv.ParseFloat(pg.rightAmountEditor.Editor.Text(), 64)
@@ -997,17 +1009,22 @@ func (pg *sendPage) calculateValues() {
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
+		pg.setDestinationAddr(pg.amountUSDtoDCR)
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.rightAmountEditor.Editor.Focused():
 		pg.leftAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountDCRtoUSD))
+		pg.setDestinationAddr(pg.inputAmount)
 	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "" && pg.rightAmountEditor.Editor.Focused():
 		pg.leftAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
+		pg.setDestinationAddr(pg.amountUSDtoDCR)
 	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountDCRtoUSD))
+		pg.setDestinationAddr(pg.inputAmount)
 	default:
 		pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
 		if pg.rightAmountEditor.Editor.Focused() {
 			pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
 		}
+		pg.setDestinationAddr(pg.inputAmount)
 	}
 
 	if pg.amountAtoms == 0 {
@@ -1021,118 +1038,47 @@ func (pg *sendPage) calculateValues() {
 
 	pg.totalCostDCR = pg.txFee + pg.amountAtoms
 
-	// pg.updateDefaultValues()
+	pg.updateDefaultValues()
+	// pg.balanceAfterSend(false)
 }
 
-// func (pg *sendPage) calculateValues() {
-// 	defaultActiveValues := fmt.Sprintf("- %s", "DCR" /*pg.leftExchangeValue*/)
-// 	defaultInactiveValues := "($ -)"
-
-// 	pg.activeTransactionFeeValue = defaultActiveValues
-// 	pg.activeTotalCostValue = defaultActiveValues
-// 	pg.inactiveTransactionFeeValue = defaultInactiveValues
-// 	pg.inactiveTotalCostValue = defaultInactiveValues
-
-// 	// pg.calculateErrorText = ""
-// 	// pg.activeTotalAmount = pg.leftExchangeValue
-// 	// pg.inactiveInputAmount = fmt.Sprintf("0 %s", pg.rightExchangeValue)
-
-// 	// default values when exchange is not available
-// 	if pg.LastTradeRate == "" {
-// 		pg.activeTransactionFeeValue = defaultActiveValues
-// 		pg.activeTotalCostValue = defaultActiveValues
-// 		pg.inactiveTransactionFeeValue = ""
-// 		pg.inactiveTotalCostValue = ""
-// 		// pg.activeTotalAmount = pg.leftExchangeValue
-// 		// pg.inactiveInputAmount = noExchangeText
-// 	}
-
-// 	// fmt.Println(reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}))
-// 	// fmt.Println("")
-// 	// fmt.Println(pg.validate() )
-
-// 	// if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate() {
-// 	// 	return
-// 	// }
-
-// 		fmt.Println("i am here")
-
-// 	pg.inputAmount, _ = strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
-
-// 	if pg.LastTradeRate != "" {
-// 		pg.usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
-// 		pg.amountUSDtoDCR = pg.inputAmount / pg.usdExchangeRate
-// 		pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
-// 	}
-
-// 	pg.setChangeDestinationAddr()
-
-// 	if pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" {
-// 		pg.amountAtoms = pg.setDestinationAddr(pg.amountUSDtoDCR)
-// 	} else {
-// 		pg.amountAtoms = pg.setDestinationAddr(pg.inputAmount)
-// 	}
-
-// 	if pg.amountAtoms == 0 {
-// 		return
-// 	}
-
-// 	pg.txFee = pg.getTxFee()
-// 	if pg.txFee == 0 {
-// 		return
-// 	}
-
-// 	pg.totalCostDCR = pg.txFee + pg.amountAtoms
-
-// 	pg.updateDefaultValues()
-// 	pg.balanceAfterSend(false)
-// }
-
-func (pg *sendPage) setDestinationAddr(sendAmount float64) int64 {
+func (pg *sendPage) setDestinationAddr(sendAmount float64) {
 	pg.amountErrorText = ""
 	amount, err := dcrutil.NewAmount(sendAmount)
 	if err != nil {
 		pg.feeEstimationError(err.Error(), "amount")
-		return 0
+		return
 	}
 
 	pg.amountAtoms = int64(amount)
 	pg.txAuthor.RemoveSendDestination(0)
 	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Editor.Text(), pg.amountAtoms, false)
-	return pg.amountAtoms
 }
-
-// func (pg *sendPage) setChangeDestinationAddr() {
-// 	if pg.customChangeAddressEditor.Editor.Len() > 0 {
-// 		pg.txAuthor.RemoveChangeDestination()
-// 		pg.txAuthor.SetChangeDestination(pg.customChangeAddressEditor.Editor.Text())
-// 	}
-// }
 
 func (pg *sendPage) amountValues() amountValue {
 	txFeeValueUSD := dcrutil.Amount(pg.txFee).ToCoin() * pg.usdExchangeRate
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "":
 		return amountValue{
-			inactiveInputAmount:         dcrutil.Amount(pg.amountAtoms).String(),
-			activeTransactionFeeValue:   fmt.Sprintf("%f USD", txFeeValueUSD),
-			inactiveTransactionFeeValue: fmt.Sprintf("(%s)", dcrutil.Amount(pg.txFee).String()),
-			activeTotalCostValue:        fmt.Sprintf("%s USD", strconv.FormatFloat(pg.inputAmount+txFeeValueUSD, 'f', 7, 64)),
-			inactiveTotalCostValue:      fmt.Sprintf("(%s )", dcrutil.Amount(pg.totalCostDCR).String()),
+			inactiveInputAmount:      dcrutil.Amount(pg.amountAtoms).String(),
+			leftTransactionFeeValue:  fmt.Sprintf("%f USD", txFeeValueUSD),
+			rightTransactionFeeValue: fmt.Sprintf("(%s)", dcrutil.Amount(pg.txFee).String()),
+			leftTotalCostValue:       fmt.Sprintf("%s USD", strconv.FormatFloat(pg.inputAmount+txFeeValueUSD, 'f', 7, 64)),
+			rightTotalCostValue:      fmt.Sprintf("(%s )", dcrutil.Amount(pg.totalCostDCR).String()),
 		}
 	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "":
 		return amountValue{
-			inactiveInputAmount:         fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
-			activeTransactionFeeValue:   dcrutil.Amount(pg.txFee).String(),
-			inactiveTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
-			activeTotalCostValue:        dcrutil.Amount(pg.totalCostDCR).String(),
-			inactiveTotalCostValue:      fmt.Sprintf("(%s USD)", strconv.FormatFloat(pg.amountDCRtoUSD+txFeeValueUSD, 'f', 7, 64)),
+			inactiveInputAmount:      fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
+			leftTransactionFeeValue:  dcrutil.Amount(pg.txFee).String(),
+			rightTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
+			leftTotalCostValue:       dcrutil.Amount(pg.totalCostDCR).String(),
+			rightTotalCostValue:      fmt.Sprintf("(%s USD)", strconv.FormatFloat(pg.amountDCRtoUSD+txFeeValueUSD, 'f', 7, 64)),
 		}
 	default:
 		return amountValue{
-			inactiveInputAmount:       "Exchange rate not fetched",
-			activeTransactionFeeValue: dcrutil.Amount(pg.txFee).String(),
-			activeTotalCostValue:      dcrutil.Amount(pg.totalCostDCR).String(),
+			inactiveInputAmount:     "Exchange rate not fetched",
+			leftTransactionFeeValue: dcrutil.Amount(pg.txFee).String(),
+			leftTotalCostValue:      dcrutil.Amount(pg.totalCostDCR).String(),
 		}
 	}
 }
@@ -1196,50 +1142,45 @@ func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
 		go pg.wallet.GetUSDExchangeValues(&pg, pg.errChan)
-		go pg.calculateValues()
-
-		// 	if strings.Contains(pg.currencyValue, "USD") {
-		// 	if pg.rightAmountEditor.Editor.Focused(){
-		// 		// pg.rightAmountEditor.Editor.Move(pg.rightAmountEditor.Editor.NumLines())
-		// 		pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
-		// 		return
-		// 	}
-		// 	if pg.leftAmountEditor.Editor.Focused(){
-		// 		// pg.leftAmountEditor.Editor.Move(pg.leftAmountEditor.Editor.NumLines())
-		// 		pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
-		// 		return
-		// 	}
-		// }
+		pg.calculateValues()
 	}
 }
 
 func (pg *sendPage) updateDefaultValues() {
-	fmt.Println("im here")
-	if strings.Contains(pg.currencyValue, "USD") {
-		if pg.rightAmountEditor.Editor.Focused() {
-			// pg.rightAmountEditor.Editor.Move(pg.rightAmountEditor.Editor.NumLines())
-			pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
-			return
-		}
-		if pg.leftAmountEditor.Editor.Focused() {
-			// pg.leftAmountEditor.Editor.Move(pg.leftAmountEditor.Editor.NumLines())
-			pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
-			return
-		}
-	}
+	// if strings.Contains(pg.currencyValue, "USD") {
+	// 	if pg.rightAmountEditor.Editor.Focused() {
+	// 		// pg.rightAmountEditor.Editor.Move(pg.rightAmountEditor.Editor.NumLines())
+	// 		pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
+	// 		return
+	// 	}
+	// 	if pg.leftAmountEditor.Editor.Focused() {
+	// 		// pg.leftAmountEditor.Editor.Move(pg.leftAmountEditor.Editor.NumLines())
+	// 		pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
+	// 		return
+	// 	}
+	// }
 
-	// v := pg.amountValues()
-	// pg.activeTotalAmount = pg.leftExchangeValue
-	// pg.rightAmountEditor.Editor.SetText(v.inactiveInputAmount)
-	// pg.activeTransactionFeeValue = v.activeTransactionFeeValue
-	// pg.inactiveTransactionFeeValue = v.inactiveTransactionFeeValue
-	// pg.activeTotalCostValue = v.activeTotalCostValue
-	// pg.inactiveTotalCostValue = v.inactiveTotalCostValue
+	v := pg.amountValues()
+	pg.activeTotalAmount = pg.leftExchangeValue
+	pg.leftTransactionFeeValue = v.leftTransactionFeeValue
+	pg.rightTransactionFeeValue = v.rightTransactionFeeValue
+	pg.leftTotalCostValue = v.leftTotalCostValue
+	pg.rightTotalCostValue = v.rightTotalCostValue
 }
 
 func (pg *sendPage) Handle(c pageCommon) {
 	if len(c.info.Wallets) == 0 {
 		return
+	}
+
+	if pg.LastTradeRate == "" && pg.count == 0 {
+		pg.count = 1
+		pg.calculateValues()
+	}
+
+	if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
+		pg.count = 2
+		pg.calculateValues()
 	}
 
 	if pg.exchangeErr != "" {
@@ -1275,7 +1216,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	for range pg.destinationAddressEditor.Editor.Events() {
-		go pg.calculateValues()
+		pg.calculateValues()
 	}
 
 	for pg.currencySwap.Button.Clicked() {
@@ -1291,47 +1232,33 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	for _, evt := range pg.leftAmountEditor.Editor.Events() {
-		pg.handleEditorChange(evt)
+		if pg.leftAmountEditor.Editor.Focused() {
+			pg.handleEditorChange(evt)
+		}
 	}
 
 	for _, evt := range pg.rightAmountEditor.Editor.Events() {
-		pg.handleEditorChange(evt)
+		if pg.rightAmountEditor.Editor.Focused() {
+			pg.handleEditorChange(evt)
+		}
 	}
 
-	// if pg.LastTradeRate == "" && pg.count == 0 {
-	// 	pg.count = 1
-	// 	pg.calculateValues()
-	// // }
+	if pg.calculateErrorText != "" {
+		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
+		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
+		c.Notify(pg.calculateErrorText, false)
+	} else {
+		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
+		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
+	}
 
-	// // if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
-	// // 	pg.count = 2
-	// // 	pg.calculateValues()
-	// // }
-
-	// // if (*pg.selectedAccount).CurrentAddress != c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount].CurrentAddress {
-	// // 	pg.shouldInitializeTxAuthor = true
-	// // 	pg.selectedAccount = c.info.Wallets[*c.selectedWallet].Accounts[*c.selectedAccount]
-	// // }
-
-	// // if pg.selectedWallet.ID != c.info.Wallets[*c.selectedWallet].ID {
-	// // 	pg.shouldInitializeTxAuthor = true
-	// // 	pg.selectedWallet = c.info.Wallets[*c.selectedWallet]
-	// // }
-
-	// // if pg.toggleCoinCtrl.Value {
-	// // 	_, spendableBalance := pg.calculateBalanceUTXO()
-	// // 	pg.spendableBalance = spendableBalance
-	// // } else {
-	// // 	pg.spendableBalance = pg.selectedAccount.SpendableBalance
-	// // }
-
-	// if pg.shouldInitializeTxAuthor {
-	// 	pg.shouldInitializeTxAuthor = false
-	// 	pg.leftAmountEditor.Editor.SetText("")
-	// 	pg.rightAmountEditor.Editor.SetText("")
-	// 	pg.calculateErrorText = ""
-	// 	c.wallet.CreateTransaction(pg.selectedWallet.ID, (*pg.selectedAccount).Number, pg.txAuthorErrChan)
-	// }
+	if pg.shouldInitializeTxAuthor {
+		pg.shouldInitializeTxAuthor = false
+		pg.leftAmountEditor.Editor.SetText("")
+		pg.rightAmountEditor.Editor.SetText("")
+		pg.calculateErrorText = ""
+		c.wallet.CreateTransaction(pg.selectedWallet.ID, (*pg.selectedAccount).Number, pg.txAuthorErrChan)
+	}
 
 	// // pg.validate(true)
 	// pg.watchForBroadcastResult(c)
