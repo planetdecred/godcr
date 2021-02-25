@@ -1,13 +1,17 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const PagePrivacy = "Privacy"
@@ -21,6 +25,7 @@ type privacyPage struct {
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
 	errChann                             chan error
+	acctMixerStatus                      *chan *wallet.AccountMixer
 }
 
 func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
@@ -33,6 +38,7 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
 		errChann:                common.errorChannels[PagePrivacy],
+		acctMixerStatus:         &win.walletAcctMixerStatus,
 	}
 	pg.toPrivacySetup.Background = pg.theme.Color.Primary
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
@@ -150,6 +156,35 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 	})
 }
 
+func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
+	txt := pg.theme.H6("Mixer")
+	subtxt := pg.theme.Body2("Ready to mix")
+	subtxt.Color = c.theme.Color.Gray
+	iconVisibility := false
+
+	if c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+		txt.Text = "Mixer is running..."
+		subtxt.Text = "Keep this app opened"
+		iconVisibility = true
+	}
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(txt.Layout),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if !iconVisibility {
+						return layout.Dimensions{}
+					}
+					c.icons.alertGray.Scale = 0.024
+					return c.icons.alertGray.Layout(gtx)
+				}),
+				layout.Rigid(subtxt.Layout),
+			)
+		}),
+	)
+}
+
 func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return c.theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -163,17 +198,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										txt := pg.theme.H6("Mixer")
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										txt := pg.theme.Body2("Ready to mix")
-										txt.Color = c.theme.Color.Gray
-										return txt.Layout(gtx)
-									}),
-								)
+								return pg.mixerInfoStatusTextLayout(gtx, c)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -188,6 +213,17 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+							var mixedBalance string
+							var unmixedBalance string
+							for _, acct := range c.info.Wallets[*c.selectedWallet].Accounts {
+								if acct.Name == "mixed" {
+									mixedBalance = acct.TotalBalance
+								}
+								if acct.Name == "unmixed" {
+									unmixedBalance = acct.TotalBalance
+								}
+							}
+
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
@@ -197,9 +233,19 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return txt.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return c.theme.Body2("200 DCR").Layout(gtx)
+											if c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+												return layoutBalance(gtx, unmixedBalance, *c)
+											}
+											return layoutBalance(gtx, unmixedBalance, *c)
 										}),
 									)
+								}),
+								layout.Rigid(func(gtx C) D {
+									if !c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+										return layout.Dimensions{}
+									}
+									c.icons.arrowDownIcon.Scale = 0.22
+									return layout.Center.Layout(gtx, c.icons.arrowDownIcon.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
@@ -209,7 +255,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return c.theme.Body2("0 DCR").Layout(gtx)
+											return layoutBalance(gtx, mixedBalance, *c)
 										}),
 									)
 								}),
@@ -255,11 +301,11 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Change account", "unmixed") }),
 			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
-			layout.Rigid(func(gtx C) D { return row("Account branch", "0") }),
+			layout.Rigid(func(gtx C) D { return row("Account branch", fmt.Sprintf("%d", dcrlibwallet.MixedAccountBranch)) }),
 			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
-			layout.Rigid(func(gtx C) D { return row("Shuffle server", "cspp.decred.org") }),
+			layout.Rigid(func(gtx C) D { return row("Shuffle server", dcrlibwallet.ShuffleServer) }),
 			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
-			layout.Rigid(func(gtx C) D { return row("Shuffle port", "15760") }),
+			layout.Rigid(func(gtx C) D { return row("Shuffle port", dcrlibwallet.ShufflePort) }),
 		)
 	})
 }
@@ -302,9 +348,24 @@ func (pg *privacyPage) Handler(common pageCommon) {
 		go pg.showModalSetupMixerInfo(&common)
 	}
 
+	if pg.toggleMixer.Changed() {
+		if pg.toggleMixer.Value {
+			go pg.showModalPasswordStartAccountMixer(&common)
+		} else {
+			common.wallet.StopAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pg.errChann)
+		}
+	}
+
 	select {
 	case err := <-pg.errChann:
 		common.Notify(err.Error(), false)
+	case stt := <-*pg.acctMixerStatus:
+		if stt.RunStatus == wallet.MixerStarted {
+			common.Notify("Start Successfully", true)
+			common.closeModal()
+		} else {
+			common.Notify("Stop Successfully", true)
+		}
 	default:
 	}
 }
@@ -349,6 +410,22 @@ func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
 		confirm: func() {
 			common.closeModal()
 			*common.page = PageWallet
+		},
+	}
+}
+
+func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
+	common.modalReceiver <- &modalLoad{
+		template:    PasswordTemplate,
+		title:       "Confirm to mix account",
+		confirmText: "Confirm",
+		cancel: func() {
+			common.closeModal()
+			pg.toggleMixer.Value = false
+		},
+		cancelText: "Cancel",
+		confirm: func(pass string) {
+			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errChann)
 		},
 	}
 }
