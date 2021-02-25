@@ -80,11 +80,13 @@ type sendPage struct {
 
 	txFeeCollapsible *decredmaterial.Collapsible
 
-	remainingBalance int64
-	amountAtoms      int64
-	totalCostDCR     int64
-	txFee            int64
-	spendableBalance int64
+	remainingBalance   int64
+	amountAtoms        int64
+	totalCostDCR       int64
+	txFee              int64
+	txFeeSize          string
+	txFeeEstimatedTime string
+	spendableBalance   int64
 
 	usdExchangeRate float64
 	inputAmount     float64
@@ -132,6 +134,7 @@ type sendPage struct {
 	txAuthorErrChan chan error
 
 	broadcastErrChan chan error
+	exchangeErrChan  chan error
 
 	errChan chan error
 
@@ -187,6 +190,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
+		exchangeErrChan:  make(chan error),
 		line:             common.theme.Line(),
 	}
 
@@ -266,7 +270,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.inputButtonCoinCtrl.Inset = layout.UniformInset(values.MarginPadding5)
 	pg.inputButtonCoinCtrl.TextSize = values.MarginPadding10
 
-	go common.wallet.GetUSDExchangeValues(&pg, pg.errChan)
+	go common.wallet.GetUSDExchangeValues(&pg, pg.exchangeErrChan)
 
 	return func(gtx C) D {
 		pg.Handle(common)
@@ -525,7 +529,7 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 								Bottom: values.MarginPadding5,
 							}
 							return inset.Layout(gtx, func(gtx C) D {
-								return pg.contentRow(gtx, "Estimated size", "-", "")
+								return pg.contentRow(gtx, "Estimated size", pg.txFeeSize, "")
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -695,7 +699,6 @@ func (pg *sendPage) walletAccountsLayout(gtx layout.Context, name, totalBal, spe
 							}
 						}
 						return layout.Dimensions{}
-
 					}),
 				)
 			}),
@@ -939,7 +942,7 @@ func (pg *sendPage) validateDestinationAddress() bool {
 		pg.destinationAddressEditor.SetError("")
 		return true
 	}
-	pg.destinationAddressEditor.SetError("")
+	pg.destinationAddressEditor.SetError("invalid address")
 	return false
 }
 
@@ -949,10 +952,8 @@ func (pg *sendPage) validateLeftAmount() bool {
 		if err != nil {
 			return false
 		}
-
 		return true
 	}
-
 	return false
 }
 
@@ -962,10 +963,8 @@ func (pg *sendPage) validateRightAmount() bool {
 		if err != nil {
 			return false
 		}
-
 		return true
 	}
-
 	return false
 }
 
@@ -990,6 +989,8 @@ func (pg *sendPage) calculateValues() {
 	pg.leftTotalCostValue = defaultLeftValues
 	pg.rightTotalCostValue = defaultRightValues
 	pg.calculateErrorText = ""
+	pg.txFeeSize = "-"
+	pg.txFeeEstimatedTime = "-"
 
 	if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate() {
 		return
@@ -1006,6 +1007,13 @@ func (pg *sendPage) calculateValues() {
 		pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
 	}
 
+	pg.updateAmountInputsValues()
+	pg.getTxFee()
+	pg.updateDefaultValues()
+	// pg.balanceAfterSend(false)
+}
+
+func (pg *sendPage) updateAmountInputsValues() {
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
@@ -1026,20 +1034,6 @@ func (pg *sendPage) calculateValues() {
 		}
 		pg.setDestinationAddr(pg.inputAmount)
 	}
-
-	if pg.amountAtoms == 0 {
-		return
-	}
-
-	pg.txFee = pg.getTxFee()
-	if pg.txFee == 0 {
-		return
-	}
-
-	pg.totalCostDCR = pg.txFee + pg.amountAtoms
-
-	pg.updateDefaultValues()
-	// pg.balanceAfterSend(false)
 }
 
 func (pg *sendPage) setDestinationAddr(sendAmount float64) {
@@ -1051,11 +1045,16 @@ func (pg *sendPage) setDestinationAddr(sendAmount float64) {
 	}
 
 	pg.amountAtoms = int64(amount)
+	if pg.amountAtoms == 0 {
+		return
+	}
+
 	pg.txAuthor.RemoveSendDestination(0)
 	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Editor.Text(), pg.amountAtoms, false)
 }
 
 func (pg *sendPage) amountValues() amountValue {
+	pg.totalCostDCR = pg.txFee + pg.amountAtoms
 	txFeeValueUSD := dcrutil.Amount(pg.txFee).ToCoin() * pg.usdExchangeRate
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "":
@@ -1083,15 +1082,16 @@ func (pg *sendPage) amountValues() amountValue {
 	}
 }
 
-func (pg *sendPage) getTxFee() int64 {
+func (pg *sendPage) getTxFee() {
 	// calculate transaction fee
 	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
 	if err != nil {
 		pg.feeEstimationError(err.Error(), "fee")
-		return 0
+		return
 	}
 
-	return feeAndSize.Fee.AtomValue
+	pg.txFee = feeAndSize.Fee.AtomValue
+	pg.txFeeSize = fmt.Sprintf("%v Bytes", feeAndSize.EstimatedSignedSize)
 }
 
 func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool) {
@@ -1141,7 +1141,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
-		go pg.wallet.GetUSDExchangeValues(&pg, pg.errChan)
+		go pg.wallet.GetUSDExchangeValues(&pg, pg.exchangeErrChan)
 		pg.calculateValues()
 	}
 }
@@ -1324,12 +1324,11 @@ func (pg *sendPage) Handle(c pageCommon) {
 			})
 		}
 		pg.isBroadcastingTransaction = false
-	case err := <-pg.errChan:
-		errMsg := err.Error()
-		if strings.Contains(err.Error(), "host") {
-			errMsg = "Could fetch exchange: no such host"
+	case err := <-pg.exchangeErrChan:
+		if strings.Contains(err.Error(), "host") && strings.Contains(pg.currencyValue, "USD") {
+			errMsg := "Could fetch exchange: no such host"
+			c.Notify(errMsg, false)
 		}
-		c.Notify(errMsg, false)
 	default:
 	}
 }

@@ -19,13 +19,11 @@ type SwitchButtonText struct {
 	t     *Theme
 	Color color.NRGBA
 
-	activeBtn, inactiveBtn *widget.Clickable
-
+	activeBtn, inactiveBtn   *widget.Clickable
 	activeCard, inactiveCard Card
-
-	inactivetxt          string
-	activeTxt            string
-	isActive, isInactive bool
+	inactivetxt              string
+	activeTxt                string
+	isActive, isInactive     bool
 }
 
 func (t *Theme) Switch(swtch *widget.Bool) Switch {
