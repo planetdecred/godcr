@@ -599,7 +599,7 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 func (m *ModalTemplate) computePasswordStrength(th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
-	m.passwordStrength.Progress = int(strength * 100)
+	m.passwordStrength.Progress = float32(strength * 100)
 	m.passwordStrength.Color = th.Color.Success
 }
 

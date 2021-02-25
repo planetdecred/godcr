@@ -70,7 +70,7 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 func (pg *morePage) handleClickEvents(common pageCommon) {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {
-			common.ChangePage(pg.morePageListItems[i].page)
+			common.changePage(pg.morePageListItems[i].page)
 		}
 	}
 }

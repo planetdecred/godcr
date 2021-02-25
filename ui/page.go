@@ -31,7 +31,7 @@ type pageIcons struct {
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
-	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
+	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	checkMarkGreenIcon, crossMarkRed, watchOnlyWalletIcon *widget.Image
 
@@ -146,7 +146,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		copyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
 		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
 		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
-		arrowFowardIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
+		arrowForwardIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
 		settingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
 		securityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
 		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
@@ -288,7 +288,7 @@ func (page pageCommon) refreshPage() {
 	page.refreshWindow()
 }
 
-func (page pageCommon) Notify(text string, success bool) {
+func (page pageCommon) notify(text string, success bool) {
 	go func() {
 		page.toast <- &toast{
 			text:    text,
@@ -308,13 +308,13 @@ func (page pageCommon) handleNavEvents() {
 
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
-			page.ChangePage(page.appBarNavItems[i].page)
+			page.changePage(page.appBarNavItems[i].page)
 		}
 	}
 
 	for i := range page.drawerNavItems {
 		for page.drawerNavItems[i].clickable.Clicked() {
-			page.ChangePage(page.drawerNavItems[i].page)
+			page.changePage(page.drawerNavItems[i].page)
 		}
 	}
 }

@@ -645,7 +645,7 @@ func (pg *createRestore) handle(common pageCommon) {
 
 	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
-		common.ChangePage(PageWallet)
+		common.changePage(PageWallet)
 	}
 
 	for pg.unlock.Button.Clicked() {
@@ -739,7 +739,7 @@ func (pg *createRestore) handle(common pageCommon) {
 		if err.Error() == "exists" {
 			errText = "Wallet name already exists"
 		}
-		common.Notify(errText, false)
+		common.notify(errText, false)
 	default:
 	}
 

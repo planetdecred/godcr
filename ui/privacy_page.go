@@ -60,7 +60,7 @@ func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimension
 			title:      "Privacy",
 			walletName: c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
-				c.ChangePage(PageWallet)
+				c.changePage(PageWallet)
 			},
 			infoTemplateTitle: "How to use the mixer?",
 			infoTemplate:      PrivacyInfoTemplate,
@@ -107,8 +107,8 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowFowardIcon.Scale = 0.18
-									return c.icons.arrowFowardIcon.Layout(gtx)
+									c.icons.arrowForwardIcon.Scale = 0.18
+									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -117,8 +117,8 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowFowardIcon.Scale = 0.18
-									return c.icons.arrowFowardIcon.Layout(gtx)
+									c.icons.arrowForwardIcon.Scale = 0.18
+									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -358,7 +358,7 @@ func (pg *privacyPage) Handler(common pageCommon) {
 
 	select {
 	case err := <-pg.errorReceiver:
-		common.Notify(err.Error(), false)
+		common.notify(err.Error(), false)
 	case stt := <-*pg.acctMixerStatus:
 		if stt.RunStatus == wallet.MixerStarted {
 			common.Notify("Start Successfully", true)

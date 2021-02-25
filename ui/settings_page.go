@@ -99,7 +99,7 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 		page := SubPage{
 			title: "Settings",
 			back: func() {
-				common.ChangePage(PageMore)
+				common.changePage(PageMore)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{
@@ -464,10 +464,10 @@ func (pg *settingsPage) handle(common pageCommon) {
 	case err := <-pg.errorReceiver:
 		if err.Error() == "invalid_passphrase" {
 			e := "Password is incorrect"
-			common.Notify(e, false)
+			common.notify(e, false)
 			return
 		}
-		common.Notify(err.Error(), false)
+		common.notify(err.Error(), false)
 	default:
 	}
 }

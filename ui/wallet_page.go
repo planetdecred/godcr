@@ -108,11 +108,21 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.walletAlertIcon = common.icons.walletAlertIcon
 	pg.walletAlertIcon.Scale = 1
 
-	pg.watchOnlyWalletIcon = common.icons.watchOnlyWalletIcon
+	pg.initializeWalletMenu()
+	pg.collapsibles = make([]*decredmaterial.CollapsibleWithOption, 0)
 
+	pg.addAcct = nil
+	pg.backupButton = nil
 	pg.toAcctDetails = make([]*gesture.Click, 0)
 
-	pg.optionsMenu = []menuItem{
+	return func(gtx C) D {
+		pg.Handle(common)
+		return pg.Layout(gtx, common)
+	}
+}
+
+func (pg *walletPage) initializeWalletMenu() {
+	pg.optionsMenuItems = []menuItem{
 		{
 			text:   "Sign message",
 			button: new(widget.Clickable),
@@ -131,14 +141,26 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 			text:   "Settings",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
-				common.changePage(PageHelp)
+				common.changePage(PageWalletSettings)
 			},
 		},
 		{
 			text:   "Rename",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
-				common.changePage(PageAbout)
+				go func() {
+					common.modalReceiver <- &modalLoad{
+						template: RenameWalletTemplate,
+						title:    "Rename wallet",
+						confirm: func(name string) {
+							id := common.info.Wallets[*common.selectedWallet].ID
+							common.wallet.RenameWallet(id, name, pg.errorReceiver)
+						},
+						confirmText: "Rename",
+						cancel:      common.closeModal,
+						cancelText:  "Cancel",
+					}
+				}()
 			},
 		},
 		{
@@ -622,7 +644,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 
 func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageCommon, i int) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	color := common.theme.Color.InvText
+	textColour := common.theme.Color.InvText
 	return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -636,12 +658,12 @@ func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageComm
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txt := pg.theme.Body2("Back up seed phrase")
-							txt.Color = color
+							txt.Color = textColour
 							return txt.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := pg.theme.Caption("Verify your seed phrase so you can recover your funds when needed.")
-							txt.Color = color
+							txt.Color = textColour
 							return txt.Layout(gtx)
 						}),
 					)
@@ -719,7 +741,7 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			*pg.walletAccount = acct
-			common.ChangePage(PageAccountDetails)
+			common.changePage(PageAccountDetails)
 			*common.selectedWallet = index
 		}
 	}
@@ -848,10 +870,10 @@ func (pg *walletPage) Handle(common pageCommon) {
 	case err := <-pg.errorReceiver:
 		if err.Error() == "invalid_passphrase" {
 			e := "Password is incorrect"
-			pg.common.Notify(e, false)
+			common.notify(e, false)
 			return
 		}
-		pg.common.Notify(err.Error(), false)
+		common.notify(err.Error(), false)
 	default:
 	}
 }

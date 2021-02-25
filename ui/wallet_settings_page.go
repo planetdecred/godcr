@@ -68,7 +68,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 			title:      "Settings",
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
-				common.ChangePage(PageWallet)
+				common.changePage(PageWallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -197,14 +197,14 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 					err := pg.wal.RescanBlocks(walletID)
 					if err != nil {
 						if err.Error() == "not_connected" {
-							common.Notify("Not connected to decred network", false)
+							common.notify("Not connected to decred network", false)
 							return
 						}
-						common.Notify(err.Error(), false)
+						common.notify(err.Error(), false)
 						return
 					}
 					msg := "Rescan initiated (check in overview)"
-					common.Notify(msg, true)
+					common.notify(msg, true)
 					go func() {
 						common.modalReceiver <- &modalLoad{}
 					}()
@@ -253,7 +253,7 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 	case err := <-pg.errorReceiver:
 		if err.Error() == "invalid_passphrase" {
 			e := "Password is incorrect"
-			common.Notify(e, false)
+			common.notify(e, false)
 		}
 	default:
 	}

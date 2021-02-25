@@ -259,7 +259,7 @@ func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 
 func (pg *acctDetailsPage) Handler(gtx layout.Context, common pageCommon) {
 	if pg.backButton.Button.Clicked() {
-		common.ChangePage(PageWallet)
+		common.changePage(PageWallet)
 	}
 
 	if pg.editAccount.Clicked() {

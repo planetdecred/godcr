@@ -678,7 +678,7 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		c.ChangePage(PageTransactions)
+		c.changePage(PageTransactions)
 	}
 
 	for index, click := range pg.toTransactionDetails {
@@ -686,7 +686,7 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 			if e.Type == gesture.TypeClick {
 				txn := (*pg.walletTransactions).Recent[index]
 				*pg.walletTransaction = &txn
-				c.ChangePage(PageTransactionDetails)
+				c.changePage(PageTransactionDetails)
 				return
 			}
 		}

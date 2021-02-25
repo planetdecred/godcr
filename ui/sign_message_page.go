@@ -88,7 +88,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
 				pg.clearForm()
-				common.ChangePage(PageWallet)
+				common.changePage(PageWallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return common.theme.Card().Layout(gtx, func(gtx C) D {
@@ -250,7 +250,7 @@ func (pg *signMessagePage) handle(common pageCommon) {
 
 	if *pg.result != nil {
 		if (*pg.result).Err != nil {
-			common.Notify((*pg.result).Err.Error(), false)
+			common.notify((*pg.result).Err.Error(), false)
 		} else {
 			pg.signedMessageLabel.Text = (*pg.result).Signature
 		}

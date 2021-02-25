@@ -10,7 +10,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageSecurityTools = "Security Tools"
+const PageSecurityTools = "SecurityTools"
 
 type securityToolsPage struct {
 	theme           *decredmaterial.Theme

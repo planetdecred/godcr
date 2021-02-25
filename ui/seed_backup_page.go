@@ -482,7 +482,7 @@ func checkSlice(s []string) bool {
 }
 
 func (pg *backupPage) resetPage(c pageCommon) {
-	c.ChangePage(PageWallet)
+	c.changePage(PageWallet)
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)
@@ -534,13 +534,13 @@ func (pg *backupPage) handle(c pageCommon) {
 			errMessage := "Failed to verify. Please go through every word and try again."
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
-				c.Notify(errMessage, false)
+				c.notify(errMessage, false)
 				return
 			}
 
 			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s, pg.privpass)
 			if err != nil {
-				c.Notify(errMessage, false)
+				c.notify(errMessage, false)
 				return
 			}
 			pg.info.Wallets[*c.selectedWallet].Seed = nil
