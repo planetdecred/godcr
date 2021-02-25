@@ -58,6 +58,7 @@ type Window struct {
 	toast                   chan *toast
 	modal                   chan *modalLoad
 	sysDestroyWithSync      bool
+	walletAcctMixerStatus   chan *wallet.AccountMixer
 }
 
 type WriteClipboard struct {
@@ -89,6 +90,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletSyncStatus = new(wallet.SyncStatus)
 	win.walletTransactions = new(wallet.Transactions)
 	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
+	win.walletAcctMixerStatus = make(chan *wallet.AccountMixer)
 
 	win.wallet = wal
 	win.states.loading = true
@@ -191,6 +193,10 @@ func (win *Window) Loop(shutdown chan int) {
 				}
 			case wallet.BlockConfirmed:
 				win.updateSyncProgress(update.ConfirmedTxn)
+			case wallet.AccountMixerStarted, wallet.AccountMixerEnded:
+				go func() {
+					win.walletAcctMixerStatus <- &update.AcctMixerInfo
+				}()
 			}
 		case e := <-win.window.Events():
 			switch evt := e.(type) {

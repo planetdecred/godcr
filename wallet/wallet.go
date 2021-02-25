@@ -74,6 +74,8 @@ func (wal *Wallet) LoadWallets() {
 			return
 		}
 
+		wal.multi.SetAccountMixerNotification(l)
+
 		startupPassSet := wal.multi.IsStartupSecuritySet()
 		if !startupPassSet {
 			err = wal.multi.OpenWallets(nil)
