@@ -32,7 +32,8 @@ type pageIcons struct {
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon *widget.Image
+	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
+	checkMarkGreenIcon, crossMarkRed *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -52,6 +53,7 @@ type pageCommon struct {
 	theme           *decredmaterial.Theme
 	icons           pageIcons
 	page            *string
+	returnPage      *string
 	navTab          *decredmaterial.Tabs
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
@@ -78,7 +80,8 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	changePage func(string)
+	changePage    func(string)
+	setReturnPage func(string)
 }
 
 type (
@@ -154,6 +157,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		locationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
 		alertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert-gray"])},
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
+		checkMarkGreenIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ic_checkmark_green"])},
+		crossMarkRed:               &widget.Image{Src: paint.NewImageOp(decredIcons["ic_crossmark_red"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -213,6 +218,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		selectedAccount: &win.selectedAccount,
 		theme:           win.theme,
 		icons:           ic,
+		returnPage:      &win.previous,
 		page:            &win.current,
 		walletTabs:      win.walletTabs,
 		accountTabs:     win.accountTabs,
@@ -241,6 +247,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
 		changePage:              win.changePage,
+		setReturnPage:           win.setReturnPage,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -279,6 +286,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
 	win.pages[PagePrivacy] = win.PrivacyPage(common)
 	win.pages[PageTickets] = win.TicketPage(common)
+	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
 }
 
 func (page pageCommon) ChangePage(pg string) {

@@ -106,5 +106,15 @@ func (pg *securityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 }
 
 func (pg *securityToolsPage) handle(common pageCommon) {
+	if pg.verifyMessage.Clicked() {
+		*common.returnPage = PageSecurityTools
+		common.setReturnPage(PageSecurityTools)
+		common.changePage(PageVerifyMessage)
+	}
 
+	if pg.validateAddress.Clicked() {
+		*common.returnPage = PageSecurityTools
+		common.setReturnPage(PageSecurityTools)
+		common.changePage(ValidateAddress)
+	}
 }

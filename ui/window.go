@@ -38,7 +38,7 @@ type Window struct {
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
-	current string
+	current, previous string
 
 	signatureResult *wallet.Signature
 
@@ -114,6 +114,11 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 func (win *Window) changePage(page string) {
 	win.current = page
+	win.window.Invalidate()
+}
+
+func (win *Window) setReturnPage(from string) {
+	win.previous = from
 	win.window.Invalidate()
 }
 
