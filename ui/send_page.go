@@ -279,12 +279,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 }
 
 func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	if *pg.selectedAccount == nil {
-		pg.selectedWallet = common.info.Wallets[0]
-		*pg.selectedAccount = &common.info.Wallets[0].Accounts[0]
-		pg.shouldInitializeTxAuthor = true
-	}
-
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.topNav(gtx, common)
@@ -942,6 +936,8 @@ func (pg *sendPage) validateDestinationAddress() bool {
 		pg.destinationAddressEditor.SetError("")
 		return true
 	}
+
+	pg.balanceAfterSend(true)
 	pg.destinationAddressEditor.SetError("invalid address")
 	return false
 }
@@ -1010,7 +1006,7 @@ func (pg *sendPage) calculateValues() {
 	pg.updateAmountInputsValues()
 	pg.getTxFee()
 	pg.updateDefaultValues()
-	// pg.balanceAfterSend(false)
+	pg.balanceAfterSend(false)
 }
 
 func (pg *sendPage) updateAmountInputsValues() {
@@ -1173,6 +1169,12 @@ func (pg *sendPage) Handle(c pageCommon) {
 		return
 	}
 
+	if *pg.selectedAccount == nil {
+		pg.selectedWallet = c.info.Wallets[0]
+		*pg.selectedAccount = &c.info.Wallets[0].Accounts[0]
+		pg.shouldInitializeTxAuthor = true
+	}
+
 	if pg.LastTradeRate == "" && pg.count == 0 {
 		pg.count = 1
 		pg.calculateValues()
@@ -1258,6 +1260,14 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.rightAmountEditor.Editor.SetText("")
 		pg.calculateErrorText = ""
 		c.wallet.CreateTransaction(pg.selectedWallet.ID, (*pg.selectedAccount).Number, pg.txAuthorErrChan)
+	}
+
+	activeAmountEditor := pg.leftAmountEditor.Editor
+	if pg.rightAmountEditor.Editor.Focused() {
+		activeAmountEditor = pg.rightAmountEditor.Editor
+	}
+	if !pg.inputsNotEmpty(pg.destinationAddressEditor.Editor, activeAmountEditor) {
+		pg.balanceAfterSend(true)
 	}
 
 	// // pg.validate(true)
