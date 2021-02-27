@@ -352,7 +352,7 @@ func (pg *privacyPage) Handler(common pageCommon) {
 		if pg.toggleMixer.Value {
 			go pg.showModalPasswordStartAccountMixer(&common)
 		} else {
-			common.wallet.StopAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pg.errChann)
+			common.wallet.StopAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pg.errorReceiver)
 		}
 	}
 
@@ -361,10 +361,10 @@ func (pg *privacyPage) Handler(common pageCommon) {
 		common.notify(err.Error(), false)
 	case stt := <-*pg.acctMixerStatus:
 		if stt.RunStatus == wallet.MixerStarted {
-			common.Notify("Start Successfully", true)
+			common.notify("Start Successfully", true)
 			common.closeModal()
 		} else {
-			common.Notify("Stop Successfully", true)
+			common.notify("Stop Successfully", true)
 		}
 	default:
 	}
@@ -425,7 +425,7 @@ func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
 		},
 		cancelText: "Cancel",
 		confirm: func(pass string) {
-			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errChann)
+			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errorReceiver)
 		},
 	}
 }

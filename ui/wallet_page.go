@@ -134,6 +134,8 @@ func (pg *walletPage) initializeWalletMenu() {
 			text:   "Verify message",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
+				*common.returnPage = PageWallet
+				common.setReturnPage(PageWallet)
 				common.changePage(PageVerifyMessage)
 			},
 		},
