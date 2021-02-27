@@ -14,7 +14,9 @@ const PageLog = "Log"
 type logPage struct {
 	theme *decredmaterial.Theme
 
-	copyBtn     decredmaterial.IconButton
+	copyLog  *widget.Clickable
+	copyIcon *widget.Image
+
 	entriesList layout.List
 	fullLog     string
 	logEntries  []decredmaterial.Label
@@ -28,13 +30,12 @@ func (win *Window) LogPage(common pageCommon, internalLog chan string) layout.Wi
 			Axis:        layout.Vertical,
 			ScrollToEnd: true,
 		},
-		copyBtn:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.contentCopy),
+		copyLog:    new(widget.Clickable),
 		logEntries: make([]decredmaterial.Label, 0, 20),
 	}
 
-	pg.copyBtn.Color = common.theme.Color.Gray
-	pg.copyBtn.Size = values.MarginPadding25
-	pg.copyBtn.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.copyIcon = common.icons.copyIcon
+	pg.copyIcon.Scale = 0.25
 
 	go pg.watchLogs(internalLog)
 
@@ -44,7 +45,7 @@ func (win *Window) LogPage(common pageCommon, internalLog chan string) layout.Wi
 	}
 }
 
-func (pg *logPage) copyLog(common pageCommon) {
+func (pg *logPage) copyLogEntries(common pageCommon) {
 	go func() {
 		pg.entriesLock.Lock()
 		defer pg.entriesLock.Unlock()
@@ -71,9 +72,18 @@ func (pg *logPage) Layout(gtx C, common pageCommon) D {
 			back: func() {
 				*common.page = PageDebug
 			},
-			extraBtn: &pg.copyBtn,
-			extraFunc: func() {
-				pg.copyLog(common)
+			extraItem: pg.copyLog,
+			extra: func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+						return decredmaterial.Clickable(gtx, pg.copyLog, func(gtx C) D {
+							return pg.copyIcon.Layout(gtx)
+						})
+					})
+				})
+			},
+			handleExtra: func() {
+				pg.copyLogEntries(common)
 			},
 			body: func(gtx C) D {
 				background := common.theme.Color.Surface
