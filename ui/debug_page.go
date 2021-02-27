@@ -55,33 +55,35 @@ func (pg *debugPage) handle(common pageCommon) {
 
 func (pg *debugPage) debugItem(gtx C, i int, common pageCommon) D {
 	return decredmaterial.Clickable(gtx, pg.debugItems[i].clickable, func(gtx C) D {
-		background := common.theme.Color.Surface
-		card := common.theme.Card()
-		card.Color = background
-		return card.Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Stack{}.Layout(gtx,
-				layout.Stacked(func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+					return common.theme.Body1(pg.debugItems[i].text).Layout(gtx)
+				})
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				return layout.E.Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return common.theme.Body1(pg.debugItems[i].text).Layout(gtx)
+						return common.icons.chevronRight.Layout(gtx, values.MarginPadding22)
 					})
-				}))
-		})
+				})
+			}),
+		)
 	})
 }
 
 func (pg *debugPage) layoutDebugItems(gtx C, common pageCommon) {
-	layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
-				return pg.debugItem(gtx, i, common)
-			})
-		}))
+	background := common.theme.Color.Surface
+	card := common.theme.Card()
+	card.Color = background
+	card.Layout(gtx, func(gtx C) D {
+		list := layout.List{Axis: layout.Vertical}
+		return list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
+			return pg.debugItem(gtx, i, common)
+		})
+	})
 }
 
-// main settings layout
 func (pg *debugPage) Layout(gtx C, common pageCommon) D {
 	container := func(gtx C) D {
 		page := SubPage{
