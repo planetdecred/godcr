@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"gioui.org/layout"
+	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -13,7 +14,9 @@ const PageLog = "Log"
 type logPage struct {
 	theme *decredmaterial.Theme
 
+	copyBtn     decredmaterial.IconButton
 	entriesList layout.List
+	fullLog     string
 	logEntries  []decredmaterial.Label
 	entriesLock sync.Mutex
 }
@@ -25,8 +28,13 @@ func (win *Window) LogPage(common pageCommon, internalLog chan string) layout.Wi
 			Axis:        layout.Vertical,
 			ScrollToEnd: true,
 		},
+		copyBtn:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.contentCopy),
 		logEntries: make([]decredmaterial.Label, 0, 20),
 	}
+
+	pg.copyBtn.Color = common.theme.Color.Gray
+	pg.copyBtn.Size = values.MarginPadding25
+	pg.copyBtn.Inset = layout.UniformInset(values.MarginPadding0)
 
 	go pg.watchLogs(internalLog)
 
@@ -36,10 +44,21 @@ func (win *Window) LogPage(common pageCommon, internalLog chan string) layout.Wi
 	}
 }
 
+func (pg *logPage) copyLog(common pageCommon) {
+	go func() {
+		pg.entriesLock.Lock()
+		defer pg.entriesLock.Unlock()
+		common.clipboard <- WriteClipboard{
+			Text: pg.fullLog,
+		}
+	}()
+}
+
 func (pg *logPage) watchLogs(internalLog chan string) {
 	for l := range internalLog {
 		entry := l[:len(l)-1]
 		pg.entriesLock.Lock()
+		pg.fullLog += l
 		pg.logEntries = append(pg.logEntries, pg.theme.Body1(entry))
 		pg.entriesLock.Unlock()
 	}
@@ -51,6 +70,10 @@ func (pg *logPage) Layout(gtx C, common pageCommon) D {
 			title: "Wallet log",
 			back: func() {
 				*common.page = PageDebug
+			},
+			extraBtn: &pg.copyBtn,
+			extraFunc: func() {
+				pg.copyLog(common)
 			},
 			body: func(gtx C) D {
 				background := common.theme.Color.Surface

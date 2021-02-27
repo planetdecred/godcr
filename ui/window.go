@@ -98,7 +98,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.states.loading = true
 	win.current = PageOverview
 	win.keyEvents = make(chan *key.Event)
-	win.clipboard = make(chan interface{})
+	win.clipboard = make(chan interface{}, 2)
 	win.toast = make(chan *toast)
 	win.modal = make(chan *modalLoad)
 	win.theme.ReadClipboard = win.clipboard
@@ -257,12 +257,12 @@ func (win *Window) Loop(shutdown chan int) {
 				win.window.ReadClipboard()
 			case WriteClipboard:
 				go func() {
+					win.window.WriteClipboard(c.Text)
 					win.toast <- &toast{
 						text:    "copied",
 						success: true,
 					}
 				}()
-				win.window.WriteClipboard(c.Text)
 			}
 		}
 	}

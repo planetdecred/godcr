@@ -687,6 +687,8 @@ type SubPage struct {
 	body              layout.Widget
 	infoTemplate      string
 	infoTemplateTitle string
+	extraBtn          *decredmaterial.IconButton
+	extraFunc         func()
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -732,6 +734,8 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
 					return page.subPageInfoButton.Layout(gtx)
+				} else if sp.extraBtn != nil {
+					return sp.extraBtn.Layout(gtx)
 				}
 				return layout.Dimensions{}
 			})
@@ -764,6 +768,10 @@ func (page pageCommon) subpageEventHandler(sp SubPage) {
 
 	if page.subPageBackButton.Button.Clicked() {
 		sp.back()
+	}
+
+	if sp.extraBtn != nil && sp.extraBtn.Button.Clicked() {
+		sp.extraFunc()
 	}
 }
 
