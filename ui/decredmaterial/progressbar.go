@@ -11,5 +11,5 @@ type ProgressBarStyle struct {
 }
 
 func (t *Theme) ProgressBar(progress int) ProgressBarStyle {
-	return ProgressBarStyle{material.ProgressBar(t.Base, float32(progress))}
+	return ProgressBarStyle{material.ProgressBar(t.Base, float32(progress)/100)}
 }
