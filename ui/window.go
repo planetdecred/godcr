@@ -203,6 +203,7 @@ func (win *Window) Loop(shutdown chan int) {
 					win.walletAcctMixerStatus <- &update.AcctMixerInfo
 				}()
 			}
+			win.window.Invalidate()
 		case e := <-win.window.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
