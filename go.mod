@@ -19,6 +19,7 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
 	golang.org/x/image v0.0.0-20200618115811-c13761719519
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 )
 
 // TODO: Remove and use an actual release of dcrlibwallet

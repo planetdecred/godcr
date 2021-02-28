@@ -32,6 +32,7 @@ const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
 const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
 const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
 const SecurityToolsInfoTemplate = "SecurityToolsInfo"
+const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -39,6 +40,7 @@ type ModalTemplate struct {
 	oldSpendingPassword   decredmaterial.Editor
 	spendingPassword      decredmaterial.Editor
 	matchSpendingPassword decredmaterial.Editor
+	extendedPublicKey     decredmaterial.Editor
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
 	alert                 decredmaterial.IconButton
@@ -72,8 +74,20 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 		oldSpendingPassword:   win.theme.Editor(new(widget.Editor), "Old spending password"),
 		spendingPassword:      win.theme.Editor(new(widget.Editor), "Spending password"),
 		matchSpendingPassword: win.theme.Editor(new(widget.Editor), "Confirm spending password"),
+		extendedPublicKey:     win.theme.Editor(new(widget.Editor), "Extended public key"),
 		alert:                 icon,
 		passwordStgth:         win.theme.ProgressBar(0),
+	}
+}
+
+func (m *ModalTemplate) importWatchOnlyWallet() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			return m.walletName.Layout(gtx)
+		},
+		func(gtx C) D {
+			return m.extendedPublicKey.Layout(gtx)
+		},
 	}
 }
 
@@ -486,6 +500,18 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		template = m.changePassword()
 		return
+	case ImportWatchOnlyWalletTemplate:
+		if m.confirm.Button.Clicked() {
+			load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.extendedPublicKey.Editor.Text())
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+
+		m.walletName.Hint = "Wallet name"
+
+		template = m.importWatchOnlyWallet()
+		return
 	case ConfirmRemoveTemplate:
 		if m.confirm.Button.Clicked() {
 			load.confirm.(func())()
@@ -638,4 +664,5 @@ func (m *ModalTemplate) resetFields() {
 	m.walletName.Editor.SetText("")
 	m.matchSpendingPassword.SetError("")
 	m.oldSpendingPassword.Editor.SetText("")
+	m.extendedPublicKey.Editor.SetText("")
 }

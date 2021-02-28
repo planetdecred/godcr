@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
@@ -377,6 +379,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 				DaysBehind:       fmt.Sprintf("%s behind", calculateDaysBehind(wall.GetBestBlockTimeStamp())),
 				Status:           walletSyncStatus(wall.IsWaiting(), wall.GetBestBlock(), wal.OverallBlockHeight),
 				Seed:             wall.EncryptedSeed,
+				IsWatchingOnly:   wall.IsWatchingOnlyWallet(),
 			}
 			i++
 		}
@@ -466,6 +469,25 @@ func (wal *Wallet) RenameWallet(walletID int, name string, errChan chan error) {
 		}
 		wal.Send <- resp
 	}()
+}
+
+// ImportWatchOnlyWallet imports a watch only wallet with the given parameters.
+// It is non-blocking and sends its result or any error to wal.Send.
+func (wal *Wallet) ImportWatchOnlyWallet(name, extendedPublicKey string) error {
+	var g errgroup.Group
+	g.Go(func() error {
+		_, err := wal.multi.CreateWatchOnlyWallet(name, extendedPublicKey)
+		if err != nil {
+			return fmt.Errorf("error importing watch only wallet: %s", err.Error())
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ChangeWalletPassphrase changes the spending passphrase of the wallet identified by walletID.
