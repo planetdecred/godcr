@@ -33,7 +33,7 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	checkMarkGreenIcon, crossMarkRed,  watchOnlyWalletIcon, 
+	checkMarkGreenIcon, crossMarkRed, watchOnlyWalletIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }

@@ -785,7 +785,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 			*common.selectedWallet = index
 			pg.openPopupIndex = index
 		}
-	
+
 		for pg.collapsibles[index].addAcctBtn.Button.Clicked() {
 			walletID := pg.walletInfo.Wallets[index].ID
 			go func() {
