@@ -370,6 +370,7 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
 					return material.Clickable(gtx, menu[i].button, func(gtx C) D {
 						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return pg.theme.Body2(menu[i].text).Layout(gtx)
 						})
 					})
