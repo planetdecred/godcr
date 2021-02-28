@@ -24,7 +24,6 @@ const PageWallet = "Wallet"
 
 type menuItem struct {
 	text   string
-	page   string
 	button *widget.Clickable
 	action func(pageCommon)
 }
@@ -117,32 +116,44 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		{
 			text:   "Sign message",
 			button: new(widget.Clickable),
-			page:   PageSignMessage,
+			action: func(common pageCommon) {
+				common.changePage(PageSignMessage)
+			},
 		},
 		{
 			text:   "Verify message",
 			button: new(widget.Clickable),
-			page:   PageVerifyMessage,
+			action: func(common pageCommon) {
+				common.changePage(PageVerifyMessage)
+			},
 		},
 		{
 			text:   "Settings",
 			button: new(widget.Clickable),
-			page:   PageHelp,
+			action: func(common pageCommon) {
+				common.changePage(PageHelp)
+			},
 		},
 		{
 			text:   "Rename",
 			button: new(widget.Clickable),
-			page:   PageAbout,
+			action: func(common pageCommon) {
+				common.changePage(PageAbout)
+			},
 		},
 		{
 			text:   "View property",
 			button: new(widget.Clickable),
-			page:   PageHelp,
+			action: func(common pageCommon) {
+				common.changePage(PageHelp)
+			},
 		},
 		{
 			text:   "Privacy",
 			button: new(widget.Clickable),
-			page:   PagePrivacy,
+			action: func(common pageCommon) {
+				common.changePage(PagePrivacy)
+			},
 		},
 	}
 
@@ -167,12 +178,16 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		{
 			text:   "Settings",
 			button: new(widget.Clickable),
-			page:   PageHelp,
+			action: func(common pageCommon) {
+				common.changePage(PageHelp)
+			},
 		},
 		{
 			text:   "Rename",
 			button: new(widget.Clickable),
-			page:   PageAbout,
+			action: func(common pageCommon) {
+				common.changePage(PageAbout)
+			},
 		},
 	}
 
@@ -381,6 +396,17 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 }
 
 func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+	watchOnlyWalletCount := 0
+	for i := range common.info.Wallets {
+		if common.info.Wallets[i].IsWatchingOnly {
+			watchOnlyWalletCount++
+		}
+	}
+
+	if watchOnlyWalletCount == 0 {
+		return D{}
+	}
+
 	card := pg.card
 	card.Color = pg.theme.Color.Surface
 	card.Radius = decredmaterial.CornerRadius{NE: 10, NW: 10, SE: 10, SW: 10}
@@ -730,7 +756,12 @@ func (pg *walletPage) openImportWatchOnlyWalletPopup(common pageCommon) {
 			template: ImportWatchOnlyWalletTemplate,
 			title:    "Import watch-only wallet",
 			confirm: func(name, extendedPubKey string) {
-				pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey, pg.onImportSuccess, pg.onImportError)
+				err := pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey)
+				if err != nil {
+					pg.onImportError(err)
+				} else {
+					pg.onImportSuccess()
+				}
 			},
 			confirmText: "Import",
 			cancel:      common.closeModal,
@@ -790,24 +821,21 @@ func (pg *walletPage) Handle(common pageCommon) {
 		if pg.optionsMenu[index].button.Clicked() {
 			pg.openPopupIndex = -1
 			common.setReturnPage(PageWallet)
-			common.ChangePage(pg.optionsMenu[index].page)
+			pg.optionsMenu[index].action(common)
 		}
 	}
 
 	for index := range pg.watchOnlyWalletMenu {
 		if pg.watchOnlyWalletMenu[index].button.Clicked() {
 			pg.openPopupIndex = -1
-			common.ChangePage(pg.watchOnlyWalletMenu[index].page)
+			pg.watchOnlyWalletMenu[index].action(common)
 		}
 	}
 
 	for index := range pg.addWalletMenu {
 		for pg.addWalletMenu[index].button.Clicked() {
 			pg.isAddWalletMenuOpen = false
-			action := pg.addWalletMenu[index].action
-			if action != nil {
-				action(common)
-			}
+			pg.addWalletMenu[index].action(common)
 			common.refreshPage()
 		}
 	}
