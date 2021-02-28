@@ -73,7 +73,7 @@ type Theme struct {
 	chevronUpIcon         *widget.Icon
 	chevronDownIcon       *widget.Icon
 	NavigationCheckIcon   *widget.Icon
-	navMoreIcon           *widget.Icon
+	NavMoreIcon           *widget.Icon
 	expandIcon            *widget.Image
 	collapseIcon          *widget.Image
 
@@ -109,7 +109,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
-	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+	t.NavMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
 
 	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
 	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}

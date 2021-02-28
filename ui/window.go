@@ -114,6 +114,10 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 func (win *Window) changePage(page string) {
 	win.current = page
+	win.refresh()
+}
+
+func (win *Window) refresh() {
 	win.window.Invalidate()
 }
 

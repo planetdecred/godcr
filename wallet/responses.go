@@ -51,6 +51,7 @@ type InfoShort struct {
 	Status           string
 	IsWaiting        bool
 	Seed             []byte
+	IsWatchingOnly   bool
 }
 
 // Account represents information about a wallet's account

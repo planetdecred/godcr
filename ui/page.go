@@ -33,7 +33,7 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
 	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	checkMarkGreenIcon, crossMarkRed *widget.Image
+	checkMarkGreenIcon, crossMarkRed, watchOnlyWalletIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -82,6 +82,7 @@ type pageCommon struct {
 
 	changePage    func(string)
 	setReturnPage func(string)
+	refreshWindow func()
 }
 
 type (
@@ -159,6 +160,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
 		checkMarkGreenIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ic_checkmark_green"])},
 		crossMarkRed:               &widget.Image{Src: paint.NewImageOp(decredIcons["ic_crossmark_red"])},
+		watchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -248,6 +250,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
 		changePage:              win.changePage,
 		setReturnPage:           win.setReturnPage,
+		refreshWindow:           win.refresh,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -291,6 +294,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 func (page pageCommon) ChangePage(pg string) {
 	page.changePage(pg)
+}
+
+func (page pageCommon) refreshPage() {
+	page.refreshWindow()
 }
 
 func (page pageCommon) Notify(text string, success bool) {
