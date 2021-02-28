@@ -109,10 +109,8 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.walletAlertIcon.Scale = 1
 
 	pg.initializeWalletMenu()
-	pg.collapsibles = make([]*decredmaterial.CollapsibleWithOption, 0)
+	pg.watchOnlyWalletIcon = common.icons.watchOnlyWalletIcon
 
-	pg.addAcct = nil
-	pg.backupButton = nil
 	pg.toAcctDetails = make([]*gesture.Click, 0)
 
 	return func(gtx C) D {
@@ -122,7 +120,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 }
 
 func (pg *walletPage) initializeWalletMenu() {
-	pg.optionsMenuItems = []menuItem{
+	pg.optionsMenu = []menuItem{
 		{
 			text:   "Sign message",
 			button: new(widget.Clickable),
@@ -213,11 +211,6 @@ func (pg *walletPage) initializeWalletMenu() {
 				common.changePage(PageAbout)
 			},
 		},
-	}
-
-	return func(gtx C) D {
-		pg.Handle(common)
-		return pg.Layout(gtx, common)
 	}
 }
 
@@ -755,7 +748,7 @@ func (pg *walletPage) openAddWalletPopup(common pageCommon) {
 			template: CreateWalletTemplate,
 			title:    "Create new wallet",
 			confirm: func(name string, passphrase string) {
-				pg.wallet.CreateWallet(name, passphrase, pg.errChann)
+				pg.wallet.CreateWallet(name, passphrase, pg.errorReceiver)
 			},
 			confirmText: "Create",
 			cancel:      common.closeModal,
@@ -767,11 +760,11 @@ func (pg *walletPage) openAddWalletPopup(common pageCommon) {
 func (pg *walletPage) onImportSuccess() {
 	pg.common.closeModal()
 	pg.wallet.GetMultiWalletInfo()
-	pg.common.Notify("Watch only wallet imported", true)
+	pg.common.notify("Watch only wallet imported", true)
 }
 
 func (pg *walletPage) onImportError(err error) {
-	pg.common.Notify(err.Error(), false)
+	pg.common.notify(err.Error(), false)
 }
 
 func (pg *walletPage) openImportWatchOnlyWalletPopup(common pageCommon) {
