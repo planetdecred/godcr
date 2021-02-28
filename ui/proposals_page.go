@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"strings"
 	"time"
-	//"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/op/clip"
@@ -27,6 +26,26 @@ const (
 	categoryStateFetched
 	categoryStateError
 )
+
+type proposalNotificationListeners struct {
+	page *proposalsPage
+}
+
+func (p proposalNotificationListeners) OnNewProposal(proposal *dcrlibwallet.Proposal) {
+	p.page.addDiscoveredProposal(*proposal)
+}
+
+func (p proposalNotificationListeners) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
+	p.page.updateProposal(*proposal)
+}
+
+func (p proposalNotificationListeners) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
+	p.page.updateProposal(*proposal)
+}
+
+func (p proposalNotificationListeners) OnProposalsSynced() {
+	p.page.refreshWindow()
+}
 
 type proposalItem struct {
 	btn      *widget.Clickable
@@ -59,6 +78,9 @@ type proposalsPage struct {
 	hasFetchedInitialProposal bool
 	legendIcon                *widget.Icon
 	infoIcon                  *widget.Icon
+	selectedProposal          **dcrlibwallet.Proposal
+	hasRegisteredListeners    bool
+	refreshWindow             func()
 }
 
 var (
@@ -74,15 +96,17 @@ var (
 
 func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 	pg := &proposalsPage{
-		theme:           common.theme,
-		wallet:          win.wallet,
-		proposalsList:   &layout.List{Axis: layout.Vertical},
-		scrollContainer: common.theme.ScrollContainer(),
-		tabCard:         common.theme.Card(),
-		itemCard:        common.theme.Card(),
-		notify:          common.Notify,
-		legendIcon:      common.icons.imageBrightness1,
-		infoIcon:        common.icons.actionInfo,
+		theme:            common.theme,
+		wallet:           win.wallet,
+		proposalsList:    &layout.List{Axis: layout.Vertical},
+		scrollContainer:  common.theme.ScrollContainer(),
+		tabCard:          common.theme.Card(),
+		itemCard:         common.theme.Card(),
+		notify:           common.Notify,
+		legendIcon:       common.icons.imageBrightness1,
+		infoIcon:         common.icons.actionInfo,
+		selectedProposal: &win.selectedProposal,
+		refreshWindow:    common.refreshWindow,
 	}
 	pg.tabCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 
@@ -98,12 +122,12 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 	}
 
 	return func(gtx C) D {
-		pg.handle(common)
+		pg.Handle(common)
 		return pg.Layout(gtx, common)
 	}
 }
 
-func (pg *proposalsPage) handle(common pageCommon) {
+func (pg *proposalsPage) Handle(common pageCommon) {
 	for i := range pg.tabs.tabs {
 		if pg.tabs.tabs[i].btn.Clicked() {
 			pg.tabs.selected = i
@@ -111,11 +135,39 @@ func (pg *proposalsPage) handle(common pageCommon) {
 		}
 
 		for k := range pg.tabs.tabs[i].proposals {
-			if pg.tabs.tabs[i].proposals[k].btn.Clicked() {
-				// TODO goto proposal details page
+			for pg.tabs.tabs[i].proposals[k].btn.Clicked() {
+				*pg.selectedProposal = &pg.tabs.tabs[i].proposals[k].proposal
+				common.ChangePage(PageProposalDetails)
 			}
 		}
 	}
+}
+
+func (pg *proposalsPage) addDiscoveredProposal(proposal dcrlibwallet.Proposal) {
+	for i := range pg.tabs.tabs {
+		if pg.tabs.tabs[i].category == proposal.Category {
+			item := proposalItem{
+				btn:      new(widget.Clickable),
+				proposal: proposal,
+				voteBar:  pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
+			}
+			pg.tabs.tabs[i].proposals = append([]proposalItem{item}, pg.tabs.tabs[i].proposals...)
+			break
+		}
+	}
+}
+
+func (pg *proposalsPage) updateProposal(proposal dcrlibwallet.Proposal) {
+out:
+	for i := range pg.tabs.tabs {
+		for k := range pg.tabs.tabs[i].proposals {
+			if pg.tabs.tabs[i].proposals[k].proposal.Token == proposal.Token {
+				pg.tabs.tabs[i].proposals = append(pg.tabs.tabs[i].proposals[:k], pg.tabs.tabs[i].proposals[k+1:]...)
+				break out
+			}
+		}
+	}
+	pg.addDiscoveredProposal(proposal)
 }
 
 func (pg *proposalsPage) onfetchSuccess(proposals []dcrlibwallet.Proposal) {
@@ -209,7 +261,6 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, proposal dcrlibwallet.Propos
 	nameLabel := pg.theme.Body2(proposal.Username)
 	dotLabel := pg.theme.H4(" . ")
 	versionLabel := pg.theme.Body2("Version " + proposal.Version)
-
 	timeAgoLabel := pg.theme.Body2(timeAgo(proposal.Timestamp))
 
 	var categoryLabel decredmaterial.Label
@@ -332,6 +383,11 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 		pg.fetchProposalsForCategory()
 	}
 
+	if !pg.hasRegisteredListeners {
+		pg.wallet.AddProposalNotificationListener(proposalNotificationListeners{pg})
+		pg.hasRegisteredListeners = true
+	}
+
 	return common.LayoutWithoutPadding(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.layoutTabs),
@@ -343,4 +399,15 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 func timeAgo(timestamp int64) string {
 	timeAgo, _ := timeago.TimeAgoWithTime(time.Now(), time.Unix(timestamp, 0))
 	return timeAgo
+}
+
+func truncateString(str string, num int) string {
+	bnoden := str
+	if len(str) > num {
+		if num > 3 {
+			num -= 3
+		}
+		bnoden = str[0:num] + "..."
+	}
+	return bnoden
 }

@@ -724,6 +724,10 @@ func (wal *Wallet) SyncProposals() {
 	go wal.multi.Politeia.Sync()
 }
 
+func (wal *Wallet) AddProposalNotificationListener(listener dcrlibwallet.ProposalNotificationListener) error {
+	return wal.multi.Politeia.AddNotificationListener(listener, "godcr")
+}
+
 func (wal *Wallet) GetWalletSeedPhrase(walletID int, password []byte) (string, error) {
 	return wal.multi.WalletWithID(walletID).DecryptSeed(password)
 }

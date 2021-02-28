@@ -20,6 +20,7 @@ type VoteBar struct {
 	passPercentage     float32
 	yesColor           color.NRGBA
 	noColor            color.NRGBA
+	bgColor            color.NRGBA
 
 	yesLabel         Label
 	noLabel          Label
@@ -50,6 +51,7 @@ func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
 		quorumTooltip:    t.Tooltip("", Left),
 		infoIcon:         infoIcon,
 		legendIcon:       legendIcon,
+		bgColor:          t.Color.Gray,
 	}
 }
 
@@ -68,8 +70,8 @@ func (v *VoteBar) SetParams(yesVotes, noVotes, eligibleVotes, requiredPercentage
 }
 
 func (v *VoteBar) Layout(gtx C) D {
-	yesFlex := float32(v.yesVotes / v.totalVotes)
-	noFlex := float32(v.noVotes / v.totalVotes)
+	yesFlex := v.yesVotes / v.totalVotes
+	noFlex := v.noVotes / v.totalVotes
 
 	yesRadius := CornerRadius{
 		SW: 5,
@@ -128,14 +130,14 @@ func (v *VoteBar) LayoutWithLegend(gtx C) D {
 			leftPos := (v.passPercentage / 100) * float32(gtx.Constraints.Max.X)
 			return layout.Inset{
 				Left: unit.Dp(leftPos),
-				Top: values.MarginPadding20,
+				Top:  values.MarginPadding20,
 			}.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = 3
 				gtx.Constraints.Min.Y = 28
 
 				v.passTooltip.SetText(fmt.Sprintf("%d %% Yes votes required for approval", int(v.passPercentage)))
 				return v.passTooltip.Layout(gtx, func(gtx C) D {
-					return fill(gtx, v.yesColor)
+					return fill(gtx, v.bgColor)
 				})
 			})
 		}),

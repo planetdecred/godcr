@@ -96,7 +96,6 @@ func (pg *proposalDetails) handle() {
 		proposal := *pg.selectedProposal
 		pg.goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
 	}
-
 }
 
 func (pg *proposalDetails) goToURL(url string) {
@@ -429,5 +428,4 @@ func (pg *proposalDetails) Layout(gtx C, common pageCommon) D {
 	return common.Layout(gtx, func(gtx C) D {
 		return common.UniformPadding(gtx, body)
 	})
-
 }
