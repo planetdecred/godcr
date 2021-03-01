@@ -31,7 +31,8 @@ type httpError interface {
 }
 
 type amountValue struct {
-	inactiveInputAmount      string
+	sendAmountDCR            string
+	sendAmountUSD            string
 	leftTransactionFeeValue  string
 	rightTransactionFeeValue string
 	leftTotalCostValue       string
@@ -64,7 +65,6 @@ type sendPage struct {
 
 	currencySwap, moreOption decredmaterial.IconButton
 
-	// customChangeAddressEditor    decredmaterial.Editor
 	sendAmountEditor             decredmaterial.Editor
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
@@ -111,14 +111,14 @@ type sendPage struct {
 	leftTotalCostValue  string
 	rightTotalCostValue string
 
-	// walletName     string
-	// accountName    string
-	// accountBalance string
+	sendAmountDCR string
+	sendAmountUSD string
 
 	balanceAfterSendValue string
 
-	LastTradeRate string
-	exchangeErr   string
+	LastTradeRate    string
+	exchangeErr      string
+	noExchangeErrMsg string
 
 	passwordModal *decredmaterial.Password
 	line          *decredmaterial.Line
@@ -169,10 +169,10 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		fromAccountBtn: new(widget.Clickable),
 		toAddress:      new(widget.Bool),
 
-		accountSwitch:      common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
-		leftExchangeValue:  "DCR",
-		rightExchangeValue: "USD",
-
+		accountSwitch:                common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
+		leftExchangeValue:            "DCR",
+		rightExchangeValue:           "USD",
+		noExchangeErrMsg:             "Exchange rate not fetched",
 		closeConfirmationModalButton: common.theme.Button(new(widget.Clickable), "Cancel"),
 		nextButton:                   common.theme.Button(new(widget.Clickable), "Next"),
 		confirmButton:                common.theme.Button(new(widget.Clickable), ""),
@@ -232,11 +232,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Address")
 	pg.destinationAddressEditor.Editor.SingleLine, pg.destinationAddressEditor.IsVisible = true, true
 	pg.destinationAddressEditor.Editor.SetText("")
-
-	// pg.customChangeAddressEditor = common.theme.Editor(new(widget.Editor), "Custom Change Address")
-	// pg.customChangeAddressEditor.IsVisible, pg.customChangeAddressEditor.IsTitleLabel = true, true
-	// pg.customChangeAddressEditor.Editor.SetText("")
-	// pg.customChangeAddressEditor.Editor.SingleLine = true
 
 	pg.closeConfirmationModalButton.Background = color.NRGBA{}
 	pg.closeConfirmationModalButton.Color = common.theme.Color.Primary
@@ -748,13 +743,26 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					icon := common.icons.sendIcon
-					// icon.Scale = 0.8
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding10}.Layout(gtx, icon.Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
-							return layoutBalance(gtx, "3.142320", common)
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return layoutBalance(gtx, pg.sendAmountDCR, common)
+								}),
+								layout.Flexed(1, func(gtx C) D {
+									if strings.Contains(pg.currencyValue, "USD") {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											txt := pg.theme.Body1(pg.sendAmountUSD)
+											txt.Color = pg.theme.Color.Gray
+											return txt.Layout(gtx)
+										})
+									}
+									return layout.Dimensions{}
+								}),
+							)
 						}),
 					)
 				}),
@@ -768,7 +776,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.theme.Body2("kjkjhbhcdxdfgcjhgkjnbv gfvj").Layout(gtx)
+							return pg.theme.Body2(pg.destinationAddressEditor.Editor.Text()).Layout(gtx)
 						}),
 					)
 				}),
@@ -781,15 +789,15 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.contentRow(gtx, "Sending from", "Account name", "Selected wallet")
+					return pg.contentRow(gtx, "Sending from", (*pg.selectedAccount).Name, pg.selectedWallet.Name)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.contentRow(gtx, "Fee", "345678", "")
+						return pg.contentRow(gtx, "Fee", pg.leftTransactionFeeValue, "")
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.contentRow(gtx, "Total cost", "345678", "")
+					return pg.contentRow(gtx, "Total cost", pg.leftTotalCostValue, "")
 				}),
 			)
 		},
@@ -822,7 +830,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						pg.confirmButton.Text = "4.5456566 DCR"
+						pg.confirmButton.Text = dcrutil.Amount(pg.totalCostDCR).String()
 						return pg.confirmButton.Layout(gtx)
 					}),
 				)
@@ -946,8 +954,13 @@ func (pg *sendPage) validateLeftAmount() bool {
 	if pg.inputsNotEmpty(pg.leftAmountEditor.Editor) {
 		_, err := strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
 		if err != nil {
+			fmt.Println(err.Error())
+			if strings.Contains(err.Error(), "invalid") {
+				pg.leftAmountEditor.SetError("Invalid amount")
+			}
 			return false
 		}
+		pg.leftAmountEditor.SetError("")
 		return true
 	}
 	return false
@@ -957,8 +970,12 @@ func (pg *sendPage) validateRightAmount() bool {
 	if pg.inputsNotEmpty(pg.rightAmountEditor.Editor) {
 		_, err := strconv.ParseFloat(pg.rightAmountEditor.Editor.Text(), 64)
 		if err != nil {
+			if strings.Contains(err.Error(), "invalid") {
+				pg.rightAmountEditor.SetError("Invalid amount")
+			}
 			return false
 		}
+		pg.rightAmountEditor.SetError("")
 		return true
 	}
 	return false
@@ -967,11 +984,9 @@ func (pg *sendPage) validateRightAmount() bool {
 func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {
-			pg.nextButton.Background, pg.confirmButton.Background = pg.theme.Color.Hint, pg.theme.Color.Hint
 			return false
 		}
 	}
-	pg.nextButton.Background, pg.confirmButton.Background = pg.theme.Color.Primary, pg.theme.Color.Primary
 	return true
 }
 
@@ -987,6 +1002,8 @@ func (pg *sendPage) calculateValues() {
 	pg.calculateErrorText = ""
 	pg.txFeeSize = "-"
 	pg.txFeeEstimatedTime = "-"
+	pg.sendAmountDCR = defaultLeftValues
+	pg.sendAmountUSD = defaultRightValues
 
 	if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate() {
 		return
@@ -1024,9 +1041,10 @@ func (pg *sendPage) updateAmountInputsValues() {
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountDCRtoUSD))
 		pg.setDestinationAddr(pg.inputAmount)
 	default:
-		pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
 		if pg.rightAmountEditor.Editor.Focused() {
 			pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
+		} else {
+			pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
 		}
 		pg.setDestinationAddr(pg.inputAmount)
 	}
@@ -1055,7 +1073,8 @@ func (pg *sendPage) amountValues() amountValue {
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "":
 		return amountValue{
-			inactiveInputAmount:      dcrutil.Amount(pg.amountAtoms).String(),
+			sendAmountDCR:            dcrutil.Amount(pg.amountAtoms).String(),
+			sendAmountUSD:            fmt.Sprintf("$ %f", dcrutil.Amount(pg.amountAtoms).ToCoin()*pg.usdExchangeRate),
 			leftTransactionFeeValue:  fmt.Sprintf("%f USD", txFeeValueUSD),
 			rightTransactionFeeValue: fmt.Sprintf("(%s)", dcrutil.Amount(pg.txFee).String()),
 			leftTotalCostValue:       fmt.Sprintf("%s USD", strconv.FormatFloat(pg.inputAmount+txFeeValueUSD, 'f', 7, 64)),
@@ -1063,7 +1082,8 @@ func (pg *sendPage) amountValues() amountValue {
 		}
 	case pg.leftExchangeValue == "DCR" && pg.LastTradeRate != "":
 		return amountValue{
-			inactiveInputAmount:      fmt.Sprintf("%s USD", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
+			sendAmountDCR:            dcrutil.Amount(pg.amountAtoms).String(),
+			sendAmountUSD:            fmt.Sprintf("$ %s", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
 			leftTransactionFeeValue:  dcrutil.Amount(pg.txFee).String(),
 			rightTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
 			leftTotalCostValue:       dcrutil.Amount(pg.totalCostDCR).String(),
@@ -1071,7 +1091,8 @@ func (pg *sendPage) amountValues() amountValue {
 		}
 	default:
 		return amountValue{
-			inactiveInputAmount:     "Exchange rate not fetched",
+			sendAmountDCR:           dcrutil.Amount(pg.amountAtoms).String(),
+			sendAmountUSD:           "",
 			leftTransactionFeeValue: dcrutil.Amount(pg.txFee).String(),
 			leftTotalCostValue:      dcrutil.Amount(pg.totalCostDCR).String(),
 		}
@@ -1123,7 +1144,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 		c.Notify("Transaction Sent", true)
 
 		pg.destinationAddressEditor.Editor.SetText("")
-		pg.sendAmountEditor.Editor.SetText("")
+		// pg.sendAmountEditor.Editor.SetText("")
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
@@ -1132,8 +1153,6 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 	}
 }
 
-// handleEditorChange handles changes on the editor and adjust its width of the send amount input field
-// it also updates the DCR - USD exchange rate value
 func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
@@ -1143,20 +1162,9 @@ func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 }
 
 func (pg *sendPage) updateDefaultValues() {
-	// if strings.Contains(pg.currencyValue, "USD") {
-	// 	if pg.rightAmountEditor.Editor.Focused() {
-	// 		// pg.rightAmountEditor.Editor.Move(pg.rightAmountEditor.Editor.NumLines())
-	// 		pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
-	// 		return
-	// 	}
-	// 	if pg.leftAmountEditor.Editor.Focused() {
-	// 		// pg.leftAmountEditor.Editor.Move(pg.leftAmountEditor.Editor.NumLines())
-	// 		pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
-	// 		return
-	// 	}
-	// }
-
 	v := pg.amountValues()
+	pg.sendAmountDCR = v.sendAmountDCR
+	pg.sendAmountUSD = v.sendAmountUSD
 	pg.activeTotalAmount = pg.leftExchangeValue
 	pg.leftTransactionFeeValue = v.leftTransactionFeeValue
 	pg.rightTransactionFeeValue = v.rightTransactionFeeValue
@@ -1222,12 +1230,17 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	for pg.currencySwap.Button.Clicked() {
-		if pg.leftExchangeValue == "DCR" {
-			pg.leftExchangeValue = "USD"
-			pg.rightExchangeValue = "DCR"
+		if pg.LastTradeRate != "" {
+			if pg.leftExchangeValue == "DCR" {
+				pg.leftExchangeValue = "USD"
+				pg.rightExchangeValue = "DCR"
+			} else {
+				pg.leftExchangeValue = "DCR"
+				pg.rightExchangeValue = "USD"
+			}
+			pg.rightAmountEditor.SetError("")
 		} else {
-			pg.leftExchangeValue = "DCR"
-			pg.rightExchangeValue = "USD"
+			pg.rightAmountEditor.SetError(pg.noExchangeErrMsg)
 		}
 
 		pg.calculateValues()
@@ -1252,6 +1265,12 @@ func (pg *sendPage) Handle(c pageCommon) {
 	} else {
 		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
+	}
+
+	if pg.amountErrorText != "" {
+		pg.leftAmountEditor.SetError(pg.amountErrorText)
+	} else {
+		pg.leftAmountEditor.SetError("")
 	}
 
 	if pg.shouldInitializeTxAuthor {
@@ -1309,12 +1328,15 @@ func (pg *sendPage) Handle(c pageCommon) {
 	// 	pg.calculateValues()
 	// }
 
-	// if pg.destinationAddressEditor.Editor.Len() == 0 || pg.leftAmountEditor.Editor.Len() == 0 || pg.leftAmountEditor.Editor.Len() == 0 {
-	// 	pg.balanceAfterSend(true)
-	// }
-
 	for pg.nextButton.Button.Clicked() {
 		pg.isConfirmationModalOpen = true
+	}
+
+	if pg.isConfirmationModalOpen {
+		pg.confirmButton.Background = pg.theme.Color.Primary
+		if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
+			pg.confirmButton.Background = pg.theme.Color.Hint
+		}
 	}
 
 	for pg.closeConfirmationModalButton.Button.Clicked() {
