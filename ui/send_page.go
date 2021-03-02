@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
@@ -1149,7 +1148,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues()
-		(*pg.unspentOutputsSelected)[pg.selectedWallet.ID][(*pg.selectedAccount).Number] = make(map[string]*wallet.UnspentOutput)
+		// (*pg.unspentOutputsSelected)[pg.selectedWallet.ID][(*pg.selectedAccount).Number] = make(map[string]*wallet.UnspentOutput)
 	}
 }
 
@@ -1289,44 +1288,25 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.balanceAfterSend(true)
 	}
 
-	// // pg.validate(true)
-	// pg.watchForBroadcastResult(c)
+	pg.watchForBroadcastResult(c)
 
-	// if pg.isBroadcastingTransaction {
-	// 	col := pg.theme.Color.Gray
-	// 	col.A = 150
+	if pg.isBroadcastingTransaction {
+		col := pg.theme.Color.Gray
+		col.A = 150
 
-	// 	pg.nextButton.Text = "Sending..."
-	// 	pg.nextButton.Background = col
-	// } else {
-	// 	pg.nextButton.Text = "Next"
-	// 	pg.nextButton.Background = pg.theme.Color.Primary
-	// }
+		pg.nextButton.Text = "Sending..."
+		pg.nextButton.Background = col
+	} else {
+		pg.nextButton.Text = "Next"
+		pg.nextButton.Background = pg.theme.Color.Primary
+	}
 
-	// for pg.nextButton.Button.Clicked() {
-	// 	// if pg.validate(false) && pg.calculateErrorText == "" {
-	// 		pg.isConfirmationModalOpen = true
-	// 	// }
-	// }
-
-	// for pg.confirmButton.Button.Clicked() {
-	// 	pg.isConfirmationModalOpen = false
-	// 	pg.isPasswordModalOpen = true
-	// }
-
-	// for pg.closeConfirmationModalButton.Button.Clicked() {
-	// 	pg.isConfirmationModalOpen = false
-	// }
-
-	// for pg.maxButton.Button.Clicked() {
-	// 	pg.activeExchange = "DCR"
-	// 	amountMax, err := pg.txAuthor.EstimateMaxSendAmount()
-	// 	if err != nil {
-	// 		return
-	// 	}
-	// 	pg.sendAmountEditor.Editor.SetText(fmt.Sprintf("%.10f", amountMax.DcrValue))
-	// 	pg.calculateValues()
-	// }
+	for pg.confirmButton.Button.Clicked() {
+		if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
+			return
+		}
+		pg.wallet.BroadcastTransaction(pg.txAuthor, []byte(pg.passwordEditor.Editor.Text()), pg.broadcastErrChan)
+	}
 
 	for pg.nextButton.Button.Clicked() {
 		pg.isConfirmationModalOpen = true
@@ -1348,12 +1328,10 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.calculateErrorText = err.Error()
 		c.Notify(pg.calculateErrorText, false)
 	case err := <-pg.broadcastErrChan:
-		c.Notify(err.Error(), false)
-
 		if err.Error() == invalidPassphraseError {
-			time.AfterFunc(time.Second*3, func() {
-				pg.isConfirmationModalOpen = true
-			})
+			pg.passwordEditor.SetError("Wrong password")
+		} else {
+			c.Notify(err.Error(), false)
 		}
 		pg.isBroadcastingTransaction = false
 	case err := <-pg.exchangeErrChan:
