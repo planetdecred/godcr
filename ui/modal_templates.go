@@ -310,7 +310,7 @@ func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
-							m.alert.Color = m.th.Color.Black
+							m.alert.Color = m.th.Color.DeepBlue
 							return m.alert.Layout(gtx, values.MarginPadding50)
 						})
 					})

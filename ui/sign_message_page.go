@@ -43,7 +43,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	errorLabel := common.theme.Caption("")
 	errorLabel.Color = common.theme.Color.Danger
 	copyIcon := common.icons.copyIcon
-	copyIcon.Scale = 0.25
+	copyIcon.Scale = 1
 
 	pg := &signMessagePage{
 		container: layout.List{

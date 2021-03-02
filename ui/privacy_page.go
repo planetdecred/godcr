@@ -102,27 +102,27 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 							return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										c.icons.transactionFingerPrintIcon.Scale = 0.09
+										c.icons.transactionFingerPrintIcon.Scale = 1.0
 										return c.icons.transactionFingerPrintIcon.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowForwardIcon.Scale = 0.18
+									c.icons.arrowForwardIcon.Scale = 0.5
 									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										c.icons.mixer.Scale = 0.25
+										c.icons.mixer.Scale = 1.0
 										return c.icons.mixer.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowForwardIcon.Scale = 0.18
+									c.icons.arrowForwardIcon.Scale = 0.5
 									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										c.icons.transactionIcon.Scale = 0.09
+										c.icons.transactionIcon.Scale = 1.5
 										return c.icons.transactionIcon.Layout(gtx)
 									})
 								}),
@@ -176,7 +176,7 @@ func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context, c *pageComm
 					if !iconVisibility {
 						return layout.Dimensions{}
 					}
-					c.icons.alertGray.Scale = 0.024
+					c.icons.alertGray.Scale = 1.0
 					return c.icons.alertGray.Layout(gtx)
 				}),
 				layout.Rigid(subtxt.Layout),
@@ -193,7 +193,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							c.icons.mixer.Scale = 0.05
+							c.icons.mixer.Scale = 1.0
 							return c.icons.mixer.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
@@ -244,7 +244,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 									if !c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
 										return layout.Dimensions{}
 									}
-									c.icons.arrowDownIcon.Scale = 0.22
+									c.icons.arrowDownIcon.Scale = 1.0
 									return layout.Center.Layout(gtx, c.icons.arrowDownIcon.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {

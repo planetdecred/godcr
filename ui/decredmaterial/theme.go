@@ -24,15 +24,11 @@ import (
 var (
 	// decred primary colors
 
-	keyblue = rgb(0x2970ff)
-	//turquiose = rgb(0x2ed6a1)
+	keyblue  = rgb(0x2970ff)
 	darkblue = rgb(0x091440)
 
 	// decred complemetary colors
-
-	//lightblue = rgb(0x70cbff)
-	orange = rgb(0xed6d47)
-	green  = rgb(0x41bf53)
+	green = rgb(0x41bf53)
 )
 
 type (
@@ -58,7 +54,7 @@ type Theme struct {
 		Surface    color.NRGBA
 		Gray       color.NRGBA
 		Black      color.NRGBA
-		Orange     color.NRGBA
+		DeepBlue   color.NRGBA
 		LightGray  color.NRGBA
 	}
 	Icon struct {
@@ -96,11 +92,11 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Background = argb(0x22444444)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
-	t.Color.Danger = rgb(0xff0000)
+	t.Color.Danger = rgb(0xed6d47)
 	t.Color.Gray = rgb(0x596D81)
 	t.Color.Black = rgb(0x000000)
-	t.Color.Orange = orange
-	t.Color.LightGray = rgb(0xc4cbd2)
+	t.Color.LightGray = rgb(0xf3f5f6)
+	t.Color.DeepBlue = rgb(0x091440)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))

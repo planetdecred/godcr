@@ -61,7 +61,6 @@ type walletPage struct {
 	watchOnlyWalletLabel                       decredmaterial.Label
 	watchOnlyWalletIcon                        *widget.Image
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
-	common                                     *pageCommon
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -77,10 +76,9 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		card:                     common.theme.Card(),
 		walletAccount:            &win.walletAccount,
 		backdrop:                 new(widget.Clickable),
-		errorReceiver:   		  make(chan error),
+		errorReceiver:            make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
-		common:                   &common,
 	}
 
 	pg.collapsibles = make(map[int]collapsible)
@@ -183,16 +181,19 @@ func (pg *walletPage) initializeWalletMenu() {
 		{
 			text:   "Create a new wallet",
 			button: new(widget.Clickable),
-			action: pg.openAddWalletPopup,
+			action: pg.showAddWalletModal,
 		},
 		{
 			text:   "Import an existing wallet",
 			button: new(widget.Clickable),
+			action: func(common pageCommon) {
+				common.changePage(PageCreateRestore)
+			},
 		},
 		{
 			text:   "Import a watch only wallet",
 			button: new(widget.Clickable),
-			action: pg.openImportWatchOnlyWalletPopup,
+			action: pg.showImportWatchOnlyWalletModal,
 		},
 	}
 
@@ -212,6 +213,43 @@ func (pg *walletPage) initializeWalletMenu() {
 			},
 		},
 	}
+}
+
+func (pg *walletPage) showAddWalletModal(common pageCommon) {
+	go func() {
+		common.modalReceiver <- &modalLoad{
+			template: CreateWalletTemplate,
+			title:    "Create new wallet",
+			confirm: func(name string, passphrase string) {
+				pg.wallet.CreateWallet(name, passphrase, pg.errorReceiver)
+			},
+			confirmText: "Create",
+			cancel:      common.closeModal,
+			cancelText:  "Cancel",
+		}
+	}()
+}
+
+func (pg *walletPage) showImportWatchOnlyWalletModal(common pageCommon) {
+	go func() {
+		common.modalReceiver <- &modalLoad{
+			template: ImportWatchOnlyWalletTemplate,
+			title:    "Import watch-only wallet",
+			confirm: func(name, extendedPubKey string) {
+				err := pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey)
+				if err != nil {
+					common.notify(err.Error(), false)
+				} else {
+					common.closeModal()
+					pg.wallet.GetMultiWalletInfo()
+					common.notify("Watch only wallet imported", true)
+				}
+			},
+			confirmText: "Import",
+			cancel:      common.closeModal,
+			cancelText:  "Cancel",
+		}
+	}()
 }
 
 // Layout lays out the widgets for the main wallets pg.
@@ -399,7 +437,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 			if len(common.info.Wallets[i].Seed) > 0 {
 				children = append(children, layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: unit.Dp(-10)}.Layout(gtx, func(gtx C) D {
-						pg.card.Color = pg.theme.Color.Orange
+						pg.card.Color = pg.theme.Color.Danger
 						pg.card.Radius = decredmaterial.CornerRadius{SW: 10, SE: 10}
 						return pg.card.Layout(gtx, func(gtx C) D {
 							return pg.backupSeedNotification(gtx, common, i)
@@ -496,7 +534,7 @@ func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wal
 				layout.Rigid(func(gtx C) D {
 					if len(walletInfo.Seed) > 0 {
 						txt := pg.theme.Caption("Not backed up")
-						txt.Color = pg.theme.Color.Orange
+						txt.Color = pg.theme.Color.Danger
 						return txt.Layout(gtx)
 					}
 					return D{}
@@ -544,7 +582,7 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 						if isIcon {
 							if seed > 0 {
 								txt := pg.theme.Caption("Not backed up")
-								txt.Color = pg.theme.Color.Orange
+								txt.Color = pg.theme.Color.Danger
 								inset := layout.Inset{
 									Bottom: values.MarginPadding5,
 								}
@@ -571,7 +609,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 	if name == "imported" {
 		pg.accountIcon = common.icons.importedAccountIcon
 	}
-	pg.accountIcon.Scale = 0.8
+	pg.accountIcon.Scale = 1.0
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -740,51 +778,6 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 			*common.selectedWallet = index
 		}
 	}
-}
-
-func (pg *walletPage) openAddWalletPopup(common pageCommon) {
-	go func() {
-		common.modalReceiver <- &modalLoad{
-			template: CreateWalletTemplate,
-			title:    "Create new wallet",
-			confirm: func(name string, passphrase string) {
-				pg.wallet.CreateWallet(name, passphrase, pg.errorReceiver)
-			},
-			confirmText: "Create",
-			cancel:      common.closeModal,
-			cancelText:  "Cancel",
-		}
-	}()
-}
-
-func (pg *walletPage) onImportSuccess() {
-	pg.common.closeModal()
-	pg.wallet.GetMultiWalletInfo()
-	pg.common.notify("Watch only wallet imported", true)
-}
-
-func (pg *walletPage) onImportError(err error) {
-	pg.common.notify(err.Error(), false)
-}
-
-func (pg *walletPage) openImportWatchOnlyWalletPopup(common pageCommon) {
-	go func() {
-		common.modalReceiver <- &modalLoad{
-			template: ImportWatchOnlyWalletTemplate,
-			title:    "Import watch-only wallet",
-			confirm: func(name, extendedPubKey string) {
-				err := pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey)
-				if err != nil {
-					pg.onImportError(err)
-				} else {
-					pg.onImportSuccess()
-				}
-			},
-			confirmText: "Import",
-			cancel:      common.closeModal,
-			cancelText:  "Cancel",
-		}
-	}()
 }
 
 func (pg *walletPage) closePopups() {
