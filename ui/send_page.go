@@ -289,8 +289,8 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	}
 
 	dims := common.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
+		return layout.Stack{Alignment: layout.S}.Layout(gtx,
+			layout.Expanded(func(gtx C) D {
 				return layout.Stack{Alignment: layout.NE}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
 						return common.UniformPadding(gtx, func(gtx C) D {
@@ -316,7 +316,8 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 					}),
 				)
 			}),
-			layout.Flexed(1, func(gtx C) D {
+			layout.Stacked(func(gtx C) D {
+				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 				return layout.S.Layout(gtx, func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
 						return pg.balanceSection(gtx, common)
@@ -528,8 +529,13 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 			})
 		})
 	}
-	return pg.pageSections(gtx, "Fee", func(gtx C) D {
-		return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
+	inset := layout.Inset{
+		Bottom: values.MarginPadding60,
+	}
+	return inset.Layout(gtx, func(gtx C) D {
+		return pg.pageSections(gtx, "Fee", func(gtx C) D {
+			return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
+		})
 	})
 }
 
@@ -923,6 +929,7 @@ func (pg *sendPage) validate() bool {
 	if pg.rightAmountEditor.Editor.Focused() {
 		isAmountValid = pg.validateRightAmount()
 	}
+
 	if !pg.validateDestinationAddress() || !isAmountValid || pg.calculateErrorText != "" {
 		pg.nextButton.Background = pg.theme.Color.Hint
 		return false
@@ -936,7 +943,7 @@ func (pg *sendPage) validateDestinationAddress() bool {
 	if pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
 		isValid, _ := pg.wallet.IsAddressValid(pg.destinationAddressEditor.Editor.Text())
 		if !isValid {
-			pg.destinationAddressEditor.SetError("invalid address")
+			pg.destinationAddressEditor.SetError("Invalid address")
 			return false
 		}
 
@@ -945,7 +952,7 @@ func (pg *sendPage) validateDestinationAddress() bool {
 	}
 
 	pg.balanceAfterSend(true)
-	pg.destinationAddressEditor.SetError("invalid address")
+	pg.destinationAddressEditor.SetError("")
 	return false
 }
 
@@ -953,7 +960,6 @@ func (pg *sendPage) validateLeftAmount() bool {
 	if pg.inputsNotEmpty(pg.leftAmountEditor.Editor) {
 		_, err := strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
 		if err != nil {
-			fmt.Println(err.Error())
 			if strings.Contains(err.Error(), "invalid") {
 				pg.leftAmountEditor.SetError("Invalid amount")
 			}
@@ -962,6 +968,7 @@ func (pg *sendPage) validateLeftAmount() bool {
 		pg.leftAmountEditor.SetError("")
 		return true
 	}
+	pg.leftAmountEditor.SetError("")
 	return false
 }
 
@@ -977,6 +984,7 @@ func (pg *sendPage) validateRightAmount() bool {
 		pg.rightAmountEditor.SetError("")
 		return true
 	}
+	pg.rightAmountEditor.SetError("")
 	return false
 }
 
@@ -1004,7 +1012,7 @@ func (pg *sendPage) calculateValues() {
 	pg.sendAmountDCR = defaultLeftValues
 	pg.sendAmountUSD = defaultRightValues
 
-	if reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) || !pg.validate() {
+	if !pg.validate() || reflect.DeepEqual(pg.txAuthor, &dcrlibwallet.TxAuthor{}) {
 		return
 	}
 
@@ -1123,9 +1131,11 @@ func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool) {
 func (pg *sendPage) feeEstimationError(err, errorPath string) {
 	if err == "insufficient_balance" {
 		pg.amountErrorText = "Not enough funds"
+		return
 	}
 	if strings.Contains(err, "invalid amount") {
 		pg.amountErrorText = "Invalid amount"
+		return
 	}
 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }
@@ -1142,13 +1152,11 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 		pg.remainingBalance = -1
 		c.Notify("Transaction Sent", true)
 
-		pg.destinationAddressEditor.Editor.SetText("")
-		// pg.sendAmountEditor.Editor.SetText("")
+		pg.resetFields()
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues()
-		// (*pg.unspentOutputsSelected)[pg.selectedWallet.ID][(*pg.selectedAccount).Number] = make(map[string]*wallet.UnspentOutput)
 	}
 }
 
@@ -1171,6 +1179,12 @@ func (pg *sendPage) updateDefaultValues() {
 	pg.rightTotalCostValue = v.rightTotalCostValue
 }
 
+func (pg *sendPage) resetFields() {
+	pg.destinationAddressEditor.Editor.SetText("")
+	pg.leftAmountEditor.Editor.SetText("")
+	pg.rightAmountEditor.Editor.SetText("")
+}
+
 func (pg *sendPage) Handle(c pageCommon) {
 	if len(c.info.Wallets) == 0 {
 		return
@@ -1185,6 +1199,10 @@ func (pg *sendPage) Handle(c pageCommon) {
 	if pg.LastTradeRate == "" && pg.count == 0 {
 		pg.count = 1
 		pg.calculateValues()
+	}
+
+	if pg.LastTradeRate == "" && strings.Contains(pg.currencyValue, "USD") {
+		pg.rightAmountEditor.SetError(pg.noExchangeErrMsg)
 	}
 
 	if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
@@ -1237,9 +1255,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 				pg.leftExchangeValue = "DCR"
 				pg.rightExchangeValue = "USD"
 			}
-			pg.rightAmountEditor.SetError("")
-		} else {
-			pg.rightAmountEditor.SetError(pg.noExchangeErrMsg)
 		}
 
 		pg.calculateValues()
@@ -1268,8 +1283,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	if pg.amountErrorText != "" {
 		pg.leftAmountEditor.SetError(pg.amountErrorText)
-	} else {
-		pg.leftAmountEditor.SetError("")
 	}
 
 	if pg.shouldInitializeTxAuthor {
@@ -1296,9 +1309,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 		pg.nextButton.Text = "Sending..."
 		pg.nextButton.Background = col
-	} else {
-		pg.nextButton.Text = "Next"
-		pg.nextButton.Background = pg.theme.Color.Primary
 	}
 
 	for pg.confirmButton.Button.Clicked() {
@@ -1309,7 +1319,9 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	for pg.nextButton.Button.Clicked() {
-		pg.isConfirmationModalOpen = true
+		if pg.validate() && pg.calculateErrorText == "" {
+			pg.isConfirmationModalOpen = true
+		}
 	}
 
 	if pg.isConfirmationModalOpen {
@@ -1321,6 +1333,10 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	for pg.closeConfirmationModalButton.Button.Clicked() {
 		pg.isConfirmationModalOpen = false
+	}
+
+	for pg.clearAllBtn.Button.Clicked() {
+		pg.resetFields()
 	}
 
 	select {
