@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -75,11 +76,12 @@ func (pg *logPage) Layout(gtx C, common pageCommon) D {
 			extraItem: pg.copyLog,
 			extra: func(gtx C) D {
 				return layout.Center.Layout(gtx, func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-						return decredmaterial.Clickable(gtx, pg.copyLog, func(gtx C) D {
-							return pg.copyIcon.Layout(gtx)
-						})
+					return decredmaterial.Clickable(gtx, pg.copyLog, func(gtx C) D {
+						sz := gtx.Constraints.Max.X
+						pg.copyIcon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+						return pg.copyIcon.Layout(gtx)
 					})
+
 				})
 			},
 			handleExtra: func() {

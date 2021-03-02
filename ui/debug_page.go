@@ -17,10 +17,7 @@ type debugItem struct {
 }
 
 type debugPage struct {
-	theme *decredmaterial.Theme
-
-	pageTitle decredmaterial.Label
-
+	theme      *decredmaterial.Theme
 	debugItems []debugItem
 }
 
@@ -35,7 +32,6 @@ func (win *Window) DebugPage(common pageCommon) layout.Widget {
 
 	pg := &debugPage{
 		theme:      common.theme,
-		pageTitle:  common.theme.H5("Session log entries"),
 		debugItems: debugItems,
 	}
 
@@ -48,7 +44,7 @@ func (win *Window) DebugPage(common pageCommon) layout.Widget {
 func (pg *debugPage) handle(common pageCommon) {
 	for i := range pg.debugItems {
 		for pg.debugItems[i].clickable.Clicked() {
-			*common.page = pg.debugItems[i].page
+			common.changePage(pg.debugItems[i].page)
 		}
 	}
 }
@@ -89,7 +85,7 @@ func (pg *debugPage) Layout(gtx C, common pageCommon) D {
 		page := SubPage{
 			title: "Debug",
 			back: func() {
-				*common.page = PageMore
+				common.changePage(PageMore)
 			},
 			body: func(gtx C) D {
 				pg.layoutDebugItems(gtx, common)
