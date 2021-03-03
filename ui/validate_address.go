@@ -156,11 +156,9 @@ func (pg *validateAddressPage) showDisplayResult(c pageCommon) layout.Widget {
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 							if pg.stateValidate == invalid {
-								c.icons.crossMarkRed.Scale = 0.5
-								return c.icons.crossMarkRed.Layout(gtx)
+								return c.icons.navigationCancel.Layout(gtx, values.MarginPadding25)
 							}
-							c.icons.checkMarkGreenIcon.Scale = 0.5
-							return c.icons.checkMarkGreenIcon.Layout(gtx)
+							return c.icons.actionCheckCircle.Layout(gtx, values.MarginPadding25)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {

@@ -24,7 +24,7 @@ type privacyPage struct {
 	line                                 *decredmaterial.Line
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
-	errChann                             chan error
+	errorReceiver                        chan error
 	acctMixerStatus                      *chan *wallet.AccountMixer
 }
 
@@ -37,7 +37,7 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 		line:                    common.theme.Line(),
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
-		errChann:                common.errorChannels[PagePrivacy],
+		errorReceiver:           make(chan error),
 		acctMixerStatus:         &win.walletAcctMixerStatus,
 	}
 	pg.toPrivacySetup.Background = pg.theme.Color.Primary
@@ -60,7 +60,7 @@ func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimension
 			title:      "Privacy",
 			walletName: c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
-				c.ChangePage(PageWallet)
+				c.changePage(PageWallet)
 			},
 			infoTemplateTitle: "How to use the mixer?",
 			infoTemplate:      PrivacyInfoTemplate,
@@ -102,27 +102,27 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 							return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										c.icons.transactionFingerPrintIcon.Scale = 0.09
+										c.icons.transactionFingerPrintIcon.Scale = 1.0
 										return c.icons.transactionFingerPrintIcon.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowFowardIcon.Scale = 0.18
-									return c.icons.arrowFowardIcon.Layout(gtx)
+									c.icons.arrowForwardIcon.Scale = 0.5
+									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										c.icons.mixer.Scale = 0.25
+										c.icons.mixer.Scale = 1.0
 										return c.icons.mixer.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-									c.icons.arrowFowardIcon.Scale = 0.18
-									return c.icons.arrowFowardIcon.Layout(gtx)
+									c.icons.arrowForwardIcon.Scale = 0.5
+									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										c.icons.transactionIcon.Scale = 0.09
+										c.icons.transactionIcon.Scale = 1.5
 										return c.icons.transactionIcon.Layout(gtx)
 									})
 								}),
@@ -176,7 +176,7 @@ func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context, c *pageComm
 					if !iconVisibility {
 						return layout.Dimensions{}
 					}
-					c.icons.alertGray.Scale = 0.024
+					c.icons.alertGray.Scale = 1.0
 					return c.icons.alertGray.Layout(gtx)
 				}),
 				layout.Rigid(subtxt.Layout),
@@ -193,7 +193,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							c.icons.mixer.Scale = 0.05
+							c.icons.mixer.Scale = 1.0
 							return c.icons.mixer.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
@@ -244,7 +244,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 									if !c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
 										return layout.Dimensions{}
 									}
-									c.icons.arrowDownIcon.Scale = 0.22
+									c.icons.arrowDownIcon.Scale = 1.0
 									return layout.Center.Layout(gtx, c.icons.arrowDownIcon.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -352,19 +352,19 @@ func (pg *privacyPage) Handler(common pageCommon) {
 		if pg.toggleMixer.Value {
 			go pg.showModalPasswordStartAccountMixer(&common)
 		} else {
-			common.wallet.StopAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pg.errChann)
+			common.wallet.StopAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pg.errorReceiver)
 		}
 	}
 
 	select {
-	case err := <-pg.errChann:
-		common.Notify(err.Error(), false)
+	case err := <-pg.errorReceiver:
+		common.notify(err.Error(), false)
 	case stt := <-*pg.acctMixerStatus:
 		if stt.RunStatus == wallet.MixerStarted {
-			common.Notify("Start Successfully", true)
+			common.notify("Start Successfully", true)
 			common.closeModal()
 		} else {
-			common.Notify("Stop Successfully", true)
+			common.notify("Stop Successfully", true)
 		}
 	default:
 	}
@@ -372,7 +372,7 @@ func (pg *privacyPage) Handler(common pageCommon) {
 
 func (pg *privacyPage) showModalSetupMixerInfo(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		template: ConfirmSetupMixerTemplate,
+		template: SetupMixerInfoTemplate,
 		title:    "Set up mixer by creating two needed accounts",
 		confirm: func() {
 			go pg.showModalSetupMixerAcct(common)
@@ -385,7 +385,7 @@ func (pg *privacyPage) showModalSetupMixerInfo(common *pageCommon) {
 
 func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		template: ConfirmSetupMixerAcctTemplate,
+		template: PasswordTemplate,
 		title:    "Confirm to create needed accounts",
 		confirm: func(p string) {
 			for _, acct := range common.info.Wallets[*common.selectedWallet].Accounts {
@@ -394,7 +394,7 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 					return
 				}
 			}
-			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errChann)
+			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errorReceiver)
 		},
 		confirmText: "Confirm",
 		cancel:      common.closeModal,
@@ -404,9 +404,9 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 
 func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
 	common.modalReceiver <- &modalLoad{
-		customTemplate: ConfirmMixerAcctExistTemplate,
-		confirmText:    "Go back & rename",
-		cancel:         common.closeModal,
+		template:    ConfirmMixerAcctExistTemplate,
+		confirmText: "Go back & rename",
+		cancel:      common.closeModal,
 		confirm: func() {
 			common.closeModal()
 			*common.page = PageWallet
@@ -425,7 +425,7 @@ func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
 		},
 		cancelText: "Cancel",
 		confirm: func(pass string) {
-			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errChann)
+			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errorReceiver)
 		},
 	}
 }

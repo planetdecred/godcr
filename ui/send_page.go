@@ -327,15 +327,15 @@ func (pg *SendPage) Handle(c pageCommon) {
 
 	if pg.inputButtonCoinCtrl.Button.Clicked() {
 		c.wallet.AllUnspentOutputs(pg.selectedWallet.ID, pg.selectedAccount.Number)
-		c.ChangePage(PageUTXO)
+		c.changePage(PageUTXO)
 	}
 
 	select {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
-		c.Notify(pg.calculateErrorText, false)
+		c.notify(pg.calculateErrorText, false)
 	case err := <-pg.broadcastErrChan:
-		c.Notify(err.Error(), false)
+		c.notify(err.Error(), false)
 
 		if err.Error() == invalidPassphraseError {
 			time.AfterFunc(time.Second*3, func() {
@@ -971,7 +971,7 @@ func (pg *SendPage) watchForBroadcastResult(c pageCommon) {
 			pg.spendableBalance = pg.remainingBalance
 		}
 		pg.remainingBalance = -1
-		c.Notify("Transaction Sent", true)
+		c.notify("Transaction Sent", true)
 
 		pg.destinationAddressEditor.Editor.SetText("")
 		pg.sendAmountEditor.Editor.SetText("")

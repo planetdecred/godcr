@@ -20,20 +20,17 @@ import (
 )
 
 type pageIcons struct {
-	contentAdd, contentClear, contentCreate, navigationCheck,
-	contentSend, contentAddBox, contentRemove, toggleRadioButtonUnchecked,
-	actionCheckCircle, contentCopy, actionInfo, navigationMore,
-	navigationArrowBack, navigationArrowForward, verifyAction, actionDelete, actionLock,
-	communicationComment, editorModeEdit, actionBackup, actionCheck, chevronRight,
-	actionSwapVert, navigationCancel, notificationSync, imageBrightness1 *widget.Icon
+	contentAdd, navigationCheck, actionCheckCircle, actionInfo, navigationArrowBack,
+	navigationArrowForward, actionCheck, chevronRight, actionSwapVert, navigationCancel,
+	imageBrightness1 *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
-	importedAccountIcon, accountIcon, editIcon, expandIcon, collapseIcon, copyIcon, mixer,
-	arrowFowardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon, alert, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	checkMarkGreenIcon, crossMarkRed, watchOnlyWalletIcon *widget.Image
+	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer,
+	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
+	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
+	watchOnlyWalletIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -57,7 +54,6 @@ type pageCommon struct {
 	navTab          *decredmaterial.Tabs
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
-	errorChannels   map[string]chan error
 	keyEvents       chan *key.Event
 	clipboard       chan interface{}
 	toast           chan *toast
@@ -97,32 +93,17 @@ const (
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
 	ic := pageIcons{
-		contentAdd:                 mustIcon(widget.NewIcon(icons.ContentAdd)),
-		contentClear:               mustIcon(widget.NewIcon(icons.ContentClear)),
-		contentCreate:              mustIcon(widget.NewIcon(icons.ContentCreate)),
-		navigationCheck:            mustIcon(widget.NewIcon(icons.NavigationCheck)),
-		contentSend:                mustIcon(widget.NewIcon(icons.ContentSend)),
-		contentAddBox:              mustIcon(widget.NewIcon(icons.ContentAddBox)),
-		contentRemove:              mustIcon(widget.NewIcon(icons.ContentRemove)),
-		toggleRadioButtonUnchecked: mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked)),
-		actionCheckCircle:          mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
-		navigationArrowBack:        mustIcon(widget.NewIcon(icons.NavigationArrowBack)),
-		navigationArrowForward:     mustIcon(widget.NewIcon(icons.NavigationArrowForward)),
-		contentCopy:                mustIcon(widget.NewIcon(icons.NavigationMoreVert)),
-		actionInfo:                 mustIcon(widget.NewIcon(icons.ActionInfo)),
-		navigationMore:             mustIcon(widget.NewIcon(icons.NavigationMoreVert)),
-		actionDelete:               mustIcon(widget.NewIcon(icons.ActionDelete)),
-		communicationComment:       mustIcon(widget.NewIcon(icons.CommunicationComment)),
-		verifyAction:               mustIcon(widget.NewIcon(icons.ActionVerifiedUser)),
-		editorModeEdit:             mustIcon(widget.NewIcon(icons.EditorModeEdit)),
-		actionLock:                 mustIcon(widget.NewIcon(icons.ActionLock)),
-		actionBackup:               mustIcon(widget.NewIcon(icons.ActionSettingsBackupRestore)),
-		actionCheck:                mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
-		actionSwapVert:             mustIcon(widget.NewIcon(icons.ActionSwapVert)),
-		navigationCancel:           mustIcon(widget.NewIcon(icons.NavigationCancel)),
-		notificationSync:           mustIcon(widget.NewIcon(icons.NotificationSync)),
-		imageBrightness1:           mustIcon(widget.NewIcon(icons.ImageBrightness1)),
-		chevronRight:               mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
+		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
+		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
+		actionCheckCircle:      mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
+		navigationArrowBack:    mustIcon(widget.NewIcon(icons.NavigationArrowBack)),
+		navigationArrowForward: mustIcon(widget.NewIcon(icons.NavigationArrowForward)),
+		actionInfo:             mustIcon(widget.NewIcon(icons.ActionInfo)),
+		actionCheck:            mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
+		actionSwapVert:         mustIcon(widget.NewIcon(icons.ActionSwapVert)),
+		navigationCancel:       mustIcon(widget.NewIcon(icons.NavigationCancel)),
+		imageBrightness1:       mustIcon(widget.NewIcon(icons.ImageBrightness1)),
+		chevronRight:           mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
@@ -143,23 +124,19 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		importedAccountIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
 		editIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
 		expandIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
-		collapseIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])},
 		copyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
 		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
 		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
-		arrowFowardIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
+		arrowForwardIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
 		settingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
 		securityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
 		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
 		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
 		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
-		alert:                      &widget.Image{Src: paint.NewImageOp(decredIcons["alert"])},
 		verifyMessageIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
 		locationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
 		alertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert-gray"])},
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
-		checkMarkGreenIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ic_checkmark_green"])},
-		crossMarkRed:               &widget.Image{Src: paint.NewImageOp(decredIcons["ic_crossmark_red"])},
 		watchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
 
 		syncingIcon: decredIcons["syncing"],
@@ -214,25 +191,16 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	}
 
 	common := pageCommon{
-		wallet:          win.wallet,
-		info:            win.walletInfo,
-		selectedWallet:  &win.selected,
-		selectedAccount: &win.selectedAccount,
-		theme:           win.theme,
-		icons:           ic,
-		returnPage:      &win.previous,
-		page:            &win.current,
-		walletTabs:      win.walletTabs,
-		accountTabs:     win.accountTabs,
-		errorChannels: map[string]chan error{
-			PageSignMessage:    make(chan error),
-			PageCreateRestore:  make(chan error),
-			PageWallet:         make(chan error),
-			PageAccountDetails: make(chan error),
-			PageWalletSettings: make(chan error),
-			PageSettings:       make(chan error),
-			PagePrivacy:        make(chan error),
-		},
+		wallet:                  win.wallet,
+		info:                    win.walletInfo,
+		selectedWallet:          &win.selected,
+		selectedAccount:         &win.selectedAccount,
+		theme:                   win.theme,
+		icons:                   ic,
+		returnPage:              &win.previous,
+		page:                    &win.current,
+		walletTabs:              win.walletTabs,
+		accountTabs:             win.accountTabs,
 		keyEvents:               win.keyEvents,
 		clipboard:               win.clipboard,
 		toast:                   win.toast,
@@ -264,7 +232,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
 	common.modalTemplate = win.LoadModalTemplates()
-	common.modalTemplate.alertError = ic.alert
 
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
@@ -300,7 +267,7 @@ func (page pageCommon) refreshPage() {
 	page.refreshWindow()
 }
 
-func (page pageCommon) Notify(text string, success bool) {
+func (page pageCommon) notify(text string, success bool) {
 	go func() {
 		page.toast <- &toast{
 			text:    text,
@@ -320,13 +287,13 @@ func (page pageCommon) handleNavEvents() {
 
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
-			page.ChangePage(page.appBarNavItems[i].page)
+			page.changePage(page.appBarNavItems[i].page)
 		}
 	}
 
 	for i := range page.drawerNavItems {
 		for page.drawerNavItems[i].clickable.Clicked() {
-			page.ChangePage(page.drawerNavItems[i].page)
+			page.changePage(page.drawerNavItems[i].page)
 		}
 	}
 }
@@ -377,7 +344,6 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				select {
 				case load := <-page.modalReceiver:
 					page.modalLoad.template = load.template
-					page.modalLoad.customTemplate = load.customTemplate
 					page.modalLoad.title = load.title
 					page.modalLoad.confirm = load.confirm
 					page.modalLoad.confirmText = load.confirmText
@@ -462,11 +428,12 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							sz := gtx.Constraints.Max.X
-							img := page.icons.logo
-							img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-
-							return img.Layout(gtx)
+							return layout.Inset{Top: values.MarginPadding9, Left: values.MarginPadding15}.Layout(gtx,
+								func(gtx layout.Context) layout.Dimensions {
+									img := page.icons.logo
+									img.Scale = 1.0
+									return img.Layout(gtx)
+								})
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -485,9 +452,8 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
-														sz := gtx.Constraints.Max.X
 														img := page.appBarNavItems[i].image
-														img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+														img.Scale = 1.0
 														return page.appBarNavItems[i].image.Layout(gtx)
 													})
 												}),
@@ -549,13 +515,12 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									sz := gtx.Constraints.Max.X
 									img := page.drawerNavItems[i].imageInactive
 									if page.drawerNavItems[i].page == *page.page {
 										img = page.drawerNavItems[i].image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
-										img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+										img.Scale = 1.0
 										return img.Layout(gtx)
 									})
 								}),
@@ -799,11 +764,6 @@ func (page pageCommon) subpageEventHandler(sp SubPage) {
 	if page.subPageBackButton.Button.Clicked() {
 		sp.back()
 	}
-}
-
-func toMax(gtx layout.Context) {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 }
 
 func mustIcon(ic *widget.Icon, err error) *widget.Icon {

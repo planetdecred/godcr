@@ -467,7 +467,7 @@ func (pg *transactionDetailsPage) viewTxn(gtx layout.Context, common *pageCommon
 			}),
 			layout.Rigid(func(gtx C) D {
 				redirect := common.icons.redirectIcon
-				redirect.Scale = 0.26
+				redirect.Scale = 1.0
 				return decredmaterial.Clickable(gtx, pg.toDcrdata, func(gtx C) D {
 					return redirect.Layout(gtx)
 				})
@@ -574,7 +574,7 @@ func (pg *transactionDetailsPage) Handler(common pageCommon) {
 	}
 
 	if pg.backButton.Button.Clicked() {
-		common.ChangePage(PageTransactions)
+		common.changePage(PageTransactions)
 	}
 
 	for _, b := range pg.copyTextBtn {

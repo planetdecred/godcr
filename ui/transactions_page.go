@@ -313,7 +313,7 @@ func (pg *transactionsPage) goToTxnDetails(gtx layout.Context, c *pageCommon, tx
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			*pg.walletTransaction = txn
-			c.ChangePage(PageTransactionDetails)
+			c.changePage(PageTransactionDetails)
 		}
 	}
 }

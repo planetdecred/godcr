@@ -23,7 +23,7 @@ type walletSettingsPage struct {
 
 	notificationW *widget.Bool
 	line          *decredmaterial.Line
-	errChann      chan error
+	errorReceiver chan error
 }
 
 func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
@@ -34,7 +34,7 @@ func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
 		wal:           common.wallet,
 		notificationW: new(widget.Bool),
 		line:          common.theme.Line(),
-		errChann:      common.errorChannels[PageSettings],
+		errorReceiver: make(chan error),
 
 		changePass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
 		rescan:       common.theme.PlainIconButton(new(widget.Clickable), icon),
@@ -68,7 +68,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 			title:      "Settings",
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
-				common.ChangePage(PageWallet)
+				common.changePage(PageWallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -177,7 +177,7 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 				template: ChangePasswordTemplate,
 				title:    "Change spending password",
 				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errChann)
+					pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errorReceiver)
 				},
 				confirmText: "Change",
 				cancel:      common.closeModal,
@@ -197,14 +197,14 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 					err := pg.wal.RescanBlocks(walletID)
 					if err != nil {
 						if err.Error() == "not_connected" {
-							common.Notify("Not connected to decred network", false)
+							common.notify("Not connected to decred network", false)
 							return
 						}
-						common.Notify(err.Error(), false)
+						common.notify(err.Error(), false)
 						return
 					}
 					msg := "Rescan initiated (check in overview)"
-					common.Notify(msg, true)
+					common.notify(msg, true)
 					go func() {
 						common.modalReceiver <- &modalLoad{}
 					}()
@@ -233,7 +233,7 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 							template: PasswordTemplate,
 							title:    "Confirm to remove",
 							confirm: func(pass string) {
-								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errChann)
+								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
 							},
 							confirmText: "Confirm",
 							cancel:      common.closeModal,
@@ -250,10 +250,10 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 	}
 
 	select {
-	case err := <-pg.errChann:
+	case err := <-pg.errorReceiver:
 		if err.Error() == "invalid_passphrase" {
 			e := "Password is incorrect"
-			common.Notify(e, false)
+			common.notify(e, false)
 		}
 	default:
 	}
