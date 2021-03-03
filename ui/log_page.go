@@ -24,7 +24,7 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func (win *Window) LogPage(common pageCommon, internalLog chan string) layout.Widget {
+func (win *Window) LogPage(common pageCommon) layout.Widget {
 	pg := &logPage{
 		theme: common.theme,
 		entriesList: layout.List{
@@ -38,7 +38,7 @@ func (win *Window) LogPage(common pageCommon, internalLog chan string) layout.Wi
 	pg.copyIcon = common.icons.copyIcon
 	pg.copyIcon.Scale = 0.25
 
-	go pg.watchLogs(internalLog)
+	go pg.watchLogs(win.internalLog)
 
 	return func(gtx C) D {
 		//pg.handle(common)
@@ -71,7 +71,7 @@ func (pg *logPage) Layout(gtx C, common pageCommon) D {
 		page := SubPage{
 			title: "Wallet log",
 			back: func() {
-				*common.page = PageDebug
+				common.changePage(PageDebug)
 			},
 			extraItem: pg.copyLog,
 			extra: func(gtx C) D {

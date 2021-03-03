@@ -250,7 +250,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
 	win.pages[PagePoliteia] = win.PoliteiaPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
-	win.pages[PageLog] = win.LogPage(common, win.internalLog)
+	win.pages[PageLog] = win.LogPage(common)
 	win.pages[PageAbout] = win.AboutPage(common)
 	win.pages[PageHelp] = win.HelpPage(common)
 	win.pages[PageUTXO] = win.UTXOPage(common)
