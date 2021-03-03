@@ -492,6 +492,7 @@ func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common pageComm
 
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
+				pg.watchOnlyWalletIcon.Scale = 1.0
 				return pg.watchOnlyWalletIcon.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {

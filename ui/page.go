@@ -428,7 +428,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding7, Left: values.MarginPadding15}.Layout(gtx,
+							return layout.Inset{Top: values.MarginPadding9, Left: values.MarginPadding15}.Layout(gtx,
 								func(gtx layout.Context) layout.Dimensions {
 									img := page.icons.logo
 									img.Scale = 1.0
