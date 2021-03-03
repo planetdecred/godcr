@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -28,8 +29,7 @@ const UnlockWalletTemplate = "UnlockWallet"
 const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
 const ChangeSpecificPeerTemplate = "ChangeSpecificPeer"
 const UserAgentTemplate = "UserAgent"
-const ConfirmSetupMixerTemplate = "ConfirmSetupMixer"
-const ConfirmSetupMixerAcctTemplate = "SetupMixerAcctTemplate"
+const SetupMixerInfoTemplate = "ConfirmSetupMixer"
 const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
 const SecurityToolsInfoTemplate = "SecurityToolsInfo"
 const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
@@ -43,29 +43,21 @@ type ModalTemplate struct {
 	extendedPublicKey     decredmaterial.Editor
 	confirm               decredmaterial.Button
 	cancel                decredmaterial.Button
-	alert                 decredmaterial.IconButton
-	alertError            *widget.Image
-	passwordStgth         decredmaterial.ProgressBarStyle
+	alert                 *widget.Icon
+	passwordStrength      decredmaterial.ProgressBarStyle
 }
 
 type modalLoad struct {
-	template       string
-	customTemplate string
-	title          string
-	confirm        interface{}
-	confirmText    string
-	cancel         interface{}
-	cancelText     string
-	isReset        bool
+	template    string
+	title       string
+	confirm     interface{}
+	confirmText string
+	cancel      interface{}
+	cancelText  string
+	isReset     bool
 }
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
-	icon := win.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.AlertError)))
-	icon.Size = values.MarginPadding20
-	icon.Inset = layout.UniformInset(values.MarginPadding5)
-	icon.Color = win.theme.Color.Gray
-	icon.Background = win.theme.Color.Surface
-
 	return &ModalTemplate{
 		th:                    win.theme,
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
@@ -75,8 +67,8 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 		spendingPassword:      win.theme.Editor(new(widget.Editor), "Spending password"),
 		matchSpendingPassword: win.theme.Editor(new(widget.Editor), "Confirm spending password"),
 		extendedPublicKey:     win.theme.Editor(new(widget.Editor), "Extended public key"),
-		alert:                 icon,
-		passwordStgth:         win.theme.ProgressBar(0),
+		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
+		passwordStrength:      win.theme.ProgressBar(0),
 	}
 }
 
@@ -101,7 +93,7 @@ func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
-			return m.passwordStgth.Layout(gtx)
+			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
 			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
@@ -123,7 +115,10 @@ func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C)
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return m.alert.Layout(gtx)
+					m.alert.Color = m.th.Color.Gray
+					return layout.Inset{Top: values.MarginPadding7, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						return m.alert.Layout(gtx, unit.Dp(15))
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
 					info := th.Body1("Accounts")
@@ -188,7 +183,7 @@ func (m *ModalTemplate) changePassword() []func(gtx C) D {
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
-			return m.passwordStgth.Layout(gtx)
+			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
 			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
@@ -204,7 +199,7 @@ func (m *ModalTemplate) setStartupPassword() []func(gtx C) D {
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
-			return m.passwordStgth.Layout(gtx)
+			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
 			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
@@ -308,24 +303,15 @@ func (m *ModalTemplate) setupMixerInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) setupMixerAcct() []func(gtx C) D {
+func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
 	return []func(gtx C) D{
-		func(gtx C) D {
-			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
-			return m.spendingPassword.Layout(gtx)
-		},
-	}
-}
-
-func (m *ModalTemplate) warnExistMixerAcct(load *modalLoad) []func(gtx C) D {
-	return append([]func(gtx C) D{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
-							m.alertError.Scale = 0.07
-							return m.alertError.Layout(gtx)
+							m.alert.Color = m.th.Color.DeepBlue
+							return m.alert.Layout(gtx, values.MarginPadding50)
 						})
 					})
 				}),
@@ -339,14 +325,10 @@ func (m *ModalTemplate) warnExistMixerAcct(load *modalLoad) []func(gtx C) D {
 			txt.Color = m.th.Color.Gray
 			return txt.Layout(gtx)
 		},
-	}, m.actions(m.th, load)...)
+	}
 }
 
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
-	if load.customTemplate != "" {
-		return m.handleCustomTemplate(load)
-	}
-
 	if !load.isReset {
 		m.resetFields()
 		load.isReset = true
@@ -420,7 +402,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.passwordStrength(th, m.spendingPassword.Editor)
+		m.computePasswordStrength(th, m.spendingPassword.Editor)
 
 		template = m.createNewWallet()
 		m.walletName.Hint = "Wallet name"
@@ -488,7 +470,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.passwordStrength(th, m.spendingPassword.Editor)
+		m.computePasswordStrength(th, m.spendingPassword.Editor)
 
 		m.spendingPassword.Hint = "New spending password"
 		m.matchSpendingPassword.Hint = "Confirm new spending password"
@@ -513,39 +495,23 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.importWatchOnlyWallet()
 		return
 	case ConfirmRemoveTemplate:
-		if m.confirm.Button.Clicked() {
-			load.confirm.(func())()
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
+		m.handleButtonEvents(load)
 		template = m.removeWallet(th)
 		return
 	case VerifyMessageInfoTemplate:
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
+		m.handleButtonEvents(load)
 		template = m.verifyMessageInfo()
 		return
 	case SignMessageInfoTemplate:
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
+		m.handleButtonEvents(load)
 		template = m.signMessageInfo()
 		return
 	case RescanWalletTemplate:
-		if m.confirm.Button.Clicked() {
-			load.confirm.(func())()
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
+		m.handleButtonEvents(load)
 		template = m.rescanWallet()
 		return
 	case PrivacyInfoTemplate:
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
+		m.handleButtonEvents(load)
 		template = m.privacyInfo()
 		return
 	case SetStartupPasswordTemplate:
@@ -565,52 +531,32 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.passwordStrength(th, m.spendingPassword.Editor)
+		m.computePasswordStrength(th, m.spendingPassword.Editor)
 		m.spendingPassword.Hint = "Startup password"
 		m.matchSpendingPassword.Hint = "Confirm startup password"
 
 		template = m.setStartupPassword()
 		return
-	case ConfirmSetupMixerTemplate:
-		if m.confirm.Button.Clicked() {
-			load.confirm.(func())()
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
-
+	case SetupMixerInfoTemplate:
+		m.handleButtonEvents(load)
 		template = m.setupMixerInfo()
 		return
-	case ConfirmSetupMixerAcctTemplate:
-		if m.editorsNotEmpty(th, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
-			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
-		template = m.setupMixerAcct()
-		return
-	case SecurityToolsInfoTemplate:
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
-		template = m.securityToolsInfo()
+	case ConfirmMixerAcctExistTemplate:
+		m.handleButtonEvents(load)
+		template = m.warnExistMixerAcct()
 		return
 	default:
 		return
 	}
 }
 
-func (m *ModalTemplate) handleCustomTemplate(load *modalLoad) (template []func(gtx C) D) {
-	switch load.customTemplate {
-	case ConfirmMixerAcctExistTemplate:
-		if m.confirm.Button.Clicked() {
-			load.confirm.(func())()
-		}
-		template = m.warnExistMixerAcct(load)
-		return
-	default:
-		return
+func (m *ModalTemplate) handleButtonEvents(load *modalLoad) {
+	if m.confirm.Button.Clicked() {
+		load.confirm.(func())()
+	}
+
+	if m.cancel.Button.Clicked() {
+		load.cancel.(func())()
 	}
 }
 
@@ -650,11 +596,11 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (m *ModalTemplate) passwordStrength(th *decredmaterial.Theme, editors ...*widget.Editor) {
+func (m *ModalTemplate) computePasswordStrength(th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
-	strength := (dcrlibwallet.ShannonEntropy(password.Text()) / 4.0)
-	m.passwordStgth.Progress = float32(strength * 100)
-	m.passwordStgth.Color = th.Color.Success
+	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
+	m.passwordStrength.Progress = float32(strength * 100)
+	m.passwordStrength.Color = th.Color.Success
 }
 
 // resetFields clears all modal fields when the modal is closed

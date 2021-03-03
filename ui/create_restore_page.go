@@ -31,7 +31,7 @@ type createRestore struct {
 	info            *wallet.MultiWalletInfo
 	wal             *wallet.Wallet
 	keyEvent        chan *key.Event
-	errChan         chan error
+	errorReceiver   chan error
 	showRestore     bool
 	restoring       bool
 	showPassword    bool
@@ -79,11 +79,11 @@ type createRestore struct {
 // Loading lays out the loading widget with a faded background
 func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg := createRestore{
-		theme:    common.theme,
-		wal:      common.wallet,
-		info:     common.info,
-		keyEvent: common.keyEvents,
-		errChan:  common.errorChannels[PageCreateRestore],
+		theme:         common.theme,
+		wal:           common.wallet,
+		info:          common.info,
+		keyEvent:      common.keyEvents,
+		errorReceiver: make(chan error),
 
 		errLabel:              common.theme.Body1(""),
 		spendingPassword:      common.theme.Editor(new(widget.Editor), "Enter password"),
@@ -161,7 +161,6 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return common.Layout(gtx, func(gtx C) D {
-		toMax(gtx)
 		pd := values.MarginPadding15
 		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
@@ -646,7 +645,7 @@ func (pg *createRestore) handle(common pageCommon) {
 
 	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
-		common.ChangePage(PageWallet)
+		common.changePage(PageWallet)
 	}
 
 	for pg.unlock.Button.Clicked() {
@@ -655,7 +654,7 @@ func (pg *createRestore) handle(common pageCommon) {
 				template: UnlockWalletTemplate,
 				title:    "Enter startup wallet password",
 				confirm: func(pass string) {
-					pg.wal.OpenWallets(pass, pg.errChan)
+					pg.wal.OpenWallets(pass, pg.errorReceiver)
 				},
 				confirmText: "Confirm",
 				cancel:      common.closeModal,
@@ -665,13 +664,12 @@ func (pg *createRestore) handle(common pageCommon) {
 	}
 
 	for pg.create.Button.Clicked() {
-		// pg.showPassword = true
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: CreateWalletTemplate,
 				title:    "Create new wallet",
 				confirm: func(wallet, pass string) {
-					pg.wal.CreateWallet(wallet, pass, pg.errChan)
+					pg.wal.CreateWallet(wallet, pass, pg.errorReceiver)
 				},
 				confirmText: "Create",
 				cancel:      common.closeModal,
@@ -713,10 +711,10 @@ func (pg *createRestore) handle(common pageCommon) {
 		}
 
 		if pg.showRestore {
-			pg.wal.RestoreWallet(pg.seedPhrase, pass, pg.errChan)
+			pg.wal.RestoreWallet(pg.seedPhrase, pass, pg.errorReceiver)
 			pg.resetSeeds()
 		} else {
-			pg.wal.CreateWallet(pg.walletName.Editor.Text(), pass, pg.errChan)
+			pg.wal.CreateWallet(pg.walletName.Editor.Text(), pass, pg.errorReceiver)
 		}
 		common.states.creating = true
 		pg.resetPasswords()
@@ -735,13 +733,13 @@ func (pg *createRestore) handle(common pageCommon) {
 				pg.seedEditors.editors[focus].Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
 		}
-	case err := <-pg.errChan:
+	case err := <-pg.errorReceiver:
 		common.states.creating = false
 		errText := err.Error()
 		if err.Error() == "exists" {
 			errText = "Wallet name already exists"
 		}
-		common.Notify(errText, false)
+		common.notify(errText, false)
 	default:
 	}
 

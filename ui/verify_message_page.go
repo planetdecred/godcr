@@ -57,6 +57,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dim
 			walletName: walletName,
 			back: func() {
 				pg.clearInputs(&c)
+				c.changePage(PageWallet)
 				c.changePage(*c.returnPage)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {

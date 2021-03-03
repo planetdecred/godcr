@@ -364,21 +364,21 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 	numbTicketsStr := pg.inputNumberTickets.Editor.Text()
 	numbTickets, err := strconv.Atoi(numbTicketsStr)
 	if err != nil {
-		c.Notify(err.Error(), false)
+		c.notify(err.Error(), false)
 		return
 	}
 
 	expiryBlocksStr := pg.inputExpiryBlocks.Editor.Text()
 	expiryBlocks, err := strconv.Atoi(expiryBlocksStr)
 	if err != nil {
-		c.Notify(err.Error(), false)
+		c.notify(err.Error(), false)
 		return
 	}
 
 	hashes, err := c.wallet.PurchaseTicket(selectedWallet.ID, selectedAccount.Number, uint32(numbTickets), password, uint32(expiryBlocks))
 	if err != nil {
 		log.Error("[PurchaseTicket] err:", err)
-		c.Notify(err.Error(), false)
+		c.notify(err.Error(), false)
 		return
 	}
 
@@ -392,19 +392,19 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 		transactionResponse, err := pg.vspd.CreateTicketFeeTx(resp.FeeAmount, hash, resp.FeeAddress, password)
 		if err != nil {
 			log.Error("[CreateTicketFeeTx] err:", err)
-			c.Notify(err.Error(), false)
+			c.notify(err.Error(), false)
 			return
 		}
 
 		_, err = pg.vspd.PayVSPFee(transactionResponse, hash, "", password)
 		if err != nil {
 			log.Error("[PayVSPFee] err:", err)
-			c.Notify(err.Error(), false)
+			c.notify(err.Error(), false)
 			return
 		}
 	}
 
-	c.Notify("success", true)
+	c.notify("success", true)
 	pg.inputExpiryBlocks.Editor.SetText("")
 	pg.inputNumberTickets.Editor.SetText("")
 	c.closeModal()

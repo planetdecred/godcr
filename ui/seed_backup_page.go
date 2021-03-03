@@ -158,7 +158,6 @@ func (pg *backupPage) clearButton() {
 
 func (pg *backupPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	dims := pg.theme.Surface(gtx, func(gtx C) D {
-		toMax(gtx)
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Start}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				pg.action.Background = pg.theme.Color.Hint
@@ -308,7 +307,6 @@ func (pg *backupPage) seedView(gtx layout.Context) layout.Dimensions {
 
 func (pg *backupPage) verifyView(gtx layout.Context) layout.Dimensions {
 	return pg.viewTemplate(gtx, func(gtx C) D {
-		toMax(gtx)
 		return pg.verifyList.Layout(gtx, len(pg.suggestions), func(gtx C, i int) D {
 			s := pg.suggestions[i]
 			return layout.Center.Layout(gtx, func(gtx C) D {
@@ -484,7 +482,7 @@ func checkSlice(s []string) bool {
 }
 
 func (pg *backupPage) resetPage(c pageCommon) {
-	c.ChangePage(PageWallet)
+	c.changePage(PageWallet)
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)
@@ -536,13 +534,13 @@ func (pg *backupPage) handle(c pageCommon) {
 			errMessage := "Failed to verify. Please go through every word and try again."
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
-				c.Notify(errMessage, false)
+				c.notify(errMessage, false)
 				return
 			}
 
 			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s, pg.privpass)
 			if err != nil {
-				c.Notify(errMessage, false)
+				c.notify(errMessage, false)
 				return
 			}
 			pg.info.Wallets[*c.selectedWallet].Seed = nil
