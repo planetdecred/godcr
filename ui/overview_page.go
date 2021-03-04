@@ -82,6 +82,8 @@ type overviewPage struct {
 	toTransactionDetails []*gesture.Click
 	line                 *decredmaterial.Line
 
+	autoSyncWallet bool
+
 	text             overviewPageText
 	syncButtonHeight int
 	syncButtonWidth  int
@@ -109,6 +111,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		moreButtonHeight: 70,
 
 		isCheckingLockWL: false,
+		autoSyncWallet:   true,
 	}
 	pg.text = overviewPageText{
 		balanceTitle:         "Current Total Balance",
@@ -700,6 +703,12 @@ func (pg *overviewPage) checkLockWallet(c pageCommon) {
 func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 	if pg.walletInfo.Synced {
 		pg.sync.Text = pg.text.disconnect
+	}
+
+	if pg.autoSyncWallet && !pg.walletInfo.Synced {
+		c.wallet.StartSync()
+		pg.sync.Text = pg.text.cancel
+		pg.autoSyncWallet = false
 	}
 
 	if pg.sync.Button.Clicked() {
