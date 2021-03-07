@@ -353,6 +353,15 @@ func (wal *Wallet) GetMultiWalletInfo() {
 					Name:             acct.Name,
 					TotalBalance:     dcrutil.Amount(acct.TotalBalance).String(),
 					SpendableBalance: acct.Balance.Spendable,
+					Balance: Balance{
+						Total:                   acct.Balance.Total,
+						Spendable:               acct.Balance.Spendable,
+						ImmatureReward:          acct.Balance.ImmatureReward,
+						ImmatureStakeGeneration: acct.Balance.ImmatureStakeGeneration,
+						LockedByTickets:         acct.Balance.LockedByTickets,
+						VotingAuthority:         acct.Balance.VotingAuthority,
+						UnConfirmed:             acct.Balance.UnConfirmed,
+					},
 					Keys: struct {
 						Internal, External, Imported string
 					}{

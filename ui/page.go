@@ -680,12 +680,12 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 }
 
 type SubPage struct {
-	title             string
-	walletName        string
-	back              func()
-	body              layout.Widget
-	infoTemplate      string
-	infoTemplateTitle string
+	title        string
+	walletName   string
+	back         func()
+	body         layout.Widget
+	infoTemplate string
+	extras       layout.Widget
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -728,6 +728,9 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return layout.Dimensions{}
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+			if sp.extras != nil {
+				return layout.E.Layout(gtx, sp.extras)
+			}
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
 					return page.subPageInfoButton.Layout(gtx)
