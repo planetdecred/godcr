@@ -33,6 +33,7 @@ const SetupMixerInfoTemplate = "ConfirmSetupMixer"
 const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
 const SecurityToolsInfoTemplate = "SecurityToolsInfo"
 const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
+const UnlockWalletRestoreTemplate = "UnlockWalletRestoreTemplate"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -328,6 +329,29 @@ func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) unlockWalletRestore(th *decredmaterial.Theme) []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			info := th.Body1("The restoration process to discover your accounts was interrupted in the last sync.")
+			info.Color = th.Color.Gray
+			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+				return info.Layout(gtx)
+			})
+		},
+		func(gtx C) D {
+			info := th.Body1("Unlock to resume the process.")
+			info.Color = th.Color.Gray
+			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+				return info.Layout(gtx)
+			})
+		},
+		func(gtx C) D {
+			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			return m.spendingPassword.Layout(gtx)
+		},
+	}
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
 	if !load.isReset {
 		m.resetFields()
@@ -544,6 +568,15 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	case ConfirmMixerAcctExistTemplate:
 		m.handleButtonEvents(load)
 		template = m.warnExistMixerAcct()
+		return
+	case UnlockWalletRestoreTemplate:
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
+			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		}
+
+		m.spendingPassword.Hint = "Spending password"
+
+		template = m.unlockWalletRestore(th)
 		return
 	default:
 		return
