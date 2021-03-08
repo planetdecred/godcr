@@ -133,10 +133,17 @@ func (pg *walletPage) initializeWalletMenu() {
 			},
 		},
 		{
-			text:   "Settings",
+			text:   "View property",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
-				common.changePage(PageWalletSettings)
+				common.changePage(PageHelp)
+			},
+		},
+		{
+			text:   "StakeShuffle",
+			button: new(widget.Clickable),
+			action: func(common pageCommon) {
+				common.changePage(PagePrivacy)
 			},
 		},
 		{
@@ -159,17 +166,10 @@ func (pg *walletPage) initializeWalletMenu() {
 			},
 		},
 		{
-			text:   "View property",
+			text:   "Settings",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
-				common.changePage(PageHelp)
-			},
-		},
-		{
-			text:   "Privacy",
-			button: new(widget.Clickable),
-			action: func(common pageCommon) {
-				common.changePage(PagePrivacy)
+				common.changePage(PageWalletSettings)
 			},
 		},
 	}
@@ -354,7 +354,7 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		leftInset = -35
 	} else {
 		menu = pg.optionsMenu
-		leftInset = -80
+		leftInset = -120
 	}
 
 	inset := layout.Inset{
@@ -368,12 +368,26 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
-					return material.Clickable(gtx, menu[i].button, func(gtx C) D {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return pg.theme.Body2(menu[i].text).Layout(gtx)
-						})
-					})
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return material.Clickable(gtx, menu[i].button, func(gtx C) D {
+								m10 := values.MarginPadding10
+								return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
+									gtx.Constraints.Min.X = 130
+									return pg.theme.Body1(menu[i].text).Layout(gtx)
+								})
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							if i == 1 || i == 2 || i == 3 {
+								pg.line.Width = gtx.Constraints.Max.X
+								pg.line.Color = pg.theme.Color.Background
+								pg.line.Width = 150
+								return pg.line.Layout(gtx)
+							}
+							return layout.Dimensions{}
+						}),
+					)
 				})
 			})
 		})
