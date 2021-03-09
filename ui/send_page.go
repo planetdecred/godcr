@@ -29,6 +29,10 @@ type httpError interface {
 	Error() string
 }
 
+type walletAccount struct {
+	selectAccount []*gesture.Click
+}
+
 type amountValue struct {
 	sendAmountDCR            string
 	sendAmountUSD            string
@@ -43,7 +47,7 @@ type sendPage struct {
 	accountsList layout.List
 	theme *decredmaterial.Theme
 
-	fromAccountBtn *widget.Clickable
+	fromAccountBtn, currencySwap *widget.Clickable
 
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
@@ -55,16 +59,16 @@ type sendPage struct {
 	toAddress    *widget.Bool
 	isMoreOption bool
 
-	unspentOutputsSelected *map[int]map[int32]map[string]*wallet.UnspentOutput
+	walletAccount  walletAccount
+	walletAccounts map[int]walletAccount
 
 	destinationAddressEditor decredmaterial.Editor
 	leftAmountEditor         decredmaterial.Editor
 	rightAmountEditor        decredmaterial.Editor
 	passwordEditor           decredmaterial.Editor
 
-	currencySwap, moreOption decredmaterial.IconButton
+	moreOption decredmaterial.IconButton
 
-	sendAmountEditor             decredmaterial.Editor
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
 	confirmButton                decredmaterial.Button
@@ -97,9 +101,8 @@ type sendPage struct {
 	amountErrorText    string
 	calculateErrorText string
 
-	activeTotalAmount   string
-	inactiveInputAmount string
-	currencyValue       string
+	activeTotalAmount string
+	currencyValue     string
 
 	leftExchangeValue  string
 	rightExchangeValue string
@@ -135,12 +138,8 @@ type sendPage struct {
 	broadcastErrChan chan error
 	exchangeErrChan  chan error
 
-	errChan chan error
-
 	toggleCoinCtrl      *widget.Bool
 	inputButtonCoinCtrl decredmaterial.Button
-
-	toAcctDetails []*gesture.Click
 }
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -157,15 +156,14 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 			Axis: layout.Vertical,
 		},
 
-		theme:                  common.theme,
-		wallet:                 common.wallet,
-		txAuthor:               &win.txAuthor,
-		broadcastResult:        &win.broadcastResult,
-		unspentOutputsSelected: &common.selectedUTXO,
-		selectedAccount:        &win.walletAccount,
-		errChan:                common.errorChannels[PageCreateRestore],
+		theme:           common.theme,
+		wallet:          common.wallet,
+		txAuthor:        &win.txAuthor,
+		broadcastResult: &win.broadcastResult,
+		selectedAccount: &win.walletAccount,
 
 		fromAccountBtn: new(widget.Clickable),
+		currencySwap:   new(widget.Clickable),
 		toAddress:      new(widget.Bool),
 
 		accountSwitch:                common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
@@ -193,7 +191,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		line:             common.theme.Line(),
 	}
 
-	pg.toAcctDetails = make([]*gesture.Click, 0)
+	pg.walletAccounts = make(map[int]walletAccount)
 
 	pg.line.Color = common.theme.Color.Background
 	pg.line.Height = 2
@@ -235,12 +233,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.closeConfirmationModalButton.Background = color.NRGBA{}
 	pg.closeConfirmationModalButton.Color = common.theme.Color.Primary
 
-	pg.currencySwap = common.theme.IconButton(new(widget.Clickable), common.icons.actionSwapHoriz)
-	pg.currencySwap.Background = color.NRGBA{}
-	pg.currencySwap.Color = common.theme.Color.Text
-	pg.currencySwap.Inset = layout.UniformInset(values.MarginPadding0)
-	pg.currencySwap.Size = values.MarginPadding25
-
 	pg.moreOption = common.theme.IconButton(new(widget.Clickable), common.icons.navMoreIcon)
 	pg.moreOption.Background = color.NRGBA{}
 	pg.moreOption.Color = common.theme.Color.Text
@@ -273,6 +265,20 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 }
 
 func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	for index := 0; index < common.info.LoadedWallets; index++ {
+		if _, ok := pg.walletAccounts[index]; !ok {
+			accounts := common.info.Wallets[index].Accounts
+			if len(accounts) != len(pg.walletAccount.selectAccount) {
+				pg.walletAccount.selectAccount = make([]*gesture.Click, len(accounts))
+				for index := range accounts {
+					pg.walletAccount.selectAccount[index] = &gesture.Click{}
+				}
+			}
+
+			pg.walletAccounts[index] = pg.walletAccount
+		}
+	}
+
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.topNav(gtx, common)
@@ -425,7 +431,7 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 											Top:  values.MarginPadding2,
 										}
 										return inset.Layout(gtx, func(gtx C) D {
-											icon := common.icons.collapseIcon
+											icon := common.icons.expandIcon
 											icon.Scale = 0.75
 											return icon.Layout(gtx)
 										})
@@ -460,7 +466,11 @@ func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dime
 						}),
 						layout.Flexed(0.1, func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return pg.currencySwap.Layout(gtx)
+								return decredmaterial.Clickable(gtx, pg.currencySwap, func(gtx C) D {
+									icon := common.icons.currencySwapIcon
+									icon.Scale = 1.75
+									return icon.Layout(gtx)
+								})
 							})
 						}),
 						layout.Flexed(0.45, func(gtx C) D {
@@ -610,7 +620,6 @@ func (pg *sendPage) walletAccountSection(gtx layout.Context, common pageCommon) 
 				accounts := common.info.Wallets[i].Accounts
 				wIndex := i
 
-				pg.updateAcctDetailsButtons(&accounts)
 				inset := layout.Inset{
 					Bottom: values.MarginPadding10,
 				}
@@ -620,14 +629,13 @@ func (pg *sendPage) walletAccountSection(gtx layout.Context, common pageCommon) 
 							accountsName := accounts[x].Name
 							totalBalance := accounts[x].TotalBalance
 							spendable := dcrutil.Amount(accounts[x].SpendableBalance).String()
-							aIndex := x
 
-							click := pg.toAcctDetails[x]
+							click := pg.walletAccounts[wIndex].selectAccount[x]
 							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 							click.Add(gtx.Ops)
-							pg.goToAcctDetails(gtx, common, &accounts[x], wIndex, aIndex, click)
+							pg.walletAccountsHandler(gtx, common, &accounts[x], wIndex, x, click)
 
-							return pg.walletAccountsLayout(gtx, accountsName, totalBalance, spendable, common, wIndex, aIndex)
+							return pg.walletAccountsPopupLayout(gtx, accountsName, totalBalance, spendable, common, wIndex, x)
 						})
 					})
 				})
@@ -638,7 +646,7 @@ func (pg *sendPage) walletAccountSection(gtx layout.Context, common pageCommon) 
 	return pg.walletAccountModal.Layout(gtx, w, 850)
 }
 
-func (pg *sendPage) walletAccountsLayout(gtx layout.Context, name, totalBal, spendableBal string, common pageCommon, wIndex, aIndex int) layout.Dimensions {
+func (pg *sendPage) walletAccountsPopupLayout(gtx layout.Context, name, totalBal, spendableBal string, common pageCommon, wIndex, aIndex int) layout.Dimensions {
 	accountIcon := common.icons.accountIcon
 	accountIcon.Scale = 0.8
 
@@ -682,7 +690,6 @@ func (pg *sendPage) walletAccountsLayout(gtx layout.Context, name, totalBal, spe
 							Top:   values.MarginPadding10,
 						}
 
-						// fmt.Println(*common.selectedWallet ,"==", wIndex)
 						if *common.selectedWallet == wIndex {
 							if *common.selectedAccount == aIndex {
 								return layout.E.Layout(gtx, func(gtx C) D {
@@ -718,20 +725,11 @@ func (pg *sendPage) accountTableLayout(gtx layout.Context, leftLabel, rightLabel
 	)
 }
 
-func (pg *sendPage) updateAcctDetailsButtons(walAcct *[]wallet.Account) {
-	if len(*walAcct) != len(pg.toAcctDetails) {
-		for i := 0; i < len(*walAcct); i++ {
-			pg.toAcctDetails = append(pg.toAcctDetails, &gesture.Click{})
-		}
-	}
-}
-
-func (pg *sendPage) goToAcctDetails(gtx layout.Context, common pageCommon, acct *wallet.Account, wIndex, aIndex int, click *gesture.Click) {
+func (pg *sendPage) walletAccountsHandler(gtx layout.Context, common pageCommon, acct *wallet.Account, wIndex, aIndex int, click *gesture.Click) {
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
-			fmt.Println(wIndex, "  ", aIndex)
 			*pg.selectedAccount = acct
-			// *common.selectedAccount = aIndex
+			*common.selectedAccount = aIndex
 			*common.selectedWallet = wIndex
 			pg.selectedWallet = common.info.Wallets[wIndex]
 			pg.isWalletAccountModalOpen = false
@@ -1150,7 +1148,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 			pg.spendableBalance = pg.remainingBalance
 		}
 		pg.remainingBalance = -1
-		c.Notify("Transaction Sent", true)
+		c.notify("Transaction Sent", true)
 
 		pg.resetFields()
 		pg.isConfirmationModalOpen = false
@@ -1211,7 +1209,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	if pg.exchangeErr != "" {
-		c.Notify(pg.exchangeErr, false)
+		c.notify(pg.exchangeErr, false)
 	}
 
 	if c.subPageBackButton.Button.Clicked() {
@@ -1246,7 +1244,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.calculateValues()
 	}
 
-	for pg.currencySwap.Button.Clicked() {
+	for pg.currencySwap.Clicked() {
 		if pg.LastTradeRate != "" {
 			if pg.leftExchangeValue == "DCR" {
 				pg.leftExchangeValue = "USD"
@@ -1275,7 +1273,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	if pg.calculateErrorText != "" {
 		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
-		c.Notify(pg.calculateErrorText, false)
+		c.notify(pg.calculateErrorText, false)
 	} else {
 		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
@@ -1342,18 +1340,18 @@ func (pg *sendPage) Handle(c pageCommon) {
 	select {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
-		c.Notify(pg.calculateErrorText, false)
+		c.notify(pg.calculateErrorText, false)
 	case err := <-pg.broadcastErrChan:
 		if err.Error() == invalidPassphraseError {
 			pg.passwordEditor.SetError("Wrong password")
 		} else {
-			c.Notify(err.Error(), false)
+			c.notify(err.Error(), false)
 		}
 		pg.isBroadcastingTransaction = false
 	case err := <-pg.exchangeErrChan:
 		if strings.Contains(err.Error(), "host") && strings.Contains(pg.currencyValue, "USD") {
 			errMsg := "Could fetch exchange: no such host"
-			c.Notify(errMsg, false)
+			c.notify(errMsg, false)
 		}
 	default:
 	}

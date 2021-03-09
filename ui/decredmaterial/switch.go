@@ -50,7 +50,7 @@ func (t *Theme) SwitchButtonText(activeTxt, inactivetxt string, activeBtn, inact
 }
 
 func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
-	s.handleClickEvent(gtx)
+	s.handleClickEvent()
 	card := s.t.Card()
 	card.Color = s.t.Color.LightGray
 	m10 := unit.Dp(10)
@@ -108,7 +108,7 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (s *SwitchButtonText) handleClickEvent(gtx layout.Context) {
+func (s *SwitchButtonText) handleClickEvent() {
 	for s.inactiveBtn.Clicked() {
 		s.inactiveCard.Color = s.t.Color.Surface
 		s.activeCard.Color = color.NRGBA{}

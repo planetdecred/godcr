@@ -21,8 +21,8 @@ import (
 
 type pageIcons struct {
 	contentAdd, navigationCheck, actionCheckCircle, actionInfo, navigationArrowBack,
-	navigationArrowForward, actionCheck, chevronRight, actionSwapVert, navigationCancel,
-	imageBrightness1 *widget.Icon
+	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
+	imageBrightness1, contentClear *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
@@ -30,7 +30,7 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon *widget.Image
+	watchOnlyWalletIcon, currencySwapIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -100,10 +100,13 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		navigationArrowForward: mustIcon(widget.NewIcon(icons.NavigationArrowForward)),
 		actionInfo:             mustIcon(widget.NewIcon(icons.ActionInfo)),
 		actionCheck:            mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
-		actionSwapVert:         mustIcon(widget.NewIcon(icons.ActionSwapVert)),
 		navigationCancel:       mustIcon(widget.NewIcon(icons.NavigationCancel)),
 		imageBrightness1:       mustIcon(widget.NewIcon(icons.ImageBrightness1)),
 		chevronRight:           mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
+		contentClear:           mustIcon(widget.NewIcon(icons.ContentClear)),
+		navMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
+		// 	chevronDown:           mustIcon(widget.NewIcon(icons.NavigationExpandMore)),
+		// chevronUp: mustIcon(widget.NewIcon(icons.NavigationExpandLess)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
@@ -138,6 +141,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		alertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert-gray"])},
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
 		watchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
+		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],

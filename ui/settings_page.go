@@ -1,9 +1,10 @@
 package ui
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"image/color"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -83,8 +84,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		updateUserAgent:     new(widget.Clickable),
 		changeStartupPass:   new(widget.Clickable),
 
-		confirm:             win.theme.Button(new(widget.Clickable), "Ok"),
-		cancel:              win.theme.Button(new(widget.Clickable), "Cancel"),
+		confirm: win.theme.Button(new(widget.Clickable), "Ok"),
+		cancel:  win.theme.Button(new(widget.Clickable), "Cancel"),
 
 		currencyModal:     common.theme.Modal(),
 		radioButtonsGroup: new(widget.Enum),
@@ -522,7 +523,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
 	}
 
-	for pg.currencyConversion.Button.Clicked() {
+	for pg.currencyConversion.Clicked() {
 		pg.isCurrencyModalOpen = true
 	}
 
