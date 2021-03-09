@@ -65,6 +65,7 @@ type Account struct {
 	HDPath         string
 	TotalBalance   string
 	CurrentAddress string
+	Balance        Balance
 }
 
 // AddedAccount is sent when the wallet is done adding an account
@@ -208,3 +209,13 @@ type Tickets struct {
 }
 
 type TicketPurchase struct{}
+
+type Balance struct {
+	Total                   int64
+	Spendable               int64
+	ImmatureReward          int64
+	ImmatureStakeGeneration int64
+	LockedByTickets         int64
+	VotingAuthority         int64
+	UnConfirmed             int64
+}
