@@ -612,6 +612,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.spendingPassword.Hint = "Spending password"
 
 		template = m.unlockWalletRestore(th)
+		return
 	case SendInfoTemplate:
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()

@@ -56,7 +56,7 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 	m10 := unit.Dp(10)
 	m5 := unit.Dp(5)
 	return card.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(unit.Dp(1)).Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Stack{}.Layout(gtx,
