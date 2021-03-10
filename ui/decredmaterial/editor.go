@@ -23,23 +23,33 @@ type Editor struct {
 	errorLabel Label
 	LineColor  color.NRGBA
 
-	flexWidth float32
-	//IsVisible if true, displays the paste and clear button.
-	IsVisible bool
 	//IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
 	//Bordered if true makes the adds a border around the editor.
 	Bordered bool
+	//IsPassword if true, displays the show and hide button.
+	IsPassword bool
 
 	requiredErrorText string
 
-	pasteBtnMaterial IconButton
-	clearBtMaterial  IconButton
+	showPasswordButton IconButton
+	hidePasswordButton IconButton
+
+	showHidePassword *widget.Clickable
 
 	m2 unit.Value
 	m5 unit.Value
+}
+
+func (t *Theme) EditorPassword(editor *widget.Editor, hint string, isPassword bool) Editor {
+	if isPassword {
+		editor.Mask = '*'
+	}
+	edit := t.Editor(editor, hint)
+	edit.IsPassword = isPassword
+	return edit
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -53,13 +63,11 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	m.HintColor = t.Color.Hint
 
 	var m0 = unit.Dp(0)
-	var m25 = unit.Dp(25)
 
-	return Editor{
+	edit := Editor{
 		t:                 t,
 		EditorStyle:       m,
 		TitleLabel:        t.Body2(""),
-		flexWidth:         0,
 		IsTitleLabel:      true,
 		Bordered:          true,
 		LineColor:         t.Color.Hint,
@@ -69,35 +77,33 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m2: unit.Dp(2),
 		m5: unit.Dp(5),
 
-		pasteBtnMaterial: IconButton{
+		showHidePassword: new(widget.Clickable),
+		showPasswordButton: IconButton{
 			material.IconButtonStyle{
-				Icon:       mustIcon(widget.NewIcon(icons.ContentContentPaste)),
-				Size:       m25,
+				Icon:       mustIcon(widget.NewIcon(icons.ActionVisibility)),
+				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
-				Color:      t.Color.Text,
+				Color:      t.Color.Gray,
 				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
 			},
 		},
-
-		clearBtMaterial: IconButton{
+		hidePasswordButton: IconButton{
 			material.IconButtonStyle{
-				Icon:       mustIcon(widget.NewIcon(icons.ContentClear)),
-				Size:       m25,
+				Icon:       mustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
+				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
-				Color:      t.Color.Text,
+				Color:      t.Color.Gray,
 				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
 			},
 		},
 	}
+	edit.hidePasswordButton.IconButtonStyle.Button = edit.showHidePassword
+	edit.showPasswordButton.IconButtonStyle.Button = edit.showHidePassword
+	return edit
 }
 
 func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	e.handleEvents()
-	if e.IsVisible {
-		e.flexWidth = 20
-	}
 
 	if e.Editor.Len() > 0 {
 		e.TitleLabel.Text = e.Hint
@@ -197,16 +203,18 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if e.IsVisible {
+			if e.IsPassword {
 				inset := layout.Inset{
 					Top:  e.m2,
 					Left: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					if e.Editor.Text() == "" {
-						return e.pasteBtnMaterial.Layout(gtx)
-					}
-					return e.clearBtMaterial.Layout(gtx)
+					return material.Clickable(gtx, e.showHidePassword, func(gtx C) D {
+						if e.Editor.Mask == '*' {
+							return e.showPasswordButton.Layout(gtx)
+						}
+						return e.hidePasswordButton.Layout(gtx)
+					})
 				})
 			}
 			return layout.Dimensions{}
@@ -215,21 +223,12 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 }
 
 func (e Editor) handleEvents() {
-	if e.pasteBtnMaterial.Button.Clicked() {
-		e.Editor.Focus()
-
-		go func() {
-			text := <-e.t.Clipboard
-			e.Editor.SetText(text)
-			//e.Editor.Move(e.Editor.Len())
-		}()
-		go func() {
-			e.t.ReadClipboard <- ReadClipboard{}
-		}()
-	}
-
-	for e.clearBtMaterial.Button.Clicked() {
-		e.Editor.SetText("")
+	if e.showHidePassword.Clicked() {
+		if e.Editor.Mask == '*' {
+			e.Editor.Mask = 0
+		} else if e.Editor.Mask == 0 {
+			e.Editor.Mask = '*'
+		}
 	}
 
 	if e.errorLabel.Text != "" {
