@@ -383,7 +383,10 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 								pg.line.Width = gtx.Constraints.Max.X
 								pg.line.Color = pg.theme.Color.Background
 								pg.line.Width = 150
-								return pg.line.Layout(gtx)
+								m := values.MarginPadding5
+								return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+									return pg.line.Layout(gtx)
+								})
 							}
 							return layout.Dimensions{}
 						}),
