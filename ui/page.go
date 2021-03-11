@@ -694,7 +694,7 @@ type SubPage struct {
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Bottom: values.MarginPadding15, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 				return page.subpageHeader(gtx, sp)
 			})
 		}),
@@ -731,13 +731,15 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return layout.Dimensions{}
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				if sp.infoTemplate != "" {
-					return page.subPageInfoButton.Layout(gtx)
-				} else if sp.extraItem != nil {
-					return decredmaterial.Clickable(gtx, sp.extraItem, sp.extra)
-				}
-				return layout.Dimensions{}
+			return layout.Inset{Right: values.MarginPadding9}.Layout(gtx, func(gtx C) D {
+				return layout.E.Layout(gtx, func(gtx C) D {
+					if sp.infoTemplate != "" {
+						return page.subPageInfoButton.Layout(gtx)
+					} else if sp.extraItem != nil {
+						return decredmaterial.Clickable(gtx, sp.extraItem, sp.extra)
+					}
+					return layout.Dimensions{}
+				})
 			})
 		}),
 	)

@@ -59,7 +59,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 		func(gtx C) D {
 			pg.line.Width = gtx.Constraints.Max.X
 			pg.line.Height = 2
-			m := values.MarginPadding5
+			m := values.MarginPadding10
 			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 				return pg.line.Layout(gtx)
 			})
@@ -82,13 +82,15 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 				common.changePage(PageWallet)
 			},
 			body: func(gtx C) D {
-				return pg.theme.Card().Layout(gtx, func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						if *pg.acctInfo == nil {
-							return layout.Dimensions{}
-						}
-						return pg.acctDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-							return layout.Inset{}.Layout(gtx, widgets[i])
+				return layout.Inset{Left: values.MarginPadding9, Right: values.MarginPadding9, Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+					return pg.theme.Card().Layout(gtx, func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+							if *pg.acctInfo == nil {
+								return layout.Dimensions{}
+							}
+							return pg.acctDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+								return layout.Inset{}.Layout(gtx, widgets[i])
+							})
 						})
 					})
 				})
@@ -168,7 +170,7 @@ func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *page
 func (pg *acctDetailsPage) acctBalLayout(gtx layout.Context, balType string, mainBalance, subBalance string, isFirst bool) layout.Dimensions {
 	mainLabel := pg.theme.Body1(mainBalance)
 	subLabel := pg.theme.Caption(subBalance)
-	marginTop := values.MarginPadding15
+	marginTop := values.MarginPadding16
 	marginLeft := values.MarginPadding35
 	if isFirst {
 		mainLabel = pg.theme.H4(mainBalance)
@@ -202,35 +204,11 @@ func (pg *acctDetailsPage) acctBalLayout(gtx layout.Context, balType string, mai
 }
 
 func (pg *acctDetailsPage) accountInfoLayout(gtx layout.Context) layout.Dimensions {
-	acctInfoLayout := func(gtx layout.Context, leftText, rightText string) layout.Dimensions {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						leftTextLabel := pg.theme.Body1(leftText)
-						leftTextLabel.Color = pg.theme.Color.Gray
-						return leftTextLabel.Layout(gtx)
-					}),
-				)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, func(gtx C) D {
-					inset := layout.Inset{
-						Right: values.MarginPadding10,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return pg.theme.Body1(rightText).Layout(gtx)
-					})
-				})
-			}),
-		)
-	}
-
 	return pg.pageSections(gtx, func(gtx C) D {
 		m := values.MarginPadding10
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return acctInfoLayout(gtx, "Account Number", fmt.Sprint((*pg.acctInfo).Number))
+				return pg.acctInfoLayout(gtx, "Account Number", fmt.Sprint((*pg.acctInfo).Number))
 			}),
 			layout.Rigid(func(gtx C) D {
 				inset := layout.Inset{
@@ -238,7 +216,7 @@ func (pg *acctDetailsPage) accountInfoLayout(gtx layout.Context) layout.Dimensio
 					Bottom: m,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					return acctInfoLayout(gtx, "HD Path", (*pg.acctInfo).HDPath)
+					return pg.acctInfoLayout(gtx, "HD Path", (*pg.acctInfo).HDPath)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -249,11 +227,32 @@ func (pg *acctDetailsPage) accountInfoLayout(gtx layout.Context) layout.Dimensio
 					ext := (*pg.acctInfo).Keys.External
 					int := (*pg.acctInfo).Keys.Internal
 					imp := (*pg.acctInfo).Keys.Imported
-					return acctInfoLayout(gtx, "Key", ext+" external, "+int+" internal, "+imp+" imported")
+					return pg.acctInfoLayout(gtx, "Key", ext+" external, "+int+" internal, "+imp+" imported")
 				})
 			}),
 		)
 	})
+}
+
+func (pg *acctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightText string) layout.Dimensions {
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					leftTextLabel := pg.theme.Label(values.TextSize14, leftText)
+					leftTextLabel.Color = pg.theme.Color.Gray
+					return leftTextLabel.Layout(gtx)
+				}),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				rightTextLabel := pg.theme.Label(values.TextSize16, rightText)
+				rightTextLabel.Color = pg.theme.Color.DeepBlue
+				return rightTextLabel.Layout(gtx)
+			})
+		}),
+	)
 }
 
 func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
