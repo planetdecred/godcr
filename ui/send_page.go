@@ -749,6 +749,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					icon := common.icons.sendIcon
+					icon.Scale = 0.6
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding10}.Layout(gtx, icon.Layout)
@@ -836,7 +837,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						pg.confirmButton.Text = dcrutil.Amount(pg.totalCostDCR).String()
+						pg.confirmButton.Text = fmt.Sprintf("Send %s", dcrutil.Amount(pg.totalCostDCR).String())
 						return pg.confirmButton.Layout(gtx)
 					}),
 				)
@@ -1165,6 +1166,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 		pg.isBroadcastingTransaction = false
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues()
+		pg.destinationAddressEditor.Editor.SetText("")
 	}
 }
 
@@ -1188,7 +1190,7 @@ func (pg *sendPage) updateDefaultValues() {
 }
 
 func (pg *sendPage) resetFields() {
-	pg.destinationAddressEditor.Editor.SetText("")
+	pg.destinationAddressEditor.SetError("")
 	pg.leftAmountEditor.Editor.SetText("")
 	pg.rightAmountEditor.Editor.SetText("")
 }

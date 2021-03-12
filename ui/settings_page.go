@@ -156,7 +156,7 @@ func (pg *settingsPage) general() layout.Widget {
 						title:     "Currency conversion",
 						clickable: pg.currencyConversion,
 						icon:      pg.chevronRightIcon,
-						label:     pg.theme.Body2("None"),
+						label:     pg.theme.Body2(pg.currencyValue),
 					}
 					return pg.clickableRow(gtx, currencyConversionRow)
 				}),
