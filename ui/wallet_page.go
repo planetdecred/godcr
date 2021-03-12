@@ -354,18 +354,19 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		leftInset = -35
 	} else {
 		menu = pg.optionsMenu
-		leftInset = -170
+		leftInset = -125
 	}
 
 	inset := layout.Inset{
-		Top:  unit.Dp(20),
+		Top:  unit.Dp(30),
 		Left: unit.Dp(leftInset),
 	}
 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
-		border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
-		return border.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Max.X = int(gtx.Metric.PxPerDp) * 150
+		border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
+		dims := border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -373,7 +374,6 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 							return material.Clickable(gtx, menu[i].button, func(gtx C) D {
 								m10 := values.MarginPadding10
 								return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
-									// gtx.Constraints.Min.X = 130
 									return pg.theme.Body1(menu[i].text).Layout(gtx)
 								})
 							})
@@ -391,6 +391,7 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 				})
 			})
 		})
+		return dims
 	})
 	op.Defer(gtx.Ops, m.Stop())
 }
