@@ -36,7 +36,7 @@ func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
 		changePass:   new(widget.Clickable),
 		rescan:       new(widget.Clickable),
 		deleteWallet: new(widget.Clickable),
-
+		
 		chevronRightIcon: common.icons.chevronRight,
 	}
 

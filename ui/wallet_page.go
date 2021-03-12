@@ -354,7 +354,7 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		leftInset = -35
 	} else {
 		menu = pg.optionsMenu
-		leftInset = -120
+		leftInset = -170
 	}
 
 	inset := layout.Inset{
@@ -373,19 +373,16 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 							return material.Clickable(gtx, menu[i].button, func(gtx C) D {
 								m10 := values.MarginPadding10
 								return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
-									gtx.Constraints.Min.X = 130
+									// gtx.Constraints.Min.X = 130
 									return pg.theme.Body1(menu[i].text).Layout(gtx)
 								})
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
 							if i == 1 || i == 2 || i == 3 {
-								pg.line.Width = gtx.Constraints.Max.X
-								pg.line.Color = pg.theme.Color.Background
-								pg.line.Width = 150
 								m := values.MarginPadding5
 								return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-									return pg.line.Layout(gtx)
+									return pg.theme.Separator().Layout(gtx)
 								})
 							}
 							return layout.Dimensions{}
@@ -509,8 +506,8 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageComm
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.watchOnlyWalletLabel.Layout),
 				layout.Rigid(func(gtx C) D {
-					m1 := values.MarginPadding10
-					return layout.Inset{Top: m1, Bottom: m1}.Layout(gtx, pg.theme.Separator().Layout)
+					m := values.MarginPadding10
+					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
