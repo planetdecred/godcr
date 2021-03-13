@@ -16,9 +16,9 @@ type Switch struct {
 }
 
 type SwitchButtonText struct {
-	t     *Theme
-	Color color.NRGBA
-
+	t                        *Theme
+	activeTextColor          color.NRGBA
+	inactiveTextColor        color.NRGBA
 	activeBtn, inactiveBtn   *widget.Clickable
 	activeCard, inactiveCard Card
 	inactivetxt              string
@@ -46,15 +46,17 @@ func (t *Theme) SwitchButtonText(activeTxt, inactivetxt string, activeBtn, inact
 	sw.activeCard.Color = sw.t.Color.Surface
 	sw.inactiveCard.Color = color.NRGBA{}
 
+	sw.activeTextColor = sw.t.Color.DeepBlue
+	sw.inactiveTextColor = sw.t.Color.IconGray
 	return sw
 }
 
 func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 	s.handleClickEvent()
 	card := s.t.Card()
-	card.Color = s.t.Color.LightGray
-	m10 := unit.Dp(10)
-	m5 := unit.Dp(5)
+	card.Color = s.t.Color.BorderColor
+	m8 := unit.Dp(8)
+	m4 := unit.Dp(4)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -63,15 +65,15 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 						layout.Stacked(func(gtx C) D {
 							return s.activeCard.Layout(gtx, func(gtx C) D {
 								return layout.Inset{
-									Left:   m10,
-									Bottom: m5,
-									Right:  m10,
-									Top:    m5,
+									Left:   m8,
+									Bottom: m4,
+									Right:  m8,
+									Top:    m4,
 								}.Layout(gtx, func(gtx C) D {
 									txt := s.t.Body2(s.activeTxt)
-									txt.Color = s.t.Color.Text
+									txt.Color = s.activeTextColor
 									if !s.isActive {
-										txt.Color = s.t.Color.Gray
+										txt.Color = s.inactiveTextColor
 									}
 									return txt.Layout(gtx)
 								})
@@ -85,15 +87,15 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 						layout.Stacked(func(gtx C) D {
 							return s.inactiveCard.Layout(gtx, func(gtx C) D {
 								return layout.Inset{
-									Left:   m10,
-									Bottom: m5,
-									Right:  m10,
-									Top:    m5,
+									Left:   m8,
+									Bottom: m4,
+									Right:  m8,
+									Top:    m4,
 								}.Layout(gtx, func(gtx C) D {
 									txt := s.t.Body2(s.inactivetxt)
-									txt.Color = s.t.Color.Text
+									txt.Color = s.activeTextColor
 									if !s.isInactive {
-										txt.Color = s.t.Color.Gray
+										txt.Color = s.inactiveTextColor
 									}
 									return txt.Layout(gtx)
 								})

@@ -10,6 +10,7 @@ import (
 )
 
 type Collapsible struct {
+	iconColor       color.NRGBA
 	isExpanded      bool
 	button          *widget.Clickable
 	BackgroundColor color.NRGBA
@@ -35,6 +36,7 @@ func (t *Theme) Collapsible() *Collapsible {
 		card:            t.Card(),
 		expandedIcon:    t.chevronUpIcon,
 		collapsedIcon:   t.chevronDownIcon,
+		iconColor:       t.Color.IconGray,
 	}
 	c.card.Color = c.BackgroundColor
 	return c
@@ -71,6 +73,7 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 	if c.isExpanded {
 		icon = c.expandedIcon
 	}
+	icon.Color = c.iconColor
 
 	return c.card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -83,11 +86,7 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 								return header(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Right: unit.Dp(10),
-								}.Layout(gtx, func(C) D {
-									return icon.Layout(gtx, unit.Dp(20))
-								})
+								return icon.Layout(gtx, unit.Dp(20))
 							}),
 						)
 					}),

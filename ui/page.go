@@ -30,7 +30,7 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon, currencySwapIcon *widget.Image
+	watchOnlyWalletIcon, currencySwapIcon, chevronDown, infoIcon, spinnerIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -105,7 +105,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		chevronRight:           mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
 		contentClear:           mustIcon(widget.NewIcon(icons.ContentClear)),
 		navMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
-		// 	chevronDown:           mustIcon(widget.NewIcon(icons.NavigationExpandMore)),
+		// chevronDown:           mustIcon(widget.NewIcon(icons.NavigationExpandMore)),
 		// chevronUp: mustIcon(widget.NewIcon(icons.NavigationExpandLess)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
@@ -117,7 +117,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		sendIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
 		moreIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
 		moreIconInactive:           &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
-		logo:                       &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
+		logo:                       &widget.Image{Src: paint.NewImageOp(decredIcons["decredIcon"])},
 		confirmIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
 		pendingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
 		redirectIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
@@ -134,7 +134,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		settingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
 		securityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
 		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
-		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
+		aboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["about_icon"])},
+		infoIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["info_icon"])},
 		debugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
 		verifyMessageIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
 		locationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
@@ -142,6 +143,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
 		watchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
 		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
+		chevronDown:                &widget.Image{Src: paint.NewImageOp(decredIcons["chevronDown"])},
+		spinnerIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["spinner"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],
@@ -228,10 +231,10 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
 	isNavDrawerMinimized := false
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
-	common.minimizeNavDrawerButton.Color = common.theme.Color.Gray
-	common.maximizeNavDrawerButton.Color = common.theme.Color.Gray
+	common.minimizeNavDrawerButton.Color = common.theme.Color.IconGray
+	common.maximizeNavDrawerButton.Color = common.theme.Color.IconGray
 	zeroInset := layout.UniformInset(values.MarginPadding0)
-	common.subPageBackButton.Color, common.subPageInfoButton.Color = common.theme.Color.Gray, common.theme.Color.Gray
+	common.subPageBackButton.Color, common.subPageInfoButton.Color = common.theme.Color.IconGray, common.theme.Color.IconGray
 	common.subPageBackButton.Size, common.subPageInfoButton.Size = values.MarginPadding25, values.MarginPadding25
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
@@ -427,9 +430,11 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								img := page.icons.logo
-								img.Scale = 1.0
+								img.Scale = 0.6
 								return layout.Inset{
-									Top: values.MarginPadding5,
+									Top:   values.MarginPadding10,
+									Left:  values.MarginPadding25,
+									Right: values.TextSize16,
 								}.Layout(gtx, func(gtx C) D {
 									return img.Layout(gtx)
 								})
@@ -437,8 +442,7 @@ func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
 							layout.Rigid(func(gtx C) D {
 								m := values.MarginPadding10
 								return layout.Inset{
-									Top:  m,
-									Left: m,
+									Top: m,
 								}.Layout(gtx, func(gtx C) D {
 									return page.layoutBalance(gtx, page.info.TotalBalance)
 								})
@@ -574,10 +578,14 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 	mainText, subText := page.breakBalance(amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return page.theme.H5(mainText).Layout(gtx)
+			txt := page.theme.H5(mainText)
+			txt.Color = page.theme.Color.DeepBlue
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.theme.Body1(subText).Layout(gtx)
+			txt := page.theme.Body1(subText)
+			txt.Color = page.theme.Color.DeepBlue
+			return txt.Layout(gtx)
 		}),
 	)
 }
@@ -697,7 +705,7 @@ func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensio
 }
 
 func (page pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return layout.UniformInset(values.MarginPadding15).Layout(gtx, body)
+	return layout.UniformInset(values.TextSize16).Layout(gtx, body)
 }
 
 type SubPage struct {

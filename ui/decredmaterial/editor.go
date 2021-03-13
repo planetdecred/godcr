@@ -69,8 +69,8 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		TitleLabel:        t.Body2(""),
 		IsTitleLabel:      true,
 		Bordered:          true,
-		LineColor:         t.Color.Hint,
-		TitleLabelColor:   t.Color.Gray,
+		LineColor:         t.Color.BorderColor,
+		TitleLabelColor:   t.Color.IconGray,
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 
@@ -157,7 +157,7 @@ func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 
 func (e Editor) editorLayout(gtx C) D {
 	if e.Bordered {
-		border := widget.Border{Color: e.LineColor, CornerRadius: e.m5, Width: unit.Dp(1)}
+		border := widget.Border{Color: e.LineColor, CornerRadius: e.m5, Width: unit.Dp(2)}
 		return border.Layout(gtx, func(gtx C) D {
 			inset := layout.Inset{
 				Top:    e.m5,
@@ -209,10 +209,12 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			if e.IsCustomButton {
 				inset := layout.Inset{
-					Top:  e.m5,
-					Left: e.m5,
+					Top:   e.m5,
+					Left:  e.m5,
+					Right: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
+					e.CustomButton.TextSize = unit.Dp(10)
 					return e.CustomButton.Layout(gtx)
 				})
 			}
@@ -233,13 +235,13 @@ func (e Editor) handleEvents() {
 	if e.errorLabel.Text != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.Hint
+		e.LineColor = e.t.Color.BorderColor
 	}
 
 	if e.requiredErrorText != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.Hint
+		e.LineColor = e.t.Color.BorderColor
 	}
 }
 

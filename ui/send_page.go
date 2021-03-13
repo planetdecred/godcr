@@ -136,9 +136,6 @@ type sendPage struct {
 
 	broadcastErrChan chan error
 	exchangeErrChan  chan error
-
-	toggleCoinCtrl      *widget.Bool
-	inputButtonCoinCtrl decredmaterial.Button
 }
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -191,13 +188,13 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	pg.walletAccounts = make(map[int]walletAccount)
 
-	pg.line.Color = common.theme.Color.Background
-	pg.line.Height = 2
+	pg.line.Color = common.theme.Color.BorderColor
+	pg.line.Height = 1
 
 	pg.balanceAfterSendValue = "- DCR"
 
 	pg.nextButton = common.theme.Button(new(widget.Clickable), "Next")
-	pg.nextButton.Background = pg.theme.Color.Hint
+	pg.nextButton.Background = pg.theme.Color.InactiveGray
 
 	activeEditorHint := fmt.Sprintf("Amount (%s)", pg.leftExchangeValue)
 	pg.leftAmountEditor = common.theme.Editor(new(widget.Editor), activeEditorHint)
@@ -228,18 +225,17 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.passwordEditor.LineColor, pg.passwordEditor.TitleLabelColor = editorColor, editorColor
 
 	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Address")
-	pg.destinationAddressEditor.Editor.SingleLine, pg.destinationAddressEditor.IsVisible = true, true
+	pg.destinationAddressEditor.Editor.SingleLine = true
 	pg.destinationAddressEditor.Editor.SetText("")
 
 	pg.closeConfirmationModalButton.Background = color.NRGBA{}
 	pg.closeConfirmationModalButton.Color = common.theme.Color.Primary
 
-	pg.moreOption = common.theme.IconButton(new(widget.Clickable), common.icons.navMoreIcon)
-	pg.moreOption.Background = color.NRGBA{}
-	pg.moreOption.Color = common.theme.Color.Text
+	pg.moreOption = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon)
+	pg.moreOption.Color = common.theme.Color.IconGray
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.maxButton.Background = common.theme.Color.Black
+	pg.maxButton.Background = common.theme.Color.IconGray
 	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
 	pg.sendToButton = common.theme.Button(new(widget.Clickable), "Send to account")
@@ -251,11 +247,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.clearAllBtn.Background = common.theme.Color.Surface
 	pg.clearAllBtn.Color = common.theme.Color.Text
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
-
-	pg.toggleCoinCtrl = new(widget.Bool)
-	pg.inputButtonCoinCtrl = common.theme.Button(new(widget.Clickable), "Inputs")
-	pg.inputButtonCoinCtrl.Inset = layout.UniformInset(values.MarginPadding5)
-	pg.inputButtonCoinCtrl.TextSize = values.MarginPadding10
 
 	go common.wallet.GetUSDExchangeValues(&pg, pg.exchangeErrChan)
 
@@ -302,7 +293,7 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 					layout.Expanded(func(gtx C) D {
 						return common.UniformPadding(gtx, func(gtx C) D {
 							return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-								return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pageContent[i])
+								return layout.Inset{Bottom: values.TextSize8}.Layout(gtx, pageContent[i])
 							})
 						})
 					}),
@@ -346,7 +337,7 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 }
 
 func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensions {
-	m := values.MarginPadding15
+	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -356,7 +347,7 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 				}),
 				layout.Rigid(func(gtx C) D {
 					txt := pg.theme.H6("Send DCR")
-					txt.Color = pg.theme.Color.Text
+					txt.Color = pg.theme.Color.DeepBlue
 					return layout.Inset{Left: m}.Layout(gtx, func(gtx C) D {
 						return txt.Layout(gtx)
 					})
@@ -382,9 +373,9 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 
 func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, "From", func(gtx C) D {
-		border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
+		border := widget.Border{Color: pg.theme.Color.BorderColor, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
 		return border.Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.TextSize12).Layout(gtx, func(gtx C) D {
 				return decredmaterial.Clickable(gtx, pg.fromAccountBtn, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
@@ -392,8 +383,7 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 							accountIcon.Scale = 0.9
 
 							inset := layout.Inset{
-								Right: values.MarginPadding10,
-								Top:   values.MarginPadding2,
+								Right: values.TextSize8,
 							}
 							return inset.Layout(gtx, func(gtx C) D {
 								return accountIcon.Layout(gtx)
@@ -404,14 +394,22 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 						}),
 						layout.Rigid(func(gtx C) D {
 							inset := layout.Inset{
-								Left: values.MarginPadding5,
+								Left: values.MarginPadding4,
 								Top:  values.MarginPadding2,
 							}
 							return inset.Layout(gtx, func(gtx C) D {
 								return decredmaterial.Card{
-									Color: pg.theme.Color.Background,
+									Color: pg.theme.Color.LightGray,
 								}.Layout(gtx, func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+									m2 := values.MarginPadding2
+									m4 := values.MarginPadding4
+									inset := layout.Inset{
+										Left:   m4,
+										Top:    m2,
+										Bottom: m2,
+										Right:  m4,
+									}
+									return inset.Layout(gtx, func(gtx C) D {
 										text := pg.theme.Caption(pg.selectedWallet.Name)
 										text.Color = pg.theme.Color.Gray
 										return text.Layout(gtx)
@@ -423,17 +421,18 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										return pg.theme.Body1((*pg.selectedAccount).TotalBalance).Layout(gtx)
+										txt := pg.theme.Body1((*pg.selectedAccount).TotalBalance)
+										txt.Color = pg.theme.Color.DeepBlue
+										return txt.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-
 										inset := layout.Inset{
-											Left: values.MarginPadding5,
-											Top:  values.MarginPadding2,
+											Left: values.MarginPadding15,
+											Top:  values.MarginPadding7,
 										}
 										return inset.Layout(gtx, func(gtx C) D {
-											icon := common.icons.expandIcon
-											icon.Scale = 0.75
+											icon := common.icons.chevronDown
+											icon.Scale = 0.5
 											return icon.Layout(gtx)
 										})
 									}),
@@ -452,8 +451,7 @@ func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dime
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
-					Top:    values.MarginPadding10,
-					Bottom: values.MarginPadding10,
+					Bottom: values.TextSize16,
 				}.Layout(gtx, func(gtx C) D {
 					return pg.destinationAddressEditor.Layout(gtx)
 				})
@@ -493,12 +491,12 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				b := pg.theme.Body1(pg.leftTransactionFeeValue)
-				b.Color = pg.theme.Color.Text
+				b.Color = pg.theme.Color.DeepBlue
 				return b.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				b := pg.theme.Body1(pg.rightTransactionFeeValue)
-				b.Color = pg.theme.Color.Hint
+				b.Color = pg.theme.Color.Gray
 				inset := layout.Inset{
 					Left: values.MarginPadding5,
 				}
@@ -514,7 +512,7 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 
 	collapsibleBody := func(gtx C) D {
 		card := pg.theme.Card()
-		card.Color = pg.theme.Color.Background
+		card.Color = pg.theme.Color.LightGray
 		inset := layout.Inset{
 			Top: values.MarginPadding10,
 		}
@@ -543,7 +541,7 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 		})
 	}
 	inset := layout.Inset{
-		Bottom: values.MarginPadding60,
+		Bottom: values.MarginPadding75,
 	}
 	return inset.Layout(gtx, func(gtx C) D {
 		return pg.pageSections(gtx, "Fee", func(gtx C) D {
@@ -582,12 +580,8 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 					})
 				}),
 				layout.Flexed(0.3, func(gtx C) D {
-					inset := layout.Inset{
-						Top: values.MarginPadding2,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return pg.nextButton.Layout(gtx)
-					})
+					pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
+					return pg.nextButton.Layout(gtx)
 				}),
 			)
 		})
@@ -743,16 +737,18 @@ func (pg *sendPage) walletAccountsHandler(gtx layout.Context, common pageCommon,
 func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) layout.Dimensions {
 	w := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.theme.H6("Confim to send").Layout(gtx)
+			txt := pg.theme.H6("Confim to send")
+			txt.Color = pg.theme.Color.DeepBlue
+			return txt.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					icon := common.icons.sendIcon
-					icon.Scale = 0.6
+					icon.Scale = 0.7
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding5, Right: values.MarginPadding10}.Layout(gtx, icon.Layout)
+							return layout.Inset{Top: values.MarginPadding2, Right: values.TextSize16}.Layout(gtx, icon.Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
@@ -777,13 +773,15 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							icon := common.icons.navigationArrowForward
-							icon.Color = pg.theme.Color.Gray
-							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							icon.Color = pg.theme.Color.IconGray
+							return layout.Inset{Right: values.TextSize8}.Layout(gtx, func(gtx C) D {
 								return icon.Layout(gtx, values.MarginPadding15)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.theme.Body2(pg.destinationAddressEditor.Editor.Text()).Layout(gtx)
+							txt := pg.theme.Body2(pg.destinationAddressEditor.Editor.Text())
+							txt.Color = pg.theme.Color.DeepBlue
+							return txt.Layout(gtx)
 						}),
 					)
 				}),
@@ -799,7 +797,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 					return pg.contentRow(gtx, "Sending from", (*pg.selectedAccount).Name, pg.selectedWallet.Name)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Top: values.TextSize8, Bottom: values.TextSize8}.Layout(gtx, func(gtx C) D {
 						return pg.contentRow(gtx, "Fee", pg.leftTransactionFeeValue, "")
 					})
 				}),
@@ -821,7 +819,9 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.theme.Body2("Your DCR will be sent after this step.").Layout(gtx)
+					txt := pg.theme.Body2("Your DCR will be sent after this step.")
+					txt.Color = pg.theme.Color.IconGray
+					return txt.Layout(gtx)
 				}),
 			)
 		},
@@ -837,6 +837,17 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
+						if pg.isBroadcastingTransaction {
+							icon := common.icons.spinnerIcon
+							icon.Scale = 0.5
+							inset := layout.Inset{
+								Top:  values.MarginPadding10,
+								Left: values.MarginPadding45,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return icon.Layout(gtx)
+							})
+						}
 						pg.confirmButton.Text = fmt.Sprintf("Send %s", dcrutil.Amount(pg.totalCostDCR).String())
 						return pg.confirmButton.Layout(gtx)
 					}),
@@ -845,20 +856,20 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 		},
 	}
 
-	return pg.confirmModal.Layout(gtx, w, 1000)
+	return pg.confirmModal.Layout(gtx, w, 900)
 }
 
 func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return pg.theme.Card().Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.TextSize16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txt := pg.theme.Body1(title)
-							txt.Color = pg.theme.Color.Text
+							txt.Color = pg.theme.Color.DeepBlue
 							inset := layout.Inset{
-								Bottom: values.MarginPadding10,
+								Bottom: values.TextSize16,
 							}
 							return inset.Layout(gtx, func(gtx C) D {
 								return txt.Layout(gtx)
@@ -867,7 +878,12 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 						layout.Flexed(1, func(gtx C) D {
 							if title == "To" {
 								return layout.E.Layout(gtx, func(gtx C) D {
-									return pg.accountSwitch.Layout(gtx)
+									inset := layout.Inset{
+										Top: values.MarginPaddingMinus5,
+									}
+									return inset.Layout(gtx, func(gtx C) D {
+										return pg.accountSwitch.Layout(gtx)
+									})
 								})
 							}
 							return layout.Dimensions{}
@@ -891,20 +907,15 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						txt := pg.theme.Body2(rightValue)
-						txt.Color = pg.theme.Color.Text
+						txt := pg.theme.Body1(rightValue)
+						txt.Color = pg.theme.Color.DeepBlue
 						return txt.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if walletName != "" {
 							card := pg.theme.Card()
-							card.Radius = decredmaterial.CornerRadius{
-								NE: 0,
-								NW: 0,
-								SE: 0,
-								SW: 0,
-							}
-							card.Color = pg.theme.Color.Background
+							card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+							card.Color = pg.theme.Color.LightGray
 							inset := layout.Inset{
 								Left: values.MarginPadding5,
 							}
@@ -1155,15 +1166,17 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 	}
 
 	if pg.broadcastResult.TxHash != "" {
+		*c.page = PageOverview
+		c.notify("1 Transaction Sent", true)
+
 		if pg.remainingBalance != -1 {
 			pg.spendableBalance = pg.remainingBalance
 		}
 		pg.remainingBalance = -1
-		c.notify("Transaction Sent", true)
 
-		pg.resetFields()
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
+		pg.resetFields()
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues()
 		pg.destinationAddressEditor.Editor.SetText("")
@@ -1286,8 +1299,8 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
 		c.notify(pg.calculateErrorText, false)
 	} else {
-		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
-		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Hint, pg.theme.Color.Gray
+		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.BorderColor, pg.theme.Color.IconGray
+		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.BorderColor, pg.theme.Color.IconGray
 	}
 
 	if pg.amountErrorText != "" {
@@ -1312,18 +1325,11 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	pg.watchForBroadcastResult(c)
 
-	if pg.isBroadcastingTransaction {
-		col := pg.theme.Color.Gray
-		col.A = 150
-
-		pg.nextButton.Text = "Sending..."
-		pg.nextButton.Background = col
-	}
-
 	for pg.confirmButton.Button.Clicked() {
 		if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
 			return
 		}
+		pg.isBroadcastingTransaction = true
 		pg.wallet.BroadcastTransaction(pg.txAuthor, []byte(pg.passwordEditor.Editor.Text()), pg.broadcastErrChan)
 	}
 
@@ -1337,7 +1343,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	if pg.isConfirmationModalOpen {
 		pg.confirmButton.Background = pg.theme.Color.Primary
 		if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
-			pg.confirmButton.Background = pg.theme.Color.Hint
+			pg.confirmButton.Background = pg.theme.Color.InactiveGray
 		}
 	}
 
@@ -1358,6 +1364,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 			pg.passwordEditor.SetError("Wrong password")
 		} else {
 			c.notify(err.Error(), false)
+			pg.isConfirmationModalOpen = false
 		}
 		pg.isBroadcastingTransaction = false
 	case err := <-pg.exchangeErrChan:

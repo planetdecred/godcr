@@ -49,7 +49,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) 
 					Right: mg,
 				}.Layout(gtx, func(gtx C) D {
 					return m.card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(unit.Dp(20)).Layout(gtx, func(gtx C) D {
 							return m.list.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
 								gtx.Constraints.Min.X = gtx.Constraints.Max.X
 								return layout.UniformInset(unit.Dp(10)).Layout(gtx, widgetFuncs[i])
