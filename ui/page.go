@@ -3,8 +3,12 @@ package ui
 import (
 	"image"
 	"image/color"
+	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
@@ -43,6 +47,7 @@ type navHandler struct {
 }
 
 type pageCommon struct {
+	printer         *message.Printer
 	wallet          *wallet.Wallet
 	info            *wallet.MultiWalletInfo
 	selectedWallet  *int
@@ -195,6 +200,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	}
 
 	common := pageCommon{
+		printer:                 message.NewPrinter(language.English),
 		wallet:                  win.wallet,
 		info:                    win.walletInfo,
 		selectedWallet:          &win.selected,
@@ -318,17 +324,12 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(page.layoutAppBar),
+				layout.Rigid(page.layoutTopBar),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							card := page.theme.Card()
-							card.Radius = decredmaterial.CornerRadius{
-								NE: 0,
-								NW: 0,
-								SE: 0,
-								SW: 0,
-							}
+							card.Radius = decredmaterial.CornerRadius{}
 							return card.Layout(gtx, page.layoutNavDrawer)
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -346,6 +347,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			return layout.Dimensions{}
 		}),
 		layout.Stacked(func(gtx C) D {
+			// global modal. Stack modal on all pages and contents
 		outer:
 			for {
 				select {
@@ -370,6 +372,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			return layout.Dimensions{}
 		}),
 		layout.Stacked(func(gtx C) D {
+			// global toasts. Stack toast on all pages and contents
 			toast := func(n *toast) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Flexed(1, func(gtx C) D {
@@ -419,89 +422,61 @@ func fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
 	return decredmaterial.Fill(gtx, col)
 }
 
-func (page pageCommon) layoutAppBar(gtx layout.Context) layout.Dimensions {
+func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 	card := page.theme.Card()
-	card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+	card.Radius = decredmaterial.CornerRadius{}
 	return card.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								img := page.icons.logo
-								img.Scale = 1.0
-								return layout.Inset{
-									Top:   values.MarginPadding15,
-									Left:  values.MarginPadding25,
-									Right: values.MarginPadding16,
-								}.Layout(gtx, func(gtx C) D {
-									return img.Layout(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								m := values.MarginPadding10
-								return layout.Inset{
-									Top: m,
-								}.Layout(gtx, func(gtx C) D {
-									return page.layoutBalance(gtx, page.info.TotalBalance)
-								})
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.E.Layout(gtx, func(gtx C) D {
-							list := layout.List{Axis: layout.Horizontal}
-							return list.Layout(gtx, len(page.appBarNavItems), func(gtx C, i int) D {
-								background := page.theme.Color.Surface
-								if page.appBarNavItems[i].page == *page.page {
-									background = page.theme.Color.Background
-								}
-								card := page.theme.Card()
-								card.Color = background
-								card.Radius = decredmaterial.CornerRadius{
-									NE: 0,
-									NW: 0,
-									SE: 0,
-									SW: 0,
-								}
-								return card.Layout(gtx, func(gtx C) D {
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Left: values.MarginPadding24, Right: values.MarginPadding24,
+					Top: values.MarginPadding16, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							img := page.icons.logo
+							img.Scale = 1.0
+							return img.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+								return page.layoutBalance(gtx, page.info.TotalBalance)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.E.Layout(gtx, func(gtx C) D {
+								list := layout.List{Axis: layout.Horizontal}
+								return list.Layout(gtx, len(page.appBarNavItems), func(gtx C, i int) D {
 									return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
-										return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													page.appBarNavItems[i].image.Scale = 0.05
+										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												return layout.Center.Layout(gtx, func(gtx C) D {
+													img := page.appBarNavItems[i].image
+													img.Scale = 1.0
+													return page.appBarNavItems[i].image.Layout(gtx)
+												})
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{
+													Left: values.MarginPadding0,
+												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
-														img := page.appBarNavItems[i].image
-														img.Scale = 1.0
-														return page.appBarNavItems[i].image.Layout(gtx)
+														return page.theme.Body1(page.appBarNavItems[i].page).Layout(gtx)
 													})
-												}),
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{
-														Left: values.MarginPadding10,
-													}.Layout(gtx, func(gtx C) D {
-														return layout.Center.Layout(gtx, func(gtx C) D {
-															return page.theme.Body1(page.appBarNavItems[i].page).Layout(gtx)
-														})
-													})
-												}),
-											)
-										})
+												})
+											}),
+										)
 									})
 								})
 							})
-						})
-					}),
-				)
+						}),
+					)
+				})
 			}),
-			layout.Rigid(func(gtx C) D {
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				l := page.theme.Line()
-				l.Color = page.theme.Color.Background
-				l.Width = gtx.Constraints.Min.X
-				l.Height = 2
+				l.Color = page.theme.Color.Gray1
+				l.Width = gtx.Constraints.Max.X
 				return l.Layout(gtx)
 			}),
 		)
@@ -515,7 +490,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
 				background := page.theme.Color.Surface
 				if page.drawerNavItems[i].page == *page.page {
-					background = page.theme.Color.Background
+					background = page.theme.Color.LightGray
 				}
 				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
@@ -579,14 +554,11 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 	mainText, subText := page.breakBalance(amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			txt := page.theme.H5(mainText)
-			txt.Color = page.theme.Color.DeepBlue
-			return txt.Layout(gtx)
+			return page.theme.Label(unit.Sp(20), mainText).Layout(gtx)
+			//return page.theme.H5(mainText).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			txt := page.theme.Body1(subText)
-			txt.Color = page.theme.Color.DeepBlue
-			return txt.Layout(gtx)
+			return page.theme.Label(unit.Sp(14), subText).Layout(gtx)
 		}),
 	)
 }
@@ -597,7 +569,12 @@ func (page pageCommon) breakBalance(balance string) (b1, b2 string) {
 	if len(balanceParts) == 1 {
 		return balanceParts[0], ""
 	}
+
 	b1 = balanceParts[0]
+	if bal, err := strconv.Atoi(b1); err == nil {
+		b1 = page.printer.Sprint(bal)
+	}
+
 	b2 = balanceParts[1]
 	b1 = b1 + "." + b2[:2]
 	b2 = b2[2:]
