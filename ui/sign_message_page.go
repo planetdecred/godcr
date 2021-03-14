@@ -67,7 +67,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	}
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -170,7 +170,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
-						border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
 						return border.Layout(gtx, func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,

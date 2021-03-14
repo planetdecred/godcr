@@ -145,7 +145,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		hideSyncDetails:      "Hide details",
 	}
 
-	pg.line.Color = c.theme.Color.Background
+	pg.line.Color = c.theme.Color.LightGray
 	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), pg.text.viewAllTx, c.icons.navigationArrowForward)
 	pg.toTransactions.Color = c.theme.Color.Primary
 	pg.toTransactions.BackgroundColor = c.theme.Color.Surface
@@ -706,7 +706,7 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		card := pg.theme.Card()
-		card.Color = pg.theme.Color.Background
+		card.Color = pg.theme.Color.LightGray
 		return card.Layout(gtx, func(gtx C) D {
 			return card.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

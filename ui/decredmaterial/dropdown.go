@@ -36,7 +36,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 	c := &DropDown{
 		isOpen:         false,
 		items:          make([]DropDownItem, len(items)+1),
-		color:          t.Color.Background,
+		color:          t.Color.Gray1,
 		background:     t.Color.Surface,
 		chevronIcon:    t.chevronDownIcon,
 		navigationIcon: t.NavigationCheckIcon,

@@ -45,7 +45,7 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 	pg.infoBtn.Color = common.theme.Color.Gray
 	pg.infoBtn.Background = common.theme.Color.Surface
 	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 	pg.line.Height = 1
 
 	return func(gtx C) D {
@@ -210,7 +210,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 				layout.Rigid(pg.gutter),
 				layout.Rigid(func(gtx C) D {
 					content := c.theme.Card()
-					content.Color = c.theme.Color.Background
+					content.Color = c.theme.Color.LightGray
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {

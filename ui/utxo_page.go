@@ -77,7 +77,7 @@ func (pg *utxoPage) Handler(common pageCommon) {
 			}
 			icoBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy)))
 			icoBtn.Inset, icoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
-			icoBtn.Background = common.theme.Color.Background
+			icoBtn.Background = common.theme.Color.LightGray
 			pg.copyButtons[i] = icoBtn
 		}
 		pg.calculateAmountAndFeeUTXO()

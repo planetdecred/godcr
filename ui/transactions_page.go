@@ -3,7 +3,6 @@ package ui
 import (
 	"image"
 	"sort"
-	"strconv"
 	"time"
 
 	"gioui.org/f32"
@@ -31,16 +30,15 @@ type transactionWdg struct {
 }
 
 type transactionsPage struct {
-	container                                   layout.Flex
-	txsList                                     layout.List
-	walletTransactions                          **wallet.Transactions
-	walletTransaction                           **wallet.Transaction
-	filterSorter                                string
-	filterSortW, filterDirectionW               *widget.Enum
-	filterDirection, filterSort                 []decredmaterial.RadioButton
-	defaultFilterSorter, defaultFilterDirection string
-	toTxnDetails                                []*gesture.Click
-	line                                        *decredmaterial.Line
+	container                     layout.Flex
+	txsList                       layout.List
+	walletTransactions            **wallet.Transactions
+	walletTransaction             **wallet.Transaction
+	filterSorter                  int
+	filterSortW, filterDirectionW *widget.Enum
+	filterDirection, filterSort   []decredmaterial.RadioButton
+	toTxnDetails                  []*gesture.Click
+	line                          *decredmaterial.Line
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
@@ -49,17 +47,15 @@ type transactionsPage struct {
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 	pg := transactionsPage{
-		container:              layout.Flex{Axis: layout.Vertical},
-		txsList:                layout.List{Axis: layout.Vertical},
-		walletTransactions:     &win.walletTransactions,
-		walletTransaction:      &win.walletTransaction,
-		filterDirectionW:       new(widget.Enum),
-		filterSortW:            new(widget.Enum),
-		defaultFilterSorter:    "0",
-		defaultFilterDirection: "0",
-		line:                   common.theme.Line(),
+		container:          layout.Flex{Axis: layout.Vertical},
+		txsList:            layout.List{Axis: layout.Vertical},
+		walletTransactions: &win.walletTransactions,
+		walletTransaction:  &win.walletTransaction,
+		filterDirectionW:   new(widget.Enum),
+		filterSortW:        new(widget.Enum),
+		line:               common.theme.Line(),
 	}
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
@@ -278,7 +274,7 @@ func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, t
 }
 
 func (pg *transactionsPage) Handle(common pageCommon) {
-	sortSelection := strconv.Itoa(pg.orderDropDown.SelectedIndex())
+	sortSelection := pg.orderDropDown.SelectedIndex()
 
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
@@ -287,7 +283,7 @@ func (pg *transactionsPage) Handle(common pageCommon) {
 }
 
 func (pg *transactionsPage) sortTransactions(common *pageCommon) {
-	newestFirst := pg.filterSorter == pg.defaultFilterSorter
+	newestFirst := pg.filterSorter == 0
 
 	for _, wal := range common.info.Wallets {
 		transactions := (*pg.walletTransactions).Txs[wal.ID]

@@ -71,7 +71,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 
 	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.minInfoBtn.Background = color.NRGBA{}
@@ -320,7 +320,7 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 
 								SE: 0,
 								SW: 0,
 							}
-							card.Color = pg.theme.Color.Background
+							card.Color = pg.theme.Color.LightGray
 							return card.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 									txt := pg.theme.Body2(strings.Title(strings.ToLower(t2)))
@@ -406,7 +406,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName, walName, hashAcct string, i int) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 		card := pg.theme.Card()
-		card.Color = pg.theme.Color.Background
+		card.Color = pg.theme.Color.LightGray
 		return card.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -433,7 +433,7 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 									SE: 0,
 									SW: 0,
 								}
-								card.Color = pg.theme.Color.Background
+								card.Color = pg.theme.Color.LightGray
 								return card.Layout(gtx, func(gtx C) D {
 									return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 										txt := pg.theme.Body2(walName)
@@ -501,8 +501,6 @@ func (pg *transactionDetailsPage) infoModalLayout(gtx layout.Context, common *pa
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.NW.Layout(gtx, func(gtx C) D {
-				t := pg.theme.Body1("Tap on")
-				t.Color = common.theme.Color.Text
 				return pg.theme.H6("How to copy").Layout(gtx)
 			})
 		}),

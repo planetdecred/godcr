@@ -41,7 +41,7 @@ func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
 		deleteWallet: common.theme.PlainIconButton(new(widget.Clickable), icon),
 	}
 	pg.line.Height = 2
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 
 	color := common.theme.Color.LightGray
 	zeroInset := layout.UniformInset(values.MarginPadding0)

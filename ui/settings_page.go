@@ -91,7 +91,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		radioButtonsGroup: new(widget.Enum),
 	}
 	pg.line.Height = 2
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 
 	color := common.theme.Color.LightGray
 

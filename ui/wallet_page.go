@@ -355,7 +355,7 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
-		border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
+		border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
@@ -405,7 +405,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 					}),
 					layout.Rigid(func(gtx C) D {
 						pg.line.Width = gtx.Constraints.Max.X
-						pg.line.Color = common.theme.Color.Background
+						pg.line.Color = common.theme.Color.LightGray
 						m := values.MarginPadding10
 						return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 							return pg.line.Layout(gtx)
@@ -619,7 +619,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			pg.line.Width = gtx.Constraints.Max.X
-			pg.line.Color = common.theme.Color.Background
+			pg.line.Color = common.theme.Color.LightGray
 			m := values.MarginPadding10
 			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 				return pg.line.Layout(gtx)
@@ -728,7 +728,7 @@ func (pg *walletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 	}
 
 	return inset.Layout(gtx, func(gtx C) D {
-		border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
+		border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {

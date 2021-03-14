@@ -41,7 +41,7 @@ func (win *Window) AcctDetailsPage(common pageCommon) layout.Widget {
 		errorReceiver: make(chan error),
 	}
 
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 

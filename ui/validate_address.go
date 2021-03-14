@@ -50,7 +50,7 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
 
 	pg.line.Height = 2
-	pg.line.Color = common.theme.Color.Background
+	pg.line.Color = common.theme.Color.LightGray
 
 	pg.stateValidate = none
 
