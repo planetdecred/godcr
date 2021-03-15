@@ -250,6 +250,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
 	win.pages[PagePoliteia] = win.PoliteiaPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
+	win.pages[PageLog] = win.LogPage(common)
 	win.pages[PageAbout] = win.AboutPage(common)
 	win.pages[PageHelp] = win.HelpPage(common)
 	win.pages[PageUTXO] = win.UTXOPage(common)
@@ -685,7 +686,9 @@ type SubPage struct {
 	back         func()
 	body         layout.Widget
 	infoTemplate string
-	extras       layout.Widget
+	extraItem    *widget.Clickable
+	extra        layout.Widget
+	handleExtra  func()
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -728,12 +731,11 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return layout.Dimensions{}
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			if sp.extras != nil {
-				return layout.E.Layout(gtx, sp.extras)
-			}
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
 					return page.subPageInfoButton.Layout(gtx)
+				} else if sp.extraItem != nil {
+					return decredmaterial.Clickable(gtx, sp.extraItem, sp.extra)
 				}
 				return layout.Dimensions{}
 			})
@@ -766,6 +768,10 @@ func (page pageCommon) subpageEventHandler(sp SubPage) {
 
 	if page.subPageBackButton.Button.Clicked() {
 		sp.back()
+	}
+
+	if sp.extraItem != nil && sp.extraItem.Clicked() {
+		sp.handleExtra()
 	}
 }
 
