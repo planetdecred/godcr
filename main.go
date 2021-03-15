@@ -118,7 +118,7 @@ func main() {
 		collection = append(collection, text.FontFace{Font: text.Font{}, Face: fnt})
 	}
 
-	win, err := ui.CreateWindow(wal, decredIcons, collection)
+	win, err := ui.CreateWindow(wal, decredIcons, collection, internalLog)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return

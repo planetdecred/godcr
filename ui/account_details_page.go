@@ -93,14 +93,13 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 					})
 				})
 			},
-			extras: func(gtx C) D {
+			extraItem: pg.editAccount,
+			extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					edit := common.icons.editIcon
 					edit.Scale = 1
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return decredmaterial.Clickable(gtx, pg.editAccount, func(gtx C) D {
-							return edit.Layout(gtx)
-						})
+						return edit.Layout(gtx)
 					})
 				})
 			},
