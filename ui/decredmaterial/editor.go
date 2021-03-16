@@ -23,23 +23,28 @@ type Editor struct {
 	errorLabel Label
 	LineColor  color.NRGBA
 
-	flexWidth float32
-	//IsVisible if true, displays the paste and clear button.
-	IsVisible bool
 	//IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
 	//Bordered if true makes the adds a border around the editor.
 	Bordered bool
+	//IsPassword if true, displays the show and hide button.
+	isPassword bool
 
 	requiredErrorText string
 
-	pasteBtnMaterial IconButton
-	clearBtMaterial  IconButton
+	showHidePassword IconButton
 
 	m2 unit.Value
 	m5 unit.Value
+}
+
+func (t *Theme) EditorPassword(editor *widget.Editor, hint string) Editor {
+	editor.Mask = '*'
+	e := t.Editor(editor, hint)
+	e.isPassword = true
+	return e
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -53,13 +58,11 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	m.HintColor = t.Color.Hint
 
 	var m0 = unit.Dp(0)
-	var m25 = unit.Dp(25)
 
 	return Editor{
 		t:                 t,
 		EditorStyle:       m,
 		TitleLabel:        t.Body2(""),
-		flexWidth:         0,
 		IsTitleLabel:      true,
 		Bordered:          true,
 		LineColor:         t.Color.Hint,
@@ -69,23 +72,12 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m2: unit.Dp(2),
 		m5: unit.Dp(5),
 
-		pasteBtnMaterial: IconButton{
+		showHidePassword: IconButton{
 			material.IconButtonStyle{
-				Icon:       mustIcon(widget.NewIcon(icons.ContentContentPaste)),
-				Size:       m25,
+				Icon:       mustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
+				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
-				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
-			},
-		},
-
-		clearBtMaterial: IconButton{
-			material.IconButtonStyle{
-				Icon:       mustIcon(widget.NewIcon(icons.ContentClear)),
-				Size:       m25,
-				Background: color.NRGBA{},
-				Color:      t.Color.Text,
+				Color:      t.Color.Gray,
 				Inset:      layout.UniformInset(m0),
 				Button:     new(widget.Clickable),
 			},
@@ -95,9 +87,6 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 
 func (e Editor) Layout(gtx layout.Context) layout.Dimensions {
 	e.handleEvents()
-	if e.IsVisible {
-		e.flexWidth = 20
-	}
 
 	if e.Editor.Len() > 0 {
 		e.TitleLabel.Text = e.Hint
@@ -197,16 +186,18 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if e.IsVisible {
+			if e.isPassword {
 				inset := layout.Inset{
 					Top:  e.m2,
 					Left: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					if e.Editor.Text() == "" {
-						return e.pasteBtnMaterial.Layout(gtx)
+					icon := mustIcon(widget.NewIcon(icons.ActionVisibilityOff))
+					if e.Editor.Mask == '*' {
+						icon = mustIcon(widget.NewIcon(icons.ActionVisibility))
 					}
-					return e.clearBtMaterial.Layout(gtx)
+					e.showHidePassword.Icon = icon
+					return e.showHidePassword.Layout(gtx)
 				})
 			}
 			return layout.Dimensions{}
@@ -215,21 +206,12 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 }
 
 func (e Editor) handleEvents() {
-	if e.pasteBtnMaterial.Button.Clicked() {
-		e.Editor.Focus()
-
-		go func() {
-			text := <-e.t.Clipboard
-			e.Editor.SetText(text)
-			//e.Editor.Move(e.Editor.Len())
-		}()
-		go func() {
-			e.t.ReadClipboard <- ReadClipboard{}
-		}()
-	}
-
-	for e.clearBtMaterial.Button.Clicked() {
-		e.Editor.SetText("")
+	if e.showHidePassword.Button.Clicked() {
+		if e.Editor.Mask == '*' {
+			e.Editor.Mask = 0
+		} else if e.Editor.Mask == 0 {
+			e.Editor.Mask = '*'
+		}
 	}
 
 	if e.errorLabel.Text != "" {

@@ -64,9 +64,9 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
 		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
-		oldSpendingPassword:   win.theme.Editor(new(widget.Editor), "Old spending password"),
-		spendingPassword:      win.theme.Editor(new(widget.Editor), "Spending password"),
-		matchSpendingPassword: win.theme.Editor(new(widget.Editor), "Confirm spending password"),
+		oldSpendingPassword:   win.theme.EditorPassword(new(widget.Editor), "Old spending password"),
+		spendingPassword:      win.theme.EditorPassword(new(widget.Editor), "Spending password"),
+		matchSpendingPassword: win.theme.EditorPassword(new(widget.Editor), "Confirm spending password"),
 		extendedPublicKey:     win.theme.Editor(new(widget.Editor), "Extended public key"),
 		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
 		passwordStrength:      win.theme.ProgressBar(0),
@@ -90,14 +90,14 @@ func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
 			return m.walletName.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
 			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
+			m.matchSpendingPassword.Editor.SingleLine = true
 			return m.matchSpendingPassword.Layout(gtx)
 		},
 	}
@@ -148,7 +148,7 @@ func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C)
 			return m.walletName.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 	}
@@ -167,7 +167,7 @@ func (m *ModalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
 func (m *ModalTemplate) Password() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 	}
@@ -176,18 +176,18 @@ func (m *ModalTemplate) Password() []func(gtx C) D {
 func (m *ModalTemplate) changePassword() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			m.oldSpendingPassword.Editor.Mask, m.oldSpendingPassword.Editor.SingleLine = '*', true
+			m.oldSpendingPassword.Editor.SingleLine = true
 			return m.oldSpendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
 			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
+			m.matchSpendingPassword.Editor.SingleLine = true
 			return m.matchSpendingPassword.Layout(gtx)
 		},
 	}
@@ -196,14 +196,14 @@ func (m *ModalTemplate) changePassword() []func(gtx C) D {
 func (m *ModalTemplate) setStartupPassword() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
 			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.matchSpendingPassword.Editor.Mask, m.matchSpendingPassword.Editor.SingleLine = '*', true
+			m.matchSpendingPassword.Editor.SingleLine = true
 			return m.matchSpendingPassword.Layout(gtx)
 		},
 	}
@@ -346,7 +346,7 @@ func (m *ModalTemplate) unlockWalletRestore(th *decredmaterial.Theme) []func(gtx
 			})
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.Mask, m.spendingPassword.Editor.SingleLine = '*', true
+			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 	}
@@ -408,6 +408,7 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 }
 
 func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
+	m.walletName.Editor.SingleLine = true
 	switch load.template {
 	case CreateWalletTemplate:
 		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {

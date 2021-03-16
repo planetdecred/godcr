@@ -72,6 +72,7 @@ type Theme struct {
 	NavMoreIcon           *widget.Icon
 	expandIcon            *widget.Image
 	collapseIcon          *widget.Image
+	decredIcons           map[string]image.Image
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
@@ -107,6 +108,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
 	t.NavMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
 
+	t.decredIcons = decredIcons
 	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
 	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
 
