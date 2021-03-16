@@ -152,13 +152,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Destination Address")
 	pg.destinationAddressEditor.IsRequired = true
-	pg.destinationAddressEditor.IsVisible = true
 	pg.destinationAddressEditor.IsTitleLabel = false
 	pg.destinationAddressEditor.Editor.SetText("")
 	pg.destinationAddressEditor.Editor.SingleLine = true
 
 	pg.customChangeAddressEditor = common.theme.Editor(new(widget.Editor), "Custom Change Address")
-	pg.customChangeAddressEditor.IsVisible = true
 	pg.customChangeAddressEditor.IsTitleLabel = false
 	pg.customChangeAddressEditor.Editor.SetText("")
 	pg.customChangeAddressEditor.Editor.SingleLine = true

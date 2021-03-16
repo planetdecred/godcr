@@ -32,10 +32,8 @@ type signMessagePage struct {
 
 func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
-	addressEditor.IsVisible = true
 	addressEditor.Editor.SingleLine = true
 	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
-	messageEditor.IsVisible = true
 	messageEditor.Editor.SingleLine = true
 	clearButton := common.theme.Button(new(widget.Clickable), "Clear all")
 	clearButton.Background = color.NRGBA{}

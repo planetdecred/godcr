@@ -135,11 +135,9 @@ func (t *TestStruct) initWidgets() {
 
 	// Editor test
 	t.customEditorOutput.test1 = theme.Editor(new(widget.Editor), "Enter Hint Text1")
-	t.customEditorOutput.test1.IsVisible = true
 	t.customEditorOutput.test1.IsRequired = true
 
 	t.customEditorOutput.test2 = theme.Editor(new(widget.Editor), "Enter Hint Text2")
-	t.customEditorOutput.test2.IsVisible = true
 	t.customEditorOutput.test1.Editor.SingleLine = true
 
 	t.customEditorOutput.test3 = theme.Editor(new(widget.Editor), "Enter Hint Text3")

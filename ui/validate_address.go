@@ -41,7 +41,6 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 
 	pg.addressEditor = common.theme.Editor(new(widget.Editor), "Address")
 	pg.addressEditor.IsRequired = false
-	pg.addressEditor.IsVisible = true
 	pg.addressEditor.Editor.SetText("")
 	pg.addressEditor.Editor.SingleLine = true
 

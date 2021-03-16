@@ -143,7 +143,6 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	}
 
 	pg.seedListLeft, pg.seedListRight = &layout.List{Axis: layout.Vertical}, &layout.List{Axis: layout.Vertical}
-	pg.spendingPassword.Editor.Mask, pg.matchSpendingPassword.Editor.Mask = '*', '*'
 	pg.spendingPassword.Editor.SingleLine, pg.matchSpendingPassword.Editor.SingleLine = true, true
 	pg.walletName.Editor.SingleLine = true
 
