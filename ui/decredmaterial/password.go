@@ -31,7 +31,7 @@ func (t *Theme) Password() *Password {
 		theme:          t,
 		titleLabel:     t.H6("Enter password to confirm"),
 		titleSeparator: t.Line(),
-		passwordEditor: t.EditorPassword(editorWidget, "Password", true),
+		passwordEditor: t.EditorPassword(editorWidget, "Password"),
 		cancelButton:   cancelButton,
 		confirmButton:  confirmButton,
 		modal:          t.Modal(),
