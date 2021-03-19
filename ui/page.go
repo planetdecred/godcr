@@ -366,6 +366,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageProposalDetails] = win.ProposalDetailsPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
 	win.pages[PageLog] = win.LogPage(common)
+	win.pages[PageStat] = win.StatPage(common)
 	win.pages[PageAbout] = win.AboutPage(common)
 	win.pages[PageHelp] = win.HelpPage(common)
 	win.pages[PageUTXO] = win.UTXOPage(common)
