@@ -724,6 +724,10 @@ func (wal *Wallet) SyncProposals() {
 	go wal.multi.Politeia.Sync()
 }
 
+func (wal *Wallet) IsSyncingPropoals() bool {
+	return wal.multi.Politeia.IsSyncing()
+}
+
 func (wal *Wallet) AddProposalNotificationListener(listener dcrlibwallet.ProposalNotificationListener) error {
 	return wal.multi.Politeia.AddNotificationListener(listener, "godcr")
 }
