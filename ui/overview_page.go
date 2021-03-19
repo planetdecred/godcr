@@ -394,7 +394,7 @@ func (pg *overviewPage) syncDormantContent(gtx layout.Context) layout.Dimensions
 	return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Bottom: values.TextSize12}.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
 					return pg.blockInfoRow(gtx)
 				})
 			}),

@@ -56,7 +56,7 @@ type Theme struct {
 		Black        color.NRGBA
 		DeepBlue     color.NRGBA
 		LightGray    color.NRGBA
-		IconGray     color.NRGBA
+		IconColor    color.NRGBA
 		BorderColor  color.NRGBA
 		InactiveGray color.NRGBA
 	}
@@ -101,7 +101,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Black = rgb(0x000000)
 	t.Color.LightGray = rgb(0xF3F5F6)
 	t.Color.DeepBlue = rgb(0x091440)
-	t.Color.IconGray = rgb(0x3D5873)
+	t.Color.IconColor = rgb(0x3D5873)
 	t.Color.BorderColor = rgb(0xE6EAED)
 	t.Color.InactiveGray = rgb(0xC4CBD2)
 	t.TextSize = unit.Sp(16)

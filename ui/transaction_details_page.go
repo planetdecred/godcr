@@ -76,7 +76,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.minInfoBtn.Background = color.NRGBA{}
 	pg.minInfoBtn.Color = common.theme.Color.Primary
-	pg.minInfoBtn.TextSize = values.MarginPadding20
+	pg.minInfoBtn.TextSize = values.TextSize20
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
 	pg.infoBtn.Color = common.theme.Color.Gray
 	pg.infoBtn.Background = common.theme.Color.Surface
