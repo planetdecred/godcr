@@ -669,7 +669,8 @@ func (pg *overviewPage) updateToTransactionDetailsButtons() {
 	}
 }
 
-func (pg *overviewPage) checkLockWallet(c pageCommon) {
+// getLockWallet get all the lock wallets
+func getLockWallet(c pageCommon) []*dcrlibwallet.Wallet {
 	allWallets := c.wallet.AllWallets()
 
 	var walletsLocked []*dcrlibwallet.Wallet
@@ -678,6 +679,13 @@ func (pg *overviewPage) checkLockWallet(c pageCommon) {
 			walletsLocked = append(walletsLocked, wl)
 		}
 	}
+
+	return walletsLocked
+}
+
+func (pg *overviewPage) checkLockWallet(c pageCommon) {
+
+	walletsLocked := getLockWallet(c)
 
 	if len(walletsLocked) > 0 {
 		go func() {
@@ -710,9 +718,13 @@ func (pg *overviewPage) Handler(gtx layout.Context, c pageCommon) {
 	}
 
 	if pg.autoSyncWallet && !pg.walletInfo.Synced {
-		c.wallet.StartSync()
-		pg.sync.Text = pg.text.cancel
-		pg.autoSyncWallet = false
+
+		walletsLocked := getLockWallet(c)
+		if len(walletsLocked) == 0 {
+			c.wallet.StartSync()
+			pg.sync.Text = pg.text.cancel
+			pg.autoSyncWallet = false
+		}
 	}
 
 	if pg.sync.Button.Clicked() {
