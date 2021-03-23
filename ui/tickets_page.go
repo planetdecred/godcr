@@ -64,58 +64,60 @@ func (win *Window) TicketPage(common pageCommon) layout.Widget {
 }
 
 func (pg *ticketPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions {
-	return c.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		pg.setWallets(c)
-		pg.setAccounts(c)
+	return c.Layout(gtx, func(gtx C) D {
+		return c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
+			pg.setWallets(c)
+			pg.setAccounts(c)
 
-		sections := []func(gtx C) D{
-			func(ctx layout.Context) layout.Dimensions {
-				return pg.LayoutTicketPurchase(gtx, c)
-			},
-			func(ctx layout.Context) layout.Dimensions {
-				return pg.ticketRowHeader(gtx, c)
-			},
-			func(ctx layout.Context) layout.Dimensions {
-				return pg.LayoutTicketList(gtx, c)
-			},
-			func(ctx layout.Context) layout.Dimensions {
-				walletID := c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID
-				if *pg.tickets != nil {
-					if len((*pg.tickets).Unconfirmed[walletID]) > 0 {
-						return pg.LayoutUnconfirmedPurchased(gtx, c)
+			sections := []func(gtx C) D{
+				func(ctx layout.Context) layout.Dimensions {
+					return pg.LayoutTicketPurchase(gtx, c)
+				},
+				func(ctx layout.Context) layout.Dimensions {
+					return pg.ticketRowHeader(gtx, c)
+				},
+				func(ctx layout.Context) layout.Dimensions {
+					return pg.LayoutTicketList(gtx, c)
+				},
+				func(ctx layout.Context) layout.Dimensions {
+					walletID := c.info.Wallets[pg.walletsDropdown.SelectedIndex()].ID
+					if *pg.tickets != nil {
+						if len((*pg.tickets).Unconfirmed[walletID]) > 0 {
+							return pg.LayoutUnconfirmedPurchased(gtx, c)
+						}
 					}
-				}
-				return layout.Dimensions{}
-			},
-		}
+					return layout.Dimensions{}
+				},
+			}
 
-		return layout.Stack{Alignment: layout.N}.Layout(gtx,
-			layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return pg.th.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
-							return layout.Inset{}.Layout(gtx, sections[i])
+			return layout.Stack{Alignment: layout.N}.Layout(gtx,
+				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+					return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return pg.th.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
+								return layout.Inset{}.Layout(gtx, sections[i])
+							})
 						})
 					})
-				})
-			}),
-			layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-									return pg.walletsDropdown.Layout(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								return pg.accountsDropdown.Layout(gtx)
-							}),
-						)
-					}),
-				)
-			}),
-		)
+				}),
+				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+									return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+										return pg.walletsDropdown.Layout(gtx)
+									})
+								}),
+								layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+									return pg.accountsDropdown.Layout(gtx)
+								}),
+							)
+						}),
+					)
+				}),
+			)
+		})
 	})
 }
 

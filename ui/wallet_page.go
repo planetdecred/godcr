@@ -256,8 +256,10 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common pageCommon) {
 func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	if common.info.LoadedWallets == 0 {
 		return common.Layout(gtx, func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return common.theme.H3("No wallets loaded").Layout(gtx)
+			return common.UniformPadding(gtx, func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return common.theme.H3("No wallets loaded").Layout(gtx)
+				})
 			})
 		})
 	}
@@ -326,7 +328,9 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 			}),
 		)
 	}
-	return common.Layout(gtx, body)
+	return common.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, body)
+	})
 }
 
 func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int, isWatchOnlyWalletMenu bool) {

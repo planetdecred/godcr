@@ -188,7 +188,9 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 			}),
 		)
 	}
-	return common.Layout(gtx, container)
+	return common.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, container)
+	})
 }
 
 func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {

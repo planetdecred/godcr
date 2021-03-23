@@ -42,20 +42,23 @@ type Theme struct {
 	Shaper text.Shaper
 	Base   *material.Theme
 	Color  struct {
-		Primary    color.NRGBA
-		Secondary  color.NRGBA
-		Text       color.NRGBA
-		Hint       color.NRGBA
-		Overlay    color.NRGBA
-		InvText    color.NRGBA
-		Success    color.NRGBA
-		Danger     color.NRGBA
-		Background color.NRGBA
-		Surface    color.NRGBA
-		Gray       color.NRGBA
-		Black      color.NRGBA
-		DeepBlue   color.NRGBA
-		LightGray  color.NRGBA
+		Primary      color.NRGBA
+		Secondary    color.NRGBA
+		Text         color.NRGBA
+		Hint         color.NRGBA
+		Overlay      color.NRGBA
+		InvText      color.NRGBA
+		Success      color.NRGBA
+		Danger       color.NRGBA
+		Background   color.NRGBA
+		Surface      color.NRGBA
+		Gray         color.NRGBA
+		Black        color.NRGBA
+		DeepBlue     color.NRGBA
+		LightGray    color.NRGBA
+		IconColor    color.NRGBA
+		BorderColor  color.NRGBA
+		InactiveGray color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -87,7 +90,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	}
 	t.Color.Primary = keyblue
 	t.Color.Text = darkblue
-	t.Color.Hint = rgb(0xbbbbbb)
+	t.Color.Hint = rgb(0x8997A5)
 	t.Color.InvText = rgb(0xffffff)
 	t.Color.Overlay = rgb(0x000000)
 	t.Color.Background = argb(0x22444444)
@@ -96,8 +99,11 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Danger = rgb(0xed6d47)
 	t.Color.Gray = rgb(0x596D81)
 	t.Color.Black = rgb(0x000000)
-	t.Color.LightGray = rgb(0xf3f5f6)
+	t.Color.LightGray = rgb(0xF3F5F6)
 	t.Color.DeepBlue = rgb(0x091440)
+	t.Color.IconColor = rgb(0x3D5873)
+	t.Color.BorderColor = rgb(0xE6EAED)
+	t.Color.InactiveGray = rgb(0xC4CBD2)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))

@@ -55,7 +55,9 @@ func (pg *securityToolsPage) Layout(gtx layout.Context, common pageCommon) layou
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, body)
+	return common.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, body)
+	})
 }
 
 func (pg *securityToolsPage) message(common pageCommon) layout.Widget {

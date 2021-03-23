@@ -76,7 +76,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.minInfoBtn.Background = color.NRGBA{}
 	pg.minInfoBtn.Color = common.theme.Color.Primary
-	pg.minInfoBtn.TextSize = values.MarginPadding20
+	pg.minInfoBtn.TextSize = values.TextSize20
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
 	pg.infoBtn.Color = common.theme.Color.Gray
 	pg.infoBtn.Background = common.theme.Color.Surface
@@ -128,12 +128,14 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) 
 	}
 
 	body := common.Layout(gtx, func(gtx C) D {
-		return common.theme.Card().Layout(gtx, func(gtx C) D {
-			if *pg.txnInfo == nil {
-				return layout.Dimensions{}
-			}
-			return pg.transactionDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-				return layout.Inset{}.Layout(gtx, widgets[i])
+		return common.UniformPadding(gtx, func(gtx C) D {
+			return common.theme.Card().Layout(gtx, func(gtx C) D {
+				if *pg.txnInfo == nil {
+					return layout.Dimensions{}
+				}
+				return pg.transactionDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+					return layout.Inset{}.Layout(gtx, widgets[i])
+				})
 			})
 		})
 	})

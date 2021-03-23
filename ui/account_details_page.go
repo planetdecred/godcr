@@ -106,7 +106,9 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, body)
+	return common.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, body)
+	})
 }
 
 func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {

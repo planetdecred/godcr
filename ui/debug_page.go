@@ -95,5 +95,7 @@ func (pg *debugPage) Layout(gtx C, common pageCommon) D {
 		return common.SubPageLayout(gtx, page)
 
 	}
-	return common.Layout(gtx, container)
+	return common.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, container)
+	})
 }
