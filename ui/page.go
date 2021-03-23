@@ -22,7 +22,7 @@ import (
 type pageIcons struct {
 	contentAdd, navigationCheck, actionCheckCircle, actionInfo, navigationArrowBack,
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
-	imageBrightness1, contentClear, dropDownIcon *widget.Icon
+	imageBrightness1, contentClear, dropDownIcon, cached *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
@@ -30,9 +30,9 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon, currencySwapIcon *widget.Image
+	watchOnlyWalletIcon, currencySwapIcon, syncingIcon *widget.Image
 
-	walletIcon, syncingIcon image.Image
+	walletIcon image.Image
 }
 
 type navHandler struct {
@@ -106,6 +106,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		contentClear:           mustIcon(widget.NewIcon(icons.ContentClear)),
 		navMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		dropDownIcon:           mustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
+		cached:                 mustIcon(widget.NewIcon(icons.ActionCached)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
@@ -141,9 +142,9 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
 		watchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
 		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
+		syncingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["syncing"])},
 
-		syncingIcon: decredIcons["syncing"],
-		walletIcon:  decredIcons["wallet"],
+		walletIcon: decredIcons["wallet"],
 	}
 	win.theme.NavigationCheckIcon = ic.navigationCheck
 
