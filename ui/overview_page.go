@@ -169,8 +169,10 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 func (pg *overviewPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	if c.info.LoadedWallets == 0 {
 		return c.Layout(gtx, func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return c.theme.H3(pg.text.noWallet).Layout(gtx)
+			return c.UniformPadding(gtx, func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return c.theme.H3(pg.text.noWallet).Layout(gtx)
+				})
 			})
 		})
 	}
@@ -187,8 +189,10 @@ func (pg *overviewPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensio
 	}
 
 	return c.Layout(gtx, func(gtx C) D {
-		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+		return c.UniformPadding(gtx, func(gtx C) D {
+			return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+			})
 		})
 	})
 }
@@ -390,7 +394,7 @@ func (pg *overviewPage) syncDormantContent(gtx layout.Context) layout.Dimensions
 	return layout.Inset{Left: values.MarginPadding45}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Bottom: values.TextSize12}.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
 					return pg.blockInfoRow(gtx)
 				})
 			}),

@@ -23,7 +23,7 @@ type CornerRadius struct {
 }
 
 const (
-	defaultRadius = 10
+	defaultRadius = 14
 )
 
 func (t *Theme) Card() Card {
