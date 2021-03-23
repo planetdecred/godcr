@@ -16,6 +16,7 @@ var (
 	MarginPadding10      = unit.Dp(10)
 	MarginPaddingMinus10 = unit.Dp(-10)
 	MarginPadding12      = unit.Dp(12)
+	MarginPadding14      = unit.Dp(14)
 	MarginPadding15      = unit.Dp(15)
 	MarginPadding16      = unit.Dp(16)
 	MarginPadding20      = unit.Dp(20)
@@ -49,4 +50,8 @@ var (
 	TextSize22 = unit.Sp(22)
 	TextSize24 = unit.Sp(24)
 	TextSize28 = unit.Sp(28)
+
+	STextSize20 = unit.Sp(20)
+
+	SMarginPadding16 = unit.Sp(16)
 )
