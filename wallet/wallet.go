@@ -157,17 +157,15 @@ func (wal *Wallet) GetBlockExplorerURL(txnHash string) string {
 }
 
 //GetUSDExchangeValues gets the exchange rate of DCR - USDT from a specified endpoint
-func (wal *Wallet) GetUSDExchangeValues(target interface{}, errChan chan error) {
+func (wal *Wallet) GetUSDExchangeValues(target interface{}) error {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	resp, err := http.Get(url)
 	if err != nil {
-		go func() {
-			errChan <- err
-		}()
-		return
+		return err
 	}
 
 	defer resp.Body.Close()
 
 	json.NewDecoder(resp.Body).Decode(target)
+	return nil
 }

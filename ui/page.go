@@ -22,7 +22,7 @@ import (
 type pageIcons struct {
 	contentAdd, navigationCheck, actionCheckCircle, actionInfo, navigationArrowBack,
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
-	imageBrightness1, contentClear *widget.Icon
+	imageBrightness1, contentClear, dropDownIcon *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
 	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
@@ -30,7 +30,7 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon, currencySwapIcon, chevronDown *widget.Image
+	watchOnlyWalletIcon, currencySwapIcon *widget.Image
 
 	walletIcon, syncingIcon image.Image
 }
@@ -105,6 +105,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		chevronRight:           mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
 		contentClear:           mustIcon(widget.NewIcon(icons.ContentClear)),
 		navMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
+		dropDownIcon:           mustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
@@ -140,7 +141,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
 		watchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
 		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
-		chevronDown:                &widget.Image{Src: paint.NewImageOp(decredIcons["chevronDown"])},
 
 		syncingIcon: decredIcons["syncing"],
 		walletIcon:  decredIcons["wallet"],

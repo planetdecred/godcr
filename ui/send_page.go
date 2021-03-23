@@ -25,10 +25,6 @@ const (
 	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
 )
 
-type httpError interface {
-	Error() string
-}
-
 type walletAccount struct {
 	selectAccount []*gesture.Click
 }
@@ -73,7 +69,6 @@ type sendPage struct {
 	closeConfirmationModalButton decredmaterial.Button
 	confirmButton                decredmaterial.Button
 	maxButton                    decredmaterial.Button
-	sendToButton                 decredmaterial.Button
 	clearAllBtn                  decredmaterial.Button
 
 	accountSwitch *decredmaterial.SwitchButtonText
@@ -83,6 +78,7 @@ type sendPage struct {
 
 	txFeeCollapsible *decredmaterial.Collapsible
 
+	count              int
 	remainingBalance   int64
 	amountAtoms        int64
 	totalCostDCR       int64
@@ -95,8 +91,6 @@ type sendPage struct {
 	inputAmount     float64
 	amountUSDtoDCR  float64
 	amountDCRtoUSD  float64
-
-	count int
 
 	amountErrorText    string
 	calculateErrorText string
@@ -116,16 +110,12 @@ type sendPage struct {
 	sendAmountUSD string
 
 	balanceAfterSendValue string
-
-	LastTradeRate    string
-	exchangeErr      string
-	noExchangeErrMsg string
+	LastTradeRate         string
 
 	passwordModal *decredmaterial.Password
 	line          *decredmaterial.Line
 
 	isConfirmationModalOpen   bool
-	isPasswordModalOpen       bool
 	isBroadcastingTransaction bool
 	usdExchangeSet            bool
 	isWalletAccountModalOpen  bool
@@ -135,7 +125,6 @@ type sendPage struct {
 	txAuthorErrChan chan error
 
 	broadcastErrChan chan error
-	exchangeErrChan  chan error
 }
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -165,7 +154,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		accountSwitch:                common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
 		leftExchangeValue:            "DCR",
 		rightExchangeValue:           "USD",
-		noExchangeErrMsg:             "Exchange rate not fetched",
 		closeConfirmationModalButton: common.theme.Button(new(widget.Clickable), "Cancel"),
 		confirmButton:                common.theme.Button(new(widget.Clickable), ""),
 		maxButton:                    common.theme.Button(new(widget.Clickable), "MAX"),
@@ -175,14 +163,12 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		confirmModal:              common.theme.Modal(),
 		walletAccountModal:        common.theme.Modal(),
 		isConfirmationModalOpen:   false,
-		isPasswordModalOpen:       false,
 		isBroadcastingTransaction: false,
 		isWalletAccountModalOpen:  false,
 
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
-		exchangeErrChan:  make(chan error),
 		line:             common.theme.Line(),
 	}
 
@@ -238,17 +224,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.maxButton.Background = common.theme.Color.IconColor
 	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
-	pg.sendToButton = common.theme.Button(new(widget.Clickable), "Send to account")
-	pg.sendToButton.TextSize = values.TextSize14
-	pg.sendToButton.Background = color.NRGBA{}
-	pg.sendToButton.Color = common.theme.Color.Primary
-	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
-
 	pg.clearAllBtn.Background = common.theme.Color.Surface
 	pg.clearAllBtn.Color = common.theme.Color.Text
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
 
-	go common.wallet.GetUSDExchangeValues(&pg, pg.exchangeErrChan)
+	pg.fetchExchangeValue()
 
 	return func(gtx C) D {
 		pg.Handle(common)
@@ -436,12 +416,9 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 									layout.Rigid(func(gtx C) D {
 										inset := layout.Inset{
 											Left: values.MarginPadding15,
-											Top:  values.MarginPadding7,
 										}
 										return inset.Layout(gtx, func(gtx C) D {
-											icon := common.icons.chevronDown
-											icon.Scale = 0.5
-											return icon.Layout(gtx)
+											return common.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
 										})
 									}),
 								)
@@ -1070,7 +1047,7 @@ func (pg *sendPage) updateAmountInputsValues() {
 func (pg *sendPage) updateExchangeError() {
 	pg.rightAmountEditor.SetError("")
 	if pg.LastTradeRate == "" && pg.usdExchangeSet {
-		pg.rightAmountEditor.SetError(pg.noExchangeErrMsg)
+		pg.rightAmountEditor.SetError("Exchange rate not fetched")
 	}
 }
 
@@ -1183,7 +1160,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
-		go pg.wallet.GetUSDExchangeValues(&pg, pg.exchangeErrChan)
+		pg.fetchExchangeValue()
 		pg.calculateValues()
 	}
 }
@@ -1203,6 +1180,15 @@ func (pg *sendPage) resetFields() {
 	pg.destinationAddressEditor.SetError("")
 	pg.leftAmountEditor.Editor.SetText("")
 	pg.rightAmountEditor.Editor.SetText("")
+}
+
+func (pg *sendPage) fetchExchangeValue() {
+	go func() {
+		err := pg.wallet.GetUSDExchangeValues(&pg)
+		if err != nil {
+			pg.updateExchangeError()
+		}
+	}()
 }
 
 func (pg *sendPage) Handle(c pageCommon) {
@@ -1227,10 +1213,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	pg.updateExchangeError()
-
-	if pg.exchangeErr != "" {
-		c.notify(pg.exchangeErr, false)
-	}
 
 	if c.subPageBackButton.Button.Clicked() {
 		*c.page = PageOverview
@@ -1364,11 +1346,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 			pg.isConfirmationModalOpen = false
 		}
 		pg.isBroadcastingTransaction = false
-	case err := <-pg.exchangeErrChan:
-		if strings.Contains(err.Error(), "host") && pg.usdExchangeSet {
-			errMsg := "Could fetch exchange: no such host"
-			c.notify(errMsg, false)
-		}
 	default:
 	}
 }
