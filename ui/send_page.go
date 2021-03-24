@@ -963,7 +963,6 @@ func (pg *sendPage) walletInfoPopup(gtx layout.Context) layout.Dimensions {
 	}
 	title := fmt.Sprintf("%s accounts are hidden.", acctType)
 	desc := fmt.Sprintf("%s %s accounts is disabled by StakeShuffle settings to protect your privacy.", t, strings.ToLower(acctType))
-
 	card := pg.theme.Card()
 	card.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
 	border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
@@ -1389,15 +1388,6 @@ func (pg *sendPage) resetFields() {
 	pg.leftAmountEditor.Editor.SetText("")
 	pg.rightAmountEditor.Editor.SetText("")
 	pg.passwordEditor.Editor.SetText("")
-}
-
-func (pg *sendPage) fetchExchangeValue() {
-	go func() {
-		err := pg.wallet.GetUSDExchangeValues(&pg)
-		if err != nil {
-			pg.updateExchangeError()
-		}
-	}()
 }
 
 func (pg *sendPage) fetchExchangeValue() {
