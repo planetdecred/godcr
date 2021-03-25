@@ -10,6 +10,12 @@ import (
 
 const PageAbout = "About"
 
+type aboutPageRow struct {
+	leftLabel  *decredmaterial.Label
+	rightLabel *decredmaterial.Label
+	icon       *widget.Icon
+}
+
 type aboutPage struct {
 	theme     *decredmaterial.Theme
 	card      decredmaterial.Card
@@ -84,28 +90,32 @@ func (pg *aboutPage) Layout(gtx C, common pageCommon) D {
 func (pg *aboutPage) layoutRows(gtx C) D {
 	w := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.layoutRow(gtx, pg.versionLabel, pg.versionValueLabel)
+			row := aboutPageRow{
+				leftLabel:  &pg.versionLabel,
+				rightLabel: &pg.versionValueLabel,
+			}
+			return pg.layoutRow(gtx, row, true)
 		},
 		func(gtx C) D {
-			return pg.layoutRow(gtx, pg.buildDateLabel, pg.buildDateValueLabel)
+			row := aboutPageRow{
+				leftLabel:  &pg.buildDateLabel,
+				rightLabel: &pg.buildDateValueLabel,
+			}
+			return pg.layoutRow(gtx, row, true)
 		},
 		func(gtx C) D {
-			return pg.layoutRow(gtx, pg.networkLabel, pg.networkValueLabel)
+			row := aboutPageRow{
+				leftLabel:  &pg.networkLabel,
+				rightLabel: &pg.networkValueLabel,
+			}
+			return pg.layoutRow(gtx, row, true)
 		},
 		func(gtx C) D {
-			return layout.Inset{
-				Top:    values.MarginPadding5,
-				Bottom: values.MarginPadding5,
-			}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(pg.licenseLabel.Layout),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return pg.chevronRightIcon.Layout(gtx, values.MarginPadding30)
-						})
-					}),
-				)
-			})
+			row := aboutPageRow{
+				leftLabel: &pg.licenseLabel,
+				icon:      pg.chevronRightIcon,
+			}
+			return pg.layoutRow(gtx, row, false)
 		},
 	}
 
@@ -114,7 +124,42 @@ func (pg *aboutPage) layoutRows(gtx C) D {
 	})
 }
 
-func (pg *aboutPage) layoutRow(gtx C, leftLabel, rightLabel decredmaterial.Label) D {
+func (pg *aboutPage) layoutRow(gtx C, row aboutPageRow, drawSeparator bool) D {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{
+				Top:    values.MarginPadding5,
+				Bottom: values.MarginPadding5,
+			}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(row.leftLabel.Layout),
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							if row.icon != nil {
+								return row.icon.Layout(gtx, values.MarginPadding30)
+							}
+							return row.rightLabel.Layout(gtx)
+						})
+					}),
+				)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			if !drawSeparator {
+				return D{}
+			}
+			return layout.Inset{
+				Top:    values.MarginPadding5,
+				Bottom: values.MarginPadding5,
+			}.Layout(gtx, func(gtx C) D {
+				pg.line.Width = gtx.Constraints.Max.X
+				return pg.line.Layout(gtx)
+			})
+		}),
+	)
+}
+
+func (pg *aboutPage) layoutRowD(gtx C, leftLabel, rightLabel decredmaterial.Label) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
