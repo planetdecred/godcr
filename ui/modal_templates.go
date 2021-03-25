@@ -617,6 +617,11 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.receiveInfo()
+	case SendInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.sendInfo()
 		return
 	default:
 		return

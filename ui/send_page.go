@@ -22,6 +22,15 @@ const (
 	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
 )
 
+type httpError interface {
+	Error() string
+}
+
+type walletAccount struct {
+	selectFromAccount []*gesture.Click
+	selectToAccount   []*gesture.Click
+}
+
 type amountValue struct {
 	sendAmountDCR            string
 	sendAmountUSD            string
@@ -35,14 +44,19 @@ type sendPage struct {
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
 
-	currencySwap *widget.Clickable
+	fromAccountBtn, currencySwap,
+	toSelfBtn *widget.Clickable
 
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
 
-	wallet          *wallet.Wallet
-	selectedWallet  wallet.InfoShort
-	selectedAccount **wallet.Account
+	wallet *wallet.Wallet
+
+	selectedFromWallet wallet.InfoShort
+	selectedToWallet   wallet.InfoShort
+
+	selectedFromAccount **wallet.Account
+	selectedToAccount   wallet.Account
 
 	toAddress    *widget.Bool
 	isMoreOption bool
@@ -52,12 +66,13 @@ type sendPage struct {
 	rightAmountEditor        decredmaterial.Editor
 	passwordEditor           decredmaterial.Editor
 
-	moreOption decredmaterial.IconButton
+	moreOption, walletInfoButton decredmaterial.IconButton
 
 	nextButton                   decredmaterial.Button
 	closeConfirmationModalButton decredmaterial.Button
 	confirmButton                decredmaterial.Button
 	maxButton                    decredmaterial.Button
+	sendToButton                 decredmaterial.Button
 	clearAllBtn                  decredmaterial.Button
 
 	accountSwitch *decredmaterial.SwitchButtonText
@@ -66,7 +81,6 @@ type sendPage struct {
 
 	txFeeCollapsible *decredmaterial.Collapsible
 
-	count              int
 	remainingBalance   int64
 	amountAtoms        int64
 	totalCostDCR       int64
@@ -75,10 +89,16 @@ type sendPage struct {
 	txFeeEstimatedTime string
 	spendableBalance   int64
 
+	mixedAcct, unmixedAcct int32
+
 	usdExchangeRate float64
 	inputAmount     float64
 	amountUSDtoDCR  float64
 	amountDCRtoUSD  float64
+
+	count                  int
+	selectedToAccountIndex int
+	selectedToWalletIndex  int
 
 	amountErrorText    string
 	calculateErrorText string
@@ -93,18 +113,27 @@ type sendPage struct {
 
 	leftTotalCostValue  string
 	rightTotalCostValue string
+	popupText           string
+	sendToOption        string
 
 	sendAmountDCR string
 	sendAmountUSD string
 
 	balanceAfterSendValue string
-	LastTradeRate         string
+
+	LastTradeRate      string
+	exchangeErr        string
+	noExchangeErrMsg   string
+	selectedModalTitle string
 
 	passwordModal *decredmaterial.Password
 
 	isConfirmationModalOpen   bool
+	isPasswordModalOpen       bool
 	isBroadcastingTransaction bool
 	usdExchangeSet            bool
+	isWalletAccountModalOpen  bool
+	isWalletInfo              bool
 
 	shouldInitializeTxAuthor bool
 
@@ -124,14 +153,19 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		wallet:          common.wallet,
 		txAuthor:        &win.txAuthor,
 		broadcastResult: &win.broadcastResult,
-		selectedAccount: &win.walletAccount,
 
-		currencySwap: new(widget.Clickable),
-		toAddress:    new(widget.Bool),
+		selectedFromAccount: &win.walletAccount,
+		// selectedToAccount: win.walletAccount,
 
-		accountSwitch:                common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
+		fromAccountBtn: new(widget.Clickable),
+		currencySwap:   new(widget.Clickable),
+		toSelfBtn:      new(widget.Clickable),
+
+		toAddress: new(widget.Bool),
+
 		leftExchangeValue:            "DCR",
 		rightExchangeValue:           "USD",
+		noExchangeErrMsg:             "Exchange rate not fetched",
 		closeConfirmationModalButton: common.theme.Button(new(widget.Clickable), "Cancel"),
 		confirmButton:                common.theme.Button(new(widget.Clickable), ""),
 		maxButton:                    common.theme.Button(new(widget.Clickable), "MAX"),
@@ -140,12 +174,17 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 		confirmModal:              common.theme.Modal(),
 		isConfirmationModalOpen:   false,
+		isPasswordModalOpen:       false,
 		isBroadcastingTransaction: false,
 
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
 	}
+
+	pg.accountSwitch = common.theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
+
+	pg.walletAccounts = make(map[int]walletAccount)
 
 	pg.balanceAfterSendValue = "- DCR"
 
@@ -190,9 +229,20 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.maxButton.Background = common.theme.Color.Gray3
 	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
+	pg.sendToButton = common.theme.Button(new(widget.Clickable), "Send to account")
+	pg.sendToButton.TextSize = values.TextSize14
+	pg.sendToButton.Background = color.NRGBA{}
+	pg.sendToButton.Color = common.theme.Color.Primary
+	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
+
 	pg.clearAllBtn.Background = common.theme.Color.Surface
 	pg.clearAllBtn.Color = common.theme.Color.Text
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
+
+	pg.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
+	pg.walletInfoButton.Color = common.theme.Color.IconColor
+	pg.walletInfoButton.Size = values.MarginPadding15
+	pg.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.fetchExchangeValue()
 
@@ -203,6 +253,30 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 }
 
 func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	for index := 0; index < common.info.LoadedWallets; index++ {
+		if _, ok := pg.walletAccounts[index]; !ok {
+			toaccounts := common.info.Wallets[index].Accounts
+			fromaccounts := common.info.Wallets[index].Accounts
+			if (len(fromaccounts)-1) != len(pg.walletAccount.selectFromAccount) || (len(toaccounts)-1) != len(pg.walletAccount.selectToAccount) {
+				pg.walletAccount.selectFromAccount = make([]*gesture.Click, (len(fromaccounts) - 1))
+				pg.walletAccount.selectToAccount = make([]*gesture.Click, (len(toaccounts) - 1))
+				for i := range toaccounts {
+					if toaccounts[i].Name == "imported" {
+						continue
+					}
+					pg.walletAccount.selectToAccount[i] = &gesture.Click{}
+				}
+				for i := range fromaccounts {
+					if toaccounts[i].Name == "imported" {
+						continue
+					}
+					pg.walletAccount.selectFromAccount[i] = &gesture.Click{}
+				}
+			}
+			pg.walletAccounts[index] = pg.walletAccount
+		}
+	}
+
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", func(gtx C) D {
@@ -271,6 +345,10 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		return common.Modal(gtx, dims, pg.confirmationModal(gtx, common))
 	}
 
+	if pg.isWalletAccountModalOpen {
+		return common.Modal(gtx, dims, pg.walletAccountSection(gtx, pg.selectedModalTitle, common))
+	}
+
 	return dims
 }
 
@@ -307,6 +385,12 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 	)
 }
 
+func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+	return pg.pageSections(gtx, "From", func(gtx C) D {
+		return pg.selectedAccountSection(gtx, common, "from", pg.fromAccountBtn)
+	})
+}
+
 func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, "To", func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -314,6 +398,9 @@ func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dime
 				return layout.Inset{
 					Bottom: values.MarginPadding16,
 				}.Layout(gtx, func(gtx C) D {
+					if pg.sendToOption == "My account" {
+						return pg.selectedAccountSection(gtx, common, "to", pg.toSelfBtn)
+					}
 					return pg.destinationAddressEditor.Layout(gtx)
 				})
 			}),
@@ -447,6 +534,279 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 	})
 }
 
+func (pg *sendPage) selectedAccountSection(gtx layout.Context, common pageCommon, display string, w *widget.Clickable) layout.Dimensions {
+	acctName := (*pg.selectedFromAccount).Name
+	walName := pg.selectedFromWallet.Name
+	bal := (*pg.selectedFromAccount).TotalBalance
+	if display == "to" {
+		acctName = pg.selectedToAccount.Name
+		walName = pg.selectedToWallet.Name
+		bal = pg.selectedToAccount.TotalBalance
+	}
+
+	border := widget.Border{Color: pg.theme.Color.BorderColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
+	return border.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+			return decredmaterial.Clickable(gtx, w, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						accountIcon := common.icons.accountIcon
+						accountIcon.Scale = 0.9
+
+						inset := layout.Inset{
+							Right: values.MarginPadding8,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return accountIcon.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.theme.Body1(acctName).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Left: values.MarginPadding4,
+							Top:  values.MarginPadding2,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return decredmaterial.Card{
+								Color: pg.theme.Color.LightGray,
+							}.Layout(gtx, func(gtx C) D {
+								m2 := values.MarginPadding2
+								m4 := values.MarginPadding4
+								inset := layout.Inset{
+									Left:   m4,
+									Top:    m2,
+									Bottom: m2,
+									Right:  m4,
+								}
+								return inset.Layout(gtx, func(gtx C) D {
+									text := pg.theme.Caption(walName)
+									text.Color = pg.theme.Color.Gray
+									return text.Layout(gtx)
+								})
+							})
+						})
+					}),
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									txt := pg.theme.Body1(bal)
+									txt.Color = pg.theme.Color.DeepBlue
+									return txt.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									inset := layout.Inset{
+										Left: values.MarginPadding15,
+									}
+									return inset.Layout(gtx, func(gtx C) D {
+										return common.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
+									})
+								}),
+							)
+						})
+					}),
+				)
+			})
+		})
+	})
+}
+
+func (pg *sendPage) walletAccountSection(gtx layout.Context, title string, common pageCommon) layout.Dimensions {
+	w := []func(gtx C) D{
+		func(gtx C) D {
+			txt := pg.theme.H6(title)
+			txt.Color = pg.theme.Color.Text
+			return txt.Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
+						wn := common.info.Wallets[i].Name
+						wID := common.info.Wallets[i].ID
+						accounts := common.info.Wallets[i].Accounts
+						wIndex := i
+
+						pg.mixedAcct = pg.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, wID)
+						pg.unmixedAcct = pg.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, wID)
+
+						inset := layout.Inset{
+							Bottom: values.MarginPadding10,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.popupSections(gtx, wn, title, wIndex, func(gtx C) D {
+								return pg.accountsList.Layout(gtx, len(accounts)-1, func(gtx C, x int) D {
+									var accountsName, totalBalance, spendable string
+									var aIndex int
+
+									switch {
+									case pg.sendToOption == "Address" && accounts[x].Number != pg.unmixedAcct && strings.Contains(title, "Sending"):
+										aIndex = x
+										accountsName = accounts[x].Name
+										totalBalance = accounts[x].TotalBalance
+										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
+										click := pg.walletAccounts[wIndex].selectFromAccount[x]
+										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+										click.Add(gtx.Ops)
+										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
+									case pg.sendToOption == "My account" && accounts[x].Number != pg.mixedAcct && strings.Contains(title, "Receiving"):
+										aIndex = x
+										accountsName = accounts[x].Name
+										totalBalance = accounts[x].TotalBalance
+										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
+										click := pg.walletAccounts[wIndex].selectToAccount[x]
+										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+										click.Add(gtx.Ops)
+										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
+									case pg.sendToOption == "My account" && strings.Contains(title, "Sending"):
+										aIndex = x
+										accountsName = accounts[x].Name
+										totalBalance = accounts[x].TotalBalance
+										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
+										click := pg.walletAccounts[wIndex].selectToAccount[x]
+										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+										click.Add(gtx.Ops)
+										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
+									default:
+									}
+
+									if spendable != "" {
+										return pg.walletAccountsPopupLayout(gtx, accountsName, totalBalance, spendable, title, common, wIndex, aIndex)
+									}
+									return layout.Dimensions{}
+								})
+							})
+						})
+					})
+				}),
+				layout.Stacked(func(gtx C) D {
+					if pg.isWalletInfo {
+						inset := layout.Inset{
+							Top:  values.MarginPadding20,
+							Left: values.MarginPaddingMinus75,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.walletInfoPopup(gtx)
+						})
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		},
+	}
+
+	return pg.walletAccountModal.Layout(gtx, w, 850)
+}
+
+func (pg *sendPage) walletAccountsPopupLayout(gtx layout.Context, name, totalBal, spendableBal, title string, common pageCommon, wIndex, aIndex int) layout.Dimensions {
+	accountIcon := common.icons.accountIcon
+	accountIcon.Scale = 0.8
+
+	inset := layout.Inset{
+		Bottom: values.MarginPadding10,
+	}
+	return inset.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Flexed(0.1, func(gtx C) D {
+						inset := layout.Inset{
+							Right: values.MarginPadding10,
+							Top:   values.MarginPadding15,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return accountIcon.Layout(gtx)
+						})
+					}),
+					layout.Flexed(0.8, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								accountLabel := pg.theme.Body2(name)
+								accountLabel.Color = pg.theme.Color.Text
+								accountBalLabel := pg.theme.Body2(totalBal)
+								accountBalLabel.Color = pg.theme.Color.Text
+								return pg.accountTableLayout(gtx, accountLabel, accountBalLabel)
+							}),
+							layout.Rigid(func(gtx C) D {
+								spendibleLabel := pg.theme.Body2("Spendable")
+								spendibleLabel.Color = pg.theme.Color.Gray
+								spendibleBalLabel := pg.theme.Body2(spendableBal)
+								spendibleBalLabel.Color = pg.theme.Color.Gray
+								return pg.accountTableLayout(gtx, spendibleLabel, spendibleBalLabel)
+							}),
+						)
+					}),
+					layout.Flexed(0.1, func(gtx C) D {
+						inset := layout.Inset{
+							Right: values.MarginPadding10,
+							Top:   values.MarginPadding10,
+						}
+
+						sections := func(gtx layout.Context) layout.Dimensions {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return inset.Layout(gtx, func(gtx C) D {
+									return common.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
+								})
+							})
+						}
+
+						if strings.Contains(title, "Sending") && *common.selectedWallet == wIndex && *common.selectedAccount == aIndex {
+							sections(gtx)
+						}
+
+						if strings.Contains(title, "Receiving") && pg.selectedToWalletIndex == wIndex && pg.selectedToAccountIndex == aIndex {
+							sections(gtx)
+						}
+
+						return layout.Dimensions{}
+					}),
+				)
+			}),
+		)
+	})
+}
+
+func (pg *sendPage) accountTableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			inset := layout.Inset{
+				Top: values.MarginPadding2,
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return leftLabel.Layout(gtx)
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return rightLabel.Layout(gtx)
+			})
+		}),
+	)
+}
+
+func (pg *sendPage) walletAccountsHandler(gtx layout.Context, common pageCommon, acct *wallet.Account, wIndex, aIndex int, title string, click *gesture.Click) {
+	for _, e := range click.Events(gtx) {
+		if e.Type == gesture.TypeClick {
+			switch {
+			case strings.Contains(title, "Sending"):
+				*pg.selectedFromAccount = acct
+				*common.selectedAccount = aIndex
+				*common.selectedWallet = wIndex
+				pg.selectedFromWallet = common.info.Wallets[wIndex]
+			case strings.Contains(title, "Receiving"):
+				pg.selectedToAccount = common.info.Wallets[wIndex].Accounts[aIndex]
+				pg.selectedToAccountIndex = aIndex
+				pg.selectedToWalletIndex = wIndex
+				pg.selectedToWallet = common.info.Wallets[wIndex]
+			default:
+			}
+			pg.isWalletAccountModalOpen = false
+		}
+	}
+}
+
 func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) layout.Dimensions {
 	w := []func(gtx C) D{
 		func(gtx C) D {
@@ -490,7 +850,37 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.theme.Body2(pg.destinationAddressEditor.Editor.Text()).Layout(gtx)
+							if pg.sendToOption == "My account" {
+								return layout.E.Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											txt := pg.theme.Body2(pg.selectedToAccount.Name)
+											txt.Color = pg.theme.Color.DeepBlue
+											return txt.Layout(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											card := pg.theme.Card()
+											card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+											card.Color = pg.theme.Color.LightGray
+											inset := layout.Inset{
+												Left: values.MarginPadding5,
+											}
+											return inset.Layout(gtx, func(gtx C) D {
+												return card.Layout(gtx, func(gtx C) D {
+													return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+														txt := pg.theme.Caption(pg.selectedToWallet.Name)
+														txt.Color = pg.theme.Color.Gray
+														return txt.Layout(gtx)
+													})
+												})
+											})
+										}),
+									)
+								})
+							}
+							txt := pg.theme.Body2(pg.destinationAddressEditor.Editor.Text())
+							txt.Color = pg.theme.Color.DeepBlue
+							return txt.Layout(gtx)
 						}),
 					)
 				}),
@@ -502,7 +892,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.contentRow(gtx, "Sending from", (*pg.selectedAccount).Name, pg.selectedWallet.Name)
+					return pg.contentRow(gtx, "Sending from", (*pg.selectedFromAccount).Name, pg.selectedFromWallet.Name)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding8, Bottom: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
@@ -562,6 +952,50 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 	return pg.confirmModal.Layout(gtx, w, 900)
 }
 
+func (pg *sendPage) walletInfoPopup(gtx layout.Context) layout.Dimensions {
+	acctType := "Unmixed"
+	t := "from"
+	txDirection := " Spending"
+	if pg.sendToOption == "My account" {
+		acctType = "The mixed"
+		t = "to"
+		txDirection = " Receiving"
+	}
+	title := fmt.Sprintf("%s accounts are hidden.", acctType)
+	desc := fmt.Sprintf("%s %s accounts is disabled by StakeShuffle settings to protect your privacy.", t, strings.ToLower(acctType))
+	card := pg.theme.Card()
+	card.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
+	border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding280)
+	return border.Layout(gtx, func(gtx C) D {
+		return card.Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.Body2(title)
+								txt.Color = pg.theme.Color.DeepBlue
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := pg.theme.Body2(txDirection)
+								txt.Color = pg.theme.Color.Gray
+								return txt.Layout(gtx)
+							}),
+						)
+					}),
+					layout.Rigid(func(gtx C) D {
+						txt := pg.theme.Body2(desc)
+						txt.Color = pg.theme.Color.Gray
+						return txt.Layout(gtx)
+					}),
+				)
+			})
+		})
+	})
+}
+
 func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return pg.theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
@@ -595,6 +1029,47 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 			)
 		})
 	})
+}
+
+func (pg *sendPage) popupSections(gtx layout.Context, walletName, modalTitle string, i int, body layout.Widget) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body2(walletName)
+					txt.Color = pg.theme.Color.Text
+					inset := layout.Inset{
+						Bottom: values.MarginPadding15,
+						Right:  values.MarginPadding5,
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						return txt.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					var dis bool
+					switch {
+					case i == 0 && pg.sendToOption == "Address":
+						dis = true
+					case i == 0 && pg.sendToOption == "My account" && strings.Contains(modalTitle, "Receiving"):
+						dis = true
+					default:
+					}
+
+					if dis {
+						inset := layout.Inset{
+							Top: values.MarginPadding2,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.walletInfoButton.Layout(gtx)
+						})
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		}),
+		layout.Rigid(body),
+	)
 }
 
 func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, walletName string) layout.Dimensions {
@@ -637,14 +1112,16 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 }
 
 func (pg *sendPage) validate() bool {
-	isAmountValid := pg.validateLeftAmount()
-	if pg.rightAmountEditor.Editor.Focused() {
-		isAmountValid = pg.validateRightAmount()
-	}
+	if pg.sendToOption == "Address" {
+		isAmountValid := pg.validateLeftAmount()
+		if pg.rightAmountEditor.Editor.Focused() {
+			isAmountValid = pg.validateRightAmount()
+		}
 
-	if !pg.validateDestinationAddress() || !isAmountValid || pg.calculateErrorText != "" {
-		pg.nextButton.Background = pg.theme.Color.Hint
-		return false
+		if !pg.validateDestinationAddress() || !isAmountValid || pg.calculateErrorText != "" {
+			pg.nextButton.Background = pg.theme.Color.Hint
+			return false
+		}
 	}
 
 	pg.nextButton.Background = pg.theme.Color.Primary
@@ -772,7 +1249,7 @@ func (pg *sendPage) updateAmountInputsValues() {
 func (pg *sendPage) updateExchangeError() {
 	pg.rightAmountEditor.SetError("")
 	if pg.LastTradeRate == "" && pg.usdExchangeSet {
-		pg.rightAmountEditor.SetError("Exchange rate not fetched")
+		pg.rightAmountEditor.SetError(pg.noExchangeErrMsg)
 	}
 }
 
@@ -790,7 +1267,12 @@ func (pg *sendPage) setDestinationAddr(sendAmount float64) {
 	}
 
 	pg.txAuthor.RemoveSendDestination(0)
-	pg.txAuthor.AddSendDestination(pg.destinationAddressEditor.Editor.Text(), pg.amountAtoms, false)
+	addr := pg.destinationAddressEditor.Editor.Text()
+	if pg.sendToOption == "My account" {
+		addr = pg.selectedToAccount.CurrentAddress
+	}
+	fmt.Println(addr)
+	pg.txAuthor.AddSendDestination(addr, pg.amountAtoms, false)
 }
 
 func (pg *sendPage) amountValues() amountValue {
@@ -840,9 +1322,9 @@ func (pg *sendPage) getTxFee() {
 func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool) {
 	pg.remainingBalance = 0
 	if isInputAmountEmpty {
-		pg.remainingBalance = (*pg.selectedAccount).SpendableBalance
+		pg.remainingBalance = (*pg.selectedFromAccount).SpendableBalance
 	} else {
-		pg.remainingBalance = (*pg.selectedAccount).SpendableBalance - pg.totalCostDCR
+		pg.remainingBalance = (*pg.selectedFromAccount).SpendableBalance - pg.totalCostDCR
 	}
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
 }
@@ -905,6 +1387,16 @@ func (pg *sendPage) resetFields() {
 	pg.destinationAddressEditor.SetError("")
 	pg.leftAmountEditor.Editor.SetText("")
 	pg.rightAmountEditor.Editor.SetText("")
+	pg.passwordEditor.Editor.SetText("")
+}
+
+func (pg *sendPage) fetchExchangeValue() {
+	go func() {
+		err := pg.wallet.GetUSDExchangeValues(&pg)
+		if err != nil {
+			pg.updateExchangeError()
+		}
+	}()
 }
 
 func (pg *sendPage) fetchExchangeValue() {
@@ -921,9 +1413,9 @@ func (pg *sendPage) Handle(c pageCommon) {
 		return
 	}
 
-	if *pg.selectedAccount == nil {
-		pg.selectedWallet = c.info.Wallets[0]
-		*pg.selectedAccount = &c.info.Wallets[0].Accounts[0]
+	if *pg.selectedFromAccount == nil {
+		pg.selectedFromWallet, pg.selectedToWallet = c.info.Wallets[0], c.info.Wallets[0]
+		*pg.selectedFromAccount, pg.selectedToAccount = &c.info.Wallets[0].Accounts[0], c.info.Wallets[0].Accounts[0]
 		pg.shouldInitializeTxAuthor = true
 	}
 
@@ -938,6 +1430,12 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	pg.updateExchangeError()
+
+	if pg.exchangeErr != "" {
+		c.notify(pg.exchangeErr, false)
+	}
+
+	pg.sendToOption = pg.accountSwitch.SelectedOption()
 
 	if c.subPageBackButton.Button.Clicked() {
 		*c.page = PageOverview
@@ -956,6 +1454,20 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	for pg.moreOption.Button.Clicked() {
 		pg.isMoreOption = !pg.isMoreOption
+	}
+
+	for pg.walletInfoButton.Button.Clicked() {
+		pg.isWalletInfo = !pg.isWalletInfo
+	}
+
+	if pg.fromAccountBtn.Clicked() {
+		pg.selectedModalTitle = "Sending account"
+		pg.isWalletAccountModalOpen = true
+	}
+
+	if pg.toSelfBtn.Clicked() {
+		pg.selectedModalTitle = "Receiving account"
+		pg.isWalletAccountModalOpen = true
 	}
 
 	currencyExchangeValue := pg.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
@@ -1012,7 +1524,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.leftAmountEditor.Editor.SetText("")
 		pg.rightAmountEditor.Editor.SetText("")
 		pg.calculateErrorText = ""
-		c.wallet.CreateTransaction(pg.selectedWallet.ID, (*pg.selectedAccount).Number, pg.txAuthorErrChan)
+		c.wallet.CreateTransaction(pg.selectedFromWallet.ID, (*pg.selectedFromAccount).Number, pg.txAuthorErrChan)
 	}
 
 	activeAmountEditor := pg.leftAmountEditor.Editor

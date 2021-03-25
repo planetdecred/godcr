@@ -71,6 +71,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		Bordered:          true,
 		LineColor:         t.Color.Gray1,
 		TitleLabelColor:   t.Color.Gray3,
+
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 

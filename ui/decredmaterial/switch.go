@@ -15,42 +15,42 @@ type Switch struct {
 	material.SwitchStyle
 }
 
+type SwitchItem struct {
+	Text   string
+	button Button
+}
+
 type SwitchButtonText struct {
-	t                        *Theme
-	activeTextColor          color.NRGBA
-	inactiveTextColor        color.NRGBA
-	activeBtn, inactiveBtn   *widget.Clickable
-	activeCard, inactiveCard Card
-	inactivetxt              string
-	activeTxt                string
-	isActive, isInactive     bool
+	t                                  *Theme
+	activeTextColor, inactiveTextColor color.NRGBA
+	active, inactive                   color.NRGBA
+	items                              []SwitchItem
+	selected                           int
 }
 
 func (t *Theme) Switch(swtch *widget.Bool) Switch {
 	return Switch{material.Switch(t.Base, swtch)}
 }
 
-func (t *Theme) SwitchButtonText(activeTxt, inactivetxt string, activeBtn, inactiveBtn *widget.Clickable) *SwitchButtonText {
+func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 	sw := &SwitchButtonText{
-		t:           t,
-		activeBtn:   activeBtn,
-		inactiveBtn: inactiveBtn,
-
-		inactivetxt:  inactivetxt,
-		activeTxt:    activeTxt,
-		isActive:     true,
-		activeCard:   t.Card(),
-		inactiveCard: t.Card(),
+		t:     t,
+		items: make([]SwitchItem, len(i)+1),
 	}
 
-	sw.activeCard.Color = sw.t.Color.Surface
-	sw.inactiveCard.Color = color.NRGBA{}
+	sw.active, sw.inactive = sw.t.Color.Surface, color.NRGBA{}
+	sw.activeTextColor, sw.inactiveTextColor = sw.t.Color.DeepBlue, sw.t.Color.IconColor
 
-	raduis := CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
-	sw.activeCard.Radius, sw.inactiveCard.Radius = raduis, raduis
+	for index := range i {
+		i[index].button = t.Button(new(widget.Clickable), i[index].Text)
+		i[index].button.Background, i[index].button.Color = sw.inactive, sw.inactiveTextColor
+		i[index].button.TextSize = unit.Sp(14)
+		sw.items[index+1] = i[index]
+	}
 
-	sw.activeTextColor = sw.t.Color.DeepBlue
-	sw.inactiveTextColor = sw.t.Color.Gray3
+	if len(sw.items) > 0 {
+		sw.selected = 1
+	}
 	return sw
 }
 
@@ -63,68 +63,46 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 	card.Radius = CornerRadius{NE: 8, NW: 8, SE: 8, SW: 8}
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(unit.Dp(2)).Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Stack{}.Layout(gtx,
-						layout.Stacked(func(gtx C) D {
-							return s.activeCard.Layout(gtx, func(gtx C) D {
-								return layout.Inset{
-									Left:   m8,
-									Bottom: m4,
-									Right:  m8,
-									Top:    m4,
-								}.Layout(gtx, func(gtx C) D {
-									txt := s.t.Body2(s.activeTxt)
-									txt.Color = s.activeTextColor
-									if !s.isActive {
-										txt.Color = s.inactiveTextColor
-									}
-									return txt.Layout(gtx)
-								})
-							})
-						}),
-						layout.Expanded(s.activeBtn.Layout),
+			list := &layout.List{Axis: layout.Horizontal}
+			Items := s.items[1:]
+			return list.Layout(gtx, len(Items), func(gtx C, i int) D {
+				return layout.UniformInset(unit.Dp(0)).Layout(gtx, func(gtx C) D {
+					index := i + 1
+					btn := s.items[index].button
+					btn.Inset = layout.Inset{
+						Left:   m8,
+						Bottom: m4,
+						Right:  m8,
+						Top:    m4,
+					}
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(btn.Layout),
 					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Stack{}.Layout(gtx,
-						layout.Stacked(func(gtx C) D {
-							return s.inactiveCard.Layout(gtx, func(gtx C) D {
-								return layout.Inset{
-									Left:   m8,
-									Bottom: m4,
-									Right:  m8,
-									Top:    m4,
-								}.Layout(gtx, func(gtx C) D {
-									txt := s.t.Body2(s.inactivetxt)
-									txt.Color = s.activeTextColor
-									if !s.isInactive {
-										txt.Color = s.inactiveTextColor
-									}
-									return txt.Layout(gtx)
-								})
-							})
-						}),
-						layout.Expanded(s.inactiveBtn.Layout),
-					)
-				}),
-			)
+				})
+			})
 		})
 	})
 }
 
 func (s *SwitchButtonText) handleClickEvent() {
-	for s.inactiveBtn.Clicked() {
-		s.inactiveCard.Color = s.t.Color.Surface
-		s.activeCard.Color = color.NRGBA{}
-		s.isActive = false
-		s.isInactive = true
-	}
+	for i := range s.items {
+		index := i
+		if index != 0 {
+			if s.items[index].button.Button.Clicked() {
+				s.selected = index
+			}
+		}
 
-	for s.activeBtn.Clicked() {
-		s.inactiveCard.Color = color.NRGBA{}
-		s.activeCard.Color = s.t.Color.Surface
-		s.isActive = true
-		s.isInactive = false
+		if s.selected == index {
+			s.items[s.selected].button.Background = s.active
+			s.items[s.selected].button.Color = s.activeTextColor
+		} else {
+			s.items[index].button.Background = s.inactive
+			s.items[index].button.Color = s.inactiveTextColor
+		}
 	}
+}
+
+func (s *SwitchButtonText) SelectedOption() string {
+	return s.items[s.selected].Text
 }
