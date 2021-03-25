@@ -44,7 +44,7 @@ func (win *Window) AboutPage(common pageCommon) layout.Widget {
 		buildDateLabel:      common.theme.Body1("Build date"),
 		buildDateValueLabel: common.theme.Body2("2020-09-10"),
 		networkLabel:        common.theme.Body1("Network"),
-		networkValueLabel:   common.theme.Body2("Testnet3"),
+		networkValueLabel:   common.theme.Body2(win.wallet.Net),
 		licenseLabel:        common.theme.Body1("License"),
 		chevronRightIcon:    common.icons.chevronRight,
 	}
