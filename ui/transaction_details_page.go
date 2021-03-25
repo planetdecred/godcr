@@ -185,9 +185,7 @@ func (pg *transactionDetailsPage) header(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	txnWidgets := transactionWdg{}
-	initTxnWidgets(common, *pg.txnInfo, &txnWidgets)
-
+	txnWidgets := initTxnWidgets(common, **pg.txnInfo)
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {

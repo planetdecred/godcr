@@ -24,7 +24,7 @@ import (
 )
 
 type pageIcons struct {
-	contentAdd, navigationCheck, actionCheckCircle, actionInfo, navigationArrowBack,
+	contentAdd, navigationCheck, navigationMore, actionCheckCircle, actionInfo, navigationArrowBack,
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
 	imageBrightness1, contentClear, dropDownIcon, cached *widget.Icon
 
@@ -100,6 +100,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	ic := pageIcons{
 		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
 		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
+		navigationMore:         mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		actionCheckCircle:      mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
 		navigationArrowBack:    mustIcon(widget.NewIcon(icons.NavigationArrowBack)),
 		navigationArrowForward: mustIcon(widget.NewIcon(icons.NavigationArrowForward)),
@@ -151,7 +152,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 		walletIcon: decredIcons["wallet"],
 	}
-	win.theme.NavigationCheckIcon = ic.navigationCheck
 
 	appBarNavItems := []navHandler{
 		{

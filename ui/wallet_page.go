@@ -270,7 +270,7 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 				pg.watchOnlyWalletMoreButtons[index] = decredmaterial.IconButton{
 					IconButtonStyle: material.IconButtonStyle{
 						Button:     new(widget.Clickable),
-						Icon:       common.theme.NavMoreIcon,
+						Icon:       common.icons.navigationMore,
 						Size:       values.MarginPadding25,
 						Background: color.NRGBA{},
 						Color:      common.theme.Color.Text,

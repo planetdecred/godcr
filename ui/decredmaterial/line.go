@@ -36,7 +36,7 @@ func (l *Line) Layout(gtx C) D {
 	line := image.Rectangle{
 		Max: image.Point{
 			X: l.Width,
-			Y: l.Height,
+			Y: l.Height * int(gtx.Metric.PxPerDp),
 		},
 	}
 	clip.Rect(line).Add(gtx.Ops)

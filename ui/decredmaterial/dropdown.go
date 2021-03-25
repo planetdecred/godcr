@@ -16,7 +16,7 @@ type DropDown struct {
 	selectedIndex  int
 	color          color.NRGBA
 	background     color.NRGBA
-	chevronIcon    *widget.Icon
+	dropdownIcon   *widget.Icon
 	navigationIcon *widget.Icon
 	backdrop       *widget.Clickable
 
@@ -38,8 +38,8 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		items:          make([]DropDownItem, len(items)+1),
 		color:          t.Color.Gray1,
 		background:     t.Color.Surface,
-		chevronIcon:    t.chevronDownIcon,
-		navigationIcon: t.NavigationCheckIcon,
+		dropdownIcon:   t.dropDownIcon,
+		navigationIcon: t.navigationCheckIcon,
 		backdrop:       new(widget.Clickable),
 
 		group:            group,
@@ -140,7 +140,7 @@ func (c *DropDown) layoutText(index int) layout.FlexChild {
 func (c *DropDown) layoutActiveIcon(index int, isFirstOption bool) layout.FlexChild {
 	var icon *widget.Icon
 	if isFirstOption {
-		icon = c.chevronIcon
+		icon = c.dropdownIcon
 	} else if index == c.selectedIndex {
 		icon = c.navigationIcon
 	}

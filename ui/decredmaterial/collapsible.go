@@ -52,7 +52,7 @@ func (t *Theme) CollapsibleWithOption() *CollapsibleWithOption {
 		moreIconButton: IconButton{
 			IconButtonStyle: material.IconButtonStyle{
 				Button:     new(widget.Clickable),
-				Icon:       t.NavMoreIcon,
+				Icon:       t.navMoreIcon,
 				Size:       unit.Dp(25),
 				Background: color.NRGBA{},
 				Color:      t.Color.Text,
