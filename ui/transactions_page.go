@@ -110,7 +110,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 			})
 		}
 
-		pg.updateTotransactionDetailsButtons(&wallTxs)
+		pg.updateToTransactionDetailsButtons(wallTxs)
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return layout.Inset{
@@ -120,10 +120,11 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 						padding := values.MarginPadding16
 						return Container{layout.Inset{Top: padding, Bottom: padding, Left: padding}}.Layout(gtx,
 							func(gtx C) D {
-								// return "no transactions" text if there are no transactions
+								// return "no transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {
-									txt := common.theme.Body1("No transactions")
-									txt.Alignment = text.Middle
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									txt := common.theme.Body1("No transactions yet")
+									txt.Color = common.theme.Color.Gray2
 									return txt.Layout(gtx)
 								}
 
@@ -339,10 +340,10 @@ func (pg *transactionsPage) sortTransactions(common *pageCommon) {
 	}
 }
 
-func (pg *transactionsPage) updateTotransactionDetailsButtons(walTxs *[]wallet.Transaction) {
-	if len(*walTxs) != len(pg.toTxnDetails) {
-		pg.toTxnDetails = make([]*gesture.Click, len(*walTxs))
-		for index := range *walTxs {
+func (pg *transactionsPage) updateToTransactionDetailsButtons(walTxs []wallet.Transaction) {
+	if len(walTxs) != len(pg.toTxnDetails) {
+		pg.toTxnDetails = make([]*gesture.Click, len(walTxs))
+		for index := range walTxs {
 			pg.toTxnDetails[index] = &gesture.Click{}
 		}
 	}
