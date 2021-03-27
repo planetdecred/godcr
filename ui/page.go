@@ -31,7 +31,8 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer, mixerSmall,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, documentationIcon *widget.Image
+documentationIcon, watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, 
+proposalIconInactive,restore *widget.Image
 
 	walletIcon image.Image
 }
@@ -178,6 +179,9 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
 		syncingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["syncing"])},
 		documentationIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
+		proposalIconActive:         &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
+		proposalIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaInactive"])},
+		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
 
 		walletIcon: decredIcons["wallet"],
 	}
@@ -216,8 +220,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
-			imageInactive: ic.walletIconInactive,
+			image:         ic.proposalIconActive,
+			imageInactive: ic.proposalIconInactive,
 			page:          PageProposals,
 		},
 		{

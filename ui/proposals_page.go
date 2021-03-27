@@ -109,7 +109,7 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 	pg := &proposalsPage{
 		theme:            common.theme,
 		wallet:           win.wallet,
-		proposalsList:    &layout.List{Axis: layout.Vertical},
+		proposalsList:    &layout.List{},
 		scrollContainer:  common.theme.ScrollContainer(),
 		tabCard:          common.theme.Card(),
 		itemCard:         common.theme.Card(),
@@ -120,10 +120,10 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		selectedProposal: &win.selectedProposal,
 		refreshWindow:    common.refreshWindow,
 		updatedIcon:      common.icons.navigationCheck,
-		updatedLabel:     common.theme.Caption("Updated"),
+		updatedLabel:     common.theme.Body2("Updated"),
 		syncIcon:         common.icons.syncingIcon,
 		syncButton:       new(widget.Clickable),
-		startSyncIcon:    common.icons.pendingIcon,
+		startSyncIcon:    common.icons.restore,
 	}
 	pg.updatedIcon.Color = common.theme.Color.Success
 	pg.updatedLabel.Color = common.theme.Color.Success
@@ -240,36 +240,42 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 
 	return pg.tabCard.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
-			Left:  values.MarginPadding10,
-			Right: values.MarginPadding10,
+			Left:  values.MarginPadding12,
+			Right: values.MarginPadding12,
 		}.Layout(gtx, func(gtx C) D {
-			return (&layout.List{}).Layout(gtx, len(pg.tabs.tabs), func(gtx C, i int) D {
+			return pg.proposalsList.Layout(gtx, len(pg.tabs.tabs), func(gtx C, i int) D {
 				gtx.Constraints.Min.X = int(width)
 				return layout.Stack{Alignment: layout.S}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
-						return material.Clickable(gtx, pg.tabs.tabs[i].btn, func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						return decredmaterial.Clickable(gtx, pg.tabs.tabs[i].btn, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding14).Layout(gtx, func(gtx C) D {
 								return layout.Center.Layout(gtx, func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											lbl := pg.theme.Body1(pg.tabs.tabs[i].title)
+											lbl.Color = pg.theme.Color.Gray
 											if pg.tabs.selected == i {
 												lbl.Color = pg.theme.Color.Primary
 											}
 											return lbl.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-												badge := pg.theme.Badge()
-												lbl := pg.theme.Caption(strconv.Itoa(len(pg.tabs.tabs[i].proposals)))
+											return layout.Inset{Left: values.MarginPadding4, Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+												c := pg.theme.Card()
+												c.Color = pg.theme.Color.LightGray
+												r := float32(8.5)
+												c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
+												lbl := pg.theme.Body2(strconv.Itoa(len(pg.tabs.tabs[i].proposals)))
+												lbl.Color = pg.theme.Color.IconColor
 												if pg.tabs.selected == i {
-													badge.Background = pg.theme.Color.Primary
+													c.Color = pg.theme.Color.Primary
 													lbl.Color = pg.theme.Color.Surface
-												} else {
-													badge.Background = pg.theme.Color.Background
-													lbl.Color = pg.theme.Color.Black
 												}
-												return badge.Layout(gtx, lbl)
+												return c.Layout(gtx, func(gtx C) D {
+													return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+														return lbl.Layout(gtx)
+													})
+												})
 											})
 										}),
 									)
@@ -296,7 +302,6 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 
 func (pg *proposalsPage) layoutFetchingState(gtx C) D {
 	str := "Fetching " + strings.ToLower(proposalCategoryTitles[pg.tabs.selected]) + " proposals..."
-
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return pg.theme.Body1(str).Layout(gtx)
@@ -405,7 +410,7 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 				Left:   values.MarginPadding15,
 				Right:  values.MarginPadding15,
 			}.Layout(gtx, func(gtx C) D {
-				return material.Clickable(gtx, selected.proposals[index].btn, func(gtx C) D {
+				return decredmaterial.Clickable(gtx, selected.proposals[index].btn, func(gtx C) D {
 					return pg.itemCard.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -458,13 +463,14 @@ func (pg *proposalsPage) layoutIsSyncedSection(gtx C) D {
 }
 
 func (pg *proposalsPage) layoutIsSyncingSection(gtx C) D {
-	return pg.theme.ImageIcon(gtx, pg.syncIcon, 20)
+	txt := pg.theme.Body2("Fetching...")
+	txt.Color = pg.theme.Color.Gray
+	return txt.Layout(gtx)
 }
 
 func (pg *proposalsPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
-		sz := gtx.Constraints.Max.X
-		pg.startSyncIcon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+		pg.startSyncIcon.Scale = 0.68
 		return pg.startSyncIcon.Layout(gtx)
 	})
 }
@@ -488,19 +494,33 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 		pg.hasRegisteredListeners = true
 	}
 
+	border := widget.Border{Color: pg.theme.Color.BorderColor, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
+	borderLayout := func(gtx layout.Context, body layout.Widget) layout.Dimensions {
+		return border.Layout(gtx, body)
+	}
+
 	return common.LayoutWithoutPadding(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
-					layout.Flexed(1, pg.layoutTabs),
+					layout.Flexed(1, func(gtx C) D {
+						return borderLayout(gtx, pg.layoutTabs)
+					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.syncCard.Layout(gtx, func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-								return layout.Center.Layout(gtx, func(gtx C) D {
-									return pg.layoutSyncSection(gtx)
+						return borderLayout(gtx, func(gtx C) D {
+							return pg.syncCard.Layout(gtx, func(gtx C) D {
+								m := values.MarginPadding12
+								if pg.isSynced {
+									m = values.MarginPadding14
+								} else if pg.wallet.IsSyncingPropoals() {
+									m = values.MarginPadding15
+								}
+								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
+									return layout.Center.Layout(gtx, func(gtx C) D {
+										return pg.layoutSyncSection(gtx)
+									})
 								})
 							})
-
 						})
 					}),
 				)
