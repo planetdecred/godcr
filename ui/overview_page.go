@@ -83,7 +83,6 @@ type overviewPage struct {
 	walletStatusIcon, cachedIcon *widget.Icon
 	syncingIcon          *widget.Image
 	toTransactionDetails []*gesture.Click
-	line                 *decredmaterial.Line
 
 	autoSyncWallet bool
 
@@ -107,7 +106,6 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		walletTransaction:  &win.walletTransaction,
 		listContainer:      &layout.List{Axis: layout.Vertical},
 		walletSyncList:     &layout.List{Axis: layout.Vertical},
-		line:               c.theme.Line(),
 
 		syncButtonHeight: 50,
 		moreButtonWidth:  115,
@@ -145,7 +143,6 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 		hideSyncDetails:      "Hide details",
 	}
 
-	pg.line.Color = c.theme.Color.LightGray
 	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), pg.text.viewAllTx, c.icons.navigationArrowForward)
 	pg.toTransactions.Color = c.theme.Color.Primary
 	pg.toTransactions.BackgroundColor = c.theme.Color.Surface
@@ -253,9 +250,8 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, c pageComm
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
-				pg.line.Width = gtx.Constraints.Max.X
 				m := values.MarginPadding5
-				return layout.Inset{Top: m}.Layout(gtx, pg.line.Layout)
+				return layout.Inset{Top: m}.Layout(gtx, pg.theme.Separator().Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
 				list := &layout.List{Axis: layout.Vertical}
@@ -364,8 +360,7 @@ func (pg *overviewPage) recentTransactionRows(c pageCommon) []layout.Widget {
 						Top:    values.MarginPadding0,
 						Bottom: values.MarginPadding0,
 					}.Layout(gtx, func(gtx C) D {
-						pg.line.Width = gtx.Constraints.Max.X
-						return pg.line.Layout(gtx)
+						return pg.theme.Separator().Layout(gtx)
 					})
 				}),
 			)
@@ -385,8 +380,7 @@ func (pg *overviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions 
 				return pg.syncBoxTitleRow(gtx, uniform)
 			}),
 			layout.Rigid(func(gtx C) D {
-				pg.line.Width = gtx.Constraints.Max.X
-				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.line.Layout)
+				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.theme.Separator().Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
@@ -423,7 +417,7 @@ func (pg *overviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions 
 			layout.Rigid(func(gtx C) D {
 				if pg.walletInfo.Syncing {
 					m := values.MarginPadding5
-					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.line.Layout)
+					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 				}
 				return layout.Dimensions{}
 			}),

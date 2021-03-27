@@ -22,7 +22,6 @@ type walletSettingsPage struct {
 	deleteWallet decredmaterial.IconButton
 
 	notificationW *widget.Bool
-	line          *decredmaterial.Line
 	errorReceiver chan error
 }
 
@@ -33,15 +32,12 @@ func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
 		walletInfo:    win.walletInfo,
 		wal:           common.wallet,
 		notificationW: new(widget.Bool),
-		line:          common.theme.Line(),
 		errorReceiver: make(chan error),
 
 		changePass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
 		rescan:       common.theme.PlainIconButton(new(widget.Clickable), icon),
 		deleteWallet: common.theme.PlainIconButton(new(widget.Clickable), icon),
 	}
-	pg.line.Height = 2
-	pg.line.Color = common.theme.Color.LightGray
 
 	color := common.theme.Color.LightGray
 	zeroInset := layout.UniformInset(values.MarginPadding0)

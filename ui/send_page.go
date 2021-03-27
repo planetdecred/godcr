@@ -113,7 +113,6 @@ type sendPage struct {
 	LastTradeRate         string
 
 	passwordModal *decredmaterial.Password
-	line          *decredmaterial.Line
 
 	isConfirmationModalOpen   bool
 	isBroadcastingTransaction bool
@@ -169,13 +168,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
-		line:             common.theme.Line(),
 	}
 
 	pg.walletAccounts = make(map[int]walletAccount)
-
-	pg.line.Color = common.theme.Color.BorderColor
-	pg.line.Height = 1
 
 	pg.balanceAfterSendValue = "- DCR"
 
@@ -361,7 +356,7 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 
 func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, "From", func(gtx C) D {
-		border := widget.Border{Color: pg.theme.Color.BorderColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
+		border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
 		return border.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
 				return decredmaterial.Clickable(gtx, pg.fromAccountBtn, func(gtx C) D {
@@ -773,8 +768,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 			)
 		},
 		func(gtx C) D {
-			pg.line.Width = gtx.Constraints.Max.X
-			return pg.line.Layout(gtx)
+			return pg.theme.Separator().Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -1278,8 +1272,8 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
 		c.notify(pg.calculateErrorText, false)
 	} else {
-		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.BorderColor, pg.theme.Color.IconColor
-		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.BorderColor, pg.theme.Color.IconColor
+		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.IconColor
+		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.IconColor
 	}
 
 	if pg.amountErrorText != "" {

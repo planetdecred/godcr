@@ -19,7 +19,6 @@ type verifyMessagePage struct {
 	clearBtn, verifyBtn                   decredmaterial.Button
 	verifyMessage                         decredmaterial.Label
 
-	line                *decredmaterial.Line
 	verifyMessageStatus *widget.Icon
 }
 
@@ -32,7 +31,6 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 		verifyMessage: c.theme.Body1(""),
 		verifyBtn:     c.theme.Button(new(widget.Clickable), "Verify message"),
 		clearBtn:      c.theme.Button(new(widget.Clickable), "Clear all"),
-		line:          c.theme.Line(),
 	}
 
 	pg.messageInput.Editor.SingleLine, pg.addressInput.Editor.SingleLine, pg.messageInput.Editor.SingleLine = true, true, true
@@ -126,9 +124,7 @@ func (pg *verifyMessagePage) verifyMessageResponse() layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		if pg.verifyMessageStatus != nil {
 			return layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
-				pg.line.Width = gtx.Constraints.Max.X
-				pg.line.Color = pg.theme.Color.Hint
-				pg.line.Layout(gtx)
+				pg.theme.Separator().Layout(gtx)
 
 				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,

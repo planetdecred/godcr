@@ -20,23 +20,37 @@ type (
 )
 
 // Line returns a line widget instance
-func (t *Theme) Line() *Line {
+func (t *Theme) Line(height, width int) Line {
+	if height == 0 {
+		height = 1
+	}
+
 	col := t.Color.Primary
 	col.A = 150
-
-	return &Line{
-		Height: 1,
+	return Line{
+		Height: height,
+		Width:  width,
 		Color:  col,
 	}
 }
 
+func (t *Theme) Separator() Line {
+	l := t.Line(1, 0)
+	l.Color = t.Color.Gray1
+	return l
+}
+
 // Layout renders the line widget
-func (l *Line) Layout(gtx C) D {
+func (l Line) Layout(gtx C) D {
 	st := op.Save(gtx.Ops)
+	if l.Width == 0 {
+		l.Width = gtx.Constraints.Max.X
+	}
+
 	line := image.Rectangle{
 		Max: image.Point{
 			X: l.Width,
-			Y: l.Height * int(gtx.Metric.PxPerDp),
+			Y: l.Height,
 		},
 	}
 	clip.Rect(line).Add(gtx.Ops)

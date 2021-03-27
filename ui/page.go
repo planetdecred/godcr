@@ -3,8 +3,6 @@ package ui
 import (
 	"image"
 	"image/color"
-	"strconv"
-	"strings"
 	"time"
 
 	"golang.org/x/text/language"
@@ -13,10 +11,8 @@ import (
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -274,10 +270,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
 }
 
-func (page pageCommon) ChangePage(pg string) {
-	page.changePage(pg)
-}
-
 func (page pageCommon) refreshPage() {
 	page.refreshWindow()
 }
@@ -291,26 +283,14 @@ func (page pageCommon) notify(text string, success bool) {
 	}()
 }
 
-func (page pageCommon) handleNavEvents() {
-	for page.minimizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = true
-	}
-
-	for page.maximizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = false
-	}
-
-	for i := range page.appBarNavItems {
-		for page.appBarNavItems[i].clickable.Clicked() {
-			page.changePage(page.appBarNavItems[i].page)
+func (page pageCommon) closeModal() {
+	go func() {
+		page.modalReceiver <- &modalLoad{
+			title:   "",
+			confirm: nil,
+			cancel:  nil,
 		}
-	}
-
-	for i := range page.drawerNavItems {
-		for page.drawerNavItems[i].clickable.Clicked() {
-			page.changePage(page.drawerNavItems[i].page)
-		}
-	}
+	}()
 }
 
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -320,7 +300,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 		layout.Expanded(func(gtx C) D {
 			// fill the entire window with a color if a user has no wallet created
 			if *page.page == PageCreateRestore {
-				return fill(gtx, page.theme.Color.Surface)
+				return decredmaterial.Fill(gtx, page.theme.Color.Surface)
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -373,7 +353,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global toasts. Stack toast on all pages and contents
-			toast := func(n *toast) layout.Dimensions {
+			t := func(n *toast) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Flexed(1, func(gtx C) D {
 						return layout.Center.Layout(gtx, func(gtx C) D {
@@ -401,25 +381,11 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 				page.toastLoad.Timer(time.Second*3, func() {
 					page.toastLoad.text = ""
 				})
-				return toast(page.toastLoad)
+				return t(page.toastLoad)
 			}
 			return layout.Dimensions{}
 		}),
 	)
-}
-
-func (page pageCommon) closeModal() {
-	go func() {
-		page.modalReceiver <- &modalLoad{
-			title:   "",
-			confirm: nil,
-			cancel:  nil,
-		}
-	}()
-}
-
-func fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
-	return decredmaterial.Fill(gtx, col)
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -430,285 +396,6 @@ type Container struct {
 
 func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	return c.padding.Layout(gtx, w)
-}
-
-func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
-	card := page.theme.Card()
-	card.Radius = decredmaterial.CornerRadius{}
-	return card.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.W.Layout(gtx, func(gtx C) D {
-							h := values.MarginPadding24
-							v := values.MarginPadding16
-							// Balance container
-							return Container{padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
-								func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											img := page.icons.logo
-											img.Scale = 1.0
-											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
-												func(gtx C) D {
-													return img.Layout(gtx)
-												})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.layoutBalance(gtx, page.info.TotalBalance)
-											})
-										}),
-									)
-								})
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-								list := layout.List{Axis: layout.Horizontal}
-								return list.Layout(gtx, len(page.appBarNavItems), func(gtx C, i int) D {
-									// header buttons container
-									return Container{layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-										return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
-											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-														func(gtx C) D {
-															return layout.Center.Layout(gtx, func(gtx C) D {
-																img := page.appBarNavItems[i].image
-																img.Scale = 1.0
-																return page.appBarNavItems[i].image.Layout(gtx)
-															})
-														})
-												}),
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{
-														Left: values.MarginPadding0,
-													}.Layout(gtx, func(gtx C) D {
-														return layout.Center.Layout(gtx, func(gtx C) D {
-															return page.theme.Body1(page.appBarNavItems[i].page).Layout(gtx)
-														})
-													})
-												}),
-											)
-										})
-									})
-								})
-							})
-						})
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				l := page.theme.Line()
-				l.Color = page.theme.Color.Gray1
-				l.Width = gtx.Constraints.Max.X
-				return l.Layout(gtx)
-			}),
-		)
-	})
-}
-
-func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
-	return layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
-				background := page.theme.Color.Surface
-				if page.drawerNavItems[i].page == *page.page {
-					background = page.theme.Color.LightGray
-				}
-				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
-				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
-					card := page.theme.Card()
-					card.Color = background
-					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
-					return card.Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-							axis := layout.Horizontal
-							leftInset := float32(15)
-							width := navDrawerWidth
-							if *page.isNavDrawerMinimized {
-								axis = layout.Vertical
-								txt.TextSize = values.TextSize10
-								leftInset = 0
-								width = navDrawerMinimizedWidth
-							}
-
-							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
-							return layout.Flex{Axis: axis}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									img := page.drawerNavItems[i].imageInactive
-									if page.drawerNavItems[i].page == *page.page {
-										img = page.drawerNavItems[i].image
-									}
-									return layout.Center.Layout(gtx, func(gtx C) D {
-										img.Scale = 1.0
-										return img.Layout(gtx)
-									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: unit.Dp(leftInset),
-										Top:  unit.Dp(4),
-									}.Layout(gtx, func(gtx C) D {
-										return layout.Center.Layout(gtx, txt.Layout)
-									})
-								}),
-							)
-						})
-					})
-				})
-			})
-		}),
-		layout.Expanded(func(gtx C) D {
-			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := page.minimizeNavDrawerButton
-				if *page.isNavDrawerMinimized {
-					btn = page.maximizeNavDrawerButton
-				}
-				return btn.Layout(gtx)
-			})
-		}),
-	)
-}
-
-// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
-// balance at the baseline of the row.
-func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
-	mainText, subText := page.breakBalance(amount)
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(unit.Sp(20), mainText).Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(unit.Sp(14), subText).Layout(gtx)
-		}),
-	)
-}
-
-// breakBalance takes the balance string and returns it in two slices
-func (page pageCommon) breakBalance(balance string) (b1, b2 string) {
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		return balanceParts[0], ""
-	}
-
-	b1 = balanceParts[0]
-	if bal, err := strconv.Atoi(b1); err == nil {
-		b1 = page.printer.Sprint(bal)
-	}
-
-	b2 = balanceParts[1]
-	b1 = b1 + "." + b2[:2]
-	b2 = b2[2:]
-	return
-}
-
-func (page pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
-	dims := layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			return body
-		}),
-		layout.Stacked(func(gtx C) D {
-			return modal
-		}),
-	)
-	return dims
-}
-
-func (page pageCommon) LayoutWithWallets(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	bd := func(gtx C) D {
-		if page.walletTabs.ChangeEvent() {
-			*page.selectedWallet = page.walletTabs.Selected
-			*page.selectedAccount = 0
-			page.accountTabs.Selected = 0
-
-			accounts := make([]decredmaterial.TabItem, len(page.info.Wallets[*page.selectedWallet].Accounts))
-			for i, account := range page.info.Wallets[*page.selectedWallet].Accounts {
-				if account.Name == "imported" {
-					continue
-				}
-				accounts[i] = decredmaterial.TabItem{
-					Title: page.info.Wallets[*page.selectedWallet].Accounts[i].Name,
-				}
-			}
-			page.accountTabs.SetTabs(accounts)
-		}
-		return page.walletTabs.Layout(gtx, body)
-	}
-	return page.Layout(gtx, bd)
-}
-
-func (page pageCommon) LayoutWithAccounts(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	if page.accountTabs.ChangeEvent() {
-		*page.selectedAccount = page.accountTabs.Selected
-	}
-
-	if page.selectedUTXO[page.info.Wallets[*page.selectedWallet].ID] == nil {
-		current := page.info.Wallets[*page.selectedWallet]
-		account := page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount]
-		page.selectedUTXO[current.ID] = make(map[int32]map[string]*wallet.UnspentOutput)
-		page.selectedUTXO[current.ID][account.Number] = make(map[string]*wallet.UnspentOutput)
-	}
-
-	return page.LayoutWithWallets(gtx, func(gtx C) D {
-		return page.accountTabs.Layout(gtx, body)
-	})
-}
-
-func (page pageCommon) SelectedAccountLayout(gtx layout.Context) layout.Dimensions {
-	current := page.info.Wallets[*page.selectedWallet]
-	account := page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount]
-
-	selectedDetails := func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return page.theme.H6(account.Name).Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-								return page.theme.H6(dcrutil.Amount(account.SpendableBalance).String()).Layout(gtx)
-							})
-						}),
-					)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								return page.theme.Body2(current.Name).Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-								return page.theme.Body2(current.Balance).Layout(gtx)
-							})
-						}),
-					)
-				}),
-			)
-		})
-	}
-
-	card := page.theme.Card()
-	card.Radius = decredmaterial.CornerRadius{
-		NE: 0,
-		NW: 0,
-		SE: 0,
-		SW: 0,
-	}
-	return card.Layout(gtx, selectedDetails)
 }
 
 func (page pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -810,11 +497,4 @@ func (page pageCommon) subpageEventHandler(sp SubPage) {
 	if sp.extraItem != nil && sp.extraItem.Clicked() {
 		sp.handleExtra()
 	}
-}
-
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
-	if err != nil {
-		panic(err)
-	}
-	return ic
 }

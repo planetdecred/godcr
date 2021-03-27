@@ -17,9 +17,9 @@ import (
 const PageUTXO = "unspentTransactionOutput"
 
 type utxoPage struct {
+	theme                  *decredmaterial.Theme
 	utxoListContainer      layout.List
 	txAuthor               *dcrlibwallet.TxAuthor
-	line                   *decredmaterial.Line
 	backButton             decredmaterial.IconButton
 	useUTXOButton          decredmaterial.Button
 	unspentOutputs         **wallet.UnspentOutputs
@@ -38,17 +38,15 @@ type utxoPage struct {
 
 func (win *Window) UTXOPage(common pageCommon) layout.Widget {
 	pg := &utxoPage{
+		theme:          common.theme,
 		unspentOutputs: &win.walletUnspentOutputs,
 		utxoListContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		line:                   common.theme.Line(),
 		txAuthor:               &win.txAuthor,
 		unspentOutputsSelected: &common.selectedUTXO,
 		selecAllChexBox:        common.theme.CheckBox(new(widget.Bool), ""),
 	}
-	pg.line.Color = common.theme.Color.Gray
-	pg.line.Height = 1
 
 	pg.backButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
 	pg.backButton.Color = common.theme.Color.Hint
@@ -182,8 +180,7 @@ func (pg *utxoPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							pg.line.Width = gtx.Constraints.Max.X
-							return pg.line.Layout(gtx)
+							return pg.theme.Separator().Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return pg.utxoRowHeader(gtx, &c)

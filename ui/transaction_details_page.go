@@ -36,7 +36,6 @@ type transactionDetailsPage struct {
 	toDcrdata                       *widget.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
-	line                            *decredmaterial.Line
 	infoModal                       *decredmaterial.Modal
 	showInfo                        bool
 }
@@ -65,13 +64,11 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 		minInfoBtn: common.theme.Button(new(widget.Clickable), "Got it"),
 		hashBtn:    common.theme.Button(new(widget.Clickable), ""),
 		toDcrdata:  new(widget.Clickable),
-		line:       common.theme.Line(),
 		infoModal:  common.theme.Modal(),
 	}
 
 	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
-	pg.line.Color = common.theme.Color.LightGray
 	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.minInfoBtn.Background = color.NRGBA{}
@@ -96,28 +93,28 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) 
 			return pg.header(gtx)
 		},
 		func(gtx C) D {
-			return pg.txnBalanceAndStatus(gtx, &common)
+			return pg.txnBalanceAndStatus(gtx, common)
 		},
 		func(gtx C) D {
-			return pg.divide(gtx)
+			return pg.separator(gtx)
 		},
 		func(gtx C) D {
 			return pg.txnTypeAndID(gtx)
 		},
 		func(gtx C) D {
-			return pg.divide(gtx)
+			return pg.separator(gtx)
 		},
 		func(gtx C) D {
 			return pg.txnInputs(gtx)
 		},
 		func(gtx C) D {
-			return pg.divide(gtx)
+			return pg.separator(gtx)
 		},
 		func(gtx C) D {
 			return pg.txnOutputs(gtx, &common)
 		},
 		func(gtx C) D {
-			return pg.divide(gtx)
+			return pg.separator(gtx)
 		},
 		func(gtx C) D {
 			if *pg.txnInfo == nil {
@@ -184,7 +181,7 @@ func (pg *transactionDetailsPage) header(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common pageCommon) layout.Dimensions {
 	txnWidgets := initTxnWidgets(common, **pg.txnInfo)
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
@@ -549,12 +546,10 @@ func (pg *transactionDetailsPage) pageSections(gtx layout.Context, body layout.W
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
 }
 
-func (pg *transactionDetailsPage) divide(gtx layout.Context) layout.Dimensions {
-	pg.line.Width = gtx.Constraints.Max.X
-	pg.line.Height = 2
+func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding5
 	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-		return pg.line.Layout(gtx)
+		return pg.theme.Separator().Layout(gtx)
 	})
 }
 

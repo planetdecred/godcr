@@ -44,7 +44,6 @@ type walletPage struct {
 	accountIcon                                *widget.Image
 	walletAlertIcon                            *widget.Image
 	container, accountsList, walletsList, list layout.List
-	line                                       *decredmaterial.Line
 	collapsibles                               map[int]collapsible
 	toAcctDetails                              []*gesture.Click
 	iconButton                                 decredmaterial.IconButton
@@ -72,7 +71,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		list:                     layout.List{Axis: layout.Vertical},
 		theme:                    common.theme,
 		wallet:                   common.wallet,
-		line:                     common.theme.Line(),
 		card:                     common.theme.Card(),
 		walletAccount:            &win.walletAccount,
 		backdrop:                 new(widget.Clickable),
@@ -87,7 +85,6 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.watchOnlyWalletLabel = pg.theme.Body1("Watch-only Wallets")
 	pg.watchOnlyWalletLabel.Color = pg.theme.Color.Gray
 
-	pg.line.Height = 1
 	pg.iconButton = decredmaterial.IconButton{
 		IconButtonStyle: material.IconButtonStyle{
 			Size:       unit.Dp(25),
@@ -404,11 +401,9 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						pg.line.Width = gtx.Constraints.Max.X
-						pg.line.Color = common.theme.Color.LightGray
 						m := values.MarginPadding10
 						return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-							return pg.line.Layout(gtx)
+							return pg.theme.Separator().Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -476,9 +471,7 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageComm
 				layout.Rigid(pg.watchOnlyWalletLabel.Layout),
 				layout.Rigid(func(gtx C) D {
 					m := values.MarginPadding10
-					pg.line.Width = gtx.Constraints.Max.X
-					pg.line.Color = common.theme.Color.Hint
-					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.line.Layout)
+					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.layoutWatchOnlyWallets(gtx, common)
@@ -618,11 +611,9 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			pg.line.Width = gtx.Constraints.Max.X
-			pg.line.Color = common.theme.Color.LightGray
 			m := values.MarginPadding10
 			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-				return pg.line.Layout(gtx)
+				return pg.theme.Separator().Layout(gtx)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -821,7 +812,7 @@ func (pg *walletPage) Handle(common pageCommon) {
 		for pg.collapsibles[index].backupAcctBtn.Button.Clicked() {
 			*common.selectedWallet = index
 			pg.current = pg.walletInfo.Wallets[index]
-			common.ChangePage(PageSeedBackup)
+			common.changePage(PageSeedBackup)
 		}
 	}
 

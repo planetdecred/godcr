@@ -22,7 +22,6 @@ type acctDetailsPage struct {
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
 	acctInfo                 **wallet.Account
-	line                     *decredmaterial.Line
 	editAccount              *widget.Clickable
 	errorReceiver            chan error
 }
@@ -36,12 +35,10 @@ func (win *Window) AcctDetailsPage(common pageCommon) layout.Widget {
 		acctInfo:      &win.walletAccount,
 		theme:         common.theme,
 		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
-		line:          common.theme.Line(),
 		editAccount:   new(widget.Clickable),
 		errorReceiver: make(chan error),
 	}
 
-	pg.line.Color = common.theme.Color.LightGray
 	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -57,11 +54,9 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 			return pg.accountBalanceLayout(gtx, &common)
 		},
 		func(gtx C) D {
-			pg.line.Width = gtx.Constraints.Max.X
-			pg.line.Height = 2
 			m := values.MarginPadding10
 			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-				return pg.line.Layout(gtx)
+				return pg.theme.Separator().Layout(gtx)
 			})
 		},
 		func(gtx C) D {

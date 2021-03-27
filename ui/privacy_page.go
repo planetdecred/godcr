@@ -21,7 +21,6 @@ type privacyPage struct {
 	pageContainer                        layout.List
 	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
 	infoBtn                              decredmaterial.IconButton
-	line                                 *decredmaterial.Line
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
 	errorReceiver                        chan error
@@ -34,7 +33,6 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 		pageContainer:           layout.List{Axis: layout.Vertical},
 		toggleMixer:             new(widget.Bool),
 		allowUnspendUnmixedAcct: new(widget.Bool),
-		line:                    common.theme.Line(),
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
 		errorReceiver:           make(chan error),
@@ -45,8 +43,6 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 	pg.infoBtn.Color = common.theme.Color.Gray
 	pg.infoBtn.Background = common.theme.Color.Surface
 	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
-	pg.line.Color = common.theme.Color.LightGray
-	pg.line.Height = 1
 
 	return func(gtx C) D {
 		pg.Handler(common)
@@ -272,7 +268,6 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return c.theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		pg.line.Width = gtx.Constraints.Max.X
 
 		row := func(txt1, txt2 string) D {
 			return layout.Inset{
@@ -299,13 +294,13 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 				})
 			}),
 			layout.Rigid(func(gtx C) D { return row("Mixed account", "mixed") }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Change account", "unmixed") }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Account branch", fmt.Sprintf("%d", dcrlibwallet.MixedAccountBranch)) }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Shuffle server", dcrlibwallet.ShuffleServer) }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Shuffle port", dcrlibwallet.ShufflePort) }),
 		)
 	})
