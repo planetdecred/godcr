@@ -35,6 +35,7 @@ const SecurityToolsInfoTemplate = "SecurityToolsInfo"
 const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
 const UnlockWalletRestoreTemplate = "UnlockWalletRestoreTemplate"
 const SendInfoTemplate = "SendInfo"
+const ReceiveInfoTemplate = "ReceiveInfo"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -258,6 +259,16 @@ func (m *ModalTemplate) sendInfo() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			text := m.th.Body1("Input or scan the destination wallet address and input the amount to send funds.")
+			text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) receiveInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Body1("Each time you receive a payment, a new address is generated to protect your privacy.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -595,6 +606,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.sendInfo()
+		return
+	case ReceiveInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.receiveInfo()
 		return
 	default:
 		return
