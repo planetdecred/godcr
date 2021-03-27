@@ -136,7 +136,7 @@ func (pg *aboutPage) layoutRow(gtx C, row aboutPageRow, drawSeparator bool) D {
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							if row.icon != nil {
-								return row.icon.Layout(gtx, values.MarginPadding30)
+								return row.icon.Layout(gtx, values.MarginPadding20)
 							}
 							return row.rightLabel.Layout(gtx)
 						})
@@ -145,39 +145,15 @@ func (pg *aboutPage) layoutRow(gtx C, row aboutPageRow, drawSeparator bool) D {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
+			top := values.MarginPadding5
+			bottom := top 
 			if !drawSeparator {
+				bottom = values.MarginPadding0
 				return D{}
 			}
 			return layout.Inset{
-				Top:    values.MarginPadding5,
-				Bottom: values.MarginPadding5,
-			}.Layout(gtx, func(gtx C) D {
-				pg.line.Width = gtx.Constraints.Max.X
-				return pg.line.Layout(gtx)
-			})
-		}),
-	)
-}
-
-func (pg *aboutPage) layoutRowD(gtx C, leftLabel, rightLabel decredmaterial.Label) D {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{
-				Top:    values.MarginPadding5,
-				Bottom: values.MarginPadding5,
-			}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(leftLabel.Layout),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, rightLabel.Layout)
-					}),
-				)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{
-				Top:    values.MarginPadding5,
-				Bottom: values.MarginPadding5,
+				Top:    top,
+				Bottom: bottom,
 			}.Layout(gtx, func(gtx C) D {
 				pg.line.Width = gtx.Constraints.Max.X
 				return pg.line.Layout(gtx)
