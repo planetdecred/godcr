@@ -52,6 +52,10 @@ func (win *Window) AboutPage(common pageCommon) layout.Widget {
 	pg.line.Height = 1
 	pg.line.Color = common.theme.Color.Background
 
+	pg.versionLabel.Color = pg.theme.Color.Text
+	pg.buildDateLabel.Color = pg.theme.Color.Text
+	pg.networkLabel.Color = pg.theme.Color.Text
+	pg.licenseLabel.Color = pg.theme.Color.Text
 	pg.versionValueLabel.Color = pg.theme.Color.Gray
 	pg.buildDateValueLabel.Color = pg.theme.Color.Gray
 	pg.networkValueLabel.Color = pg.theme.Color.Gray
