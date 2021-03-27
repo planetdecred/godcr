@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -127,9 +128,16 @@ func (pg *aboutPage) layoutRows(gtx C) D {
 func (pg *aboutPage) layoutRow(gtx C, row aboutPageRow, drawSeparator bool) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
+			var bottmPadding unit.Value
+			if drawSeparator {
+				bottmPadding = values.MarginPadding5
+			} else {
+				bottmPadding = values.MarginPadding0
+			}
+
 			return layout.Inset{
 				Top:    values.MarginPadding5,
-				Bottom: values.MarginPadding5,
+				Bottom: bottmPadding,
 			}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(row.leftLabel.Layout),
@@ -145,15 +153,12 @@ func (pg *aboutPage) layoutRow(gtx C, row aboutPageRow, drawSeparator bool) D {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			top := values.MarginPadding5
-			bottom := top 
 			if !drawSeparator {
-				bottom = values.MarginPadding0
 				return D{}
 			}
 			return layout.Inset{
-				Top:    top,
-				Bottom: bottom,
+				Top:    values.MarginPadding5,
+				Bottom: values.MarginPadding5,
 			}.Layout(gtx, func(gtx C) D {
 				pg.line.Width = gtx.Constraints.Max.X
 				return pg.line.Layout(gtx)
