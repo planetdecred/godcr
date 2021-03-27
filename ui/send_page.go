@@ -113,7 +113,6 @@ type sendPage struct {
 
 	leftTotalCostValue  string
 	rightTotalCostValue string
-	popupText           string
 	sendToOption        string
 
 	sendAmountDCR string
@@ -753,11 +752,11 @@ func (pg *sendPage) walletAccountsPopupLayout(gtx layout.Context, name, totalBal
 						}
 
 						if strings.Contains(title, "Sending") && *common.selectedWallet == wIndex && *common.selectedAccount == aIndex {
-							sections(gtx)
+							return sections(gtx)
 						}
 
 						if strings.Contains(title, "Receiving") && pg.selectedToWalletIndex == wIndex && pg.selectedToAccountIndex == aIndex {
-							sections(gtx)
+							return sections(gtx)
 						}
 
 						return layout.Dimensions{}
@@ -1271,7 +1270,6 @@ func (pg *sendPage) setDestinationAddr(sendAmount float64) {
 	if pg.sendToOption == "My account" {
 		addr = pg.selectedToAccount.CurrentAddress
 	}
-	fmt.Println(addr)
 	pg.txAuthor.AddSendDestination(addr, pg.amountAtoms, false)
 }
 

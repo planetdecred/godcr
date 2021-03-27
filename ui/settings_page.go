@@ -133,7 +133,6 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 		return common.Modal(gtx, common.Layout(gtx, body), pg.currencyConversionSection(gtx))
 	}
 
-
 	return common.Layout(gtx, func(gtx C) D {
 		return common.UniformPadding(gtx, body)
 	})
