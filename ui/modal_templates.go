@@ -268,7 +268,7 @@ func (m *ModalTemplate) sendInfo() []func(gtx C) D {
 func (m *ModalTemplate) receiveInfo() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			text := m.th.Body1("Each time you receive a payment, a new address is generated to protect your privacy.")
+			text := m.th.Label(values.TextSize20, "Each time you receive a payment, a new address is generated to protect your privacy.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},
@@ -382,7 +382,9 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 
 	title := []func(gtx C) D{
 		func(gtx C) D {
-			return th.H5(load.title).Layout(gtx)
+			t := th.H5(load.title)
+			t.Font.Weight = 600
+			return t.Layout(gtx)
 		},
 	}
 

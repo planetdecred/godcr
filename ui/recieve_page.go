@@ -38,13 +38,13 @@ type walletAccountWidget struct {
 	fromAccountBtn           *widget.Clickable
 }
 type receivePage struct {
-	pageContainer                layout.List
-	isNewAddr, isInfo            bool
-	addrs                        string
-	newAddrBtn, minInfo, copyBtn decredmaterial.Button
-	infoBtn, moreBtn             decredmaterial.IconButton
-	card                         decredmaterial.Card
-	receiveAddressLabel          decredmaterial.Label
+	pageContainer          layout.List
+	isNewAddr, isInfo      bool
+	addrs                  string
+	newAddr, minInfo, copy decredmaterial.Button
+	info, more             decredmaterial.IconButton
+	card                   decredmaterial.Card
+	receiveAddress         decredmaterial.Label
 
 	line *decredmaterial.Line
 
@@ -56,14 +56,14 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		infoBtn: common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo))),
-		copyBtn: common.theme.Button(new(widget.Clickable), "Copy"),
-
-		minInfo:             common.theme.Button(new(widget.Clickable), "Got It"),
-		newAddrBtn:          common.theme.Button(new(widget.Clickable), "Generate new address"),
-		receiveAddressLabel: common.theme.Label(values.TextSize20, ""),
-		card:                common.theme.Card(),
-		line:                common.theme.Line(),
+		info:           common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo))),
+		copy:           common.theme.Button(new(widget.Clickable), "Copy"),
+		more:           common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon),
+		minInfo:        common.theme.Button(new(widget.Clickable), "Got It"),
+		newAddr:        common.theme.Button(new(widget.Clickable), "Generate new address"),
+		receiveAddress: common.theme.Label(values.TextSize20, ""),
+		card:           common.theme.Card(),
+		line:           common.theme.Line(),
 
 		wallAcctWidget: walletAccountWidget{
 			title:                    common.theme.Label(values.TextSize24, "Receiving account"),
@@ -76,16 +76,15 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		},
 	}
 
-	page.infoBtn.Inset, page.infoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
-
-	page.copyBtn.Background = color.NRGBA{}
-	page.copyBtn.Color = common.theme.Color.Primary
-
-	page.moreBtn = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon)
-	page.moreBtn.Color = common.theme.Color.IconColor
-	page.moreBtn.Inset = layout.UniformInset(values.MarginPadding0)
-
+	page.info.Inset, page.info.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
+	page.copy.Background = color.NRGBA{}
+	page.copy.Color = common.theme.Color.Primary
+	page.more.Color = common.theme.Color.IconColor
+	page.more.Inset = layout.UniformInset(values.MarginPadding0)
 	page.line.Color = common.theme.Color.Background
+	page.newAddr.Inset = layout.UniformInset(values.MarginPadding15)
+	page.newAddr.Color = common.theme.Color.Text
+	page.newAddr.Background = common.theme.Color.Surface
 
 	return func(gtx C) D {
 		page.Handle(common)
@@ -180,15 +179,15 @@ func (pg *receivePage) generateAddressSection(gtx layout.Context, common pageCom
 					if pg.isNewAddr {
 						m := op.Record(gtx.Ops)
 						layout.Inset{Top: values.MarginPadding30, Left: unit.Dp(-95)}.Layout(gtx, func(gtx C) D {
-							pg.newAddrBtn.TextSize = values.TextSize10
-							return pg.newAddrBtn.Layout(gtx)
+							pg.newAddr.TextSize = values.TextSize10
+							return pg.newAddr.Layout(gtx)
 						})
 						op.Defer(gtx.Ops, m.Stop())
 					}
 					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.moreBtn.Layout(gtx)
+					return pg.more.Layout(gtx)
 				}),
 			)
 		}),
@@ -242,9 +241,9 @@ func (pg *receivePage) receiveAddressSection(gtx layout.Context, c pageCommon) l
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
-				pg.receiveAddressLabel.Text = pg.addrs
-				pg.receiveAddressLabel.Alignment = text.Middle
-				return pg.receiveAddressLabel.Layout(gtx)
+				pg.receiveAddress.Text = pg.addrs
+				pg.receiveAddress.Alignment = text.Middle
+				return pg.receiveAddress.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				pg.line.Width, pg.line.Height = 1, 100
@@ -255,14 +254,14 @@ func (pg *receivePage) receiveAddressSection(gtx layout.Context, c pageCommon) l
 			}),
 			layout.Rigid(func(gtx C) D {
 				gtx.Constraints.Min.X, gtx.Constraints.Min.Y = 120, 100
-				return pg.copyBtn.Layout(gtx)
+				return pg.copy.Layout(gtx)
 			}),
 		)
 	})
 }
 
 func (pg *receivePage) Handle(common pageCommon) {
-	if pg.moreBtn.Button.Clicked() {
+	if pg.more.Button.Clicked() {
 		pg.isNewAddr = !pg.isNewAddr
 		if pg.isInfo {
 			pg.isInfo = false
@@ -273,7 +272,7 @@ func (pg *receivePage) Handle(common pageCommon) {
 		pg.isInfo = false
 	}
 
-	if pg.newAddrBtn.Button.Clicked() {
+	if pg.newAddr.Button.Clicked() {
 		wallet := common.info.Wallets[*common.selectedWallet]
 		account := common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount]
 
@@ -289,7 +288,7 @@ func (pg *receivePage) Handle(common pageCommon) {
 	if common.subPageInfoButton.Button.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
-				template:   SendInfoTemplate,
+				template:   ReceiveInfoTemplate,
 				title:      "Receive DCR",
 				cancel:     common.closeModal,
 				cancelText: "Got it",
@@ -301,15 +300,15 @@ func (pg *receivePage) Handle(common pageCommon) {
 		*common.page = PageOverview
 	}
 
-	if pg.copyBtn.Button.Clicked() {
+	if pg.copy.Button.Clicked() {
 		go func() {
 			common.clipboard <- WriteClipboard{Text: common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress}
 		}()
-		pg.copyBtn.Text = "Copied!"
-		pg.copyBtn.Color = common.theme.Color.Success
+		pg.copy.Text = "Copied!"
+		pg.copy.Color = common.theme.Color.Success
 		time.AfterFunc(time.Second*3, func() {
-			pg.copyBtn.Text = "Copy"
-			pg.copyBtn.Color = common.theme.Color.Primary
+			pg.copy.Text = "Copy"
+			pg.copy.Color = common.theme.Color.Primary
 		})
 		return
 	}
