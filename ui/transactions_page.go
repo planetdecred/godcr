@@ -5,15 +5,12 @@ import (
 	"sort"
 	"time"
 
-	"gioui.org/unit"
-
 	"gioui.org/f32"
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
-	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -98,7 +95,6 @@ func (pg *transactionsPage) setWallets(common pageCommon) {
 
 func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.setWallets(common)
-
 	container := func(gtx C) D {
 		walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
 		wallTxs := (*pg.walletTransactions).Txs[walletID]
@@ -108,7 +104,6 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 			})
 		}
 
-		pg.updateToTransactionDetailsButtons(wallTxs)
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return layout.Inset{
@@ -118,7 +113,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 						padding := values.MarginPadding16
 						return Container{layout.Inset{Top: padding, Bottom: padding, Left: padding}}.Layout(gtx,
 							func(gtx C) D {
-								// return "no transactions yet" text if there are no transactions
+								// return "No transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									txt := common.theme.Body1("No transactions yet")
@@ -126,16 +121,23 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 									return txt.Layout(gtx)
 								}
 
+								// update transaction row click gesture when the length of the click gesture slice and
+								// transactions list are different.
+								if len(wallTxs) != len(pg.toTxnDetails) {
+									pg.toTxnDetails = createClickGestures(len(wallTxs))
+								}
+
 								return pg.txsList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
 									click := pg.toTxnDetails[index]
 									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 									click.Add(gtx.Ops)
-									pg.goToTxnDetails(gtx, &common, &wallTxs[index], click)
-									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return txnRowInfo(gtx, common, wallTxs[index], index)
-										}),
-									)
+									pg.goToTxnDetails(click.Events(gtx), common.changePage, &wallTxs[index])
+									var row = TransactionRow{
+										transaction: wallTxs[index],
+										index:       index,
+										showBadge:   false,
+									}
+									return transactionRow(gtx, common, row)
 								})
 							})
 					})
@@ -233,202 +235,6 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	}
 }
 
-type transactionRow struct {
-	transaction wallet.Transaction
-	index       int
-	showBadge   bool
-}
-
-func txnRowInfo(gtx layout.Context, common pageCommon, transaction wallet.Transaction, index int) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	directionIconTopMargin := values.MarginPadding35
-	if index == 0 {
-		directionIconTopMargin = values.MarginPadding0
-	}
-	return layout.Inset{}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				icon := common.icons.receiveIcon
-				icon.Scale = 1.0
-				if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
-					icon = common.icons.sendIcon
-				}
-				return layout.Inset{Top: directionIconTopMargin}.Layout(gtx, func(gtx C) D {
-					return icon.Layout(gtx)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if index == 0 {
-							return layout.Dimensions{}
-						}
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						separator := common.theme.Separator()
-						separator.Width = gtx.Constraints.Max.X - gtx.Px(unit.Dp(16))
-						return layout.E.Layout(gtx, func(gtx C) D {
-							// The top and bottom margin below should be 18 as defined in the mockup. However, there's
-							// already a margin between the label and separator of about 2DP
-							return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}.Layout(gtx,
-								func(gtx C) D {
-									return separator.Layout(gtx)
-								})
-						})
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.Inset{}.Layout(gtx, func(gtx C) D {
-							return layout.Flex{
-								Axis:      layout.Horizontal,
-								Spacing:   layout.SpaceBetween,
-								Alignment: layout.Middle,
-							}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												return layoutBalance(gtx, transaction.Balance, common)
-											}),
-											layout.Rigid(func(gtx C) D {
-												return walletBadge(gtx, common, transaction.WalletName)
-											}),
-										)
-									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-												func(gtx C) D {
-													s := formatDateOrTime(transaction.Txn.Timestamp)
-													if transaction.Status != "confirmed" {
-														s = transaction.Status
-													}
-													status := common.theme.Body1(s)
-													status.Alignment = text.Middle
-													return status.Layout(gtx)
-												})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Right: values.MarginPadding22}.Layout(gtx, func(gtx C) D {
-												statusIcon := common.icons.confirmIcon
-												statusIcon.Scale = 1.0
-												if transaction.Status != "confirmed" {
-													statusIcon = common.icons.pendingIcon
-												}
-												return statusIcon.Layout(gtx)
-											})
-										}),
-									)
-								}),
-							)
-						})
-					}),
-				)
-			}),
-		)
-	})
-}
-
-func walletBadge(gtx layout.Context, c pageCommon, walletName string) D {
-	//walletNameVisibility := len(c.info.Wallets) > 1
-	//if !walletNameVisibility {
-	//	return layout.Dimensions{}
-	//}
-	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-		return decredmaterial.Card{
-			Color: c.theme.Color.LightGray,
-		}.Layout(gtx, func(gtx C) D {
-			return layout.Inset{
-				Top:   values.MarginPadding2,
-				Left:  values.MarginPadding5,
-				Right: values.MarginPadding5,
-			}.Layout(gtx, func(gtx C) D {
-				name := c.theme.Label(values.TextSize12, walletName)
-				name.Color = c.theme.Color.Gray
-				return name.Layout(gtx)
-			})
-		})
-	})
-}
-
-//func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, transaction wallet.Transaction, index int) layout.Dimensions {
-//	txnWidgets := initTxnWidgets(common, transaction)
-//	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-//	directionIconTopMargin := values.MarginPadding35
-//	if index == 0 {
-//		directionIconTopMargin = values.MarginPadding0
-//	}
-//	return layout.Inset{}.Layout(gtx, func(gtx C) D {
-//		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-//			layout.Rigid(func(gtx C) D {
-//				icon := txnWidgets.direction
-//				icon.Scale = 1.0
-//				return layout.Inset{Top: directionIconTopMargin}.Layout(gtx, func(gtx C) D {
-//					return icon.Layout(gtx)
-//				})
-//			}),
-//			layout.Rigid(func(gtx C) D {
-//				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-//					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-//						if index == 0 {
-//							return layout.Dimensions{}
-//						}
-//						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-//						pg.line.Width = gtx.Constraints.Max.X - gtx.Px(unit.Dp(16))
-//						pg.line.Height = 1
-//						return layout.E.Layout(gtx, func(gtx C) D {
-//							// The top and bottom margin below should be 18 as defined in the mockup. However, there's
-//							// already a margin between the label and separator of about 2DP
-//							return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}.Layout(gtx,
-//								func(gtx C) D {
-//									return pg.line.Layout(gtx)
-//								})
-//						})
-//					}),
-//					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-//						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-//						return layout.Inset{}.Layout(gtx, func(gtx C) D {
-//							return layout.Flex{
-//								Axis:      layout.Horizontal,
-//								Spacing:   layout.SpaceBetween,
-//								Alignment: layout.Middle,
-//							}.Layout(gtx,
-//								layout.Rigid(func(gtx C) D {
-//									layout.Flex{Axis: layout.Vertical}.Layout(gtx, layout.Rigid(func(gtx C) D {
-//
-//									}))
-//									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-//										return layoutBalance(gtx, transaction.Balance, *common)
-//									})
-//								}),
-//								layout.Rigid(func(gtx C) D {
-//									return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-//										layout.Rigid(func(gtx C) D {
-//											txnWidgets.status.Alignment = text.Middle
-//											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-//												func(gtx C) D {
-//													return txnWidgets.status.Layout(gtx)
-//												})
-//										}),
-//										layout.Rigid(func(gtx C) D {
-//											return layout.Inset{Right: values.MarginPadding22}.Layout(gtx, func(gtx C) D {
-//												icon := txnWidgets.statusIcon
-//												icon.Scale = 1.0
-//												return icon.Layout(gtx)
-//											})
-//										}),
-//									)
-//								}),
-//							)
-//						})
-//					}),
-//				)
-//			}),
-//		)
-//	})
-//}
-
 func (pg *transactionsPage) Handle(common pageCommon) {
 	sortSelection := pg.orderDropDown.SelectedIndex()
 
@@ -454,20 +260,11 @@ func (pg *transactionsPage) sortTransactions(common *pageCommon) {
 	}
 }
 
-func (pg *transactionsPage) updateToTransactionDetailsButtons(walTxs []wallet.Transaction) {
-	if len(walTxs) != len(pg.toTxnDetails) {
-		pg.toTxnDetails = make([]*gesture.Click, len(walTxs))
-		for index := range walTxs {
-			pg.toTxnDetails[index] = &gesture.Click{}
-		}
-	}
-}
-
-func (pg *transactionsPage) goToTxnDetails(gtx layout.Context, c *pageCommon, txn *wallet.Transaction, click *gesture.Click) {
-	for _, e := range click.Events(gtx) {
+func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, changePage func(string), txn *wallet.Transaction) {
+	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			*pg.walletTransaction = txn
-			c.changePage(PageTransactionDetails)
+			changePage(PageTransactionDetails)
 		}
 	}
 }

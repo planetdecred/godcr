@@ -59,6 +59,7 @@ type Theme struct {
 		InactiveGray color.NRGBA
 		Gray1        color.NRGBA
 		Gray2        color.NRGBA
+		Gray3        color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -98,10 +99,10 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Danger = rgb(0xed6d47)
 	t.Color.Gray = rgb(0x596D81)
 	t.Color.Gray1 = rgb(0xe6eaed)
-	t.Color.Gray2 = rgb(0x899785)
+	t.Color.Gray2 = rgb(0x8997a5)
+	t.Color.Gray3 = rgb(0x3d5873)
 	t.Color.LightGray = rgb(0xf3f5f6)
 	t.Color.DeepBlue = rgb(0x091440)
-	t.Color.IconColor = rgb(0x3d5873)
 	t.Color.InactiveGray = rgb(0xc4cbd2)
 	t.Color.Black = rgb(0x000000)
 	t.TextSize = unit.Sp(16)

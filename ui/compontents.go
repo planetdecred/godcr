@@ -2,16 +2,22 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	"strconv"
 	"strings"
 )
 
+// todo: add comment describing what code should be in components
+
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
 func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
+	// todo: make "DCR" symbols small when there are no decimals in the balance
 	mainText, subText := page.breakBalance(amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -182,6 +188,135 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 	)
+}
+
+type TransactionRow struct {
+	transaction wallet.Transaction
+	index       int
+	showBadge   bool
+}
+
+// transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
+// direction, balance, status.
+func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	directionIconTopMargin := values.MarginPadding16
+
+	if row.index == 0 && row.showBadge {
+		directionIconTopMargin = values.MarginPadding14
+	} else if row.index == 0 {
+		// todo: remove top margin from container
+		directionIconTopMargin = values.MarginPadding0
+	}
+
+	return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				icon := common.icons.receiveIcon
+				if row.transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
+					icon = common.icons.sendIcon
+				}
+				icon.Scale = 1.0
+
+				return layout.Inset{Top: directionIconTopMargin}.Layout(gtx, func(gtx C) D {
+					return icon.Layout(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						if row.index == 0 {
+							return layout.Dimensions{}
+						}
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						separator := common.theme.Separator()
+						separator.Width = gtx.Constraints.Max.X - gtx.Px(unit.Dp(16))
+						return layout.E.Layout(gtx, func(gtx C) D {
+							// Todo: add comment
+							marginBottom := values.MarginPadding16
+							if row.showBadge {
+								marginBottom = values.MarginPadding5
+							}
+							return layout.Inset{Bottom: marginBottom}.Layout(gtx,
+								func(gtx C) D {
+									return separator.Layout(gtx)
+								})
+						})
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.Inset{}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{
+								Axis:      layout.Horizontal,
+								Spacing:   layout.SpaceBetween,
+								Alignment: layout.Middle,
+							}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												return layoutBalance(gtx, row.transaction.Balance, common)
+											}),
+											layout.Rigid(func(gtx C) D {
+												if row.showBadge {
+													return walletLabel(gtx, common, row.transaction.WalletName)
+												}
+												return layout.Dimensions{}
+											}),
+										)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
+												func(gtx C) D {
+													s := formatDateOrTime(row.transaction.Txn.Timestamp)
+													if row.transaction.Status != "confirmed" {
+														s = row.transaction.Status
+													}
+													status := common.theme.Body1(s)
+													status.Alignment = text.Middle
+													return status.Layout(gtx)
+												})
+										}),
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{Right: values.MarginPadding22}.Layout(gtx, func(gtx C) D {
+												statusIcon := common.icons.confirmIcon
+												if row.transaction.Status != "confirmed" {
+													statusIcon = common.icons.pendingIcon
+												}
+												statusIcon.Scale = 1.0
+												return statusIcon.Layout(gtx)
+											})
+										}),
+									)
+								}),
+							)
+						})
+					}),
+				)
+			}),
+		)
+	})
+}
+
+// walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
+// are transactions from multiple wallets
+func walletLabel(gtx layout.Context, c pageCommon, walletName string) D {
+	return decredmaterial.Card{
+		Color: c.theme.Color.LightGray,
+	}.Layout(gtx, func(gtx C) D {
+		return Container{
+			layout.Inset{
+				Left:  values.MarginPadding4,
+				Right: values.MarginPadding4,
+			}}.Layout(gtx, func(gtx C) D {
+			name := c.theme.Label(values.TextSize12, walletName)
+			name.Color = c.theme.Color.Gray
+			return name.Layout(gtx)
+		})
+	})
 }
 
 func (page pageCommon) handleNavEvents() {
