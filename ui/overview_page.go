@@ -275,7 +275,7 @@ func (pg *overviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions 
 		}}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.syncBoxTitleRow(gtx, uniform)
+					return pg.syncBoxTitleRow(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, pg.theme.Separator().Layout)
@@ -456,7 +456,7 @@ func (pg *overviewPage) endToEndRow(gtx layout.Context, inset layout.Inset, left
 }
 
 // syncBoxTitleRow lays out widgets in the title row inside the sync status box.
-func (pg *overviewPage) syncBoxTitleRow(gtx layout.Context, inset layout.Inset) layout.Dimensions {
+func (pg *overviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 	title := pg.theme.Body2(pg.text.statusTitle)
 	title.Color = pg.theme.Color.Gray3
 	statusLabel := pg.theme.Body1(pg.text.offlineStatus)
