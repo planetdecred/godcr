@@ -231,9 +231,9 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 										}),
 										layout.Rigid(func(gtx C) D {
 											if c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
-												return layoutBalance(gtx, unmixedBalance, *c)
+												return c.layoutBalance(gtx, unmixedBalance)
 											}
-											return layoutBalance(gtx, unmixedBalance, *c)
+											return c.layoutBalance(gtx, unmixedBalance)
 										}),
 									)
 								}),
@@ -252,7 +252,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return layoutBalance(gtx, mixedBalance, *c)
+											return c.layoutBalance(gtx, mixedBalance)
 										}),
 									)
 								}),

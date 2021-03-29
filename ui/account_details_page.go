@@ -109,17 +109,17 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 }
 
 func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	totalBalanceMain, totalBalanceSub := breakBalance((*pg.acctInfo).TotalBalance)
+	totalBalanceMain, totalBalanceSub := breakBalance(common.printer, (*pg.acctInfo).TotalBalance)
 	spendable := dcrutil.Amount((*pg.acctInfo).SpendableBalance).String()
-	spendableMain, spendableSub := breakBalance(spendable)
+	spendableMain, spendableSub := breakBalance(common.printer, spendable)
 	immatureRewards := dcrutil.Amount((*pg.acctInfo).Balance.ImmatureReward).String()
-	rewardBalanceMain, rewardBalanceSub := breakBalance(immatureRewards)
+	rewardBalanceMain, rewardBalanceSub := breakBalance(common.printer, immatureRewards)
 	lockedByTickets := dcrutil.Amount((*pg.acctInfo).Balance.LockedByTickets).String()
-	lockBalanceMain, lockBalanceSub := breakBalance(lockedByTickets)
+	lockBalanceMain, lockBalanceSub := breakBalance(common.printer, lockedByTickets)
 	votingAuthority := dcrutil.Amount((*pg.acctInfo).Balance.VotingAuthority).String()
-	voteBalanceMain, voteBalanceSub := breakBalance(votingAuthority)
+	voteBalanceMain, voteBalanceSub := breakBalance(common.printer, votingAuthority)
 	immatureStakeGen := dcrutil.Amount((*pg.acctInfo).Balance.ImmatureStakeGeneration).String()
-	stakeBalanceMain, stakeBalanceSub := breakBalance(immatureStakeGen)
+	stakeBalanceMain, stakeBalanceSub := breakBalance(common.printer, immatureStakeGen)
 
 	return pg.pageSections(gtx, func(gtx C) D {
 		accountIcon := common.icons.accountIcon

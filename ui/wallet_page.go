@@ -645,7 +645,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 												Right: values.MarginPadding10,
 											}
 											return inset.Layout(gtx, func(gtx C) D {
-												return layoutBalance(gtx, totalBal, common)
+												return common.layoutBalance(gtx, totalBal)
 											})
 										})
 									}),

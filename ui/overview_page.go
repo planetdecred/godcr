@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"strings"
 
 	"gioui.org/gesture"
 	"gioui.org/io/event"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"github.com/planetdecred/dcrlibwallet"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -648,13 +648,19 @@ func (pg *overviewPage) Handler(eq event.Queue, c pageCommon) {
 	}
 
 	if pg.autoSyncWallet && !pg.walletInfo.Synced {
-
-		walletsLocked := getLockWallet(c)
+		walletsLocked := getLockedWallets(c.wallet.AllWallets())
 		if len(walletsLocked) == 0 {
 			c.wallet.StartSync()
 			pg.sync.Text = pg.text.cancel
 			pg.autoSyncWallet = false
 		}
+	}
+
+	if !pg.isCheckingLockWL {
+		if lockedWallets := getLockedWallets(c.wallet.AllWallets()); len(lockedWallets) > 0 {
+			showWalletUnlockModal(c, lockedWallets)
+		}
+		pg.isCheckingLockWL = true
 	}
 
 	if pg.sync.Button.Clicked() {
@@ -669,11 +675,6 @@ func (pg *overviewPage) Handler(eq event.Queue, c pageCommon) {
 
 	if pg.toTransactions.Button.Clicked() {
 		c.changePage(PageTransactions)
-	}
-
-	if !pg.isCheckingLockWL {
-		checkLockWallet(c)
-		pg.isCheckingLockWL = true
 	}
 
 	for index, click := range pg.toTransactionDetails {
@@ -697,30 +698,24 @@ func (pg *overviewPage) Handler(eq event.Queue, c pageCommon) {
 	}
 }
 
-// todo: remove and use balance methods in components
-// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
-// balance at the baseline of the row.
-func layoutBalance(gtx layout.Context, amount string, c pageCommon) layout.Dimensions {
-	mainText, subText := breakBalance(amount)
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return c.theme.Label(values.TextSize20, mainText).Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return c.theme.Label(values.TextSize14, subText).Layout(gtx)
-		}),
-	)
-}
-
-// breakBalance takes the balance string and returns it in two slices
-func breakBalance(balance string) (b1, b2 string) {
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		return balanceParts[0], ""
-	}
-	b1 = balanceParts[0]
-	b2 = balanceParts[1]
-	b1 = b1 + "." + b2[:2]
-	b2 = b2[2:]
-	return
+func showWalletUnlockModal(c pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
+	go func() {
+		c.modalReceiver <- &modalLoad{
+			template: UnlockWalletRestoreTemplate,
+			title:    "Unlock to resume restoration",
+			confirm: func(pass string) {
+				err := c.wallet.UnlockWallet(lockedWallets[0].ID, []byte(pass))
+				if err != nil {
+					errText := err.Error()
+					if err.Error() == "invalid_passphrase" {
+						errText = "Invalid passphrase"
+					}
+					c.notify(errText, false)
+				} else {
+					c.closeModal()
+				}
+			},
+			confirmText: "Unlock",
+		}
+	}()
 }

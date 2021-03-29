@@ -1,3 +1,5 @@
+// NOTE: This file along with its content will be deleted when all pages have been updated to the new UI designs
+
 package ui
 
 import (

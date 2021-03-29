@@ -111,7 +111,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 				}.Layout(gtx, func(gtx C) D {
 					return common.theme.Card().Layout(gtx, func(gtx C) D {
 						padding := values.MarginPadding16
-						return Container{layout.Inset{Top: padding, Bottom: padding, Left: padding}}.Layout(gtx,
+						return Container{layout.Inset{Bottom: padding, Left: padding}}.Layout(gtx,
 							func(gtx C) D {
 								// return "No transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {

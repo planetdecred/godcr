@@ -733,7 +733,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return layoutBalance(gtx, pg.sendAmountDCR, common)
+									return common.layoutBalance(gtx, pg.sendAmountDCR)
 								}),
 								layout.Flexed(1, func(gtx C) D {
 									if pg.usdExchangeSet {

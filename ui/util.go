@@ -1,13 +1,19 @@
+// util contains functions that don't contain layout code. They could be considered helpers that aren't particularly
+// bounded to a page.
+
 package ui
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"gioui.org/gesture"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
-	"strings"
-	"time"
+	"golang.org/x/text/message"
 )
 
 func mustIcon(ic *widget.Icon, err error) *widget.Icon {
@@ -17,39 +23,10 @@ func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	return ic
 }
 
-func checkLockWallet(c pageCommon) {
-	walletsLocked := getLockWallet(c)
-	if len(walletsLocked) > 0 {
-		go func() {
-			c.modalReceiver <- &modalLoad{
-				template: UnlockWalletRestoreTemplate,
-				title:    "Unlock to resume restoration",
-				confirm: func(pass string) {
-					err := c.wallet.UnlockWallet(walletsLocked[0].ID, []byte(pass))
-					if err != nil {
-						errText := err.Error()
-						if err.Error() == "invalid_passphrase" {
-							errText = "Invalid passphrase"
-						}
-						c.notify(errText, false)
-					} else {
-						c.closeModal()
-					}
-				},
-				confirmText: "Unlock",
-				cancel:      "",
-				cancelText:  "",
-			}
-		}()
-	}
-}
-
-// getLockWallet get all the lock wallets
-func getLockWallet(c pageCommon) []*dcrlibwallet.Wallet {
-	allWallets := c.wallet.AllWallets()
-
+// getLockWallet returns a list of locked wallets
+func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
 	var walletsLocked []*dcrlibwallet.Wallet
-	for _, wl := range allWallets {
+	for _, wl := range wallets {
 		if !wl.HasDiscoveredAccounts && wl.IsLocked() {
 			walletsLocked = append(walletsLocked, wl)
 		}
@@ -92,4 +69,28 @@ func showLabel(recentTransactions []wallet.Transaction) bool {
 		name = t.WalletName
 	}
 	return false
+}
+
+// breakBalance takes the balance string and returns it in two slices
+func breakBalance(p *message.Printer, balance string) (b1, b2 string) {
+	var isDecimal = true
+	balanceParts := strings.Split(balance, ".")
+	if len(balanceParts) == 1 {
+		isDecimal = false
+		balanceParts = strings.Split(balance, " ")
+	}
+
+	b1 = balanceParts[0]
+	if bal, err := strconv.Atoi(b1); err == nil {
+		b1 = p.Sprint(bal)
+	}
+
+	b2 = balanceParts[1]
+	if isDecimal {
+		b1 = b1 + "." + b2[:2]
+		b2 = b2[2:]
+		return
+	}
+	b2 = " " + b2
+	return
 }

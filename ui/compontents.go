@@ -1,3 +1,6 @@
+// components contain layout code that are shared by multiple pages but aren't widely used enough to be defined as
+// widgets
+
 package ui
 
 import (
@@ -8,45 +11,25 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
-	"strconv"
-	"strings"
 )
-
-// todo: add comment describing what code should be in components
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
 func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
-	mainText, subText := page.breakBalance(amount)
+	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(unit.Sp(20), mainText).Layout(gtx)
+			return page.theme.Label(values.TextSize20, mainText).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(unit.Sp(14), subText).Layout(gtx)
+			return page.theme.Label(values.TextSize14, subText).Layout(gtx)
 		}),
 	)
 }
 
-// breakBalance takes the balance string and returns it in two slices
-func (page pageCommon) breakBalance(balance string) (b1, b2 string) {
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		return balanceParts[0], ""
-	}
-
-	b1 = balanceParts[0]
-	if bal, err := strconv.Atoi(b1); err == nil {
-		b1 = page.printer.Sprint(bal)
-	}
-
-	b2 = balanceParts[1]
-	b1 = b1 + "." + b2[:2]
-	b2 = b2[2:]
-	return
-}
-
+// layoutTopBar is the top horizontal bar on every page of the app. It lays out the wallet balance, receive and send
+// buttons.
 func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 	card := page.theme.Card()
 	card.Radius = decredmaterial.CornerRadius{}
@@ -125,6 +108,8 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+// layoutNavDrawer is the left vertical pane on every page of the app. It vertically lays out buttons used to navigate
+// to different pages.
 func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
@@ -255,7 +240,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return layoutBalance(gtx, row.transaction.Balance, common)
+												return common.layoutBalance(gtx, row.transaction.Balance)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
