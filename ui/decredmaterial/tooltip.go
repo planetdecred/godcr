@@ -4,10 +4,6 @@ import (
 	"image"
 	"image/color"
 
-<<<<<<< HEAD
-=======
-	//"gioui.org/f32"
->>>>>>> fix irregular scroll container height issue
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/unit"

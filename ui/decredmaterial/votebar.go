@@ -142,7 +142,8 @@ func (v *VoteBar) Layout(gtx C) D {
 	}
 	clip.Rect(rect).Add(gtx.Ops)
 	paint.Fill(gtx.Ops, v.bgColor)
-	v.passTooltip.Layout(gtx, rect, 110, func(gtx C) D {
+	inset := layout.Inset{Left: unit.Dp(110)}
+	v.passTooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		return v.passTooltipLabel.Layout(gtx)
 	})
 	st.Load()
@@ -234,7 +235,8 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 }
 
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
-	v.quorumTooltip.Layout(gtx, rect, -165, func(gtx C) D {
+	inset := layout.Inset{Left: unit.Dp(-165)}
+	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		gtx.Constraints.Min.X = 150
 		gtx.Constraints.Max.X = 150
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

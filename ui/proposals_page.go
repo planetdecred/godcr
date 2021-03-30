@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"strconv"
@@ -50,9 +51,12 @@ func (p proposalNotificationListeners) OnProposalsSynced() {
 }
 
 type proposalItem struct {
-	btn      *widget.Clickable
-	proposal dcrlibwallet.Proposal
-	voteBar  decredmaterial.VoteBar
+	btn               *widget.Clickable
+	proposal          dcrlibwallet.Proposal
+	voteBar           decredmaterial.VoteBar
+	infoIcon          *widget.Icon
+	stateInfoTooltip  *decredmaterial.Tooltip
+	stateTooltipLabel decredmaterial.Label
 }
 
 type tab struct {
@@ -89,7 +93,6 @@ type proposalsPage struct {
 	refreshWindow              func()
 	updatedIcon                *widget.Icon
 	updatedLabel               decredmaterial.Label
-	syncIcon                   image.Image
 	syncButton                 *widget.Clickable
 	startSyncIcon              *widget.Image
 }
@@ -121,10 +124,12 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		refreshWindow:    common.refreshWindow,
 		updatedIcon:      common.icons.navigationCheck,
 		updatedLabel:     common.theme.Body2("Updated"),
-		syncIcon:         common.icons.syncingIcon,
 		syncButton:       new(widget.Clickable),
 		startSyncIcon:    common.icons.restore,
 	}
+	pg.infoIcon.Color = common.theme.Color.Gray
+	pg.legendIcon.Color = common.theme.Color.InactiveGray
+
 	pg.updatedIcon.Color = common.theme.Color.Success
 	pg.updatedLabel.Color = common.theme.Color.Success
 
@@ -172,9 +177,12 @@ func (pg *proposalsPage) addDiscoveredProposal(proposal dcrlibwallet.Proposal) {
 	for i := range pg.tabs.tabs {
 		if pg.tabs.tabs[i].category == proposal.Category {
 			item := proposalItem{
-				btn:      new(widget.Clickable),
-				proposal: proposal,
-				voteBar:  pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
+				btn:               new(widget.Clickable),
+				proposal:          proposal,
+				voteBar:           pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
+				infoIcon:          pg.infoIcon,
+				stateInfoTooltip:  pg.theme.Tooltip(),
+				stateTooltipLabel: pg.theme.Caption(""),
 			}
 			pg.tabs.tabs[i].proposals = append([]proposalItem{item}, pg.tabs.tabs[i].proposals...)
 			break
@@ -198,9 +206,12 @@ out:
 func (pg *proposalsPage) onFetchSuccess(proposals []dcrlibwallet.Proposal) {
 	for i := range proposals {
 		item := proposalItem{
-			btn:      new(widget.Clickable),
-			proposal: proposals[i],
-			voteBar:  pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
+			btn:               new(widget.Clickable),
+			proposal:          proposals[i],
+			voteBar:           pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
+			infoIcon:          pg.infoIcon,
+			stateInfoTooltip:  pg.theme.Tooltip(),
+			stateTooltipLabel: pg.theme.Caption(""),
 		}
 
 		for k := range pg.tabs.tabs {
@@ -328,11 +339,24 @@ func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) layoutAuthorAndDate(gtx C, proposal dcrlibwallet.Proposal) D {
+func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet.Proposal) D {
+	p := pg.tabs.tabs[pg.tabs.selected]
+	grayCol := pg.theme.Color.Gray
+
 	nameLabel := pg.theme.Body2(proposal.Username)
+	nameLabel.Color = grayCol
+
 	dotLabel := pg.theme.H4(" . ")
+	dotLabel.Color = grayCol
+
 	versionLabel := pg.theme.Body2("Version " + proposal.Version)
+	versionLabel.Color = grayCol
+
+	stateLabel := pg.theme.Body2(fmt.Sprintf("%v /2", proposal.State))
+	stateLabel.Color = grayCol
+
 	timeAgoLabel := pg.theme.Body2(timeAgo(proposal.Timestamp))
+	timeAgoLabel.Color = grayCol
 
 	var categoryLabel decredmaterial.Label
 	var categoryLabelColor color.NRGBA
@@ -348,10 +372,10 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, proposal dcrlibwallet.Propos
 		categoryLabelColor = pg.theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
 		categoryLabel = pg.theme.Body2("Abandoned")
-		categoryLabelColor = pg.theme.Color.Gray
+		categoryLabelColor = grayCol
 	case dcrlibwallet.ProposalCategoryPre:
-		categoryLabel = pg.theme.Body2("in discussion")
-		categoryLabelColor = pg.theme.Color.Gray
+		categoryLabel = pg.theme.Body2("In discussion")
+		categoryLabelColor = grayCol
 	}
 	categoryLabel.Color = categoryLabelColor
 
@@ -360,7 +384,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, proposal dcrlibwallet.Propos
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(nameLabel.Layout),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: unit.Dp(-23)}.Layout(gtx, dotLabel.Layout)
+					return layout.Inset{Top: values.MarginPaddingMinus22}.Layout(gtx, dotLabel.Layout)
 				}),
 				layout.Rigid(versionLabel.Layout),
 			)
@@ -369,22 +393,51 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, proposal dcrlibwallet.Propos
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(categoryLabel.Layout),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: unit.Dp(-23)}.Layout(gtx, dotLabel.Layout)
+					return layout.Inset{Top: values.MarginPaddingMinus22}.Layout(gtx, dotLabel.Layout)
 				}),
-				layout.Rigid(timeAgoLabel.Layout),
+				layout.Rigid(func(gtx C) D {
+					if p.title == "In discussion" {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(stateLabel.Layout),
+							layout.Rigid(func(gtx C) D {
+								rect := image.Rectangle{
+									Min: gtx.Constraints.Min,
+									Max: gtx.Constraints.Max,
+								}
+								rect.Max.Y = 20
+								pg.layoutInfoTooltip(gtx, i, proposal.State, rect)
+								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									return p.proposals[i].infoIcon.Layout(gtx, unit.Dp(20))
+								})
+							}),
+						)
+					}
+
+					return timeAgoLabel.Layout(gtx)
+				}),
 			)
 		}),
 	)
 }
 
+func (pg *proposalsPage) layoutInfoTooltip(gtx C, i int, state int32, rect image.Rectangle) {
+	proposal := pg.tabs.tabs[pg.tabs.selected].proposals[i]
+	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus230}
+	proposal.stateInfoTooltip.Layout(gtx, rect, inset, func(gtx C) D {
+		proposal.stateTooltipLabel.Color = pg.theme.Color.IconColor
+		if state == 1 {
+			proposal.stateTooltipLabel.Text = "Waiting for author to authorize voting"
+		} else if state == 2 {
+			proposal.stateTooltipLabel.Text = "Waiting for admin to trigger the start of voting"
+		}
+		return proposal.stateTooltipLabel.Layout(gtx)
+	})
+}
+
 func (pg *proposalsPage) layoutTitle(gtx C, proposal dcrlibwallet.Proposal) D {
 	lbl := pg.theme.H6(proposal.Name)
-	lbl.Color = pg.theme.Color.Text
-
-	return layout.Inset{
-		Top:    values.MarginPadding5,
-		Bottom: values.MarginPadding5,
-	}.Layout(gtx, lbl.Layout)
+	lbl.Color = pg.theme.Color.DeepBlue
+	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
 func (pg *proposalsPage) layoutProposalVoteBar(gtx C, proposalItem proposalItem) D {
@@ -413,10 +466,10 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 				return decredmaterial.Clickable(gtx, selected.proposals[index].btn, func(gtx C) D {
 					return pg.itemCard.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return pg.layoutAuthorAndDate(gtx, proposalItem.proposal)
+									return pg.layoutAuthorAndDate(gtx, index, proposalItem.proposal)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return pg.layoutTitle(gtx, proposalItem.proposal)
@@ -499,7 +552,7 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 		return border.Layout(gtx, body)
 	}
 
-	return common.LayoutWithoutPadding(gtx, func(gtx C) D {
+	return common.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
@@ -525,7 +578,9 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 					}),
 				)
 			}),
-			layout.Flexed(1, pg.layoutContent),
+			layout.Flexed(1, func(gtx C) D {
+				return common.UniformPadding(gtx, pg.layoutContent)
+			}),
 		)
 	})
 }

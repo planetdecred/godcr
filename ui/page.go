@@ -370,12 +370,12 @@ func (page pageCommon) LayoutWithoutPadding(gtx layout.Context, body layout.Widg
 func (page pageCommon) layout(gtx layout.Context, body layout.Widget, padded bool) layout.Dimensions {
 	page.handleNavEvents()
 
-	var padding unit.Value
-	if padded {
-		padding = values.MarginPadding15
-	} else {
-		padding = values.MarginPadding0
-	}
+	// var padding unit.Value
+	// if padded {
+	// 	padding = values.MarginPadding15
+	// } else {
+	// 	padding = values.MarginPadding0
+	// }
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
