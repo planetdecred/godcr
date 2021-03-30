@@ -574,7 +574,6 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 				completedSteps.Color = pg.theme.Color.Gray
 				headersFetched := pg.theme.Body1(fmt.Sprintf("%s  ·  %v%%", pg.text.fetchingBlockHeaders,
 					pg.walletSyncStatus.HeadersFetchProgress))
-				headersFetched.Color = pg.theme.Color.DeepBlue
 				return pg.endToEndRow(gtx, inset, completedSteps, headersFetched)
 			}),
 			layout.Rigid(func(gtx C) D {

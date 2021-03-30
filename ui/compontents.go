@@ -153,6 +153,11 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Left: leftInset,
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
+										textColor := page.theme.Color.Gray3
+										if page.drawerNavItems[i].page == *page.page {
+											textColor = page.theme.Color.DeepBlue
+										}
+										txt.Color = textColor
 										return layout.Center.Layout(gtx, txt.Layout)
 									})
 								}),
@@ -261,6 +266,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 														s = row.transaction.Status
 													}
 													status := common.theme.Body1(s)
+													status.Color = common.theme.Color.Gray
 													status.Alignment = text.Middle
 													return status.Layout(gtx)
 												})

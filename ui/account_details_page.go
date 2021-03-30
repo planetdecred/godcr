@@ -244,9 +244,7 @@ func (pg *acctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightTex
 		}),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
-				rightTextLabel := pg.theme.Label(values.TextSize16, rightText)
-				rightTextLabel.Color = pg.theme.Color.DeepBlue
-				return rightTextLabel.Layout(gtx)
+				return pg.theme.Body1(rightText).Layout(gtx)
 			})
 		}),
 	)
