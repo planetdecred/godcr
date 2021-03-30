@@ -39,6 +39,7 @@ type walletAccountWidget struct {
 }
 type receivePage struct {
 	pageContainer          layout.List
+	theme                  *decredmaterial.Theme
 	isNewAddr, isInfo      bool
 	addrs                  string
 	newAddr, minInfo, copy decredmaterial.Button
@@ -46,8 +47,8 @@ type receivePage struct {
 	card                   decredmaterial.Card
 	receiveAddress         decredmaterial.Label
 
-	line *decredmaterial.Line
-
+	line           *decredmaterial.Line
+	backdrop       *widget.Clickable
 	wallAcctWidget walletAccountWidget
 }
 
@@ -56,6 +57,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
+		theme:          common.theme,
 		info:           common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           common.theme.Button(new(widget.Clickable), "Copy"),
 		more:           common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon),
@@ -64,6 +66,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		receiveAddress: common.theme.Label(values.TextSize20, ""),
 		card:           common.theme.Card(),
 		line:           common.theme.Line(),
+		backdrop:       new(widget.Clickable),
 
 		wallAcctWidget: walletAccountWidget{
 			title:                    common.theme.Label(values.TextSize24, "Receiving account"),
@@ -94,20 +97,30 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 }
 
 func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	pg.pageBackDrop(gtx)
+
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.wallAcctWidget.accountSelectSection(gtx, common)
+			return pg.pageSections(gtx, func(gtx C) D {
+				return pg.wallAcctWidget.accountSelectSection(gtx, common)
+			})
 		},
 		func(gtx C) D {
 			pg.line.Width, pg.line.Height = gtx.Constraints.Max.X, 1
 			pg.line.Color = common.theme.Color.Background
-			return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding14}.Layout(gtx, pg.line.Layout)
+			return pg.line.Layout(gtx)
 		},
 		func(gtx C) D {
-			return pg.generateAddressSection(gtx, common)
-		},
-		func(gtx C) D {
-			return pg.addressSection(gtx, common)
+			return pg.pageSections(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.generateAddressSection(gtx, common)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.addressSection(gtx, common)
+					}),
+				)
+			})
 		},
 	}
 
@@ -121,11 +134,8 @@ func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 				}),
 				layout.Rigid(func(gtx C) D {
 					return common.theme.Card().Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-							return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-								return pageContent[i](gtx)
-							})
+						return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+							return pageContent[i](gtx)
 						})
 					})
 				}),
@@ -138,6 +148,23 @@ func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 	}
 
 	return dims
+}
+
+func (pg *receivePage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return pg.theme.Card().Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
+		return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
+	})
+}
+
+func (pg *receivePage) pageBackDrop(gtx layout.Context) {
+	if pg.isNewAddr {
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+		m := op.Record(gtx.Ops)
+		pg.backdrop.Layout(gtx)
+		op.Defer(gtx.Ops, m.Stop())
+	}
 }
 
 func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dimensions {
@@ -261,6 +288,10 @@ func (pg *receivePage) receiveAddressSection(gtx layout.Context, c pageCommon) l
 }
 
 func (pg *receivePage) Handle(common pageCommon) {
+	if pg.backdrop.Clicked() {
+		pg.isNewAddr = false
+	}
+
 	if pg.more.Button.Clicked() {
 		pg.isNewAddr = !pg.isNewAddr
 		if pg.isInfo {
