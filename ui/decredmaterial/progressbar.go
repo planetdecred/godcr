@@ -15,6 +15,7 @@ import (
 )
 
 type ProgressBarStyle struct {
+	Radius unit.Value
 	Height unit.Value
 	material.ProgressBarStyle
 }
@@ -25,11 +26,15 @@ func (t *Theme) ProgressBar(progress int) ProgressBarStyle {
 
 func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 	shader := func(width float32, color color.NRGBA) layout.Dimensions {
-		maxHeight := unit.Dp(4)
-		if p.Height.V > 0 {
-			maxHeight = p.Height
+		maxHeight := p.Height
+		if p.Height.V <= 0 {
+			maxHeight = unit.Dp(4)
 		}
-		rr := float32(gtx.Px(unit.Dp(2)))
+
+		rr := float32(gtx.Px(p.Radius))
+		if p.Radius.V <= 0 {
+			rr = float32(gtx.Px(unit.Dp(2)))
+		}
 
 		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
 

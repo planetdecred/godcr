@@ -55,7 +55,6 @@ type Theme struct {
 		Black        color.NRGBA
 		DeepBlue     color.NRGBA
 		LightGray    color.NRGBA
-		IconColor    color.NRGBA
 		InactiveGray color.NRGBA
 		Gray1        color.NRGBA
 		Gray2        color.NRGBA

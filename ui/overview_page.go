@@ -545,6 +545,7 @@ func (pg *overviewPage) progressBarRow(gtx layout.Context, inset layout.Inset) l
 		progress := pg.walletSyncStatus.Progress
 		p := pg.theme.ProgressBar(int(progress))
 		p.Height = values.MarginPadding8
+		p.Radius = values.MarginPadding4
 		p.Color = pg.theme.Color.Success
 		return p.Layout(gtx)
 	})

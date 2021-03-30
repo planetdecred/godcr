@@ -231,7 +231,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	isNavDrawerMinimized := false
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
 
-	iconColor := common.theme.Color.IconColor
+	iconColor := common.theme.Color.Gray3
 	common.minimizeNavDrawerButton.Color, common.maximizeNavDrawerButton.Color = iconColor, iconColor
 
 	zeroInset := layout.UniformInset(values.MarginPadding0)

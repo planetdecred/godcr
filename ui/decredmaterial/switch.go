@@ -50,7 +50,7 @@ func (t *Theme) SwitchButtonText(activeTxt, inactivetxt string, activeBtn, inact
 	sw.activeCard.Radius, sw.inactiveCard.Radius = raduis, raduis
 
 	sw.activeTextColor = sw.t.Color.DeepBlue
-	sw.inactiveTextColor = sw.t.Color.IconColor
+	sw.inactiveTextColor = sw.t.Color.Gray3
 	return sw
 }
 

@@ -213,10 +213,10 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.closeConfirmationModalButton.Color = common.theme.Color.Primary
 
 	pg.moreOption = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon)
-	pg.moreOption.Color = common.theme.Color.IconColor
+	pg.moreOption.Color = common.theme.Color.Gray3
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.maxButton.Background = common.theme.Color.IconColor
+	pg.maxButton.Background = common.theme.Color.Gray3
 	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
 	pg.clearAllBtn.Background = common.theme.Color.Surface
@@ -753,7 +753,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							icon := common.icons.navigationArrowForward
-							icon.Color = pg.theme.Color.IconColor
+							icon.Color = pg.theme.Color.Gray3
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								return icon.Layout(gtx, values.MarginPadding15)
 							})
@@ -799,7 +799,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 				}),
 				layout.Rigid(func(gtx C) D {
 					txt := pg.theme.Body2("Your DCR will be sent after this step.")
-					txt.Color = pg.theme.Color.IconColor
+					txt.Color = pg.theme.Color.Gray3
 					return txt.Layout(gtx)
 				}),
 			)
@@ -1272,8 +1272,8 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
 		c.notify(pg.calculateErrorText, false)
 	} else {
-		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.IconColor
-		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.IconColor
+		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.Gray3
+		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.Gray3
 	}
 
 	if pg.amountErrorText != "" {
