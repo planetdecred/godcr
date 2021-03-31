@@ -359,23 +359,8 @@ func (page pageCommon) closeModal() {
 	}()
 }
 
-func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) D {
-	return page.layout(gtx, body, true)
-}
-
-func (page pageCommon) LayoutWithoutPadding(gtx layout.Context, body layout.Widget) D {
-	return page.layout(gtx, body, false)
-}
-
-func (page pageCommon) layout(gtx layout.Context, body layout.Widget, padded bool) layout.Dimensions {
+func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	page.handleNavEvents()
-
-	// var padding unit.Value
-	// if padded {
-	// 	padding = values.MarginPadding15
-	// } else {
-	// 	padding = values.MarginPadding0
-	// }
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
@@ -498,13 +483,14 @@ type SubPage struct {
 	infoTemplate string
 	extraItem    *widget.Clickable
 	extra        layout.Widget
+	extraText    string
 	handleExtra  func()
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Bottom: values.MarginPadding15, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 				return page.subpageHeader(gtx, sp)
 			})
 		}),
@@ -551,15 +537,27 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return layout.Dimensions{}
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding9}.Layout(gtx, func(gtx C) D {
-				return layout.E.Layout(gtx, func(gtx C) D {
-					if sp.infoTemplate != "" {
-						return page.subPageInfoButton.Layout(gtx)
-					} else if sp.extraItem != nil {
-						return decredmaterial.Clickable(gtx, sp.extraItem, sp.extra)
-					}
-					return layout.Dimensions{}
-				})
+			return layout.E.Layout(gtx, func(gtx C) D {
+				if sp.infoTemplate != "" {
+					return page.subPageInfoButton.Layout(gtx)
+				} else if sp.extraItem != nil {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							if sp.extraText != "" {
+								return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									text := page.theme.Caption(sp.extraText)
+									text.Color = page.theme.Color.DeepBlue
+									return text.Layout(gtx)
+								})
+							}
+							return layout.Dimensions{}
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return decredmaterial.Clickable(gtx, sp.extraItem, sp.extra)
+						}),
+					)
+				}
+				return layout.Dimensions{}
 			})
 		}),
 	)

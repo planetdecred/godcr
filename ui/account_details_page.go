@@ -77,7 +77,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 				common.changePage(PageWallet)
 			},
 			body: func(gtx C) D {
-				return layout.Inset{Left: values.MarginPadding9, Right: values.MarginPadding9, Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 					return pg.theme.Card().Layout(gtx, func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 							if *pg.acctInfo == nil {
