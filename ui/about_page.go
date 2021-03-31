@@ -117,3 +117,35 @@ func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 		})
 	})
 }
+
+func (pg *aboutPage) layoutRow(gtx C, row aboutPageRow, drawSeparator bool) D {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(row.left.Layout),
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							if row.icon != nil {
+								return row.icon.Layout(gtx, values.MarginPadding20)
+							}
+							return row.right.Layout(gtx)
+						})
+					}),
+				)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			if !drawSeparator {
+				return D{}
+			}
+			return layout.Inset{
+				Left: values.MarginPadding15,
+			}.Layout(gtx, pg.theme.Separator().Layout)
+		}),
+	)
+}
+
+func (pg *aboutPage) handle(common pageCommon) {
+
+}
