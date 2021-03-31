@@ -87,11 +87,6 @@ type (
 	D = layout.Dimensions
 )
 
-const (
-	navDrawerWidth          = 160
-	navDrawerMinimizedWidth = 80
-)
-
 func (win *Window) addPages(decredIcons map[string]image.Image) {
 	ic := pageIcons{
 		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),

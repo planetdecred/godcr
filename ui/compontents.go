@@ -4,9 +4,12 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
+	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -108,6 +111,11 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+const (
+	navDrawerWidth          = 160
+	navDrawerMinimizedWidth = 72
+)
+
 // layoutNavDrawer is the left vertical pane on every page of the app. It vertically lays out buttons used to navigate
 // to different pages.
 func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
@@ -125,7 +133,14 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 					card.Color = background
 					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 					return card.Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						return Container{
+							layout.Inset{
+								Top:    values.MarginPadding16,
+								Right:  values.MarginPadding24,
+								Bottom: values.MarginPadding16,
+								Left:   values.MarginPadding24,
+							},
+						}.Layout(gtx, func(gtx C) D {
 							axis := layout.Horizontal
 							leftInset := values.MarginPadding15
 							width := navDrawerWidth
@@ -144,7 +159,21 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										img = page.drawerNavItems[i].image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
-										img.Scale = 1.0
+										scaler := func(im widget.Image, scale float32) {
+											size := im.Src.Size()
+											wf, hf := float32(size.X), float32(size.Y)
+											w, h := gtx.Px(unit.Dp(wf*scale)), gtx.Px(unit.Dp(hf*scale))
+											fmt.Printf("ORIGINAL WIDITH %v, HEIGHT %v  WIDTH %v HEIGHT %v ", wf, hf, w, h)
+											//cs := gtx.Constraints
+											//_ = cs.Constrain(image.Pt(w, h))
+											pixelScale := scale * gtx.Metric.PxPerDp
+											fmt.Printf("pixel scale %v  perPixel %v\n", pixelScale, gtx.Metric.PxPerDp)
+										}
+										//sz := gtx.Constraints.Max.X
+										//img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
+										//fmt.Printf("image scale %v SZ  %v  float\n", img.Scale, sz, )
+										img.Scale = 0.7
+										scaler(*img, img.Scale)
 										return img.Layout(gtx)
 									})
 								}),
@@ -272,7 +301,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 												})
 										}),
 										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Right: values.MarginPadding22}.Layout(gtx, func(gtx C) D {
+											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 												statusIcon := common.icons.confirmIcon
 												if row.transaction.Status != "confirmed" {
 													statusIcon = common.icons.pendingIcon
