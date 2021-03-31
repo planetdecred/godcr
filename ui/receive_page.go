@@ -38,14 +38,14 @@ type walletAccountWidget struct {
 	fromAccountBtn           *widget.Clickable
 }
 type receivePage struct {
-	pageContainer          layout.List
-	theme                  *decredmaterial.Theme
-	isNewAddr, isInfo      bool
-	addrs                  string
-	newAddr, minInfo, copy decredmaterial.Button
-	info, more             decredmaterial.IconButton
-	card                   decredmaterial.Card
-	receiveAddress         decredmaterial.Label
+	pageContainer     layout.List
+	theme             *decredmaterial.Theme
+	isNewAddr, isInfo bool
+	addrs             string
+	newAddr, copy     decredmaterial.Button
+	info, more        decredmaterial.IconButton
+	card              decredmaterial.Card
+	receiveAddress    decredmaterial.Label
 
 	line           *decredmaterial.Line
 	backdrop       *widget.Clickable
@@ -61,7 +61,6 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		info:           common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           common.theme.Button(new(widget.Clickable), "Copy"),
 		more:           common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon),
-		minInfo:        common.theme.Button(new(widget.Clickable), "Got It"),
 		newAddr:        common.theme.Button(new(widget.Clickable), "Generate new address"),
 		receiveAddress: common.theme.Label(values.TextSize20, ""),
 		card:           common.theme.Card(),
@@ -82,12 +81,24 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	page.info.Inset, page.info.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 	page.copy.Background = color.NRGBA{}
 	page.copy.Color = common.theme.Color.Primary
+	page.copy.Inset = layout.Inset{
+		Top:    values.SMarginPadding19p5,
+		Bottom: values.SMarginPadding19p5,
+		Left:   values.SMarginPadding16,
+		Right:  values.SMarginPadding16,
+	}
 	page.more.Color = common.theme.Color.IconColor
 	page.more.Inset = layout.UniformInset(values.MarginPadding0)
 	page.line.Color = common.theme.Color.Background
-	page.newAddr.Inset = layout.UniformInset(values.MarginPadding15)
+	page.newAddr.Inset = layout.Inset{
+		Top:    values.MarginPadding20,
+		Bottom: values.MarginPadding20,
+		Left:   values.MarginPadding16,
+		Right:  values.MarginPadding16,
+	}
 	page.newAddr.Color = common.theme.Color.Text
 	page.newAddr.Background = common.theme.Color.Surface
+	page.newAddr.TextSize = values.TextSize16
 
 	return func(gtx C) D {
 		page.Handle(common)
@@ -205,8 +216,7 @@ func (pg *receivePage) generateAddressSection(gtx layout.Context, common pageCom
 				layout.Rigid(func(gtx C) D {
 					if pg.isNewAddr {
 						m := op.Record(gtx.Ops)
-						layout.Inset{Top: values.MarginPadding30, Left: unit.Dp(-95)}.Layout(gtx, func(gtx C) D {
-							pg.newAddr.TextSize = values.TextSize10
+						layout.Inset{Top: values.MarginPadding30, Left: unit.Dp(-152)}.Layout(gtx, func(gtx C) D {
 							return pg.newAddr.Layout(gtx)
 						})
 						op.Defer(gtx.Ops, m.Stop())
@@ -252,39 +262,42 @@ func (pg *receivePage) qrCodeAddressSection(gtx layout.Context, common pageCommo
 }
 
 func (pg *receivePage) receiveAddressSection(gtx layout.Context, c pageCommon) layout.Dimensions {
-	return decredmaterial.Card{
+	card := decredmaterial.Card{
 		Inset: layout.Inset{
 			Top:    values.MarginPadding14,
 			Bottom: values.MarginPadding16,
 		},
 		Color: c.theme.Color.Background,
-		Radius: decredmaterial.CornerRadius{
-			NE: 8,
-			NW: 8,
-			SE: 8,
-			SW: 8,
-		},
-	}.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-			layout.Flexed(1, func(gtx C) D {
-				pg.receiveAddress.Text = pg.addrs
-				pg.receiveAddress.Alignment = text.Middle
-				return pg.receiveAddress.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				pg.line.Width, pg.line.Height = 1, 100
-				pg.line.Color = c.theme.Color.Surface
-				return layout.UniformInset(values.MarginPadding0).Layout(gtx, func(gtx C) D {
-					return pg.line.Layout(gtx)
+	}
+
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			pg.receiveAddress.Text = pg.addrs
+			pg.receiveAddress.Alignment = text.Middle
+			card.Radius.NE = 8
+			card.Radius.SW = 8
+			card.Radius.NW = 0
+			card.Radius.SE = 0
+			return card.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.UniformInset(values.SMarginPadding16).Layout(gtx, func(gtx C) D {
+					return pg.receiveAddress.Layout(gtx)
 				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X, gtx.Constraints.Min.Y = 120, 100
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
+		}),
+		layout.Rigid(func(gtx C) D {
+			card.Radius.NE = 0
+			card.Radius.SW = 0
+			card.Radius.NW = 8
+			card.Radius.SE = 8
+			return card.Layout(gtx, func(gtx C) D {
 				return pg.copy.Layout(gtx)
-			}),
-		)
-	})
+			})
+		}),
+	)
 }
 
 func (pg *receivePage) Handle(common pageCommon) {
@@ -297,10 +310,6 @@ func (pg *receivePage) Handle(common pageCommon) {
 		if pg.isInfo {
 			pg.isInfo = false
 		}
-	}
-
-	if pg.minInfo.Button.Clicked() {
-		pg.isInfo = false
 	}
 
 	if pg.newAddr.Button.Clicked() {

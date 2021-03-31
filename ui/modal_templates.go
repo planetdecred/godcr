@@ -61,10 +61,12 @@ type modalLoad struct {
 }
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
+	cancel := win.theme.Button(new(widget.Clickable), "Cancel")
+	cancel.TextSize = values.TextSize16
 	return &ModalTemplate{
 		th:                    win.theme,
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
-		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
+		cancel:                cancel,
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
 		oldSpendingPassword:   win.theme.EditorPassword(new(widget.Editor), "Old spending password"),
 		spendingPassword:      win.theme.EditorPassword(new(widget.Editor), "Spending password"),
