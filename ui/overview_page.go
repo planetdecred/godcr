@@ -439,22 +439,6 @@ func (pg *overviewPage) connectionPeer(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-// endToEndRow layouts out its content on both ends of its horizontal layout.
-func (pg *overviewPage) endToEndRow(gtx layout.Context, inset layout.Inset, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
-	return inset.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return leftLabel.Layout(gtx)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, func(gtx C) D {
-					return rightLabel.Layout(gtx)
-				})
-			}),
-		)
-	})
-}
-
 // syncBoxTitleRow lays out widgets in the title row inside the sync status box.
 func (pg *overviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 	title := pg.theme.Body2(pg.text.statusTitle)
@@ -560,7 +544,10 @@ func (pg *overviewPage) progressStatusRow(gtx layout.Context, inset layout.Inset
 
 	percentageLabel := pg.theme.Body1(fmt.Sprintf("%v%%", pg.walletSyncStatus.Progress))
 	timeLeftLabel := pg.theme.Body1(fmt.Sprintf("%v Left", timeLeft))
-	return pg.endToEndRow(gtx, inset, percentageLabel, timeLeftLabel)
+	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return endToEndRow(gtx, percentageLabel.Layout, timeLeftLabel.Layout)
+	})
+
 }
 
 //	walletSyncRow layouts a list of wallet sync boxes horizontally.
@@ -574,13 +561,17 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 				completedSteps.Color = pg.theme.Color.Gray
 				headersFetched := pg.theme.Body1(fmt.Sprintf("%s  ·  %v%%", pg.text.fetchingBlockHeaders,
 					pg.walletSyncStatus.HeadersFetchProgress))
-				return pg.endToEndRow(gtx, inset, completedSteps, headersFetched)
+				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return endToEndRow(gtx, completedSteps.Layout, headersFetched.Layout)
+				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				connectedPeersTitleLabel := pg.theme.Body2(pg.text.connectedPeersTitle)
 				connectedPeersTitleLabel.Color = pg.theme.Color.Gray
 				connectedPeersLabel := pg.theme.Body1(fmt.Sprintf("%d", pg.walletSyncStatus.ConnectedPeers))
-				return pg.endToEndRow(gtx, inset, connectedPeersTitleLabel, connectedPeersLabel)
+				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return endToEndRow(gtx, connectedPeersTitleLabel.Layout, connectedPeersLabel.Layout)
+				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				var overallBlockHeight int32
@@ -624,17 +615,23 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 			}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return pg.endToEndRow(gtx, inset, details.name, details.status)
+						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							return endToEndRow(gtx, details.name.Layout, details.status.Layout)
+						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						headersFetchedTitleLabel := pg.theme.Body2(pg.text.headersFetchedTitle)
 						headersFetchedTitleLabel.Color = pg.theme.Color.Gray
-						return pg.endToEndRow(gtx, inset, headersFetchedTitleLabel, details.blockHeaderFetched)
+						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							return endToEndRow(gtx, headersFetchedTitleLabel.Layout, details.blockHeaderFetched.Layout)
+						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						progressTitleLabel := pg.theme.Body2(pg.text.syncingProgressTitle)
 						progressTitleLabel.Color = pg.theme.Color.Gray
-						return pg.endToEndRow(gtx, inset, progressTitleLabel, details.syncingProgress)
+						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+							return endToEndRow(gtx, progressTitleLabel.Layout, details.syncingProgress.Layout)
+						})
 					}),
 				)
 			})
