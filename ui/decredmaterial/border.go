@@ -17,7 +17,6 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-
 )
 
 type Border struct {
@@ -56,7 +55,6 @@ func (b Border) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	sz.X -= width
 	sz.Y -= width
 
-	
 	// clip.Border{
 	// 	Rect: f32.Rectangle{
 	// 		Max: layout.FPt(sz),

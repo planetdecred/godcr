@@ -60,6 +60,7 @@ type walletPage struct {
 	watchOnlyWalletLabel                       decredmaterial.Label
 	watchOnlyWalletIcon                        *widget.Image
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
+	shadowBox                                  decredmaterial.Border                                   
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -77,7 +78,10 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		errorReceiver:            make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
+		shadowBox:                common.theme.Border(true, true, true, true, unit.Dp(5), unit.Dp(10)),
 	}
+
+	pg.shadowBox.Color = pg.theme.Color.Primary
 
 	pg.collapsibles = make(map[int]collapsible)
 	pg.watchOnlyWalletMoreButtons = make(map[int]decredmaterial.IconButton)
@@ -347,6 +351,14 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		return
 	}
 
+	m := op.Record(gtx.Ops)
+	pg.shadowBox.Layout(gtx, func(gtx C) D {
+		return pg.layoutDropdown(gtx, isWatchOnlyWalletMenu)
+	})
+	op.Defer(gtx.Ops, m.Stop())
+}
+
+func (pg *walletPage) layoutDropdown(gtx C, isWatchOnlyWalletMenu bool) D {
 	var menu []menuItem
 	var leftInset float32
 	if isWatchOnlyWalletMenu {
@@ -362,10 +374,10 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		Left: unit.Dp(leftInset),
 	}
 
-	m := op.Record(gtx.Ops)
-	inset.Layout(gtx, func(gtx C) D {
+	return inset.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Max.X = int(gtx.Metric.PxPerDp) * 150
 		border := pg.theme.Border(true, true, true, true, unit.Dp(5), unit.Dp(2))
+		border.Color = pg.theme.Color.Success
 		dims := border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
@@ -394,7 +406,6 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		})
 		return dims
 	})
-	op.Defer(gtx.Ops, m.Stop())
 }
 
 func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
