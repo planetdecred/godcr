@@ -34,7 +34,7 @@ func (t *Theme) Shadow(left, right, top, bottom bool) *Shadow {
 
 func (s *Shadow) Layout(gtx C, startX, startY int, wdgt func(gtx C) D) D {
 	dims := wdgt(gtx)
-	size := dims.Size 
+	size := dims.Size
 
 	if s.top {
 		rect := image.Rectangle{
