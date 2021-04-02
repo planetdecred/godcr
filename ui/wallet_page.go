@@ -78,7 +78,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		errorReceiver:            make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
-		shadowBox:                common.theme.Shadow(common.theme.Color.Gray, true, true, true, true),
+		shadowBox:                common.theme.Shadow(true, false, false, true),
 	}
 
 	pg.collapsibles = make(map[int]collapsible)
