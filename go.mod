@@ -16,9 +16,9 @@ require (
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/planetdecred/dcrlibwallet v1.5.3-0.20210224132742-5d0bc5e13370
-	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086
+	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20191002040644-a1355ae1e2c3
-	golang.org/x/image v0.0.0-20200618115811-c13761719519
+	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/text v0.3.3
 )

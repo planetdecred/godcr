@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"image"
 	"image/color"
 	"time"
@@ -13,12 +14,12 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
-
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/skip2/go-qrcode"
+	qrcode "github.com/yeqown/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/image/draw"
 )
 
 const PageReceive = "Receive"
@@ -249,15 +250,34 @@ func (pg *receivePage) addressSection(gtx layout.Context, common pageCommon) lay
 
 func (pg *receivePage) qrCodeAddressSection(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.addrs = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress
-	qrCode, err := qrcode.New(pg.addrs, qrcode.Highest)
+	opt := qrcode.WithLogoImageFilePNG("ui/assets/decredicons/qrcodeSymbol.png")
+	qrCode, err := qrcode.New(pg.addrs, opt)
 	if err != nil {
 		log.Error("Error generating address qrCode: " + err.Error())
 		return layout.Dimensions{}
 	}
-	qrCode.DisableBorder = true
-	img := widget.Image{
-		Src: paint.NewImageOp(qrCode.Image(100)),
+
+	var buff bytes.Buffer
+	err = qrCode.SaveTo(&buff)
+	if err != nil {
+		log.Error(err.Error())
+		return layout.Dimensions{}
 	}
+	imgdec, _, err := image.Decode(bytes.NewReader(buff.Bytes()))
+	if err != nil {
+		log.Error(err.Error())
+		return layout.Dimensions{}
+	}
+
+	imgs := image.NewRGBA(image.Rectangle{Max: image.Point{X: 180, Y: 180}})
+	draw.ApproxBiLinear.Scale(imgs, imgs.Bounds(), imgdec, imgdec.Bounds(), draw.Src, nil)
+
+	src := paint.NewImageOp(imgs)
+	img := widget.Image{
+		Src:   src,
+		Scale: 1,
+	}
+
 	return img.Layout(gtx)
 }
 
