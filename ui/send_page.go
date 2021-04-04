@@ -152,11 +152,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 		wallAcctWidget: walletAccountWidget{
 			title:                    common.theme.Label(values.TextSize24, "Sending account"),
-			fromAccountBtn:           new(widget.Clickable),
-			walletAccountModal:       common.theme.Modal(),
-			walletsList:              layout.List{Axis: layout.Vertical},
-			accountsList:             layout.List{Axis: layout.Vertical},
-			walletAccounts:           make(map[int]walletAccount),
+			fromAccount:              new(widget.Clickable),
+			walletAccount:            common.theme.Modal(),
+			wallets:                  layout.List{Axis: layout.Vertical},
+			accounts:                 layout.List{Axis: layout.Vertical},
+			walletAccounts:           make(map[int][]walletAccount),
 			isWalletAccountModalOpen: false,
 		},
 	}
@@ -216,7 +216,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		pg.Handle(common)
-		pg.wallAcctWidget.Handler(common)
 		return pg.Layout(gtx, common)
 	}
 }
@@ -225,7 +224,7 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", func(gtx C) D {
-				return pg.wallAcctWidget.accountSelectSection(gtx, common)
+				return pg.wallAcctWidget.accountSelectLayout(gtx, common)
 			})
 		},
 		func(gtx C) D {
@@ -291,7 +290,7 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	}
 
 	if pg.wallAcctWidget.isWalletAccountModalOpen {
-		return common.Modal(gtx, dims, pg.wallAcctWidget.walletAccountSection(gtx, common))
+		return common.Modal(gtx, dims, pg.wallAcctWidget.walletAccountModalLayout(gtx, common))
 	}
 
 	return dims
@@ -937,6 +936,8 @@ func (pg *sendPage) Handle(c pageCommon) {
 	if len(c.info.Wallets) == 0 {
 		return
 	}
+
+	pg.wallAcctWidget.Handler(c)
 
 	if *pg.selectedAccount == nil {
 		pg.selectedWallet = c.info.Wallets[0]

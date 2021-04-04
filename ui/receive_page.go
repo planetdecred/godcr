@@ -25,18 +25,21 @@ import (
 const PageReceive = "Receive"
 
 type walletAccount struct {
-	selectAccount []*gesture.Click
+	evt          *gesture.Click
+	walletIndex  int
+	accountIndex int
+	accountName  string
+	totalBalance string
+	spendable    string
 }
 
 type walletAccountWidget struct {
 	title                    decredmaterial.Label
-	walletAccountModal       *decredmaterial.Modal
-	walletsList              layout.List
-	accountsList             layout.List
-	walletAccount            walletAccount
+	walletAccount            *decredmaterial.Modal
+	wallets, accounts        layout.List
 	isWalletAccountModalOpen bool
-	walletAccounts           map[int]walletAccount
-	fromAccountBtn           *widget.Clickable
+	walletAccounts           map[int][]walletAccount
+	fromAccount              *widget.Clickable
 }
 type receivePage struct {
 	pageContainer     layout.List
@@ -70,11 +73,11 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 
 		wallAcctWidget: walletAccountWidget{
 			title:                    common.theme.Label(values.TextSize24, "Receiving account"),
-			fromAccountBtn:           new(widget.Clickable),
-			walletAccountModal:       common.theme.Modal(),
-			walletsList:              layout.List{Axis: layout.Vertical},
-			accountsList:             layout.List{Axis: layout.Vertical},
-			walletAccounts:           make(map[int]walletAccount),
+			fromAccount:              new(widget.Clickable),
+			walletAccount:            common.theme.Modal(),
+			wallets:                  layout.List{Axis: layout.Vertical},
+			accounts:                 layout.List{Axis: layout.Vertical},
+			walletAccounts:           make(map[int][]walletAccount),
 			isWalletAccountModalOpen: false,
 		},
 	}
@@ -83,10 +86,10 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	page.copy.Background = color.NRGBA{}
 	page.copy.Color = common.theme.Color.Primary
 	page.copy.Inset = layout.Inset{
-		Top:    values.SMarginPadding19p5,
-		Bottom: values.SMarginPadding19p5,
-		Left:   values.SMarginPadding16,
-		Right:  values.SMarginPadding16,
+		Top:    values.ScaleMarginPadding19p5,
+		Bottom: values.ScaleMarginPadding19p5,
+		Left:   values.ScaleMarginPadding16,
+		Right:  values.ScaleMarginPadding16,
 	}
 	page.more.Color = common.theme.Color.IconColor
 	page.more.Inset = layout.UniformInset(values.MarginPadding0)
@@ -103,18 +106,17 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		page.Handle(common)
-		page.wallAcctWidget.Handler(common)
 		return page.Layout(gtx, common)
 	}
 }
 
 func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.pageBackDrop(gtx)
+	pg.pageBackdropLayout(gtx)
 
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.wallAcctWidget.accountSelectSection(gtx, common)
+				return pg.wallAcctWidget.accountSelectLayout(gtx, common)
 			})
 		},
 		func(gtx C) D {
@@ -126,10 +128,25 @@ func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 			return pg.pageSections(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return pg.generateAddressSection(gtx, common)
+						return pg.titleLayout(gtx, common)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.addressSection(gtx, common)
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							return layout.Flex{
+								Axis:      layout.Vertical,
+								Alignment: layout.Middle,
+							}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									if pg.addrs != "" {
+										return pg.addressLayout(gtx, common)
+									}
+									return layout.Dimensions{}
+								}),
+								layout.Rigid(func(gtx C) D {
+									return pg.addressQRCodeLayout(gtx, common)
+								}),
+							)
+						})
 					}),
 				)
 			})
@@ -156,7 +173,7 @@ func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 	})
 
 	if pg.wallAcctWidget.isWalletAccountModalOpen {
-		return common.Modal(gtx, dims, pg.wallAcctWidget.walletAccountSection(gtx, common))
+		return common.Modal(gtx, dims, pg.wallAcctWidget.walletAccountModalLayout(gtx, common))
 	}
 
 	return dims
@@ -169,7 +186,9 @@ func (pg *receivePage) pageSections(gtx layout.Context, body layout.Widget) layo
 	})
 }
 
-func (pg *receivePage) pageBackDrop(gtx layout.Context) {
+// pageBackdropLayout layout of background overlay when the popup button generate new address is show,
+// click outside of the generate new address button to hide the button
+func (pg *receivePage) pageBackdropLayout(gtx layout.Context) {
 	if pg.isNewAddr {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
@@ -207,7 +226,7 @@ func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dime
 	)
 }
 
-func (pg *receivePage) generateAddressSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *receivePage) titleLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return common.theme.Body1("Your Address").Layout(gtx)
@@ -232,23 +251,46 @@ func (pg *receivePage) generateAddressSection(gtx layout.Context, common pageCom
 	)
 }
 
-func (pg *receivePage) addressSection(gtx layout.Context, common pageCommon) layout.Dimensions {
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				if pg.addrs != "" {
-					return pg.receiveAddressSection(gtx, common)
-				}
-				return layout.Dimensions{}
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.qrCodeAddressSection(gtx, common)
-			}),
-		)
-	})
+func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
+	card := decredmaterial.Card{
+		Inset: layout.Inset{
+			Top:    values.MarginPadding14,
+			Bottom: values.MarginPadding16,
+		},
+		Color: c.theme.Color.Background,
+	}
+
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+		layout.Flexed(1, func(gtx C) D {
+			pg.receiveAddress.Text = pg.addrs
+			pg.receiveAddress.Alignment = text.Middle
+			card.Radius.NE = 8
+			card.Radius.SW = 8
+			card.Radius.NW = 0
+			card.Radius.SE = 0
+			return card.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.UniformInset(values.ScaleMarginPadding16).Layout(gtx, func(gtx C) D {
+					return pg.receiveAddress.Layout(gtx)
+				})
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
+		}),
+		layout.Rigid(func(gtx C) D {
+			card.Radius.NE = 0
+			card.Radius.SW = 0
+			card.Radius.NW = 8
+			card.Radius.SE = 8
+			return card.Layout(gtx, func(gtx C) D {
+				return pg.copy.Layout(gtx)
+			})
+		}),
+	)
 }
 
-func (pg *receivePage) qrCodeAddressSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.addrs = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress
 	opt := qrcode.WithLogoImageFilePNG("ui/assets/decredicons/qrcodeSymbol.png")
 	qrCode, err := qrcode.New(pg.addrs, opt)
@@ -281,46 +323,9 @@ func (pg *receivePage) qrCodeAddressSection(gtx layout.Context, common pageCommo
 	return img.Layout(gtx)
 }
 
-func (pg *receivePage) receiveAddressSection(gtx layout.Context, c pageCommon) layout.Dimensions {
-	card := decredmaterial.Card{
-		Inset: layout.Inset{
-			Top:    values.MarginPadding14,
-			Bottom: values.MarginPadding16,
-		},
-		Color: c.theme.Color.Background,
-	}
-
-	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-		layout.Flexed(1, func(gtx C) D {
-			pg.receiveAddress.Text = pg.addrs
-			pg.receiveAddress.Alignment = text.Middle
-			card.Radius.NE = 8
-			card.Radius.SW = 8
-			card.Radius.NW = 0
-			card.Radius.SE = 0
-			return card.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.UniformInset(values.SMarginPadding16).Layout(gtx, func(gtx C) D {
-					return pg.receiveAddress.Layout(gtx)
-				})
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
-		}),
-		layout.Rigid(func(gtx C) D {
-			card.Radius.NE = 0
-			card.Radius.SW = 0
-			card.Radius.NW = 8
-			card.Radius.SE = 8
-			return card.Layout(gtx, func(gtx C) D {
-				return pg.copy.Layout(gtx)
-			})
-		}),
-	)
-}
-
 func (pg *receivePage) Handle(common pageCommon) {
+	pg.wallAcctWidget.Handler(common)
+
 	if pg.backdrop.Clicked() {
 		pg.isNewAddr = false
 	}
@@ -374,7 +379,7 @@ func (pg *receivePage) Handle(common pageCommon) {
 	}
 }
 
-func (wg *walletAccountWidget) accountSelectSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (wg *walletAccountWidget) accountSelectLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	border := widget.Border{
 		Color:        common.theme.Color.BorderColor,
 		CornerRadius: values.MarginPadding8,
@@ -382,12 +387,11 @@ func (wg *walletAccountWidget) accountSelectSection(gtx layout.Context, common p
 	}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, wg.fromAccountBtn, func(gtx C) D {
+			return decredmaterial.Clickable(gtx, wg.fromAccount, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						accountIcon := common.icons.accountIcon
-						accountIcon.Scale = 0.9
-
+						accountIcon.Scale = 1
 						inset := layout.Inset{
 							Right: values.MarginPadding8,
 						}
@@ -450,21 +454,23 @@ func (wg *walletAccountWidget) accountSelectSection(gtx layout.Context, common p
 	})
 }
 
-func (wg *walletAccountWidget) walletAccountSection(gtx layout.Context, c pageCommon) layout.Dimensions {
-	sections := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				txt := c.theme.Body2(title)
-				txt.Color = c.theme.Color.Text
-				inset := layout.Inset{
-					Bottom: values.MarginPadding15,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return txt.Layout(gtx)
-				})
-			}),
-			layout.Rigid(body),
-		)
+func (wg *walletAccountWidget) walletAccountModalLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
+	wallAcctGroup := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+		return layout.Inset{
+			Bottom: values.MarginPadding10,
+		}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := c.theme.Body2(title)
+					txt.Color = c.theme.Color.Text
+					inset := layout.Inset{
+						Bottom: values.MarginPadding15,
+					}
+					return inset.Layout(gtx, txt.Layout)
+				}),
+				layout.Rigid(body),
+			)
+		})
 	}
 
 	w := []func(gtx C) D{
@@ -473,70 +479,59 @@ func (wg *walletAccountWidget) walletAccountSection(gtx layout.Context, c pageCo
 			return wg.title.Layout(gtx)
 		},
 		func(gtx C) D {
-			return wg.walletsList.Layout(gtx, len(c.info.Wallets), func(gtx C, i int) D {
-				wn := c.info.Wallets[i].Name
-				accounts := c.info.Wallets[i].Accounts
-				wIndex := i
-
-				inset := layout.Inset{
-					Bottom: values.MarginPadding10,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return sections(gtx, wn, func(gtx C) D {
-						return wg.accountsList.Layout(gtx, len(accounts), func(gtx C, x int) D {
-							accountsName := accounts[x].Name
-							totalBalance := accounts[x].TotalBalance
-							spendable := dcrutil.Amount(accounts[x].SpendableBalance).String()
-
-							click := wg.walletAccounts[wIndex].selectAccount[x]
-							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-							click.Add(gtx.Ops)
-							wg.walletAccountsHandler(gtx, c, wIndex, x, click)
-
-							return wg.walletAccountsPopupLayout(gtx, accountsName, totalBalance, spendable, c, wIndex, x)
-						})
+			return wg.wallets.Layout(gtx, len(c.info.Wallets), func(gtx C, windex int) D {
+				return wallAcctGroup(gtx, c.info.Wallets[windex].Name, func(gtx C) D {
+					return wg.accounts.Layout(gtx, len(c.info.Wallets[windex].Accounts), func(gtx C, aindex int) D {
+						click := wg.walletAccounts[windex][aindex].evt
+						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+						click.Add(gtx.Ops)
+						wg.walletAccountsHandler(gtx, c, wg.walletAccounts[windex][aindex])
+						return wg.walletAccountLayout(gtx, c, wg.walletAccounts[windex][aindex])
 					})
 				})
 			})
 		},
 	}
 
-	return wg.walletAccountModal.Layout(gtx, w, 850)
+	return wg.walletAccount.Layout(gtx, w, 850)
 }
 
 func (wg *walletAccountWidget) Handler(c pageCommon) {
-	for index := 0; index < c.info.LoadedWallets; index++ {
-		if _, ok := wg.walletAccounts[index]; !ok {
-			accounts := c.info.Wallets[index].Accounts
-			if len(accounts) != len(wg.walletAccount.selectAccount) {
-				wg.walletAccount.selectAccount = make([]*gesture.Click, len(accounts))
-				for index := range accounts {
-					wg.walletAccount.selectAccount[index] = &gesture.Click{}
+	for windex := 0; windex < c.info.LoadedWallets; windex++ {
+		if _, ok := wg.walletAccounts[windex]; !ok {
+			accounts := c.info.Wallets[windex].Accounts
+			if len(accounts) != len(wg.walletAccounts[windex]) {
+				wg.walletAccounts[windex] = make([]walletAccount, len(accounts))
+				for aindex := range accounts {
+					wg.walletAccounts[windex][aindex].walletIndex = windex
+					wg.walletAccounts[windex][aindex].accountIndex = aindex
+					wg.walletAccounts[windex][aindex].evt = &gesture.Click{}
+					wg.walletAccounts[windex][aindex].accountName = accounts[aindex].Name
+					wg.walletAccounts[windex][aindex].totalBalance = accounts[aindex].TotalBalance
+					wg.walletAccounts[windex][aindex].spendable = dcrutil.Amount(accounts[aindex].SpendableBalance).String()
 				}
 			}
-
-			wg.walletAccounts[index] = wg.walletAccount
 		}
 	}
 
-	if wg.fromAccountBtn.Clicked() {
+	if wg.fromAccount.Clicked() {
 		wg.isWalletAccountModalOpen = true
 	}
 }
 
-func (wg *walletAccountWidget) walletAccountsHandler(gtx layout.Context, common pageCommon, wIndex, aIndex int, click *gesture.Click) {
-	for _, e := range click.Events(gtx) {
+func (wg *walletAccountWidget) walletAccountsHandler(gtx layout.Context, common pageCommon, wallAcct walletAccount) {
+	for _, e := range wallAcct.evt.Events(gtx) {
 		if e.Type == gesture.TypeClick {
-			*common.selectedAccount = aIndex
-			*common.selectedWallet = wIndex
+			*common.selectedWallet = wallAcct.walletIndex
+			*common.selectedAccount = wallAcct.accountIndex
 			wg.isWalletAccountModalOpen = false
 		}
 	}
 }
 
-func (wg *walletAccountWidget) walletAccountsPopupLayout(gtx layout.Context, name, totalBal, spendableBal string, common pageCommon, wIndex, aIndex int) layout.Dimensions {
+func (wg *walletAccountWidget) walletAccountLayout(gtx layout.Context, common pageCommon, wallAcct walletAccount) layout.Dimensions {
 	accountIcon := common.icons.accountIcon
-	accountIcon.Scale = 0.8
+	accountIcon.Scale = 1
 
 	inset := layout.Inset{
 		Bottom: values.MarginPadding10,
@@ -557,16 +552,16 @@ func (wg *walletAccountWidget) walletAccountsPopupLayout(gtx layout.Context, nam
 					layout.Flexed(0.8, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								accountLabel := common.theme.Body2(name)
+								accountLabel := common.theme.Body2(wallAcct.accountName)
 								accountLabel.Color = common.theme.Color.Text
-								accountBalLabel := common.theme.Body2(totalBal)
+								accountBalLabel := common.theme.Body2(wallAcct.totalBalance)
 								accountBalLabel.Color = common.theme.Color.Text
 								return wg.accountTableLayout(gtx, accountLabel, accountBalLabel)
 							}),
 							layout.Rigid(func(gtx C) D {
 								spendibleLabel := common.theme.Body2("Spendable")
 								spendibleLabel.Color = common.theme.Color.Gray
-								spendibleBalLabel := common.theme.Body2(spendableBal)
+								spendibleBalLabel := common.theme.Body2(wallAcct.spendable)
 								spendibleBalLabel.Color = common.theme.Color.Gray
 								return wg.accountTableLayout(gtx, spendibleLabel, spendibleBalLabel)
 							}),
@@ -578,14 +573,12 @@ func (wg *walletAccountWidget) walletAccountsPopupLayout(gtx layout.Context, nam
 							Top:   values.MarginPadding10,
 						}
 
-						if *common.selectedWallet == wIndex {
-							if *common.selectedAccount == aIndex {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return inset.Layout(gtx, func(gtx C) D {
-										return common.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
-									})
+						if *common.selectedWallet == wallAcct.walletIndex && *common.selectedAccount == wallAcct.accountIndex {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return inset.Layout(gtx, func(gtx C) D {
+									return common.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
 								})
-							}
+							})
 						}
 						return layout.Dimensions{}
 					}),

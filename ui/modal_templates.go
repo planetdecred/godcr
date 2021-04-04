@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -385,7 +386,7 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 	title := []func(gtx C) D{
 		func(gtx C) D {
 			t := th.H5(load.title)
-			t.Font.Weight = 600
+			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
 	}

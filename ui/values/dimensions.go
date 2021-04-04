@@ -49,8 +49,8 @@ var (
 	TextSize24 = unit.Sp(24)
 	TextSize28 = unit.Sp(28)
 
-	STextSize20 = unit.Sp(20)
+	ScaleTextSize20 = unit.Sp(20)
 
-	SMarginPadding16   = unit.Sp(16)
-	SMarginPadding19p5 = unit.Sp(19.5)
+	ScaleMarginPadding16   = unit.Sp(16)
+	ScaleMarginPadding19p5 = unit.Sp(19.5)
 )
