@@ -30,7 +30,7 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon, currencySwapIcon, syncingIcon *widget.Image
+	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, documentationIcon *widget.Image
 
 	walletIcon image.Image
 }
@@ -143,6 +143,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		watchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
 		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
 		syncingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["syncing"])},
+		documentationIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
 
 		walletIcon: decredIcons["wallet"],
 	}
@@ -711,6 +712,7 @@ func (page pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) la
 
 type SubPage struct {
 	title        string
+	subTitle     string
 	walletName   string
 	back         func()
 	body         layout.Widget
@@ -741,7 +743,18 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			})
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return page.theme.H6(sp.title).Layout(gtx)
+			if sp.subTitle == "" {
+				return page.theme.H6(sp.title).Layout(gtx)
+			} else {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return page.theme.H6(sp.title).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return page.theme.Body1(sp.subTitle).Layout(gtx)
+					}),
+				)
+			}
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.walletName != "" {
