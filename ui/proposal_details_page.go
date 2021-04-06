@@ -43,6 +43,7 @@ type proposalDetails struct {
 	rejectedIcon        *widget.Icon
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
+
 	successIcon         *widget.Icon
 	refreshWindow       func()
 }

@@ -231,7 +231,11 @@ func (r *Renderer) renderWords(lblFunc labelFunc) {
 				return r.getLinkWidget(gtx, words[i])
 			}
 
-			return lblFunc(words[i] + " ").Layout(gtx)
+			word := words[i] + " "
+			if i == 0 {
+				word = words[i]
+			}
+			return lblFunc(word).Layout(gtx)
 		})
 	}
 	r.containers = append(r.containers, wdgt)

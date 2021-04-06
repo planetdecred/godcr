@@ -724,7 +724,7 @@ func (wal *Wallet) SyncProposals() {
 	go wal.multi.Politeia.Sync()
 }
 
-func (wal *Wallet) IsSyncingPropoals() bool {
+func (wal *Wallet) IsSyncingProposals() bool {
 	return wal.multi.Politeia.IsSyncing()
 }
 

@@ -531,7 +531,7 @@ func (pg *proposalsPage) layoutStartSyncSection(gtx C) D {
 func (pg *proposalsPage) layoutSyncSection(gtx C) D {
 	if pg.isSynced {
 		return pg.layoutIsSyncedSection(gtx)
-	} else if pg.wallet.IsSyncingPropoals() {
+	} else if pg.wallet.IsSyncingProposals() {
 		return pg.layoutIsSyncingSection(gtx)
 	}
 	return pg.layoutStartSyncSection(gtx)
@@ -565,7 +565,7 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 								m := values.MarginPadding12
 								if pg.isSynced {
 									m = values.MarginPadding14
-								} else if pg.wallet.IsSyncingPropoals() {
+								} else if pg.wallet.IsSyncingProposals() {
 									m = values.MarginPadding15
 								}
 								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {

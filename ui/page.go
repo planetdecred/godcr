@@ -32,7 +32,7 @@ type pageIcons struct {
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 documentationIcon, watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, 
-proposalIconInactive,restore *widget.Image
+proposalIconInactive,restore, downloadIcon *widget.Image
 
 	walletIcon image.Image
 }
@@ -182,6 +182,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		proposalIconActive:         &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
 		proposalIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaInactive"])},
 		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
+		downloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
 
 		walletIcon: decredIcons["wallet"],
 	}
