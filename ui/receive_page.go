@@ -17,6 +17,7 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	qrcode "github.com/yeqown/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/image/draw"
@@ -339,16 +340,25 @@ func (pg *receivePage) Handle(common pageCommon) {
 	}
 
 	if pg.newAddr.Button.Clicked() {
-		wallet := common.info.Wallets[*common.selectedWallet]
-		account := common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount]
+		wall := common.info.Wallets[*common.selectedWallet]
 
-		addr, err := common.wallet.NextAddress(wallet.ID, account.Number)
-		if err != nil {
-			log.Debug("Error generating new address" + err.Error())
-		} else {
-			common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress = addr
+		var generateNewAddress func(wall wallet.InfoShort)
+		generateNewAddress = func(wall wallet.InfoShort) {
+			oldAddr := wall.Accounts[*common.selectedAccount].CurrentAddress
+			newAddr, err := common.wallet.NextAddress(wall.ID, wall.Accounts[*common.selectedAccount].Number)
+			if err != nil {
+				log.Debug("Error generating new address" + err.Error())
+				return
+			}
+			if newAddr == oldAddr {
+				log.Info("Call again to generate new address")
+				generateNewAddress(wall)
+				return
+			}
+			common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress = newAddr
 			pg.isNewAddr = false
 		}
+		generateNewAddress(wall)
 	}
 
 	if common.subPageInfoButton.Button.Clicked() {
