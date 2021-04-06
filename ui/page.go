@@ -745,16 +745,15 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
 				return page.theme.H6(sp.title).Layout(gtx)
-			} else {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return page.theme.H6(sp.title).Layout(gtx)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return page.theme.Body1(sp.subTitle).Layout(gtx)
-					}),
-				)
 			}
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return page.theme.H6(sp.title).Layout(gtx)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return page.theme.Body1(sp.subTitle).Layout(gtx)
+				}),
+			)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.walletName != "" {
