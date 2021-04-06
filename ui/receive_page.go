@@ -35,7 +35,7 @@ type walletAccount struct {
 
 type walletAccountWidget struct {
 	title                    decredmaterial.Label
-	walletAccount            *decredmaterial.Modal
+	walletAccount            decredmaterial.Modal
 	wallets, accounts        layout.List
 	isWalletAccountModalOpen bool
 	walletAccounts           map[int][]walletAccount
@@ -74,7 +74,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 		wallAcctWidget: walletAccountWidget{
 			title:                    common.theme.Label(values.TextSize24, "Receiving account"),
 			fromAccount:              new(widget.Clickable),
-			walletAccount:            common.theme.Modal(),
+			walletAccount:            *common.theme.Modal(),
 			wallets:                  layout.List{Axis: layout.Vertical},
 			accounts:                 layout.List{Axis: layout.Vertical},
 			walletAccounts:           make(map[int][]walletAccount),
@@ -86,10 +86,10 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	page.copy.Background = color.NRGBA{}
 	page.copy.Color = common.theme.Color.Primary
 	page.copy.Inset = layout.Inset{
-		Top:    values.ScaleMarginPadding19p5,
-		Bottom: values.ScaleMarginPadding19p5,
-		Left:   values.ScaleMarginPadding16,
-		Right:  values.ScaleMarginPadding16,
+		Top:    values.MarginPadding19p5,
+		Bottom: values.MarginPadding19p5,
+		Left:   values.MarginPadding16,
+		Right:  values.MarginPadding16,
 	}
 	page.more.Color = common.theme.Color.IconColor
 	page.more.Inset = layout.UniformInset(values.MarginPadding0)
@@ -264,13 +264,14 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 		layout.Flexed(1, func(gtx C) D {
 			pg.receiveAddress.Text = pg.addrs
 			pg.receiveAddress.Alignment = text.Middle
+			pg.receiveAddress.MaxLines = 1
 			card.Radius.NE = 8
 			card.Radius.SW = 8
 			card.Radius.NW = 0
 			card.Radius.SE = 0
 			return card.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.UniformInset(values.ScaleMarginPadding16).Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 					return pg.receiveAddress.Layout(gtx)
 				})
 			})
@@ -503,12 +504,14 @@ func (wg *walletAccountWidget) Handler(c pageCommon) {
 			if len(accounts) != len(wg.walletAccounts[windex]) {
 				wg.walletAccounts[windex] = make([]walletAccount, len(accounts))
 				for aindex := range accounts {
-					wg.walletAccounts[windex][aindex].walletIndex = windex
-					wg.walletAccounts[windex][aindex].accountIndex = aindex
-					wg.walletAccounts[windex][aindex].evt = &gesture.Click{}
-					wg.walletAccounts[windex][aindex].accountName = accounts[aindex].Name
-					wg.walletAccounts[windex][aindex].totalBalance = accounts[aindex].TotalBalance
-					wg.walletAccounts[windex][aindex].spendable = dcrutil.Amount(accounts[aindex].SpendableBalance).String()
+					wg.walletAccounts[windex][aindex] = walletAccount{
+						walletIndex:  windex,
+						accountIndex: aindex,
+						evt:          &gesture.Click{},
+						accountName:  accounts[aindex].Name,
+						totalBalance: accounts[aindex].TotalBalance,
+						spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
+					}
 				}
 			}
 		}

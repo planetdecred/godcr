@@ -153,7 +153,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		wallAcctWidget: walletAccountWidget{
 			title:                    common.theme.Label(values.TextSize24, "Sending account"),
 			fromAccount:              new(widget.Clickable),
-			walletAccount:            common.theme.Modal(),
+			walletAccount:            *common.theme.Modal(),
 			wallets:                  layout.List{Axis: layout.Vertical},
 			accounts:                 layout.List{Axis: layout.Vertical},
 			walletAccounts:           make(map[int][]walletAccount),
