@@ -160,7 +160,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txFeeCollapsible:             common.theme.Collapsible(),
 
 		confirmModal:              common.theme.Modal(),
-		walletAccountModal:        common.theme.Modal(),
+		walletAccountModal:        common.theme.ModalFloatTitle(),
 		isConfirmationModalOpen:   false,
 		isBroadcastingTransaction: false,
 		isWalletAccountModalOpen:  false,
@@ -402,7 +402,9 @@ func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Di
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										return pg.theme.Body1((*pg.selectedAccount).TotalBalance).Layout(gtx)
+										spendableBalance := dcrutil.Amount((*pg.selectedAccount).SpendableBalance).String()
+										txt := pg.theme.Body1(spendableBalance)
+										return txt.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
 										inset := layout.Inset{
