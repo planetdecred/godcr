@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -56,9 +55,10 @@ type Theme struct {
 		Black        color.NRGBA
 		DeepBlue     color.NRGBA
 		LightGray    color.NRGBA
-		IconColor    color.NRGBA
-		BorderColor  color.NRGBA
 		InactiveGray color.NRGBA
+		Gray1        color.NRGBA
+		Gray2        color.NRGBA
+		Gray3        color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -70,12 +70,12 @@ type Theme struct {
 	radioCheckedIcon      *widget.Icon
 	radioUncheckedIcon    *widget.Icon
 	chevronUpIcon         *widget.Icon
+	dropDownIcon          *widget.Icon
 	chevronDownIcon       *widget.Icon
-	NavigationCheckIcon   *widget.Icon
-	NavMoreIcon           *widget.Icon
+	navigationCheckIcon   *widget.Icon
+	navMoreIcon           *widget.Icon
 	expandIcon            *widget.Image
 	collapseIcon          *widget.Image
-	decredIcons           map[string]image.Image
 
 	Clipboard     chan string
 	ReadClipboard chan interface{}
@@ -93,17 +93,17 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Hint = rgb(0x8997A5)
 	t.Color.InvText = rgb(0xffffff)
 	t.Color.Overlay = rgb(0x000000)
-	t.Color.Background = argb(0x22444444)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
 	t.Color.Danger = rgb(0xed6d47)
 	t.Color.Gray = rgb(0x596D81)
-	t.Color.Black = rgb(0x000000)
-	t.Color.LightGray = rgb(0xF3F5F6)
+	t.Color.Gray1 = rgb(0xe6eaed)
+	t.Color.Gray2 = rgb(0x8997a5)
+	t.Color.Gray3 = rgb(0x3d5873)
+	t.Color.LightGray = rgb(0xf3f5f6)
 	t.Color.DeepBlue = rgb(0x091440)
-	t.Color.IconColor = rgb(0x3D5873)
-	t.Color.BorderColor = rgb(0xE6EAED)
-	t.Color.InactiveGray = rgb(0xC4CBD2)
+	t.Color.InactiveGray = rgb(0xc4cbd2)
+	t.Color.Black = rgb(0x000000)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
@@ -112,9 +112,10 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
 	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
 	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
-	t.NavMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+	t.navigationCheckIcon = mustIcon(widget.NewIcon(icons.NavigationCheck))
+	t.dropDownIcon = mustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
 
-	t.decredIcons = decredIcons
 	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
 	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
 
@@ -127,7 +128,7 @@ func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
 		Alignment: layout.N,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return fill(gtx, t.Color.Background)
+			return fill(gtx, t.Color.LightGray)
 		}),
 		layout.Stacked(w),
 	)
@@ -166,10 +167,6 @@ func rgb(c uint32) color.NRGBA {
 
 func argb(c uint32) color.NRGBA {
 	return color.NRGBA{A: uint8(c >> 24), R: uint8(c >> 16), G: uint8(c >> 8), B: uint8(c)}
-}
-
-func toPointF(p image.Point) f32.Point {
-	return f32.Point{X: float32(p.X), Y: float32(p.Y)}
 }
 
 func fillMax(gtx layout.Context, col color.NRGBA) {

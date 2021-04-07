@@ -24,7 +24,6 @@ type validateAddressPage struct {
 	theme                 *decredmaterial.Theme
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
-	line                  *decredmaterial.Line
 	wallet                *wallet.Wallet
 	walletID              int
 	stateValidate         int
@@ -35,7 +34,6 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 		theme:       common.theme,
 		validateBtn: common.theme.Button(new(widget.Clickable), "Validate"),
 		clearBtn:    common.theme.Button(new(widget.Clickable), "Clear"),
-		line:        common.theme.Line(),
 		wallet:      common.wallet,
 	}
 
@@ -48,10 +46,6 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 	pg.validateBtn.Background = pg.theme.Color.Primary
 	pg.clearBtn.Color = pg.theme.Color.Primary
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
-
-	pg.line.Height = 2
-	pg.line.Color = common.theme.Color.Background
-
 	pg.stateValidate = none
 
 	return func(gtx C) D {
@@ -134,8 +128,7 @@ func (pg *validateAddressPage) actionButtons() layout.Widget {
 func (pg *validateAddressPage) lineSeparator(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding10
 	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-		pg.line.Width = gtx.Constraints.Max.X
-		return pg.line.Layout(gtx)
+		return pg.theme.Separator().Layout(gtx)
 	})
 }
 

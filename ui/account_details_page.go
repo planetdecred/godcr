@@ -22,7 +22,6 @@ type acctDetailsPage struct {
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
 	acctInfo                 **wallet.Account
-	line                     *decredmaterial.Line
 	editAccount              *widget.Clickable
 	errorReceiver            chan error
 }
@@ -36,12 +35,10 @@ func (win *Window) AcctDetailsPage(common pageCommon) layout.Widget {
 		acctInfo:      &win.walletAccount,
 		theme:         common.theme,
 		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
-		line:          common.theme.Line(),
 		editAccount:   new(widget.Clickable),
 		errorReceiver: make(chan error),
 	}
 
-	pg.line.Color = common.theme.Color.Background
 	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -57,11 +54,9 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 			return pg.accountBalanceLayout(gtx, &common)
 		},
 		func(gtx C) D {
-			pg.line.Width = gtx.Constraints.Max.X
-			pg.line.Height = 2
 			m := values.MarginPadding10
 			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-				return pg.line.Layout(gtx)
+				return pg.theme.Separator().Layout(gtx)
 			})
 		},
 		func(gtx C) D {
@@ -114,17 +109,17 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 }
 
 func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	totalBalanceMain, totalBalanceSub := breakBalance((*pg.acctInfo).TotalBalance)
+	totalBalanceMain, totalBalanceSub := breakBalance(common.printer, (*pg.acctInfo).TotalBalance)
 	spendable := dcrutil.Amount((*pg.acctInfo).SpendableBalance).String()
-	spendableMain, spendableSub := breakBalance(spendable)
+	spendableMain, spendableSub := breakBalance(common.printer, spendable)
 	immatureRewards := dcrutil.Amount((*pg.acctInfo).Balance.ImmatureReward).String()
-	rewardBalanceMain, rewardBalanceSub := breakBalance(immatureRewards)
+	rewardBalanceMain, rewardBalanceSub := breakBalance(common.printer, immatureRewards)
 	lockedByTickets := dcrutil.Amount((*pg.acctInfo).Balance.LockedByTickets).String()
-	lockBalanceMain, lockBalanceSub := breakBalance(lockedByTickets)
+	lockBalanceMain, lockBalanceSub := breakBalance(common.printer, lockedByTickets)
 	votingAuthority := dcrutil.Amount((*pg.acctInfo).Balance.VotingAuthority).String()
-	voteBalanceMain, voteBalanceSub := breakBalance(votingAuthority)
+	voteBalanceMain, voteBalanceSub := breakBalance(common.printer, votingAuthority)
 	immatureStakeGen := dcrutil.Amount((*pg.acctInfo).Balance.ImmatureStakeGeneration).String()
-	stakeBalanceMain, stakeBalanceSub := breakBalance(immatureStakeGen)
+	stakeBalanceMain, stakeBalanceSub := breakBalance(common.printer, immatureStakeGen)
 
 	return pg.pageSections(gtx, func(gtx C) D {
 		accountIcon := common.icons.accountIcon
@@ -249,9 +244,7 @@ func (pg *acctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightTex
 		}),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
-				rightTextLabel := pg.theme.Label(values.TextSize16, rightText)
-				rightTextLabel.Color = pg.theme.Color.DeepBlue
-				return rightTextLabel.Layout(gtx)
+				return pg.theme.Body1(rightText).Layout(gtx)
 			})
 		}),
 	)

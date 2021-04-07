@@ -21,7 +21,6 @@ type privacyPage struct {
 	pageContainer                        layout.List
 	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
 	infoBtn                              decredmaterial.IconButton
-	line                                 *decredmaterial.Line
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
 	errorReceiver                        chan error
@@ -34,7 +33,6 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 		pageContainer:           layout.List{Axis: layout.Vertical},
 		toggleMixer:             new(widget.Bool),
 		allowUnspendUnmixedAcct: new(widget.Bool),
-		line:                    common.theme.Line(),
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
 		errorReceiver:           make(chan error),
@@ -45,8 +43,6 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 	pg.infoBtn.Color = common.theme.Color.Gray
 	pg.infoBtn.Background = common.theme.Color.Surface
 	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
-	pg.line.Color = common.theme.Color.Background
-	pg.line.Height = 1
 
 	return func(gtx C) D {
 		pg.Handler(common)
@@ -113,8 +109,8 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										c.icons.mixer.Scale = 1.0
-										return c.icons.mixer.Layout(gtx)
+										c.icons.mixerSmall.Scale = 1.0
+										return c.icons.mixerSmall.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -194,8 +190,9 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							c.icons.mixer.Scale = 1.0
-							return c.icons.mixer.Layout(gtx)
+							ic := c.icons.mixerSmall
+							ic.Scale = 1.0
+							return ic.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -210,7 +207,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 				layout.Rigid(pg.gutter),
 				layout.Rigid(func(gtx C) D {
 					content := c.theme.Card()
-					content.Color = c.theme.Color.Background
+					content.Color = c.theme.Color.LightGray
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -235,9 +232,9 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 										}),
 										layout.Rigid(func(gtx C) D {
 											if c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
-												return layoutBalance(gtx, unmixedBalance, *c)
+												return c.layoutBalance(gtx, unmixedBalance)
 											}
-											return layoutBalance(gtx, unmixedBalance, *c)
+											return c.layoutBalance(gtx, unmixedBalance)
 										}),
 									)
 								}),
@@ -256,7 +253,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return layoutBalance(gtx, mixedBalance, *c)
+											return c.layoutBalance(gtx, mixedBalance)
 										}),
 									)
 								}),
@@ -272,7 +269,6 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return c.theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		pg.line.Width = gtx.Constraints.Max.X
 
 		row := func(txt1, txt2 string) D {
 			return layout.Inset{
@@ -299,13 +295,13 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 				})
 			}),
 			layout.Rigid(func(gtx C) D { return row("Mixed account", "mixed") }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Change account", "unmixed") }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Account branch", fmt.Sprintf("%d", dcrlibwallet.MixedAccountBranch)) }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Shuffle server", dcrlibwallet.ShuffleServer) }),
-			layout.Rigid(func(gtx C) D { return pg.line.Layout(gtx) }),
+			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Shuffle port", dcrlibwallet.ShufflePort) }),
 		)
 	})

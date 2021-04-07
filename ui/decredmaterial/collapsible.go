@@ -36,7 +36,7 @@ func (t *Theme) Collapsible() *Collapsible {
 		card:            t.Card(),
 		expandedIcon:    t.chevronUpIcon,
 		collapsedIcon:   t.chevronDownIcon,
-		iconColor:       t.Color.IconColor,
+		iconColor:       t.Color.Gray3,
 	}
 	c.card.Color = c.BackgroundColor
 	return c
@@ -52,7 +52,7 @@ func (t *Theme) CollapsibleWithOption() *CollapsibleWithOption {
 		moreIconButton: IconButton{
 			IconButtonStyle: material.IconButtonStyle{
 				Button:     new(widget.Clickable),
-				Icon:       t.NavMoreIcon,
+				Icon:       t.navMoreIcon,
 				Size:       unit.Dp(25),
 				Background: color.NRGBA{},
 				Color:      t.Color.Text,

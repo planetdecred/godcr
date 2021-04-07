@@ -25,7 +25,6 @@ type signMessagePage struct {
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
 	result                                     **wallet.Signature
-	line                                       *decredmaterial.Line
 	copySignature                              *widget.Clickable
 	copyIcon                                   *widget.Image
 }
@@ -60,14 +59,12 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		signButton:    common.theme.Button(new(widget.Clickable), "Sign message"),
 		copyButton:    common.theme.Button(new(widget.Clickable), "Copy"),
 		result:        &win.signatureResult,
-		line:          common.theme.Line(),
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
 		errorReceiver: make(chan error),
 	}
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
-	pg.line.Color = common.theme.Color.Background
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -162,15 +159,13 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				m := values.MarginPadding30
 				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-					pg.line.Width = gtx.Constraints.Max.X
-					pg.line.Height = 3
-					return pg.line.Layout(gtx)
+					return pg.theme.Separator().Layout(gtx)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
-						border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
 						return border.Layout(gtx, func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
