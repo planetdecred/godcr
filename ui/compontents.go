@@ -4,12 +4,9 @@
 package ui
 
 import (
-	"fmt"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -159,21 +156,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										img = page.drawerNavItems[i].image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
-										scaler := func(im widget.Image, scale float32) {
-											size := im.Src.Size()
-											wf, hf := float32(size.X), float32(size.Y)
-											w, h := gtx.Px(unit.Dp(wf*scale)), gtx.Px(unit.Dp(hf*scale))
-											fmt.Printf("ORIGINAL WIDITH %v, HEIGHT %v  WIDTH %v HEIGHT %v ", wf, hf, w, h)
-											//cs := gtx.Constraints
-											//_ = cs.Constrain(image.Pt(w, h))
-											pixelScale := scale * gtx.Metric.PxPerDp
-											fmt.Printf("pixel scale %v  perPixel %v\n", pixelScale, gtx.Metric.PxPerDp)
-										}
-										//sz := gtx.Constraints.Max.X
-										//img.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-										//fmt.Printf("image scale %v SZ  %v  float\n", img.Scale, sz, )
-										img.Scale = 0.7
-										scaler(*img, img.Scale)
+										img.Scale = 1.0
 										return img.Layout(gtx)
 									})
 								}),

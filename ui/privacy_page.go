@@ -109,8 +109,8 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										c.icons.mixer.Scale = 1.0
-										return c.icons.mixer.Layout(gtx)
+										c.icons.mixerSmall.Scale = 1.0
+										return c.icons.mixerSmall.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -190,8 +190,9 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							c.icons.mixer.Scale = 1.0
-							return c.icons.mixer.Layout(gtx)
+							ic := c.icons.mixerSmall
+							ic.Scale = 1.0
+							return ic.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
