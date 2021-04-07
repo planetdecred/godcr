@@ -95,6 +95,7 @@ type proposalsPage struct {
 	updatedLabel               decredmaterial.Label
 	syncButton                 *widget.Clickable
 	startSyncIcon              *widget.Image
+	timerIcon                  *widget.Image
 }
 
 var (
@@ -126,6 +127,7 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		updatedLabel:     common.theme.Body2("Updated"),
 		syncButton:       new(widget.Clickable),
 		startSyncIcon:    common.icons.restore,
+		timerIcon:        common.icons.timerIcon,
 	}
 	pg.infoIcon.Color = common.theme.Color.Gray
 	pg.legendIcon.Color = common.theme.Color.InactiveGray
@@ -412,8 +414,18 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 							}),
 						)
 					}
-
-					return timeAgoLabel.Layout(gtx)
+					pg.timerIcon.Scale = 1
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							if p.title == "Voting" {
+								return layout.Inset{Right: values.MarginPadding4, Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+									return pg.timerIcon.Layout(gtx)
+								})
+							}
+							return D{}
+						}),
+						layout.Rigid(timeAgoLabel.Layout),
+					)
 				}),
 			)
 		}),
