@@ -73,7 +73,6 @@ type createRestore struct {
 	createModal     *decredmaterial.Modal
 	warningModal    *decredmaterial.Modal
 	modalTitleLabel decredmaterial.Label
-	modalSeparator  *decredmaterial.Line
 }
 
 // Loading lays out the loading widget with a faded background
@@ -95,7 +94,6 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 		createModal:           common.theme.Modal(),
 		warningModal:          common.theme.Modal(),
 		modalTitleLabel:       common.theme.H6(""),
-		modalSeparator:        common.theme.Line(),
 	}
 
 	pg.create = common.theme.Button(new(widget.Clickable), "create wallet")
@@ -189,8 +187,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 							return pg.modalTitleLabel.Layout(gtx)
 						},
 						func(gtx C) D {
-							pg.modalSeparator.Width = gtx.Constraints.Max.X
-							return pg.modalSeparator.Layout(gtx)
+							return pg.theme.Separator().Layout(gtx)
 						},
 						func(gtx C) D {
 							if pg.showRestore {

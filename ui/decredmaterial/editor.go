@@ -69,8 +69,8 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		TitleLabel:        t.Body2(""),
 		IsTitleLabel:      true,
 		Bordered:          true,
-		LineColor:         t.Color.BorderColor,
-		TitleLabelColor:   t.Color.IconColor,
+		LineColor:         t.Color.Gray1,
+		TitleLabelColor:   t.Color.Gray3,
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 
@@ -235,13 +235,13 @@ func (e Editor) handleEvents() {
 	if e.errorLabel.Text != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.BorderColor
+		e.LineColor = e.t.Color.Gray1
 	}
 
 	if e.requiredErrorText != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.BorderColor
+		e.LineColor = e.t.Color.Gray1
 	}
 }
 

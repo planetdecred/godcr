@@ -43,8 +43,6 @@ type settingsPage struct {
 
 	peerLabel, agentLabel decredmaterial.Label
 
-	line *decredmaterial.Line
-
 	isStartupPassword bool
 	peerAddr          string
 	agentValue        string
@@ -76,7 +74,6 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		userAgent:        new(widget.Bool),
 		chevronRightIcon: chevronRightIcon,
 
-		line:          common.theme.Line(),
 		errorReceiver: make(chan error),
 
 		currencyConversion:  new(widget.Clickable),
@@ -90,8 +87,6 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		currencyModal:     common.theme.Modal(),
 		radioButtonsGroup: new(widget.Enum),
 	}
-	pg.line.Height = 2
-	pg.line.Color = common.theme.Color.Background
 
 	color := common.theme.Color.LightGray
 
@@ -379,8 +374,7 @@ func (pg *settingsPage) lineSeparator() layout.Widget {
 	m := values.MarginPadding1
 	return func(gtx C) D {
 		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-			pg.line.Width = gtx.Constraints.Max.X
-			return pg.line.Layout(gtx)
+			return pg.theme.Separator().Layout(gtx)
 		})
 	}
 }

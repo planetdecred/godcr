@@ -3,7 +3,6 @@ package ui
 import (
 	"image"
 	"sort"
-	"strconv"
 	"time"
 
 	"gioui.org/f32"
@@ -12,8 +11,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
-	"gioui.org/text"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -25,22 +22,20 @@ import (
 const PageTransactions = "Transactions"
 
 type transactionWdg struct {
-	statusIcon   *widget.Image
-	direction    *widget.Image
-	time, status decredmaterial.Label
+	statusIcon           *widget.Image
+	direction            *widget.Image
+	time, status, wallet decredmaterial.Label
 }
 
 type transactionsPage struct {
-	container                                   layout.Flex
-	txsList                                     layout.List
-	walletTransactions                          **wallet.Transactions
-	walletTransaction                           **wallet.Transaction
-	filterSorter                                string
-	filterSortW, filterDirectionW               *widget.Enum
-	filterDirection, filterSort                 []decredmaterial.RadioButton
-	defaultFilterSorter, defaultFilterDirection string
-	toTxnDetails                                []*gesture.Click
-	line                                        *decredmaterial.Line
+	container                     layout.Flex
+	txsList                       layout.List
+	walletTransactions            **wallet.Transactions
+	walletTransaction             **wallet.Transaction
+	filterSorter                  int
+	filterSortW, filterDirectionW *widget.Enum
+	filterDirection, filterSort   []decredmaterial.RadioButton
+	toTxnDetails                  []*gesture.Click
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
@@ -49,17 +44,14 @@ type transactionsPage struct {
 
 func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 	pg := transactionsPage{
-		container:              layout.Flex{Axis: layout.Vertical},
-		txsList:                layout.List{Axis: layout.Vertical},
-		walletTransactions:     &win.walletTransactions,
-		walletTransaction:      &win.walletTransaction,
-		filterDirectionW:       new(widget.Enum),
-		filterSortW:            new(widget.Enum),
-		defaultFilterSorter:    "0",
-		defaultFilterDirection: "0",
-		line:                   common.theme.Line(),
+		container:          layout.Flex{Axis: layout.Vertical},
+		txsList:            layout.List{Axis: layout.Vertical},
+		walletTransactions: &win.walletTransactions,
+		walletTransaction:  &win.walletTransaction,
+		filterDirectionW:   new(widget.Enum),
+		filterSortW:        new(widget.Enum),
 	}
-	pg.line.Color = common.theme.Color.Background
+
 	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
@@ -90,7 +82,7 @@ func (pg *transactionsPage) setWallets(common pageCommon) {
 		return
 	}
 
-	walletDropDownItems := []decredmaterial.DropDownItem{}
+	var walletDropDownItems []decredmaterial.DropDownItem
 	for i := range common.info.Wallets {
 		item := decredmaterial.DropDownItem{
 			Text: common.info.Wallets[i].Name,
@@ -103,13 +95,14 @@ func (pg *transactionsPage) setWallets(common pageCommon) {
 
 func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.setWallets(common)
-
 	container := func(gtx C) D {
 		walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
-		walTxs := (*pg.walletTransactions).Txs[walletID]
-		pg.updateTotransactionDetailsButtons(&walTxs)
-
-		directionFilter := pg.txTypeDropDown.SelectedIndex()
+		wallTxs := (*pg.walletTransactions).Txs[walletID]
+		if pg.txTypeDropDown.SelectedIndex()-1 != -1 {
+			wallTxs = filterTransactions(wallTxs, func(i int) bool {
+				return i == pg.txTypeDropDown.SelectedIndex()-1
+			})
+		}
 
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
@@ -117,79 +110,87 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 					Top: values.MarginPadding60,
 				}.Layout(gtx, func(gtx C) D {
 					return common.theme.Card().Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
-							if len(walTxs) == 0 {
-								txt := common.theme.Body1("No transactions")
-								txt.Alignment = text.Middle
-								return txt.Layout(gtx)
-							}
-
-							return pg.txsList.Layout(gtx, len(walTxs), func(gtx C, index int) D {
-								if directionFilter != 0 && walTxs[index].Txn.Direction != int32(directionFilter-1) {
-									return layout.Dimensions{}
+						padding := values.MarginPadding16
+						return Container{layout.Inset{Bottom: padding, Left: padding}}.Layout(gtx,
+							func(gtx C) D {
+								// return "No transactions yet" text if there are no transactions
+								if len(wallTxs) == 0 {
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									txt := common.theme.Body1("No transactions yet")
+									txt.Color = common.theme.Color.Gray2
+									return txt.Layout(gtx)
 								}
 
-								click := pg.toTxnDetails[index]
-								pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-								click.Add(gtx.Ops)
-								pg.goToTxnDetails(gtx, &common, &walTxs[index], click)
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return pg.txnRowInfo(gtx, &common, walTxs[index])
-									}),
-									layout.Rigid(func(gtx C) D {
-										pg.line.Width = gtx.Constraints.Max.X
-										if index < len(walTxs)-1 {
-											return layout.Inset{
-												Top:    values.MarginPadding10,
-												Bottom: values.MarginPadding10,
-											}.Layout(gtx, func(gtx C) D {
-												return pg.line.Layout(gtx)
-											})
-										}
+								// update transaction row click gesture when the length of the click gesture slice and
+								// transactions list are different.
+								if len(wallTxs) != len(pg.toTxnDetails) {
+									pg.toTxnDetails = createClickGestures(len(wallTxs))
+								}
 
-										return layout.Dimensions{}
-									}),
-								)
+								return pg.txsList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+									click := pg.toTxnDetails[index]
+									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+									click.Add(gtx.Ops)
+									pg.goToTxnDetails(click.Events(gtx), common.changePage, &wallTxs[index])
+									var row = TransactionRow{
+										transaction: wallTxs[index],
+										index:       index,
+										showBadge:   false,
+									}
+									return transactionRow(gtx, common, row)
+								})
 							})
-						})
 					})
 				})
 			}),
 			layout.Stacked(func(gtx C) D {
-				return layout.Inset{
-					Bottom: values.MarginPadding10,
-				}.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return pg.walletDropDown.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: values.MarginPadding5,
-									}.Layout(gtx, func(gtx C) D {
-										return pg.txTypeDropDown.Layout(gtx)
-									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: values.MarginPadding5,
-									}.Layout(gtx, func(gtx C) D {
-										return pg.orderDropDown.Layout(gtx)
-									})
-								}),
-							)
-						}),
-					)
-				})
+				return pg.dropDowns(gtx)
 			}),
 		)
 	}
 	return common.Layout(gtx, func(gtx C) D {
 		return common.UniformPadding(gtx, container)
+	})
+}
+
+func filterTransactions(transactions []wallet.Transaction, f func(int) bool) []wallet.Transaction {
+	t := make([]wallet.Transaction, 0)
+	for _, v := range transactions {
+		if f(int(v.Txn.Direction)) {
+			t = append(t, v)
+		}
+	}
+	return t
+}
+
+func (pg *transactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
+	return layout.Inset{
+		Bottom: values.MarginPadding10,
+	}.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
+		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return pg.walletDropDown.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Left: values.MarginPadding5,
+						}.Layout(gtx, func(gtx C) D {
+							return pg.txTypeDropDown.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Left: values.MarginPadding5,
+						}.Layout(gtx, func(gtx C) D {
+							return pg.orderDropDown.Layout(gtx)
+						})
+					}),
+				)
+			}),
+		)
 	})
 }
 
@@ -234,51 +235,8 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	}
 }
 
-func (pg *transactionsPage) txnRowInfo(gtx layout.Context, common *pageCommon, transaction wallet.Transaction) layout.Dimensions {
-	txnWidgets := transactionWdg{}
-	initTxnWidgets(common, &transaction, &txnWidgets)
-
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					sz := gtx.Constraints.Max.X
-
-					icon := txnWidgets.direction
-					icon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, icon.Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding15, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return layoutBalance(gtx, transaction.Balance, *common)
-					})
-				}),
-			)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return txnWidgets.status.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						sz := gtx.Constraints.Max.X
-
-						icon := txnWidgets.statusIcon
-						icon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-						return icon.Layout(gtx)
-					})
-				}),
-			)
-		}),
-	)
-}
-
 func (pg *transactionsPage) Handle(common pageCommon) {
-	sortSelection := strconv.Itoa(pg.orderDropDown.SelectedIndex())
+	sortSelection := pg.orderDropDown.SelectedIndex()
 
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
@@ -287,7 +245,7 @@ func (pg *transactionsPage) Handle(common pageCommon) {
 }
 
 func (pg *transactionsPage) sortTransactions(common *pageCommon) {
-	newestFirst := pg.filterSorter == pg.defaultFilterSorter
+	newestFirst := pg.filterSorter == 0
 
 	for _, wal := range common.info.Wallets {
 		transactions := (*pg.walletTransactions).Txs[wal.ID]
@@ -302,41 +260,36 @@ func (pg *transactionsPage) sortTransactions(common *pageCommon) {
 	}
 }
 
-func (pg *transactionsPage) updateTotransactionDetailsButtons(walTxs *[]wallet.Transaction) {
-	if len(*walTxs) != len(pg.toTxnDetails) {
-		pg.toTxnDetails = make([]*gesture.Click, len(*walTxs))
-		for index := range *walTxs {
-			pg.toTxnDetails[index] = &gesture.Click{}
-		}
-	}
-}
-
-func (pg *transactionsPage) goToTxnDetails(gtx layout.Context, c *pageCommon, txn *wallet.Transaction, click *gesture.Click) {
-	for _, e := range click.Events(gtx) {
+func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, changePage func(string), txn *wallet.Transaction) {
+	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			*pg.walletTransaction = txn
-			c.changePage(PageTransactionDetails)
+			changePage(PageTransactionDetails)
 		}
 	}
 }
 
-func initTxnWidgets(common *pageCommon, transaction *wallet.Transaction, txWidgets *transactionWdg) {
+func initTxnWidgets(common pageCommon, transaction wallet.Transaction) transactionWdg {
+	var txn transactionWdg
 	t := time.Unix(transaction.Txn.Timestamp, 0).UTC()
-	txWidgets.time = common.theme.Body1(t.Format(time.UnixDate))
-	txWidgets.status = common.theme.Body1("")
+	txn.time = common.theme.Body1(t.Format(time.UnixDate))
+	txn.status = common.theme.Body1("")
+	txn.wallet = common.theme.Body2(transaction.WalletName)
 
 	if transaction.Status == "confirmed" {
-		txWidgets.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
-		txWidgets.statusIcon = common.icons.confirmIcon
+		txn.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
+		txn.statusIcon = common.icons.confirmIcon
 	} else {
-		txWidgets.status.Text = transaction.Status
-		txWidgets.status.Color = common.theme.Color.Gray
-		txWidgets.statusIcon = common.icons.pendingIcon
+		txn.status.Text = transaction.Status
+		txn.status.Color = common.theme.Color.Gray
+		txn.statusIcon = common.icons.pendingIcon
 	}
 
 	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
-		txWidgets.direction = common.icons.sendIcon
+		txn.direction = common.icons.sendIcon
 	} else {
-		txWidgets.direction = common.icons.receiveIcon
+		txn.direction = common.icons.receiveIcon
 	}
+
+	return txn
 }

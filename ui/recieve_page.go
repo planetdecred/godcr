@@ -35,7 +35,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	infoBtn.Inset, infoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 	copyBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy)))
 	copyBtn.Inset, copyBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
-	copyBtn.Background = common.theme.Color.Background
+	copyBtn.Background = common.theme.Color.LightGray
 	copyBtn.Color = common.theme.Color.Text
 	receiveAddressLabel := common.theme.H6("")
 	receiveAddressLabel.Color = common.theme.Color.Primary
