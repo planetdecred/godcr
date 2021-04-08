@@ -53,8 +53,4 @@ var (
 	TextSize22 = unit.Sp(22)
 	TextSize24 = unit.Sp(24)
 	TextSize28 = unit.Sp(28)
-
-	ScaleTextSize20 = unit.Sp(20)
-
-	ScaleMarginPadding16 = unit.Sp(16)
 )

@@ -111,8 +111,6 @@ type sendPage struct {
 	txAuthorErrChan chan error
 
 	broadcastErrChan chan error
-
-	wallAcctWidget walletAccountWidget
 }
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -141,24 +139,12 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txFeeCollapsible:             common.theme.Collapsible(),
 
 		confirmModal:              common.theme.Modal(),
-		walletAccountModal:        common.theme.ModalFloatTitle(),
 		isConfirmationModalOpen:   false,
 		isBroadcastingTransaction: false,
 
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
-		line:             common.theme.Line(),
-
-		wallAcctWidget: walletAccountWidget{
-			title:                    common.theme.Label(values.TextSize24, "Sending account"),
-			fromAccount:              new(widget.Clickable),
-			walletAccount:            *common.theme.Modal(),
-			wallets:                  layout.List{Axis: layout.Vertical},
-			accounts:                 layout.List{Axis: layout.Vertical},
-			walletAccounts:           make(map[int][]walletAccount),
-			isWalletAccountModalOpen: false,
-		},
 	}
 
 	pg.balanceAfterSendValue = "- DCR"
@@ -224,7 +210,7 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", func(gtx C) D {
-				return pg.wallAcctWidget.accountSelectLayout(gtx, common)
+				return common.accountSelectorLayout(gtx, "Sending account")
 			})
 		},
 		func(gtx C) D {
@@ -287,10 +273,6 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 
 	if pg.isConfirmationModalOpen {
 		return common.Modal(gtx, dims, pg.confirmationModal(gtx, common))
-	}
-
-	if pg.wallAcctWidget.isWalletAccountModalOpen {
-		return common.Modal(gtx, dims, pg.wallAcctWidget.walletAccountModalLayout(gtx, common))
 	}
 
 	return dims
@@ -936,8 +918,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 	if len(c.info.Wallets) == 0 {
 		return
 	}
-
-	pg.wallAcctWidget.Handler(c)
 
 	if *pg.selectedAccount == nil {
 		pg.selectedWallet = c.info.Wallets[0]

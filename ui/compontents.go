@@ -4,9 +4,15 @@
 package ui
 
 import (
+	"image"
+
+	"gioui.org/gesture"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
+	"gioui.org/widget"
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -336,6 +342,184 @@ func endToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.D
 	)
 }
 
+func (page *pageCommon) accountSelectorLayout(gtx layout.Context, title string) layout.Dimensions {
+	border := widget.Border{
+		Color:        page.theme.Color.Gray1,
+		CornerRadius: values.MarginPadding8,
+		Width:        values.MarginPadding2,
+	}
+	page.wallAcctSelector.title = title
+
+	return border.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+			return decredmaterial.Clickable(gtx, page.wallAcctSelector.fromAccount, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						accountIcon := page.icons.accountIcon
+						accountIcon.Scale = 1
+						inset := layout.Inset{
+							Right: values.MarginPadding8,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return accountIcon.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return page.theme.Body1(
+							page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount].Name).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Left: values.MarginPadding4,
+							Top:  values.MarginPadding2,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return decredmaterial.Card{
+								Color: page.theme.Color.LightGray,
+							}.Layout(gtx, func(gtx C) D {
+								m2 := values.MarginPadding2
+								m4 := values.MarginPadding4
+								inset := layout.Inset{
+									Left:   m4,
+									Top:    m2,
+									Bottom: m2,
+									Right:  m4,
+								}
+								return inset.Layout(gtx, func(gtx C) D {
+									text := page.theme.Caption(page.info.Wallets[*page.selectedWallet].Name)
+									text.Color = page.theme.Color.Gray
+									return text.Layout(gtx)
+								})
+							})
+						})
+					}),
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return layout.Flex{}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									txt := page.theme.Body1(
+										page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount].TotalBalance)
+									txt.Color = page.theme.Color.DeepBlue
+									return txt.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									inset := layout.Inset{
+										Left: values.MarginPadding15,
+									}
+									return inset.Layout(gtx, func(gtx C) D {
+										return page.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
+									})
+								}),
+							)
+						})
+					}),
+				)
+			})
+		})
+	})
+}
+
+func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dimensions {
+	wallAcctGroup := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+		return layout.Inset{
+			Bottom: values.MarginPadding10,
+		}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := page.theme.Body2(title)
+					txt.Color = page.theme.Color.Text
+					inset := layout.Inset{
+						Bottom: values.MarginPadding15,
+					}
+					return inset.Layout(gtx, txt.Layout)
+				}),
+				layout.Rigid(body),
+			)
+		})
+	}
+	wallAcctSelector := page.wallAcctSelector
+	w := []func(gtx C) D{
+		func(gtx C) D {
+			tit := page.theme.Label(values.TextSize24, wallAcctSelector.title)
+			tit.Color = page.theme.Color.Text
+			return tit.Layout(gtx)
+		},
+		func(gtx C) D {
+			return wallAcctSelector.walletsList.Layout(gtx, len(page.info.Wallets), func(gtx C, windex int) D {
+				return wallAcctGroup(gtx, page.info.Wallets[windex].Name, func(gtx C) D {
+					return wallAcctSelector.accountsList.Layout(gtx, len(page.info.Wallets[windex].Accounts), func(gtx C, aindex int) D {
+						click := wallAcctSelector.walletAccounts[windex][aindex].evt
+						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+						click.Add(gtx.Ops)
+						page.walletAccountsHandler(gtx, wallAcctSelector.walletAccounts[windex][aindex])
+						return page.walletAccountLayout(gtx, wallAcctSelector.walletAccounts[windex][aindex])
+					})
+				})
+			})
+		},
+	}
+
+	return wallAcctSelector.walletAccount.Layout(gtx, w, 850)
+}
+
+func (page *pageCommon) walletAccountsHandler(gtx layout.Context, wallAcct walletAccount) {
+	for _, e := range wallAcct.evt.Events(gtx) {
+		if e.Type == gesture.TypeClick {
+			*page.selectedWallet = wallAcct.walletIndex
+			*page.selectedAccount = wallAcct.accountIndex
+			page.wallAcctSelector.isWalletAccountModalOpen = false
+		}
+	}
+}
+
+func (page *pageCommon) walletAccountLayout(gtx layout.Context, wallAcct walletAccount) layout.Dimensions {
+	accountIcon := page.icons.accountIcon
+	accountIcon.Scale = 1
+	return layout.Inset{
+		Bottom: values.MarginPadding20,
+	}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+					layout.Flexed(0.1, func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding18,
+						}.Layout(gtx, func(gtx C) D {
+							return accountIcon.Layout(gtx)
+						})
+					}),
+					layout.Flexed(0.8, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								acct := page.theme.Label(values.TextSize18, wallAcct.accountName)
+								acct.Color = page.theme.Color.Text
+								return endToEndRow(gtx, acct.Layout, func(gtx C) D {
+									return page.layoutBalance(gtx, wallAcct.totalBalance)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								spendable := page.theme.Label(values.TextSize14, "Spendable")
+								spendable.Color = page.theme.Color.Gray
+								spendableBal := page.theme.Label(values.TextSize14, wallAcct.spendable)
+								spendableBal.Color = page.theme.Color.Gray
+								return endToEndRow(gtx, spendable.Layout, spendableBal.Layout)
+							}),
+						)
+					}),
+					layout.Flexed(0.1, func(gtx C) D {
+						if *page.selectedWallet == wallAcct.walletIndex && *page.selectedAccount == wallAcct.accountIndex {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return page.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
+							})
+						}
+						return layout.Dimensions{}
+					}),
+				)
+			}),
+		)
+	})
+}
+
 func (page pageCommon) handleNavEvents() {
 	for page.minimizeNavDrawerButton.Button.Clicked() {
 		*page.isNavDrawerMinimized = true
@@ -355,5 +539,28 @@ func (page pageCommon) handleNavEvents() {
 		for page.drawerNavItems[i].clickable.Clicked() {
 			page.changePage(page.drawerNavItems[i].page)
 		}
+	}
+
+	for windex := 0; windex < page.info.LoadedWallets; windex++ {
+		if _, ok := page.wallAcctSelector.walletAccounts[windex]; !ok {
+			accounts := page.info.Wallets[windex].Accounts
+			if len(accounts) != len(page.wallAcctSelector.walletAccounts[windex]) {
+				page.wallAcctSelector.walletAccounts[windex] = make([]walletAccount, len(accounts))
+				for aindex := range accounts {
+					page.wallAcctSelector.walletAccounts[windex][aindex] = walletAccount{
+						walletIndex:  windex,
+						accountIndex: aindex,
+						evt:          &gesture.Click{},
+						accountName:  accounts[aindex].Name,
+						totalBalance: accounts[aindex].TotalBalance,
+						spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
+					}
+				}
+			}
+		}
+	}
+
+	if page.wallAcctSelector.fromAccount.Clicked() {
+		page.wallAcctSelector.isWalletAccountModalOpen = true
 	}
 }
