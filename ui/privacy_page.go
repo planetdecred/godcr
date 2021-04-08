@@ -109,8 +109,8 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										c.icons.mixerSmall.Scale = 1.0
-										return c.icons.mixerSmall.Layout(gtx)
+										c.icons.mixer.Scale = 1.0
+										return c.icons.mixer.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -353,6 +353,12 @@ func (pg *privacyPage) Handler(common pageCommon) {
 		}
 	}
 
+	if pg.allowUnspendUnmixedAcct.Changed() {
+		if pg.allowUnspendUnmixedAcct.Value {
+			go pg.showModalAllowSpendingUnmixedAccount(&common)
+		}
+	}
+
 	select {
 	case err := <-pg.errorReceiver:
 		common.notify(err.Error(), false)
@@ -423,6 +429,21 @@ func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
 		cancelText: "Cancel",
 		confirm: func(pass string) {
 			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errorReceiver)
+		},
+	}
+}
+
+func (pg *privacyPage) showModalAllowSpendingUnmixedAccount(common *pageCommon) {
+	common.modalReceiver <- &modalLoad{
+		template:    AllowSpendingUnmixedAccountTemplate,
+		title:       "Confirm to allow spending from unmixed accounts",
+		confirmText: "Confirm",
+		cancel: func() {
+			common.closeModal()
+		},
+		cancelText: "Cancel",
+		confirm: func() {
+			common.closeModal()
 		},
 	}
 }

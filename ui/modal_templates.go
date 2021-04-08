@@ -1,8 +1,11 @@
 package ui
 
 import (
+	"strings"
+
 	"gioui.org/font/gofont"
 	"gioui.org/io/key"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -41,20 +44,23 @@ const SendInfoTemplate = "SendInfo"
 const ReceiveInfoTemplate = "ReceiveInfo"
 const TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
 
+const AllowSpendingUnmixedAccountTemplate = "SpendingUnmixedAccountTemplate"
+
 type ModalTemplate struct {
-	th                    *decredmaterial.Theme
-	walletName            decredmaterial.Editor
-	oldSpendingPassword   decredmaterial.Editor
-	spendingPassword      decredmaterial.Editor
-	matchSpendingPassword decredmaterial.Editor
-	extendedPublicKey     decredmaterial.Editor
-	confirm               decredmaterial.Button
-	cancel                decredmaterial.Button
-	alert                 *widget.Icon
-	passwordStrength      decredmaterial.ProgressBarStyle
-	keyEvent              chan *key.Event
-	refreshWindow         func()
-	confirmKeyPressed     bool
+	th                     *decredmaterial.Theme
+	walletName             decredmaterial.Editor
+	oldSpendingPassword    decredmaterial.Editor
+	spendingPassword       decredmaterial.Editor
+	matchSpendingPassword  decredmaterial.Editor
+	extendedPublicKey      decredmaterial.Editor
+	confirm                decredmaterial.Button
+	cancel                 decredmaterial.Button
+	alert                  *widget.Icon
+	passwordStrength       decredmaterial.ProgressBarStyle
+	keyEvent               chan *key.Event
+	refreshWindow          func()
+	confirmKeyPressed      bool
+	spendingUnmixedAccount decredmaterial.Editor
 }
 
 type modalLoad struct {
@@ -89,18 +95,19 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 	extendedPublicKey.Editor.Submit = true
 
 	return &ModalTemplate{
-		th:                    win.theme,
-		confirm:               confirm,
-		cancel:                cancel,
-		walletName:            walletName,
-		oldSpendingPassword:   oldSpendingPassword,
-		spendingPassword:      spendingPassword,
-		matchSpendingPassword: matchSpendingPassword,
-		extendedPublicKey:     extendedPublicKey,
-		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
-		passwordStrength:      win.theme.ProgressBar(0),
-		keyEvent:              win.keyEvents,
-		refreshWindow:         win.refresh,
+		th:                     win.theme,
+		confirm:                confirm,
+		cancel:                 cancel,
+		walletName:             walletName,
+		oldSpendingPassword:    oldSpendingPassword,
+		spendingPassword:       spendingPassword,
+		matchSpendingPassword:  matchSpendingPassword,
+		extendedPublicKey:      extendedPublicKey,
+		alert:                  mustIcon(widget.NewIcon(icons.AlertError)),
+		passwordStrength:       win.theme.ProgressBar(0),
+		keyEvent:               win.keyEvents,
+		refreshWindow:          win.refresh,
+		spendingUnmixedAccount: win.theme.Editor(new(widget.Editor), ""),
 	}
 }
 
@@ -431,6 +438,31 @@ func (m *ModalTemplate) transactionDetailsInfo() []layout.Widget {
 	}
 }
 
+func (m *ModalTemplate) allowSpendingUnmixedAccount() []layout.Widget {
+	return []layout.Widget{
+		func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					m.alert.Color = m.th.Color.Gray
+					return layout.Inset{Top: values.MarginPadding6, Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+						return m.alert.Layout(gtx, values.MarginPadding16)
+					})
+				}),
+				layout.Flexed(1, func(gtx C) D {
+					return m.th.Label(values.TextSize16, "Spendings from unmixed accounts could potentially be traced back to you.").Layout(gtx)
+				}),
+			)
+		},
+		func(gtx C) D {
+			return m.th.Label(values.TextSize16, "Please type “I understand the risks” to allow spending from unmixed accounts.").Layout(gtx)
+		},
+		func(gtx C) D {
+			m.spendingUnmixedAccount.Editor.SingleLine = true
+			return m.spendingUnmixedAccount.Layout(gtx)
+		},
+	}
+}
+
 func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []layout.Widget {
 	if !load.isReset {
 		m.resetFields()
@@ -699,6 +731,27 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	case TransactionDetailsInfoTemplate:
 		m.handleButtonEvents(load)
 		template = m.transactionDetailsInfo()
+		return
+	case AllowSpendingUnmixedAccountTemplate:
+		canConfirm := false
+		m.confirm.Background = th.Color.Hint
+		if strings.ToLower(strings.Trim(m.spendingUnmixedAccount.Editor.Text(), "")) == "i understand the risks" {
+			m.confirm.Background = th.Color.Orange
+			canConfirm = true
+		}
+		if canConfirm && m.confirm.Button.Clicked() {
+			load.confirm.(func())()
+		}
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+
+		m.spendingPassword.Hint = "Spending password"
+		if load.template == RemoveStartupPasswordTemplate || load.template == UnlockWalletTemplate {
+			m.spendingPassword.Hint = "Startup password"
+		}
+
+		template = m.allowSpendingUnmixedAccount()
 		return
 	default:
 		return
