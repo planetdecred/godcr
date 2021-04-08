@@ -8,7 +8,7 @@ import (
 
 	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op"
+	// "gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
@@ -27,6 +27,7 @@ type VoteBar struct {
 	yesColor           color.NRGBA
 	noColor            color.NRGBA
 	bgColor            color.NRGBA
+	thumbCol           color.NRGBA
 
 	yesLabel                      Label
 	noLabel                       Label
@@ -65,7 +66,8 @@ func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
 		quorumTooltip:                 t.Tooltip(),
 		infoIcon:                      infoIcon,
 		legendIcon:                    legendIcon,
-		bgColor:                       t.Color.Gray,
+		thumbCol:                      t.Color.InactiveGray,
+		bgColor:                       t.Color.BorderColor,
 		passTooltipLabel:              t.Caption(""),
 		totalVotesTooltipLabel:        t.Caption("Total votes"),
 		quorumRequirementTooltipLabel: t.Caption("Quorum requirement"),
@@ -91,69 +93,88 @@ func (v *VoteBar) SetParams(yesVotes, noVotes, eligibleVotes, requiredPercentage
 }
 
 func (v *VoteBar) Layout(gtx C) D {
-	yesRatio := (v.yesVotes / v.totalVotes) * float32(gtx.Constraints.Max.X)
+	var rW, rN float32
+	progressBarWidth := float32(gtx.Constraints.Max.X)
+	quorumRequirement := (v.requiredPercentage / 100) * v.eligibleVotes
 
-	// draw yes voteBar
-	st := op.Save(gtx.Ops)
-	rrect := f32.Rectangle{
-		Max: f32.Point{
-			X: yesRatio,
-			Y: voteBarHeight,
-		},
-	}
-	clip.RRect{
-		Rect: rrect,
-		NW:   voteBarRadius,
-		SW:   voteBarRadius,
-	}.Add(gtx.Ops)
-	paint.Fill(gtx.Ops, v.yesColor)
-	st.Load()
+	yesVotes := (v.yesVotes / quorumRequirement) * 100
+	noVotes := (v.noVotes / quorumRequirement) * 100
+	yesWidth := (progressBarWidth / 100) * float32(yesVotes)
+	noWidth := (progressBarWidth / 100) * float32(noVotes)
 
-	// draw no voteBar
-	st = op.Save(gtx.Ops)
-	rrect = f32.Rectangle{
-		Min: f32.Point{
-			X: yesRatio,
-		},
-		Max: f32.Point{
-			X: float32(gtx.Constraints.Max.X),
-			Y: voteBarHeight,
-		},
-	}
-	clip.RRect{
-		Rect: rrect,
-		NE:   voteBarRadius,
-		SE:   voteBarRadius,
-	}.Add(gtx.Ops)
-	paint.Fill(gtx.Ops, v.noColor)
-	st.Load()
+	shader := func(width float32, color color.NRGBA, layer int) layout.Dimensions {
+		maxHeight := unit.Dp(8)
+		rW, rN = 0, 0
+		if layer == 2 {
+			rW = float32(gtx.Px(unit.Dp(4)))
+		} else if layer == 1 || layer == 3 {
+			rN = float32(gtx.Px(unit.Dp(4)))
+		}
+		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
 
-	st = op.Save(gtx.Ops)
-	thumbLeftPos := (v.passPercentage / 100) * float32(gtx.Constraints.Max.X)
-	rect := image.Rectangle{
-		Min: image.Point{
-			X: int(thumbLeftPos - float32(voteBarThumbWidth/2)),
-			Y: -voteBarThumbHeight + 7,
-		},
-		Max: image.Point{
-			X: int(thumbLeftPos + voteBarThumbWidth),
-			Y: voteBarThumbHeight,
-		},
-	}
-	clip.Rect(rect).Add(gtx.Ops)
-	paint.Fill(gtx.Ops, v.bgColor)
-	inset := layout.Inset{Left: unit.Dp(110)}
-	v.passTooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		return v.passTooltipLabel.Layout(gtx)
-	})
-	st.Load()
+		clip.RRect{
+			Rect: f32.Rectangle{Max: f32.Point{X: width, Y: float32(gtx.Px(maxHeight))}},
+			NE:   rN, NW: rW, SE: rN, SW: rW,
+		}.Add(gtx.Ops)
 
-	return D{
-		Size: image.Point{
-			X: gtx.Constraints.Max.X,
-			Y: voteBarHeight,
-		},
+		paint.ColorOp{Color: color}.Add(gtx.Ops)
+		paint.PaintOp{}.Add(gtx.Ops)
+
+		return layout.Dimensions{
+			Size: d,
+		}
 	}
+
+	if yesWidth > progressBarWidth || noWidth > progressBarWidth || (yesWidth+noWidth) > progressBarWidth {
+		yes := (v.yesVotes / v.totalVotes) * 100
+		no := (v.noVotes / v.totalVotes) * 100
+		noWidth = (progressBarWidth / 100) * float32(no)
+		yesWidth = (progressBarWidth / 100) * float32(yes)
+		rN = float32(gtx.Px(unit.Dp(4)))
+	} else if yesWidth < 0 {
+		yesWidth, noWidth = 0, 0
+	}
+
+	return layout.Stack{Alignment: layout.W}.Layout(gtx,
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			return shader(progressBarWidth, v.bgColor, 1)
+		}),
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if yesWidth == 0 {
+						return D{}
+					}
+					return shader(yesWidth, v.yesColor, 2)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if noWidth == 0 {
+						return D{}
+					}
+					return shader(noWidth, v.noColor, 3)
+				}),
+			)
+		}),
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			thumbLeftPos := (v.passPercentage / 100) * float32(gtx.Constraints.Max.X)
+			rect := image.Rectangle{
+				Min: image.Point{
+					X: int(thumbLeftPos - float32(voteBarThumbWidth/2)),
+					Y: -voteBarThumbHeight + 7,
+				},
+				Max: image.Point{
+					X: int(thumbLeftPos + voteBarThumbWidth),
+					Y: voteBarThumbHeight,
+				},
+			}
+			clip.Rect(rect).Add(gtx.Ops)
+			paint.Fill(gtx.Ops, v.thumbCol)
+			inset := layout.Inset{Left: unit.Dp(110)}
+			return v.passTooltip.Layout(gtx, rect, inset, func(gtx C) D {
+				return v.passTooltipLabel.Layout(gtx)
+			})
+		}),
+	)
 }
 
 func (v *VoteBar) LayoutWithLegend(gtx C) D {
