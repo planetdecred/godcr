@@ -239,7 +239,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
 
 	pg.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
-	pg.walletInfoButton.Color = common.theme.Color.IconColor
+	pg.walletInfoButton.Color = common.theme.Color.Gray3
 	pg.walletInfoButton.Size = values.MarginPadding15
 	pg.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -543,7 +543,7 @@ func (pg *sendPage) selectedAccountSection(gtx layout.Context, common pageCommon
 		bal = pg.selectedToAccount.TotalBalance
 	}
 
-	border := widget.Border{Color: pg.theme.Color.BorderColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
+	border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
 			return decredmaterial.Clickable(gtx, w, func(gtx C) D {
