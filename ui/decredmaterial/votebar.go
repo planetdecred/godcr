@@ -8,7 +8,6 @@ import (
 
 	"gioui.org/f32"
 	"gioui.org/layout"
-	// "gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
@@ -47,10 +46,9 @@ type VoteBar struct {
 }
 
 const (
-	voteBarHeight      = 8
-	voteBarRadius      = 5
-	voteBarThumbWidth  = 4
-	voteBarThumbHeight = 15
+	voteBarHeight     = 8
+	voteBarRadius     = 5
+	voteBarThumbWidth = 2
 )
 
 func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
@@ -160,11 +158,11 @@ func (v *VoteBar) Layout(gtx C) D {
 			rect := image.Rectangle{
 				Min: image.Point{
 					X: int(thumbLeftPos - float32(voteBarThumbWidth/2)),
-					Y: -voteBarThumbHeight + 7,
+					Y: -30,
 				},
 				Max: image.Point{
 					X: int(thumbLeftPos + voteBarThumbWidth),
-					Y: voteBarThumbHeight,
+					Y: 0,
 				},
 			}
 			clip.Rect(rect).Add(gtx.Ops)
