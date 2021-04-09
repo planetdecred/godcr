@@ -65,7 +65,7 @@ func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
 		infoIcon:                      infoIcon,
 		legendIcon:                    legendIcon,
 		thumbCol:                      t.Color.InactiveGray,
-		bgColor:                       t.Color.BorderColor,
+		bgColor:                       t.Color.Gray1,
 		passTooltipLabel:              t.Caption(""),
 		totalVotesTooltipLabel:        t.Caption("Total votes"),
 		quorumRequirementTooltipLabel: t.Caption("Quorum requirement"),
@@ -97,8 +97,8 @@ func (v *VoteBar) Layout(gtx C) D {
 
 	yesVotes := (v.yesVotes / quorumRequirement) * 100
 	noVotes := (v.noVotes / quorumRequirement) * 100
-	yesWidth := (progressBarWidth / 100) * float32(yesVotes)
-	noWidth := (progressBarWidth / 100) * float32(noVotes)
+	yesWidth := (progressBarWidth / 100) * yesVotes
+	noWidth := (progressBarWidth / 100) * noVotes
 
 	shader := func(width float32, color color.NRGBA, layer int) layout.Dimensions {
 		maxHeight := unit.Dp(8)
@@ -126,8 +126,8 @@ func (v *VoteBar) Layout(gtx C) D {
 	if yesWidth > progressBarWidth || noWidth > progressBarWidth || (yesWidth+noWidth) > progressBarWidth {
 		yes := (v.yesVotes / v.totalVotes) * 100
 		no := (v.noVotes / v.totalVotes) * 100
-		noWidth = (progressBarWidth / 100) * float32(no)
-		yesWidth = (progressBarWidth / 100) * float32(yes)
+		noWidth = (progressBarWidth / 100) * no
+		yesWidth = (progressBarWidth / 100) * yes
 		rN = float32(gtx.Px(unit.Dp(4)))
 	} else if yesWidth < 0 {
 		yesWidth, noWidth = 0, 0
@@ -238,13 +238,13 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 		layout.Rigid(v.totalVotesLabel.Layout),
 		layout.Rigid(v.requirementLabel.Layout),
 		layout.Rigid(func(gtx C) D {
+			rect := image.Rectangle{
+				Min: gtx.Constraints.Min,
+				Max: gtx.Constraints.Max,
+			}
+			rect.Max.Y = 20
+			v.layoutInfoTooltip(gtx, rect)
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				rect := image.Rectangle{
-					Min: gtx.Constraints.Min,
-					Max: gtx.Constraints.Max,
-				}
-				rect.Max.Y = 20
-				v.layoutInfoTooltip(gtx, rect)
 				return v.infoIcon.Layout(gtx, unit.Dp(20))
 			})
 		}),
@@ -254,10 +254,10 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 }
 
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
-	inset := layout.Inset{Left: unit.Dp(-165)}
+	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		gtx.Constraints.Min.X = 150
-		gtx.Constraints.Max.X = 150
+		gtx.Constraints.Min.X = gtx.Px(unit.Dp(180))
+		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,

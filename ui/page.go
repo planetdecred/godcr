@@ -32,7 +32,7 @@ type pageIcons struct {
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, proposalIconInactive,
-	restore, downloadIcon, timerIcon *widget.Image
+	restore, documentationIcon, downloadIcon, timerIcon *widget.Image
 
 	walletIcon image.Image
 }

@@ -47,7 +47,6 @@ func (p proposalNotificationListeners) OnProposalVoteFinished(proposal *dcrlibwa
 
 func (p proposalNotificationListeners) OnProposalsSynced() {
 	p.page.isSynced = true
-	p.page.refreshWindow()
 }
 
 type proposalItem struct {
@@ -64,7 +63,7 @@ type tab struct {
 	btn       *widget.Clickable
 	category  int32
 	proposals []proposalItem
-	container *decredmaterial.ScrollContainer
+	container *layout.List
 }
 
 type tabs struct {
@@ -76,7 +75,6 @@ type proposalsPage struct {
 	theme                      *decredmaterial.Theme
 	wallet                     *wallet.Wallet
 	proposalsList              *layout.List
-	scrollContainer            *decredmaterial.ScrollContainer
 	tabs                       tabs
 	tabCard                    decredmaterial.Card
 	itemCard                   decredmaterial.Card
@@ -90,7 +88,6 @@ type proposalsPage struct {
 	state                      int
 	hasRegisteredListeners     bool
 	isSynced                   bool
-	refreshWindow              func()
 	updatedIcon                *widget.Icon
 	updatedLabel               decredmaterial.Label
 	syncButton                 *widget.Clickable
@@ -114,7 +111,6 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		theme:            common.theme,
 		wallet:           win.wallet,
 		proposalsList:    &layout.List{},
-		scrollContainer:  common.theme.ScrollContainer(),
 		tabCard:          common.theme.Card(),
 		itemCard:         common.theme.Card(),
 		syncCard:         common.theme.Card(),
@@ -122,7 +118,6 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		legendIcon:       common.icons.imageBrightness1,
 		infoIcon:         common.icons.actionInfo,
 		selectedProposal: &win.selectedProposal,
-		refreshWindow:    common.refreshWindow,
 		updatedIcon:      common.icons.navigationCheck,
 		updatedLabel:     common.theme.Body2("Updated"),
 		syncButton:       new(widget.Clickable),
@@ -144,7 +139,7 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 				title:     proposalCategoryTitles[i],
 				btn:       new(widget.Clickable),
 				category:  proposalCategories[i],
-				container: pg.theme.ScrollContainer(),
+				container: &layout.List{Axis: layout.Vertical},
 			},
 		)
 	}
@@ -164,14 +159,14 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 		for k := range pg.tabs.tabs[i].proposals {
 			for pg.tabs.tabs[i].proposals[k].btn.Clicked() {
 				*pg.selectedProposal = &pg.tabs.tabs[i].proposals[k].proposal
-				common.ChangePage(PageProposalDetails)
+				common.changePage(PageProposalDetails)
 			}
 		}
 	}
 
 	for pg.syncButton.Clicked() {
 		pg.wallet.SyncProposals()
-		pg.refreshWindow()
+		common.refreshPage()
 	}
 }
 
@@ -279,7 +274,7 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 												r := float32(8.5)
 												c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
 												lbl := pg.theme.Body2(strconv.Itoa(len(pg.tabs.tabs[i].proposals)))
-												lbl.Color = pg.theme.Color.IconColor
+												lbl.Color = pg.theme.Color.Gray
 												if pg.tabs.selected == i {
 													c.Color = pg.theme.Color.Primary
 													lbl.Color = pg.theme.Color.Surface
@@ -418,7 +413,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							if p.title == "Voting" {
-								return layout.Inset{Right: values.MarginPadding4, Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Right: values.MarginPadding4, Top: values.MarginPadding3}.Layout(gtx, func(gtx C) D {
 									return pg.timerIcon.Layout(gtx)
 								})
 							}
@@ -436,7 +431,7 @@ func (pg *proposalsPage) layoutInfoTooltip(gtx C, i int, state int32, rect image
 	proposal := pg.tabs.tabs[pg.tabs.selected].proposals[i]
 	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus230}
 	proposal.stateInfoTooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		proposal.stateTooltipLabel.Color = pg.theme.Color.IconColor
+		proposal.stateTooltipLabel.Color = pg.theme.Color.Gray
 		if state == 1 {
 			proposal.stateTooltipLabel.Text = "Waiting for author to authorize voting"
 		} else if state == 2 {
@@ -468,12 +463,16 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 	for i := range selected.proposals {
 		index := i
 		proposalItem := selected.proposals[index]
+		pt := values.MarginPadding5
+		if index == 0 {
+			pt = values.MarginPadding16
+		}
 		wdgs[index] = func(gtx C) D {
 			return layout.Inset{
-				Top:    values.MarginPadding5,
+				Top:    pt,
 				Bottom: values.MarginPadding5,
-				Left:   values.MarginPadding15,
-				Right:  values.MarginPadding15,
+				Left:   values.MarginPadding24,
+				Right:  values.MarginPadding24,
 			}.Layout(gtx, func(gtx C) D {
 				return decredmaterial.Clickable(gtx, selected.proposals[index].btn, func(gtx C) D {
 					return pg.itemCard.Layout(gtx, func(gtx C) D {
@@ -501,7 +500,9 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 			})
 		}
 	}
-	return selected.container.Layout(gtx, wdgs)
+	return selected.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
+		return layout.Inset{}.Layout(gtx, wdgs[i])
+	})
 }
 
 func (pg *proposalsPage) layoutContent(gtx C) D {
@@ -540,8 +541,9 @@ func (pg *proposalsPage) layoutStartSyncSection(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) layoutSyncSection(gtx C) D {
+func (pg *proposalsPage) layoutSyncSection(gtx C, common pageCommon) D {
 	if pg.isSynced {
+		common.refreshPage()
 		return pg.layoutIsSyncedSection(gtx)
 	} else if pg.wallet.IsSyncingProposals() {
 		return pg.layoutIsSyncingSection(gtx)
@@ -559,7 +561,7 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 		pg.hasRegisteredListeners = true
 	}
 
-	border := widget.Border{Color: pg.theme.Color.BorderColor, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
+	border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
 	borderLayout := func(gtx layout.Context, body layout.Widget) layout.Dimensions {
 		return border.Layout(gtx, body)
 	}
@@ -582,7 +584,7 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 								}
 								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
 									return layout.Center.Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
+										return pg.layoutSyncSection(gtx, common)
 									})
 								})
 							})
@@ -590,9 +592,7 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 					}),
 				)
 			}),
-			layout.Flexed(1, func(gtx C) D {
-				return common.UniformPadding(gtx, pg.layoutContent)
-			}),
+			layout.Flexed(1, pg.layoutContent),
 		)
 	})
 }

@@ -20,7 +20,7 @@ func (t *Theme) Tooltip() *Tooltip {
 	return &Tooltip{
 		hoverable:   t.Hoverable(),
 		card:        t.Card(),
-		borderColor: t.Color.BorderColor,
+		borderColor: t.Color.Gray1,
 	}
 }
 

@@ -28,7 +28,6 @@ type proposalItemWidgets struct {
 
 type proposalDetails struct {
 	theme               *decredmaterial.Theme
-	line                *decredmaterial.Line
 	descriptionCard     decredmaterial.Card
 	proposalItems       map[string]proposalItemWidgets
 	descriptionList     *layout.List
@@ -43,7 +42,6 @@ type proposalDetails struct {
 	rejectedIcon        *widget.Icon
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
-
 	successIcon         *widget.Icon
 	refreshWindow       func()
 }
@@ -51,7 +49,6 @@ type proposalDetails struct {
 func (win *Window) ProposalDetailsPage(common pageCommon) layout.Widget {
 	pg := &proposalDetails{
 		theme:               common.theme,
-		line:                common.theme.Line(),
 		descriptionCard:     common.theme.Card(),
 		descriptionList:     &layout.List{Axis: layout.Vertical},
 		selectedProposal:    &win.selectedProposal,
@@ -70,7 +67,6 @@ func (win *Window) ProposalDetailsPage(common pageCommon) layout.Widget {
 		timerIcon:           common.icons.timerIcon,
 	}
 
-	pg.line.Color = pg.theme.Color.Background
 	pg.downloadIcon.Scale = 1
 
 	return func(gtx C) D {
@@ -195,14 +191,14 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet
 			return c(gtx, 1, stateText1)
 		}),
 		layout.Rigid(func(gtx C) D {
-			pg.line.Width = gtx.Px(values.MarginPadding4)
-			pg.line.Height = gtx.Px(values.MarginPadding26)
+			height, width := gtx.Px(values.MarginPadding26), gtx.Px(values.MarginPadding4)
+			line := pg.theme.Line(height, width)
 			if proposal.State > 1 {
-				pg.line.Color = pg.theme.Color.Primary
+				line.Color = pg.theme.Color.Primary
 			} else {
-				pg.line.Color = pg.theme.Color.BorderColor
+				line.Color = pg.theme.Color.Gray1
 			}
-			return layout.Inset{Left: values.MarginPadding8, Top: values.MarginPaddingMinus2}.Layout(gtx, pg.line.Layout)
+			return layout.Inset{Left: values.MarginPadding8, Top: values.MarginPaddingMinus2}.Layout(gtx, line.Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return c(gtx, 2, stateText2)
@@ -365,12 +361,7 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *
 
 func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 	return func(gtx C) D {
-		return inset.Layout(gtx, func(gtx C) D {
-			pg.line.Width = gtx.Constraints.Max.X
-			pg.line.Height = 1
-			pg.line.Color = pg.theme.Color.BorderColor
-			return pg.line.Layout(gtx)
-		})
+		return inset.Layout(gtx, pg.theme.Separator().Layout)
 	}
 }
 
@@ -402,6 +393,7 @@ func (pg *proposalDetails) Layout(gtx C, common pageCommon) D {
 			title: truncateString(proposal.Name, 40),
 			back: func() {
 				common.changePage(PageProposals)
+				pg.descriptionList.Position.First, pg.descriptionList.Position.Offset = 0, 0
 			},
 			body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
