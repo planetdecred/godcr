@@ -199,14 +199,26 @@ func (pg *walletPage) initializeWalletMenu() {
 			text:   "Settings",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
-				common.changePage(PageHelp)
+				common.changePage(PageWalletSettings)
 			},
 		},
 		{
 			text:   "Rename",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
-				common.changePage(PageAbout)
+				go func() {
+					common.modalReceiver <- &modalLoad{
+						template: RenameWalletTemplate,
+						title:    "Rename wallet",
+						confirm: func(name string) {
+							id := common.info.Wallets[*common.selectedWallet].ID
+							common.wallet.RenameWallet(id, name, pg.errorReceiver)
+						},
+						confirmText: "Rename",
+						cancel:      common.closeModal,
+						cancelText:  "Cancel",
+					}
+				}()
 			},
 		},
 	}
