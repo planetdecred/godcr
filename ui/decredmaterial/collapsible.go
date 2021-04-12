@@ -47,8 +47,8 @@ func (t *Theme) CollapsibleWithOption() *CollapsibleWithOption {
 		BackgroundColor: t.Color.Surface,
 		button:          new(widget.Clickable),
 		card:            t.Card(),
-		expandedIcon:    t.expandIcon,
-		collapsedIcon:   t.collapseIcon,
+		expandedIcon:    t.collapseIcon,
+		collapsedIcon:   t.expandIcon,
 		moreIconButton: IconButton{
 			IconButtonStyle: material.IconButtonStyle{
 				Button:     new(widget.Clickable),
@@ -117,7 +117,7 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) 
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Stack{}.Layout(gtx,
 								layout.Stacked(func(gtx C) D {

@@ -392,6 +392,11 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Left: values.MarginPadding38, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return pg.theme.Separator().Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
 						return pg.accountsList.Layout(gtx, len(accounts), func(gtx C, x int) D {
 							click := pg.toAcctDetails[x]
 							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -401,27 +406,23 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						m := values.MarginPadding10
-						return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-							return pg.theme.Separator().Layout(gtx)
+						return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Right: values.MarginPadding10,
+										Left:  values.MarginPadding38,
+									}.Layout(gtx, func(gtx C) D {
+										return pg.collapsibles[i].addAcctBtn.Layout(gtx)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									txt := pg.theme.H6("Add new account")
+									txt.Color = common.theme.Color.Gray
+									return txt.Layout(gtx)
+								}),
+							)
 						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Bottom: values.MarginPadding5,
-									Right:  values.MarginPadding10,
-								}.Layout(gtx, func(gtx C) D {
-									return pg.collapsibles[i].addAcctBtn.Layout(gtx)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								txt := pg.theme.H6("Add new account")
-								txt.Color = common.theme.Color.Gray
-								return txt.Layout(gtx)
-							}),
-						)
 					}),
 				)
 			})
@@ -436,11 +437,20 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 			if len(common.info.Wallets[i].Seed) > 0 {
 				children = append(children, layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: unit.Dp(-10)}.Layout(gtx, func(gtx C) D {
-						pg.card.Color = pg.theme.Color.Danger
-						pg.card.Radius = decredmaterial.CornerRadius{SW: 10, SE: 10}
-						return pg.card.Layout(gtx, func(gtx C) D {
-							return pg.backupSeedNotification(gtx, common, i)
-						})
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								blankLine := common.theme.Line(10, gtx.Constraints.Max.X)
+								blankLine.Color = common.theme.Color.Surface
+								return blankLine.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								pg.card.Color = pg.theme.Color.Danger
+								pg.card.Radius = decredmaterial.CornerRadius{SW: 10, SE: 10}
+								return pg.card.Layout(gtx, func(gtx C) D {
+									return pg.backupSeedNotification(gtx, common, i)
+								})
+							}),
+						)
 					})
 				}))
 			}
@@ -456,25 +466,26 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageComm
 			watchOnlyWalletCount++
 		}
 	}
-
 	if watchOnlyWalletCount == 0 {
 		return D{}
 	}
-
 	card := pg.card
 	card.Color = pg.theme.Color.Surface
 	card.Radius = decredmaterial.CornerRadius{NE: 10, NW: 10, SE: 10, SW: 10}
 
 	return card.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
+		m := values.MarginPadding20
+		return layout.Inset{Top: m, Left: m}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.watchOnlyWalletLabel.Layout),
 				layout.Rigid(func(gtx C) D {
-					m := values.MarginPadding10
-					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
+					m1 := values.MarginPadding10
+					return layout.Inset{Top: m1, Bottom: m1}.Layout(gtx, pg.theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.layoutWatchOnlyWallets(gtx, common)
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return pg.layoutWatchOnlyWallets(gtx, common)
+					})
 				}),
 			)
 		})
@@ -486,37 +497,56 @@ func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common pageComm
 		if !common.info.Wallets[i].IsWatchingOnly {
 			return D{}
 		}
-
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				pg.watchOnlyWalletIcon.Scale = 1.0
-				return pg.watchOnlyWalletIcon.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.theme.Body2(common.info.Wallets[i].Name).Layout(gtx)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.E.Layout(gtx, func(gtx C) D {
+		m := values.MarginPadding10
+		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							spendableBalanceText := dcrutil.Amount(common.info.Wallets[i].SpendableBalance).String()
-							return pg.theme.Body2(spendableBalanceText).Layout(gtx)
+							inset := layout.Inset{
+								Right: values.MarginPadding10,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								pg.watchOnlyWalletIcon.Scale = 1.0
+								return pg.watchOnlyWalletIcon.Layout(gtx)
+							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							pg.layoutOptionsMenu(gtx, i, true)
-							return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, func(gtx C) D {
-								return pg.watchOnlyWalletMoreButtons[i].Layout(gtx)
+							return pg.theme.Body2(common.info.Wallets[i].Name).Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										spendableBalanceText := dcrutil.Amount(common.info.Wallets[i].SpendableBalance).String()
+										return pg.theme.Body2(spendableBalanceText).Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										pg.layoutOptionsMenu(gtx, i, true)
+										return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, func(gtx C) D {
+											return pg.watchOnlyWalletMoreButtons[i].Layout(gtx)
+										})
+									}),
+								)
 							})
 						}),
 					)
-				})
-			}),
-		)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding38, Right: values.MarginPaddingMinus10}.Layout(gtx, func(gtx C) D {
+						if i == common.info.LoadedWallets-1 {
+							return D{}
+						}
+						return pg.theme.Separator().Layout(gtx)
+					})
+				}),
+			)
+		})
 	})
 }
 
 func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wallet.InfoShort) D {
-	return layout.Flex{}.Layout(gtx,
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Right: values.MarginPadding10,
@@ -611,62 +641,63 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			m := values.MarginPadding10
-			return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-				return pg.theme.Separator().Layout(gtx)
+			inset := layout.Inset{
+				Top:    values.MarginPadding10,
+				Left:   values.MarginPadding38,
+				Bottom: values.MarginPadding20,
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						inset := layout.Inset{
+							Right: values.MarginPadding10,
+							Top:   values.MarginPadding13,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return pg.accountIcon.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								inset := layout.Inset{
+									Right: values.MarginPadding10,
+								}
+								return inset.Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											acctName := strings.Title(strings.ToLower(name))
+											return pg.theme.H6(acctName).Layout(gtx)
+										}),
+										layout.Flexed(1, func(gtx C) D {
+											return layout.E.Layout(gtx, func(gtx C) D {
+												return common.layoutBalance(gtx, totalBal)
+											})
+										}),
+									)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								inset := layout.Inset{
+									Right: values.MarginPadding10,
+								}
+								return inset.Layout(gtx, func(gtx C) D {
+									spendibleLabel := pg.theme.Body2("Spendable")
+									spendibleLabel.Color = pg.theme.Color.Gray
+									spendibleBalLabel := pg.theme.Body2(spendableBal)
+									spendibleBalLabel.Color = pg.theme.Color.Gray
+									return pg.tableLayout(gtx, spendibleLabel, spendibleBalLabel, false, 0)
+								})
+							}),
+						)
+					}),
+				)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					inset := layout.Inset{
-						Right: values.MarginPadding10,
-						Top:   values.MarginPadding15,
-					}
-					return inset.Layout(gtx, func(gtx C) D {
-						return pg.accountIcon.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							inset := layout.Inset{
-								Right: values.MarginPadding10,
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										acctName := strings.Title(strings.ToLower(name))
-										return pg.theme.H6(acctName).Layout(gtx)
-									}),
-									layout.Flexed(1, func(gtx C) D {
-										return layout.E.Layout(gtx, func(gtx C) D {
-											inset := layout.Inset{
-												Right: values.MarginPadding10,
-											}
-											return inset.Layout(gtx, func(gtx C) D {
-												return common.layoutBalance(gtx, totalBal)
-											})
-										})
-									}),
-								)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							inset := layout.Inset{
-								Right: values.MarginPadding20,
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								spendibleLabel := pg.theme.Body2("Spendable")
-								spendibleLabel.Color = pg.theme.Color.Gray
-								spendibleBalLabel := pg.theme.Body2(spendableBal)
-								spendibleBalLabel.Color = pg.theme.Color.Gray
-								return pg.tableLayout(gtx, spendibleLabel, spendibleBalLabel, false, 0)
-							})
-						}),
-					)
-				}),
-			)
+			return layout.Inset{Left: values.MarginPadding70, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return pg.theme.Separator().Layout(gtx)
+			})
 		}),
 	)
 }
