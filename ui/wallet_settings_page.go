@@ -68,7 +68,12 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(pg.changePassphrase()),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						if !common.info.Wallets[*common.selectedWallet].IsWatchingOnly {
+							return pg.changePassphrase()(gtx)
+						}
+						return layout.Dimensions{}
+					}),
 					layout.Rigid(pg.notification()),
 					layout.Rigid(pg.debug()),
 					layout.Rigid(pg.dangerZone()),
