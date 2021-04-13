@@ -197,13 +197,9 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.rightAmountEditor.CustomButton.Text = "Max"
 	pg.rightAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	editorColor := common.theme.Color.Primary
-	pg.passwordEditor = common.theme.Editor(new(widget.Editor), "Spending password")
-	pg.passwordEditor.IsTitleLabel = true
+	pg.passwordEditor = win.theme.EditorPassword(new(widget.Editor), "Spending password")
 	pg.passwordEditor.Editor.SetText("")
 	pg.passwordEditor.Editor.SingleLine = true
-	pg.passwordEditor.Editor.Mask = '*'
-	pg.passwordEditor.LineColor, pg.passwordEditor.TitleLabelColor = editorColor, editorColor
 
 	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Address")
 	pg.destinationAddressEditor.Editor.SingleLine = true
@@ -769,10 +765,16 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding8, Bottom: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+						if pg.usdExchangeSet {
+							return pg.contentRow(gtx, "Fee", pg.leftTransactionFeeValue+" "+pg.rightTransactionFeeValue, "")
+						}
 						return pg.contentRow(gtx, "Fee", pg.leftTransactionFeeValue, "")
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
+					if pg.usdExchangeSet {
+						return pg.contentRow(gtx, "Total cost", pg.leftTotalCostValue+" "+pg.rightTotalCostValue, "")
+					}
 					return pg.contentRow(gtx, "Total cost", pg.leftTotalCostValue, "")
 				}),
 			)
@@ -1068,9 +1070,9 @@ func (pg *sendPage) amountValues() amountValue {
 			sendAmountDCR:            dcrutil.Amount(pg.amountAtoms).String(),
 			sendAmountUSD:            fmt.Sprintf("$ %s", strconv.FormatFloat(pg.amountDCRtoUSD, 'f', 2, 64)),
 			leftTransactionFeeValue:  dcrutil.Amount(pg.txFee).String(),
-			rightTransactionFeeValue: fmt.Sprintf("(%f USD)", txFeeValueUSD),
+			rightTransactionFeeValue: fmt.Sprintf("($ %s)", strconv.FormatFloat(txFeeValueUSD, 'f', 2, 64)),
 			leftTotalCostValue:       dcrutil.Amount(pg.totalCostDCR).String(),
-			rightTotalCostValue:      fmt.Sprintf("(%s USD)", strconv.FormatFloat(pg.amountDCRtoUSD+txFeeValueUSD, 'f', 7, 64)),
+			rightTotalCostValue:      fmt.Sprintf("($ %s)", strconv.FormatFloat(pg.amountDCRtoUSD+txFeeValueUSD, 'f', 2, 64)),
 		}
 	default:
 		return amountValue{
