@@ -446,6 +446,10 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 		},
 		func(gtx C) D {
 			return wallAcctSelector.walletsList.Layout(gtx, len(page.info.Wallets), func(gtx C, windex int) D {
+				if page.info.Wallets[windex].IsWatchingOnly {
+					return D{}
+				}
+
 				return wallAcctGroup(gtx, page.info.Wallets[windex].Name, func(gtx C) D {
 					return wallAcctSelector.accountsList.Layout(gtx, len(page.info.Wallets[windex].Accounts), func(gtx C, aindex int) D {
 						click := wallAcctSelector.walletAccounts[windex][aindex].evt
