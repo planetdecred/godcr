@@ -2,14 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"image"
 	"image/color"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"gioui.org/gesture"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -25,10 +22,6 @@ const (
 	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
 )
 
-type walletAccount struct {
-	selectAccount []*gesture.Click
-}
-
 type amountValue struct {
 	sendAmountDCR            string
 	sendAmountUSD            string
@@ -39,11 +32,10 @@ type amountValue struct {
 }
 
 type sendPage struct {
-	pageContainer, walletsList,
-	accountsList layout.List
-	theme *decredmaterial.Theme
+	pageContainer layout.List
+	theme         *decredmaterial.Theme
 
-	fromAccountBtn, currencySwap *widget.Clickable
+	currencySwap *widget.Clickable
 
 	txAuthor        *dcrlibwallet.TxAuthor
 	broadcastResult *wallet.Broadcast
@@ -54,9 +46,6 @@ type sendPage struct {
 
 	toAddress    *widget.Bool
 	isMoreOption bool
-
-	walletAccount  walletAccount
-	walletAccounts map[int]walletAccount
 
 	destinationAddressEditor decredmaterial.Editor
 	leftAmountEditor         decredmaterial.Editor
@@ -73,8 +62,7 @@ type sendPage struct {
 
 	accountSwitch *decredmaterial.SwitchButtonText
 
-	confirmModal       *decredmaterial.Modal
-	walletAccountModal *decredmaterial.Modal
+	confirmModal *decredmaterial.Modal
 
 	txFeeCollapsible *decredmaterial.Collapsible
 
@@ -117,7 +105,6 @@ type sendPage struct {
 	isConfirmationModalOpen   bool
 	isBroadcastingTransaction bool
 	usdExchangeSet            bool
-	isWalletAccountModalOpen  bool
 
 	shouldInitializeTxAuthor bool
 
@@ -132,13 +119,6 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
-		accountsList: layout.List{
-			Axis: layout.Vertical,
-		},
-
-		walletsList: layout.List{
-			Axis: layout.Vertical,
-		},
 
 		theme:           common.theme,
 		wallet:          common.wallet,
@@ -146,9 +126,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		broadcastResult: &win.broadcastResult,
 		selectedAccount: &win.walletAccount,
 
-		fromAccountBtn: new(widget.Clickable),
-		currencySwap:   new(widget.Clickable),
-		toAddress:      new(widget.Bool),
+		currencySwap: new(widget.Clickable),
+		toAddress:    new(widget.Bool),
 
 		accountSwitch:                common.theme.SwitchButtonText("Address", "My Account", new(widget.Clickable), new(widget.Clickable)),
 		leftExchangeValue:            "DCR",
@@ -160,17 +139,13 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		txFeeCollapsible:             common.theme.Collapsible(),
 
 		confirmModal:              common.theme.Modal(),
-		walletAccountModal:        common.theme.ModalFloatTitle(),
 		isConfirmationModalOpen:   false,
 		isBroadcastingTransaction: false,
-		isWalletAccountModalOpen:  false,
 
 		passwordModal:    common.theme.Password(),
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
 	}
-
-	pg.walletAccounts = make(map[int]walletAccount)
 
 	pg.balanceAfterSendValue = "- DCR"
 
@@ -232,23 +207,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 }
 
 func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	for index := 0; index < common.info.LoadedWallets; index++ {
-		if _, ok := pg.walletAccounts[index]; !ok {
-			accounts := common.info.Wallets[index].Accounts
-			if len(accounts) != len(pg.walletAccount.selectAccount) {
-				pg.walletAccount.selectAccount = make([]*gesture.Click, len(accounts))
-				for index := range accounts {
-					pg.walletAccount.selectAccount[index] = &gesture.Click{}
-				}
-			}
-
-			pg.walletAccounts[index] = pg.walletAccount
-		}
-	}
-
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.fromSection(gtx, common)
+			return pg.pageSections(gtx, "From", func(gtx C) D {
+				return common.accountSelectorLayout(gtx, "Sending account")
+			})
 		},
 		func(gtx C) D {
 			return pg.toSection(gtx, common)
@@ -312,10 +275,6 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		return common.Modal(gtx, dims, pg.confirmationModal(gtx, common))
 	}
 
-	if pg.isWalletAccountModalOpen {
-		return common.Modal(gtx, dims, pg.walletAccountSection(gtx, common))
-	}
-
 	return dims
 }
 
@@ -350,78 +309,6 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 			})
 		}),
 	)
-}
-
-func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Dimensions {
-	return pg.pageSections(gtx, "From", func(gtx C) D {
-		border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
-		return border.Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-				return decredmaterial.Clickable(gtx, pg.fromAccountBtn, func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							accountIcon := common.icons.accountIcon
-							accountIcon.Scale = 0.9
-
-							inset := layout.Inset{
-								Right: values.MarginPadding8,
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								return accountIcon.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.Body1((*pg.selectedAccount).Name).Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							inset := layout.Inset{
-								Left: values.MarginPadding4,
-								Top:  values.MarginPadding2,
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								return decredmaterial.Card{
-									Color: pg.theme.Color.LightGray,
-								}.Layout(gtx, func(gtx C) D {
-									m2 := values.MarginPadding2
-									m4 := values.MarginPadding4
-									inset := layout.Inset{
-										Left:   m4,
-										Top:    m2,
-										Bottom: m2,
-										Right:  m4,
-									}
-									return inset.Layout(gtx, func(gtx C) D {
-										text := pg.theme.Caption(pg.selectedWallet.Name)
-										text.Color = pg.theme.Color.Gray
-										return text.Layout(gtx)
-									})
-								})
-							})
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										spendableBalance := dcrutil.Amount((*pg.selectedAccount).SpendableBalance).String()
-										txt := pg.theme.Body1(spendableBalance)
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										inset := layout.Inset{
-											Left: values.MarginPadding15,
-										}
-										return inset.Layout(gtx, func(gtx C) D {
-											return common.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
-										})
-									}),
-								)
-							})
-						}),
-					)
-				})
-			})
-		})
-	})
 }
 
 func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dimensions {
@@ -562,152 +449,6 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 			)
 		})
 	})
-}
-
-func (pg *sendPage) walletAccountSection(gtx layout.Context, common pageCommon) layout.Dimensions {
-	sections := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				txt := pg.theme.Body2(title)
-				txt.Color = pg.theme.Color.Text
-				inset := layout.Inset{
-					Bottom: values.MarginPadding15,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return txt.Layout(gtx)
-				})
-			}),
-			layout.Rigid(body),
-		)
-	}
-
-	w := []func(gtx C) D{
-		func(gtx C) D {
-			txt := pg.theme.H6("Sending account")
-			txt.Color = pg.theme.Color.Text
-			return txt.Layout(gtx)
-		},
-		func(gtx C) D {
-			return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
-				wn := common.info.Wallets[i].Name
-				accounts := common.info.Wallets[i].Accounts
-				wIndex := i
-
-				inset := layout.Inset{
-					Bottom: values.MarginPadding10,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return sections(gtx, wn, func(gtx C) D {
-						return pg.accountsList.Layout(gtx, len(accounts), func(gtx C, x int) D {
-							accountsName := accounts[x].Name
-							totalBalance := accounts[x].TotalBalance
-							spendable := dcrutil.Amount(accounts[x].SpendableBalance).String()
-
-							click := pg.walletAccounts[wIndex].selectAccount[x]
-							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-							click.Add(gtx.Ops)
-							pg.walletAccountsHandler(gtx, common, &accounts[x], wIndex, x, click)
-
-							return pg.walletAccountsPopupLayout(gtx, accountsName, totalBalance, spendable, common, wIndex, x)
-						})
-					})
-				})
-			})
-		},
-	}
-
-	return pg.walletAccountModal.Layout(gtx, w, 850)
-}
-
-func (pg *sendPage) walletAccountsPopupLayout(gtx layout.Context, name, totalBal, spendableBal string, common pageCommon, wIndex, aIndex int) layout.Dimensions {
-	accountIcon := common.icons.accountIcon
-	accountIcon.Scale = 0.8
-
-	inset := layout.Inset{
-		Bottom: values.MarginPadding10,
-	}
-	return inset.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Flexed(0.1, func(gtx C) D {
-						inset := layout.Inset{
-							Right: values.MarginPadding10,
-							Top:   values.MarginPadding15,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
-						})
-					}),
-					layout.Flexed(0.8, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								accountLabel := pg.theme.Body2(name)
-								accountLabel.Color = pg.theme.Color.Text
-								accountBalLabel := pg.theme.Body2(totalBal)
-								accountBalLabel.Color = pg.theme.Color.Text
-								return pg.accountTableLayout(gtx, accountLabel, accountBalLabel)
-							}),
-							layout.Rigid(func(gtx C) D {
-								spendibleLabel := pg.theme.Body2("Spendable")
-								spendibleLabel.Color = pg.theme.Color.Gray
-								spendibleBalLabel := pg.theme.Body2(spendableBal)
-								spendibleBalLabel.Color = pg.theme.Color.Gray
-								return pg.accountTableLayout(gtx, spendibleLabel, spendibleBalLabel)
-							}),
-						)
-					}),
-					layout.Flexed(0.1, func(gtx C) D {
-						inset := layout.Inset{
-							Right: values.MarginPadding10,
-							Top:   values.MarginPadding10,
-						}
-
-						if *common.selectedWallet == wIndex {
-							if *common.selectedAccount == aIndex {
-								return layout.E.Layout(gtx, func(gtx C) D {
-									return inset.Layout(gtx, func(gtx C) D {
-										return common.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
-									})
-								})
-							}
-						}
-						return layout.Dimensions{}
-					}),
-				)
-			}),
-		)
-	})
-}
-
-func (pg *sendPage) accountTableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
-	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			inset := layout.Inset{
-				Top: values.MarginPadding2,
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return leftLabel.Layout(gtx)
-			})
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return rightLabel.Layout(gtx)
-			})
-		}),
-	)
-}
-
-func (pg *sendPage) walletAccountsHandler(gtx layout.Context, common pageCommon, acct *wallet.Account, wIndex, aIndex int, click *gesture.Click) {
-	for _, e := range click.Events(gtx) {
-		if e.Type == gesture.TypeClick {
-			*pg.selectedAccount = acct
-			*common.selectedAccount = aIndex
-			*common.selectedWallet = wIndex
-			pg.selectedWallet = common.info.Wallets[wIndex]
-			pg.isWalletAccountModalOpen = false
-		}
-	}
 }
 
 func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) layout.Dimensions {
@@ -1213,10 +954,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	for pg.moreOption.Button.Clicked() {
 		pg.isMoreOption = !pg.isMoreOption
-	}
-
-	if pg.fromAccountBtn.Clicked() {
-		pg.isWalletAccountModalOpen = true
 	}
 
 	currencyExchangeValue := pg.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
