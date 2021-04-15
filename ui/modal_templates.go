@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -35,6 +36,7 @@ const SecurityToolsInfoTemplate = "SecurityToolsInfo"
 const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
 const UnlockWalletRestoreTemplate = "UnlockWalletRestoreTemplate"
 const SendInfoTemplate = "SendInfo"
+const ReceiveInfoTemplate = "ReceiveInfo"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -60,10 +62,12 @@ type modalLoad struct {
 }
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
+	cancel := win.theme.Button(new(widget.Clickable), "Cancel")
+	cancel.TextSize = values.TextSize16
 	return &ModalTemplate{
 		th:                    win.theme,
 		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
-		cancel:                win.theme.Button(new(widget.Clickable), "Cancel"),
+		cancel:                cancel,
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
 		oldSpendingPassword:   win.theme.EditorPassword(new(widget.Editor), "Old spending password"),
 		spendingPassword:      win.theme.EditorPassword(new(widget.Editor), "Spending password"),
@@ -264,6 +268,16 @@ func (m *ModalTemplate) sendInfo() []func(gtx C) D {
 	}
 }
 
+func (m *ModalTemplate) receiveInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			text := m.th.Label(values.TextSize20, "Each time you receive a payment, a new address is generated to protect your privacy.")
+			text.Color = m.th.Color.Gray
+			return text.Layout(gtx)
+		},
+	}
+}
+
 func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
@@ -371,7 +385,9 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 
 	title := []func(gtx C) D{
 		func(gtx C) D {
-			return th.H5(load.title).Layout(gtx)
+			t := th.H5(load.title)
+			t.Font.Weight = text.Bold
+			return t.Layout(gtx)
 		},
 	}
 
@@ -595,6 +611,12 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.sendInfo()
+		return
+	case ReceiveInfoTemplate:
+		if m.cancel.Button.Clicked() {
+			load.cancel.(func())()
+		}
+		template = m.receiveInfo()
 		return
 	default:
 		return

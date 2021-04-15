@@ -8,6 +8,7 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 
+	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -40,6 +41,24 @@ type navHandler struct {
 	image         *widget.Image
 	imageInactive *widget.Image
 	page          string
+}
+
+type walletAccount struct {
+	evt          *gesture.Click
+	walletIndex  int
+	accountIndex int
+	accountName  string
+	totalBalance string
+	spendable    string
+}
+
+type walletAccountSelector struct {
+	title                     string
+	walletAccount             decredmaterial.Modal
+	walletsList, accountsList layout.List
+	isWalletAccountModalOpen  bool
+	walletAccounts            map[int][]walletAccount
+	fromAccount               *widget.Clickable
 }
 
 type pageCommon struct {
@@ -80,6 +99,8 @@ type pageCommon struct {
 	changePage    func(string)
 	setReturnPage func(string)
 	refreshWindow func()
+
+	wallAcctSelector *walletAccountSelector
 }
 
 type (
@@ -222,6 +243,15 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		changePage:              win.changePage,
 		setReturnPage:           win.setReturnPage,
 		refreshWindow:           win.refresh,
+	}
+
+	common.wallAcctSelector = &walletAccountSelector{
+		fromAccount:              new(widget.Clickable),
+		walletAccount:            *common.theme.ModalFloatTitle(),
+		walletsList:              layout.List{Axis: layout.Vertical},
+		accountsList:             layout.List{Axis: layout.Vertical},
+		walletAccounts:           make(map[int][]walletAccount),
+		isWalletAccountModalOpen: false,
 	}
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
@@ -379,6 +409,12 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 					page.toastLoad.text = ""
 				})
 				return t(page.toastLoad)
+			}
+			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+			if page.wallAcctSelector.isWalletAccountModalOpen {
+				return page.walletAccountModalLayout(gtx)
 			}
 			return layout.Dimensions{}
 		}),
