@@ -85,8 +85,7 @@ func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (s *SwitchButtonText) handleClickEvent() {
-	for i := range s.items {
-		index := i
+	for index := range s.items {
 		if index != 0 {
 			if s.items[index].button.Button.Clicked() {
 				s.selected = index

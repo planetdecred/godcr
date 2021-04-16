@@ -1058,9 +1058,9 @@ func (wal *Wallet) AllWallets() []*dcrlibwallet.Wallet {
 }
 
 func (wal *Wallet) ReadMixerConfigValueForKey(key string, walletID int) int32 {
-	wall := wal.multi.WalletWithID(walletID)
-	if wall != nil {
-		return wall.ReadInt32ConfigValueForKey(key, -1)
+	wallet := wal.multi.WalletWithID(walletID)
+	if wallet != nil {
+		return wallet.ReadInt32ConfigValueForKey(key, -1)
 	}
 	return 0
 }
