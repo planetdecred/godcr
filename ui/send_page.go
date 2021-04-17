@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -26,7 +27,7 @@ type httpError interface {
 	Error() string
 }
 
-type walletAccount struct {
+type walletAccount2 struct {
 	selectFromAccount []*gesture.Click
 	selectToAccount   []*gesture.Click
 }
@@ -183,7 +184,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	pg.accountSwitch = common.theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
 
-	pg.walletAccounts = make(map[int]walletAccount)
+	// pg.walletAccounts = make(map[int]walletAccount2)
 
 	pg.balanceAfterSendValue = "- DCR"
 
@@ -252,34 +253,34 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 }
 
 func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	for index := 0; index < common.info.LoadedWallets; index++ {
-		if _, ok := pg.walletAccounts[index]; !ok {
-			toaccounts := common.info.Wallets[index].Accounts
-			fromaccounts := common.info.Wallets[index].Accounts
-			if (len(fromaccounts)-1) != len(pg.walletAccount.selectFromAccount) || (len(toaccounts)-1) != len(pg.walletAccount.selectToAccount) {
-				pg.walletAccount.selectFromAccount = make([]*gesture.Click, (len(fromaccounts) - 1))
-				pg.walletAccount.selectToAccount = make([]*gesture.Click, (len(toaccounts) - 1))
-				for i := range toaccounts {
-					if toaccounts[i].Name == "imported" {
-						continue
-					}
-					pg.walletAccount.selectToAccount[i] = &gesture.Click{}
-				}
-				for i := range fromaccounts {
-					if toaccounts[i].Name == "imported" {
-						continue
-					}
-					pg.walletAccount.selectFromAccount[i] = &gesture.Click{}
-				}
-			}
-			pg.walletAccounts[index] = pg.walletAccount
-		}
-	}
+	// for index := 0; index < common.info.LoadedWallets; index++ {
+	// 	if _, ok := pg.walletAccounts[index]; !ok {
+	// 		toaccounts := common.info.Wallets[index].Accounts
+	// 		fromaccounts := common.info.Wallets[index].Accounts
+	// 		if (len(fromaccounts)-1) != len(pg.walletAccount2.selectFromAccount) || (len(toaccounts)-1) != len(pg.walletAccount2.selectToAccount) {
+	// 			pg.walletAccount2.selectFromAccount = make([]*gesture.Click, (len(fromaccounts) - 1))
+	// 			pg.walletAccount2.selectToAccount = make([]*gesture.Click, (len(toaccounts) - 1))
+	// 			for i := range toaccounts {
+	// 				if toaccounts[i].Name == "imported" {
+	// 					continue
+	// 				}
+	// 				pg.walletAccount2.selectToAccount[i] = &gesture.Click{}
+	// 			}
+	// 			for i := range fromaccounts {
+	// 				if toaccounts[i].Name == "imported" {
+	// 					continue
+	// 				}
+	// 				pg.walletAccount2.selectFromAccount[i] = &gesture.Click{}
+	// 			}
+	// 		}
+	// 		pg.walletAccounts[index] = pg.walletAccount2
+	// 	}
+	// }
 
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", func(gtx C) D {
-				return common.accountSelectorLayout(gtx, "Sending account")
+				return common.accountSelectorLayout(gtx, "Sending account", pg.sendToOption)
 			})
 		},
 		func(gtx C) D {
@@ -344,9 +345,9 @@ func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensi
 		return common.Modal(gtx, dims, pg.confirmationModal(gtx, common))
 	}
 
-	if pg.isWalletAccountModalOpen {
-		return common.Modal(gtx, dims, pg.walletAccountSection(gtx, pg.selectedModalTitle, common))
-	}
+	// if pg.isWalletAccountModalOpen {
+	// 	return common.Modal(gtx, dims, pg.walletAccountSection(gtx, pg.selectedModalTitle, common))
+	// }
 
 	return dims
 }
@@ -384,11 +385,11 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 	)
 }
 
-func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Dimensions {
-	return pg.pageSections(gtx, "From", func(gtx C) D {
-		return pg.selectedAccountSection(gtx, common, "from", pg.fromAccountBtn)
-	})
-}
+// func (pg *sendPage) fromSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+// 	return pg.pageSections(gtx, "From", func(gtx C) D {
+// 		return pg.selectedAccountSection(gtx, common, "from", pg.fromAccountBtn)
+// 	})
+// }
 
 func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, "To", func(gtx C) D {
@@ -397,9 +398,9 @@ func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dime
 				return layout.Inset{
 					Bottom: values.MarginPadding16,
 				}.Layout(gtx, func(gtx C) D {
-					if pg.sendToOption == "My account" {
-						return pg.selectedAccountSection(gtx, common, "to", pg.toSelfBtn)
-					}
+					// if pg.sendToOption == "My account" {
+					// 	return pg.selectedAccountSection(gtx, common, "to", pg.toSelfBtn)
+					// }
 					return pg.destinationAddressEditor.Layout(gtx)
 				})
 			}),
@@ -533,278 +534,278 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 	})
 }
 
-func (pg *sendPage) selectedAccountSection(gtx layout.Context, common pageCommon, display string, w *widget.Clickable) layout.Dimensions {
-	acctName := (*pg.selectedFromAccount).Name
-	walName := pg.selectedFromWallet.Name
-	bal := (*pg.selectedFromAccount).TotalBalance
-	if display == "to" {
-		acctName = pg.selectedToAccount.Name
-		walName = pg.selectedToWallet.Name
-		bal = pg.selectedToAccount.TotalBalance
-	}
+// func (pg *sendPage) selectedAccountSection(gtx layout.Context, common pageCommon, display string, w *widget.Clickable) layout.Dimensions {
+// 	acctName := (*pg.selectedFromAccount).Name
+// 	walName := pg.selectedFromWallet.Name
+// 	bal := (*pg.selectedFromAccount).TotalBalance
+// 	if display == "to" {
+// 		acctName = pg.selectedToAccount.Name
+// 		walName = pg.selectedToWallet.Name
+// 		bal = pg.selectedToAccount.TotalBalance
+// 	}
 
-	border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
-	return border.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, w, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						accountIcon := common.icons.accountIcon
-						accountIcon.Scale = 0.9
+// 	border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
+// 	return border.Layout(gtx, func(gtx C) D {
+// 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+// 			return decredmaterial.Clickable(gtx, w, func(gtx C) D {
+// 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+// 					layout.Rigid(func(gtx C) D {
+// 						accountIcon := common.icons.accountIcon
+// 						accountIcon.Scale = 0.9
 
-						inset := layout.Inset{
-							Right: values.MarginPadding8,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.theme.Body1(acctName).Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Left: values.MarginPadding4,
-							Top:  values.MarginPadding2,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return decredmaterial.Card{
-								Color: pg.theme.Color.LightGray,
-							}.Layout(gtx, func(gtx C) D {
-								m2 := values.MarginPadding2
-								m4 := values.MarginPadding4
-								inset := layout.Inset{
-									Left:   m4,
-									Top:    m2,
-									Bottom: m2,
-									Right:  m4,
-								}
-								return inset.Layout(gtx, func(gtx C) D {
-									text := pg.theme.Caption(walName)
-									text.Color = pg.theme.Color.Gray
-									return text.Layout(gtx)
-								})
-							})
-						})
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									txt := pg.theme.Body1(bal)
-									txt.Color = pg.theme.Color.DeepBlue
-									return txt.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									inset := layout.Inset{
-										Left: values.MarginPadding15,
-									}
-									return inset.Layout(gtx, func(gtx C) D {
-										return common.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
-									})
-								}),
-							)
-						})
-					}),
-				)
-			})
-		})
-	})
-}
+// 						inset := layout.Inset{
+// 							Right: values.MarginPadding8,
+// 						}
+// 						return inset.Layout(gtx, func(gtx C) D {
+// 							return accountIcon.Layout(gtx)
+// 						})
+// 					}),
+// 					layout.Rigid(func(gtx C) D {
+// 						return pg.theme.Body1(acctName).Layout(gtx)
+// 					}),
+// 					layout.Rigid(func(gtx C) D {
+// 						inset := layout.Inset{
+// 							Left: values.MarginPadding4,
+// 							Top:  values.MarginPadding2,
+// 						}
+// 						return inset.Layout(gtx, func(gtx C) D {
+// 							return decredmaterial.Card{
+// 								Color: pg.theme.Color.LightGray,
+// 							}.Layout(gtx, func(gtx C) D {
+// 								m2 := values.MarginPadding2
+// 								m4 := values.MarginPadding4
+// 								inset := layout.Inset{
+// 									Left:   m4,
+// 									Top:    m2,
+// 									Bottom: m2,
+// 									Right:  m4,
+// 								}
+// 								return inset.Layout(gtx, func(gtx C) D {
+// 									text := pg.theme.Caption(walName)
+// 									text.Color = pg.theme.Color.Gray
+// 									return text.Layout(gtx)
+// 								})
+// 							})
+// 						})
+// 					}),
+// 					layout.Flexed(1, func(gtx C) D {
+// 						return layout.E.Layout(gtx, func(gtx C) D {
+// 							return layout.Flex{}.Layout(gtx,
+// 								layout.Rigid(func(gtx C) D {
+// 									txt := pg.theme.Body1(bal)
+// 									txt.Color = pg.theme.Color.DeepBlue
+// 									return txt.Layout(gtx)
+// 								}),
+// 								layout.Rigid(func(gtx C) D {
+// 									inset := layout.Inset{
+// 										Left: values.MarginPadding15,
+// 									}
+// 									return inset.Layout(gtx, func(gtx C) D {
+// 										return common.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
+// 									})
+// 								}),
+// 							)
+// 						})
+// 					}),
+// 				)
+// 			})
+// 		})
+// 	})
+// }
 
-func (pg *sendPage) walletAccountSection(gtx layout.Context, title string, common pageCommon) layout.Dimensions {
-	w := []func(gtx C) D{
-		func(gtx C) D {
-			txt := pg.theme.H6(title)
-			txt.Color = pg.theme.Color.Text
-			return txt.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
-				layout.Expanded(func(gtx C) D {
-					return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
-						wn := common.info.Wallets[i].Name
-						wID := common.info.Wallets[i].ID
-						accounts := common.info.Wallets[i].Accounts
-						wIndex := i
+// func (pg *sendPage) walletAccountSection(gtx layout.Context, title string, common pageCommon) layout.Dimensions {
+// 	w := []func(gtx C) D{
+// 		func(gtx C) D {
+// 			txt := pg.theme.H6(title)
+// 			txt.Color = pg.theme.Color.Text
+// 			return txt.Layout(gtx)
+// 		},
+// 		func(gtx C) D {
+// 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
+// 				layout.Expanded(func(gtx C) D {
+// 					return pg.walletsList.Layout(gtx, len(common.info.Wallets), func(gtx C, i int) D {
+// 						wn := common.info.Wallets[i].Name
+// 						wID := common.info.Wallets[i].ID
+// 						accounts := common.info.Wallets[i].Accounts
+// 						wIndex := i
 
-						pg.mixedAcct = pg.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, wID)
-						pg.unmixedAcct = pg.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, wID)
+// 						pg.mixedAcct = pg.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, wID)
+// 						pg.unmixedAcct = pg.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, wID)
 
-						inset := layout.Inset{
-							Bottom: values.MarginPadding10,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return pg.popupSections(gtx, wn, title, wIndex, func(gtx C) D {
-								return pg.accountsList.Layout(gtx, len(accounts)-1, func(gtx C, x int) D {
-									var accountsName, totalBalance, spendable string
-									var aIndex int
+// 						inset := layout.Inset{
+// 							Bottom: values.MarginPadding10,
+// 						}
+// 						return inset.Layout(gtx, func(gtx C) D {
+// 							return pg.popupSections(gtx, wn, title, wIndex, func(gtx C) D {
+// 								return pg.accountsList.Layout(gtx, len(accounts)-1, func(gtx C, x int) D {
+// 									var accountsName, totalBalance, spendable string
+// 									var aIndex int
 
-									switch {
-									case pg.sendToOption == "Address" && accounts[x].Number != pg.unmixedAcct && strings.Contains(title, "Sending"):
-										aIndex = x
-										accountsName = accounts[x].Name
-										totalBalance = accounts[x].TotalBalance
-										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
-										click := pg.walletAccounts[wIndex].selectFromAccount[x]
-										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-										click.Add(gtx.Ops)
-										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
-									case pg.sendToOption == "My account" && accounts[x].Number != pg.mixedAcct && strings.Contains(title, "Receiving"):
-										aIndex = x
-										accountsName = accounts[x].Name
-										totalBalance = accounts[x].TotalBalance
-										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
-										click := pg.walletAccounts[wIndex].selectToAccount[x]
-										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-										click.Add(gtx.Ops)
-										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
-									case pg.sendToOption == "My account" && strings.Contains(title, "Sending"):
-										aIndex = x
-										accountsName = accounts[x].Name
-										totalBalance = accounts[x].TotalBalance
-										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
-										click := pg.walletAccounts[wIndex].selectToAccount[x]
-										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-										click.Add(gtx.Ops)
-										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
-									default:
-									}
+// 									switch {
+// 									case pg.sendToOption == "Address" && accounts[x].Number != pg.unmixedAcct && strings.Contains(title, "Sending"):
+// 										aIndex = x
+// 										accountsName = accounts[x].Name
+// 										totalBalance = accounts[x].TotalBalance
+// 										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
+// 										click := pg.walletAccounts[wIndex].selectFromAccount[x]
+// 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+// 										click.Add(gtx.Ops)
+// 										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
+// 									case pg.sendToOption == "My account" && accounts[x].Number != pg.mixedAcct && strings.Contains(title, "Receiving"):
+// 										aIndex = x
+// 										accountsName = accounts[x].Name
+// 										totalBalance = accounts[x].TotalBalance
+// 										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
+// 										click := pg.walletAccounts[wIndex].selectToAccount[x]
+// 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+// 										click.Add(gtx.Ops)
+// 										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
+// 									case pg.sendToOption == "My account" && strings.Contains(title, "Sending"):
+// 										aIndex = x
+// 										accountsName = accounts[x].Name
+// 										totalBalance = accounts[x].TotalBalance
+// 										spendable = dcrutil.Amount(accounts[x].SpendableBalance).String()
+// 										click := pg.walletAccounts[wIndex].selectToAccount[x]
+// 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+// 										click.Add(gtx.Ops)
+// 										pg.walletAccountsHandler(gtx, common, &accounts[aIndex], wIndex, aIndex, title, click)
+// 									default:
+// 									}
 
-									if spendable != "" {
-										return pg.walletAccountsPopupLayout(gtx, accountsName, totalBalance, spendable, title, common, wIndex, aIndex)
-									}
-									return layout.Dimensions{}
-								})
-							})
-						})
-					})
-				}),
-				layout.Stacked(func(gtx C) D {
-					if pg.isWalletInfo {
-						inset := layout.Inset{
-							Top:  values.MarginPadding20,
-							Left: values.MarginPaddingMinus75,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return pg.walletInfoPopup(gtx)
-						})
-					}
-					return layout.Dimensions{}
-				}),
-			)
-		},
-	}
+// 									if spendable != "" {
+// 										return pg.walletAccountsPopupLayout(gtx, accountsName, totalBalance, spendable, title, common, wIndex, aIndex)
+// 									}
+// 									return layout.Dimensions{}
+// 								})
+// 							})
+// 						})
+// 					})
+// 				}),
+// 				layout.Stacked(func(gtx C) D {
+// 					if pg.isWalletInfo {
+// 						inset := layout.Inset{
+// 							Top:  values.MarginPadding20,
+// 							Left: values.MarginPaddingMinus75,
+// 						}
+// 						return inset.Layout(gtx, func(gtx C) D {
+// 							return pg.walletInfoPopup(gtx)
+// 						})
+// 					}
+// 					return layout.Dimensions{}
+// 				}),
+// 			)
+// 		},
+// 	}
 
-	return pg.walletAccountModal.Layout(gtx, w, 850)
-}
+// 	return pg.walletAccountModal.Layout(gtx, w, 850)
+// }
 
-func (pg *sendPage) walletAccountsPopupLayout(gtx layout.Context, name, totalBal, spendableBal, title string, common pageCommon, wIndex, aIndex int) layout.Dimensions {
-	accountIcon := common.icons.accountIcon
-	accountIcon.Scale = 0.8
+// func (pg *sendPage) walletAccountsPopupLayout(gtx layout.Context, name, totalBal, spendableBal, title string, common pageCommon, wIndex, aIndex int) layout.Dimensions {
+// 	accountIcon := common.icons.accountIcon
+// 	accountIcon.Scale = 0.8
 
-	inset := layout.Inset{
-		Bottom: values.MarginPadding10,
-	}
-	return inset.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Flexed(0.1, func(gtx C) D {
-						inset := layout.Inset{
-							Right: values.MarginPadding10,
-							Top:   values.MarginPadding15,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
-						})
-					}),
-					layout.Flexed(0.8, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								accountLabel := pg.theme.Body2(name)
-								accountLabel.Color = pg.theme.Color.Text
-								accountBalLabel := pg.theme.Body2(totalBal)
-								accountBalLabel.Color = pg.theme.Color.Text
-								return pg.accountTableLayout(gtx, accountLabel, accountBalLabel)
-							}),
-							layout.Rigid(func(gtx C) D {
-								spendibleLabel := pg.theme.Body2("Spendable")
-								spendibleLabel.Color = pg.theme.Color.Gray
-								spendibleBalLabel := pg.theme.Body2(spendableBal)
-								spendibleBalLabel.Color = pg.theme.Color.Gray
-								return pg.accountTableLayout(gtx, spendibleLabel, spendibleBalLabel)
-							}),
-						)
-					}),
-					layout.Flexed(0.1, func(gtx C) D {
-						inset := layout.Inset{
-							Right: values.MarginPadding10,
-							Top:   values.MarginPadding10,
-						}
+// 	inset := layout.Inset{
+// 		Bottom: values.MarginPadding10,
+// 	}
+// 	return inset.Layout(gtx, func(gtx C) D {
+// 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+// 			layout.Rigid(func(gtx C) D {
+// 				return layout.Flex{}.Layout(gtx,
+// 					layout.Flexed(0.1, func(gtx C) D {
+// 						inset := layout.Inset{
+// 							Right: values.MarginPadding10,
+// 							Top:   values.MarginPadding15,
+// 						}
+// 						return inset.Layout(gtx, func(gtx C) D {
+// 							return accountIcon.Layout(gtx)
+// 						})
+// 					}),
+// 					layout.Flexed(0.8, func(gtx C) D {
+// 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+// 							layout.Rigid(func(gtx C) D {
+// 								accountLabel := pg.theme.Body2(name)
+// 								accountLabel.Color = pg.theme.Color.Text
+// 								accountBalLabel := pg.theme.Body2(totalBal)
+// 								accountBalLabel.Color = pg.theme.Color.Text
+// 								return pg.accountTableLayout(gtx, accountLabel, accountBalLabel)
+// 							}),
+// 							layout.Rigid(func(gtx C) D {
+// 								spendibleLabel := pg.theme.Body2("Spendable")
+// 								spendibleLabel.Color = pg.theme.Color.Gray
+// 								spendibleBalLabel := pg.theme.Body2(spendableBal)
+// 								spendibleBalLabel.Color = pg.theme.Color.Gray
+// 								return pg.accountTableLayout(gtx, spendibleLabel, spendibleBalLabel)
+// 							}),
+// 						)
+// 					}),
+// 					layout.Flexed(0.1, func(gtx C) D {
+// 						inset := layout.Inset{
+// 							Right: values.MarginPadding10,
+// 							Top:   values.MarginPadding10,
+// 						}
 
-						sections := func(gtx layout.Context) layout.Dimensions {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return inset.Layout(gtx, func(gtx C) D {
-									return common.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
-								})
-							})
-						}
+// 						sections := func(gtx layout.Context) layout.Dimensions {
+// 							return layout.E.Layout(gtx, func(gtx C) D {
+// 								return inset.Layout(gtx, func(gtx C) D {
+// 									return common.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
+// 								})
+// 							})
+// 						}
 
-						if strings.Contains(title, "Sending") && *common.selectedWallet == wIndex && *common.selectedAccount == aIndex {
-							return sections(gtx)
-						}
+// 						if strings.Contains(title, "Sending") && *common.selectedWallet == wIndex && *common.selectedAccount == aIndex {
+// 							return sections(gtx)
+// 						}
 
-						if strings.Contains(title, "Receiving") && pg.selectedToWalletIndex == wIndex && pg.selectedToAccountIndex == aIndex {
-							return sections(gtx)
-						}
+// 						if strings.Contains(title, "Receiving") && pg.selectedToWalletIndex == wIndex && pg.selectedToAccountIndex == aIndex {
+// 							return sections(gtx)
+// 						}
 
-						return layout.Dimensions{}
-					}),
-				)
-			}),
-		)
-	})
-}
+// 						return layout.Dimensions{}
+// 					}),
+// 				)
+// 			}),
+// 		)
+// 	})
+// }
 
-func (pg *sendPage) accountTableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
-	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			inset := layout.Inset{
-				Top: values.MarginPadding2,
-			}
-			return inset.Layout(gtx, func(gtx C) D {
-				return leftLabel.Layout(gtx)
-			})
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return rightLabel.Layout(gtx)
-			})
-		}),
-	)
-}
+// func (pg *sendPage) accountTableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
+// 	return layout.Flex{}.Layout(gtx,
+// 		layout.Rigid(func(gtx C) D {
+// 			inset := layout.Inset{
+// 				Top: values.MarginPadding2,
+// 			}
+// 			return inset.Layout(gtx, func(gtx C) D {
+// 				return leftLabel.Layout(gtx)
+// 			})
+// 		}),
+// 		layout.Flexed(1, func(gtx C) D {
+// 			return layout.E.Layout(gtx, func(gtx C) D {
+// 				return rightLabel.Layout(gtx)
+// 			})
+// 		}),
+// 	)
+// }
 
-func (pg *sendPage) walletAccountsHandler(gtx layout.Context, common pageCommon, acct *wallet.Account, wIndex, aIndex int, title string, click *gesture.Click) {
-	for _, e := range click.Events(gtx) {
-		if e.Type == gesture.TypeClick {
-			switch {
-			case strings.Contains(title, "Sending"):
-				*pg.selectedFromAccount = acct
-				*common.selectedAccount = aIndex
-				*common.selectedWallet = wIndex
-				pg.selectedFromWallet = common.info.Wallets[wIndex]
-			case strings.Contains(title, "Receiving"):
-				pg.selectedToAccount = common.info.Wallets[wIndex].Accounts[aIndex]
-				pg.selectedToAccountIndex = aIndex
-				pg.selectedToWalletIndex = wIndex
-				pg.selectedToWallet = common.info.Wallets[wIndex]
-			default:
-			}
-			pg.isWalletAccountModalOpen = false
-		}
-	}
-}
+// func (pg *sendPage) walletAccountsHandler(gtx layout.Context, common pageCommon, acct *wallet.Account, wIndex, aIndex int, title string, click *gesture.Click) {
+// 	for _, e := range click.Events(gtx) {
+// 		if e.Type == gesture.TypeClick {
+// 			switch {
+// 			case strings.Contains(title, "Sending"):
+// 				*pg.selectedFromAccount = acct
+// 				*common.selectedAccount = aIndex
+// 				*common.selectedWallet = wIndex
+// 				pg.selectedFromWallet = common.info.Wallets[wIndex]
+// 			case strings.Contains(title, "Receiving"):
+// 				pg.selectedToAccount = common.info.Wallets[wIndex].Accounts[aIndex]
+// 				pg.selectedToAccountIndex = aIndex
+// 				pg.selectedToWalletIndex = wIndex
+// 				pg.selectedToWallet = common.info.Wallets[wIndex]
+// 			default:
+// 			}
+// 			pg.isWalletAccountModalOpen = false
+// 		}
+// 	}
+// }
 
 func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) layout.Dimensions {
 	w := []func(gtx C) D{
