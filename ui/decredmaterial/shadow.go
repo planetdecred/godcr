@@ -19,7 +19,7 @@ type Shadow struct {
 }
 
 const (
-	shadowElevation = 3
+	shadowElevation = 4
 )
 
 func (t *Theme) Shadow(left, right, top, bottom bool) *Shadow {
@@ -51,13 +51,23 @@ func (s *Shadow) Layout(gtx C, startX, startY int, wdgt func(gtx C) D) D {
 	}
 
 	if s.bottom {
+		bottomStartX := startX
+		bottomEndX := size.X
+		if s.left {
+			bottomStartX -= shadowElevation
+		}
+
+		if s.right {
+			bottomEndX += shadowElevation
+		}
+
 		rect := image.Rectangle{
 			Min: image.Point{
 				Y: size.Y,
-				X: startX,
+				X: bottomStartX,
 			},
 			Max: image.Point{
-				X: size.X,
+				X: bottomEndX,
 				Y: size.Y + shadowElevation,
 			},
 		}
@@ -68,10 +78,10 @@ func (s *Shadow) Layout(gtx C, startX, startY int, wdgt func(gtx C) D) D {
 		rect := image.Rectangle{
 			Min: image.Point{
 				Y: startY,
-				X: startX,
+				X: startX - shadowElevation,
 			},
 			Max: image.Point{
-				X: startX + shadowElevation,
+				X: startX,
 				Y: size.Y,
 			},
 		}
@@ -91,7 +101,6 @@ func (s *Shadow) Layout(gtx C, startX, startY int, wdgt func(gtx C) D) D {
 		}
 		s.drawShadowOverRectangle(gtx, rect)
 	}
-
 	return D{}
 }
 
