@@ -64,8 +64,7 @@ type sendPage struct {
 	txFee            int64
 	spendableBalance int64
 
-	mixedAcct, unmixedAcct int32
-	count                  int
+	count int
 
 	usdExchangeRate float64
 	inputAmount     float64
