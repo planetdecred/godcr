@@ -83,7 +83,7 @@ func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
-				return common.accountSelectorLayout(gtx, "Receiving account", "")
+				return common.accountSelectorLayout(gtx, "receive", "")
 			})
 		},
 		func(gtx C) D {
@@ -253,7 +253,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 }
 
 func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	pg.addrs = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress
+	pg.addrs = common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress
 	opt := qrcode.WithLogoImageFilePNG("ui/assets/decredicons/qrcodeSymbol.png")
 	qrCode, err := qrcode.New(pg.addrs, opt)
 	if err != nil {
@@ -298,12 +298,12 @@ func (pg *receivePage) Handle(common pageCommon) {
 	}
 
 	if pg.newAddr.Button.Clicked() {
-		wall := common.info.Wallets[*common.selectedWallet]
+		wall := common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet]
 
 		var generateNewAddress func(wall wallet.InfoShort)
 		generateNewAddress = func(wall wallet.InfoShort) {
-			oldAddr := wall.Accounts[*common.selectedAccount].CurrentAddress
-			newAddr, err := common.wallet.NextAddress(wall.ID, wall.Accounts[*common.selectedAccount].Number)
+			oldAddr := wall.Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress
+			newAddr, err := common.wallet.NextAddress(wall.ID, wall.Accounts[common.wallAcctSelector.selectedReceiveAccount].Number)
 			if err != nil {
 				log.Debug("Error generating new address" + err.Error())
 				return
@@ -313,7 +313,7 @@ func (pg *receivePage) Handle(common pageCommon) {
 				generateNewAddress(wall)
 				return
 			}
-			common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress = newAddr
+			common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress = newAddr
 			pg.isNewAddr = false
 		}
 		generateNewAddress(wall)
@@ -336,7 +336,7 @@ func (pg *receivePage) Handle(common pageCommon) {
 
 	if pg.copy.Button.Clicked() {
 		go func() {
-			common.clipboard <- WriteClipboard{Text: common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].CurrentAddress}
+			common.clipboard <- WriteClipboard{Text: common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress}
 		}()
 		pg.copy.Text = "Copied!"
 		pg.copy.Color = common.theme.Color.Success

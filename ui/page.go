@@ -53,16 +53,27 @@ type walletAccount struct {
 	number       int32
 }
 
+type wallectAccountOption struct {
+	selectSendAccount    map[int][]walletAccount
+	selectReceiveAccount map[int][]walletAccount
+}
+
 type walletAccountSelector struct {
 	title                     string
 	walletAccount             decredmaterial.Modal
 	walletsList, accountsList layout.List
 	isWalletAccountModalOpen  bool
 	isWalletAccountInfo       bool
-	walletAccounts            map[int][]walletAccount
-	fromAccount               *widget.Clickable
-	option                    string
+	walletAccounts            *wallectAccountOption
+	sendAccountBtn            *widget.Clickable
+	receivingAccountBtn       *widget.Clickable
+	sendOption                string
 	walletInfoButton          decredmaterial.IconButton
+
+	selectedSendAccount,
+	selectedSendWallet,
+	selectedReceiveAccount,
+	selectedReceiveWallet int
 }
 
 type pageCommon struct {
@@ -250,12 +261,20 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	}
 
 	common.wallAcctSelector = &walletAccountSelector{
-		fromAccount:              new(widget.Clickable),
-		walletAccount:            *common.theme.ModalFloatTitle(),
-		walletsList:              layout.List{Axis: layout.Vertical},
-		accountsList:             layout.List{Axis: layout.Vertical},
-		walletAccounts:           make(map[int][]walletAccount),
+		sendAccountBtn:      new(widget.Clickable),
+		receivingAccountBtn: new(widget.Clickable),
+		walletAccount:       *common.theme.ModalFloatTitle(),
+		walletsList:         layout.List{Axis: layout.Vertical},
+		accountsList:        layout.List{Axis: layout.Vertical},
+		walletAccounts: &wallectAccountOption{
+			selectSendAccount:    make(map[int][]walletAccount),
+			selectReceiveAccount: make(map[int][]walletAccount),
+		},
 		isWalletAccountModalOpen: false,
+		selectedSendAccount:      *common.selectedAccount,
+		selectedSendWallet:       *common.selectedWallet,
+		selectedReceiveAccount:   *common.selectedAccount,
+		selectedReceiveWallet:    *common.selectedWallet,
 	}
 	iconColor := common.theme.Color.Gray3
 
