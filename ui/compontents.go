@@ -484,13 +484,12 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 			return tit.Layout(gtx)
 		},
 		func(gtx C) D {
-			return wallAcctSelector.walletsList.Layout(gtx, len(page.info.Wallets), func(gtx C, windex int) D {
-				if page.info.Wallets[windex].IsWatchingOnly {
-					return D{}
-				}
 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
 					return wallAcctSelector.walletsList.Layout(gtx, len(page.info.Wallets), func(gtx C, windex int) D {
+						if page.info.Wallets[windex].IsWatchingOnly {
+							return D{}
+						}
 						walletID := page.info.Wallets[windex].ID
 						mixedAcct := page.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, walletID)
 						unmixedAcct := page.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, walletID)
