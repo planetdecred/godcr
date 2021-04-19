@@ -1056,3 +1056,11 @@ func (wal *Wallet) IsAccountMixerActive(walletID int) bool {
 func (wal *Wallet) AllWallets() []*dcrlibwallet.Wallet {
 	return wal.multi.AllWallets()
 }
+
+func (wal *Wallet) ReadMixerConfigValueForKey(key string, walletID int) int32 {
+	wallet := wal.multi.WalletWithID(walletID)
+	if wallet != nil {
+		return wallet.ReadInt32ConfigValueForKey(key, -1)
+	}
+	return 0
+}

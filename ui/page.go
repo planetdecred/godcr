@@ -50,6 +50,12 @@ type walletAccount struct {
 	accountName  string
 	totalBalance string
 	spendable    string
+	number       int32
+}
+
+type wallectAccountOption struct {
+	selectSendAccount    map[int][]walletAccount
+	selectReceiveAccount map[int][]walletAccount
 }
 
 type walletAccountSelector struct {
@@ -57,8 +63,17 @@ type walletAccountSelector struct {
 	walletAccount             decredmaterial.Modal
 	walletsList, accountsList layout.List
 	isWalletAccountModalOpen  bool
-	walletAccounts            map[int][]walletAccount
-	fromAccount               *widget.Clickable
+	isWalletAccountInfo       bool
+	walletAccounts            *wallectAccountOption
+	sendAccountBtn            *widget.Clickable
+	receivingAccountBtn       *widget.Clickable
+	sendOption                string
+	walletInfoButton          decredmaterial.IconButton
+
+	selectedSendAccount,
+	selectedSendWallet,
+	selectedReceiveAccount,
+	selectedReceiveWallet int
 }
 
 type pageCommon struct {
@@ -246,19 +261,32 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	}
 
 	common.wallAcctSelector = &walletAccountSelector{
-		fromAccount:              new(widget.Clickable),
-		walletAccount:            *common.theme.ModalFloatTitle(),
-		walletsList:              layout.List{Axis: layout.Vertical},
-		accountsList:             layout.List{Axis: layout.Vertical},
-		walletAccounts:           make(map[int][]walletAccount),
+		sendAccountBtn:      new(widget.Clickable),
+		receivingAccountBtn: new(widget.Clickable),
+		walletAccount:       *common.theme.ModalFloatTitle(),
+		walletsList:         layout.List{Axis: layout.Vertical},
+		accountsList:        layout.List{Axis: layout.Vertical},
+		walletAccounts: &wallectAccountOption{
+			selectSendAccount:    make(map[int][]walletAccount),
+			selectReceiveAccount: make(map[int][]walletAccount),
+		},
 		isWalletAccountModalOpen: false,
+		selectedSendAccount:      *common.selectedAccount,
+		selectedSendWallet:       *common.selectedWallet,
+		selectedReceiveAccount:   *common.selectedAccount,
+		selectedReceiveWallet:    *common.selectedWallet,
 	}
+	iconColor := common.theme.Color.Gray3
+
+	common.wallAcctSelector.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo)
+	common.wallAcctSelector.walletInfoButton.Color = iconColor
+	common.wallAcctSelector.walletInfoButton.Size = values.MarginPadding15
+	common.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
 	isNavDrawerMinimized := false
 	common.isNavDrawerMinimized = &isNavDrawerMinimized
 
-	iconColor := common.theme.Color.Gray3
 	common.minimizeNavDrawerButton.Color, common.maximizeNavDrawerButton.Color = iconColor, iconColor
 
 	zeroInset := layout.UniformInset(values.MarginPadding0)
