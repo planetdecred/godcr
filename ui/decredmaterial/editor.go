@@ -64,13 +64,14 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	var m0 = unit.Dp(0)
 
 	return Editor{
-		t:                 t,
-		EditorStyle:       m,
-		TitleLabel:        t.Body2(""),
-		IsTitleLabel:      true,
-		Bordered:          true,
-		LineColor:         t.Color.Gray1,
-		TitleLabelColor:   t.Color.Gray3,
+		t:               t,
+		EditorStyle:     m,
+		TitleLabel:      t.Body2(""),
+		IsTitleLabel:    true,
+		Bordered:        true,
+		LineColor:       t.Color.Gray1,
+		TitleLabelColor: t.Color.Gray3,
+
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
 

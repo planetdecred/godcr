@@ -4,7 +4,9 @@
 package ui
 
 import (
+	"fmt"
 	"image"
+	"strings"
 
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
@@ -342,96 +344,133 @@ func endToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.D
 	)
 }
 
-func (page *pageCommon) accountSelectorLayout(gtx layout.Context, title string) layout.Dimensions {
+func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage, sendOption string) layout.Dimensions {
 	border := widget.Border{
 		Color:        page.theme.Color.Gray1,
 		CornerRadius: values.MarginPadding8,
 		Width:        values.MarginPadding2,
 	}
-	page.wallAcctSelector.title = title
+	page.wallAcctSelector.sendOption = sendOption
 
-	return border.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, page.wallAcctSelector.fromAccount, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						accountIcon := page.icons.accountIcon
-						accountIcon.Scale = 1
-						inset := layout.Inset{
-							Right: values.MarginPadding8,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return page.theme.Body1(
-							page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount].Name).Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Left: values.MarginPadding4,
-							Top:  values.MarginPadding2,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return decredmaterial.Card{
-								Color: page.theme.Color.LightGray,
-							}.Layout(gtx, func(gtx C) D {
-								m2 := values.MarginPadding2
-								m4 := values.MarginPadding4
-								inset := layout.Inset{
-									Left:   m4,
-									Top:    m2,
-									Bottom: m2,
-									Right:  m4,
-								}
-								return inset.Layout(gtx, func(gtx C) D {
-									text := page.theme.Caption(page.info.Wallets[*page.selectedWallet].Name)
-									text.Color = page.theme.Color.Gray
-									return text.Layout(gtx)
-								})
+	d := func(gtx layout.Context, acctName, walName, bal string, btn *widget.Clickable) layout.Dimensions {
+		return border.Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+				return decredmaterial.Clickable(gtx, btn, func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							accountIcon := page.icons.accountIcon
+							accountIcon.Scale = 1
+							inset := layout.Inset{
+								Right: values.MarginPadding8,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return accountIcon.Layout(gtx)
 							})
-						})
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									txt := page.theme.Body1(
-										page.info.Wallets[*page.selectedWallet].Accounts[*page.selectedAccount].TotalBalance)
-									txt.Color = page.theme.Color.DeepBlue
-									return txt.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
+						}),
+						layout.Rigid(func(gtx C) D {
+							return page.theme.Body1(acctName).Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							inset := layout.Inset{
+								Left: values.MarginPadding4,
+								Top:  values.MarginPadding2,
+							}
+							return inset.Layout(gtx, func(gtx C) D {
+								return decredmaterial.Card{
+									Color: page.theme.Color.LightGray,
+								}.Layout(gtx, func(gtx C) D {
+									m2 := values.MarginPadding2
+									m4 := values.MarginPadding4
 									inset := layout.Inset{
-										Left: values.MarginPadding15,
+										Left:   m4,
+										Top:    m2,
+										Bottom: m2,
+										Right:  m4,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
-										return page.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
+										text := page.theme.Caption(walName)
+										text.Color = page.theme.Color.Gray
+										return text.Layout(gtx)
 									})
-								}),
-							)
-						})
-					}),
-				)
+								})
+							})
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										txt := page.theme.Body1(bal)
+										txt.Color = page.theme.Color.DeepBlue
+										return txt.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										inset := layout.Inset{
+											Left: values.MarginPadding15,
+										}
+										return inset.Layout(gtx, func(gtx C) D {
+											return page.icons.dropDownIcon.Layout(gtx, values.MarginPadding20)
+										})
+									}),
+								)
+							})
+						}),
+					)
+				})
 			})
 		})
-	})
+	}
+
+	switch {
+	case callingPage == "send":
+		acctName := page.info.Wallets[page.wallAcctSelector.selectedSendWallet].Accounts[page.wallAcctSelector.selectedSendAccount].Name
+		walName := page.info.Wallets[page.wallAcctSelector.selectedSendWallet].Name
+		bal := page.info.Wallets[page.wallAcctSelector.selectedSendWallet].Accounts[page.wallAcctSelector.selectedSendAccount].TotalBalance
+		return d(gtx, acctName, walName, bal, page.wallAcctSelector.sendAccountBtn)
+	case callingPage == "receive":
+		acctName := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].Name
+		walName := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Name
+		bal := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].TotalBalance
+		return d(gtx, acctName, walName, bal, page.wallAcctSelector.receivingAccountBtn)
+	default:
+		return layout.Dimensions{}
+	}
 }
 
 func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dimensions {
-	wallAcctGroup := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+	wallAcctGroup := func(gtx layout.Context, title string, windex int, body layout.Widget) layout.Dimensions {
 		return layout.Inset{
 			Bottom: values.MarginPadding10,
 		}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := page.theme.Body2(title)
-					txt.Color = page.theme.Color.Text
-					inset := layout.Inset{
-						Bottom: values.MarginPadding15,
-					}
-					return inset.Layout(gtx, txt.Layout)
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := page.theme.Body2(title)
+							txt.Color = page.theme.Color.Text
+							inset := layout.Inset{
+								Bottom: values.MarginPadding15,
+							}
+							return inset.Layout(gtx, txt.Layout)
+						}),
+						layout.Rigid(func(gtx C) D {
+							var showInfoBtn bool
+							if windex == 0 && strings.Contains(page.wallAcctSelector.title, "Receiving") {
+								showInfoBtn = true
+							} else if windex == 0 && page.wallAcctSelector.sendOption == "Address" {
+								showInfoBtn = true
+							}
+
+							if showInfoBtn {
+								inset := layout.Inset{
+									Top: values.MarginPadding2,
+								}
+								return inset.Layout(gtx, func(gtx C) D {
+									return page.wallAcctSelector.walletInfoButton.Layout(gtx)
+								})
+							}
+							return layout.Dimensions{}
+						}),
+					)
 				}),
 				layout.Rigid(body),
 			)
@@ -445,21 +484,70 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 			return tit.Layout(gtx)
 		},
 		func(gtx C) D {
-			return wallAcctSelector.walletsList.Layout(gtx, len(page.info.Wallets), func(gtx C, windex int) D {
-				if page.info.Wallets[windex].IsWatchingOnly {
-					return D{}
-				}
+			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return wallAcctSelector.walletsList.Layout(gtx, len(page.info.Wallets), func(gtx C, windex int) D {
+						if page.info.Wallets[windex].IsWatchingOnly {
+							return D{}
+						}
+						walletID := page.info.Wallets[windex].ID
+						mixedAcct := page.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, walletID)
+						unmixedAcct := page.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, walletID)
 
-				return wallAcctGroup(gtx, page.info.Wallets[windex].Name, func(gtx C) D {
-					return wallAcctSelector.accountsList.Layout(gtx, len(page.info.Wallets[windex].Accounts), func(gtx C, aindex int) D {
-						click := wallAcctSelector.walletAccounts[windex][aindex].evt
-						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-						click.Add(gtx.Ops)
-						page.walletAccountsHandler(gtx, wallAcctSelector.walletAccounts[windex][aindex])
-						return page.walletAccountLayout(gtx, wallAcctSelector.walletAccounts[windex][aindex])
+						return wallAcctGroup(gtx, page.info.Wallets[windex].Name, windex, func(gtx C) D {
+							return wallAcctSelector.accountsList.Layout(gtx, len(page.info.Wallets[windex].Accounts), func(gtx C, aindex int) D {
+								var visibleAccount walletAccount
+								fromAccount := wallAcctSelector.walletAccounts.selectSendAccount[windex][aindex]
+								toAccount := wallAcctSelector.walletAccounts.selectReceiveAccount[windex][aindex]
+								switch {
+								case fromAccount.number != unmixedAcct && strings.Contains(page.wallAcctSelector.title, "Sending") && page.wallAcctSelector.sendOption == "Address":
+									if fromAccount.spendable != "" || fromAccount.evt != nil {
+										click := fromAccount.evt
+										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+										click.Add(gtx.Ops)
+										page.walletAccountsHandler(gtx, fromAccount)
+										visibleAccount = fromAccount
+									}
+								case toAccount.number != mixedAcct && strings.Contains(page.wallAcctSelector.title, "Receiving"):
+									if toAccount.spendable != "" || toAccount.evt != nil {
+										click := toAccount.evt
+										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+										click.Add(gtx.Ops)
+										page.walletAccountsHandler(gtx, toAccount)
+										visibleAccount = toAccount
+									}
+								case page.wallAcctSelector.sendOption == "My account" && strings.Contains(page.wallAcctSelector.title, "Sending"):
+									if toAccount.spendable != "" || toAccount.evt != nil {
+										click := toAccount.evt
+										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+										click.Add(gtx.Ops)
+										page.walletAccountsHandler(gtx, toAccount)
+										visibleAccount = toAccount
+									}
+								default:
+								}
+
+								if visibleAccount.spendable != "" || visibleAccount.evt != nil {
+									return page.walletAccountLayout(gtx, visibleAccount)
+								}
+								return D{}
+							})
+						})
 					})
-				})
-			})
+				}),
+				layout.Stacked(func(gtx C) D {
+					if page.wallAcctSelector.isWalletAccountInfo {
+						inset := layout.Inset{
+							Top:  values.MarginPadding20,
+							Left: values.MarginPaddingMinus75,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							return page.walletInfoPopup(gtx)
+						})
+					}
+					return layout.Dimensions{}
+				}),
+			)
 		},
 	}
 
@@ -469,8 +557,13 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 func (page *pageCommon) walletAccountsHandler(gtx layout.Context, wallAcct walletAccount) {
 	for _, e := range wallAcct.evt.Events(gtx) {
 		if e.Type == gesture.TypeClick {
-			*page.selectedWallet = wallAcct.walletIndex
-			*page.selectedAccount = wallAcct.accountIndex
+			if strings.Contains(page.wallAcctSelector.title, "Sending") {
+				page.wallAcctSelector.selectedSendWallet = wallAcct.walletIndex
+				page.wallAcctSelector.selectedSendAccount = wallAcct.accountIndex
+			} else {
+				page.wallAcctSelector.selectedReceiveWallet = wallAcct.walletIndex
+				page.wallAcctSelector.selectedReceiveAccount = wallAcct.accountIndex
+			}
 			page.wallAcctSelector.isWalletAccountModalOpen = false
 		}
 	}
@@ -511,16 +604,75 @@ func (page *pageCommon) walletAccountLayout(gtx layout.Context, wallAcct walletA
 						)
 					}),
 					layout.Flexed(0.1, func(gtx C) D {
-						if *page.selectedWallet == wallAcct.walletIndex && *page.selectedAccount == wallAcct.accountIndex {
+						inset := layout.Inset{
+							Right: values.MarginPadding10,
+							Top:   values.MarginPadding10,
+						}
+						sections := func(gtx layout.Context) layout.Dimensions {
 							return layout.E.Layout(gtx, func(gtx C) D {
-								return page.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
+								return inset.Layout(gtx, func(gtx C) D {
+									return page.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
+								})
 							})
 						}
+
+						if strings.Contains(page.wallAcctSelector.title, "Sending") && page.wallAcctSelector.selectedSendWallet == wallAcct.walletIndex && page.wallAcctSelector.selectedSendAccount == wallAcct.accountIndex {
+							return sections(gtx)
+						}
+
+						if strings.Contains(page.wallAcctSelector.title, "Receiving") && page.wallAcctSelector.selectedReceiveWallet == wallAcct.walletIndex && page.wallAcctSelector.selectedReceiveAccount == wallAcct.accountIndex {
+							return sections(gtx)
+						}
+
 						return layout.Dimensions{}
 					}),
 				)
 			}),
 		)
+	})
+}
+
+func (page *pageCommon) walletInfoPopup(gtx layout.Context) layout.Dimensions {
+	acctType := "Unmixed"
+	t := "from"
+	txDirection := " Spending"
+	if strings.Contains(page.wallAcctSelector.title, "Receiving") {
+		acctType = "The mixed"
+		t = "to"
+		txDirection = " Receiving"
+	}
+	title := fmt.Sprintf("%s accounts are hidden.", acctType)
+	desc := fmt.Sprintf("%s %s accounts is disabled by StakeShuffle settings to protect your privacy.", t, strings.ToLower(acctType))
+	card := page.theme.Card()
+	card.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
+	border := widget.Border{Color: page.theme.Color.Background, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding280)
+	return border.Layout(gtx, func(gtx C) D {
+		return card.Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := page.theme.Body2(title)
+								txt.Color = page.theme.Color.DeepBlue
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := page.theme.Body2(txDirection)
+								txt.Color = page.theme.Color.Gray
+								return txt.Layout(gtx)
+							}),
+						)
+					}),
+					layout.Rigid(func(gtx C) D {
+						txt := page.theme.Body2(desc)
+						txt.Color = page.theme.Color.Gray
+						return txt.Layout(gtx)
+					}),
+				)
+			})
+		})
 	})
 }
 
@@ -546,25 +698,60 @@ func (page pageCommon) handleNavEvents() {
 	}
 
 	for windex := 0; windex < page.info.LoadedWallets; windex++ {
-		if _, ok := page.wallAcctSelector.walletAccounts[windex]; !ok {
+		if _, ok := page.wallAcctSelector.walletAccounts.selectSendAccount[windex]; !ok {
 			accounts := page.info.Wallets[windex].Accounts
-			if len(accounts) != len(page.wallAcctSelector.walletAccounts[windex]) {
-				page.wallAcctSelector.walletAccounts[windex] = make([]walletAccount, len(accounts))
+			if len(accounts) != len(page.wallAcctSelector.walletAccounts.selectSendAccount[windex]) {
+				page.wallAcctSelector.walletAccounts.selectSendAccount[windex] = make([]walletAccount, len(accounts))
 				for aindex := range accounts {
-					page.wallAcctSelector.walletAccounts[windex][aindex] = walletAccount{
+					if accounts[aindex].Name == "imported" {
+						continue
+					}
+					page.wallAcctSelector.walletAccounts.selectSendAccount[windex][aindex] = walletAccount{
 						walletIndex:  windex,
 						accountIndex: aindex,
 						evt:          &gesture.Click{},
 						accountName:  accounts[aindex].Name,
 						totalBalance: accounts[aindex].TotalBalance,
 						spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
+						number:       accounts[aindex].Number,
+					}
+				}
+			}
+		}
+
+		if _, ok := page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex]; !ok {
+			accounts := page.info.Wallets[windex].Accounts
+			if len(accounts) != len(page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex]) {
+				page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex] = make([]walletAccount, len(accounts))
+				for aindex := range accounts {
+					if accounts[aindex].Name == "imported" {
+						continue
+					}
+					page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex][aindex] = walletAccount{
+						walletIndex:  windex,
+						accountIndex: aindex,
+						evt:          &gesture.Click{},
+						accountName:  accounts[aindex].Name,
+						totalBalance: accounts[aindex].TotalBalance,
+						spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
+						number:       accounts[aindex].Number,
 					}
 				}
 			}
 		}
 	}
 
-	if page.wallAcctSelector.fromAccount.Clicked() {
+	if page.wallAcctSelector.sendAccountBtn.Clicked() {
+		page.wallAcctSelector.title = "Sending Account"
 		page.wallAcctSelector.isWalletAccountModalOpen = true
+	}
+
+	if page.wallAcctSelector.receivingAccountBtn.Clicked() {
+		page.wallAcctSelector.title = "Receiving Account"
+		page.wallAcctSelector.isWalletAccountModalOpen = true
+	}
+
+	if page.wallAcctSelector.walletInfoButton.Button.Clicked() {
+		page.wallAcctSelector.isWalletAccountInfo = !page.wallAcctSelector.isWalletAccountInfo
 	}
 }
