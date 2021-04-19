@@ -17,16 +17,15 @@ type walletSettingsPage struct {
 	walletInfo *wallet.MultiWalletInfo
 	wal        *wallet.Wallet
 
-	changePass   decredmaterial.IconButton
-	rescan       decredmaterial.IconButton
-	deleteWallet decredmaterial.IconButton
+	changePass, rescan, deleteWallet *widget.Clickable
 
 	notificationW *widget.Bool
 	errorReceiver chan error
+
+	chevronRightIcon *widget.Icon
 }
 
 func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
-	icon := common.icons.chevronRight
 	pg := &walletSettingsPage{
 		theme:         common.theme,
 		walletInfo:    win.walletInfo,
@@ -34,17 +33,14 @@ func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
 		notificationW: new(widget.Bool),
 		errorReceiver: make(chan error),
 
-		changePass:   common.theme.PlainIconButton(new(widget.Clickable), icon),
-		rescan:       common.theme.PlainIconButton(new(widget.Clickable), icon),
-		deleteWallet: common.theme.PlainIconButton(new(widget.Clickable), icon),
+		changePass:   new(widget.Clickable),
+		rescan:       new(widget.Clickable),
+		deleteWallet: new(widget.Clickable),
+
+		chevronRightIcon: common.icons.chevronRight,
 	}
 
-	color := common.theme.Color.LightGray
-	zeroInset := layout.UniformInset(values.MarginPadding0)
-
-	pg.changePass.Color, pg.changePass.Inset = color, zeroInset
-	pg.rescan.Color, pg.rescan.Inset = color, zeroInset
-	pg.deleteWallet.Color, pg.deleteWallet.Inset = color, zeroInset
+	pg.chevronRightIcon.Color = pg.theme.Color.LightGray
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -90,12 +86,12 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 
 func (pg *walletSettingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Spending password", func(gtx C) D {
+		return pg.pageSections(gtx, "Spending password", pg.changePass, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(pg.bottomSectionLabel("Change spending password")),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.changePass.Layout(gtx)
+						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 					})
 				}),
 			)
@@ -105,7 +101,7 @@ func (pg *walletSettingsPage) changePassphrase() layout.Widget {
 
 func (pg *walletSettingsPage) notification() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Notification", func(gtx C) D {
+		return pg.pageSections(gtx, "Notification", nil, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(pg.bottomSectionLabel("Beep for new blocks")),
 				layout.Flexed(1, func(gtx C) D {
@@ -120,12 +116,12 @@ func (pg *walletSettingsPage) notification() layout.Widget {
 
 func (pg *walletSettingsPage) debug() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Debug", func(gtx C) D {
+		return pg.pageSections(gtx, "Debug", pg.rescan, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(pg.bottomSectionLabel("Rescan blockchain")),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.rescan.Layout(gtx)
+						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 					})
 				}),
 			)
@@ -135,12 +131,12 @@ func (pg *walletSettingsPage) debug() layout.Widget {
 
 func (pg *walletSettingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Danger zone", func(gtx C) D {
+		return pg.pageSections(gtx, "Danger zone", pg.deleteWallet, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(pg.bottomSectionLabel("Remove wallet from device")),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.deleteWallet.Layout(gtx)
+						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 					})
 				}),
 			)
@@ -148,18 +144,27 @@ func (pg *walletSettingsPage) dangerZone() layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *walletSettingsPage) pageSections(gtx layout.Context, title string, clickable *widget.Clickable, body layout.Widget) layout.Dimensions {
+	dims := func(gtx layout.Context, title string, body layout.Widget) D {
+		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Body2(title)
+					txt.Color = pg.theme.Color.Gray
+					return txt.Layout(gtx)
+				}),
+				layout.Rigid(body),
+			)
+		})
+	}
+
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.theme.Card().Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						txt := pg.theme.Body2(title)
-						txt.Color = pg.theme.Color.Gray
-						return txt.Layout(gtx)
-					}),
-					layout.Rigid(body),
-				)
+			if clickable == nil {
+				return dims(gtx, title, body)
+			}
+			return decredmaterial.Clickable(gtx, clickable, func(gtx C) D {
+				return dims(gtx, title, body)
 			})
 		})
 	})
@@ -172,7 +177,7 @@ func (pg *walletSettingsPage) bottomSectionLabel(title string) layout.Widget {
 }
 
 func (pg *walletSettingsPage) handle(common pageCommon) {
-	for pg.changePass.Button.Clicked() {
+	for pg.changePass.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
 			common.modalReceiver <- &modalLoad{
@@ -189,7 +194,7 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 		break
 	}
 
-	for pg.rescan.Button.Clicked() {
+	for pg.rescan.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
 			common.modalReceiver <- &modalLoad{
@@ -223,7 +228,7 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notificationW.Value)
 	}
 
-	for pg.deleteWallet.Button.Clicked() {
+	for pg.deleteWallet.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ConfirmRemoveTemplate,
