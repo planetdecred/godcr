@@ -454,7 +454,7 @@ func (pg *proposalsPage) layoutProposalVoteBar(gtx C, proposalItem proposalItem)
 	passPercentage := float32(proposalItem.proposal.PassPercentage)
 	eligibleTickets := float32(proposalItem.proposal.EligibleTickets)
 
-	return proposalItem.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
+	return proposalItem.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).Layout(gtx)
 }
 
 func (pg *proposalsPage) layoutProposalsList(gtx C) D {

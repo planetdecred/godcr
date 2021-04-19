@@ -3,8 +3,6 @@ package ui
 import (
 	"encoding/base64"
 	"fmt"
-	"os/exec"
-	"runtime"
 	"strings"
 
 	"gioui.org/layout"
@@ -79,37 +77,19 @@ func (pg *proposalDetails) handle() {
 	for token := range pg.proposalItems {
 		for location, clickable := range pg.proposalItems[token].clickables {
 			if clickable.Clicked() {
-				pg.goToURL(location)
+				goToURL(location)
 			}
 		}
 	}
 
 	for pg.viewInPoliteiaBtn.Clicked() {
 		proposal := *pg.selectedProposal
-		pg.goToURL("https://proposals.decred.org/proposals/" + proposal.Token)
+		goToURL("https://proposals.decred.org/proposals/" + proposal.Token)
 	}
 
 	for pg.viewInGithubBtn.Clicked() {
 		proposal := *pg.selectedProposal
-		pg.goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
-	}
-}
-
-func (pg *proposalDetails) goToURL(url string) {
-	var err error
-
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-	if err != nil {
-		log.Error(err)
+		goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
 	}
 }
 

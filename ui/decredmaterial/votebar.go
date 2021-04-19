@@ -16,6 +16,8 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+// VoteBar widget implements voting stat for proposals.
+// VoteBar shows the range/percentage of the yes votes and no votes against the total required.
 type VoteBar struct {
 	yesVotes           float32
 	noVotes            float32
@@ -100,7 +102,8 @@ func (v *VoteBar) Layout(gtx C) D {
 	yesWidth := (progressBarWidth / 100) * yesVotes
 	noWidth := (progressBarWidth / 100) * noVotes
 
-	shader := func(width float32, color color.NRGBA, layer int) layout.Dimensions {
+	// progressScale represent the different progress bar layers
+	progressScale := func(width float32, color color.NRGBA, layer int) layout.Dimensions {
 		maxHeight := unit.Dp(8)
 		rW, rN = 0, 0
 		if layer == 2 {
@@ -135,7 +138,7 @@ func (v *VoteBar) Layout(gtx C) D {
 
 	return layout.Stack{Alignment: layout.W}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			return shader(progressBarWidth, v.bgColor, 1)
+			return progressScale(progressBarWidth, v.bgColor, 1)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{}.Layout(gtx,
@@ -143,13 +146,13 @@ func (v *VoteBar) Layout(gtx C) D {
 					if yesWidth == 0 {
 						return D{}
 					}
-					return shader(yesWidth, v.yesColor, 2)
+					return progressScale(yesWidth, v.yesColor, 2)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if noWidth == 0 {
 						return D{}
 					}
-					return shader(noWidth, v.noColor, 3)
+					return progressScale(noWidth, v.noColor, 3)
 				}),
 			)
 		}),
