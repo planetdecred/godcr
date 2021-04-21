@@ -29,6 +29,7 @@ func ResponseResp(resp interface{}) Response {
 type MultiWalletInfo struct {
 	LoadedWallets   int
 	TotalBalance    string
+	TotalBalanceRaw    string
 	Wallets         []InfoShort
 	BestBlockHeight int32
 	BestBlockTime   int64

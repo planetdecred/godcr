@@ -427,6 +427,8 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		resp.Resp = MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    dcrutil.Amount(completeTotal).String(),
+			TotalBalanceRaw: strconv.FormatFloat(float64(completeTotal) / math.Pow10(int(0+8)), 'f', -int(0+8), 64),
+			// TotalBalanceRaw: strconv.Itoa(int(completeTotal)),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
 			LastSyncTime:    SecondsToDays(lastSyncTime),
