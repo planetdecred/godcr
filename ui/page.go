@@ -31,7 +31,8 @@ type pageIcons struct {
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer, mixerSmall,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, documentationIcon *widget.Image
+	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, proposalIconInactive,
+	restore, documentationIcon, downloadIcon, timerIcon *widget.Image
 
 	walletIcon image.Image
 }
@@ -178,6 +179,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
 		syncingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["syncing"])},
 		documentationIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
+		proposalIconActive:         &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
+		proposalIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaInactive"])},
+		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
+		downloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
+		timerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
 
 		walletIcon: decredIcons["wallet"],
 	}
@@ -213,6 +219,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
 			imageInactive: ic.walletIconInactive,
 			page:          PageWallet,
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         ic.proposalIconActive,
+			imageInactive: ic.proposalIconInactive,
+			page:          PageProposals,
 		},
 		{
 			clickable:     new(widget.Clickable),
@@ -313,7 +325,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PageSettings] = win.SettingsPage(common)
 	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
 	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
-	win.pages[PagePoliteia] = win.PoliteiaPage(common)
+	win.pages[PageProposals] = win.ProposalsPage(common)
+	win.pages[PageProposalDetails] = win.ProposalDetailsPage(common)
 	win.pages[PageDebug] = win.DebugPage(common)
 	win.pages[PageLog] = win.LogPage(common)
 	win.pages[PageAbout] = win.AboutPage(common)
@@ -472,13 +485,14 @@ type SubPage struct {
 	infoTemplate string
 	extraItem    *widget.Clickable
 	extra        layout.Widget
+	extraText    string
 	handleExtra  func()
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Bottom: values.MarginPadding15, Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 				return page.subpageHeader(gtx, sp)
 			})
 		}),
@@ -525,15 +539,27 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 			return layout.Dimensions{}
 		}),
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding9}.Layout(gtx, func(gtx C) D {
-				return layout.E.Layout(gtx, func(gtx C) D {
-					if sp.infoTemplate != "" {
-						return page.subPageInfoButton.Layout(gtx)
-					} else if sp.extraItem != nil {
-						return decredmaterial.Clickable(gtx, sp.extraItem, sp.extra)
-					}
-					return layout.Dimensions{}
-				})
+			return layout.E.Layout(gtx, func(gtx C) D {
+				if sp.infoTemplate != "" {
+					return page.subPageInfoButton.Layout(gtx)
+				} else if sp.extraItem != nil {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							if sp.extraText != "" {
+								return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									text := page.theme.Caption(sp.extraText)
+									text.Color = page.theme.Color.DeepBlue
+									return text.Layout(gtx)
+								})
+							}
+							return layout.Dimensions{}
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return decredmaterial.Clickable(gtx, sp.extraItem, sp.extra)
+						}),
+					)
+				}
+				return layout.Dimensions{}
 			})
 		}),
 	)

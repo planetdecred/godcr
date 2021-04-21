@@ -39,7 +39,7 @@ func (t *Theme) Modal() *Modal {
 func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) layout.Dimensions {
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			fillMax(gtx, m.overlayColor)
+			fillMax(gtx, m.overlayColor, CornerRadius{})
 			return m.button.Layout(gtx)
 		}),
 		layout.Stacked(func(gtx C) D {

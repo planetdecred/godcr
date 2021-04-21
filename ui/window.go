@@ -59,8 +59,8 @@ type Window struct {
 	modal                   chan *modalLoad
 	sysDestroyWithSync      bool
 	walletAcctMixerStatus   chan *wallet.AccountMixer
-
-	internalLog chan string
+	internalLog             chan string
+	selectedProposal        *dcrlibwallet.Proposal
 }
 
 type WriteClipboard struct {
@@ -128,7 +128,7 @@ func (win *Window) refresh() {
 
 func (win *Window) setReturnPage(from string) {
 	win.previous = from
-	win.window.Invalidate()
+	win.refresh()
 }
 
 func (win *Window) unloaded() {
