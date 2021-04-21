@@ -15,6 +15,7 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -837,12 +838,21 @@ func (pg *walletPage) Handle(common pageCommon) {
 
 		for pg.collapsibles[index].addAcctBtn.Button.Clicked() {
 			walletID := pg.walletInfo.Wallets[index].ID
+			walletIndex := index
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: CreateAccountTemplate,
 					title:    "Create new account",
 					confirm: func(name string, passphrase string) {
-						pg.wallet.AddAccount(walletID, name, []byte(passphrase), pg.errorReceiver)
+						pg.wallet.AddAccount(walletID, name, []byte(passphrase), pg.errorReceiver, func(acct *dcrlibwallet.Account) {
+							walletAccount := walletAccount{
+								walletIndex:  walletIndex,
+								accountName:  acct.Name,
+								totalBalance: dcrutil.Amount(acct.Balance.Total).String(),
+								spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
+							}
+							common.addAccount(walletAccount)
+						})
 					},
 					confirmText: "Create",
 					cancel:      common.closeModal,
