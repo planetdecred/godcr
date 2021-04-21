@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	gioui.org v0.0.0-20210228180843-e1248651c871
+	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/decred/dcrd/chaincfg v1.5.2 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
 	github.com/decred/dcrd/dcrutil v1.4.0
@@ -11,6 +12,7 @@ require (
 	github.com/decred/dcrd/dcrutil/v3 v3.0.0
 	github.com/decred/slog v1.1.0
 	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
+	github.com/gomarkdown/markdown v0.0.0-20210208175418-bda154fe17d8
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
 	github.com/onsi/ginkgo v1.14.0
