@@ -3,7 +3,7 @@ module github.com/planetdecred/godcr
 go 1.13
 
 require (
-	gioui.org v0.0.0-20210228180843-e1248651c871
+	gioui.org v0.0.0-20210418151603-3b69b5ed0512
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/decred/dcrd/chaincfg v1.5.2 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2

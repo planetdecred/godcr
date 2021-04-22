@@ -80,7 +80,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	} else {
 		netType = wal.Net
 	}
-	win.window = app.NewWindow(app.Title(fmt.Sprintf("%s (%s)", "godcr", netType)))
+	win.window = app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(fmt.Sprintf("%s (%s)", "godcr", netType)))
 	theme := decredmaterial.NewTheme(collection, decredIcons)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
