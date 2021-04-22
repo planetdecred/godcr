@@ -243,3 +243,8 @@ type VSPInfo struct {
 type VSP struct {
 	List []VSPInfo
 }
+
+// Proposals is sent when all proposals has been fetched
+type Proposals struct {
+	Proposals []dcrlibwallet.Proposal
+}

@@ -26,7 +26,7 @@ const (
 	// HeadersRescanProgress indicates an address rescan signal
 	HeadersRescanProgress
 
-	// HeadersFetchProgress indicates an peer connected signal
+	// HeadersFetchProgress indicates a peer connected signal
 	PeersConnected
 
 	// BlockAttached indicates a block attached signal
@@ -40,6 +40,18 @@ const (
 
 	// AccountMixerEnded indicates on account mixer ended
 	AccountMixerEnded
+
+	// ProposalVoteFinished indicates that proposal voting is finished
+	ProposalVoteFinished
+
+	// ProposalVoteStarted indicates that proposal voting has started
+	ProposalVoteStarted
+
+	// ProposalSynced indicates that proposal has finished syncing
+	ProposalSynced
+
+	// ProposalAdded indicates that a new proposal was added
+	ProposalAdded
 )
 
 const (
@@ -69,6 +81,7 @@ type (
 		BlockInfo      NewBlock
 		ConfirmedTxn   TxConfirmed
 		AcctMixerInfo  AccountMixer
+		Proposal       NewProposal
 	}
 )
 

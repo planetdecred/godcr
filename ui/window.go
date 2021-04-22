@@ -36,6 +36,9 @@ type Window struct {
 	walletAccount      *wallet.Account
 	walletTickets      *wallet.Tickets
 	vspInfo            *wallet.VSP
+	proposals          *wallet.Proposals
+	selectedProposal   *dcrlibwallet.Proposal
+	proposal           chan *wallet.NewProposal
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -61,7 +64,6 @@ type Window struct {
 	sysDestroyWithSync      bool
 	walletAcctMixerStatus   chan *wallet.AccountMixer
 	internalLog             chan string
-	selectedProposal        *dcrlibwallet.Proposal
 }
 
 type WriteClipboard struct {
@@ -96,6 +98,8 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletAcctMixerStatus = make(chan *wallet.AccountMixer)
 	win.walletTickets = new(wallet.Tickets)
 	win.vspInfo = new(wallet.VSP)
+	win.proposals = new(wallet.Proposals)
+	win.proposal = make(chan *wallet.NewProposal)
 
 	win.wallet = wal
 	win.states.loading = true
@@ -213,6 +217,10 @@ func (win *Window) Loop(shutdown chan int) {
 			case wallet.AccountMixerStarted, wallet.AccountMixerEnded:
 				go func() {
 					win.walletAcctMixerStatus <- &update.AcctMixerInfo
+				}()
+			case wallet.ProposalAdded, wallet.ProposalVoteFinished, wallet.ProposalVoteStarted, wallet.ProposalSynced:
+				go func() {
+					win.proposal <- &update.Proposal
 				}()
 			}
 			win.window.Invalidate()

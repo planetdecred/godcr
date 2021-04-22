@@ -76,6 +76,8 @@ func (wal *Wallet) LoadWallets() {
 
 		wal.multi.SetAccountMixerNotification(l)
 
+		wal.multi.Politeia.AddNotificationListener(l, syncID)
+
 		startupPassSet := wal.multi.IsStartupSecuritySet()
 		if !startupPassSet {
 			err = wal.multi.OpenWallets(nil)

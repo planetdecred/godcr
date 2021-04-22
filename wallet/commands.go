@@ -676,14 +676,20 @@ func (wal *Wallet) RenameAccount(walletID int, acct int32, name string, errChan 
 	}()
 }
 
-func (wal *Wallet) GetProposals(category int32, successCB func([]dcrlibwallet.Proposal), errorCB func(error)) {
+func (wal *Wallet) GetAllProposals() {
+	var resp Response
 	go func() {
-		proposals, err := wal.multi.Politeia.GetProposalsRaw(category, 0, 0, true)
+		proposals, err := wal.multi.Politeia.GetProposalsRaw(dcrlibwallet.ProposalCategoryAll, 0, 0, true)
 		if err != nil {
-			errorCB(fmt.Errorf("error fetching proposals: %s", err.Error()))
+			resp.Err = err
+			wal.Send <- resp
 			return
 		}
-		successCB(proposals)
+
+		resp.Resp = &Proposals{
+			Proposals: proposals,
+		}
+		wal.Send <- resp
 	}()
 }
 
@@ -749,10 +755,6 @@ func (wal *Wallet) SyncProposals() {
 
 func (wal *Wallet) IsSyncingProposals() bool {
 	return wal.multi.Politeia.IsSyncing()
-}
-
-func (wal *Wallet) AddProposalNotificationListener(listener dcrlibwallet.ProposalNotificationListener) error {
-	return wal.multi.Politeia.AddNotificationListener(listener, "godcr")
 }
 
 func (wal *Wallet) GetWalletSeedPhrase(walletID int, password []byte) (string, error) {

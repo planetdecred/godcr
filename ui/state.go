@@ -68,6 +68,10 @@ func (win *Window) updateStates(update interface{}) {
 		win.vspInfo = e
 		win.refresh()
 		return
+	case *wallet.Proposals:
+		win.states.loading = false
+		win.proposals = e
+		return
 	case wallet.CreatedSeed:
 		win.notifyOnSuccess("Wallet created")
 		win.changePage(PageWallet)
@@ -112,6 +116,7 @@ func (win *Window) updateStates(update interface{}) {
 	win.wallet.GetMultiWalletInfo()
 	win.wallet.GetAllTransactions(0, 0, 0)
 	win.wallet.GetAllTickets()
+	win.wallet.GetAllProposals()
 	win.window.Invalidate()
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }
