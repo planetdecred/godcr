@@ -1,12 +1,11 @@
 package ui
 
 import (
+	"encoding/json"
 	"image"
 	"image/color"
-	"time"
-	"encoding/json"
-	"fmt"
 	"net/http"
+	"time"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -63,7 +62,7 @@ type wallectAccountOption struct {
 }
 
 type DCRUSDTBittrex struct {
-	LastTradeRate string 
+	LastTradeRate string
 }
 
 type walletAccountSelector struct {
@@ -96,9 +95,8 @@ type pageCommon struct {
 	returnPage      *string
 	amountDCRtoUSD  float64
 	usdExchangeRate float64
-	usdExchangeSet            bool
-	LastTradeRate    string 
-	dcrUsdtBittrex          DCRUSDTBittrex 
+	usdExchangeSet  bool
+	dcrUsdtBittrex  DCRUSDTBittrex
 	navTab          *decredmaterial.Tabs
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
@@ -284,9 +282,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		refreshWindow:           win.refresh,
 	}
 
-// common.LastTradeRate = "50.0"
-common.fetchExchangeValue()
-common.unmarshall()
+	common.fetchExchangeValue(&common.dcrUsdtBittrex)
 
 	common.wallAcctSelector = &walletAccountSelector{
 		sendAccountBtn:      new(widget.Clickable),
@@ -326,9 +322,6 @@ common.unmarshall()
 
 	common.modalTemplate = win.LoadModalTemplates()
 
-	
-
-
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
@@ -357,17 +350,7 @@ common.unmarshall()
 	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
 }
 
-// func (page *pageCommon) fetchExchangeValue() {
-// 	go func() {
-// 		err := page.wallet.GetUSDExchangeValues(&page)
-// 		if err != nil {
-// 			page.updateExchangeError()
-// 		}
-// 		// fmt.Printf("[][][][][][][][][][][] %+v\n", page.LastTradeRate)
-// 	}()
-// }
-
-func (page *pageCommon) unmarshall() error{
+func (page *pageCommon) fetchExchangeValue(target interface{}) error {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	res, err := http.Get(url)
 	if err != nil {
@@ -376,17 +359,12 @@ func (page *pageCommon) unmarshall() error{
 
 	defer res.Body.Close()
 
-	err = json.NewDecoder(res.Body).Decode(&page.dcrUsdtBittrex)
+	err = json.NewDecoder(res.Body).Decode(target)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
- 	fmt.Printf("[][][][][][][][][][][] %+v\n", page.dcrUsdtBittrex)
-	
-	return nil
-}
 
-func (page *pageCommon) updateExchangeError() {
-	fmt.Println("Exchange rate not fetched")
+	return nil
 }
 
 func (page pageCommon) refreshPage() {
@@ -414,7 +392,6 @@ func (page pageCommon) closeModal() {
 
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	page.handleNavEvents()
-	page.fetchExchangeValue()
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {

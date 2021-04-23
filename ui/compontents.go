@@ -6,8 +6,8 @@ package ui
 import (
 	"fmt"
 	"image"
-	"strings"
 	"strconv"
+	"strings"
 
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
@@ -16,6 +16,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/decred/dcrd/dcrutil"
+	"github.com/leekchan/accounting"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -33,6 +34,47 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 		}),
 		layout.Rigid(func(gtx C) D {
 			return page.theme.Label(values.TextSize14, subText).Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return page.layoutUSDBalance(gtx)
+		}),
+	)
+}
+
+func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+			page.usdExchangeSet = false
+			if strings.Contains(currencyExchangeValue, "USD") {
+				page.usdExchangeSet = true
+			}
+			if page.usdExchangeSet && page.dcrUsdtBittrex.LastTradeRate != "" {
+				page.usdExchangeRate, _ = strconv.ParseFloat(page.dcrUsdtBittrex.LastTradeRate, 64)
+				TotalBalanceFloat, _ := strconv.ParseFloat(page.info.TotalBalanceRaw, 64)
+				page.amountDCRtoUSD = TotalBalanceFloat * page.usdExchangeRate
+
+				inset := layout.Inset{
+					Left: values.MarginPadding8,
+				}
+				border := widget.Border{Color: page.theme.Color.LightGray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				return inset.Layout(gtx, func(gtx C) D {
+					padding := layout.Inset{
+						Top:    values.MarginPadding3,
+						Bottom: values.MarginPadding3,
+						Left:   values.MarginPadding6,
+						Right:  values.MarginPadding6,
+					}
+					return border.Layout(gtx, func(gtx C) D {
+						return padding.Layout(gtx, func(gtx C) D {
+							ac := accounting.Accounting{Symbol: "$", Precision: 2}
+							amountDCRtoUSDString := ac.FormatMoney(page.amountDCRtoUSD)
+							return page.theme.Label(values.TextSize14, amountDCRtoUSDString).Layout(gtx)
+						})
+					})
+				})
+			}
+			return D{}
 		}),
 	)
 }
@@ -67,51 +109,6 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 											return layout.Center.Layout(gtx, func(gtx C) D {
 												return page.layoutBalance(gtx, page.info.TotalBalance)
 											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-											page.usdExchangeSet = false
-											if strings.Contains(currencyExchangeValue, "USD") {
-												page.usdExchangeSet = true
-											}
-											
-											if page.usdExchangeSet && page.LastTradeRate != "" {
-												page.usdExchangeRate, _ = strconv.ParseFloat(page.LastTradeRate, 64)
-												fmt.Println("[][][][] Balance int64", page.info.TotalBalanceRaw)
-
-												TotalBalanceFloat, _ := strconv.ParseFloat(page.info.TotalBalanceRaw, 64)
-												page.amountDCRtoUSD =  TotalBalanceFloat * page.usdExchangeRate
-												fmt.Println("[][][][] Balance float64", TotalBalanceFloat)
-												// amountDCRtoUSDString := strconv.FormatFloat(page.amountDCRtoUSD, 'E', -1, 64)
-											}
-											page.fetchExchangeValue()
-											fmt.Println("[][][][] LastTradeRate", page.dcrUsdtBittrex.LastTradeRate)
-											fmt.Println("[][][][] LastTradeRate2", page.LastTradeRate)
-											
-											
-												fmt.Println("[][][][] Exchange Rate", page.usdExchangeRate)
-												fmt.Println("[][][][] amountDCRtoUSD", page.amountDCRtoUSD)
-											if page.usdExchangeSet {
-												return layout.Center.Layout(gtx, func(gtx C) D {
-													inset := layout.Inset{
-														Left: values.MarginPadding8,
-													}
-													border := widget.Border{Color: page.theme.Color.LightGray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
-													return inset.Layout(gtx, func(gtx C) D {
-														return border.Layout(gtx, func(gtx C) D {
-															amountDCRtoUSDString := fmt.Sprint(page.amountDCRtoUSD)
-															// return page.layoutBalance(gtx, page.info.TotalBalance)
-															return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-																layout.Rigid(func(gtx C) D {
-																	return page.theme.Label(values.TextSize14, amountDCRtoUSDString).Layout(gtx)
-
-																}),
-															)
-														})
-													})
-												})
-											}
-											return D{}
 										}),
 									)
 								})
@@ -162,20 +159,6 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 		)
 	})
 }
-
-func (page *pageCommon) fetchExchangeValue() {
-	go func() {
-		err := page.wallet.GetUSDExchangeValues(&page)
-		if err != nil {
-			page.updateExchangeError()
-		}
-		// fmt.Printf("[][][][][][][][][][][] %+v\n", page.LastTradeRate)
-	}()
-}
-
-// func (page *pageCommon) updateExchangeError() {
-// 	fmt.Println("Exchange rate not fetched")
-// }
 
 const (
 	navDrawerWidth          = 160
