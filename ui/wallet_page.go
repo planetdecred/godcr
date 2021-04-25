@@ -78,7 +78,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		errorReceiver:            make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
-		shadowBox:                common.theme.Shadow(true, false, false, true),
+		shadowBox:                common.theme.Shadow(),
 	}
 
 	pg.collapsibles = make(map[int]collapsible)
@@ -365,9 +365,10 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	}
 
 	m := op.Record(gtx.Ops)
-	pg.shadowBox.Layout(gtx, int(inset.Left.V), int(inset.Top.V), func(gtx C) D {
-		return inset.Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Max.X = int(gtx.Metric.PxPerDp) * 150
+
+	inset.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Max.X = int(gtx.Metric.PxPerDp) * 150
+		return pg.shadowBox.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -394,6 +395,13 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 			})
 		})
 	})
+
+	/**pg.shadowBox.Layout(gtx, func(gtx C) D {
+		return inset.Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Max.X = int(gtx.Metric.PxPerDp) * 150
+
+		})
+	})**/
 	op.Defer(gtx.Ops, m.Stop())
 }
 
