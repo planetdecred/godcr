@@ -131,7 +131,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 									click := pg.toTxnDetails[index]
 									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 									click.Add(gtx.Ops)
-									pg.goToTxnDetails(click.Events(gtx), common.changePage, &wallTxs[index])
+									pg.goToTxnDetails(click.Events(gtx), &common, &wallTxs[index])
 									var row = TransactionRow{
 										transaction: wallTxs[index],
 										index:       index,
@@ -260,11 +260,13 @@ func (pg *transactionsPage) sortTransactions(common *pageCommon) {
 	}
 }
 
-func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, changePage func(string), txn *wallet.Transaction) {
+func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, common *pageCommon, txn *wallet.Transaction) {
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			*pg.walletTransaction = txn
-			changePage(PageTransactionDetails)
+
+			common.setReturnPage(PageTransactions)
+			common.changePage(PageTransactionDetails)
 		}
 	}
 }
