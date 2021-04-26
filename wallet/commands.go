@@ -802,7 +802,7 @@ func SecondsToDays(totalTimeLeft int64) string {
 
 // GetRawBalance gets the balance in int64, formats it and returns a string while also leaving out the "DCR" suffix
 func GetRawBalance(balance int64, AmountUnit int) string {
-	return strconv.FormatFloat(float64(balance)/math.Pow10(int(AmountUnit+8)), 'f', -int(AmountUnit+8), 64)
+	return strconv.FormatFloat(float64(balance)/math.Pow10(AmountUnit+8), 'f', -(AmountUnit + 8), 64)
 }
 
 // divMod divides a numerator by a denominator and returns its quotient and remainder.

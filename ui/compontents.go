@@ -16,7 +16,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/leekchan/accounting"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -25,7 +24,7 @@ import (
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
+func (page pageCommon) layoutBalance(gtx layout.Context, amount string, topnav bool) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
 	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
@@ -36,7 +35,10 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 			return page.theme.Label(values.TextSize14, subText).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.layoutUSDBalance(gtx)
+			if topnav {
+				return page.layoutUSDBalance(gtx)
+			}
+			return D{}
 		}),
 	)
 }
@@ -67,8 +69,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					}
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
-							ac := accounting.Accounting{Symbol: "$", Precision: 2}
-							amountDCRtoUSDString := ac.FormatMoney(page.amountDCRtoUSD)
+							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
 							return page.theme.Label(values.TextSize14, amountDCRtoUSDString).Layout(gtx)
 						})
 					})
@@ -82,7 +83,6 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 // layoutTopBar is the top horizontal bar on every page of the app. It lays out the wallet balance, receive and send
 // buttons.
 func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
-	// page.fetchExchangeValue()
 	card := page.theme.Card()
 	card.Radius = decredmaterial.CornerRadius{}
 	return card.Layout(gtx, func(gtx C) D {
@@ -107,7 +107,7 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.layoutBalance(gtx, page.info.TotalBalance)
+												return page.layoutBalance(gtx, page.info.TotalBalance, true)
 											})
 										}),
 									)
@@ -309,7 +309,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return common.layoutBalance(gtx, row.transaction.Balance)
+												return common.layoutBalance(gtx, row.transaction.Balance, false)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
@@ -635,7 +635,7 @@ func (page *pageCommon) walletAccountLayout(gtx layout.Context, wallAcct walletA
 								acct := page.theme.Label(values.TextSize18, wallAcct.accountName)
 								acct.Color = page.theme.Color.Text
 								return endToEndRow(gtx, acct.Layout, func(gtx C) D {
-									return page.layoutBalance(gtx, wallAcct.totalBalance)
+									return page.layoutBalance(gtx, wallAcct.totalBalance, false)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
