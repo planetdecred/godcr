@@ -97,6 +97,10 @@ func breakBalance(p *message.Printer, balance string) (b1, b2 string) {
 	return
 }
 
+func formatUSDBalance(p *message.Printer, balance float64) string {
+	return p.Sprintf("$%.2f", balance)
+}
+
 func goToURL(url string) {
 	var err error
 

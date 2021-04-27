@@ -6,6 +6,7 @@ package ui
 import (
 	"fmt"
 	"image"
+	"strconv"
 	"strings"
 
 	"gioui.org/gesture"
@@ -32,6 +33,44 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 		}),
 		layout.Rigid(func(gtx C) D {
 			return page.theme.Label(values.TextSize14, subText).Layout(gtx)
+		}),
+	)
+}
+
+func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+			page.usdExchangeSet = false
+			if strings.Contains(currencyExchangeValue, "USD") {
+				page.usdExchangeSet = true
+			}
+			if page.usdExchangeSet && page.dcrUsdtBittrex.LastTradeRate != "" {
+				page.usdExchangeRate, _ = strconv.ParseFloat(page.dcrUsdtBittrex.LastTradeRate, 64)
+				TotalBalanceFloat, _ := strconv.ParseFloat(page.info.TotalBalanceRaw, 64)
+				page.amountDCRtoUSD = TotalBalanceFloat * page.usdExchangeRate
+
+				inset := layout.Inset{
+					Top:  values.MarginPadding3,
+					Left: values.MarginPadding8,
+				}
+				border := widget.Border{Color: page.theme.Color.LightGray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				return inset.Layout(gtx, func(gtx C) D {
+					padding := layout.Inset{
+						Top:    values.MarginPadding3,
+						Bottom: values.MarginPadding3,
+						Left:   values.MarginPadding6,
+						Right:  values.MarginPadding6,
+					}
+					return border.Layout(gtx, func(gtx C) D {
+						return padding.Layout(gtx, func(gtx C) D {
+							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
+							return page.theme.Label(values.TextSize14, amountDCRtoUSDString).Layout(gtx)
+						})
+					})
+				})
+			}
+			return D{}
 		}),
 	)
 }
@@ -65,6 +104,9 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 											return layout.Center.Layout(gtx, func(gtx C) D {
 												return page.layoutBalance(gtx, page.info.TotalBalance)
 											})
+										}),
+										layout.Rigid(func(gtx C) D {
+											return page.layoutUSDBalance(gtx)
 										}),
 									)
 								})
