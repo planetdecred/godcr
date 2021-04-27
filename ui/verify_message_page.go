@@ -125,7 +125,6 @@ func (pg *verifyMessagePage) verifyMessageResponse() layout.Widget {
 		if pg.verifyMessageStatus != nil {
 			return layout.Inset{Top: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
 				pg.theme.Separator().Layout(gtx)
-
 				return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {

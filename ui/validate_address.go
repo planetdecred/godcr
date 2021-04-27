@@ -46,6 +46,7 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 	pg.validateBtn.Background = pg.theme.Color.Primary
 	pg.clearBtn.Color = pg.theme.Color.Primary
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
+
 	pg.stateValidate = none
 
 	return func(gtx C) D {

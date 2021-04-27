@@ -27,6 +27,7 @@ type utxoPage struct {
 	checkboxes             []decredmaterial.CheckBoxStyle
 	copyButtons            []decredmaterial.IconButton
 	selecAllChexBox        decredmaterial.CheckBoxStyle
+	separator              decredmaterial.Line
 
 	txnFee            string
 	txnAmount         string
@@ -46,6 +47,7 @@ func (win *Window) UTXOPage(common pageCommon) layout.Widget {
 		txAuthor:               &win.txAuthor,
 		unspentOutputsSelected: &common.selectedUTXO,
 		selecAllChexBox:        common.theme.CheckBox(new(widget.Bool), ""),
+		separator:              common.theme.Separator(),
 	}
 
 	pg.backButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
@@ -180,7 +182,7 @@ func (pg *utxoPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							return pg.theme.Separator().Layout(gtx)
+							return pg.separator.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return pg.utxoRowHeader(gtx, &c)
