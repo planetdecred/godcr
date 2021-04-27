@@ -99,7 +99,7 @@ func (wal *Wallet) DeleteWallet(walletID int, passphrase []byte, errChan chan er
 
 // AddAccount adds an account to a wallet.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan chan error) {
+func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan chan error, onCreate func(*dcrlibwallet.Account)) {
 	go func() {
 		var resp Response
 		wall := wal.multi.WalletWithID(walletID)
@@ -128,6 +128,22 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 			})
 			return
 		}
+
+		acct, err := wall.GetAccount(id)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(InternalWalletError{
+				Message:  "Could not fetch newly created account",
+				Affected: []int{walletID},
+				Err:      err,
+			})
+			return
+		}
+		onCreate(acct)
+
 		resp.Resp = AddedAccount{
 			ID: id,
 		}
