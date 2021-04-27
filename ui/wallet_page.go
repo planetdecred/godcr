@@ -24,9 +24,10 @@ import (
 const PageWallet = "Wallet"
 
 type menuItem struct {
-	text   string
-	button *widget.Clickable
-	action func(pageCommon)
+	text     string
+	button   *widget.Clickable
+	action   func(pageCommon)
+	separate bool
 }
 
 type collapsible struct {
@@ -61,6 +62,8 @@ type walletPage struct {
 	watchOnlyWalletLabel                       decredmaterial.Label
 	watchOnlyWalletIcon                        *widget.Image
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
+	shadowBox                                  *decredmaterial.Shadow
+	separator                                  decredmaterial.Line
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -78,7 +81,11 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		errorReceiver:            make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
+		shadowBox:                common.theme.Shadow(),
+		separator:                common.theme.Separator(),
 	}
+
+	pg.separator.Color = common.theme.Color.Background
 
 	pg.collapsibles = make(map[int]collapsible)
 	pg.watchOnlyWalletMoreButtons = make(map[int]decredmaterial.IconButton)
@@ -125,8 +132,9 @@ func (pg *walletPage) initializeWalletMenu() {
 			},
 		},
 		{
-			text:   "Verify message",
-			button: new(widget.Clickable),
+			text:     "Verify message",
+			button:   new(widget.Clickable),
+			separate: true,
 			action: func(common pageCommon) {
 				*common.returnPage = PageWallet
 				common.setReturnPage(PageWallet)
@@ -134,10 +142,19 @@ func (pg *walletPage) initializeWalletMenu() {
 			},
 		},
 		{
-			text:   "Settings",
-			button: new(widget.Clickable),
+			text:     "View property",
+			button:   new(widget.Clickable),
+			separate: true,
 			action: func(common pageCommon) {
-				common.changePage(PageWalletSettings)
+				common.changePage(PageHelp)
+			},
+		},
+		{
+			text:     "StakeShuffle",
+			button:   new(widget.Clickable),
+			separate: true,
+			action: func(common pageCommon) {
+				common.changePage(PagePrivacy)
 			},
 		},
 		{
@@ -160,17 +177,10 @@ func (pg *walletPage) initializeWalletMenu() {
 			},
 		},
 		{
-			text:   "View property",
+			text:   "Settings",
 			button: new(widget.Clickable),
 			action: func(common pageCommon) {
-				common.changePage(PageHelp)
-			},
-		},
-		{
-			text:   "Privacy",
-			button: new(widget.Clickable),
-			action: func(common pageCommon) {
-				common.changePage(PagePrivacy)
+				common.changePage(PageWalletSettings)
 			},
 		},
 	}
@@ -355,25 +365,39 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 		leftInset = -35
 	} else {
 		menu = pg.optionsMenu
-		leftInset = -80
+		leftInset = -120
 	}
 
 	inset := layout.Inset{
-		Top:  unit.Dp(20),
+		Top:  unit.Dp(30),
 		Left: unit.Dp(leftInset),
 	}
 
 	m := op.Record(gtx.Ops)
+
 	inset.Layout(gtx, func(gtx C) D {
-		border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
-		return border.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Max.X = int(gtx.Metric.PxPerDp) * 150
+		return pg.shadowBox.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
-					return material.Clickable(gtx, menu[i].button, func(gtx C) D {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-							return pg.theme.Body2(menu[i].text).Layout(gtx)
-						})
-					})
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return material.Clickable(gtx, menu[i].button, func(gtx C) D {
+								m10 := values.MarginPadding10
+								return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									return pg.theme.Body1(menu[i].text).Layout(gtx)
+								})
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							if menu[i].separate {
+								m := values.MarginPadding5
+								return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.separator.Layout)
+							}
+							return D{}
+						}),
+					)
 				})
 			})
 		})
@@ -492,8 +516,8 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageComm
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.watchOnlyWalletLabel.Layout),
 				layout.Rigid(func(gtx C) D {
-					m1 := values.MarginPadding10
-					return layout.Inset{Top: m1, Bottom: m1}.Layout(gtx, pg.theme.Separator().Layout)
+					m := values.MarginPadding10
+					return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {

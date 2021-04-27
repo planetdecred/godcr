@@ -36,6 +36,7 @@ type transactionsPage struct {
 	filterSortW, filterDirectionW *widget.Enum
 	filterDirection, filterSort   []decredmaterial.RadioButton
 	toTxnDetails                  []*gesture.Click
+	separator                     decredmaterial.Line
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
@@ -50,6 +51,7 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		walletTransaction:  &win.walletTransaction,
 		filterDirectionW:   new(widget.Enum),
 		filterSortW:        new(widget.Enum),
+		separator:          common.theme.Separator(),
 	}
 
 	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
