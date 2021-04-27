@@ -105,6 +105,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.DeepBlue = rgb(0x091440)
 	t.Color.InactiveGray = rgb(0xc4cbd2)
 	t.Color.Black = rgb(0x000000)
+	t.Color.Background = argb(0x22444444)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
