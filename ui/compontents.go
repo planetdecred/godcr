@@ -24,7 +24,7 @@ import (
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func (page pageCommon) layoutBalance(gtx layout.Context, amount string, topnav bool) layout.Dimensions {
+func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
 	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
@@ -34,17 +34,11 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string, topnav b
 		layout.Rigid(func(gtx C) D {
 			return page.theme.Label(values.TextSize14, subText).Layout(gtx)
 		}),
-		layout.Rigid(func(gtx C) D {
-			if topnav {
-				return page.layoutUSDBalance(gtx)
-			}
-			return D{}
-		}),
 	)
 }
 
 func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 			page.usdExchangeSet = false
@@ -57,6 +51,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 				page.amountDCRtoUSD = TotalBalanceFloat * page.usdExchangeRate
 
 				inset := layout.Inset{
+					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
 				}
 				border := widget.Border{Color: page.theme.Color.LightGray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
@@ -107,8 +102,11 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.layoutBalance(gtx, page.info.TotalBalance, true)
+												return page.layoutBalance(gtx, page.info.TotalBalance)
 											})
+										}),
+										layout.Rigid(func(gtx C) D {
+											return page.layoutUSDBalance(gtx)
 										}),
 									)
 								})
@@ -309,7 +307,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return common.layoutBalance(gtx, row.transaction.Balance, false)
+												return common.layoutBalance(gtx, row.transaction.Balance)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
@@ -635,7 +633,7 @@ func (page *pageCommon) walletAccountLayout(gtx layout.Context, wallAcct walletA
 								acct := page.theme.Label(values.TextSize18, wallAcct.accountName)
 								acct.Color = page.theme.Color.Text
 								return endToEndRow(gtx, acct.Layout, func(gtx C) D {
-									return page.layoutBalance(gtx, wallAcct.totalBalance, false)
+									return page.layoutBalance(gtx, wallAcct.totalBalance)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
