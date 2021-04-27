@@ -133,7 +133,6 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) 
 							)
 						}),
 						layout.Rigid(func(gtx C) D {
-							//fmt.Printf("MAX %v MIN %v\n",gtx.Constraints.Max, gtx.Constraints.Min)
 							more(gtx)
 							return c.moreIconButton.Layout(gtx)
 						}),
