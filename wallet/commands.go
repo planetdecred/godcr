@@ -427,6 +427,7 @@ func (wal *Wallet) GetMultiWalletInfo() {
 		resp.Resp = MultiWalletInfo{
 			LoadedWallets:   len(wallets),
 			TotalBalance:    dcrutil.Amount(completeTotal).String(),
+			TotalBalanceRaw: GetRawBalance(completeTotal, 0),
 			BestBlockHeight: best.Height,
 			BestBlockTime:   best.Timestamp,
 			LastSyncTime:    SecondsToDays(lastSyncTime),
@@ -797,6 +798,11 @@ func SecondsToDays(totalTimeLeft int64) string {
 		return fmt.Sprintf("%dd%s", q, timeLeft.String())
 	}
 	return timeLeft.String()
+}
+
+// GetRawBalance gets the balance in int64, formats it and returns a string while also leaving out the "DCR" suffix
+func GetRawBalance(balance int64, AmountUnit int) string {
+	return strconv.FormatFloat(float64(balance)/math.Pow10(AmountUnit+8), 'f', -(AmountUnit + 8), 64)
 }
 
 // divMod divides a numerator by a denominator and returns its quotient and remainder.

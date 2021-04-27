@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"encoding/json"
 	"image"
 	"image/color"
+	"net/http"
 	"time"
 
 	"golang.org/x/text/language"
@@ -59,6 +61,10 @@ type wallectAccountOption struct {
 	selectReceiveAccount map[int][]walletAccount
 }
 
+type DCRUSDTBittrex struct {
+	LastTradeRate string
+}
+
 type walletAccountSelector struct {
 	title                     string
 	walletAccount             decredmaterial.Modal
@@ -87,6 +93,10 @@ type pageCommon struct {
 	icons           pageIcons
 	page            *string
 	returnPage      *string
+	amountDCRtoUSD  float64
+	usdExchangeRate float64
+	usdExchangeSet  bool
+	dcrUsdtBittrex  DCRUSDTBittrex
 	navTab          *decredmaterial.Tabs
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
@@ -272,6 +282,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		refreshWindow:           win.refresh,
 	}
 
+	common.fetchExchangeValue(&common.dcrUsdtBittrex)
+
 	common.wallAcctSelector = &walletAccountSelector{
 		sendAccountBtn:      new(widget.Clickable),
 		receivingAccountBtn: new(widget.Clickable),
@@ -336,6 +348,23 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PagePrivacy] = win.PrivacyPage(common)
 	win.pages[PageTickets] = win.TicketPage(common)
 	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
+}
+
+func (page *pageCommon) fetchExchangeValue(target interface{}) error {
+	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	err = json.NewDecoder(res.Body).Decode(target)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return nil
 }
 
 func (page pageCommon) refreshPage() {
