@@ -676,6 +676,22 @@ func (page *pageCommon) walletInfoPopup(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+func (page pageCommon) addAccount(account walletAccount) {
+	account.evt = &gesture.Click{}
+	selectSendAccount := page.wallAcctSelector.walletAccounts.selectSendAccount
+	selectReceiveAccount := page.wallAcctSelector.walletAccounts.selectReceiveAccount
+
+	if len(selectSendAccount) > account.walletIndex {
+		account.accountIndex = len(selectSendAccount[account.walletIndex])
+		page.wallAcctSelector.walletAccounts.selectSendAccount[account.walletIndex] = append(page.wallAcctSelector.walletAccounts.selectSendAccount[account.walletIndex], account)
+	}
+
+	if len(selectReceiveAccount) > account.walletIndex {
+		account.accountIndex = len(selectReceiveAccount[account.walletIndex])
+		page.wallAcctSelector.walletAccounts.selectReceiveAccount[account.walletIndex] = append(page.wallAcctSelector.walletAccounts.selectReceiveAccount[account.walletIndex], account)
+	}
+}
+
 func (page pageCommon) handleNavEvents() {
 	for page.minimizeNavDrawerButton.Button.Clicked() {
 		*page.isNavDrawerMinimized = true
