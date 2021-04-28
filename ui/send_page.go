@@ -990,7 +990,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	pg.sendToOption = pg.accountSwitch.SelectedOption()
 
 	if c.subPageBackButton.Button.Clicked() {
-		*c.page = PageOverview
+		*c.page = *c.returnPage
 	}
 
 	if c.subPageInfoButton.Button.Clicked() {
