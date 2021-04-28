@@ -331,7 +331,7 @@ func (pg *receivePage) Handle(common pageCommon) {
 	}
 
 	if common.subPageBackButton.Button.Clicked() {
-		*common.page = *common.returnPage
+		common.changePage(*common.returnPage)
 	}
 
 	if pg.copy.Button.Clicked() {
