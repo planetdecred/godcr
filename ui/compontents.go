@@ -745,6 +745,7 @@ func (page pageCommon) handleNavEvents() {
 
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
+			page.setReturnPage(*page.page)
 			page.changePage(page.appBarNavItems[i].page)
 		}
 	}
