@@ -40,7 +40,6 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	errorLabel := common.theme.Caption("")
 	errorLabel.Color = common.theme.Color.Danger
 	copyIcon := common.icons.copyIcon
-	copyIcon.Scale = 1
 
 	pg := &signMessagePage{
 		container: layout.List{
@@ -176,6 +175,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 										return layout.E.Layout(gtx, func(gtx C) D {
 											return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 												return decredmaterial.Clickable(gtx, pg.copySignature, func(gtx C) D {
+													pg.copyIcon.Scale = 1.0
 													return pg.copyIcon.Layout(gtx)
 												})
 											})
