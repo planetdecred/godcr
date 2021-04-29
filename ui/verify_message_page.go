@@ -155,6 +155,7 @@ func (pg *verifyMessagePage) handle(c pageCommon) {
 				pg.signInput.SetError("Invalid signature")
 				return
 			}
+			pg.signInput.SetError("")
 
 			if !valid {
 				pg.verifyMessageStatus = c.icons.navigationCancel
@@ -203,6 +204,7 @@ func (pg *verifyMessagePage) validateAddress(c pageCommon) bool {
 		return false
 	}
 
+	pg.addressInput.SetError("")
 	return true
 }
 
