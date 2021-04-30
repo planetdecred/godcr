@@ -685,12 +685,19 @@ func (wal *Wallet) GetAllProposals() {
 			wal.Send <- resp
 			return
 		}
-
 		resp.Resp = &Proposals{
 			Proposals: proposals,
 		}
 		wal.Send <- resp
 	}()
+}
+
+func (wal *Wallet) ClearSavedProposals() {
+	err := wal.multi.Politeia.ClearSavedProposals()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 }
 
 func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {

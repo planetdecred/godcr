@@ -1,6 +1,8 @@
 package wallet
 
-import "github.com/planetdecred/dcrlibwallet"
+import (
+	"github.com/planetdecred/dcrlibwallet"
+)
 
 type ProposalStatus int
 

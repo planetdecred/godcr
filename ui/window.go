@@ -219,6 +219,7 @@ func (win *Window) Loop(shutdown chan int) {
 					win.walletAcctMixerStatus <- &update.AcctMixerInfo
 				}()
 			case wallet.ProposalAdded, wallet.ProposalVoteFinished, wallet.ProposalVoteStarted, wallet.ProposalSynced:
+				win.wallet.GetAllProposals()
 				go func() {
 					win.proposal <- &update.Proposal
 				}()
