@@ -189,10 +189,13 @@ type UnspentOutputs struct {
 type SetupAccountMixer struct{}
 
 type Ticket struct {
-	Info     dcrlibwallet.TicketInfo
-	Fee      string
-	Amount   string
-	DateTime string
+	Info       dcrlibwallet.TicketInfo
+	Fee        string
+	Amount     string
+	DateTime   string
+	MonthDay   string
+	DaysBehind string
+	WalletName string
 }
 
 type UnconfirmedPurchase struct {
@@ -206,6 +209,7 @@ type UnconfirmedPurchase struct {
 type Tickets struct {
 	Total       int
 	Confirmed   map[int][]Ticket
+	Recent      []Ticket
 	Unconfirmed map[int][]UnconfirmedPurchase
 }
 

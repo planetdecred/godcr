@@ -939,9 +939,8 @@ func (wal *Wallet) NewVSPD(walletID int, accountID int32) *dcrlibwallet.VSPD {
 }
 
 // TicketPrice get ticket price
-func (wal *Wallet) TicketPrice(walletID int) string {
-	wall := wal.multi.WalletWithID(walletID)
-	pr, err := wall.TicketPrice()
+func (wal *Wallet) TicketPrice() string {
+	pr, err := wal.multi.WalletsIterator().Next().TicketPrice()
 	if err != nil {
 		log.Error(err)
 		return ""
@@ -982,6 +981,9 @@ func (wal *Wallet) GetAllTickets() {
 			wal.Send <- resp
 			return
 		}
+		var recentTickets []Ticket
+		recentTicketsLimit := 5
+
 		tickets := make(map[int][]Ticket)
 		unconfirmedTickets := make(map[int][]UnconfirmedPurchase)
 		totalTicket := 0
@@ -993,18 +995,25 @@ func (wal *Wallet) GetAllTickets() {
 				wal.Send <- resp
 				return
 			}
-			for _, tinfo := range ticketsInfo {
+			for idx, tinfo := range ticketsInfo {
 				var amount dcrutil.Amount
 				for _, output := range tinfo.Ticket.MyOutputs {
 					amount += output.Amount
 				}
 				info := Ticket{
-					Info:     *tinfo,
-					DateTime: dcrlibwallet.ExtractDateOrTime(tinfo.Ticket.Timestamp),
-					Amount:   amount.String(),
-					Fee:      tinfo.Ticket.Fee.String(),
+					Info:       *tinfo,
+					DateTime:   dcrlibwallet.ExtractDateOrTime(tinfo.Ticket.Timestamp),
+					MonthDay:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2"),
+					DaysBehind: calculateDaysBehind(tinfo.Ticket.Timestamp),
+					Amount:     amount.String(),
+					Fee:        tinfo.Ticket.Fee.String(),
+					WalletName: wall.Name,
 				}
 				tickets[wall.ID] = append(tickets[wall.ID], info)
+
+				if idx < recentTicketsLimit {
+					recentTickets = append(recentTickets, info)
+				}
 			}
 
 			unconfirmedTicketPurchases, err := getUnconfirmedPurchases(wall, tickets[wall.ID])
@@ -1016,10 +1025,17 @@ func (wal *Wallet) GetAllTickets() {
 			unconfirmedTickets[wall.ID] = unconfirmedTicketPurchases
 		}
 
+		sort.SliceStable(recentTickets, func(i, j int) bool {
+			backTime := time.Unix(recentTickets[j].Info.Ticket.Timestamp, 0)
+			frontTime := time.Unix(recentTickets[i].Info.Ticket.Timestamp, 0)
+			return backTime.Before(frontTime)
+		})
+
 		resp.Resp = &Tickets{
 			Total:       totalTicket,
 			Confirmed:   tickets,
 			Unconfirmed: unconfirmedTickets,
+			Recent:      recentTickets,
 		}
 		wal.Send <- resp
 	}()

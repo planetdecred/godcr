@@ -55,6 +55,7 @@ type Theme struct {
 		Gray         color.NRGBA
 		Black        color.NRGBA
 		DeepBlue     color.NRGBA
+		LightBlue    color.NRGBA
 		LightGray    color.NRGBA
 		InactiveGray color.NRGBA
 		Gray1        color.NRGBA
@@ -106,6 +107,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.InactiveGray = rgb(0xc4cbd2)
 	t.Color.Black = rgb(0x000000)
 	t.Color.Background = argb(0x22444444)
+	t.Color.LightBlue = rgb(0xe4f6ff)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))

@@ -27,16 +27,43 @@ type pageIcons struct {
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
 	imageBrightness1, contentClear, dropDownIcon, cached *widget.Icon
 
-	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
-	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
+	overviewIcon, overviewIconInactive, walletIcon, walletIconInactive,
+	receiveIcon, transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer, mixerSmall,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, proposalIconInactive,
-	restore, documentationIcon, downloadIcon, timerIcon *widget.Image
+	restore, documentationIcon, downloadIcon, timerIcon, ticketIcon, ticketIconInactive *widget.Image
 
-	walletIcon image.Image
+	ti ticketIconStatus
+}
+type ticketIconStatus struct {
+	ticketPurchasedIcon,
+	ticketPurchasedIcon1,
+	ticketPurchasedIcon2,
+	ticketPurchasedIcon3,
+	ticketImmatureIcon1,
+	ticketImmatureIcon2,
+	ticketImmatureIcon3,
+	ticketLiveIcon1,
+	ticketLiveIcon2,
+	ticketLiveIcon3,
+	ticketVotedIcon1,
+	ticketVotedIcon2,
+	ticketVotedIcon3,
+	ticketMissedIcon1,
+	ticketMissedIcon2,
+	ticketMissedIcon3,
+	ticketExpiredIcon1,
+	ticketExpiredIcon2,
+	ticketExpiredIcon3,
+	ticketRevokedIcon1,
+	ticketRevokedIcon2,
+	ticketRevokedIcon3,
+	ticketUnminedIcon1,
+	ticketUnminedIcon2,
+	ticketUnminedIcon3 *widget.Image
 }
 
 type navHandler struct {
@@ -194,8 +221,37 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
 		downloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
 		timerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
+		walletIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
+		ticketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
+		ticketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},
+	}
 
-		walletIcon: decredIcons["wallet"],
+	ic.ti = ticketIconStatus{
+		ticketPurchasedIcon:  &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased"])},
+		ticketPurchasedIcon1: &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased_1"])},
+		ticketPurchasedIcon2: &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased_2"])},
+		ticketPurchasedIcon3: &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased_3"])},
+		ticketImmatureIcon1:  &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature_1"])},
+		ticketImmatureIcon2:  &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature_2"])},
+		ticketImmatureIcon3:  &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature_3"])},
+		ticketUnminedIcon1:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined_1"])},
+		ticketUnminedIcon2:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined_2"])},
+		ticketUnminedIcon3:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined_3"])},
+		ticketLiveIcon1:      &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live_1"])},
+		ticketLiveIcon2:      &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live_2"])},
+		ticketLiveIcon3:      &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live_3"])},
+		ticketVotedIcon1:     &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_voted_1"])},
+		ticketVotedIcon2:     &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_voted_2"])},
+		ticketVotedIcon3:     &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_voted_3"])},
+		ticketMissedIcon1:    &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed_1"])},
+		ticketMissedIcon2:    &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed_2"])},
+		ticketMissedIcon3:    &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed_3"])},
+		ticketExpiredIcon1:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired_1"])},
+		ticketExpiredIcon2:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired_2"])},
+		ticketExpiredIcon3:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired_3"])},
+		ticketRevokedIcon1:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked_1"])},
+		ticketRevokedIcon2:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked_2"])},
+		ticketRevokedIcon3:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked_3"])},
 	}
 
 	appBarNavItems := []navHandler{
@@ -226,7 +282,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			image:         ic.walletIcon,
 			imageInactive: ic.walletIconInactive,
 			page:          PageWallet,
 		},
@@ -238,8 +294,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
-			imageInactive: ic.walletIconInactive,
+			image:         ic.ticketIcon,
+			imageInactive: ic.ticketIconInactive,
 			page:          PageTickets,
 		},
 		{
