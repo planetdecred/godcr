@@ -990,7 +990,7 @@ func (pg *sendPage) fetchExchangeValue() {
 	}()
 }
 
-func (pg *sendPage) setMaxAmount(c pageCommon){
+func (pg *sendPage) setMaxAmount(c pageCommon) {
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
 	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
 	spendableBalance := sendAcct.SpendableBalance
@@ -1001,7 +1001,7 @@ func (pg *sendPage) setMaxAmount(c pageCommon){
 	spendableBalanceDCR := dcrutil.Amount(spendableBalance - fee).ToCoin()
 
 	if !pg.usdExchangeSet {
-		pg.leftAmountEditor.Editor.SetText(fmt.Sprintf("%s", strconv.FormatFloat(spendableBalanceDCR, 'f', 7, 64)))
+		pg.leftAmountEditor.Editor.SetText(strconv.FormatFloat(spendableBalanceDCR, 'f', 7, 64))
 	} else {
 		pg.fetchExchangeValue()
 		pg.usdExchangeRate, _ = strconv.ParseFloat(pg.LastTradeRate, 64)
@@ -1009,11 +1009,11 @@ func (pg *sendPage) setMaxAmount(c pageCommon){
 
 		switch {
 		case pg.leftExchangeValue == "USD":
-			pg.leftAmountEditor.Editor.SetText(fmt.Sprintf("%s", strconv.FormatFloat(spendableBalanceUSD, 'f', 7, 64)))
-			pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%s", strconv.FormatFloat(spendableBalanceDCR, 'f', 7, 64)))
+			pg.leftAmountEditor.Editor.SetText(strconv.FormatFloat(spendableBalanceUSD, 'f', 7, 64))
+			pg.rightAmountEditor.Editor.SetText(strconv.FormatFloat(spendableBalanceDCR, 'f', 7, 64))
 		case pg.leftExchangeValue == "DCR":
-			pg.leftAmountEditor.Editor.SetText(fmt.Sprintf("%s", strconv.FormatFloat(spendableBalanceDCR, 'f', 7, 64)))
-			pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%s", strconv.FormatFloat(spendableBalanceUSD, 'f', 7, 64)))
+			pg.leftAmountEditor.Editor.SetText(strconv.FormatFloat(spendableBalanceDCR, 'f', 7, 64))
+			pg.rightAmountEditor.Editor.SetText(strconv.FormatFloat(spendableBalanceUSD, 'f', 7, 64))
 		}
 	}
 
@@ -1187,7 +1187,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.leftAmountEditor.Editor.Focus()
 		pg.setMaxAmount(c)
 	}
-	if pg.rightAmountEditor.CustomButton.Button.Clicked(){
+	if pg.rightAmountEditor.CustomButton.Button.Clicked() {
 		pg.rightAmountEditor.Editor.Focus()
 		pg.setMaxAmount(c)
 	}
