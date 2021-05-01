@@ -174,6 +174,10 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 }
 
 func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	if pg.info.LoadedWallets > 0 {
+		pg.restoring = true
+		pg.showRestore = true
+	}
 	return common.Layout(gtx, func(gtx C) D {
 		pd := values.MarginPadding15
 		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -183,7 +187,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 						return pg.processing(gtx)
 					})
 				} else if pg.showRestore {
-					return pg.restore(gtx, common)
+					return pg.restore(gtx)
 				} else {
 					return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, func(gtx C) D {
 						return pg.mainContent(gtx)
@@ -302,7 +306,7 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *createRestore) restore(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 	op.TransformOp{}.Add(gtx.Ops)
 	paint.Fill(gtx.Ops, pg.theme.Color.LightGray)
 	dims := layout.Stack{Alignment: layout.S}.Layout(gtx,
@@ -777,9 +781,14 @@ func (pg *createRestore) computePasswordStrength(common pageCommon, editors ...*
 
 func (pg *createRestore) handle(common pageCommon) {
 	for pg.hideRestoreWallet.Button.Clicked() {
-		pg.showRestore = false
-		pg.restoring = false
-		pg.errLabel.Text = ""
+		if pg.info.LoadedWallets <= 0 {
+			pg.showRestore = false
+			pg.restoring = false
+			pg.errLabel.Text = ""
+		} else {
+			pg.resetSeeds()
+			common.changePage(PageWallet)
+		}
 	}
 
 	for pg.showRestoreWallet.Button.Clicked() {
