@@ -207,10 +207,18 @@ type UnconfirmedPurchase struct {
 }
 
 type Tickets struct {
-	Total       int
 	Confirmed   map[int][]Ticket
-	Recent      []Ticket
 	Unconfirmed map[int][]UnconfirmedPurchase
+	LiveRecent  []Ticket
+	LiveCounter []struct {
+		Status string
+		Count  int
+	}
+	RecentActivity        []Ticket
+	StackingRecordCounter []struct {
+		Status string
+		Count  int
+	}
 }
 
 type TicketPurchase struct{}

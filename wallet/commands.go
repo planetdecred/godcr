@@ -981,12 +981,34 @@ func (wal *Wallet) GetAllTickets() {
 			wal.Send <- resp
 			return
 		}
-		var recentTickets []Ticket
 		recentTicketsLimit := 5
+		var liveRecentTickets []Ticket
+		var recentActivity []Ticket
 
 		tickets := make(map[int][]Ticket)
 		unconfirmedTickets := make(map[int][]UnconfirmedPurchase)
-		totalTicket := 0
+
+		stackingRecordCounter := []struct {
+			Status string
+			Count  int
+		}{
+			{"UNMINED", 0},
+			{"IMMATURE", 0},
+			{"LIVE", 0},
+			{"VOTED", 0},
+			{"MISSED", 0},
+			{"EXPIRED", 0},
+			{"REVOKED", 0},
+		}
+
+		liveCounter := []struct {
+			Status string
+			Count  int
+		}{
+			{"UNMINED", 0},
+			{"IMMATURE", 0},
+			{"LIVE", 0},
+		}
 
 		for _, wall := range wallets {
 			ticketsInfo, err := wall.GetTicketsForBlockHeightRange(0, wall.GetBestBlock(), math.MaxInt32)
@@ -995,6 +1017,7 @@ func (wal *Wallet) GetAllTickets() {
 				wal.Send <- resp
 				return
 			}
+
 			for idx, tinfo := range ticketsInfo {
 				var amount dcrutil.Amount
 				for _, output := range tinfo.Ticket.MyOutputs {
@@ -1011,8 +1034,25 @@ func (wal *Wallet) GetAllTickets() {
 				}
 				tickets[wall.ID] = append(tickets[wall.ID], info)
 
-				if idx < recentTicketsLimit {
-					recentTickets = append(recentTickets, info)
+				for i := range liveCounter {
+					if liveCounter[i].Status == tinfo.Status {
+						liveCounter[i].Count += 1
+					}
+				}
+
+				if idx < recentTicketsLimit &&
+					(tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE") {
+					liveRecentTickets = append(liveRecentTickets, info)
+				}
+
+				if idx < recentTicketsLimit && tinfo.Status != "UNKNOWN" {
+					recentActivity = append(recentActivity, info)
+				}
+
+				for i := range stackingRecordCounter {
+					if stackingRecordCounter[i].Status == tinfo.Status {
+						stackingRecordCounter[i].Count += 1
+					}
 				}
 			}
 
@@ -1025,17 +1065,25 @@ func (wal *Wallet) GetAllTickets() {
 			unconfirmedTickets[wall.ID] = unconfirmedTicketPurchases
 		}
 
-		sort.SliceStable(recentTickets, func(i, j int) bool {
-			backTime := time.Unix(recentTickets[j].Info.Ticket.Timestamp, 0)
-			frontTime := time.Unix(recentTickets[i].Info.Ticket.Timestamp, 0)
+		sort.SliceStable(liveRecentTickets, func(i, j int) bool {
+			backTime := time.Unix(liveRecentTickets[j].Info.Ticket.Timestamp, 0)
+			frontTime := time.Unix(liveRecentTickets[i].Info.Ticket.Timestamp, 0)
+			return backTime.Before(frontTime)
+		})
+
+		sort.SliceStable(recentActivity, func(i, j int) bool {
+			backTime := time.Unix(recentActivity[j].Info.Ticket.Timestamp, 0)
+			frontTime := time.Unix(recentActivity[i].Info.Ticket.Timestamp, 0)
 			return backTime.Before(frontTime)
 		})
 
 		resp.Resp = &Tickets{
-			Total:       totalTicket,
-			Confirmed:   tickets,
-			Unconfirmed: unconfirmedTickets,
-			Recent:      recentTickets,
+			Confirmed:             tickets,
+			Unconfirmed:           unconfirmedTickets,
+			RecentActivity:        recentActivity,
+			StackingRecordCounter: stackingRecordCounter,
+			LiveRecent:            liveRecentTickets,
+			LiveCounter:           liveCounter,
 		}
 		wal.Send <- resp
 	}()

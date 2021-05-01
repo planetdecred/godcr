@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"gioui.org/widget"
@@ -30,15 +29,10 @@ type ticketPage struct {
 	tickets              **wallet.Tickets
 	ticketPrice          string
 
-	autoPurchaseEnabled  *widget.Bool
-	toTickets            decredmaterial.TextAndIconButton
-	toTicketsActivity    decredmaterial.TextAndIconButton
-	ticketStatusIc       map[string]map[string]*widget.Image
-	stackingRecordsCount []struct {
-		status string
-		count  int
-		order  int
-	}
+	autoPurchaseEnabled *widget.Bool
+	toTickets           decredmaterial.TextAndIconButton
+	toTicketsActivity   decredmaterial.TextAndIconButton
+	ticketStatusIc      map[string]map[string]*widget.Image
 }
 
 func (win *Window) TicketPage(c pageCommon) layout.Widget {
@@ -207,64 +201,51 @@ func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layou
 }
 
 func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layout.Dimensions {
-	if *pg.tickets == nil {
-		return layout.Dimensions{}
-	}
-	tickets := (*pg.tickets).Recent
-	if len(tickets) == 0 {
-		return layout.Dimensions{}
-	}
-
-	type item struct {
-		status string
-		count  int
-	}
-	var counterTicketStatus = make(map[string]item)
-	for _, ticket := range tickets {
-		prev, ok := counterTicketStatus[ticket.Info.Status]
-		if ok {
-			prev.count += 1
-			counterTicketStatus[ticket.Info.Status] = prev
-		} else {
-			counterTicketStatus[ticket.Info.Status] = item{status: ticket.Info.Status, count: 1}
-		}
-	}
-
-	var childrens []layout.FlexChild
-	for _, item := range counterTicketStatus {
-		childrens = append(childrens, layout.Rigid(func(gtx C) D {
-			return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						ic := pg.ticketStatusIc[item.status]["head"]
-						ic.Scale = 1.0
-						return ic.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							return pg.th.Label(values.TextSize14, fmt.Sprintf("%d", item.count)).Layout(gtx)
-						})
-					}),
-				)
-			})
-		}))
-	}
-	childrens = append(childrens, layout.Rigid(func(gtx C) D {
-		return pg.toTickets.Layout(gtx)
-	}))
-
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
+				if *pg.tickets == nil {
+					return layout.Dimensions{}
+				}
+				ticketLiveCounter := (*pg.tickets).LiveCounter
+				var elements []layout.FlexChild
+				for i := 0; i < len(ticketLiveCounter); i++ {
+					item := ticketLiveCounter[i]
+					elements = append(elements, layout.Rigid(func(gtx C) D {
+						return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									ic := pg.ticketStatusIc[item.Status]["head"]
+									ic.Scale = 1.0
+									return ic.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+										return pg.th.Label(values.TextSize14, fmt.Sprintf("%d", item.Count)).Layout(gtx)
+									})
+								}),
+							)
+						})
+					}))
+				}
+
+				elements = append(elements, layout.Rigid(func(gtx C) D {
+					return pg.toTickets.Layout(gtx)
+				}))
+
 				return layout.Inset{Bottom: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 					return pg.titleRow(gtx, c.theme.Label(values.TextSize14, "Live Tickets").Layout,
 						func(gtx C) D {
-							return layout.Flex{Alignment: layout.Middle}.Layout(gtx, childrens...)
+							return layout.Flex{Alignment: layout.Middle}.Layout(gtx, elements...)
 						},
 					)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
+				if *pg.tickets == nil {
+					return layout.Dimensions{}
+				}
+				tickets := (*pg.tickets).LiveRecent
 				return pg.ticketsLive.Layout(gtx, len(tickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 						return pg.ticketLiveItemnInfo(gtx, c, tickets[index])
@@ -400,7 +381,7 @@ func (pg *ticketPage) ticketsActivitySection(gtx layout.Context, c pageCommon) l
 	if *pg.tickets == nil {
 		return layout.Dimensions{}
 	}
-	tickets := (*pg.tickets).Recent
+	tickets := (*pg.tickets).RecentActivity
 	if len(tickets) == 0 {
 		return layout.Dimensions{}
 	}
@@ -411,7 +392,7 @@ func (pg *ticketPage) ticketsActivitySection(gtx layout.Context, c pageCommon) l
 				return layout.Inset{
 					Bottom: values.MarginPadding14,
 				}.Layout(gtx, func(gtx C) D {
-					return pg.titleRow(gtx, c.theme.Label(values.TextSize14, "Ticket Activity").Layout,
+					return pg.titleRow(gtx, c.theme.Label(values.TextSize14, "Recent Activity").Layout,
 						pg.toTicketsActivity.Layout,
 					)
 				})
@@ -510,14 +491,6 @@ func (pg *ticketPage) ticketActivityItemnInfo(gtx layout.Context, c pageCommon, 
 }
 
 func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) layout.Dimensions {
-	if *pg.tickets == nil {
-		return layout.Dimensions{}
-	}
-	tickets := (*pg.tickets).Recent
-	if len(tickets) == 0 {
-		return layout.Dimensions{}
-	}
-
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -529,17 +502,21 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
+				if *pg.tickets == nil {
+					return layout.Dimensions{}
+				}
+				stackingRecords := (*pg.tickets).StackingRecordCounter
 				return decredmaterial.GridWrap{
 					Axis:      layout.Horizontal,
 					Alignment: layout.End,
-				}.Layout(gtx, len(pg.stackingRecordsCount), func(gtx layout.Context, i int) layout.Dimensions {
-					item := pg.stackingRecordsCount[i]
+				}.Layout(gtx, len(stackingRecords), func(gtx layout.Context, i int) layout.Dimensions {
+					item := stackingRecords[i]
 					gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * 118
 
 					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := pg.ticketStatusIc[item.status]["activity"]
+								ic := pg.ticketStatusIc[item.Status]["activity"]
 								if ic == nil {
 									return layout.Dimensions{}
 								}
@@ -550,11 +527,11 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return pg.th.Label(values.TextSize16, fmt.Sprintf("%d", item.count)).Layout(gtx)
+											return pg.th.Label(values.TextSize16, fmt.Sprintf("%d", item.Count)).Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-												txt := pg.th.Label(values.TextSize12, strings.Title(strings.ToLower(item.status)))
+												txt := pg.th.Label(values.TextSize12, strings.Title(strings.ToLower(item.Status)))
 												txt.Color = pg.th.Color.Gray2
 												return txt.Layout(gtx)
 											})
@@ -653,58 +630,6 @@ func (pg *ticketPage) purchaseTicket(c pageCommon, password []byte) {
 func (pg *ticketPage) Handler(c pageCommon) {
 	if len(c.info.Wallets) > 0 && pg.ticketPrice == "" {
 		pg.ticketPrice = c.wallet.TicketPrice()
-	}
-
-	if *pg.tickets != nil {
-		var tickets []wallet.Ticket
-
-		for _, wallTicket := range (*pg.tickets).Confirmed {
-			for _, ticket := range wallTicket {
-				tickets = append(tickets, ticket)
-			}
-		}
-
-		stackingRecordsMap := map[string]struct {
-			count int
-			order int
-		}{
-			"UNMINED":  {0, 1},
-			"IMMATURE": {0, 2},
-			"LIVE":     {0, 3},
-			"VOTED":    {0, 4},
-			"MISSED":   {0, 5},
-			"EXPIRED":  {0, 6},
-			"REVOKED":  {0, 7},
-		}
-
-		for _, ticket := range tickets {
-			if ticket.Info.Status == "UNKNOWN" {
-				continue
-			}
-			prev := stackingRecordsMap[ticket.Info.Status]
-			prev.count += 1
-			stackingRecordsMap[ticket.Info.Status] = prev
-		}
-
-		var elements []struct {
-			status string
-			count  int
-			order  int
-		}
-
-		for status, stackingRecord := range stackingRecordsMap {
-			elements = append(elements, struct {
-				status string
-				count  int
-				order  int
-			}{status, stackingRecord.count, stackingRecord.order})
-		}
-
-		sort.SliceStable(elements, func(i, j int) bool {
-			return elements[i].order < elements[j].order
-		})
-
-		pg.stackingRecordsCount = elements
 	}
 
 	if pg.purchaseTicketButton.Button.Clicked() {
