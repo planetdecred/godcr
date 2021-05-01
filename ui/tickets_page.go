@@ -566,6 +566,41 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 					})
 				})
 			}),
+			layout.Rigid(func(gtx C) D {
+				wrapper := pg.th.Card()
+				wrapper.Color = pg.th.Color.Success2
+				return wrapper.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return layout.Inset{
+							Top:    values.MarginPadding16,
+							Bottom: values.MarginPadding16,
+						}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+										txt := pg.th.Label(values.TextSize14, "Rewards Earned")
+										txt.Color = pg.th.Color.Success
+										return txt.Layout(gtx)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											ic := c.icons.stakeyIcon
+											ic.Scale = 1.0
+											return ic.Layout(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											return c.layoutBalance(gtx, "16.5112316")
+										}),
+									)
+								}),
+							)
+						})
+					})
+				})
+			}),
 		)
 	})
 }
@@ -656,9 +691,7 @@ func (pg *ticketPage) Handler(c pageCommon) {
 			count  int
 			order  int
 		}
-		for i := 0; i < len(stackingRecordsMap); i++ {
 
-		}
 		for status, stackingRecord := range stackingRecordsMap {
 			elements = append(elements, struct {
 				status string

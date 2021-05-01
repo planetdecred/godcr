@@ -49,6 +49,7 @@ type Theme struct {
 		Overlay      color.NRGBA
 		InvText      color.NRGBA
 		Success      color.NRGBA
+		Success2     color.NRGBA
 		Danger       color.NRGBA
 		Background   color.NRGBA
 		Surface      color.NRGBA
@@ -97,6 +98,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Overlay = rgb(0x000000)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
+	t.Color.Success2 = rgb(0xE1F8EF)
 	t.Color.Danger = rgb(0xed6d47)
 	t.Color.Gray = rgb(0x596D81)
 	t.Color.Gray1 = rgb(0xe6eaed)

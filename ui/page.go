@@ -34,7 +34,7 @@ type pageIcons struct {
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, proposalIconInactive,
-	restore, documentationIcon, downloadIcon, timerIcon, ticketIcon, ticketIconInactive *widget.Image
+	restore, documentationIcon, downloadIcon, timerIcon, ticketIcon, ticketIconInactive, stakeyIcon *widget.Image
 
 	ti ticketIconStatus
 }
@@ -224,6 +224,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		walletIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
 		ticketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
 		ticketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},
+		stakeyIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["stakey"])},
 	}
 
 	ic.ti = ticketIconStatus{
