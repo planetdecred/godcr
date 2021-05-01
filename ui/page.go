@@ -84,8 +84,9 @@ type walletAccount struct {
 }
 
 type wallectAccountOption struct {
-	selectSendAccount    map[int][]walletAccount
-	selectReceiveAccount map[int][]walletAccount
+	selectSendAccount           map[int][]walletAccount
+	selectReceiveAccount        map[int][]walletAccount
+	selectPurchaseTicketAccount map[int][]walletAccount
 }
 
 type DCRUSDTBittrex struct {
@@ -101,13 +102,16 @@ type walletAccountSelector struct {
 	walletAccounts            *wallectAccountOption
 	sendAccountBtn            *widget.Clickable
 	receivingAccountBtn       *widget.Clickable
+	purchaseTicketAccountBtn  *widget.Clickable
 	sendOption                string
 	walletInfoButton          decredmaterial.IconButton
 
 	selectedSendAccount,
 	selectedSendWallet,
 	selectedReceiveAccount,
-	selectedReceiveWallet int
+	selectedReceiveWallet,
+	selectedPurchaseTicketAccount,
+	selectedPurchaseTicketWallet int
 }
 
 type pageCommon struct {
@@ -342,20 +346,24 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.fetchExchangeValue(&common.dcrUsdtBittrex)
 
 	common.wallAcctSelector = &walletAccountSelector{
-		sendAccountBtn:      new(widget.Clickable),
-		receivingAccountBtn: new(widget.Clickable),
-		walletAccount:       *common.theme.ModalFloatTitle(),
-		walletsList:         layout.List{Axis: layout.Vertical},
-		accountsList:        layout.List{Axis: layout.Vertical},
+		sendAccountBtn:           new(widget.Clickable),
+		receivingAccountBtn:      new(widget.Clickable),
+		purchaseTicketAccountBtn: new(widget.Clickable),
+		walletAccount:            *common.theme.ModalFloatTitle(),
+		walletsList:              layout.List{Axis: layout.Vertical},
+		accountsList:             layout.List{Axis: layout.Vertical},
 		walletAccounts: &wallectAccountOption{
-			selectSendAccount:    make(map[int][]walletAccount),
-			selectReceiveAccount: make(map[int][]walletAccount),
+			selectSendAccount:           make(map[int][]walletAccount),
+			selectReceiveAccount:        make(map[int][]walletAccount),
+			selectPurchaseTicketAccount: make(map[int][]walletAccount),
 		},
-		isWalletAccountModalOpen: false,
-		selectedSendAccount:      *common.selectedAccount,
-		selectedSendWallet:       *common.selectedWallet,
-		selectedReceiveAccount:   *common.selectedAccount,
-		selectedReceiveWallet:    *common.selectedWallet,
+		isWalletAccountModalOpen:      false,
+		selectedSendAccount:           *common.selectedAccount,
+		selectedSendWallet:            *common.selectedWallet,
+		selectedReceiveAccount:        *common.selectedAccount,
+		selectedReceiveWallet:         *common.selectedWallet,
+		selectedPurchaseTicketAccount: *common.selectedAccount,
+		selectedPurchaseTicketWallet:  *common.selectedWallet,
 	}
 	iconColor := common.theme.Color.Gray3
 

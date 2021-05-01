@@ -473,6 +473,11 @@ func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage, s
 		walName := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Name
 		bal := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].TotalBalance
 		return d(gtx, acctName, walName, bal, page.wallAcctSelector.receivingAccountBtn)
+	case callingPage == "purchase":
+		acctName := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].Name
+		walName := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet].Name
+		bal := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].TotalBalance
+		return d(gtx, acctName, walName, bal, page.wallAcctSelector.purchaseTicketAccountBtn)
 	default:
 		return layout.Dimensions{}
 	}
@@ -541,6 +546,8 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 								var visibleAccount walletAccount
 								fromAccount := wallAcctSelector.walletAccounts.selectSendAccount[windex][aindex]
 								toAccount := wallAcctSelector.walletAccounts.selectReceiveAccount[windex][aindex]
+								purchaseTicketAccount := wallAcctSelector.walletAccounts.selectPurchaseTicketAccount[windex][aindex]
+
 								switch {
 								case fromAccount.number != unmixedAcct && strings.Contains(page.wallAcctSelector.title, "Sending") && page.wallAcctSelector.sendOption == "Address":
 									if fromAccount.spendable != "" || fromAccount.evt != nil {
@@ -565,6 +572,14 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 										click.Add(gtx.Ops)
 										page.walletAccountsHandler(gtx, toAccount)
 										visibleAccount = toAccount
+									}
+								case strings.Contains(page.wallAcctSelector.title, "Purchasing"):
+									if purchaseTicketAccount.spendable != "" || purchaseTicketAccount.evt != nil {
+										click := purchaseTicketAccount.evt
+										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+										click.Add(gtx.Ops)
+										page.walletAccountsHandler(gtx, purchaseTicketAccount)
+										visibleAccount = purchaseTicketAccount
 									}
 								default:
 								}
@@ -602,10 +617,18 @@ func (page *pageCommon) walletAccountsHandler(gtx layout.Context, wallAcct walle
 			if strings.Contains(page.wallAcctSelector.title, "Sending") {
 				page.wallAcctSelector.selectedSendWallet = wallAcct.walletIndex
 				page.wallAcctSelector.selectedSendAccount = wallAcct.accountIndex
-			} else {
+			}
+
+			if strings.Contains(page.wallAcctSelector.title, "Receiving") {
 				page.wallAcctSelector.selectedReceiveWallet = wallAcct.walletIndex
 				page.wallAcctSelector.selectedReceiveAccount = wallAcct.accountIndex
 			}
+
+			if strings.Contains(page.wallAcctSelector.title, "Purchasing") {
+				page.wallAcctSelector.selectedReceiveWallet = wallAcct.walletIndex
+				page.wallAcctSelector.selectedReceiveAccount = wallAcct.accountIndex
+			}
+
 			page.wallAcctSelector.isWalletAccountModalOpen = false
 		}
 	}
@@ -666,6 +689,12 @@ func (page *pageCommon) walletAccountLayout(gtx layout.Context, wallAcct walletA
 							return sections(gtx)
 						}
 
+						if strings.Contains(page.wallAcctSelector.title, "Purchasing") &&
+							page.wallAcctSelector.selectedPurchaseTicketWallet == wallAcct.walletIndex &&
+							page.wallAcctSelector.selectedPurchaseTicketAccount == wallAcct.accountIndex {
+							return sections(gtx)
+						}
+
 						return layout.Dimensions{}
 					}),
 				)
@@ -722,6 +751,7 @@ func (page pageCommon) addAccount(account walletAccount) {
 	account.evt = &gesture.Click{}
 	selectSendAccount := page.wallAcctSelector.walletAccounts.selectSendAccount
 	selectReceiveAccount := page.wallAcctSelector.walletAccounts.selectReceiveAccount
+	selectPurchaseTicketAccount := page.wallAcctSelector.walletAccounts.selectPurchaseTicketAccount
 
 	if len(selectSendAccount) > account.walletIndex {
 		account.accountIndex = len(selectSendAccount[account.walletIndex])
@@ -731,6 +761,35 @@ func (page pageCommon) addAccount(account walletAccount) {
 	if len(selectReceiveAccount) > account.walletIndex {
 		account.accountIndex = len(selectReceiveAccount[account.walletIndex])
 		page.wallAcctSelector.walletAccounts.selectReceiveAccount[account.walletIndex] = append(page.wallAcctSelector.walletAccounts.selectReceiveAccount[account.walletIndex], account)
+	}
+
+	if len(selectPurchaseTicketAccount) > account.walletIndex {
+		account.accountIndex = len(selectReceiveAccount[account.walletIndex])
+		page.wallAcctSelector.walletAccounts.selectPurchaseTicketAccount[account.walletIndex] = append(page.wallAcctSelector.walletAccounts.selectPurchaseTicketAccount[account.walletIndex], account)
+	}
+}
+
+func (page pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount, windex int) {
+	if _, ok := wallAcct[windex]; !ok {
+		accounts := page.info.Wallets[windex].Accounts
+		if len(accounts) != len(wallAcct[windex]) {
+			wallAcct[windex] = make([]walletAccount, len(accounts))
+			for aindex := range accounts {
+				if accounts[aindex].Name == "imported" {
+					continue
+				}
+
+				wallAcct[windex][aindex] = walletAccount{
+					walletIndex:  windex,
+					accountIndex: aindex,
+					evt:          &gesture.Click{},
+					accountName:  accounts[aindex].Name,
+					totalBalance: accounts[aindex].TotalBalance,
+					spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
+					number:       accounts[aindex].Number,
+				}
+			}
+		}
 	}
 }
 
@@ -757,47 +816,9 @@ func (page pageCommon) handleNavEvents() {
 	}
 
 	for windex := 0; windex < page.info.LoadedWallets; windex++ {
-		if _, ok := page.wallAcctSelector.walletAccounts.selectSendAccount[windex]; !ok {
-			accounts := page.info.Wallets[windex].Accounts
-			if len(accounts) != len(page.wallAcctSelector.walletAccounts.selectSendAccount[windex]) {
-				page.wallAcctSelector.walletAccounts.selectSendAccount[windex] = make([]walletAccount, len(accounts))
-				for aindex := range accounts {
-					if accounts[aindex].Name == "imported" {
-						continue
-					}
-					page.wallAcctSelector.walletAccounts.selectSendAccount[windex][aindex] = walletAccount{
-						walletIndex:  windex,
-						accountIndex: aindex,
-						evt:          &gesture.Click{},
-						accountName:  accounts[aindex].Name,
-						totalBalance: accounts[aindex].TotalBalance,
-						spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
-						number:       accounts[aindex].Number,
-					}
-				}
-			}
-		}
-
-		if _, ok := page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex]; !ok {
-			accounts := page.info.Wallets[windex].Accounts
-			if len(accounts) != len(page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex]) {
-				page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex] = make([]walletAccount, len(accounts))
-				for aindex := range accounts {
-					if accounts[aindex].Name == "imported" {
-						continue
-					}
-					page.wallAcctSelector.walletAccounts.selectReceiveAccount[windex][aindex] = walletAccount{
-						walletIndex:  windex,
-						accountIndex: aindex,
-						evt:          &gesture.Click{},
-						accountName:  accounts[aindex].Name,
-						totalBalance: accounts[aindex].TotalBalance,
-						spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
-						number:       accounts[aindex].Number,
-					}
-				}
-			}
-		}
+		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectSendAccount, windex)
+		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectReceiveAccount, windex)
+		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectPurchaseTicketAccount, windex)
 	}
 
 	if page.wallAcctSelector.sendAccountBtn.Clicked() {
@@ -807,6 +828,11 @@ func (page pageCommon) handleNavEvents() {
 
 	if page.wallAcctSelector.receivingAccountBtn.Clicked() {
 		page.wallAcctSelector.title = "Receiving Account"
+		page.wallAcctSelector.isWalletAccountModalOpen = true
+	}
+
+	if page.wallAcctSelector.purchaseTicketAccountBtn.Clicked() {
+		page.wallAcctSelector.title = "Purchasing account"
 		page.wallAcctSelector.isWalletAccountModalOpen = true
 	}
 

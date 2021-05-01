@@ -934,8 +934,8 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 	}()
 }
 
-func (wal *Wallet) NewVSPD(walletID int, accountID int32) *dcrlibwallet.VSPD {
-	return wal.multi.NewVSPD("http://dev.planetdecred.org:23125", walletID, accountID)
+func (wal *Wallet) NewVSPD(walletID int, accountID int32, host string) *dcrlibwallet.VSPD {
+	return wal.multi.NewVSPD(host, walletID, accountID)
 }
 
 // TicketPrice get ticket price
@@ -1036,7 +1036,7 @@ func (wal *Wallet) GetAllTickets() {
 
 				for i := range liveCounter {
 					if liveCounter[i].Status == tinfo.Status {
-						liveCounter[i].Count += 1
+						liveCounter[i].Count++
 					}
 				}
 
@@ -1051,7 +1051,7 @@ func (wal *Wallet) GetAllTickets() {
 
 				for i := range stackingRecordCounter {
 					if stackingRecordCounter[i].Status == tinfo.Status {
-						stackingRecordCounter[i].Count += 1
+						stackingRecordCounter[i].Count++
 					}
 				}
 			}
