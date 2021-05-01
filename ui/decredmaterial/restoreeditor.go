@@ -8,6 +8,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type RestoreEditor struct {
@@ -15,7 +16,6 @@ type RestoreEditor struct {
 	Edit       Editor
 	TitleLabel Label
 	LineColor  color.NRGBA
-	m5         unit.Value
 	m10        unit.Value
 	height     int
 }
@@ -29,14 +29,13 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		Edit:       e,
 		TitleLabel: t.Body2(title),
 		LineColor:  t.Color.Gray1,
-		m5:         unit.Dp(5),
-		m10:        unit.Dp(10),
+		m10:        values.MarginPadding10,
 		height:     30,
 	}
 }
 
 func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
-	border := widget.Border{Color: re.LineColor, CornerRadius: unit.Dp(8), Width: unit.Dp(2)}
+	border := widget.Border{Color: re.LineColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
