@@ -20,6 +20,7 @@ const PageTransactionDetails = "TransactionDetails"
 
 type transactionDetailsPage struct {
 	theme                           *decredmaterial.Theme
+	common                          pageCommon
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
@@ -30,9 +31,10 @@ type transactionDetailsPage struct {
 	toDcrdata                       *widget.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
+	gtx                             *layout.Context
 }
 
-func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
+func (win *Window) TransactionDetailsPage(common pageCommon) Page {
 	pg := &transactionDetailsPage{
 		transactionDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -46,6 +48,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 
 		txnInfo: &win.walletTransaction,
 		theme:   common.theme,
+		common:  common,
 
 		outputsCollapsible: common.theme.Collapsible(),
 		inputsCollapsible:  common.theme.Collapsible(),
@@ -59,13 +62,14 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 	pg.dot = common.icons.imageBrightness1
 	pg.dot.Color = common.theme.Color.Gray
 
-	return func(gtx C) D {
-		pg.Handler(gtx, common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
+	if pg.gtx == nil {
+		pg.gtx = &gtx
+	}
 	body := func(gtx C) D {
 		page := SubPage{
 			title: dcrlibwallet.TransactionDirectionName((*pg.txnInfo).Txn.Direction),
@@ -429,7 +433,9 @@ func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimension
 	})
 }
 
-func (pg *transactionDetailsPage) Handler(gtx C, common pageCommon) {
+func (pg *transactionDetailsPage) handle() {
+	common := pg.common
+	gtx := *pg.gtx
 	if pg.toDcrdata.Clicked() {
 		goToURL(common.wallet.GetBlockExplorerURL((*pg.txnInfo).Txn.Hash))
 	}
@@ -444,3 +450,5 @@ func (pg *transactionDetailsPage) Handler(gtx C, common pageCommon) {
 		clipboard.WriteOp{Text: (*pg.txnInfo).Txn.Hash}.Add(gtx.Ops)
 	}
 }
+
+func (pg *transactionDetailsPage) onClose() {}

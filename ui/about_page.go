@@ -11,6 +11,7 @@ import (
 const PageAbout = "About"
 
 type aboutPage struct {
+	common    pageCommon
 	theme     *decredmaterial.Theme
 	card      decredmaterial.Card
 	container *layout.List
@@ -26,8 +27,9 @@ type aboutPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) AboutPage(common pageCommon) layout.Widget {
+func (win *Window) AboutPage(common pageCommon) Page {
 	pg := &aboutPage{
+		common:           common,
 		theme:            common.theme,
 		card:             common.theme.Card(),
 		container:        &layout.List{Axis: layout.Vertical},
@@ -46,17 +48,15 @@ func (win *Window) AboutPage(common pageCommon) layout.Widget {
 	pg.networkValue.Color = pg.theme.Color.Gray
 	pg.chevronRightIcon.Color = pg.theme.Color.Gray
 
-	return func(gtx C) D {
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *aboutPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "About",
 			back: func() {
-				common.changePage(PageMore)
+				pg.common.changePage(PageMore)
 			},
 			body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
@@ -64,11 +64,11 @@ func (pg *aboutPage) Layout(gtx layout.Context, common pageCommon) layout.Dimens
 				})
 			},
 		}
-		return common.SubPageLayout(gtx, page)
+		return pg.common.SubPageLayout(gtx, page)
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
+	return pg.common.Layout(gtx, func(gtx C) D {
+		return pg.common.UniformPadding(gtx, body)
 	})
 }
 
@@ -117,3 +117,6 @@ func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 		})
 	})
 }
+
+func (pg *aboutPage) handle()  {}
+func (pg *aboutPage) onClose() {}

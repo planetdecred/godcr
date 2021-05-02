@@ -36,6 +36,7 @@ type collapsible struct {
 }
 
 type walletPage struct {
+	common                                     pageCommon
 	walletInfo                                 *wallet.MultiWalletInfo
 	wallet                                     *wallet.Wallet
 	walletAccount                              **wallet.Account
@@ -50,7 +51,8 @@ type walletPage struct {
 	iconButton                                 decredmaterial.IconButton
 	errorReceiver                              chan error
 	card                                       decredmaterial.Card
-	backdrop                                   *widget.Clickable
+	backdrops                                  []*widget.Clickable
+	backdropList                               *layout.List
 	optionsMenuCard                            decredmaterial.Card
 	optionsMenu                                []menuItem
 	addWalletMenu                              []menuItem
@@ -66,8 +68,9 @@ type walletPage struct {
 	refreshPage                                *bool
 }
 
-func (win *Window) WalletPage(common pageCommon) layout.Widget {
+func (win *Window) WalletPage(common pageCommon) Page {
 	pg := &walletPage{
+		common:                   common,
 		walletInfo:               win.walletInfo,
 		container:                layout.List{Axis: layout.Vertical},
 		accountsList:             layout.List{Axis: layout.Vertical},
@@ -77,13 +80,17 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		wallet:                   common.wallet,
 		card:                     common.theme.Card(),
 		walletAccount:            &win.walletAccount,
-		backdrop:                 new(widget.Clickable),
+		backdropList:             &layout.List{Axis: layout.Vertical},
 		errorReceiver:            make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
 		shadowBox:                common.theme.Shadow(),
 		separator:                common.theme.Separator(),
 		refreshPage:              &win.refreshPage,
+	}
+
+	for i := 0; i < 4; i++ {
+		pg.backdrops = append(pg.backdrops, new(widget.Clickable))
 	}
 
 	pg.separator.Color = common.theme.Color.Background
@@ -117,10 +124,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 
 	pg.toAcctDetails = make([]*gesture.Click, 0)
 
-	return func(gtx C) D {
-		pg.Handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
 func (pg *walletPage) initializeWalletMenu() {
@@ -274,7 +278,8 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common pageCommon) {
 }
 
 // Layout lays out the widgets for the main wallets pg.
-func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
 	if *pg.refreshPage {
 		common.refreshWindow()
 		*pg.refreshPage = false
@@ -340,22 +345,35 @@ func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimen
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+					dims := layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+					if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
+						dims.Size.Y += 60
+					}
+					return dims
 				})
 			}),
 			layout.Stacked(func(gtx C) D {
 				return pg.layoutAddWalletSection(gtx, common)
 			}),
+		)
+	}
+
+	return common.Layout(gtx, func(gtx C) D {
+		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				if pg.openPopupIndex != -1 || pg.isAddWalletMenuOpen {
-					return pg.backdrop.Layout(gtx)
+				return common.UniformPadding(gtx, body)
+			}),
+			layout.Expanded(func(gtx C) D {
+				if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
+					halfHeight := gtx.Constraints.Max.Y / 2
+					return pg.container.Layout(gtx, len(pg.backdrops), func(gtx C, i int) D {
+						gtx.Constraints.Min.Y = halfHeight
+						return pg.backdrops[i].Layout(gtx)
+					})
 				}
 				return D{}
 			}),
 		)
-	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
 	})
 }
 
@@ -380,7 +398,6 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	}
 
 	m := op.Record(gtx.Ops)
-
 	inset.Layout(gtx, func(gtx C) D {
 		width := unit.Value{U: unit.UnitDp, V: 150}
 		gtx.Constraints.Max.X = gtx.Px(width)
@@ -851,20 +868,41 @@ func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acc
 	}
 }
 
+func (pg *walletPage) isCollapsibleMenuOpen() bool {
+	return pg.openPopupIndex > -1
+}
+
 func (pg *walletPage) closePopups() {
 	pg.openPopupIndex = -1
 	pg.isAddWalletMenuOpen = false
 }
 
-func (pg *walletPage) Handle(common pageCommon) {
-	for pg.backdrop.Clicked() {
-		pg.closePopups()
+func (pg *walletPage) openPopup(common pageCommon, index int) {
+	*common.selectedWallet = index
+	pg.openPopupIndex = index
+}
+
+func (pg *walletPage) handle() {
+	common := pg.common
+
+	for index := range pg.backdrops {
+		for pg.backdrops[index].Clicked() {
+			pg.closePopups()
+		}
 	}
 
 	for index := range pg.collapsibles {
 		for pg.collapsibles[index].collapsible.MoreTriggered() {
-			*common.selectedWallet = index
-			pg.openPopupIndex = index
+			if pg.isCollapsibleMenuOpen() {
+				if pg.openPopupIndex == index {
+					pg.closePopups()
+				} else {
+					pg.closePopups()
+					pg.openPopup(common, index)
+				}
+			} else {
+				pg.openPopup(common, index)
+			}
 		}
 
 		for pg.collapsibles[index].addAcctBtn.Button.Clicked() {
@@ -944,4 +982,8 @@ func (pg *walletPage) Handle(common pageCommon) {
 		common.notify(err.Error(), false)
 	default:
 	}
+}
+
+func (pg *walletPage) onClose() {
+	pg.closePopups()
 }

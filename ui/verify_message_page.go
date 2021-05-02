@@ -15,6 +15,7 @@ const PageVerifyMessage = "VerifyMessage"
 
 type verifyMessagePage struct {
 	theme                                 *decredmaterial.Theme
+	common                                pageCommon
 	addressInput, messageInput, signInput decredmaterial.Editor
 	clearBtn, verifyBtn                   decredmaterial.Button
 	verifyMessage                         decredmaterial.Label
@@ -22,9 +23,10 @@ type verifyMessagePage struct {
 	verifyMessageStatus *widget.Icon
 }
 
-func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
+func (win *Window) VerifyMessagePage(c pageCommon) Page {
 	pg := &verifyMessagePage{
 		theme:         c.theme,
+		common:        c,
 		addressInput:  c.theme.Editor(new(widget.Editor), "Address"),
 		messageInput:  c.theme.Editor(new(widget.Editor), "Message"),
 		signInput:     c.theme.Editor(new(widget.Editor), "Signature"),
@@ -38,13 +40,12 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 	pg.verifyBtn.TextSize, pg.clearBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
 
-	return func(gtx C) D {
-		pg.handle(c)
-		return pg.Layout(gtx, c)
-	}
+	return pg
 }
 
-func (pg *verifyMessagePage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
+	c := pg.common
+
 	var walletName = c.info.Wallets[*c.selectedWallet].Name
 	if *c.returnPage == PageSecurityTools {
 		walletName = ""
@@ -144,7 +145,9 @@ func (pg *verifyMessagePage) verifyMessageResponse() layout.Widget {
 	}
 }
 
-func (pg *verifyMessagePage) handle(c pageCommon) {
+func (pg *verifyMessagePage) handle() {
+	c := pg.common
+
 	pg.verifyBtn.Background, pg.clearBtn.Color = c.theme.Color.Hint, c.theme.Color.Hint
 	if pg.inputsNotEmpty(c) {
 		pg.verifyBtn.Background, pg.clearBtn.Color = c.theme.Color.Primary, c.theme.Color.Primary
@@ -223,3 +226,5 @@ func (pg *verifyMessagePage) inputsNotEmpty(c pageCommon) bool {
 	pg.verifyBtn.Background = c.theme.Color.Primary
 	return true
 }
+
+func (pg *verifyMessagePage) onClose() {}

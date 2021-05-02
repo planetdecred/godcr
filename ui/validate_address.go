@@ -21,6 +21,7 @@ const (
 )
 
 type validateAddressPage struct {
+	common                pageCommon
 	theme                 *decredmaterial.Theme
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
@@ -29,12 +30,13 @@ type validateAddressPage struct {
 	stateValidate         int
 }
 
-func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
+func (win *Window) ValidateAddressPage(common pageCommon) Page {
 	pg := &validateAddressPage{
 		theme:       common.theme,
 		validateBtn: common.theme.Button(new(widget.Clickable), "Validate"),
 		clearBtn:    common.theme.Button(new(widget.Clickable), "Clear"),
 		wallet:      common.wallet,
+		common:      common,
 	}
 
 	pg.addressEditor = common.theme.Editor(new(widget.Editor), "Address")
@@ -49,14 +51,11 @@ func (win *Window) ValidateAddressPage(common pageCommon) layout.Widget {
 
 	pg.stateValidate = none
 
-	return func(gtx C) D {
-		pg.handle()
-		pg.updateColors(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *validateAddressPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	body := func(gtx C) D {
 		page := SubPage{
@@ -222,6 +221,9 @@ func (pg *validateAddressPage) pageSections(gtx layout.Context, body layout.Widg
 }
 
 func (pg *validateAddressPage) handle() {
+	c := pg.common
+	pg.updateColors(c)
+
 	if pg.validateBtn.Button.Clicked() {
 		pg.validateAddress()
 	}
@@ -277,3 +279,5 @@ func (pg *validateAddressPage) clearInputs(c *pageCommon) {
 	pg.validateBtn.Background = c.theme.Color.Hint
 	pg.addressEditor.Editor.SetText("")
 }
+
+func (pg *validateAddressPage) onClose() {}

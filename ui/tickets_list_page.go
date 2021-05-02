@@ -27,11 +27,13 @@ type ticketPageList struct {
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
 	isGridView         bool
+	common             pageCommon
 }
 
-func (win *Window) TicketPageList(c pageCommon) layout.Widget {
+func (win *Window) TicketPageList(c pageCommon) Page {
 	pg := &ticketPageList{
 		th:             c.theme,
+		common:         c,
 		tickets:        &win.walletTickets,
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
@@ -49,13 +51,11 @@ func (win *Window) TicketPageList(c pageCommon) layout.Widget {
 		{Text: "Revoked"},
 	}, 1)
 
-	return func(gtx C) D {
-		pg.handler(c)
-		return pg.layout(gtx, c)
-	}
+	return pg
 }
 
-func (pg *ticketPageList) layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
+	c := pg.common
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "All tickets",
@@ -314,7 +314,8 @@ func (pg *ticketPageList) initWalletDropDown(common pageCommon) {
 	pg.walletDropDown = common.theme.DropDown(walletDropDownItems, 2)
 }
 
-func (pg *ticketPageList) handler(c pageCommon) {
+func (pg *ticketPageList) handle() {
+	c := pg.common
 	pg.initWalletDropDown(c)
 
 	if pg.toggleViewType.Clicked() {
@@ -338,3 +339,5 @@ func (pg *ticketPageList) handler(c pageCommon) {
 		}
 	}
 }
+
+func (pg *ticketPageList) onClose() {}
