@@ -66,7 +66,6 @@ type proposalsPage struct {
 	timerIcon        *widget.Image
 	isSynced         bool
 	proposalsItemSet bool
-	clearButton      decredmaterial.Button
 }
 
 var (
@@ -107,7 +106,6 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 
 	pg.tabCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	pg.syncCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
-	pg.clearButton = common.theme.Button(new(widget.Clickable), "Clear all")
 
 	for i := range proposalCategoryTitles {
 		pg.tabs.tabs = append(pg.tabs.tabs,
@@ -145,10 +143,6 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 		common.refreshPage()
 	}
 
-	for pg.clearButton.Button.Clicked() {
-		pg.wallet.ClearSavedProposals()
-	}
-
 	select {
 	case prop := <-*pg.proposalSync:
 		if prop.ProposalStatus == wallet.Synced {
@@ -157,17 +151,20 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 			}
 			pg.isSynced = true
 		} else if prop.ProposalStatus == wallet.NewProposalFound {
-			// fmt.Println("NewProposalFound")
-			fmt.Println(*prop.Proposal)
 			pg.addDiscoveredProposal(*prop.Proposal)
 			common.refreshPage()
 		} else if prop.ProposalStatus == wallet.VoteStarted || prop.ProposalStatus == wallet.VoteFinished {
-			// fmt.Println("VoteStarted")
-			fmt.Println(*prop.Proposal)
 			pg.updateProposal(*prop.Proposal)
 			common.refreshPage()
 		}
 	default:
+	}
+
+	if pg.isSynced {
+		time.AfterFunc(time.Second*3, func() {
+			pg.isSynced = false
+		})
+		common.refreshPage()
 	}
 }
 
@@ -271,12 +268,7 @@ func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(pg.clearButton.Layout),
-			layout.Rigid(func(gtx C) D {
-				return pg.theme.Body1(str).Layout(gtx)
-			}),
-		)
+		return pg.theme.Body1(str).Layout(gtx)
 	})
 }
 
@@ -493,6 +485,7 @@ func (pg *proposalsPage) layoutSyncSection(gtx C) D {
 func (pg *proposalsPage) initializeProposaltabItems() {
 	pg.proposalsItemSet = true
 	if len((*pg.proposals).Proposals) == 0 {
+		pg.wallet.SyncProposals()
 		pg.proposalsItemSet = false
 	}
 
