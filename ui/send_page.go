@@ -760,7 +760,7 @@ func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (pg *sendPage) calculateValues(c pageCommon) {
+func (pg *sendPage) calculateValues(c pageCommon, isUpdateAmountInput bool) {
 	defaultLeftValues := fmt.Sprintf("- %s", "DCR")
 	defaultRightValues := "($ -)"
 
@@ -790,13 +790,13 @@ func (pg *sendPage) calculateValues(c pageCommon) {
 		pg.amountDCRtoUSD = pg.inputAmount * pg.usdExchangeRate
 	}
 
-	pg.updateAmountInputsValues(c)
+	pg.updateAmountInputsValues(c, isUpdateAmountInput)
 	pg.getTxFee()
 	pg.updateDefaultValues()
 	pg.balanceAfterSend(false, c)
 }
 
-func (pg *sendPage) updateAmountInputsValues(c pageCommon) {
+func (pg *sendPage) updateAmountInputsValues(c pageCommon, isUpdateAmountInput bool) {
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
@@ -811,10 +811,12 @@ func (pg *sendPage) updateAmountInputsValues(c pageCommon) {
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountDCRtoUSD))
 		pg.setDestinationAddr(pg.inputAmount, c)
 	default:
-		if pg.rightAmountEditor.Editor.Focused() {
-			pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
-		} else {
-			pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
+		if isUpdateAmountInput {
+			if pg.rightAmountEditor.Editor.Focused() {
+				pg.leftAmountEditor.Editor.SetText(pg.rightAmountEditor.Editor.Text())
+			} else {
+				pg.rightAmountEditor.Editor.SetText(pg.leftAmountEditor.Editor.Text())
+			}
 		}
 		pg.setDestinationAddr(pg.inputAmount, c)
 	}
@@ -939,7 +941,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 		pg.resetFields()
 		c.modalLoad.setLoading(false)
 		pg.broadcastResult.TxHash = ""
-		pg.calculateValues(c)
+		pg.calculateValues(c, true)
 		pg.destinationAddressEditor.Editor.SetText("")
 	}
 }
@@ -948,7 +950,7 @@ func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c pageCommon) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
 		pg.fetchExchangeValue()
-		pg.calculateValues(c)
+		pg.calculateValues(c, true)
 	}
 }
 
@@ -1017,7 +1019,7 @@ func (pg *sendPage) setMaxAmount(c pageCommon) {
 		}
 	}
 
-	pg.calculateValues(c)
+	pg.calculateValues(c, false)
 }
 
 func (pg *sendPage) Handle(c pageCommon) {
@@ -1031,13 +1033,13 @@ func (pg *sendPage) Handle(c pageCommon) {
 	if pg.LastTradeRate == "" && pg.count == 0 {
 		pg.count = 1
 		pg.shouldInitializeTxAuthor = true
-		pg.calculateValues(c)
+		pg.calculateValues(c, true)
 	}
 
 	if (pg.LastTradeRate != "" && pg.count == 0) || (pg.LastTradeRate != "" && pg.count == 1) {
 		pg.count = 2
 		pg.shouldInitializeTxAuthor = true
-		pg.calculateValues(c)
+		pg.calculateValues(c, true)
 	}
 
 	pg.updateExchangeError()
@@ -1076,7 +1078,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	for range pg.destinationAddressEditor.Editor.Events() {
-		pg.calculateValues(c)
+		pg.calculateValues(c, true)
 	}
 
 	for pg.currencySwap.Clicked() {
@@ -1090,7 +1092,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 			}
 		}
 
-		pg.calculateValues(c)
+		pg.calculateValues(c, true)
 	}
 
 	for _, evt := range pg.leftAmountEditor.Editor.Events() {
