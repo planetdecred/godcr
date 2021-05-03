@@ -1,9 +1,14 @@
 package wallet
 
 import (
+	"crypto/ed25519"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"sort"
 	"strconv"
 	"time"
@@ -934,40 +939,79 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 	}()
 }
 
-func (wal *Wallet) NewVSPD(walletID int, accountID int32, host string) *dcrlibwallet.VSPD {
-	return wal.multi.NewVSPD(host, walletID, accountID)
-}
-
 // TicketPrice get ticket price
-func (wal *Wallet) TicketPrice() string {
+func (wal *Wallet) TicketPrice() (int64, string) {
 	pr, err := wal.multi.WalletsIterator().Next().TicketPrice()
 	if err != nil {
 		log.Error(err)
-		return ""
+		return 0, ""
 	}
-	return dcrutil.Amount(pr.TicketPrice).String()
+	return pr.TicketPrice, dcrutil.Amount(pr.TicketPrice).String()
 }
 
 // PurchaseTicket buy a ticket with given parameters
-func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, expiry uint32) ([]string, error) {
-	wall := wal.multi.WalletWithID(walletID)
-	request := &dcrlibwallet.PurchaseTicketsRequest{
-		Account:               uint32(accountID),
-		Passphrase:            passphrase,
-		NumTickets:            tickets,
-		Expiry:                uint32(wal.multi.GetBestBlock().Height) + expiry,
-		RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
-	}
-	hashes, err := wall.PurchaseTickets(request, "")
-	if err != nil {
-		return []string{}, err
-	}
+func (wal *Wallet) PurchaseTicket(host string, walletID int, accountID int32, tickets uint32, passphrase []byte, errChan chan error) {
 	go func() {
 		var resp Response
-		resp.Resp = &TicketPurchase{}
-		wal.Send <- resp
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			go func() {
+				errChan <- ErrIDNotExist
+			}()
+			return
+		}
+
+		vspd := wal.multi.NewVSPD(host, walletID, accountID)
+		_, err := vspd.GetInfo()
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			return
+		}
+
+		request := &dcrlibwallet.PurchaseTicketsRequest{
+			Account:               uint32(accountID),
+			Passphrase:            passphrase,
+			NumTickets:            tickets,
+			Expiry:                uint32(wal.multi.GetBestBlock().Height) + 256,
+			RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
+		}
+
+		hashes, err := wall.PurchaseTickets(request, "")
+		for _, hash := range hashes {
+			r, err := vspd.GetVSPFeeAddress(hash, passphrase)
+			if err != nil {
+				go func() {
+					errChan <- err
+				}()
+				return
+			}
+
+			transactionResponse, err := vspd.CreateTicketFeeTx(r.FeeAmount, hash, r.FeeAddress, passphrase)
+			if err != nil {
+				go func() {
+					errChan <- err
+				}()
+				return
+			}
+
+			_, err = vspd.PayVSPFee(transactionResponse, hash, "", passphrase)
+			if err != nil {
+				go func() {
+					errChan <- err
+				}()
+				return
+			}
+
+			go func() {
+				errChan <- nil
+			}()
+
+			resp.Resp = &TicketPurchase{}
+			wal.Send <- resp
+		}
 	}()
-	return hashes, nil
 }
 
 // GetAllTickets collects a per-wallet slice of tickets fitting the parameters.
@@ -1172,4 +1216,146 @@ func (wal *Wallet) ReadMixerConfigValueForKey(key string, walletID int) int32 {
 		return wallet.ReadInt32ConfigValueForKey(key, -1)
 	}
 	return 0
+}
+
+func (wal *Wallet) AddVSP(host string, errChan chan error) {
+	// wal.multi.DeleteUserConfigValueForKey(dcrlibwallet.VSPHostConfigKey)
+	go func() {
+		var resp Response
+		var valueOut struct {
+			Remember string
+			List     []string
+		}
+
+		wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+
+		for _, v := range valueOut.List {
+			if v == host {
+				go func() {
+					errChan <- fmt.Errorf("Existing host %s", host)
+				}()
+				return
+			}
+		}
+
+		info, err := getVSPInfo(host)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not create vsp",
+				Err:     err,
+			})
+			return
+		}
+
+		if info.Network != wal.Net {
+			go func() {
+				errChan <- fmt.Errorf("Invalid net %s", info.Network)
+			}()
+			return
+		}
+
+		valueOut.List = append(valueOut.List, host)
+		wal.multi.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
+		resp.Resp = &VSPInfo{
+			Host: host,
+			Info: info,
+		}
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) GetAllVSP() {
+	go func() {
+		var valueOut struct {
+			Remember string
+			List     []string
+		}
+
+		wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+
+		var loadedVSP []VSPInfo
+		for _, host := range valueOut.List {
+			v, err := getVSPInfo(host)
+			if err == nil {
+				loadedVSP = append(loadedVSP, VSPInfo{
+					Host: host,
+					Info: v,
+				})
+			}
+		}
+		var resp Response
+		resp.Resp = &VSP{
+			List: loadedVSP,
+		}
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) RememberVSP(host string) {
+	var valueOut struct {
+		Remember string
+		List     []string
+	}
+	wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+	valueOut.Remember = host
+	wal.multi.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
+}
+
+func (wal *Wallet) GetRememberVSP() string {
+	var valueOut struct {
+		Remember string
+	}
+	wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+
+	return valueOut.Remember
+}
+
+// getVSPInfo returns the information of the specified VSP base URL
+func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
+	rq := new(http.Client)
+	resp, err := rq.Get((url + "/api/v3/vspinfo"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
+	}
+
+	var vspInfoResponse dcrlibwallet.GetVspInfoResponse
+	err = json.Unmarshal(b, &vspInfoResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validateVSPServerSignature(resp, vspInfoResponse.PubKey, b)
+	if err != nil {
+		return nil, err
+	}
+	return &vspInfoResponse, nil
+}
+
+func validateVSPServerSignature(resp *http.Response, pubKey, body []byte) error {
+	sigStr := resp.Header.Get("VSP-Server-Signature")
+	sig, err := base64.StdEncoding.DecodeString(sigStr)
+	if err != nil {
+		return fmt.Errorf("error validating VSP signature: %v", err)
+	}
+
+	if !ed25519.Verify(pubKey, body, sig) {
+		return errors.New("bad signature from VSP")
+	}
+
+	return nil
 }

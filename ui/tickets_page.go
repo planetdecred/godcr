@@ -2,11 +2,16 @@ package ui
 
 import (
 	"fmt"
+	"image"
 	"image/color"
+	"strconv"
 	"strings"
 
+	"gioui.org/gesture"
+	"gioui.org/io/pointer"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 
@@ -23,15 +28,17 @@ type ticketPage struct {
 	ticketPageContainer layout.List
 	ticketsLive         layout.List
 	ticketsActivity     layout.List
-	vspHosts            layout.List
 
-	purchaseTicketButton  decredmaterial.Button
+	purchaseTicket        decredmaterial.Button
 	cancelPurchase        decredmaterial.Button
 	reviewPurchase        decredmaterial.Button
 	cancelConfirmPurchase decredmaterial.Button
-	purchaseTicket        decredmaterial.Button
+	submitPurchase        decredmaterial.Button
 	tickets               **wallet.Tickets
 	ticketPrice           string
+	totalCost             string
+	remainingBalance      string
+	ticketAmount          decredmaterial.Editor
 	showPurchaseOptions   bool
 	showPurchaseConfirm   bool
 
@@ -40,13 +47,19 @@ type ticketPage struct {
 	toTickets           decredmaterial.TextAndIconButton
 	toTicketsActivity   decredmaterial.TextAndIconButton
 	ticketStatusIc      map[string]map[string]*widget.Image
+	purchaseErrChan     chan error
 
+	vspInfo          **wallet.VSP
+	vspHosts         layout.List
 	rememberVSP      decredmaterial.CheckBoxStyle
 	showVSPHosts     bool
-	selectVSP        *widget.Clickable
-	inputNewVSP      decredmaterial.Editor
+	showVSP          *widget.Clickable
+	selectVSP        []*gesture.Click
+	selectedVSP      wallet.VSPInfo
+	inputVSP         decredmaterial.Editor
 	spendingPassword decredmaterial.Editor
-	addNewVSP        decredmaterial.Button
+	addVSP           decredmaterial.Button
+	vspErrChan       chan error
 }
 
 func (win *Window) TicketPage(c pageCommon) layout.Widget {
@@ -58,23 +71,31 @@ func (win *Window) TicketPage(c pageCommon) layout.Widget {
 		ticketsLive:           layout.List{Axis: layout.Horizontal},
 		ticketsActivity:       layout.List{Axis: layout.Vertical},
 		ticketPageContainer:   layout.List{Axis: layout.Vertical},
-		vspHosts:              layout.List{Axis: layout.Vertical},
-		purchaseTicketButton:  c.theme.Button(new(widget.Clickable), "Purchase"),
+		purchaseTicket:        c.theme.Button(new(widget.Clickable), "Purchase"),
 		cancelPurchase:        c.theme.Button(new(widget.Clickable), "Cancel"),
 		cancelConfirmPurchase: c.theme.Button(new(widget.Clickable), "Cancel"),
-		purchaseTicket:        c.theme.Button(new(widget.Clickable), "Purchase 1 ticket"),
+		submitPurchase:        c.theme.Button(new(widget.Clickable), "Purchase ticket"),
 		reviewPurchase:        c.theme.Button(new(widget.Clickable), "Review purchase"),
-		selectVSP:             new(widget.Clickable),
 		autoPurchaseEnabled:   new(widget.Bool),
 		toTickets:             c.theme.TextAndIconButton(new(widget.Clickable), "See All", c.icons.navigationArrowForward),
 		toTicketsActivity:     c.theme.TextAndIconButton(new(widget.Clickable), "See All", c.icons.navigationArrowForward),
 		purchaseOptions:       c.theme.Modal(),
-		rememberVSP:           c.theme.CheckBox(new(widget.Bool), "Remember VSP"),
-		inputNewVSP:           c.theme.Editor(new(widget.Editor), "Add a new VSP..."),
-		addNewVSP:             c.theme.Button(new(widget.Clickable), "Save"),
-		spendingPassword:      c.theme.EditorPassword(new(widget.Editor), "Spending password"),
+		ticketAmount:          c.theme.Editor(new(widget.Editor), ""),
+		purchaseErrChan:       make(chan error),
+
+		vspHosts:         layout.List{Axis: layout.Vertical},
+		showVSP:          new(widget.Clickable),
+		rememberVSP:      c.theme.CheckBox(new(widget.Bool), "Remember VSP"),
+		inputVSP:         c.theme.Editor(new(widget.Editor), "Add a new VSP..."),
+		addVSP:           c.theme.Button(new(widget.Clickable), "Save"),
+		spendingPassword: c.theme.EditorPassword(new(widget.Editor), "Spending password"),
+		vspInfo:          &win.vspInfo,
+		vspErrChan:       make(chan error),
 	}
-	pg.purchaseTicketButton.TextSize = values.TextSize12
+	pg.ticketAmount.Editor.SetText("1")
+
+	pg.purchaseTicket.TextSize = values.TextSize12
+	pg.purchaseTicket.Background = c.theme.Color.Primary
 
 	pg.cancelPurchase.Background = color.NRGBA{}
 	pg.cancelPurchase.Color = c.theme.Color.Primary
@@ -161,11 +182,11 @@ func (pg *ticketPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions
 	})
 
 	if pg.showPurchaseConfirm {
-		return pg.confirmPurchaseModal(gtx)
+		return pg.confirmPurchaseModal(gtx, c)
 	}
 
 	if pg.showVSPHosts {
-		return pg.vspHostModalLayout(gtx)
+		return pg.vspHostModalLayout(gtx, c)
 	}
 
 	if pg.showPurchaseOptions && !c.wallAcctSelector.isWalletAccountModalOpen {
@@ -238,7 +259,7 @@ func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layou
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.purchaseTicketButton.Layout(gtx)
+				return pg.purchaseTicket.Layout(gtx)
 			}),
 		)
 	})
@@ -252,9 +273,6 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 					tit := c.theme.Label(values.TextSize14, "Live Tickets")
 					tit.Color = c.theme.Color.Gray2
 					return pg.titleRow(gtx, tit.Layout, func(gtx C) D {
-						if *pg.tickets == nil {
-							return layout.Dimensions{}
-						}
 						ticketLiveCounter := (*pg.tickets).LiveCounter
 						var elements []layout.FlexChild
 						for i := 0; i < len(ticketLiveCounter); i++ {
@@ -279,15 +297,11 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 						elements = append(elements, layout.Rigid(func(gtx C) D {
 							return pg.toTickets.Layout(gtx)
 						}))
-
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx, elements...)
 					})
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				if *pg.tickets == nil {
-					return layout.Dimensions{}
-				}
 				tickets := (*pg.tickets).LiveRecent
 				return pg.ticketsLive.Layout(gtx, len(tickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
@@ -421,9 +435,6 @@ func (pg *ticketPage) ticketLiveItemnInfo(gtx layout.Context, c pageCommon, t wa
 }
 
 func (pg *ticketPage) ticketsActivitySection(gtx layout.Context, c pageCommon) layout.Dimensions {
-	if *pg.tickets == nil {
-		return layout.Dimensions{}
-	}
 	tickets := (*pg.tickets).RecentActivity
 	if len(tickets) == 0 {
 		return layout.Dimensions{}
@@ -538,9 +549,6 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				if *pg.tickets == nil {
-					return layout.Dimensions{}
-				}
 				stackingRecords := (*pg.tickets).StackingRecordCounter
 				return decredmaterial.GridWrap{
 					Axis:      layout.Horizontal,
@@ -639,14 +647,21 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							tit := pg.th.Label(values.TextSize14, "Total")
-							tit.Color = pg.th.Color.Gray2
-							return tit.Layout(gtx)
+					return layout.Flex{}.Layout(gtx,
+						layout.Flexed(.5, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									tit := pg.th.Label(values.TextSize14, "Total")
+									tit.Color = pg.th.Color.Gray2
+									return tit.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return pg.th.Label(values.TextSize16, pg.ticketPrice).Layout(gtx)
+								}),
+							)
 						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.th.Label(values.TextSize16, pg.ticketPrice).Layout(gtx)
+						layout.Flexed(.5, func(gtx C) D {
+							return pg.ticketAmount.Layout(gtx)
 						}),
 					)
 				}),
@@ -684,7 +699,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 	}, 900)
 }
 
-func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context) layout.Dimensions {
+func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return pg.purchaseOptions.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
 			return pg.th.Label(values.TextSize20, "Confirm to purchase tickets").Layout(gtx)
@@ -694,13 +709,13 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context) layout.Dimensions
 				layout.Rigid(func(gtx C) D {
 					tleft := pg.th.Label(values.TextSize14, "Amount")
 					tleft.Color = pg.th.Color.Gray2
-					tright := pg.th.Label(values.TextSize14, "1")
+					tright := pg.th.Label(values.TextSize14, pg.ticketAmount.Editor.Text())
 					return endToEndRow(gtx, tleft.Layout, tright.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					tleft := pg.th.Label(values.TextSize14, "Total cost")
 					tleft.Color = pg.th.Color.Gray2
-					tright := pg.th.Label(values.TextSize14, "122")
+					tright := pg.th.Label(values.TextSize14, pg.totalCost)
 					return endToEndRow(gtx, tleft.Layout, tright.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -712,13 +727,14 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context) layout.Dimensions
 				layout.Rigid(func(gtx C) D {
 					tleft := pg.th.Label(values.TextSize14, "Account")
 					tleft.Color = pg.th.Color.Gray2
-					tright := pg.th.Label(values.TextSize14, "Default")
+					wallAcct := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet].Accounts
+					tright := pg.th.Label(values.TextSize14, wallAcct[c.wallAcctSelector.selectedPurchaseTicketAccount].Name)
 					return endToEndRow(gtx, tleft.Layout, tright.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					tleft := pg.th.Label(values.TextSize14, "Remaining")
 					tleft.Color = pg.th.Color.Gray2
-					tright := pg.th.Label(values.TextSize14, "122")
+					tright := pg.th.Label(values.TextSize14, pg.remainingBalance)
 					return endToEndRow(gtx, tleft.Layout, tright.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -730,7 +746,7 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context) layout.Dimensions
 				layout.Rigid(func(gtx C) D {
 					tleft := pg.th.Label(values.TextSize14, "VSP")
 					tleft.Color = pg.th.Color.Gray2
-					tright := pg.th.Label(values.TextSize14, "stakey.net")
+					tright := pg.th.Label(values.TextSize14, pg.selectedVSP.Host)
 					return endToEndRow(gtx, tleft.Layout, tright.Layout)
 				}),
 			)
@@ -751,7 +767,7 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context) layout.Dimensions
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.purchaseTicket.Layout(gtx)
+						return pg.submitPurchase.Layout(gtx)
 					}),
 				)
 			})
@@ -767,16 +783,24 @@ func (pg *ticketPage) vspHostSelectorLayout(gtx C, c pageCommon) layout.Dimensio
 	}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, pg.selectVSP, func(gtx C) D {
+			return decredmaterial.Clickable(gtx, pg.showVSP, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return pg.th.Body1("http://dev.planetdecred.org:23125").Layout(gtx)
+						if pg.selectedVSP.Host == "" {
+							txt := pg.th.Label(values.TextSize16, "Select VSP...")
+							txt.Color = pg.th.Color.Gray2
+							return txt.Layout(gtx)
+						}
+						return pg.th.Label(values.TextSize16, pg.selectedVSP.Host).Layout(gtx)
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									txt := pg.th.Body1("1%")
+									if pg.selectedVSP.Info == nil {
+										return layout.Dimensions{}
+									}
+									txt := pg.th.Label(values.TextSize16, fmt.Sprintf("%v", pg.selectedVSP.Info.FeePercentage)+"%")
 									txt.Color = pg.th.Color.DeepBlue
 									return txt.Layout(gtx)
 								}),
@@ -797,16 +821,10 @@ func (pg *ticketPage) vspHostSelectorLayout(gtx C, c pageCommon) layout.Dimensio
 	})
 }
 
-var hostList = []string{"vsp.stakeminer.com", "dcrvsp.ubiqsmart.com", "vsp.coinmine.pl"}
-
-func (pg *ticketPage) vspHostModalLayout(gtx C) layout.Dimensions {
+func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions {
 	return pg.purchaseOptions.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.th.Label(values.TextSize20, "Voting service provider").Layout(gtx)
-				}),
-			)
+			return pg.th.Label(values.TextSize20, "Voting service provider").Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -815,15 +833,37 @@ func (pg *ticketPage) vspHostModalLayout(gtx C) layout.Dimensions {
 					txt.Color = pg.th.Color.Gray2
 					txtFee := pg.th.Label(values.TextSize14, "Fee")
 					txtFee.Color = pg.th.Color.Gray2
-					return endToEndRow(gtx, txt.Layout, txtFee.Layout)
+					return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+						return endToEndRow(gtx, txt.Layout, txtFee.Layout)
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.vspHosts.Layout(gtx, len(hostList), func(gtx C, i int) D {
-						return layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
-							txt := pg.th.Label(values.TextSize14, "1%")
-							txt.Color = pg.th.Color.Gray2
-							return endToEndRow(gtx, pg.th.Label(values.TextSize16, hostList[i]).Layout, txt.Layout)
-						})
+					listVSP := (*pg.vspInfo).List
+					return pg.vspHosts.Layout(gtx, len(listVSP), func(gtx C, i int) D {
+						click := pg.selectVSP[i]
+						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+						click.Add(gtx.Ops)
+						pg.handlerSelectVSP(click.Events(gtx), listVSP[i], c)
+
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Flexed(0.8, func(gtx C) D {
+								return layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
+									txt := pg.th.Label(values.TextSize14, fmt.Sprintf("%v", listVSP[i].Info.FeePercentage)+"%")
+									txt.Color = pg.th.Color.Gray2
+									return endToEndRow(gtx, pg.th.Label(values.TextSize16, listVSP[i].Host).Layout, txt.Layout)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								if pg.selectedVSP.Host != listVSP[i].Host {
+									return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
+										return layout.Dimensions{}
+									})
+								}
+								return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+									return c.icons.navigationCheck.Layout(gtx, values.MarginPadding20)
+								})
+							}),
+						)
 					})
 				}),
 			)
@@ -831,67 +871,106 @@ func (pg *ticketPage) vspHostModalLayout(gtx C) layout.Dimensions {
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 				layout.Flexed(1, func(gtx C) D {
-					return pg.inputNewVSP.Layout(gtx)
+					return pg.inputVSP.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.addNewVSP.Layout(gtx)
+					return pg.addVSP.Layout(gtx)
 				}),
 			)
 		},
 	}, 900)
 }
 
-func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte) {
+func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmount uint32) {
 	selectedWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
 	selectedAccount := selectedWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount]
+	c.wallet.PurchaseTicket(pg.selectedVSP.Host, selectedWallet.ID, selectedAccount.Number, ticketAmount, password, pg.purchaseErrChan)
+}
 
-	vspd := c.wallet.NewVSPD(selectedWallet.ID, selectedAccount.Number, "http://dev.planetdecred.org:23125")
-	_, err := vspd.GetInfo()
-	if err != nil {
-		log.Error("[GetInfo] err:", err)
-		return
-	}
-
-	hashes, err := c.wallet.PurchaseTicket(selectedWallet.ID, selectedAccount.Number, 1, password, 256)
-	if err != nil {
-		log.Error("[PurchaseTicket] err:", err)
-		c.notify(err.Error(), false)
-		return
-	}
-
-	for _, hash := range hashes {
-		resp, err := vspd.GetVSPFeeAddress(hash, password)
-		if err != nil {
-			log.Error("[CreateTicketFeeTx] err:", err)
-			return
+func (pg *ticketPage) handlerSelectVSP(events []gesture.ClickEvent, v wallet.VSPInfo, c pageCommon) {
+	for _, e := range events {
+		if e.Type == gesture.TypeClick {
+			pg.selectedVSP = v
+			pg.showVSPHosts = false
+			if pg.rememberVSP.CheckBox.Value {
+				c.wallet.RememberVSP(pg.selectedVSP.Host)
+			}
 		}
+	}
+}
 
-		transactionResponse, err := vspd.CreateTicketFeeTx(resp.FeeAmount, hash, resp.FeeAddress, password)
-		if err != nil {
-			log.Error("[CreateTicketFeeTx] err:", err)
-			c.notify(err.Error(), false)
-			return
-		}
-
-		_, err = vspd.PayVSPFee(transactionResponse, hash, "", password)
-		if err != nil {
-			log.Error("[PayVSPFee] err:", err)
-			c.notify(err.Error(), false)
-			return
+func (pg *ticketPage) editorsNotEmpty(btn *decredmaterial.Button, editors ...*widget.Editor) bool {
+	btn.Color = pg.th.Color.Surface
+	for _, e := range editors {
+		if e.Text() == "" {
+			btn.Background = pg.th.Color.Hint
+			return false
 		}
 	}
 
-	c.notify("success", true)
-	c.closeModal()
+	btn.Background = pg.th.Color.Primary
+	return true
+}
+
+func (pg *ticketPage) calculateAndValidCost(c pageCommon) bool {
+	tprice, _ := c.wallet.TicketPrice()
+	tnumber, err := strconv.ParseInt(pg.ticketAmount.Editor.Text(), 10, 64)
+	pg.submitPurchase.Text = "Purchase tickets"
+	pg.reviewPurchase.Background = pg.th.Color.Hint
+	if err != nil || pg.selectedVSP.Info == nil {
+		return false
+	}
+	pg.submitPurchase.Text = fmt.Sprintf("Purchase %d tickets", tnumber)
+
+	selectWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
+	accountBalance := selectWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount].Balance.Total
+	feePercentage := pg.selectedVSP.Info.FeePercentage
+	total := tprice * tnumber
+	feeDCR := int64((float64(total) / 100) * feePercentage)
+	remaining := accountBalance - total + feeDCR
+
+	if accountBalance < total+feeDCR || remaining < 0 {
+		return false
+	}
+
+	pg.reviewPurchase.Background = pg.th.Color.Primary
+	pg.totalCost = dcrutil.Amount(total).String()
+	pg.remainingBalance = dcrutil.Amount(remaining).String()
+	return true
 }
 
 func (pg *ticketPage) handler(c pageCommon) {
+	// TODO: frefresh when ticket price update from remote
 	if len(c.info.Wallets) > 0 && pg.ticketPrice == "" {
-		pg.ticketPrice = c.wallet.TicketPrice()
+		_, priceText := c.wallet.TicketPrice()
+		pg.ticketPrice = priceText
+		c.wallet.GetAllVSP()
 	}
 
-	if pg.purchaseTicketButton.Button.Clicked() {
+	if len((*pg.vspInfo).List) != len(pg.selectVSP) {
+		pg.selectVSP = createClickGestures(len((*pg.vspInfo).List))
+	}
+
+	for _, evt := range pg.ticketAmount.Editor.Events() {
+		switch evt.(type) {
+		case widget.ChangeEvent:
+			pg.calculateAndValidCost(c)
+		}
+	}
+
+	if pg.purchaseTicket.Button.Clicked() {
+		if c.wallet.GetRememberVSP() != "" {
+			for _, vinfo := range (*pg.vspInfo).List {
+				if vinfo.Host == c.wallet.GetRememberVSP() {
+					pg.selectedVSP = vinfo
+					pg.rememberVSP.CheckBox.Value = true
+					break
+				}
+			}
+		}
+
 		if pg.autoPurchaseEnabled.Value {
+			// TODO: calculate ticket number and vsp selected
 			pg.showPurchaseConfirm = true
 			return
 		}
@@ -902,23 +981,54 @@ func (pg *ticketPage) handler(c pageCommon) {
 		pg.showPurchaseConfirm = false
 	}
 
-	if pg.purchaseTicket.Button.Clicked() {
-		pg.doPurchaseTicket(c, []byte(pg.spendingPassword.Editor.Text()))
+	if pg.editorsNotEmpty(&pg.submitPurchase, pg.spendingPassword.Editor) &&
+		pg.calculateAndValidCost(c) &&
+		pg.submitPurchase.Button.Clicked() {
+		i, err := strconv.Atoi(pg.ticketAmount.Editor.Text())
+		if err != nil {
+			return
+		}
+		pg.doPurchaseTicket(c, []byte(pg.spendingPassword.Editor.Text()), uint32(i))
 	}
 
 	if pg.cancelPurchase.Button.Clicked() {
 		pg.showPurchaseOptions = false
 	}
 
-	if pg.reviewPurchase.Button.Clicked() {
+	if pg.calculateAndValidCost(c) && pg.reviewPurchase.Button.Clicked() {
 		pg.showPurchaseConfirm = true
 	}
 
-	if pg.selectVSP.Clicked() {
+	if pg.showVSP.Clicked() {
+		c.wallet.GetAllVSP()
 		pg.showVSPHosts = true
 	}
 
-	if pg.addNewVSP.Button.Clicked() {
-		pg.showVSPHosts = false
+	if pg.editorsNotEmpty(&pg.addVSP, pg.inputVSP.Editor) && pg.addVSP.Button.Clicked() {
+		// c.wallet.AddVSP("http://dev.planetdecred.org:23125", pg.vspErrChan)
+		c.wallet.AddVSP(pg.inputVSP.Editor.Text(), pg.vspErrChan)
+	}
+
+	if pg.rememberVSP.CheckBox.Changed() {
+		if pg.rememberVSP.CheckBox.Value {
+			c.wallet.RememberVSP(pg.selectedVSP.Host)
+		} else {
+			c.wallet.RememberVSP("")
+		}
+	}
+
+	select {
+	case err := <-pg.vspErrChan:
+		c.notify(err.Error(), false)
+	case err := <-pg.purchaseErrChan:
+		if err != nil {
+			c.notify(err.Error(), false)
+		} else {
+			pg.spendingPassword.Editor.SetText("")
+			pg.showPurchaseConfirm = false
+			pg.showVSPHosts = false
+			pg.showPurchaseOptions = false
+		}
+	default:
 	}
 }

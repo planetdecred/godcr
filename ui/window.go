@@ -35,6 +35,7 @@ type Window struct {
 	walletTransaction  *wallet.Transaction
 	walletAccount      *wallet.Account
 	walletTickets      *wallet.Tickets
+	vspInfo            *wallet.VSP
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -93,6 +94,8 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletTransactions = new(wallet.Transactions)
 	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
 	win.walletAcctMixerStatus = make(chan *wallet.AccountMixer)
+	win.walletTickets = new(wallet.Tickets)
+	win.vspInfo = new(wallet.VSP)
 
 	win.wallet = wal
 	win.states.loading = true

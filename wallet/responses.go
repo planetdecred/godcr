@@ -232,3 +232,14 @@ type Balance struct {
 	VotingAuthority         int64
 	UnConfirmed             int64
 }
+
+// CreateVSP is sent when the Wallet is done creating a new VSP
+type VSPInfo struct {
+	Host string
+	Info *dcrlibwallet.GetVspInfoResponse
+}
+
+// VSP is sent when the Wallet is done getting all VSP info
+type VSP struct {
+	List []VSPInfo
+}

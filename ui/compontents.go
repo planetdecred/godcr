@@ -474,10 +474,10 @@ func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage, s
 		bal := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].TotalBalance
 		return d(gtx, acctName, walName, bal, page.wallAcctSelector.receivingAccountBtn)
 	case callingPage == "purchase":
-		acctName := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].Name
-		walName := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet].Name
-		bal := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].TotalBalance
-		return d(gtx, acctName, walName, bal, page.wallAcctSelector.purchaseTicketAccountBtn)
+		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet]
+		acctName := wallSelect.Accounts[page.wallAcctSelector.selectedPurchaseTicketAccount].Name
+		bal := wallSelect.Accounts[page.wallAcctSelector.selectedPurchaseTicketAccount].TotalBalance
+		return d(gtx, acctName, wallSelect.Name, bal, page.wallAcctSelector.purchaseTicketAccountBtn)
 	default:
 		return layout.Dimensions{}
 	}
@@ -625,8 +625,8 @@ func (page *pageCommon) walletAccountsHandler(gtx layout.Context, wallAcct walle
 			}
 
 			if strings.Contains(page.wallAcctSelector.title, "Purchasing") {
-				page.wallAcctSelector.selectedReceiveWallet = wallAcct.walletIndex
-				page.wallAcctSelector.selectedReceiveAccount = wallAcct.accountIndex
+				page.wallAcctSelector.selectedPurchaseTicketWallet = wallAcct.walletIndex
+				page.wallAcctSelector.selectedPurchaseTicketAccount = wallAcct.accountIndex
 			}
 
 			page.wallAcctSelector.isWalletAccountModalOpen = false
