@@ -5,6 +5,8 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
+	"gioui.org/font/gofont"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -55,6 +57,7 @@ type modalLoad struct {
 	template    string
 	title       string
 	confirm     interface{}
+	loading 	bool
 	confirmText string
 	cancel      interface{}
 	cancelText  string
@@ -87,6 +90,10 @@ func (m *ModalTemplate) importWatchOnlyWallet() []func(gtx C) D {
 			return m.extendedPublicKey.Layout(gtx)
 		},
 	}
+}
+
+func (load *modalLoad) setLoading(loading bool) {
+	load.loading = loading
 }
 
 func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
@@ -425,7 +432,12 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 							if load.template == RescanWalletTemplate {
 								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
 							}
-							return m.confirm.Layout(gtx)
+							if load.loading {
+								th := material.NewTheme(gofont.Collection())
+								return material.Loader(th).Layout(gtx)		
+							} else {
+								return m.confirm.Layout(gtx)
+							}
 						})
 					}),
 				)
@@ -445,6 +457,8 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.confirm.Button.Clicked() {
+			load.setLoading(true)
+			// load.loading = true
 			if m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
 				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
 			}
