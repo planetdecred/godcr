@@ -930,7 +930,7 @@ func (pg *ticketPage) calculateAndValidCost(c pageCommon) bool {
 	pg.submitPurchase.Text = fmt.Sprintf("Purchase %d tickets", tnumber)
 
 	selectWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
-	accountBalance := selectWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount].Balance.Total
+	accountBalance := selectWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount].Balance.Spendable
 	feePercentage := pg.selectedVSP.Info.FeePercentage
 	total := tprice * tnumber
 	feeDCR := int64((float64(total) / 100) * feePercentage)

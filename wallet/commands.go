@@ -980,6 +980,13 @@ func (wal *Wallet) PurchaseTicket(host string, walletID int, accountID int32, ti
 		}
 
 		hashes, err := wall.PurchaseTickets(request, "")
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			return
+		}
+
 		for _, hash := range hashes {
 			r, err := vspd.GetVSPFeeAddress(hash, passphrase)
 			if err != nil {
@@ -996,7 +1003,6 @@ func (wal *Wallet) PurchaseTicket(host string, walletID int, accountID int32, ti
 				}()
 				return
 			}
-
 			_, err = vspd.PayVSPFee(transactionResponse, hash, "", passphrase)
 			if err != nil {
 				go func() {
@@ -1004,14 +1010,14 @@ func (wal *Wallet) PurchaseTicket(host string, walletID int, accountID int32, ti
 				}()
 				return
 			}
-
-			go func() {
-				errChan <- nil
-			}()
-
-			resp.Resp = &TicketPurchase{}
-			wal.Send <- resp
 		}
+
+		go func() {
+			errChan <- nil
+		}()
+
+		resp.Resp = &TicketPurchase{}
+		wal.Send <- resp
 	}()
 }
 
@@ -1063,7 +1069,7 @@ func (wal *Wallet) GetAllTickets() {
 				return
 			}
 
-			for idx, tinfo := range ticketsInfo {
+			for _, tinfo := range ticketsInfo {
 				var amount dcrutil.Amount
 				for _, output := range tinfo.Ticket.MyOutputs {
 					amount += output.Amount
@@ -1085,12 +1091,12 @@ func (wal *Wallet) GetAllTickets() {
 					}
 				}
 
-				if idx < recentTicketsLimit &&
+				if len(liveRecentTickets) < recentTicketsLimit &&
 					(tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE") {
 					liveRecentTickets = append(liveRecentTickets, info)
 				}
 
-				if idx < recentTicketsLimit && tinfo.Status != "UNKNOWN" {
+				if len(recentActivity) < recentTicketsLimit && tinfo.Status != "UNKNOWN" {
 					recentActivity = append(recentActivity, info)
 				}
 
