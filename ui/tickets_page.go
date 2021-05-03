@@ -60,6 +60,8 @@ type ticketPage struct {
 	spendingPassword decredmaterial.Editor
 	addVSP           decredmaterial.Button
 	vspErrChan       chan error
+
+	isPurchaseLoading bool
 }
 
 func (win *Window) TicketPage(c pageCommon) layout.Widget {
@@ -882,6 +884,11 @@ func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions 
 }
 
 func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmount uint32) {
+	if pg.isPurchaseLoading {
+		log.Info("Please wait...")
+		return
+	}
+	pg.isPurchaseLoading = true
 	selectedWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
 	selectedAccount := selectedWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount]
 	c.wallet.PurchaseTicket(pg.selectedVSP.Host, selectedWallet.ID, selectedAccount.Number, ticketAmount, password, pg.purchaseErrChan)
@@ -1029,6 +1036,7 @@ func (pg *ticketPage) handler(c pageCommon) {
 			pg.showVSPHosts = false
 			pg.showPurchaseOptions = false
 		}
+		pg.isPurchaseLoading = false
 	default:
 	}
 }

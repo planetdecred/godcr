@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -1276,8 +1277,8 @@ func (wal *Wallet) GetAllVSP() {
 		}
 
 		wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
-
 		var loadedVSP []VSPInfo
+
 		for _, host := range valueOut.List {
 			v, err := getVSPInfo(host)
 			if err == nil {
@@ -1287,6 +1288,17 @@ func (wal *Wallet) GetAllVSP() {
 				})
 			}
 		}
+
+		l, _ := getInitVSPInfo("https://api.decred.org/?c=vsp")
+		for h, v := range l {
+			if strings.Contains(wal.Net, v.Network) {
+				loadedVSP = append(loadedVSP, VSPInfo{
+					Host: fmt.Sprintf("https://%s", h),
+					Info: v,
+				})
+			}
+		}
+
 		var resp Response
 		resp.Resp = &VSP{
 			List: loadedVSP,
@@ -1344,6 +1356,33 @@ func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
 		return nil, err
 	}
 	return &vspInfoResponse, nil
+}
+
+// getInitVSPInfo returns the list information of the VSP
+func getInitVSPInfo(url string) (map[string]*dcrlibwallet.GetVspInfoResponse, error) {
+	rq := new(http.Client)
+	resp, err := rq.Get((url))
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
+	}
+
+	var vspInfoResponse map[string]*dcrlibwallet.GetVspInfoResponse
+	err = json.Unmarshal(b, &vspInfoResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return vspInfoResponse, nil
 }
 
 func validateVSPServerSignature(resp *http.Response, pubKey, body []byte) error {
