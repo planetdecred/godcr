@@ -149,6 +149,7 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 			if !pg.proposalsItemSet {
 				pg.initializeProposaltabItems()
 			}
+			go pg.updateProposalState()
 			pg.isSynced = true
 		} else if prop.ProposalStatus == wallet.NewProposalFound {
 			pg.addDiscoveredProposal(*prop.Proposal)
@@ -263,6 +264,28 @@ out:
 	pg.addDiscoveredProposal(proposal)
 }
 
+func (pg *proposalsPage) updateProposalState() {
+	for p := range (*pg.proposals).Proposals {
+		for i := range pg.tabs.tabs {
+			if pg.tabs.tabs[i].category == dcrlibwallet.ProposalCategoryPre || pg.tabs.tabs[i].category == dcrlibwallet.ProposalCategoryActive {
+				for k := range pg.tabs.tabs[i].proposals {
+					if pg.tabs.tabs[i].proposals[k].proposal.Token == (*pg.proposals).Proposals[p].Token {
+						if pg.tabs.tabs[i].proposals[k].proposal.VoteStatus != (*pg.proposals).Proposals[p].VoteStatus {
+							pg.tabs.tabs[i].proposals[k].proposal.VoteStatus = (*pg.proposals).Proposals[p].VoteStatus
+						}
+						if pg.tabs.tabs[i].proposals[k].proposal.YesVotes != (*pg.proposals).Proposals[k].YesVotes {
+							pg.tabs.tabs[i].proposals[k].proposal.YesVotes = (*pg.proposals).Proposals[p].YesVotes
+						}
+						if pg.tabs.tabs[i].proposals[k].proposal.NoVotes != (*pg.proposals).Proposals[k].NoVotes {
+							pg.tabs.tabs[i].proposals[k].proposal.NoVotes = (*pg.proposals).Proposals[p].NoVotes
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
 	str := "No " + strings.ToLower(proposalCategoryTitles[pg.tabs.selected]) + " proposals"
 
@@ -285,7 +308,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 	versionLabel := pg.theme.Body2("Version " + proposal.Version)
 	versionLabel.Color = grayCol
 
-	stateLabel := pg.theme.Body2(fmt.Sprintf("%v /2", proposal.State))
+	stateLabel := pg.theme.Body2(fmt.Sprintf("%v /2", proposal.VoteStatus))
 	stateLabel.Color = grayCol
 
 	timeAgoLabel := pg.theme.Body2(timeAgo(proposal.Timestamp))
@@ -338,7 +361,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 									Max: gtx.Constraints.Max,
 								}
 								rect.Max.Y = 20
-								pg.layoutInfoTooltip(gtx, i, proposal.State, rect)
+								pg.layoutInfoTooltip(gtx, i, proposal.VoteStatus, rect)
 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 									return p.proposals[i].infoIcon.Layout(gtx, unit.Dp(20))
 								})
