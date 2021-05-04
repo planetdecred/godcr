@@ -1,12 +1,12 @@
 package ui
 
 import (
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"gioui.org/font/gofont"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -57,7 +57,7 @@ type modalLoad struct {
 	template    string
 	title       string
 	confirm     interface{}
-	loading 	bool
+	loading     bool
 	confirmText string
 	cancel      interface{}
 	cancelText  string
@@ -92,8 +92,8 @@ func (m *ModalTemplate) importWatchOnlyWallet() []func(gtx C) D {
 	}
 }
 
-func (load *modalLoad) setLoading(loading bool) {
-	load.loading = loading
+func (load *modalLoad) setLoading(isLoading bool) {
+	load.loading = isLoading
 }
 
 func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
@@ -388,6 +388,7 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 	if !load.isReset {
 		m.resetFields()
 		load.isReset = true
+		load.setLoading(false)
 	}
 
 	title := []func(gtx C) D{
@@ -434,10 +435,11 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 							}
 							if load.loading {
 								th := material.NewTheme(gofont.Collection())
-								return material.Loader(th).Layout(gtx)		
-							} else {
-								return m.confirm.Layout(gtx)
+								return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
+									return material.Loader(th).Layout(gtx)
+								})
 							}
+							return m.confirm.Layout(gtx)
 						})
 					}),
 				)
@@ -458,7 +460,6 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.confirm.Button.Clicked() {
 			load.setLoading(true)
-			// load.loading = true
 			if m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
 				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
 			}
@@ -495,6 +496,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case CreateAccountTemplate:
 		if m.editorsNotEmpty(th, m.walletName.Editor, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
+			load.setLoading(true)
 			load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
 		}
 		if m.cancel.Button.Clicked() {
@@ -527,6 +529,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		if m.editorsNotEmpty(th, m.oldSpendingPassword.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.confirm.Button.Clicked() {
+			load.setLoading(true)
 			if m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
 				load.confirm.(func(string, string))(m.oldSpendingPassword.Editor.Text(), m.spendingPassword.Editor.Text())
 			}
@@ -550,6 +553,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case ImportWatchOnlyWalletTemplate:
 		if m.confirm.Button.Clicked() {
+			load.setLoading(true)
 			load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.extendedPublicKey.Editor.Text())
 		}
 		if m.cancel.Button.Clicked() {
