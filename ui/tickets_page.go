@@ -48,7 +48,7 @@ type ticketPage struct {
 	autoPurchaseEnabled   *widget.Bool
 	toTickets             decredmaterial.TextAndIconButton
 	toTicketsActivity     decredmaterial.TextAndIconButton
-	ticketStatusIc        map[string]map[string]*widget.Image
+	ticketStatusIc        map[string]*widget.Image
 	purchaseErrChan       chan error
 	walletSelectedID      int
 	accountSelectedNumber int32
@@ -113,47 +113,15 @@ func (win *Window) TicketPage(c pageCommon) layout.Widget {
 	pg.toTicketsActivity.Color = c.theme.Color.Primary
 	pg.toTicketsActivity.BackgroundColor = c.theme.Color.Surface
 
-	pg.ticketStatusIc = map[string]map[string]*widget.Image{
-		"UNKNOWN": {
-			"head":     nil,
-			"live":     nil,
-			"activity": nil,
-		},
-		"UNMINED": {
-			"head":     c.icons.ti.ticketUnminedIcon3,
-			"live":     c.icons.ti.ticketUnminedIcon1,
-			"activity": c.icons.ti.ticketUnminedIcon2,
-		},
-		"IMMATURE": {
-			"head":     c.icons.ti.ticketImmatureIcon3,
-			"live":     c.icons.ti.ticketImmatureIcon1,
-			"activity": c.icons.ti.ticketImmatureIcon2,
-		},
-		"LIVE": {
-			"head":     c.icons.ti.ticketLiveIcon3,
-			"live":     c.icons.ti.ticketLiveIcon1,
-			"activity": c.icons.ti.ticketLiveIcon2,
-		},
-		"VOTED": {
-			"head":     c.icons.ti.ticketVotedIcon3,
-			"live":     c.icons.ti.ticketVotedIcon1,
-			"activity": c.icons.ti.ticketVotedIcon2,
-		},
-		"MISSED": {
-			"head":     c.icons.ti.ticketMissedIcon3,
-			"live":     c.icons.ti.ticketMissedIcon1,
-			"activity": c.icons.ti.ticketMissedIcon2,
-		},
-		"EXPIRED": {
-			"head":     c.icons.ti.ticketExpiredIcon3,
-			"live":     c.icons.ti.ticketExpiredIcon1,
-			"activity": c.icons.ti.ticketExpiredIcon2,
-		},
-		"REVOKED": {
-			"head":     c.icons.ti.ticketRevokedIcon3,
-			"live":     c.icons.ti.ticketRevokedIcon1,
-			"activity": c.icons.ti.ticketRevokedIcon2,
-		},
+	pg.ticketStatusIc = map[string]*widget.Image{
+		"UNKNOWN":  nil,
+		"UNMINED":  c.icons.ticketUnminedIcon,
+		"IMMATURE": c.icons.ticketImmatureIcon,
+		"LIVE":     c.icons.ticketLiveIcon,
+		"VOTED":    c.icons.ticketVotedIcon,
+		"MISSED":   c.icons.ticketMissedIcon,
+		"EXPIRED":  c.icons.ticketExpiredIcon,
+		"REVOKED":  c.icons.ticketRevokedIcon,
 	}
 
 	return func(gtx C) D {
@@ -240,8 +208,8 @@ func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layou
 					Bottom: values.MarginPadding8,
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Center.Layout(gtx, func(gtx C) D {
-						ic := c.icons.ti.ticketPurchasedIcon
-						ic.Scale = 1.0
+						ic := c.icons.ticketPurchasedIcon
+						ic.Scale = 1.2
 						return ic.Layout(gtx)
 					})
 				})
@@ -286,8 +254,8 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 								return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											ic := pg.ticketStatusIc[item.Status]["head"]
-											ic.Scale = 1.0
+											ic := pg.ticketStatusIc[item.Status]
+											ic.Scale = .5
 											return ic.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
@@ -358,7 +326,7 @@ func (pg *ticketPage) ticketLiveItemnInfo(gtx layout.Context, c pageCommon, t wa
 							Left:   values.MarginPadding62,
 							Bottom: values.MarginPadding24,
 						}.Layout(gtx, func(gtx C) D {
-							ic := pg.ticketStatusIc[t.Info.Status]["live"]
+							ic := pg.ticketStatusIc[t.Info.Status]
 							ic.Scale = 1.0
 							return ic.Layout(gtx)
 						})
@@ -469,8 +437,8 @@ func (pg *ticketPage) ticketActivityItemnInfo(gtx layout.Context, c pageCommon, 
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				ic := pg.ticketStatusIc[t.Info.Status]["activity"]
-				ic.Scale = 1.0
+				ic := pg.ticketStatusIc[t.Info.Status]
+				ic.Scale = 0.6
 				return ic.Layout(gtx)
 			})
 		}),
@@ -565,11 +533,11 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := pg.ticketStatusIc[item.Status]["activity"]
+								ic := pg.ticketStatusIc[item.Status]
 								if ic == nil {
 									return layout.Dimensions{}
 								}
-								ic.Scale = 1.0
+								ic.Scale = 0.6
 								return ic.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -639,8 +607,8 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 					return layout.Center.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := c.icons.ti.ticketPurchasedIcon
-								ic.Scale = 1.0
+								ic := c.icons.ticketPurchasedIcon
+								ic.Scale = 1.2
 								return ic.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
