@@ -464,20 +464,17 @@ func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage, s
 
 	switch {
 	case callingPage == "send":
-		acctName := page.info.Wallets[page.wallAcctSelector.selectedSendWallet].Accounts[page.wallAcctSelector.selectedSendAccount].Name
-		walName := page.info.Wallets[page.wallAcctSelector.selectedSendWallet].Name
-		bal := page.info.Wallets[page.wallAcctSelector.selectedSendWallet].Accounts[page.wallAcctSelector.selectedSendAccount].TotalBalance
-		return d(gtx, acctName, walName, bal, page.wallAcctSelector.sendAccountBtn)
+		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedSendWallet]
+		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedSendAccount]
+		return d(gtx, acctSelect.Name, wallSelect.Name, acctSelect.TotalBalance, page.wallAcctSelector.sendAccountBtn)
 	case callingPage == "receive":
-		acctName := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].Name
-		walName := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Name
-		bal := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet].Accounts[page.wallAcctSelector.selectedReceiveAccount].TotalBalance
-		return d(gtx, acctName, walName, bal, page.wallAcctSelector.receivingAccountBtn)
+		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet]
+		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedReceiveAccount]
+		return d(gtx, acctSelect.Name, wallSelect.Name, acctSelect.TotalBalance, page.wallAcctSelector.receivingAccountBtn)
 	case callingPage == "purchase":
 		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet]
-		acctName := wallSelect.Accounts[page.wallAcctSelector.selectedPurchaseTicketAccount].Name
-		bal := wallSelect.Accounts[page.wallAcctSelector.selectedPurchaseTicketAccount].TotalBalance
-		return d(gtx, acctName, wallSelect.Name, bal, page.wallAcctSelector.purchaseTicketAccountBtn)
+		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedPurchaseTicketAccount]
+		return d(gtx, acctSelect.Name, wallSelect.Name, acctSelect.TotalBalance, page.wallAcctSelector.purchaseTicketAccountBtn)
 	default:
 		return layout.Dimensions{}
 	}

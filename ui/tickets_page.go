@@ -12,6 +12,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/decred/dcrd/dcrutil"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 
@@ -22,8 +23,9 @@ import (
 const PageTickets = "Tickets"
 
 type ticketPage struct {
-	th  *decredmaterial.Theme
-	wal *wallet.Wallet
+	th   *decredmaterial.Theme
+	wal  *wallet.Wallet
+	vspd *dcrlibwallet.VSPD
 
 	ticketPageContainer layout.List
 	ticketsLive         layout.List
@@ -42,12 +44,14 @@ type ticketPage struct {
 	showPurchaseOptions   bool
 	showPurchaseConfirm   bool
 
-	purchaseOptions     *decredmaterial.Modal
-	autoPurchaseEnabled *widget.Bool
-	toTickets           decredmaterial.TextAndIconButton
-	toTicketsActivity   decredmaterial.TextAndIconButton
-	ticketStatusIc      map[string]map[string]*widget.Image
-	purchaseErrChan     chan error
+	purchaseOptions       *decredmaterial.Modal
+	autoPurchaseEnabled   *widget.Bool
+	toTickets             decredmaterial.TextAndIconButton
+	toTicketsActivity     decredmaterial.TextAndIconButton
+	ticketStatusIc        map[string]map[string]*widget.Image
+	purchaseErrChan       chan error
+	walletSelectedID      int
+	accountSelectedNumber int32
 
 	vspInfo          **wallet.VSP
 	vspHosts         layout.List
@@ -84,15 +88,14 @@ func (win *Window) TicketPage(c pageCommon) layout.Widget {
 		purchaseOptions:       c.theme.Modal(),
 		ticketAmount:          c.theme.Editor(new(widget.Editor), ""),
 		purchaseErrChan:       make(chan error),
-
-		vspHosts:         layout.List{Axis: layout.Vertical},
-		showVSP:          new(widget.Clickable),
-		rememberVSP:      c.theme.CheckBox(new(widget.Bool), "Remember VSP"),
-		inputVSP:         c.theme.Editor(new(widget.Editor), "Add a new VSP..."),
-		addVSP:           c.theme.Button(new(widget.Clickable), "Save"),
-		spendingPassword: c.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		vspInfo:          &win.vspInfo,
-		vspErrChan:       make(chan error),
+		vspHosts:              layout.List{Axis: layout.Vertical},
+		showVSP:               new(widget.Clickable),
+		rememberVSP:           c.theme.CheckBox(new(widget.Bool), "Remember VSP"),
+		inputVSP:              c.theme.Editor(new(widget.Editor), "Add a new VSP..."),
+		addVSP:                c.theme.Button(new(widget.Clickable), "Save"),
+		spendingPassword:      c.theme.EditorPassword(new(widget.Editor), "Spending password"),
+		vspInfo:               &win.vspInfo,
+		vspErrChan:            make(chan error),
 	}
 	pg.ticketAmount.Editor.SetText("1")
 
@@ -883,21 +886,11 @@ func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions 
 	}, 900)
 }
 
-func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmount uint32) {
-	if pg.isPurchaseLoading {
-		log.Info("Please wait...")
-		return
-	}
-	pg.isPurchaseLoading = true
-	selectedWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
-	selectedAccount := selectedWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount]
-	c.wallet.PurchaseTicket(pg.selectedVSP.Host, selectedWallet.ID, selectedAccount.Number, ticketAmount, password, pg.purchaseErrChan)
-}
-
 func (pg *ticketPage) handlerSelectVSP(events []gesture.ClickEvent, v wallet.VSPInfo, c pageCommon) {
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			pg.selectedVSP = v
+			pg.createNewVSPD(c)
 			pg.showVSPHosts = false
 			if pg.rememberVSP.CheckBox.Value {
 				c.wallet.RememberVSP(pg.selectedVSP.Host)
@@ -946,12 +939,41 @@ func (pg *ticketPage) calculateAndValidCost(c pageCommon) bool {
 	return true
 }
 
+func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmount uint32) {
+	if pg.isPurchaseLoading {
+		log.Info("Please wait...")
+		return
+	}
+	pg.isPurchaseLoading = true
+	c.wallet.PurchaseTicket(pg.walletSelectedID, pg.accountSelectedNumber, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
+}
+
+func (pg *ticketPage) createNewVSPD(c pageCommon) {
+	vspd, err := c.wallet.NewVSPD(pg.selectedVSP.Host, pg.walletSelectedID, pg.accountSelectedNumber)
+	if err != nil {
+		c.notify(err.Error(), false)
+	}
+	pg.vspd = vspd
+}
+
 func (pg *ticketPage) handler(c pageCommon) {
 	// TODO: frefresh when ticket price update from remote
 	if len(c.info.Wallets) > 0 && pg.ticketPrice == "" {
 		_, priceText := c.wallet.TicketPrice()
 		pg.ticketPrice = priceText
 		c.wallet.GetAllVSP()
+	}
+
+	selectedWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
+	selectedAccount := selectedWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount]
+
+	if pg.walletSelectedID != selectedWallet.ID ||
+		pg.accountSelectedNumber != selectedAccount.Number {
+		pg.walletSelectedID = selectedWallet.ID
+		pg.accountSelectedNumber = selectedAccount.Number
+		if pg.selectedVSP.Host != "" {
+			pg.createNewVSPD(c)
+		}
 	}
 
 	if len((*pg.vspInfo).List) != len(pg.selectVSP) {
@@ -971,6 +993,7 @@ func (pg *ticketPage) handler(c pageCommon) {
 				if vinfo.Host == c.wallet.GetRememberVSP() {
 					pg.selectedVSP = vinfo
 					pg.rememberVSP.CheckBox.Value = true
+					pg.createNewVSPD(c)
 					break
 				}
 			}

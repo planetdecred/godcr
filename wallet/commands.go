@@ -950,8 +950,23 @@ func (wal *Wallet) TicketPrice() (int64, string) {
 	return pr.TicketPrice, dcrutil.Amount(pr.TicketPrice).String()
 }
 
+func (wal *Wallet) NewVSPD(host string, walletID int, accountID int32) (*dcrlibwallet.VSPD, error) {
+	if host == "" {
+		return nil, fmt.Errorf("Host is required")
+	}
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
+		return nil, ErrIDNotExist
+	}
+	vspd := wal.multi.NewVSPD(host, walletID, accountID)
+	if vspd == nil {
+		return nil, fmt.Errorf("Something wrong when creating new VSPD")
+	}
+	return vspd, nil
+}
+
 // PurchaseTicket buy a ticket with given parameters
-func (wal *Wallet) PurchaseTicket(host string, walletID int, accountID int32, tickets uint32, passphrase []byte, errChan chan error) {
+func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, vspd *dcrlibwallet.VSPD, errChan chan error) {
 	go func() {
 		var resp Response
 		wall := wal.multi.WalletWithID(walletID)
@@ -962,7 +977,6 @@ func (wal *Wallet) PurchaseTicket(host string, walletID int, accountID int32, ti
 			return
 		}
 
-		vspd := wal.multi.NewVSPD(host, walletID, accountID)
 		_, err := vspd.GetInfo()
 		if err != nil {
 			go func() {
