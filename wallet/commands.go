@@ -1046,7 +1046,7 @@ func (wal *Wallet) GetAllTickets() {
 			wal.Send <- resp
 			return
 		}
-		recentTicketsLimit := 5
+
 		var liveRecentTickets []Ticket
 		var recentActivity []Ticket
 
@@ -1105,12 +1105,11 @@ func (wal *Wallet) GetAllTickets() {
 					}
 				}
 
-				if len(liveRecentTickets) < recentTicketsLimit &&
-					(tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE") {
+				if tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE" {
 					liveRecentTickets = append(liveRecentTickets, info)
 				}
 
-				if len(recentActivity) < recentTicketsLimit && tinfo.Status != "UNKNOWN" {
+				if tinfo.Status != "UNKNOWN" {
 					recentActivity = append(recentActivity, info)
 				}
 
@@ -1136,11 +1135,20 @@ func (wal *Wallet) GetAllTickets() {
 			return backTime.Before(frontTime)
 		})
 
+		recentLimit := 5
+		if len(liveRecentTickets) > recentLimit {
+			liveRecentTickets = liveRecentTickets[:recentLimit]
+		}
+
 		sort.SliceStable(recentActivity, func(i, j int) bool {
 			backTime := time.Unix(recentActivity[j].Info.Ticket.Timestamp, 0)
 			frontTime := time.Unix(recentActivity[i].Info.Ticket.Timestamp, 0)
 			return backTime.Before(frontTime)
 		})
+
+		if len(recentActivity) > recentLimit {
+			recentActivity = recentActivity[:recentLimit]
+		}
 
 		resp.Resp = &Tickets{
 			Confirmed:             tickets,
