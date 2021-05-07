@@ -38,7 +38,7 @@ type Window struct {
 	vspInfo            *wallet.VSP
 	proposals          *wallet.Proposals
 	selectedProposal   *dcrlibwallet.Proposal
-	proposal           chan *wallet.NewProposal
+	proposal           chan *wallet.Proposal
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -99,7 +99,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletTickets = new(wallet.Tickets)
 	win.vspInfo = new(wallet.VSP)
 	win.proposals = new(wallet.Proposals)
-	win.proposal = make(chan *wallet.NewProposal)
+	win.proposal = make(chan *wallet.Proposal)
 
 	win.wallet = wal
 	win.states.loading = true

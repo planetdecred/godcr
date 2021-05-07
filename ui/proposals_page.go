@@ -51,7 +51,7 @@ type proposalsPage struct {
 	wallet           *wallet.Wallet
 	selectedProposal **dcrlibwallet.Proposal
 	proposals        **wallet.Proposals
-	proposalSync     *chan *wallet.NewProposal
+	syncedProposal   *chan *wallet.Proposal
 	proposalsList    *layout.List
 	tabs             tabs
 	tabCard          decredmaterial.Card
@@ -91,7 +91,7 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		infoIcon:         common.icons.actionInfo,
 		proposals:        &win.proposals,
 		selectedProposal: &win.selectedProposal,
-		proposalSync:     &win.proposal,
+		syncedProposal:   &win.proposal,
 		updatedIcon:      common.icons.navigationCheck,
 		updatedLabel:     common.theme.Body2("Updated"),
 		syncButton:       new(widget.Clickable),
@@ -144,7 +144,7 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 	}
 
 	select {
-	case prop := <-*pg.proposalSync:
+	case prop := <-*pg.syncedProposal:
 		if prop.ProposalStatus == wallet.Synced {
 			if !pg.proposalsItemSet {
 				pg.initializeProposaltabItems()
@@ -152,10 +152,10 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 			go pg.updateProposalState()
 			pg.isSynced = true
 		} else if prop.ProposalStatus == wallet.NewProposalFound {
-			pg.addDiscoveredProposal(*prop.Proposal)
+			pg.addDiscoveredProposal(false, *prop.Proposal)
 			common.refreshPage()
 		} else if prop.ProposalStatus == wallet.VoteStarted || prop.ProposalStatus == wallet.VoteFinished {
-			pg.updateProposal(*prop.Proposal)
+			pg.updateProposalVoteStatus(*prop.Proposal)
 			common.refreshPage()
 		}
 	default:
@@ -234,7 +234,7 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) addDiscoveredProposal(proposal dcrlibwallet.Proposal) {
+func (pg *proposalsPage) addDiscoveredProposal(first bool, proposal dcrlibwallet.Proposal) {
 	for i := range pg.tabs.tabs {
 		if pg.tabs.tabs[i].category == proposal.Category {
 			item := proposalItem{
@@ -245,13 +245,19 @@ func (pg *proposalsPage) addDiscoveredProposal(proposal dcrlibwallet.Proposal) {
 				stateInfoTooltip:  pg.theme.Tooltip(),
 				stateTooltipLabel: pg.theme.Caption(""),
 			}
-			pg.tabs.tabs[i].proposals = append([]proposalItem{item}, pg.tabs.tabs[i].proposals...)
-			break
+			if first {
+				pg.tabs.tabs[i].proposals = append(pg.tabs.tabs[i].proposals, item)
+				break
+			} else {
+				pg.tabs.tabs[i].proposals = append([]proposalItem{item}, pg.tabs.tabs[i].proposals...)
+				break
+			}
 		}
 	}
 }
 
-func (pg *proposalsPage) updateProposal(proposal dcrlibwallet.Proposal) {
+// updateProposalVoteStatus is called when voting has either started or ended for a particular proposal
+func (pg *proposalsPage) updateProposalVoteStatus(proposal dcrlibwallet.Proposal) {
 out:
 	for i := range pg.tabs.tabs {
 		for k := range pg.tabs.tabs[i].proposals {
@@ -261,7 +267,7 @@ out:
 			}
 		}
 	}
-	pg.addDiscoveredProposal(proposal)
+	pg.addDiscoveredProposal(false, proposal)
 }
 
 func (pg *proposalsPage) updateProposalState() {
@@ -514,20 +520,7 @@ func (pg *proposalsPage) initializeProposaltabItems() {
 
 	for i := range (*pg.proposals).Proposals {
 		if i != len((*pg.proposals).Proposals) {
-			item := proposalItem{
-				btn:               new(widget.Clickable),
-				proposal:          (*pg.proposals).Proposals[i],
-				voteBar:           pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
-				infoIcon:          pg.infoIcon,
-				stateInfoTooltip:  pg.theme.Tooltip(),
-				stateTooltipLabel: pg.theme.Caption(""),
-			}
-			for k := range pg.tabs.tabs {
-				if pg.tabs.tabs[k].category == (*pg.proposals).Proposals[i].Category {
-					pg.tabs.tabs[k].proposals = append(pg.tabs.tabs[k].proposals, item)
-					break
-				}
-			}
+			pg.addDiscoveredProposal(true, (*pg.proposals).Proposals[i])
 		}
 	}
 }

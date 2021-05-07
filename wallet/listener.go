@@ -81,7 +81,7 @@ type (
 		BlockInfo      NewBlock
 		ConfirmedTxn   TxConfirmed
 		AcctMixerInfo  AccountMixer
-		Proposal       NewProposal
+		Proposal       Proposal
 	}
 )
 

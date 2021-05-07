@@ -13,7 +13,7 @@ const (
 	VoteFinished
 )
 
-type NewProposal struct {
+type Proposal struct {
 	Proposal       *dcrlibwallet.Proposal
 	ProposalStatus ProposalStatus
 }
@@ -21,7 +21,7 @@ type NewProposal struct {
 func (l *listener) OnNewProposal(proposal *dcrlibwallet.Proposal) {
 	l.Send <- SyncStatusUpdate{
 		Stage: ProposalAdded,
-		Proposal: NewProposal{
+		Proposal: Proposal{
 			Proposal:       proposal,
 			ProposalStatus: NewProposalFound,
 		},
@@ -31,7 +31,7 @@ func (l *listener) OnNewProposal(proposal *dcrlibwallet.Proposal) {
 func (l *listener) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
 	l.Send <- SyncStatusUpdate{
 		Stage: ProposalVoteStarted,
-		Proposal: NewProposal{
+		Proposal: Proposal{
 			Proposal:       proposal,
 			ProposalStatus: VoteStarted,
 		},
@@ -41,7 +41,7 @@ func (l *listener) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
 func (l *listener) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
 	l.Send <- SyncStatusUpdate{
 		Stage: ProposalVoteFinished,
-		Proposal: NewProposal{
+		Proposal: Proposal{
 			Proposal:       proposal,
 			ProposalStatus: VoteFinished,
 		},
@@ -51,7 +51,7 @@ func (l *listener) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
 func (l *listener) OnProposalsSynced() {
 	l.Send <- SyncStatusUpdate{
 		Stage: ProposalSynced,
-		Proposal: NewProposal{
+		Proposal: Proposal{
 			ProposalStatus: Synced,
 		},
 	}
