@@ -151,6 +151,8 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.restoreWalletBtn.TextSize = values.TextSize16
 	pg.errLabel.Color = pg.theme.Color.Danger
 
+	pg.passwordStrength.Color = pg.theme.Color.LightGray
+
 	for i := 0; i <= 32; i++ {
 		widgetEditor := new(widget.Editor)
 		widgetEditor.SingleLine, widgetEditor.Submit = true, true
@@ -772,13 +774,6 @@ func (pg *createRestore) centralize(gtx layout.Context, content layout.Widget) l
 	)
 }
 
-func (pg *createRestore) computePasswordStrength(common pageCommon, editors ...*widget.Editor) {
-	password := editors[0]
-	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
-	pg.passwordStrength.Progress = float32(strength * 100)
-	pg.passwordStrength.Color = common.theme.Color.Success
-}
-
 func (pg *createRestore) handle(common pageCommon) {
 	for pg.hideRestoreWallet.Button.Clicked() {
 		if pg.info.LoadedWallets <= 0 {
@@ -897,7 +892,7 @@ func (pg *createRestore) handle(common pageCommon) {
 	default:
 	}
 
-	pg.computePasswordStrength(common, pg.spendingPassword.Editor)
+	computePasswordStrength(&pg.passwordStrength, common.theme, pg.spendingPassword.Editor)
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
 }

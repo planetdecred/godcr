@@ -14,6 +14,7 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/text/message"
 )
@@ -117,4 +118,11 @@ func goToURL(url string) {
 	if err != nil {
 		log.Error(err)
 	}
+}
+
+func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
+	password := editors[0]
+	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
+	pb.Progress = float32(strength * 100)
+	pb.Color = th.Color.Success
 }

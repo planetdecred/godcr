@@ -16,14 +16,14 @@ type (
 		Height     int
 		Width      int
 		Color      color.NRGBA
-		isVetircal bool
+		isVertical bool
 	}
 )
 
-// VLine returns a vertical line widget instance
-func (t *Theme) VLine(height, width int) Line {
+// SeparatorVertical returns a vertical line widget instance
+func (t *Theme) SeparatorVertical(height, width int) Line {
 	vLine := t.Line(height, width)
-	vLine.isVetircal = true
+	vLine.isVertical = true
 	return vLine
 }
 
@@ -55,7 +55,7 @@ func (l Line) Layout(gtx C) D {
 		l.Width = gtx.Constraints.Max.X
 	}
 
-	if l.isVetircal && l.Height == 0 {
+	if l.isVertical && l.Height == 0 {
 		l.Height = gtx.Constraints.Max.Y
 	}
 

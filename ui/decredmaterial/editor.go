@@ -15,6 +15,15 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
+type RestoreEditor struct {
+	t          *Theme
+	Edit       Editor
+	TitleLabel Label
+	LineColor  color.NRGBA
+	m10        unit.Value
+	height     int
+}
+
 type Editor struct {
 	t *Theme
 	material.EditorStyle
@@ -49,6 +58,20 @@ func (t *Theme) EditorPassword(editor *widget.Editor, hint string) Editor {
 	e := t.Editor(editor, hint)
 	e.isPassword = true
 	return e
+}
+
+func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) RestoreEditor {
+
+	e := t.Editor(editor, hint)
+	e.Bordered = false
+	return RestoreEditor{
+		t:          t,
+		Edit:       e,
+		TitleLabel: t.Body2(title),
+		LineColor:  t.Color.Gray1,
+		m10:        values.MarginPadding10,
+		height:     30,
+	}
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -244,6 +267,34 @@ func (e Editor) handleEvents() {
 	} else {
 		e.LineColor = e.t.Color.Gray1
 	}
+}
+
+func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
+	border := widget.Border{Color: re.LineColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
+	return border.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{
+					Left:  re.m10,
+					Right: re.m10,
+				}.Layout(gtx, func(gtx C) D {
+					return re.TitleLabel.Layout(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				l := re.t.SeparatorVertical(re.height, 2)
+				l.Color = re.t.Color.Gray1
+				return layout.Inset{}.Layout(gtx, func(gtx C) D {
+					return l.Layout(gtx)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				edit := re.Edit.Layout(gtx)
+				re.height = edit.Size.Y
+				return edit
+			}),
+		)
+	})
 }
 
 func (e *Editor) SetRequiredErrorText(txt string) {
