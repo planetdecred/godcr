@@ -63,6 +63,7 @@ type walletPage struct {
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
 	shadowBox                                  *decredmaterial.Shadow
 	separator                                  decredmaterial.Line
+	refreshPage                                *bool
 }
 
 func (win *Window) WalletPage(common pageCommon) layout.Widget {
@@ -82,6 +83,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 		openPopupIndex:           -1,
 		shadowBox:                common.theme.Shadow(),
 		separator:                common.theme.Separator(),
+		refreshPage:              &win.refreshPage,
 	}
 
 	pg.separator.Color = common.theme.Color.Background
@@ -273,6 +275,11 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common pageCommon) {
 
 // Layout lays out the widgets for the main wallets pg.
 func (pg *walletPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+	if *pg.refreshPage {
+		common.refreshWindow()
+		*pg.refreshPage = false
+	}
+
 	if common.info.LoadedWallets == 0 {
 		return common.Layout(gtx, func(gtx C) D {
 			return common.UniformPadding(gtx, func(gtx C) D {

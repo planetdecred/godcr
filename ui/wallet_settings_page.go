@@ -241,6 +241,7 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 							title:    "Confirm to remove",
 							confirm: func(pass string) {
 								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
+								common.resetSelected()
 							},
 							confirmText: "Confirm",
 							cancel:      common.closeModal,

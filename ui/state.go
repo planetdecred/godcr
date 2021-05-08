@@ -83,7 +83,7 @@ func (win *Window) updateStates(update interface{}) {
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
 		win.selected = 0
-		win.changePage(PageWallet)
+		win.changePageAndRefresh(PageWallet)
 		win.notifyOnSuccess("Wallet removed")
 	case wallet.AddedAccount:
 		win.notifyOnSuccess("Account created")

@@ -61,6 +61,9 @@ type Window struct {
 	sysDestroyWithSync      bool
 	walletAcctMixerStatus   chan *wallet.AccountMixer
 	internalLog             chan string
+
+	selectedProposal        *dcrlibwallet.Proposal
+	refreshPage bool
 }
 
 type WriteClipboard struct {
@@ -122,6 +125,11 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 func (win *Window) changePage(page string) {
 	win.current = page
 	win.refresh()
+}
+
+func (win *Window) changePageAndRefresh(page string) {
+	win.refreshPage = true
+	win.changePage(page)
 }
 
 func (win *Window) refresh() {
