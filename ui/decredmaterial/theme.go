@@ -57,11 +57,15 @@ type Theme struct {
 		LightBlue    color.NRGBA
 		LightGray    color.NRGBA
 		InactiveGray color.NRGBA
+		ActiveGray   color.NRGBA
 		Gray1        color.NRGBA
 		Gray2        color.NRGBA
 		Gray3        color.NRGBA
 		Orange       color.NRGBA
 		Orange2      color.NRGBA
+		Gray4        color.NRGBA
+		Gray5        color.NRGBA
+		Gray6        color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -81,35 +85,78 @@ type Theme struct {
 	collapseIcon          *widget.Image
 
 	dropDownMenus []*DropDown
+
+	DarkMode bool
 }
 
-func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image) *Theme {
+func (t *Theme) setColorMode(darkMode bool){
+	if darkMode {
+		t.DarkMode = true
+		t.Color.Primary = rgb(0x57B6FF)
+		t.Color.Text = argb(0x99FFFFFF)
+		t.Color.Hint = rgb(0x8997A5)
+		t.Color.InvText = rgb(0xffffff)
+		t.Color.Overlay = rgb(0x000000)
+		t.Color.Surface = rgb(0x252525)
+		t.Color.Success = green
+		t.Color.Success2 = rgb(0xE1F8EF)
+		t.Color.Danger = rgb(0xed6d47)
+		t.Color.Gray = argb(0x99FFFFFF)
+		t.Color.Gray1 = rgb(0x1E1E1E)
+		t.Color.Gray2 = rgb(0x8997a5)
+		t.Color.Gray3 = argb(0xDEFFFFFF)
+		t.Color.Gray4 = argb(0x99FFFFFF)
+		t.Color.Gray5 = argb(0x61FFFFFF)
+		t.Color.Gray6 = argb(0xCCFFFFFF)
+		t.Color.LightGray = rgb(0x121212)
+		t.Color.ActiveGray = rgb(0x363636)
+		t.Color.DeepBlue = argb(0xDEFFFFFF)
+		t.Color.InactiveGray = rgb(0xc4cbd2)
+		t.Color.Black = rgb(0x000000)
+		t.Color.Background = argb(0x22444444)
+		t.Color.LightBlue = rgb(0xe4f6ff)
+		t.Color.Orange = rgb(0xD34A21)
+		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.TextSize = unit.Sp(16)
+	} else {
+		t.DarkMode = false
+		t.Color.Primary = keyblue
+		t.Color.Text = darkblue
+		t.Color.Hint = rgb(0x8997A5)
+		t.Color.InvText = rgb(0xffffff)
+		t.Color.Overlay = rgb(0x000000)
+		t.Color.Surface = rgb(0xffffff)
+		t.Color.Success = green
+		t.Color.Success2 = rgb(0xE1F8EF)
+		t.Color.Danger = rgb(0xed6d47)
+		t.Color.Gray = rgb(0x596D81)
+		t.Color.Gray1 = rgb(0xe6eaed)
+		t.Color.Gray2 = rgb(0x8997a5)
+		t.Color.Gray3 = rgb(0x3d5873)
+		t.Color.Gray4 = rgb(0x3d5873)
+		t.Color.Gray5 = rgb(0x3d5873)
+		t.Color.Gray6 = rgb(0x091440)
+		t.Color.LightGray = rgb(0xf3f5f6)
+		t.Color.ActiveGray = rgb(0xf3f5f6)
+		t.Color.DeepBlue = rgb(0x091440)
+		t.Color.InactiveGray = rgb(0xc4cbd2)
+		t.Color.Black = rgb(0x000000)
+		t.Color.Background = argb(0x22444444)
+		t.Color.LightBlue = rgb(0xe4f6ff)
+		t.Color.Orange = rgb(0xD34A21)
+		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.TextSize = unit.Sp(16)
+	}
+}
+
+func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image, isDarkModeOn bool) *Theme {
 	t := &Theme{
 		Shaper: text.NewCache(fontCollection),
 		Base:   material.NewTheme(fontCollection),
+		DarkMode: false,
 	}
-	t.Color.Primary = keyblue
-	t.Color.Text = darkblue
-	t.Color.Hint = rgb(0x8997A5)
-	t.Color.InvText = rgb(0xffffff)
-	t.Color.Overlay = rgb(0x000000)
-	t.Color.Surface = rgb(0xffffff)
-	t.Color.Success = green
-	t.Color.Success2 = rgb(0xE1F8EF)
-	t.Color.Danger = rgb(0xed6d47)
-	t.Color.Gray = rgb(0x596D81)
-	t.Color.Gray1 = rgb(0xe6eaed)
-	t.Color.Gray2 = rgb(0x8997a5)
-	t.Color.Gray3 = rgb(0x3d5873)
-	t.Color.LightGray = rgb(0xf3f5f6)
-	t.Color.DeepBlue = rgb(0x091440)
-	t.Color.InactiveGray = rgb(0xc4cbd2)
-	t.Color.Black = rgb(0x000000)
-	t.Color.Background = argb(0x22444444)
-	t.Color.LightBlue = rgb(0xe4f6ff)
-	t.Color.Orange = rgb(0xD34A21)
-	t.Color.Orange2 = rgb(0xF8E8E7)
-	t.TextSize = unit.Sp(16)
+
+	t.setColorMode(isDarkModeOn)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
 	t.checkBoxUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
@@ -124,6 +171,10 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
 	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
 	return t
+}
+
+func (t *Theme) SwitchDarkMode(isDarkModeOn bool) {
+	t.setColorMode(isDarkModeOn)
 }
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {

@@ -35,10 +35,10 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(values.TextSize20, mainText).Layout(gtx)
+			return page.theme.LabelColor(values.TextSize20, mainText, page.theme.Color.DeepBlue).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(values.TextSize14, subText).Layout(gtx)
+			return page.theme.LabelColor(values.TextSize14, subText, page.theme.Color.DeepBlue).Layout(gtx)
 		}),
 	)
 }
@@ -60,7 +60,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
 				}
-				border := widget.Border{Color: page.theme.Color.LightGray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				border := widget.Border{Color: page.theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
 				return inset.Layout(gtx, func(gtx C) D {
 					padding := layout.Inset{
 						Top:    values.MarginPadding3,
@@ -71,7 +71,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
 							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
-							return page.theme.Label(values.TextSize14, amountDCRtoUSDString).Layout(gtx)
+							return page.theme.LabelColor(values.TextSize14, amountDCRtoUSDString, page.theme.Color.DeepBlue).Layout(gtx)
 						})
 					})
 				})
@@ -178,7 +178,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
 				background := page.theme.Color.Surface
 				if page.drawerNavItems[i].page == *page.page {
-					background = page.theme.Color.LightGray
+					background = page.theme.Color.ActiveGray
 				}
 				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
@@ -221,7 +221,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Left: leftInset,
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										textColor := page.theme.Color.Gray3
+										textColor := page.theme.Color.Gray4
 										if page.drawerNavItems[i].page == *page.page {
 											textColor = page.theme.Color.DeepBlue
 										}
@@ -334,7 +334,11 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 														s = row.transaction.Status
 													}
 													status := common.theme.Body1(s)
-													status.Color = common.theme.Color.Gray
+													if row.transaction.Status != "confirmed" {
+														status.Color = common.theme.Color.Gray5
+													}else{
+														status.Color = common.theme.Color.Gray4
+													}
 													status.Alignment = text.Middle
 													return status.Layout(gtx)
 												})

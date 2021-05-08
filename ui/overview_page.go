@@ -86,6 +86,13 @@ type overviewPage struct {
 }
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
+
+	isDarkModeOn := win.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
+	if isDarkModeOn != win.theme.DarkMode {
+		win.theme.SwitchDarkMode(isDarkModeOn)
+		win.reloadPage(c)
+	}
+
 	pg := overviewPage{
 		theme: c.theme,
 		tab:   c.navTab,

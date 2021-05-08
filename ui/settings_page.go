@@ -36,6 +36,7 @@ type settingsPage struct {
 	confirm             decredmaterial.Button
 	cancel              decredmaterial.Button
 
+	isDarkModeOn     *widget.Bool
 	spendUnconfirmed *widget.Bool
 	startupPassword  *widget.Bool
 	beepNewBlocks    *widget.Bool
@@ -68,6 +69,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		walletInfo: win.walletInfo,
 		wal:        common.wallet,
 
+		isDarkModeOn:     new(widget.Bool),
 		spendUnconfirmed: new(widget.Bool),
 		startupPassword:  new(widget.Bool),
 		beepNewBlocks:    new(widget.Bool),
@@ -100,7 +102,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	pg.chevronRightIcon.Color = color
 
 	return func(gtx C) D {
-		pg.handle(common)
+		pg.handle(common, win)
 		return pg.Layout(gtx, common)
 	}
 }
@@ -143,6 +145,9 @@ func (pg *settingsPage) general() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, "General", func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.subSectionSwitch(gtx, "Dark mode", pg.isDarkModeOn)
+				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, "Spending unconfirmed funds", pg.spendUnconfirmed)
 				}),
@@ -380,7 +385,14 @@ func (pg *settingsPage) lineSeparator() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) handle(common pageCommon) {
+func (pg *settingsPage) handle(common pageCommon, win *Window) {
+
+	if pg.isDarkModeOn.Changed() {
+		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
+		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
+		win.reloadPage(common)
+	}
+
 	if pg.spendUnconfirmed.Changed() {
 		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.Value)
 	}
@@ -560,6 +572,12 @@ func (pg *settingsPage) updateSettingOptions() {
 	if isPassword {
 		pg.startupPassword.Value = true
 		pg.isStartupPassword = true
+	}
+
+	isDarkModeOn := pg.wal.ReadBoolConfigValueForKey("isDarkModeOn")
+	pg.isDarkModeOn.Value = false
+	if isDarkModeOn {
+		pg.isDarkModeOn.Value = true
 	}
 
 	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)

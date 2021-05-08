@@ -28,6 +28,7 @@ type transactionWdg struct {
 }
 
 type transactionsPage struct {
+<<<<<<< HEAD
 	container                   layout.Flex
 	txsList                     layout.List
 	walletTransactions          **wallet.Transactions
@@ -36,6 +37,18 @@ type transactionsPage struct {
 	filterDirection, filterSort []decredmaterial.RadioButton
 	toTxnDetails                []*gesture.Click
 	separator                   decredmaterial.Line
+=======
+	container                     layout.Flex
+	txsList                       layout.List
+	walletTransactions            **wallet.Transactions
+	walletTransaction             **wallet.Transaction
+	filterSorter                  int
+	filterSortW, filterDirectionW *widget.Enum
+	filterDirection, filterSort   []decredmaterial.RadioButton
+	toTxnDetails                  []*gesture.Click
+	separator                     decredmaterial.Line
+	theme 	*decredmaterial.Theme
+>>>>>>> Implement dark mode
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
@@ -49,6 +62,7 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		walletTransactions: &win.walletTransactions,
 		walletTransaction:  &win.walletTransaction,
 		separator:          common.theme.Separator(),
+		theme: common.theme,
 	}
 
 	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
