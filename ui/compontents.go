@@ -336,7 +336,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 													status := common.theme.Body1(s)
 													if row.transaction.Status != "confirmed" {
 														status.Color = common.theme.Color.Gray5
-													}else{
+													} else {
 														status.Color = common.theme.Color.Gray4
 													}
 													status.Alignment = text.Middle

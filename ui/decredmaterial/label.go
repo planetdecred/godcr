@@ -3,9 +3,10 @@
 package decredmaterial
 
 import (
+	"image/color"
+
 	"gioui.org/unit"
 	"gioui.org/widget/material"
-	"image/color"
 )
 
 type Label struct {

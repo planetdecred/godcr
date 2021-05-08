@@ -89,7 +89,7 @@ type Theme struct {
 	DarkMode bool
 }
 
-func (t *Theme) setColorMode(darkMode bool){
+func (t *Theme) setColorMode(darkMode bool) {
 	if darkMode {
 		t.DarkMode = true
 		t.Color.Primary = rgb(0x57B6FF)
@@ -151,8 +151,8 @@ func (t *Theme) setColorMode(darkMode bool){
 
 func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image, isDarkModeOn bool) *Theme {
 	t := &Theme{
-		Shaper: text.NewCache(fontCollection),
-		Base:   material.NewTheme(fontCollection),
+		Shaper:   text.NewCache(fontCollection),
+		Base:     material.NewTheme(fontCollection),
 		DarkMode: false,
 	}
 

@@ -351,7 +351,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.loadPage(common)
 }
 
-func (win *Window) loadPage(common pageCommon){
+func (win *Window) loadPage(common pageCommon) {
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
@@ -381,7 +381,7 @@ func (win *Window) loadPage(common pageCommon){
 	win.pages[PageTicketsList] = win.TicketPageList(common)
 }
 
-func (win *Window) reloadPage(common pageCommon){
+func (win *Window) reloadPage(common pageCommon) {
 	win.loadPage(common)
 }
 
