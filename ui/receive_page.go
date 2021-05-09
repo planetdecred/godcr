@@ -13,6 +13,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	qrcode "github.com/yeqown/go-qrcode"
@@ -41,7 +42,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 			Axis: layout.Vertical,
 		},
 		theme:          common.theme,
-		info:           common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo))),
+		info:           common.theme.IconButton(new(widget.Clickable), utils.MustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           common.theme.Button(new(widget.Clickable), "Copy"),
 		more:           common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon),
 		newAddr:        common.theme.Button(new(widget.Clickable), "Generate new address"),

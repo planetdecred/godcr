@@ -1,11 +1,11 @@
-// util contains functions that don't contain layout code. They could be considered helpers that aren't particularly
-// bounded to a page.
-
-package ui
+package utils
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -19,7 +19,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
+func MustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +27,7 @@ func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 }
 
 // getLockWallet returns a list of locked wallets
-func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
+func GetLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
 	var walletsLocked []*dcrlibwallet.Wallet
 	for _, wl := range wallets {
 		if !wl.HasDiscoveredAccounts && wl.IsLocked() {
@@ -38,7 +38,7 @@ func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
 	return walletsLocked
 }
 
-func formatDateOrTime(timestamp int64) string {
+func FormatDateOrTime(timestamp int64) string {
 	utcTime := time.Unix(timestamp, 0).UTC()
 	if time.Now().UTC().Sub(utcTime).Hours() < 168 {
 		return utcTime.Weekday().String()
@@ -53,7 +53,7 @@ func formatDateOrTime(timestamp int64) string {
 }
 
 // createClickGestures returns a slice of click gestures
-func createClickGestures(count int) []*gesture.Click {
+func CreateClickGestures(count int) []*gesture.Click {
 	var gestures = make([]*gesture.Click, count)
 	for i := 0; i < count; i++ {
 		gestures[i] = &gesture.Click{}
@@ -63,7 +63,7 @@ func createClickGestures(count int) []*gesture.Click {
 
 // showBadge loops through a slice of recent transactions and checks if there are transaction from different wallets.
 // It returns true if transactions from different wallets exists and false if they don't
-func showLabel(recentTransactions []wallet.Transaction) bool {
+func ShowLabel(recentTransactions []wallet.Transaction) bool {
 	var name string
 	for _, t := range recentTransactions {
 		if name != "" && name != t.WalletName {
@@ -75,7 +75,7 @@ func showLabel(recentTransactions []wallet.Transaction) bool {
 }
 
 // breakBalance takes the balance string and returns it in two slices
-func breakBalance(p *message.Printer, balance string) (b1, b2 string) {
+func BreakBalance(p *message.Printer, balance string) (b1, b2 string) {
 	var isDecimal = true
 	balanceParts := strings.Split(balance, ".")
 	if len(balanceParts) == 1 {
@@ -98,11 +98,11 @@ func breakBalance(p *message.Printer, balance string) (b1, b2 string) {
 	return
 }
 
-func formatUSDBalance(p *message.Printer, balance float64) string {
+func FormatUSDBalance(p *message.Printer, balance float64) string {
 	return p.Sprintf("$%.2f", balance)
 }
 
-func goToURL(url string) {
+func GoToURL(url string) {
 	var err error
 
 	switch runtime.GOOS {

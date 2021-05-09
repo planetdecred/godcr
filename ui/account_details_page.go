@@ -9,6 +9,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -109,17 +110,17 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.
 }
 
 func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	totalBalanceMain, totalBalanceSub := breakBalance(common.printer, (*pg.acctInfo).TotalBalance)
+	totalBalanceMain, totalBalanceSub := utils.BreakBalance(common.printer, (*pg.acctInfo).TotalBalance)
 	spendable := dcrutil.Amount((*pg.acctInfo).SpendableBalance).String()
-	spendableMain, spendableSub := breakBalance(common.printer, spendable)
+	spendableMain, spendableSub := utils.BreakBalance(common.printer, spendable)
 	immatureRewards := dcrutil.Amount((*pg.acctInfo).Balance.ImmatureReward).String()
-	rewardBalanceMain, rewardBalanceSub := breakBalance(common.printer, immatureRewards)
+	rewardBalanceMain, rewardBalanceSub := utils.BreakBalance(common.printer, immatureRewards)
 	lockedByTickets := dcrutil.Amount((*pg.acctInfo).Balance.LockedByTickets).String()
-	lockBalanceMain, lockBalanceSub := breakBalance(common.printer, lockedByTickets)
+	lockBalanceMain, lockBalanceSub := utils.BreakBalance(common.printer, lockedByTickets)
 	votingAuthority := dcrutil.Amount((*pg.acctInfo).Balance.VotingAuthority).String()
-	voteBalanceMain, voteBalanceSub := breakBalance(common.printer, votingAuthority)
+	voteBalanceMain, voteBalanceSub := utils.BreakBalance(common.printer, votingAuthority)
 	immatureStakeGen := dcrutil.Amount((*pg.acctInfo).Balance.ImmatureStakeGeneration).String()
-	stakeBalanceMain, stakeBalanceSub := breakBalance(common.printer, immatureStakeGen)
+	stakeBalanceMain, stakeBalanceSub := utils.BreakBalance(common.printer, immatureStakeGen)
 
 	return pg.pageSections(gtx, func(gtx C) D {
 		accountIcon := common.icons.accountIcon

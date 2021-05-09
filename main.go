@@ -5,36 +5,18 @@ import (
 	"image"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
-	"gioui.org/font/gofont"
-	"gioui.org/font/opentype"
-	"gioui.org/text"
+	"gioui.org/app"
 
 	_ "net/http/pprof"
 
-	"gioui.org/app"
-
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/wallet"
 )
-
-func getAbsoultePath() (string, error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return "", fmt.Errorf("error getting executable path: %s", err.Error())
-	}
-
-	exSym, err := filepath.EvalSymlinks(ex)
-	if err != nil {
-		return "", fmt.Errorf("error getting filepath after evaluating sym links")
-	}
-
-	return path.Dir(exSym), nil
-}
 
 func main() {
 	cfg, err := loadConfig()
@@ -52,7 +34,7 @@ func main() {
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
 
-	absoluteWdPath, err := getAbsoultePath()
+	absoluteWdPath, err := utils.GetAbsoultePath()
 	if err != nil {
 		panic(err)
 	}
@@ -99,24 +81,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	var collection []text.FontFace
-	source, err := os.Open(filepath.Join(absoluteWdPath, "ui/assets/fonts/source_sans_pro_regular.otf"))
-	if err != nil {
-		fmt.Println("Failed to load font")
-		collection = gofont.Collection()
-	} else {
-		stat, err := source.Stat()
-		if err != nil {
-			fmt.Println(err)
-		}
-		bytes := make([]byte, stat.Size())
-		source.Read(bytes)
-		fnt, err := opentype.Parse(bytes)
-		if err != nil {
-			fmt.Println(err)
-		}
-		collection = append(collection, text.FontFace{Font: text.Font{}, Face: fnt})
-	}
+	collection := utils.FontCollection()
 
 	win, err := ui.CreateWindow(wal, decredIcons, collection, internalLog)
 	if err != nil {

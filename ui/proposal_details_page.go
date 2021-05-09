@@ -77,19 +77,19 @@ func (pg *proposalDetails) handle() {
 	for token := range pg.proposalItems {
 		for location, clickable := range pg.proposalItems[token].clickables {
 			if clickable.Clicked() {
-				goToURL(location)
+				utils.GoToURL(location)
 			}
 		}
 	}
 
 	for pg.viewInPoliteiaBtn.Clicked() {
 		proposal := *pg.selectedProposal
-		goToURL("https://proposals.decred.org/proposals/" + proposal.Token)
+		utils.GoToURL("https://proposals.decred.org/proposals/" + proposal.Token)
 	}
 
 	for pg.viewInGithubBtn.Clicked() {
 		proposal := *pg.selectedProposal
-		goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
+		utils.GoToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
 	}
 }
 

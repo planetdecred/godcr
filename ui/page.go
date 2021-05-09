@@ -17,6 +17,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -147,21 +148,21 @@ type (
 
 func (win *Window) addPages(decredIcons map[string]image.Image) {
 	ic := pageIcons{
-		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
-		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
-		navigationMore:         mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
-		actionCheckCircle:      mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
-		navigationArrowBack:    mustIcon(widget.NewIcon(icons.NavigationArrowBack)),
-		navigationArrowForward: mustIcon(widget.NewIcon(icons.NavigationArrowForward)),
-		actionInfo:             mustIcon(widget.NewIcon(icons.ActionInfo)),
-		actionCheck:            mustIcon(widget.NewIcon(icons.ActionCheckCircle)),
-		navigationCancel:       mustIcon(widget.NewIcon(icons.NavigationCancel)),
-		imageBrightness1:       mustIcon(widget.NewIcon(icons.ImageBrightness1)),
-		chevronRight:           mustIcon(widget.NewIcon(icons.NavigationChevronRight)),
-		contentClear:           mustIcon(widget.NewIcon(icons.ContentClear)),
-		navMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
-		dropDownIcon:           mustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
-		cached:                 mustIcon(widget.NewIcon(icons.ActionCached)),
+		contentAdd:             utils.MustIcon(widget.NewIcon(icons.ContentAdd)),
+		navigationCheck:        utils.MustIcon(widget.NewIcon(icons.NavigationCheck)),
+		navigationMore:         utils.MustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
+		actionCheckCircle:      utils.MustIcon(widget.NewIcon(icons.ActionCheckCircle)),
+		navigationArrowBack:    utils.MustIcon(widget.NewIcon(icons.NavigationArrowBack)),
+		navigationArrowForward: utils.MustIcon(widget.NewIcon(icons.NavigationArrowForward)),
+		actionInfo:             utils.MustIcon(widget.NewIcon(icons.ActionInfo)),
+		actionCheck:            utils.MustIcon(widget.NewIcon(icons.ActionCheckCircle)),
+		navigationCancel:       utils.MustIcon(widget.NewIcon(icons.NavigationCancel)),
+		imageBrightness1:       utils.MustIcon(widget.NewIcon(icons.ImageBrightness1)),
+		chevronRight:           utils.MustIcon(widget.NewIcon(icons.NavigationChevronRight)),
+		contentClear:           utils.MustIcon(widget.NewIcon(icons.ContentClear)),
+		navMoreIcon:            utils.MustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
+		dropDownIcon:           utils.MustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
+		cached:                 utils.MustIcon(widget.NewIcon(icons.ActionCached)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
