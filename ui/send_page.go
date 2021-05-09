@@ -993,15 +993,38 @@ func (pg *sendPage) fetchExchangeValue() {
 }
 
 func (pg *sendPage) setMaxAmount(c pageCommon) {
+
+	// Get spendable balance
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
 	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
-	spendableBalance := sendAcct.SpendableBalance
+	atomValue := sendAcct.SpendableBalance
 
-	pg.getTxFee()
-	fee := pg.txFee
+	// Estimate max send value
+	amount, err := pg.txAuthor.EstimateMaxSendAmount()
+	if err == nil {
+		atomValue = amount.AtomValue
+		dcrValue := amount.DcrValue
+		pg.updateAmountField(dcrValue)
+		pg.calculateValues(c, false)
+	}
 
-	spendableBalanceDCR := dcrutil.Amount(spendableBalance - fee).ToCoin()
+	// Adjust value
+	step := int64(10)
+	for {
+		_, err := pg.txAuthor.EstimateFeeAndSize()
+		if err != nil {
+			atomValue -= step
+			pg.updateAmountField(dcrutil.Amount(atomValue).ToCoin())
+			pg.calculateValues(c, false)
+		} else {
+			pg.updateAmountField(dcrutil.Amount(atomValue).ToCoin())
+			pg.calculateValues(c, false)
+			break
+		}
+	}
+}
 
+func (pg *sendPage) updateAmountField(spendableBalanceDCR float64) {
 	if !pg.usdExchangeSet {
 		pg.leftAmountEditor.Editor.SetText(strconv.FormatFloat(spendableBalanceDCR, 'f', 7, 64))
 	} else {
@@ -1018,8 +1041,6 @@ func (pg *sendPage) setMaxAmount(c pageCommon) {
 			pg.rightAmountEditor.Editor.SetText(strconv.FormatFloat(spendableBalanceUSD, 'f', 7, 64))
 		}
 	}
-
-	pg.calculateValues(c, false)
 }
 
 func (pg *sendPage) Handle(c pageCommon) {
