@@ -2,6 +2,7 @@ godcr*
 _*
 *.dll
 .vscode
+.DS_Store
 *.coverprofile
 **/.godcr_test*
 pkged.go

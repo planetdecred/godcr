@@ -59,6 +59,15 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.loading = false
 		win.walletTickets = e
 		return
+	case *wallet.VSPInfo:
+		win.states.loading = false
+		win.vspInfo.List = append(win.vspInfo.List, *e)
+		win.refresh()
+		return
+	case *wallet.VSP:
+		win.vspInfo = e
+		win.refresh()
+		return
 	case wallet.CreatedSeed:
 		win.notifyOnSuccess("Wallet created")
 		win.changePage(PageWallet)
