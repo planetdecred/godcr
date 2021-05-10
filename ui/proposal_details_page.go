@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -276,7 +277,9 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 
 	w := []layout.Widget{
 		func(gtx C) D {
-			return pg.theme.H5(proposal.Name).Layout(gtx)
+			lbl := pg.theme.H5(proposal.Name)
+			lbl.Font.Weight = text.Bold
+			return lbl.Layout(gtx)
 		},
 		pg.lineSeparator(layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}),
 		func(gtx C) D {

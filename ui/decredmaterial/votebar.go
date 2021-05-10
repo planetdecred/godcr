@@ -10,6 +10,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -57,9 +58,9 @@ func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
 	return VoteBar{
 		yesColor:                      t.Color.Success,
 		noColor:                       t.Color.Danger,
-		yesLabel:                      t.Body2("Yes:"),
-		noLabel:                       t.Body2("No:"),
-		legendLabel:                   t.Body2(""),
+		yesLabel:                      t.Body1("Yes:"),
+		noLabel:                       t.Body1("No:"),
+		legendLabel:                   t.Body1(""),
 		requirementLabel:              t.Body2(""),
 		totalVotesLabel:               t.Body2(""),
 		passTooltip:                   t.Tooltip(),
@@ -236,6 +237,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl Label, count float32) D {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
+				lbl.Font.Weight = text.Bold
 				return lbl.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {

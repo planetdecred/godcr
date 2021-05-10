@@ -85,6 +85,10 @@ func getFontByte(path string) ([]byte, error) {
 	}
 
 	source, err := os.Open(filepath.Join(absoluteWdPath, path))
+	if err != nil {
+		return nil, err
+	}
+
 	stat, err := source.Stat()
 	if err != nil {
 		return nil, err
