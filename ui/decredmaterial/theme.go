@@ -49,12 +49,14 @@ type Theme struct {
 		Overlay      color.NRGBA
 		InvText      color.NRGBA
 		Success      color.NRGBA
+		Success2     color.NRGBA
 		Danger       color.NRGBA
 		Background   color.NRGBA
 		Surface      color.NRGBA
 		Gray         color.NRGBA
 		Black        color.NRGBA
 		DeepBlue     color.NRGBA
+		LightBlue    color.NRGBA
 		LightGray    color.NRGBA
 		InactiveGray color.NRGBA
 		Gray1        color.NRGBA
@@ -96,6 +98,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Overlay = rgb(0x000000)
 	t.Color.Surface = rgb(0xffffff)
 	t.Color.Success = green
+	t.Color.Success2 = rgb(0xE1F8EF)
 	t.Color.Danger = rgb(0xed6d47)
 	t.Color.Gray = rgb(0x596D81)
 	t.Color.Gray1 = rgb(0xe6eaed)
@@ -106,6 +109,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.InactiveGray = rgb(0xc4cbd2)
 	t.Color.Black = rgb(0x000000)
 	t.Color.Background = argb(0x22444444)
+	t.Color.LightBlue = rgb(0xe4f6ff)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))

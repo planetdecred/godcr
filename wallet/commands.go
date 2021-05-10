@@ -1,11 +1,17 @@
 package wallet
 
 import (
+	"crypto/ed25519"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -934,41 +940,99 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 	}()
 }
 
-func (wal *Wallet) NewVSPD(walletID int, accountID int32) *dcrlibwallet.VSPD {
-	return wal.multi.NewVSPD("http://dev.planetdecred.org:23125", walletID, accountID)
-}
-
 // TicketPrice get ticket price
-func (wal *Wallet) TicketPrice(walletID int) string {
-	wall := wal.multi.WalletWithID(walletID)
-	pr, err := wall.TicketPrice()
+func (wal *Wallet) TicketPrice() (int64, string) {
+	pr, err := wal.multi.WalletsIterator().Next().TicketPrice()
 	if err != nil {
 		log.Error(err)
-		return ""
+		return 0, ""
 	}
-	return dcrutil.Amount(pr.TicketPrice).String()
+	return pr.TicketPrice, dcrutil.Amount(pr.TicketPrice).String()
+}
+
+func (wal *Wallet) NewVSPD(host string, walletID int, accountID int32) (*dcrlibwallet.VSPD, error) {
+	if host == "" {
+		return nil, fmt.Errorf("Host is required")
+	}
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
+		return nil, ErrIDNotExist
+	}
+	vspd := wal.multi.NewVSPD(host, walletID, accountID)
+	if vspd == nil {
+		return nil, fmt.Errorf("Something wrong when creating new VSPD")
+	}
+	return vspd, nil
 }
 
 // PurchaseTicket buy a ticket with given parameters
-func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, expiry uint32) ([]string, error) {
-	wall := wal.multi.WalletWithID(walletID)
-	request := &dcrlibwallet.PurchaseTicketsRequest{
-		Account:               uint32(accountID),
-		Passphrase:            passphrase,
-		NumTickets:            tickets,
-		Expiry:                uint32(wal.multi.GetBestBlock().Height) + expiry,
-		RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
-	}
-	hashes, err := wall.PurchaseTickets(request, "")
-	if err != nil {
-		return []string{}, err
-	}
+func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, vspd *dcrlibwallet.VSPD, errChan chan error) {
 	go func() {
 		var resp Response
+		wall := wal.multi.WalletWithID(walletID)
+		if wall == nil {
+			go func() {
+				errChan <- ErrIDNotExist
+			}()
+			return
+		}
+
+		_, err := vspd.GetInfo()
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			return
+		}
+
+		request := &dcrlibwallet.PurchaseTicketsRequest{
+			Account:               uint32(accountID),
+			Passphrase:            passphrase,
+			NumTickets:            tickets,
+			Expiry:                uint32(wal.multi.GetBestBlock().Height) + 256,
+			RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
+		}
+
+		hashes, err := wall.PurchaseTickets(request, "")
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			return
+		}
+
+		for _, hash := range hashes {
+			r, err := vspd.GetVSPFeeAddress(hash, passphrase)
+			if err != nil {
+				go func() {
+					errChan <- err
+				}()
+				return
+			}
+
+			transactionResponse, err := vspd.CreateTicketFeeTx(r.FeeAmount, hash, r.FeeAddress, passphrase)
+			if err != nil {
+				go func() {
+					errChan <- err
+				}()
+				return
+			}
+			_, err = vspd.PayVSPFee(transactionResponse, hash, "", passphrase)
+			if err != nil {
+				go func() {
+					errChan <- err
+				}()
+				return
+			}
+		}
+
+		go func() {
+			errChan <- nil
+		}()
+
 		resp.Resp = &TicketPurchase{}
 		wal.Send <- resp
 	}()
-	return hashes, nil
 }
 
 // GetAllTickets collects a per-wallet slice of tickets fitting the parameters.
@@ -982,9 +1046,34 @@ func (wal *Wallet) GetAllTickets() {
 			wal.Send <- resp
 			return
 		}
+
+		var liveRecentTickets []Ticket
+		var recentActivity []Ticket
+
 		tickets := make(map[int][]Ticket)
 		unconfirmedTickets := make(map[int][]UnconfirmedPurchase)
-		totalTicket := 0
+
+		stackingRecordCounter := []struct {
+			Status string
+			Count  int
+		}{
+			{"UNMINED", 0},
+			{"IMMATURE", 0},
+			{"LIVE", 0},
+			{"VOTED", 0},
+			{"MISSED", 0},
+			{"EXPIRED", 0},
+			{"REVOKED", 0},
+		}
+
+		liveCounter := []struct {
+			Status string
+			Count  int
+		}{
+			{"UNMINED", 0},
+			{"IMMATURE", 0},
+			{"LIVE", 0},
+		}
 
 		for _, wall := range wallets {
 			ticketsInfo, err := wall.GetTicketsForBlockHeightRange(0, wall.GetBestBlock(), math.MaxInt32)
@@ -993,18 +1082,42 @@ func (wal *Wallet) GetAllTickets() {
 				wal.Send <- resp
 				return
 			}
+
 			for _, tinfo := range ticketsInfo {
 				var amount dcrutil.Amount
 				for _, output := range tinfo.Ticket.MyOutputs {
 					amount += output.Amount
 				}
 				info := Ticket{
-					Info:     *tinfo,
-					DateTime: dcrlibwallet.ExtractDateOrTime(tinfo.Ticket.Timestamp),
-					Amount:   amount.String(),
-					Fee:      tinfo.Ticket.Fee.String(),
+					Info:       *tinfo,
+					DateTime:   dcrlibwallet.ExtractDateOrTime(tinfo.Ticket.Timestamp),
+					MonthDay:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2"),
+					DaysBehind: calculateDaysBehind(tinfo.Ticket.Timestamp),
+					Amount:     amount.String(),
+					Fee:        tinfo.Ticket.Fee.String(),
+					WalletName: wall.Name,
 				}
 				tickets[wall.ID] = append(tickets[wall.ID], info)
+
+				for i := range liveCounter {
+					if liveCounter[i].Status == tinfo.Status {
+						liveCounter[i].Count++
+					}
+				}
+
+				if tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE" {
+					liveRecentTickets = append(liveRecentTickets, info)
+				}
+
+				if tinfo.Status != "UNKNOWN" {
+					recentActivity = append(recentActivity, info)
+				}
+
+				for i := range stackingRecordCounter {
+					if stackingRecordCounter[i].Status == tinfo.Status {
+						stackingRecordCounter[i].Count++
+					}
+				}
 			}
 
 			unconfirmedTicketPurchases, err := getUnconfirmedPurchases(wall, tickets[wall.ID])
@@ -1016,10 +1129,34 @@ func (wal *Wallet) GetAllTickets() {
 			unconfirmedTickets[wall.ID] = unconfirmedTicketPurchases
 		}
 
+		sort.SliceStable(liveRecentTickets, func(i, j int) bool {
+			backTime := time.Unix(liveRecentTickets[j].Info.Ticket.Timestamp, 0)
+			frontTime := time.Unix(liveRecentTickets[i].Info.Ticket.Timestamp, 0)
+			return backTime.Before(frontTime)
+		})
+
+		recentLimit := 5
+		if len(liveRecentTickets) > recentLimit {
+			liveRecentTickets = liveRecentTickets[:recentLimit]
+		}
+
+		sort.SliceStable(recentActivity, func(i, j int) bool {
+			backTime := time.Unix(recentActivity[j].Info.Ticket.Timestamp, 0)
+			frontTime := time.Unix(recentActivity[i].Info.Ticket.Timestamp, 0)
+			return backTime.Before(frontTime)
+		})
+
+		if len(recentActivity) > recentLimit {
+			recentActivity = recentActivity[:recentLimit]
+		}
+
 		resp.Resp = &Tickets{
-			Total:       totalTicket,
-			Confirmed:   tickets,
-			Unconfirmed: unconfirmedTickets,
+			Confirmed:             tickets,
+			Unconfirmed:           unconfirmedTickets,
+			RecentActivity:        recentActivity,
+			StackingRecordCounter: stackingRecordCounter,
+			LiveRecent:            liveRecentTickets,
+			LiveCounter:           liveCounter,
 		}
 		wal.Send <- resp
 	}()
@@ -1108,4 +1245,184 @@ func (wal *Wallet) ReadMixerConfigValueForKey(key string, walletID int) int32 {
 		return wallet.ReadInt32ConfigValueForKey(key, -1)
 	}
 	return 0
+}
+
+func (wal *Wallet) AddVSP(host string, errChan chan error) {
+	// wal.multi.DeleteUserConfigValueForKey(dcrlibwallet.VSPHostConfigKey)
+	go func() {
+		var resp Response
+		var valueOut struct {
+			Remember string
+			List     []string
+		}
+
+		wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+
+		for _, v := range valueOut.List {
+			if v == host {
+				go func() {
+					errChan <- fmt.Errorf("Existing host %s", host)
+				}()
+				return
+			}
+		}
+
+		info, err := getVSPInfo(host)
+		if err != nil {
+			go func() {
+				errChan <- err
+			}()
+			resp.Err = err
+			wal.Send <- ResponseError(MultiWalletError{
+				Message: "Could not create vsp",
+				Err:     err,
+			})
+			return
+		}
+
+		if info.Network != wal.Net {
+			go func() {
+				errChan <- fmt.Errorf("Invalid net %s", info.Network)
+			}()
+			return
+		}
+
+		valueOut.List = append(valueOut.List, host)
+		wal.multi.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
+		resp.Resp = &VSPInfo{
+			Host: host,
+			Info: info,
+		}
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) GetAllVSP() {
+	go func() {
+		var valueOut struct {
+			Remember string
+			List     []string
+		}
+
+		wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+		var loadedVSP []VSPInfo
+
+		for _, host := range valueOut.List {
+			v, err := getVSPInfo(host)
+			if err == nil {
+				loadedVSP = append(loadedVSP, VSPInfo{
+					Host: host,
+					Info: v,
+				})
+			}
+		}
+
+		l, _ := getInitVSPInfo("https://api.decred.org/?c=vsp")
+		for h, v := range l {
+			if strings.Contains(wal.Net, v.Network) {
+				loadedVSP = append(loadedVSP, VSPInfo{
+					Host: fmt.Sprintf("https://%s", h),
+					Info: v,
+				})
+			}
+		}
+
+		var resp Response
+		resp.Resp = &VSP{
+			List: loadedVSP,
+		}
+		wal.Send <- resp
+	}()
+}
+
+func (wal *Wallet) RememberVSP(host string) {
+	var valueOut struct {
+		Remember string
+		List     []string
+	}
+	wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+	valueOut.Remember = host
+	wal.multi.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
+}
+
+func (wal *Wallet) GetRememberVSP() string {
+	var valueOut struct {
+		Remember string
+	}
+	wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+
+	return valueOut.Remember
+}
+
+// getVSPInfo returns the information of the specified VSP base URL
+func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
+	rq := new(http.Client)
+	resp, err := rq.Get((url + "/api/v3/vspinfo"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
+	}
+
+	var vspInfoResponse dcrlibwallet.GetVspInfoResponse
+	err = json.Unmarshal(b, &vspInfoResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validateVSPServerSignature(resp, vspInfoResponse.PubKey, b)
+	if err != nil {
+		return nil, err
+	}
+	return &vspInfoResponse, nil
+}
+
+// getInitVSPInfo returns the list information of the VSP
+func getInitVSPInfo(url string) (map[string]*dcrlibwallet.GetVspInfoResponse, error) {
+	rq := new(http.Client)
+	resp, err := rq.Get((url))
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
+	}
+
+	var vspInfoResponse map[string]*dcrlibwallet.GetVspInfoResponse
+	err = json.Unmarshal(b, &vspInfoResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return vspInfoResponse, nil
+}
+
+func validateVSPServerSignature(resp *http.Response, pubKey, body []byte) error {
+	sigStr := resp.Header.Get("VSP-Server-Signature")
+	sig, err := base64.StdEncoding.DecodeString(sigStr)
+	if err != nil {
+		return fmt.Errorf("error validating VSP signature: %v", err)
+	}
+
+	if !ed25519.Verify(pubKey, body, sig) {
+		return errors.New("bad signature from VSP")
+	}
+
+	return nil
 }

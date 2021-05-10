@@ -9,7 +9,6 @@ import (
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -105,7 +104,7 @@ func (win *Window) WalletPage(common pageCommon) layout.Widget {
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{NE: 5, NW: 5, SE: 5, SW: 5}
 
-	pg.walletIcon = &widget.Image{Src: paint.NewImageOp(common.icons.walletIcon)}
+	pg.walletIcon = common.icons.walletIcon
 	pg.walletIcon.Scale = 1
 
 	pg.walletAlertIcon = common.icons.walletAlertIcon

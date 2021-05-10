@@ -189,10 +189,13 @@ type UnspentOutputs struct {
 type SetupAccountMixer struct{}
 
 type Ticket struct {
-	Info     dcrlibwallet.TicketInfo
-	Fee      string
-	Amount   string
-	DateTime string
+	Info       dcrlibwallet.TicketInfo
+	Fee        string
+	Amount     string
+	DateTime   string
+	MonthDay   string
+	DaysBehind string
+	WalletName string
 }
 
 type UnconfirmedPurchase struct {
@@ -204,9 +207,18 @@ type UnconfirmedPurchase struct {
 }
 
 type Tickets struct {
-	Total       int
 	Confirmed   map[int][]Ticket
 	Unconfirmed map[int][]UnconfirmedPurchase
+	LiveRecent  []Ticket
+	LiveCounter []struct {
+		Status string
+		Count  int
+	}
+	RecentActivity        []Ticket
+	StackingRecordCounter []struct {
+		Status string
+		Count  int
+	}
 }
 
 type TicketPurchase struct{}
@@ -219,4 +231,15 @@ type Balance struct {
 	LockedByTickets         int64
 	VotingAuthority         int64
 	UnConfirmed             int64
+}
+
+// CreateVSP is sent when the Wallet is done creating a new VSP
+type VSPInfo struct {
+	Host string
+	Info *dcrlibwallet.GetVspInfoResponse
+}
+
+// VSP is sent when the Wallet is done getting all VSP info
+type VSP struct {
+	List []VSPInfo
 }

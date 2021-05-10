@@ -27,16 +27,23 @@ type pageIcons struct {
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
 	imageBrightness1, contentClear, dropDownIcon, cached *widget.Icon
 
-	overviewIcon, overviewIconInactive, walletIconInactive, receiveIcon,
-	transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
+	overviewIcon, overviewIconInactive, walletIcon, walletIconInactive,
+	receiveIcon, transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
 	pendingIcon, logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
 	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer, mixerSmall,
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, proposalIconInactive,
-	restore, documentationIcon, downloadIcon, timerIcon *widget.Image
+	restore, documentationIcon, downloadIcon, timerIcon, ticketIcon, ticketIconInactive, stakeyIcon *widget.Image
 
-	walletIcon image.Image
+	ticketPurchasedIcon,
+	ticketImmatureIcon,
+	ticketLiveIcon,
+	ticketVotedIcon,
+	ticketMissedIcon,
+	ticketExpiredIcon,
+	ticketRevokedIcon,
+	ticketUnminedIcon *widget.Image
 }
 
 type navHandler struct {
@@ -57,8 +64,9 @@ type walletAccount struct {
 }
 
 type wallectAccountOption struct {
-	selectSendAccount    map[int][]walletAccount
-	selectReceiveAccount map[int][]walletAccount
+	selectSendAccount           map[int][]walletAccount
+	selectReceiveAccount        map[int][]walletAccount
+	selectPurchaseTicketAccount map[int][]walletAccount
 }
 
 type DCRUSDTBittrex struct {
@@ -74,13 +82,16 @@ type walletAccountSelector struct {
 	walletAccounts            *wallectAccountOption
 	sendAccountBtn            *widget.Clickable
 	receivingAccountBtn       *widget.Clickable
+	purchaseTicketAccountBtn  *widget.Clickable
 	sendOption                string
 	walletInfoButton          decredmaterial.IconButton
 
 	selectedSendAccount,
 	selectedSendWallet,
 	selectedReceiveAccount,
-	selectedReceiveWallet int
+	selectedReceiveWallet,
+	selectedPurchaseTicketAccount,
+	selectedPurchaseTicketWallet int
 }
 
 type pageCommon struct {
@@ -194,8 +205,18 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
 		downloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
 		timerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
-
-		walletIcon: decredIcons["wallet"],
+		walletIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
+		ticketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
+		ticketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},
+		stakeyIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["stakey"])},
+		ticketPurchasedIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased"])},
+		ticketImmatureIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature"])},
+		ticketUnminedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined"])},
+		ticketLiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live"])},
+		ticketVotedIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_voted"])},
+		ticketMissedIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed"])},
+		ticketExpiredIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired"])},
+		ticketRevokedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked"])},
 	}
 
 	appBarNavItems := []navHandler{
@@ -226,7 +247,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
+			image:         ic.walletIcon,
 			imageInactive: ic.walletIconInactive,
 			page:          PageWallet,
 		},
@@ -238,8 +259,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         &widget.Image{Src: paint.NewImageOp(ic.walletIcon)},
-			imageInactive: ic.walletIconInactive,
+			image:         ic.ticketIcon,
+			imageInactive: ic.ticketIconInactive,
 			page:          PageTickets,
 		},
 		{
@@ -285,20 +306,24 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	common.fetchExchangeValue(&common.dcrUsdtBittrex)
 
 	common.wallAcctSelector = &walletAccountSelector{
-		sendAccountBtn:      new(widget.Clickable),
-		receivingAccountBtn: new(widget.Clickable),
-		walletAccount:       *common.theme.ModalFloatTitle(),
-		walletsList:         layout.List{Axis: layout.Vertical},
-		accountsList:        layout.List{Axis: layout.Vertical},
+		sendAccountBtn:           new(widget.Clickable),
+		receivingAccountBtn:      new(widget.Clickable),
+		purchaseTicketAccountBtn: new(widget.Clickable),
+		walletAccount:            *common.theme.ModalFloatTitle(),
+		walletsList:              layout.List{Axis: layout.Vertical},
+		accountsList:             layout.List{Axis: layout.Vertical},
 		walletAccounts: &wallectAccountOption{
-			selectSendAccount:    make(map[int][]walletAccount),
-			selectReceiveAccount: make(map[int][]walletAccount),
+			selectSendAccount:           make(map[int][]walletAccount),
+			selectReceiveAccount:        make(map[int][]walletAccount),
+			selectPurchaseTicketAccount: make(map[int][]walletAccount),
 		},
-		isWalletAccountModalOpen: false,
-		selectedSendAccount:      *common.selectedAccount,
-		selectedSendWallet:       *common.selectedWallet,
-		selectedReceiveAccount:   *common.selectedAccount,
-		selectedReceiveWallet:    *common.selectedWallet,
+		isWalletAccountModalOpen:      false,
+		selectedSendAccount:           *common.selectedAccount,
+		selectedSendWallet:            *common.selectedWallet,
+		selectedReceiveAccount:        *common.selectedAccount,
+		selectedReceiveWallet:         *common.selectedWallet,
+		selectedPurchaseTicketAccount: *common.selectedAccount,
+		selectedPurchaseTicketWallet:  *common.selectedWallet,
 	}
 	iconColor := common.theme.Color.Gray3
 
