@@ -51,7 +51,7 @@ type proposalsPage struct {
 	wallet           *wallet.Wallet
 	selectedProposal **dcrlibwallet.Proposal
 	proposals        **wallet.Proposals
-	syncedProposal   *chan *wallet.Proposal
+	syncedProposal   chan *wallet.Proposal
 	proposalsList    *layout.List
 	tabs             tabs
 	tabCard          decredmaterial.Card
@@ -91,7 +91,7 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		infoIcon:         common.icons.actionInfo,
 		proposals:        &win.proposals,
 		selectedProposal: &win.selectedProposal,
-		syncedProposal:   &win.proposal,
+		syncedProposal:   win.proposal,
 		updatedIcon:      common.icons.navigationCheck,
 		updatedLabel:     common.theme.Body2("Updated"),
 		syncButton:       new(widget.Clickable),
@@ -144,7 +144,7 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 	}
 
 	select {
-	case prop := <-*pg.syncedProposal:
+	case prop := <-pg.syncedProposal:
 		if prop.ProposalStatus == wallet.Synced {
 			if !pg.proposalsItemSet {
 				pg.initializeProposaltabItems()
