@@ -119,15 +119,15 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet
 	c := func(gtx layout.Context, val int32, info string) layout.Dimensions {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				if proposal.State == val || proposal.State < val {
+				if proposal.VoteStatus == val || proposal.VoteStatus < val {
 					c := pg.theme.Card()
 					c.Color = pg.theme.Color.Primary
 
-					r := float32(9.7)
+					r := float32(9.5)
 					c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
 					lbl := pg.theme.Body1(fmt.Sprint(val))
 					lbl.Color = pg.theme.Color.Surface
-					if proposal.State < val {
+					if proposal.VoteStatus < val {
 						c.Color = pg.theme.Color.LightGray
 						lbl.Color = pg.theme.Color.Hint
 					}
@@ -151,10 +151,10 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet
 			layout.Rigid(func(gtx C) D {
 				col := pg.theme.Color.Primary
 				txt := info + "..."
-				if proposal.State != val {
+				if proposal.VoteStatus != val {
 					txt = info
 					col = pg.theme.Color.Hint
-					if proposal.State > 1 {
+					if proposal.VoteStatus > 1 {
 						col = pg.theme.Color.DeepBlue
 					}
 				}
@@ -173,12 +173,12 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet
 		layout.Rigid(func(gtx C) D {
 			height, width := gtx.Px(values.MarginPadding26), gtx.Px(values.MarginPadding4)
 			line := pg.theme.Line(height, width)
-			if proposal.State > 1 {
+			if proposal.VoteStatus > 1 {
 				line.Color = pg.theme.Color.Primary
 			} else {
 				line.Color = pg.theme.Color.Gray1
 			}
-			return layout.Inset{Left: values.MarginPadding8, Top: values.MarginPaddingMinus2}.Layout(gtx, line.Layout)
+			return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, line.Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return c(gtx, 2, stateText2)

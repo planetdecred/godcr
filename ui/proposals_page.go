@@ -23,31 +23,6 @@ import (
 )
 
 const PageProposals = "Proposals"
-const (
-	categoryStateFetching = iota
-	categoryStateFetched
-	categoryStateError
-)
-
-type proposalNotificationListeners struct {
-	page *proposalsPage
-}
-
-func (p proposalNotificationListeners) OnNewProposal(proposal *dcrlibwallet.Proposal) {
-	p.page.addDiscoveredProposal(*proposal)
-}
-
-func (p proposalNotificationListeners) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
-	p.page.updateProposal(*proposal)
-}
-
-func (p proposalNotificationListeners) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
-	p.page.updateProposal(*proposal)
-}
-
-func (p proposalNotificationListeners) OnProposalsSynced() {
-	p.page.isSynced = true
-}
 
 type proposalItem struct {
 	btn               *widget.Clickable
@@ -72,27 +47,25 @@ type tabs struct {
 }
 
 type proposalsPage struct {
-	theme                      *decredmaterial.Theme
-	wallet                     *wallet.Wallet
-	proposalsList              *layout.List
-	tabs                       tabs
-	tabCard                    decredmaterial.Card
-	itemCard                   decredmaterial.Card
-	syncCard                   decredmaterial.Card
-	notify                     func(string, bool)
-	hasFetchedInitialProposals bool
-	isFetchingInitialProposals bool
-	legendIcon                 *widget.Icon
-	infoIcon                   *widget.Icon
-	selectedProposal           **dcrlibwallet.Proposal
-	state                      int
-	hasRegisteredListeners     bool
-	isSynced                   bool
-	updatedIcon                *widget.Icon
-	updatedLabel               decredmaterial.Label
-	syncButton                 *widget.Clickable
-	startSyncIcon              *widget.Image
-	timerIcon                  *widget.Image
+	theme            *decredmaterial.Theme
+	wallet           *wallet.Wallet
+	selectedProposal **dcrlibwallet.Proposal
+	proposals        **wallet.Proposals
+	syncedProposal   chan *wallet.Proposal
+	proposalsList    *layout.List
+	tabs             tabs
+	tabCard          decredmaterial.Card
+	itemCard         decredmaterial.Card
+	syncCard         decredmaterial.Card
+	updatedLabel     decredmaterial.Label
+	legendIcon       *widget.Icon
+	infoIcon         *widget.Icon
+	updatedIcon      *widget.Icon
+	syncButton       *widget.Clickable
+	startSyncIcon    *widget.Image
+	timerIcon        *widget.Image
+	isSynced         bool
+	proposalsItemSet bool
 }
 
 var (
@@ -114,10 +87,11 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		tabCard:          common.theme.Card(),
 		itemCard:         common.theme.Card(),
 		syncCard:         common.theme.Card(),
-		notify:           common.notify,
 		legendIcon:       common.icons.imageBrightness1,
 		infoIcon:         common.icons.actionInfo,
+		proposals:        &win.proposals,
 		selectedProposal: &win.selectedProposal,
+		syncedProposal:   win.proposal,
 		updatedIcon:      common.icons.navigationCheck,
 		updatedLabel:     common.theme.Body2("Updated"),
 		syncButton:       new(widget.Clickable),
@@ -168,79 +142,31 @@ func (pg *proposalsPage) Handle(common pageCommon) {
 		pg.wallet.SyncProposals()
 		common.refreshPage()
 	}
-}
 
-func (pg *proposalsPage) addDiscoveredProposal(proposal dcrlibwallet.Proposal) {
-	for i := range pg.tabs.tabs {
-		if pg.tabs.tabs[i].category == proposal.Category {
-			item := proposalItem{
-				btn:               new(widget.Clickable),
-				proposal:          proposal,
-				voteBar:           pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
-				infoIcon:          pg.infoIcon,
-				stateInfoTooltip:  pg.theme.Tooltip(),
-				stateTooltipLabel: pg.theme.Caption(""),
+	select {
+	case prop := <-pg.syncedProposal:
+		if prop.ProposalStatus == wallet.Synced {
+			if !pg.proposalsItemSet {
+				pg.initializeProposaltabItems()
 			}
-			pg.tabs.tabs[i].proposals = append([]proposalItem{item}, pg.tabs.tabs[i].proposals...)
-			break
+			go pg.updateProposalState()
+			pg.isSynced = true
+		} else if prop.ProposalStatus == wallet.NewProposalFound {
+			pg.addDiscoveredProposal(false, *prop.Proposal)
+			common.refreshPage()
+		} else if prop.ProposalStatus == wallet.VoteStarted || prop.ProposalStatus == wallet.VoteFinished {
+			pg.updateProposalVoteStatus(*prop.Proposal)
+			common.refreshPage()
 		}
-	}
-}
-
-func (pg *proposalsPage) updateProposal(proposal dcrlibwallet.Proposal) {
-out:
-	for i := range pg.tabs.tabs {
-		for k := range pg.tabs.tabs[i].proposals {
-			if pg.tabs.tabs[i].proposals[k].proposal.Token == proposal.Token {
-				pg.tabs.tabs[i].proposals = append(pg.tabs.tabs[i].proposals[:k], pg.tabs.tabs[i].proposals[k+1:]...)
-				break out
-			}
-		}
-	}
-	pg.addDiscoveredProposal(proposal)
-}
-
-func (pg *proposalsPage) onFetchSuccess(proposals []dcrlibwallet.Proposal) {
-	for i := range proposals {
-		item := proposalItem{
-			btn:               new(widget.Clickable),
-			proposal:          proposals[i],
-			voteBar:           pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
-			infoIcon:          pg.infoIcon,
-			stateInfoTooltip:  pg.theme.Tooltip(),
-			stateTooltipLabel: pg.theme.Caption(""),
-		}
-
-		for k := range pg.tabs.tabs {
-			if pg.tabs.tabs[k].category == proposals[i].Category {
-				pg.tabs.tabs[k].proposals = append(pg.tabs.tabs[k].proposals, item)
-				break
-			}
-		}
-	}
-	pg.onFetchComplete()
-	pg.state = categoryStateFetched
-}
-
-func (pg *proposalsPage) onFetchError(err error) {
-	pg.state = categoryStateError
-	pg.onFetchComplete()
-	pg.notify(err.Error(), false)
-}
-
-func (pg *proposalsPage) onFetchComplete() {
-	if !pg.hasFetchedInitialProposals {
-		pg.hasFetchedInitialProposals = true
+	default:
 	}
 
-	if !pg.isFetchingInitialProposals {
-		pg.isFetchingInitialProposals = false
+	if pg.isSynced {
+		time.AfterFunc(time.Second*3, func() {
+			pg.isSynced = false
+		})
+		common.refreshPage()
 	}
-}
-
-func (pg *proposalsPage) fetchProposals() {
-	pg.isFetchingInitialProposals = true
-	pg.wallet.GetProposals(dcrlibwallet.ProposalCategoryAll, pg.onFetchSuccess, pg.onFetchError)
 }
 
 func (pg *proposalsPage) layoutTabs(gtx C) D {
@@ -308,23 +234,62 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) layoutFetchingState(gtx C) D {
-	str := "Fetching " + strings.ToLower(proposalCategoryTitles[pg.tabs.selected]) + " proposals..."
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		return pg.theme.Body1(str).Layout(gtx)
-	})
+func (pg *proposalsPage) addDiscoveredProposal(first bool, proposal dcrlibwallet.Proposal) {
+	for i := range pg.tabs.tabs {
+		if pg.tabs.tabs[i].category == proposal.Category {
+			item := proposalItem{
+				btn:               new(widget.Clickable),
+				proposal:          proposal,
+				voteBar:           pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
+				infoIcon:          pg.infoIcon,
+				stateInfoTooltip:  pg.theme.Tooltip(),
+				stateTooltipLabel: pg.theme.Caption(""),
+			}
+			if first {
+				pg.tabs.tabs[i].proposals = append(pg.tabs.tabs[i].proposals, item)
+				break
+			} else {
+				pg.tabs.tabs[i].proposals = append([]proposalItem{item}, pg.tabs.tabs[i].proposals...)
+				break
+			}
+		}
+	}
 }
 
-func (pg *proposalsPage) layoutErrorState(gtx C) D {
-	str := "Error fetching proposals"
+// updateProposalVoteStatus is called when voting has either started or ended for a particular proposal
+func (pg *proposalsPage) updateProposalVoteStatus(proposal dcrlibwallet.Proposal) {
+out:
+	for i := range pg.tabs.tabs {
+		for k := range pg.tabs.tabs[i].proposals {
+			if pg.tabs.tabs[i].proposals[k].proposal.Token == proposal.Token {
+				pg.tabs.tabs[i].proposals = append(pg.tabs.tabs[i].proposals[:k], pg.tabs.tabs[i].proposals[k+1:]...)
+				break out
+			}
+		}
+	}
+	pg.addDiscoveredProposal(false, proposal)
+}
 
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		lbl := pg.theme.Body1(str)
-		lbl.Color = pg.theme.Color.Danger
-		return lbl.Layout(gtx)
-	})
+func (pg *proposalsPage) updateProposalState() {
+	for p := range (*pg.proposals).Proposals {
+		for i := range pg.tabs.tabs {
+			if pg.tabs.tabs[i].category == dcrlibwallet.ProposalCategoryPre || pg.tabs.tabs[i].category == dcrlibwallet.ProposalCategoryActive {
+				for k := range pg.tabs.tabs[i].proposals {
+					if pg.tabs.tabs[i].proposals[k].proposal.Token == (*pg.proposals).Proposals[p].Token {
+						if pg.tabs.tabs[i].proposals[k].proposal.VoteStatus != (*pg.proposals).Proposals[p].VoteStatus {
+							pg.tabs.tabs[i].proposals[k].proposal.VoteStatus = (*pg.proposals).Proposals[p].VoteStatus
+						}
+						if pg.tabs.tabs[i].proposals[k].proposal.YesVotes != (*pg.proposals).Proposals[k].YesVotes {
+							pg.tabs.tabs[i].proposals[k].proposal.YesVotes = (*pg.proposals).Proposals[p].YesVotes
+						}
+						if pg.tabs.tabs[i].proposals[k].proposal.NoVotes != (*pg.proposals).Proposals[k].NoVotes {
+							pg.tabs.tabs[i].proposals[k].proposal.NoVotes = (*pg.proposals).Proposals[p].NoVotes
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
@@ -349,7 +314,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 	versionLabel := pg.theme.Body2("Version " + proposal.Version)
 	versionLabel.Color = grayCol
 
-	stateLabel := pg.theme.Body2(fmt.Sprintf("%v /2", proposal.State))
+	stateLabel := pg.theme.Body2(fmt.Sprintf("%v /2", proposal.VoteStatus))
 	stateLabel.Color = grayCol
 
 	timeAgoLabel := pg.theme.Body2(timeAgo(proposal.Timestamp))
@@ -402,7 +367,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 									Max: gtx.Constraints.Max,
 								}
 								rect.Max.Y = 20
-								pg.layoutInfoTooltip(gtx, i, proposal.State, rect)
+								pg.layoutInfoTooltip(gtx, i, proposal.VoteStatus, rect)
 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 									return p.proposals[i].infoIcon.Layout(gtx, unit.Dp(20))
 								})
@@ -454,7 +419,7 @@ func (pg *proposalsPage) layoutProposalVoteBar(gtx C, proposalItem proposalItem)
 	passPercentage := float32(proposalItem.proposal.PassPercentage)
 	eligibleTickets := float32(proposalItem.proposal.EligibleTickets)
 
-	return proposalItem.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).Layout(gtx)
+	return proposalItem.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
 }
 
 func (pg *proposalsPage) layoutProposalsList(gtx C) D {
@@ -507,12 +472,8 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 
 func (pg *proposalsPage) layoutContent(gtx C) D {
 	selected := pg.tabs.tabs[pg.tabs.selected]
-	if pg.state == categoryStateFetching {
-		return pg.layoutFetchingState(gtx)
-	} else if pg.state == categoryStateFetched && len(selected.proposals) == 0 {
+	if len(selected.proposals) == 0 {
 		return pg.layoutNoProposalsFound(gtx)
-	} else if pg.state == categoryStateError {
-		return pg.layoutErrorState(gtx)
 	}
 	return pg.layoutProposalsList(gtx)
 }
@@ -541,9 +502,8 @@ func (pg *proposalsPage) layoutStartSyncSection(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) layoutSyncSection(gtx C, common pageCommon) D {
+func (pg *proposalsPage) layoutSyncSection(gtx C) D {
 	if pg.isSynced {
-		common.refreshPage()
 		return pg.layoutIsSyncedSection(gtx)
 	} else if pg.wallet.IsSyncingProposals() {
 		return pg.layoutIsSyncingSection(gtx)
@@ -551,14 +511,23 @@ func (pg *proposalsPage) layoutSyncSection(gtx C, common pageCommon) D {
 	return pg.layoutStartSyncSection(gtx)
 }
 
-func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
-	if !pg.hasFetchedInitialProposals && !pg.isFetchingInitialProposals {
-		pg.fetchProposals()
+func (pg *proposalsPage) initializeProposaltabItems() {
+	pg.proposalsItemSet = true
+	if len((*pg.proposals).Proposals) == 0 {
+		pg.wallet.SyncProposals()
+		pg.proposalsItemSet = false
 	}
 
-	if !pg.hasRegisteredListeners {
-		pg.wallet.AddProposalNotificationListener(proposalNotificationListeners{pg})
-		pg.hasRegisteredListeners = true
+	for i := range (*pg.proposals).Proposals {
+		if i != len((*pg.proposals).Proposals) {
+			pg.addDiscoveredProposal(true, (*pg.proposals).Proposals[i])
+		}
+	}
+}
+
+func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
+	if !pg.proposalsItemSet {
+		pg.initializeProposaltabItems()
 	}
 
 	border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
@@ -584,7 +553,7 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 								}
 								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
 									return layout.Center.Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx, common)
+										return pg.layoutSyncSection(gtx)
 									})
 								})
 							})
