@@ -93,7 +93,8 @@ func (v *VoteBar) SetParams(yesVotes, noVotes, eligibleVotes, requiredPercentage
 }
 
 func (v *VoteBar) Layout(gtx C) D {
-	var rW, rN float32
+	var rW, rE float32
+	r := float32(gtx.Px(unit.Dp(4)))
 	progressBarWidth := float32(gtx.Constraints.Max.X)
 	quorumRequirement := (v.requiredPercentage / 100) * v.eligibleVotes
 
@@ -105,17 +106,25 @@ func (v *VoteBar) Layout(gtx C) D {
 	// progressScale represent the different progress bar layers
 	progressScale := func(width float32, color color.NRGBA, layer int) layout.Dimensions {
 		maxHeight := unit.Dp(8)
-		rW, rN = 0, 0
+		rW, rE = 0, 0
 		if layer == 2 {
-			rW = float32(gtx.Px(unit.Dp(4)))
-		} else if layer == 1 || layer == 3 {
-			rN = float32(gtx.Px(unit.Dp(4)))
+			if width >= progressBarWidth {
+				rE = r
+			}
+			rW = r
+		} else if layer == 3 {
+			if v.yesVotes == 0 {
+				rW = r
+			}
+			rE = r
+		} else {
+			rE, rW = r, r
 		}
 		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
 
 		clip.RRect{
 			Rect: f32.Rectangle{Max: f32.Point{X: width, Y: float32(gtx.Px(maxHeight))}},
-			NE:   rN, NW: rW, SE: rN, SW: rW,
+			NE:   rE, NW: rW, SE: rE, SW: rW,
 		}.Add(gtx.Ops)
 
 		paint.ColorOp{Color: color}.Add(gtx.Ops)
@@ -131,7 +140,7 @@ func (v *VoteBar) Layout(gtx C) D {
 		no := (v.noVotes / v.totalVotes) * 100
 		noWidth = (progressBarWidth / 100) * no
 		yesWidth = (progressBarWidth / 100) * yes
-		rN = float32(gtx.Px(unit.Dp(4)))
+		rE = r
 	} else if yesWidth < 0 {
 		yesWidth, noWidth = 0, 0
 	}
@@ -156,26 +165,35 @@ func (v *VoteBar) Layout(gtx C) D {
 				}),
 			)
 		}),
-		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			thumbLeftPos := (v.passPercentage / 100) * float32(gtx.Constraints.Max.X)
-			rect := image.Rectangle{
-				Min: image.Point{
-					X: int(thumbLeftPos - float32(voteBarThumbWidth/2)),
-					Y: -30,
-				},
-				Max: image.Point{
-					X: int(thumbLeftPos + voteBarThumbWidth),
-					Y: 0,
-				},
-			}
-			clip.Rect(rect).Add(gtx.Ops)
-			paint.Fill(gtx.Ops, v.thumbCol)
-			inset := layout.Inset{Left: unit.Dp(110)}
-			return v.passTooltip.Layout(gtx, rect, inset, func(gtx C) D {
-				return v.passTooltipLabel.Layout(gtx)
-			})
-		}),
+		layout.Stacked(v.requiredYesVotesIndicator),
 	)
+}
+
+func (v *VoteBar) votesIndicatorTooltip(gtx C, r image.Rectangle, tipPos float32) {
+	inset := layout.Inset{Left: unit.Dp(tipPos / 3), Top: unit.Dp(20)}
+	v.passTooltip.Layout(gtx, r, inset, func(gtx C) D {
+		return v.passTooltipLabel.Layout(gtx)
+	})
+}
+
+func (v *VoteBar) requiredYesVotesIndicator(gtx C) D {
+	thumbLeftPos := (v.passPercentage / 100) * float32(gtx.Constraints.Max.X)
+	rect := image.Rectangle{
+		Min: image.Point{
+			X: int(thumbLeftPos - float32(voteBarThumbWidth/2)),
+			Y: -1,
+		},
+		Max: image.Point{
+			X: int(thumbLeftPos + voteBarThumbWidth),
+			Y: 45,
+		},
+	}
+	clip.Rect(rect).Add(gtx.Ops)
+	paint.Fill(gtx.Ops, v.thumbCol)
+	v.votesIndicatorTooltip(gtx, rect, thumbLeftPos)
+	return D{
+		Size: rect.Max,
+	}
 }
 
 func (v *VoteBar) LayoutWithLegend(gtx C) D {
@@ -222,6 +240,9 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl Label, count float32) D {
 			}),
 			layout.Rigid(func(gtx C) D {
 				percentage := (count / v.totalVotes) * 100
+				if percentage != percentage {
+					percentage = 0
+				}
 				percentageStr := strconv.FormatFloat(float64(percentage), 'f', 1, 64) + "%"
 				countStr := strconv.FormatFloat(float64(count), 'f', 0, 64)
 
