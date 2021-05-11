@@ -35,10 +35,14 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.D
 	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return page.theme.LabelColor(values.TextSize20, mainText, page.theme.Color.DeepBlue).Layout(gtx)
+			label := page.theme.Label(values.TextSize20, mainText)
+			label.Color = page.theme.Color.DeepBlue
+			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.theme.LabelColor(values.TextSize14, subText, page.theme.Color.DeepBlue).Layout(gtx)
+			label := page.theme.Label(values.TextSize14, subText)
+			label.Color = page.theme.Color.DeepBlue
+			return label.Layout(gtx)
 		}),
 	)
 }
@@ -71,7 +75,8 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
 							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
-							return page.theme.LabelColor(values.TextSize14, amountDCRtoUSDString, page.theme.Color.DeepBlue).Layout(gtx)
+							return page.theme.Body2(amountDCRtoUSDString).Layout(gtx)
+							//return page.theme.LabelColor(values.TextSize14, amountDCRtoUSDString, page.theme.Color.DeepBlue).Layout(gtx)
 						})
 					})
 				})
