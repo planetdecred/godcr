@@ -5,6 +5,7 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -125,4 +126,57 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
 	pb.Progress = float32(strength * 100)
 	pb.Color = th.Color.Success
+}
+
+func ticketIconStatus(c *pageCommon, ticketStatus string) *struct {
+	icon       *widget.Image
+	color      color.NRGBA
+	background color.NRGBA
+} {
+	m := map[string]struct {
+		icon       *widget.Image
+		color      color.NRGBA
+		background color.NRGBA
+	}{
+		"UNMINED": {
+			c.icons.ticketUnminedIcon,
+			c.theme.Color.DeepBlue,
+			c.theme.Color.LightBlue,
+		},
+		"IMMATURE": {
+			c.icons.ticketImmatureIcon,
+			c.theme.Color.DeepBlue,
+			c.theme.Color.LightBlue,
+		},
+		"LIVE": {
+			c.icons.ticketLiveIcon,
+			c.theme.Color.Primary,
+			c.theme.Color.LightBlue,
+		},
+		"VOTED": {
+			c.icons.ticketVotedIcon,
+			c.theme.Color.Success,
+			c.theme.Color.Success2,
+		},
+		"MISSED": {
+			c.icons.ticketMissedIcon,
+			c.theme.Color.Gray,
+			c.theme.Color.LightGray,
+		},
+		"EXPIRED": {
+			c.icons.ticketExpiredIcon,
+			c.theme.Color.Gray,
+			c.theme.Color.LightGray,
+		},
+		"REVOKED": {
+			c.icons.ticketRevokedIcon,
+			c.theme.Color.Orange,
+			c.theme.Color.Orange2,
+		},
+	}
+	st, ok := m[ticketStatus]
+	if !ok {
+		return nil
+	}
+	return &st
 }

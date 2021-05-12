@@ -28,15 +28,14 @@ type transactionWdg struct {
 }
 
 type transactionsPage struct {
-	container                     layout.Flex
-	txsList                       layout.List
-	walletTransactions            **wallet.Transactions
-	walletTransaction             **wallet.Transaction
-	filterSorter                  int
-	filterSortW, filterDirectionW *widget.Enum
-	filterDirection, filterSort   []decredmaterial.RadioButton
-	toTxnDetails                  []*gesture.Click
-	separator                     decredmaterial.Line
+	container                   layout.Flex
+	txsList                     layout.List
+	walletTransactions          **wallet.Transactions
+	walletTransaction           **wallet.Transaction
+	filterSorter                int
+	filterDirection, filterSort []decredmaterial.RadioButton
+	toTxnDetails                []*gesture.Click
+	separator                   decredmaterial.Line
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
@@ -49,8 +48,6 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		txsList:            layout.List{Axis: layout.Vertical},
 		walletTransactions: &win.walletTransactions,
 		walletTransaction:  &win.walletTransaction,
-		filterDirectionW:   new(widget.Enum),
-		filterSortW:        new(widget.Enum),
 		separator:          common.theme.Separator(),
 	}
 

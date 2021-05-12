@@ -60,6 +60,8 @@ type Theme struct {
 		Gray1        color.NRGBA
 		Gray2        color.NRGBA
 		Gray3        color.NRGBA
+		Orange       color.NRGBA
+		Orange2      color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -105,6 +107,8 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Black = rgb(0x000000)
 	t.Color.Background = argb(0x22444444)
 	t.Color.LightBlue = rgb(0xe4f6ff)
+	t.Color.Orange = rgb(0xD34A21)
+	t.Color.Orange2 = rgb(0xF8E8E7)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
