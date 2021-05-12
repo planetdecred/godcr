@@ -20,7 +20,6 @@ type RestoreEditor struct {
 	Edit       Editor
 	TitleLabel Label
 	LineColor  color.NRGBA
-	m10        unit.Value
 	height     int
 }
 
@@ -69,7 +68,6 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		Edit:       e,
 		TitleLabel: t.Body2(title),
 		LineColor:  t.Color.Gray1,
-		m10:        values.MarginPadding10,
 		height:     30,
 	}
 }
@@ -275,8 +273,8 @@ func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
-					Left:  re.m10,
-					Right: re.m10,
+					Left:  unit.Dp(10),
+					Right: unit.Dp(10),
 				}.Layout(gtx, func(gtx C) D {
 					return re.TitleLabel.Layout(gtx)
 				})
