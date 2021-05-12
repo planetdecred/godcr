@@ -7,8 +7,11 @@ import (
 	"strconv"
 	"strings"
 
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -583,6 +586,12 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
+						if common.modalLoad.loading {
+							th := material.NewTheme(gofont.Collection())
+							return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
+								return material.Loader(th).Layout(gtx)
+							})
+						}
 						pg.confirmButton.Text = fmt.Sprintf("Send %s", dcrutil.Amount(pg.totalCostDCR).String())
 						return pg.confirmButton.Layout(gtx)
 					}),
@@ -920,6 +929,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.resetFields()
+		c.modalLoad.setLoading(false)
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues(c)
 		pg.destinationAddressEditor.Editor.SetText("")
@@ -1076,6 +1086,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	pg.watchForBroadcastResult(c)
 
 	for pg.confirmButton.Button.Clicked() {
+		c.modalLoad.setLoading(true)
 		if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
 			return
 		}
@@ -1098,6 +1109,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	}
 
 	for pg.closeConfirmationModalButton.Button.Clicked() {
+		c.modalLoad.setLoading(false)
 		pg.isConfirmationModalOpen = false
 	}
 
