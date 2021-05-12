@@ -6,7 +6,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -454,7 +453,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.computePasswordStrength(th, m.spendingPassword.Editor)
+		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
 
 		template = m.createNewWallet()
 		m.walletName.Hint = "Wallet name"
@@ -522,7 +521,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.computePasswordStrength(th, m.spendingPassword.Editor)
+		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
 
 		m.spendingPassword.Hint = "New spending password"
 		m.matchSpendingPassword.Hint = "Confirm new spending password"
@@ -583,7 +582,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		m.computePasswordStrength(th, m.spendingPassword.Editor)
+		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
 		m.spendingPassword.Hint = "Startup password"
 		m.matchSpendingPassword.Hint = "Confirm startup password"
 
@@ -667,13 +666,6 @@ func (m *ModalTemplate) passwordsMatch(editors ...*widget.Editor) bool {
 
 	m.matchSpendingPassword.SetError("")
 	return true
-}
-
-func (m *ModalTemplate) computePasswordStrength(th *decredmaterial.Theme, editors ...*widget.Editor) {
-	password := editors[0]
-	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
-	m.passwordStrength.Progress = float32(strength * 100)
-	m.passwordStrength.Color = th.Color.Success
 }
 
 // resetFields clears all modal fields when the modal is closed

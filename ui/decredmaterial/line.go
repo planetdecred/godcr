@@ -13,11 +13,19 @@ import (
 type (
 	// Line represents a rectangle widget with an initial thickness of 1
 	Line struct {
-		Height int
-		Width  int
-		Color  color.NRGBA
+		Height     int
+		Width      int
+		Color      color.NRGBA
+		isVertical bool
 	}
 )
+
+// SeparatorVertical returns a vertical line widget instance
+func (t *Theme) SeparatorVertical(height, width int) Line {
+	vLine := t.Line(height, width)
+	vLine.isVertical = true
+	return vLine
+}
 
 // Line returns a line widget instance
 func (t *Theme) Line(height, width int) Line {
@@ -45,6 +53,10 @@ func (l Line) Layout(gtx C) D {
 	st := op.Save(gtx.Ops)
 	if l.Width == 0 {
 		l.Width = gtx.Constraints.Max.X
+	}
+
+	if l.isVertical && l.Height == 0 {
+		l.Height = gtx.Constraints.Max.Y
 	}
 
 	line := image.Rectangle{
