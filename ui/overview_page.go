@@ -87,12 +87,6 @@ type overviewPage struct {
 
 func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 
-	isDarkModeOn := win.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
-	if isDarkModeOn != win.theme.DarkMode {
-		win.theme.SwitchDarkMode(isDarkModeOn)
-		win.reloadPage(c)
-	}
-
 	pg := overviewPage{
 		theme: c.theme,
 		tab:   c.navTab,
@@ -169,7 +163,7 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	pg.cachedIcon = c.icons.cached
 
 	return func(gtx C) D {
-		pg.Handler(gtx, c)
+		pg.Handler(gtx, c, win)
 		return pg.Layout(gtx, c)
 	}
 }
@@ -646,7 +640,16 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 	})
 }
 
-func (pg *overviewPage) Handler(eq event.Queue, c pageCommon) {
+func (pg *overviewPage) Handler(eq event.Queue, c pageCommon, win *Window) {
+
+	if win.wallet != nil {
+		isDarkModeOn := win.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
+		if isDarkModeOn != win.theme.DarkMode {
+			win.theme.SwitchDarkMode(isDarkModeOn)
+			win.reloadPage(c)
+		}
+	}
+
 	if pg.walletInfo.Synced {
 		pg.sync.Text = pg.text.disconnect
 	}
