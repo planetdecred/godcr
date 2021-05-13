@@ -194,17 +194,31 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				wrapIcon := c.theme.Card()
-				wrapIcon.Color = st.background
-				wrapIcon.Radius.NE = 8
-				wrapIcon.Radius.SW = 8
-				wrapIcon.Radius.NW = 8
-				wrapIcon.Radius.SE = 8
-				st.icon.Scale = 0.6
 				return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-					return wrapIcon.Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout)
-					})
+					var progressBarWidth int
+					return layout.Stack{Alignment: layout.S}.Layout(gtx,
+						layout.Stacked(func(gtx C) D {
+							wrapIcon := c.theme.Card()
+							wrapIcon.Color = st.background
+							wrapIcon.Radius.NE = 8
+							wrapIcon.Radius.SW = 8
+							wrapIcon.Radius.NW = 8
+							wrapIcon.Radius.SE = 8
+							st.icon.Scale = 0.6
+							dims := wrapIcon.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout)
+							})
+							progressBarWidth = dims.Size.X
+							return dims
+						}),
+						layout.Stacked(func(gtx C) D {
+							gtx.Constraints.Max.X = progressBarWidth - 4
+							p := c.theme.ProgressBar(20)
+							p.Height, p.Radius = values.MarginPadding4, values.MarginPadding2
+							p.Color = st.color
+							return p.Layout(gtx)
+						}),
+					)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -232,26 +246,34 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 									return endToEndRow(gtx, func(gtx C) D { return c.layoutBalance(gtx, tickets[index].Amount) }, dtime.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											txt := c.theme.Label(values.MarginPadding14, tickets[index].Info.Status)
-											txt.Color = st.color
-											return txt.Layout(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{
-												Left:  values.MarginPadding4,
-												Right: values.MarginPadding4,
-											}.Layout(gtx, func(gtx C) D {
-												ic := c.icons.imageBrightness1
-												ic.Color = c.theme.Color.Gray2
-												return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return c.theme.Label(values.MarginPadding14, tickets[index].WalletName).Layout(gtx)
-										}),
-									)
+									l := func(gtx C) layout.Dimensions {
+										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												txt := c.theme.Label(values.MarginPadding14, tickets[index].Info.Status)
+												txt.Color = st.color
+												return txt.Layout(gtx)
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{
+													Left:  values.MarginPadding4,
+													Right: values.MarginPadding4,
+												}.Layout(gtx, func(gtx C) D {
+													ic := c.icons.imageBrightness1
+													ic.Color = c.theme.Color.Gray2
+													return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+												})
+											}),
+											layout.Rigid(func(gtx C) D {
+												return c.theme.Label(values.MarginPadding14, tickets[index].WalletName).Layout(gtx)
+											}),
+										)
+									}
+									r := func(gtx C) layout.Dimensions {
+										txt := c.theme.Label(values.TextSize14, tickets[index].DaysBehind)
+										txt.Color = c.theme.Color.Gray2
+										return txt.Layout(gtx)
+									}
+									return endToEndRow(gtx, l, r)
 								}),
 							)
 						})
