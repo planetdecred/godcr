@@ -11,7 +11,6 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -431,7 +430,7 @@ func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimension
 
 func (pg *transactionDetailsPage) Handler(common pageCommon) {
 	if pg.toDcrdata.Clicked() {
-		utils.GoToURL(common.wallet.GetBlockExplorerURL((*pg.txnInfo).Txn.Hash))
+		goToURL(common.wallet.GetBlockExplorerURL((*pg.txnInfo).Txn.Hash))
 	}
 
 	for _, b := range pg.copyTextBtn {

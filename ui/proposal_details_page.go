@@ -12,7 +12,6 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -78,19 +77,19 @@ func (pg *proposalDetails) handle() {
 	for token := range pg.proposalItems {
 		for location, clickable := range pg.proposalItems[token].clickables {
 			if clickable.Clicked() {
-				utils.GoToURL(location)
+				goToURL(location)
 			}
 		}
 	}
 
 	for pg.viewInPoliteiaBtn.Clicked() {
 		proposal := *pg.selectedProposal
-		utils.GoToURL("https://proposals.decred.org/proposals/" + proposal.Token)
+		goToURL("https://proposals.decred.org/proposals/" + proposal.Token)
 	}
 
 	for pg.viewInGithubBtn.Clicked() {
 		proposal := *pg.selectedProposal
-		utils.GoToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
+		goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
 	}
 }
 
@@ -360,7 +359,7 @@ func (pg *proposalDetails) Layout(gtx C, common pageCommon) D {
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok {
 		go func() {
-			r := utils.RenderMarkdown(gtx, pg.theme, pg.getProposalText())
+			r := RenderMarkdown(gtx, pg.theme, pg.getProposalText())
 			proposalWidgets, proposalClickables := r.Layout()
 			pg.proposalItems[proposal.Token] = proposalItemWidgets{
 				widgets:    proposalWidgets,

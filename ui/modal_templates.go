@@ -9,7 +9,6 @@ import (
 	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -77,7 +76,7 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 		spendingPassword:      win.theme.EditorPassword(new(widget.Editor), "Spending password"),
 		matchSpendingPassword: win.theme.EditorPassword(new(widget.Editor), "Confirm spending password"),
 		extendedPublicKey:     win.theme.Editor(new(widget.Editor), "Extended public key"),
-		alert:                 utils.MustIcon(widget.NewIcon(icons.AlertError)),
+		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
 		passwordStrength:      win.theme.ProgressBar(0),
 	}
 }
@@ -291,7 +290,7 @@ func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := utils.MustIcon(widget.NewIcon(icons.ImageLens))
+					ic := mustIcon(widget.NewIcon(icons.ImageLens))
 					ic.Color = m.th.Color.Gray
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
@@ -310,7 +309,7 @@ func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := utils.MustIcon(widget.NewIcon(icons.ImageLens))
+					ic := mustIcon(widget.NewIcon(icons.ImageLens))
 					ic.Color = m.th.Color.Gray
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),

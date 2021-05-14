@@ -10,7 +10,6 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 
@@ -78,7 +77,7 @@ func (pg *utxoPage) Handler(common pageCommon) {
 			if _, ok := (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID][utxo.UTXO.OutputKey]; ok {
 				pg.checkboxes[i].CheckBox.Value = true
 			}
-			icoBtn := common.theme.IconButton(new(widget.Clickable), utils.MustIcon(widget.NewIcon(icons.ContentContentCopy)))
+			icoBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy)))
 			icoBtn.Inset, icoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 			icoBtn.Background = common.theme.Color.LightGray
 			pg.copyButtons[i] = icoBtn

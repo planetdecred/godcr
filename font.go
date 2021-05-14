@@ -1,4 +1,4 @@
-package utils
+package main
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ var (
 )
 
 // FontCollection registers the fonts to used in the app
-func FontCollection() []text.FontFace {
+func fontCollection() []text.FontFace {
 	regularItalic, err := getFontByte("ui/assets/fonts/source_sans_pro_It.otf")
 	if err != nil {
 		regularItalic = goitalic.TTF
@@ -78,7 +78,7 @@ func register(fnt text.Font, fontByte []byte) {
 }
 
 func getFontByte(path string) ([]byte, error) {
-	absoluteWdPath, err := GetAbsoultePath()
+	absoluteWdPath, err := getAbsoultePath()
 	if err != nil {
 		log.Errorf("failed to get absoluteWdPath: %s", err.Error())
 		return nil, err

@@ -18,7 +18,6 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -27,7 +26,7 @@ import (
 // balance at the baseline of the row.
 func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
-	mainText, subText := utils.BreakBalance(page.printer, amount)
+	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return page.theme.Label(values.TextSize20, mainText).Layout(gtx)
@@ -65,7 +64,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					}
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
-							amountDCRtoUSDString := utils.FormatUSDBalance(page.printer, page.amountDCRtoUSD)
+							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
 							return page.theme.Label(values.TextSize14, amountDCRtoUSDString).Layout(gtx)
 						})
 					})
@@ -324,7 +323,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 												func(gtx C) D {
-													s := utils.FormatDateOrTime(row.transaction.Txn.Timestamp)
+													s := formatDateOrTime(row.transaction.Txn.Timestamp)
 													if row.transaction.Status != "confirmed" {
 														s = row.transaction.Status
 													}

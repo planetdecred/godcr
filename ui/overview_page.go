@@ -13,7 +13,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -216,7 +215,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 	if len((*pg.walletTransactions).Txs) > 0 {
 		recentTransactions = (*pg.walletTransactions).Recent
 		if len(recentTransactions) != len(pg.toTransactionDetails) {
-			pg.toTransactionDetails = utils.CreateClickGestures(len(recentTransactions))
+			pg.toTransactionDetails = createClickGestures(len(recentTransactions))
 		}
 	}
 
@@ -254,7 +253,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 						var row = TransactionRow{
 							transaction: recentTransactions[i],
 							index:       i,
-							showBadge:   utils.ShowLabel(recentTransactions),
+							showBadge:   showLabel(recentTransactions),
 						}
 						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 							return transactionRow(gtx, common, row)
@@ -646,7 +645,7 @@ func (pg *overviewPage) Handler(eq event.Queue, c pageCommon) {
 	}
 
 	if pg.autoSyncWallet && !pg.walletInfo.Synced {
-		walletsLocked := utils.GetLockedWallets(c.wallet.AllWallets())
+		walletsLocked := getLockedWallets(c.wallet.AllWallets())
 		if len(walletsLocked) == 0 {
 			c.wallet.StartSync()
 			pg.sync.Text = pg.text.cancel
@@ -655,7 +654,7 @@ func (pg *overviewPage) Handler(eq event.Queue, c pageCommon) {
 	}
 
 	if !pg.isCheckingLockWL {
-		if lockedWallets := utils.GetLockedWallets(c.wallet.AllWallets()); len(lockedWallets) > 0 {
+		if lockedWallets := getLockedWallets(c.wallet.AllWallets()); len(lockedWallets) > 0 {
 			showWalletUnlockModal(c, lockedWallets)
 		}
 		pg.isCheckingLockWL = true

@@ -15,7 +15,6 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -123,7 +122,7 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 	pg.showRestoreWallet.Background = color.NRGBA{}
 	pg.showRestoreWallet.Color = common.theme.Color.Hint
 
-	pg.closeCreateRestore = common.theme.IconButton(new(widget.Clickable), utils.MustIcon(widget.NewIcon(icons.NavigationArrowBack)))
+	pg.closeCreateRestore = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationArrowBack)))
 	pg.closeCreateRestore.Background = color.NRGBA{}
 	pg.closeCreateRestore.Color = common.theme.Color.Hint
 

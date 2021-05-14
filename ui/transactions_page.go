@@ -15,7 +15,6 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -127,7 +126,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 								// update transaction row click gesture when the length of the click gesture slice and
 								// transactions list are different.
 								if len(wallTxs) != len(pg.toTxnDetails) {
-									pg.toTxnDetails = utils.CreateClickGestures(len(wallTxs))
+									pg.toTxnDetails = createClickGestures(len(wallTxs))
 								}
 
 								return pg.txsList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
@@ -282,7 +281,7 @@ func initTxnWidgets(common pageCommon, transaction wallet.Transaction) transacti
 	txn.wallet = common.theme.Body2(transaction.WalletName)
 
 	if transaction.Status == "confirmed" {
-		txn.status.Text = utils.FormatDateOrTime(transaction.Txn.Timestamp)
+		txn.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
 		txn.statusIcon = common.icons.confirmIcon
 	} else {
 		txn.status.Text = transaction.Status
