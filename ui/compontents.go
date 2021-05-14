@@ -466,15 +466,15 @@ func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage, s
 	case callingPage == "send":
 		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedSendWallet]
 		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedSendAccount]
-		return d(gtx, acctSelect.Name, wallSelect.Name, acctSelect.TotalBalance, page.wallAcctSelector.sendAccountBtn)
+		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.SpendableBalance).String(), page.wallAcctSelector.sendAccountBtn)
 	case callingPage == "receive":
 		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet]
 		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedReceiveAccount]
-		return d(gtx, acctSelect.Name, wallSelect.Name, acctSelect.TotalBalance, page.wallAcctSelector.receivingAccountBtn)
+		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.SpendableBalance).String(), page.wallAcctSelector.receivingAccountBtn)
 	case callingPage == "purchase":
 		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet]
 		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedPurchaseTicketAccount]
-		return d(gtx, acctSelect.Name, wallSelect.Name, acctSelect.TotalBalance, page.wallAcctSelector.purchaseTicketAccountBtn)
+		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.SpendableBalance).String(), page.wallAcctSelector.purchaseTicketAccountBtn)
 	default:
 		return layout.Dimensions{}
 	}
