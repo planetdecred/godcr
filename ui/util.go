@@ -128,7 +128,7 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 	pb.Color = th.Color.Success
 }
 
-func ticketIconStatus(c *pageCommon, ticketStatus string) *struct {
+func ticketStatusIcon(c *pageCommon, ticketStatus string) *struct {
 	icon       *widget.Image
 	color      color.NRGBA
 	background color.NRGBA

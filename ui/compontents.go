@@ -803,9 +803,10 @@ func (page pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount,
 	}
 }
 
-func ticketLiveItemnInfo(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimensions {
+// ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
+func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimensions {
 	var itemWidth int
-	st := ticketIconStatus(&c, t.Info.Status)
+	st := ticketStatusIcon(&c, t.Info.Status)
 	if st == nil {
 		return layout.Dimensions{}
 	}
@@ -814,10 +815,7 @@ func ticketLiveItemnInfo(gtx layout.Context, c pageCommon, t *wallet.Ticket) lay
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				wrap := c.theme.Card()
-				wrap.Radius.NE = 8 // top - left
-				wrap.Radius.SW = 0 // bottom - left
-				wrap.Radius.NW = 8 // top - right
-				wrap.Radius.SE = 0 // bottom - right
+				wrap.Radius = decredmaterial.CornerRadius{NE: 8, NW: 8, SE: 0, SW: 0}
 				wrap.Color = st.background
 				return wrap.Layout(gtx, func(gtx C) D {
 					return layout.Stack{Alignment: layout.S}.Layout(gtx,
@@ -825,10 +823,7 @@ func ticketLiveItemnInfo(gtx layout.Context, c pageCommon, t *wallet.Ticket) lay
 						layout.Expanded(func(gtx C) D {
 							return layout.NE.Layout(gtx, func(gtx C) D {
 								wTimeLabel := c.theme.Card()
-								wTimeLabel.Radius.NE = 0
-								wTimeLabel.Radius.SW = 8
-								wTimeLabel.Radius.NW = 8
-								wTimeLabel.Radius.SE = 0
+								wTimeLabel.Radius = decredmaterial.CornerRadius{NE: 0, NW: 8, SE: 0, SW: 8}
 								return wTimeLabel.Layout(gtx, func(gtx C) D {
 									return layout.Inset{
 										Top:    values.MarginPadding4,
@@ -871,10 +866,7 @@ func ticketLiveItemnInfo(gtx layout.Context, c pageCommon, t *wallet.Ticket) lay
 			}),
 			layout.Rigid(func(gtx C) D {
 				wrap := c.theme.Card()
-				wrap.Radius.NE = 0 // top - left
-				wrap.Radius.SW = 8 // bottom - left
-				wrap.Radius.NW = 0 // top - right
-				wrap.Radius.SE = 8 // bottom - right
+				wrap.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 8, SW: 8}
 				return wrap.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X, gtx.Constraints.Max.X = itemWidth, itemWidth
 					return layout.Inset{

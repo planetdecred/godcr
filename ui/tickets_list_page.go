@@ -94,10 +94,7 @@ func (pg *ticketPageList) layout(gtx layout.Context, c pageCommon) layout.Dimens
 			extra: func(gtx C) D {
 				wrap := c.theme.Card()
 				wrap.Color = c.theme.Color.Gray1
-				wrap.Radius.NE = 8 // top - left
-				wrap.Radius.SW = 8 // bottom - left
-				wrap.Radius.NW = 8 // top - right
-				wrap.Radius.SE = 8 // bottom - right
+				wrap.Radius = decredmaterial.CornerRadius{NE: 8, NW: 8, SE: 8, SW: 8}
 				return wrap.Layout(gtx, func(gtx C) D {
 					insetIcon := layout.Inset{
 						Top:    values.MarginPadding4,
@@ -113,10 +110,7 @@ func (pg *ticketPageList) layout(gtx layout.Context, c pageCommon) layout.Dimens
 					}.Layout(gtx, func(gtx C) D {
 						wrapIcon := c.theme.Card()
 						wrapIcon.Color = c.theme.Color.Surface
-						wrapIcon.Radius.NE = 7
-						wrapIcon.Radius.SW = 7
-						wrapIcon.Radius.NW = 7
-						wrapIcon.Radius.SE = 7
+						wrapIcon.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
 
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
@@ -187,7 +181,7 @@ func (pg *ticketPageList) dropDowns(gtx layout.Context) layout.Dimensions {
 
 func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tickets []wallet.Ticket) layout.Dimensions {
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-		st := ticketIconStatus(&c, tickets[index].Info.Status)
+		st := ticketStatusIcon(&c, tickets[index].Info.Status)
 		if st == nil {
 			return layout.Dimensions{}
 		}
@@ -200,10 +194,7 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 						layout.Stacked(func(gtx C) D {
 							wrapIcon := c.theme.Card()
 							wrapIcon.Color = st.background
-							wrapIcon.Radius.NE = 8
-							wrapIcon.Radius.SW = 8
-							wrapIcon.Radius.NW = 8
-							wrapIcon.Radius.SE = 8
+							wrapIcon.Radius = decredmaterial.CornerRadius{NE: 8, NW: 8, SE: 8, SW: 8}
 							st.icon.Scale = 0.6
 							dims := wrapIcon.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout)
@@ -286,15 +277,21 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 
 func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c pageCommon, tickets []wallet.Ticket) layout.Dimensions {
 	// TODO: GridWrap's items not able to scroll vertically, will update when it fixed
-	return pg.ticketsList.Layout(gtx, 1, func(gtx C, index int) D {
-		return c.theme.Card().Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Min = gtx.Constraints.Max
-			return decredmaterial.GridWrap{
-				Axis:      layout.Horizontal,
-				Alignment: layout.End,
-			}.Layout(gtx, len(tickets), func(gtx C, index int) D {
-				return layout.Inset{Right: values.MarginPadding8, Bottom: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-					return ticketLiveItemnInfo(gtx, c, &tickets[index])
+	return layout.Center.Layout(gtx, func(gtx C) D {
+		return pg.ticketsList.Layout(gtx, 1, func(gtx C, index int) D {
+			return c.theme.Card().Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min = gtx.Constraints.Max
+				return decredmaterial.GridWrap{
+					Axis:      layout.Horizontal,
+					Alignment: layout.End,
+				}.Layout(gtx, len(tickets), func(gtx C, index int) D {
+					return layout.Inset{
+						Left:   values.MarginPadding4,
+						Right:  values.MarginPadding4,
+						Bottom: values.MarginPadding8,
+					}.Layout(gtx, func(gtx C) D {
+						return ticketCard(gtx, c, &tickets[index])
+					})
 				})
 			})
 		})

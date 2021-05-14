@@ -242,7 +242,7 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 								return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											st := ticketIconStatus(&c, item.Status)
+											st := ticketStatusIcon(&c, item.Status)
 											if st == nil {
 												return layout.Dimensions{}
 											}
@@ -269,7 +269,7 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 				tickets := (*pg.tickets).LiveRecent
 				return pg.ticketsLive.Layout(gtx, len(tickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						return ticketLiveItemnInfo(gtx, c, &tickets[index])
+						return ticketCard(gtx, c, &tickets[index])
 					})
 				})
 			}),
@@ -307,7 +307,7 @@ func (pg *ticketPage) ticketActivityItemnInfo(gtx layout.Context, c pageCommon, 
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				st := ticketIconStatus(&c, t.Info.Status)
+				st := ticketStatusIcon(&c, t.Info.Status)
 				if st == nil {
 					return layout.Dimensions{}
 				}
@@ -406,7 +406,7 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								st := ticketIconStatus(&c, item.Status)
+								st := ticketStatusIcon(&c, item.Status)
 								if st == nil {
 									return layout.Dimensions{}
 								}
