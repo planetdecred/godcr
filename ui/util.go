@@ -1,3 +1,6 @@
+// util contains functions that don't contain layout code. They could be considered helpers that aren't particularly
+// bounded to a page.
+
 package ui
 
 import (

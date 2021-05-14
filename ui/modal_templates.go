@@ -3,7 +3,7 @@ package ui
 import (
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
-	w "gioui.org/text"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -302,9 +302,9 @@ func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 			)
 		},
 		func(gtx C) D {
-			text := m.th.Body1("Important: keep this app opened while mixer is running.")
-			text.Font.Weight = w.Bold
-			return text.Layout(gtx)
+			txt := m.th.Body1("Important: keep this app opened while mixer is running.")
+			txt.Font.Weight = text.Bold
+			return txt.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
@@ -351,7 +351,7 @@ func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
 				}),
 				layout.Rigid(func(gtx C) D {
 					label := m.th.H6("Account name is taken")
-					label.Font.Weight = w.Bold
+					label.Font.Weight = text.Bold
 					return label.Layout(gtx)
 				}),
 			)
@@ -434,7 +434,7 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 				txt = "How to use the mixer?"
 			}
 			t := th.H6(txt)
-			t.Font.Weight = w.Bold
+			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
 	}
@@ -455,7 +455,7 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 							return layout.Dimensions{}
 						}
 						m.cancel.Text = load.cancelText
-						m.cancel.Font.Weight = w.Bold
+						m.cancel.Font.Weight = text.Bold
 						m.cancel.Background = th.Color.Surface
 						m.cancel.Color = th.Color.Primary
 						return m.cancel.Layout(gtx)
@@ -473,12 +473,12 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 							m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
 						}
 						if load.loading {
-								th := material.NewTheme(gofont.Collection())
-								return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
-									return material.Loader(th).Layout(gtx)
-								})
-							}
-						m.confirm.Font.Weight = w.Bold
+							th := material.NewTheme(gofont.Collection())
+							return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
+								return material.Loader(th).Layout(gtx)
+							})
+						}
+						m.confirm.Font.Weight = text.Bold
 						return m.confirm.Layout(gtx)
 					}),
 				)
