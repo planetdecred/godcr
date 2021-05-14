@@ -108,6 +108,8 @@ type sendPage struct {
 
 	txAuthorErrChan  chan error
 	broadcastErrChan chan error
+
+	walletSelected int
 }
 
 func (win *Window) SendPage(common pageCommon) layout.Widget {
@@ -140,6 +142,8 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 		broadcastErrChan: make(chan error),
 		txAuthorErrChan:  make(chan error),
 	}
+
+	pg.walletSelected = common.wallAcctSelector.selectedSendWallet
 
 	pg.accountSwitch = common.theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
 
@@ -1139,6 +1143,11 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	if pg.amountErrorText != "" {
 		pg.leftAmountEditor.SetError(pg.amountErrorText)
+	}
+
+	if pg.walletSelected != c.wallAcctSelector.selectedSendWallet {
+		pg.shouldInitializeTxAuthor = true
+		pg.walletSelected = c.wallAcctSelector.selectedSendWallet
 	}
 
 	if pg.shouldInitializeTxAuthor {
