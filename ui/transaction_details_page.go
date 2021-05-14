@@ -3,12 +3,9 @@ package ui
 import (
 	"fmt"
 	"image/color"
-	"os/exec"
-	"runtime"
 	"strings"
 
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -25,19 +22,13 @@ type transactionDetailsPage struct {
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
-	autoCompleteList                *layout.List
-	backButton                      decredmaterial.IconButton
 	txnInfo                         **wallet.Transaction
-	minInfoBtn                      decredmaterial.Button
 	hashBtn                         decredmaterial.Button
 	copyTextBtn                     []decredmaterial.Button
-	infoBtn                         decredmaterial.IconButton
 	dot                             *widget.Icon
 	toDcrdata                       *widget.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
-	infoModal                       *decredmaterial.Modal
-	showInfo                        bool
 }
 
 func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
@@ -51,33 +42,19 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 		transactionOutputsContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		autoCompleteList: &layout.List{Axis: layout.Horizontal},
 
-		txnInfo:  &win.walletTransaction,
-		theme:    common.theme,
-		showInfo: false,
+		txnInfo: &win.walletTransaction,
+		theme:   common.theme,
 
 		outputsCollapsible: common.theme.Collapsible(),
 		inputsCollapsible:  common.theme.Collapsible(),
 
-		backButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
-		minInfoBtn: common.theme.Button(new(widget.Clickable), "Got it"),
-		hashBtn:    common.theme.Button(new(widget.Clickable), ""),
-		toDcrdata:  new(widget.Clickable),
-		infoModal:  common.theme.Modal(),
+		hashBtn:   common.theme.Button(new(widget.Clickable), ""),
+		toDcrdata: new(widget.Clickable),
 	}
 
 	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
-	pg.backButton.Color = common.theme.Color.Text
-	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
-	pg.minInfoBtn.Background = color.NRGBA{}
-	pg.minInfoBtn.Color = common.theme.Color.Primary
-	pg.minInfoBtn.TextSize = values.TextSize20
-	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
-	pg.infoBtn.Color = common.theme.Color.Gray
-	pg.infoBtn.Background = common.theme.Color.Surface
-	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.dot = common.icons.imageBrightness1
 	pg.dot.Color = common.theme.Color.Gray
 
@@ -88,96 +65,61 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 }
 
 func (pg *transactionDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
-	widgets := []func(gtx C) D{
-		func(gtx C) D {
-			return pg.header(gtx)
-		},
-		func(gtx C) D {
-			return pg.txnBalanceAndStatus(gtx, common)
-		},
-		func(gtx C) D {
-			return pg.separator(gtx)
-		},
-		func(gtx C) D {
-			return pg.txnTypeAndID(gtx)
-		},
-		func(gtx C) D {
-			return pg.separator(gtx)
-		},
-		func(gtx C) D {
-			return pg.txnInputs(gtx)
-		},
-		func(gtx C) D {
-			return pg.separator(gtx)
-		},
-		func(gtx C) D {
-			return pg.txnOutputs(gtx, &common)
-		},
-		func(gtx C) D {
-			return pg.separator(gtx)
-		},
-		func(gtx C) D {
-			if *pg.txnInfo == nil {
-				return layout.Dimensions{}
-			}
-			return pg.viewTxn(gtx, &common)
-		},
-	}
-
-	body := common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, func(gtx C) D {
-			return common.theme.Card().Layout(gtx, func(gtx C) D {
-				if *pg.txnInfo == nil {
-					return layout.Dimensions{}
-				}
-				return pg.transactionDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-					return layout.Inset{}.Layout(gtx, widgets[i])
-				})
-			})
-		})
-	})
-
-	if pg.showInfo {
-		info := []func(gtx C) D{
-			func(gtx C) D {
-				return pg.infoModalLayout(gtx, &common)
+	body := func(gtx C) D {
+		page := SubPage{
+			title: dcrlibwallet.TransactionDirectionName((*pg.txnInfo).Txn.Direction),
+			back: func() {
+				common.changePage(*common.returnPage)
 			},
-		}
-
-		return pg.infoModal.Layout(gtx, info, 1300)
-	}
-	return body
-}
-
-func (pg *transactionDetailsPage) header(gtx layout.Context) layout.Dimensions {
-	return pg.pageSections(gtx, func(gtx C) D {
-		return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.W.Layout(gtx, func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-							return pg.backButton.Layout(gtx)
-						})
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.H6("")
-					if *pg.txnInfo != nil {
-						txt.Text = dcrlibwallet.TransactionDirectionName((*pg.txnInfo).Txn.Direction)
-					} else {
-						txt.Text = "Not found"
+			body: func(gtx layout.Context) layout.Dimensions {
+				widgets := []func(gtx C) D{
+					func(gtx C) D {
+						return pg.txnBalanceAndStatus(gtx, common)
+					},
+					func(gtx C) D {
+						return pg.separator(gtx)
+					},
+					func(gtx C) D {
+						return pg.txnTypeAndID(gtx)
+					},
+					func(gtx C) D {
+						return pg.separator(gtx)
+					},
+					func(gtx C) D {
+						return pg.txnInputs(gtx)
+					},
+					func(gtx C) D {
+						return pg.separator(gtx)
+					},
+					func(gtx C) D {
+						return pg.txnOutputs(gtx, &common)
+					},
+					func(gtx C) D {
+						return pg.separator(gtx)
+					},
+					func(gtx C) D {
+						if *pg.txnInfo == nil {
+							return layout.Dimensions{}
+						}
+						return pg.viewTxn(gtx, &common)
+					},
+				}
+				return common.theme.Card().Layout(gtx, func(gtx C) D {
+					if *pg.txnInfo == nil {
+						return layout.Dimensions{}
 					}
-
-					txt.Alignment = text.Middle
-					return txt.Layout(gtx)
-				}),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.infoBtn.Layout(gtx)
+					return pg.transactionDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+						return layout.Inset{}.Layout(gtx, widgets[i])
 					})
-				}),
-			)
-		})
+				})
+			},
+			infoTemplate: TransactionDetailsInfoTemplate,
+		}
+		return common.SubPageLayout(gtx, page)
+	}
+
+	return common.Layout(gtx, func(gtx C) D {
+		return common.UniformPadding(gtx, body)
 	})
 }
 
@@ -473,73 +415,6 @@ func (pg *transactionDetailsPage) viewTxn(gtx layout.Context, common *pageCommon
 	})
 }
 
-func (pg *transactionDetailsPage) viewTxnOnBrowser(common *pageCommon) {
-	var err error
-	url := common.wallet.GetBlockExplorerURL((*pg.txnInfo).Txn.Hash)
-
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-	if err != nil {
-		log.Error(err)
-	}
-}
-
-func (pg *transactionDetailsPage) infoModalLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.NW.Layout(gtx, func(gtx C) D {
-				return pg.theme.H6("How to copy").Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				inset := layout.Inset{
-					Top:    values.MarginPadding20,
-					Bottom: values.MarginPadding30,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							t := pg.theme.Body1("Tap on")
-							t.Color = common.theme.Color.Gray
-							return t.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							t := pg.theme.Body1("blue text")
-							t.Color = common.theme.Color.Primary
-							m := values.MarginPadding2
-							return layout.Inset{
-								Left:  m,
-								Right: m,
-							}.Layout(gtx, func(gtx C) D {
-								return t.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							t := pg.theme.Body1("to copy the item.")
-							t.Color = common.theme.Color.Gray
-							return t.Layout(gtx)
-						}),
-					)
-				})
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.SE.Layout(gtx, func(gtx C) D {
-				return pg.minInfoBtn.Layout(gtx)
-			})
-		}),
-	)
-}
-
 func (pg *transactionDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	m := values.MarginPadding20
 	mtb := values.MarginPadding5
@@ -555,19 +430,7 @@ func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimension
 
 func (pg *transactionDetailsPage) Handler(common pageCommon) {
 	if pg.toDcrdata.Clicked() {
-		pg.viewTxnOnBrowser(&common)
-	}
-
-	if pg.infoBtn.Button.Clicked() {
-		pg.showInfo = true
-	}
-
-	if pg.minInfoBtn.Button.Clicked() {
-		pg.showInfo = false
-	}
-
-	if pg.backButton.Button.Clicked() {
-		common.changePage(*common.returnPage)
+		goToURL(common.wallet.GetBlockExplorerURL((*pg.txnInfo).Txn.Hash))
 	}
 
 	for _, b := range pg.copyTextBtn {

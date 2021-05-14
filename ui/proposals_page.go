@@ -11,6 +11,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -408,7 +409,7 @@ func (pg *proposalsPage) layoutInfoTooltip(gtx C, i int, state int32, rect image
 
 func (pg *proposalsPage) layoutTitle(gtx C, proposal dcrlibwallet.Proposal) D {
 	lbl := pg.theme.H6(proposal.Name)
-	lbl.Color = pg.theme.Color.DeepBlue
+	lbl.Font.Weight = text.Bold
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 

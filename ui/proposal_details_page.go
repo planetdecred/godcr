@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -276,7 +276,9 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 
 	w := []layout.Widget{
 		func(gtx C) D {
-			return pg.theme.H5(proposal.Name).Layout(gtx)
+			lbl := pg.theme.H5(proposal.Name)
+			lbl.Font.Weight = text.Bold
+			return lbl.Layout(gtx)
 		},
 		pg.lineSeparator(layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}),
 		func(gtx C) D {
@@ -357,7 +359,7 @@ func (pg *proposalDetails) Layout(gtx C, common pageCommon) D {
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok {
 		go func() {
-			r := utils.RenderMarkdown(gtx, pg.theme, pg.getProposalText())
+			r := RenderMarkdown(gtx, pg.theme, pg.getProposalText())
 			proposalWidgets, proposalClickables := r.Layout()
 			pg.proposalItems[proposal.Token] = proposalItemWidgets{
 				widgets:    proposalWidgets,
