@@ -38,6 +38,7 @@ const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
 const UnlockWalletRestoreTemplate = "UnlockWalletRestoreTemplate"
 const SendInfoTemplate = "SendInfo"
 const ReceiveInfoTemplate = "ReceiveInfo"
+const TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -122,7 +123,7 @@ func (m *ModalTemplate) renameWallet() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C) D {
+func (m *ModalTemplate) createNewAccount() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -133,22 +134,22 @@ func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					info := th.Body1("Accounts")
-					info.Color = th.Color.Gray
+					info := m.th.Body1("Accounts")
+					info.Color = m.th.Color.Gray
 					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						return info.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					info := th.Body1(" cannot ")
-					info.Color = th.Color.Black
+					info := m.th.Body1(" cannot ")
+					info.Color = m.th.Color.Black
 					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						return info.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					info := th.Body1("be deleted when created")
-					info.Color = th.Color.Gray
+					info := m.th.Body1("be deleted when created")
+					info.Color = m.th.Color.Gray
 					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 						return info.Layout(gtx)
 					})
@@ -165,11 +166,11 @@ func (m *ModalTemplate) createNewAccount(th *decredmaterial.Theme) []func(gtx C)
 	}
 }
 
-func (m *ModalTemplate) removeWallet(th *decredmaterial.Theme) []func(gtx C) D {
+func (m *ModalTemplate) removeWallet() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			info := th.Body1("Make sure to have the seed phrase backed up before removing the wallet")
-			info.Color = th.Color.Gray
+			info := m.th.Body1("Make sure to have the seed phrase backed up before removing the wallet")
+			info.Color = m.th.Color.Gray
 			return info.Layout(gtx)
 		},
 	}
@@ -301,8 +302,9 @@ func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 			)
 		},
 		func(gtx C) D {
-			text := m.th.Label(values.TextSize18, "Important: keep this app opened while mixer is running.")
-			return text.Layout(gtx)
+			txt := m.th.Body1("Important: keep this app opened while mixer is running.")
+			txt.Font.Weight = text.Bold
+			return txt.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
@@ -348,7 +350,9 @@ func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return m.th.H5("Account name is taken").Layout(gtx)
+					label := m.th.H6("Account name is taken")
+					label.Font.Weight = text.Bold
+					return label.Layout(gtx)
 				}),
 			)
 		},
@@ -360,18 +364,18 @@ func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) unlockWalletRestore(th *decredmaterial.Theme) []func(gtx C) D {
+func (m *ModalTemplate) unlockWalletRestore() []func(gtx C) D {
 	return []func(gtx C) D{
 		func(gtx C) D {
-			info := th.Body1("The restoration process to discover your accounts was interrupted in the last sync.")
-			info.Color = th.Color.Gray
+			info := m.th.Body1("The restoration process to discover your accounts was interrupted in the last sync.")
+			info.Color = m.th.Color.Gray
 			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 				return info.Layout(gtx)
 			})
 		},
 		func(gtx C) D {
-			info := th.Body1("Unlock to resume the process.")
-			info.Color = th.Color.Gray
+			info := m.th.Body1("Unlock to resume the process.")
+			info.Color = m.th.Color.Gray
 			return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 				return info.Layout(gtx)
 			})
@@ -379,6 +383,36 @@ func (m *ModalTemplate) unlockWalletRestore(th *decredmaterial.Theme) []func(gtx
 		func(gtx C) D {
 			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
+		},
+	}
+}
+
+func (m *ModalTemplate) transactionDetailsInfo() []func(gtx C) D {
+	return []func(gtx C) D{
+		func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					t := m.th.Body1("Tap on")
+					t.Color = m.th.Color.Gray
+					return t.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					t := m.th.Body1("blue text")
+					t.Color = m.th.Color.Primary
+					m := values.MarginPadding2
+					return layout.Inset{
+						Left:  m,
+						Right: m,
+					}.Layout(gtx, func(gtx C) D {
+						return t.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					t := m.th.Body1("to copy the item.")
+					t.Color = m.th.Color.Gray
+					return t.Layout(gtx)
+				}),
+			)
 		},
 	}
 }
@@ -392,7 +426,14 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 
 	title := []func(gtx C) D{
 		func(gtx C) D {
-			t := th.H5(load.title)
+			txt := load.title
+			if load.template == TransactionDetailsInfoTemplate {
+				txt = "How to copy"
+			}
+			if load.template == PrivacyInfoTemplate {
+				txt = "How to use the mixer?"
+			}
+			t := th.H6(txt)
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
@@ -413,33 +454,32 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 						if load.cancelText == "" {
 							return layout.Dimensions{}
 						}
-						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-							m.cancel.Text = load.cancelText
-							m.cancel.Background = th.Color.Surface
-							m.cancel.Color = th.Color.Primary
-							return m.cancel.Layout(gtx)
-						})
+						m.cancel.Text = load.cancelText
+						m.cancel.Font.Weight = text.Bold
+						m.cancel.Background = th.Color.Surface
+						m.cancel.Color = th.Color.Primary
+						return m.cancel.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if load.confirmText == "" {
 							return layout.Dimensions{}
 						}
-						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-							m.confirm.Text = load.confirmText
-							if load.template == ConfirmRemoveTemplate {
-								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
-							}
-							if load.template == RescanWalletTemplate {
-								m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
-							}
-							if load.loading {
-								th := material.NewTheme(gofont.Collection())
-								return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
-									return material.Loader(th).Layout(gtx)
-								})
-							}
-							return m.confirm.Layout(gtx)
-						})
+
+						m.confirm.Text = load.confirmText
+						if load.template == ConfirmRemoveTemplate {
+							m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
+						}
+						if load.template == RescanWalletTemplate {
+							m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
+						}
+						if load.loading {
+							th := material.NewTheme(gofont.Collection())
+							return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
+								return material.Loader(th).Layout(gtx)
+							})
+						}
+						m.confirm.Font.Weight = text.Bold
+						return m.confirm.Layout(gtx)
 					}),
 				)
 			})
@@ -502,7 +542,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 
-		template = m.createNewAccount(th)
+		template = m.createNewAccount()
 		m.walletName.Hint = "Account name"
 		return
 	case PasswordTemplate, UnlockWalletTemplate, RemoveStartupPasswordTemplate:
@@ -565,7 +605,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case ConfirmRemoveTemplate:
 		m.handleButtonEvents(load)
-		template = m.removeWallet(th)
+		template = m.removeWallet()
 		return
 	case VerifyMessageInfoTemplate:
 		m.handleButtonEvents(load)
@@ -621,7 +661,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		m.spendingPassword.Hint = "Spending password"
 
-		template = m.unlockWalletRestore(th)
+		template = m.unlockWalletRestore()
 		return
 	case SendInfoTemplate:
 		if m.cancel.Button.Clicked() {
@@ -634,6 +674,10 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			load.cancel.(func())()
 		}
 		template = m.receiveInfo()
+		return
+	case TransactionDetailsInfoTemplate:
+		m.handleButtonEvents(load)
+		template = m.transactionDetailsInfo()
 		return
 	default:
 		return

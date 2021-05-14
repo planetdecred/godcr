@@ -523,9 +523,10 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 	wallAcctSelector := page.wallAcctSelector
 	w := []func(gtx C) D{
 		func(gtx C) D {
-			tit := page.theme.Label(values.TextSize24, wallAcctSelector.title)
-			tit.Color = page.theme.Color.Text
-			return tit.Layout(gtx)
+			title := page.theme.H6(wallAcctSelector.title)
+			title.Color = page.theme.Color.Text
+			title.Font.Weight = text.Bold
+			return title.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
@@ -724,6 +725,7 @@ func (page *pageCommon) walletInfoPopup(gtx layout.Context) layout.Dimensions {
 							layout.Rigid(func(gtx C) D {
 								txt := page.theme.Body2(title)
 								txt.Color = page.theme.Color.DeepBlue
+								txt.Font.Weight = text.Bold
 								return txt.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
