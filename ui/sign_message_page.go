@@ -3,11 +3,11 @@ package ui
 import (
 	"image/color"
 
-	"github.com/planetdecred/godcr/ui/values"
-
+	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -66,7 +66,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
 
 	return func(gtx C) D {
-		pg.handle(common)
+		pg.handle(gtx, common)
 		pg.updateColors(common)
 		pg.validate(true)
 		return pg.Layout(gtx, common)
@@ -211,7 +211,7 @@ func (pg *signMessagePage) updateColors(common pageCommon) {
 	}
 }
 
-func (pg *signMessagePage) handle(common pageCommon) {
+func (pg *signMessagePage) handle(gtx C, common pageCommon) {
 	for pg.clearButton.Button.Clicked() {
 		pg.clearForm()
 	}
@@ -238,9 +238,7 @@ func (pg *signMessagePage) handle(common pageCommon) {
 	}
 
 	if pg.copySignature.Clicked() {
-		go func() {
-			common.clipboard <- WriteClipboard{Text: pg.signedMessageLabel.Text}
-		}()
+		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
 	}
 
 	if *pg.result != nil {

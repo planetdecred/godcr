@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"gioui.org/app"
-	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -58,7 +57,6 @@ type Window struct {
 	pages                   map[string]layout.Widget
 	walletTabs, accountTabs *decredmaterial.Tabs
 	keyEvents               chan *key.Event
-	clipboard               chan interface{}
 	toast                   chan *toast
 	modal                   chan *modalLoad
 	sysDestroyWithSync      bool
@@ -105,10 +103,8 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.states.loading = true
 	win.current = PageOverview
 	win.keyEvents = make(chan *key.Event)
-	win.clipboard = make(chan interface{}, 2)
 	win.toast = make(chan *toast)
 	win.modal = make(chan *modalLoad)
-	win.theme.ReadClipboard = win.clipboard
 
 	win.walletTabs, win.accountTabs = decredmaterial.NewTabs(win.theme), decredmaterial.NewTabs(win.theme)
 	win.walletTabs.Position, win.accountTabs.Position = decredmaterial.Top, decredmaterial.Top
@@ -254,27 +250,10 @@ func (win *Window) Loop(shutdown chan int) {
 				go func() {
 					win.keyEvents <- &evt
 				}()
-			case clipboard.Event:
-				go func() {
-					win.theme.Clipboard <- evt.Text
-				}()
 			case nil:
 				// Ignore
 			default:
 				log.Tracef("Unhandled window event %+v\n", e)
-			}
-		case e := <-win.clipboard:
-			switch c := e.(type) {
-			case decredmaterial.ReadClipboard:
-				win.window.ReadClipboard()
-			case WriteClipboard:
-				go func() {
-					win.window.WriteClipboard(c.Text)
-					win.toast <- &toast{
-						text:    "copied",
-						success: true,
-					}
-				}()
 			}
 		}
 	}

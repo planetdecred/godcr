@@ -34,8 +34,6 @@ var (
 type (
 	C = layout.Context
 	D = layout.Dimensions
-
-	ReadClipboard struct{}
 )
 
 type Theme struct {
@@ -80,9 +78,6 @@ type Theme struct {
 	expandIcon            *widget.Image
 	collapseIcon          *widget.Image
 
-	Clipboard     chan string
-	ReadClipboard chan interface{}
-
 	dropDownMenus []*DropDown
 }
 
@@ -124,8 +119,6 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 
 	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
 	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
-
-	t.Clipboard = make(chan string)
 	return t
 }
 

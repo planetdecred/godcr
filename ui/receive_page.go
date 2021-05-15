@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"time"
 
+	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/paint"
@@ -72,7 +73,7 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	page.newAddr.TextSize = values.TextSize16
 
 	return func(gtx C) D {
-		page.Handle(common)
+		page.Handle(gtx, common)
 		return page.Layout(gtx, common)
 	}
 }
@@ -285,7 +286,7 @@ func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon
 	return img.Layout(gtx)
 }
 
-func (pg *receivePage) Handle(common pageCommon) {
+func (pg *receivePage) Handle(gtx C, common pageCommon) {
 	if pg.backdrop.Clicked() {
 		pg.isNewAddr = false
 	}
@@ -335,9 +336,10 @@ func (pg *receivePage) Handle(common pageCommon) {
 	}
 
 	if pg.copy.Button.Clicked() {
-		go func() {
-			common.clipboard <- WriteClipboard{Text: common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress}
-		}()
+
+		selectedAccount := common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount]
+		clipboard.WriteOp{Text: selectedAccount.CurrentAddress}.Add(gtx.Ops)
+
 		pg.copy.Text = "Copied!"
 		pg.copy.Color = common.theme.Color.Success
 		time.AfterFunc(time.Second*3, func() {

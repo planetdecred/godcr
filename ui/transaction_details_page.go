@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"strings"
 
+	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -59,7 +60,7 @@ func (win *Window) TransactionDetailsPage(common pageCommon) layout.Widget {
 	pg.dot.Color = common.theme.Color.Gray
 
 	return func(gtx C) D {
-		pg.Handler(common)
+		pg.Handler(gtx, common)
 		return pg.Layout(gtx, common)
 	}
 }
@@ -428,23 +429,18 @@ func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimension
 	})
 }
 
-func (pg *transactionDetailsPage) Handler(common pageCommon) {
+func (pg *transactionDetailsPage) Handler(gtx C, common pageCommon) {
 	if pg.toDcrdata.Clicked() {
 		goToURL(common.wallet.GetBlockExplorerURL((*pg.txnInfo).Txn.Hash))
 	}
 
 	for _, b := range pg.copyTextBtn {
 		for b.Button.Clicked() {
-			t := b.Text
-			go func() {
-				common.clipboard <- WriteClipboard{Text: t}
-			}()
+			clipboard.WriteOp{Text: b.Text}.Add(gtx.Ops)
 		}
 	}
 
 	for pg.hashBtn.Button.Clicked() {
-		go func() {
-			common.clipboard <- WriteClipboard{Text: (*pg.txnInfo).Txn.Hash}
-		}()
+		clipboard.WriteOp{Text: (*pg.txnInfo).Txn.Hash}.Add(gtx.Ops)
 	}
 }
