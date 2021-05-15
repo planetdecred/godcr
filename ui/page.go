@@ -221,6 +221,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
+	win.loadPage(ic)
+}
+
+func (win *Window) loadPage(ic pageIcons) {
+
 	appBarNavItems := []navHandler{
 		{
 			clickable: new(widget.Clickable),
@@ -348,10 +353,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 
 	common.modalTemplate = win.LoadModalTemplates()
 
-	win.loadPage(common)
-}
-
-func (win *Window) loadPage(common pageCommon) {
 	win.pages = make(map[string]layout.Widget)
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
@@ -382,7 +383,7 @@ func (win *Window) loadPage(common pageCommon) {
 }
 
 func (win *Window) reloadPage(common pageCommon) {
-	win.loadPage(common)
+	win.loadPage(common.icons)
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {

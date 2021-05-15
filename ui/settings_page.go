@@ -388,7 +388,7 @@ func (pg *settingsPage) lineSeparator() layout.Widget {
 func (pg *settingsPage) handle(common pageCommon, win *Window) {
 
 	if pg.isDarkModeOn.Changed() {
-		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
+		win.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
 		win.reloadPage(common)
 	}
