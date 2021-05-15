@@ -66,15 +66,22 @@ type modalLoad struct {
 
 func (win *Window) LoadModalTemplates() *ModalTemplate {
 	cancel := win.theme.Button(new(widget.Clickable), "Cancel")
-	cancel.TextSize = values.TextSize16
+	confirm := win.theme.Button(new(widget.Clickable), "Confirm")
+	cancel.TextSize, confirm.TextSize = values.TextSize16, values.TextSize16
+
+	spendingPassword := win.theme.EditorPassword(new(widget.Editor), "Spending password")
+	matchSpendingPassword := win.theme.EditorPassword(new(widget.Editor), "Confirm spending password")
+	spendingPassword.Editor.SingleLine, matchSpendingPassword.Editor.SingleLine = true, true
+	spendingPassword.Editor.Submit = true
+
 	return &ModalTemplate{
 		th:                    win.theme,
-		confirm:               win.theme.Button(new(widget.Clickable), "Confirm"),
+		confirm:               confirm,
 		cancel:                cancel,
 		walletName:            win.theme.Editor(new(widget.Editor), ""),
 		oldSpendingPassword:   win.theme.EditorPassword(new(widget.Editor), "Old spending password"),
-		spendingPassword:      win.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		matchSpendingPassword: win.theme.EditorPassword(new(widget.Editor), "Confirm spending password"),
+		spendingPassword:      spendingPassword,
+		matchSpendingPassword: matchSpendingPassword,
 		extendedPublicKey:     win.theme.Editor(new(widget.Editor), "Extended public key"),
 		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
 		passwordStrength:      win.theme.ProgressBar(0),
@@ -102,14 +109,12 @@ func (m *ModalTemplate) createNewWallet() []layout.Widget {
 			return m.walletName.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
 			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.matchSpendingPassword.Editor.SingleLine = true
 			return m.matchSpendingPassword.Layout(gtx)
 		},
 	}
@@ -160,7 +165,6 @@ func (m *ModalTemplate) createNewAccount() []layout.Widget {
 			return m.walletName.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 	}
@@ -179,7 +183,6 @@ func (m *ModalTemplate) removeWallet() []layout.Widget {
 func (m *ModalTemplate) Password() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 	}
@@ -192,14 +195,12 @@ func (m *ModalTemplate) changePassword() []layout.Widget {
 			return m.oldSpendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
 			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.matchSpendingPassword.Editor.SingleLine = true
 			return m.matchSpendingPassword.Layout(gtx)
 		},
 	}
@@ -208,14 +209,12 @@ func (m *ModalTemplate) changePassword() []layout.Widget {
 func (m *ModalTemplate) setStartupPassword() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 		func(gtx C) D {
 			return m.passwordStrength.Layout(gtx)
 		},
 		func(gtx C) D {
-			m.matchSpendingPassword.Editor.SingleLine = true
 			return m.matchSpendingPassword.Layout(gtx)
 		},
 	}
@@ -381,7 +380,6 @@ func (m *ModalTemplate) unlockWalletRestore() []layout.Widget {
 			})
 		},
 		func(gtx C) D {
-			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
 		},
 	}
@@ -546,8 +544,11 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		m.walletName.Hint = "Account name"
 		return
 	case PasswordTemplate, UnlockWalletTemplate, RemoveStartupPasswordTemplate:
-		if m.editorsNotEmpty(th, m.spendingPassword.Editor) && m.confirm.Button.Clicked() {
-			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		if m.editorsNotEmpty(th, m.spendingPassword.Editor) {
+			m.handleSubmitEvent(load)
+			if m.confirm.Button.Clicked() {
+				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+			}
 		}
 		if m.cancel.Button.Clicked() {
 			load.cancel.(func())()
@@ -691,6 +692,14 @@ func (m *ModalTemplate) handleButtonEvents(load *modalLoad) {
 
 	if m.cancel.Button.Clicked() {
 		load.cancel.(func())()
+	}
+}
+
+func (m *ModalTemplate) handleSubmitEvent(load *modalLoad) {
+	for _, e := range m.spendingPassword.Editor.Events() {
+		if _, ok := e.(widget.SubmitEvent); ok {
+			load.confirm.(func(string))(m.spendingPassword.Editor.Text())
+		}
 	}
 }
 
