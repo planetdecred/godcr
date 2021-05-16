@@ -61,9 +61,7 @@ type Window struct {
 	sysDestroyWithSync      bool
 	walletAcctMixerStatus   chan *wallet.AccountMixer
 	internalLog             chan string
-
-	selectedProposal        *dcrlibwallet.Proposal
-	refreshPage bool
+	refreshPage             bool
 }
 
 type WriteClipboard struct {
