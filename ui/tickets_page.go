@@ -600,7 +600,7 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 }
 
 func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dimensions {
-	return pg.purchaseOptions.Layout(gtx, []func(gtx C) D{
+	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -673,7 +673,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 }
 
 func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c pageCommon) layout.Dimensions {
-	return pg.purchaseOptions.Layout(gtx, []func(gtx C) D{
+	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return pg.th.Label(values.TextSize20, "Confirm to purchase tickets").Layout(gtx)
 		},
@@ -795,7 +795,7 @@ func (pg *ticketPage) vspHostSelectorLayout(gtx C, c pageCommon) layout.Dimensio
 }
 
 func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions {
-	return pg.purchaseOptions.Layout(gtx, []func(gtx C) D{
+	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return pg.th.Label(values.TextSize20, "Voting service provider").Layout(gtx)
 		},

@@ -49,7 +49,7 @@ func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func(
 	p.handleEvents(confirm, cancel)
 	p.updateColors()
 
-	widgets := []func(gtx C) D{
+	widgets := []layout.Widget{
 		func(gtx C) D {
 			return p.titleLabel.Layout(gtx)
 		},

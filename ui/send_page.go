@@ -457,7 +457,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) lay
 	receiveAcct := receiveWallet.Accounts[common.wallAcctSelector.selectedReceiveAccount]
 	sendWallet := common.info.Wallets[common.wallAcctSelector.selectedSendWallet]
 	sendAcct := sendWallet.Accounts[common.wallAcctSelector.selectedSendAccount]
-	w := []func(gtx C) D{
+	w := []layout.Widget{
 		func(gtx C) D {
 			return pg.theme.H6("Confim to send").Layout(gtx)
 		},

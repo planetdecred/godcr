@@ -526,7 +526,7 @@ func (tr *tableRenderer) Render() layout.Widget {
 	}
 }
 
-func (tr *tableRenderer) getTableRow(row []tableCell) func(gtx C) D {
+func (tr *tableRenderer) getTableRow(row []tableCell) layout.Widget {
 	children := make([]layout.FlexChild, len(row))
 	for i := range row {
 		index := i
