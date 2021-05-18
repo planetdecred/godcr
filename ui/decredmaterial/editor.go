@@ -68,7 +68,7 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		Edit:       e,
 		TitleLabel: t.Body2(title),
 		LineColor:  t.Color.Gray1,
-		height:     61,
+		height:     31,
 	}
 }
 
@@ -268,7 +268,7 @@ func (e Editor) handleEvents() {
 }
 
 func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
-	l := re.t.SeparatorVertical(re.height, 4)
+	l := re.t.SeparatorVertical(int(gtx.Metric.PxPerDp)*re.height, int(gtx.Metric.PxPerDp)*2)
 	if re.Edit.Editor.Focused() {
 		re.TitleLabel.Color, re.LineColor, l.Color = re.t.Color.Primary, re.t.Color.Primary, re.t.Color.Primary
 	} else {
@@ -278,7 +278,7 @@ func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = 65
+				gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * 40
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return re.TitleLabel.Layout(gtx)
 				})
