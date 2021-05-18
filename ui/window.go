@@ -2,7 +2,6 @@ package ui
 
 import (
 	"errors"
-	"fmt"
 	"image"
 	"time"
 
@@ -81,7 +80,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	} else {
 		netType = wal.Net
 	}
-	win.window = app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(fmt.Sprintf("%s (%s)", values.GetString(values.StrAppName), netType)))
+	win.window = app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
 	theme := decredmaterial.NewTheme(collection, decredIcons, false)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")

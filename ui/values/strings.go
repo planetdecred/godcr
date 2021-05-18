@@ -44,7 +44,7 @@ func trimQuotes(s string) string {
 	return s
 }
 
-func GetString(key string) string {
+func String(key string) string {
 	str, ok := en[key]
 	if !ok {
 		return ""
@@ -53,6 +53,45 @@ func GetString(key string) string {
 	return str
 }
 
+func StringF(key string, a ...interface{}) string {
+	str := String(key)
+	if str == "" {
+		return str
+	}
+
+	return fmt.Sprintf(str, a...)
+}
+
 const (
-	StrAppName = "app_name"
+	StrAppName                   = "app_name"
+	StrAppTitle                  = "app_title"
+	StrRecentTransactions        = "recentTransactions"
+	StrSeeAll                    = "seeAll"
+	StrSend                      = "send"
+	StrReceive                   = "receive"
+	StrOnline                    = "online"
+	StrOffline                   = "offline"
+	StrShowDetails               = "showDetails"
+	StrHideDetails               = "hideDetails"
+	StrConnectedPeersCount       = "connectedPeersCount"
+	StrNoConnectedPeers          = "noConnectedPeer"
+	StrDisconnect                = "disconnect"
+	StrReconnect                 = "reconnect"
+	StrCurrentTotalBalance       = "currentTotalBalance"
+	StrWalletStatus              = "walletStatus"
+	StrBlockHeadersFetched       = "blockHeadersFetched"
+	StrNoTransactions            = "noTransactions"
+	StrHeadersFetchProgress      = "headersFetchProgress"
+	StrSyncSteps                 = "syncSteps"
+	StrScanningTotalHeaders      = "scanningTotalHeaders"
+	StrConnectedTo               = "connectedTo"
+	StrWalletSynced              = "walletSynced"
+	StrSynchronizing             = "synchronizing"
+	StrWalletNotSynced           = "walletNotSynced"
+	StrCancel                    = "cancel"
+	StrUnlockToResumeRestoration = "unlockToResumeRestoration"
+	StrUnlock                    = "unlock"
+	StrSyncingProgress           = "syncingProgress"
+	StrNoWalletLoaded            = "noWalletLoaded"
+	StrLastBlockHeight           = "lastBlockHeight"
 )
