@@ -506,7 +506,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		if m.editorsNotEmpty(m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
 				load.setLoading(true)
 				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
 			}
@@ -523,7 +523,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, ChangeSpecificPeerTemplate, UserAgentTemplate:
 		if m.editorsNotEmpty(m.walletName.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.walletName.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor) {
 				load.confirm.(func(string))(m.walletName.Editor.Text())
 			}
 		}
@@ -545,7 +545,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case CreateAccountTemplate:
 		if m.editorsNotEmpty(m.walletName.Editor, m.spendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.walletName.Editor, m.spendingPassword.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.spendingPassword.Editor) {
 				load.setLoading(true)
 				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
 			}
@@ -559,7 +559,8 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case PasswordTemplate, UnlockWalletTemplate, RemoveStartupPasswordTemplate:
 		if m.editorsNotEmpty(m.spendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.spendingPassword.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.spendingPassword.Editor) {
+				load.setLoading(true)
 				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
 			}
 		}
@@ -582,7 +583,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		if m.editorsNotEmpty(m.oldSpendingPassword.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.oldSpendingPassword.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.oldSpendingPassword.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
 				load.setLoading(true)
 				load.confirm.(func(string, string))(m.oldSpendingPassword.Editor.Text(), m.spendingPassword.Editor.Text())
 			}
@@ -606,7 +607,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case ImportWatchOnlyWalletTemplate:
 		if m.editorsNotEmpty(m.walletName.Editor, m.extendedPublicKey.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.walletName.Editor, m.extendedPublicKey.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.extendedPublicKey.Editor) {
 				load.setLoading(true)
 				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.extendedPublicKey.Editor.Text())
 			}
@@ -647,7 +648,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 
 		if m.editorsNotEmpty(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
 			m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
 				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
 			}
 		}
@@ -672,7 +673,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case UnlockWalletRestoreTemplate:
 		if m.editorsNotEmpty(m.spendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || m.handleSubmitEvent(m.spendingPassword.Editor) {
+			if m.confirm.Button.Clicked() || handleSubmitEvent(m.spendingPassword.Editor) {
 				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
 			}
 		}
@@ -710,18 +711,6 @@ func (m *ModalTemplate) handleButtonEvents(load *modalLoad) {
 	if m.cancel.Button.Clicked() {
 		load.cancel.(func())()
 	}
-}
-
-func (m *ModalTemplate) handleSubmitEvent(editors ...*widget.Editor) bool {
-	var submit bool
-	for _, editor := range editors {
-		for _, e := range editor.Events() {
-			if _, ok := e.(widget.SubmitEvent); ok {
-				submit = true
-			}
-		}
-	}
-	return submit
 }
 
 // editorsNotEmpty checks that the editor fields are not empty. It returns false if they are empty and true if they are
