@@ -663,6 +663,7 @@ func (pg *createRestore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex
 		border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
 					return material.Clickable(gtx, pg.seedMenu[i].button, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
@@ -881,6 +882,12 @@ func (pg *createRestore) handle(common pageCommon) {
 				pg.seedClicked = true
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
+		}
+		if evt.Name == key.NameUpArrow {
+
+		}
+		if evt.Name == key.NameDownArrow {
+
 		}
 	case err := <-pg.errorReceiver:
 		common.states.creating = false
