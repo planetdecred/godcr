@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gioui.org/unit"
+
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/widget"
@@ -528,7 +530,8 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 					Alignment: layout.End,
 				}.Layout(gtx, len(stackingRecords), func(gtx layout.Context, i int) layout.Dimensions {
 					item := stackingRecords[i]
-					gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * 118
+					width := unit.Value{U: unit.UnitDp, V: 118}
+					gtx.Constraints.Min.X = gtx.Px(width)
 
 					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
