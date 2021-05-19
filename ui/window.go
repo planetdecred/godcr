@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"strings"
 	"time"
 
 	"gioui.org/app"
@@ -78,7 +77,7 @@ type WriteClipboard struct {
 func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace, internalLog chan string) (*Window, error) {
 	win := new(Window)
 	var netType string
-	if strings.Contains(wal.Net, "testnet") {
+	if wal.Net == "testnet3" {
 		netType = "testnet"
 	} else {
 		netType = wal.Net

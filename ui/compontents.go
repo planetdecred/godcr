@@ -22,6 +22,12 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
+const (
+	purchasingAccountTitle = "Purchasing account"
+	sendingAccountTitle    = "Sending account"
+	receivingAccountTitle  = "Receiving account"
+)
+
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
 func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
@@ -42,7 +48,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 			page.usdExchangeSet = false
-			if strings.Contains(currencyExchangeValue, "USD") {
+			if currencyExchangeValue == USDExchangeValue {
 				page.usdExchangeSet = true
 			}
 			if page.usdExchangeSet && page.dcrUsdtBittrex.LastTradeRate != "" {
@@ -498,7 +504,7 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 						}),
 						layout.Rigid(func(gtx C) D {
 							var showInfoBtn bool
-							if windex == 0 && strings.Contains(page.wallAcctSelector.title, "Receiving") {
+							if windex == 0 && page.wallAcctSelector.title == receivingAccountTitle {
 								showInfoBtn = true
 							} else if windex == 0 && page.wallAcctSelector.sendOption == "Address" {
 								showInfoBtn = true
@@ -547,7 +553,8 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 								purchaseTicketAccount := wallAcctSelector.walletAccounts.selectPurchaseTicketAccount[windex][aindex]
 
 								switch {
-								case fromAccount.number != unmixedAcct && strings.Contains(page.wallAcctSelector.title, "Sending") && page.wallAcctSelector.sendOption == "Address":
+								case fromAccount.number != unmixedAcct &&
+									page.wallAcctSelector.title == sendingAccountTitle && page.wallAcctSelector.sendOption == "Address":
 									if fromAccount.spendable != "" || fromAccount.evt != nil {
 										click := fromAccount.evt
 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -555,7 +562,7 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 										page.walletAccountsHandler(gtx, fromAccount)
 										visibleAccount = fromAccount
 									}
-								case toAccount.number != mixedAcct && strings.Contains(page.wallAcctSelector.title, "Receiving"):
+								case toAccount.number != mixedAcct && page.wallAcctSelector.title == receivingAccountTitle:
 									if toAccount.spendable != "" || toAccount.evt != nil {
 										click := toAccount.evt
 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -563,7 +570,7 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 										page.walletAccountsHandler(gtx, toAccount)
 										visibleAccount = toAccount
 									}
-								case page.wallAcctSelector.sendOption == "My account" && strings.Contains(page.wallAcctSelector.title, "Sending"):
+								case page.wallAcctSelector.sendOption == "My account" && page.wallAcctSelector.title == sendingAccountTitle:
 									if toAccount.spendable != "" || toAccount.evt != nil {
 										click := toAccount.evt
 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -571,7 +578,7 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 										page.walletAccountsHandler(gtx, toAccount)
 										visibleAccount = toAccount
 									}
-								case strings.Contains(page.wallAcctSelector.title, "Purchasing"):
+								case page.wallAcctSelector.title == purchasingAccountTitle:
 									if purchaseTicketAccount.spendable != "" || purchaseTicketAccount.evt != nil {
 										click := purchaseTicketAccount.evt
 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -612,17 +619,17 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 func (page *pageCommon) walletAccountsHandler(gtx layout.Context, wallAcct walletAccount) {
 	for _, e := range wallAcct.evt.Events(gtx) {
 		if e.Type == gesture.TypeClick {
-			if strings.Contains(page.wallAcctSelector.title, "Sending") {
+			if page.wallAcctSelector.title == sendingAccountTitle {
 				page.wallAcctSelector.selectedSendWallet = wallAcct.walletIndex
 				page.wallAcctSelector.selectedSendAccount = wallAcct.accountIndex
 			}
 
-			if strings.Contains(page.wallAcctSelector.title, "Receiving") {
+			if page.wallAcctSelector.title == receivingAccountTitle {
 				page.wallAcctSelector.selectedReceiveWallet = wallAcct.walletIndex
 				page.wallAcctSelector.selectedReceiveAccount = wallAcct.accountIndex
 			}
 
-			if strings.Contains(page.wallAcctSelector.title, "Purchasing") {
+			if page.wallAcctSelector.title == purchasingAccountTitle {
 				page.wallAcctSelector.selectedPurchaseTicketWallet = wallAcct.walletIndex
 				page.wallAcctSelector.selectedPurchaseTicketAccount = wallAcct.accountIndex
 			}
@@ -679,15 +686,19 @@ func (page *pageCommon) walletAccountLayout(gtx layout.Context, wallAcct walletA
 							})
 						}
 
-						if strings.Contains(page.wallAcctSelector.title, "Sending") && page.wallAcctSelector.selectedSendWallet == wallAcct.walletIndex && page.wallAcctSelector.selectedSendAccount == wallAcct.accountIndex {
+						if page.wallAcctSelector.title == sendingAccountTitle &&
+							page.wallAcctSelector.selectedSendWallet == wallAcct.walletIndex &&
+							page.wallAcctSelector.selectedSendAccount == wallAcct.accountIndex {
 							return sections(gtx)
 						}
 
-						if strings.Contains(page.wallAcctSelector.title, "Receiving") && page.wallAcctSelector.selectedReceiveWallet == wallAcct.walletIndex && page.wallAcctSelector.selectedReceiveAccount == wallAcct.accountIndex {
+						if page.wallAcctSelector.title == receivingAccountTitle &&
+							page.wallAcctSelector.selectedReceiveWallet == wallAcct.walletIndex &&
+							page.wallAcctSelector.selectedReceiveAccount == wallAcct.accountIndex {
 							return sections(gtx)
 						}
 
-						if strings.Contains(page.wallAcctSelector.title, "Purchasing") &&
+						if page.wallAcctSelector.title == purchasingAccountTitle &&
 							page.wallAcctSelector.selectedPurchaseTicketWallet == wallAcct.walletIndex &&
 							page.wallAcctSelector.selectedPurchaseTicketAccount == wallAcct.accountIndex {
 							return sections(gtx)
@@ -705,7 +716,7 @@ func (page *pageCommon) walletInfoPopup(gtx layout.Context) layout.Dimensions {
 	acctType := "Unmixed"
 	t := "from"
 	txDirection := " Spending"
-	if strings.Contains(page.wallAcctSelector.title, "Receiving") {
+	if page.wallAcctSelector.title == receivingAccountTitle {
 		acctType = "The mixed"
 		t = "to"
 		txDirection = " Receiving"
@@ -821,17 +832,17 @@ func (page pageCommon) handleNavEvents() {
 	}
 
 	if page.wallAcctSelector.sendAccountBtn.Clicked() {
-		page.wallAcctSelector.title = "Sending Account"
+		page.wallAcctSelector.title = sendingAccountTitle
 		page.wallAcctSelector.isWalletAccountModalOpen = true
 	}
 
 	if page.wallAcctSelector.receivingAccountBtn.Clicked() {
-		page.wallAcctSelector.title = "Receiving Account"
+		page.wallAcctSelector.title = receivingAccountTitle
 		page.wallAcctSelector.isWalletAccountModalOpen = true
 	}
 
 	if page.wallAcctSelector.purchaseTicketAccountBtn.Clicked() {
-		page.wallAcctSelector.title = "Purchasing account"
+		page.wallAcctSelector.title = purchasingAccountTitle
 		page.wallAcctSelector.isWalletAccountModalOpen = true
 	}
 
