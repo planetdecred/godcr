@@ -5,8 +5,8 @@ const ENGLISH = "en"
 // one string per line, no multiline
 // semicolon is not compulsory
 const EN = `
-"app_name" = "godcr";
-"app_title" = "godcr (%s)";
+"appName" = "godcr";
+"appTitle" = "godcr (%s)";
 "recentTransactions" = "Recent Transactions";
 "seeAll" = "See all";
 "send" = "send";
@@ -36,4 +36,23 @@ const EN = `
 "syncingProgress" = "Syncing progress";
 "noWalletLoaded" = "No wallet loaded";
 "lastBlockHeight" = "Last Block Height";
+"ago" = "ago";
+"newest" = "Newest";
+"oldest" = "Oldest";
+"all" = "All";
+"transferred" = "Transferred";
+"sent" = "Sent";
+"received" = "Received";
+"yourself" = "Yourself";
+"staking" = "Staking";
+"nConfirmations" = "%d Confirmations";
+"from" = "From";
+"to" = "To";
+"fee" = "Fee";
+"includedInBlock" = "Included in block";
+"type" = "Type";
+"transactionId" = "Transaction ID";
+"xInputsConsumed" = "%d Inputs consumed";
+"xOutputCreated" = "%d Outputs created";
+"viewOnDcrdata" = "View on dcrdata";
 `

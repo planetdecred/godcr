@@ -357,7 +357,7 @@ func (pg *overviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			lastSyncedLabel := pg.theme.Body1("ago")
+			lastSyncedLabel := pg.theme.Body1(values.String(values.StrAgo))
 			lastSyncedLabel.Color = pg.theme.Color.Gray
 			return lastSyncedLabel.Layout(gtx)
 		}),
