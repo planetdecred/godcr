@@ -59,6 +59,27 @@ func init() {
 	languageStrings[localizable.FRENCH] = fr
 }
 
+func hasLanguage(language string) bool {
+	for _, lang := range Languages {
+		if lang == language {
+			return true
+		}
+	}
+
+	return false
+}
+
+func SetUserLanguage(lang string) {
+	if hasLanguage(lang) {
+		languages := []string{lang}
+		if lang != DefaultLanguge {
+			languages = append(languages, DefaultLanguge)
+		}
+
+		UserLanguages = languages
+	}
+}
+
 func trimQuotes(s string) string {
 	if len(s) >= 2 {
 		if s[0] == '"' && s[len(s)-1] == '"' {
