@@ -1,5 +1,7 @@
 package localizable
 
+const ENGLISH = "en"
+
 // one string per line, no multiline
 // semicolon is not compulsory
 const EN = `
@@ -19,17 +21,17 @@ const EN = `
 "reconnect" = "Reconnect";
 "currentTotalBalance" = "Current Total Balance";
 "walletStatus" = "Wallet Status";
-"blockHeadersFetched" = "Block headers fetched";
-"noTransactions" = "No transactions yet.";
-"headersFetchProgress" = "Fetching block headers · %v%%";
+"blockHeaderFetched" = "Block header fetched";
+"noTransactionsYet" = "No transactions yet.";
+"fetchingBlockHeaders" = "Fetching block headers · %v%%";
 "syncSteps" = "Step %d/3";
-"scanningTotalHeaders" = "%d of %d";
+"blockHeaderFetchedCount" = "%d of %d";
 "connectedTo" = "Connected to";
-"walletSynced" = "Synced";
-"synchronizing" = "Syncing...";
+"synced" = "Synced";
+"syncingState" = "Syncing...";
 "walletNotSynced" = "Not Synced";
 "cancel" = "Cancel";
-"unlockToResumeRestoration" = "Unlock to resume restoration";
+"resumeAccountDiscoveryTitle" = "Unlock to resume restoration";
 "unlock" = "Unlock";
 "syncingProgress" = "Syncing progress";
 "noWalletLoaded" = "No wallet loaded";

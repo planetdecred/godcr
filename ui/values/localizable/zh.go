@@ -1,32 +1,28 @@
 package localizable
 
-const ZH = `
-"seeAll" = "查看所有";
-"receive" = "接收";
-"blockHeadersFetched" = "区块头已获取";
-"scanningTotalHeaders" = "%d/%d";
-"unlock" = "解锁";
-"noConnectedPeer" = "未连接节点";
-"connectedTo" = "已连接%d个节点";
-"synchronizing" = "正在同步...";
-"walletNotSynced" = "未同步";
-"recentTransactions" = "最近的交易";
-"send" = "发送";
-"hideDetails" = "隐藏详情";
-"connectedPeersCount" = "连接节点数";
-"disconnect" = "断开连接";
-"unlockToResumeRestoration" = "解锁以恢复";
-"offline" = "离线";
-"reconnect" = "重新连接";
-"currentTotalBalance" = "总余额";
-"walletStatus" = "钱包状态";
-"walletSynced" = "已同步";
-"cancel" = "取消";
-"showDetails" = "显示详情";
-"syncSteps" = "步骤 %d/3";
-"syncingProgress" = "当前同步进度";
-"online" = "在线";
-"noTransactions" = "没有交易";
-"headersFetchProgress" = "获取区块头 · %d%%";
+const CHINESE = "zh"
 
+const ZH = `
+"connectedPeersCount" = "已连接的节点数量";
+"walletStatus" = "钱包状态";
+"offline" = "离线";
+"hideDetails" = "隐藏详情";
+"fetchingBlockHeaders" = "正在获取区块头 · %v%%";
+"unlock" = "解锁";
+"online" = "在线";
+"recentTransactions" = "最近的交易";
+"receive" = "接收";
+"reconnect" = "重连";
+"syncingProgress" = "同步进度";
+"syncingState" = "同步中…";
+"cancel" = "取消";
+"resumeAccountDiscoveryTitle" = "解锁以恢复";
+"blockHeaderFetched" = "区块头已获取";
+"noTransactionsYet" = "没有交易";
+"showDetails" = "查看详情";
+"currentTotalBalance" = "当前总金额";
+"synced" = "已同步";
+"send" = "发送";
+"disconnect" = "断开连接";
+"blockHeaderFetchedCount" = "%d of %d";
 `

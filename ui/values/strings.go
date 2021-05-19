@@ -9,17 +9,14 @@ import (
 	"github.com/planetdecred/godcr/ui/values/localizable"
 )
 
-var rex = regexp.MustCompile(`(?m)("(?:\\.|[^"\\])*")\s*=\s*("(?:\\.|[^"\\])*")`) // "key"="value"
-var Languages = []string{"en", "zh"}
-var UserLanguages = []string{"en"} // order of preference
-
 const (
-	DefaultLanguge = "en"
+	DefaultLanguge = localizable.ENGLISH
 	commentPrefix  = "/"
 )
 
-var en map[string]string
-var zh map[string]string
+var rex = regexp.MustCompile(`(?m)("(?:\\.|[^"\\])*")\s*=\s*("(?:\\.|[^"\\])*")`) // "key"="value"
+var Languages = []string{localizable.ENGLISH, localizable.CHINESE, localizable.FRENCH}
+var UserLanguages = []string{DefaultLanguge} // order of preference
 
 var languageStrings map[string]map[string]string
 
@@ -47,14 +44,19 @@ func init() {
 		}
 	}
 
-	en = make(map[string]string)
-	zh = make(map[string]string)
+	en := make(map[string]string)
+	zh := make(map[string]string)
+	fr := make(map[string]string)
 	languageStrings = make(map[string]map[string]string)
 
 	readIntoMap(en, localizable.EN)
-	languageStrings["en"] = en
+	languageStrings[localizable.ENGLISH] = en
+
 	readIntoMap(zh, localizable.ZH)
-	languageStrings["zh"] = zh
+	languageStrings[localizable.CHINESE] = zh
+
+	readIntoMap(fr, localizable.FR)
+	languageStrings[localizable.FRENCH] = fr
 }
 
 func trimQuotes(s string) string {
@@ -88,35 +90,35 @@ func StringF(key string, a ...interface{}) string {
 }
 
 const (
-	StrAppName                   = "app_name"
-	StrAppTitle                  = "app_title"
-	StrRecentTransactions        = "recentTransactions"
-	StrSeeAll                    = "seeAll"
-	StrSend                      = "send"
-	StrReceive                   = "receive"
-	StrOnline                    = "online"
-	StrOffline                   = "offline"
-	StrShowDetails               = "showDetails"
-	StrHideDetails               = "hideDetails"
-	StrConnectedPeersCount       = "connectedPeersCount"
-	StrNoConnectedPeers          = "noConnectedPeer"
-	StrDisconnect                = "disconnect"
-	StrReconnect                 = "reconnect"
-	StrCurrentTotalBalance       = "currentTotalBalance"
-	StrWalletStatus              = "walletStatus"
-	StrBlockHeadersFetched       = "blockHeadersFetched"
-	StrNoTransactions            = "noTransactions"
-	StrHeadersFetchProgress      = "headersFetchProgress"
-	StrSyncSteps                 = "syncSteps"
-	StrScanningTotalHeaders      = "scanningTotalHeaders"
-	StrConnectedTo               = "connectedTo"
-	StrWalletSynced              = "walletSynced"
-	StrSynchronizing             = "synchronizing"
-	StrWalletNotSynced           = "walletNotSynced"
-	StrCancel                    = "cancel"
-	StrUnlockToResumeRestoration = "unlockToResumeRestoration"
-	StrUnlock                    = "unlock"
-	StrSyncingProgress           = "syncingProgress"
-	StrNoWalletLoaded            = "noWalletLoaded"
-	StrLastBlockHeight           = "lastBlockHeight"
+	StrAppName                     = "appName"
+	StrSend                        = "send"
+	StrReceive                     = "receive"
+	StrUnlock                      = "unlock"
+	StrWalletStatus                = "walletStatus"
+	StrFetchingBlockHeaders        = "fetchingBlockHeaders"
+	StrSyncingState                = "syncingState"
+	StrResumeAccountDiscoveryTitle = "resumeAccountDiscoveryTitle"
+	StrHideDetails                 = "hideDetails"
+	StrSyncSteps                   = "syncSteps"
+	StrBlockHeaderFetchedCount     = "blockHeaderFetchedCount"
+	StrConnectedTo                 = "connectedTo"
+	StrSynced                      = "synced"
+	StrNoWalletLoaded              = "noWalletLoaded"
+	StrReconnect                   = "reconnect"
+	StrWalletNotSynced             = "walletNotSynced"
+	StrDisconnect                  = "disconnect"
+	StrSyncingProgress             = "syncingProgress"
+	StrBlockHeaderFetched          = "blockHeaderFetched"
+	StrNoTransactionsYet           = "noTransactionsYet"
+	StrCancel                      = "cancel"
+	StrAppTitle                    = "appTitle"
+	StrSeeAll                      = "seeAll"
+	StrOnline                      = "online"
+	StrConnectedPeersCount         = "connectedPeersCount"
+	StrNoConnectedPeer             = "noConnectedPeer"
+	StrCurrentTotalBalance         = "currentTotalBalance"
+	StrRecentTransactions          = "recentTransactions"
+	StrOffline                     = "offline"
+	StrShowDetails                 = "showDetails"
+	StrLastBlockHeight             = "lastBlockHeight"
 )

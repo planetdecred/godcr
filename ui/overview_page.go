@@ -180,7 +180,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 				}),
 				layout.Rigid(func(gtx C) D {
 					if len((*pg.walletTransactions).Txs) == 0 {
-						message := pg.theme.Body1(values.String(values.StrNoTransactions))
+						message := pg.theme.Body1(values.String(values.StrNoTransactionsYet))
 						message.Color = pg.theme.Color.Gray2
 						return Container{layout.Inset{
 							Left:   values.MarginPadding16,
@@ -325,7 +325,7 @@ func (pg *overviewPage) syncDormantContent(gtx layout.Context, uniform layout.In
 				if pg.walletInfo.Synced {
 					return pg.connectionPeer(gtx)
 				}
-				latestBlockTitleLabel := pg.theme.Body1(values.String(values.StrNoConnectedPeers))
+				latestBlockTitleLabel := pg.theme.Body1(values.String(values.StrNoConnectedPeer))
 				latestBlockTitleLabel.Color = pg.theme.Color.Gray
 				return latestBlockTitleLabel.Layout(gtx)
 			}),
@@ -414,9 +414,9 @@ func (pg *overviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset) layout.Dimensions {
 	syncStatusLabel := pg.theme.H6(values.String(values.StrWalletNotSynced))
 	if pg.walletInfo.Syncing {
-		syncStatusLabel.Text = values.String(values.StrSynchronizing)
+		syncStatusLabel.Text = values.String(values.StrSyncingState)
 	} else if pg.walletInfo.Synced {
-		syncStatusLabel.Text = values.String(values.StrWalletSynced)
+		syncStatusLabel.Text = values.String(values.StrSynced)
 	}
 
 	return inset.Layout(gtx, func(gtx C) D {
@@ -502,7 +502,7 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 			layout.Rigid(func(gtx C) D {
 				completedSteps := pg.theme.Body2(values.StringF(values.StrSyncSteps, pg.walletSyncStatus.Steps))
 				completedSteps.Color = pg.theme.Color.Gray
-				headersFetched := pg.theme.Body1(values.StringF(values.StrHeadersFetchProgress, pg.walletSyncStatus.HeadersFetchProgress))
+				headersFetched := pg.theme.Body1(values.StringF(values.StrFetchingBlockHeaders, pg.walletSyncStatus.HeadersFetchProgress))
 				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return endToEndRow(gtx, completedSteps.Layout, headersFetched.Layout)
 				})
@@ -528,7 +528,7 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 					if w.BestBlockHeight > overallBlockHeight {
 						overallBlockHeight = w.BestBlockHeight
 					}
-					blockHeightProgress := values.StringF(values.StrScanningTotalHeaders, w.BestBlockHeight, overallBlockHeight)
+					blockHeightProgress := values.StringF(values.StrBlockHeaderFetchedCount, w.BestBlockHeight, overallBlockHeight)
 					details := pg.syncDetail(w.Name, w.Status, blockHeightProgress, w.DaysBehind)
 					uniform := layout.UniformInset(values.MarginPadding5)
 					walletSyncBoxes = append(walletSyncBoxes,
@@ -562,7 +562,7 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						headersFetchedTitleLabel := pg.theme.Body2(values.String(values.StrBlockHeadersFetched))
+						headersFetchedTitleLabel := pg.theme.Body2(values.String(values.StrBlockHeaderFetched))
 						headersFetchedTitleLabel.Color = pg.theme.Color.Gray
 						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 							return endToEndRow(gtx, headersFetchedTitleLabel.Layout, details.blockHeaderFetched.Layout)
@@ -652,7 +652,7 @@ func showWalletUnlockModal(c pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
 	go func() {
 		c.modalReceiver <- &modalLoad{
 			template: UnlockWalletRestoreTemplate,
-			title:    values.String(values.StrUnlockToResumeRestoration),
+			title:    values.String(values.StrResumeAccountDiscoveryTitle),
 			confirm: func(pass string) {
 				err := c.wallet.UnlockWallet(lockedWallets[0].ID, []byte(pass))
 				if err != nil {
