@@ -208,7 +208,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 							showBadge:   showLabel(recentTransactions),
 						}
 						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							return transactionRow(gtx, common, row)
+							return transactionRow(gtx, &common, row)
 						})
 					})
 				}),

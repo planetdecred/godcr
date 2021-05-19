@@ -19,7 +19,10 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageCreateRestore = "CreateRestore"
+const (
+	PageCreateRestore = "CreateRestore"
+	numberOfSeeds     = 32
+)
 
 type (
 	seedEditors struct {
@@ -155,7 +158,7 @@ func (win *Window) CreateRestorePage(common pageCommon) Page {
 
 	pg.passwordStrength.Color = pg.theme.Color.LightGray
 
-	for i := 0; i <= 32; i++ {
+	for i := 0; i <= numberOfSeeds; i++ {
 		widgetEditor := new(widget.Editor)
 		widgetEditor.SingleLine, widgetEditor.Submit = true, true
 		pg.seedEditors.editors = append(pg.seedEditors.editors, win.theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
@@ -285,7 +288,7 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 			btnPadding := values.MarginPadding10
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if pg.wal.LoadedWalletsCount() > int32(0) {
+					if pg.wal.LoadedWalletsCount() > 0 {
 						return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return pg.unlock.Layout(gtx)
@@ -567,7 +570,7 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 			pg.seedEditors.editors[index].Edit.Editor.SetText(b.text)
 			pg.seedEditors.editors[index].Edit.Editor.MoveCaret(len(b.text), 0)
 			pg.seedClicked = true
-			if index != 32 {
+			if index != numberOfSeeds {
 				pg.seedEditors.editors[index+1].Edit.Editor.Focus()
 			}
 		}
@@ -626,7 +629,7 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 					pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
 				}
 			case widget.SubmitEvent:
-				if i != 32 {
+				if i != numberOfSeeds {
 					pg.seedEditors.editors[i+1].Edit.Editor.Focus()
 				}
 			}

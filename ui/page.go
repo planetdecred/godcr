@@ -312,7 +312,9 @@ func (win *Window) loadPage(ic pageIcons) {
 		toast:                   &win.toast,
 	}
 
-	common.fetchExchangeValue(&common.dcrUsdtBittrex)
+	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
+		return
+	}
 
 	common.wallAcctSelector = &walletAccountSelector{
 		sendAccountBtn:           new(widget.Clickable),

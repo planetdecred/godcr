@@ -139,7 +139,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 										index:       index,
 										showBadge:   false,
 									}
-									return transactionRow(gtx, common, row)
+									return transactionRow(gtx, &common, row)
 								})
 							})
 					})
