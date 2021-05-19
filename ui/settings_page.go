@@ -155,18 +155,18 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 
 func (pg *settingsPage) general() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "General", func(gtx C) D {
+		return pg.mainSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, "Dark mode", pg.isDarkModeOn)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Spending unconfirmed funds", pg.spendUnconfirmed)
+					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
 					currencyConversionRow := row{
-						title:     "Currency conversion",
+						title:     values.String(values.StrCurrencyConversion),
 						clickable: pg.currencyConversion,
 						icon:      pg.chevronRightIcon,
 						label:     pg.theme.Body2(pg.currencyValue),
@@ -176,7 +176,7 @@ func (pg *settingsPage) general() layout.Widget {
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
 					languageRow := row{
-						title:     "Language",
+						title:     values.String(values.StrLanguage),
 						clickable: pg.language,
 						icon:      pg.chevronRightIcon,
 						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey("app_language")),
@@ -190,23 +190,23 @@ func (pg *settingsPage) general() layout.Widget {
 
 func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "Notification", func(gtx C) D {
-			return pg.subSectionSwitch(gtx, "Beep for new blocks", pg.beepNewBlocks)
+		return pg.mainSection(gtx, values.String(values.StrNotifications), func(gtx C) D {
+			return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
 		})
 	}
 }
 
 func (pg *settingsPage) security() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "Security", func(gtx C) D {
+		return pg.mainSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Startup password", pg.startupPassword)
+					return pg.subSectionSwitch(gtx, values.String(values.StrStartupPassword), pg.startupPassword)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.conditionalDisplay(gtx, pg.isStartupPassword, func(gtx C) D {
 						changeStartupPassRow := row{
-							title:     "Change startup password",
+							title:     values.String(values.StrChangeStartupPassword),
 							clickable: pg.changeStartupPass,
 							icon:      pg.chevronRightIcon,
 							label:     pg.theme.Body1(""),
@@ -221,14 +221,14 @@ func (pg *settingsPage) security() layout.Widget {
 
 func (pg *settingsPage) connection() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "Connection", func(gtx C) D {
+		return pg.mainSection(gtx, values.String(values.StrConnection), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Connect to specific peer", pg.connectToPeer)
+					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
 				}),
 				layout.Rigid(func(gtx C) D {
 					peerAddrRow := row{
-						title:     "Change specific peer",
+						title:     values.String(values.StrChangeSpecificPeer),
 						clickable: pg.updateConnectToPeer,
 						icon:      pg.chevronRightIcon,
 						label:     pg.peerLabel,
@@ -253,9 +253,9 @@ func (pg *settingsPage) agent() layout.Widget {
 						m10 := values.MarginPadding10
 						return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(pg.subSectionLabel("Custom user agent")),
+								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
 								layout.Rigid(func(gtx C) D {
-									txt := pg.theme.Body2("For exchange rate fetching")
+									txt := pg.theme.Body2(values.String(values.StrUserAgentSummary))
 									txt.Color = pg.theme.Color.Gray
 									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 										return txt.Layout(gtx)
@@ -276,7 +276,7 @@ func (pg *settingsPage) agent() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				return pg.conditionalDisplay(gtx, pg.agentValue != "", func(gtx C) D {
 					userAgentRow := row{
-						title:     "Change user agent",
+						title:     values.String(values.StrUserAgentDialogTitle),
 						clickable: pg.updateUserAgent,
 						icon:      pg.chevronRightIcon,
 						label:     pg.agentLabel,
@@ -291,7 +291,7 @@ func (pg *settingsPage) agent() layout.Widget {
 func (pg *settingsPage) currencyConversionSection(gtx layout.Context) layout.Dimensions {
 	w := []layout.Widget{
 		func(gtx C) D {
-			txt := pg.theme.H6("Currency conversion")
+			txt := pg.theme.H6(values.String(values.StrCurrencyConversion))
 			txt.Color = pg.theme.Color.Text
 			return txt.Layout(gtx)
 		},
@@ -461,13 +461,13 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangeStartupPasswordTemplate,
-				title:    "Change startup password",
+				title:    values.String(values.StrChangeStartupPassword),
 				confirm: func(oldPass, newPass string) {
 					pg.wal.ChangeStartupPassphrase(oldPass, newPass, pg.errorReceiver)
 				},
-				confirmText: "Change",
+				confirmText: values.String(values.StrChange),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -478,13 +478,13 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: SetStartupPasswordTemplate,
-					title:    "Create a startup password",
+					title:    values.String(values.StrCreateStartupPassword),
 					confirm: func(pass string) {
 						pg.wal.SetStartupPassphrase(pass, pg.errorReceiver)
 					},
-					confirmText: "Create",
+					confirmText: values.String(values.StrCreate),
 					cancel:      common.closeModal,
-					cancelText:  "Cancel",
+					cancelText:  values.String(values.StrCancel),
 				}
 			}()
 			return
@@ -492,13 +492,13 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: RemoveStartupPasswordTemplate,
-				title:    "Confirm to turn off startup password",
+				title:    values.String(values.StrConfirmRemoveStartupPass),
 				confirm: func(pass string) {
 					pg.wal.RemoveStartupPassphrase(pass, pg.errorReceiver)
 				},
-				confirmText: "Confirm",
+				confirmText: values.String(values.StrConfirm),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 	}
@@ -509,16 +509,16 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: ConnectToSpecificPeerTemplate,
-					title:    "Connect to specific peer",
+					title:    values.String(values.StrConnectToSpecificPeer),
 					confirm: func(ipAddress string) {
 						if ipAddress != "" {
 							pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
 							common.closeModal()
 						}
 					},
-					confirmText: "Connect",
+					confirmText: values.String(values.StrConfirm),
 					cancel:      common.closeModal,
-					cancelText:  "Cancel",
+					cancelText:  values.String(values.StrCancel),
 				}
 			}()
 			return
@@ -529,16 +529,16 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangeSpecificPeerTemplate,
-				title:    "Change specific peer",
+				title:    values.String(values.StrChangeSpecificPeer),
 				confirm: func(ipAddress string) {
 					if ipAddress != "" {
 						pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
 						common.closeModal()
 					}
 				},
-				confirmText: "Done",
+				confirmText: values.String(values.StrConfirm),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -549,14 +549,14 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: UserAgentTemplate,
-				title:    "Change user agent",
+				title:    values.String(values.StrChangeUserAgent),
 				confirm: func(agent string) {
 					if agent != "" {
 						pg.wal.SaveConfigValueForKey(userAgentKey, agent)
 						common.closeModal()
 					}
 				},
-				confirmText: "Done",
+				confirmText: values.String(values.StrGeneral),
 				cancel:      common.closeModal,
 				cancelText:  "Cancel",
 			}
@@ -569,16 +569,16 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: UserAgentTemplate,
-					title:    "Set up user agent",
+					title:    values.String(values.StrChangeUserAgent),
 					confirm: func(agent string) {
 						if agent != "" {
 							pg.wal.SaveConfigValueForKey(userAgentKey, agent)
 							common.closeModal()
 						}
 					},
-					confirmText: "Set up",
+					confirmText: values.String(values.StrConfirm),
 					cancel:      common.closeModal,
-					cancelText:  "Cancel",
+					cancelText:  values.String(values.StrCancel),
 				}
 			}()
 			return
