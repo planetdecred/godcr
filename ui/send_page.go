@@ -715,9 +715,7 @@ func (pg *sendPage) validateLeftAmount() bool {
 	if pg.inputsNotEmpty(pg.leftAmountEditor.Editor) {
 		_, err := strconv.ParseFloat(pg.leftAmountEditor.Editor.Text(), 64)
 		if err != nil {
-			if strings.Contains(err.Error(), "invalid") {
-				pg.leftAmountEditor.SetError("Invalid amount")
-			}
+			pg.leftAmountEditor.SetError("Invalid amount")
 			return false
 		}
 		pg.leftAmountEditor.SetError("")
@@ -731,9 +729,7 @@ func (pg *sendPage) validateRightAmount() bool {
 	if pg.inputsNotEmpty(pg.rightAmountEditor.Editor) {
 		_, err := strconv.ParseFloat(pg.rightAmountEditor.Editor.Text(), 64)
 		if err != nil {
-			if strings.Contains(err.Error(), "invalid") {
-				pg.rightAmountEditor.SetError("Invalid amount")
-			}
+			pg.rightAmountEditor.SetError("Invalid amount")
 			return false
 		}
 		pg.rightAmountEditor.SetError("")
@@ -901,7 +897,7 @@ func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool, c pageCommon) {
 }
 
 func (pg *sendPage) feeEstimationError(err, errorPath string) {
-	if err == "insufficient_balance" {
+	if err == dcrlibwallet.ErrInsufficientBalance {
 		pg.amountErrorText = "Not enough funds"
 		return
 	}
@@ -1020,7 +1016,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 
 	currencyExchangeValue := pg.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	pg.usdExchangeSet = false
-	if strings.Contains(currencyExchangeValue, "USD") {
+	if currencyExchangeValue == USDExchangeValue {
 		pg.usdExchangeSet = true
 	}
 

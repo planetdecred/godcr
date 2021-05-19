@@ -13,6 +13,7 @@ import (
 )
 
 const PageSettings = "Settings"
+const USDExchangeValue = "USD (Bittrex)"
 
 type row struct {
 	title     string
@@ -272,7 +273,7 @@ func (pg *settingsPage) currencyConversionSection(gtx layout.Context) layout.Dim
 				layout.Rigid(pg.theme.RadioButton(pg.radioButtonsGroup, "None", "None").Layout),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.theme.RadioButton(pg.radioButtonsGroup, "USD (Bittrex)", "USD (Bittrex)").Layout(gtx)
+						return pg.theme.RadioButton(pg.radioButtonsGroup, USDExchangeValue, USDExchangeValue).Layout(gtx)
 					})
 				}),
 			)
@@ -523,7 +524,7 @@ func (pg *settingsPage) handle(common pageCommon) {
 
 	if pg.radioButtonsGroup.Changed() {
 		if pg.radioButtonsGroup.Value == "None" {
-			pg.initialValue = "USD (Bittrex)"
+			pg.initialValue = USDExchangeValue
 		} else {
 			pg.initialValue = "None"
 		}
