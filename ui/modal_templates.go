@@ -81,8 +81,8 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 	}
 }
 
-func (m *ModalTemplate) importWatchOnlyWallet() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) importWatchOnlyWallet() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
 		},
@@ -96,8 +96,8 @@ func (load *modalLoad) setLoading(isLoading bool) {
 	load.loading = isLoading
 }
 
-func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) createNewWallet() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
 		},
@@ -115,16 +115,16 @@ func (m *ModalTemplate) createNewWallet() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) renameWallet() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) renameWallet() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return m.walletName.Layout(gtx)
 		},
 	}
 }
 
-func (m *ModalTemplate) createNewAccount() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) createNewAccount() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -166,8 +166,8 @@ func (m *ModalTemplate) createNewAccount() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) removeWallet() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) removeWallet() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			info := m.th.Body1("Make sure to have the seed phrase backed up before removing the wallet")
 			info.Color = m.th.Color.Gray
@@ -176,8 +176,8 @@ func (m *ModalTemplate) removeWallet() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) Password() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) Password() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
@@ -185,8 +185,8 @@ func (m *ModalTemplate) Password() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) changePassword() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) changePassword() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			m.oldSpendingPassword.Editor.SingleLine = true
 			return m.oldSpendingPassword.Layout(gtx)
@@ -205,8 +205,8 @@ func (m *ModalTemplate) changePassword() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) setStartupPassword() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) setStartupPassword() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			m.spendingPassword.Editor.SingleLine = true
 			return m.spendingPassword.Layout(gtx)
@@ -221,8 +221,8 @@ func (m *ModalTemplate) setStartupPassword() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) verifyMessageInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) verifyMessageInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			text := m.th.Body1("After you or your counterparty has genrated a signature, you can use this form to verify the" +
 				" validity of the  signature. \n \nOnce you have entered the address, the message and the corresponding " +
@@ -233,8 +233,8 @@ func (m *ModalTemplate) verifyMessageInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) signMessageInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) signMessageInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			text := m.th.Body1("Signing a message with an address' private key allows you to prove that you are the owner of a given address" +
 				" to a possible counterparty.")
@@ -244,8 +244,8 @@ func (m *ModalTemplate) signMessageInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) rescanWallet() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) rescanWallet() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			text := m.th.Body1("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire" +
 				" blockchain for transactions")
@@ -255,8 +255,8 @@ func (m *ModalTemplate) rescanWallet() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) securityToolsInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) securityToolsInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			text := m.th.Body1("Various tools that help in different aspects of crypto currency security will be located here.")
 			text.Color = m.th.Color.Gray
@@ -265,8 +265,8 @@ func (m *ModalTemplate) securityToolsInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) sendInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) sendInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			text := m.th.Body1("Input or scan the destination wallet address and input the amount to send funds.")
 			text.Color = m.th.Color.Gray
@@ -275,8 +275,8 @@ func (m *ModalTemplate) sendInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) receiveInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) receiveInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			text := m.th.Label(values.TextSize20, "Each time you receive a payment, a new address is generated to protect your privacy.")
 			text.Color = m.th.Color.Gray
@@ -285,8 +285,8 @@ func (m *ModalTemplate) receiveInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) privacyInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -323,8 +323,8 @@ func (m *ModalTemplate) privacyInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) setupMixerInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) setupMixerInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			txt := m.th.Body1("Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.")
 			txt.Color = m.th.Color.Gray
@@ -337,8 +337,8 @@ func (m *ModalTemplate) setupMixerInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) warnExistMixerAcct() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -364,8 +364,8 @@ func (m *ModalTemplate) warnExistMixerAcct() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) unlockWalletRestore() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) unlockWalletRestore() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			info := m.th.Body1("The restoration process to discover your accounts was interrupted in the last sync.")
 			info.Color = m.th.Color.Gray
@@ -387,8 +387,8 @@ func (m *ModalTemplate) unlockWalletRestore() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) transactionDetailsInfo() []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) transactionDetailsInfo() []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -417,14 +417,14 @@ func (m *ModalTemplate) transactionDetailsInfo() []func(gtx C) D {
 	}
 }
 
-func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
+func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []layout.Widget {
 	if !load.isReset {
 		m.resetFields()
 		load.isReset = true
 		load.setLoading(false)
 	}
 
-	title := []func(gtx C) D{
+	title := []layout.Widget{
 		func(gtx C) D {
 			txt := load.title
 			if load.template == TransactionDetailsInfoTemplate {
@@ -445,8 +445,8 @@ func (m *ModalTemplate) Layout(th *decredmaterial.Theme, load *modalLoad) []func
 	return w
 }
 
-func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []func(gtx C) D {
-	return []func(gtx C) D{
+func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []layout.Widget {
+	return []layout.Widget{
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -487,7 +487,7 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []fun
 	}
 }
 
-func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []func(gtx C) D) {
+func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []layout.Widget) {
 	m.walletName.Editor.SingleLine = true
 	switch load.template {
 	case CreateWalletTemplate:

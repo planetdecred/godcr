@@ -262,7 +262,7 @@ func (pg *settingsPage) agent() layout.Widget {
 }
 
 func (pg *settingsPage) currencyConversionSection(gtx layout.Context) layout.Dimensions {
-	w := []func(gtx C) D{
+	w := []layout.Widget{
 		func(gtx C) D {
 			txt := pg.theme.H6("Currency conversion")
 			txt.Color = pg.theme.Color.Text

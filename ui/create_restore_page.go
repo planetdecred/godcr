@@ -203,7 +203,7 @@ func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Di
 						pg.modalTitleLabel.Text = "Restore Wallet"
 					}
 
-					w := []func(gtx C) D{
+					w := []layout.Widget{
 						func(gtx C) D {
 							return pg.modalTitleLabel.Layout(gtx)
 						},

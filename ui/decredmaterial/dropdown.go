@@ -195,7 +195,7 @@ func (c *DropDown) Layout(gtx layout.Context) layout.Dimensions {
 
 func (c *DropDown) dropDownItemMenu(gtx layout.Context) layout.Dimensions {
 	items := c.items[1:]
-	var dropDownItemRows []func(gtx C) D
+	var dropDownItemRows []layout.Widget
 	for i := range items {
 		index := i
 		dropDownItemRows = append(dropDownItemRows, func(gtx C) D {

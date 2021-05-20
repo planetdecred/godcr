@@ -575,7 +575,7 @@ func (pg *overviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 			}),
 			layout.Rigid(func(gtx C) D {
 				var overallBlockHeight int32
-				var walletSyncBoxes []func(gtx C) D
+				var walletSyncBoxes []layout.Widget
 
 				if pg.walletSyncStatus != nil {
 					overallBlockHeight = pg.walletSyncStatus.HeadersToFetch

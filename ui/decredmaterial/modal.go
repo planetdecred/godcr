@@ -36,7 +36,7 @@ func (t *Theme) Modal() *Modal {
 
 // Layout renders the modal widget to screen. The modal assumes the size of
 // its content plus padding.
-func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) layout.Dimensions {
+func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) layout.Dimensions {
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			fillMax(gtx, m.overlayColor, CornerRadius{})
@@ -44,8 +44,8 @@ func (m *Modal) Layout(gtx layout.Context, widgets []func(gtx C) D, margin int) 
 		}),
 		layout.Stacked(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			var widgetFuncs []func(gtx C) D
-			var title func(gtx C) D
+			var widgetFuncs []layout.Widget
+			var title layout.Widget
 
 			if m.isFloatTitle && len(widgets) > 0 {
 				title = widgets[0]

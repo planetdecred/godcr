@@ -114,7 +114,7 @@ func (t *Theme) ScrollContainer() *ScrollContainer {
 	}
 }
 
-func (s *ScrollContainer) calculateTotalContentHeight(gtx layout.Context, widgets []func(gtx C) D) {
+func (s *ScrollContainer) calculateTotalContentHeight(gtx layout.Context, widgets []layout.Widget) {
 	for i := range widgets {
 		index := i
 		(&layout.List{Axis: layout.Vertical}).Layout(gtx, 1, func(gtx C, i int) D {
@@ -126,7 +126,7 @@ func (s *ScrollContainer) calculateTotalContentHeight(gtx layout.Context, widget
 	s.hasCalculatedTotalContentHeight = true
 }
 
-func (s *ScrollContainer) Layout(gtx layout.Context, widgets []func(gtx C) D) layout.Dimensions {
+func (s *ScrollContainer) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimensions {
 	maxSize := gtx.Constraints.Max
 
 	if s.scrollbar.scrolled() {

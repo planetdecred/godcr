@@ -527,7 +527,7 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 		})
 	}
 	wallAcctSelector := page.wallAcctSelector
-	w := []func(gtx C) D{
+	w := []layout.Widget{
 		func(gtx C) D {
 			title := page.theme.H6(wallAcctSelector.title)
 			title.Color = page.theme.Color.Text

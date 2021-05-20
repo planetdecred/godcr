@@ -24,7 +24,7 @@ func (t *Theme) Tooltip() *Tooltip {
 	}
 }
 
-func (t *Tooltip) layout(gtx C, pos layout.Inset, wdgt func(gtx C) D) D {
+func (t *Tooltip) layout(gtx C, pos layout.Inset, wdgt layout.Widget) D {
 	border := widget.Border{
 		Color:        t.borderColor,
 		CornerRadius: unit.Dp(5),
@@ -44,7 +44,7 @@ func (t *Tooltip) layout(gtx C, pos layout.Inset, wdgt func(gtx C) D) D {
 	})
 }
 
-func (t *Tooltip) Layout(gtx C, rect image.Rectangle, pos layout.Inset, wdgt func(gtx C) D) D {
+func (t *Tooltip) Layout(gtx C, rect image.Rectangle, pos layout.Inset, wdgt layout.Widget) D {
 	if t.hoverable.Hovered() {
 		m := op.Record(gtx.Ops)
 		t.layout(gtx, pos, wdgt)
