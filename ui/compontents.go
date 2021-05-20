@@ -803,6 +803,143 @@ func (page pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount,
 	}
 }
 
+// ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
+func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimensions {
+	var itemWidth int
+	st := ticketStatusIcon(&c, t.Info.Status)
+	if st == nil {
+		return layout.Dimensions{}
+	}
+	st.icon.Scale = 1.0
+	return c.theme.Shadow().Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				wrap := c.theme.Card()
+				wrap.Radius = decredmaterial.CornerRadius{NE: 8, NW: 8, SE: 0, SW: 0}
+				wrap.Color = st.background
+				return wrap.Layout(gtx, func(gtx C) D {
+					return layout.Stack{Alignment: layout.S}.Layout(gtx,
+
+						layout.Expanded(func(gtx C) D {
+							return layout.NE.Layout(gtx, func(gtx C) D {
+								wTimeLabel := c.theme.Card()
+								wTimeLabel.Radius = decredmaterial.CornerRadius{NE: 0, NW: 8, SE: 0, SW: 8}
+								return wTimeLabel.Layout(gtx, func(gtx C) D {
+									return layout.Inset{
+										Top:    values.MarginPadding4,
+										Bottom: values.MarginPadding4,
+										Right:  values.MarginPadding8,
+										Left:   values.MarginPadding8,
+									}.Layout(gtx, func(gtx C) D {
+										return c.theme.Label(values.TextSize14, "10h 47m").Layout(gtx)
+									})
+								})
+							})
+						}),
+
+						layout.Stacked(func(gtx C) D {
+							content := layout.Inset{
+								Top:    values.MarginPadding24,
+								Right:  values.MarginPadding62,
+								Left:   values.MarginPadding62,
+								Bottom: values.MarginPadding24,
+							}.Layout(gtx, func(gtx C) D {
+								return st.icon.Layout(gtx)
+							})
+							itemWidth = content.Size.X
+							return content
+						}),
+
+						layout.Stacked(func(gtx C) D {
+							return layout.Center.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+									gtx.Constraints.Max.X = itemWidth
+									p := c.theme.ProgressBar(20)
+									p.Height, p.Radius = values.MarginPadding4, values.MarginPadding1
+									p.Color = st.color
+									return p.Layout(gtx)
+								})
+							})
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				wrap := c.theme.Card()
+				wrap.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 8, SW: 8}
+				return wrap.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X, gtx.Constraints.Max.X = itemWidth, itemWidth
+					return layout.Inset{
+						Left:   values.MarginPadding12,
+						Right:  values.MarginPadding12,
+						Bottom: values.MarginPadding8,
+					}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Top: values.MarginPadding16,
+								}.Layout(gtx, func(gtx C) D {
+									return c.layoutBalance(gtx, t.Amount)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										txt := c.theme.Label(values.MarginPadding14, t.Info.Status)
+										txt.Color = st.color
+										return txt.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Left:  values.MarginPadding4,
+											Right: values.MarginPadding4,
+										}.Layout(gtx, func(gtx C) D {
+											ic := c.icons.imageBrightness1
+											ic.Color = c.theme.Color.Gray2
+											return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return c.theme.Label(values.MarginPadding14, t.WalletName).Layout(gtx)
+									}),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Top:    values.MarginPadding16,
+									Bottom: values.MarginPadding16,
+								}.Layout(gtx, func(gtx C) D {
+									txt := c.theme.Label(values.TextSize14, t.MonthDay)
+									txt.Color = c.theme.Color.Gray2
+									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return txt.Layout(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{
+												Left:  values.MarginPadding4,
+												Right: values.MarginPadding4,
+											}.Layout(gtx, func(gtx C) D {
+												ic := c.icons.imageBrightness1
+												ic.Color = c.theme.Color.Gray2
+												return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+											})
+										}),
+										layout.Rigid(func(gtx C) D {
+											txt.Text = t.DaysBehind
+											return txt.Layout(gtx)
+										}),
+									)
+								})
+							}),
+						)
+					})
+				})
+			}),
+		)
+	})
+}
+
 func (page pageCommon) handleNavEvents() {
 	for page.minimizeNavDrawerButton.Button.Clicked() {
 		*page.isNavDrawerMinimized = true

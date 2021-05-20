@@ -1085,13 +1085,17 @@ func (wal *Wallet) GetAllTickets() {
 			}
 
 			for _, tinfo := range ticketsInfo {
+				if tinfo.Status == "UNKNOWN" {
+					continue
+				}
+
 				var amount dcrutil.Amount
 				for _, output := range tinfo.Ticket.MyOutputs {
 					amount += output.Amount
 				}
 				info := Ticket{
 					Info:       *tinfo,
-					DateTime:   dcrlibwallet.ExtractDateOrTime(tinfo.Ticket.Timestamp),
+					DateTime:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
 					MonthDay:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2"),
 					DaysBehind: calculateDaysBehind(tinfo.Ticket.Timestamp),
 					Amount:     amount.String(),
@@ -1110,9 +1114,7 @@ func (wal *Wallet) GetAllTickets() {
 					liveRecentTickets = append(liveRecentTickets, info)
 				}
 
-				if tinfo.Status != "UNKNOWN" {
-					recentActivity = append(recentActivity, info)
-				}
+				recentActivity = append(recentActivity, info)
 
 				for i := range stackingRecordCounter {
 					if stackingRecordCounter[i].Status == tinfo.Status {
@@ -1120,6 +1122,12 @@ func (wal *Wallet) GetAllTickets() {
 					}
 				}
 			}
+
+			sort.SliceStable(tickets[wall.ID], func(i, j int) bool {
+				backTime := time.Unix(tickets[wall.ID][j].Info.Ticket.Timestamp, 0)
+				frontTime := time.Unix(tickets[wall.ID][i].Info.Ticket.Timestamp, 0)
+				return backTime.Before(frontTime)
+			})
 
 			unconfirmedTicketPurchases, err := getUnconfirmedPurchases(wall, tickets[wall.ID])
 			if err != nil {

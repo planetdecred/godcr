@@ -34,7 +34,8 @@ type pageIcons struct {
 	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, proposalIconInactive,
-	restore, documentationIcon, downloadIcon, timerIcon, ticketIcon, ticketIconInactive, stakeyIcon *widget.Image
+	restore, documentationIcon, downloadIcon, timerIcon, ticketIcon, ticketIconInactive, stakeyIcon,
+	list, listGridIcon *widget.Image
 
 	ticketPurchasedIcon,
 	ticketImmatureIcon,
@@ -216,6 +217,8 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		ticketMissedIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed"])},
 		ticketExpiredIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired"])},
 		ticketRevokedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked"])},
+		list:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
+		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
 	appBarNavItems := []navHandler{
@@ -371,6 +374,7 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 	win.pages[PagePrivacy] = win.PrivacyPage(common)
 	win.pages[PageTickets] = win.TicketPage(common)
 	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
+	win.pages[PageTicketsList] = win.TicketPageList(common)
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {
