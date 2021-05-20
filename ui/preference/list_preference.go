@@ -127,7 +127,7 @@ func (lp *ListPreference) Layout(gtx layout.Context, body layout.Dimensions) lay
 }
 
 func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
-	w := []func(gtx layout.Context) layout.Dimensions{
+	w := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			txt := lp.theme.H6(values.String(lp.titleStrKey))
 			txt.Color = lp.theme.Color.Text

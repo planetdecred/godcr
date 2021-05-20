@@ -8,7 +8,6 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/preference"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/ui/values/localizable"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -88,12 +87,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		cancel:  win.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
 	}
 
-	languageMap := make(map[string]string)
-	languageMap[localizable.ENGLISH] = values.StrEnglish
-	languageMap[localizable.FRENCH] = values.StrFrench
-
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
-		values.DefaultLangauge, languageMap).
+		values.DefaultLangauge, values.ArrLanguages).
 		Title(values.StrLanguage).
 		PostiveButton(values.StrConfirm, func() {}).
 		NegativeButton(values.StrCancel, func() {})
