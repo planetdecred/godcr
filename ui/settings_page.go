@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -15,8 +13,13 @@ import (
 )
 
 const PageSettings = "Settings"
-const USDExchangeValue = "USD (Bittrex)"
-const languagePreferenceKey = "app_language"
+
+const (
+	USDExchangeValue     = "usd_bittrex"
+	DefaultExchangeValue = "none"
+
+	languagePreferenceKey = "app_language"
+)
 
 type row struct {
 	title     string
@@ -31,7 +34,6 @@ type settingsPage struct {
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
-	currencyConversion  *widget.Clickable
 	updateConnectToPeer *widget.Clickable
 	updateUserAgent     *widget.Clickable
 	changeStartupPass   *widget.Clickable
@@ -53,13 +55,7 @@ type settingsPage struct {
 	agentValue        string
 	errorReceiver     chan error
 
-	currencyValue       string
-	initialValue        string
-	isCurrencyModalOpen bool
-
-	currencyModal      *decredmaterial.Modal
-	currencyRadioGroup *widget.Enum
-
+	currencyPreference *preference.ListPreference
 	languagePreference *preference.ListPreference
 }
 
@@ -84,16 +80,12 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 		errorReceiver: make(chan error),
 
-		currencyConversion:  new(widget.Clickable),
 		updateConnectToPeer: new(widget.Clickable),
 		updateUserAgent:     new(widget.Clickable),
 		changeStartupPass:   new(widget.Clickable),
 
 		confirm: win.theme.Button(new(widget.Clickable), "Ok"),
 		cancel:  win.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
-
-		currencyModal:      common.theme.Modal(),
-		currencyRadioGroup: new(widget.Enum),
 	}
 
 	languageMap := make(map[string]string)
@@ -107,6 +99,17 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		NegativeButton(values.StrCancel, func() {})
 	pg.languagePreference = languagePreference
 
+	currencyMap := make(map[string]string)
+	currencyMap[DefaultExchangeValue] = values.StrNone
+	currencyMap[USDExchangeValue] = values.StrUsdBittrex
+
+	currencyPreference := preference.NewListPreference(common.wallet, common.theme,
+		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue, currencyMap).
+		Title(values.StrCurrencyConversion).
+		PostiveButton(values.StrConfirm, func() {}).
+		NegativeButton(values.StrCancel, func() {})
+	pg.currencyPreference = currencyPreference
+
 	color := common.theme.Color.LightGray
 
 	pg.peerLabel = common.theme.Body1("")
@@ -119,7 +122,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		pg.handle(common, win)
-		languagePreference.Handle()
+		pg.languagePreference.Handle()
+		pg.currencyPreference.Handle()
 		return pg.Layout(gtx, common)
 	}
 }
@@ -149,10 +153,10 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 		return common.SubPageLayout(gtx, page)
 	}
 
-	if pg.isCurrencyModalOpen {
-		return common.Modal(gtx, common.Layout(gtx, func(gtx C) D {
+	if pg.currencyPreference.IsShowing {
+		return pg.currencyPreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
 			return common.UniformPadding(gtx, body)
-		}), pg.currencyConversionSection(gtx))
+		}))
 	}
 
 	if pg.languagePreference.IsShowing {
@@ -180,9 +184,9 @@ func (pg *settingsPage) general() layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					currencyConversionRow := row{
 						title:     values.String(values.StrCurrencyConversion),
-						clickable: pg.currencyConversion,
+						clickable: pg.currencyPreference.Clickable(),
 						icon:      pg.chevronRightIcon,
-						label:     pg.theme.Body2(pg.currencyValue),
+						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
 					return pg.clickableRow(gtx, currencyConversionRow)
 				}),
@@ -299,46 +303,6 @@ func (pg *settingsPage) agent() layout.Widget {
 			}),
 		)
 	}
-}
-
-func (pg *settingsPage) currencyConversionSection(gtx layout.Context) layout.Dimensions {
-	w := []layout.Widget{
-		func(gtx C) D {
-			txt := pg.theme.H6(values.String(values.StrCurrencyConversion))
-			txt.Color = pg.theme.Color.Text
-			return txt.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.theme.RadioButton(pg.currencyRadioGroup, "None", "None").Layout),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.theme.RadioButton(pg.currencyRadioGroup, USDExchangeValue, USDExchangeValue).Layout(gtx)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-							pg.cancel.Background, pg.cancel.Color = color.NRGBA{}, pg.theme.Color.Primary
-							return pg.cancel.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-							pg.confirm.Background, pg.confirm.Color = color.NRGBA{}, pg.theme.Color.Primary
-							return pg.confirm.Layout(gtx)
-						})
-					}),
-				)
-			})
-		},
-	}
-
-	return pg.currencyModal.Layout(gtx, w, 1050)
 }
 
 func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
@@ -565,33 +529,6 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
 	}
 
-	for pg.currencyConversion.Clicked() {
-		pg.isCurrencyModalOpen = true
-	}
-
-	if pg.currencyRadioGroup.Changed() {
-		if pg.currencyRadioGroup.Value == "None" {
-			pg.initialValue = USDExchangeValue
-		} else {
-			pg.initialValue = "None"
-		}
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, pg.currencyRadioGroup.Value)
-	}
-
-	for pg.cancel.Button.Clicked() {
-		if pg.isCurrencyModalOpen {
-			pg.wal.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, pg.initialValue)
-			pg.isCurrencyModalOpen = false
-		}
-	}
-
-	if pg.confirm.Button.Clicked() {
-		if pg.isCurrencyModalOpen {
-			pg.initialValue = pg.currencyRadioGroup.Value
-			pg.isCurrencyModalOpen = false
-		}
-	}
-
 	select {
 	case err := <-pg.errorReceiver:
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
@@ -644,10 +581,4 @@ func (pg *settingsPage) updateSettingOptions() {
 		pg.agentLabel.Text = pg.agentValue
 		pg.userAgent.Value = true
 	}
-
-	pg.currencyValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if pg.currencyValue == "" {
-		pg.currencyValue = "None"
-	}
-	pg.currencyRadioGroup.Value = pg.currencyValue
 }

@@ -220,4 +220,6 @@ const (
 	StrOverview                    = "overview"
 	StrEnglish                     = "english"
 	StrFrench                      = "french"
+	StrUsdBittrex                  = "usdBittrex"
+	StrNone                        = "none"
 )
