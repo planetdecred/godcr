@@ -112,7 +112,6 @@ type pageCommon struct {
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
 	keyEvents       chan *key.Event
-	clipboard       chan interface{}
 	toast           chan *toast
 	toastLoad       *toast
 	states          *states
@@ -284,7 +283,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		walletTabs:              win.walletTabs,
 		accountTabs:             win.accountTabs,
 		keyEvents:               win.keyEvents,
-		clipboard:               win.clipboard,
 		toast:                   win.toast,
 		toastLoad:               &toast{},
 		states:                  &win.states,
