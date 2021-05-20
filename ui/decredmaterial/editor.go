@@ -278,7 +278,8 @@ func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * 40
+				width := unit.Value{U: unit.UnitDp, V: 40}
+				gtx.Constraints.Min.X = gtx.Px(width)
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return re.TitleLabel.Layout(gtx)
 				})
