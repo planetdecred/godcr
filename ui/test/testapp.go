@@ -201,7 +201,7 @@ func (t *TestStruct) testPageContents(gtx layout.Context) layout.Dimensions {
 		)
 	}
 
-	pageContent := []func(gtx C) D{
+	pageContent := []layout.Widget{
 		func(gtx C) D {
 			return t.theme.H4("Decrematerial Test Page").Layout(gtx)
 		},
