@@ -227,10 +227,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 			pg.receiveAddress.Text = pg.addrs
 			pg.receiveAddress.Alignment = text.Middle
 			pg.receiveAddress.MaxLines = 1
-			card.Radius.NE = 8
-			card.Radius.SW = 8
-			card.Radius.NW = 0
-			card.Radius.SE = 0
+			card.Radius = decredmaterial.CornerRadius{NE: 8, NW: 0, SE: 0, SW: 8}
 			return card.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
@@ -242,10 +239,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 			return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
 		}),
 		layout.Rigid(func(gtx C) D {
-			card.Radius.NE = 0
-			card.Radius.SW = 0
-			card.Radius.NW = 8
-			card.Radius.SE = 8
+			card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 8, SE: 8, SW: 0}
 			return card.Layout(gtx, func(gtx C) D {
 				return pg.copy.Layout(gtx)
 			})
