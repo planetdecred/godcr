@@ -68,7 +68,7 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		Edit:       e,
 		TitleLabel: t.Body2(title),
 		LineColor:  t.Color.Gray1,
-		height:     30,
+		height:     31,
 	}
 }
 
@@ -268,21 +268,24 @@ func (e Editor) handleEvents() {
 }
 
 func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
+	l := re.t.SeparatorVertical(int(gtx.Metric.PxPerDp)*re.height, int(gtx.Metric.PxPerDp)*2)
+	if re.Edit.Editor.Focused() {
+		re.TitleLabel.Color, re.LineColor, l.Color = re.t.Color.Primary, re.t.Color.Primary, re.t.Color.Primary
+	} else {
+		l.Color = re.t.Color.Gray1
+	}
 	border := widget.Border{Color: re.LineColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{
-					Left:  unit.Dp(10),
-					Right: unit.Dp(10),
-				}.Layout(gtx, func(gtx C) D {
+				width := unit.Value{U: unit.UnitDp, V: 40}
+				gtx.Constraints.Min.X = gtx.Px(width)
+				return layout.Center.Layout(gtx, func(gtx C) D {
 					return re.TitleLabel.Layout(gtx)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				l := re.t.SeparatorVertical(re.height, 2)
-				l.Color = re.t.Color.Gray1
-				return layout.Inset{}.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: unit.Dp(-3), Right: unit.Dp(5)}.Layout(gtx, func(gtx C) D {
 					return l.Layout(gtx)
 				})
 			}),
