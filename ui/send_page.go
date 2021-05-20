@@ -1003,27 +1003,32 @@ func (pg *sendPage) setMaxAmount(c pageCommon) {
 	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
 	atomValue := sendAcct.SpendableBalance
 
-	// Estimate max send value
-	amount, err := pg.txAuthor.EstimateMaxSendAmount()
-	if err == nil {
-		atomValue = amount.AtomValue
-		dcrValue := amount.DcrValue
-		pg.updateAmountField(dcrValue)
-		pg.calculateValues(c, false)
-	}
+	pg.updateAmountField(dcrutil.Amount(0).ToCoin())
+	pg.calculateValues(c, false)
 
-	// Adjust value
-	step := int64(10)
-	for {
-		_, err := pg.txAuthor.EstimateFeeAndSize()
-		if err != nil {
-			atomValue -= step
-			pg.updateAmountField(dcrutil.Amount(atomValue).ToCoin())
+	if atomValue > 0 {
+		// Estimate max send value
+		amount, err := pg.txAuthor.EstimateMaxSendAmount()
+		if err == nil {
+			atomValue = amount.AtomValue
+			dcrValue := amount.DcrValue
+			pg.updateAmountField(dcrValue)
 			pg.calculateValues(c, false)
-		} else {
-			pg.updateAmountField(dcrutil.Amount(atomValue).ToCoin())
-			pg.calculateValues(c, false)
-			break
+		}
+
+		// Adjust value
+		step := int64(10)
+		for {
+			_, err := pg.txAuthor.EstimateFeeAndSize()
+			if err != nil {
+				atomValue -= step
+				pg.updateAmountField(dcrutil.Amount(atomValue).ToCoin())
+				pg.calculateValues(c, false)
+			} else {
+				pg.updateAmountField(dcrutil.Amount(atomValue).ToCoin())
+				pg.calculateValues(c, false)
+				break
+			}
 		}
 	}
 }
