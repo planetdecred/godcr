@@ -164,9 +164,9 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-const (
-	navDrawerWidth          = 160
-	navDrawerMinimizedWidth = 72
+var (
+	navDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
+	navDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
 )
 
 // layoutNavDrawer is the left vertical pane on every page of the app. It vertically lays out buttons used to navigate
@@ -204,7 +204,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 								width = navDrawerMinimizedWidth
 							}
 
-							gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
+							gtx.Constraints.Min.X = gtx.Px(width)
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									img := page.drawerNavItems[i].imageInactive

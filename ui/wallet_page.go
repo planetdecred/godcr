@@ -375,7 +375,8 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	m := op.Record(gtx.Ops)
 
 	inset.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Max.X = int(gtx.Metric.PxPerDp) * 150
+		width := unit.Value{U: unit.UnitDp, V: 150}
+		gtx.Constraints.Max.X = gtx.Px(width)
 		return pg.shadowBox.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
