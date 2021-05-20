@@ -112,4 +112,6 @@ const EN = `
 "wallets" = "Wallets";
 "tickets" = "Tickets";
 "more" = "More";
+"english" = "English";
+"french" = "French";
 `

@@ -8,6 +8,7 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/preference"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/ui/values/localizable"
 	"github.com/planetdecred/godcr/wallet"
@@ -15,6 +16,7 @@ import (
 
 const PageSettings = "Settings"
 const USDExchangeValue = "USD (Bittrex)"
+const languagePreferenceKey = "app_language"
 
 type row struct {
 	title     string
@@ -30,7 +32,6 @@ type settingsPage struct {
 	wal           *wallet.Wallet
 
 	currencyConversion  *widget.Clickable
-	language            *widget.Clickable
 	updateConnectToPeer *widget.Clickable
 	updateUserAgent     *widget.Clickable
 	changeStartupPass   *widget.Clickable
@@ -59,9 +60,7 @@ type settingsPage struct {
 	currencyModal      *decredmaterial.Modal
 	currencyRadioGroup *widget.Enum
 
-	isLanguageModalOpen bool
-	languageModal       *decredmaterial.Modal
-	languageRadioGroup  *widget.Enum
+	languagePreference *preference.ListPreference
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
@@ -86,7 +85,6 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		errorReceiver: make(chan error),
 
 		currencyConversion:  new(widget.Clickable),
-		language:            new(widget.Clickable),
 		updateConnectToPeer: new(widget.Clickable),
 		updateUserAgent:     new(widget.Clickable),
 		changeStartupPass:   new(widget.Clickable),
@@ -96,10 +94,18 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 		currencyModal:      common.theme.Modal(),
 		currencyRadioGroup: new(widget.Enum),
-
-		languageModal:      common.theme.Modal(),
-		languageRadioGroup: new(widget.Enum),
 	}
+
+	languageMap := make(map[string]string)
+	languageMap[localizable.ENGLISH] = values.StrEnglish
+	languageMap[localizable.FRENCH] = values.StrFrench
+
+	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
+		values.DefaultLangauge, languageMap).
+		Title(values.StrLanguage).
+		PostiveButton(values.StrConfirm, func() {}).
+		NegativeButton(values.StrCancel, func() {})
+	pg.languagePreference = languagePreference
 
 	color := common.theme.Color.LightGray
 
@@ -113,6 +119,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		pg.handle(common, win)
+		languagePreference.Handle()
 		return pg.Layout(gtx, common)
 	}
 }
@@ -143,9 +150,15 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 	}
 
 	if pg.isCurrencyModalOpen {
-		return common.Modal(gtx, common.Layout(gtx, body), pg.currencyConversionSection(gtx))
-	} else if pg.isLanguageModalOpen {
-		return common.Modal(gtx, common.Layout(gtx, body), pg.languageSection(gtx))
+		return common.Modal(gtx, common.Layout(gtx, func(gtx C) D {
+			return common.UniformPadding(gtx, body)
+		}), pg.currencyConversionSection(gtx))
+	}
+
+	if pg.languagePreference.IsShowing {
+		return pg.languagePreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
+			return common.UniformPadding(gtx, body)
+		}))
 	}
 
 	return common.Layout(gtx, func(gtx C) D {
@@ -177,9 +190,9 @@ func (pg *settingsPage) general() layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					languageRow := row{
 						title:     values.String(values.StrLanguage),
-						clickable: pg.language,
+						clickable: pg.languagePreference.Clickable(),
 						icon:      pg.chevronRightIcon,
-						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey("app_language")),
+						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey)),
 					}
 					return pg.clickableRow(gtx, languageRow)
 				}),
@@ -326,40 +339,6 @@ func (pg *settingsPage) currencyConversionSection(gtx layout.Context) layout.Dim
 	}
 
 	return pg.currencyModal.Layout(gtx, w, 1050)
-}
-
-func (pg *settingsPage) languageSection(gtx layout.Context) layout.Dimensions {
-	w := []func(gtx C) D{
-		func(gtx C) D {
-			txt := pg.theme.H6("Language")
-			txt.Color = pg.theme.Color.Text
-			return txt.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.theme.RadioButton(pg.languageRadioGroup, localizable.ENGLISH, "English").Layout),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.theme.RadioButton(pg.languageRadioGroup, localizable.FRENCH, "French").Layout(gtx)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-							pg.cancel.Background, pg.cancel.Color = color.NRGBA{}, pg.theme.Color.Primary
-							return pg.cancel.Layout(gtx)
-						})
-					}),
-				)
-			})
-		},
-	}
-
-	return pg.languageModal.Layout(gtx, w, 1050)
 }
 
 func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
@@ -558,7 +537,7 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 				},
 				confirmText: values.String(values.StrGeneral),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -590,10 +569,6 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		pg.isCurrencyModalOpen = true
 	}
 
-	for pg.language.Clicked() {
-		pg.isLanguageModalOpen = true
-	}
-
 	if pg.currencyRadioGroup.Changed() {
 		if pg.currencyRadioGroup.Value == "None" {
 			pg.initialValue = USDExchangeValue
@@ -607,8 +582,6 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		if pg.isCurrencyModalOpen {
 			pg.wal.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, pg.initialValue)
 			pg.isCurrencyModalOpen = false
-		} else if pg.isLanguageModalOpen {
-			pg.isLanguageModalOpen = false
 		}
 	}
 
@@ -617,11 +590,6 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 			pg.initialValue = pg.currencyRadioGroup.Value
 			pg.isCurrencyModalOpen = false
 		}
-	}
-
-	if pg.languageRadioGroup.Changed() {
-		pg.wal.SaveConfigValueForKey("app_language", pg.languageRadioGroup.Value)
-		values.SetUserLanguage(pg.languageRadioGroup.Value)
 	}
 
 	select {
@@ -682,10 +650,4 @@ func (pg *settingsPage) updateSettingOptions() {
 		pg.currencyValue = "None"
 	}
 	pg.currencyRadioGroup.Value = pg.currencyValue
-
-	languageValue := pg.wal.ReadStringConfigValueForKey("app_language")
-	if languageValue == "" {
-		languageValue = values.DefaultLanguge
-	}
-	pg.languageRadioGroup.Value = languageValue
 }

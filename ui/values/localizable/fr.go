@@ -84,4 +84,6 @@ const FR = `
 "viewOnDcrdata" = "Voir sur dcrdata";
 "beepForNewBlocks" = "Beep pour les nouveaux blocs";
 "connectToSpecificPeer" = "Se connecter à un pair spécifique";
+"english" = "Anglais";
+"french" = "Français";
 `

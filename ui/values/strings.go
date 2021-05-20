@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	DefaultLanguge = localizable.ENGLISH
-	commentPrefix  = "/"
+	DefaultLangauge = localizable.ENGLISH
+	commentPrefix   = "/"
 )
 
 var rex = regexp.MustCompile(`(?m)("(?:\\.|[^"\\])*")\s*=\s*("(?:\\.|[^"\\])*")`) // "key"="value"
 var Languages = []string{localizable.ENGLISH, localizable.CHINESE, localizable.FRENCH}
-var UserLanguages = []string{DefaultLanguge} // order of preference
+var UserLanguages = []string{DefaultLangauge} // order of preference
 
 var languageStrings map[string]map[string]string
 
@@ -72,8 +72,8 @@ func hasLanguage(language string) bool {
 func SetUserLanguage(lang string) {
 	if hasLanguage(lang) {
 		languages := []string{lang}
-		if lang != DefaultLanguge {
-			languages = append(languages, DefaultLanguge)
+		if lang != DefaultLangauge {
+			languages = append(languages, DefaultLangauge)
 		}
 
 		UserLanguages = languages
@@ -218,4 +218,6 @@ const (
 	StrTickets                     = "tickets"
 	StrMore                        = "more"
 	StrOverview                    = "overview"
+	StrEnglish                     = "english"
+	StrFrench                      = "french"
 )
