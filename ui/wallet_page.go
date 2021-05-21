@@ -20,7 +20,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageWallet = "Wallet"
+const PageWallet = "Wallets"
 
 type menuItem struct {
 	text     string
