@@ -1117,7 +1117,6 @@ func (pg *sendPage) Handle(c pageCommon) {
 				pg.rightExchangeValue = "USD"
 			}
 		}
-
 		pg.calculateValues(c, true)
 	}
 
