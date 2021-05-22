@@ -17,9 +17,10 @@ import (
 
 // Dex represents the Dex UI. There should only be one.
 type Dex struct {
-	ops   op.Ops
-	theme *decredmaterial.Theme
-	dexc  *dex.Dex
+	ops      op.Ops
+	theme    *decredmaterial.Theme
+	dexc     *dex.Dex
+	userInfo *dex.User
 
 	current, previous string
 
@@ -50,9 +51,9 @@ func NewDexUI(dexc *dex.Dex, decredIcons map[string]image.Image, collection []te
 	}
 	d.ops = op.Ops{}
 	d.theme = theme
-
 	d.internalLog = internalLog
 
+	d.userInfo = new(dex.User)
 	d.current = PageMarkets
 	d.switchView = v
 	d.addPages(decredIcons)
@@ -97,7 +98,13 @@ func (d *Dex) unloaded(w *app.Window) {
 // Run runs main event handling and page rendering loop
 func (d *Dex) Run(shutdown chan int, w *app.Window) {
 	for {
-		select {}
+		select {
+		case e := <-d.dexc.Send:
+			if e.Err != nil {
+				log.Error(e.Err)
+			}
+			d.updateStates(e.Resp)
+		}
 	}
 }
 

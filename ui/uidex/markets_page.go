@@ -17,6 +17,17 @@ import (
 
 const PageMarkets = "MarketsPage"
 
+type navItem struct {
+	imageLeft  *widget.Image
+	imageRight *widget.Image
+	mkt        string
+}
+
+type drawerNav struct {
+	host     string
+	elements []navItem
+}
+
 type marketsPage struct {
 	dexc      *dex.Dex
 	theme     *decredmaterial.Theme
@@ -24,10 +35,11 @@ type marketsPage struct {
 	exchange  layout.List
 
 	supportedAsset      []*core.SupportedAsset
-	user                *core.User
+	user                **dex.User
 	defaultWalletConfig map[string]string
 	cert                string
 	certName            string
+	drawerNavItems      []*drawerNav
 
 	appPassword      decredmaterial.Editor
 	appPasswordAgain decredmaterial.Editor
@@ -43,7 +55,7 @@ type marketsPage struct {
 	addCertFile     decredmaterial.Button
 	addDexServer    decredmaterial.Button
 	register        decredmaterial.Button
-	toWallet        decredmaterial.Button
+	toWallet        decredmaterial.IconButton
 
 	isAppInitialized    bool
 	isLoggedIn          bool
@@ -57,36 +69,38 @@ type marketsPage struct {
 	responseGetDexChan  chan *core.Exchange
 }
 
-func (win *Dex) MarketsPage(common pageCommon) layout.Widget {
+func (d *Dex) MarketsPage(common pageCommon) layout.Widget {
 	pg := &marketsPage{
-		dexc:               win.dexc,
+		dexc:               d.dexc,
 		theme:              common.theme,
 		pageModal:          common.theme.Modal(),
 		exchange:           layout.List{Axis: layout.Vertical},
-		user:               new(core.User),
+		user:               &d.userInfo,
+		drawerNavItems:     make([]*drawerNav, 0),
 		errWalletChan:      make(chan error),
 		errInitappChan:     make(chan error),
 		errLoginChan:       make(chan error),
 		errRegisterChan:    make(chan error),
 		responseGetDexChan: make(chan *core.Exchange),
 
-		createPassword:  common.theme.Button(new(widget.Clickable), "Create password"),
-		login:           common.theme.Button(new(widget.Clickable), "Login"),
-		cancel:          common.theme.Button(new(widget.Clickable), "Cancel"),
-		createNewWallet: common.theme.Button(new(widget.Clickable), "Add"),
-		unlockWallet:    common.theme.Button(new(widget.Clickable), "Unlock"),
-		addCertFile:     common.theme.Button(new(widget.Clickable), "Add a file"),
-		addDexServer:    common.theme.Button(new(widget.Clickable), "Submit"),
-		register:        common.theme.Button(new(widget.Clickable), "Register"),
-		toWallet:        common.theme.Button(new(widget.Clickable), "To Wallet"),
+		createPassword:  d.theme.Button(new(widget.Clickable), "Create password"),
+		login:           d.theme.Button(new(widget.Clickable), "Login"),
+		cancel:          d.theme.Button(new(widget.Clickable), "Cancel"),
+		createNewWallet: d.theme.Button(new(widget.Clickable), "Add"),
+		unlockWallet:    d.theme.Button(new(widget.Clickable), "Unlock"),
+		addCertFile:     d.theme.Button(new(widget.Clickable), "Add a file"),
+		addDexServer:    d.theme.Button(new(widget.Clickable), "Submit"),
+		register:        d.theme.Button(new(widget.Clickable), "Register"),
+		toWallet:        d.theme.PlainIconButton(new(widget.Clickable), common.icons.cached),
 
-		appPassword:      win.theme.EditorPassword(new(widget.Editor), "Password"),
-		appPasswordAgain: win.theme.EditorPassword(new(widget.Editor), "Password Again"),
-		accountName:      win.theme.Editor(new(widget.Editor), "Account Name"),
-		walletPassword:   win.theme.EditorPassword(new(widget.Editor), "Wallet Password"),
-		dexServerAddress: win.theme.Editor(new(widget.Editor), "DEX Address"),
+		appPassword:      d.theme.EditorPassword(new(widget.Editor), "Password"),
+		appPasswordAgain: d.theme.EditorPassword(new(widget.Editor), "Password Again"),
+		accountName:      d.theme.Editor(new(widget.Editor), "Account Name"),
+		walletPassword:   d.theme.EditorPassword(new(widget.Editor), "Wallet Password"),
+		dexServerAddress: d.theme.Editor(new(widget.Editor), "DEX Address"),
 	}
 
+	pg.toWallet.Color = d.theme.Color.Black
 	pg.dexServerAddress.Editor.SetText("http://127.0.0.1:7232")
 
 	pg.appPassword.Editor.SetText("")
@@ -108,15 +122,29 @@ func (win *Dex) MarketsPage(common pageCommon) layout.Widget {
 
 func (pg *marketsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	dims := common.Layout(gtx, func(gtx C) D {
-		return pg.theme.Card().Layout(gtx, func(gtx C) D {
+		card := pg.theme.Card()
+		card.Radius = decredmaterial.CornerRadius{}
+		return card.Layout(gtx, func(gtx C) D {
 			gtx.Constraints.Min = gtx.Constraints.Max
-			return common.UniformPadding(gtx, func(gtx C) D {
-				return pg.marketsLayout(gtx, common)
-			})
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.navDrawerLayout(gtx, common)
+				}),
+				layout.Rigid(func(gtx C) D {
+					l := common.theme.Line(gtx.Constraints.Max.X, 1)
+					l.Color = common.theme.Color.Gray1
+					return l.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return common.UniformPadding(gtx, func(gtx C) D {
+						return pg.marketsLayout(gtx, common)
+					})
+				}),
+			)
 		})
 	})
 
-	// For testing purposes, will remove this
+	// TODO: For testing purposes, will remove this
 	if pg.hideAllModal {
 		return dims
 	}
@@ -129,17 +157,21 @@ func (pg *marketsPage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 		return pg.loginModal(gtx, common)
 	}
 
-	if len(pg.user.Exchanges) == 0 && pg.user.Initialized && pg.user.Assets[dex.DefaultAssert].Wallet == nil {
+	u := ((*pg.user).Info)
+	if len(u.Exchanges) == 0 && u.Initialized && u.Assets[dex.DefaultAssert].Wallet == nil {
 		return pg.createNewWalletModal(gtx, common)
 	}
 
-	if pg.user.Assets[dex.DefaultAssert] != nil &&
-		pg.user.Assets[dex.DefaultAssert].Wallet != nil &&
-		!pg.user.Assets[dex.DefaultAssert].Wallet.Open {
+	if u.Assets[dex.DefaultAssert] != nil &&
+		u.Assets[dex.DefaultAssert].Wallet != nil &&
+		!u.Assets[dex.DefaultAssert].Wallet.Open {
 		return pg.unlockWalletModal(gtx, common)
 	}
 
-	if len(pg.user.Exchanges) == 0 && pg.user.Assets[dex.DefaultAssert].Wallet.Open && !pg.showConfirmRegister {
+	if len(u.Exchanges) == 0 &&
+		u.Assets[dex.DefaultAssert] != nil &&
+		u.Assets[dex.DefaultAssert].Wallet.Open &&
+		!pg.showConfirmRegister {
 		return pg.addNewDexModal(gtx, common)
 	}
 
@@ -150,38 +182,81 @@ func (pg *marketsPage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 	return dims
 }
 
-func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.theme.H5("Dex page").Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			var list []*core.Exchange
-			for _, ex := range pg.user.Exchanges {
-				list = append(list, ex)
-			}
-			return pg.exchange.Layout(gtx, len(list), func(gtx layout.Context, i int) layout.Dimensions {
+const (
+	navDrawerWidth          = 120
+	navDrawerMinimizedWidth = 72
+)
+
+func (pg *marketsPage) navDrawerLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
+	width := navDrawerWidth
+	gtx.Constraints.Min.X = int(gtx.Metric.PxPerDp) * width
+
+	return layout.Stack{}.Layout(gtx,
+		layout.Stacked(func(gtx C) D {
+			list := layout.List{Axis: layout.Vertical}
+			inset := layout.Inset{Left: values.MarginPadding5}
+
+			return list.Layout(gtx, len(pg.drawerNavItems), func(gtx C, i int) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Bottom: values.MarginPadding30}.Layout(gtx, func(gtx C) D {
-							return pg.theme.Label(values.TextSize16, list[i].Host).Layout(gtx)
+						txt := pg.theme.Label(values.TextSize14, pg.drawerNavItems[i].host)
+						return inset.Layout(gtx, func(gtx C) D {
+							return txt.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						var elements []layout.FlexChild
-						for _, mkt := range list[i].Markets {
-							t := strings.Join(strings.Split(mkt.Name, "_"), "-")
-							elements = append(elements, layout.Rigid(func(gtx C) D {
-								return pg.theme.Label(values.TextSize16, strings.ToUpper(t)).Layout(gtx)
-							}))
-						}
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx, elements...)
+						listMkt := layout.List{Axis: layout.Vertical}
+
+						return listMkt.Layout(gtx, len(pg.drawerNavItems[i].elements), func(gtx C, mktIndex int) D {
+							element := pg.drawerNavItems[i].elements[mktIndex]
+
+							return decredmaterial.Clickable(gtx, new(widget.Clickable), func(gtx C) D {
+								return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												img := element.imageLeft
+												img.Scale = 0.11
+												return inset.Layout(gtx, func(gtx C) D {
+													return img.Layout(gtx)
+												})
+											}),
+											layout.Rigid(func(gtx C) D {
+												img := element.imageRight
+												img.Scale = 0.11
+												return inset.Layout(gtx, func(gtx C) D {
+													return img.Layout(gtx)
+												})
+											}),
+										)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return inset.Layout(gtx, func(gtx C) D {
+											t := strings.Join(strings.Split(element.mkt, "_"), "-")
+											txt := pg.theme.Label(values.TextSize16, t)
+											return txt.Layout(gtx)
+										})
+									}),
+								)
+							})
+						})
 					}),
 				)
 			})
 		}),
+		layout.Stacked(func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return layout.SE.Layout(gtx, func(gtx C) D {
+				return pg.toWallet.Layout(gtx)
+			})
+		}),
+	)
+}
+
+func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return pg.toWallet.Layout(gtx)
+			return pg.theme.H5("Dex page").Layout(gtx)
 		}),
 	)
 }
@@ -329,7 +404,29 @@ func (pg *marketsPage) confirmRegisterModal(gtx layout.Context, c pageCommon) la
 	}, 900)
 }
 
+func (pg *marketsPage) initDrawerNavItems(c *pageCommon) {
+	if len(pg.drawerNavItems) == len((*pg.user).Info.Exchanges) {
+		return
+	}
+
+	pg.drawerNavItems = make([]*drawerNav, 0)
+	for h, ex := range (*pg.user).Info.Exchanges {
+		dn := &drawerNav{host: h}
+		for mkt := range ex.Markets {
+			dn.elements = append(dn.elements, navItem{
+				imageLeft:  c.icons.btc,
+				imageRight: c.icons.dcr,
+				mkt:        mkt,
+			})
+		}
+
+		pg.drawerNavItems = append(pg.drawerNavItems, dn)
+	}
+}
+
 func (pg *marketsPage) handle(common pageCommon) {
+	pg.initDrawerNavItems(&common)
+
 	if pg.createPassword.Button.Clicked() {
 		if pg.appPasswordAgain.Editor.Text() != pg.appPassword.Editor.Text() {
 			return
@@ -344,7 +441,8 @@ func (pg *marketsPage) handle(common pageCommon) {
 
 	if pg.createNewWallet.Button.Clicked() {
 		config := pg.defaultWalletConfig
-		for assetID, supportedAsset := range pg.user.Assets {
+
+		for assetID, supportedAsset := range (*pg.user).Info.Assets {
 			if assetID == dex.DefaultAssert {
 				for _, cfgOpt := range supportedAsset.Info.ConfigOpts {
 					if key := cfgOpt.Key; key == "fallbackfee" ||
@@ -373,7 +471,7 @@ func (pg *marketsPage) handle(common pageCommon) {
 
 	if pg.unlockWallet.Button.Clicked() {
 		pg.dexc.UnlockWallet(dex.DefaultAssert, []byte(pg.appPassword.Editor.Text()))
-		pg.user = pg.dexc.GetUser()
+		pg.dexc.GetUser()
 	}
 
 	if pg.addCertFile.Button.Clicked() {
@@ -408,6 +506,12 @@ func (pg *marketsPage) handle(common pageCommon) {
 		pg.hideAllModal = true
 	}
 
+	// for i := range pg.drawerNavItems {
+	// 	for pg.drawerNavItems[i].clickable.Clicked() {
+	// 		log.Info("Switch market...")
+	// 	}
+	// }
+
 	select {
 	case err := <-pg.errInitappChan:
 		if err != nil {
@@ -417,14 +521,14 @@ func (pg *marketsPage) handle(common pageCommon) {
 		pg.isAppInitialized = true
 		pg.appPassword.Editor.SetText("")
 		pg.isLoggedIn = true
-		pg.user = pg.dexc.GetUser()
+		pg.dexc.GetUser()
 		pg.defaultWalletConfig = pg.dexc.GetDefaultWalletConfig()
 	case err := <-pg.errLoginChan:
 		if err != nil {
 			common.notify(err.Error(), false)
 			return
 		}
-		pg.user = pg.dexc.GetUser()
+		pg.dexc.GetUser()
 		pg.isLoggedIn = true
 		df := pg.dexc.GetDefaultWalletConfig()
 		pg.defaultWalletConfig = df
@@ -435,7 +539,7 @@ func (pg *marketsPage) handle(common pageCommon) {
 			common.notify(err.Error(), false)
 			return
 		}
-		pg.user = pg.dexc.GetUser()
+		pg.dexc.GetUser()
 	case resp := <-pg.responseGetDexChan:
 		pg.responseGetDex = resp
 		pg.showConfirmRegister = true
@@ -446,7 +550,7 @@ func (pg *marketsPage) handle(common pageCommon) {
 			return
 		}
 		pg.showConfirmRegister = false
-		pg.user = pg.dexc.GetUser()
+		pg.dexc.GetUser()
 		pg.appPassword.Editor.SetText("")
 	default:
 	}

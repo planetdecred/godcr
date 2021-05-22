@@ -17,13 +17,21 @@ import (
 
 type Dex struct {
 	core *core.Core
+	Send chan Response
+	Net  string
 }
 
 const DefaultAssert = 42
 
-func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dex, error) {
+func NewDex(debugLevel string, dbPath, net string, send chan Response, w io.Writer) (*Dex, error) {
 	logMaker := initLogging(debugLevel, true, w)
 	log = logMaker.Logger("DEXC")
+
+	_, err := dex.NetFromString(net)
+	if err != nil {
+		log.Error(err)
+		// return nil, err
+	}
 
 	// Prepare the Core.
 	clientCore, err := core.New(&core.Config{
@@ -39,7 +47,11 @@ func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dex, error) {
 		return nil, err
 	}
 
-	return &Dex{clientCore}, nil
+	return &Dex{
+		core: clientCore,
+		Send: send,
+		Net:  net,
+	}, nil
 }
 
 func (d *Dex) Run(appCtx context.Context, cancel context.CancelFunc) {
@@ -51,4 +63,6 @@ func (d *Dex) Run(appCtx context.Context, cancel context.CancelFunc) {
 		cancel() // in the event that Run returns prematurely prior to context cancellation
 	}()
 	<-d.core.Ready()
+
+	d.GetUser()
 }

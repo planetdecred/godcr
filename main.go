@@ -56,7 +56,7 @@ func main() {
 	}()
 
 	dbPath := filepath.Join(cfg.HomeDir, cfg.Network, "dexc.db")
-	dexc, err := dex.NewDex(cfg.DebugLevel, dbPath, cfg.Network, logWriter{})
+	dexc, err := dex.NewDex(cfg.DebugLevel, dbPath, cfg.Network, make(chan dex.Response, 3), logWriter{})
 	if err != nil {
 		fmt.Printf("error creating Dex: %s", err)
 		return

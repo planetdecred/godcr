@@ -35,7 +35,7 @@ type UI struct {
 // Should never be called more than once as it calls
 func NewUI(w *app.Window, wal *wallet.Wallet, dexc *dex.Dex, internalLog chan string) (*UI, error) {
 	ui := &UI{
-		view: 0,
+		view: 1,
 	}
 
 	absoluteWdPath, err := getAbsoultePath()

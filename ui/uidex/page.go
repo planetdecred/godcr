@@ -8,6 +8,7 @@ import (
 
 	"gioui.org/io/key"
 	"gioui.org/layout"
+	"gioui.org/op/paint"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -20,6 +21,8 @@ type pageIcons struct {
 	contentAdd, navigationCheck, navigationMore, actionCheckCircle, actionInfo, navigationArrowBack,
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
 	imageBrightness1, contentClear, dropDownIcon, cached *widget.Icon
+
+	logo, btc, dcr, ltc, bch *widget.Image
 }
 
 type navHandler struct {
@@ -29,22 +32,15 @@ type navHandler struct {
 	page          string
 }
 type pageCommon struct {
-	printer    *message.Printer
-	theme      *decredmaterial.Theme
-	icons      pageIcons
-	page       *string
-	returnPage *string
-	navTab     *decredmaterial.Tabs
-	keyEvents  chan *key.Event
-	// states          *states
-	modal *decredmaterial.Modal
-
-	appBarNavItems          []navHandler
-	drawerNavItems          []navHandler
-	isNavDrawerMinimized    *bool
-	minimizeNavDrawerButton decredmaterial.IconButton
-	maximizeNavDrawerButton decredmaterial.IconButton
-	testButton              decredmaterial.Button
+	printer        *message.Printer
+	theme          *decredmaterial.Theme
+	icons          pageIcons
+	page           *string
+	returnPage     *string
+	navTab         *decredmaterial.Tabs
+	keyEvents      chan *key.Event
+	modal          *decredmaterial.Modal
+	appBarNavItems []navHandler
 
 	changePage    func(string)
 	setReturnPage func(string)
@@ -74,31 +70,27 @@ func (d *Dex) addPages(decredIcons map[string]image.Image) {
 		navMoreIcon:            utils.MustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		dropDownIcon:           utils.MustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		cached:                 utils.MustIcon(widget.NewIcon(icons.ActionCached)),
+
+		logo: &widget.Image{Src: paint.NewImageOp(decredIcons["favicon"])},
+		btc:  &widget.Image{Src: paint.NewImageOp(decredIcons["btc"])},
+		dcr:  &widget.Image{Src: paint.NewImageOp(decredIcons["dcr"])},
+		bch:  &widget.Image{Src: paint.NewImageOp(decredIcons["bch"])},
+		ltc:  &widget.Image{Src: paint.NewImageOp(decredIcons["ltc"])},
 	}
 
 	common := pageCommon{
-		printer:                 message.NewPrinter(language.English),
-		theme:                   d.theme,
-		icons:                   ic,
-		returnPage:              &d.previous,
-		page:                    &d.current,
-		minimizeNavDrawerButton: d.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		maximizeNavDrawerButton: d.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
-		modal:                   d.theme.Modal(),
-		changePage:              d.changePage,
-		setReturnPage:           d.setReturnPage,
-		refreshWindow:           d.refresh,
+		printer:       message.NewPrinter(language.English),
+		theme:         d.theme,
+		icons:         ic,
+		returnPage:    &d.previous,
+		page:          &d.current,
+		modal:         d.theme.Modal(),
+		changePage:    d.changePage,
+		setReturnPage: d.setReturnPage,
+		refreshWindow: d.refresh,
 
 		switchView: d.switchView,
 	}
-
-	iconColor := common.theme.Color.Gray3
-
-	common.testButton = d.theme.Button(new(widget.Clickable), "test button")
-	isNavDrawerMinimized := false
-	common.isNavDrawerMinimized = &isNavDrawerMinimized
-
-	common.minimizeNavDrawerButton.Color, common.maximizeNavDrawerButton.Color = iconColor, iconColor
 
 	d.pages = make(map[string]layout.Widget)
 	d.pages[PageMarkets] = d.MarketsPage(common)
@@ -115,12 +107,13 @@ func (page pageCommon) notify(text string, success bool) {
 func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			// fill the entire window with a color if a user has no wallet created
-			return decredmaterial.Fill(gtx, page.theme.Color.Surface)
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(page.layoutTopBar),
+				layout.Rigid(body),
+			)
 		}),
 		layout.Stacked(func(gtx C) D {
-			// stack the page content on the entire window if a user has no wallet
-			return body(gtx)
+			return layout.Dimensions{}
 		}),
 	)
 }

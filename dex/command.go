@@ -5,15 +5,7 @@ import (
 	"fmt"
 
 	"decred.org/dcrdex/client/core"
-	"decred.org/dcrdex/dex/encode"
 )
-
-type NewWalletForm struct {
-	AssetID uint32
-	Config  map[string]string
-	Pass    encode.PassBytes
-	AppPW   encode.PassBytes
-}
 
 func (d *Dex) InitializeClient(apppasswd string, errChan chan error) {
 	go func() {
@@ -41,12 +33,18 @@ func (d *Dex) IsInitialized() bool {
 	if err != nil {
 		log.Error(err)
 	}
+
 	return ok
 }
 
-func (d *Dex) GetUser() *core.User {
-	u := d.core.User()
-	return u
+func (d *Dex) GetUser() {
+	go func() {
+		var resp Response
+		resp.Resp = User{
+			Info: *d.core.User(),
+		}
+		d.Send <- resp
+	}()
 }
 
 func (d *Dex) GetDefaultWalletConfig() map[string]string {
@@ -59,11 +57,13 @@ func (d *Dex) GetDefaultWalletConfig() map[string]string {
 
 func (d *Dex) UnlockWallet(assetID uint32, appPW []byte) error {
 	status := d.core.WalletState(assetID)
+	log.Info(status)
 	if status == nil {
 		return errors.New(fmt.Sprintf("No wallet for %d", assetID))
 	}
 
 	err := d.core.OpenWallet(assetID, appPW)
+	log.Info(err)
 	if err != nil {
 		return errors.New(fmt.Sprintf("error unlocking %s wallet: %v", assetID, err))
 	}
