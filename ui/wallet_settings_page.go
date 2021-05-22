@@ -176,6 +176,14 @@ func (pg *walletSettingsPage) bottomSectionLabel(title string) layout.Widget {
 	}
 }
 
+func (pg *walletSettingsPage) resetSelectedWallet(common pageCommon) {
+	common.wallAcctSelector.selectedSendWallet = 0
+	common.wallAcctSelector.selectedSendAccount = 0
+
+	common.wallAcctSelector.selectedReceiveWallet = 0
+	common.wallAcctSelector.selectedReceiveAccount = 0
+}
+
 func (pg *walletSettingsPage) handle(common pageCommon) {
 	for pg.changePass.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
@@ -241,6 +249,7 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 							title:    "Confirm to remove",
 							confirm: func(pass string) {
 								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
+								pg.resetSelectedWallet(common)
 							},
 							confirmText: "Confirm",
 							cancel:      common.closeModal,
