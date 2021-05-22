@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gioui.org/font/gofont"
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -51,6 +52,9 @@ type ModalTemplate struct {
 	cancel                decredmaterial.Button
 	alert                 *widget.Icon
 	passwordStrength      decredmaterial.ProgressBarStyle
+	keyEvent              chan *key.Event
+	refreshWindow         func()
+	confirmKeyPressed     bool
 }
 
 type modalLoad struct {
@@ -95,6 +99,8 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 		extendedPublicKey:     extendedPublicKey,
 		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
 		passwordStrength:      win.theme.ProgressBar(0),
+		keyEvent:              win.keyEvents,
+		refreshWindow:         win.refresh,
 	}
 }
 
@@ -683,15 +689,11 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.unlockWalletRestore()
 		return
 	case SendInfoTemplate:
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
+		m.handleButtonEvents(load)
 		template = m.sendInfo()
 		return
 	case ReceiveInfoTemplate:
-		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
-		}
+		m.handleButtonEvents(load)
 		template = m.receiveInfo()
 		return
 	case TransactionDetailsInfoTemplate:
@@ -704,12 +706,26 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 }
 
 func (m *ModalTemplate) handleButtonEvents(load *modalLoad) {
-	if m.confirm.Button.Clicked() {
+	m.handleConfirmEvent()
+	if m.confirm.Button.Clicked() || m.confirmKeyPressed {
+		m.confirmKeyPressed = false
 		load.confirm.(func())()
 	}
 
 	if m.cancel.Button.Clicked() {
 		load.cancel.(func())()
+	}
+	m.refreshWindow()
+}
+
+func (m *ModalTemplate) handleConfirmEvent() {
+	select {
+	case evt := <-m.keyEvent:
+		if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && evt.State == key.Press {
+			m.confirmKeyPressed = true
+			return
+		}
+	default:
 	}
 }
 
