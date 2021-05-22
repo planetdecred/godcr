@@ -37,14 +37,19 @@ func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout
 	})
 }
 
-// Timer implements the standard time.AfterFunc. It only creates a new time.Timer when toast.timer is nil.
+// Timer is only creates a new time.Timer when toast.timer is nil.
 // Gio re-renders its UI recursively and Timer prevents multiple time.Timer from being created before the duration is
 // exceeded.
 func (n *toast) Timer(d time.Duration, f func()) {
-	if n.timer != nil {
-		return
+	if n.timer == nil {
+		n.timer = time.NewTimer(d)
 	}
-	n.timer = time.AfterFunc(d, f)
+
+	select {
+	case <-n.timer.C:
+		f()
+	default:
+	}
 }
 
 func (n *toast) ResetTimer() {

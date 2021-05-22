@@ -113,8 +113,8 @@ type pageCommon struct {
 	walletTabs      *decredmaterial.Tabs
 	accountTabs     *decredmaterial.Tabs
 	keyEvents       chan *key.Event
-	toast           chan *toast
-	toastLoad       *toast
+	toasts          *[]*toast
+	toastList       layout.List
 	states          *states
 	modal           *decredmaterial.Modal
 	modalReceiver   chan *modalLoad
@@ -286,8 +286,6 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		walletTabs:              win.walletTabs,
 		accountTabs:             win.accountTabs,
 		keyEvents:               win.keyEvents,
-		toast:                   win.toast,
-		toastLoad:               &toast{},
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,
 		drawerNavItems:          drawerNavItems,
@@ -302,8 +300,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		changePage:              win.changePage,
 		setReturnPage:           win.setReturnPage,
 		refreshWindow:           win.refresh,
+		toastList:               layout.List{Axis: layout.Vertical},
 	}
 
+	toasts := make([]*toast, 0)
+	common.toasts = &toasts
 	common.fetchExchangeValue(&common.dcrUsdtBittrex)
 
 	common.wallAcctSelector = &walletAccountSelector{
@@ -399,12 +400,10 @@ func (page pageCommon) refreshPage() {
 }
 
 func (page pageCommon) notify(text string, success bool) {
-	go func() {
-		page.toast <- &toast{
-			text:    text,
-			success: success,
-		}
-	}()
+	*page.toasts = append(*page.toasts, &toast{
+		text:    text,
+		success: success,
+	})
 }
 
 func (page pageCommon) closeModal() {
@@ -477,37 +476,27 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global toasts. Stack toast on all pages and contents
-			t := func(n *toast) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Flexed(1, func(gtx C) D {
-						return layout.Center.Layout(gtx, func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding65}.Layout(gtx, func(gtx C) D {
-								return displayToast(page.theme, gtx, n)
+			if len(*page.toasts) == 0 {
+				return layout.Dimensions{}
+			}
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return page.toastList.Layout(gtx, len(*page.toasts), func(gtx C, index int) D {
+					t := func(n *toast) layout.Dimensions {
+						inset := layout.Inset{Top: values.MarginPadding20}
+						if index == 0 {
+							inset.Top = values.MarginPadding65
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							(*page.toasts)[index].Timer(time.Second*3, func() {
+								*page.toasts = (*page.toasts)[1:]
 							})
+							return displayToast(page.theme, gtx, n)
 						})
-					}),
-				)
-			}
-
-		outer:
-			for {
-				select {
-				case n := <-page.toast:
-					page.toastLoad.success = n.success
-					page.toastLoad.text = n.text
-					page.toastLoad.ResetTimer()
-				default:
-					break outer
-				}
-			}
-
-			if page.toastLoad.text != "" {
-				page.toastLoad.Timer(time.Second*3, func() {
-					page.toastLoad.text = ""
+					}
+					return t((*page.toasts)[index])
 				})
-				return t(page.toastLoad)
-			}
-			return layout.Dimensions{}
+			})
 		}),
 		layout.Stacked(func(gtx C) D {
 			if page.wallAcctSelector.isWalletAccountModalOpen {
