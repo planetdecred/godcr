@@ -430,12 +430,6 @@ func (pg *marketsPage) handle(common pageCommon) {
 		pg.defaultWalletConfig = df
 		pg.appPassword.Editor.SetText("")
 
-		log.Info("df.password", df["password"])
-		log.Info("df.rpccert", df["rpccert"])
-		log.Info("df.rpckey", df["rpckey"])
-		log.Info("df.rpclisten", df["rpclisten"])
-		log.Info("df.username", df["username"])
-
 	case err := <-pg.errWalletChan:
 		if err != nil {
 			common.notify(err.Error(), false)
