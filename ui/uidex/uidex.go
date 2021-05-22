@@ -53,7 +53,7 @@ func NewDexUI(dexc *dex.Dex, decredIcons map[string]image.Image, collection []te
 
 	d.internalLog = internalLog
 
-	d.current = PageDex
+	d.current = PageMarkets
 	d.switchView = v
 	d.addPages(decredIcons)
 

@@ -15,9 +15,9 @@ import (
 	"github.com/sqweek/dialog"
 )
 
-const PageDex = "Dex"
+const PageMarkets = "MarketsPage"
 
-type dexPage struct {
+type marketsPage struct {
 	dexc      *dex.Dex
 	theme     *decredmaterial.Theme
 	pageModal *decredmaterial.Modal
@@ -57,8 +57,8 @@ type dexPage struct {
 	responseGetDexChan  chan *core.Exchange
 }
 
-func (win *Dex) DexPage(common pageCommon) layout.Widget {
-	pg := &dexPage{
+func (win *Dex) MarketsPage(common pageCommon) layout.Widget {
+	pg := &marketsPage{
 		dexc:               win.dexc,
 		theme:              common.theme,
 		pageModal:          common.theme.Modal(),
@@ -106,14 +106,12 @@ func (win *Dex) DexPage(common pageCommon) layout.Widget {
 	}
 }
 
-func (pg *dexPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *marketsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	dims := common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, func(gtx C) D {
-			return pg.theme.Card().Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min = gtx.Constraints.Max
-				return common.UniformPadding(gtx, func(gtx C) D {
-					return pg.marketsLayout(gtx, common)
-				})
+		return pg.theme.Card().Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min = gtx.Constraints.Max
+			return common.UniformPadding(gtx, func(gtx C) D {
+				return pg.marketsLayout(gtx, common)
 			})
 		})
 	})
@@ -152,7 +150,7 @@ func (pg *dexPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensio
 	return dims
 }
 
-func (pg *dexPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return pg.theme.H5("Dex page").Layout(gtx)
@@ -188,7 +186,7 @@ func (pg *dexPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Dimens
 	)
 }
 
-func (pg *dexPage) initAppPasswordModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *marketsPage) initAppPasswordModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return pg.pageModal.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
 			return pg.theme.Label(values.TextSize20, "Set App Password").Layout(gtx)
@@ -216,7 +214,7 @@ func (pg *dexPage) initAppPasswordModal(gtx layout.Context, c pageCommon) layout
 	}, 900)
 }
 
-func (pg *dexPage) loginModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *marketsPage) loginModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return pg.pageModal.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
 			return pg.theme.Label(values.TextSize20, "Login").Layout(gtx)
@@ -235,7 +233,7 @@ func (pg *dexPage) loginModal(gtx layout.Context, c pageCommon) layout.Dimension
 	}, 900)
 }
 
-func (pg *dexPage) createNewWalletModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *marketsPage) createNewWalletModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return pg.pageModal.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
 			return pg.theme.Label(values.TextSize20, "Add a decred wallet").Layout(gtx)
@@ -268,7 +266,7 @@ func (pg *dexPage) createNewWalletModal(gtx layout.Context, c pageCommon) layout
 	}, 900)
 }
 
-func (pg *dexPage) unlockWalletModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *marketsPage) unlockWalletModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return pg.pageModal.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
 			return pg.theme.Label(values.TextSize20, "Unlock wallet").Layout(gtx)
@@ -284,7 +282,7 @@ func (pg *dexPage) unlockWalletModal(gtx layout.Context, c pageCommon) layout.Di
 	}, 900)
 }
 
-func (pg *dexPage) addNewDexModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *marketsPage) addNewDexModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return pg.pageModal.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
 			return pg.theme.Label(values.TextSize20, "Add a dex").Layout(gtx)
@@ -309,7 +307,7 @@ func (pg *dexPage) addNewDexModal(gtx layout.Context, c pageCommon) layout.Dimen
 	}, 900)
 }
 
-func (pg *dexPage) confirmRegisterModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *marketsPage) confirmRegisterModal(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return pg.pageModal.Layout(gtx, []func(gtx C) D{
 		func(gtx C) D {
 			return pg.theme.Label(values.TextSize20, "Confirm Registration").Layout(gtx)
@@ -331,7 +329,7 @@ func (pg *dexPage) confirmRegisterModal(gtx layout.Context, c pageCommon) layout
 	}, 900)
 }
 
-func (pg *dexPage) handle(common pageCommon) {
+func (pg *marketsPage) handle(common pageCommon) {
 	if pg.createPassword.Button.Clicked() {
 		if pg.appPasswordAgain.Editor.Text() != pg.appPassword.Editor.Text() {
 			return

@@ -86,10 +86,7 @@ type pageCommon struct {
 	amountDCRtoUSD  float64
 	usdExchangeRate float64
 	usdExchangeSet  bool
-	dcrUsdtBittrex  DCRUSDTBittrex
 	navTab          *decredmaterial.Tabs
-	walletTabs      *decredmaterial.Tabs
-	accountTabs     *decredmaterial.Tabs
 	keyEvents       chan *key.Event
 	clipboard       chan interface{}
 	toast           chan *toast
@@ -162,8 +159,6 @@ func (d *Dex) addPages(decredIcons map[string]image.Image) {
 		switchView: d.switchView,
 	}
 
-	common.fetchExchangeValue(&common.dcrUsdtBittrex)
-
 	iconColor := common.theme.Color.Gray3
 
 	common.testButton = d.theme.Button(new(widget.Clickable), "test button")
@@ -180,7 +175,7 @@ func (d *Dex) addPages(decredIcons map[string]image.Image) {
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
 	d.pages = make(map[string]layout.Widget)
-	d.pages[PageDex] = d.DexPage(common)
+	d.pages[PageMarkets] = d.MarketsPage(common)
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {
