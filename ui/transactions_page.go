@@ -28,16 +28,15 @@ type transactionWdg struct {
 }
 
 type transactionsPage struct {
-	container                     layout.Flex
-	txsList                       layout.List
-	walletTransactions            **wallet.Transactions
-	walletTransaction             **wallet.Transaction
-	filterSorter                  int
-	filterSortW, filterDirectionW *widget.Enum
-	filterDirection, filterSort   []decredmaterial.RadioButton
-	toTxnDetails                  []*gesture.Click
-	separator                     decredmaterial.Line
-	theme                         *decredmaterial.Theme
+	container                   layout.Flex
+	txsList                     layout.List
+	walletTransactions          **wallet.Transactions
+	walletTransaction           **wallet.Transaction
+	filterSorter                int
+	filterDirection, filterSort []decredmaterial.RadioButton
+	toTxnDetails                []*gesture.Click
+	separator                   decredmaterial.Line
+	theme                       *decredmaterial.Theme
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown

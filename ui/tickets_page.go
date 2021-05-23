@@ -476,7 +476,7 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 											return ic.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return c.layoutBalance(gtx, "16.5112316")
+											return c.layoutBalance(gtx, "16.5112316", false)
 										}),
 									)
 								}),
@@ -503,7 +503,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-									return c.layoutBalance(gtx, pg.ticketPrice)
+									return c.layoutBalance(gtx, pg.ticketPrice, true)
 								})
 							}),
 						)

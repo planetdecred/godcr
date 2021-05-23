@@ -167,6 +167,7 @@ func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *page
 func (pg *acctDetailsPage) acctBalLayout(gtx layout.Context, balType string, mainBalance, subBalance string, isFirst bool) layout.Dimensions {
 	mainLabel := pg.theme.Body1(mainBalance)
 	subLabel := pg.theme.Caption(subBalance)
+	subLabel.Color = pg.theme.Color.DeepBlue
 	marginTop := values.MarginPadding16
 	marginLeft := values.MarginPadding35
 	if isFirst {
