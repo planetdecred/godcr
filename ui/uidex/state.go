@@ -38,6 +38,7 @@ func (d *Dex) updateStates(update interface{}) {
 				break
 			}
 		}
+		d.refresh()
 		return
 	}
 }

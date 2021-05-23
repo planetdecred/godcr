@@ -65,15 +65,14 @@ type marketsPage struct {
 	walletPassword   decredmaterial.Editor
 	dexServerAddress decredmaterial.Editor
 
-	createPassword   decredmaterial.Button
-	createNewWallet  decredmaterial.Button
-	unlockWallet     decredmaterial.Button
-	login            decredmaterial.Button
-	addCertFile      decredmaterial.Button
-	addDexServer     decredmaterial.Button
-	register         decredmaterial.Button
-	choseAssetUnlock decredmaterial.IconButton
-	toWallet         decredmaterial.IconButton
+	createPassword  decredmaterial.Button
+	createNewWallet decredmaterial.Button
+	unlockWallet    decredmaterial.Button
+	login           decredmaterial.Button
+	addCertFile     decredmaterial.Button
+	addDexServer    decredmaterial.Button
+	register        decredmaterial.Button
+	toWallet        decredmaterial.IconButton
 
 	isLoggedIn          bool
 	showAddWallet       bool
@@ -107,15 +106,14 @@ func (d *Dex) MarketsPage(common pageCommon) layout.Widget {
 		errUnlockWallChan:   make(chan error),
 		responseGetDexChan:  make(chan *core.Exchange),
 
-		createPassword:   d.theme.Button(new(widget.Clickable), "Create password"),
-		login:            d.theme.Button(new(widget.Clickable), "Login"),
-		createNewWallet:  d.theme.Button(new(widget.Clickable), "Add"),
-		unlockWallet:     d.theme.Button(new(widget.Clickable), "Unlock"),
-		addCertFile:      d.theme.Button(new(widget.Clickable), "Add a file"),
-		addDexServer:     d.theme.Button(new(widget.Clickable), "Submit"),
-		register:         d.theme.Button(new(widget.Clickable), "Register"),
-		toWallet:         d.theme.PlainIconButton(new(widget.Clickable), common.icons.cached),
-		choseAssetUnlock: d.theme.PlainIconButton(new(widget.Clickable), common.icons.lock),
+		createPassword:  d.theme.Button(new(widget.Clickable), "Create password"),
+		login:           d.theme.Button(new(widget.Clickable), "Login"),
+		createNewWallet: d.theme.Button(new(widget.Clickable), "Add"),
+		unlockWallet:    d.theme.Button(new(widget.Clickable), "Unlock"),
+		addCertFile:     d.theme.Button(new(widget.Clickable), "Add a file"),
+		addDexServer:    d.theme.Button(new(widget.Clickable), "Submit"),
+		register:        d.theme.Button(new(widget.Clickable), "Register"),
+		toWallet:        d.theme.PlainIconButton(new(widget.Clickable), common.icons.cached),
 
 		appPassword:      d.theme.EditorPassword(new(widget.Editor), "Password"),
 		appPasswordAgain: d.theme.EditorPassword(new(widget.Editor), "Password Again"),
@@ -134,7 +132,6 @@ func (d *Dex) MarketsPage(common pageCommon) layout.Widget {
 
 	iconColor := common.theme.Color.Gray3
 	pg.toWallet.Color = iconColor
-	pg.choseAssetUnlock.Color = iconColor
 
 	pg.dexServerAddress.Editor.SetText("http://127.0.0.1:7232")
 
@@ -313,7 +310,11 @@ func (pg *marketsPage) navDrawerLayout(gtx layout.Context, c pageCommon) layout.
 func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return pg.theme.H5("Dex page").Layout(gtx)
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			gtx.Constraints.Min.Y = 220
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return pg.theme.H5("1.00").Layout(gtx)
+			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			return c.UniformPadding(gtx, func(gtx C) D {
@@ -329,71 +330,90 @@ func (pg *marketsPage) marketBalancesLayout(gtx layout.Context, c *pageCommon) l
 
 	return border.Layout(gtx, func(gtx C) D {
 		u := (*pg.user).Info
+		gutter := func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
+		}
+		insetHoriz := layout.Inset{Left: values.MarginPadding8, Right: values.MarginPadding8}
+		var lineHeight int
 
-		col := func(gtx layout.Context, ic *widget.Image, market string, wallState *core.WalletState) layout.Dimensions {
+		col := func(gtx layout.Context, ic *widget.Image, market string, wallState *core.WalletState) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Alignment: layout.Baseline, Spacing: layout.SpaceBetween}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										return ic.Layout(gtx)
-									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									txt := pg.theme.Label(values.TextSize16, strings.ToUpper(market))
-									return txt.Layout(gtx)
-								}),
-							)
-						}),
-						layout.Rigid(func(gtx C) D {
-							if wallState == nil {
-								return layout.Dimensions{}
-							}
-							var ic *widget.Icon
-							if wallState.Open {
-								ic = c.icons.lockOpen
-								ic.Color = pg.theme.Color.Success
-							} else {
-								ic = c.icons.lock
-								pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-								pg.walletActionWidgets[market].evt.Add(gtx.Ops)
-								pg.unlockWalletHandler(gtx, pg.walletActionWidgets[market])
-							}
-							return ic.Layout(gtx, values.MarginPadding15)
-						}),
-					)
+					return insetHoriz.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Alignment: layout.Baseline, Spacing: layout.SpaceBetween}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+											return ic.Layout(gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										txt := pg.theme.Label(values.TextSize16, strings.ToUpper(market))
+										return txt.Layout(gtx)
+									}),
+								)
+							}),
+							layout.Rigid(func(gtx C) D {
+								if wallState == nil {
+									return layout.Dimensions{}
+								}
+								var ic *widget.Icon
+
+								if wallState.Open {
+									ic = c.icons.lockOpen
+									ic.Color = pg.theme.Color.Success
+								} else {
+									ic = c.icons.lock
+									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+									pg.walletActionWidgets[market].evt.Add(gtx.Ops)
+									pg.unlockWalletHandler(gtx, pg.walletActionWidgets[market])
+								}
+
+								return ic.Layout(gtx, values.MarginPadding15)
+							}),
+						)
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					if wallState == nil {
-						b := widget.Border{Color: c.theme.Color.Gray1, CornerRadius: values.MarginPadding8, Width: values.MarginPadding1}
-						gtx.Constraints.Max.X = 120
-						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-						pg.walletActionWidgets[market].evt.Add(gtx.Ops)
-						pg.addWalletHandler(gtx, pg.walletActionWidgets[market])
-						return b.Layout(gtx, func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-								return pg.theme.
-									Label(values.TextSize14, fmt.Sprintf("Add a %s wallet", strings.ToUpper(market))).
-									Layout(gtx)
+					l := pg.theme.Line(1, gtx.Constraints.Max.X)
+					l.Color = pg.theme.Color.Gray1
+					return l.Layout(gtx)
+				}),
+				layout.Rigid(gutter),
+				layout.Rigid(func(gtx C) D {
+					return insetHoriz.Layout(gtx, func(gtx C) D {
+						if wallState == nil {
+							b := widget.Border{Color: c.theme.Color.Gray1, CornerRadius: values.MarginPadding8, Width: values.MarginPadding1}
+							gtx.Constraints.Max.X = 120
+							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+							pg.walletActionWidgets[market].evt.Add(gtx.Ops)
+							pg.addWalletHandler(gtx, pg.walletActionWidgets[market])
+							return b.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+									return pg.theme.
+										Label(values.TextSize14, fmt.Sprintf("Add a %s wallet", strings.ToUpper(market))).
+										Layout(gtx)
+								})
 							})
-						})
-					}
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							bal := dcrutil.Amount(wallState.Balance.Available).ToCoin()
-							return pg.theme.Label(values.TextSize14, fmt.Sprintf("%v", bal)).Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							bal := dcrutil.Amount(wallState.Balance.Locked).ToCoin()
-							return pg.theme.Label(values.TextSize14, fmt.Sprintf("%v", bal)).Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							bal := dcrutil.Amount(wallState.Balance.Immature).ToCoin()
-							return pg.theme.Label(values.TextSize14, fmt.Sprintf("%v", bal)).Layout(gtx)
-						}),
-					)
+						}
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								bal := dcrutil.Amount(wallState.Balance.Available).ToCoin()
+								return pg.theme.Label(values.TextSize14, fmt.Sprintf("%v", bal)).Layout(gtx)
+							}),
+							layout.Rigid(gutter),
+							layout.Rigid(func(gtx C) D {
+								bal := dcrutil.Amount(wallState.Balance.Locked).ToCoin()
+								return pg.theme.Label(values.TextSize14, fmt.Sprintf("%v", bal)).Layout(gtx)
+							}),
+							layout.Rigid(gutter),
+							layout.Rigid(func(gtx C) D {
+								bal := dcrutil.Amount(wallState.Balance.Immature).ToCoin()
+								return pg.theme.Label(values.TextSize14, fmt.Sprintf("%v", bal)).Layout(gtx)
+							}),
+						)
+					})
 				}),
 			)
 		}
@@ -401,27 +421,48 @@ func (pg *marketsPage) marketBalancesLayout(gtx layout.Context, c *pageCommon) l
 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 				layout.Flexed(.2, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					dims := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							return pg.theme.Label(values.TextSize16, "Balances").Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
+							l := pg.theme.Line(1, gtx.Constraints.Max.X)
+							l.Color = pg.theme.Color.Gray1
+							return l.Layout(gtx)
+						}),
+						layout.Rigid(gutter),
+						layout.Rigid(func(gtx C) D {
 							return pg.theme.Label(values.TextSize14, "available").Layout(gtx)
 						}),
+						layout.Rigid(gutter),
 						layout.Rigid(func(gtx C) D {
 							return pg.theme.Label(values.TextSize14, "locked").Layout(gtx)
 						}),
+						layout.Rigid(gutter),
 						layout.Rigid(func(gtx C) D {
 							return pg.theme.Label(values.TextSize14, "immature").Layout(gtx)
 						}),
 					)
+					lineHeight = dims.Size.Y
+					return dims
 				}),
+				layout.Flexed(0, func(gtx C) D {
+					l := pg.theme.Line(lineHeight, 1)
+					l.Color = pg.theme.Color.Gray1
+					return l.Layout(gtx)
+				}),
+
 				layout.Flexed(.4, func(gtx C) D {
 					ic := coinImageBySymbol(&c.icons, (*pg.selectedMaket).marketBase)
 					if ic == nil {
 						return layout.Dimensions{}
 					}
 					return col(gtx, ic, (*pg.selectedMaket).marketBase, u.Assets[(*pg.selectedMaket).marketBaseID].Wallet)
+				}),
+				layout.Flexed(0, func(gtx C) D {
+					l := pg.theme.Line(lineHeight, 1)
+					l.Color = pg.theme.Color.Gray1
+					return l.Layout(gtx)
 				}),
 				layout.Flexed(.4, func(gtx C) D {
 					ic := coinImageBySymbol(&c.icons, (*pg.selectedMaket).marketQuote)
@@ -703,17 +744,18 @@ func (pg *marketsPage) handle(common pageCommon) {
 						config[key] = fmt.Sprintf("%v", cfgOpt.DefaultValue)
 					}
 				}
+
+				break
 			}
 		}
 
 		// Bitcoin
 		config["walletname"] = pg.accountName.Editor.Text()
+		config["rpcport"] = "18332"
 
 		// Decred
 		config["account"] = pg.accountName.Editor.Text()
 		config["password"] = pg.walletPassword.Editor.Text()
-		config["username"] = config["rpcuser"]
-		config["rpcport"] = "18332"
 
 		form := &dex.NewWalletForm{
 			AssetID: coinID,
