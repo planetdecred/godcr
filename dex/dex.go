@@ -21,7 +21,10 @@ type Dex struct {
 	Net  string
 }
 
-const DefaultAssert = 42
+const (
+	DefaultAsset          = "dcr"
+	DefaultAssetID uint32 = 42
+)
 
 func NewDex(debugLevel string, dbPath, net string, send chan Response, w io.Writer) (*Dex, error) {
 	logMaker := initLogging(debugLevel, true, w)

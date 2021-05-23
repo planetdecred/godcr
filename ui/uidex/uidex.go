@@ -5,14 +5,12 @@ import (
 	"image"
 
 	"gioui.org/app"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/text"
 
 	"github.com/planetdecred/godcr/dex"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 // Dex represents the Dex UI. There should only be one.
@@ -22,23 +20,26 @@ type Dex struct {
 	dexc     *dex.Dex
 	userInfo *dex.User
 
-	current, previous string
+	// market current selected
+	market *selectedMaket
 
-	signatureResult *wallet.Signature
+	current, previous string
 
 	err string
 
-	pages                 map[string]layout.Widget
-	sysDestroyWithSync    bool
-	walletAcctMixerStatus chan *wallet.AccountMixer
-	internalLog           chan string
+	pages       map[string]layout.Widget
+	internalLog chan string
 
 	// Toggle between wallet and dex view mode
 	switchView *int
 }
-
-type WriteClipboard struct {
-	Text string
+type selectedMaket struct {
+	host          string
+	name          string
+	marketBase    string
+	marketQuote   string
+	marketBaseID  uint32
+	marketQuoteID uint32
 }
 
 // NewDexUI creates and initializes a new walletUI with start
@@ -54,6 +55,7 @@ func NewDexUI(dexc *dex.Dex, decredIcons map[string]image.Image, collection []te
 	d.internalLog = internalLog
 
 	d.userInfo = new(dex.User)
+	d.market = new(selectedMaket)
 	d.current = PageMarkets
 	d.switchView = v
 	d.addPages(decredIcons)
@@ -76,23 +78,6 @@ func (d *Dex) refresh() {
 func (d *Dex) setReturnPage(from string) {
 	d.previous = from
 	d.refresh()
-}
-
-func (d *Dex) unloaded(w *app.Window) {
-	lbl := d.theme.H3("Multiwallet not loaded\nIs another instance open?")
-	var ops op.Ops
-
-	for {
-		e := <-w.Events()
-		switch evt := e.(type) {
-		case system.DestroyEvent:
-			return
-		case system.FrameEvent:
-			gtx := layout.NewContext(&ops, evt)
-			lbl.Layout(gtx)
-			evt.Frame(gtx.Ops)
-		}
-	}
 }
 
 // Run runs main event handling and page rendering loop

@@ -11,6 +11,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/godcr/dex"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
@@ -20,7 +21,7 @@ import (
 type pageIcons struct {
 	contentAdd, navigationCheck, navigationMore, actionCheckCircle, actionInfo, navigationArrowBack,
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
-	imageBrightness1, contentClear, dropDownIcon, cached *widget.Icon
+	imageBrightness1, contentClear, dropDownIcon, cached, lock, lockOpen *widget.Icon
 
 	logo, btc, dcr, ltc, bch *widget.Image
 }
@@ -32,6 +33,7 @@ type navHandler struct {
 	page          string
 }
 type pageCommon struct {
+	dexc           *dex.Dex
 	printer        *message.Printer
 	theme          *decredmaterial.Theme
 	icons          pageIcons
@@ -70,6 +72,8 @@ func (d *Dex) addPages(decredIcons map[string]image.Image) {
 		navMoreIcon:            utils.MustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		dropDownIcon:           utils.MustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		cached:                 utils.MustIcon(widget.NewIcon(icons.ActionCached)),
+		lock:                   utils.MustIcon(widget.NewIcon(icons.ActionLock)),
+		lockOpen:               utils.MustIcon(widget.NewIcon(icons.ActionLockOpen)),
 
 		logo: &widget.Image{Src: paint.NewImageOp(decredIcons["favicon"])},
 		btc:  &widget.Image{Src: paint.NewImageOp(decredIcons["btc"])},
@@ -79,6 +83,7 @@ func (d *Dex) addPages(decredIcons map[string]image.Image) {
 	}
 
 	common := pageCommon{
+		dexc:          d.dexc,
 		printer:       message.NewPrinter(language.English),
 		theme:         d.theme,
 		icons:         ic,

@@ -1,6 +1,8 @@
 package uidex
 
 import (
+	"strings"
+
 	"github.com/planetdecred/godcr/dex"
 )
 
@@ -15,6 +17,27 @@ func (d *Dex) updateStates(update interface{}) {
 	switch e := update.(type) {
 	case dex.User:
 		d.userInfo = &e
+		if d.userInfo.Info.Exchanges == nil {
+			return
+		}
+
+		// Set default selected host and market
+		if d.market.host == "" ||
+			d.market.marketBase == "" ||
+			d.market.marketQuote == "" {
+			for _, exchange := range d.userInfo.Info.Exchanges {
+				d.market.host = exchange.Host
+				for _, market := range exchange.Markets {
+					d.market.marketBase = market.BaseSymbol
+					d.market.marketQuote = market.QuoteSymbol
+					d.market.marketBaseID = market.BaseID
+					d.market.marketQuoteID = market.QuoteID
+					d.market.name = strings.ToUpper(market.BaseSymbol + "-" + market.QuoteSymbol)
+					break
+				}
+				break
+			}
+		}
 		return
 	}
 }

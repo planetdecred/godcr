@@ -47,28 +47,42 @@ func (d *Dex) GetUser() {
 	}()
 }
 
-func (d *Dex) GetDefaultWalletConfig() map[string]string {
-	cfg, err := d.core.AutoWalletConfig(DefaultAssert)
+func (d *Dex) AutoWalletConfig(assetID uint32) map[string]string {
+	cfg, err := d.core.AutoWalletConfig(assetID)
 	if err != nil {
 		return nil
 	}
+
 	return cfg
 }
 
-func (d *Dex) UnlockWallet(assetID uint32, appPW []byte) error {
-	status := d.core.WalletState(assetID)
-	log.Info(status)
-	if status == nil {
-		return errors.New(fmt.Sprintf("No wallet for %d", assetID))
-	}
+func (d *Dex) UnlockWallet(assetID uint32, appPW []byte, errChan chan error) {
+	go func() {
+		status := d.core.WalletState(assetID)
 
-	err := d.core.OpenWallet(assetID, appPW)
-	log.Info(err)
-	if err != nil {
-		return errors.New(fmt.Sprintf("error unlocking %s wallet: %v", assetID, err))
-	}
+		if status == nil {
+			go func() {
+				errChan <- errors.New(fmt.Sprintf("No wallet for %d", assetID))
+			}()
 
-	return nil
+			return
+		}
+
+		err := d.core.OpenWallet(assetID, appPW)
+		if err != nil {
+			log.Errorf("UnlockWallet error: %v", err)
+
+			go func() {
+				errChan <- errors.New(fmt.Sprintf("error unlocking %s wallet: %v", assetID, err))
+			}()
+
+			return
+		}
+
+		go func() {
+			errChan <- nil
+		}()
+	}()
 }
 
 func (d *Dex) GetDEXConfig(addr string, cert string, errChan chan error, responseChan chan *core.Exchange) {
