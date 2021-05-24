@@ -560,8 +560,8 @@ func (pg *createRestore) inputsGroup(gtx layout.Context, l *layout.List, len, st
 
 func (pg *createRestore) onSuggestionSeedsClicked() {
 	index := pg.seedEditors.focusIndex
-	for _, b := range pg.seedMenu {
-		for b.button.Button.Clicked() {
+	for i, b := range pg.seedMenu {
+		for pg.seedMenu[i].button.Button.Clicked() {
 			pg.seedEditors.editors[index].Edit.Editor.SetText(b.text)
 			pg.seedEditors.editors[index].Edit.Editor.MoveCaret(len(b.text), 0)
 			pg.seedClicked = true
@@ -571,15 +571,6 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 		}
 	}
 }
-
-// func (pg *createRestore) suggestionSeedEffect() {
-// 	for _, b := range pg.seedMenu {
-// 		b.button.Background = color.NRGBA{}
-// 		for b.button.Button.Hovered() {
-// 			b.button.Background = pg.theme.Color.LightGray
-// 		}
-// 	}
-// }
 
 func diff(a, b []int) []int {
 	temp := map[int]int{}
@@ -910,6 +901,9 @@ func (pg *createRestore) handle(common pageCommon) {
 			if pg.selected >= len(pg.suggestions) {
 				pg.selected = len(pg.suggestions) - 1
 			}
+		}
+		if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && pg.openPopupIndex != -1 && evt.State == key.Press {
+			pg.seedMenu[pg.selected].button.Button.Click()
 		}
 	case err := <-pg.errorReceiver:
 		common.states.creating = false
