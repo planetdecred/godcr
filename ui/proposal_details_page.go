@@ -1,14 +1,16 @@
 package ui
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -26,6 +28,7 @@ type proposalItemWidgets struct {
 
 type proposalDetails struct {
 	theme               *decredmaterial.Theme
+	loadingDescription  bool
 	descriptionCard     decredmaterial.Card
 	proposalItems       map[string]proposalItemWidgets
 	descriptionList     *layout.List
@@ -47,6 +50,7 @@ type proposalDetails struct {
 func (win *Window) ProposalDetailsPage(common pageCommon) layout.Widget {
 	pg := &proposalDetails{
 		theme:               common.theme,
+		loadingDescription:  false,
 		descriptionCard:     common.theme.Card(),
 		descriptionList:     &layout.List{Axis: layout.Vertical},
 		selectedProposal:    &win.selectedProposal,
@@ -91,13 +95,6 @@ func (pg *proposalDetails) handle() {
 		proposal := *pg.selectedProposal
 		goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
 	}
-}
-
-func (pg *proposalDetails) getProposalText() []byte {
-	proposal := *pg.selectedProposal
-	desc, _ := base64.StdEncoding.DecodeString(proposal.IndexFile)
-
-	return desc
 }
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
@@ -301,7 +298,24 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 		pg.lineSeparator(layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}),
 	}
 
-	w = append(w, pg.proposalItems[proposal.Token].widgets...)
+	_, ok := pg.proposalItems[proposal.Token]
+	if ok {
+		w = append(w, pg.proposalItems[proposal.Token].widgets...)
+	} else {
+		th := material.NewTheme(gofont.Collection())
+		loading := func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Flexed(1, func(gtx C) D {
+				return layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return material.Loader(th).Layout(gtx)
+					})
+				})
+			}))
+		}
+
+		w = append(w, loading)
+	}
+
 	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
 	w = append(w, pg.layoutRedirect("View on GitHub", pg.redirectIcon, pg.viewInGithubBtn))
 	w = append(w, pg.layoutRedirect("Download Proposal Bundle", pg.downloadIcon, pg.proposalBundleBtn))
@@ -347,27 +361,35 @@ func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 	}
 }
 
-func (pg *proposalDetails) layoutParsingState(gtx C) D {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		return pg.theme.Body1("Preparing document...").Layout(gtx)
-	})
-}
-
 func (pg *proposalDetails) Layout(gtx C, common pageCommon) D {
 	proposal := *pg.selectedProposal
 	_, ok := pg.proposalItems[proposal.Token]
-	if !ok {
+	if !ok && !pg.loadingDescription {
+		pg.loadingDescription = true
 		go func() {
-			r := RenderMarkdown(gtx, pg.theme, pg.getProposalText())
+			var proposalDescription string
+			if proposal.IndexFile != "" && proposal.IndexFileVersion == proposal.Version {
+				proposalDescription = proposal.IndexFile
+			} else {
+				var err error
+				proposalDescription, err = common.wallet.FetchProposalDescription(proposal.Token)
+				if err != nil {
+					log.Infof("Error loading proposal description: %v", err)
+					time.Sleep(7 * time.Second)
+					pg.loadingDescription = false
+					return
+				}
+			}
+
+			r := RenderMarkdown(gtx, pg.theme, proposalDescription)
 			proposalWidgets, proposalClickables := r.Layout()
 			pg.proposalItems[proposal.Token] = proposalItemWidgets{
 				widgets:    proposalWidgets,
 				clickables: proposalClickables,
 			}
+			pg.loadingDescription = false
 			pg.refreshWindow()
 		}()
-		return pg.layoutParsingState(gtx)
 	}
 
 	body := func(gtx C) D {

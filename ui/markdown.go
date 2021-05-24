@@ -45,7 +45,7 @@ const (
 	linkSpacer    = "@@@@"
 )
 
-func RenderMarkdown(gtx layout.Context, theme *decredmaterial.Theme, source []byte) *Renderer {
+func RenderMarkdown(gtx layout.Context, theme *decredmaterial.Theme, source string) *Renderer {
 	extensions := parser.NoIntraEmphasis        // Ignore emphasis markers inside words
 	extensions |= parser.Tables                 // Parse tables
 	extensions |= parser.FencedCode             // Parse fenced code blocks
@@ -61,7 +61,7 @@ func RenderMarkdown(gtx layout.Context, theme *decredmaterial.Theme, source []by
 	p := parser.NewWithExtensions(extensions)
 
 	source = prepareDocForTable(source)
-	nodes := md.Parse(source, p)
+	nodes := md.Parse([]byte(source), p)
 	renderer := newRenderer(gtx, theme)
 	md.Render(nodes, renderer)
 
@@ -76,13 +76,13 @@ func newRenderer(gtx layout.Context, theme *decredmaterial.Theme) *Renderer {
 	}
 }
 
-func prepareDocForTable(doc []byte) []byte {
-	d := strings.Replace(string(doc), ":|", "------:|", -1)
+func prepareDocForTable(doc string) string {
+	d := strings.Replace(doc, ":|", "------:|", -1)
 	d = strings.Replace(d, "-|", "------|", -1)
 	d = strings.Replace(d, "|-", "|------", -1)
 	d = strings.Replace(d, "|:-", "|:------", -1)
 
-	return []byte(d)
+	return d
 }
 
 func (r *Renderer) pad() string {
