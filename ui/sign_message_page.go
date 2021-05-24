@@ -31,9 +31,9 @@ type signMessagePage struct {
 
 func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
-	addressEditor.Editor.SingleLine = true
+	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
-	messageEditor.Editor.SingleLine = true
+	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
 	clearButton := common.theme.Button(new(widget.Clickable), "Clear all")
 	clearButton.Background = color.NRGBA{}
 	clearButton.Color = common.theme.Color.Gray
@@ -216,7 +216,7 @@ func (pg *signMessagePage) handle(gtx C, common pageCommon) {
 		pg.clearForm()
 	}
 
-	for pg.signButton.Button.Clicked() {
+	for pg.signButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor) {
 		if !pg.isSigningMessage && pg.validate(false) {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()
@@ -226,7 +226,6 @@ func (pg *signMessagePage) handle(gtx C, common pageCommon) {
 					template: PasswordTemplate,
 					title:    "Confirm to sign",
 					confirm: func(pass string) {
-						pg.signButton.Text = "Signing..."
 						pg.wallet.SignMessage(pg.walletID, []byte(pass), address, message, pg.errorReceiver)
 					},
 					confirmText: "Confirm",

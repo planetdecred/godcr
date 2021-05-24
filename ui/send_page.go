@@ -175,6 +175,7 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 	pg.passwordEditor = win.theme.EditorPassword(new(widget.Editor), "Spending password")
 	pg.passwordEditor.Editor.SetText("")
 	pg.passwordEditor.Editor.SingleLine = true
+	pg.passwordEditor.Editor.Submit = true
 
 	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Address")
 	pg.destinationAddressEditor.Editor.SingleLine = true
@@ -951,6 +952,8 @@ func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c pageCommon) {
 	case widget.ChangeEvent:
 		pg.fetchExchangeValue()
 		pg.calculateValues(c, true)
+	case widget.SubmitEvent:
+		pg.sendFund(c)
 	}
 }
 
@@ -1048,6 +1051,15 @@ func (pg *sendPage) updateAmountField(spendableBalanceDCR float64) {
 	}
 }
 
+func (pg *sendPage) sendFund(c pageCommon) {
+	if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
+		return
+	}
+	c.modalLoad.setLoading(true)
+	pg.isBroadcastingTransaction = true
+	pg.wallet.BroadcastTransaction(pg.txAuthor, []byte(pg.passwordEditor.Editor.Text()), pg.broadcastErrChan)
+}
+
 func (pg *sendPage) Handle(c pageCommon) {
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
 	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
@@ -1132,6 +1144,12 @@ func (pg *sendPage) Handle(c pageCommon) {
 		}
 	}
 
+	for _, evt := range pg.passwordEditor.Editor.Events() {
+		if pg.passwordEditor.Editor.Focused() {
+			pg.handleEditorChange(evt, c)
+		}
+	}
+
 	if pg.calculateErrorText != "" {
 		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
@@ -1169,12 +1187,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 	pg.watchForBroadcastResult(c)
 
 	for pg.confirmButton.Button.Clicked() {
-		c.modalLoad.setLoading(true)
-		if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
-			return
-		}
-		pg.isBroadcastingTransaction = true
-		pg.wallet.BroadcastTransaction(pg.txAuthor, []byte(pg.passwordEditor.Editor.Text()), pg.broadcastErrChan)
+		pg.sendFund(c)
 	}
 
 	for pg.nextButton.Button.Clicked() {
@@ -1211,6 +1224,7 @@ func (pg *sendPage) Handle(c pageCommon) {
 			c.notify(err.Error(), false)
 			pg.isConfirmationModalOpen = false
 		}
+		c.modalLoad.setLoading(false)
 		pg.isBroadcastingTransaction = false
 	default:
 	}

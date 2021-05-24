@@ -33,7 +33,8 @@ func (win *Window) VerifyMessagePage(c pageCommon) layout.Widget {
 		clearBtn:      c.theme.Button(new(widget.Clickable), "Clear all"),
 	}
 
-	pg.messageInput.Editor.SingleLine, pg.addressInput.Editor.SingleLine, pg.messageInput.Editor.SingleLine = true, true, true
+	pg.addressInput.Editor.SingleLine, pg.messageInput.Editor.SingleLine = true, true
+	pg.signInput.Editor.Submit, pg.addressInput.Editor.Submit, pg.messageInput.Editor.Submit = true, true, true
 	pg.verifyBtn.TextSize, pg.clearBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
 
@@ -147,7 +148,7 @@ func (pg *verifyMessagePage) handle(c pageCommon) {
 	pg.verifyBtn.Background, pg.clearBtn.Color = c.theme.Color.Hint, c.theme.Color.Hint
 	if pg.inputsNotEmpty(c) {
 		pg.verifyBtn.Background, pg.clearBtn.Color = c.theme.Color.Primary, c.theme.Color.Primary
-		if pg.verifyBtn.Button.Clicked() {
+		if pg.verifyBtn.Button.Clicked() || handleSubmitEvent(pg.addressInput.Editor, pg.messageInput.Editor, pg.signInput.Editor) {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
 			valid, err := c.wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())

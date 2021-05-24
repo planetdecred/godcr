@@ -180,3 +180,15 @@ func ticketStatusIcon(c *pageCommon, ticketStatus string) *struct {
 	}
 	return &st
 }
+
+func handleSubmitEvent(editors ...*widget.Editor) bool {
+	var submit bool
+	for _, editor := range editors {
+		for _, e := range editor.Events() {
+			if _, ok := e.(widget.SubmitEvent); ok {
+				submit = true
+			}
+		}
+	}
+	return submit
+}
