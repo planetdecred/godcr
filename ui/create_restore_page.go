@@ -619,6 +619,7 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 
 				pg.resetSeedFields.Color = pg.theme.Color.Primary
 				pg.suggestions = pg.suggestionSeeds(text)
+				pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
 				for k, s := range pg.suggestions {
 					pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
 				}
@@ -649,7 +650,7 @@ func (pg *createRestore) initSeedMenu() {
 
 func (pg *createRestore) suggestionSeedEffect() {
 	for k := range pg.suggestions {
-		if pg.selected == k {
+		if pg.selected == k || pg.seedMenu[k].button.Button.Hovered() {
 			pg.seedMenu[k].button.Background = pg.theme.Color.LightGray
 		} else {
 			pg.seedMenu[k].button.Background = color.NRGBA{}
