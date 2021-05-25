@@ -122,12 +122,10 @@ func (win *Window) updateStates(update interface{}) {
 }
 
 func (win *Window) notifyOnSuccess(text string) {
-	go func() {
-		win.toast <- &toast{
-			text:    text,
-			success: true,
-		}
-	}()
+	win.toast = &toast{
+		text:    text,
+		success: true,
+	}
 
 	go func() {
 		win.modal <- &modalLoad{}

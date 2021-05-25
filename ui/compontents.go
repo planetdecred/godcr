@@ -8,6 +8,7 @@ import (
 	"image"
 	"strconv"
 	"strings"
+	"time"
 
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
@@ -26,6 +27,19 @@ const (
 	purchasingAccountTitle = "Purchasing account"
 	sendingAccountTitle    = "Sending account"
 	receivingAccountTitle  = "Receiving account"
+)
+
+type (
+	TransactionRow struct {
+		transaction wallet.Transaction
+		index       int
+		showBadge   bool
+	}
+	toast struct {
+		text    string
+		success bool
+		timer   *time.Timer
+	}
 )
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
@@ -246,12 +260,6 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 	)
-}
-
-type TransactionRow struct {
-	transaction wallet.Transaction
-	index       int
-	showBadge   bool
 }
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
@@ -940,7 +948,45 @@ func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimen
 	})
 }
 
-func (page pageCommon) handleNavEvents() {
+func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout.Dimensions {
+	color := th.Color.Success
+	if !n.success {
+		color = th.Color.Danger
+	}
+
+	card := th.Card()
+	card.Color = color
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Inset{
+			Top: values.MarginPadding7, Bottom: values.MarginPadding7,
+			Left: values.MarginPadding15, Right: values.MarginPadding15,
+		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			t := th.Body1(n.text)
+			t.Color = th.Color.Surface
+			return t.Layout(gtx)
+		})
+	})
+}
+
+func (page pageCommon) handleToast() {
+	if (*page.toast) == nil {
+		return
+	}
+
+	if (*page.toast).timer == nil {
+		(*page.toast).timer = time.NewTimer(time.Second * 3)
+	}
+
+	select {
+	case <-(*page.toast).timer.C:
+		*page.toast = nil
+	default:
+	}
+}
+
+func (page pageCommon) handler() {
+	page.handleToast()
+
 	for page.minimizeNavDrawerButton.Button.Clicked() {
 		*page.isNavDrawerMinimized = true
 	}
