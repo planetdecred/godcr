@@ -192,7 +192,7 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								txt := common.theme.Body1(fmt.Sprintf("%d Confirmations", (*pg.txnInfo).Confirmations))
+								txt := common.theme.Body1(values.StringF(values.StrNConfirmations, (*pg.txnInfo).Confirmations))
 								txt.Color = common.theme.Color.Gray
 								return txt.Layout(gtx)
 							}),
@@ -210,28 +210,28 @@ func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 		m := values.MarginPadding10
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.txnInfoSection(gtx, "From", transaction.WalletName, transaction.AccountName, true, false)
+				return pg.txnInfoSection(gtx, values.String(values.StrFrom), transaction.WalletName, transaction.AccountName, true, false)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, "Fee", "", dcrutil.Amount(transaction.Txn.Fee).String(), false, false)
+					return pg.txnInfoSection(gtx, values.String(values.StrFee), "", dcrutil.Amount(transaction.Txn.Fee).String(), false, false)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				if transaction.Txn.BlockHeight != -1 {
-					return pg.txnInfoSection(gtx, "Included in block", "", fmt.Sprintf("%d", transaction.Txn.BlockHeight), false, false)
+					return pg.txnInfoSection(gtx, values.String(values.StrIncludedInBlock), "", fmt.Sprintf("%d", transaction.Txn.BlockHeight), false, false)
 				}
 				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, "Type", "", transaction.Txn.Type, false, false)
+					return pg.txnInfoSection(gtx, values.String(values.StrType), "", transaction.Txn.Type, false, false)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				trimmedHash := transaction.Txn.Hash[:24] + "..." + transaction.Txn.Hash[len(transaction.Txn.Hash)-24:]
 				return layout.Inset{Bottom: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, "Transaction ID", "", trimmedHash, false, true)
+					return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), "", trimmedHash, false, true)
 				})
 			}),
 		)
@@ -298,7 +298,7 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 	}
 
 	collapsibleHeader := func(gtx C) D {
-		t := pg.theme.Body1(fmt.Sprintf("%d Inputs consumed", len(transaction.Txn.Inputs)))
+		t := pg.theme.Body1(values.StringF(values.StrXInputsConsumed, len(transaction.Txn.Inputs)))
 		t.Color = pg.theme.Color.Gray
 		return t.Layout(gtx)
 	}
@@ -321,7 +321,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 	transaction := *pg.txnInfo
 
 	collapsibleHeader := func(gtx C) D {
-		t := common.theme.Body1(fmt.Sprintf("%d Outputs created", len(transaction.Txn.Outputs)))
+		t := common.theme.Body1(values.StringF(values.StrXOutputCreated, len(transaction.Txn.Outputs)))
 		t.Color = common.theme.Color.Gray
 		return t.Layout(gtx)
 	}
@@ -403,7 +403,7 @@ func (pg *transactionDetailsPage) viewTxn(gtx layout.Context, common *pageCommon
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.theme.Body1("View on dcrdata").Layout(gtx)
+				return pg.theme.Body1(values.String(values.StrViewOnDcrdata)).Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
 				redirect := common.icons.redirectIcon
