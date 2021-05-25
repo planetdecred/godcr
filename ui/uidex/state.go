@@ -3,7 +3,7 @@ package uidex
 import (
 	"strings"
 
-	"github.com/planetdecred/godcr/dex"
+	"github.com/planetdecred/godcr/dexc"
 )
 
 // states represents a combination of booleans that determine what the wallet is displaying.
@@ -13,9 +13,9 @@ type states struct {
 }
 
 // updateStates changes the dexc state based on the received update
-func (d *Dex) updateStates(update interface{}) {
+func (d *DexUI) updateStates(update interface{}) {
 	switch e := update.(type) {
-	case dex.User:
+	case dexc.User:
 		d.userInfo = &e
 		if d.userInfo.Info.Exchanges == nil {
 			return

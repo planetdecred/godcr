@@ -1,4 +1,4 @@
-package dex
+package dexc
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"decred.org/dcrdex/dex"
 )
 
-type Dex struct {
+type Dexc struct {
 	core *core.Core
 	Send chan Response
 	Net  string
@@ -26,7 +26,7 @@ const (
 	DefaultAssetID uint32 = 42
 )
 
-func NewDex(debugLevel string, dbPath, net string, send chan Response, w io.Writer) (*Dex, error) {
+func NewDex(debugLevel string, dbPath, net string, send chan Response, w io.Writer) (*Dexc, error) {
 	logMaker := initLogging(debugLevel, true, w)
 	log = logMaker.Logger("DEXC")
 
@@ -50,14 +50,14 @@ func NewDex(debugLevel string, dbPath, net string, send chan Response, w io.Writ
 		return nil, err
 	}
 
-	return &Dex{
+	return &Dexc{
 		core: clientCore,
 		Send: send,
 		Net:  net,
 	}, nil
 }
 
-func (d *Dex) Run(appCtx context.Context, cancel context.CancelFunc) {
+func (d *Dexc) Run(appCtx context.Context, cancel context.CancelFunc) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

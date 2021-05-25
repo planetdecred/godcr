@@ -9,16 +9,16 @@ import (
 	"gioui.org/op"
 	"gioui.org/text"
 
-	"github.com/planetdecred/godcr/dex"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
 // Dex represents the Dex UI. There should only be one.
-type Dex struct {
+type DexUI struct {
 	ops      op.Ops
 	theme    *decredmaterial.Theme
-	dexc     *dex.Dex
-	userInfo *dex.User
+	dexc     *dexc.Dexc
+	userInfo *dexc.User
 
 	// market current selected
 	market *selectedMaket
@@ -45,10 +45,10 @@ type selectedMaket struct {
 }
 
 // NewDexUI creates and initializes a new walletUI with start
-func NewDexUI(dexc *dex.Dex, decredIcons map[string]image.Image, collection []text.FontFace,
-	internalLog chan string, v *int, invalidate func()) (*Dex, error) {
-	d := new(Dex)
-	d.dexc = dexc
+func NewDexUI(dc *dexc.Dexc, decredIcons map[string]image.Image, collection []text.FontFace,
+	internalLog chan string, v *int, invalidate func()) (*DexUI, error) {
+	d := new(DexUI)
+	d.dexc = dc
 	theme := decredmaterial.NewTheme(collection, decredIcons)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
@@ -57,7 +57,7 @@ func NewDexUI(dexc *dex.Dex, decredIcons map[string]image.Image, collection []te
 	d.theme = theme
 	d.internalLog = internalLog
 
-	d.userInfo = new(dex.User)
+	d.userInfo = new(dexc.User)
 	d.market = new(selectedMaket)
 	d.current = PageMarkets
 	d.switchView = v
@@ -68,26 +68,26 @@ func NewDexUI(dexc *dex.Dex, decredIcons map[string]image.Image, collection []te
 	return d, nil
 }
 
-func (d *Dex) Ops() *op.Ops {
+func (d *DexUI) Ops() *op.Ops {
 	return &d.ops
 }
 
-func (d *Dex) changePage(page string) {
+func (d *DexUI) changePage(page string) {
 	d.current = page
 	d.refresh()
 }
 
-func (d *Dex) refresh() {
+func (d *DexUI) refresh() {
 	d.refreshWindow()
 }
 
-func (d *Dex) setReturnPage(from string) {
+func (d *DexUI) setReturnPage(from string) {
 	d.previous = from
 	d.refresh()
 }
 
 // Run runs main event handling and page rendering loop
-func (d *Dex) Run(shutdown chan int, w *app.Window) {
+func (d *DexUI) Run(shutdown chan int, w *app.Window) {
 	for {
 		select {
 		case e := <-d.dexc.Send:
@@ -99,10 +99,10 @@ func (d *Dex) Run(shutdown chan int, w *app.Window) {
 	}
 }
 
-func (d *Dex) HandlerDestroy(shutdown chan int) {
+func (d *DexUI) HandlerDestroy(shutdown chan int) {
 
 }
 
-func (d *Dex) HandlerPages(gtx layout.Context) {
+func (d *DexUI) HandlerPages(gtx layout.Context) {
 	d.theme.Background(gtx, d.pages[d.current])
 }

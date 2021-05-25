@@ -13,7 +13,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/planetdecred/godcr/dex"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/sqweek/dialog"
@@ -52,7 +52,7 @@ type marketsPage struct {
 	exchange  layout.List
 
 	supportedAsset []*core.SupportedAsset
-	user           **dex.User
+	user           **dexc.User
 	selectedMaket  **selectedMaket
 	cert           string
 	certName       string
@@ -83,14 +83,20 @@ type marketsPage struct {
 	errInitappChan      chan error
 	errRegisterChan     chan error
 	errUnlockWallChan   chan error
+	errSubmitTradeChan  chan error
 	responseGetDex      *core.Exchange
 	responseGetDexChan  chan *core.Exchange
 
 	walletActionWidgets map[string]*walletActionWidget
 	walletActionInfo    *walletActionInfo
+
+	rateField decredmaterial.Editor
+	lotField  decredmaterial.Editor
+	qtyField  decredmaterial.Editor
+	submit    decredmaterial.Button
 }
 
-func (d *Dex) MarketsPage(common pageCommon) layout.Widget {
+func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 	pg := &marketsPage{
 		theme:         common.theme,
 		pageModal:     common.theme.Modal(),
@@ -104,6 +110,7 @@ func (d *Dex) MarketsPage(common pageCommon) layout.Widget {
 		errLoginChan:        make(chan error),
 		errRegisterChan:     make(chan error),
 		errUnlockWallChan:   make(chan error),
+		errSubmitTradeChan:  make(chan error),
 		responseGetDexChan:  make(chan *core.Exchange),
 
 		createPassword:  d.theme.Button(new(widget.Clickable), "Create password"),
@@ -123,10 +130,10 @@ func (d *Dex) MarketsPage(common pageCommon) layout.Widget {
 
 		walletActionWidgets: make(map[string]*walletActionWidget),
 		walletActionInfo: &walletActionInfo{
-			image:    coinImageBySymbol(&common.icons, dex.DefaultAsset),
-			coin:     dex.DefaultAsset,
+			image:    coinImageBySymbol(&common.icons, dexc.DefaultAsset),
+			coin:     dexc.DefaultAsset,
 			coinName: "Decred",
-			coinID:   dex.DefaultAssetID,
+			coinID:   dexc.DefaultAssetID,
 		},
 	}
 
@@ -153,6 +160,16 @@ func (d *Dex) MarketsPage(common pageCommon) layout.Widget {
 			},
 		}
 	}
+
+	pg.rateField = common.theme.Editor(new(widget.Editor), "Price")
+	pg.rateField.Editor.SingleLine = true
+	pg.rateField.Editor.SetText("0")
+	pg.lotField = common.theme.Editor(new(widget.Editor), "Lots")
+	pg.lotField.Editor.SingleLine = true
+	pg.qtyField = common.theme.Editor(new(widget.Editor), "DCR")
+	pg.qtyField.Editor.SingleLine = true
+	pg.submit = d.theme.Button(new(widget.Clickable), "")
+	pg.submit.Background = d.theme.Color.Success
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -182,7 +199,7 @@ func (pg *marketsPage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 		})
 	})
 
-	u := ((*pg.user).Info)
+	u := (*pg.user).Info
 
 	if !u.Initialized {
 		return pg.initAppPasswordModal(gtx, common)
@@ -193,20 +210,20 @@ func (pg *marketsPage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 	}
 
 	// Show add wallet from initialize
-	if len(u.Exchanges) == 0 && u.Initialized && u.Assets[dex.DefaultAssetID].Wallet == nil {
+	if len(u.Exchanges) == 0 && u.Initialized && u.Assets[dexc.DefaultAssetID].Wallet == nil {
 		return pg.createNewWalletModal(gtx, common)
 	}
 
 	// Show unlock wallet from initialize
-	if u.Assets[dex.DefaultAssetID] != nil &&
-		u.Assets[dex.DefaultAssetID].Wallet != nil &&
-		!u.Assets[dex.DefaultAssetID].Wallet.Open {
+	if u.Assets[dexc.DefaultAssetID] != nil &&
+		u.Assets[dexc.DefaultAssetID].Wallet != nil &&
+		!u.Assets[dexc.DefaultAssetID].Wallet.Open {
 		return pg.unlockWalletModal(gtx, common)
 	}
 
 	if len(u.Exchanges) == 0 &&
-		u.Assets[dex.DefaultAssetID] != nil &&
-		u.Assets[dex.DefaultAssetID].Wallet.Open &&
+		u.Assets[dexc.DefaultAssetID] != nil &&
+		u.Assets[dexc.DefaultAssetID].Wallet.Open &&
 		!pg.showConfirmRegister {
 		return pg.addNewDexModal(gtx, common)
 	}
@@ -317,11 +334,71 @@ func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Di
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
+			return pg.theme.Separator().Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
 			return c.UniformPadding(gtx, func(gtx C) D {
-				return pg.marketBalancesLayout(gtx, &c)
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.orderFormLayout(gtx, &c)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.marketBalancesLayout(gtx, &c)
+					}),
+				)
 			})
 		}),
 	)
+}
+
+func (pg *marketsPage) orderFormLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
+	inset := layout.Inset{Bottom: values.MarginPadding10}
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return inset.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return inset.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+						layout.Flexed(.2, func(gtx C) D {
+							return pg.theme.Label(values.TextSize14, "Price").Layout(gtx)
+						}),
+						layout.Flexed(.8, func(gtx C) D {
+							txt := fmt.Sprintf("%s/%s", strings.ToUpper((*pg.selectedMaket).marketQuote), strings.ToUpper((*pg.selectedMaket).marketBase))
+							pg.rateField.Hint = txt
+							return pg.rateField.Layout(gtx)
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return inset.Layout(gtx, func(gtx C) D {
+					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+						layout.Flexed(.2, func(gtx C) D {
+							return pg.theme.Label(values.TextSize14, "Quantity").Layout(gtx)
+						}),
+						layout.Flexed(.8, func(gtx C) D {
+							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+								layout.Flexed(0.4, func(gtx C) D {
+									return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+										return pg.lotField.Layout(gtx)
+									})
+								}),
+								layout.Flexed(0.6, func(gtx C) D {
+									return pg.qtyField.Layout(gtx)
+								}),
+							)
+						}),
+					)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				pg.submit.Text = "Place order to buy  DCR"
+				return layout.E.Layout(gtx, func(gtx C) D {
+					return pg.submit.Layout(gtx)
+				})
+			}),
+		)
+	})
 }
 
 func (pg *marketsPage) marketBalancesLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
@@ -542,7 +619,7 @@ func (pg *marketsPage) createNewWalletModal(gtx layout.Context, c pageCommon) la
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if pg.walletActionInfo.coinID == dex.DefaultAssetID {
+					if pg.walletActionInfo.coinID == dexc.DefaultAssetID {
 						return pg.theme.Label(values.TextSize14, "Your Decred wallet is required to pay registration fees.").Layout(gtx)
 					}
 					return layout.Dimensions{}
@@ -757,7 +834,7 @@ func (pg *marketsPage) handle(common pageCommon) {
 		config["account"] = pg.accountName.Editor.Text()
 		config["password"] = pg.walletPassword.Editor.Text()
 
-		form := &dex.NewWalletForm{
+		form := &dexc.NewWalletForm{
 			AssetID: coinID,
 			Config:  config,
 			Pass:    []byte(pg.walletPassword.Editor.Text()),
@@ -796,6 +873,23 @@ func (pg *marketsPage) handle(common pageCommon) {
 
 	if pg.toWallet.Button.Clicked() {
 		*common.switchView = values.WalletView
+	}
+
+	if pg.submit.Button.Clicked() {
+		form := dexc.TradeForm{
+			Pass: []byte(pg.appPassword.Editor.Text()),
+			Order: &core.TradeForm{
+				Host:    (*pg.selectedMaket).host,
+				Base:    (*pg.selectedMaket).marketBaseID,
+				Quote:   (*pg.selectedMaket).marketQuoteID,
+				Qty:     1 * 1e8,
+				Rate:    1 * 1e8,
+				IsLimit: true,
+				Sell:    false,
+				TifNow:  false,
+			},
+		}
+		common.dexc.Trade(&form, pg.errSubmitTradeChan)
 	}
 
 	select {
@@ -847,6 +941,13 @@ func (pg *marketsPage) handle(common pageCommon) {
 		pg.showConfirmRegister = false
 		common.dexc.GetUser()
 		pg.appPassword.Editor.SetText("")
+	case err := <-pg.errSubmitTradeChan:
+		if err != nil {
+			common.notify(err.Error(), false)
+			log.Info(err.Error())
+			return
+		}
+		log.Info("Order submiteed...")
 	default:
 	}
 }

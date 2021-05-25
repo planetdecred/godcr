@@ -13,7 +13,7 @@ import (
 	"gioui.org/app"
 
 	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/dex"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -56,14 +56,14 @@ func main() {
 	}()
 
 	dbPath := filepath.Join(cfg.HomeDir, cfg.Network, "dexc.db")
-	dexc, err := dex.NewDex(cfg.DebugLevel, dbPath, cfg.Network, make(chan dex.Response, 3), logWriter{})
+	dc, err := dexc.NewDex(cfg.DebugLevel, dbPath, cfg.Network, make(chan dexc.Response, 3), logWriter{})
 	if err != nil {
 		fmt.Printf("error creating Dex: %s", err)
 		return
 	}
 	appCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	dexc.Run(appCtx, cancel)
+	dc.Run(appCtx, cancel)
 
 	var netType string
 	if strings.Contains(wal.Net, "testnet") {
@@ -74,7 +74,7 @@ func main() {
 	w := app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(fmt.Sprintf("%s (%s)", "godcr", netType)))
 
 	// Create ui
-	appui, err := ui.NewUI(w, wal, dexc, internalLog)
+	appui, err := ui.NewUI(w, wal, dc, internalLog)
 	if err != nil {
 		fmt.Printf("Could not initialize wallet UI: %s\ns", err)
 		return

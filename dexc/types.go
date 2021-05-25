@@ -1,4 +1,4 @@
-package dex
+package dexc
 
 import (
 	"decred.org/dcrdex/client/core"
@@ -21,4 +21,9 @@ type NewWalletForm struct {
 
 type User struct {
 	Info core.User
+}
+
+type TradeForm struct {
+	Pass  encode.PassBytes
+	Order *core.TradeForm
 }

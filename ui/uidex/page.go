@@ -11,7 +11,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
-	"github.com/planetdecred/godcr/dex"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/utils"
 	"github.com/planetdecred/godcr/ui/values"
@@ -33,7 +33,7 @@ type navHandler struct {
 	page          string
 }
 type pageCommon struct {
-	dexc           *dex.Dex
+	dexc           *dexc.Dexc
 	printer        *message.Printer
 	theme          *decredmaterial.Theme
 	icons          pageIcons
@@ -55,7 +55,7 @@ type (
 	D = layout.Dimensions
 )
 
-func (d *Dex) addPages(decredIcons map[string]image.Image) {
+func (d *DexUI) addPages(decredIcons map[string]image.Image) {
 	ic := pageIcons{
 		contentAdd:             utils.MustIcon(widget.NewIcon(icons.ContentAdd)),
 		navigationCheck:        utils.MustIcon(widget.NewIcon(icons.NavigationCheck)),

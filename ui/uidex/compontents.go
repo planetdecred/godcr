@@ -20,8 +20,8 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.W.Layout(gtx, func(gtx C) D {
-							h := values.MarginPadding24
-							v := values.MarginPadding16
+							h := values.MarginPadding16
+							v := values.MarginPadding10
 							return Container{padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
 								func(gtx C) D {
 									return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,

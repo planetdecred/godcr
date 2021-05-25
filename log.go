@@ -12,7 +12,7 @@ import (
 	"github.com/decred/slog"
 	"github.com/jrick/logrotate/rotator"
 	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/dex"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/uidex"
 	"github.com/planetdecred/godcr/ui/uiwallet"
 	"github.com/planetdecred/godcr/wallet"
@@ -65,7 +65,7 @@ func init() {
 	wallet.UseLogger(walletLog)
 	uiwallet.UseLogger(uiWalletLog)
 	dcrlibwallet.UseLogger(dlwlLog)
-	dex.UseLogger(dexcLog)
+	dexc.UseLogger(dexcLog)
 	uidex.UseLogger(uidexLog)
 }
 

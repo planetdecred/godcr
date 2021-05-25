@@ -17,7 +17,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 
-	"github.com/planetdecred/godcr/dex"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/uidex"
 	"github.com/planetdecred/godcr/ui/uiwallet"
 	"github.com/planetdecred/godcr/ui/values"
@@ -27,13 +27,13 @@ import (
 type UI struct {
 	view     int
 	uiwallet *uiwallet.Wallet
-	uidex    *uidex.Dex
+	uidex    *uidex.DexUI
 }
 
 // NewUI creates and initializes a new ui with start
 // as the first page displayed.
 // Should never be called more than once as it calls
-func NewUI(w *app.Window, wal *wallet.Wallet, dexc *dex.Dex, internalLog chan string) (*UI, error) {
+func NewUI(w *app.Window, wal *wallet.Wallet, dexc *dexc.Dexc, internalLog chan string) (*UI, error) {
 	ui := &UI{
 		view: 1,
 	}
