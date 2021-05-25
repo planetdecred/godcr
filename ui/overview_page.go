@@ -646,7 +646,7 @@ func (pg *overviewPage) Handler(eq event.Queue, c pageCommon, win *Window) {
 		isDarkModeOn := win.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
 		if isDarkModeOn != win.theme.DarkMode {
 			win.theme.SwitchDarkMode(isDarkModeOn)
-			win.reloadPage(c)
+			win.loadPage(c.icons)
 		}
 	}
 

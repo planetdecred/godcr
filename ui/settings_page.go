@@ -390,7 +390,7 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 	if pg.isDarkModeOn.Changed() {
 		win.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
-		win.reloadPage(common)
+		win.loadPage(common.icons)
 	}
 
 	if pg.spendUnconfirmed.Changed() {

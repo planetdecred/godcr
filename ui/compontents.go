@@ -80,7 +80,6 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 						return padding.Layout(gtx, func(gtx C) D {
 							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
 							return page.theme.Body2(amountDCRtoUSDString).Layout(gtx)
-							//return page.theme.LabelColor(values.TextSize14, amountDCRtoUSDString, page.theme.Color.DeepBlue).Layout(gtx)
 						})
 					})
 				})

@@ -382,10 +382,6 @@ func (win *Window) loadPage(ic pageIcons) {
 	win.pages[PageTicketsList] = win.TicketPageList(common)
 }
 
-func (win *Window) reloadPage(common pageCommon) {
-	win.loadPage(common.icons)
-}
-
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	res, err := http.Get(url)
