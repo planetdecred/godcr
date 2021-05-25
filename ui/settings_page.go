@@ -1,19 +1,24 @@
 package ui
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/preference"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageSettings = "Settings"
-const USDExchangeValue = "USD (Bittrex)"
+
+const (
+	USDExchangeValue     = "usd_bittrex"
+	DefaultExchangeValue = "none"
+
+	languagePreferenceKey = "app_language"
+)
 
 type row struct {
 	title     string
@@ -28,7 +33,6 @@ type settingsPage struct {
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
-	currencyConversion  *widget.Clickable
 	updateConnectToPeer *widget.Clickable
 	updateUserAgent     *widget.Clickable
 	changeStartupPass   *widget.Clickable
@@ -50,12 +54,8 @@ type settingsPage struct {
 	agentValue        string
 	errorReceiver     chan error
 
-	currencyValue       string
-	initialValue        string
-	isCurrencyModalOpen bool
-
-	currencyModal     *decredmaterial.Modal
-	radioButtonsGroup *widget.Enum
+	currencyPreference *preference.ListPreference
+	languagePreference *preference.ListPreference
 }
 
 func (win *Window) SettingsPage(common pageCommon) layout.Widget {
@@ -79,17 +79,33 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 		errorReceiver: make(chan error),
 
-		currencyConversion:  new(widget.Clickable),
 		updateConnectToPeer: new(widget.Clickable),
 		updateUserAgent:     new(widget.Clickable),
 		changeStartupPass:   new(widget.Clickable),
 
 		confirm: win.theme.Button(new(widget.Clickable), "Ok"),
-		cancel:  win.theme.Button(new(widget.Clickable), "Cancel"),
-
-		currencyModal:     common.theme.Modal(),
-		radioButtonsGroup: new(widget.Enum),
+		cancel:  win.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
 	}
+
+	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
+		values.DefaultLangauge, values.ArrLanguages).
+		Title(values.StrLanguage).
+		PostiveButton(values.StrConfirm, func() {
+			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey))
+		}).
+		NegativeButton(values.StrCancel, func() {})
+	pg.languagePreference = languagePreference
+
+	currencyMap := make(map[string]string)
+	currencyMap[DefaultExchangeValue] = values.StrNone
+	currencyMap[USDExchangeValue] = values.StrUsdBittrex
+
+	currencyPreference := preference.NewListPreference(common.wallet, common.theme,
+		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue, currencyMap).
+		Title(values.StrCurrencyConversion).
+		PostiveButton(values.StrConfirm, func() {}).
+		NegativeButton(values.StrCancel, func() {})
+	pg.currencyPreference = currencyPreference
 
 	color := common.theme.Color.LightGray
 
@@ -103,6 +119,8 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 	return func(gtx C) D {
 		pg.handle(common, win)
+		pg.languagePreference.Handle()
+		pg.currencyPreference.Handle()
 		return pg.Layout(gtx, common)
 	}
 }
@@ -112,7 +130,7 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 
 	body := func(gtx C) D {
 		page := SubPage{
-			title: "Settings",
+			title: values.String(values.StrSettings),
 			back: func() {
 				common.changePage(PageMore)
 			},
@@ -132,8 +150,16 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 		return common.SubPageLayout(gtx, page)
 	}
 
-	if pg.isCurrencyModalOpen {
-		return common.Modal(gtx, common.Layout(gtx, body), pg.currencyConversionSection(gtx))
+	if pg.currencyPreference.IsShowing {
+		return pg.currencyPreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
+			return common.UniformPadding(gtx, body)
+		}))
+	}
+
+	if pg.languagePreference.IsShowing {
+		return pg.languagePreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
+			return common.UniformPadding(gtx, body)
+		}))
 	}
 
 	return common.Layout(gtx, func(gtx C) D {
@@ -143,23 +169,33 @@ func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dim
 
 func (pg *settingsPage) general() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "General", func(gtx C) D {
+		return pg.mainSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, "Dark mode", pg.isDarkModeOn)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Spending unconfirmed funds", pg.spendUnconfirmed)
+					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
 					currencyConversionRow := row{
-						title:     "Currency conversion",
-						clickable: pg.currencyConversion,
+						title:     values.String(values.StrCurrencyConversion),
+						clickable: pg.currencyPreference.Clickable(),
 						icon:      pg.chevronRightIcon,
-						label:     pg.theme.Body2(pg.currencyValue),
+						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
 					return pg.clickableRow(gtx, currencyConversionRow)
+				}),
+				layout.Rigid(pg.lineSeparator()),
+				layout.Rigid(func(gtx C) D {
+					languageRow := row{
+						title:     values.String(values.StrLanguage),
+						clickable: pg.languagePreference.Clickable(),
+						icon:      pg.chevronRightIcon,
+						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey)),
+					}
+					return pg.clickableRow(gtx, languageRow)
 				}),
 			)
 		})
@@ -168,23 +204,23 @@ func (pg *settingsPage) general() layout.Widget {
 
 func (pg *settingsPage) notification() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "Notification", func(gtx C) D {
-			return pg.subSectionSwitch(gtx, "Beep for new blocks", pg.beepNewBlocks)
+		return pg.mainSection(gtx, values.String(values.StrNotifications), func(gtx C) D {
+			return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
 		})
 	}
 }
 
 func (pg *settingsPage) security() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "Security", func(gtx C) D {
+		return pg.mainSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Startup password", pg.startupPassword)
+					return pg.subSectionSwitch(gtx, values.String(values.StrStartupPassword), pg.startupPassword)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.conditionalDisplay(gtx, pg.isStartupPassword, func(gtx C) D {
 						changeStartupPassRow := row{
-							title:     "Change startup password",
+							title:     values.String(values.StrChangeStartupPassword),
 							clickable: pg.changeStartupPass,
 							icon:      pg.chevronRightIcon,
 							label:     pg.theme.Body1(""),
@@ -199,14 +235,14 @@ func (pg *settingsPage) security() layout.Widget {
 
 func (pg *settingsPage) connection() layout.Widget {
 	return func(gtx C) D {
-		return pg.mainSection(gtx, "Connection", func(gtx C) D {
+		return pg.mainSection(gtx, values.String(values.StrConnection), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Connect to specific peer", pg.connectToPeer)
+					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
 				}),
 				layout.Rigid(func(gtx C) D {
 					peerAddrRow := row{
-						title:     "Change specific peer",
+						title:     values.String(values.StrChangeSpecificPeer),
 						clickable: pg.updateConnectToPeer,
 						icon:      pg.chevronRightIcon,
 						label:     pg.peerLabel,
@@ -231,9 +267,9 @@ func (pg *settingsPage) agent() layout.Widget {
 						m10 := values.MarginPadding10
 						return layout.Inset{Top: m10, Bottom: m10}.Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(pg.subSectionLabel("Custom user agent")),
+								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
 								layout.Rigid(func(gtx C) D {
-									txt := pg.theme.Body2("For exchange rate fetching")
+									txt := pg.theme.Body2(values.String(values.StrUserAgentSummary))
 									txt.Color = pg.theme.Color.Gray
 									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 										return txt.Layout(gtx)
@@ -254,7 +290,7 @@ func (pg *settingsPage) agent() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				return pg.conditionalDisplay(gtx, pg.agentValue != "", func(gtx C) D {
 					userAgentRow := row{
-						title:     "Change user agent",
+						title:     values.String(values.StrUserAgentDialogTitle),
 						clickable: pg.updateUserAgent,
 						icon:      pg.chevronRightIcon,
 						label:     pg.agentLabel,
@@ -264,46 +300,6 @@ func (pg *settingsPage) agent() layout.Widget {
 			}),
 		)
 	}
-}
-
-func (pg *settingsPage) currencyConversionSection(gtx layout.Context) layout.Dimensions {
-	w := []layout.Widget{
-		func(gtx C) D {
-			txt := pg.theme.H6("Currency conversion")
-			txt.Color = pg.theme.Color.Text
-			return txt.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(pg.theme.RadioButton(pg.radioButtonsGroup, "None", "None").Layout),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.theme.RadioButton(pg.radioButtonsGroup, USDExchangeValue, USDExchangeValue).Layout(gtx)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-							pg.cancel.Background, pg.cancel.Color = color.NRGBA{}, pg.theme.Color.Primary
-							return pg.cancel.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-							pg.confirm.Background, pg.confirm.Color = color.NRGBA{}, pg.theme.Color.Primary
-							return pg.confirm.Layout(gtx)
-						})
-					}),
-				)
-			})
-		},
-	}
-
-	return pg.currencyModal.Layout(gtx, w, 1050)
 }
 
 func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
@@ -405,13 +401,13 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangeStartupPasswordTemplate,
-				title:    "Change startup password",
+				title:    values.String(values.StrChangeStartupPassword),
 				confirm: func(oldPass, newPass string) {
 					pg.wal.ChangeStartupPassphrase(oldPass, newPass, pg.errorReceiver)
 				},
-				confirmText: "Change",
+				confirmText: values.String(values.StrChange),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -422,13 +418,13 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: SetStartupPasswordTemplate,
-					title:    "Create a startup password",
+					title:    values.String(values.StrCreateStartupPassword),
 					confirm: func(pass string) {
 						pg.wal.SetStartupPassphrase(pass, pg.errorReceiver)
 					},
-					confirmText: "Create",
+					confirmText: values.String(values.StrCreate),
 					cancel:      common.closeModal,
-					cancelText:  "Cancel",
+					cancelText:  values.String(values.StrCancel),
 				}
 			}()
 			return
@@ -436,13 +432,13 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: RemoveStartupPasswordTemplate,
-				title:    "Confirm to turn off startup password",
+				title:    values.String(values.StrConfirmRemoveStartupPass),
 				confirm: func(pass string) {
 					pg.wal.RemoveStartupPassphrase(pass, pg.errorReceiver)
 				},
-				confirmText: "Confirm",
+				confirmText: values.String(values.StrConfirm),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 	}
@@ -453,16 +449,16 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: ConnectToSpecificPeerTemplate,
-					title:    "Connect to specific peer",
+					title:    values.String(values.StrConnectToSpecificPeer),
 					confirm: func(ipAddress string) {
 						if ipAddress != "" {
 							pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
 							common.closeModal()
 						}
 					},
-					confirmText: "Connect",
+					confirmText: values.String(values.StrConfirm),
 					cancel:      common.closeModal,
-					cancelText:  "Cancel",
+					cancelText:  values.String(values.StrCancel),
 				}
 			}()
 			return
@@ -473,16 +469,16 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangeSpecificPeerTemplate,
-				title:    "Change specific peer",
+				title:    values.String(values.StrChangeSpecificPeer),
 				confirm: func(ipAddress string) {
 					if ipAddress != "" {
 						pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
 						common.closeModal()
 					}
 				},
-				confirmText: "Done",
+				confirmText: values.String(values.StrConfirm),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -493,16 +489,16 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: UserAgentTemplate,
-				title:    "Change user agent",
+				title:    values.String(values.StrChangeUserAgent),
 				confirm: func(agent string) {
 					if agent != "" {
 						pg.wal.SaveConfigValueForKey(userAgentKey, agent)
 						common.closeModal()
 					}
 				},
-				confirmText: "Done",
+				confirmText: values.String(values.StrGeneral),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -513,16 +509,16 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: UserAgentTemplate,
-					title:    "Set up user agent",
+					title:    values.String(values.StrChangeUserAgent),
 					confirm: func(agent string) {
 						if agent != "" {
 							pg.wal.SaveConfigValueForKey(userAgentKey, agent)
 							common.closeModal()
 						}
 					},
-					confirmText: "Set up",
+					confirmText: values.String(values.StrConfirm),
 					cancel:      common.closeModal,
-					cancelText:  "Cancel",
+					cancelText:  values.String(values.StrCancel),
 				}
 			}()
 			return
@@ -530,32 +526,9 @@ func (pg *settingsPage) handle(common pageCommon, win *Window) {
 		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
 	}
 
-	for pg.currencyConversion.Clicked() {
-		pg.isCurrencyModalOpen = true
-	}
-
-	if pg.radioButtonsGroup.Changed() {
-		if pg.radioButtonsGroup.Value == "None" {
-			pg.initialValue = USDExchangeValue
-		} else {
-			pg.initialValue = "None"
-		}
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, pg.radioButtonsGroup.Value)
-	}
-
-	for pg.cancel.Button.Clicked() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, pg.initialValue)
-		pg.isCurrencyModalOpen = false
-	}
-
-	if pg.confirm.Button.Clicked() {
-		pg.initialValue = pg.radioButtonsGroup.Value
-		pg.isCurrencyModalOpen = false
-	}
-
 	select {
 	case err := <-pg.errorReceiver:
-		if err.Error() == "invalid_passphrase" {
+		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 			e := "Password is incorrect"
 			common.notify(e, false)
 			return
@@ -605,10 +578,4 @@ func (pg *settingsPage) updateSettingOptions() {
 		pg.agentLabel.Text = pg.agentValue
 		pg.userAgent.Value = true
 	}
-
-	pg.currencyValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if pg.currencyValue == "" {
-		pg.currencyValue = "None"
-	}
-	pg.radioButtonsGroup.Value = pg.currencyValue
 }

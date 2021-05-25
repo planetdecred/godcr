@@ -57,7 +57,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 
 	body := func(gtx C) D {
 		page := SubPage{
-			title:      "Settings",
+			title:      values.String(values.StrSettings),
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
 			back: func() {
 				common.changePage(PageWallet)
@@ -86,9 +86,9 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layo
 
 func (pg *walletSettingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Spending password", pg.changePass, func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrSpendingPassword), pg.changePass, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel("Change spending password")),
+				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrChangeSpendingPass))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
@@ -101,9 +101,9 @@ func (pg *walletSettingsPage) changePassphrase() layout.Widget {
 
 func (pg *walletSettingsPage) notification() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Notification", nil, func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrNotifications), nil, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel("Beep for new blocks")),
+				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrBeepForNewBlocks))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.theme.Switch(pg.notificationW).Layout(gtx)
@@ -116,9 +116,9 @@ func (pg *walletSettingsPage) notification() layout.Widget {
 
 func (pg *walletSettingsPage) debug() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Debug", pg.rescan, func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrDebug), pg.rescan, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel("Rescan blockchain")),
+				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRescanBlockchain))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
@@ -131,9 +131,9 @@ func (pg *walletSettingsPage) debug() layout.Widget {
 
 func (pg *walletSettingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, "Danger zone", pg.deleteWallet, func(gtx C) D {
+		return pg.pageSections(gtx, values.String(values.StrDangerZone), pg.deleteWallet, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel("Remove wallet from device")),
+				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRemoveWallet))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
@@ -190,13 +190,13 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangePasswordTemplate,
-				title:    "Change spending password",
+				title:    values.String(values.StrChangeSpendingPass),
 				confirm: func(oldPass, newPass string) {
 					pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errorReceiver)
 				},
-				confirmText: "Change",
+				confirmText: values.String(values.StrChange),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -207,26 +207,26 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: RescanWalletTemplate,
-				title:    "Rescan blockchain",
+				title:    values.String(values.StrRescanBlockchain),
 				confirm: func() {
 					err := pg.wal.RescanBlocks(walletID)
 					if err != nil {
-						if err.Error() == "not_connected" {
-							common.notify("Not connected to decred network", false)
+						if err.Error() == dcrlibwallet.ErrNotConnected {
+							common.notify(values.String(values.StrNotConnected), false)
 							return
 						}
 						common.notify(err.Error(), false)
 						return
 					}
-					msg := "Rescan initiated (check in overview)"
+					msg := values.String(values.StrRescanProgressNotification)
 					common.notify(msg, true)
 					go func() {
 						common.modalReceiver <- &modalLoad{}
 					}()
 				},
-				confirmText: "Rescan",
+				confirmText: values.String(values.StrRescan),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -240,26 +240,26 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ConfirmRemoveTemplate,
-				title:    "Remove wallet from device",
+				title:    values.String(values.StrRemoveWallet),
 				confirm: func() {
 					walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 					go func() {
 						common.modalReceiver <- &modalLoad{
 							template: PasswordTemplate,
-							title:    "Confirm to remove",
+							title:    values.String(values.StrConfirmToRemove),
 							confirm: func(pass string) {
 								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
 								pg.resetSelectedWallet(common)
 							},
-							confirmText: "Confirm",
+							confirmText: values.String(values.StrConfirm),
 							cancel:      common.closeModal,
-							cancelText:  "Cancel",
+							cancelText:  values.String(values.StrCancel),
 						}
 					}()
 				},
-				confirmText: "Remove",
+				confirmText: values.String(values.StrRemove),
 				cancel:      common.closeModal,
-				cancelText:  "Cancel",
+				cancelText:  values.String(values.StrCancel),
 			}
 		}()
 		break
@@ -267,8 +267,8 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 
 	select {
 	case err := <-pg.errorReceiver:
-		if err.Error() == "invalid_passphrase" {
-			e := "Password is incorrect"
+		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+			e := values.String(values.StrInvalidPassphrase)
 			common.notify(e, false)
 		}
 	default:

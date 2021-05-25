@@ -228,12 +228,12 @@ func (win *Window) loadPage(ic pageIcons) {
 		{
 			clickable: new(widget.Clickable),
 			image:     ic.sendIcon,
-			page:      PageSend,
+			page:      values.String(values.StrSend),
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     ic.receiveIcon,
-			page:      PageReceive,
+			page:      values.String(values.StrReceive),
 		},
 	}
 
@@ -242,19 +242,19 @@ func (win *Window) loadPage(ic pageIcons) {
 			clickable:     new(widget.Clickable),
 			image:         ic.overviewIcon,
 			imageInactive: ic.overviewIconInactive,
-			page:          PageOverview,
+			page:          values.String(values.StrOverview),
 		},
 		{
 			clickable:     new(widget.Clickable),
 			image:         ic.transactionIcon,
 			imageInactive: ic.transactionIconInactive,
-			page:          PageTransactions,
+			page:          values.String(values.StrTransactions),
 		},
 		{
 			clickable:     new(widget.Clickable),
 			image:         ic.walletIcon,
 			imageInactive: ic.walletIconInactive,
-			page:          PageWallet,
+			page:          values.String(values.StrWallets),
 		},
 		{
 			clickable:     new(widget.Clickable),
@@ -266,13 +266,13 @@ func (win *Window) loadPage(ic pageIcons) {
 			clickable:     new(widget.Clickable),
 			image:         ic.ticketIcon,
 			imageInactive: ic.ticketIconInactive,
-			page:          PageTickets,
+			page:          values.String(values.StrTickets),
 		},
 		{
 			clickable:     new(widget.Clickable),
 			image:         ic.moreIcon,
 			imageInactive: ic.moreIconInactive,
-			page:          PageMore,
+			page:          values.String(values.StrMore),
 		},
 	}
 

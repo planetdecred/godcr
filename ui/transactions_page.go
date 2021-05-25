@@ -53,22 +53,23 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		theme:              common.theme,
 	}
 
-	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
+	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
+		{Text: values.String(values.StrOldest)}}, 1)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
-			Text: "All",
+			Text: values.String(values.StrAll),
 		},
 		{
-			Text: "Sent",
+			Text: values.String(values.StrSent),
 		},
 		{
-			Text: "Received",
+			Text: values.String(values.StrReceived),
 		},
 		{
-			Text: "Yourself",
+			Text: values.String(values.StrYourself),
 		},
 		{
-			Text: "Staking",
+			Text: values.String(values.StrStaking),
 		},
 	}, 1)
 
@@ -117,7 +118,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout
 								// return "No transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									txt := common.theme.Body1("No transactions yet")
+									txt := common.theme.Body1(values.String(values.StrNoTransactionsYet))
 									txt.Color = common.theme.Color.Gray2
 									return txt.Layout(gtx)
 								}
