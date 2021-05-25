@@ -302,9 +302,17 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
 			layout.Rigid(func(gtx C) D { return row("Shuffle server", dcrlibwallet.ShuffleServer) }),
 			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
-			layout.Rigid(func(gtx C) D { return row("Shuffle port", dcrlibwallet.ShufflePort) }),
+			layout.Rigid(func(gtx C) D { return row("Shuffle port", pg.shufflePortForCurrentNet(c)) }),
 		)
 	})
+}
+
+func (pg *privacyPage) shufflePortForCurrentNet(c *pageCommon) string {
+	if c.wallet.Net == "testnet3" {
+		return dcrlibwallet.TestnetShufflePort
+	}
+
+	return dcrlibwallet.MainnetShufflePort
 }
 
 func (pg *privacyPage) dangerZoneLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
