@@ -14,7 +14,7 @@ const PageStat = "Stat"
 
 type statItems struct {
 	network, buildDate string
-	peers, walletDir   string
+	walletDir          string
 	numWallets, numTxs string
 	walletDataSize     string
 	syncStatus         *wallet.SyncStatus
@@ -36,7 +36,7 @@ func (win *Window) StatPage(common pageCommon) layout.Widget {
 
 	pg.divider.Color = common.theme.Color.Background
 
-	pg.startupTime = time.Now()
+	pg.statItems.startupTime = time.Now()
 
 	pg.syncStatus = win.walletSyncStatus
 
@@ -86,27 +86,27 @@ func (pg *statPage) layoutStats(gtx C, common pageCommon) D {
 	uptime := now.Sub(pg.startupTime)
 
 	items := []layout.Widget{
-		item("Build", pg.network+","+pg.buildDate),
+		item("Build", pg.statItems.network+","+pg.statItems.buildDate),
 		pg.lineSeparator(),
-		item("Peers connected", strconv.Itoa(int(pg.syncStatus.ConnectedPeers))),
+		item("Peers connected", strconv.Itoa(int(pg.statItems.syncStatus.ConnectedPeers))),
 		pg.lineSeparator(),
 		item("Uptime", uptime.String()),
 		pg.lineSeparator(),
-		item("Network", pg.network),
+		item("Network", pg.statItems.network),
 		pg.lineSeparator(),
-		item("Best block", strconv.Itoa(int(pg.syncStatus.CurrentBlockHeight))),
+		item("Best block", strconv.Itoa(int(pg.statItems.syncStatus.CurrentBlockHeight))),
 		pg.lineSeparator(),
 		item("Best block timestamp", "value"),
 		pg.lineSeparator(),
 		item("Best block age", "value"),
 		pg.lineSeparator(),
-		item("Wallet data directory", pg.walletDir),
+		item("Wallet data directory", pg.statItems.walletDir),
 		pg.lineSeparator(),
-		item("Wallet data", pg.walletDataSize),
+		item("Wallet data", pg.statItems.walletDataSize),
 		pg.lineSeparator(),
 		item("Transactions", pg.numTxs),
 		pg.lineSeparator(),
-		item("Wallets", pg.numWallets),
+		item("Wallets", pg.statItems.numWallets),
 	}
 
 	return card.Layout(gtx, func(gtx C) D {
