@@ -157,7 +157,7 @@ const (
 	StrFee                         = "fee"
 	StrIncludedInBlock             = "includedInBlock"
 	StrType                        = "type"
-	StrTransactionId               = "transactionId"
+	StrTransactionID               = "transactionId"
 	StrXInputsConsumed             = "xInputsConsumed"
 	StrXOutputCreated              = "xOutputCreated"
 	StrViewOnDcrdata               = "viewOnDcrdata"
