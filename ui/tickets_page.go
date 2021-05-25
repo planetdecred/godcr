@@ -212,10 +212,14 @@ func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layou
 						mainText, subText := breakBalance(c.printer, pg.ticketPrice)
 						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return pg.th.Label(values.TextSize28, mainText).Layout(gtx)
+								label := pg.th.Label(values.TextSize28, mainText)
+								label.Color = pg.th.Color.DeepBlue
+								return label.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return pg.th.Label(values.TextSize16, subText).Layout(gtx)
+								label := pg.th.Label(values.TextSize16, subText)
+								label.Color = pg.th.Color.DeepBlue
+								return label.Layout(gtx)
 							}),
 						)
 					})
@@ -253,7 +257,9 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-												return pg.th.Label(values.TextSize14, fmt.Sprintf("%d", item.Count)).Layout(gtx)
+												label := pg.th.Label(values.TextSize14, fmt.Sprintf("%d", item.Count))
+												label.Color = pg.th.Color.DeepBlue
+												return label.Layout(gtx)
 											})
 										}),
 									)
@@ -337,9 +343,15 @@ func (pg *ticketPage) ticketActivityItemnInfo(gtx layout.Context, c pageCommon, 
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
+								labelStatus := pg.th.Label(values.TextSize18, strings.Title(strings.ToLower(t.Info.Status)))
+								labelStatus.Color = pg.th.Color.DeepBlue
+
+								labelDaysBehind := pg.th.Label(values.TextSize14, t.DaysBehind)
+								labelDaysBehind.Color = pg.th.Color.DeepBlue
+
 								return endToEndRow(gtx,
-									pg.th.Label(values.TextSize18, strings.Title(strings.ToLower(t.Info.Status))).Layout,
-									pg.th.Label(values.TextSize14, t.DaysBehind).Layout)
+									labelStatus.Layout,
+									labelDaysBehind.Layout)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Flex{
@@ -420,7 +432,9 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return pg.th.Label(values.TextSize16, fmt.Sprintf("%d", item.Count)).Layout(gtx)
+											label := pg.th.Label(values.TextSize16, fmt.Sprintf("%d", item.Count))
+											label.Color = pg.th.Color.DeepBlue
+											return label.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
@@ -462,7 +476,7 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 											return ic.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return c.layoutBalance(gtx, "16.5112316")
+											return c.layoutBalance(gtx, "16.5112316", false)
 										}),
 									)
 								}),
@@ -489,7 +503,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-									return c.layoutBalance(gtx, pg.ticketPrice)
+									return c.layoutBalance(gtx, pg.ticketPrice, true)
 								})
 							}),
 						)

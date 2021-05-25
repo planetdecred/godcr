@@ -225,6 +225,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
 			pg.receiveAddress.Text = pg.addrs
+			pg.receiveAddress.Color = pg.theme.Color.DeepBlue
 			pg.receiveAddress.Alignment = text.Middle
 			pg.receiveAddress.MaxLines = 1
 			card.Radius = decredmaterial.CornerRadius{NE: 8, NW: 0, SE: 0, SW: 8}

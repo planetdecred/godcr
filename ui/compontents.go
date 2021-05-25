@@ -44,15 +44,23 @@ type (
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func (page pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
+func (page pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitchColor bool) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
 	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(values.TextSize20, mainText).Layout(gtx)
+			label := page.theme.Label(values.TextSize20, mainText)
+			if isSwitchColor {
+				label.Color = page.theme.Color.DeepBlue
+			}
+			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return page.theme.Label(values.TextSize14, subText).Layout(gtx)
+			label := page.theme.Label(values.TextSize14, subText)
+			if isSwitchColor {
+				label.Color = page.theme.Color.DeepBlue
+			}
+			return label.Layout(gtx)
 		}),
 	)
 }
@@ -74,7 +82,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
 				}
-				border := widget.Border{Color: page.theme.Color.LightGray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				border := widget.Border{Color: page.theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
 				return inset.Layout(gtx, func(gtx C) D {
 					padding := layout.Inset{
 						Top:    values.MarginPadding3,
@@ -85,7 +93,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
 							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
-							return page.theme.Label(values.TextSize14, amountDCRtoUSDString).Layout(gtx)
+							return page.theme.Body2(amountDCRtoUSDString).Layout(gtx)
 						})
 					})
 				})
@@ -122,7 +130,7 @@ func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.layoutBalance(gtx, page.info.TotalBalance)
+												return page.layoutBalance(gtx, page.info.TotalBalance, true)
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
@@ -192,7 +200,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
 				background := page.theme.Color.Surface
 				if page.drawerNavItems[i].page == *page.page {
-					background = page.theme.Color.LightGray
+					background = page.theme.Color.ActiveGray
 				}
 				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
 				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
@@ -235,7 +243,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Left: leftInset,
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										textColor := page.theme.Color.Gray3
+										textColor := page.theme.Color.Gray4
 										if page.drawerNavItems[i].page == *page.page {
 											textColor = page.theme.Color.DeepBlue
 										}
@@ -321,7 +329,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return common.layoutBalance(gtx, row.transaction.Balance)
+												return common.layoutBalance(gtx, row.transaction.Balance, true)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
@@ -342,7 +350,11 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 														s = row.transaction.Status
 													}
 													status := common.theme.Body1(s)
-													status.Color = common.theme.Color.Gray
+													if row.transaction.Status != "confirmed" {
+														status.Color = common.theme.Color.Gray5
+													} else {
+														status.Color = common.theme.Color.Gray4
+													}
 													status.Alignment = text.Middle
 													return status.Layout(gtx)
 												})
@@ -669,7 +681,7 @@ func (page *pageCommon) walletAccountLayout(gtx layout.Context, wallAcct walletA
 								acct := page.theme.Label(values.TextSize18, wallAcct.accountName)
 								acct.Color = page.theme.Color.Text
 								return endToEndRow(gtx, acct.Layout, func(gtx C) D {
-									return page.layoutBalance(gtx, wallAcct.totalBalance)
+									return page.layoutBalance(gtx, wallAcct.totalBalance, true)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -887,7 +899,7 @@ func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimen
 								return layout.Inset{
 									Top: values.MarginPadding16,
 								}.Layout(gtx, func(gtx C) D {
-									return c.layoutBalance(gtx, t.Amount)
+									return c.layoutBalance(gtx, t.Amount, true)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {

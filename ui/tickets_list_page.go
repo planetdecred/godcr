@@ -234,7 +234,7 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 								layout.Rigid(func(gtx C) D {
 									dtime := c.theme.Label(values.TextSize14, tickets[index].DateTime)
 									dtime.Color = c.theme.Color.Gray2
-									return endToEndRow(gtx, func(gtx C) D { return c.layoutBalance(gtx, tickets[index].Amount) }, dtime.Layout)
+									return endToEndRow(gtx, func(gtx C) D { return c.layoutBalance(gtx, tickets[index].Amount, true) }, dtime.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
 									l := func(gtx C) layout.Dimensions {

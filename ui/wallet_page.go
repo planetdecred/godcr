@@ -715,7 +715,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 										}),
 										layout.Flexed(1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
-												return common.layoutBalance(gtx, totalBal)
+												return common.layoutBalance(gtx, totalBal, true)
 											})
 										}),
 									)
