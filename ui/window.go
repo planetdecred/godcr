@@ -56,7 +56,7 @@ type Window struct {
 	pages                   map[string]layout.Widget
 	walletTabs, accountTabs *decredmaterial.Tabs
 	keyEvents               chan *key.Event
-	toast                   chan *toast
+	toast                   *toast
 	modal                   chan *modalLoad
 	sysDestroyWithSync      bool
 	walletAcctMixerStatus   chan *wallet.AccountMixer
@@ -103,7 +103,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.states.loading = true
 	win.current = PageOverview
 	win.keyEvents = make(chan *key.Event)
-	win.toast = make(chan *toast)
 	win.modal = make(chan *modalLoad)
 
 	win.walletTabs, win.accountTabs = decredmaterial.NewTabs(win.theme), decredmaterial.NewTabs(win.theme)
