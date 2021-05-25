@@ -23,6 +23,7 @@ type ListPreference struct {
 	IsShowing   bool
 	titleStrKey string
 	items       map[string]string //[key]str-key
+	itemKeys    []string
 
 	clickable         *widget.Clickable
 	optionsRadioGroup *widget.Enum
@@ -37,13 +38,23 @@ type ListPreference struct {
 }
 
 func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, preferenceKey, defaultValue string, items map[string]string) *ListPreference {
+
+	// sort keys to keep order when refreshed
+	sortedKeys := make([]string, 0)
+	for k := range items {
+		sortedKeys = append(sortedKeys, k)
+	}
+
+	sort.Slice(sortedKeys, func(i int, j int) bool { return sortedKeys[i] < sortedKeys[j] })
+
 	return &ListPreference{
 		wallet:        wallet,
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
 		theme:         theme,
 
-		items: items,
+		items:    items,
+		itemKeys: sortedKeys,
 
 		IsShowing: false,
 
@@ -112,7 +123,6 @@ func (lp *ListPreference) Handle() {
 
 func (lp *ListPreference) setValue(value string) {
 	lp.wallet.SaveConfigValueForKey(lp.preferenceKey, value)
-	values.SetUserLanguage(value)
 }
 
 func (lp *ListPreference) Layout(gtx layout.Context, body layout.Dimensions) layout.Dimensions {
@@ -150,16 +160,8 @@ func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
 
 func (lp *ListPreference) layoutItems() []layout.FlexChild {
 
-	// sort keys to keep order when refreshed
-	keys := make([]string, 0)
-	for k := range lp.items {
-		keys = append(keys, k)
-	}
-
-	sort.Slice(keys, func(i int, j int) bool { return keys[i] < keys[j] })
-
 	items := make([]layout.FlexChild, 0)
-	for _, k := range keys {
+	for _, k := range lp.itemKeys {
 		radioItem := layout.Rigid(lp.theme.RadioButton(lp.optionsRadioGroup, k, values.String(lp.items[k])).Layout)
 
 		items = append(items, radioItem)

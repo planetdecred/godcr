@@ -90,7 +90,9 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
 		values.DefaultLangauge, values.ArrLanguages).
 		Title(values.StrLanguage).
-		PostiveButton(values.StrConfirm, func() {}).
+		PostiveButton(values.StrConfirm, func() {
+			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey))
+		}).
 		NegativeButton(values.StrCancel, func() {})
 	pg.languagePreference = languagePreference
 
