@@ -103,7 +103,7 @@ func CreateWindow() (*TestStruct, error) {
 		log.Fatal(err)
 	}
 
-	theme := decredmaterial.NewTheme(gofont.Collection(), decredIcons)
+	theme := decredmaterial.NewTheme(gofont.Collection(), decredIcons, true)
 	if theme == nil {
 		return nil, errors.New("Unexpected error while loading theme")
 	}

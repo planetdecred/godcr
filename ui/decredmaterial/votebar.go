@@ -30,6 +30,7 @@ type VoteBar struct {
 	noColor            color.NRGBA
 	bgColor            color.NRGBA
 	thumbCol           color.NRGBA
+	notifyColor        color.NRGBA
 
 	yesLabel                      Label
 	noLabel                       Label
@@ -69,6 +70,7 @@ func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
 		legendIcon:                    legendIcon,
 		thumbCol:                      t.Color.InactiveGray,
 		bgColor:                       t.Color.Gray1,
+		notifyColor:                   t.Color.Gray4,
 		passTooltipLabel:              t.Caption(""),
 		totalVotesTooltipLabel:        t.Caption("Total votes"),
 		quorumRequirementTooltipLabel: t.Caption("Quorum requirement"),
@@ -281,6 +283,10 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
 	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
+	v.totalVotesTooltipLabel.Color = v.notifyColor
+	v.totalVotesCountLabel.Color = v.notifyColor
+	v.quorumRequirementTooltipLabel.Color = v.notifyColor
+	v.quorumRequirementCountLabel.Color = v.notifyColor
 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Px(unit.Dp(180))
 		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))

@@ -219,6 +219,11 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
+	win.loadPage(ic)
+}
+
+func (win *Window) loadPage(ic pageIcons) {
+
 	appBarNavItems := []navHandler{
 		{
 			clickable: new(widget.Clickable),
