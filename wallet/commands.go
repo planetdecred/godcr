@@ -692,6 +692,10 @@ func (wal *Wallet) GetAllProposals() {
 	}()
 }
 
+func (wal *Wallet) FetchProposalDescription(token string) (string, error) {
+	return wal.multi.Politeia.FetchProposalDescription(token)
+}
+
 func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
 	return wal.multi.UnlockWallet(walletID, passphrase)
 }
