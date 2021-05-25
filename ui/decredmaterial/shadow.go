@@ -30,9 +30,9 @@ const (
 func (t *Theme) Shadow() *Shadow {
 	return &Shadow{
 		surface:       t.Color.Surface,
-		ambientColor:  color.NRGBA{A: 0x10},
-		penumbraColor: color.NRGBA{A: 0x20},
-		umbraColor:    color.NRGBA{A: 0x30},
+		ambientColor:  color.NRGBA{A: 0x1},
+		penumbraColor: color.NRGBA{A: 0x5},
+		umbraColor:    color.NRGBA{A: 0x10},
 	}
 }
 
