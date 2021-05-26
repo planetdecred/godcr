@@ -28,6 +28,7 @@ type row struct {
 }
 
 type settingsPage struct {
+	common        pageCommon
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
 	walletInfo    *wallet.MultiWalletInfo
@@ -53,12 +54,13 @@ type settingsPage struct {
 	peerAddr          string
 	agentValue        string
 	errorReceiver     chan error
+	loadPage          func(pageIcons)
 
 	currencyPreference *preference.ListPreference
 	languagePreference *preference.ListPreference
 }
 
-func (win *Window) SettingsPage(common pageCommon) layout.Widget {
+func (win *Window) SettingsPage(common pageCommon) Page {
 	chevronRightIcon := common.icons.chevronRight
 
 	pg := &settingsPage{
@@ -68,6 +70,7 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		theme:      common.theme,
 		walletInfo: win.walletInfo,
 		wal:        common.wallet,
+		common:     common,
 
 		isDarkModeOn:     new(widget.Bool),
 		spendUnconfirmed: new(widget.Bool),
@@ -83,8 +86,10 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 		updateUserAgent:     new(widget.Clickable),
 		changeStartupPass:   new(widget.Clickable),
 
-		confirm: win.theme.Button(new(widget.Clickable), "Ok"),
-		cancel:  win.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+		confirm: common.theme.Button(new(widget.Clickable), "Ok"),
+		cancel:  common.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+
+		loadPage: win.loadPage,
 	}
 
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
@@ -117,15 +122,11 @@ func (win *Window) SettingsPage(common pageCommon) layout.Widget {
 
 	pg.chevronRightIcon.Color = color
 
-	return func(gtx C) D {
-		pg.handle(common, win)
-		pg.languagePreference.Handle()
-		pg.currencyPreference.Handle()
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *settingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
 	pg.updateSettingOptions()
 
 	body := func(gtx C) D {
@@ -381,12 +382,15 @@ func (pg *settingsPage) lineSeparator() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) handle(common pageCommon, win *Window) {
+func (pg *settingsPage) handle() {
+	common := pg.common
+	pg.languagePreference.Handle()
+	pg.currencyPreference.Handle()
 
 	if pg.isDarkModeOn.Changed() {
-		win.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
+		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
-		win.loadPage(common.icons)
+		pg.loadPage(common.icons)
 	}
 
 	if pg.spendUnconfirmed.Changed() {
@@ -579,3 +583,5 @@ func (pg *settingsPage) updateSettingOptions() {
 		pg.userAgent.Value = true
 	}
 }
+
+func (pg *settingsPage) onClose() {}

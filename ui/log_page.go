@@ -14,7 +14,8 @@ import (
 const PageLog = "Log"
 
 type logPage struct {
-	theme *decredmaterial.Theme
+	theme  *decredmaterial.Theme
+	common pageCommon
 
 	copyLog  *widget.Clickable
 	copyIcon *widget.Image
@@ -25,9 +26,10 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func (win *Window) LogPage(common pageCommon) layout.Widget {
+func (win *Window) LogPage(common pageCommon) Page {
 	pg := &logPage{
-		theme: common.theme,
+		common: common,
+		theme:  common.theme,
 		entriesList: layout.List{
 			Axis:        layout.Vertical,
 			ScrollToEnd: true,
@@ -41,10 +43,7 @@ func (win *Window) LogPage(common pageCommon) layout.Widget {
 
 	go pg.watchLogs(win.internalLog)
 
-	return func(gtx C) D {
-		//pg.handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
 func (pg *logPage) copyLogEntries(gtx C) {
@@ -65,7 +64,9 @@ func (pg *logPage) watchLogs(internalLog chan string) {
 	}
 }
 
-func (pg *logPage) Layout(gtx C, common pageCommon) D {
+func (pg *logPage) Layout(gtx C) D {
+	common := pg.common
+
 	container := func(gtx C) D {
 		page := SubPage{
 			title: "Wallet log",
@@ -108,3 +109,6 @@ func (pg *logPage) Layout(gtx C, common pageCommon) D {
 	}
 	return common.Layout(gtx, container)
 }
+
+func (pg *logPage) handle()  {}
+func (pg *logPage) onClose() {}

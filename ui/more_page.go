@@ -17,12 +17,13 @@ type morePageHandler struct {
 }
 
 type morePage struct {
+	common            pageCommon
 	container         layout.Flex
 	morePageListItems []morePageHandler
 	page              *string
 }
 
-func (win *Window) MorePage(common pageCommon) layout.Widget {
+func (win *Window) MorePage(common pageCommon) Page {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),
@@ -55,16 +56,14 @@ func (win *Window) MorePage(common pageCommon) layout.Widget {
 		morePageListItems[i].image.Scale = 1
 	}
 
-	pg := morePage{
+	pg := &morePage{
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,
 		page:              &win.current,
+		common:            common,
 	}
 
-	return func(gtx C) D {
-		pg.Handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
 func (pg *morePage) handleClickEvents(common pageCommon) {
@@ -75,7 +74,8 @@ func (pg *morePage) handleClickEvents(common pageCommon) {
 	}
 }
 
-func (pg *morePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *morePage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
 	pg.handleClickEvents(common)
 
 	container := func(gtx C) D {
@@ -135,6 +135,5 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 	)
 }
 
-func (pg *morePage) Handle(common pageCommon) {
-
-}
+func (pg *morePage) handle()  {}
+func (pg *morePage) onClose() {}

@@ -15,41 +15,40 @@ const PageHelp = "Help"
 type helpPage struct {
 	theme         *decredmaterial.Theme
 	documentation *widget.Clickable
+	common        pageCommon
 }
 
-func (win *Window) HelpPage(common pageCommon) layout.Widget {
+func (win *Window) HelpPage(common pageCommon) Page {
 	pg := &helpPage{
 		theme:         common.theme,
 		documentation: new(widget.Clickable),
+		common:        common,
 	}
 
-	return func(gtx C) D {
-		pg.handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
 // main settings layout
-func (pg *helpPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			title:    "Help",
 			subTitle: "For more information, please visit the Decred documentation.",
 			back: func() {
-				*common.page = PageMore
+				pg.common.changePage(PageMore)
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween, WeightSum: 2}.Layout(gtx,
-						layout.Flexed(1, pg.document(common)),
+						layout.Flexed(1, pg.document(pg.common)),
 					)
 				})
 			},
 		}
-		return common.SubPageLayout(gtx, page)
+		return pg.common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
+	return pg.common.Layout(gtx, func(gtx C) D {
+		return pg.common.UniformPadding(gtx, body)
 	})
 }
 
@@ -88,6 +87,5 @@ func (pg *helpPage) pageSections(gtx layout.Context, icon *widget.Image, action 
 	})
 }
 
-func (pg *helpPage) handle(common pageCommon) {
-
-}
+func (pg *helpPage) handle()  {}
+func (pg *helpPage) onClose() {}

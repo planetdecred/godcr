@@ -21,6 +21,7 @@ const PageUTXO = "unspentTransactionOutput"
 
 type utxoPage struct {
 	theme                  *decredmaterial.Theme
+	common                 pageCommon
 	utxoListContainer      layout.List
 	txAuthor               *dcrlibwallet.TxAuthor
 	backButton             decredmaterial.IconButton
@@ -40,9 +41,10 @@ type utxoPage struct {
 	selectedAccountID int32
 }
 
-func (win *Window) UTXOPage(common pageCommon) layout.Widget {
+func (win *Window) UTXOPage(common pageCommon) Page {
 	pg := &utxoPage{
 		theme:          common.theme,
+		common:         common,
 		unspentOutputs: &win.walletUnspentOutputs,
 		utxoListContainer: layout.List{
 			Axis: layout.Vertical,
@@ -58,13 +60,11 @@ func (win *Window) UTXOPage(common pageCommon) layout.Widget {
 	pg.backButton.Size = values.MarginPadding30
 	pg.useUTXOButton = common.theme.Button(new(widget.Clickable), "OK")
 
-	return func(gtx C) D {
-		pg.Handler(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *utxoPage) Handler(common pageCommon) {
+func (pg *utxoPage) handle() {
+	common := pg.common
 	pg.selectedWalletID = common.info.Wallets[*common.selectedWallet].ID
 	pg.selectedAccountID = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].Number
 
@@ -147,7 +147,8 @@ func (pg *utxoPage) clearPageData() {
 	pg.txnFee = ""
 }
 
-func (pg *utxoPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
+	c := pg.common
 	return c.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -297,3 +298,5 @@ func (pg *utxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, c *p
 		}),
 	)
 }
+
+func (pg *utxoPage) onClose() {}

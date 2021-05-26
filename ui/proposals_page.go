@@ -49,6 +49,7 @@ type tabs struct {
 
 type proposalsPage struct {
 	theme            *decredmaterial.Theme
+	common           pageCommon
 	wallet           *wallet.Wallet
 	selectedProposal **dcrlibwallet.Proposal
 	proposals        **wallet.Proposals
@@ -80,8 +81,9 @@ var (
 	}
 )
 
-func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
+func (win *Window) ProposalsPage(common pageCommon) Page {
 	pg := &proposalsPage{
+		common:           common,
 		theme:            common.theme,
 		wallet:           win.wallet,
 		proposalsList:    &layout.List{},
@@ -119,13 +121,11 @@ func (win *Window) ProposalsPage(common pageCommon) layout.Widget {
 		)
 	}
 
-	return func(gtx C) D {
-		pg.Handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *proposalsPage) Handle(common pageCommon) {
+func (pg *proposalsPage) handle() {
+	common := pg.common
 	for i := range pg.tabs.tabs {
 		if pg.tabs.tabs[i].btn.Clicked() {
 			pg.tabs.selected = i
@@ -526,7 +526,9 @@ func (pg *proposalsPage) initializeProposaltabItems() {
 	}
 }
 
-func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
+func (pg *proposalsPage) Layout(gtx C) D {
+	common := pg.common
+
 	if !pg.proposalsItemSet {
 		pg.initializeProposaltabItems()
 	}
@@ -566,6 +568,8 @@ func (pg *proposalsPage) Layout(gtx C, common pageCommon) D {
 		)
 	})
 }
+
+func (pg *proposalsPage) onClose() {}
 
 func timeAgo(timestamp int64) string {
 	timeAgo, _ := timeago.TimeAgoWithTime(time.Now(), time.Unix(timestamp, 0))

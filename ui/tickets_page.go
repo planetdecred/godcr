@@ -25,9 +25,10 @@ import (
 const PageTickets = "Tickets"
 
 type ticketPage struct {
-	th   *decredmaterial.Theme
-	wal  *wallet.Wallet
-	vspd *dcrlibwallet.VSPD
+	th     *decredmaterial.Theme
+	wal    *wallet.Wallet
+	vspd   *dcrlibwallet.VSPD
+	common pageCommon
 
 	ticketPageContainer layout.List
 	ticketsLive         layout.List
@@ -69,11 +70,12 @@ type ticketPage struct {
 	isPurchaseLoading bool
 }
 
-func (win *Window) TicketPage(c pageCommon) layout.Widget {
+func (win *Window) TicketPage(c pageCommon) Page {
 	pg := &ticketPage{
 		th:      c.theme,
 		wal:     win.wallet,
 		tickets: &win.walletTickets,
+		common:  c,
 
 		ticketsLive:           layout.List{Axis: layout.Horizontal},
 		ticketsActivity:       layout.List{Axis: layout.Vertical},
@@ -114,13 +116,11 @@ func (win *Window) TicketPage(c pageCommon) layout.Widget {
 	pg.toTicketsActivity.Color = c.theme.Color.Primary
 	pg.toTicketsActivity.BackgroundColor = c.theme.Color.Surface
 
-	return func(gtx C) D {
-		pg.handler(c)
-		return pg.layout(gtx, c)
-	}
+	return pg
 }
 
-func (pg *ticketPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
+	c := pg.common
 	dims := c.Layout(gtx, func(gtx C) D {
 		return c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
 			sections := []func(gtx C) D{
@@ -814,7 +814,8 @@ func (pg *ticketPage) createNewVSPD(c pageCommon) {
 	pg.vspd = vspd
 }
 
-func (pg *ticketPage) handler(c pageCommon) {
+func (pg *ticketPage) handle() {
+	c := pg.common
 	// TODO: frefresh when ticket price update from remote
 	if len(c.info.Wallets) > 0 && pg.ticketPrice == "" {
 		_, priceText := c.wallet.TicketPrice()
@@ -925,3 +926,5 @@ func (pg *ticketPage) handler(c pageCommon) {
 	default:
 	}
 }
+
+func (pg *ticketPage) onClose() {}

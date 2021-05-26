@@ -43,9 +43,10 @@ type (
 )
 
 type backupPage struct {
-	theme *decredmaterial.Theme
-	wal   *wallet.Wallet
-	info  *wallet.MultiWalletInfo
+	theme  *decredmaterial.Theme
+	common pageCommon
+	wal    *wallet.Wallet
+	info   *wallet.MultiWalletInfo
 
 	backButton     decredmaterial.IconButton
 	title          decredmaterial.Label
@@ -75,11 +76,12 @@ type backupPage struct {
 	privpass       []byte
 }
 
-func (win *Window) BackupPage(c pageCommon) layout.Widget {
+func (win *Window) BackupPage(c pageCommon) Page {
 	b := &backupPage{
-		theme: c.theme,
-		wal:   c.wallet,
-		info:  c.info,
+		theme:  c.theme,
+		wal:    c.wallet,
+		info:   c.info,
+		common: c,
 
 		action:         c.theme.Button(new(widget.Clickable), "View seed phrase"),
 		backButton:     c.theme.PlainIconButton(new(widget.Clickable), c.icons.navigationArrowBack),
@@ -140,10 +142,7 @@ func (win *Window) BackupPage(c pageCommon) layout.Widget {
 	b.seedPhraseListRight = &layout.List{Axis: layout.Vertical}
 	b.verifyList = &layout.List{Axis: layout.Vertical}
 
-	return func(gtx C) layout.Dimensions {
-		b.handle(c)
-		return b.layout(gtx, c)
-	}
+	return b
 }
 
 func (pg *backupPage) activeButton() {
@@ -156,7 +155,8 @@ func (pg *backupPage) clearButton() {
 	pg.action.Color = pg.theme.Color.Primary
 }
 
-func (pg *backupPage) layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *backupPage) Layout(gtx layout.Context) layout.Dimensions {
+	c := pg.common
 	dims := pg.theme.Surface(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Start}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -516,7 +516,8 @@ func (pg *backupPage) cancel() {
 	pg.isPasswordModalOpen = false
 }
 
-func (pg *backupPage) handle(c pageCommon) {
+func (pg *backupPage) handle() {
+	c := pg.common
 	if pg.backButton.Button.Clicked() {
 		pg.resetPage(c)
 	}
@@ -563,3 +564,5 @@ func (pg *backupPage) handle(c pageCommon) {
 		}
 	}
 }
+
+func (pg *backupPage) onClose() {}

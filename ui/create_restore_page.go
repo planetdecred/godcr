@@ -35,6 +35,7 @@ type seedItemMenu struct {
 }
 
 type createRestore struct {
+	common          pageCommon
 	theme           *decredmaterial.Theme
 	info            *wallet.MultiWalletInfo
 	wal             *wallet.Wallet
@@ -84,8 +85,9 @@ type createRestore struct {
 }
 
 // Loading lays out the loading widget with a faded background
-func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
-	pg := createRestore{
+func (win *Window) CreateRestorePage(common pageCommon) Page {
+	pg := &createRestore{
+		common:        common,
 		theme:         common.theme,
 		wal:           common.wallet,
 		info:          common.info,
@@ -169,17 +171,17 @@ func (win *Window) CreateRestorePage(common pageCommon) layout.Widget {
 
 	pg.allSuggestions = dcrlibwallet.PGPWordList()
 
-	return func(gtx C) D {
-		pg.handle(common)
-		return pg.layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *createRestore) layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *createRestore) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
+
 	if pg.info.LoadedWallets > 0 {
 		pg.restoring = true
 		pg.showRestore = true
 	}
+
 	return common.Layout(gtx, func(gtx C) D {
 		pd := values.MarginPadding15
 		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -774,7 +776,9 @@ func (pg *createRestore) centralize(gtx layout.Context, content layout.Widget) l
 	)
 }
 
-func (pg *createRestore) handle(common pageCommon) {
+func (pg *createRestore) handle() {
+	common := pg.common
+
 	for pg.hideRestoreWallet.Button.Clicked() {
 		if pg.info.LoadedWallets <= 0 {
 			pg.showRestore = false
@@ -896,3 +900,5 @@ func (pg *createRestore) handle(common pageCommon) {
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
 }
+
+func (pg *createRestore) onClose() {}

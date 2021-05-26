@@ -18,6 +18,7 @@ const PagePrivacy = "Privacy"
 
 type privacyPage struct {
 	theme                                *decredmaterial.Theme
+	common                               pageCommon
 	pageContainer                        layout.List
 	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
 	infoBtn                              decredmaterial.IconButton
@@ -27,9 +28,10 @@ type privacyPage struct {
 	acctMixerStatus                      *chan *wallet.AccountMixer
 }
 
-func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
+func (win *Window) PrivacyPage(common pageCommon) Page {
 	pg := &privacyPage{
 		theme:                   common.theme,
+		common:                  common,
 		pageContainer:           layout.List{Axis: layout.Vertical},
 		toggleMixer:             new(widget.Bool),
 		allowUnspendUnmixedAcct: new(widget.Bool),
@@ -44,13 +46,11 @@ func (win *Window) PrivacyPage(common pageCommon) layout.Widget {
 	pg.infoBtn.Background = common.theme.Color.Surface
 	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
 
-	return func(gtx C) D {
-		pg.Handler(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *privacyPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
+	c := pg.common
 	d := func(gtx C) D {
 		load := SubPage{
 			title:      "Privacy",
@@ -348,7 +348,8 @@ func (pg *privacyPage) gutter(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *privacyPage) Handler(common pageCommon) {
+func (pg *privacyPage) handle() {
+	common := pg.common
 	if pg.toPrivacySetup.Button.Clicked() {
 		go pg.showModalSetupMixerInfo(&common)
 	}
@@ -434,3 +435,5 @@ func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
 		},
 	}
 }
+
+func (pg *privacyPage) onClose() {}

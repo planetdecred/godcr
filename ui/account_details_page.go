@@ -16,6 +16,7 @@ import (
 const PageAccountDetails = "AccountDetails"
 
 type acctDetailsPage struct {
+	common                   pageCommon
 	wallet                   *wallet.Wallet
 	current                  wallet.InfoShort
 	theme                    *decredmaterial.Theme
@@ -26,11 +27,12 @@ type acctDetailsPage struct {
 	errorReceiver            chan error
 }
 
-func (win *Window) AcctDetailsPage(common pageCommon) layout.Widget {
+func (win *Window) AcctDetailsPage(common pageCommon) Page {
 	pg := &acctDetailsPage{
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
+		common:        common,
 		wallet:        common.wallet,
 		acctInfo:      &win.walletAccount,
 		theme:         common.theme,
@@ -42,13 +44,12 @@ func (win *Window) AcctDetailsPage(common pageCommon) layout.Widget {
 	pg.backButton.Color = common.theme.Color.Text
 	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
-	return func(gtx C) D {
-		pg.Handler(gtx, common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *acctDetailsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
+
 	widgets := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.accountBalanceLayout(gtx, &common)
@@ -279,3 +280,6 @@ func (pg *acctDetailsPage) Handler(gtx layout.Context, common pageCommon) {
 		}()
 	}
 }
+
+func (pg *acctDetailsPage) handle()  {}
+func (pg *acctDetailsPage) onClose() {}

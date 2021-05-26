@@ -36,6 +36,7 @@ type amountValue struct {
 
 type sendPage struct {
 	pageContainer layout.List
+	common        pageCommon
 	theme         *decredmaterial.Theme
 
 	txAuthor        *dcrlibwallet.TxAuthor
@@ -112,13 +113,14 @@ type sendPage struct {
 	walletSelected int
 }
 
-func (win *Window) SendPage(common pageCommon) layout.Widget {
+func (win *Window) SendPage(common pageCommon) Page {
 	pg := &sendPage{
 		pageContainer: layout.List{
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
 
+		common:          common,
 		theme:           common.theme,
 		wallet:          common.wallet,
 		txAuthor:        &win.txAuthor,
@@ -203,13 +205,11 @@ func (win *Window) SendPage(common pageCommon) layout.Widget {
 
 	pg.fetchExchangeValue()
 
-	return func(gtx C) D {
-		pg.Handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *sendPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", func(gtx C) D {
@@ -1060,7 +1060,8 @@ func (pg *sendPage) sendFund(c pageCommon) {
 	pg.wallet.BroadcastTransaction(pg.txAuthor, []byte(pg.passwordEditor.Editor.Text()), pg.broadcastErrChan)
 }
 
-func (pg *sendPage) Handle(c pageCommon) {
+func (pg *sendPage) handle() {
+	c := pg.common
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
 	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
 
@@ -1238,3 +1239,5 @@ func (pg *sendPage) Handle(c pageCommon) {
 		pg.setMaxAmount(c)
 	}
 }
+
+func (pg *sendPage) onClose() {}

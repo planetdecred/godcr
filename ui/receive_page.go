@@ -24,6 +24,7 @@ import (
 const PageReceive = "Receive"
 
 type receivePage struct {
+	common            pageCommon
 	pageContainer     layout.List
 	theme             *decredmaterial.Theme
 	isNewAddr, isInfo bool
@@ -32,15 +33,17 @@ type receivePage struct {
 	info, more        decredmaterial.IconButton
 	card              decredmaterial.Card
 	receiveAddress    decredmaterial.Label
+	gtx               *layout.Context
 
 	backdrop *widget.Clickable
 }
 
-func (win *Window) ReceivePage(common pageCommon) layout.Widget {
+func (win *Window) ReceivePage(common pageCommon) Page {
 	page := &receivePage{
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
+		common:         common,
 		theme:          common.theme,
 		info:           common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           common.theme.Button(new(widget.Clickable), "Copy"),
@@ -72,13 +75,14 @@ func (win *Window) ReceivePage(common pageCommon) layout.Widget {
 	page.newAddr.Background = common.theme.Color.Surface
 	page.newAddr.TextSize = values.TextSize16
 
-	return func(gtx C) D {
-		page.Handle(gtx, common)
-		return page.Layout(gtx, common)
-	}
+	return page
 }
 
-func (pg *receivePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
+	if pg.gtx == nil {
+		pg.gtx = &gtx
+	}
 	pg.pageBackdropLayout(gtx)
 
 	pageContent := []func(gtx C) D{
@@ -281,7 +285,9 @@ func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon
 	return img.Layout(gtx)
 }
 
-func (pg *receivePage) Handle(gtx C, common pageCommon) {
+func (pg *receivePage) handle() {
+	common := pg.common
+	gtx := *pg.gtx
 	if pg.backdrop.Clicked() {
 		pg.isNewAddr = false
 	}
@@ -344,3 +350,5 @@ func (pg *receivePage) Handle(gtx C, common pageCommon) {
 		return
 	}
 }
+
+func (pg *receivePage) onClose() {}

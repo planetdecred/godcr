@@ -29,6 +29,7 @@ type proposalItemWidgets struct {
 type proposalDetails struct {
 	theme               *decredmaterial.Theme
 	loadingDescription  bool
+	common              pageCommon
 	descriptionCard     decredmaterial.Card
 	proposalItems       map[string]proposalItemWidgets
 	descriptionList     *layout.List
@@ -47,10 +48,11 @@ type proposalDetails struct {
 	refreshWindow       func()
 }
 
-func (win *Window) ProposalDetailsPage(common pageCommon) layout.Widget {
+func (win *Window) ProposalDetailsPage(common pageCommon) Page {
 	pg := &proposalDetails{
 		theme:               common.theme,
 		loadingDescription:  false,
+		common:              common,
 		descriptionCard:     common.theme.Card(),
 		descriptionList:     &layout.List{Axis: layout.Vertical},
 		selectedProposal:    &win.selectedProposal,
@@ -71,10 +73,7 @@ func (win *Window) ProposalDetailsPage(common pageCommon) layout.Widget {
 
 	pg.downloadIcon.Scale = 1
 
-	return func(gtx C) D {
-		pg.handle()
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
 func (pg *proposalDetails) handle() {
@@ -361,7 +360,16 @@ func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 	}
 }
 
-func (pg *proposalDetails) Layout(gtx C, common pageCommon) D {
+func (pg *proposalDetails) layoutParsingState(gtx C) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Center.Layout(gtx, func(gtx C) D {
+		return pg.theme.Body1("Preparing document...").Layout(gtx)
+	})
+}
+
+func (pg *proposalDetails) Layout(gtx C) D {
+	common := pg.common
+
 	proposal := *pg.selectedProposal
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok && !pg.loadingDescription {
@@ -427,3 +435,5 @@ func (pg *proposalDetails) Layout(gtx C, common pageCommon) D {
 	})
 
 }
+
+func (pg *proposalDetails) onClose() {}
