@@ -14,6 +14,7 @@ import (
 const PageSignMessage = "SignMessage"
 
 type signMessagePage struct {
+	common        pageCommon
 	theme         *decredmaterial.Theme
 	container     layout.List
 	wallet        *wallet.Wallet
@@ -27,9 +28,10 @@ type signMessagePage struct {
 	result                                     **wallet.Signature
 	copySignature                              *widget.Clickable
 	copyIcon                                   *widget.Image
+	gtx                                        *layout.Context
 }
 
-func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
+func (win *Window) SignMessagePage(common pageCommon) Page {
 	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
@@ -45,6 +47,7 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
+		common: common,
 		theme:  common.theme,
 		wallet: common.wallet,
 
@@ -65,15 +68,14 @@ func (win *Window) SignMessagePage(common pageCommon) layout.Widget {
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
 
-	return func(gtx C) D {
-		pg.handle(gtx, common)
-		pg.updateColors(common)
-		pg.validate(true)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *signMessagePage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
+	if pg.gtx == nil {
+		pg.gtx = &gtx
+	}
+	common := pg.common
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 
 	body := func(gtx C) D {
@@ -211,7 +213,12 @@ func (pg *signMessagePage) updateColors(common pageCommon) {
 	}
 }
 
-func (pg *signMessagePage) handle(gtx C, common pageCommon) {
+func (pg *signMessagePage) handle() {
+	gtx := *pg.gtx
+	common := pg.common
+	pg.updateColors(common)
+	pg.validate(true)
+
 	for pg.clearButton.Button.Clicked() {
 		pg.clearForm()
 	}
@@ -303,3 +310,5 @@ func (pg *signMessagePage) clearForm() {
 	pg.signedMessageLabel.Text = ""
 	pg.errorLabel.Text = ""
 }
+
+func (pg *signMessagePage) onClose() {}

@@ -14,6 +14,7 @@ const PageWalletSettings = "WalletSettings"
 
 type walletSettingsPage struct {
 	theme      *decredmaterial.Theme
+	common     pageCommon
 	walletInfo *wallet.MultiWalletInfo
 	wal        *wallet.Wallet
 
@@ -25,9 +26,10 @@ type walletSettingsPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
+func (win *Window) WalletSettingsPage(common pageCommon) Page {
 	pg := &walletSettingsPage{
 		theme:         common.theme,
+		common:        common,
 		walletInfo:    win.walletInfo,
 		wal:           common.wallet,
 		notificationW: new(widget.Bool),
@@ -42,13 +44,12 @@ func (win *Window) WalletSettingsPage(common pageCommon) layout.Widget {
 
 	pg.chevronRightIcon.Color = pg.theme.Color.LightGray
 
-	return func(gtx C) D {
-		pg.handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *walletSettingsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
+
 	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
 	pg.notificationW.Value = false
 	if beep {
@@ -184,7 +185,8 @@ func (pg *walletSettingsPage) resetSelectedWallet(common pageCommon) {
 	common.wallAcctSelector.selectedReceiveAccount = 0
 }
 
-func (pg *walletSettingsPage) handle(common pageCommon) {
+func (pg *walletSettingsPage) handle() {
+	common := pg.common
 	for pg.changePass.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
@@ -274,3 +276,5 @@ func (pg *walletSettingsPage) handle(common pageCommon) {
 	default:
 	}
 }
+
+func (pg *walletSettingsPage) onClose() {}

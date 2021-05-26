@@ -52,7 +52,7 @@ type Window struct {
 
 	err string
 
-	pages                   map[string]layout.Widget
+	pages                   map[string]Page
 	walletTabs, accountTabs *decredmaterial.Tabs
 	keyEvents               chan *key.Event
 	toast                   *toast
@@ -119,6 +119,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 }
 
 func (win *Window) changePage(page string) {
+	win.pages[win.current].onClose()
 	win.current = page
 	win.refresh()
 }
@@ -150,6 +151,20 @@ func (win *Window) unloaded() {
 			evt.Frame(win.ops)
 		}
 	}
+}
+
+func (win *Window) layoutPage(gtx C, page Page) {
+	layout.Stack{
+		Alignment: layout.N,
+	}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return decredmaterial.Fill(gtx, win.theme.Color.LightGray)
+		}),
+		layout.Stacked(func(gtx C) D {
+			page.handle()
+			return page.Layout(gtx)
+		}),
+	)
 }
 
 // Loop runs main event handling and page rendering loop
@@ -245,7 +260,7 @@ func (win *Window) Loop(shutdown chan int) {
 				if s.loading {
 					win.Loading(gtx)
 				} else {
-					win.theme.Background(gtx, win.pages[win.current])
+					win.layoutPage(gtx, win.pages[win.current])
 				}
 
 				evt.Frame(win.ops)

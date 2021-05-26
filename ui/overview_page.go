@@ -29,11 +29,13 @@ type walletSyncDetails struct {
 }
 
 type overviewPage struct {
+	common pageCommon
 	listContainer, walletSyncList,
 	transactionsList *layout.List
 	theme *decredmaterial.Theme
 	tab   *decredmaterial.Tabs
 
+	wallet             **wallet.Wallet
 	walletInfo         *wallet.MultiWalletInfo
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions **wallet.Transactions
@@ -54,14 +56,18 @@ type overviewPage struct {
 	isCheckingLockWL      bool
 	syncDetailsVisibility bool
 	txnRowHeight          int
+	queue                 event.Queue
+
+	loadPage func(pageIcons)
 }
 
-func (win *Window) OverviewPage(c pageCommon) layout.Widget {
+func (win *Window) OverviewPage(c pageCommon) Page {
+	pg := &overviewPage{
+		theme:  c.theme,
+		common: c,
+		tab:    c.navTab,
 
-	pg := overviewPage{
-		theme: c.theme,
-		tab:   c.navTab,
-
+		wallet:             &win.wallet,
 		walletInfo:         win.walletInfo,
 		walletSyncStatus:   win.walletSyncStatus,
 		walletTransactions: &win.walletTransactions,
@@ -77,6 +83,8 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 
 		isCheckingLockWL: false,
 		autoSyncWallet:   true,
+
+		loadPage: win.loadPage,
 	}
 
 	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), c.icons.navigationArrowForward)
@@ -106,14 +114,13 @@ func (win *Window) OverviewPage(c pageCommon) layout.Widget {
 	pg.walletStatusIcon = c.icons.imageBrightness1
 	pg.cachedIcon = c.icons.cached
 
-	return func(gtx C) D {
-		pg.Handler(gtx, c, win)
-		return pg.Layout(gtx, c)
-	}
+	return pg
 }
 
 // Layout lays out the entire content for overview pg.
-func (pg *overviewPage) Layout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
+	pg.queue = gtx
+	c := pg.common
 	if c.info.LoadedWallets == 0 {
 		return c.Layout(gtx, func(gtx C) D {
 			return c.UniformPadding(gtx, func(gtx C) D {
@@ -581,13 +588,16 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 	})
 }
 
-func (pg *overviewPage) Handler(eq event.Queue, c pageCommon, win *Window) {
+func (pg *overviewPage) handle() {
+	eq := pg.queue
+	c := pg.common
 
-	if win.wallet != nil {
-		isDarkModeOn := win.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
-		if isDarkModeOn != win.theme.DarkMode {
-			win.theme.SwitchDarkMode(isDarkModeOn)
-			win.loadPage(c.icons)
+	wal := *pg.wallet
+	if wal != nil {
+		isDarkModeOn := wal.ReadBoolConfigValueForKey("isDarkModeOn")
+		if isDarkModeOn != pg.theme.DarkMode {
+			pg.theme.SwitchDarkMode(isDarkModeOn)
+			pg.loadPage(c.icons)
 		}
 	}
 
@@ -647,6 +657,8 @@ func (pg *overviewPage) Handler(eq event.Queue, c pageCommon, win *Window) {
 		}
 	}
 }
+
+func (pg *overviewPage) onClose() {}
 
 func showWalletUnlockModal(c pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
 	go func() {

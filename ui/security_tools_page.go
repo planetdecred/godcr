@@ -16,23 +16,23 @@ type securityToolsPage struct {
 	theme           *decredmaterial.Theme
 	verifyMessage   *widget.Clickable
 	validateAddress *widget.Clickable
+	common          pageCommon
 }
 
-func (win *Window) SecurityToolsPage(common pageCommon) layout.Widget {
+func (win *Window) SecurityToolsPage(common pageCommon) Page {
 	pg := &securityToolsPage{
 		theme:           common.theme,
 		verifyMessage:   new(widget.Clickable),
 		validateAddress: new(widget.Clickable),
+		common:          common,
 	}
 
-	return func(gtx C) D {
-		pg.handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
 // main settings layout
-func (pg *securityToolsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "Security Tools",
@@ -107,7 +107,8 @@ func (pg *securityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 	})
 }
 
-func (pg *securityToolsPage) handle(common pageCommon) {
+func (pg *securityToolsPage) handle() {
+	common := pg.common
 	if pg.verifyMessage.Clicked() {
 		*common.returnPage = PageSecurityTools
 		common.setReturnPage(PageSecurityTools)
@@ -120,3 +121,5 @@ func (pg *securityToolsPage) handle(common pageCommon) {
 		common.changePage(ValidateAddress)
 	}
 }
+
+func (pg *securityToolsPage) onClose() {}

@@ -19,9 +19,10 @@ type debugItem struct {
 type debugPage struct {
 	theme      *decredmaterial.Theme
 	debugItems []debugItem
+	common     pageCommon
 }
 
-func (win *Window) DebugPage(common pageCommon) layout.Widget {
+func (win *Window) DebugPage(common pageCommon) Page {
 	debugItems := []debugItem{
 		{
 			clickable: new(widget.Clickable),
@@ -33,21 +34,21 @@ func (win *Window) DebugPage(common pageCommon) layout.Widget {
 	pg := &debugPage{
 		theme:      common.theme,
 		debugItems: debugItems,
+		common:     common,
 	}
 
-	return func(gtx C) D {
-		pg.handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
-func (pg *debugPage) handle(common pageCommon) {
+func (pg *debugPage) handle() {
 	for i := range pg.debugItems {
 		for pg.debugItems[i].clickable.Clicked() {
-			common.changePage(pg.debugItems[i].page)
+			pg.common.changePage(pg.debugItems[i].page)
 		}
 	}
 }
+
+func (pg *debugPage) onClose() {}
 
 func (pg *debugPage) debugItem(gtx C, i int, common pageCommon) D {
 	return decredmaterial.Clickable(gtx, pg.debugItems[i].clickable, func(gtx C) D {
@@ -80,22 +81,22 @@ func (pg *debugPage) layoutDebugItems(gtx C, common pageCommon) {
 	})
 }
 
-func (pg *debugPage) Layout(gtx C, common pageCommon) D {
+func (pg *debugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		page := SubPage{
 			title: "Debug",
 			back: func() {
-				common.changePage(PageMore)
+				pg.common.changePage(PageMore)
 			},
 			body: func(gtx C) D {
-				pg.layoutDebugItems(gtx, common)
+				pg.layoutDebugItems(gtx, pg.common)
 				return layout.Dimensions{Size: gtx.Constraints.Max}
 			},
 		}
-		return common.SubPageLayout(gtx, page)
+		return pg.common.SubPageLayout(gtx, page)
 
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, container)
+	return pg.common.Layout(gtx, func(gtx C) D {
+		return pg.common.UniformPadding(gtx, container)
 	})
 }

@@ -46,6 +46,12 @@ type pageIcons struct {
 	ticketUnminedIcon *widget.Image
 }
 
+type Page interface {
+	Layout(layout.Context) layout.Dimensions
+	handle()
+	onClose()
+}
+
 type navHandler struct {
 	clickable     *widget.Clickable
 	image         *widget.Image
@@ -350,7 +356,7 @@ func (win *Window) loadPage(ic pageIcons) {
 
 	common.modalTemplate = win.LoadModalTemplates()
 
-	win.pages = make(map[string]layout.Widget)
+	win.pages = make(map[string]Page)
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)

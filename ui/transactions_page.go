@@ -37,14 +37,16 @@ type transactionsPage struct {
 	toTxnDetails                []*gesture.Click
 	separator                   decredmaterial.Line
 	theme                       *decredmaterial.Theme
+	common                      pageCommon
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
 	walletDropDown *decredmaterial.DropDown
 }
 
-func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
-	pg := transactionsPage{
+func (win *Window) TransactionsPage(common pageCommon) Page {
+	pg := &transactionsPage{
+		common:             common,
 		container:          layout.Flex{Axis: layout.Vertical},
 		txsList:            layout.List{Axis: layout.Vertical},
 		walletTransactions: &win.walletTransactions,
@@ -73,10 +75,7 @@ func (win *Window) TransactionsPage(common pageCommon) layout.Widget {
 		},
 	}, 1)
 
-	return func(gtx C) D {
-		pg.Handle(common)
-		return pg.Layout(gtx, common)
-	}
+	return pg
 }
 
 func (pg *transactionsPage) setWallets(common pageCommon) {
@@ -95,7 +94,8 @@ func (pg *transactionsPage) setWallets(common pageCommon) {
 	pg.walletDropDown = common.theme.DropDown(walletDropDownItems, 2)
 }
 
-func (pg *transactionsPage) Layout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.common
 	pg.setWallets(common)
 	container := func(gtx C) D {
 		walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
@@ -237,7 +237,8 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 	}
 }
 
-func (pg *transactionsPage) Handle(common pageCommon) {
+func (pg *transactionsPage) handle() {
+	common := pg.common
 	sortSelection := pg.orderDropDown.SelectedIndex()
 
 	if pg.filterSorter != sortSelection {
@@ -297,3 +298,5 @@ func initTxnWidgets(common pageCommon, transaction wallet.Transaction) transacti
 
 	return txn
 }
+
+func (pg *transactionsPage) onClose() {}
