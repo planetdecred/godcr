@@ -294,7 +294,7 @@ func (pg *ticketPage) ticketsActivitySection(gtx layout.Context, c pageCommon) l
 			}),
 			layout.Rigid(func(gtx C) D {
 				return pg.ticketsActivity.Layout(gtx, len(tickets), func(gtx C, index int) D {
-					return pg.ticketActivityItemnInfo(gtx, c, tickets[index], index)
+					return ticketRowActivity(gtx, &c, tickets[index], index)
 				})
 			}),
 		)
@@ -880,6 +880,10 @@ func (pg *ticketPage) handle() {
 
 	if pg.toTickets.Button.Clicked() {
 		c.changePage(PageTicketsList)
+	}
+
+	if pg.toTicketsActivity.Button.Clicked() {
+		c.changePage(PageTicketsActivity)
 	}
 
 	select {

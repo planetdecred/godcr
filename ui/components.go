@@ -968,6 +968,92 @@ func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimen
 	})
 }
 
+// ticketRowActivity layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
+func ticketRowActivity(gtx layout.Context, c *pageCommon, t wallet.Ticket, index int) layout.Dimensions {
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+				st := ticketStatusIcon(c, t.Info.Status)
+				if st == nil {
+					return layout.Dimensions{}
+				}
+				st.icon.Scale = 0.6
+				return st.icon.Layout(gtx)
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if index == 0 {
+						return layout.Dimensions{}
+					}
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					separator := c.theme.Separator()
+					separator.Width = gtx.Constraints.Max.X
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return separator.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Top:    values.MarginPadding8,
+						Bottom: values.MarginPadding8,
+					}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								labelStatus := c.theme.Label(values.TextSize18, strings.Title(strings.ToLower(t.Info.Status)))
+								labelStatus.Color = c.theme.Color.DeepBlue
+
+								labelDaysBehind := c.theme.Label(values.TextSize14, t.DaysBehind)
+								labelDaysBehind.Color = c.theme.Color.DeepBlue
+
+								return endToEndRow(gtx,
+									labelStatus.Layout,
+									labelDaysBehind.Layout)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{
+									Alignment: layout.Middle,
+								}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										txt := c.theme.Label(values.TextSize14, t.WalletName)
+										txt.Color = c.theme.Color.Gray2
+										return txt.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Left:  values.MarginPadding4,
+											Right: values.MarginPadding4,
+										}.Layout(gtx, func(gtx C) D {
+											ic := c.icons.imageBrightness1
+											ic.Color = c.theme.Color.Gray2
+											return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Right: values.MarginPadding4,
+										}.Layout(gtx, func(gtx C) D {
+											ic := c.icons.ticketIconInactive
+											ic.Scale = 0.5
+											return ic.Layout(gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										txt := c.theme.Label(values.TextSize14, t.Amount)
+										txt.Color = c.theme.Color.Gray2
+										return txt.Layout(gtx)
+									}),
+								)
+							}),
+						)
+					})
+				}),
+			)
+		}),
+	)
+}
+
 func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout.Dimensions {
 	color := th.Color.Success
 	if !n.success {
