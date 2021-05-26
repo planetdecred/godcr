@@ -89,7 +89,7 @@ type walletAccountSelector struct {
 	sendAccountBtn            *widget.Clickable
 	receivingAccountBtn       *widget.Clickable
 	purchaseTicketAccountBtn  *widget.Clickable
-	sendOption                string
+	sendToAddress             bool
 	walletInfoButton          decredmaterial.IconButton
 
 	selectedSendAccount,

@@ -88,7 +88,7 @@ func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
-				return common.accountSelectorLayout(gtx, "receive", "")
+				return common.accountSelectorLayout(gtx, "receive", false)
 			})
 		},
 		func(gtx C) D {

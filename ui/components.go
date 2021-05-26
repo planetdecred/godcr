@@ -420,13 +420,13 @@ func (page pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal l
 	return dims
 }
 
-func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage, sendOption string) layout.Dimensions {
+func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage string, sendToAddress bool) layout.Dimensions {
 	border := widget.Border{
 		Color:        page.theme.Color.Gray1,
 		CornerRadius: values.MarginPadding8,
 		Width:        values.MarginPadding2,
 	}
-	page.wallAcctSelector.sendOption = sendOption
+	page.wallAcctSelector.sendToAddress = sendToAddress
 
 	d := func(gtx layout.Context, acctName, walName, bal string, btn *widget.Clickable) layout.Dimensions {
 		return border.Layout(gtx, func(gtx C) D {
@@ -534,7 +534,8 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 							var showInfoBtn bool
 							if windex == 0 && page.wallAcctSelector.title == receivingAccountTitle {
 								showInfoBtn = true
-							} else if windex == 0 && page.wallAcctSelector.sendOption == "Address" {
+							} else if windex == 0 && page.wallAcctSelector.title == sendingAccountTitle && page.wallAcctSelector.sendToAddress {
+								// TODO
 								showInfoBtn = true
 							}
 
@@ -582,7 +583,7 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 
 								switch {
 								case fromAccount.number != unmixedAcct &&
-									page.wallAcctSelector.title == sendingAccountTitle && page.wallAcctSelector.sendOption == "Address":
+									page.wallAcctSelector.title == sendingAccountTitle && page.wallAcctSelector.sendToAddress:
 									if fromAccount.spendable != "" || fromAccount.evt != nil {
 										click := fromAccount.evt
 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -598,7 +599,7 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 										page.walletAccountsHandler(gtx, toAccount)
 										visibleAccount = toAccount
 									}
-								case page.wallAcctSelector.sendOption == "My account" && page.wallAcctSelector.title == sendingAccountTitle:
+								case !page.wallAcctSelector.sendToAddress && page.wallAcctSelector.title == sendingAccountTitle:
 									if toAccount.spendable != "" || toAccount.evt != nil {
 										click := toAccount.evt
 										pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)

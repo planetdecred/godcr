@@ -519,7 +519,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return c.accountSelectorLayout(gtx, "purchase", "")
+					return c.accountSelectorLayout(gtx, "purchase", false)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
