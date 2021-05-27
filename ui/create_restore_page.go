@@ -11,7 +11,6 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -31,7 +30,7 @@ type (
 
 type seedItemMenu struct {
 	text   string
-	button *widget.Clickable
+	button decredmaterial.Button
 }
 
 type createRestore struct {
@@ -52,6 +51,7 @@ type createRestore struct {
 	focused         []int
 	seedMenu        []seedItemMenu
 	openPopupIndex  int
+	selected        int
 
 	closeCreateRestore decredmaterial.IconButton
 	hideRestoreWallet  decredmaterial.IconButton
@@ -562,8 +562,8 @@ func (pg *createRestore) inputsGroup(gtx layout.Context, l *layout.List, len, st
 
 func (pg *createRestore) onSuggestionSeedsClicked() {
 	index := pg.seedEditors.focusIndex
-	for _, b := range pg.seedMenu {
-		for b.button.Clicked() {
+	for i, b := range pg.seedMenu {
+		for pg.seedMenu[i].button.Button.Clicked() {
 			pg.seedEditors.editors[index].Edit.Editor.SetText(b.text)
 			pg.seedEditors.editors[index].Edit.Editor.MoveCaret(len(b.text), 0)
 			pg.seedClicked = true
@@ -621,11 +621,9 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 
 				pg.resetSeedFields.Color = pg.theme.Color.Primary
 				pg.suggestions = pg.suggestionSeeds(text)
+				pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
 				for k, s := range pg.suggestions {
-					pg.seedMenu[k] = seedItemMenu{
-						text:   s,
-						button: new(widget.Clickable),
-					}
+					pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
 				}
 			case widget.SubmitEvent:
 				if i != 32 {
@@ -643,10 +641,22 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 
 func (pg *createRestore) initSeedMenu() {
 	for i := 0; i < pg.suggestionLimit; i++ {
+		btn := pg.theme.Button(new(widget.Clickable), "")
+		btn.Background, btn.Color = color.NRGBA{}, pg.theme.Color.DeepBlue
 		pg.seedMenu = append(pg.seedMenu, seedItemMenu{
 			text:   "",
-			button: new(widget.Clickable),
+			button: btn,
 		})
+	}
+}
+
+func (pg *createRestore) suggestionSeedEffect() {
+	for k := range pg.suggestions {
+		if pg.selected == k || pg.seedMenu[k].button.Button.Hovered() {
+			pg.seedMenu[k].button.Background = pg.theme.Color.LightGray
+		} else {
+			pg.seedMenu[k].button.Background = color.NRGBA{}
+		}
 	}
 }
 
@@ -665,11 +675,10 @@ func (pg *createRestore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex
 		border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
-					return material.Clickable(gtx, pg.seedMenu[i].button, func(gtx C) D {
-						return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-							return pg.theme.Body2(pg.seedMenu[i].text).Layout(gtx)
-						})
+					return layout.UniformInset(values.MarginPadding0).Layout(gtx, func(gtx C) D {
+						return pg.seedMenu[i].button.Layout(gtx)
 					})
 				})
 			})
@@ -886,6 +895,21 @@ func (pg *createRestore) handle() {
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
 		}
+		if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
+			pg.selected--
+			if pg.selected < 0 {
+				pg.selected = 0
+			}
+		}
+		if evt.Name == key.NameDownArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
+			pg.selected++
+			if pg.selected >= len(pg.suggestions) {
+				pg.selected = len(pg.suggestions) - 1
+			}
+		}
+		if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && pg.openPopupIndex != -1 && evt.State == key.Press {
+			pg.seedMenu[pg.selected].button.Button.Click()
+		}
 	case err := <-pg.errorReceiver:
 		common.states.creating = false
 		errText := err.Error()
@@ -899,6 +923,7 @@ func (pg *createRestore) handle() {
 	computePasswordStrength(&pg.passwordStrength, common.theme, pg.spendingPassword.Editor)
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
+	pg.suggestionSeedEffect()
 }
 
 func (pg *createRestore) onClose() {}
