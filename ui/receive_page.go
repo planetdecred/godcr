@@ -287,7 +287,7 @@ func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon
 
 func (pg *receivePage) handle() {
 	common := pg.common
-	gtx := *pg.gtx
+	gtx := pg.gtx
 	if pg.backdrop.Clicked() {
 		pg.isNewAddr = false
 	}

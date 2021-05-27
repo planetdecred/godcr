@@ -364,6 +364,7 @@ func (pg *privacyPage) handle() {
 
 	select {
 	case err := <-pg.errorReceiver:
+		common.modalLoad.setLoading(false)
 		common.notify(err.Error(), false)
 	case stt := <-*pg.acctMixerStatus:
 		if stt.RunStatus == wallet.MixerStarted {

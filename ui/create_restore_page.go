@@ -892,6 +892,7 @@ func (pg *createRestore) handle() {
 		if err.Error() == "exists" {
 			errText = "Wallet name already exists"
 		}
+		common.modalLoad.setLoading(false)
 		common.notify(errText, false)
 	default:
 	}
