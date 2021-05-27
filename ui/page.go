@@ -15,6 +15,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -102,25 +103,29 @@ type walletAccountSelector struct {
 }
 
 type pageCommon struct {
-	printer         *message.Printer
-	wallet          *wallet.Wallet
-	selectedWallet  *int
-	selectedAccount *int
-	theme           *decredmaterial.Theme
-	icons           pageIcons
-	returnPage      Page
-	amountDCRtoUSD  float64
-	usdExchangeRate float64
-	usdExchangeSet  bool
-	dcrUsdtBittrex  DCRUSDTBittrex
-	navTab          *decredmaterial.Tabs
-	keyEvents       chan *key.Event
-	toast           **toast
-	states          *states
-	modal           *decredmaterial.Modal
-	modalReceiver   chan *modalLoad
-	modalLoad       *modalLoad
-	modalTemplate   *ModalTemplate
+	printer          *message.Printer
+	multiWallet      *dcrlibwallet.MultiWallet
+	syncStatusUpdate *chan wallet.SyncStatusUpdate
+	wallet           *wallet.Wallet
+	selectedWallet   *int
+	selectedAccount  *int
+	theme            *decredmaterial.Theme
+	icons            pageIcons
+	returnPage       Page
+	amountDCRtoUSD   float64
+	usdExchangeRate  float64
+	usdExchangeSet   bool
+	dcrUsdtBittrex   DCRUSDTBittrex
+	navTab           *decredmaterial.Tabs
+	walletTabs       *decredmaterial.Tabs
+	accountTabs      *decredmaterial.Tabs
+	keyEvents        chan *key.Event
+	toast            **toast
+	states           *states
+	modal            *decredmaterial.Modal
+	modalReceiver    chan *modalLoad
+	modalLoad        *modalLoad
+	modalTemplate    *ModalTemplate
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
@@ -227,7 +232,7 @@ func (win *Window) loadIcons(decredIcons map[string]image.Image) pageIcons {
 	return ic
 }
 
-func (win *Window) loadPageCommon(decredIcons map[string]image.Image) pageCommon {
+func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWallet *dcrlibwallet.MultiWallet) pageCommon {
 
 	ic := win.loadIcons(decredIcons)
 
@@ -285,6 +290,8 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image) pageCommon
 
 	common := pageCommon{
 		printer:                 message.NewPrinter(language.English),
+		multiWallet:             multiWallet,
+		syncStatusUpdate:        &win.syncStatusUpdate,
 		wallet:                  win.wallet,
 		selectedWallet:          &win.selected,
 		selectedAccount:         &win.selectedAccount,
@@ -360,34 +367,6 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image) pageCommon
 	common.modalTemplate = win.LoadModalTemplates()
 
 	return common
-
-	// win.pages = make(map[string]Page)
-	// win.pages[PageWallet] = win.WalletPage(common)
-	// win.pages[PageOverview] = win.OverviewPage(common)
-	// win.pages[PageTransactions] = win.TransactionsPage(common)
-	// win.pages[PageMore] = win.MorePage(common)
-	// win.pages[PageCreateRestore] = win.CreateRestorePage(common)
-	// win.pages[PageReceive] = win.ReceivePage(common)
-	// win.pages[PageSend] = win.SendPage(common)
-	// win.pages[PageTransactionDetails] = win.TransactionDetailsPage(common)
-	// win.pages[PageSignMessage] = win.SignMessagePage(common)
-	// win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
-	// win.pages[PageSeedBackup] = win.BackupPage(common)
-	// win.pages[PageSettings] = win.SettingsPage(common)
-	// win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
-	// win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
-	// win.pages[PageProposals] = win.ProposalsPage(common)
-	// win.pages[PageProposalDetails] = win.ProposalDetailsPage(common)
-	// win.pages[PageDebug] = win.DebugPage(common)
-	// win.pages[PageLog] = win.LogPage(common)
-	// win.pages[PageAbout] = win.AboutPage(common)
-	// win.pages[PageHelp] = win.HelpPage(common)
-	// win.pages[PageUTXO] = win.UTXOPage(common)
-	// win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
-	// win.pages[PagePrivacy] = win.PrivacyPage(common)
-	// win.pages[PageTickets] = win.TicketPage(common)
-	// win.pages[ValidateAddress] = win.ValidateAddressPage(common)
-	// win.pages[PageTicketsList] = win.TicketPageList(common)
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {

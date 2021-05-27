@@ -25,6 +25,7 @@ type Window struct {
 	ops    *op.Ops
 
 	wallet             *wallet.Wallet
+	syncStatusUpdate   chan wallet.SyncStatusUpdate
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions *wallet.Transactions
 	walletTransaction  *wallet.Transaction
@@ -87,6 +88,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.theme = theme
 	win.ops = &op.Ops{}
 
+	win.syncStatusUpdate = make(chan wallet.SyncStatusUpdate, 10)
 	win.walletSyncStatus = new(wallet.SyncStatus)
 	win.walletTransactions = new(wallet.Transactions)
 	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
@@ -97,14 +99,15 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.proposal = make(chan *wallet.Proposal)
 
 	win.wallet = wal
-	win.states.loading = true
+	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)
 	win.modal = make(chan *modalLoad)
 
 	win.internalLog = internalLog
 
-	win.common = win.loadPageCommon(decredIcons)
+	wal.MultiWallet().AddSyncProgressListener(win, "window") // register for sync notifications
+	win.common = win.loadPageCommon(decredIcons, wal.MultiWallet())
 	win.currentPage = OverviewPage(win.common) // TODO
 
 	return win, nil

@@ -284,6 +284,8 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 		directionIconTopMargin = values.MarginPadding0
 	}
 
+	wal := common.multiWallet.WalletWithID(row.transaction.WalletID)
+
 	return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -330,11 +332,11 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return common.layoutBalance(gtx, "row.transaction.Balance", true)
+												return common.layoutBalance(gtx, dcrutil.Amount(row.transaction.Amount).String(), true)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
-													return walletLabel(gtx, common, " row.transaction.WalletID")
+													return walletLabel(gtx, common, wal.Name)
 												}
 												return layout.Dimensions{}
 											}),
@@ -1025,7 +1027,7 @@ func (page pageCommon) handler() {
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
 			// page.setReturnPage(*page.page)
-			// page.changePage(page.appBarNavItems[i].page)
+			// page.changePage(page.appBarNavItems[i].page) //TODO
 		}
 	}
 

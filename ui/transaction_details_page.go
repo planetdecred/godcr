@@ -23,7 +23,6 @@ type transactionDetailsPage struct {
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
-	transaction                     *dcrlibwallet.Transaction
 	hashBtn                         decredmaterial.Button
 	copyTextBtn                     []decredmaterial.Button
 	dot                             *widget.Icon
@@ -32,7 +31,10 @@ type transactionDetailsPage struct {
 	inputsCollapsible               *decredmaterial.Collapsible
 	gtx                             *layout.Context
 
-	walletName string
+	wallet               *dcrlibwallet.Wallet
+	transaction          *dcrlibwallet.Transaction
+	txSourceAccount      string
+	txDestinationAddress string
 }
 
 func TransactionDetailsPage(common pageCommon, transaction *dcrlibwallet.Transaction) Page {
@@ -57,13 +59,37 @@ func TransactionDetailsPage(common pageCommon, transaction *dcrlibwallet.Transac
 		hashBtn:   common.theme.Button(new(widget.Clickable), ""),
 		toDcrdata: new(widget.Clickable),
 
-		walletName: common.wallet.WalletWithID(transaction.WalletID).Name,
+		wallet: common.wallet.WalletWithID(transaction.WalletID),
 	}
 
 	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
 	pg.dot = common.icons.imageBrightness1
 	pg.dot.Color = common.theme.Color.Gray
+
+	// find source account
+	if transaction.Direction == dcrlibwallet.TxDirectionSent ||
+		transaction.Direction == dcrlibwallet.TxDirectionTransferred {
+		for _, input := range transaction.Inputs {
+			if input.AccountNumber != -1 {
+				accountName, err := pg.wallet.AccountName(input.AccountNumber)
+				if err != nil {
+					log.Error(err)
+				} else {
+					pg.txSourceAccount = accountName
+				}
+			}
+		}
+	}
+
+	//	find destination address
+	if transaction.Direction == dcrlibwallet.TxDirectionSent {
+		for _, output := range transaction.Outputs {
+			if output.AccountNumber == -1 {
+				pg.txDestinationAddress = output.Address
+			}
+		}
+	}
 
 	return pg
 }
@@ -142,13 +168,14 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						// amount := strings.Split((*pg.txnInfo).Balance, " ")
-						amount := strings.Split("1.4", " ") //TODO
+						mainText, subText := breakBalance(common.printer, dcrutil.Amount(pg.transaction.Amount).String())
 						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, common.theme.H4(amount[0]).Layout)
+								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+									return common.theme.H4(mainText).Layout(gtx)
+								})
 							}),
-							layout.Rigid(common.theme.H6(amount[1]).Layout),
+							layout.Rigid(common.theme.H6(subText).Layout),
 						)
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -218,7 +245,15 @@ func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 		m := values.MarginPadding10
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.txnInfoSection(gtx, values.String(values.StrFrom), pg.walletName, "TODO: tx account", true, false)
+				return pg.txnInfoSection(gtx, values.String(values.StrFrom), pg.wallet.Name, pg.txSourceAccount, true, false)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if transaction.Direction == dcrlibwallet.TxDirectionSent {
+					return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
+						return pg.txnInfoSection(gtx, values.String(values.StrTo), "", pg.txDestinationAddress, false, true)
+					})
+				}
+				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
@@ -314,17 +349,18 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 		return pg.transactionInputsContainer.Layout(gtx, len(pg.transaction.Inputs), func(gtx C, i int) D {
 			input := pg.transaction.Inputs[i]
 			accountName := "external"
+			walletName := ""
 			if input.AccountNumber != -1 {
-				account, err := pg.common.wallet.WalletWithID(pg.transaction.WalletID).GetAccount(input.AccountNumber)
+				account, err := pg.wallet.GetAccount(input.AccountNumber)
 				if err == nil {
 					accountName = account.Name
+					walletName = pg.wallet.Name
 				}
 			}
 			amount := dcrutil.Amount(input.Amount).String()
 			acctName := fmt.Sprintf("(%s)", accountName)
-			walName := pg.walletName //TODO
 			hashAcct := input.PreviousOutpoint
-			return pg.txnIORow(gtx, amount, acctName, walName, hashAcct, i)
+			return pg.txnIORow(gtx, amount, acctName, walletName, hashAcct, i)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -345,18 +381,19 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 		return pg.transactionOutputsContainer.Layout(gtx, len(transaction.Outputs), func(gtx C, i int) D {
 			output := transaction.Outputs[i]
 			accountName := "external"
+			walletName := ""
 			if output.AccountNumber != -1 {
-				account, err := pg.common.wallet.WalletWithID(pg.transaction.WalletID).GetAccount(output.AccountNumber)
+				name, err := pg.wallet.AccountName(output.AccountNumber)
 				if err == nil {
-					accountName = account.Name
+					accountName = name
+					walletName = pg.wallet.Name
 				}
 			}
 			amount := dcrutil.Amount(output.Amount).String()
 			acctName := fmt.Sprintf("(%s)", accountName)
-			walName := pg.walletName //todo
 			hashAcct := output.Address
 			x := len(transaction.Inputs)
-			return pg.txnIORow(gtx, amount, acctName, walName, hashAcct, i+x)
+			return pg.txnIORow(gtx, amount, acctName, walletName, hashAcct, i+x)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
