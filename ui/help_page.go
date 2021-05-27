@@ -18,7 +18,7 @@ type helpPage struct {
 	common        pageCommon
 }
 
-func (win *Window) HelpPage(common pageCommon) Page {
+func HelpPage(common pageCommon) Page {
 	pg := &helpPage{
 		theme:         common.theme,
 		documentation: new(widget.Clickable),
@@ -28,6 +28,10 @@ func (win *Window) HelpPage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *helpPage) pageID() string {
+	return PageHelp
+}
+
 // main settings layout
 func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
@@ -35,7 +39,7 @@ func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 			title:    "Help",
 			subTitle: "For more information, please visit the Decred documentation.",
 			back: func() {
-				pg.common.changePage(PageMore)
+				pg.common.popPage()
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {

@@ -63,10 +63,14 @@ func (win *Window) UTXOPage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *utxoPage) pageID() string {
+	return PageUTXO
+}
+
 func (pg *utxoPage) handle() {
 	common := pg.common
-	pg.selectedWalletID = common.info.Wallets[*common.selectedWallet].ID
-	pg.selectedAccountID = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].Number
+	pg.selectedWalletID = common.wallet.AllWallets()[*common.selectedWallet].ID //TODO
+	// pg.selectedAccountID = common.wallet.[*common.selectedWallet].Accounts[*common.selectedAccount].Number
 
 	if len(pg.checkboxes) != len((*pg.unspentOutputs).List) {
 		pg.checkboxes = make([]decredmaterial.CheckBoxStyle, len((*pg.unspentOutputs).List))
@@ -88,11 +92,11 @@ func (pg *utxoPage) handle() {
 
 	if pg.backButton.Button.Clicked() {
 		pg.clearPageData()
-		common.changePage(PageSend)
+		common.popPage()
 	}
 
 	if pg.useUTXOButton.Button.Clicked() {
-		common.changePage(PageSend)
+		common.popPage()
 	}
 
 	if pg.selecAllChexBox.CheckBox.Changed() {

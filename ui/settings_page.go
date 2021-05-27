@@ -31,7 +31,6 @@ type settingsPage struct {
 	common        pageCommon
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
-	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
 	updateConnectToPeer *widget.Clickable
@@ -54,23 +53,21 @@ type settingsPage struct {
 	peerAddr          string
 	agentValue        string
 	errorReceiver     chan error
-	loadPage          func(pageIcons)
 
 	currencyPreference *preference.ListPreference
 	languagePreference *preference.ListPreference
 }
 
-func (win *Window) SettingsPage(common pageCommon) Page {
+func SettingsPage(common pageCommon) Page {
 	chevronRightIcon := common.icons.chevronRight
 
 	pg := &settingsPage{
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		theme:      common.theme,
-		walletInfo: win.walletInfo,
-		wal:        common.wallet,
-		common:     common,
+		theme:  common.theme,
+		wal:    common.wallet,
+		common: common,
 
 		isDarkModeOn:     new(widget.Bool),
 		spendUnconfirmed: new(widget.Bool),
@@ -88,8 +85,6 @@ func (win *Window) SettingsPage(common pageCommon) Page {
 
 		confirm: common.theme.Button(new(widget.Clickable), "Ok"),
 		cancel:  common.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
-
-		loadPage: win.loadPage,
 	}
 
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
@@ -125,6 +120,10 @@ func (win *Window) SettingsPage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *settingsPage) pageID() string {
+	return PageSettings
+}
+
 func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	pg.updateSettingOptions()
@@ -133,7 +132,7 @@ func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 		page := SubPage{
 			title: values.String(values.StrSettings),
 			back: func() {
-				common.changePage(PageMore)
+				common.popPage()
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{
@@ -380,7 +379,7 @@ func (pg *settingsPage) handle() {
 	if pg.isDarkModeOn.Changed() {
 		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
-		pg.loadPage(common.icons)
+		// pg.loadPage(common.icons)
 	}
 
 	if pg.spendUnconfirmed.Changed() {

@@ -119,6 +119,10 @@ func (win *Window) TicketPage(c pageCommon) Page {
 	return pg
 }
 
+func (pg *ticketPage) pageID() string {
+	return PageTickets
+}
+
 func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	dims := c.Layout(gtx, func(gtx C) D {
@@ -572,8 +576,8 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c pageCommon) lay
 				layout.Rigid(func(gtx C) D {
 					tleft := pg.th.Label(values.TextSize14, "Account")
 					tleft.Color = pg.th.Color.Gray2
-					wallAcct := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet].Accounts
-					tright := pg.th.Label(values.TextSize14, wallAcct[c.wallAcctSelector.selectedPurchaseTicketAccount].Name)
+					wallAcct, _ := c.wallet.WalletWithID(c.wallAcctSelector.selectedPurchaseTicketWallet).GetAccountsRaw() //TODO
+					tright := pg.th.Label(values.TextSize14, wallAcct.Acc[c.wallAcctSelector.selectedPurchaseTicketAccount].Name)
 					return endToEndRow(gtx, tleft.Layout, tright.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -752,8 +756,9 @@ func (pg *ticketPage) calculateAndValidCost(c pageCommon) bool {
 	}
 	pg.submitPurchase.Text = fmt.Sprintf("Purchase %d tickets", tnumber)
 
-	selectWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
-	accountBalance := selectWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount].Balance.Spendable
+	selectWallet := c.wallet.AllWallets()[c.wallAcctSelector.selectedPurchaseTicketWallet]
+	selectedAccount, _ := selectWallet.GetAccount(int32(c.wallAcctSelector.selectedPurchaseTicketAccount)) //TODO
+	accountBalance := selectedAccount.Balance.Spendable
 	feePercentage := pg.selectedVSP.Info.FeePercentage
 	total := tprice * tnumber
 	feeDCR := int64((float64(total) / 100) * feePercentage)
@@ -789,14 +794,14 @@ func (pg *ticketPage) createNewVSPD(c pageCommon) {
 func (pg *ticketPage) handle() {
 	c := pg.common
 	// TODO: frefresh when ticket price update from remote
-	if len(c.info.Wallets) > 0 && pg.ticketPrice == "" {
+	if pg.ticketPrice == "" {
 		_, priceText := c.wallet.TicketPrice()
 		pg.ticketPrice = priceText
 		c.wallet.GetAllVSP()
 	}
 
-	selectedWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
-	selectedAccount := selectedWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount]
+	selectedWallet := c.wallet.AllWallets()[c.wallAcctSelector.selectedPurchaseTicketWallet]
+	selectedAccount, _ := selectedWallet.GetAccount(int32(c.wallAcctSelector.selectedPurchaseTicketAccount)) //TODO
 
 	if pg.walletSelectedID != selectedWallet.ID ||
 		pg.accountSelectedNumber != selectedAccount.Number {
@@ -879,7 +884,7 @@ func (pg *ticketPage) handle() {
 	}
 
 	if pg.toTickets.Button.Clicked() {
-		c.changePage(PageTicketsList)
+		c.changePage(TicketPageList(c))
 	}
 
 	select {

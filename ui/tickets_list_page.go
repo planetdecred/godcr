@@ -30,11 +30,11 @@ type ticketPageList struct {
 	common             pageCommon
 }
 
-func (win *Window) TicketPageList(c pageCommon) Page {
+func TicketPageList(c pageCommon) Page {
 	pg := &ticketPageList{
-		th:             c.theme,
-		common:         c,
-		tickets:        &win.walletTickets,
+		th:     c.theme,
+		common: c,
+		// tickets:        &win.walletTickets, TODO
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,
@@ -54,16 +54,20 @@ func (win *Window) TicketPageList(c pageCommon) Page {
 	return pg
 }
 
+func (pg *ticketPageList) pageID() string {
+	return PageTicketsList
+}
+
 func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "All tickets",
 			back: func() {
-				c.changePage(PageTickets)
+				c.popPage()
 			},
 			body: func(gtx C) D {
-				walletID := c.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
+				walletID := c.wallet.AllWallets()[pg.walletDropDown.SelectedIndex()].ID
 				tickets := (*pg.tickets).Confirmed[walletID]
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
@@ -285,14 +289,14 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c pageCommon,
 }
 
 func (pg *ticketPageList) initWalletDropDown(common pageCommon) {
-	if len(common.info.Wallets) == 0 || pg.walletDropDown != nil {
+	if pg.walletDropDown != nil {
 		return
 	}
 
 	var walletDropDownItems []decredmaterial.DropDownItem
-	for i := range common.info.Wallets {
+	for _, wal := range common.wallet.AllWallets() {
 		item := decredmaterial.DropDownItem{
-			Text: common.info.Wallets[i].Name,
+			Text: wal.Name,
 			Icon: common.icons.walletIcon,
 		}
 		walletDropDownItems = append(walletDropDownItems, item)
@@ -312,7 +316,7 @@ func (pg *ticketPageList) handle() {
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
 		newestFirst := pg.filterSorter == 0
-		for _, wal := range c.info.Wallets {
+		for _, wal := range c.wallet.AllWallets() {
 			tickets := (*pg.tickets).Confirmed[wal.ID]
 			sort.SliceStable(tickets, func(i, j int) bool {
 				backTime := time.Unix(tickets[j].Info.Ticket.Timestamp, 0)

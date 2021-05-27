@@ -43,10 +43,10 @@ type (
 )
 
 type backupPage struct {
-	theme  *decredmaterial.Theme
-	common pageCommon
-	wal    *wallet.Wallet
-	info   *wallet.MultiWalletInfo
+	theme    *decredmaterial.Theme
+	common   pageCommon
+	wal      *wallet.Wallet
+	walletID int
 
 	backButton     decredmaterial.IconButton
 	title          decredmaterial.Label
@@ -76,12 +76,12 @@ type backupPage struct {
 	privpass       []byte
 }
 
-func (win *Window) BackupPage(c pageCommon) Page {
+func BackupPage(c pageCommon, walletID int) Page {
 	b := &backupPage{
-		theme:  c.theme,
-		wal:    c.wallet,
-		info:   c.info,
-		common: c,
+		theme:    c.theme,
+		wal:      c.wallet,
+		walletID: walletID,
+		common:   c,
 
 		action:         c.theme.Button(new(widget.Clickable), "View seed phrase"),
 		backButton:     c.theme.PlainIconButton(new(widget.Clickable), c.icons.navigationArrowBack),
@@ -143,6 +143,10 @@ func (win *Window) BackupPage(c pageCommon) Page {
 	b.verifyList = &layout.List{Axis: layout.Vertical}
 
 	return b
+}
+
+func (pg *backupPage) pageID() string {
+	return PageSeedBackup
 }
 
 func (pg *backupPage) activeButton() {
@@ -471,8 +475,9 @@ func checkSlice(s []string) bool {
 	return true
 }
 
+//TODO What does this do?
 func (pg *backupPage) resetPage(c pageCommon) {
-	c.changePage(PageWallet)
+	c.popToPage(PageWallet)
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)
@@ -491,7 +496,7 @@ func (pg *backupPage) resetPage(c pageCommon) {
 
 func (pg *backupPage) confirm(password []byte) {
 	pg.privpass = password
-	s, err := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, password)
+	s, err := pg.wal.GetWalletSeedPhrase(pg.walletID, password)
 	if err != nil {
 		pg.passwordModal.WithError(err.Error())
 		return
@@ -529,12 +534,11 @@ func (pg *backupPage) handle() {
 				return
 			}
 
-			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*c.selectedWallet].ID, s, pg.privpass)
+			err := pg.wal.VerifyWalletSeedPhrase(pg.walletID, s, pg.privpass)
 			if err != nil {
 				c.notify(errMessage, false)
 				return
 			}
-			pg.info.Wallets[*c.selectedWallet].Seed = nil
 			pg.active++
 		case successView:
 			pg.resetPage(c)

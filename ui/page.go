@@ -47,6 +47,7 @@ type pageIcons struct {
 }
 
 type Page interface {
+	pageID() string
 	Layout(layout.Context) layout.Dimensions
 	handle()
 	onClose()
@@ -103,13 +104,11 @@ type walletAccountSelector struct {
 type pageCommon struct {
 	printer         *message.Printer
 	wallet          *wallet.Wallet
-	info            *wallet.MultiWalletInfo
 	selectedWallet  *int
 	selectedAccount *int
 	theme           *decredmaterial.Theme
 	icons           pageIcons
-	page            *string
-	returnPage      *string
+	returnPage      Page
 	amountDCRtoUSD  float64
 	usdExchangeRate float64
 	usdExchangeSet  bool
@@ -135,8 +134,10 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	changePage    func(string)
-	setReturnPage func(string)
+	popPage       func()
+	popToPage     func(string) error
+	changePage    func(Page)
+	setReturnPage func(Page)
 	refreshWindow func()
 
 	wallAcctSelector *walletAccountSelector
@@ -147,7 +148,7 @@ type (
 	D = layout.Dimensions
 )
 
-func (win *Window) addPages(decredIcons map[string]image.Image) {
+func (win *Window) loadIcons(decredIcons map[string]image.Image) pageIcons {
 	ic := pageIcons{
 		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
 		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
@@ -223,10 +224,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
-	win.loadPage(ic)
+	return ic
 }
 
-func (win *Window) loadPage(ic pageIcons) {
+func (win *Window) loadPageCommon(decredIcons map[string]image.Image) pageCommon {
+
+	ic := win.loadIcons(decredIcons)
 
 	appBarNavItems := []navHandler{
 		{
@@ -283,13 +286,13 @@ func (win *Window) loadPage(ic pageIcons) {
 	common := pageCommon{
 		printer:                 message.NewPrinter(language.English),
 		wallet:                  win.wallet,
-		info:                    win.walletInfo,
 		selectedWallet:          &win.selected,
 		selectedAccount:         &win.selectedAccount,
 		theme:                   win.theme,
 		icons:                   ic,
-		returnPage:              &win.previous,
-		page:                    &win.current,
+		returnPage:              win.previousPage,
+		walletTabs:              win.walletTabs,
+		accountTabs:             win.accountTabs,
 		keyEvents:               win.keyEvents,
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,
@@ -302,6 +305,8 @@ func (win *Window) loadPage(ic pageIcons) {
 		modalLoad:               &modalLoad{},
 		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
+		popPage:                 win.popPage,
+		popToPage:               win.popToPage,
 		changePage:              win.changePage,
 		setReturnPage:           win.setReturnPage,
 		refreshWindow:           win.refresh,
@@ -354,33 +359,35 @@ func (win *Window) loadPage(ic pageIcons) {
 
 	common.modalTemplate = win.LoadModalTemplates()
 
-	win.pages = make(map[string]Page)
-	win.pages[PageWallet] = win.WalletPage(common)
-	win.pages[PageOverview] = win.OverviewPage(common)
-	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageMore] = win.MorePage(common)
-	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
-	win.pages[PageReceive] = win.ReceivePage(common)
-	win.pages[PageSend] = win.SendPage(common)
-	win.pages[PageTransactionDetails] = win.TransactionDetailsPage(common)
-	win.pages[PageSignMessage] = win.SignMessagePage(common)
-	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
-	win.pages[PageSeedBackup] = win.BackupPage(common)
-	win.pages[PageSettings] = win.SettingsPage(common)
-	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
-	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
-	win.pages[PageProposals] = win.ProposalsPage(common)
-	win.pages[PageProposalDetails] = win.ProposalDetailsPage(common)
-	win.pages[PageDebug] = win.DebugPage(common)
-	win.pages[PageLog] = win.LogPage(common)
-	win.pages[PageAbout] = win.AboutPage(common)
-	win.pages[PageHelp] = win.HelpPage(common)
-	win.pages[PageUTXO] = win.UTXOPage(common)
-	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
-	win.pages[PagePrivacy] = win.PrivacyPage(common)
-	win.pages[PageTickets] = win.TicketPage(common)
-	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
-	win.pages[PageTicketsList] = win.TicketPageList(common)
+	return common
+
+	// win.pages = make(map[string]Page)
+	// win.pages[PageWallet] = win.WalletPage(common)
+	// win.pages[PageOverview] = win.OverviewPage(common)
+	// win.pages[PageTransactions] = win.TransactionsPage(common)
+	// win.pages[PageMore] = win.MorePage(common)
+	// win.pages[PageCreateRestore] = win.CreateRestorePage(common)
+	// win.pages[PageReceive] = win.ReceivePage(common)
+	// win.pages[PageSend] = win.SendPage(common)
+	// win.pages[PageTransactionDetails] = win.TransactionDetailsPage(common)
+	// win.pages[PageSignMessage] = win.SignMessagePage(common)
+	// win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
+	// win.pages[PageSeedBackup] = win.BackupPage(common)
+	// win.pages[PageSettings] = win.SettingsPage(common)
+	// win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
+	// win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
+	// win.pages[PageProposals] = win.ProposalsPage(common)
+	// win.pages[PageProposalDetails] = win.ProposalDetailsPage(common)
+	// win.pages[PageDebug] = win.DebugPage(common)
+	// win.pages[PageLog] = win.LogPage(common)
+	// win.pages[PageAbout] = win.AboutPage(common)
+	// win.pages[PageHelp] = win.HelpPage(common)
+	// win.pages[PageUTXO] = win.UTXOPage(common)
+	// win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
+	// win.pages[PagePrivacy] = win.PrivacyPage(common)
+	// win.pages[PageTickets] = win.TicketPage(common)
+	// win.pages[ValidateAddress] = win.ValidateAddressPage(common)
+	// win.pages[PageTicketsList] = win.TicketPageList(common)
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {
@@ -427,7 +434,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			// fill the entire window with a color if a user has no wallet created
-			if *page.page == PageCreateRestore {
+			if "page.page.pageID()" == PageCreateRestore { //TODO
 				return decredmaterial.Fill(gtx, page.theme.Color.Surface)
 			}
 
@@ -447,7 +454,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 		}),
 		layout.Stacked(func(gtx C) D {
 			// stack the page content on the entire window if a user has no wallet
-			if *page.page == PageCreateRestore {
+			if "page.page.pageID()" == PageCreateRestore { //TODO
 				return body(gtx)
 			}
 			return layout.Dimensions{}

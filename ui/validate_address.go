@@ -26,11 +26,10 @@ type validateAddressPage struct {
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
 	wallet                *wallet.Wallet
-	walletID              int
 	stateValidate         int
 }
 
-func (win *Window) ValidateAddressPage(common pageCommon) Page {
+func ValidateAddressPage(common pageCommon) Page {
 	pg := &validateAddressPage{
 		theme:       common.theme,
 		validateBtn: common.theme.Button(new(widget.Clickable), "Validate"),
@@ -54,14 +53,17 @@ func (win *Window) ValidateAddressPage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *validateAddressPage) pageID() string {
+	return ValidateAddress
+}
+
 func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
-	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	body := func(gtx C) D {
 		page := SubPage{
 			title: ValidateAddress,
 			back: func() {
-				common.changePage(*common.returnPage)
+				common.popPage()
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -183,18 +185,15 @@ func (pg *validateAddressPage) showDisplayResult(c pageCommon) layout.Widget {
 									}),
 									layout.Rigid(func(gtx C) D {
 										if pg.stateValidate == valid {
-											walletName := c.info.Wallets[*c.selectedWallet].Name
-											if walletName != "" {
-												return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-													return decredmaterial.Card{
-														Color: pg.theme.Color.Surface,
-													}.Layout(gtx, func(gtx C) D {
-														walletText := pg.theme.Caption(walletName)
-														walletText.Color = pg.theme.Color.Gray
-														return walletText.Layout(gtx)
-													})
+											return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+												return decredmaterial.Card{
+													Color: pg.theme.Color.Surface,
+												}.Layout(gtx, func(gtx C) D {
+													walletText := pg.theme.Caption("TODO") 
+													walletText.Color = pg.theme.Color.Gray
+													return walletText.Layout(gtx)
 												})
-											}
+											})
 										}
 										return layout.Dimensions{}
 									}),
@@ -254,14 +253,15 @@ func (pg *validateAddressPage) validateAddress() {
 			return
 		}
 
-		exist, err := pg.wallet.HaveAddress(pg.walletID, address)
-		if err != nil {
-			return
-		}
-		if !exist {
-			pg.stateValidate = notOwned
-			return
-		}
+		// exist, err := pg.wallet.HaveAddress(pg.walletID, address)
+		// if err != nil {
+		// 	return
+		// }
+		// if !exist {
+		// 	pg.stateValidate = notOwned
+		// 	return
+		// }
+		// TODO
 		pg.stateValidate = valid
 		return
 	}

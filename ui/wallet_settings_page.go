@@ -13,10 +13,12 @@ import (
 const PageWalletSettings = "WalletSettings"
 
 type walletSettingsPage struct {
-	theme      *decredmaterial.Theme
-	common     pageCommon
-	walletInfo *wallet.MultiWalletInfo
-	wal        *wallet.Wallet
+	theme          *decredmaterial.Theme
+	common         pageCommon
+	wal            *wallet.Wallet
+	walletID       int
+	walletName     string
+	IsWatchingOnly bool
 
 	changePass, rescan, deleteWallet *widget.Clickable
 
@@ -26,12 +28,16 @@ type walletSettingsPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) WalletSettingsPage(common pageCommon) Page {
+func WalletSettingsPage(common pageCommon, walletID int) Page {
+	wal := common.wallet.WalletWithID(walletID)
 	pg := &walletSettingsPage{
-		theme:         common.theme,
-		common:        common,
-		walletInfo:    win.walletInfo,
-		wal:           common.wallet,
+		theme:          common.theme,
+		common:         common,
+		wal:            common.wallet,
+		walletID:       walletID,
+		walletName:     wal.Name,
+		IsWatchingOnly: wal.IsWatchingOnlyWallet(),
+
 		notificationW: new(widget.Bool),
 		errorReceiver: make(chan error),
 
@@ -47,6 +53,10 @@ func (win *Window) WalletSettingsPage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *walletSettingsPage) pageID() string {
+	return PageWalletSettings
+}
+
 func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 
@@ -59,14 +69,14 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			title:      values.String(values.StrSettings),
-			walletName: common.info.Wallets[*common.selectedWallet].Name,
+			walletName: pg.walletName,
 			back: func() {
-				common.changePage(PageWallet)
+				common.popPage()
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if !common.info.Wallets[*common.selectedWallet].IsWatchingOnly {
+						if !pg.IsWatchingOnly {
 							return pg.changePassphrase()(gtx)
 						}
 						return layout.Dimensions{}
@@ -188,13 +198,12 @@ func (pg *walletSettingsPage) resetSelectedWallet(common pageCommon) {
 func (pg *walletSettingsPage) handle() {
 	common := pg.common
 	for pg.changePass.Clicked() {
-		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: ChangePasswordTemplate,
 				title:    values.String(values.StrChangeSpendingPass),
 				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errorReceiver)
+					pg.wal.ChangeWalletPassphrase(pg.walletID, oldPass, newPass, pg.errorReceiver)
 				},
 				confirmText: values.String(values.StrChange),
 				cancel:      common.closeModal,
@@ -205,13 +214,12 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.rescan.Clicked() {
-		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template: RescanWalletTemplate,
 				title:    values.String(values.StrRescanBlockchain),
 				confirm: func() {
-					err := pg.wal.RescanBlocks(walletID)
+					err := pg.wal.RescanBlocks(pg.walletID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
 							common.notify(values.String(values.StrNotConnected), false)
@@ -244,13 +252,12 @@ func (pg *walletSettingsPage) handle() {
 				template: ConfirmRemoveTemplate,
 				title:    values.String(values.StrRemoveWallet),
 				confirm: func() {
-					walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 					go func() {
 						common.modalReceiver <- &modalLoad{
 							template: PasswordTemplate,
 							title:    values.String(values.StrConfirmToRemove),
 							confirm: func(pass string) {
-								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
+								pg.wal.DeleteWallet(pg.walletID, []byte(pass), pg.errorReceiver)
 								pg.resetSelectedWallet(common)
 							},
 							confirmText: values.String(values.StrConfirm),

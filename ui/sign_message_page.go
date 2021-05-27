@@ -21,6 +21,7 @@ type signMessagePage struct {
 	container     layout.List
 	wallet        *wallet.Wallet
 	walletID      int
+	walletName    string
 	errorReceiver chan error
 
 	isSigningMessage                           bool
@@ -33,7 +34,7 @@ type signMessagePage struct {
 	gtx                                        *layout.Context
 }
 
-func (win *Window) SignMessagePage(common pageCommon) Page {
+func SignMessagePage(common pageCommon, walletID int) Page {
 	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
@@ -49,9 +50,11 @@ func (win *Window) SignMessagePage(common pageCommon) Page {
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
-		common: common,
-		theme:  common.theme,
-		wallet: common.wallet,
+		common:   common,
+		theme:    common.theme,
+		wallet:   common.wallet,
+		walletID: walletID,
+		walletName: common.wallet.WalletWithID(walletID).Name,
 
 		titleLabel:         common.theme.H5("Sign Message"),
 		signedMessageLabel: common.theme.Body1(""),
@@ -59,10 +62,10 @@ func (win *Window) SignMessagePage(common pageCommon) Page {
 		addressEditor:      addressEditor,
 		messageEditor:      messageEditor,
 
-		clearButton:   clearButton,
-		signButton:    common.theme.Button(new(widget.Clickable), "Sign message"),
-		copyButton:    common.theme.Button(new(widget.Clickable), "Copy"),
-		result:        &win.signatureResult,
+		clearButton: clearButton,
+		signButton:  common.theme.Button(new(widget.Clickable), "Sign message"),
+		copyButton:  common.theme.Button(new(widget.Clickable), "Copy"),
+		// result:        &win.signatureResult,
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
 		errorReceiver: make(chan error),
@@ -73,20 +76,23 @@ func (win *Window) SignMessagePage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *signMessagePage) pageID() string {
+	return PageSignMessage
+}
+
 func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
 	}
 	common := pg.common
-	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 
 	body := func(gtx C) D {
 		page := SubPage{
 			title:      "Sign message",
-			walletName: common.info.Wallets[*common.selectedWallet].Name,
+			walletName: pg.walletName,
 			back: func() {
 				pg.clearForm()
-				common.changePage(PageWallet)
+				common.changePage(WalletPage(common)) // TODO
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return common.theme.Card().Layout(gtx, func(gtx C) D {

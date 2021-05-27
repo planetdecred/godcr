@@ -31,7 +31,7 @@ const (
 
 type (
 	TransactionRow struct {
-		transaction wallet.Transaction
+		transaction dcrlibwallet.Transaction
 		index       int
 		showBadge   bool
 	}
@@ -75,7 +75,8 @@ func (page *pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			}
 			if page.usdExchangeSet && page.dcrUsdtBittrex.LastTradeRate != "" {
 				page.usdExchangeRate, _ = strconv.ParseFloat(page.dcrUsdtBittrex.LastTradeRate, 64)
-				TotalBalanceFloat, _ := strconv.ParseFloat(page.info.TotalBalanceRaw, 64)
+				totalBalance := "4"                                          // todo
+				TotalBalanceFloat, _ := strconv.ParseFloat(totalBalance, 64) // todo
 				page.amountDCRtoUSD = TotalBalanceFloat * page.usdExchangeRate
 
 				inset := layout.Inset{
@@ -130,7 +131,7 @@ func (page *pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.layoutBalance(gtx, page.info.TotalBalance, true)
+												return page.layoutBalance(gtx, "totalBalance TODO", true)
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
@@ -199,7 +200,7 @@ func (page *pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			list := layout.List{Axis: layout.Vertical}
 			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
 				background := page.theme.Color.Surface
-				if page.drawerNavItems[i].page == *page.page {
+				if page.drawerNavItems[i].page == "page.page.pageID()" { //TODO
 					background = page.theme.Color.ActiveGray
 				}
 				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
@@ -230,7 +231,7 @@ func (page *pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									img := page.drawerNavItems[i].imageInactive
-									if page.drawerNavItems[i].page == *page.page {
+									if page.drawerNavItems[i].page == "page.page.pageID()" { // TODO
 										img = page.drawerNavItems[i].image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
@@ -244,7 +245,7 @@ func (page *pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
 										textColor := page.theme.Color.Gray4
-										if page.drawerNavItems[i].page == *page.page {
+										if page.drawerNavItems[i].page == "page.page.pageID()" { // TODO
 											textColor = page.theme.Color.DeepBlue
 										}
 										txt.Color = textColor
@@ -287,7 +288,7 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				icon := common.icons.receiveIcon
-				if row.transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
+				if row.transaction.Direction == dcrlibwallet.TxDirectionSent {
 					icon = common.icons.sendIcon
 				}
 				icon.Scale = 1.0
@@ -329,11 +330,11 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return common.layoutBalance(gtx, row.transaction.Balance, true)
+												return common.layoutBalance(gtx, "row.transaction.Balance", true)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
-													return walletLabel(gtx, *common, row.transaction.WalletName)
+													return walletLabel(gtx, common, " row.transaction.WalletID")
 												}
 												return layout.Dimensions{}
 											}),
@@ -345,12 +346,12 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 												func(gtx C) D {
-													s := formatDateOrTime(row.transaction.Txn.Timestamp)
-													if row.transaction.Status != "confirmed" {
-														s = row.transaction.Status
+													s := formatDateOrTime(row.transaction.Timestamp)
+													if txConfirmations(common, &row.transaction) > 1 {
+														s = "confirmed"
 													}
 													status := common.theme.Body1(s)
-													if row.transaction.Status != "confirmed" {
+													if txConfirmations(common, &row.transaction) <= 1 {
 														status.Color = common.theme.Color.Gray5
 													} else {
 														status.Color = common.theme.Color.Gray4
@@ -362,7 +363,7 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 												statusIcon := common.icons.confirmIcon
-												if row.transaction.Status != "confirmed" {
+												if txConfirmations(common, &row.transaction) <= 1 {
 													statusIcon = common.icons.pendingIcon
 												}
 												statusIcon.Scale = 1.0
@@ -498,17 +499,20 @@ func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage st
 
 	switch {
 	case callingPage == "send":
-		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedSendWallet]
-		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedSendAccount]
-		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.SpendableBalance).String(), page.wallAcctSelector.sendAccountBtn)
+		wallSelect := page.wallet.AllWallets()[page.wallAcctSelector.selectedSendWallet] //TODO
+		accts, _ := wallSelect.GetAccountsRaw()
+		acctSelect := accts.Acc[page.wallAcctSelector.selectedSendAccount]
+		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.Balance.Spendable).String(), page.wallAcctSelector.sendAccountBtn)
 	case callingPage == "receive":
-		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedReceiveWallet]
-		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedReceiveAccount]
-		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.SpendableBalance).String(), page.wallAcctSelector.receivingAccountBtn)
+		wallSelect := page.wallet.AllWallets()[page.wallAcctSelector.selectedReceiveWallet]
+		accts, _ := wallSelect.GetAccountsRaw()
+		acctSelect := accts.Acc[page.wallAcctSelector.selectedSendAccount]
+		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.Balance.Spendable).String(), page.wallAcctSelector.receivingAccountBtn)
 	case callingPage == "purchase":
-		wallSelect := page.info.Wallets[page.wallAcctSelector.selectedPurchaseTicketWallet]
-		acctSelect := wallSelect.Accounts[page.wallAcctSelector.selectedPurchaseTicketAccount]
-		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.SpendableBalance).String(), page.wallAcctSelector.purchaseTicketAccountBtn)
+		wallSelect := page.wallet.AllWallets()[page.wallAcctSelector.selectedPurchaseTicketWallet]
+		accts, _ := wallSelect.GetAccountsRaw()
+		acctSelect := accts.Acc[page.wallAcctSelector.selectedSendAccount]
+		return d(gtx, acctSelect.Name, wallSelect.Name, dcrutil.Amount(acctSelect.Balance.Spendable).String(), page.wallAcctSelector.purchaseTicketAccountBtn)
 	default:
 		return layout.Dimensions{}
 	}
@@ -566,16 +570,17 @@ func (page *pageCommon) walletAccountModalLayout(gtx layout.Context) layout.Dime
 		func(gtx C) D {
 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					return wallAcctSelector.walletsList.Layout(gtx, len(page.info.Wallets), func(gtx C, windex int) D {
-						if page.info.Wallets[windex].IsWatchingOnly {
+					return wallAcctSelector.walletsList.Layout(gtx, len(page.wallet.AllWallets()), func(gtx C, windex int) D {
+						if page.wallet.AllWallets()[windex].IsWatchingOnlyWallet() {
 							return D{}
 						}
-						walletID := page.info.Wallets[windex].ID
+						walletID := page.wallet.AllWallets()[windex].ID
 						mixedAcct := page.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, walletID)
 						unmixedAcct := page.wallet.ReadMixerConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, walletID)
 
-						return wallAcctGroup(gtx, page.info.Wallets[windex].Name, windex, func(gtx C) D {
-							return wallAcctSelector.accountsList.Layout(gtx, len(page.info.Wallets[windex].Accounts), func(gtx C, aindex int) D {
+						return wallAcctGroup(gtx, page.wallet.AllWallets()[windex].Name, windex, func(gtx C) D {
+							accts, _ := page.wallet.AllWallets()[windex].GetAccountsRaw()
+							return wallAcctSelector.accountsList.Layout(gtx, len(accts.Acc), func(gtx C, aindex int) D {
 								var visibleAccount walletAccount
 								fromAccount := wallAcctSelector.walletAccounts.selectSendAccount[windex][aindex]
 								toAccount := wallAcctSelector.walletAccounts.selectReceiveAccount[windex][aindex]
@@ -810,7 +815,8 @@ func (page *pageCommon) addAccount(account walletAccount) {
 
 func (page *pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount, windex int) {
 	if _, ok := wallAcct[windex]; !ok {
-		accounts := page.info.Wallets[windex].Accounts
+		accts, _ := page.wallet.AllWallets()[windex].GetAccountsRaw()
+		accounts := accts.Acc
 		if len(accounts) != len(wallAcct[windex]) {
 			wallAcct[windex] = make([]walletAccount, len(accounts))
 			for aindex := range accounts {
@@ -823,8 +829,8 @@ func (page *pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount
 					accountIndex: aindex,
 					evt:          &gesture.Click{},
 					accountName:  accounts[aindex].Name,
-					totalBalance: accounts[aindex].TotalBalance,
-					spendable:    dcrutil.Amount(accounts[aindex].SpendableBalance).String(),
+					totalBalance: dcrutil.Amount(accounts[aindex].TotalBalance).String(),
+					spendable:    dcrutil.Amount(accounts[aindex].Balance.Spendable).String(),
 					number:       accounts[aindex].Number,
 				}
 			}
@@ -1018,18 +1024,18 @@ func (page pageCommon) handler() {
 
 	for i := range page.appBarNavItems {
 		for page.appBarNavItems[i].clickable.Clicked() {
-			page.setReturnPage(*page.page)
-			page.changePage(page.appBarNavItems[i].page)
+			// page.setReturnPage(*page.page)
+			// page.changePage(page.appBarNavItems[i].page)
 		}
 	}
 
 	for i := range page.drawerNavItems {
 		for page.drawerNavItems[i].clickable.Clicked() {
-			page.changePage(page.drawerNavItems[i].page)
+			// page.changePage(page.drawerNavItems[i].page) //TODO
 		}
 	}
 
-	for windex := 0; windex < page.info.LoadedWallets; windex++ {
+	for windex := 0; windex < int(page.wallet.LoadedWalletsCount()); windex++ {
 		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectSendAccount, windex)
 		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectReceiveAccount, windex)
 		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectPurchaseTicketAccount, windex)

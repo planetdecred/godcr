@@ -27,7 +27,8 @@ type aboutPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) AboutPage(common pageCommon) Page {
+func AboutPage(common pageCommon) Page {
+
 	pg := &aboutPage{
 		common:           common,
 		theme:            common.theme,
@@ -38,7 +39,7 @@ func (win *Window) AboutPage(common pageCommon) Page {
 		buildDate:        common.theme.Body1("Build date"),
 		buildDateValue:   common.theme.Body1("2020-09-10"),
 		network:          common.theme.Body1("Network"),
-		networkValue:     common.theme.Body1(win.wallet.Net),
+		networkValue:     common.theme.Body1(common.wallet.Net),
 		license:          common.theme.Body1("License"),
 		chevronRightIcon: common.icons.chevronRight,
 	}
@@ -51,12 +52,16 @@ func (win *Window) AboutPage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *aboutPage) pageID() string {
+	return PageAbout
+}
+
 func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "About",
 			back: func() {
-				pg.common.changePage(PageMore)
+				pg.common.popPage()
 			},
 			body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {

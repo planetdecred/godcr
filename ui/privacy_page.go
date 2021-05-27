@@ -8,6 +8,7 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -26,9 +27,13 @@ type privacyPage struct {
 	dangerZoneCollapsible                *decredmaterial.Collapsible
 	errorReceiver                        chan error
 	acctMixerStatus                      *chan *wallet.AccountMixer
+	walletID                             int
+
+	walletName string
+	accounts   []*dcrlibwallet.Account
 }
 
-func (win *Window) PrivacyPage(common pageCommon) Page {
+func PrivacyPage(common pageCommon, walletID int) Page {
 	pg := &privacyPage{
 		theme:                   common.theme,
 		common:                  common,
@@ -38,7 +43,10 @@ func (win *Window) PrivacyPage(common pageCommon) Page {
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
 		errorReceiver:           make(chan error),
-		acctMixerStatus:         &win.walletAcctMixerStatus,
+		// acctMixerStatus:         &win.walletAcctMixerStatus, //TODO
+		walletID: walletID,
+
+		walletName: common.wallet.WalletWithID(walletID).Name,
 	}
 	pg.toPrivacySetup.Background = pg.theme.Color.Primary
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
@@ -46,7 +54,17 @@ func (win *Window) PrivacyPage(common pageCommon) Page {
 	pg.infoBtn.Background = common.theme.Color.Surface
 	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
 
+	accounts, err := common.wallet.WalletWithID(pg.walletID).GetAccountsRaw()
+	if err != nil {
+		log.Error("error getting accounts:", err)
+	}
+	pg.accounts = accounts.Acc
+
 	return pg
+}
+
+func (pg *privacyPage) pageID() string {
+	return PagePrivacy
 }
 
 func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -54,13 +72,13 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		load := SubPage{
 			title:      "Privacy",
-			walletName: c.info.Wallets[*c.selectedWallet].Name,
+			walletName: pg.walletName,
 			back: func() {
-				c.changePage(PageWallet)
+				c.popPage()
 			},
 			infoTemplate: PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
-				if c.wallet.IsAccountMixerConfigSet(c.info.Wallets[*c.selectedWallet].ID) {
+				if c.wallet.IsAccountMixerConfigSet(pg.walletID) {
 					widgets := []func(gtx C) D{
 						func(gtx C) D {
 							return pg.mixerInfoLayout(gtx, &c)
@@ -156,7 +174,7 @@ func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context, c *pageComm
 	subtxt.Color = c.theme.Color.Gray
 	iconVisibility := false
 
-	if c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+	if c.wallet.IsAccountMixerActive(pg.walletID) {
 		txt.Text = "Mixer is running..."
 		subtxt.Text = "Keep this app opened"
 		iconVisibility = true
@@ -206,14 +224,17 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+
 							var mixedBalance string
 							var unmixedBalance string
-							for _, acct := range c.info.Wallets[*c.selectedWallet].Accounts {
-								if acct.Name == "mixed" {
-									mixedBalance = acct.TotalBalance
-								}
-								if acct.Name == "unmixed" {
-									unmixedBalance = acct.TotalBalance
+
+							wal := pg.common.wallet.WalletWithID(pg.walletID)
+
+							for _, acct := range pg.accounts {
+								if acct.Number == wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, -1) {
+									mixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+								} else if acct.Number == wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, -1) {
+									unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
 								}
 							}
 
@@ -226,7 +247,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return txt.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											if c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+											if c.wallet.IsAccountMixerActive(pg.walletID) {
 												return c.layoutBalance(gtx, unmixedBalance, true)
 											}
 											return c.layoutBalance(gtx, unmixedBalance, true)
@@ -234,7 +255,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 									)
 								}),
 								layout.Rigid(func(gtx C) D {
-									if !c.wallet.IsAccountMixerActive(c.info.Wallets[*c.selectedWallet].ID) {
+									if !c.wallet.IsAccountMixerActive(pg.walletID) {
 										return layout.Dimensions{}
 									}
 									c.icons.arrowDownIcon.Scale = 1.0
@@ -343,7 +364,7 @@ func (pg *privacyPage) handle() {
 		if pg.toggleMixer.Value {
 			go pg.showModalPasswordStartAccountMixer(&common)
 		} else {
-			common.wallet.StopAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pg.errorReceiver)
+			common.wallet.StopAccountMixer(pg.walletID, pg.errorReceiver)
 		}
 	}
 
@@ -380,13 +401,20 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 		template: PasswordTemplate,
 		title:    "Confirm to create needed accounts",
 		confirm: func(p string) {
-			for _, acct := range common.info.Wallets[*common.selectedWallet].Accounts {
+
+			// TODO simplify
+			accounts, err := common.wallet.WalletWithID(pg.walletID).GetAccountsRaw()
+			if err != nil {
+				log.Error("error getting accounts:", err)
+				return
+			}
+			for _, acct := range accounts.Acc {
 				if acct.Name == "mixed" || acct.Name == "unmixed" {
 					go pg.showModalSetupExistAcct(common)
 					return
 				}
 			}
-			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errorReceiver)
+			common.wallet.SetupAccountMixer(pg.walletID, p, pg.errorReceiver)
 		},
 		confirmText: "Confirm",
 		cancel:      common.closeModal,
@@ -401,7 +429,7 @@ func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
 		cancel:      common.closeModal,
 		confirm: func() {
 			common.closeModal()
-			*common.page = PageWallet
+			// *common.page = PageWallet TODO
 		},
 	}
 }
@@ -417,7 +445,7 @@ func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
 		},
 		cancelText: "Cancel",
 		confirm: func(pass string) {
-			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errorReceiver)
+			common.wallet.StartAccountMixer(pg.walletID, pass, pg.errorReceiver)
 		},
 	}
 }

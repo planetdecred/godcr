@@ -185,6 +185,10 @@ func (win *Window) SendPage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *sendPage) pageID() string {
+	return PageSend
+}
+
 func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	pageContent := []func(gtx C) D{
@@ -424,10 +428,10 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 }
 
 func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) layout.Dimensions {
-	receiveWallet := common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet]
-	receiveAcct := receiveWallet.Accounts[common.wallAcctSelector.selectedReceiveAccount]
-	sendWallet := common.info.Wallets[common.wallAcctSelector.selectedSendWallet]
-	sendAcct := sendWallet.Accounts[common.wallAcctSelector.selectedSendAccount]
+	receiveWallet := common.wallet.AllWallets()[common.wallAcctSelector.selectedReceiveWallet] // TODO
+	receiveAcct, _ := receiveWallet.GetAccount(int32(common.wallAcctSelector.selectedReceiveAccount))
+	sendWallet := common.wallet.AllWallets()[common.wallAcctSelector.selectedSendWallet] // TODO
+	sendAcct, _ := sendWallet.GetAccount(int32(common.wallAcctSelector.selectedSendAccount))
 	w := []layout.Widget{
 		func(gtx C) D {
 			return pg.theme.H6("Confim to send").Layout(gtx)
@@ -765,14 +769,14 @@ func (pg *sendPage) setDestinationAddr(sendAmount float64, common pageCommon) {
 }
 
 func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool, c pageCommon) {
-	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
-	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
+	sendWallet := c.wallet.AllWallets()[c.wallAcctSelector.selectedSendWallet] // TODO
+	sendAcct, _ := sendWallet.GetAccount(int32(c.wallAcctSelector.selectedSendAccount))
 
 	pg.remainingBalance = 0
 	if isInputAmountEmpty {
-		pg.remainingBalance = sendAcct.SpendableBalance
+		pg.remainingBalance = sendAcct.Balance.Spendable
 	} else {
-		pg.remainingBalance = sendAcct.SpendableBalance - pg.totalCostDCR
+		pg.remainingBalance = sendAcct.Balance.Spendable - pg.totalCostDCR
 	}
 	pg.balanceAfterSendValue = dcrutil.Amount(pg.remainingBalance).String()
 }
@@ -795,7 +799,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 	}
 
 	if pg.broadcastResult.TxHash != "" {
-		*c.page = PageOverview
+		c.popPage() // confirm TODO
 		c.notify("1 Transaction Sent", true)
 
 		if pg.remainingBalance != -1 {
@@ -861,12 +865,8 @@ func (pg *sendPage) sendFund(c pageCommon) {
 
 func (pg *sendPage) handle() {
 	c := pg.common
-	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
-	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
-
-	if len(c.info.Wallets) == 0 {
-		return
-	}
+	sendWallet := c.wallet.AllWallets()[c.wallAcctSelector.selectedSendWallet] // TODO
+	sendAcct, _ := sendWallet.GetAccount(int32(c.wallAcctSelector.selectedSendAccount))
 
 	if pg.exchangeErr != "" {
 		c.notify(pg.exchangeErr, false)
@@ -877,7 +877,7 @@ func (pg *sendPage) handle() {
 	if c.subPageBackButton.Button.Clicked() {
 		pg.resetErrorText()
 		pg.resetFields()
-		c.changePage(*c.returnPage)
+		c.popPage()
 	}
 
 	if c.subPageInfoButton.Button.Clicked() {

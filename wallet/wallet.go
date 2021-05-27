@@ -127,7 +127,7 @@ func (wal *Wallet) wallets() ([]dcrlibwallet.Wallet, error) {
 	return wallets, nil
 }
 
-func (wal *Wallet) hdPrefix() string {
+func (wal *Wallet) HDPrefix() string {
 	switch wal.Net {
 	case "testnet3": // should use a constant
 		return dcrlibwallet.TestnetHDPath

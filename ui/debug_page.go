@@ -13,7 +13,7 @@ const PageDebug = "Debug"
 type debugItem struct {
 	clickable *widget.Clickable
 	text      string
-	page      string
+	page      Page
 }
 
 type debugPage struct {
@@ -22,12 +22,12 @@ type debugPage struct {
 	common     pageCommon
 }
 
-func (win *Window) DebugPage(common pageCommon) Page {
+func DebugPage(common pageCommon) Page {
 	debugItems := []debugItem{
 		{
 			clickable: new(widget.Clickable),
 			text:      "Check wallet logs",
-			page:      PageLog,
+			page:      LogPage(common),
 		},
 	}
 
@@ -38,6 +38,10 @@ func (win *Window) DebugPage(common pageCommon) Page {
 	}
 
 	return pg
+}
+
+func (pg *debugPage) pageID() string {
+	return PageDebug
 }
 
 func (pg *debugPage) handle() {
@@ -84,7 +88,7 @@ func (pg *debugPage) Layout(gtx C) D {
 		page := SubPage{
 			title: "Debug",
 			back: func() {
-				pg.common.changePage(PageMore)
+				pg.common.changePage(MorePage(pg.common))
 			},
 			body: func(gtx C) D {
 				pg.layoutDebugItems(gtx, pg.common)

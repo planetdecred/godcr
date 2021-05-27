@@ -39,8 +39,8 @@ type seedItemMenu struct {
 type createRestore struct {
 	common          pageCommon
 	theme           *decredmaterial.Theme
-	info            *wallet.MultiWalletInfo
 	wal             *wallet.Wallet
+	loadedWallets   int32
 	keyEvent        chan *key.Event
 	errorReceiver   chan error
 	showRestore     bool
@@ -88,12 +88,12 @@ type createRestore struct {
 }
 
 // Loading lays out the loading widget with a faded background
-func (win *Window) CreateRestorePage(common pageCommon) Page {
+func CreateRestorePage(common pageCommon) Page {
 	pg := &createRestore{
 		common:        common,
 		theme:         common.theme,
 		wal:           common.wallet,
-		info:          common.info,
+		loadedWallets: common.wallet.LoadedWalletsCount(),
 		keyEvent:      common.keyEvents,
 		errorReceiver: make(chan error),
 
@@ -107,7 +107,7 @@ func (win *Window) CreateRestorePage(common pageCommon) Page {
 		createModal:           common.theme.Modal(),
 		warningModal:          common.theme.Modal(),
 		modalTitleLabel:       common.theme.H6(""),
-		passwordStrength:      win.theme.ProgressBar(0),
+		passwordStrength:      common.theme.ProgressBar(0),
 		openPopupIndex:        -1,
 		restoreContainer: layout.List{
 			Axis:      layout.Vertical,
@@ -161,7 +161,7 @@ func (win *Window) CreateRestorePage(common pageCommon) Page {
 	for i := 0; i <= numberOfSeeds; i++ {
 		widgetEditor := new(widget.Editor)
 		widgetEditor.SingleLine, widgetEditor.Submit = true, true
-		pg.seedEditors.editors = append(pg.seedEditors.editors, win.theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
+		pg.seedEditors.editors = append(pg.seedEditors.editors, common.theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
 	}
 	pg.seedEditors.focusIndex = -1
 
@@ -177,10 +177,14 @@ func (win *Window) CreateRestorePage(common pageCommon) Page {
 	return pg
 }
 
+func (pg *createRestore) pageID() string {
+	return PageCreateRestore
+}
+
 func (pg *createRestore) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 
-	if pg.info.LoadedWallets > 0 {
+	if pg.loadedWallets > 0 {
 		pg.restoring = true
 		pg.showRestore = true
 	}
@@ -256,7 +260,7 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.W.Layout(gtx, func(gtx C) D {
-				if pg.info.LoadedWallets > 0 {
+				if pg.loadedWallets > 0 {
 					return pg.closeCreateRestore.Layout(gtx)
 				}
 				return layout.Dimensions{}
@@ -266,7 +270,7 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				title := pg.theme.H3("")
 				title.Alignment = text.Middle
-				if pg.info.LoadedWallets > 0 {
+				if pg.loadedWallets > 0 {
 					title.Text = "Create or Restore Wallet"
 				} else {
 					title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
@@ -757,13 +761,13 @@ func (pg *createRestore) handle() {
 	common := pg.common
 
 	for pg.hideRestoreWallet.Button.Clicked() {
-		if pg.info.LoadedWallets <= 0 {
+		if pg.loadedWallets <= 0 {
 			pg.showRestore = false
 			pg.restoring = false
 			pg.errLabel.Text = ""
 		} else {
 			pg.resetSeeds()
-			common.changePage(PageWallet)
+			common.changePage(WalletPage(common)) //TODO
 		}
 	}
 
@@ -774,7 +778,7 @@ func (pg *createRestore) handle() {
 
 	for pg.closeCreateRestore.Button.Clicked() {
 		pg.resetSeeds()
-		common.changePage(PageWallet)
+		common.changePage(WalletPage(common))
 	}
 
 	for pg.unlock.Button.Clicked() {

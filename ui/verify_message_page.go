@@ -21,9 +21,12 @@ type verifyMessagePage struct {
 	verifyMessage                         decredmaterial.Label
 
 	verifyMessageStatus *widget.Icon
+
+	walletID   int
+	walletName string
 }
 
-func (win *Window) VerifyMessagePage(c pageCommon) Page {
+func VerifyMessagePage(c pageCommon) Page {
 	pg := &verifyMessagePage{
 		theme:         c.theme,
 		common:        c,
@@ -43,21 +46,20 @@ func (win *Window) VerifyMessagePage(c pageCommon) Page {
 	return pg
 }
 
+func (pg *verifyMessagePage) pageID() string {
+	return PageVerifyMessage
+}
+
 func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 
-	var walletName = c.info.Wallets[*c.selectedWallet].Name
-	if *c.returnPage == PageSecurityTools {
-		walletName = ""
-	}
 	body := func(gtx C) D {
 		load := SubPage{
 			title:      "Verify message",
-			walletName: walletName,
+			walletName: "",
 			back: func() {
 				pg.clearInputs(&c)
-				c.changePage(PageWallet)
-				c.changePage(*c.returnPage)
+				c.popPage() //TODO
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return pg.theme.Card().Layout(gtx, func(gtx C) D {

@@ -26,7 +26,7 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func (win *Window) LogPage(common pageCommon) Page {
+func LogPage(common pageCommon) Page {
 	pg := &logPage{
 		common: common,
 		theme:  common.theme,
@@ -41,9 +41,13 @@ func (win *Window) LogPage(common pageCommon) Page {
 	pg.copyIcon = common.icons.copyIcon
 	pg.copyIcon.Scale = 0.25
 
-	go pg.watchLogs(win.internalLog)
+	// go pg.watchLogs(win.internalLog) TODO
 
 	return pg
+}
+
+func (pg *logPage) pageID() string {
+	return PageLog
 }
 
 func (pg *logPage) copyLogEntries(gtx C) {
@@ -71,7 +75,7 @@ func (pg *logPage) Layout(gtx C) D {
 		page := SubPage{
 			title: "Wallet log",
 			back: func() {
-				common.changePage(PageDebug)
+				common.changePage(DebugPage(common))
 			},
 			extraItem: pg.copyLog,
 			extra: func(gtx C) D {
