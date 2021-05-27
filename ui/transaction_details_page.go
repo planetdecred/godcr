@@ -435,7 +435,7 @@ func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimension
 
 func (pg *transactionDetailsPage) handle() {
 	common := pg.common
-	gtx := *pg.gtx
+	gtx := pg.gtx
 	if pg.toDcrdata.Clicked() {
 		goToURL(common.wallet.GetBlockExplorerURL((*pg.txnInfo).Txn.Hash))
 	}
