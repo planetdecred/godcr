@@ -214,7 +214,7 @@ func (pg *signMessagePage) updateColors(common pageCommon) {
 }
 
 func (pg *signMessagePage) handle() {
-	gtx := *pg.gtx
+	gtx := pg.gtx
 	common := pg.common
 	pg.updateColors(common)
 	pg.validate(true)
