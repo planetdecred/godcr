@@ -6,6 +6,8 @@ import (
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/widget"
+
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -248,14 +250,19 @@ func (pg *signMessagePage) handle() {
 	}
 
 	if *pg.result != nil {
-		if (*pg.result).Err != nil {
-			common.notify((*pg.result).Err.Error(), false)
-		} else {
-			pg.signedMessageLabel.Text = (*pg.result).Signature
-		}
+		pg.signedMessageLabel.Text = (*pg.result).Signature
 		*pg.result = nil
 		pg.isSigningMessage = false
-		pg.signButton.Text = "Sign message"
+	}
+
+	select {
+	case err := <-pg.errorReceiver:
+		common.modalLoad.setLoading(false)
+		common.notify(err.Error(), false)
+		if err.Error() != dcrlibwallet.ErrInvalidPassphrase {
+			common.closeModal()
+		}
+	default:
 	}
 }
 
