@@ -6,6 +6,8 @@ import (
 	"image/color"
 	"net/http"
 
+	"gioui.org/unit"
+
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 
@@ -391,8 +393,26 @@ func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions
 	return c.padding.Layout(gtx, w)
 }
 
+var (
+	MaxWidth = unit.Dp(800)
+)
+
 func (common *pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return layout.UniformInset(values.MarginPadding24).Layout(gtx, body)
+	width := gtx.Constraints.Max.X
+
+	padding := values.MarginPadding24
+
+	if (width - 2*gtx.Px(padding)) > gtx.Px(MaxWidth) {
+		paddingValue := float32(width-gtx.Px(MaxWidth)) / 2
+		padding = unit.Px(paddingValue)
+	}
+
+	return layout.Inset{
+		Top:    values.MarginPadding24,
+		Right:  padding,
+		Bottom: values.MarginPadding24,
+		Left:   padding,
+	}.Layout(gtx, body)
 }
 
 type SubPage struct {
