@@ -16,40 +16,30 @@ const PageStat = "Stat"
 type statPage struct {
 	common      pageCommon
 	txs         **wallet.Transactions
-	divider     *decredmaterial.Line
 	theme       *decredmaterial.Theme
 	l           layout.List
-	startupTime time.Time
+	startupTime string
 	syncStatus  *wallet.SyncStatus
 }
 
 func (win *Window) StatPage(common pageCommon) Page {
-	l := common.theme.Line(2, 2)
 	pg := &statPage{
-		txs:     &win.walletTransactions,
-		common:  common,
-		theme:   common.theme,
-		divider: &l,
+		txs:    &win.walletTransactions,
+		common: common,
+		theme:  common.theme,
 		l: layout.List{
 			Axis: layout.Vertical,
 		},
 	}
-
-	pg.divider.Color = common.theme.Color.Background
-
-	pg.startupTime = time.Now()
+	pg.startupTime = time.Now().String()
 	pg.syncStatus = win.walletSyncStatus
 
 	return pg
 }
 
 func (pg *statPage) lineSeparator() layout.Widget {
-	m := values.MarginPadding1
 	return func(gtx C) D {
-		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-			pg.divider.Width = gtx.Constraints.Max.X
-			return pg.divider.Layout(gtx)
-		})
+		return pg.theme.Separator().Layout(gtx)
 	}
 }
 
@@ -79,7 +69,7 @@ func (pg *statPage) layoutStats(gtx C) D {
 		pg.lineSeparator(),
 		item("Peers connected", strconv.Itoa(int(pg.syncStatus.ConnectedPeers))),
 		pg.lineSeparator(),
-		item("Uptime", time.Since(pg.startupTime).String()),
+		item("Uptime", pg.startupTime),
 		pg.lineSeparator(),
 		item("Network", pg.common.wallet.Net),
 		pg.lineSeparator(),
