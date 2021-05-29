@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -12,54 +13,34 @@ import (
 
 const PageStat = "Stat"
 
-type statItems struct {
-	network, buildDate string
-	walletDir          string
-	numWallets, numTxs string
-	walletDataSize     string
-	syncStatus         *wallet.SyncStatus
-	startupTime        time.Time
-}
-
 type statPage struct {
-	divider *decredmaterial.Line
-	theme   *decredmaterial.Theme
-	statItems
+	common      pageCommon
+	txs         **wallet.Transactions
+	divider     *decredmaterial.Line
+	theme       *decredmaterial.Theme
+	l           layout.List
+	startupTime time.Time
+	syncStatus  *wallet.SyncStatus
 }
 
-func (win *Window) StatPage(common pageCommon) layout.Widget {
+func (win *Window) StatPage(common pageCommon) Page {
 	l := common.theme.Line(2, 2)
 	pg := &statPage{
+		txs:     &win.walletTransactions,
+		common:  common,
 		theme:   common.theme,
 		divider: &l,
+		l: layout.List{
+			Axis: layout.Vertical,
+		},
 	}
 
 	pg.divider.Color = common.theme.Color.Background
 
-	pg.statItems.startupTime = time.Now()
-
+	pg.startupTime = time.Now()
 	pg.syncStatus = win.walletSyncStatus
 
-	return func(gtx C) D {
-		return pg.Layout(gtx, common)
-	}
-}
-
-func (pg *statPage) statItem(title, value string, gtx C, common pageCommon) D {
-	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-				return common.theme.Body1(title).Layout(gtx)
-			})
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-					return common.theme.Body1(value).Layout(gtx)
-				})
-			})
-		}),
-	)
+	return pg
 }
 
 func (pg *statPage) lineSeparator() layout.Widget {
@@ -72,68 +53,78 @@ func (pg *statPage) lineSeparator() layout.Widget {
 	}
 }
 
-func (pg *statPage) layoutStats(gtx C, common pageCommon) D {
-	background := common.theme.Color.Surface
-	card := common.theme.Card()
+func (pg *statPage) layoutStats(gtx C) D {
+	background := pg.common.theme.Color.Surface
+	card := pg.common.theme.Card()
 	card.Color = background
-	item := func(t, v string) layout.Widget {
-		return func(gtx C) D {
-			return pg.statItem(t, v, gtx, common)
-		}
+	inset := layout.Inset{
+		Top:    values.MarginPadding12,
+		Bottom: values.MarginPadding12,
+		Right:  values.MarginPadding16,
+		Left:   values.MarginPadding16,
 	}
 
-	now := time.Now()
-	uptime := now.Sub(pg.startupTime)
-
+	item := func(t, v string) layout.Widget {
+		return func(gtx C) D {
+			l := pg.theme.Label(values.TextSize14, t)
+			r := pg.theme.Label(values.TextSize14, v)
+			r.Color = pg.theme.Color.Gray
+			return inset.Layout(gtx, func(gtx C) D {
+				return endToEndRow(gtx, l.Layout, r.Layout)
+			})
+		}
+	}
 	items := []layout.Widget{
-		item("Build", pg.statItems.network+","+pg.statItems.buildDate),
+		item("Build", pg.common.wallet.Net+", "+time.Now().Format("2006-01-02")),
 		pg.lineSeparator(),
-		item("Peers connected", strconv.Itoa(int(pg.statItems.syncStatus.ConnectedPeers))),
+		item("Peers connected", strconv.Itoa(int(pg.syncStatus.ConnectedPeers))),
 		pg.lineSeparator(),
-		item("Uptime", uptime.String()),
+		item("Uptime", time.Since(pg.startupTime).String()),
 		pg.lineSeparator(),
-		item("Network", pg.statItems.network),
+		item("Network", pg.common.wallet.Net),
 		pg.lineSeparator(),
-		item("Best block", strconv.Itoa(int(pg.statItems.syncStatus.CurrentBlockHeight))),
+		item("Best block", fmt.Sprintf("%d", pg.common.info.BestBlockHeight)),
 		pg.lineSeparator(),
-		item("Best block timestamp", "value"),
+		item("Best block timestamp", time.Unix(pg.common.info.BestBlockTime, 0).Format("2006-01-02 03:04:05 -0700")),
 		pg.lineSeparator(),
-		item("Best block age", "value"),
+		item("Best block age", pg.common.info.LastSyncTime),
 		pg.lineSeparator(),
-		item("Wallet data directory", pg.statItems.walletDir),
+		item("Wallet data directory", pg.common.wallet.WalletDirectory()),
 		pg.lineSeparator(),
-		item("Wallet data", pg.statItems.walletDataSize),
+		item("Wallet data", pg.common.wallet.DataSize()),
 		pg.lineSeparator(),
-		item("Transactions", pg.numTxs),
+		item("Transactions", fmt.Sprintf("%d", (*pg.txs).Total)),
 		pg.lineSeparator(),
-		item("Wallets", pg.statItems.numWallets),
+		item("Wallets", fmt.Sprintf("%d", len(pg.common.info.Wallets))),
 	}
 
 	return card.Layout(gtx, func(gtx C) D {
 		m15 := values.MarginPadding15
 		return layout.Inset{Left: m15, Right: m15}.Layout(gtx, func(gtx C) D {
-			l := layout.List{
-				Axis: layout.Vertical,
-			}
-			return l.Layout(gtx, len(items), func(gtx C, i int) D {
+			return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {
 				return items[i](gtx)
 			})
 		})
 	})
 }
 
-func (pg *statPage) Layout(gtx C, common pageCommon) D {
+func (pg *statPage) Layout(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
 		page := SubPage{
 			title: "Statistics",
 			back: func() {
-				common.changePage(PageDebug)
+				pg.common.changePage(PageDebug)
 			},
 			body: func(gtx C) D {
-				return pg.layoutStats(gtx, common)
+				return pg.layoutStats(gtx)
 			},
 		}
-		return common.SubPageLayout(gtx, page)
+		return pg.common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, container)
+	return pg.common.Layout(gtx, func(gtx C) D {
+		return pg.common.UniformPadding(gtx, container)
+	})
 }
+
+func (pg *statPage) handle()  {}
+func (pg *statPage) onClose() {}
