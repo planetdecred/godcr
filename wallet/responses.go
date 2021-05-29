@@ -157,7 +157,6 @@ type SyncStatus struct {
 // Signature is sent in response to Wallet.SignMessage
 type Signature struct {
 	Signature string
-	Err       error
 }
 
 // TxHash is sent when the Wallet successfully broadcasts a transaction

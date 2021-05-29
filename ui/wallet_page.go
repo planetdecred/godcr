@@ -974,6 +974,7 @@ func (pg *walletPage) handle() {
 
 	select {
 	case err := <-pg.errorReceiver:
+		common.modalLoad.setLoading(false)
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 			e := values.String(values.StrInvalidPassphrase)
 			common.notify(e, false)

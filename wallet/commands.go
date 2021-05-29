@@ -451,11 +451,7 @@ func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message
 
 		wall := wal.multi.WalletWithID(walletID)
 		if wall == nil {
-			resp.Resp = &Signature{
-				Err: InternalWalletError{
-					Message: "No wallet found",
-				},
-			}
+			resp.Err = ErrIDNotExist
 			wal.Send <- resp
 			return
 		}
@@ -465,9 +461,6 @@ func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message
 			go func() {
 				errChan <- err
 			}()
-			resp.Resp = &Signature{
-				Err: fmt.Errorf("error signing message: %s", err.Error()),
-			}
 			wal.Send <- resp
 			return
 		}
