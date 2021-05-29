@@ -84,9 +84,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *verifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widget {
 	return func(gtx C) D {
-		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-			return editor.Layout(gtx)
-		})
+		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, editor.Layout)
 	}
 }
 
@@ -94,9 +92,7 @@ func (pg *verifyMessagePage) description() layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		desc := pg.theme.Caption("Enter the address, signature, and message to verify:")
 		desc.Color = pg.theme.Color.Gray
-		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-			return desc.Layout(gtx)
-		})
+		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
 }
 
@@ -107,13 +103,9 @@ func (pg *verifyMessagePage) verifyAndClearButtons() layout.Widget {
 				return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return pg.clearBtn.Layout(gtx)
-							})
+							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pg.clearBtn.Layout)
 						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.verifyBtn.Layout(gtx)
-						}),
+						layout.Rigid(pg.verifyBtn.Layout),
 					)
 				})
 			}),
@@ -134,9 +126,7 @@ func (pg *verifyMessagePage) verifyMessageResponse() layout.Widget {
 								return pg.verifyMessageStatus.Layout(gtx, values.MarginPadding20)
 							})
 						}),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return pg.verifyMessage.Layout(gtx)
-						}),
+						layout.Rigid(pg.verifyMessage.Layout),
 					)
 				})
 			})

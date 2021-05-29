@@ -136,9 +136,7 @@ func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			return pg.recentTransactionsSection(gtx, c)
 		},
 		func(gtx C) D {
-			return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-				return pg.syncStatusSection(gtx)
-			})
+			return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, pg.syncStatusSection)
 		},
 	}
 
@@ -181,9 +179,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 					return pg.titleRow(gtx, title.Layout, pg.toTransactions.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return pg.theme.Separator().Layout(gtx)
-					})
+					return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, pg.theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if len((*pg.walletTransactions).Txs) == 0 {
@@ -193,9 +189,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 							Left:   values.MarginPadding16,
 							Bottom: values.MarginPadding3,
 							Top:    values.MarginPadding18,
-						}}.Layout(gtx, func(gtx C) D {
-							return message.Layout(gtx)
-						})
+						}}.Layout(gtx, message.Layout)
 					}
 
 					return pg.transactionsList.Layout(gtx, len(recentTransactions), func(gtx C, i int) D {
@@ -324,9 +318,7 @@ func (pg *overviewPage) syncDormantContent(gtx layout.Context, uniform layout.In
 	return uniform.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
-					return pg.blockInfoRow(gtx)
-				})
+				return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, pg.blockInfoRow)
 			}),
 			layout.Rigid(func(gtx C) D {
 				if pg.walletInfo.Synced {
@@ -348,9 +340,10 @@ func (pg *overviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 			return latestBlockTitleLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return pg.theme.Body1(fmt.Sprintf("%v", pg.walletInfo.BestBlockHeight)).Layout(gtx)
-			})
+			return layout.Inset{
+				Left:  values.MarginPadding5,
+				Right: values.MarginPadding5,
+			}.Layout(gtx, pg.theme.Body1(fmt.Sprintf("%v", pg.walletInfo.BestBlockHeight)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
 			pg.walletStatusIcon.Color = pg.theme.Color.Gray
@@ -359,9 +352,7 @@ func (pg *overviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return pg.theme.Body1(fmt.Sprintf("%v", pg.walletInfo.LastSyncTime)).Layout(gtx)
-			})
+			return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, pg.theme.Body1(fmt.Sprintf("%v", pg.walletInfo.LastSyncTime)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
 			lastSyncedLabel := pg.theme.Body1(values.String(values.StrAgo))
@@ -379,9 +370,7 @@ func (pg *overviewPage) connectionPeer(gtx layout.Context) layout.Dimensions {
 			return connectedPeersInfoLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return pg.theme.Body1(fmt.Sprintf("%d", pg.walletSyncStatus.ConnectedPeers)).Layout(gtx)
-			})
+			return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, pg.theme.Body1(fmt.Sprintf("%d", pg.walletSyncStatus.ConnectedPeers)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
 			peersLabel := pg.theme.Body1("peers")
@@ -466,9 +455,7 @@ func (pg *overviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions {
 	}
 	i := layout.Inset{Right: values.MarginPadding16, Top: values.MarginPadding9}
 	if pg.walletInfo.Syncing {
-		return i.Layout(gtx, func(gtx C) D {
-			return pg.syncingIcon.Layout(gtx)
-		})
+		return i.Layout(gtx, pg.syncingIcon.Layout)
 	}
 	return i.Layout(gtx, func(gtx C) D {
 		return syncStatusIcon.Layout(gtx, values.MarginPadding24)

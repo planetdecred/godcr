@@ -174,20 +174,12 @@ func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dime
 					return common.subPageBackButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: m}.Layout(gtx, func(gtx C) D {
-						return pg.theme.H6("Receive DCR").Layout(gtx)
-					})
+					return layout.Inset{Left: m}.Layout(gtx, pg.theme.H6("Receive DCR").Layout)
 				}),
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return common.subPageInfoButton.Layout(gtx)
-					}),
-				)
-			})
+			return layout.E.Layout(gtx, common.subPageInfoButton.Layout)
 		}),
 	)
 }
@@ -209,9 +201,7 @@ func (pg *receivePage) titleLayout(gtx layout.Context, common pageCommon) layout
 					}
 					return layout.Dimensions{}
 				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.more.Layout(gtx)
-				}),
+				layout.Rigid(pg.more.Layout),
 			)
 		}),
 	)
@@ -235,9 +225,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 			card.Radius = decredmaterial.CornerRadius{NE: 8, NW: 0, SE: 0, SW: 8}
 			return card.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-					return pg.receiveAddress.Layout(gtx)
-				})
+				return layout.UniformInset(values.MarginPadding16).Layout(gtx, pg.receiveAddress.Layout)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -245,9 +233,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 		}),
 		layout.Rigid(func(gtx C) D {
 			card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 8, SE: 8, SW: 0}
-			return card.Layout(gtx, func(gtx C) D {
-				return pg.copy.Layout(gtx)
-			})
+			return card.Layout(gtx, pg.copy.Layout)
 		}),
 	)
 }

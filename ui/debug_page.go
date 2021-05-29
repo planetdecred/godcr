@@ -54,9 +54,7 @@ func (pg *debugPage) debugItem(gtx C, i int, common pageCommon) D {
 	return decredmaterial.Clickable(gtx, pg.debugItems[i].clickable, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					return common.theme.Body1(pg.debugItems[i].text).Layout(gtx)
-				})
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, common.theme.Body1(pg.debugItems[i].text).Layout)
 			}),
 			layout.Flexed(1, func(gtx C) D {
 				return layout.E.Layout(gtx, func(gtx C) D {

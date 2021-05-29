@@ -74,7 +74,7 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 									txt := c.theme.Body1("No tickets yet")
 									txt.Color = c.theme.Color.Gray2
 									txt.Alignment = text.Middle
-									return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D { return txt.Layout(gtx) })
+									return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, txt.Layout)
 								}
 								return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 									if pg.isGridView {
@@ -85,9 +85,7 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					}),
-					layout.Stacked(func(gtx C) D {
-						return pg.dropDowns(gtx)
-					}),
+					layout.Stacked(pg.dropDowns),
 				)
 			},
 			extraItem: pg.toggleViewType,
@@ -118,11 +116,9 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 									wrapIcon.Color = color.NRGBA{}
 								}
 								return wrapIcon.Layout(gtx, func(gtx C) D {
-									return insetIcon.Layout(gtx, func(gtx C) D {
-										ic := c.icons.listGridIcon
-										ic.Scale = 1
-										return ic.Layout(gtx)
-									})
+									ic := c.icons.listGridIcon
+									ic.Scale = 1
+									return insetIcon.Layout(gtx, ic.Layout)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -132,11 +128,9 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 									wrapIcon.Color = c.theme.Color.Surface
 								}
 								return wrapIcon.Layout(gtx, func(gtx C) D {
-									return insetIcon.Layout(gtx, func(gtx C) D {
-										ic := c.icons.list
-										ic.Scale = 1
-										return ic.Layout(gtx)
-									})
+									ic := c.icons.list
+									ic.Scale = 1
+									return insetIcon.Layout(gtx, ic.Layout)
 								})
 							}),
 						)
@@ -163,16 +157,12 @@ func (pg *ticketPageList) dropDowns(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Left: values.MarginPadding5,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.ticketTypeDropDown.Layout(gtx)
-					})
+					}.Layout(gtx, pg.ticketTypeDropDown.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Left: values.MarginPadding5,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.orderDropDown.Layout(gtx)
-					})
+					}.Layout(gtx, pg.orderDropDown.Layout)
 				}),
 			)
 		}),
@@ -221,9 +211,7 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						separator := pg.th.Separator()
 						separator.Width = gtx.Constraints.Max.X
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return separator.Layout(gtx)
-						})
+						return layout.E.Layout(gtx, separator.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{
@@ -254,9 +242,7 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 													return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
 												})
 											}),
-											layout.Rigid(func(gtx C) D {
-												return c.theme.Label(values.MarginPadding14, tickets[index].WalletName).Layout(gtx)
-											}),
+											layout.Rigid(c.theme.Label(values.MarginPadding14, tickets[index].WalletName).Layout),
 										)
 									}
 									r := func(gtx C) layout.Dimensions {

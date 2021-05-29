@@ -159,23 +159,17 @@ func (m *ModalTemplate) createNewAccount() []layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					info := m.th.Body1("Accounts")
 					info.Color = m.th.Color.Gray
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return info.Layout(gtx)
-					})
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, info.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					info := m.th.Body1(" cannot ")
 					info.Color = m.th.Color.DeepBlue
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return info.Layout(gtx)
-					})
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, info.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					info := m.th.Body1("be deleted when created")
 					info.Color = m.th.Color.Gray
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return info.Layout(gtx)
-					})
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, info.Layout)
 				}),
 			)
 		},

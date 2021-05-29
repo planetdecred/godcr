@@ -440,9 +440,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 							card.Radius = decredmaterial.CornerRadius{}
 							return card.Layout(gtx, page.layoutNavDrawer)
 						}),
-						layout.Rigid(func(gtx C) D {
-							return body(gtx)
-						}),
+						layout.Rigid(body),
 					)
 				}),
 			)
@@ -543,21 +541,15 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-				return page.subPageBackButton.Layout(gtx)
-			})
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, page.subPageBackButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
 				return page.theme.H6(sp.title).Layout(gtx)
 			}
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return page.theme.H6(sp.title).Layout(gtx)
-				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return page.theme.Body1(sp.subTitle).Layout(gtx)
-				}),
+				layout.Rigid(page.theme.H6(sp.title).Layout),
+				layout.Rigid(page.theme.Body1(sp.subTitle).Layout),
 			)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {

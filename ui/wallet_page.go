@@ -288,9 +288,7 @@ func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 	if common.info.LoadedWallets == 0 {
 		return common.Layout(gtx, func(gtx C) D {
 			return common.UniformPadding(gtx, func(gtx C) D {
-				return layout.Center.Layout(gtx, func(gtx C) D {
-					return common.theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
-				})
+				return layout.Center.Layout(gtx, common.theme.H3(values.String(values.StrNoWalletLoaded)).Layout)
 			})
 		})
 	}
@@ -453,9 +451,10 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Left: values.MarginPadding38, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							return pg.theme.Separator().Layout(gtx)
-						})
+						return layout.Inset{
+							Left:  values.MarginPadding38,
+							Right: values.MarginPadding10,
+						}.Layout(gtx, pg.theme.Separator().Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return pg.accountsList.Layout(gtx, len(accounts), func(gtx C, x int) D {
@@ -473,9 +472,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 									return layout.Inset{
 										Right: values.MarginPadding10,
 										Left:  values.MarginPadding38,
-									}.Layout(gtx, func(gtx C) D {
-										return pg.collapsibles[i].addAcctBtn.Layout(gtx)
-									})
+									}.Layout(gtx, pg.collapsibles[i].addAcctBtn.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
 									txt := pg.theme.H6(values.String(values.StrAddNewAccount))
@@ -567,14 +564,10 @@ func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common pageComm
 							inset := layout.Inset{
 								Right: values.MarginPadding10,
 							}
-							return inset.Layout(gtx, func(gtx C) D {
-								pg.watchOnlyWalletIcon.Scale = 1.0
-								return pg.watchOnlyWalletIcon.Layout(gtx)
-							})
+							pg.watchOnlyWalletIcon.Scale = 1.0
+							return inset.Layout(gtx, pg.watchOnlyWalletIcon.Layout)
 						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.Body2(common.info.Wallets[i].Name).Layout(gtx)
-						}),
+						layout.Rigid(pg.theme.Body2(common.info.Wallets[i].Name).Layout),
 						layout.Flexed(1, func(gtx C) D {
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
@@ -584,9 +577,7 @@ func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common pageComm
 									}),
 									layout.Rigid(func(gtx C) D {
 										pg.layoutOptionsMenu(gtx, i, true)
-										return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, func(gtx C) D {
-											return pg.watchOnlyWalletMoreButtons[i].Layout(gtx)
-										})
+										return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, pg.watchOnlyWalletMoreButtons[i].Layout)
 									}),
 								)
 							})
@@ -611,9 +602,7 @@ func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wal
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Right: values.MarginPadding10,
-			}.Layout(gtx, func(gtx C) D {
-				return pg.walletIcon.Layout(gtx)
-			})
+			}.Layout(gtx, pg.walletIcon.Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -652,9 +641,7 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 				inset := layout.Inset{
 					Right: values.MarginPadding10,
 				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return pg.walletIcon.Layout(gtx)
-				})
+				return inset.Layout(gtx, pg.walletIcon.Layout)
 			}
 			return layout.Dimensions{}
 		}),
@@ -675,9 +662,7 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 								inset := layout.Inset{
 									Bottom: values.MarginPadding5,
 								}
-								return inset.Layout(gtx, func(gtx C) D {
-									return txt.Layout(gtx)
-								})
+								return inset.Layout(gtx, txt.Layout)
 							}
 						}
 						return layout.Dimensions{}
@@ -686,9 +671,7 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 			})
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return rightLabel.Layout(gtx)
-			})
+			return layout.E.Layout(gtx, rightLabel.Layout)
 		}),
 	)
 }
@@ -714,9 +697,7 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 							Right: values.MarginPadding10,
 							Top:   values.MarginPadding13,
 						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return pg.accountIcon.Layout(gtx)
-						})
+						return inset.Layout(gtx, pg.accountIcon.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -756,9 +737,10 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding70, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				return pg.theme.Separator().Layout(gtx)
-			})
+			return layout.Inset{
+				Left:  values.MarginPadding70,
+				Right: values.MarginPadding10,
+			}.Layout(gtx, pg.theme.Separator().Layout)
 		}),
 	)
 }
@@ -795,9 +777,7 @@ func (pg *walletPage) backupSeedNotification(gtx layout.Context, common pageComm
 					Top: values.MarginPadding5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.collapsibles[i].backupAcctBtn.Layout(gtx)
-					})
+					return layout.E.Layout(gtx, pg.collapsibles[i].backupAcctBtn.Layout)
 				})
 			}),
 		)
@@ -816,9 +796,7 @@ func (pg *walletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
 					return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-							return pg.theme.Body2(pg.addWalletMenu[i].text).Layout(gtx)
-						})
+						return layout.UniformInset(unit.Dp(10)).Layout(gtx, pg.theme.Body2(pg.addWalletMenu[i].text).Layout)
 					})
 				})
 			})
@@ -842,9 +820,7 @@ func (pg *walletPage) layoutAddWalletSection(gtx layout.Context, common pageComm
 				icon := common.icons.newWalletIcon
 				sz := gtx.Constraints.Max.X
 				icon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-				return decredmaterial.Clickable(gtx, pg.openAddWalletPopupButton, func(gtx C) D {
-					return icon.Layout(gtx)
-				})
+				return decredmaterial.Clickable(gtx, pg.openAddWalletPopupButton, icon.Layout)
 			}),
 		)
 	})

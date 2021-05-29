@@ -403,9 +403,7 @@ func endToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.D
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(leftWidget),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return rightWidget(gtx)
-			})
+			return layout.E.Layout(gtx, rightWidget)
 		}),
 	)
 }

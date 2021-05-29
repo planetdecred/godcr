@@ -207,9 +207,10 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 													lbl.Color = pg.theme.Color.Surface
 												}
 												return c.Layout(gtx, func(gtx C) D {
-													return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-														return lbl.Layout(gtx)
-													})
+													return layout.Inset{
+														Left:  values.MarginPadding5,
+														Right: values.MarginPadding5,
+													}.Layout(gtx, lbl.Layout)
 												})
 											})
 										}),
@@ -297,9 +298,7 @@ func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
 	str := "No " + strings.ToLower(proposalCategoryTitles[pg.tabs.selected]) + " proposals"
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		return pg.theme.Body1(str).Layout(gtx)
-	})
+	return layout.Center.Layout(gtx, pg.theme.Body1(str).Layout)
 }
 
 func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet.Proposal) D {
@@ -379,9 +378,10 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							if p.title == "Voting" {
-								return layout.Inset{Right: values.MarginPadding4, Top: values.MarginPadding3}.Layout(gtx, func(gtx C) D {
-									return pg.timerIcon.Layout(gtx)
-								})
+								return layout.Inset{
+									Right: values.MarginPadding4,
+									Top:   values.MarginPadding3,
+								}.Layout(gtx, pg.timerIcon.Layout)
 							}
 							return D{}
 						}),
@@ -555,9 +555,7 @@ func (pg *proposalsPage) Layout(gtx C) D {
 									m = values.MarginPadding15
 								}
 								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
-									return layout.Center.Layout(gtx, func(gtx C) D {
-										return pg.layoutSyncSection(gtx)
-									})
+									return layout.Center.Layout(gtx, pg.layoutSyncSection)
 								})
 							})
 						})

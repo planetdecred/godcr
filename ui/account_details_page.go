@@ -96,9 +96,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					edit := common.icons.editIcon
 					edit.Scale = 1
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return edit.Layout(gtx)
-					})
+					return layout.E.Layout(gtx, edit.Layout)
 				})
 			},
 		}
@@ -137,9 +135,7 @@ func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *page
 						return layout.Inset{
 							Right: m,
 							Top:   m,
-						}.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
-						})
+						}.Layout(gtx, accountIcon.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return pg.acctBalLayout(gtx, "Total Balance", totalBalanceMain, totalBalanceSub, true)
@@ -185,12 +181,8 @@ func (pg *acctDetailsPage) acctBalLayout(gtx layout.Context, balType string, mai
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return mainLabel.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return subLabel.Layout(gtx)
-					}),
+					layout.Rigid(mainLabel.Layout),
+					layout.Rigid(subLabel.Layout),
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -245,9 +237,7 @@ func (pg *acctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightTex
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return pg.theme.Body1(rightText).Layout(gtx)
-			})
+			return layout.E.Layout(gtx, pg.theme.Body1(rightText).Layout)
 		}),
 	)
 }

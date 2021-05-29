@@ -129,9 +129,7 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet
 					}
 					return c.Layout(gtx, func(gtx C) D {
 						m := values.MarginPadding6
-						return layout.Inset{Left: m, Right: m}.Layout(gtx, func(gtx C) D {
-							return lbl.Layout(gtx)
-						})
+						return layout.Inset{Left: m, Right: m}.Layout(gtx, lbl.Layout)
 					})
 				}
 				icon := pg.successIcon
@@ -218,10 +216,11 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C, proposal *dcrlibwallet.Propo
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								if strings.Contains(label.Text, "Voting") {
-									return layout.Inset{Right: values.MarginPadding4, Top: values.MarginPadding3}.Layout(gtx, func(gtx C) D {
-										pg.timerIcon.Scale = 1
-										return pg.timerIcon.Layout(gtx)
-									})
+									pg.timerIcon.Scale = 1
+									return layout.Inset{
+										Right: values.MarginPadding4,
+										Top:   values.MarginPadding3,
+									}.Layout(gtx, pg.timerIcon.Layout)
 								}
 								return D{}
 							}),
@@ -232,9 +231,7 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C, proposal *dcrlibwallet.Propo
 			)
 		}),
 		layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10})),
-		layout.Rigid(func(gtx C) D {
-			return pg.layoutProposalVoteBar(gtx)
-		}),
+		layout.Rigid(pg.layoutProposalVoteBar),
 	)
 }
 
@@ -305,9 +302,7 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 		loading := func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Flexed(1, func(gtx C) D {
 				return layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
-					return layout.Center.Layout(gtx, func(gtx C) D {
-						return material.Loader(th).Layout(gtx)
-					})
+					return layout.Center.Layout(gtx, material.Loader(th).Layout)
 				})
 			}))
 		}
@@ -362,9 +357,7 @@ func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 
 func (pg *proposalDetails) layoutParsingState(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		return pg.theme.Body1("Preparing document...").Layout(gtx)
-	})
+	return layout.Center.Layout(gtx, pg.theme.Body1("Preparing document...").Layout)
 }
 
 func (pg *proposalDetails) Layout(gtx C) D {
@@ -410,13 +403,9 @@ func (pg *proposalDetails) Layout(gtx C) D {
 			body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							return pg.layoutTitle(gtx)
-						})
+						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.layoutTitle)
 					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.layoutDescription(gtx)
-					}),
+					layout.Rigid(pg.layoutDescription),
 				)
 			},
 			extraItem: pg.viewInPoliteiaBtn,

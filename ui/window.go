@@ -52,14 +52,14 @@ type Window struct {
 
 	err string
 
-	pages                   map[string]Page
-	keyEvents               chan *key.Event
-	toast                   *toast
-	modal                   chan *modalLoad
-	sysDestroyWithSync      bool
-	walletAcctMixerStatus   chan *wallet.AccountMixer
-	internalLog             chan string
-	refreshPage             bool
+	pages                 map[string]Page
+	keyEvents             chan *key.Event
+	toast                 *toast
+	modal                 chan *modalLoad
+	sysDestroyWithSync    bool
+	walletAcctMixerStatus chan *wallet.AccountMixer
+	internalLog           chan string
+	refreshPage           bool
 }
 
 type WriteClipboard struct {
