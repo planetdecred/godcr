@@ -16,6 +16,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/modals"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -142,6 +143,7 @@ type pageCommon struct {
 	refreshWindow func()
 
 	wallAcctSelector *walletAccountSelector
+	modals           *modals.Modals
 }
 
 type (
@@ -310,7 +312,11 @@ func (win *Window) loadPage(ic pageIcons) {
 		setReturnPage:           win.setReturnPage,
 		refreshWindow:           win.refresh,
 		toast:                   &win.toast,
+		modals:                  modals.New(win.theme),
 	}
+
+	// TODO remove
+	common.modals.Open(modals.ConfirmRemoveModal, func() {}, func() {})
 
 	common.fetchExchangeValue(&common.dcrUsdtBittrex)
 
@@ -458,7 +464,7 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global modal. Stack modal on all pages and contents
-		outer:
+			/**outer:
 			for {
 				select {
 				case load := <-page.modalReceiver:
@@ -479,7 +485,8 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 					900)
 			}
 
-			return layout.Dimensions{}
+			return layout.Dimensions{}**/
+			return page.modals.Layout(gtx)
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global toasts. Stack toast on all pages and contents
