@@ -115,8 +115,6 @@ type pageCommon struct {
 	usdExchangeSet  bool
 	dcrUsdtBittrex  DCRUSDTBittrex
 	navTab          *decredmaterial.Tabs
-	walletTabs      *decredmaterial.Tabs
-	accountTabs     *decredmaterial.Tabs
 	keyEvents       chan *key.Event
 	toast           **toast
 	states          *states
@@ -292,8 +290,6 @@ func (win *Window) loadPage(ic pageIcons) {
 		icons:                   ic,
 		returnPage:              &win.previous,
 		page:                    &win.current,
-		walletTabs:              win.walletTabs,
-		accountTabs:             win.accountTabs,
 		keyEvents:               win.keyEvents,
 		states:                  &win.states,
 		appBarNavItems:          appBarNavItems,

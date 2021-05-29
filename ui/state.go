@@ -30,7 +30,6 @@ func (win *Window) updateStates(update interface{}) {
 					Title: e.Wallets[i].Name,
 				}
 			}
-			win.walletTabs.SetTabs(wallets)
 
 			accounts := make([]decredmaterial.TabItem, len(e.Wallets[win.selected].Accounts))
 			for i, account := range e.Wallets[win.selected].Accounts {
@@ -41,7 +40,6 @@ func (win *Window) updateStates(update interface{}) {
 					Title: e.Wallets[win.selected].Accounts[i].Name,
 				}
 			}
-			win.accountTabs.SetTabs(accounts)
 		}
 		return
 	case *wallet.Transactions:
