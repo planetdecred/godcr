@@ -99,8 +99,8 @@ func (pg *statPage) layoutStats(gtx C) D {
 	}
 
 	return card.Layout(gtx, func(gtx C) D {
-		m15 := values.MarginPadding15
-		return layout.Inset{Left: m15, Right: m15}.Layout(gtx, func(gtx C) D {
+		m16 := values.MarginPadding16
+		return layout.Inset{Left: m16}.Layout(gtx, func(gtx C) D {
 			return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {
 				return items[i](gtx)
 			})
