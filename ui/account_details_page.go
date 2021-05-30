@@ -29,7 +29,6 @@ type acctDetailsPage struct {
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
 	editAccount              *widget.Clickable
-	errorReceiver            chan error
 }
 
 func AcctDetailsPage(common pageCommon, account *dcrlibwallet.Account) Page {
@@ -37,14 +36,13 @@ func AcctDetailsPage(common pageCommon, account *dcrlibwallet.Account) Page {
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		common:        common,
-		wallet:        common.wallet,
-		walletName:    common.wallet.WalletWithID(account.WalletID).Name,
-		account:       account,
-		theme:         common.theme,
-		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
-		editAccount:   new(widget.Clickable),
-		errorReceiver: make(chan error),
+		common:      common,
+		wallet:      common.wallet,
+		walletName:  common.wallet.WalletWithID(account.WalletID).Name,
+		account:     account,
+		theme:       common.theme,
+		backButton:  common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
+		editAccount: new(widget.Clickable),
 	}
 
 	pg.backButton.Color = common.theme.Color.Text
@@ -102,12 +100,42 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.E.Layout(gtx, edit.Layout)
 				})
 			},
+			handleExtra: func() {
+				go func() {
+					common.modalReceiver <- &modalLoad{
+						template: RenameAccountTemplate,
+						title:    "Rename account",
+						confirm: func(name string) {
+							go func() {
+								wal := pg.common.multiWallet.WalletWithID(pg.account.WalletID)
+								err := wal.RenameAccount(pg.account.Number, name)
+								if err != nil {
+									log.Error("Error renaming account:", err)
+									pg.common.modalLoad.setLoading(false)
+									if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+										e := values.String(values.StrInvalidPassphrase)
+										pg.common.notify(e, false)
+										return
+									}
+									pg.common.notify(err.Error(), false)
+								} else {
+									pg.account.Name = name
+									common.closeModal()
+								}
+							}()
+
+						},
+						confirmText: "Rename",
+						cancel:      common.closeModal,
+						cancelText:  "Cancel",
+					}
+				}()
+			},
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
@@ -265,22 +293,6 @@ func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 func (pg *acctDetailsPage) Handler(gtx layout.Context, common pageCommon) {
 	if pg.backButton.Button.Clicked() {
 		common.popPage()
-	}
-
-	if pg.editAccount.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RenameAccountTemplate,
-				title:    "Rename account",
-				confirm: func(name string) {
-					pg.wallet.RenameAccount(pg.account.WalletID, pg.account.Number, name, pg.errorReceiver)
-					pg.account.Name = name
-				},
-				confirmText: "Rename",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
 	}
 }
 

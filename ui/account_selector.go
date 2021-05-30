@@ -204,7 +204,7 @@ type accountSelectorModal struct {
 	currentSelectedAccount *dcrlibwallet.Account
 	wallets                []*dcrlibwallet.Wallet // TODO sort array instead
 	filteredWallets        []*dcrlibwallet.Wallet
-	accounts               map[int][]*selectorAccount
+	accounts               map[int][]*selectorAccount // key = wallet id
 	eventQueue             event.Queue
 }
 

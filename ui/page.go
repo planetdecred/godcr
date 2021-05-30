@@ -15,6 +15,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -259,6 +260,21 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 	common.modalTemplate = win.LoadModalTemplates()
 
 	return common
+}
+
+func (c *pageCommon) totalWalletBalance(walletID int) (dcrutil.Amount, error) {
+	wal := c.multiWallet.WalletWithID(walletID)
+	accountsResult, err := wal.GetAccountsRaw()
+	if err != nil {
+		return -1, err
+	}
+
+	var totalBalance int64
+	for _, account := range accountsResult.Acc {
+		totalBalance += account.TotalBalance
+	}
+
+	return dcrutil.Amount(totalBalance), nil
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {

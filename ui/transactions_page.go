@@ -163,9 +163,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Stacked(pg.dropDowns),
 		)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, container)
-	})
+	return common.UniformPadding(gtx, container)
 }
 
 func (pg *transactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {

@@ -23,7 +23,6 @@ type walletSettingsPage struct {
 	changePass, rescan, deleteWallet *widget.Clickable
 
 	notificationW *widget.Bool
-	errorReceiver chan error
 
 	chevronRightIcon *widget.Icon
 }
@@ -39,7 +38,6 @@ func WalletSettingsPage(common pageCommon, walletID int) Page {
 		IsWatchingOnly: wal.IsWatchingOnlyWallet(),
 
 		notificationW: new(widget.Bool),
-		errorReceiver: make(chan error),
 
 		changePass:   new(widget.Clickable),
 		rescan:       new(widget.Clickable),
@@ -90,9 +88,8 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *walletSettingsPage) changePassphrase() layout.Widget {
@@ -195,7 +192,7 @@ func (pg *walletSettingsPage) handle() {
 				template: ChangePasswordTemplate,
 				title:    values.String(values.StrChangeSpendingPass),
 				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeWalletPassphrase(pg.walletID, oldPass, newPass, pg.errorReceiver)
+					// pg.wal.ChangeWalletPassphrase(pg.walletID, oldPass, newPass, pg.errorReceiver)
 				},
 				confirmText: values.String(values.StrChange),
 				cancel:      common.closeModal,
@@ -249,7 +246,18 @@ func (pg *walletSettingsPage) handle() {
 							template: PasswordTemplate,
 							title:    values.String(values.StrConfirmToRemove),
 							confirm: func(pass string) {
-								pg.wal.DeleteWallet(pg.walletID, []byte(pass), pg.errorReceiver)
+								go func() {
+									err := pg.common.multiWallet.DeleteWallet(pg.walletID, []byte(pass))
+									if err != nil {
+										common.modalLoad.setLoading(false)
+										if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+											e := values.String(values.StrInvalidPassphrase)
+											common.notify(e, false)
+										}
+									} else {
+										pg.common.popPage()
+									}
+								}()
 							},
 							confirmText: values.String(values.StrConfirm),
 							cancel:      common.closeModal,
@@ -263,16 +271,6 @@ func (pg *walletSettingsPage) handle() {
 			}
 		}()
 		break
-	}
-
-	select {
-	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
-		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-			e := values.String(values.StrInvalidPassphrase)
-			common.notify(e, false)
-		}
-	default:
 	}
 }
 
