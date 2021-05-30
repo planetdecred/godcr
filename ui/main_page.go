@@ -23,6 +23,8 @@ type mainPage struct {
 	pageBackStack []Page
 	currentPage   Page
 
+	modals []Modal
+
 	appBarNavItems []navHandler
 	drawerNavItems []navHandler
 
@@ -41,6 +43,9 @@ func MainPage(c pageCommon) Page {
 	mp.pageCommon.popPage = mp.popPage
 	mp.pageCommon.changePage = mp.changePage
 	mp.pageCommon.popToPage = mp.popToPage
+
+	mp.pageCommon.showModal = mp.showModal
+	mp.pageCommon.dismissModal = mp.dismissModal
 
 	currencyExchangeValue := mp.multiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == USDExchangeValue
@@ -183,6 +188,10 @@ func (mp *mainPage) handle() {
 	}
 
 	mp.currentPage.handle()
+
+	for _, modal := range mp.modals {
+		modal.handle()
+	}
 }
 
 func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
@@ -226,6 +235,22 @@ func (mp *mainPage) popPage() {
 func (mp *mainPage) popToPage(pageID string) error {
 	// TODO
 	return errors.New("not implemented")
+}
+
+// Modal handlers
+
+func (mp *mainPage) showModal(modal Modal) {
+	modal.OnResume() // setup display data
+	mp.modals = append(mp.modals, modal)
+}
+
+func (mp *mainPage) dismissModal(modal Modal) {
+	for i, m := range mp.modals {
+		if m.modalID() == m.modalID() {
+			modal.OnDismiss() // do garbage collection in modal
+			mp.modals = append(mp.modals[:i], mp.modals[i+1:]...)
+		}
+	}
 }
 
 // Layout
@@ -303,8 +328,8 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 		layout.Stacked(func(gtx C) D {
-			if mp.wallAcctSelector.isWalletAccountModalOpen {
-				return mp.walletAccountModalLayout(gtx)
+			if len(mp.modals) > 0 {
+				return mp.modals[0].Layout(gtx)
 			}
 			return layout.Dimensions{}
 		}),

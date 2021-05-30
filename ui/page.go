@@ -82,27 +82,6 @@ type DCRUSDTBittrex struct {
 	LastTradeRate string
 }
 
-type walletAccountSelector struct {
-	title                     string
-	walletAccount             decredmaterial.Modal
-	walletsList, accountsList layout.List
-	isWalletAccountModalOpen  bool
-	isWalletAccountInfo       bool
-	walletAccounts            *wallectAccountOption
-	sendAccountBtn            *widget.Clickable
-	receivingAccountBtn       *widget.Clickable
-	purchaseTicketAccountBtn  *widget.Clickable
-	sendToAddress             bool
-	walletInfoButton          decredmaterial.IconButton
-
-	selectedSendAccount,
-	selectedSendWallet,
-	selectedReceiveAccount,
-	selectedReceiveWallet,
-	selectedPurchaseTicketAccount,
-	selectedPurchaseTicketWallet int
-}
-
 type pageCommon struct {
 	printer          *message.Printer
 	multiWallet      *dcrlibwallet.MultiWallet
@@ -138,9 +117,12 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	popPage       func()
-	popToPage     func(string) error
-	changePage    func(Page)
+	popPage    func()
+	popToPage  func(string) error
+	changePage func(Page)
+
+	showModal    func(Modal)
+	dismissModal func(Modal)
 
 	setReturnPage func(Page) //TODO
 	refreshWindow func()
