@@ -29,6 +29,8 @@ type transactionDetailsPage struct {
 	toDcrdata                       *widget.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
+	backButton                      decredmaterial.IconButton
+	infoButton                      decredmaterial.IconButton
 	gtx                             *layout.Context
 
 	wallet               *dcrlibwallet.Wallet
@@ -67,6 +69,8 @@ func TransactionDetailsPage(common pageCommon, transaction *dcrlibwallet.Transac
 	pg.dot = common.icons.imageBrightness1
 	pg.dot.Color = common.theme.Color.Gray
 
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
+
 	// find source account
 	if transaction.Direction == dcrlibwallet.TxDirectionSent ||
 		transaction.Direction == dcrlibwallet.TxDirectionTransferred {
@@ -103,12 +107,15 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
 	}
+
 	body := func(gtx C) D {
 		page := SubPage{
 			title: dcrlibwallet.TransactionDirectionName(pg.transaction.Direction),
 			back: func() {
 				common.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{
 					func(gtx C) D {

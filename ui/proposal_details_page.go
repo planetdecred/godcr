@@ -44,6 +44,8 @@ type proposalDetails struct {
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
 	successIcon         *widget.Icon
+	backButton          decredmaterial.IconButton
+	infoButton          decredmaterial.IconButton
 }
 
 func ProposalDetailsPage(common pageCommon, selectedProposal *dcrlibwallet.Proposal) Page {
@@ -68,6 +70,7 @@ func ProposalDetailsPage(common pageCommon, selectedProposal *dcrlibwallet.Propo
 	}
 
 	pg.downloadIcon.Scale = 1
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -392,6 +395,8 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				common.popPage()
 				pg.descriptionList.Position.First, pg.descriptionList.Position.Offset = 0, 0
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {

@@ -17,8 +17,10 @@ type logPage struct {
 	theme  *decredmaterial.Theme
 	common pageCommon
 
-	copyLog  *widget.Clickable
-	copyIcon *widget.Image
+	copyLog    *widget.Clickable
+	copyIcon   *widget.Image
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 
 	entriesList layout.List
 	fullLog     string
@@ -41,6 +43,7 @@ func LogPage(common pageCommon) Page {
 	pg.copyIcon = common.icons.copyIcon
 	pg.copyIcon.Scale = 0.25
 
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 	// go pg.watchLogs(win.internalLog) TODO
 
 	return pg
@@ -77,7 +80,9 @@ func (pg *logPage) Layout(gtx C) D {
 			back: func() {
 				common.changePage(DebugPage(common))
 			},
-			extraItem: pg.copyLog,
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
+			extraItem:  pg.copyLog,
 			extra: func(gtx C) D {
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.copyLog, func(gtx C) D {

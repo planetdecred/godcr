@@ -16,6 +16,9 @@ type helpPage struct {
 	theme         *decredmaterial.Theme
 	documentation *widget.Clickable
 	common        pageCommon
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func HelpPage(common pageCommon) Page {
@@ -24,6 +27,8 @@ func HelpPage(common pageCommon) Page {
 		documentation: new(widget.Clickable),
 		common:        common,
 	}
+
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -41,6 +46,8 @@ func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				pg.common.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween, WeightSum: 2}.Layout(gtx,

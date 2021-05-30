@@ -24,6 +24,9 @@ type aboutPage struct {
 	networkValue   decredmaterial.Label
 	license        decredmaterial.Label
 
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
+
 	chevronRightIcon *widget.Icon
 }
 
@@ -44,6 +47,7 @@ func AboutPage(common pageCommon) Page {
 		chevronRightIcon: common.icons.chevronRight,
 	}
 
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 	pg.versionValue.Color = pg.theme.Color.Gray
 	pg.buildDateValue.Color = pg.theme.Color.Gray
 	pg.networkValue.Color = pg.theme.Color.Gray
@@ -63,6 +67,8 @@ func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				pg.common.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
 					return pg.layoutRows(gtx)

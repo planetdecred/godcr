@@ -39,6 +39,8 @@ type settingsPage struct {
 	chevronRightIcon    *widget.Icon
 	confirm             decredmaterial.Button
 	cancel              decredmaterial.Button
+	backButton          decredmaterial.IconButton
+	infoButton          decredmaterial.IconButton
 
 	isDarkModeOn     *widget.Bool
 	spendUnconfirmed *widget.Bool
@@ -117,6 +119,8 @@ func SettingsPage(common pageCommon) Page {
 
 	pg.chevronRightIcon.Color = color
 
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
+
 	return pg
 }
 
@@ -134,6 +138,8 @@ func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				common.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{
 					pg.general(),

@@ -27,8 +27,11 @@ type acctDetailsPage struct {
 	account                  *dcrlibwallet.Account
 	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
-	backButton               decredmaterial.IconButton
-	editAccount              *widget.Clickable
+	// backButton               decredmaterial.IconButton
+	editAccount *widget.Clickable
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func AcctDetailsPage(common pageCommon, account *dcrlibwallet.Account) Page {
@@ -41,12 +44,10 @@ func AcctDetailsPage(common pageCommon, account *dcrlibwallet.Account) Page {
 		walletName:  common.wallet.WalletWithID(account.WalletID).Name,
 		account:     account,
 		theme:       common.theme,
-		backButton:  common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		editAccount: new(widget.Clickable),
 	}
 
-	pg.backButton.Color = common.theme.Color.Text
-	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -81,6 +82,8 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				common.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 					return pg.theme.Card().Layout(gtx, func(gtx C) D {
@@ -288,12 +291,6 @@ func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 	m := values.MarginPadding20
 	mtb := values.MarginPadding5
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
-}
-
-func (pg *acctDetailsPage) Handler(gtx layout.Context, common pageCommon) {
-	if pg.backButton.Button.Clicked() {
-		common.popPage()
-	}
 }
 
 func (pg *acctDetailsPage) handle()  {}

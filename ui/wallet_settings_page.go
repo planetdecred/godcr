@@ -25,6 +25,8 @@ type walletSettingsPage struct {
 	notificationW *widget.Bool
 
 	chevronRightIcon *widget.Icon
+	backButton       decredmaterial.IconButton
+	infoButton       decredmaterial.IconButton
 }
 
 func WalletSettingsPage(common pageCommon, walletID int) Page {
@@ -47,6 +49,7 @@ func WalletSettingsPage(common pageCommon, walletID int) Page {
 	}
 
 	pg.chevronRightIcon.Color = pg.theme.Color.LightGray
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -71,6 +74,8 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				common.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {

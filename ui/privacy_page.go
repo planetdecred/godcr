@@ -25,6 +25,8 @@ type privacyPage struct {
 	infoBtn                              decredmaterial.IconButton
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
+	backButton                           decredmaterial.IconButton
+	infoButton                           decredmaterial.IconButton
 	errorReceiver                        chan error
 	acctMixerStatus                      *chan *wallet.AccountMixer
 	walletID                             int
@@ -54,6 +56,8 @@ func PrivacyPage(common pageCommon, walletID int) Page {
 	pg.infoBtn.Background = common.theme.Color.Surface
 	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
 
+	pg.backButton, _ = common.SubPageHeaderButtons()
+
 	accounts, err := common.wallet.WalletWithID(pg.walletID).GetAccountsRaw()
 	if err != nil {
 		log.Error("error getting accounts:", err)
@@ -76,6 +80,8 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				c.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoBtn,
 			infoTemplate: PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
 				if c.wallet.IsAccountMixerConfigSet(pg.walletID) {
@@ -371,13 +377,13 @@ func (pg *privacyPage) handle() {
 	case err := <-pg.errorReceiver:
 		common.modalLoad.setLoading(false)
 		common.notify(err.Error(), false)
-	case stt := <-*pg.acctMixerStatus:
-		if stt.RunStatus == wallet.MixerStarted {
-			common.notify("Start Successfully", true)
-			common.closeModal()
-		} else {
-			common.notify("Stop Successfully", true)
-		}
+	// case stt := <-*pg.acctMixerStatus:
+	// 	if stt.RunStatus == wallet.MixerStarted {
+	// 		common.notify("Start Successfully", true)
+	// 		common.closeModal()
+	// 	} else {
+	// 		common.notify("Stop Successfully", true)
+	// 	}
 	default:
 	}
 }

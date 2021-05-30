@@ -302,7 +302,23 @@ type SubPage struct {
 	extraItem    *widget.Clickable
 	extra        layout.Widget
 	extraText    string
+	backButton   decredmaterial.IconButton
+	infoButton   decredmaterial.IconButton
 	handleExtra  func()
+}
+
+func (page pageCommon) SubPageHeaderButtons() (decredmaterial.IconButton, decredmaterial.IconButton) {
+	backButton := page.theme.PlainIconButton(new(widget.Clickable), page.icons.navigationArrowBack)
+	infoButton := page.theme.PlainIconButton(new(widget.Clickable), page.icons.actionInfo)
+
+	zeroInset := layout.UniformInset(values.MarginPadding0)
+	backButton.Color, infoButton.Color = page.theme.Color.Gray3, page.theme.Color.Gray3
+
+	m25 := values.MarginPadding25
+	backButton.Size, infoButton.Size = m25, m25
+	backButton.Inset, infoButton.Inset = zeroInset, zeroInset
+
+	return backButton, infoButton
 }
 
 func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -321,7 +337,7 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, page.subPageBackButton.Layout)
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, sp.backButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
@@ -351,8 +367,7 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
-					// return page.subPageInfoButton.Layout(gtx)
-					return layout.Dimensions{}
+					return sp.infoButton.Layout(gtx)
 				} else if sp.extraItem != nil {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -388,20 +403,20 @@ func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout
 }
 
 func (page pageCommon) subpageEventHandler(sp SubPage) {
-	// if page.subPageInfoButton.Button.Clicked() {
-	// 	go func() {
-	// 		page.modalReceiver <- &modalLoad{
-	// 			template:   sp.infoTemplate,
-	// 			title:      sp.title,
-	// 			cancel:     page.closeModal,
-	// 			cancelText: "Got it",
-	// 		}
-	// 	}()
-	// }
+	if sp.infoButton.Button.Clicked() {
+		go func() {
+			page.modalReceiver <- &modalLoad{
+				template:   sp.infoTemplate,
+				title:      sp.title,
+				cancel:     page.closeModal,
+				cancelText: "Got it",
+			}
+		}()
+	}
 
-	// if page.subPageBackButton.Button.Clicked() {
-	// 	sp.back()
-	// }
+	if sp.backButton.Button.Clicked() {
+		sp.back()
+	}
 
 	if sp.extraItem != nil && sp.extraItem.Clicked() {
 		sp.handleExtra()

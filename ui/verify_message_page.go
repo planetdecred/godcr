@@ -20,6 +20,9 @@ type verifyMessagePage struct {
 	clearBtn, verifyBtn                   decredmaterial.Button
 	verifyMessage                         decredmaterial.Label
 
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
+
 	verifyMessageStatus *widget.Icon
 
 	walletID   int
@@ -43,6 +46,8 @@ func VerifyMessagePage(c pageCommon) Page {
 	pg.verifyBtn.TextSize, pg.clearBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
 
+	pg.backButton, pg.infoButton = c.SubPageHeaderButtons()
+
 	return pg
 }
 
@@ -61,6 +66,8 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.clearInputs(&c)
 				c.popPage() //TODO
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx layout.Context) layout.Dimensions {
 				return pg.theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {

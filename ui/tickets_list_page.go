@@ -26,6 +26,8 @@ type ticketPageList struct {
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
+	backButton         decredmaterial.IconButton
+	infoButton         decredmaterial.IconButton
 	isGridView         bool
 	common             pageCommon
 }
@@ -51,6 +53,8 @@ func TicketPageList(c pageCommon) Page {
 		{Text: "Revoked"},
 	}, 1)
 
+	pg.backButton, pg.infoButton = c.SubPageHeaderButtons()
+
 	return pg
 }
 
@@ -66,6 +70,8 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				c.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx C) D {
 				walletID := c.wallet.AllWallets()[pg.walletDropDown.SelectedIndex()].ID
 				tickets := (*pg.tickets).Confirmed[walletID]

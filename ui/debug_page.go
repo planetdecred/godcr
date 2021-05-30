@@ -20,6 +20,9 @@ type debugPage struct {
 	theme      *decredmaterial.Theme
 	debugItems []debugItem
 	common     pageCommon
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func DebugPage(common pageCommon) Page {
@@ -36,6 +39,8 @@ func DebugPage(common pageCommon) Page {
 		debugItems: debugItems,
 		common:     common,
 	}
+
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -90,6 +95,8 @@ func (pg *debugPage) Layout(gtx C) D {
 			back: func() {
 				pg.common.changePage(MorePage(pg.common))
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx C) D {
 				pg.layoutDebugItems(gtx, pg.common)
 				return layout.Dimensions{Size: gtx.Constraints.Max}

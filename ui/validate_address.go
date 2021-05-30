@@ -27,6 +27,9 @@ type validateAddressPage struct {
 	clearBtn, validateBtn decredmaterial.Button
 	wallet                *wallet.Wallet
 	stateValidate         int
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func ValidateAddressPage(common pageCommon) Page {
@@ -50,6 +53,8 @@ func ValidateAddressPage(common pageCommon) Page {
 
 	pg.stateValidate = none
 
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
+
 	return pg
 }
 
@@ -65,6 +70,8 @@ func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				common.popPage()
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,

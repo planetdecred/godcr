@@ -27,6 +27,9 @@ type signMessagePage struct {
 	copySignature                              *widget.Clickable
 	copyIcon                                   *widget.Image
 	gtx                                        *layout.Context
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func SignMessagePage(common pageCommon, walletID int) Page {
@@ -64,6 +67,7 @@ func SignMessagePage(common pageCommon, walletID int) Page {
 	}
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -86,6 +90,8 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.clearForm()
 				common.changePage(WalletPage(common)) // TODO
 			},
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			body: func(gtx layout.Context) layout.Dimensions {
 				return common.theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
