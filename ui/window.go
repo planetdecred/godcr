@@ -108,7 +108,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	wal.MultiWallet().AddSyncProgressListener(win, "window") // register for sync notifications
 	win.common = win.loadPageCommon(decredIcons, wal.MultiWallet())
-	win.currentPage = OverviewPage(win.common) // TODO
+	win.currentPage = MainPage(win.common) // TODO
 
 	return win, nil
 }
