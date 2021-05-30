@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"image"
 
 	"gioui.org/gesture"
@@ -16,27 +17,6 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-type walletAccountSelector struct {
-	title                     string
-	walletAccount             decredmaterial.Modal
-	walletsList, accountsList layout.List
-	isWalletAccountModalOpen  bool
-	isWalletAccountInfo       bool
-	walletAccounts            *wallectAccountOption
-	sendAccountBtn            *widget.Clickable
-	receivingAccountBtn       *widget.Clickable
-	purchaseTicketAccountBtn  *widget.Clickable
-	sendToAddress             bool
-	walletInfoButton          decredmaterial.IconButton
-
-	selectedSendAccount,
-	selectedSendWallet,
-	selectedReceiveAccount,
-	selectedReceiveWallet,
-	selectedPurchaseTicketAccount,
-	selectedPurchaseTicketWallet int
-}
-
 type accountSelector struct {
 	dialogTitle string
 	common      pageCommon
@@ -47,6 +27,7 @@ type accountSelector struct {
 	isModalOpen        bool
 	openSelectorDialog *widget.Clickable
 
+	wallets            []*dcrlibwallet.Wallet
 	selectedAccount    *dcrlibwallet.Account
 	selectedWalletName string
 	totalBalance       string
@@ -59,6 +40,8 @@ func newAccountSelector(common pageCommon) *accountSelector {
 
 		accountIsValid:     func(a *dcrlibwallet.Account) bool { return true },
 		openSelectorDialog: new(widget.Clickable),
+
+		wallets: common.multiWallet.AllWallets(),
 	}
 }
 
@@ -83,7 +66,7 @@ func (as *accountSelector) handle() {
 
 	for as.openSelectorDialog.Clicked() {
 		as.isModalOpen = true
-		m := newAccountSelectorModal(as.common, as.selectedAccount).
+		m := newAccountSelectorModal(as.common, as.selectedAccount, as.wallets).
 			title(as.dialogTitle).
 			accountValidator(as.accountIsValid).
 			accountSelected(func(account *dcrlibwallet.Account) {
@@ -219,7 +202,8 @@ type accountSelectorModal struct {
 	accountsList     layout.List
 
 	currentSelectedAccount *dcrlibwallet.Account
-	wallets                []*dcrlibwallet.Wallet
+	wallets                []*dcrlibwallet.Wallet // TODO sort array instead
+	filteredWallets        []*dcrlibwallet.Wallet
 	accounts               map[int][]*selectorAccount
 	eventQueue             event.Queue
 }
@@ -229,7 +213,7 @@ type selectorAccount struct {
 	clickEvent *gesture.Click
 }
 
-func newAccountSelectorModal(common pageCommon, currentSelectedAccount *dcrlibwallet.Account) *accountSelectorModal {
+func newAccountSelectorModal(common pageCommon, currentSelectedAccount *dcrlibwallet.Account, wallets []*dcrlibwallet.Wallet) *accountSelectorModal {
 	asm := &accountSelectorModal{
 		pageCommon: common,
 
@@ -238,12 +222,13 @@ func newAccountSelectorModal(common pageCommon, currentSelectedAccount *dcrlibwa
 		accountsList: layout.List{Axis: layout.Vertical},
 
 		currentSelectedAccount: currentSelectedAccount,
+		wallets:                wallets,
 	}
 
 	asm.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), asm.icons.actionInfo)
-	asm.wallAcctSelector.walletInfoButton.Color = asm.theme.Color.Gray3
-	asm.wallAcctSelector.walletInfoButton.Size = values.MarginPadding15
-	asm.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
+	asm.walletInfoButton.Color = asm.theme.Color.Gray3
+	asm.walletInfoButton.Size = values.MarginPadding15
+	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	return asm
 }
@@ -253,7 +238,7 @@ func (asm *accountSelectorModal) OnResume() {
 	walletAccounts := make(map[int][]*selectorAccount, 0)
 
 	// TODO use a sorted wallet list
-	for _, wal := range asm.multiWallet.AllWallets() {
+	for _, wal := range asm.wallets {
 		// filter all accounts
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
@@ -278,7 +263,7 @@ func (asm *accountSelectorModal) OnResume() {
 		}
 	}
 
-	asm.wallets = wallets
+	asm.filteredWallets = wallets
 	asm.accounts = walletAccounts
 }
 
@@ -367,11 +352,11 @@ func (asm *accountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					return asm.walletsList.Layout(gtx, len(asm.wallets), func(gtx C, windex int) D {
+					return asm.walletsList.Layout(gtx, len(asm.filteredWallets), func(gtx C, windex int) D {
 						// if page.wallet.AllWallets()[windex].IsWatchingOnlyWallet() {
 						// 	return D{}
 						// }
-						wal := asm.wallets[windex]
+						wal := asm.filteredWallets[windex]
 						return wallAcctGroup(gtx, wal.Name, windex, func(gtx C) D {
 							accounts := asm.accounts[wal.ID]
 							return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
@@ -463,5 +448,42 @@ func (asm *accountSelectorModal) walletAccountLayout(gtx layout.Context, account
 				)
 			}),
 		)
+	})
+}
+
+func (asm *accountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dimensions {
+	title := fmt.Sprintf("Some accounts are hidden.")
+	desc := fmt.Sprintf("Some accounts are disabled by StakeShuffle settings to protect your privacy.")
+	card := asm.theme.Card()
+	card.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
+	border := widget.Border{Color: asm.theme.Color.Background, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
+	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding280)
+	return border.Layout(gtx, func(gtx C) D {
+		return card.Layout(gtx, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := asm.theme.Body2(title)
+								txt.Color = asm.theme.Color.DeepBlue
+								txt.Font.Weight = text.Bold
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := asm.theme.Body2("Tx direction")
+								txt.Color = asm.theme.Color.Gray
+								return txt.Layout(gtx)
+							}),
+						)
+					}),
+					layout.Rigid(func(gtx C) D {
+						txt := asm.theme.Body2(desc)
+						txt.Color = asm.theme.Color.Gray
+						return txt.Layout(gtx)
+					}),
+				)
+			})
+		})
 	})
 }

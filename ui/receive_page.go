@@ -86,6 +86,18 @@ func ReceivePage(common pageCommon) Page {
 			} else {
 				page.currentAddress = currentAddress
 			}
+		}).
+		accountValidator(func(account *dcrlibwallet.Account) bool {
+
+			// Filter out imported account and mixed.
+
+			wal := page.common.multiWallet.WalletWithID(account.WalletID)
+			mixedAccountNumber := wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, -1)
+			if account.Number == MaxInt32 ||
+				account.Number == mixedAccountNumber {
+				return false
+			}
+			return true
 		})
 
 	return page

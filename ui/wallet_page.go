@@ -879,20 +879,13 @@ func (pg *walletPage) handle() {
 
 		for pg.collapsibles[index].addAcctBtn.Button.Clicked() {
 			walletID := pg.common.wallet.AllWallets()[index].ID
-			walletIndex := index
 			go func() {
 				common.modalReceiver <- &modalLoad{
 					template: CreateAccountTemplate,
 					title:    values.String(values.StrCreateNewAccount),
 					confirm: func(name string, passphrase string) {
 						pg.wallet.AddAccount(walletID, name, []byte(passphrase), pg.errorReceiver, func(acct *dcrlibwallet.Account) {
-							walletAccount := walletAccount{
-								walletIndex:  walletIndex,
-								accountName:  acct.Name,
-								totalBalance: dcrutil.Amount(acct.Balance.Total).String(),
-								spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
-							}
-							common.addAccount(walletAccount)
+							// account added
 						})
 					},
 					confirmText: values.String(values.StrCreate),

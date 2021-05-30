@@ -126,8 +126,6 @@ type pageCommon struct {
 
 	setReturnPage func(Page) //TODO
 	refreshWindow func()
-
-	wallAcctSelector *walletAccountSelector
 }
 
 type (
@@ -252,32 +250,7 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 		return
 	}
 
-	common.wallAcctSelector = &walletAccountSelector{
-		sendAccountBtn:           new(widget.Clickable),
-		receivingAccountBtn:      new(widget.Clickable),
-		purchaseTicketAccountBtn: new(widget.Clickable),
-		walletAccount:            *common.theme.ModalFloatTitle(),
-		walletsList:              layout.List{Axis: layout.Vertical},
-		accountsList:             layout.List{Axis: layout.Vertical},
-		walletAccounts: &wallectAccountOption{
-			selectSendAccount:           make(map[int][]walletAccount),
-			selectReceiveAccount:        make(map[int][]walletAccount),
-			selectPurchaseTicketAccount: make(map[int][]walletAccount),
-		},
-		isWalletAccountModalOpen:      false,
-		selectedSendAccount:           *common.selectedAccount,
-		selectedSendWallet:            *common.selectedWallet,
-		selectedReceiveAccount:        *common.selectedAccount,
-		selectedReceiveWallet:         *common.selectedWallet,
-		selectedPurchaseTicketAccount: *common.selectedAccount,
-		selectedPurchaseTicketWallet:  *common.selectedWallet,
-	}
 	iconColor := common.theme.Color.Gray3
-
-	common.wallAcctSelector.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo)
-	common.wallAcctSelector.walletInfoButton.Color = iconColor
-	common.wallAcctSelector.walletInfoButton.Size = values.MarginPadding15
-	common.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
 	isNavDrawerMinimized := false
@@ -398,12 +371,6 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 					return displayToast(page.theme, gtx, *page.toast)
 				})
 			})
-		}),
-		layout.Stacked(func(gtx C) D {
-			if page.wallAcctSelector.isWalletAccountModalOpen {
-				return page.walletAccountModalLayout(gtx)
-			}
-			return layout.Dimensions{}
 		}),
 	)
 }
