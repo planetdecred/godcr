@@ -943,137 +943,127 @@ func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32,
 
 // GetAllTickets collects a per-wallet slice of tickets fitting the parameters.
 // It is non-blocking and sends its result or any error to wal.Send.
-func (wal *Wallet) GetAllTickets() {
-	go func() {
-		var resp Response
-		wallets, err := wal.wallets()
+func (wal *Wallet) GetAllTickets() (*Tickets, error) {
+	wallets, err := wal.wallets()
+	if err != nil {
+		return nil, err
+	}
+
+	var liveRecentTickets []Ticket
+	var recentActivity []Ticket
+
+	tickets := make(map[int][]Ticket)
+	unconfirmedTickets := make(map[int][]UnconfirmedPurchase)
+
+	stackingRecordCounter := []struct {
+		Status string
+		Count  int
+	}{
+		{"UNMINED", 0},
+		{"IMMATURE", 0},
+		{"LIVE", 0},
+		{"VOTED", 0},
+		{"MISSED", 0},
+		{"EXPIRED", 0},
+		{"REVOKED", 0},
+	}
+
+	liveCounter := []struct {
+		Status string
+		Count  int
+	}{
+		{"UNMINED", 0},
+		{"IMMATURE", 0},
+		{"LIVE", 0},
+	}
+
+	for _, wall := range wallets {
+		ticketsInfo, err := wall.GetTicketsForBlockHeightRange(0, wall.GetBestBlock(), math.MaxInt32)
 		if err != nil {
-			resp.Err = err
-			wal.Send <- resp
-			return
+			return nil, err
 		}
 
-		var liveRecentTickets []Ticket
-		var recentActivity []Ticket
-
-		tickets := make(map[int][]Ticket)
-		unconfirmedTickets := make(map[int][]UnconfirmedPurchase)
-
-		stackingRecordCounter := []struct {
-			Status string
-			Count  int
-		}{
-			{"UNMINED", 0},
-			{"IMMATURE", 0},
-			{"LIVE", 0},
-			{"VOTED", 0},
-			{"MISSED", 0},
-			{"EXPIRED", 0},
-			{"REVOKED", 0},
-		}
-
-		liveCounter := []struct {
-			Status string
-			Count  int
-		}{
-			{"UNMINED", 0},
-			{"IMMATURE", 0},
-			{"LIVE", 0},
-		}
-
-		for _, wall := range wallets {
-			ticketsInfo, err := wall.GetTicketsForBlockHeightRange(0, wall.GetBestBlock(), math.MaxInt32)
-			if err != nil {
-				resp.Err = err
-				wal.Send <- resp
-				return
+		for _, tinfo := range ticketsInfo {
+			if tinfo.Status == "UNKNOWN" {
+				continue
 			}
 
-			for _, tinfo := range ticketsInfo {
-				if tinfo.Status == "UNKNOWN" {
-					continue
-				}
+			var amount dcrutil.Amount
+			for _, output := range tinfo.Ticket.MyOutputs {
+				amount += output.Amount
+			}
+			info := Ticket{
+				Info:       *tinfo,
+				DateTime:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
+				MonthDay:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2"),
+				DaysBehind: calculateDaysBehind(tinfo.Ticket.Timestamp),
+				Amount:     amount.String(),
+				Fee:        tinfo.Ticket.Fee.String(),
+				WalletName: wall.Name,
+			}
+			tickets[wall.ID] = append(tickets[wall.ID], info)
 
-				var amount dcrutil.Amount
-				for _, output := range tinfo.Ticket.MyOutputs {
-					amount += output.Amount
-				}
-				info := Ticket{
-					Info:       *tinfo,
-					DateTime:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
-					MonthDay:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2"),
-					DaysBehind: calculateDaysBehind(tinfo.Ticket.Timestamp),
-					Amount:     amount.String(),
-					Fee:        tinfo.Ticket.Fee.String(),
-					WalletName: wall.Name,
-				}
-				tickets[wall.ID] = append(tickets[wall.ID], info)
-
-				for i := range liveCounter {
-					if liveCounter[i].Status == tinfo.Status {
-						liveCounter[i].Count++
-					}
-				}
-
-				if tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE" {
-					liveRecentTickets = append(liveRecentTickets, info)
-				}
-
-				recentActivity = append(recentActivity, info)
-
-				for i := range stackingRecordCounter {
-					if stackingRecordCounter[i].Status == tinfo.Status {
-						stackingRecordCounter[i].Count++
-					}
+			for i := range liveCounter {
+				if liveCounter[i].Status == tinfo.Status {
+					liveCounter[i].Count++
 				}
 			}
 
-			sort.SliceStable(tickets[wall.ID], func(i, j int) bool {
-				backTime := time.Unix(tickets[wall.ID][j].Info.Ticket.Timestamp, 0)
-				frontTime := time.Unix(tickets[wall.ID][i].Info.Ticket.Timestamp, 0)
-				return backTime.Before(frontTime)
-			})
-
-			unconfirmedTicketPurchases, err := getUnconfirmedPurchases(wall, tickets[wall.ID])
-			if err != nil {
-				resp.Err = err
-				wal.Send <- resp
-				return
+			if tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE" {
+				liveRecentTickets = append(liveRecentTickets, info)
 			}
-			unconfirmedTickets[wall.ID] = unconfirmedTicketPurchases
+
+			recentActivity = append(recentActivity, info)
+
+			for i := range stackingRecordCounter {
+				if stackingRecordCounter[i].Status == tinfo.Status {
+					stackingRecordCounter[i].Count++
+				}
+			}
 		}
 
-		sort.SliceStable(liveRecentTickets, func(i, j int) bool {
-			backTime := time.Unix(liveRecentTickets[j].Info.Ticket.Timestamp, 0)
-			frontTime := time.Unix(liveRecentTickets[i].Info.Ticket.Timestamp, 0)
+		sort.SliceStable(tickets[wall.ID], func(i, j int) bool {
+			backTime := time.Unix(tickets[wall.ID][j].Info.Ticket.Timestamp, 0)
+			frontTime := time.Unix(tickets[wall.ID][i].Info.Ticket.Timestamp, 0)
 			return backTime.Before(frontTime)
 		})
 
-		recentLimit := 5
-		if len(liveRecentTickets) > recentLimit {
-			liveRecentTickets = liveRecentTickets[:recentLimit]
+		unconfirmedTicketPurchases, err := getUnconfirmedPurchases(wall, tickets[wall.ID])
+		if err != nil {
+			return nil, err
 		}
+		unconfirmedTickets[wall.ID] = unconfirmedTicketPurchases
+	}
 
-		sort.SliceStable(recentActivity, func(i, j int) bool {
-			backTime := time.Unix(recentActivity[j].Info.Ticket.Timestamp, 0)
-			frontTime := time.Unix(recentActivity[i].Info.Ticket.Timestamp, 0)
-			return backTime.Before(frontTime)
-		})
+	sort.SliceStable(liveRecentTickets, func(i, j int) bool {
+		backTime := time.Unix(liveRecentTickets[j].Info.Ticket.Timestamp, 0)
+		frontTime := time.Unix(liveRecentTickets[i].Info.Ticket.Timestamp, 0)
+		return backTime.Before(frontTime)
+	})
 
-		if len(recentActivity) > recentLimit {
-			recentActivity = recentActivity[:recentLimit]
-		}
+	recentLimit := 5
+	if len(liveRecentTickets) > recentLimit {
+		liveRecentTickets = liveRecentTickets[:recentLimit]
+	}
 
-		resp.Resp = &Tickets{
-			Confirmed:             tickets,
-			Unconfirmed:           unconfirmedTickets,
-			RecentActivity:        recentActivity,
-			StackingRecordCounter: stackingRecordCounter,
-			LiveRecent:            liveRecentTickets,
-			LiveCounter:           liveCounter,
-		}
-		wal.Send <- resp
-	}()
+	sort.SliceStable(recentActivity, func(i, j int) bool {
+		backTime := time.Unix(recentActivity[j].Info.Ticket.Timestamp, 0)
+		frontTime := time.Unix(recentActivity[i].Info.Ticket.Timestamp, 0)
+		return backTime.Before(frontTime)
+	})
+
+	if len(recentActivity) > recentLimit {
+		recentActivity = recentActivity[:recentLimit]
+	}
+
+	return &Tickets{
+		Confirmed:             tickets,
+		Unconfirmed:           unconfirmedTickets,
+		RecentActivity:        recentActivity,
+		StackingRecordCounter: stackingRecordCounter,
+		LiveRecent:            liveRecentTickets,
+		LiveCounter:           liveCounter,
+	}, nil
 }
 
 func getUnconfirmedPurchases(wall dcrlibwallet.Wallet, tickets []Ticket) (unconfirmed []UnconfirmedPurchase, err error) {
@@ -1185,7 +1175,7 @@ func (wal *Wallet) AddVSP(host string, errChan chan error) {
 			}
 		}
 
-		info, err := getVSPInfo(host)
+		info, err := GetVSPInfo(host)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -1226,7 +1216,7 @@ func (wal *Wallet) GetAllVSP() {
 		var loadedVSP []VSPInfo
 
 		for _, host := range valueOut.List {
-			v, err := getVSPInfo(host)
+			v, err := GetVSPInfo(host)
 			if err == nil {
 				loadedVSP = append(loadedVSP, VSPInfo{
 					Host: host,
@@ -1235,7 +1225,7 @@ func (wal *Wallet) GetAllVSP() {
 			}
 		}
 
-		l, _ := getInitVSPInfo("https://api.decred.org/?c=vsp")
+		l, _ := GetInitVSPInfo("https://api.decred.org/?c=vsp")
 		for h, v := range l {
 			if strings.Contains(wal.Net, v.Network) {
 				loadedVSP = append(loadedVSP, VSPInfo{
@@ -1273,7 +1263,7 @@ func (wal *Wallet) GetRememberVSP() string {
 }
 
 // getVSPInfo returns the information of the specified VSP base URL
-func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
+func GetVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
 	rq := new(http.Client)
 	resp, err := rq.Get((url + "/api/v3/vspinfo"))
 
@@ -1305,7 +1295,7 @@ func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
 }
 
 // getInitVSPInfo returns the list information of the VSP
-func getInitVSPInfo(url string) (map[string]*dcrlibwallet.GetVspInfoResponse, error) {
+func GetInitVSPInfo(url string) (map[string]*dcrlibwallet.GetVspInfoResponse, error) {
 	rq := new(http.Client)
 	resp, err := rq.Get((url))
 	if err != nil {

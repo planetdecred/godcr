@@ -145,9 +145,7 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 		return c.SubPageLayout(gtx, page)
 	}
 
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, body)
-	})
+	return c.UniformPadding(gtx, body)
 }
 
 func (pg *ticketPageList) dropDowns(gtx layout.Context) layout.Dimensions {

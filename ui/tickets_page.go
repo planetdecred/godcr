@@ -39,7 +39,7 @@ type ticketPage struct {
 	reviewPurchase        decredmaterial.Button
 	cancelConfirmPurchase decredmaterial.Button
 	submitPurchase        decredmaterial.Button
-	tickets               **wallet.Tickets
+	tickets               *wallet.Tickets
 	ticketPrice           string
 	totalCost             string
 	remainingBalance      string
@@ -56,7 +56,7 @@ type ticketPage struct {
 	walletSelectedID      int
 	accountSelectedNumber int32
 
-	vspInfo          **wallet.VSP
+	loadedVSP        []wallet.VSPInfo
 	vspHosts         layout.List
 	rememberVSP      decredmaterial.CheckBoxStyle
 	showVSPHosts     bool
@@ -71,11 +71,15 @@ type ticketPage struct {
 	isPurchaseLoading bool
 }
 
+type vspHosts struct {
+	Remember string
+	List     []string
+}
+
 func TicketPage(c pageCommon) Page {
 	pg := &ticketPage{
-		th:  c.theme,
-		wal: c.wallet,
-		// tickets: &c.walletTickets,
+		th:     c.theme,
+		wal:    c.wallet,
 		common: c,
 
 		ticketsLive:           layout.List{Axis: layout.Horizontal},
@@ -98,8 +102,7 @@ func TicketPage(c pageCommon) Page {
 		inputVSP:              c.theme.Editor(new(widget.Editor), "Add a new VSP..."),
 		addVSP:                c.theme.Button(new(widget.Clickable), "Save"),
 		spendingPassword:      c.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		// vspInfo:               &win.vspInfo,
-		vspErrChan: make(chan error),
+		vspErrChan:            make(chan error),
 	}
 	pg.ticketAmount.Editor.SetText("1")
 
@@ -134,6 +137,12 @@ func TicketPage(c pageCommon) Page {
 			return true
 		})
 
+	tickets, err := pg.common.wallet.GetAllTickets() //TODO
+	if err == nil {
+		pg.tickets = tickets
+	}
+	pg.getAllVSP() //todo do in background
+
 	return pg
 }
 
@@ -141,28 +150,55 @@ func (pg *ticketPage) pageID() string {
 	return PageTickets
 }
 
+func (pg *ticketPage) getAllVSP() {
+	var valueOut vspHosts
+
+	pg.common.multiWallet.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+	var loadedVSP []wallet.VSPInfo
+
+	for _, host := range valueOut.List {
+		v, err := wallet.GetVSPInfo(host)
+		if err == nil {
+			loadedVSP = append(loadedVSP, wallet.VSPInfo{
+				Host: host,
+				Info: v,
+			})
+		}
+	}
+
+	l, _ := wallet.GetInitVSPInfo("https://api.decred.org/?c=vsp")
+	for h, v := range l {
+		if strings.Contains("testnet", v.Network) { //todo
+			loadedVSP = append(loadedVSP, wallet.VSPInfo{
+				Host: fmt.Sprintf("https://%s", h),
+				Info: v,
+			})
+		}
+	}
+
+	pg.loadedVSP = loadedVSP
+}
+
 func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
-	dims := c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-			sections := []func(gtx C) D{
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketPriceSection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketsLiveSection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketsActivitySection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.stackingRecordSection(gtx, c)
-				},
-			}
+	dims := c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
+		sections := []func(gtx C) D{
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketPriceSection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketsLiveSection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketsActivitySection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.stackingRecordSection(gtx, c)
+			},
+		}
 
-			return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
-				return sections[i](gtx)
-			})
+		return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
+			return sections[i](gtx)
 		})
 	})
 
@@ -698,7 +734,7 @@ func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions 
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					listVSP := (*pg.vspInfo).List
+					listVSP := pg.loadedVSP
 					return pg.vspHosts.Layout(gtx, len(listVSP), func(gtx C, i int) D {
 						click := pg.selectVSP[i]
 						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -799,11 +835,7 @@ func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmou
 }
 
 func (pg *ticketPage) createNewVSPD(c pageCommon) {
-	vspd, err := c.wallet.NewVSPD(pg.selectedVSP.Host, pg.walletSelectedID, pg.accountSelectedNumber)
-	if err != nil {
-		c.notify(err.Error(), false)
-	}
-	pg.vspd = vspd
+	pg.vspd = pg.common.multiWallet.NewVSPD(pg.selectedVSP.Host, pg.walletSelectedID, pg.accountSelectedNumber)
 }
 
 func (pg *ticketPage) handle() {
@@ -817,8 +849,8 @@ func (pg *ticketPage) handle() {
 		c.wallet.GetAllVSP()
 	}
 
-	if len((*pg.vspInfo).List) != len(pg.selectVSP) {
-		pg.selectVSP = createClickGestures(len((*pg.vspInfo).List))
+	if len(pg.loadedVSP) != len(pg.selectVSP) {
+		pg.selectVSP = createClickGestures(len(pg.loadedVSP))
 	}
 
 	for _, evt := range pg.ticketAmount.Editor.Events() {
@@ -829,9 +861,11 @@ func (pg *ticketPage) handle() {
 	}
 
 	if pg.purchaseTicket.Button.Clicked() {
-		if c.wallet.GetRememberVSP() != "" {
-			for _, vinfo := range (*pg.vspInfo).List {
-				if vinfo.Host == c.wallet.GetRememberVSP() {
+		var vspHost string
+		pg.common.multiWallet.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &vspHost)
+		if vspHost != "" {
+			for _, vinfo := range pg.loadedVSP {
+				if vinfo.Host == vspHost {
 					pg.selectedVSP = vinfo
 					pg.rememberVSP.CheckBox.Value = true
 					pg.createNewVSPD(c)

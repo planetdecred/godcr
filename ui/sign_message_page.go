@@ -10,25 +10,20 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageSignMessage = "SignMessage"
 
 type signMessagePage struct {
-	common        pageCommon
-	theme         *decredmaterial.Theme
-	container     layout.List
-	wallet        *wallet.Wallet
-	walletID      int
-	walletName    string
-	errorReceiver chan error
+	common    pageCommon
+	theme     *decredmaterial.Theme
+	container layout.List
+	wallet    *dcrlibwallet.Wallet
 
 	isSigningMessage                           bool
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
-	result                                     **wallet.Signature
 	copySignature                              *widget.Clickable
 	copyIcon                                   *widget.Image
 	gtx                                        *layout.Context
@@ -50,11 +45,9 @@ func SignMessagePage(common pageCommon, walletID int) Page {
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
-		common:   common,
-		theme:    common.theme,
-		wallet:   common.wallet,
-		walletID: walletID,
-		walletName: common.wallet.WalletWithID(walletID).Name,
+		common: common,
+		theme:  common.theme,
+		wallet: common.multiWallet.WalletWithID(walletID),
 
 		titleLabel:         common.theme.H5("Sign Message"),
 		signedMessageLabel: common.theme.Body1(""),
@@ -68,7 +61,6 @@ func SignMessagePage(common pageCommon, walletID int) Page {
 		// result:        &win.signatureResult,
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
-		errorReceiver: make(chan error),
 	}
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
@@ -89,7 +81,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			title:      "Sign message",
-			walletName: pg.walletName,
+			walletName: pg.wallet.Name,
 			back: func() {
 				pg.clearForm()
 				common.changePage(WalletPage(common)) // TODO
@@ -112,9 +104,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 		return common.SubPageLayout(gtx, page)
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *signMessagePage) description() layout.Widget {
@@ -227,7 +217,19 @@ func (pg *signMessagePage) handle() {
 					template: PasswordTemplate,
 					title:    "Confirm to sign",
 					confirm: func(pass string) {
-						pg.wallet.SignMessage(pg.walletID, []byte(pass), address, message, pg.errorReceiver)
+						go func() {
+							sig, err := pg.wallet.SignMessage([]byte(pass), address, message)
+							if err != nil {
+								common.modalLoad.setLoading(false)
+								common.notify(err.Error(), false)
+								if err.Error() != dcrlibwallet.ErrInvalidPassphrase {
+									common.closeModal()
+								}
+							} else {
+								common.closeModal()
+								pg.signedMessageLabel.Text = dcrlibwallet.EncodeBase64(sig)
+							}
+						}()
 					},
 					confirmText: "Confirm",
 					cancel:      common.closeModal,
@@ -241,21 +243,6 @@ func (pg *signMessagePage) handle() {
 		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
 	}
 
-	if *pg.result != nil {
-		pg.signedMessageLabel.Text = (*pg.result).Signature
-		*pg.result = nil
-		pg.isSigningMessage = false
-	}
-
-	select {
-	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
-		common.notify(err.Error(), false)
-		if err.Error() != dcrlibwallet.ErrInvalidPassphrase {
-			common.closeModal()
-		}
-	default:
-	}
 }
 
 func (pg *signMessagePage) validate(ignoreEmpty bool) bool {
@@ -277,16 +264,13 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 	}
 
 	if address != "" {
-		isValid, _ := pg.wallet.IsAddressValid(address)
+		isValid := pg.common.multiWallet.IsAddressValid(address)
 		if !isValid {
 			pg.addressEditor.SetError("Invalid address")
 			return false
 		}
 
-		exist, err := pg.wallet.HaveAddress(pg.walletID, address)
-		if err != nil {
-			return false
-		}
+		exist := pg.wallet.HaveAddress(address)
 		if !exist {
 			pg.addressEditor.SetError("Address not owned by this wallet")
 			return false
