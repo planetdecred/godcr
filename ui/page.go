@@ -107,10 +107,7 @@ type pageCommon struct {
 	modalLoad        *modalLoad
 	modalTemplate    *ModalTemplate
 
-	isNavDrawerMinimized    *bool
-	minimizeNavDrawerButton decredmaterial.IconButton
-	maximizeNavDrawerButton decredmaterial.IconButton
-	testButton              decredmaterial.Button
+	testButton decredmaterial.Button
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
@@ -217,33 +214,31 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 	ic := win.loadIcons(decredIcons)
 
 	common := pageCommon{
-		printer:                 message.NewPrinter(language.English),
-		multiWallet:             multiWallet,
-		syncStatusUpdate:        &win.syncStatusUpdate,
-		wallet:                  win.wallet,
-		selectedWallet:          &win.selected,
-		selectedAccount:         &win.selectedAccount,
-		theme:                   win.theme,
-		icons:                   ic,
-		returnPage:              win.previousPage,
-		walletTabs:              win.walletTabs,
-		accountTabs:             win.accountTabs,
-		keyEvents:               win.keyEvents,
-		states:                  &win.states,
-		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
-		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
-		modal:                   win.theme.Modal(),
-		modalReceiver:           win.modal,
-		modalLoad:               &modalLoad{},
-		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		popPage:                 win.popPage,
-		popToPage:               win.popToPage,
-		changePage:              win.changePage,
-		setReturnPage:           win.setReturnPage,
-		refreshWindow:           win.refresh,
-		toast:                   &win.toast,
+		printer:           message.NewPrinter(language.English),
+		multiWallet:       multiWallet,
+		syncStatusUpdate:  &win.syncStatusUpdate,
+		wallet:            win.wallet,
+		selectedWallet:    &win.selected,
+		selectedAccount:   &win.selectedAccount,
+		theme:             win.theme,
+		icons:             ic,
+		returnPage:        win.previousPage,
+		walletTabs:        win.walletTabs,
+		accountTabs:       win.accountTabs,
+		keyEvents:         win.keyEvents,
+		states:            &win.states,
+		selectedUTXO:      make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		modal:             win.theme.Modal(),
+		modalReceiver:     win.modal,
+		modalLoad:         &modalLoad{},
+		subPageBackButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
+		subPageInfoButton: win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
+		popPage:           win.popPage,
+		popToPage:         win.popToPage,
+		changePage:        win.changePage,
+		setReturnPage:     win.setReturnPage,
+		refreshWindow:     win.refresh,
+		toast:             &win.toast,
 	}
 
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
@@ -253,10 +248,6 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 	iconColor := common.theme.Color.Gray3
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
-	isNavDrawerMinimized := false
-	common.isNavDrawerMinimized = &isNavDrawerMinimized
-
-	common.minimizeNavDrawerButton.Color, common.maximizeNavDrawerButton.Color = iconColor, iconColor
 
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 	common.subPageBackButton.Color, common.subPageInfoButton.Color = iconColor, iconColor

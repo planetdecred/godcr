@@ -28,6 +28,10 @@ type mainPage struct {
 	appBarNavItems []navHandler
 	drawerNavItems []navHandler
 
+	isNavDrawerMinimized    bool
+	minimizeNavDrawerButton decredmaterial.IconButton
+	maximizeNavDrawerButton decredmaterial.IconButton
+
 	// page state variables
 	usdExchangeSet  bool
 	totalBalance    dcrutil.Amount
@@ -46,6 +50,12 @@ func MainPage(c pageCommon) Page {
 
 	mp.pageCommon.showModal = mp.showModal
 	mp.pageCommon.dismissModal = mp.dismissModal
+
+	mp.minimizeNavDrawerButton = c.theme.PlainIconButton(new(widget.Clickable), c.icons.navigationArrowBack)
+	mp.minimizeNavDrawerButton.Color = c.theme.Color.Gray3
+
+	mp.maximizeNavDrawerButton = c.theme.PlainIconButton(new(widget.Clickable), c.icons.navigationArrowForward)
+	mp.maximizeNavDrawerButton.Color = c.theme.Color.Gray3
 
 	currencyExchangeValue := mp.multiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == USDExchangeValue
@@ -185,6 +195,14 @@ func (mp *mainPage) handle() {
 				break
 			}
 		}
+	}
+
+	for mp.minimizeNavDrawerButton.Button.Clicked() {
+		mp.isNavDrawerMinimized = true
+	}
+
+	for mp.maximizeNavDrawerButton.Button.Clicked() {
+		mp.isNavDrawerMinimized = false
 	}
 
 	mp.currentPage.handle()
@@ -497,7 +515,7 @@ func (mp *mainPage) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							axis := layout.Horizontal
 							leftInset := values.MarginPadding15
 							width := navDrawerWidth
-							if *common.isNavDrawerMinimized {
+							if mp.isNavDrawerMinimized {
 								axis = layout.Vertical
 								txt.TextSize = values.TextSize10
 								leftInset = values.MarginPadding0
@@ -538,9 +556,9 @@ func (mp *mainPage) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := common.minimizeNavDrawerButton
-				if *common.isNavDrawerMinimized {
-					btn = common.maximizeNavDrawerButton
+				btn := mp.minimizeNavDrawerButton
+				if mp.isNavDrawerMinimized {
+					btn = mp.maximizeNavDrawerButton
 				}
 				return btn.Layout(gtx)
 			})

@@ -182,15 +182,12 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 												func(gtx C) D {
-													s := formatDateOrTime(row.transaction.Timestamp)
-													if txConfirmations(common, &row.transaction) > 1 {
-														s = "confirmed"
-													}
-													status := common.theme.Body1(s)
+													status := common.theme.Body1("pending")
 													if txConfirmations(common, &row.transaction) <= 1 {
 														status.Color = common.theme.Color.Gray5
 													} else {
 														status.Color = common.theme.Color.Gray4
+														status.Text = formatDateOrTime(row.transaction.Timestamp)
 													}
 													status.Alignment = text.Middle
 													return status.Layout(gtx)
@@ -456,12 +453,4 @@ func (page pageCommon) handleToast() {
 
 func (page pageCommon) handler() {
 	page.handleToast()
-
-	for page.minimizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = true
-	}
-
-	for page.maximizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = false
-	}
 }

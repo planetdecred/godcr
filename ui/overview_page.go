@@ -41,7 +41,6 @@ type overviewPage struct {
 	allWallets    []*dcrlibwallet.Wallet
 	bestBlock     *dcrlibwallet.BlockInfo
 	transactions  []dcrlibwallet.Transaction
-	// walletSyncStatus  *wallet.SyncStatus
 	toTransactions    decredmaterial.TextAndIconButton
 	sync              decredmaterial.Button
 	toggleSyncDetails decredmaterial.Button
@@ -154,11 +153,9 @@ func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, func(gtx C) D {
-			return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
-			})
+	return c.UniformPadding(gtx, func(gtx C) D {
+		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
 		})
 	})
 }
