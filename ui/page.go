@@ -58,7 +58,8 @@ type navHandler struct {
 	clickable     *widget.Clickable
 	image         *widget.Image
 	imageInactive *widget.Image
-	page          string
+	pageID        string
+	label         string
 }
 
 type walletAccount struct {
@@ -127,8 +128,6 @@ type pageCommon struct {
 	modalLoad        *modalLoad
 	modalTemplate    *ModalTemplate
 
-	appBarNavItems          []navHandler
-	drawerNavItems          []navHandler
 	isNavDrawerMinimized    *bool
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
@@ -142,7 +141,8 @@ type pageCommon struct {
 	popPage       func()
 	popToPage     func(string) error
 	changePage    func(Page)
-	setReturnPage func(Page)
+
+	setReturnPage func(Page) //TODO
 	refreshWindow func()
 
 	wallAcctSelector *walletAccountSelector
@@ -236,58 +236,6 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 
 	ic := win.loadIcons(decredIcons)
 
-	appBarNavItems := []navHandler{
-		{
-			clickable: new(widget.Clickable),
-			image:     ic.sendIcon,
-			page:      values.String(values.StrSend),
-		},
-		{
-			clickable: new(widget.Clickable),
-			image:     ic.receiveIcon,
-			page:      values.String(values.StrReceive),
-		},
-	}
-
-	drawerNavItems := []navHandler{
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.overviewIcon,
-			imageInactive: ic.overviewIconInactive,
-			page:          values.String(values.StrOverview),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.transactionIcon,
-			imageInactive: ic.transactionIconInactive,
-			page:          values.String(values.StrTransactions),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.walletIcon,
-			imageInactive: ic.walletIconInactive,
-			page:          values.String(values.StrWallets),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.proposalIconActive,
-			imageInactive: ic.proposalIconInactive,
-			page:          PageProposals,
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.ticketIcon,
-			imageInactive: ic.ticketIconInactive,
-			page:          values.String(values.StrTickets),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.moreIcon,
-			imageInactive: ic.moreIconInactive,
-			page:          values.String(values.StrMore),
-		},
-	}
-
 	common := pageCommon{
 		printer:                 message.NewPrinter(language.English),
 		multiWallet:             multiWallet,
@@ -302,8 +250,6 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 		accountTabs:             win.accountTabs,
 		keyEvents:               win.keyEvents,
 		states:                  &win.states,
-		appBarNavItems:          appBarNavItems,
-		drawerNavItems:          drawerNavItems,
 		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
 		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
 		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
@@ -418,15 +364,11 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(page.layoutTopBar),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							card := page.theme.Card()
-							card.Radius = decredmaterial.CornerRadius{}
-							return card.Layout(gtx, page.layoutNavDrawer)
+							return body(gtx)
 						}),
-						layout.Rigid(body),
 					)
 				}),
 			)

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"strconv"
 
 	"gioui.org/layout"
@@ -19,8 +20,11 @@ type mainPage struct {
 	multiWallet *dcrlibwallet.MultiWallet
 
 	// TODO: protect with mutex
-	pageBackStack             []Page
-	currentPage, previousPage Page
+	pageBackStack []Page
+	currentPage   Page
+
+	appBarNavItems []navHandler
+	drawerNavItems []navHandler
 
 	// page state variables
 	usdExchangeSet  bool
@@ -34,10 +38,17 @@ func MainPage(c pageCommon) Page {
 		multiWallet: c.multiWallet,
 	}
 
+	mp.pageCommon.popPage = mp.popPage
+	mp.pageCommon.changePage = mp.changePage
+	mp.pageCommon.popToPage = mp.popToPage
+
 	currencyExchangeValue := mp.multiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.usdExchangeSet = currencyExchangeValue == USDExchangeValue
 
+	mp.setupNavHandlers()
 	mp.updateBalance()
+
+	mp.currentPage = OverviewPage(mp.pageCommon)
 
 	return mp
 }
@@ -58,6 +69,71 @@ func (mp *mainPage) updateBalance() {
 	}
 }
 
+func (mp *mainPage) setupNavHandlers() {
+	appBarNavItems := []navHandler{
+		{
+			clickable: new(widget.Clickable),
+			image:     mp.icons.sendIcon,
+			pageID:    PageSend,
+			label:     values.String(values.StrSend),
+		},
+		{
+			clickable: new(widget.Clickable),
+			image:     mp.icons.receiveIcon,
+			pageID:    PageReceive,
+			label:     values.String(values.StrReceive),
+		},
+	}
+
+	drawerNavItems := []navHandler{
+		{
+			clickable:     new(widget.Clickable),
+			image:         mp.icons.overviewIcon,
+			imageInactive: mp.icons.overviewIconInactive,
+			pageID:        PageOverview,
+			label:         values.String(values.StrOverview),
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         mp.icons.transactionIcon,
+			imageInactive: mp.icons.transactionIconInactive,
+			pageID:        PageTransactions,
+			label:         values.String(values.StrTransactions),
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         mp.icons.walletIcon,
+			imageInactive: mp.icons.walletIconInactive,
+			pageID:        PageWallet,
+			label:         values.String(values.StrWallets),
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         mp.icons.proposalIconActive,
+			imageInactive: mp.icons.proposalIconInactive,
+			pageID:        PageProposals,
+			label:         PageProposals,
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         mp.icons.ticketIcon,
+			imageInactive: mp.icons.ticketIconInactive,
+			pageID:        PageTickets,
+			label:         values.String(values.StrTickets),
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         mp.icons.moreIcon,
+			imageInactive: mp.icons.moreIconInactive,
+			pageID:        PageMore,
+			label:         values.String(values.StrMore),
+		},
+	}
+
+	mp.appBarNavItems = appBarNavItems
+	mp.drawerNavItems = drawerNavItems
+}
+
 func (mp *mainPage) onClose() {
 
 }
@@ -67,7 +143,46 @@ func (mp *mainPage) pageID() string {
 }
 
 func (mp *mainPage) handle() {
+	for _, appBarItem := range mp.appBarNavItems {
+		for appBarItem.clickable.Clicked() {
+			switch appBarItem.pageID {
+			case PageSend:
+				mp.changePage(SendPage(mp.pageCommon))
+				break
+			case PageReceive:
+				mp.changePage(ReceivePage(mp.pageCommon))
+				break
+			}
+		}
+	}
 
+	for _, navBarItem := range mp.drawerNavItems {
+		for navBarItem.clickable.Clicked() {
+			// clear backstack since no backbutton to move between nav bars
+			switch navBarItem.pageID {
+			case PageOverview:
+				mp.changePage(OverviewPage(mp.pageCommon))
+				break
+			case PageTransactions:
+				mp.changePage(TransactionsPage(mp.pageCommon))
+				break
+			case PageWallet:
+				mp.changePage(WalletPage(mp.pageCommon))
+				break
+			case PageProposals:
+				mp.changePage(ProposalsPage(mp.pageCommon))
+				break
+			case PageTickets:
+				mp.changePage(TicketPage(mp.pageCommon))
+				break
+			case PageMore:
+				mp.changePage(MorePage(mp.pageCommon))
+				break
+			}
+		}
+	}
+
+	mp.currentPage.handle()
 }
 
 func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
@@ -85,6 +200,35 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 
 	return dcrutil.Amount(totalBalance), nil
 }
+
+// Page handlers
+
+func (mp *mainPage) changePage(page Page) {
+	if mp.currentPage != nil {
+		mp.currentPage.onClose()
+		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
+	}
+	mp.currentPage = page
+}
+
+// popPage goes back to the previous page
+func (mp *mainPage) popPage() {
+	if len(mp.pageBackStack) > 0 {
+		// get and remove last page
+		previousPage := mp.pageBackStack[len(mp.pageBackStack)-1]
+		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
+
+		mp.currentPage.onClose()
+		mp.currentPage = previousPage
+	}
+}
+
+func (mp *mainPage) popToPage(pageID string) error {
+	// TODO
+	return errors.New("not implemented")
+}
+
+// Layout
 
 func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
@@ -208,18 +352,18 @@ func (mp *mainPage) layoutTopBar(gtx layout.Context) layout.Dimensions {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								list := layout.List{Axis: layout.Horizontal}
-								return list.Layout(gtx, len(common.appBarNavItems), func(gtx C, i int) D { //TODO move itemps to main page
+								return list.Layout(gtx, len(mp.appBarNavItems), func(gtx C, i int) D { //TODO move itemps to main page
 									// header buttons container
 									return Container{layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-										return decredmaterial.Clickable(gtx, common.appBarNavItems[i].clickable, func(gtx C) D {
+										return decredmaterial.Clickable(gtx, mp.appBarNavItems[i].clickable, func(gtx C) D {
 											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
 													return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 														func(gtx C) D {
 															return layout.Center.Layout(gtx, func(gtx C) D {
-																img := common.appBarNavItems[i].image
+																img := mp.appBarNavItems[i].image
 																img.Scale = 1.0
-																return common.appBarNavItems[i].image.Layout(gtx)
+																return mp.appBarNavItems[i].image.Layout(gtx)
 															})
 														})
 												}),
@@ -228,7 +372,7 @@ func (mp *mainPage) layoutTopBar(gtx layout.Context) layout.Dimensions {
 														Left: values.MarginPadding0,
 													}.Layout(gtx, func(gtx C) D {
 														return layout.Center.Layout(gtx, func(gtx C) D {
-															return common.theme.Body1(common.appBarNavItems[i].page).Layout(gtx)
+															return common.theme.Body1(mp.appBarNavItems[i].label).Layout(gtx)
 														})
 													})
 												}),
@@ -306,13 +450,13 @@ func (mp *mainPage) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
 			// todo
-			return list.Layout(gtx, len(common.drawerNavItems), func(gtx C, i int) D {
+			return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
 				background := common.theme.Color.Surface
-				if common.drawerNavItems[i].page == "page.page.pageID()" { //TODO
+				if mp.drawerNavItems[i].pageID == "page.page.pageID()" { //TODO
 					background = common.theme.Color.ActiveGray
 				}
-				txt := common.theme.Label(values.TextSize16, common.drawerNavItems[i].page)
-				return decredmaterial.Clickable(gtx, common.drawerNavItems[i].clickable, func(gtx C) D {
+				txt := common.theme.Label(values.TextSize16, mp.drawerNavItems[i].pageID)
+				return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].clickable, func(gtx C) D {
 					card := common.theme.Card()
 					card.Color = background
 					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
@@ -338,9 +482,9 @@ func (mp *mainPage) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = gtx.Px(width)
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									img := common.drawerNavItems[i].imageInactive
-									if common.drawerNavItems[i].page == "page.page.pageID()" { // TODO
-										img = common.drawerNavItems[i].image
+									img := mp.drawerNavItems[i].imageInactive
+									if mp.drawerNavItems[i].pageID == "page.page.pageID()" { // TODO
+										img = mp.drawerNavItems[i].image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
 										img.Scale = 1.0
@@ -353,7 +497,7 @@ func (mp *mainPage) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
 										textColor := common.theme.Color.Gray4
-										if common.drawerNavItems[i].page == "page.page.pageID()" { // TODO
+										if mp.drawerNavItems[i].pageID == "page.page.pageID()" { // TODO
 											textColor = common.theme.Color.DeepBlue
 										}
 										txt.Color = textColor
