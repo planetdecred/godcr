@@ -37,7 +37,6 @@ type proposalDetails struct {
 	redirectIcon        *widget.Image
 	commentsBundleBtn   *widget.Clickable
 	proposalBundleBtn   *widget.Clickable
-	viewInGithubBtn     *widget.Clickable
 	viewInPoliteiaBtn   *widget.Clickable
 	viewInPoliteiaLabel decredmaterial.Label
 	voteBar             decredmaterial.VoteBar
@@ -57,13 +56,13 @@ func ProposalDetailsPage(common pageCommon, selectedProposal *dcrlibwallet.Propo
 		descriptionList:     &layout.List{Axis: layout.Vertical},
 		commentsBundleBtn:   new(widget.Clickable),
 		proposalBundleBtn:   new(widget.Clickable),
-		viewInGithubBtn:     new(widget.Clickable),
 		viewInPoliteiaBtn:   new(widget.Clickable),
 		redirectIcon:        common.icons.redirectIcon,
 		downloadIcon:        common.icons.downloadIcon,
 		viewInPoliteiaLabel: common.theme.Body2("View on Politeia"),
 		voteBar:             common.theme.VoteBar(common.icons.actionInfo, common.icons.imageBrightness1),
 		proposalItems:       make(map[string]proposalItemWidgets),
+		selectedProposal:    selectedProposal,
 		rejectedIcon:        common.icons.navigationCancel,
 		successIcon:         common.icons.actionCheckCircle,
 		refreshWindow:       common.refreshWindow,
@@ -90,12 +89,7 @@ func (pg *proposalDetails) handle() {
 
 	for pg.viewInPoliteiaBtn.Clicked() {
 		proposal := *pg.selectedProposal
-		goToURL("https://proposals.decred.org/proposals/" + proposal.Token)
-	}
-
-	for pg.viewInGithubBtn.Clicked() {
-		proposal := *pg.selectedProposal
-		goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
+		goToURL("https://proposals.decred.org/record/" + proposal.Token)
 	}
 }
 
@@ -313,7 +307,6 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 	}
 
 	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
-	w = append(w, pg.layoutRedirect("View on GitHub", pg.redirectIcon, pg.viewInGithubBtn))
 	w = append(w, pg.layoutRedirect("Download Proposal Bundle", pg.downloadIcon, pg.proposalBundleBtn))
 	w = append(w, pg.layoutRedirect("Download Comments Bundle", pg.downloadIcon, pg.commentsBundleBtn))
 

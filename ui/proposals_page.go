@@ -121,9 +121,9 @@ func ProposalsPage(common pageCommon) Page {
 	proposals, err := common.wallet.GetAllProposals()
 	if err != nil {
 		log.Error("error fetching proposal:", err)
+	} else {
+		pg.proposals = proposals
 	}
-
-	pg.proposals = proposals
 
 	return pg
 }
@@ -521,7 +521,7 @@ func (pg *proposalsPage) layoutSyncSection(gtx C) D {
 }
 
 func (pg *proposalsPage) initializeProposaltabItems() {
-	pg.proposalsItemSet = true 
+	pg.proposalsItemSet = true
 	if len(pg.proposals) == 0 {
 		pg.wallet.SyncProposals()
 		pg.proposalsItemSet = false
