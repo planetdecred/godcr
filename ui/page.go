@@ -55,14 +55,6 @@ type Page interface {
 	onClose()
 }
 
-type navHandler struct {
-	clickable     *widget.Clickable
-	image         *widget.Image
-	imageInactive *widget.Image
-	pageID        string
-	label         string
-}
-
 type walletAccount struct {
 	evt          *gesture.Click
 	walletIndex  int
@@ -71,12 +63,6 @@ type walletAccount struct {
 	totalBalance string
 	spendable    string
 	number       int32
-}
-
-type wallectAccountOption struct {
-	selectSendAccount           map[int][]walletAccount
-	selectReceiveAccount        map[int][]walletAccount
-	selectPurchaseTicketAccount map[int][]walletAccount
 }
 
 type DCRUSDTBittrex struct {
@@ -112,18 +98,12 @@ type pageCommon struct {
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
-	subPageBackButton decredmaterial.IconButton
-	subPageInfoButton decredmaterial.IconButton
-
 	popPage    func()
 	popToPage  func(string) error
 	changePage func(Page)
 
 	showModal    func(Modal)
 	dismissModal func(Modal)
-
-	setReturnPage func(Page) //TODO
-	refreshWindow func()
 }
 
 type (
@@ -215,47 +195,34 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 	ic := win.loadIcons(decredIcons)
 
 	common := pageCommon{
-		printer:           message.NewPrinter(language.English),
-		multiWallet:       multiWallet,
-		syncStatusUpdate:  &win.syncStatusUpdate,
-		wallet:            win.wallet,
-		selectedWallet:    &win.selected,
-		selectedAccount:   &win.selectedAccount,
-		theme:             win.theme,
-		icons:             ic,
-		returnPage:        win.previousPage,
-		walletTabs:        win.walletTabs,
-		accountTabs:       win.accountTabs,
-		keyEvents:         win.keyEvents,
-		states:            &win.states,
-		selectedUTXO:      make(map[int]map[int32]map[string]*wallet.UnspentOutput),
-		modal:             win.theme.Modal(),
-		modalReceiver:     win.modal,
-		modalLoad:         &modalLoad{},
-		subPageBackButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		subPageInfoButton: win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		popPage:           win.popPage,
-		popToPage:         win.popToPage,
-		changePage:        win.changePage,
-		setReturnPage:     win.setReturnPage,
-		refreshWindow:     win.refresh,
-		toast:             &win.toast,
+		printer:          message.NewPrinter(language.English),
+		multiWallet:      multiWallet,
+		syncStatusUpdate: &win.syncStatusUpdate,
+		wallet:           win.wallet,
+		selectedWallet:   &win.selected,
+		selectedAccount:  &win.selectedAccount,
+		theme:            win.theme,
+		icons:            ic,
+		returnPage:       win.previousPage,
+		walletTabs:       win.walletTabs,
+		accountTabs:      win.accountTabs,
+		keyEvents:        win.keyEvents,
+		states:           &win.states,
+		selectedUTXO:     make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		modal:            win.theme.Modal(),
+		modalReceiver:    win.modal,
+		modalLoad:        &modalLoad{},
+		popPage:          win.popPage,
+		popToPage:        win.popToPage,
+		changePage:       win.changePage,
+		toast:            &win.toast,
 	}
 
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
 		return
 	}
 
-	iconColor := common.theme.Color.Gray3
-
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
-
-	zeroInset := layout.UniformInset(values.MarginPadding0)
-	common.subPageBackButton.Color, common.subPageInfoButton.Color = iconColor, iconColor
-
-	m25 := values.MarginPadding25
-	common.subPageBackButton.Size, common.subPageInfoButton.Size = m25, m25
-	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
 	common.modalTemplate = win.LoadModalTemplates()
 
@@ -294,10 +261,6 @@ func (page *pageCommon) fetchExchangeValue(target interface{}) error {
 	return nil
 }
 
-func (page pageCommon) refreshPage() {
-	page.refreshWindow()
-}
-
 func (page pageCommon) notify(text string, success bool) {
 	*page.toast = &toast{
 		text:    text,
@@ -313,73 +276,6 @@ func (page pageCommon) closeModal() {
 			cancel:  nil,
 		}
 	}()
-}
-
-func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	page.handler()
-
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			// fill the entire window with a color if a user has no wallet created
-			if "page.page.pageID()" == PageCreateRestore { //TODO
-				return decredmaterial.Fill(gtx, page.theme.Color.Surface)
-			}
-
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return body(gtx)
-						}),
-					)
-				}),
-			)
-		}),
-		layout.Stacked(func(gtx C) D {
-			// stack the page content on the entire window if a user has no wallet
-			if "page.page.pageID()" == PageCreateRestore { //TODO
-				return body(gtx)
-			}
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			// global modal. Stack modal on all pages and contents
-		outer:
-			for {
-				select {
-				case load := <-page.modalReceiver:
-					page.modalLoad.template = load.template
-					page.modalLoad.title = load.title
-					page.modalLoad.confirm = load.confirm
-					page.modalLoad.confirmText = load.confirmText
-					page.modalLoad.cancel = load.cancel
-					page.modalLoad.cancelText = load.cancelText
-					page.modalLoad.isReset = false
-				default:
-					break outer
-				}
-			}
-
-			if page.modalLoad.cancel != nil {
-				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, page.modalLoad),
-					900)
-			}
-
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			// global toasts. Stack toast on all pages and contents
-			if *page.toast == nil {
-				return layout.Dimensions{}
-			}
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding65}.Layout(gtx, func(gtx C) D {
-					return displayToast(page.theme, gtx, *page.toast)
-				})
-			})
-		}),
-	)
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -455,7 +351,8 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
-					return page.subPageInfoButton.Layout(gtx)
+					// return page.subPageInfoButton.Layout(gtx)
+					return layout.Dimensions{}
 				} else if sp.extraItem != nil {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -491,20 +388,20 @@ func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout
 }
 
 func (page pageCommon) subpageEventHandler(sp SubPage) {
-	if page.subPageInfoButton.Button.Clicked() {
-		go func() {
-			page.modalReceiver <- &modalLoad{
-				template:   sp.infoTemplate,
-				title:      sp.title,
-				cancel:     page.closeModal,
-				cancelText: "Got it",
-			}
-		}()
-	}
+	// if page.subPageInfoButton.Button.Clicked() {
+	// 	go func() {
+	// 		page.modalReceiver <- &modalLoad{
+	// 			template:   sp.infoTemplate,
+	// 			title:      sp.title,
+	// 			cancel:     page.closeModal,
+	// 			cancelText: "Got it",
+	// 		}
+	// 	}()
+	// }
 
-	if page.subPageBackButton.Button.Clicked() {
-		sp.back()
-	}
+	// if page.subPageBackButton.Button.Clicked() {
+	// 	sp.back()
+	// }
 
 	if sp.extraItem != nil && sp.extraItem.Clicked() {
 		sp.handleExtra()

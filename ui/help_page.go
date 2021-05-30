@@ -51,9 +51,7 @@ func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return pg.common.SubPageLayout(gtx, page)
 	}
-	return pg.common.Layout(gtx, func(gtx C) D {
-		return pg.common.UniformPadding(gtx, body)
-	})
+	return pg.common.UniformPadding(gtx, body)
 }
 
 func (pg *helpPage) document(common pageCommon) layout.Widget {

@@ -34,7 +34,9 @@ type receivePage struct {
 	selector          *accountSelector
 	gtx               *layout.Context
 
-	backdrop *widget.Clickable
+	backdrop   *widget.Clickable
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 
 	currentAddress string
 }
@@ -53,6 +55,8 @@ func ReceivePage(common pageCommon) Page {
 		receiveAddress: common.theme.Label(values.TextSize20, ""),
 		card:           common.theme.Card(),
 		backdrop:       new(widget.Clickable),
+		backButton:     common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
+		infoButton:     common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo),
 	}
 
 	page.info.Inset, page.info.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
@@ -75,6 +79,13 @@ func ReceivePage(common pageCommon) Page {
 	page.newAddr.Color = common.theme.Color.Text
 	page.newAddr.Background = common.theme.Color.Surface
 	page.newAddr.TextSize = values.TextSize16
+
+	zeroInset := layout.UniformInset(values.MarginPadding0)
+	page.backButton.Color, page.infoButton.Color = common.theme.Color.Gray3, common.theme.Color.Gray3
+
+	m25 := values.MarginPadding25
+	page.backButton.Size, page.infoButton.Size = m25, m25
+	page.backButton.Inset, page.infoButton.Inset = zeroInset, zeroInset
 
 	page.selector = newAccountSelector(common).
 		title("Receiving account").
@@ -149,26 +160,22 @@ func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	dims := common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return pg.topNav(gtx, common)
+	return common.UniformPadding(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return pg.topNav(gtx, common)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return common.theme.Card().Layout(gtx, func(gtx C) D {
+					return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+						return pageContent[i](gtx)
 					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return common.theme.Card().Layout(gtx, func(gtx C) D {
-						return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-							return pageContent[i](gtx)
-						})
-					})
-				}),
-			)
-		})
+				})
+			}),
+		)
 	})
-
-	return dims
 }
 
 func (pg *receivePage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -196,8 +203,8 @@ func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dime
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					common.subPageBackButton.Icon = common.icons.contentClear
-					return common.subPageBackButton.Layout(gtx)
+					pg.backButton.Icon = common.icons.contentClear
+					return pg.backButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: m}.Layout(gtx, pg.theme.H6("Receive DCR").Layout)
@@ -322,7 +329,7 @@ func (pg *receivePage) handle() {
 		pg.isNewAddr = false
 	}
 
-	if common.subPageInfoButton.Button.Clicked() {
+	if pg.infoButton.Button.Clicked() {
 		go func() {
 			common.modalReceiver <- &modalLoad{
 				template:   ReceiveInfoTemplate,
@@ -333,7 +340,7 @@ func (pg *receivePage) handle() {
 		}()
 	}
 
-	if common.subPageBackButton.Button.Clicked() {
+	if pg.backButton.Button.Clicked() {
 		common.popPage()
 	}
 

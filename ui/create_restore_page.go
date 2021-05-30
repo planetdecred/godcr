@@ -189,71 +189,73 @@ func (pg *createRestore) Layout(gtx layout.Context) layout.Dimensions {
 		pg.showRestore = true
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		pd := values.MarginPadding15
-		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				if common.states.creating {
-					return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, pg.processing)
-				} else if pg.showRestore {
-					return pg.restore(gtx)
-				} else {
-					return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, pg.mainContent)
+	pd := values.MarginPadding15
+	dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			if common.states.creating {
+				return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, pg.processing)
+			} else if pg.showRestore {
+				return pg.restore(gtx)
+			} else {
+				return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, pg.mainContent)
+			}
+		}),
+		layout.Rigid(func(gtx C) D {
+			if pg.showPassword {
+				pg.modalTitleLabel.Text = "Create Wallet"
+				if pg.showRestore {
+					pg.modalTitleLabel.Text = "Restore Wallet"
 				}
-			}),
-			layout.Rigid(func(gtx C) D {
-				if pg.showPassword {
-					pg.modalTitleLabel.Text = "Create Wallet"
-					if pg.showRestore {
-						pg.modalTitleLabel.Text = "Restore Wallet"
-					}
 
-					w := []layout.Widget{
-						func(gtx C) D {
-							return pg.modalTitleLabel.Layout(gtx)
-						},
-						func(gtx C) D {
-							return pg.theme.Separator().Layout(gtx)
-						},
-						func(gtx C) D {
-							if pg.showRestore {
-								return layout.Dimensions{}
-							}
-							return pg.walletName.Layout(gtx)
-						},
-						func(gtx C) D {
-							return pg.spendingPassword.Layout(gtx)
-						},
-						func(gtx C) D {
-							return pg.matchSpendingPassword.Layout(gtx)
-						},
-						func(gtx C) D {
-							return pg.errLabel.Layout(gtx)
-						},
-						func(gtx C) D {
-							if pg.showRestore {
-								pg.addWallet.Text = "restore wallet"
-							} else {
-								pg.addWallet.Text = "create new wallet"
-							}
-							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding5).Layout(gtx, pg.addWallet.Layout)
-								}),
-								layout.Rigid(func(gtx C) D {
+				w := []layout.Widget{
+					func(gtx C) D {
+						return pg.modalTitleLabel.Layout(gtx)
+					},
+					func(gtx C) D {
+						return pg.theme.Separator().Layout(gtx)
+					},
+					func(gtx C) D {
+						if pg.showRestore {
+							return layout.Dimensions{}
+						}
+						return pg.walletName.Layout(gtx)
+					},
+					func(gtx C) D {
+						return pg.spendingPassword.Layout(gtx)
+					},
+					func(gtx C) D {
+						return pg.matchSpendingPassword.Layout(gtx)
+					},
+					func(gtx C) D {
+						return pg.errLabel.Layout(gtx)
+					},
+					func(gtx C) D {
+						if pg.showRestore {
+							pg.addWallet.Text = "restore wallet"
+						} else {
+							pg.addWallet.Text = "create new wallet"
+						}
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
+									return pg.addWallet.Layout(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
 									pg.hidePasswordModal.Color = common.theme.Color.Primary
-									return layout.UniformInset(values.MarginPadding5).Layout(gtx, pg.hidePasswordModal.Layout)
-								}),
-							)
-						},
-					}
-					return pg.createModal.Layout(gtx, w, 1300)
+									return pg.hidePasswordModal.Layout(gtx)
+								})
+							}),
+						)
+					},
 				}
-				return layout.Dimensions{}
-			}),
-		)
-		return dims
-	})
+				return pg.createModal.Layout(gtx, w, 1300)
+			}
+			return layout.Dimensions{}
+		}),
+	)
+	return dims
 }
 
 func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {

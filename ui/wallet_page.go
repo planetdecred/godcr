@@ -985,7 +985,6 @@ func (pg *walletPage) handle() {
 		for pg.addWalletMenu[index].button.Clicked() {
 			pg.isAddWalletMenuOpen = false
 			pg.addWalletMenu[index].action(common)
-			common.refreshPage()
 		}
 	}
 

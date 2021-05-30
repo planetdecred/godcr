@@ -75,7 +75,8 @@ func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, body)
+
+	return body(gtx)
 }
 
 func (pg *validateAddressPage) addressSection(common pageCommon) layout.Widget {
@@ -189,7 +190,7 @@ func (pg *validateAddressPage) showDisplayResult(c pageCommon) layout.Widget {
 												return decredmaterial.Card{
 													Color: pg.theme.Color.Surface,
 												}.Layout(gtx, func(gtx C) D {
-													walletText := pg.theme.Caption("TODO") 
+													walletText := pg.theme.Caption("TODO")
 													walletText.Color = pg.theme.Color.Gray
 													return walletText.Layout(gtx)
 												})

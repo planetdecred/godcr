@@ -149,7 +149,7 @@ func (pg *proposalsPage) handle() {
 
 	for pg.syncButton.Clicked() {
 		pg.wallet.SyncProposals()
-		common.refreshPage()
+		// refresh todo
 	}
 
 	select {
@@ -162,10 +162,10 @@ func (pg *proposalsPage) handle() {
 			pg.isSynced = true
 		} else if prop.ProposalStatus == wallet.NewProposalFound {
 			pg.addDiscoveredProposal(false, *prop.Proposal)
-			common.refreshPage()
+			// refresh todo
 		} else if prop.ProposalStatus == wallet.VoteStarted || prop.ProposalStatus == wallet.VoteFinished {
 			pg.updateProposalVoteStatus(*prop.Proposal)
-			common.refreshPage()
+			// refresh todo
 		}
 	default:
 	}
@@ -174,7 +174,7 @@ func (pg *proposalsPage) handle() {
 		time.AfterFunc(time.Second*3, func() {
 			pg.isSynced = false
 		})
-		common.refreshPage()
+		// refresh todo
 	}
 }
 
@@ -535,7 +535,6 @@ func (pg *proposalsPage) initializeProposaltabItems() {
 }
 
 func (pg *proposalsPage) Layout(gtx C) D {
-	common := pg.common
 
 	if !pg.proposalsItemSet {
 		pg.initializeProposaltabItems()
@@ -546,33 +545,33 @@ func (pg *proposalsPage) Layout(gtx C) D {
 		return border.Layout(gtx, body)
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Flexed(1, func(gtx C) D {
-						return borderLayout(gtx, pg.layoutTabs)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return borderLayout(gtx, func(gtx C) D {
-							return pg.syncCard.Layout(gtx, func(gtx C) D {
-								m := values.MarginPadding12
-								if pg.isSynced {
-									m = values.MarginPadding14
-								} else if pg.wallet.IsSyncingProposals() {
-									m = values.MarginPadding15
-								}
-								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
-									return layout.Center.Layout(gtx, pg.layoutSyncSection)
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Flexed(1, func(gtx C) D {
+					return borderLayout(gtx, pg.layoutTabs)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return borderLayout(gtx, func(gtx C) D {
+						return pg.syncCard.Layout(gtx, func(gtx C) D {
+							m := values.MarginPadding12
+							if pg.isSynced {
+								m = values.MarginPadding14
+							} else if pg.wallet.IsSyncingProposals() {
+								m = values.MarginPadding15
+							}
+							return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
+								return layout.Center.Layout(gtx, func(gtx C) D {
+									return pg.layoutSyncSection(gtx)
 								})
 							})
 						})
-					}),
-				)
-			}),
-			layout.Flexed(1, pg.layoutContent),
-		)
-	})
+					})
+				}),
+			)
+		}),
+		layout.Flexed(1, pg.layoutContent),
+	)
 }
 
 func (pg *proposalsPage) onClose() {}

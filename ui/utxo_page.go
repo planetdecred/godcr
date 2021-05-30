@@ -153,10 +153,41 @@ func (pg *utxoPage) clearPageData() {
 
 func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
-	return c.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.W.Layout(gtx, func(gtx C) D { return pg.backButton.Layout(gtx) })
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding10, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return c.theme.H5("Coin Control").Layout(gtx)
+					})
+				}),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+								layout.Flexed(0.25, func(gtx C) D {
+									utxos := (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID]
+									return textData(gtx, &c, "Selected:  ", fmt.Sprintf("%d", len(utxos)))
+								}),
+								layout.Flexed(0.25, func(gtx C) D {
+									return textData(gtx, &c, "Amount:  ", pg.txnAmount)
+								}),
+								layout.Flexed(0.25, func(gtx C) D {
+									return textData(gtx, &c, "Fee:  ", pg.txnFee)
+								}),
+								layout.Flexed(0.25, func(gtx C) D {
+									return textData(gtx, &c, "After Fee:  ", pg.txnAmountAfterFee)
+								}),
+							)
+						})
+					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.W.Layout(gtx, pg.backButton.Layout)
 					}),
@@ -165,6 +196,10 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 							Left: values.MarginPadding10,
 							Top:  values.MarginPadding10,
 						}.Layout(gtx, c.theme.H5("Coin Control").Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return pg.useUTXOButton.Layout(gtx)
 					}),
 				)
 			}),

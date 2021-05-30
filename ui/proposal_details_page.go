@@ -44,7 +44,6 @@ type proposalDetails struct {
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
 	successIcon         *widget.Icon
-	refreshWindow       func()
 }
 
 func ProposalDetailsPage(common pageCommon, selectedProposal *dcrlibwallet.Proposal) Page {
@@ -65,7 +64,6 @@ func ProposalDetailsPage(common pageCommon, selectedProposal *dcrlibwallet.Propo
 		selectedProposal:    selectedProposal,
 		rejectedIcon:        common.icons.navigationCancel,
 		successIcon:         common.icons.actionCheckCircle,
-		refreshWindow:       common.refreshWindow,
 		timerIcon:           common.icons.timerIcon,
 	}
 
@@ -384,7 +382,6 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				clickables: proposalClickables,
 			}
 			pg.loadingDescription = false
-			pg.refreshWindow()
 		}()
 	}
 
@@ -414,9 +411,8 @@ func (pg *proposalDetails) Layout(gtx C) D {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+
+	return pg.common.UniformPadding(gtx, body)
 
 }
 

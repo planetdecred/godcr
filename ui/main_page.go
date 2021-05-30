@@ -15,6 +15,14 @@ import (
 
 const PageMain = "MainPage"
 
+type navHandler struct {
+	clickable     *widget.Clickable
+	image         *widget.Image
+	imageInactive *widget.Image
+	pageID        string
+	label         string
+}
+
 type mainPage struct {
 	pageCommon
 	multiWallet *dcrlibwallet.MultiWallet

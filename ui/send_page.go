@@ -46,6 +46,8 @@ type sendPage struct {
 	maxButton                    decredmaterial.Button
 	sendToButton                 decredmaterial.Button
 	clearAllBtn                  decredmaterial.Button
+	backButton                   decredmaterial.IconButton
+	infoButton                   decredmaterial.IconButton
 
 	accountSwitch    *decredmaterial.SwitchButtonText
 	confirmModal     *decredmaterial.Modal
@@ -115,6 +117,8 @@ func SendPage(common pageCommon) Page {
 		confirmButton:                common.theme.Button(new(widget.Clickable), ""),
 		maxButton:                    common.theme.Button(new(widget.Clickable), "MAX"),
 		clearAllBtn:                  common.theme.Button(new(widget.Clickable), "Clear all fields"),
+		backButton:                   common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
+		infoButton:                   common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo),
 		txFeeCollapsible:             common.theme.Collapsible(),
 
 		confirmModal:              common.theme.Modal(),
@@ -130,6 +134,13 @@ func SendPage(common pageCommon) Page {
 
 	pg.nextButton = common.theme.Button(new(widget.Clickable), "Next")
 	pg.nextButton.Background = pg.theme.Color.InactiveGray
+
+	zeroInset := layout.UniformInset(values.MarginPadding0)
+	pg.backButton.Color, pg.infoButton.Color = common.theme.Color.Gray3, common.theme.Color.Gray3
+
+	m25 := values.MarginPadding25
+	pg.backButton.Size, pg.infoButton.Size = m25, m25
+	pg.backButton.Inset, pg.infoButton.Inset = zeroInset, zeroInset
 
 	pg.dcrAmountEditor = common.theme.Editor(new(widget.Editor), "Amount (DCR)")
 	pg.dcrAmountEditor.Editor.SetText("")
@@ -252,53 +263,53 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	dims := common.Layout(gtx, func(gtx C) D {
-		return layout.Stack{Alignment: layout.S}.Layout(gtx,
-			layout.Expanded(func(gtx C) D {
-				return layout.Stack{Alignment: layout.NE}.Layout(gtx,
-					layout.Expanded(func(gtx C) D {
-						return common.UniformPadding(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return pg.topNav(gtx, common)
+	dims := layout.Stack{Alignment: layout.S}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return common.UniformPadding(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return pg.topNav(gtx, common)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+										return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
 									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-											return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
-										})
-									})
-								}),
-							)
-						})
-					}),
-					layout.Stacked(func(gtx C) D {
-						if pg.isMoreOption {
-							inset := layout.Inset{
-								Top:   values.MarginPadding40,
-								Right: values.MarginPadding20,
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
-								return border.Layout(gtx, pg.clearAllBtn.Layout)
-							})
-						}
-						return layout.Dimensions{}
-					}),
-				)
-			}),
-			layout.Stacked(func(gtx C) D {
-				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-				return layout.S.Layout(gtx, func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
-						return pg.balanceSection(gtx, common)
+								})
+							}),
+						)
 					})
+				}),
+				layout.Stacked(func(gtx C) D {
+					if pg.isMoreOption {
+						inset := layout.Inset{
+							Top:   values.MarginPadding40,
+							Right: values.MarginPadding20,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+							return border.Layout(gtx, func(gtx C) D {
+								return pg.clearAllBtn.Layout(gtx)
+							})
+						})
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		}),
+		layout.Stacked(func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return layout.S.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
+					return pg.balanceSection(gtx, common)
 				})
-			}),
-		)
-	})
+			})
+		}),
+	)
 
 	if pg.isConfirmationModalOpen {
 		return common.Modal(gtx, dims, pg.confirmationModal(gtx, common))
@@ -313,8 +324,8 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					common.subPageBackButton.Icon = common.icons.contentClear
-					return common.subPageBackButton.Layout(gtx)
+					pg.backButton.Icon = common.icons.contentClear
+					return pg.backButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: m}.Layout(gtx, pg.theme.H6("Send DCR").Layout)
@@ -926,13 +937,13 @@ func (pg *sendPage) handle() {
 
 	pg.sendToAddress = pg.accountSwitch.SelectedIndex() == 1
 
-	if c.subPageBackButton.Button.Clicked() {
+	if pg.backButton.Button.Clicked() {
 		pg.resetErrorText()
 		pg.resetFields()
 		c.popPage()
 	}
 
-	if c.subPageInfoButton.Button.Clicked() {
+	if pg.infoButton.Button.Clicked() {
 		go func() {
 			c.modalReceiver <- &modalLoad{
 				template:   SendInfoTemplate,

@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -17,12 +16,6 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
-)
-
-const (
-	purchasingAccountTitle = "Purchasing account"
-	sendingAccountTitle    = "Sending account"
-	receivingAccountTitle  = "Receiving account"
 )
 
 type (
@@ -252,30 +245,6 @@ func (page pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal l
 		}),
 	)
 	return dims
-}
-func (page pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount, windex int) {
-	if _, ok := wallAcct[windex]; !ok {
-		accts, _ := page.wallet.AllWallets()[windex].GetAccountsRaw()
-		accounts := accts.Acc
-		if len(accounts) != len(wallAcct[windex]) {
-			wallAcct[windex] = make([]walletAccount, len(accounts))
-			for aindex := range accounts {
-				if accounts[aindex].Name == "imported" {
-					continue
-				}
-
-				wallAcct[windex][aindex] = walletAccount{
-					walletIndex:  windex,
-					accountIndex: aindex,
-					evt:          &gesture.Click{},
-					accountName:  accounts[aindex].Name,
-					totalBalance: dcrutil.Amount(accounts[aindex].TotalBalance).String(),
-					spendable:    dcrutil.Amount(accounts[aindex].Balance.Spendable).String(),
-					number:       accounts[aindex].Number,
-				}
-			}
-		}
-	}
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid

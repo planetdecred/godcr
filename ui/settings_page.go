@@ -151,20 +151,14 @@ func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if pg.currencyPreference.IsShowing {
-		return pg.currencyPreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
-			return common.UniformPadding(gtx, body)
-		}))
+		return pg.currencyPreference.Layout(gtx, pg.common.UniformPadding(gtx, body))
 	}
 
 	if pg.languagePreference.IsShowing {
-		return pg.languagePreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
-			return common.UniformPadding(gtx, body)
-		}))
+		return pg.languagePreference.Layout(gtx, pg.common.UniformPadding(gtx, body))
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return pg.common.UniformPadding(gtx, body)
 }
 
 func (pg *settingsPage) general() layout.Widget {

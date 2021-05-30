@@ -111,7 +111,7 @@ func (pg *logPage) Layout(gtx C) D {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, container)
+	return container(gtx)
 }
 
 func (pg *logPage) handle()  {}
