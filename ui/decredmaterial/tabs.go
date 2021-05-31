@@ -199,19 +199,6 @@ func NewTabs(th *Theme) *Tabs {
 	}
 }
 
-// SetTabs creates a button widget for each tab item.
-func (t *Tabs) SetTabs(tabs []TabItem) {
-	t.items = tabs
-
-	for i := range tabs {
-		l := t.theme.Body1(t.items[i].Title)
-		t.items[i].label = l
-		b := t.theme.Button(new(widget.Clickable), "")
-		b.Background = color.NRGBA{}
-		tabs[i].button = b
-	}
-}
-
 // scrollButton lays out the right and left scroll buttons of the tab when Position is Horizontal.
 func (t *Tabs) scrollButton(right bool, button *widget.Clickable) layout.FlexChild {
 	show := false

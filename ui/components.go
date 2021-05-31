@@ -65,7 +65,7 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitch
 	)
 }
 
-func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
+func (page *pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
@@ -105,7 +105,7 @@ func (page pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
 
 // layoutTopBar is the top horizontal bar on every page of the app. It lays out the wallet balance, receive and send
 // buttons.
-func (page pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
+func (page *pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
 	card := page.theme.Card()
 	card.Radius = decredmaterial.CornerRadius{}
 	return card.Layout(gtx, func(gtx C) D {
@@ -193,7 +193,7 @@ var (
 
 // layoutNavDrawer is the left vertical pane on every page of the app. It vertically lays out buttons used to navigate
 // to different pages.
-func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
+func (page *pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
@@ -272,7 +272,7 @@ func (page pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
-func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) layout.Dimensions {
+func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	directionIconTopMargin := values.MarginPadding16
 
@@ -333,7 +333,7 @@ func transactionRow(gtx layout.Context, common pageCommon, row TransactionRow) l
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
-													return walletLabel(gtx, common, row.transaction.WalletName)
+													return walletLabel(gtx, *common, row.transaction.WalletName)
 												}
 												return layout.Dimensions{}
 											}),
@@ -401,15 +401,23 @@ func walletLabel(gtx layout.Context, c pageCommon, walletName string) D {
 // endToEndRow layouts out its content on both ends of its horizontal layout.
 func endToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return leftWidget(gtx)
-		}),
+		layout.Rigid(leftWidget),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return rightWidget(gtx)
-			})
+			return layout.E.Layout(gtx, rightWidget)
 		}),
 	)
+}
+
+func (page pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
+	dims := layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return body
+		}),
+		layout.Stacked(func(gtx C) D {
+			return modal
+		}),
+	)
+	return dims
 }
 
 func (page *pageCommon) accountSelectorLayout(gtx layout.Context, callingPage, sendOption string) layout.Dimensions {
@@ -777,7 +785,7 @@ func (page *pageCommon) walletInfoPopup(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (page pageCommon) addAccount(account walletAccount) {
+func (page *pageCommon) addAccount(account walletAccount) {
 	account.evt = &gesture.Click{}
 	selectSendAccount := page.wallAcctSelector.walletAccounts.selectSendAccount
 	selectReceiveAccount := page.wallAcctSelector.walletAccounts.selectReceiveAccount
@@ -799,7 +807,7 @@ func (page pageCommon) addAccount(account walletAccount) {
 	}
 }
 
-func (page pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount, windex int) {
+func (page *pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount, windex int) {
 	if _, ok := wallAcct[windex]; !ok {
 		accounts := page.info.Wallets[windex].Accounts
 		if len(accounts) != len(wallAcct[windex]) {

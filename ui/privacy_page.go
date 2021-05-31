@@ -108,20 +108,19 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Left: values.MarginPadding5, Right: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-										c.icons.mixerSmall.Scale = 1.0
-										return c.icons.mixerSmall.Layout(gtx)
-									})
+									c.icons.mixerSmall.Scale = 1.0
+									return layout.Inset{
+										Left:  values.MarginPadding5,
+										Right: values.MarginPadding5,
+									}.Layout(gtx, c.icons.mixerSmall.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
 									c.icons.arrowForwardIcon.Scale = 0.5
 									return c.icons.arrowForwardIcon.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										c.icons.transactionIcon.Scale = 1.5
-										return c.icons.transactionIcon.Layout(gtx)
-									})
+									c.icons.transactionIcon.Scale = 1.5
+									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, c.icons.transactionIcon.Layout)
 								}),
 							)
 						}),
@@ -145,9 +144,7 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) lay
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					return pg.toPrivacySetup.Layout(gtx)
-				})
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, pg.toPrivacySetup.Layout)
 			}),
 		)
 	})
@@ -199,9 +196,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 								return pg.mixerInfoStatusTextLayout(gtx, c)
 							})
 						}),
-						layout.Rigid(func(gtx C) D {
-							return material.Switch(pg.theme.Base, pg.toggleMixer).Layout(gtx)
-						}),
+						layout.Rigid(material.Switch(pg.theme.Base, pg.toggleMixer).Layout),
 					)
 				}),
 				layout.Rigid(pg.gutter),
@@ -278,30 +273,24 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context, c *pageCommon) la
 				Bottom: values.MarginPadding10,
 			}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return c.theme.Label(values.TextSize16, txt1).Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return c.theme.Body2(txt2).Layout(gtx)
-					}),
+					layout.Rigid(c.theme.Label(values.TextSize16, txt1).Layout),
+					layout.Rigid(c.theme.Body2(txt2).Layout),
 				)
 			})
 		}
 
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					return c.theme.Body2("Mixer Settings").Layout(gtx)
-				})
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, c.theme.Body2("Mixer Settings").Layout)
 			}),
 			layout.Rigid(func(gtx C) D { return row("Mixed account", "mixed") }),
-			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
+			layout.Rigid(pg.theme.Separator().Layout),
 			layout.Rigid(func(gtx C) D { return row("Change account", "unmixed") }),
-			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
+			layout.Rigid(pg.theme.Separator().Layout),
 			layout.Rigid(func(gtx C) D { return row("Account branch", fmt.Sprintf("%d", dcrlibwallet.MixedAccountBranch)) }),
-			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
+			layout.Rigid(pg.theme.Separator().Layout),
 			layout.Rigid(func(gtx C) D { return row("Shuffle server", dcrlibwallet.ShuffleServer) }),
-			layout.Rigid(func(gtx C) D { return pg.theme.Separator().Layout(gtx) }),
+			layout.Rigid(pg.theme.Separator().Layout),
 			layout.Rigid(func(gtx C) D { return row("Shuffle port", pg.shufflePortForCurrentNet(c)) }),
 		)
 	})
@@ -328,12 +317,8 @@ func (pg *privacyPage) dangerZoneLayout(gtx layout.Context, c *pageCommon) layou
 				func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Flexed(1, func(gtx C) D {
-								return c.theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return material.Switch(pg.theme.Base, pg.allowUnspendUnmixedAcct).Layout(gtx)
-							}),
+							layout.Flexed(1, c.theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout),
+							layout.Rigid(material.Switch(pg.theme.Base, pg.allowUnspendUnmixedAcct).Layout),
 						)
 					})
 				},

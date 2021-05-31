@@ -56,9 +56,7 @@ func (pg *helpPage) document(common pageCommon) layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, common.icons.documentationIcon, pg.documentation, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return common.theme.Body1("Documentation").Layout(gtx)
-				}),
+				layout.Rigid(common.theme.Body1("Documentation").Layout),
 			)
 		})
 	}

@@ -115,17 +115,13 @@ func (pg *signMessagePage) description() layout.Widget {
 	return func(gtx C) D {
 		desc := pg.theme.Caption("Enter an address and message to sign:")
 		desc.Color = pg.theme.Color.Gray
-		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-			return desc.Layout(gtx)
-		})
+		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
 }
 
 func (pg *signMessagePage) editors(editor decredmaterial.Editor) layout.Widget {
 	return func(gtx C) D {
-		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-			return editor.Layout(gtx)
-		})
+		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, editor.Layout)
 	}
 }
 
@@ -139,13 +135,9 @@ func (pg *signMessagePage) drawButtonsRow() layout.Widget {
 							inset := layout.Inset{
 								Right: values.MarginPadding5,
 							}
-							return inset.Layout(gtx, func(gtx C) D {
-								return pg.clearButton.Layout(gtx)
-							})
+							return inset.Layout(gtx, pg.clearButton.Layout)
 						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.signButton.Layout(gtx)
-						}),
+						layout.Rigid(pg.signButton.Layout),
 					)
 				})
 			}),
@@ -161,9 +153,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				m := values.MarginPadding30
-				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-					return pg.theme.Separator().Layout(gtx)
-				})
+				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
@@ -172,16 +162,12 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 						return border.Layout(gtx, func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
-									layout.Flexed(0.9, func(gtx C) D {
-										return pg.signedMessageLabel.Layout(gtx)
-									}),
+									layout.Flexed(0.9, pg.signedMessageLabel.Layout),
 									layout.Flexed(0.1, func(gtx C) D {
 										return layout.E.Layout(gtx, func(gtx C) D {
 											return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-												return decredmaterial.Clickable(gtx, pg.copySignature, func(gtx C) D {
-													pg.copyIcon.Scale = 1.0
-													return pg.copyIcon.Layout(gtx)
-												})
+												pg.copyIcon.Scale = 1.0
+												return decredmaterial.Clickable(gtx, pg.copySignature, pg.copyIcon.Layout)
 											})
 										})
 									}),

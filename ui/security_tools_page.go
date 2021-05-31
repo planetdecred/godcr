@@ -62,25 +62,13 @@ func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *securityToolsPage) message(common pageCommon) layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, common.icons.verifyMessageIcon, pg.verifyMessage, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return common.theme.Body1("Verify Message").Layout(gtx)
-				}),
-			)
-		})
+		return pg.pageSections(gtx, common.icons.verifyMessageIcon, pg.verifyMessage, common.theme.Body1("Verify Message").Layout)
 	}
 }
 
 func (pg *securityToolsPage) address(common pageCommon) layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, common.icons.locationPinIcon, pg.validateAddress, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return common.theme.Body1("Validate Address").Layout(gtx)
-				}),
-			)
-		})
+		return pg.pageSections(gtx, common.icons.locationPinIcon, pg.validateAddress, common.theme.Body1("Validate Address").Layout)
 	}
 }
 

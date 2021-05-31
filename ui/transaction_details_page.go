@@ -136,9 +136,7 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common
 				return layout.Inset{
 					Right: values.MarginPadding15,
 					Top:   values.MarginPadding10,
-				}.Layout(gtx, func(gtx C) D {
-					return txnWidgets.direction.Layout(gtx)
-				})
+				}.Layout(gtx, txnWidgets.direction.Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -146,13 +144,9 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common
 						amount := strings.Split((*pg.txnInfo).Balance, " ")
 						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-									return common.theme.H4(amount[0]).Layout(gtx)
-								})
+								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, common.theme.H4(amount[0]).Layout)
 							}),
-							layout.Rigid(func(gtx C) D {
-								return common.theme.H6(amount[1]).Layout(gtx)
-							}),
+							layout.Rigid(common.theme.H6(amount[1]).Layout),
 						)
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -171,9 +165,7 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common
 								return layout.Inset{
 									Right: values.MarginPadding5,
 									Top:   values.MarginPadding2,
-								}.Layout(gtx, func(gtx C) D {
-									return txnWidgets.statusIcon.Layout(gtx)
-								})
+								}.Layout(gtx, txnWidgets.statusIcon.Layout)
 							}),
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 								txt := common.theme.Body1("")
@@ -355,17 +347,13 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return pg.theme.Body1(amount).Layout(gtx)
-							}),
+							layout.Rigid(pg.theme.Body1(amount).Layout),
 							layout.Rigid(func(gtx C) D {
 								m := values.MarginPadding5
 								return layout.Inset{
 									Left:  m,
 									Right: m,
-								}.Layout(gtx, func(gtx C) D {
-									return pg.theme.Body1(acctName).Layout(gtx)
-								})
+								}.Layout(gtx, pg.theme.Body1(acctName).Layout)
 							}),
 							layout.Rigid(func(gtx C) D {
 								card := pg.theme.Card()
@@ -392,9 +380,7 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 						pg.copyTextBtn[i].Text = hashAcct
 						pg.copyTextBtn[i].Inset = layout.UniformInset(values.MarginPadding0)
 
-						return layout.W.Layout(gtx, func(gtx C) D {
-							return pg.copyTextBtn[i].Layout(gtx)
-						})
+						return layout.W.Layout(gtx, pg.copyTextBtn[i].Layout)
 					}),
 				)
 			})
@@ -406,15 +392,11 @@ func (pg *transactionDetailsPage) viewTxn(gtx layout.Context, common *pageCommon
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.theme.Body1(values.String(values.StrViewOnDcrdata)).Layout(gtx)
-			}),
+			layout.Rigid(pg.theme.Body1(values.String(values.StrViewOnDcrdata)).Layout),
 			layout.Rigid(func(gtx C) D {
 				redirect := common.icons.redirectIcon
 				redirect.Scale = 1.0
-				return decredmaterial.Clickable(gtx, pg.toDcrdata, func(gtx C) D {
-					return redirect.Layout(gtx)
-				})
+				return decredmaterial.Clickable(gtx, pg.toDcrdata, redirect.Layout)
 			}),
 		)
 	})
@@ -428,9 +410,7 @@ func (pg *transactionDetailsPage) pageSections(gtx layout.Context, body layout.W
 
 func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding5
-	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-		return pg.theme.Separator().Layout(gtx)
-	})
+	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 }
 
 func (pg *transactionDetailsPage) handle() {

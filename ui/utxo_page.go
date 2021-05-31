@@ -154,12 +154,13 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.W.Layout(gtx, func(gtx C) D { return pg.backButton.Layout(gtx) })
+						return layout.W.Layout(gtx, pg.backButton.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Left: values.MarginPadding10, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							return c.theme.H5("Coin Control").Layout(gtx)
-						})
+						return layout.Inset{
+							Left: values.MarginPadding10,
+							Top:  values.MarginPadding10,
+						}.Layout(gtx, c.theme.H5("Coin Control").Layout)
 					}),
 				)
 			}),
@@ -185,9 +186,7 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 								)
 							})
 						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.separator.Layout(gtx)
-						}),
+						layout.Rigid(pg.separator.Layout),
 						layout.Rigid(func(gtx C) D {
 							return pg.utxoRowHeader(gtx, &c)
 						}),
@@ -227,9 +226,7 @@ func (pg *utxoPage) utxoRowHeader(gtx layout.Context, c *pageCommon) layout.Dime
 	txt.MaxLines = 1
 	return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.selecAllChexBox.Layout(gtx)
-			}),
+			layout.Rigid(pg.selecAllChexBox.Layout),
 			layout.Rigid(func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
 				txt.Text = "Amount"
@@ -257,9 +254,7 @@ func (pg *utxoPage) utxoRowHeader(gtx layout.Context, c *pageCommon) layout.Dime
 
 func (pg *utxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, c *pageCommon, index int) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.checkboxes[index].Layout(gtx)
-		}),
+		layout.Rigid(pg.checkboxes[index].Layout),
 		layout.Rigid(func(gtx C) D {
 			txt := c.theme.Body2(data.Amount)
 			txt.MaxLines = 1
@@ -292,9 +287,7 @@ func (pg *utxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, c *p
 			if pg.copyButtons[index].Button.Clicked() {
 				clipboard.WriteOp{Text: data.UTXO.Addresses}.Add(gtx.Ops)
 			}
-			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				return pg.copyButtons[index].Layout(gtx)
-			})
+			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.copyButtons[index].Layout)
 		}),
 	)
 }
