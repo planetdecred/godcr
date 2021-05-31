@@ -149,90 +149,12 @@ func (pg *walletPage) initializeWalletMenu() {
 	pg.optionsMenu = make(map[int][]menuItem)
 	pg.watchOnlyWalletMenu = make(map[int][]menuItem)
 	for _, wallet := range pg.wallets {
-
-		pg.optionsMenu[wallet.ID] = []menuItem{
-			{
-				text:   values.String(values.StrSignMessage),
-				button: new(widget.Clickable),
-				id:     PageSignMessage,
-				// action: func(common pageCommon) {
-				// 	common.changePage(SignMessagePage(common, 1)) // TODO
-				// },
-			},
-			{
-				text:     values.String(values.StrVerifyMessage),
-				button:   new(widget.Clickable),
-				separate: true,
-				action: func(common pageCommon) {
-					common.changePage(VerifyMessagePage(common))
-				},
-			},
-			{
-				text:     values.String(values.StrViewProperty),
-				button:   new(widget.Clickable),
-				separate: true,
-				id:       "",
-			},
-			{
-				text:     values.String(values.StrStakeShuffle),
-				button:   new(widget.Clickable),
-				separate: true,
-				id:       PagePrivacy,
-			},
-			{
-				text:   values.String(values.StrRename),
-				button: new(widget.Clickable),
-				action: func(common pageCommon) {
-					go func() {
-						common.modalReceiver <- &modalLoad{
-							template: RenameWalletTemplate,
-							title:    values.String(values.StrRenameWalletSheetTitle),
-							confirm: func(name string) {
-								// id := common.info.Wallets[*common.selectedWallet].ID
-								common.wallet.RenameWallet(1, name, pg.errorReceiver) //TODO
-							},
-							confirmText: values.String(values.StrRename),
-							cancel:      common.closeModal,
-							cancelText:  values.String(values.StrCancel),
-						}
-					}()
-				},
-			},
-			{
-				text:   values.String(values.StrSettings),
-				button: new(widget.Clickable),
-				id:     PageSettings,
-				// action: func(common pageCommon) {
-				// 	common.changePage(WalletSettingsPage(common, 1)) //TODO
-				// },
-			},
+		if !wallet.IsWatchingOnlyWallet() {
+			pg.optionsMenu[wallet.ID] = pg.getWalletMenu(wallet)
 		}
 
-		pg.watchOnlyWalletMenu[wallet.ID] = []menuItem{
-			{
-				text:   values.String(values.StrSettings),
-				button: new(widget.Clickable),
-				id:     PageSettings,
-			},
-			{
-				text:   values.String(values.StrRename),
-				button: new(widget.Clickable),
-				action: func(common pageCommon) {
-					go func() {
-						common.modalReceiver <- &modalLoad{
-							template: RenameWalletTemplate,
-							title:    values.String(values.StrRenameWalletSheetTitle),
-							confirm: func(name string) {
-								// id := common.info.Wallets[*common.selectedWallet].ID
-								common.wallet.RenameWallet(1, name, pg.errorReceiver) //TODO
-							},
-							confirmText: values.String(values.StrRename),
-							cancel:      common.closeModal,
-							cancelText:  values.String(values.StrCancel),
-						}
-					}()
-				},
-			},
+		if wallet.IsWatchingOnlyWallet() {
+			pg.watchOnlyWalletMenu[wallet.ID] = pg.getWatchOnlyWalletMenu(wallet)
 		}
 
 	}
@@ -258,6 +180,90 @@ func (pg *walletPage) initializeWalletMenu() {
 
 }
 
+func (pg *walletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
+	return []menuItem{
+		{
+			text:   values.String(values.StrSignMessage),
+			button: new(widget.Clickable),
+			id:     PageSignMessage,
+		},
+		{
+			text:     values.String(values.StrVerifyMessage),
+			button:   new(widget.Clickable),
+			separate: true,
+			action: func(common pageCommon) {
+				common.changePage(VerifyMessagePage(common))
+			},
+		},
+		{
+			text:     values.String(values.StrViewProperty),
+			button:   new(widget.Clickable),
+			separate: true,
+			action: func(common pageCommon) {
+				common.changePage(HelpPage(common))
+			},
+		},
+		{
+			text:     values.String(values.StrStakeShuffle),
+			button:   new(widget.Clickable),
+			separate: true,
+			id:       PagePrivacy,
+		},
+		{
+			text:   values.String(values.StrRename),
+			button: new(widget.Clickable),
+			action: func(common pageCommon) {
+				go func() {
+					common.modalReceiver <- &modalLoad{
+						template: RenameWalletTemplate,
+						title:    values.String(values.StrRenameWalletSheetTitle),
+						confirm: func(name string) {
+							common.wallet.RenameWallet(wal.ID, name, pg.errorReceiver) //TODO
+						},
+						confirmText: values.String(values.StrRename),
+						cancel:      common.closeModal,
+						cancelText:  values.String(values.StrCancel),
+					}
+				}()
+			},
+		},
+		{
+			text:   values.String(values.StrSettings),
+			button: new(widget.Clickable),
+			id:     PageSettings,
+		},
+	}
+}
+
+func (pg *walletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
+	return []menuItem{
+		{
+			text:   values.String(values.StrSettings),
+			button: new(widget.Clickable),
+			id:     PageSettings,
+		},
+		{
+			text:   values.String(values.StrRename),
+			button: new(widget.Clickable),
+			action: func(common pageCommon) {
+				go func() {
+					common.modalReceiver <- &modalLoad{
+						template: RenameWalletTemplate,
+						title:    values.String(values.StrRenameWalletSheetTitle),
+						confirm: func(name string) {
+							// id := common.info.Wallets[*common.selectedWallet].ID
+							common.wallet.RenameWallet(wal.ID, name, pg.errorReceiver) //TODO
+						},
+						confirmText: values.String(values.StrRename),
+						cancel:      common.closeModal,
+						cancelText:  values.String(values.StrCancel),
+					}
+				}()
+			},
+		},
+	}
+}
+
 func (pg *walletPage) showAddWalletModal(common pageCommon) {
 	go func() {
 		common.modalReceiver <- &modalLoad{
@@ -270,6 +276,7 @@ func (pg *walletPage) showAddWalletModal(common pageCommon) {
 						pg.handleError(err)
 					} else {
 						pg.loadAccounts(wal)
+						pg.optionsMenu[wal.ID] = pg.getWalletMenu(wal)
 						pg.wallets = append(pg.wallets, wal)
 
 						common.closeModal()
@@ -299,6 +306,7 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common pageCommon) {
 
 						//load accounts before adding new wallet
 						pg.loadAccounts(wal)
+						pg.watchOnlyWalletMenu[wal.ID] = pg.getWatchOnlyWalletMenu(wal)
 						pg.wallets = append(pg.wallets, wal)
 
 						common.closeModal()
