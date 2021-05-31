@@ -84,9 +84,7 @@ func (as *accountSelector) selectFirstWalletValidAccount() error {
 		return nil
 	}
 
-	wallets := as.common.multiWallet.AllWallets()
-
-	for _, wal := range wallets {
+	for _, wal := range as.wallets {
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
 			return err
