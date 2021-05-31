@@ -281,9 +281,7 @@ func (pg *settingsPage) agent() layout.Widget {
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return pg.theme.Switch(pg.userAgent).Layout(gtx)
-							})
+							return layout.E.Layout(gtx, pg.theme.Switch(pg.userAgent).Layout)
 						})
 					}),
 				)
@@ -312,9 +310,7 @@ func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layou
 					layout.Rigid(func(gtx C) D {
 						txt := pg.theme.Body2(title)
 						txt.Color = pg.theme.Color.Gray
-						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							return txt.Layout(gtx)
-						})
+						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
 					}),
 					layout.Rigid(body),
 				)
@@ -335,9 +331,7 @@ func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout
 }
 
 func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
-	return pg.subSection(gtx, title, func(gtx C) D {
-		return pg.theme.Switch(option).Layout(gtx)
-	})
+	return pg.subSection(gtx, title, pg.theme.Switch(option).Layout)
 }
 
 func (pg *settingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensions {
@@ -345,9 +339,7 @@ func (pg *settingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 		return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
 			return pg.subSection(gtx, row.title, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return row.label.Layout(gtx)
-					}),
+					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
 						return row.icon.Layout(gtx, values.MarginPadding22)
 					}),
@@ -376,9 +368,7 @@ func (pg *settingsPage) subSectionLabel(title string) layout.Widget {
 func (pg *settingsPage) lineSeparator() layout.Widget {
 	m := values.MarginPadding1
 	return func(gtx C) D {
-		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-			return pg.theme.Separator().Layout(gtx)
-		})
+		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 	}
 }
 

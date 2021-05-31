@@ -19,7 +19,10 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageCreateRestore = "CreateRestore"
+const (
+	PageCreateRestore = "CreateRestore"
+	numberOfSeeds     = 32
+)
 
 type (
 	seedEditors struct {
@@ -155,7 +158,7 @@ func (win *Window) CreateRestorePage(common pageCommon) Page {
 
 	pg.passwordStrength.Color = pg.theme.Color.LightGray
 
-	for i := 0; i <= 32; i++ {
+	for i := 0; i <= numberOfSeeds; i++ {
 		widgetEditor := new(widget.Editor)
 		widgetEditor.SingleLine, widgetEditor.Submit = true, true
 		pg.seedEditors.editors = append(pg.seedEditors.editors, win.theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
@@ -187,15 +190,11 @@ func (pg *createRestore) Layout(gtx layout.Context) layout.Dimensions {
 		dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				if common.states.creating {
-					return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, func(gtx C) D {
-						return pg.processing(gtx)
-					})
+					return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, pg.processing)
 				} else if pg.showRestore {
 					return pg.restore(gtx)
 				} else {
-					return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, func(gtx C) D {
-						return pg.mainContent(gtx)
-					})
+					return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, pg.mainContent)
 				}
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -235,15 +234,11 @@ func (pg *createRestore) Layout(gtx layout.Context) layout.Dimensions {
 							}
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-										return pg.addWallet.Layout(gtx)
-									})
+									return layout.UniformInset(values.MarginPadding5).Layout(gtx, pg.addWallet.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx C) D {
-										pg.hidePasswordModal.Color = common.theme.Color.Primary
-										return pg.hidePasswordModal.Layout(gtx)
-									})
+									pg.hidePasswordModal.Color = common.theme.Color.Primary
+									return layout.UniformInset(values.MarginPadding5).Layout(gtx, pg.hidePasswordModal.Layout)
 								}),
 							)
 						},
@@ -276,16 +271,14 @@ func (pg *createRestore) mainContent(gtx layout.Context) layout.Dimensions {
 				} else {
 					title.Text = "Welcome to Decred Wallet, a secure & open-source desktop wallet."
 				}
-				return pg.centralize(gtx, func(gtx C) D {
-					return title.Layout(gtx)
-				})
+				return pg.centralize(gtx, title.Layout)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
 			btnPadding := values.MarginPadding10
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if pg.wal.LoadedWalletsCount() > int32(0) {
+					if pg.wal.LoadedWalletsCount() > 0 {
 						return layout.Inset{Top: btnPadding, Bottom: btnPadding}.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return pg.unlock.Layout(gtx)
@@ -321,14 +314,10 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 						return layout.W.Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Top: values.MarginPadding6}.Layout(gtx, func(gtx C) D {
-										return pg.hideRestoreWallet.Layout(gtx)
-									})
+									return layout.Inset{Top: values.MarginPadding6}.Layout(gtx, pg.hideRestoreWallet.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return pg.theme.H6("Restore wallet").Layout(gtx)
-									})
+									return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, pg.theme.H6("Restore wallet").Layout)
 								}),
 							)
 						})
@@ -340,19 +329,13 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 					return Container{padding: layout.Inset{Right: m, Left: m, Top: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
 						pageContent := []func(gtx C) D{
 							func(gtx C) D {
-								return pg.restorePageSections(gtx, "Enter your seed phase", "1/3", func(gtx C) D {
-									return pg.enterSeedPhase(gtx)
-								})
+								return pg.restorePageSections(gtx, "Enter your seed phase", "1/3", pg.enterSeedPhase)
 							},
 							func(gtx C) D {
-								return pg.restorePageSections(gtx, "Create spending password", "2/3", func(gtx C) D {
-									return pg.createPasswordPhase(gtx)
-								})
+								return pg.restorePageSections(gtx, "Create spending password", "2/3", pg.createPasswordPhase)
 							},
 							func(gtx C) D {
-								return pg.restorePageSections(gtx, "Chose a wallet name", "3/3", func(gtx C) D {
-									return pg.renameWalletPhase(gtx)
-								})
+								return pg.restorePageSections(gtx, "Chose a wallet name", "3/3", pg.renameWalletPhase)
 							},
 						}
 						return layout.Inset{Bottom: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
@@ -367,9 +350,7 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 		layout.Stacked(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 			return layout.S.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
-					return pg.restoreButtonSection(gtx)
-				})
+				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, pg.restoreButtonSection)
 			})
 		}),
 	)
@@ -387,9 +368,7 @@ func (pg *createRestore) restoreButtonSection(gtx layout.Context) layout.Dimensi
 						Top:    values.MarginPadding16,
 						Bottom: values.MarginPadding16,
 						Right:  values.MarginPadding16,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.restoreWalletBtn.Layout(gtx)
-					})
+					}.Layout(gtx, pg.restoreWalletBtn.Layout)
 				})
 			}),
 		)
@@ -428,12 +407,8 @@ func (pg *createRestore) enterSeedPhase(gtx layout.Context) layout.Dimensions {
 				}),
 			)
 		}),
-		layout.Rigid(func(gtx C) D {
-			return pg.errLabel.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return pg.resetSeedFields.Layout(gtx)
-		}),
+		layout.Rigid(pg.errLabel.Layout),
+		layout.Rigid(pg.resetSeedFields.Layout),
 	)
 
 }
@@ -453,13 +428,9 @@ func (pg *createRestore) createPasswordPhase(gtx layout.Context) layout.Dimensio
 								Right: values.MarginPadding10,
 								Top:   values.MarginPadding3,
 							}
-							return inset.Layout(gtx, func(gtx C) D {
-								return pg.alertIcon.Layout(gtx)
-							})
+							return inset.Layout(gtx, pg.alertIcon.Layout)
 						}),
-						layout.Rigid(func(gtx C) D {
-							return pg.theme.Body1(msg).Layout(gtx)
-						}),
+						layout.Rigid(pg.theme.Body1(msg).Layout),
 					)
 				})
 			})
@@ -499,9 +470,7 @@ func (pg *createRestore) restorePageSections(gtx layout.Context, title string, p
 								Axis:    layout.Horizontal,
 								Spacing: layout.SpaceBetween,
 							}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return txt.Layout(gtx)
-								}),
+								layout.Rigid(txt.Layout),
 								layout.Rigid(func(gtx C) D {
 									border := widget.Border{
 										Color:        pg.theme.Color.Gray1,
@@ -512,9 +481,12 @@ func (pg *createRestore) restorePageSections(gtx layout.Context, title string, p
 									return border.Layout(gtx, func(gtx C) D {
 										m := values.MarginPadding8
 										v := values.MarginPadding5
-										return Container{padding: layout.Inset{Right: m, Left: m, Top: v, Bottom: v}}.Layout(gtx, func(gtx C) D {
-											return phase.Layout(gtx)
-										})
+										return Container{padding: layout.Inset{
+											Right:  m,
+											Left:   m,
+											Top:    v,
+											Bottom: v,
+										}}.Layout(gtx, phase.Layout)
 									})
 								}),
 							)
@@ -530,16 +502,14 @@ func (pg *createRestore) restorePageSections(gtx layout.Context, title string, p
 func (pg *createRestore) processing(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Flexed(1, func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				message := pg.theme.H3("")
-				message.Alignment = text.Middle
-				if pg.restoring {
-					message.Text = "restoring wallet..."
-				} else {
-					message.Text = "creating wallet..."
-				}
-				return message.Layout(gtx)
-			})
+			message := pg.theme.H3("")
+			message.Alignment = text.Middle
+			if pg.restoring {
+				message.Text = "restoring wallet..."
+			} else {
+				message.Text = "creating wallet..."
+			}
+			return layout.Center.Layout(gtx, message.Layout)
 		}))
 }
 
@@ -567,7 +537,7 @@ func (pg *createRestore) onSuggestionSeedsClicked() {
 			pg.seedEditors.editors[index].Edit.Editor.SetText(b.text)
 			pg.seedEditors.editors[index].Edit.Editor.MoveCaret(len(b.text), 0)
 			pg.seedClicked = true
-			if index != 32 {
+			if index != numberOfSeeds {
 				pg.seedEditors.editors[index+1].Edit.Editor.Focus()
 			}
 		}
@@ -626,7 +596,7 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 					pg.seedMenu[k].text, pg.seedMenu[k].button.Text = s, s
 				}
 			case widget.SubmitEvent:
-				if i != 32 {
+				if i != numberOfSeeds {
 					pg.seedEditors.editors[i+1].Edit.Editor.Focus()
 				}
 			}
@@ -677,9 +647,7 @@ func (pg *createRestore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.seedMenu), func(gtx C, i int) D {
-					return layout.UniformInset(values.MarginPadding0).Layout(gtx, func(gtx C) D {
-						return pg.seedMenu[i].button.Layout(gtx)
-					})
+					return layout.UniformInset(values.MarginPadding0).Layout(gtx, pg.seedMenu[i].button.Layout)
 				})
 			})
 		})

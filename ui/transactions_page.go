@@ -139,15 +139,13 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 										index:       index,
 										showBadge:   false,
 									}
-									return transactionRow(gtx, common, row)
+									return transactionRow(gtx, &common, row)
 								})
 							})
 					})
 				})
 			}),
-			layout.Stacked(func(gtx C) D {
-				return pg.dropDowns(gtx)
-			}),
+			layout.Stacked(pg.dropDowns),
 		)
 	}
 	return common.Layout(gtx, func(gtx C) D {
@@ -171,24 +169,18 @@ func (pg *transactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
 	}.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.walletDropDown.Layout(gtx)
-			}),
+			layout.Rigid(pg.walletDropDown.Layout),
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{
 							Left: values.MarginPadding5,
-						}.Layout(gtx, func(gtx C) D {
-							return pg.txTypeDropDown.Layout(gtx)
-						})
+						}.Layout(gtx, pg.txTypeDropDown.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{
 							Left: values.MarginPadding5,
-						}.Layout(gtx, func(gtx C) D {
-							return pg.orderDropDown.Layout(gtx)
-						})
+						}.Layout(gtx, pg.orderDropDown.Layout)
 					}),
 				)
 			}),
@@ -206,9 +198,7 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					return (&layout.List{Axis: layout.Horizontal}).
 						Layout(gtx, len(pg.filterSort), func(gtx C, index int) D {
-							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return pg.filterSort[index].Layout(gtx)
-							})
+							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, pg.filterSort[index].Layout)
 						})
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -227,9 +217,7 @@ func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					return (&layout.List{Axis: layout.Horizontal}).
 						Layout(gtx, len(pg.filterDirection), func(gtx C, index int) D {
-							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return pg.filterDirection[index].Layout(gtx)
-							})
+							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, pg.filterDirection[index].Layout)
 						})
 				}),
 			)

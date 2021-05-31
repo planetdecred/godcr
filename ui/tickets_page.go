@@ -172,12 +172,8 @@ func (pg *ticketPage) pageSections(gtx layout.Context, body layout.Widget) layou
 
 func (pg *ticketPage) titleRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return leftWidget(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return rightWidget(gtx)
-		}),
+		layout.Rigid(leftWidget),
+		layout.Rigid(rightWidget),
 	)
 }
 
@@ -197,11 +193,9 @@ func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layou
 				return layout.Inset{
 					Bottom: values.MarginPadding8,
 				}.Layout(gtx, func(gtx C) D {
-					return layout.Center.Layout(gtx, func(gtx C) D {
-						ic := c.icons.ticketPurchasedIcon
-						ic.Scale = 1.2
-						return ic.Layout(gtx)
-					})
+					ic := c.icons.ticketPurchasedIcon
+					ic.Scale = 1.2
+					return layout.Center.Layout(gtx, ic.Layout)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -225,9 +219,7 @@ func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layou
 					})
 				})
 			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.purchaseTicket.Layout(gtx)
-			}),
+			layout.Rigid(pg.purchaseTicket.Layout),
 		)
 	})
 }
@@ -266,9 +258,7 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 								})
 							}))
 						}
-						elements = append(elements, layout.Rigid(func(gtx C) D {
-							return pg.toTickets.Layout(gtx)
-						}))
+						elements = append(elements, layout.Rigid(pg.toTickets.Layout))
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx, elements...)
 					})
 				})
@@ -332,9 +322,7 @@ func (pg *ticketPage) ticketActivityItemnInfo(gtx layout.Context, c pageCommon, 
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					separator := pg.th.Separator()
 					separator.Width = gtx.Constraints.Max.X
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return separator.Layout(gtx)
-					})
+					return layout.E.Layout(gtx, separator.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
@@ -523,9 +511,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 								}),
 							)
 						}),
-						layout.Flexed(.5, func(gtx C) D {
-							return pg.ticketAmount.Layout(gtx)
-						}),
+						layout.Flexed(.5, pg.ticketAmount.Layout),
 					)
 				}),
 			)
@@ -549,13 +535,9 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							return pg.cancelPurchase.Layout(gtx)
-						})
+						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, pg.cancelPurchase.Layout)
 					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.reviewPurchase.Layout(gtx)
-					}),
+					layout.Rigid(pg.reviewPurchase.Layout),
 				)
 			})
 		},
@@ -616,22 +598,16 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c pageCommon) lay
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.spendingPassword.Layout(gtx)
-				}),
+				layout.Rigid(pg.spendingPassword.Layout),
 			)
 		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							return pg.cancelConfirmPurchase.Layout(gtx)
-						})
+						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, pg.cancelConfirmPurchase.Layout)
 					}),
-					layout.Rigid(func(gtx C) D {
-						return pg.submitPurchase.Layout(gtx)
-					}),
+					layout.Rigid(pg.submitPurchase.Layout),
 				)
 			})
 		},
@@ -733,12 +709,8 @@ func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions 
 		},
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Flexed(1, func(gtx C) D {
-					return pg.inputVSP.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.addVSP.Layout(gtx)
-				}),
+				layout.Flexed(1, pg.inputVSP.Layout),
+				layout.Rigid(pg.addVSP.Layout),
 			)
 		},
 	}, 900)

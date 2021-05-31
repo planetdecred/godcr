@@ -101,9 +101,7 @@ func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 							Left:   values.MarginPadding16,
 							Right:  values.MarginPadding16,
 						},
-					}.Layout(gtx, func(gtx C) D {
-						return w[i](gtx)
-					})
+					}.Layout(gtx, w[i])
 				}),
 				layout.Rigid(func(gtx C) D {
 					if i == len(w)-1 {

@@ -14,32 +14,34 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const CreateWalletTemplate = "CreateWallet"
-const RenameWalletTemplate = "RenameWallet"
-const CreateAccountTemplate = "CreateNewAccount"
-const RenameAccountTemplate = "RenameAccount"
-const PasswordTemplate = "Password"
-const ChangePasswordTemplate = "ChangePassword"
-const ConfirmRemoveTemplate = "ConfirmRemove"
-const VerifyMessageInfoTemplate = "VerifyMessageInfo"
-const SignMessageInfoTemplate = "SignMessageInfo"
-const PrivacyInfoTemplate = "PrivacyInfo"
-const RescanWalletTemplate = "RescanWallet"
-const ChangeStartupPasswordTemplate = "ChangeStartupPassword"
-const SetStartupPasswordTemplate = "SetStartupPassword"
-const RemoveStartupPasswordTemplate = "RemoveStartupPassword"
-const UnlockWalletTemplate = "UnlockWallet"
-const ConnectToSpecificPeerTemplate = "ConnectToSpecificPeer"
-const ChangeSpecificPeerTemplate = "ChangeSpecificPeer"
-const UserAgentTemplate = "UserAgent"
-const SetupMixerInfoTemplate = "ConfirmSetupMixer"
-const ConfirmMixerAcctExistTemplate = "MixerAcctExistTemplate"
-const SecurityToolsInfoTemplate = "SecurityToolsInfo"
-const ImportWatchOnlyWalletTemplate = "ImportWatchOnlyWallet"
-const UnlockWalletRestoreTemplate = "UnlockWalletRestoreTemplate"
-const SendInfoTemplate = "SendInfo"
-const ReceiveInfoTemplate = "ReceiveInfo"
-const TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
+const (
+	CreateWalletTemplate           = "CreateWallet"
+	RenameWalletTemplate           = "RenameWallet"
+	CreateAccountTemplate          = "CreateNewAccount"
+	RenameAccountTemplate          = "RenameAccount"
+	PasswordTemplate               = "Password"
+	ChangePasswordTemplate         = "ChangePassword"
+	ConfirmRemoveTemplate          = "ConfirmRemove"
+	VerifyMessageInfoTemplate      = "VerifyMessageInfo"
+	SignMessageInfoTemplate        = "SignMessageInfo"
+	PrivacyInfoTemplate            = "PrivacyInfo"
+	RescanWalletTemplate           = "RescanWallet"
+	ChangeStartupPasswordTemplate  = "ChangeStartupPassword"
+	SetStartupPasswordTemplate     = "SetStartupPassword"
+	RemoveStartupPasswordTemplate  = "RemoveStartupPassword"
+	UnlockWalletTemplate           = "UnlockWallet"
+	ConnectToSpecificPeerTemplate  = "ConnectToSpecificPeer"
+	ChangeSpecificPeerTemplate     = "ChangeSpecificPeer"
+	UserAgentTemplate              = "UserAgent"
+	SetupMixerInfoTemplate         = "ConfirmSetupMixer"
+	ConfirmMixerAcctExistTemplate  = "MixerAcctExistTemplate"
+	SecurityToolsInfoTemplate      = "SecurityToolsInfo"
+	ImportWatchOnlyWalletTemplate  = "ImportWatchOnlyWallet"
+	UnlockWalletRestoreTemplate    = "UnlockWalletRestoreTemplate"
+	SendInfoTemplate               = "SendInfo"
+	ReceiveInfoTemplate            = "ReceiveInfo"
+	TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
+)
 
 type ModalTemplate struct {
 	th                    *decredmaterial.Theme
@@ -63,7 +65,7 @@ type modalLoad struct {
 	confirm     interface{}
 	loading     bool
 	confirmText string
-	cancel      interface{}
+	cancel      func()
 	cancelText  string
 	isReset     bool
 }
@@ -157,23 +159,17 @@ func (m *ModalTemplate) createNewAccount() []layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					info := m.th.Body1("Accounts")
 					info.Color = m.th.Color.Gray
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return info.Layout(gtx)
-					})
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, info.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					info := m.th.Body1(" cannot ")
 					info.Color = m.th.Color.DeepBlue
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return info.Layout(gtx)
-					})
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, info.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					info := m.th.Body1("be deleted when created")
 					info.Color = m.th.Color.Gray
-					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						return info.Layout(gtx)
-					})
+					return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, info.Layout)
 				}),
 			)
 		},
@@ -519,7 +515,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		}
 
 		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
+			load.cancel()
 		}
 
 		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
@@ -534,7 +530,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			}
 		}
 		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
+			load.cancel()
 		}
 
 		template = m.renameWallet()
@@ -557,7 +553,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			}
 		}
 		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
+			load.cancel()
 		}
 
 		template = m.createNewAccount()
@@ -571,7 +567,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			}
 		}
 		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
+			load.cancel()
 		}
 
 		m.spendingPassword.Hint = "Spending password"
@@ -596,7 +592,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		}
 
 		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
+			load.cancel()
 		}
 
 		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
@@ -619,7 +615,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 			}
 		}
 		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
+			load.cancel()
 		}
 
 		m.walletName.Hint = "Wallet name"
@@ -660,7 +656,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		}
 
 		if m.cancel.Button.Clicked() {
-			load.cancel.(func())()
+			load.cancel()
 		}
 
 		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
@@ -713,7 +709,7 @@ func (m *ModalTemplate) handleButtonEvents(load *modalLoad) {
 	}
 
 	if m.cancel.Button.Clicked() {
-		load.cancel.(func())()
+		load.cancel()
 	}
 	m.refreshWindow()
 }

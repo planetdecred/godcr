@@ -105,9 +105,7 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layou
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return layout.Center.Layout(gtx, func(gtx C) D {
-													return pg.morePageListItems[i].image.Layout(gtx)
-												})
+												return layout.Center.Layout(gtx, pg.morePageListItems[i].image.Layout)
 											}),
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{

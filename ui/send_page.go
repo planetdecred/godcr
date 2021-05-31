@@ -254,9 +254,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 							}
 							return inset.Layout(gtx, func(gtx C) D {
 								border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
-								return border.Layout(gtx, func(gtx C) D {
-									return pg.clearAllBtn.Layout(gtx)
-								})
+								return border.Layout(gtx, pg.clearAllBtn.Layout)
 							})
 						}
 						return layout.Dimensions{}
@@ -291,22 +289,16 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 					return common.subPageBackButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: m}.Layout(gtx, func(gtx C) D {
-						return pg.theme.H6("Send DCR").Layout(gtx)
-					})
+					return layout.Inset{Left: m}.Layout(gtx, pg.theme.H6("Send DCR").Layout)
 				}),
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(common.subPageInfoButton.Layout),
 					layout.Rigid(func(gtx C) D {
-						return common.subPageInfoButton.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Left: m}.Layout(gtx, func(gtx C) D {
-							return pg.moreOption.Layout(gtx)
-						})
+						return layout.Inset{Left: m}.Layout(gtx, pg.moreOption.Layout)
 					}),
 				)
 			})
@@ -370,9 +362,7 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 					Left: values.MarginPadding5,
 				}
 				if pg.usdExchangeSet {
-					return inset.Layout(gtx, func(gtx C) D {
-						return b.Layout(gtx)
-					})
+					return inset.Layout(gtx, b.Layout)
 				}
 				return layout.Dimensions{}
 			}),
@@ -618,9 +608,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 							inset := layout.Inset{
 								Bottom: values.MarginPadding16,
 							}
-							return inset.Layout(gtx, func(gtx C) D {
-								return pg.theme.Body1(title).Layout(gtx)
-							})
+							return inset.Layout(gtx, pg.theme.Body1(title).Layout)
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							if title == "To" {
@@ -628,9 +616,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 									inset := layout.Inset{
 										Top: values.MarginPaddingMinus5,
 									}
-									return inset.Layout(gtx, func(gtx C) D {
-										return pg.accountSwitch.Layout(gtx)
-									})
+									return inset.Layout(gtx, pg.accountSwitch.Layout)
 								})
 							}
 							return layout.Dimensions{}
@@ -653,9 +639,7 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return pg.theme.Body1(rightValue).Layout(gtx)
-					}),
+					layout.Rigid(pg.theme.Body1(rightValue).Layout),
 					layout.Rigid(func(gtx C) D {
 						if walletName != "" {
 							card := pg.theme.Card()
