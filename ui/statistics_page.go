@@ -3,9 +3,11 @@ package ui
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"gioui.org/layout"
+	"gioui.org/op"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -18,8 +20,9 @@ type statPage struct {
 	txs         **wallet.Transactions
 	theme       *decredmaterial.Theme
 	l           layout.List
-	startupTime string
+	startupTime time.Time
 	syncStatus  *wallet.SyncStatus
+	netType     string
 }
 
 func (win *Window) StatPage(common pageCommon) Page {
@@ -31,16 +34,15 @@ func (win *Window) StatPage(common pageCommon) Page {
 			Axis: layout.Vertical,
 		},
 	}
-	pg.startupTime = time.Now().String()
+	pg.startupTime = time.Now()
 	pg.syncStatus = win.walletSyncStatus
+	if common.wallet.Net == "testnet3" {
+		pg.netType = "Testnet"
+	} else {
+		pg.netType = strings.Title(common.wallet.Net)
+	}
 
 	return pg
-}
-
-func (pg *statPage) lineSeparator() layout.Widget {
-	return func(gtx C) D {
-		return pg.theme.Separator().Layout(gtx)
-	}
 }
 
 func (pg *statPage) layoutStats(gtx C) D {
@@ -56,41 +58,48 @@ func (pg *statPage) layoutStats(gtx C) D {
 
 	item := func(t, v string) layout.Widget {
 		return func(gtx C) D {
-			l := pg.theme.Label(values.TextSize14, t)
-			r := pg.theme.Label(values.TextSize14, v)
+			l := pg.theme.Body2(t)
+			r := pg.theme.Body2(v)
 			r.Color = pg.theme.Color.Gray
 			return inset.Layout(gtx, func(gtx C) D {
 				return endToEndRow(gtx, l.Layout, r.Layout)
 			})
 		}
 	}
+	uptime := func(t time.Time) string {
+		v := int(time.Since(t).Seconds())
+		h := v / 3600
+		m := (v - h*3600) / 60
+		s := v - h*3600 - m*60
+		return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
+	}(pg.startupTime)
+
 	items := []layout.Widget{
-		item("Build", pg.common.wallet.Net+", "+time.Now().Format("2006-01-02")),
-		pg.lineSeparator(),
+		item("Build", pg.netType+", "+time.Now().Format("2006-01-02")),
+		pg.theme.Separator().Layout,
 		item("Peers connected", strconv.Itoa(int(pg.syncStatus.ConnectedPeers))),
-		pg.lineSeparator(),
-		item("Uptime", pg.startupTime),
-		pg.lineSeparator(),
-		item("Network", pg.common.wallet.Net),
-		pg.lineSeparator(),
+		pg.theme.Separator().Layout,
+		item("Uptime", uptime),
+		pg.theme.Separator().Layout,
+		item("Network", pg.netType),
+		pg.theme.Separator().Layout,
 		item("Best block", fmt.Sprintf("%d", pg.common.info.BestBlockHeight)),
-		pg.lineSeparator(),
+		pg.theme.Separator().Layout,
 		item("Best block timestamp", time.Unix(pg.common.info.BestBlockTime, 0).Format("2006-01-02 03:04:05 -0700")),
-		pg.lineSeparator(),
+		pg.theme.Separator().Layout,
 		item("Best block age", pg.common.info.LastSyncTime),
-		pg.lineSeparator(),
+		pg.theme.Separator().Layout,
 		item("Wallet data directory", pg.common.wallet.WalletDirectory()),
-		pg.lineSeparator(),
+		pg.theme.Separator().Layout,
 		item("Wallet data", pg.common.wallet.DataSize()),
-		pg.lineSeparator(),
+		pg.theme.Separator().Layout,
 		item("Transactions", fmt.Sprintf("%d", (*pg.txs).Total)),
-		pg.lineSeparator(),
+		pg.theme.Separator().Layout,
 		item("Wallets", fmt.Sprintf("%d", len(pg.common.info.Wallets))),
 	}
 
 	return card.Layout(gtx, func(gtx C) D {
-		m16 := values.MarginPadding16
-		return layout.Inset{Left: m16}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 			return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {
 				return items[i](gtx)
 			})
@@ -105,12 +114,13 @@ func (pg *statPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				pg.common.changePage(PageDebug)
 			},
-			body: func(gtx C) D {
-				return pg.layoutStats(gtx)
-			},
+			body: pg.layoutStats,
 		}
 		return pg.common.SubPageLayout(gtx, page)
 	}
+
+	// Refresh frames every 1 second
+	op.InvalidateOp{At: time.Now().Add(time.Second * 1)}.Add(gtx.Ops)
 	return pg.common.Layout(gtx, func(gtx C) D {
 		return pg.common.UniformPadding(gtx, container)
 	})
