@@ -32,7 +32,6 @@ type Window struct {
 	walletTickets      *wallet.Tickets
 	vspInfo            *wallet.VSP
 	proposals          *wallet.Proposals
-	selectedProposal   *dcrlibwallet.Proposal
 	proposal           chan *wallet.Proposal
 
 	walletUnspentOutputs *wallet.UnspentOutputs

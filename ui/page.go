@@ -69,9 +69,6 @@ type pageCommon struct {
 	theme            *decredmaterial.Theme
 	icons            pageIcons
 	returnPage       Page
-	amountDCRtoUSD   float64
-	usdExchangeRate  float64
-	usdExchangeSet   bool
 	dcrUsdtBittrex   DCRUSDTBittrex
 	navTab           *decredmaterial.Tabs
 	walletTabs       *decredmaterial.Tabs
@@ -268,7 +265,7 @@ func (c *pageCommon) totalWalletBalance(walletID int) (dcrutil.Amount, error) {
 	return dcrutil.Amount(totalBalance), nil
 }
 
-func (page *pageCommon) fetchExchangeValue(target interface{}) error {
+func (c *pageCommon) fetchExchangeValue(target interface{}) error {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	res, err := http.Get(url)
 	if err != nil {
@@ -285,16 +282,16 @@ func (page *pageCommon) fetchExchangeValue(target interface{}) error {
 	return nil
 }
 
-func (page pageCommon) notify(text string, success bool) {
-	*page.toast = &toast{
+func (c pageCommon) notify(text string, success bool) {
+	*c.toast = &toast{
 		text:    text,
 		success: success,
 	}
 }
 
-func (page pageCommon) closeModal() {
+func (c pageCommon) closeModal() {
 	go func() {
-		page.modalReceiver <- &modalLoad{
+		c.modalReceiver <- &modalLoad{
 			title:   "",
 			confirm: nil,
 			cancel:  nil,
@@ -312,7 +309,7 @@ func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions
 	return c.padding.Layout(gtx, w)
 }
 
-func (page pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (c pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.UniformInset(values.MarginPadding24).Layout(gtx, body)
 }
 
@@ -331,12 +328,12 @@ type SubPage struct {
 	handleExtra  func()
 }
 
-func (page pageCommon) SubPageHeaderButtons() (decredmaterial.IconButton, decredmaterial.IconButton) {
-	backButton := page.theme.PlainIconButton(new(widget.Clickable), page.icons.navigationArrowBack)
-	infoButton := page.theme.PlainIconButton(new(widget.Clickable), page.icons.actionInfo)
+func (c pageCommon) SubPageHeaderButtons() (decredmaterial.IconButton, decredmaterial.IconButton) {
+	backButton := c.theme.PlainIconButton(new(widget.Clickable), c.icons.navigationArrowBack)
+	infoButton := c.theme.PlainIconButton(new(widget.Clickable), c.icons.actionInfo)
 
 	zeroInset := layout.UniformInset(values.MarginPadding0)
-	backButton.Color, infoButton.Color = page.theme.Color.Gray3, page.theme.Color.Gray3
+	backButton.Color, infoButton.Color = c.theme.Color.Gray3, c.theme.Color.Gray3
 
 	m25 := values.MarginPadding25
 	backButton.Size, infoButton.Size = m25, m25
@@ -345,19 +342,19 @@ func (page pageCommon) SubPageHeaderButtons() (decredmaterial.IconButton, decred
 	return backButton, infoButton
 }
 
-func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (c pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-				return page.subpageHeader(gtx, sp)
+				return c.subpageHeader(gtx, sp)
 			})
 		}),
 		layout.Rigid(sp.body),
 	)
 }
 
-func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
-	page.subpageEventHandler(sp)
+func (c pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
+	c.subpageEventHandler(sp)
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -365,22 +362,22 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
-				return page.theme.H6(sp.title).Layout(gtx)
+				return c.theme.H6(sp.title).Layout(gtx)
 			}
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(page.theme.H6(sp.title).Layout),
-				layout.Rigid(page.theme.Body1(sp.subTitle).Layout),
+				layout.Rigid(c.theme.H6(sp.title).Layout),
+				layout.Rigid(c.theme.Body1(sp.subTitle).Layout),
 			)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.walletName != "" {
 				return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Card{
-						Color: page.theme.Color.Surface,
+						Color: c.theme.Color.Surface,
 					}.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-							walletText := page.theme.Caption(sp.walletName)
-							walletText.Color = page.theme.Color.Gray
+							walletText := c.theme.Caption(sp.walletName)
+							walletText.Color = c.theme.Color.Gray
 							return walletText.Layout(gtx)
 						})
 					})
@@ -397,8 +394,8 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							if sp.extraText != "" {
 								return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									text := page.theme.Caption(sp.extraText)
-									text.Color = page.theme.Color.DeepBlue
+									text := c.theme.Caption(sp.extraText)
+									text.Color = c.theme.Color.DeepBlue
 									return text.Layout(gtx)
 								})
 							}
@@ -415,24 +412,24 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 	)
 }
 
-func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
-	card := page.theme.Card()
+func (c pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	card := c.theme.Card()
 	card.Color = color.NRGBA{}
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return page.subpageHeader(gtx, sp) }),
+			layout.Rigid(func(gtx C) D { return c.subpageHeader(gtx, sp) }),
 			layout.Rigid(sp.body),
 		)
 	})
 }
 
-func (page pageCommon) subpageEventHandler(sp SubPage) {
+func (c pageCommon) subpageEventHandler(sp SubPage) {
 	if sp.infoButton.Button.Clicked() {
 		go func() {
-			page.modalReceiver <- &modalLoad{
+			c.modalReceiver <- &modalLoad{
 				template:   sp.infoTemplate,
 				title:      sp.title,
-				cancel:     page.closeModal,
+				cancel:     c.closeModal,
 				cancelText: "Got it",
 			}
 		}()

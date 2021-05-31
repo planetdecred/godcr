@@ -28,7 +28,6 @@ type transactionWdg struct {
 type transactionsPage struct {
 	container                   layout.Flex
 	txsList                     layout.List
-	filterSorter                int
 	filterDirection, filterSort []decredmaterial.RadioButton
 	toTxnDetails                []*gesture.Click
 	separator                   decredmaterial.Line

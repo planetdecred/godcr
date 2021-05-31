@@ -694,7 +694,7 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 func (pg *sendPage) constructTx() {
 	address, err := pg.destinationAddress()
 	if err != nil {
-		pg.feeEstimationError(err.Error(), "construct tx")
+		pg.feeEstimationError(err.Error())
 		return
 	}
 
@@ -703,7 +703,7 @@ func (pg *sendPage) constructTx() {
 	if !pg.sendMax {
 		amount, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
 		if err != nil {
-			pg.feeEstimationError(err.Error(), "construct tx")
+			pg.feeEstimationError(err.Error())
 			return
 		}
 		amountAtom = dcrlibwallet.AmountAtom(amount)
@@ -716,13 +716,13 @@ func (pg *sendPage) constructTx() {
 
 	err = unsignedTx.AddSendDestination(address, amountAtom, pg.sendMax)
 	if err != nil {
-		pg.feeEstimationError(err.Error(), "construct tx")
+		pg.feeEstimationError(err.Error())
 		return
 	}
 
 	feeAndSize, err := unsignedTx.EstimateFeeAndSize()
 	if err != nil {
-		pg.feeEstimationError(err.Error(), "construct tx")
+		pg.feeEstimationError(err.Error())
 		return
 	}
 
@@ -888,7 +888,7 @@ func (pg *sendPage) updateExchangeError(err error) {
 	pg.usdAmountEditor.SetError(err.Error())
 }
 
-func (pg *sendPage) feeEstimationError(err, errorPath string) {
+func (pg *sendPage) feeEstimationError(err string) {
 	if err == dcrlibwallet.ErrInsufficientBalance {
 		pg.amountErrorText = "Not enough funds"
 		return
@@ -897,7 +897,7 @@ func (pg *sendPage) feeEstimationError(err, errorPath string) {
 		pg.amountErrorText = "Invalid amount"
 		return
 	}
-	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
+	pg.calculateErrorText = fmt.Sprintf("error estimating transaction: %s", err)
 }
 
 func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c pageCommon) {

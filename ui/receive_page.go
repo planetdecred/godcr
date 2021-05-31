@@ -150,7 +150,7 @@ func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
 									return pg.addressLayout(gtx, common)
 								}),
 								layout.Rigid(func(gtx C) D {
-									return pg.addressQRCodeLayout(gtx, common)
+									return pg.addressQRCodeLayout(gtx)
 								}),
 							)
 						})

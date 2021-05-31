@@ -12,7 +12,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -64,7 +63,6 @@ type walletPage struct {
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
 	shadowBox                                  *decredmaterial.Shadow
 	separator                                  decredmaterial.Line
-	refreshPage                                *bool
 }
 
 func WalletPage(common pageCommon) Page {
@@ -367,7 +365,7 @@ func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 			return pg.walletSection(gtx, common)
 		},
 		func(gtx C) D {
-			return pg.watchOnlyWalletSection(gtx, common)
+			return pg.watchOnlyWalletSection(gtx)
 		},
 	}
 
@@ -491,7 +489,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 							click := pg.toAcctDetails[x]
 							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 							click.Add(gtx.Ops)
-							pg.goToAcctDetails(gtx, common, accounts[x], i, click)
+							pg.goToAcctDetails(gtx, common, accounts[x], click)
 							return pg.walletAccountsLayout(gtx, accounts[x].Name, dcrutil.Amount(accounts[x].TotalBalance).String(), dcrutil.Amount(accounts[x].Balance.Spendable).String(), common)
 						})
 					}),
@@ -547,7 +545,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common pageCommon) layou
 	})
 }
 
-func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensions {
 	watchOnlyWalletCount := 0
 	for _, wal := range pg.wallets {
 		if wal.IsWatchingOnlyWallet() {
@@ -572,7 +570,7 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageComm
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return pg.layoutWatchOnlyWallets(gtx, common)
+						return pg.layoutWatchOnlyWallets(gtx)
 					})
 				}),
 			)
@@ -580,7 +578,7 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common pageComm
 	})
 }
 
-func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common pageCommon) D {
+func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.wallets), func(gtx C, i int) D {
 		if !pg.wallets[i].IsWatchingOnlyWallet() {
 			return D{}
@@ -870,7 +868,7 @@ func (pg *walletPage) updateAcctDetailsButtons(walAcct []*dcrlibwallet.Account) 
 	}
 }
 
-func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acct *dcrlibwallet.Account, index int, click *gesture.Click) {
+func (pg *walletPage) goToAcctDetails(gtx layout.Context, common pageCommon, acct *dcrlibwallet.Account, click *gesture.Click) {
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
 			common.changePage(AcctDetailsPage(common, acct))

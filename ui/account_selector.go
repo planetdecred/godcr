@@ -233,7 +233,7 @@ func newAccountSelectorModal(common pageCommon, currentSelectedAccount *dcrlibwa
 
 func (asm *accountSelectorModal) OnResume() {
 	wallets := make([]*dcrlibwallet.Wallet, 0)
-	walletAccounts := make(map[int][]*selectorAccount, 0)
+	walletAccounts := make(map[int][]*selectorAccount)
 
 	// TODO use a sorted wallet list
 	for _, wal := range asm.wallets {
@@ -306,7 +306,7 @@ func (asm *accountSelectorModal) OnDismiss() {
 func (asm *accountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	asm.eventQueue = gtx
 
-	wallAcctGroup := func(gtx layout.Context, title string, windex int, body layout.Widget) layout.Dimensions {
+	wallAcctGroup := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 		return layout.Inset{
 			Bottom: values.MarginPadding10,
 		}.Layout(gtx, func(gtx C) D {
@@ -351,11 +351,8 @@ func (asm *accountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 			return layout.Stack{Alignment: layout.NW}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
 					return asm.walletsList.Layout(gtx, len(asm.filteredWallets), func(gtx C, windex int) D {
-						// if page.wallet.AllWallets()[windex].IsWatchingOnlyWallet() {
-						// 	return D{}
-						// }
 						wal := asm.filteredWallets[windex]
-						return wallAcctGroup(gtx, wal.Name, windex, func(gtx C) D {
+						return wallAcctGroup(gtx, wal.Name, func(gtx C) D {
 							accounts := asm.accounts[wal.ID]
 							return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
 								return asm.walletAccountLayout(gtx, accounts[aindex])

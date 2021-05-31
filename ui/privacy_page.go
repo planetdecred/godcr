@@ -12,7 +12,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PagePrivacy = "Privacy"
@@ -26,9 +25,7 @@ type privacyPage struct {
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
 	backButton                           decredmaterial.IconButton
-	infoButton                           decredmaterial.IconButton
 	errorReceiver                        chan error
-	acctMixerStatus                      *chan *wallet.AccountMixer
 	walletID                             int
 
 	walletName string
@@ -80,8 +77,8 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			back: func() {
 				c.popPage()
 			},
-			backButton: pg.backButton,
-			infoButton: pg.infoBtn,
+			backButton:   pg.backButton,
+			infoButton:   pg.infoBtn,
 			infoTemplate: PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
 				if c.wallet.IsAccountMixerConfigSet(pg.walletID) {

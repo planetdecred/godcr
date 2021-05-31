@@ -126,15 +126,11 @@ func TicketPage(c pageCommon) Page {
 			pg.walletSelectedID = selectedAccount.WalletID
 			pg.accountSelectedNumber = selectedAccount.Number
 			if pg.selectedVSP.Host != "" {
-				pg.createNewVSPD(c)
+				pg.createNewVSPD()
 			}
 		}).
 		accountValidator(func(account *dcrlibwallet.Account) bool {
-			// Filter out imported account and mixed.
-			if account.Number == MaxInt32 {
-				return false
-			}
-			return true
+			return account.Number == MaxInt32
 		})
 
 	tickets, err := pg.common.wallet.GetAllTickets() //TODO
@@ -203,7 +199,7 @@ func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 	})
 
 	if pg.showPurchaseConfirm {
-		return pg.confirmPurchaseModal(gtx, c)
+		return pg.confirmPurchaseModal(gtx)
 	}
 
 	if pg.showVSPHosts {
@@ -602,7 +598,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 	}, 900)
 }
 
-func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context) layout.Dimensions {
 	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return pg.th.Label(values.TextSize20, "Confirm to purchase tickets").Layout(gtx)
@@ -777,7 +773,7 @@ func (pg *ticketPage) handlerSelectVSP(events []gesture.ClickEvent, v wallet.VSP
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			pg.selectedVSP = v
-			pg.createNewVSPD(c)
+			pg.createNewVSPD()
 			pg.showVSPHosts = false
 			if pg.rememberVSP.CheckBox.Value {
 				c.wallet.RememberVSP(pg.selectedVSP.Host)
@@ -834,7 +830,7 @@ func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmou
 	c.wallet.PurchaseTicket(pg.walletSelectedID, pg.accountSelectedNumber, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
 }
 
-func (pg *ticketPage) createNewVSPD(c pageCommon) {
+func (pg *ticketPage) createNewVSPD() {
 	pg.vspd = pg.common.multiWallet.NewVSPD(pg.selectedVSP.Host, pg.walletSelectedID, pg.accountSelectedNumber)
 }
 
@@ -868,7 +864,7 @@ func (pg *ticketPage) handle() {
 				if vinfo.Host == vspHost {
 					pg.selectedVSP = vinfo
 					pg.rememberVSP.CheckBox.Value = true
-					pg.createNewVSPD(c)
+					pg.createNewVSPD()
 					break
 				}
 			}

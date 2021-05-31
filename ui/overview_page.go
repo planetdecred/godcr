@@ -673,7 +673,6 @@ func (pg *overviewPage) listenForSyncNotifications() {
 			switch syncStatus.Stage {
 			case wallet.PeersConnected:
 				pg.connectedPeers = syncStatus.ConnectedPeers
-				break
 			case wallet.SyncStarted:
 				fallthrough
 			case wallet.SyncCanceled:

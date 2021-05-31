@@ -171,10 +171,8 @@ func (mp *mainPage) handle() {
 			switch appBarItem.pageID {
 			case PageSend:
 				mp.changePage(SendPage(mp.pageCommon))
-				break
 			case PageReceive:
 				mp.changePage(ReceivePage(mp.pageCommon))
-				break
 			}
 		}
 	}
@@ -185,22 +183,16 @@ func (mp *mainPage) handle() {
 			switch navBarItem.pageID {
 			case PageOverview:
 				mp.changePage(OverviewPage(mp.pageCommon))
-				break
 			case PageTransactions:
 				mp.changePage(TransactionsPage(mp.pageCommon))
-				break
 			case PageWallet:
 				mp.changePage(WalletPage(mp.pageCommon))
-				break
 			case PageProposals:
 				mp.changePage(ProposalsPage(mp.pageCommon))
-				break
 			case PageTickets:
 				mp.changePage(TicketPage(mp.pageCommon))
-				break
 			case PageMore:
 				mp.changePage(MorePage(mp.pageCommon))
-				break
 			}
 		}
 	}
@@ -272,7 +264,7 @@ func (mp *mainPage) showModal(modal Modal) {
 
 func (mp *mainPage) dismissModal(modal Modal) {
 	for i, m := range mp.modals {
-		if m.modalID() == m.modalID() {
+		if m.modalID() == modal.modalID() {
 			modal.OnDismiss() // do garbage collection in modal
 			mp.modals = append(mp.modals[:i], mp.modals[i+1:]...)
 		}

@@ -4,11 +4,10 @@ import (
 	"image/color"
 	"strings"
 
-	"github.com/planetdecred/godcr/ui/values"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const PageVerifyMessage = "VerifyMessage"
@@ -24,9 +23,6 @@ type verifyMessagePage struct {
 	infoButton decredmaterial.IconButton
 
 	verifyMessageStatus *widget.Icon
-
-	walletID   int
-	walletName string
 }
 
 func VerifyMessagePage(c pageCommon) Page {
@@ -201,7 +197,7 @@ func (pg *verifyMessagePage) clearInputs(c *pageCommon) {
 }
 
 func (pg *verifyMessagePage) validateAddress(c pageCommon) bool {
-	if c.multiWallet.IsAddressValid(pg.addressInput.Editor.Text()){
+	if c.multiWallet.IsAddressValid(pg.addressInput.Editor.Text()) {
 		pg.addressInput.SetError("Invalid address")
 		return false
 	}
