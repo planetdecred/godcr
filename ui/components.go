@@ -209,7 +209,7 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
 // are transactions from multiple wallets
-func walletLabel(gtx layout.Context, c pageCommon, walletName string) D {
+func walletLabel(gtx layout.Context, c *pageCommon, walletName string) D {
 	return decredmaterial.Card{
 		Color: c.theme.Color.LightGray,
 	}.Layout(gtx, func(gtx C) D {

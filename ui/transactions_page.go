@@ -251,7 +251,7 @@ func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, common *
 	}
 }
 
-func txConfirmations(common pageCommon, transaction *dcrlibwallet.Transaction) int32 {
+func txConfirmations(common *pageCommon, transaction *dcrlibwallet.Transaction) int32 {
 	if transaction.BlockHeight != -1 {
 		// TODO
 		return (common.wallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
@@ -260,7 +260,7 @@ func txConfirmations(common pageCommon, transaction *dcrlibwallet.Transaction) i
 	return 0
 }
 
-func initTxnWidgets(common pageCommon, transaction *dcrlibwallet.Transaction) transactionWdg {
+func initTxnWidgets(common *pageCommon, transaction *dcrlibwallet.Transaction) transactionWdg {
 
 	var txn transactionWdg
 	t := time.Unix(transaction.Timestamp, 0).UTC()

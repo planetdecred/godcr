@@ -335,7 +335,7 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(common.subPageInfoButton.Layout),
+					layout.Rigid(pg.infoButton.Layout),
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Left: m}.Layout(gtx, pg.moreOption.Layout)
 					}),

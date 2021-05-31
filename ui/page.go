@@ -218,9 +218,7 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 		toast:            &win.toast,
 	}
 
-	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
-		return
-	}
+	common.fetchExchangeValue(&common.dcrUsdtBittrex) //TODO
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
 

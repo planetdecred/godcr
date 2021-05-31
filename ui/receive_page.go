@@ -212,7 +212,7 @@ func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dime
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, common.subPageInfoButton.Layout)
+			return layout.E.Layout(gtx, pg.info.Layout)
 		}),
 	)
 }

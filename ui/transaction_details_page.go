@@ -119,7 +119,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{
 					func(gtx C) D {
-						return pg.txnBalanceAndStatus(gtx, common)
+						return pg.txnBalanceAndStatus(gtx, &common)
 					},
 					func(gtx C) D {
 						return pg.separator(gtx)
@@ -160,7 +160,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return common.UniformPadding(gtx, body)
 }
 
-func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	txnWidgets := initTxnWidgets(common, pg.transaction)
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
