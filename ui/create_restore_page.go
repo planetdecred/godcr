@@ -93,7 +93,7 @@ func CreateRestorePage(common pageCommon) Page {
 		common:        common,
 		theme:         common.theme,
 		wal:           common.wallet,
-		loadedWallets: common.wallet.LoadedWalletsCount(),
+		loadedWallets: common.multiWallet.LoadedWalletsCount(),
 		keyEvent:      common.keyEvents,
 		errorReceiver: make(chan error),
 

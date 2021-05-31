@@ -152,7 +152,7 @@ func (pg *verifyMessagePage) handle() {
 		if pg.verifyBtn.Button.Clicked() || handleSubmitEvent(pg.addressInput.Editor, pg.messageInput.Editor, pg.signInput.Editor) {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
-			valid, err := c.wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
+			valid, err := c.multiWallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
 			if err != nil {
 				pg.signInput.SetError("Invalid signature")
 				return
@@ -201,7 +201,7 @@ func (pg *verifyMessagePage) clearInputs(c *pageCommon) {
 }
 
 func (pg *verifyMessagePage) validateAddress(c pageCommon) bool {
-	if isValid, _ := c.wallet.IsAddressValid(pg.addressInput.Editor.Text()); !isValid {
+	if c.multiWallet.IsAddressValid(pg.addressInput.Editor.Text()){
 		pg.addressInput.SetError("Invalid address")
 		return false
 	}

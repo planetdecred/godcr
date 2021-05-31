@@ -369,7 +369,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				proposalDescription = proposal.IndexFile
 			} else {
 				var err error
-				proposalDescription, err = common.wallet.FetchProposalDescription(proposal.Token)
+				proposalDescription, err = common.multiWallet.Politeia.FetchProposalDescription(proposal.Token)
 				if err != nil {
 					log.Infof("Error loading proposal description: %v", err)
 					time.Sleep(7 * time.Second)

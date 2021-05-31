@@ -32,6 +32,7 @@ type settingsPage struct {
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
 	wal           *wallet.Wallet
+	multiWallet   *dcrlibwallet.MultiWallet
 
 	updateConnectToPeer *widget.Clickable
 	updateUserAgent     *widget.Clickable
@@ -67,9 +68,10 @@ func SettingsPage(common pageCommon) Page {
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		theme:  common.theme,
-		wal:    common.wallet,
-		common: common,
+		theme:       common.theme,
+		wal:         common.wallet,
+		multiWallet: common.multiWallet,
+		common:      common,
 
 		isDarkModeOn:     new(widget.Bool),
 		spendUnconfirmed: new(widget.Bool),
@@ -93,7 +95,7 @@ func SettingsPage(common pageCommon) Page {
 		values.DefaultLangauge, values.ArrLanguages).
 		Title(values.StrLanguage).
 		PostiveButton(values.StrConfirm, func() {
-			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey))
+			values.SetUserLanguage(pg.multiWallet.ReadStringConfigValueForKey(languagePreferenceKey))
 		}).
 		NegativeButton(values.StrCancel, func() {})
 	pg.languagePreference = languagePreference
@@ -183,7 +185,7 @@ func (pg *settingsPage) general() layout.Widget {
 						title:     values.String(values.StrCurrencyConversion),
 						clickable: pg.currencyPreference.Clickable(),
 						icon:      pg.chevronRightIcon,
-						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
+						label:     pg.theme.Body2(pg.multiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
 					return pg.clickableRow(gtx, currencyConversionRow)
 				}),
@@ -193,7 +195,7 @@ func (pg *settingsPage) general() layout.Widget {
 						title:     values.String(values.StrLanguage),
 						clickable: pg.languagePreference.Clickable(),
 						icon:      pg.chevronRightIcon,
-						label:     pg.theme.Body2(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey)),
+						label:     pg.theme.Body2(pg.multiWallet.ReadStringConfigValueForKey(languagePreferenceKey)),
 					}
 					return pg.clickableRow(gtx, languageRow)
 				}),
@@ -378,16 +380,16 @@ func (pg *settingsPage) handle() {
 
 	if pg.isDarkModeOn.Changed() {
 		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
-		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
+		pg.multiWallet.SaveUserConfigValue("isDarkModeOn", pg.isDarkModeOn.Value)
 		// pg.loadPage(common.icons)
 	}
 
 	if pg.spendUnconfirmed.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.Value)
+		pg.multiWallet.SaveUserConfigValue(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.Value)
 	}
 
 	if pg.beepNewBlocks.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.Value)
+		pg.multiWallet.SaveUserConfigValue(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.Value)
 	}
 
 	for pg.changeStartupPass.Clicked() {
@@ -445,7 +447,7 @@ func (pg *settingsPage) handle() {
 					title:    values.String(values.StrConnectToSpecificPeer),
 					confirm: func(ipAddress string) {
 						if ipAddress != "" {
-							pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
+							pg.multiWallet.SaveUserConfigValue(specificPeerKey, ipAddress)
 							common.closeModal()
 						}
 					},
@@ -456,7 +458,7 @@ func (pg *settingsPage) handle() {
 			}()
 			return
 		}
-		pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
+		pg.multiWallet.DeleteUserConfigValueForKey(specificPeerKey)
 	}
 	for pg.updateConnectToPeer.Clicked() {
 		go func() {
@@ -465,7 +467,7 @@ func (pg *settingsPage) handle() {
 				title:    values.String(values.StrChangeSpecificPeer),
 				confirm: func(ipAddress string) {
 					if ipAddress != "" {
-						pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
+						pg.multiWallet.SaveUserConfigValue(specificPeerKey, ipAddress)
 						common.closeModal()
 					}
 				},
@@ -485,7 +487,7 @@ func (pg *settingsPage) handle() {
 				title:    values.String(values.StrChangeUserAgent),
 				confirm: func(agent string) {
 					if agent != "" {
-						pg.wal.SaveConfigValueForKey(userAgentKey, agent)
+						pg.multiWallet.SaveUserConfigValue(userAgentKey, agent)
 						common.closeModal()
 					}
 				},
@@ -505,7 +507,7 @@ func (pg *settingsPage) handle() {
 					title:    values.String(values.StrChangeUserAgent),
 					confirm: func(agent string) {
 						if agent != "" {
-							pg.wal.SaveConfigValueForKey(userAgentKey, agent)
+							pg.multiWallet.SaveUserConfigValue(userAgentKey, agent)
 							common.closeModal()
 						}
 					},
@@ -516,7 +518,7 @@ func (pg *settingsPage) handle() {
 			}()
 			return
 		}
-		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
+		pg.multiWallet.DeleteUserConfigValueForKey(userAgentKey)
 	}
 
 	select {
@@ -533,7 +535,7 @@ func (pg *settingsPage) handle() {
 }
 
 func (pg *settingsPage) updateSettingOptions() {
-	isPassword := pg.wal.IsStartupSecuritySet()
+	isPassword := pg.multiWallet.IsStartupSecuritySet()
 	pg.startupPassword.Value = false
 	pg.isStartupPassword = false
 	if isPassword {
@@ -541,32 +543,32 @@ func (pg *settingsPage) updateSettingOptions() {
 		pg.isStartupPassword = true
 	}
 
-	isDarkModeOn := pg.wal.ReadBoolConfigValueForKey("isDarkModeOn")
+	isDarkModeOn := pg.multiWallet.ReadBoolConfigValueForKey("isDarkModeOn", false)
 	pg.isDarkModeOn.Value = false
 	if isDarkModeOn {
 		pg.isDarkModeOn.Value = true
 	}
 
-	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)
+	isSpendUnconfirmed := pg.multiWallet.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, false)
 	pg.spendUnconfirmed.Value = false
 	if isSpendUnconfirmed {
 		pg.spendUnconfirmed.Value = true
 	}
 
-	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+	beep := pg.multiWallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
 	pg.beepNewBlocks.Value = false
 	if beep {
 		pg.beepNewBlocks.Value = true
 	}
 
-	pg.peerAddr = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
+	pg.peerAddr = pg.multiWallet.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
 	pg.connectToPeer.Value = false
 	if pg.peerAddr != "" {
 		pg.peerLabel.Text = pg.peerAddr
 		pg.connectToPeer.Value = true
 	}
 
-	pg.agentValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
+	pg.agentValue = pg.multiWallet.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
 	pg.userAgent.Value = false
 	if pg.agentValue != "" {
 		pg.agentLabel.Text = pg.agentValue

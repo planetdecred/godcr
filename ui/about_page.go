@@ -42,7 +42,7 @@ func AboutPage(common pageCommon) Page {
 		buildDate:        common.theme.Body1("Build date"),
 		buildDateValue:   common.theme.Body1("2020-09-10"),
 		network:          common.theme.Body1("Network"),
-		networkValue:     common.theme.Body1(common.wallet.Net),
+		networkValue:     common.theme.Body1(common.network),
 		license:          common.theme.Body1("License"),
 		chevronRightIcon: common.icons.chevronRight,
 	}

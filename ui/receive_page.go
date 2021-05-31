@@ -359,7 +359,7 @@ func (pg *receivePage) handle() {
 }
 
 func (pg *receivePage) generateNewAddress() (string, error) {
-	selectedWallet := pg.common.wallet.WalletWithID(pg.selector.selectedAccount.WalletID)
+	selectedWallet := pg.common.multiWallet.WalletWithID(pg.selector.selectedAccount.WalletID)
 
 generateAddress:
 	newAddr, err := selectedWallet.NextAddress(pg.selector.selectedAccount.Number)

@@ -8,7 +8,6 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const ValidateAddress = "ValidateAddress"
@@ -25,7 +24,6 @@ type validateAddressPage struct {
 	theme                 *decredmaterial.Theme
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
-	wallet                *wallet.Wallet
 	stateValidate         int
 
 	backButton decredmaterial.IconButton
@@ -37,7 +35,6 @@ func ValidateAddressPage(common pageCommon) Page {
 		theme:       common.theme,
 		validateBtn: common.theme.Button(new(widget.Clickable), "Validate"),
 		clearBtn:    common.theme.Button(new(widget.Clickable), "Clear"),
-		wallet:      common.wallet,
 		common:      common,
 	}
 
@@ -255,7 +252,7 @@ func (pg *validateAddressPage) validateAddress() {
 	}
 
 	if address != "" {
-		isValid, _ := pg.wallet.IsAddressValid(address)
+		isValid := pg.common.multiWallet.IsAddressValid(address)
 		if !isValid {
 			pg.stateValidate = invalid
 			return

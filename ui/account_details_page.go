@@ -12,7 +12,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageAccountDetails = "AccountDetails"
@@ -22,7 +21,6 @@ const MaxInt32 = 1<<(Uint32Size-1) - 1
 
 type acctDetailsPage struct {
 	common                   pageCommon
-	wallet                   *wallet.Wallet
 	walletName               string
 	account                  *dcrlibwallet.Account
 	theme                    *decredmaterial.Theme
@@ -40,8 +38,7 @@ func AcctDetailsPage(common pageCommon, account *dcrlibwallet.Account) Page {
 			Axis: layout.Vertical,
 		},
 		common:      common,
-		wallet:      common.wallet,
-		walletName:  common.wallet.WalletWithID(account.WalletID).Name,
+		walletName:  common.multiWallet.WalletWithID(account.WalletID).Name,
 		account:     account,
 		theme:       common.theme,
 		editAccount: new(widget.Clickable),
@@ -267,7 +264,7 @@ func (pg *acctDetailsPage) accountInfoLayout(gtx layout.Context) layout.Dimensio
 }
 
 func (pg *acctDetailsPage) hdPath() string {
-	return pg.wallet.HDPrefix() + strconv.Itoa(int(pg.account.Number)) + "'"
+	return pg.common.HDPrefix() + strconv.Itoa(int(pg.account.Number)) + "'"
 }
 
 func (pg *acctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightText string) layout.Dimensions {

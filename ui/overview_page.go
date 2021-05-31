@@ -36,11 +36,11 @@ type overviewPage struct {
 	theme *decredmaterial.Theme
 	tab   *decredmaterial.Tabs
 
-	multiWallet   *dcrlibwallet.MultiWallet
-	loadedWallets int32
-	allWallets    []*dcrlibwallet.Wallet
-	bestBlock     *dcrlibwallet.BlockInfo
-	transactions  []dcrlibwallet.Transaction
+	multiWallet       *dcrlibwallet.MultiWallet
+	loadedWallets     int32
+	allWallets        []*dcrlibwallet.Wallet
+	bestBlock         *dcrlibwallet.BlockInfo
+	transactions      []dcrlibwallet.Transaction
 	toTransactions    decredmaterial.TextAndIconButton
 	sync              decredmaterial.Button
 	toggleSyncDetails decredmaterial.Button
@@ -77,7 +77,7 @@ func OverviewPage(c pageCommon) Page {
 		tab:    c.navTab,
 
 		multiWallet:      c.multiWallet,
-		loadedWallets:    c.wallet.LoadedWalletsCount(),
+		loadedWallets:    c.multiWallet.LoadedWalletsCount(),
 		allWallets:       c.multiWallet.AllWallets(),
 		bestBlock:        c.multiWallet.GetBestBlock(),
 		listContainer:    &layout.List{Axis: layout.Vertical},
@@ -587,7 +587,7 @@ func (pg *overviewPage) handle() {
 	eq := pg.queue
 	c := pg.common
 
-	isDarkModeOn := c.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
+	isDarkModeOn := c.multiWallet.ReadBoolConfigValueForKey("isDarkModeOn", false)
 	if isDarkModeOn != pg.theme.DarkMode {
 		pg.theme.SwitchDarkMode(isDarkModeOn)
 		// pg.loadPage(c.icons)  TODO
@@ -597,17 +597,17 @@ func (pg *overviewPage) handle() {
 		pg.sync.Text = values.String(values.StrDisconnect)
 	}
 
-	if pg.autoSyncWallet && !pg.walletSynced {
-		walletsLocked := getLockedWallets(c.wallet.AllWallets())
+	if pg.autoSyncWallet && !pg.isConnnected {
+		walletsLocked := getLockedWallets(pg.allWallets)
 		if len(walletsLocked) == 0 {
-			c.wallet.StartSync()
+			c.multiWallet.SpvSync()
 			pg.sync.Text = values.String(values.StrCancel)
 			pg.autoSyncWallet = false
 		}
 	}
 
 	if !pg.isCheckingLockWL {
-		if lockedWallets := getLockedWallets(c.wallet.AllWallets()); len(lockedWallets) > 0 {
+		if lockedWallets := getLockedWallets(pg.allWallets); len(lockedWallets) > 0 {
 			showWalletUnlockModal(c, lockedWallets)
 		}
 		pg.isCheckingLockWL = true
@@ -618,7 +618,7 @@ func (pg *overviewPage) handle() {
 			pg.multiWallet.CancelSync()
 			pg.sync.Text = values.String(values.StrReconnect)
 		} else {
-			c.wallet.StartSync()
+			c.multiWallet.SpvSync()
 			pg.sync.Text = values.String(values.StrCancel)
 		}
 	}
@@ -697,7 +697,7 @@ func showWalletUnlockModal(c pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
 			template: UnlockWalletRestoreTemplate,
 			title:    values.String(values.StrResumeAccountDiscoveryTitle),
 			confirm: func(pass string) {
-				err := c.wallet.UnlockWallet(lockedWallets[0].ID, []byte(pass))
+				err := c.multiWallet.UnlockWallet(lockedWallets[0].ID, []byte(pass))
 				if err != nil {
 					errText := err.Error()
 					if err.Error() == "invalid_passphrase" {

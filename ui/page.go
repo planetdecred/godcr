@@ -9,7 +9,6 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 
-	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -55,16 +54,6 @@ type Page interface {
 	onClose()
 }
 
-type walletAccount struct {
-	evt          *gesture.Click
-	walletIndex  int
-	accountIndex int
-	accountName  string
-	totalBalance string
-	spendable    string
-	number       int32
-}
-
 type DCRUSDTBittrex struct {
 	LastTradeRate string
 }
@@ -74,6 +63,7 @@ type pageCommon struct {
 	multiWallet      *dcrlibwallet.MultiWallet
 	syncStatusUpdate *chan wallet.SyncStatusUpdate
 	wallet           *wallet.Wallet
+	network          string
 	selectedWallet   *int
 	selectedAccount  *int
 	theme            *decredmaterial.Theme
@@ -199,6 +189,7 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 		multiWallet:      multiWallet,
 		syncStatusUpdate: &win.syncStatusUpdate,
 		wallet:           win.wallet,
+		network:          win.wallet.Net,
 		selectedWallet:   &win.selected,
 		selectedAccount:  &win.selectedAccount,
 		theme:            win.theme,
@@ -225,6 +216,41 @@ func (win *Window) loadPageCommon(decredIcons map[string]image.Image, multiWalle
 	common.modalTemplate = win.LoadModalTemplates()
 
 	return common
+}
+
+func (c *pageCommon) HDPrefix() string {
+	switch c.network {
+	case "testnet3": // should use a constant
+		return dcrlibwallet.TestnetHDPath
+	case "mainnet":
+		return dcrlibwallet.MainnetHDPath
+	default:
+		return ""
+	}
+}
+
+func (c *pageCommon) GetBlockExplorerURL(txnHash string) string {
+	switch c.network {
+	case "testnet3": // should use a constant
+		return "https://testnet.dcrdata.org/tx/" + txnHash
+	case "mainnet":
+		return "https://explorer.dcrdata.org/tx/" + txnHash
+	default:
+		return ""
+	}
+}
+
+func GetUSDExchangeValues(target interface{}) error {
+	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	json.NewDecoder(resp.Body).Decode(target)
+	return nil
 }
 
 func (c *pageCommon) totalWalletBalance(walletID int) (dcrutil.Amount, error) {

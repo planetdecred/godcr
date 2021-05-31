@@ -4,13 +4,11 @@
 package ui
 
 import (
-	"strconv"
 	"time"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"gioui.org/widget"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -50,45 +48,6 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitch
 				label.Color = page.theme.Color.DeepBlue
 			}
 			return label.Layout(gtx)
-		}),
-	)
-}
-
-func (page *pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-			page.usdExchangeSet = false
-			if currencyExchangeValue == USDExchangeValue {
-				page.usdExchangeSet = true
-			}
-			if page.usdExchangeSet && page.dcrUsdtBittrex.LastTradeRate != "" {
-				page.usdExchangeRate, _ = strconv.ParseFloat(page.dcrUsdtBittrex.LastTradeRate, 64)
-				totalBalance := "4"                                          // todo
-				TotalBalanceFloat, _ := strconv.ParseFloat(totalBalance, 64) // todo
-				page.amountDCRtoUSD = TotalBalanceFloat * page.usdExchangeRate
-
-				inset := layout.Inset{
-					Top:  values.MarginPadding3,
-					Left: values.MarginPadding8,
-				}
-				border := widget.Border{Color: page.theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
-				return inset.Layout(gtx, func(gtx C) D {
-					padding := layout.Inset{
-						Top:    values.MarginPadding3,
-						Bottom: values.MarginPadding3,
-						Left:   values.MarginPadding6,
-						Right:  values.MarginPadding6,
-					}
-					return border.Layout(gtx, func(gtx C) D {
-						return padding.Layout(gtx, func(gtx C) D {
-							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
-							return page.theme.Body2(amountDCRtoUSDString).Layout(gtx)
-						})
-					})
-				})
-			}
-			return D{}
 		}),
 	)
 }

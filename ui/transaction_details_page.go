@@ -61,7 +61,7 @@ func TransactionDetailsPage(common pageCommon, transaction *dcrlibwallet.Transac
 		hashBtn:   common.theme.Button(new(widget.Clickable), ""),
 		toDcrdata: new(widget.Clickable),
 
-		wallet: common.wallet.WalletWithID(transaction.WalletID),
+		wallet: common.multiWallet.WalletWithID(transaction.WalletID),
 	}
 
 	pg.copyTextBtn = make([]decredmaterial.Button, 0)
@@ -237,7 +237,7 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common
 //TODO: do this at startup
 func (pg *transactionDetailsPage) txConfirmations() int32 {
 	if pg.transaction.BlockHeight != -1 {
-		return (pg.common.wallet.WalletWithID(pg.transaction.WalletID).GetBestBlock() - pg.transaction.BlockHeight) + 1
+		return (pg.common.multiWallet.WalletWithID(pg.transaction.WalletID).GetBestBlock() - pg.transaction.BlockHeight) + 1
 	}
 
 	return 0
@@ -486,7 +486,7 @@ func (pg *transactionDetailsPage) handle() {
 	common := pg.common
 	gtx := pg.gtx
 	if pg.toDcrdata.Clicked() {
-		goToURL(common.wallet.GetBlockExplorerURL(pg.transaction.Hash))
+		goToURL(common.GetBlockExplorerURL(pg.transaction.Hash))
 	}
 
 	for _, b := range pg.copyTextBtn {

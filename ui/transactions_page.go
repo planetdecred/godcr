@@ -254,7 +254,7 @@ func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, common *
 func txConfirmations(common *pageCommon, transaction *dcrlibwallet.Transaction) int32 {
 	if transaction.BlockHeight != -1 {
 		// TODO
-		return (common.wallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
+		return (common.multiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
 	}
 
 	return 0
@@ -266,7 +266,7 @@ func initTxnWidgets(common *pageCommon, transaction *dcrlibwallet.Transaction) t
 	t := time.Unix(transaction.Timestamp, 0).UTC()
 	txn.time = common.theme.Body1(t.Format(time.UnixDate))
 	txn.status = common.theme.Body1("")
-	txn.wallet = common.theme.Body2(common.wallet.WalletWithID(transaction.WalletID).Name)
+	txn.wallet = common.theme.Body2(common.multiWallet.WalletWithID(transaction.WalletID).Name)
 
 	if txConfirmations(common, transaction) > 1 {
 		txn.status.Text = formatDateOrTime(transaction.Timestamp)

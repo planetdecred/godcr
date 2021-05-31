@@ -16,7 +16,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -29,7 +28,6 @@ type sendPage struct {
 	common        pageCommon
 	theme         *decredmaterial.Theme
 
-	wallet   *wallet.Wallet
 	txAuthor *dcrlibwallet.TxAuthor
 
 	exchangeRate float64
@@ -93,7 +91,6 @@ func SendPage(common pageCommon) Page {
 
 		common: common,
 		theme:  common.theme,
-		wallet: common.wallet,
 
 		exchangeRate: -1,
 
@@ -167,7 +164,7 @@ func SendPage(common pageCommon) Page {
 	pg.clearAllBtn.Color = common.theme.Color.Text
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
 
-	currencyExchangeValue := pg.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	currencyExchangeValue := common.multiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	pg.usdExchangeSet = false
 	if currencyExchangeValue == USDExchangeValue {
 		pg.usdExchangeSet = true
@@ -945,7 +942,7 @@ func (pg *sendPage) resetErrorText() {
 func (pg *sendPage) fetchExchangeValue() {
 	go func() {
 		var dcrUsdtBittrex DCRUSDTBittrex
-		err := pg.wallet.GetUSDExchangeValues(&dcrUsdtBittrex)
+		err := GetUSDExchangeValues(&dcrUsdtBittrex)
 		if err != nil {
 			pg.updateExchangeError(err)
 			return

@@ -118,7 +118,7 @@ func ProposalsPage(common pageCommon) Page {
 		)
 	}
 
-	proposals, err := common.wallet.GetAllProposals()
+	proposals, err := common.multiWallet.Politeia.GetProposalsRaw(dcrlibwallet.ProposalCategoryAll, 0, 0, true)
 	if err != nil {
 		log.Error("error fetching proposal:", err)
 	} else {

@@ -7,7 +7,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageWalletSettings = "WalletSettings"
@@ -15,7 +14,7 @@ const PageWalletSettings = "WalletSettings"
 type walletSettingsPage struct {
 	theme          *decredmaterial.Theme
 	common         pageCommon
-	wal            *wallet.Wallet
+	wal            *dcrlibwallet.Wallet
 	walletID       int
 	walletName     string
 	IsWatchingOnly bool
@@ -30,11 +29,12 @@ type walletSettingsPage struct {
 }
 
 func WalletSettingsPage(common pageCommon, walletID int) Page {
-	wal := common.wallet.WalletWithID(walletID)
+	wal := common.multiWallet.WalletWithID(walletID)
+
 	pg := &walletSettingsPage{
 		theme:          common.theme,
 		common:         common,
-		wal:            common.wallet,
+		wal:            wal,
 		walletID:       walletID,
 		walletName:     wal.Name,
 		IsWatchingOnly: wal.IsWatchingOnlyWallet(),
@@ -61,7 +61,7 @@ func (pg *walletSettingsPage) pageID() string {
 func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 
-	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
+	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
 	pg.notificationW.Value = false
 	if beep {
 		pg.notificationW.Value = true
@@ -213,7 +213,7 @@ func (pg *walletSettingsPage) handle() {
 				template: RescanWalletTemplate,
 				title:    values.String(values.StrRescanBlockchain),
 				confirm: func() {
-					err := pg.wal.RescanBlocks(pg.walletID)
+					err := pg.common.multiWallet.RescanBlocks(pg.walletID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
 							common.notify(values.String(values.StrNotConnected), false)
@@ -237,7 +237,7 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	if pg.notificationW.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notificationW.Value)
+		pg.wal.SaveUserConfigValue(dcrlibwallet.BeepNewBlocksConfigKey, pg.notificationW.Value)
 	}
 
 	for pg.deleteWallet.Clicked() {

@@ -5,6 +5,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
 
 	"gioui.org/layout"
@@ -21,6 +22,7 @@ type ticketPageList struct {
 	tickets      **wallet.Tickets
 	ticketsList  layout.List
 	filterSorter int
+	wallets      []*dcrlibwallet.Wallet
 
 	toggleViewType     *widget.Clickable
 	orderDropDown      *decredmaterial.DropDown
@@ -34,8 +36,9 @@ type ticketPageList struct {
 
 func TicketPageList(c pageCommon) Page {
 	pg := &ticketPageList{
-		th:     c.theme,
-		common: c,
+		th:      c.theme,
+		common:  c,
+		wallets: c.multiWallet.AllWallets(),
 		// tickets:        &win.walletTickets, TODO
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
@@ -73,7 +76,7 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 			backButton: pg.backButton,
 			infoButton: pg.infoButton,
 			body: func(gtx C) D {
-				walletID := c.wallet.AllWallets()[pg.walletDropDown.SelectedIndex()].ID
+				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 				tickets := (*pg.tickets).Confirmed[walletID]
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
@@ -298,7 +301,7 @@ func (pg *ticketPageList) initWalletDropDown(common pageCommon) {
 	}
 
 	var walletDropDownItems []decredmaterial.DropDownItem
-	for _, wal := range common.wallet.AllWallets() {
+	for _, wal := range pg.wallets {
 		item := decredmaterial.DropDownItem{
 			Text: wal.Name,
 			Icon: common.icons.walletIcon,
@@ -320,7 +323,7 @@ func (pg *ticketPageList) handle() {
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
 		newestFirst := pg.filterSorter == 0
-		for _, wal := range c.wallet.AllWallets() {
+		for _, wal := range pg.wallets {
 			tickets := (*pg.tickets).Confirmed[wal.ID]
 			sort.SliceStable(tickets, func(i, j int) bool {
 				backTime := time.Unix(tickets[j].Info.Ticket.Timestamp, 0)
