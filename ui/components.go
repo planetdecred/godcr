@@ -968,8 +968,8 @@ func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimen
 	})
 }
 
-// ticketRowActivity layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
-func ticketRowActivity(gtx layout.Context, c *pageCommon, t wallet.Ticket, index int) layout.Dimensions {
+// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
+func ticketActivityRow(gtx layout.Context, c *pageCommon, t wallet.Ticket, index int) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -1090,7 +1090,36 @@ func (page pageCommon) handleToast() {
 	}
 }
 
-func (page pageCommon) handler() {
+// createOrUpdateWalletDropDown check for len of wallets to create dropDown,
+// also update the list when create, update, delete a wallet.
+func (page *pageCommon) createOrUpdateWalletDropDown(dwn **decredmaterial.DropDown) {
+	init := func() {
+		var walletDropDownItems []decredmaterial.DropDownItem
+		for i := range page.info.Wallets {
+			item := decredmaterial.DropDownItem{
+				Text: page.info.Wallets[i].Name,
+				Icon: page.icons.walletIcon,
+			}
+			walletDropDownItems = append(walletDropDownItems, item)
+		}
+		*dwn = page.theme.DropDown(walletDropDownItems, 2)
+	}
+
+	if *dwn == nil && len(page.info.Wallets) > 0 {
+		init()
+		return
+	}
+	if (*dwn).Len() != len(page.info.Wallets) {
+		init()
+	}
+}
+
+func createOrderDropDown(c *pageCommon) *decredmaterial.DropDown {
+	return c.theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
+		{Text: values.String(values.StrOldest)}}, 1)
+}
+
+func (page *pageCommon) handler() {
 	page.handleToast()
 
 	for page.minimizeNavDrawerButton.Button.Clicked() {

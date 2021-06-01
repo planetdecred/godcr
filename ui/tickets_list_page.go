@@ -40,7 +40,7 @@ func (win *Window) TicketPageList(c pageCommon) Page {
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,
 	}
-	pg.orderDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
+	pg.orderDropDown = createOrderDropDown(&c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -292,25 +292,9 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c pageCommon,
 	})
 }
 
-func initWalletDropDown(common pageCommon, dwn **decredmaterial.DropDown) {
-	if len(common.info.Wallets) == 0 || *dwn != nil {
-		return
-	}
-
-	var walletDropDownItems []decredmaterial.DropDownItem
-	for i := range common.info.Wallets {
-		item := decredmaterial.DropDownItem{
-			Text: common.info.Wallets[i].Name,
-			Icon: common.icons.walletIcon,
-		}
-		walletDropDownItems = append(walletDropDownItems, item)
-	}
-	*dwn = common.theme.DropDown(walletDropDownItems, 2)
-}
-
 func (pg *ticketPageList) handle() {
 	c := pg.common
-	initWalletDropDown(c, &pg.walletDropDown)
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView

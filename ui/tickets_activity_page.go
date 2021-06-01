@@ -34,7 +34,7 @@ func (win *Window) TicketActivityPage(c pageCommon) Page {
 		tickets:     &win.walletTickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
 	}
-	pg.orderDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
+	pg.orderDropDown = createOrderDropDown(&c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -79,7 +79,7 @@ func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 									return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-										return ticketRowActivity(gtx, &c, tickets[index], index)
+										return ticketActivityRow(gtx, &c, tickets[index], index)
 									})
 								})
 							})
@@ -138,7 +138,7 @@ func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket
 
 func (pg *ticketsActivityPage) handle() {
 	c := pg.common
-	initWalletDropDown(c, &pg.walletDropDown)
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 
 	sortSelection := pg.orderDropDown.SelectedIndex()
 	if pg.filterSorter != sortSelection {

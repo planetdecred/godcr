@@ -73,6 +73,10 @@ func (c *DropDown) SelectedIndex() int {
 	return c.selectedIndex - 1
 }
 
+func (c *DropDown) Len() int {
+	return len(c.items) - 1
+}
+
 func (c *DropDown) handleEvents() {
 	for c.items[0].button.Button.Clicked() {
 		c.closeAllDropdown(c.group)
