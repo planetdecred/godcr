@@ -33,7 +33,7 @@ func main() {
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
 
-	absoluteWdPath, err := ui.GetAbsoultePath()
+	absoluteWdPath, err := ui.GetAbsolutePath()
 	if err != nil {
 		panic(err)
 	}

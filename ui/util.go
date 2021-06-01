@@ -196,7 +196,7 @@ func handleSubmitEvent(editors ...*widget.Editor) bool {
 	return submit
 }
 
-func GetAbsoultePath() (string, error) {
+func GetAbsolutePath() (string, error) {
 	ex, err := os.Executable()
 	if err != nil {
 		return "", fmt.Errorf("error getting executable path: %s", err.Error())

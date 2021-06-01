@@ -80,7 +80,7 @@ func register(fnt text.Font, fontByte []byte) {
 }
 
 func getFontByte(path string) ([]byte, error) {
-	absoluteWdPath, err := ui.GetAbsoultePath()
+	absoluteWdPath, err := ui.GetAbsolutePath()
 	if err != nil {
 		log.Errorf("failed to get absoluteWdPath: %s", err.Error())
 		return nil, err

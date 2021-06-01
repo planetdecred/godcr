@@ -256,7 +256,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 
 func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.addrs = common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress
-	absoluteWdPath, err := GetAbsoultePath()
+	absoluteWdPath, err := GetAbsolutePath()
 	if err != nil {
 		log.Error(err.Error())
 	}
