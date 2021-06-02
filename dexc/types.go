@@ -27,3 +27,8 @@ type TradeForm struct {
 	Pass  encode.PassBytes
 	Order *core.TradeForm
 }
+
+// MaxOrderEstimate is sent when the dex core is done getting max order estimate.
+type MaxOrderEstimate struct {
+	MaxOrderEstimate *core.MaxOrderEstimate
+}

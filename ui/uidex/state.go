@@ -40,5 +40,8 @@ func (d *DexUI) updateStates(update interface{}) {
 		}
 		d.refresh()
 		return
+
+	case dexc.MaxOrderEstimate:
+		d.maxOrderEstimate = &e
 	}
 }

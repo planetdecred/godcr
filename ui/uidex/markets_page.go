@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"image"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"decred.org/dcrdex/client/core"
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -78,6 +80,7 @@ type marketsPage struct {
 	showAddWallet       bool
 	showUnlockWallet    bool
 	showConfirmRegister bool
+	showVerifyOrder     bool
 	errCreateWalletChan chan error
 	errLoginChan        chan error
 	errInitappChan      chan error
@@ -90,19 +93,23 @@ type marketsPage struct {
 	walletActionWidgets map[string]*walletActionWidget
 	walletActionInfo    *walletActionInfo
 
-	rateField decredmaterial.Editor
-	lotField  decredmaterial.Editor
-	qtyField  decredmaterial.Editor
-	submit    decredmaterial.Button
+	rateField   decredmaterial.Editor
+	lotField    decredmaterial.Editor
+	qtyField    decredmaterial.Editor
+	reviewOrder decredmaterial.Button
+	submit      decredmaterial.Button
+
+	maxOrderEstimate **dexc.MaxOrderEstimate
 }
 
 func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 	pg := &marketsPage{
-		theme:         common.theme,
-		pageModal:     common.theme.Modal(),
-		exchange:      layout.List{Axis: layout.Vertical},
-		user:          &d.userInfo,
-		selectedMaket: &d.market,
+		theme:            common.theme,
+		pageModal:        common.theme.Modal(),
+		exchange:         layout.List{Axis: layout.Vertical},
+		user:             &d.userInfo,
+		selectedMaket:    &d.market,
+		maxOrderEstimate: &d.maxOrderEstimate,
 
 		drawerNavItems:      make([]*drawerNav, 0),
 		errCreateWalletChan: make(chan error),
@@ -168,6 +175,8 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 	pg.lotField.Editor.SingleLine = true
 	pg.qtyField = common.theme.Editor(new(widget.Editor), "DCR")
 	pg.qtyField.Editor.SingleLine = true
+	pg.reviewOrder = d.theme.Button(new(widget.Clickable), "")
+	pg.reviewOrder.Background = d.theme.Color.Success
 	pg.submit = d.theme.Button(new(widget.Clickable), "")
 	pg.submit.Background = d.theme.Color.Success
 
@@ -240,6 +249,10 @@ func (pg *marketsPage) Layout(gtx layout.Context, common pageCommon) layout.Dime
 	// Show unlock wallet from market page
 	if pg.showUnlockWallet {
 		return pg.unlockWalletModal(gtx, common)
+	}
+
+	if pg.showVerifyOrder {
+		return pg.verifyOrderModal(gtx, common)
 	}
 
 	return dims
@@ -392,9 +405,9 @@ func (pg *marketsPage) orderFormLayout(gtx layout.Context, c *pageCommon) layout
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				pg.submit.Text = "Place order to buy  DCR"
+				pg.reviewOrder.Text = "Place order to buy  DCR"
 				return layout.E.Layout(gtx, func(gtx C) D {
-					return pg.submit.Layout(gtx)
+					return pg.reviewOrder.Layout(gtx)
 				})
 			}),
 		)
@@ -728,6 +741,82 @@ func (pg *marketsPage) confirmRegisterModal(gtx layout.Context, c pageCommon) la
 	}, 900)
 }
 
+func (pg *marketsPage) verifyOrderModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+	return pg.pageModal.Layout(gtx, []func(gtx C) D{
+		func(gtx C) D {
+			return pg.theme.Label(values.TextSize20, "Verify Buy Order").Layout(gtx)
+		},
+		func(gtx C) D {
+			inset := layout.Inset{Bottom: values.MarginPadding8}
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Label(values.TextSize12, "You are submitting an order to")
+					txt.Alignment = text.Middle
+					return inset.Layout(gtx, txt.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.H6("buy 1.000 DCR")
+					txt.Alignment = text.Middle
+					return inset.Layout(gtx, txt.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Label(values.TextSize12, "At rate of")
+					txt.Alignment = text.Middle
+					return inset.Layout(gtx, txt.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.H6("0.0002000 BTC/DCR")
+					txt.Alignment = text.Middle
+					return inset.Layout(gtx, txt.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.Label(values.TextSize12, "for a total of")
+					txt.Alignment = text.Middle
+					return inset.Layout(gtx, txt.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := pg.theme.H6("0.0002000 BTC")
+					txt.Alignment = text.Middle
+					return txt.Layout(gtx)
+				}),
+			)
+		},
+		func(gtx C) D {
+			return pg.theme.Separator().Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return pg.theme.Label(values.TextSize14, "Authorize this order with your app password.").Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Flexed(.6, func(gtx C) D {
+								return pg.appPassword.Layout(gtx)
+							}),
+							layout.Flexed(.4, func(gtx C) D {
+								return layout.Inset{Left: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+									pg.submit.Text = "Buy DCR"
+									return pg.submit.Layout(gtx)
+								})
+							}),
+						)
+					})
+				}),
+			)
+		},
+		func(gtx C) D {
+			return pg.theme.Separator().Layout(gtx)
+		},
+		func(gtx C) D {
+			return pg.theme.Label(values.TextSize12, "IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours.").Layout(gtx)
+		},
+	}, 900)
+}
+
 func (pg *marketsPage) initDrawerNavItems(c *pageCommon) {
 	if len(pg.drawerNavItems) == len((*pg.user).Info.Exchanges) {
 		return
@@ -788,6 +877,19 @@ func (pg *marketsPage) navItemHandler(gtx layout.Context, navItem *navItem) {
 			(*pg.selectedMaket) = navItem.asset
 		}
 	}
+}
+
+func (pg *marketsPage) calculateMaxBuy(c *pageCommon) {
+	var rate uint64
+	if s, err := strconv.ParseFloat(pg.rateField.Editor.Text(), 64); err == nil {
+		rate = uint64(s * 1e8)
+	}
+
+	c.dexc.MaxBuy((*pg.selectedMaket).host, (*pg.selectedMaket).marketBaseID, (*pg.selectedMaket).marketQuoteID, rate)
+}
+
+func (pg *marketsPage) calculateMaxSell(c *pageCommon) {
+	// c.dexc.MaxBuy(form *dexc.NewWalletForm, errChan chan error)
 }
 
 func (pg *marketsPage) handle(common pageCommon) {
@@ -875,6 +977,10 @@ func (pg *marketsPage) handle(common pageCommon) {
 		*common.switchView = values.WalletView
 	}
 
+	if pg.reviewOrder.Button.Clicked() {
+		pg.showVerifyOrder = true
+	}
+
 	if pg.submit.Button.Clicked() {
 		form := dexc.TradeForm{
 			Pass: []byte(pg.appPassword.Editor.Text()),
@@ -890,6 +996,15 @@ func (pg *marketsPage) handle(common pageCommon) {
 			},
 		}
 		common.dexc.Trade(&form, pg.errSubmitTradeChan)
+	}
+
+	for _, evt := range pg.rateField.Editor.Events() {
+		if pg.rateField.Editor.Focused() {
+			switch evt.(type) {
+			case widget.ChangeEvent:
+				pg.calculateMaxBuy(&common)
+			}
+		}
 	}
 
 	select {

@@ -177,8 +177,28 @@ func (d *Dexc) AddNewWallet(form *NewWalletForm, errChan chan error) {
 	}()
 }
 
+// MaxBuy get MaxOrderEstimate information by given parameters
+// It is non-blocking and sends its result or any error to wal.Send.
+func (d *Dexc) MaxBuy(host string, base, quote uint32, rate uint64) {
+	go func() {
+		var resp Response
+		maxOrderEstimate, err := d.core.MaxBuy(host, base, quote, rate)
+		if err != nil {
+			log.Error(err)
+
+			return
+		}
+
+		resp.Resp = &MaxOrderEstimate{
+			MaxOrderEstimate: maxOrderEstimate,
+		}
+		d.Send <- resp
+	}()
+}
+
 func (d *Dexc) Trade(form *TradeForm, errChan chan error) {
 	go func() {
+		var resp Response
 		_, err := d.core.Trade(form.Pass, form.Order)
 		if err != nil {
 			go func() {
@@ -188,8 +208,6 @@ func (d *Dexc) Trade(form *TradeForm, errChan chan error) {
 			return
 		}
 
-		go func() {
-			errChan <- nil
-		}()
+		d.Send <- resp
 	}()
 }

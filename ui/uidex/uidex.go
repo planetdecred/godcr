@@ -21,7 +21,8 @@ type DexUI struct {
 	userInfo *dexc.User
 
 	// market current selected
-	market *selectedMaket
+	market           *selectedMaket
+	maxOrderEstimate *dexc.MaxOrderEstimate
 
 	current, previous string
 
