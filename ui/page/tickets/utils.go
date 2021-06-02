@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"strings"
+	"time"
 
 	"gioui.org/gesture"
 	"gioui.org/layout"
@@ -209,20 +210,68 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 								wTimeLabel := l.Theme.Card()
 								wTimeLabel.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 0, BottomLeft: 8}
 								return wTimeLabel.Layout(gtx, func(gtx C) D {
+
+									blockHeight := t.Info.BlockHeight
+									totalTime := getTimeToDone(l, blockHeight)
+
+									if totalTime == 0 {
+										return layout.Inset{}.Layout(gtx, func(gtx C) D {
+											return layout.Dimensions{}
+										})
+									}
+
+									hours := totalTime / 60
+									minute := totalTime % 60
+
 									return layout.Inset{
 										Top:    values.MarginPadding4,
 										Bottom: values.MarginPadding4,
-										Right:  values.MarginPadding8,
-										Left:   values.MarginPadding8,
+										Right:  values.MarginPadding4,
+										Left:   values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										txt := l.Theme.Label(values.TextSize14, "10h 47m")
-										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tooltip.durationTooltip, func(gtx C) D {
+										layoutTimer := layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{Right: values.MarginPadding8, Top: values.MarginPadding5}.Layout(gtx,
+													func(gtx C) D {
+														return layout.Center.Layout(gtx, func(gtx C) D {
+															image := l.Icons.TimerIcon
+															image.Scale = 1.0
+															return image.Layout(gtx)
+														})
+													})
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{
+													Left:  values.MarginPadding0,
+													Right: values.MarginPadding1,
+												}.Layout(gtx, func(gtx C) D {
+													return layout.Center.Layout(gtx, func(gtx C) D {
+														return l.Theme.Body1(fmt.Sprintf("%d:%d", hours, minute)).Layout(gtx)
+													})
+												})
+											}),
+										)
+
+										ticketCardTooltip(gtx, layoutTimer, tooltip.durationTooltip, func(gtx C) D {
 											setText(t.Info.Status)
 											return walletNameDateTimeTooltip(gtx, l, durationTitle,
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
 										})
-										return txtLayout
+										return layoutTimer
+										// =======
+										//return wTimeLabel.Layout(gtx, func(gtx C) D {
+										//
+										//	hours := totalTime / 60
+										//	minute := totalTime % 60
+										//	return layout.Inset{
+										//		Top:    values.MarginPadding4,
+										//		Bottom: values.MarginPadding4,
+										//		Right:  values.MarginPadding4,
+										//		Left:   values.MarginPadding4,
+										//	}.Layout(gtx, func(gtx C) D {
+
+										//})
+										// >>>>>>> Ticket page design details
 									})
 								})
 							})
@@ -245,7 +294,14 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 							return layout.Center.Layout(gtx, func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 									gtx.Constraints.Max.X = itemWidth
-									p := l.Theme.ProgressBar(20)
+									blockHeight := t.Info.BlockHeight
+									percent := getPercentConfirmation(l, blockHeight)
+
+									if percent >= 100 {
+										return layout.Dimensions{}
+									}
+
+									p := l.Theme.ProgressBar(percent)
 									p.Height, p.Radius = values.MarginPadding4, values.MarginPadding1
 									p.Color = st.color
 									return p.Layout(gtx)
@@ -274,9 +330,11 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+								return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
+
 										txt := l.Theme.Label(values.MarginPadding14, t.Info.Status)
+										txt.TextSize = unit.Sp(12)
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {
@@ -297,6 +355,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 									}),
 									layout.Rigid(func(gtx C) D {
 										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
+										// <<<<<<< HEAD
 										txt.Color = l.Theme.Color.Gray
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.walletNameTooltip, func(gtx C) D {
@@ -304,6 +363,10 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout))
 										})
 										return txtLayout
+										// =======
+										// 										txt.TextSize = unit.Sp(14)
+										// 										return txt.Layout(gtx)
+										// >>>>>>> Ticket page design details
 									}),
 								)
 							}),
@@ -340,6 +403,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
+											// <<<<<<< HEAD
 											txt.Text = t.DaysBehind
 											txtLayout := txt.Layout(gtx)
 											ticketCardTooltip(gtx, txtLayout, tooltip.daysBehindTooltip, func(gtx C) D {
@@ -348,6 +412,15 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.DaysBehind).Layout))
 											})
 											return txtLayout
+											// =======
+											// 											timeBehind, unit := getTimeBehind(t.DateTime)
+											// 											if timeBehind == 0 && unit == "h" {
+											// 												return layout.Dimensions{}
+											// 											}
+
+											// 											txt.Text = fmt.Sprintf("%d%s", timeBehind, unit)
+											// 											return txt.Layout(gtx)
+											// >>>>>>> Ticket page design details
 										}),
 									)
 								})
@@ -460,4 +533,39 @@ func createClickGestures(count int) []*gesture.Click {
 		gestures[i] = &gesture.Click{}
 	}
 	return gestures
+}
+
+func getPercentConfirmation(l *load.Load, blockHeight int32) int {
+
+	totalConfirmBlock, _ := l.WL.Wallet.GetTicketConfig()
+	currBlockHeight := l.WL.Info.BestBlockHeight
+	confirmations := currBlockHeight - blockHeight
+	percent := confirmations / totalConfirmBlock * 100
+	return int(percent)
+}
+
+func getTimeBehind(datetime string) (int, string) {
+	layout := "Jan 2, 2006 03:04:05 PM"
+	t, err := time.Parse(layout, datetime)
+	if err != nil {
+		return 0, "h"
+	}
+	now := time.Now()
+	hours := int(now.Sub(t).Hours())
+	if hours >= 24 {
+		return hours / 24, "d"
+	}
+
+	return hours, "h"
+}
+
+func getTimeToDone(l *load.Load, blockHeight int32) int32 {
+	totalConfirmBlock, timeToCreateBlock := l.WL.Wallet.GetTicketConfig()
+	currBlockHeight := l.WL.Info.BestBlockHeight
+	confirmations := currBlockHeight - blockHeight
+	minutes := (totalConfirmBlock - confirmations) * timeToCreateBlock
+	if minutes > 0 {
+		return minutes
+	}
+	return 0
 }

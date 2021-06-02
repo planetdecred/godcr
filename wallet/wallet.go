@@ -163,3 +163,20 @@ func (wal *Wallet) GetUSDExchangeValues(target interface{}) error {
 	json.NewDecoder(resp.Body).Decode(target)
 	return nil
 }
+
+func (wal *Wallet) GetTicketConfig() (int32, int32) {
+	const (
+		TotalConfirmBlockInMainNet = 256
+		TimeToCreateBlockInMainNet = 5
+		TotalConfirmBlockInTestNet = 16
+		TimeToCreateBlockInTestNet = 5
+	)
+	switch wal.Net {
+	case "testnet3":
+		return TotalConfirmBlockInTestNet, TimeToCreateBlockInTestNet
+	case "mainnet":
+		return TotalConfirmBlockInMainNet, TimeToCreateBlockInTestNet
+	default:
+		return 0, 0
+	}
+}

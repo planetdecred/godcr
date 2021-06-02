@@ -228,7 +228,13 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 						}),
 						layout.Stacked(func(gtx C) D {
 							gtx.Constraints.Max.X = progressBarWidth - 4
-							p := pg.Theme.ProgressBar(20)
+							blockHeight := tickets[index].Info.BlockHeight
+							percent := getPercentConfirmation(pg.Load, blockHeight)
+							if percent >= 100 {
+								return layout.Dimensions{}
+							}
+
+							p := pg.Load.Theme.ProgressBar(percent)
 							p.Height, p.Radius = values.MarginPadding4, values.MarginPadding2
 							p.Color = st.color
 							return p.Layout(gtx)
@@ -299,7 +305,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 
 func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []wallet.Ticket) layout.Dimensions {
 	// TODO: GridWrap's items not able to scroll vertically, will update when it fixed
-	return layout.Center.Layout(gtx, func(gtx C) D {
+	return layout.NW.Layout(gtx, func(gtx C) D {
 		return pg.ticketsList.Layout(gtx, 1, func(gtx C, index int) D {
 			return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min = gtx.Constraints.Max
