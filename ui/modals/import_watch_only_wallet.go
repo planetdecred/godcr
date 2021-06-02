@@ -22,7 +22,7 @@ func (m *importWatchOnlyWallet) getTitle() string {
 	return m.title
 }
 
-func (m *importWatchOnlyWallet) onCancel() {}
+func (m *importWatchOnlyWallet) onCancel()  {}
 func (m *importWatchOnlyWallet) onConfirm() {}
 
 func (m *importWatchOnlyWallet) Layout(gtx C) []layout.Widget {

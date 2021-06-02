@@ -7,7 +7,7 @@ import (
 )
 
 type ConfirmRemove struct {
-	title string
+	title     string
 	infoLabel decredmaterial.Label
 }
 
@@ -19,7 +19,7 @@ func (m *Modals) registerConfirmRemoveWalletModal() {
 
 	m.modals[ConfirmRemoveModal] = &ConfirmRemove{
 		infoLabel: lbl,
-		title: "Remove Wallet",
+		title:     "Remove Wallet",
 	}
 }
 
@@ -27,11 +27,11 @@ func (m *ConfirmRemove) getTitle() string {
 	return m.title
 }
 
-func (m *ConfirmRemove) onCancel() {}
+func (m *ConfirmRemove) onCancel()  {}
 func (m *ConfirmRemove) onConfirm() {}
 
 func (m *ConfirmRemove) Layout(gtx layout.Context) []layout.Widget {
-	return []layout.Widget {
+	return []layout.Widget{
 		m.infoLabel.Layout,
 	}
 }
