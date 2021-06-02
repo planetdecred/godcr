@@ -2,7 +2,6 @@ package ui
 
 import (
 	"errors"
-	"fmt"
 	"image"
 
 	"gioui.org/gesture"
@@ -447,8 +446,8 @@ func (asm *accountSelectorModal) walletAccountLayout(gtx layout.Context, account
 }
 
 func (asm *accountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dimensions {
-	title := fmt.Sprintf("Some accounts are hidden.")
-	desc := fmt.Sprintf("Some accounts are disabled by StakeShuffle settings to protect your privacy.")
+	title := "Some accounts are hidden."
+	desc := "Some accounts are disabled by StakeShuffle settings to protect your privacy."
 	card := asm.theme.Card()
 	card.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
 	border := widget.Border{Color: asm.theme.Color.Background, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}

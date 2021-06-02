@@ -273,7 +273,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 	)
 }
 
-func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *receivePage) addressQRCodeLayout(gtx layout.Context) layout.Dimensions {
 	absoluteWdPath, err := GetAbsolutePath()
 	if err != nil {
 		log.Error(err.Error())
