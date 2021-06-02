@@ -289,7 +289,7 @@ func (m *ModalTemplate) sendInfo() []layout.Widget {
 func (m *ModalTemplate) receiveInfo() []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			text := m.th.Label(values.TextSize20, "Each time you receive a payment, a new address is generated to protect your privacy.")
+			text := m.th.Body1("Each time you receive a payment, a new address is generated to protect your privacy.")
 			text.Color = m.th.Color.Gray
 			return text.Layout(gtx)
 		},

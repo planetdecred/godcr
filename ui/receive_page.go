@@ -4,21 +4,21 @@ import (
 	"bytes"
 	"image"
 	"image/color"
+	"path/filepath"
 	"time"
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	qrcode "github.com/yeqown/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/image/draw"
 )
 
 const PageReceive = "Receive"
@@ -187,7 +187,9 @@ func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dime
 func (pg *receivePage) titleLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return common.theme.Body1("Your Address").Layout(gtx)
+			txt := common.theme.Body2("Your Address")
+			txt.Color = pg.theme.Color.Gray
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -240,7 +242,12 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 
 func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
 	pg.addrs = common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress
-	opt := qrcode.WithLogoImageFilePNG("ui/assets/decredicons/qrcodeSymbol.png")
+	absoluteWdPath, err := GetAbsolutePath()
+	if err != nil {
+		log.Error(err.Error())
+	}
+
+	opt := qrcode.WithLogoImageFilePNG(filepath.Join(absoluteWdPath, "ui/assets/decredicons/qrcodeSymbol.png"))
 	qrCode, err := qrcode.New(pg.addrs, opt)
 	if err != nil {
 		log.Error("Error generating address qrCode: " + err.Error())
@@ -259,16 +266,7 @@ func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon
 		return layout.Dimensions{}
 	}
 
-	imgs := image.NewRGBA(image.Rectangle{Max: image.Point{X: 180, Y: 180}})
-	draw.ApproxBiLinear.Scale(imgs, imgs.Bounds(), imgdec, imgdec.Bounds(), draw.Src, nil)
-
-	src := paint.NewImageOp(imgs)
-	img := widget.Image{
-		Src:   src,
-		Scale: 1,
-	}
-
-	return img.Layout(gtx)
+	return pg.theme.ImageIcon(gtx, imgdec, 360)
 }
 
 func (pg *receivePage) handle() {

@@ -15,6 +15,8 @@ import (
 	"golang.org/x/image/font/gofont/gomedium"
 	"golang.org/x/image/font/gofont/gomediumitalic"
 	"golang.org/x/image/font/gofont/goregular"
+
+	"github.com/planetdecred/godcr/ui"
 )
 
 var (
@@ -78,7 +80,7 @@ func register(fnt text.Font, fontByte []byte) {
 }
 
 func getFontByte(path string) ([]byte, error) {
-	absoluteWdPath, err := getAbsoultePath()
+	absoluteWdPath, err := ui.GetAbsolutePath()
 	if err != nil {
 		log.Errorf("failed to get absoluteWdPath: %s", err.Error())
 		return nil, err
