@@ -939,8 +939,7 @@ func (pg *walletPage) handle() {
 		}
 
 		for pg.collapsibles[index].backupAcctBtn.Button.Clicked() {
-			*common.selectedWallet = index
-			common.changePage(BackupPage(common, index))
+			common.changePage(BackupPage(common, pg.wallets[index].ID))
 		}
 	}
 

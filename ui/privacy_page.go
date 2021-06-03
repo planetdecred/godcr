@@ -28,8 +28,10 @@ type privacyPage struct {
 	errorReceiver                        chan error
 	walletID                             int
 
-	walletName string
-	accounts   []*dcrlibwallet.Account
+	walletName     string
+	accounts       []*dcrlibwallet.Account
+	mixedBalance   string
+	unmixedBalance string
 }
 
 func PrivacyPage(common pageCommon, walletID int) Page {
@@ -60,6 +62,7 @@ func PrivacyPage(common pageCommon, walletID int) Page {
 		log.Error("error getting accounts:", err)
 	}
 	pg.accounts = accounts.Acc
+	pg.updateBalance()
 
 	return pg
 }
@@ -226,20 +229,6 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-
-							var mixedBalance string
-							var unmixedBalance string
-
-							wal := pg.common.wallet.WalletWithID(pg.walletID)
-
-							for _, acct := range pg.accounts {
-								if acct.Number == wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, -1) {
-									mixedBalance = dcrutil.Amount(acct.TotalBalance).String()
-								} else if acct.Number == wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, -1) {
-									unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
-								}
-							}
-
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
@@ -249,10 +238,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return txt.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											if c.wallet.IsAccountMixerActive(pg.walletID) {
-												return c.layoutBalance(gtx, unmixedBalance, true)
-											}
-											return c.layoutBalance(gtx, unmixedBalance, true)
+											return c.layoutBalance(gtx, pg.unmixedBalance, true)
 										}),
 									)
 								}),
@@ -271,7 +257,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return c.layoutBalance(gtx, mixedBalance, true)
+											return c.layoutBalance(gtx, pg.mixedBalance, true)
 										}),
 									)
 								}),
@@ -356,6 +342,25 @@ func (pg *privacyPage) gutter(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+// TODO: call on account mixer notifications
+func (pg *privacyPage) updateBalance() {
+	var mixedBalance dcrutil.Amount
+	var unmixedBalance dcrutil.Amount
+
+	wal := pg.common.wallet.WalletWithID(pg.walletID)
+
+	for _, acct := range pg.accounts {
+		if acct.Number == wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, -1) {
+			mixedBalance = dcrutil.Amount(acct.Balance.Spendable)
+		} else if acct.Number == wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerUnmixedAccount, -1) {
+			unmixedBalance = dcrutil.Amount(acct.Balance.Spendable)
+		}
+	}
+
+	pg.mixedBalance = mixedBalance.String()
+	pg.unmixedBalance = unmixedBalance.String()
+}
+
 func (pg *privacyPage) handle() {
 	common := pg.common
 	if pg.toPrivacySetup.Button.Clicked() {
@@ -369,6 +374,9 @@ func (pg *privacyPage) handle() {
 			common.wallet.StopAccountMixer(pg.walletID, pg.errorReceiver)
 		}
 	}
+
+	// TODO: redundant
+	pg.updateBalance()
 
 	select {
 	case err := <-pg.errorReceiver:

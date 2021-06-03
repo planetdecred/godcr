@@ -82,6 +82,7 @@ func TicketPage(c pageCommon) Page {
 		wal:    c.wallet,
 		common: c,
 
+		tickets:               new(wallet.Tickets),
 		ticketsLive:           layout.List{Axis: layout.Horizontal},
 		ticketsActivity:       layout.List{Axis: layout.Vertical},
 		ticketPageContainer:   layout.List{Axis: layout.Vertical},
@@ -133,11 +134,13 @@ func TicketPage(c pageCommon) Page {
 			return account.Number == MaxInt32
 		})
 
-	tickets, err := pg.common.wallet.GetAllTickets() //TODO
-	if err == nil {
-		pg.tickets = tickets
-	}
-	pg.getAllVSP() //todo do in background
+	go func() {
+		tickets, err := pg.common.wallet.GetAllTickets() //TODO
+		if err == nil {
+			pg.tickets = tickets
+		}
+		pg.getAllVSP()
+	}()
 
 	return pg
 }
@@ -919,7 +922,7 @@ func (pg *ticketPage) handle() {
 	}
 
 	if pg.toTickets.Button.Clicked() {
-		c.changePage(TicketPageList(c))
+		c.changePage(TicketPageList(c, pg.tickets))
 	}
 
 	select {

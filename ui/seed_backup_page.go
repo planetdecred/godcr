@@ -17,7 +17,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -43,10 +42,9 @@ type (
 )
 
 type backupPage struct {
-	theme    *decredmaterial.Theme
-	common   pageCommon
-	wal      *wallet.Wallet
-	walletID int
+	theme  *decredmaterial.Theme
+	common pageCommon
+	wal    *dcrlibwallet.Wallet
 
 	backButton     decredmaterial.IconButton
 	title          decredmaterial.Label
@@ -67,7 +65,6 @@ type backupPage struct {
 	suggestions         []seedGroup
 	passwordModal       *decredmaterial.Password
 	isPasswordModalOpen bool
-	selectedWallet      *int
 
 	seedPhrase     []string
 	selectedSeeds  []string
@@ -78,10 +75,9 @@ type backupPage struct {
 
 func BackupPage(c pageCommon, walletID int) Page {
 	b := &backupPage{
-		theme:    c.theme,
-		wal:      c.wallet,
-		walletID: walletID,
-		common:   c,
+		theme:  c.theme,
+		wal:    c.multiWallet.WalletWithID(walletID),
+		common: c,
 
 		action:         c.theme.Button(new(widget.Clickable), "View seed phrase"),
 		backButton:     c.theme.PlainIconButton(new(widget.Clickable), c.icons.navigationArrowBack),
@@ -92,10 +88,9 @@ func BackupPage(c pageCommon, walletID int) Page {
 		successInfo:    c.theme.Body2("Be sure to store your seed phrase backup in a secure location."),
 		checkIcon:      c.icons.actionCheckCircle,
 
-		active:         infoView,
-		selectedSeeds:  make([]string, 0, 33),
-		selectedWallet: c.selectedWallet,
-		passwordModal:  c.theme.Password(),
+		active:        infoView,
+		selectedSeeds: make([]string, 0, 33),
+		passwordModal: c.theme.Password(),
 	}
 
 	b.checkIcon.Color = c.theme.Color.Success
@@ -496,7 +491,7 @@ func (pg *backupPage) resetPage(c pageCommon) {
 
 func (pg *backupPage) confirm(password []byte) {
 	pg.privpass = password
-	s, err := pg.wal.GetWalletSeedPhrase(pg.walletID, password)
+	s, err := pg.wal.DecryptSeed(password)
 	if err != nil {
 		pg.passwordModal.WithError(err.Error())
 		return
@@ -515,6 +510,7 @@ func (pg *backupPage) handle() {
 	c := pg.common
 	if pg.backButton.Button.Clicked() {
 		pg.resetPage(c)
+		c.popPage()
 	}
 
 	if pg.action.Button.Clicked() && pg.verifyCheckBoxes() {
@@ -534,8 +530,8 @@ func (pg *backupPage) handle() {
 				return
 			}
 
-			err := pg.wal.VerifyWalletSeedPhrase(pg.walletID, s, pg.privpass)
-			if err != nil {
+			verified, err := pg.common.multiWallet.VerifySeedForWallet(pg.wal.ID, s, pg.privpass)
+			if err != nil || !verified {
 				c.notify(errMessage, false)
 				return
 			}
