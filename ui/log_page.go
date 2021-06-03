@@ -107,7 +107,9 @@ func (pg *logPage) Layout(gtx C) D {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, container)
+	return pg.common.Layout(gtx, func(gtx C) D {
+		return pg.common.UniformPadding(gtx, container)
+	})
 }
 
 func (pg *logPage) handle()  {}

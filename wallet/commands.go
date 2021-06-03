@@ -1432,3 +1432,15 @@ func validateVSPServerSignature(resp *http.Response, pubKey, body []byte) error 
 
 	return nil
 }
+
+func (wal *Wallet) WalletDirectory() string {
+	return fmt.Sprintf("%s/%s", wal.root, wal.Net)
+}
+
+func (wal *Wallet) DataSize() string {
+	v, err := wal.multi.RootDirFileSizeInBytes()
+	if err != nil {
+		return "Unknown"
+	}
+	return fmt.Sprintf("%f GB", float64(v)*1e-9)
+}
