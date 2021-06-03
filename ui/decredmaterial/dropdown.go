@@ -66,11 +66,15 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 }
 
 func (c *DropDown) Selected() string {
-	return c.items[c.SelectedIndex()].Text
+	return c.items[c.SelectedIndex()+1].Text
 }
 
 func (c *DropDown) SelectedIndex() int {
 	return c.selectedIndex - 1
+}
+
+func (c *DropDown) Len() int {
+	return len(c.items) - 1
 }
 
 func (c *DropDown) handleEvents() {
