@@ -55,8 +55,7 @@ func (win *Window) TransactionsPage(common pageCommon) Page {
 		theme:              common.theme,
 	}
 
-	pg.orderDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
-		{Text: values.String(values.StrOldest)}}, 1)
+	pg.orderDropDown = createOrderDropDown(&common)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
@@ -78,25 +77,9 @@ func (win *Window) TransactionsPage(common pageCommon) Page {
 	return pg
 }
 
-func (pg *transactionsPage) setWallets(common pageCommon) {
-	if len(common.info.Wallets) == 0 || pg.walletDropDown != nil {
-		return
-	}
-
-	var walletDropDownItems []decredmaterial.DropDownItem
-	for i := range common.info.Wallets {
-		item := decredmaterial.DropDownItem{
-			Text: common.info.Wallets[i].Name,
-			Icon: common.icons.walletIcon,
-		}
-		walletDropDownItems = append(walletDropDownItems, item)
-	}
-	pg.walletDropDown = common.theme.DropDown(walletDropDownItems, 2)
-}
-
 func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
-	pg.setWallets(common)
+	common.createOrUpdateWalletDropDown(&pg.walletDropDown)
 	container := func(gtx C) D {
 		walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
 		wallTxs := (*pg.walletTransactions).Txs[walletID]

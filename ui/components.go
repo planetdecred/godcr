@@ -968,6 +968,92 @@ func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimen
 	})
 }
 
+// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
+func ticketActivityRow(gtx layout.Context, c *pageCommon, t wallet.Ticket, index int) layout.Dimensions {
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+				st := ticketStatusIcon(c, t.Info.Status)
+				if st == nil {
+					return layout.Dimensions{}
+				}
+				st.icon.Scale = 0.6
+				return st.icon.Layout(gtx)
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if index == 0 {
+						return layout.Dimensions{}
+					}
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					separator := c.theme.Separator()
+					separator.Width = gtx.Constraints.Max.X
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return separator.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Top:    values.MarginPadding8,
+						Bottom: values.MarginPadding8,
+					}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								labelStatus := c.theme.Label(values.TextSize18, strings.Title(strings.ToLower(t.Info.Status)))
+								labelStatus.Color = c.theme.Color.DeepBlue
+
+								labelDaysBehind := c.theme.Label(values.TextSize14, t.DaysBehind)
+								labelDaysBehind.Color = c.theme.Color.DeepBlue
+
+								return endToEndRow(gtx,
+									labelStatus.Layout,
+									labelDaysBehind.Layout)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Flex{
+									Alignment: layout.Middle,
+								}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										txt := c.theme.Label(values.TextSize14, t.WalletName)
+										txt.Color = c.theme.Color.Gray2
+										return txt.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Left:  values.MarginPadding4,
+											Right: values.MarginPadding4,
+										}.Layout(gtx, func(gtx C) D {
+											ic := c.icons.imageBrightness1
+											ic.Color = c.theme.Color.Gray2
+											return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Right: values.MarginPadding4,
+										}.Layout(gtx, func(gtx C) D {
+											ic := c.icons.ticketIconInactive
+											ic.Scale = 0.5
+											return ic.Layout(gtx)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										txt := c.theme.Label(values.TextSize14, t.Amount)
+										txt.Color = c.theme.Color.Gray2
+										return txt.Layout(gtx)
+									}),
+								)
+							}),
+						)
+					})
+				}),
+			)
+		}),
+	)
+}
+
 func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout.Dimensions {
 	color := th.Color.Success
 	if !n.success {
@@ -1004,7 +1090,36 @@ func (page pageCommon) handleToast() {
 	}
 }
 
-func (page pageCommon) handler() {
+// createOrUpdateWalletDropDown check for len of wallets to create dropDown,
+// also update the list when create, update, delete a wallet.
+func (page *pageCommon) createOrUpdateWalletDropDown(dwn **decredmaterial.DropDown) {
+	init := func() {
+		var walletDropDownItems []decredmaterial.DropDownItem
+		for i := range page.info.Wallets {
+			item := decredmaterial.DropDownItem{
+				Text: page.info.Wallets[i].Name,
+				Icon: page.icons.walletIcon,
+			}
+			walletDropDownItems = append(walletDropDownItems, item)
+		}
+		*dwn = page.theme.DropDown(walletDropDownItems, 2)
+	}
+
+	if *dwn == nil && len(page.info.Wallets) > 0 {
+		init()
+		return
+	}
+	if (*dwn).Len() != len(page.info.Wallets) {
+		init()
+	}
+}
+
+func createOrderDropDown(c *pageCommon) *decredmaterial.DropDown {
+	return c.theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
+		{Text: values.String(values.StrOldest)}}, 1)
+}
+
+func (page *pageCommon) handler() {
 	page.handleToast()
 
 	for page.minimizeNavDrawerButton.Button.Clicked() {

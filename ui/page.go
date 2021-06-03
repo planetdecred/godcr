@@ -381,6 +381,7 @@ func (win *Window) loadPage(ic pageIcons) {
 	win.pages[PageTickets] = win.TicketPage(common)
 	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
 	win.pages[PageTicketsList] = win.TicketPageList(common)
+	win.pages[PageTicketsActivity] = win.TicketActivityPage(common)
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {

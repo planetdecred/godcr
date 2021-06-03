@@ -3,6 +3,7 @@ package ui
 import (
 	"image/color"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/planetdecred/godcr/wallet"
@@ -39,7 +40,7 @@ func (win *Window) TicketPageList(c pageCommon) Page {
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,
 	}
-	pg.orderDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{{Text: "Newest"}, {Text: "Oldest"}}, 1)
+	pg.orderDropDown = createOrderDropDown(&c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -70,6 +71,13 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
 							return c.theme.Card().Layout(gtx, func(gtx C) D {
 								gtx.Constraints.Min = gtx.Constraints.Max
+
+								if pg.ticketTypeDropDown.SelectedIndex()-1 != -1 {
+									tickets = filterTickets(tickets, func(ticketStatus string) bool {
+										return ticketStatus == strings.ToUpper(pg.ticketTypeDropDown.Selected())
+									})
+								}
+
 								if len(tickets) == 0 {
 									txt := c.theme.Body1("No tickets yet")
 									txt.Color = c.theme.Color.Gray2
@@ -284,25 +292,9 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c pageCommon,
 	})
 }
 
-func (pg *ticketPageList) initWalletDropDown(common pageCommon) {
-	if len(common.info.Wallets) == 0 || pg.walletDropDown != nil {
-		return
-	}
-
-	var walletDropDownItems []decredmaterial.DropDownItem
-	for i := range common.info.Wallets {
-		item := decredmaterial.DropDownItem{
-			Text: common.info.Wallets[i].Name,
-			Icon: common.icons.walletIcon,
-		}
-		walletDropDownItems = append(walletDropDownItems, item)
-	}
-	pg.walletDropDown = common.theme.DropDown(walletDropDownItems, 2)
-}
-
 func (pg *ticketPageList) handle() {
 	c := pg.common
-	pg.initWalletDropDown(c)
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
