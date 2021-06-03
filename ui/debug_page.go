@@ -29,6 +29,11 @@ func (win *Window) DebugPage(common pageCommon) Page {
 			text:      "Check wallet logs",
 			page:      PageLog,
 		},
+		{
+			clickable: new(widget.Clickable),
+			text:      "Check statistics",
+			page:      PageStat,
+		},
 	}
 
 	pg := &debugPage{
