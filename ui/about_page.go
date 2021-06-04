@@ -11,7 +11,7 @@ import (
 const PageAbout = "About"
 
 type aboutPage struct {
-	common    pageCommon
+	common    *pageCommon
 	theme     *decredmaterial.Theme
 	card      decredmaterial.Card
 	container *layout.List
@@ -27,7 +27,7 @@ type aboutPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) AboutPage(common pageCommon) Page {
+func (win *Window) AboutPage(common *pageCommon) Page {
 	pg := &aboutPage{
 		common:           common,
 		theme:            common.theme,

@@ -21,7 +21,7 @@ const (
 )
 
 type validateAddressPage struct {
-	common                pageCommon
+	common                *pageCommon
 	theme                 *decredmaterial.Theme
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
@@ -30,7 +30,7 @@ type validateAddressPage struct {
 	stateValidate         int
 }
 
-func (win *Window) ValidateAddressPage(common pageCommon) Page {
+func (win *Window) ValidateAddressPage(common *pageCommon) Page {
 	pg := &validateAddressPage{
 		theme:       common.theme,
 		validateBtn: common.theme.Button(new(widget.Clickable), "Validate"),
@@ -76,7 +76,7 @@ func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	return common.Layout(gtx, body)
 }
 
-func (pg *validateAddressPage) addressSection(common pageCommon) layout.Widget {
+func (pg *validateAddressPage) addressSection(common *pageCommon) layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -132,7 +132,7 @@ func (pg *validateAddressPage) lineSeparator(gtx layout.Context) layout.Dimensio
 	})
 }
 
-func (pg *validateAddressPage) showDisplayResult(c pageCommon) layout.Widget {
+func (pg *validateAddressPage) showDisplayResult(c *pageCommon) layout.Widget {
 	if pg.stateValidate == none {
 		return func(gtx C) D {
 			return layout.Dimensions{}
@@ -267,7 +267,7 @@ func (pg *validateAddressPage) validateAddress() {
 	}
 }
 
-func (pg *validateAddressPage) updateColors(common pageCommon) {
+func (pg *validateAddressPage) updateColors(common *pageCommon) {
 	if pg.addressEditor.Editor.Text() == "" {
 		pg.validateBtn.Background = common.theme.Color.Hint
 	} else {

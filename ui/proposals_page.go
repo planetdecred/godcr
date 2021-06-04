@@ -49,7 +49,7 @@ type tabs struct {
 
 type proposalsPage struct {
 	theme            *decredmaterial.Theme
-	common           pageCommon
+	common           *pageCommon
 	wallet           *wallet.Wallet
 	selectedProposal **dcrlibwallet.Proposal
 	proposals        **wallet.Proposals
@@ -81,7 +81,7 @@ var (
 	}
 )
 
-func (win *Window) ProposalsPage(common pageCommon) Page {
+func (win *Window) ProposalsPage(common *pageCommon) Page {
 	pg := &proposalsPage{
 		common:           common,
 		theme:            common.theme,

@@ -36,7 +36,7 @@ type amountValue struct {
 
 type sendPage struct {
 	pageContainer layout.List
-	common        pageCommon
+	common        *pageCommon
 	theme         *decredmaterial.Theme
 
 	txAuthor        *dcrlibwallet.TxAuthor
@@ -113,7 +113,7 @@ type sendPage struct {
 	walletSelected int
 }
 
-func (win *Window) SendPage(common pageCommon) Page {
+func (win *Window) SendPage(common *pageCommon) Page {
 	pg := &sendPage{
 		pageContainer: layout.List{
 			Axis:      layout.Vertical,
@@ -279,7 +279,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) topNav(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -306,7 +306,7 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 	)
 }
 
-func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) toSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, "To", func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -409,7 +409,7 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) balanceSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	c := pg.theme.Card()
 	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	return c.Layout(gtx, func(gtx C) D {
@@ -447,7 +447,7 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 	})
 }
 
-func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) confirmationModal(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	receiveWallet := common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet]
 	receiveAcct := receiveWallet.Accounts[common.wallAcctSelector.selectedReceiveAccount]
 	sendWallet := common.info.Wallets[common.wallAcctSelector.selectedSendWallet]
@@ -666,7 +666,7 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 	)
 }
 
-func (pg *sendPage) validate(c pageCommon) bool {
+func (pg *sendPage) validate(c *pageCommon) bool {
 	if pg.sendToOption == "Address" {
 		isAmountValid := pg.validateLeftAmount()
 		if pg.rightAmountEditor.Editor.Focused() {
@@ -691,7 +691,7 @@ func (pg *sendPage) validate(c pageCommon) bool {
 	return true
 }
 
-func (pg *sendPage) validateDestinationAddress(c pageCommon) bool {
+func (pg *sendPage) validateDestinationAddress(c *pageCommon) bool {
 	if pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
 		isValid, _ := pg.wallet.IsAddressValid(pg.destinationAddressEditor.Editor.Text())
 		if !isValid {
@@ -745,7 +745,7 @@ func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (pg *sendPage) calculateValues(c pageCommon, isUpdateAmountInput bool) {
+func (pg *sendPage) calculateValues(c *pageCommon, isUpdateAmountInput bool) {
 	defaultLeftValues := fmt.Sprintf("- %s", "DCR")
 	defaultRightValues := "($ -)"
 
@@ -781,7 +781,7 @@ func (pg *sendPage) calculateValues(c pageCommon, isUpdateAmountInput bool) {
 	pg.balanceAfterSend(false, c)
 }
 
-func (pg *sendPage) updateAmountInputsValues(c pageCommon, isUpdateAmountInput bool) {
+func (pg *sendPage) updateAmountInputsValues(c *pageCommon, isUpdateAmountInput bool) {
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
@@ -814,7 +814,7 @@ func (pg *sendPage) updateExchangeError() {
 	}
 }
 
-func (pg *sendPage) setDestinationAddr(sendAmount float64, common pageCommon) {
+func (pg *sendPage) setDestinationAddr(sendAmount float64, common *pageCommon) {
 	receiveWallet := common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet]
 	receiveAcct := receiveWallet.Accounts[common.wallAcctSelector.selectedReceiveAccount]
 
@@ -882,7 +882,7 @@ func (pg *sendPage) getTxFee() {
 	pg.txFeeSize = fmt.Sprintf("%v Bytes", feeAndSize.EstimatedSignedSize)
 }
 
-func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool, c pageCommon) {
+func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool, c *pageCommon) {
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
 	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
 
@@ -907,7 +907,7 @@ func (pg *sendPage) feeEstimationError(err, errorPath string) {
 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }
 
-func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
+func (pg *sendPage) watchForBroadcastResult(c *pageCommon) {
 	if pg.broadcastResult == nil {
 		return
 	}
@@ -931,7 +931,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 	}
 }
 
-func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c pageCommon) {
+func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c *pageCommon) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
 		pg.fetchExchangeValue()
@@ -979,7 +979,7 @@ func (pg *sendPage) fetchExchangeValue() {
 	}()
 }
 
-func (pg *sendPage) setMaxAmount(c pageCommon) {
+func (pg *sendPage) setMaxAmount(c *pageCommon) {
 
 	// Get spendable balance
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
@@ -1035,7 +1035,7 @@ func (pg *sendPage) updateAmountField(spendableBalanceDCR float64) {
 	}
 }
 
-func (pg *sendPage) sendFund(c pageCommon) {
+func (pg *sendPage) sendFund(c *pageCommon) {
 	if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
 		return
 	}

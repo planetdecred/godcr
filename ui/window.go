@@ -99,13 +99,13 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.wallet = wal
 	win.states.loading = true
-	win.current = PageOverview
 	win.keyEvents = make(chan *key.Event)
 	win.modal = make(chan *modalLoad)
 
 	win.internalLog = internalLog
 
-	win.addPages(decredIcons)
+	win.current = PageMain
+	win.loadPages(decredIcons)
 
 	return win, nil
 }

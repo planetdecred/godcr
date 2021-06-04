@@ -29,7 +29,7 @@ type walletSyncDetails struct {
 }
 
 type overviewPage struct {
-	common pageCommon
+	common *pageCommon
 	listContainer, walletSyncList,
 	transactionsList *layout.List
 	theme *decredmaterial.Theme
@@ -61,7 +61,7 @@ type overviewPage struct {
 	loadPage func(pageIcons)
 }
 
-func (win *Window) OverviewPage(c pageCommon) Page {
+func (win *Window) OverviewPage(c *pageCommon) Page {
 	pg := &overviewPage{
 		theme:  c.theme,
 		common: c,
@@ -84,7 +84,7 @@ func (win *Window) OverviewPage(c pageCommon) Page {
 		isCheckingLockWL: false,
 		autoSyncWallet:   true,
 
-		loadPage: win.loadPage,
+		// loadPage: win.loadPage, //TODO
 	}
 
 	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), c.icons.navigationArrowForward)
@@ -160,7 +160,7 @@ func (pg *overviewPage) syncDetail(name, status, headersFetched, progress string
 }
 
 // recentTransactionsSection lays out the list of recent transactions.
-func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	var recentTransactions []wallet.Transaction
 	if len((*pg.walletTransactions).Txs) > 0 {
 		recentTransactions = (*pg.walletTransactions).Recent
@@ -202,7 +202,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 							showBadge:   showLabel(recentTransactions),
 						}
 						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							return transactionRow(gtx, &common, row)
+							return transactionRow(gtx, common, row)
 						})
 					})
 				}),
@@ -647,7 +647,7 @@ func (pg *overviewPage) handle() {
 
 func (pg *overviewPage) onClose() {}
 
-func showWalletUnlockModal(c pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
+func showWalletUnlockModal(c *pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
 	go func() {
 		c.modalReceiver <- &modalLoad{
 			template: UnlockWalletRestoreTemplate,

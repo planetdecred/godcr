@@ -17,7 +17,7 @@ func (win *Window) updateStates(update interface{}) {
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
 		if win.walletInfo.LoadedWallets == 0 && e.LoadedWallets > 0 {
-			win.changePage(PageOverview)
+			win.changePage(PageMain)
 		}
 		*win.walletInfo = e
 		win.states.loading = false

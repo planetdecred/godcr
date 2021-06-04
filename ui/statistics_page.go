@@ -16,7 +16,7 @@ import (
 const PageStat = "Stat"
 
 type statPage struct {
-	common      pageCommon
+	common      *pageCommon
 	txs         **wallet.Transactions
 	theme       *decredmaterial.Theme
 	l           layout.List
@@ -25,7 +25,7 @@ type statPage struct {
 	netType     string
 }
 
-func (win *Window) StatPage(common pageCommon) Page {
+func (win *Window) StatPage(common *pageCommon) Page {
 	pg := &statPage{
 		txs:    &win.walletTransactions,
 		common: common,

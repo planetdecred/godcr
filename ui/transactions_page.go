@@ -37,14 +37,14 @@ type transactionsPage struct {
 	toTxnDetails                []*gesture.Click
 	separator                   decredmaterial.Line
 	theme                       *decredmaterial.Theme
-	common                      pageCommon
+	common                      *pageCommon
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
 	walletDropDown *decredmaterial.DropDown
 }
 
-func (win *Window) TransactionsPage(common pageCommon) Page {
+func (win *Window) TransactionsPage(common *pageCommon) Page {
 	pg := &transactionsPage{
 		common:             common,
 		container:          layout.Flex{Axis: layout.Vertical},
@@ -55,7 +55,7 @@ func (win *Window) TransactionsPage(common pageCommon) Page {
 		theme:              common.theme,
 	}
 
-	pg.orderDropDown = createOrderDropDown(&common)
+	pg.orderDropDown = createOrderDropDown(common)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
@@ -116,13 +116,13 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 									click := pg.toTxnDetails[index]
 									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 									click.Add(gtx.Ops)
-									pg.goToTxnDetails(click.Events(gtx), &common, &wallTxs[index])
+									pg.goToTxnDetails(click.Events(gtx), common, &wallTxs[index])
 									var row = TransactionRow{
 										transaction: wallTxs[index],
 										index:       index,
 										showBadge:   false,
 									}
-									return transactionRow(gtx, &common, row)
+									return transactionRow(gtx, common, row)
 								})
 							})
 					})
@@ -214,7 +214,7 @@ func (pg *transactionsPage) handle() {
 
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
-		pg.sortTransactions(&common)
+		pg.sortTransactions(common)
 	}
 }
 
@@ -245,7 +245,7 @@ func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, common *
 	}
 }
 
-func initTxnWidgets(common pageCommon, transaction wallet.Transaction) transactionWdg {
+func initTxnWidgets(common *pageCommon, transaction wallet.Transaction) transactionWdg {
 	var txn transactionWdg
 	t := time.Unix(transaction.Txn.Timestamp, 0).UTC()
 	txn.time = common.theme.Body1(t.Format(time.UnixDate))

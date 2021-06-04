@@ -147,7 +147,7 @@ type (
 	D = layout.Dimensions
 )
 
-func (win *Window) addPages(decredIcons map[string]image.Image) {
+func (win *Window) loadIcons(decredIcons map[string]image.Image) pageIcons {
 	ic := pageIcons{
 		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
 		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
@@ -223,10 +223,12 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
-	win.loadPage(ic)
+	return ic
 }
 
-func (win *Window) loadPage(ic pageIcons) {
+func (win *Window) loadPages(decredIcons map[string]image.Image) {
+
+	ic := win.loadIcons(decredIcons)
 
 	appBarNavItems := []navHandler{
 		{
@@ -355,6 +357,7 @@ func (win *Window) loadPage(ic pageIcons) {
 	common.modalTemplate = win.LoadModalTemplates()
 
 	win.pages = make(map[string]Page)
+	win.pages[PageMain] = MainPage(&common)
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)

@@ -15,10 +15,10 @@ const PageHelp = "Help"
 type helpPage struct {
 	theme         *decredmaterial.Theme
 	documentation *widget.Clickable
-	common        pageCommon
+	common        *pageCommon
 }
 
-func (win *Window) HelpPage(common pageCommon) Page {
+func (win *Window) HelpPage(common *pageCommon) Page {
 	pg := &helpPage{
 		theme:         common.theme,
 		documentation: new(widget.Clickable),
@@ -52,7 +52,7 @@ func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *helpPage) document(common pageCommon) layout.Widget {
+func (pg *helpPage) document(common *pageCommon) layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, common.icons.documentationIcon, pg.documentation, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,

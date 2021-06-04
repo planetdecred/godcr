@@ -21,7 +21,7 @@ const PageUTXO = "unspentTransactionOutput"
 
 type utxoPage struct {
 	theme                  *decredmaterial.Theme
-	common                 pageCommon
+	common                 *pageCommon
 	utxoListContainer      layout.List
 	txAuthor               *dcrlibwallet.TxAuthor
 	backButton             decredmaterial.IconButton
@@ -41,7 +41,7 @@ type utxoPage struct {
 	selectedAccountID int32
 }
 
-func (win *Window) UTXOPage(common pageCommon) Page {
+func (win *Window) UTXOPage(common *pageCommon) Page {
 	pg := &utxoPage{
 		theme:          common.theme,
 		common:         common,
@@ -172,23 +172,23 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 								return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 									layout.Flexed(0.25, func(gtx C) D {
 										utxos := (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID]
-										return textData(gtx, &c, "Selected:  ", fmt.Sprintf("%d", len(utxos)))
+										return textData(gtx, c, "Selected:  ", fmt.Sprintf("%d", len(utxos)))
 									}),
 									layout.Flexed(0.25, func(gtx C) D {
-										return textData(gtx, &c, "Amount:  ", pg.txnAmount)
+										return textData(gtx, c, "Amount:  ", pg.txnAmount)
 									}),
 									layout.Flexed(0.25, func(gtx C) D {
-										return textData(gtx, &c, "Fee:  ", pg.txnFee)
+										return textData(gtx, c, "Fee:  ", pg.txnFee)
 									}),
 									layout.Flexed(0.25, func(gtx C) D {
-										return textData(gtx, &c, "After Fee:  ", pg.txnAmountAfterFee)
+										return textData(gtx, c, "After Fee:  ", pg.txnAmountAfterFee)
 									}),
 								)
 							})
 						}),
 						layout.Rigid(pg.separator.Layout),
 						layout.Rigid(func(gtx C) D {
-							return pg.utxoRowHeader(gtx, &c)
+							return pg.utxoRowHeader(gtx, c)
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							if len(pg.checkboxes) == 0 {
@@ -197,7 +197,7 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 							return pg.utxoListContainer.Layout(gtx, len((*pg.unspentOutputs).List), func(gtx C, index int) D {
 								utxo := (*pg.unspentOutputs).List[index]
 								pg.handlerCheckboxes(&pg.checkboxes[index], utxo)
-								return pg.utxoRow(gtx, utxo, &c, index)
+								return pg.utxoRow(gtx, utxo, c, index)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {

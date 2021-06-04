@@ -20,7 +20,7 @@ const PageTransactionDetails = "TransactionDetails"
 
 type transactionDetailsPage struct {
 	theme                           *decredmaterial.Theme
-	common                          pageCommon
+	common                          *pageCommon
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
@@ -34,7 +34,7 @@ type transactionDetailsPage struct {
 	gtx                             *layout.Context
 }
 
-func (win *Window) TransactionDetailsPage(common pageCommon) Page {
+func (win *Window) TransactionDetailsPage(common *pageCommon) Page {
 	pg := &transactionDetailsPage{
 		transactionDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -97,7 +97,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 						return pg.separator(gtx)
 					},
 					func(gtx C) D {
-						return pg.txnOutputs(gtx, &common)
+						return pg.txnOutputs(gtx, common)
 					},
 					func(gtx C) D {
 						return pg.separator(gtx)
@@ -106,7 +106,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 						if *pg.txnInfo == nil {
 							return layout.Dimensions{}
 						}
-						return pg.viewTxn(gtx, &common)
+						return pg.viewTxn(gtx, common)
 					},
 				}
 				return common.theme.Card().Layout(gtx, func(gtx C) D {
@@ -128,7 +128,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	txnWidgets := initTxnWidgets(common, **pg.txnInfo)
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,

@@ -37,7 +37,7 @@ type seedItemMenu struct {
 }
 
 type createRestore struct {
-	common          pageCommon
+	common          *pageCommon
 	theme           *decredmaterial.Theme
 	info            *wallet.MultiWalletInfo
 	wal             *wallet.Wallet
@@ -88,7 +88,7 @@ type createRestore struct {
 }
 
 // Loading lays out the loading widget with a faded background
-func (win *Window) CreateRestorePage(common pageCommon) Page {
+func (win *Window) CreateRestorePage(common *pageCommon) Page {
 	pg := &createRestore{
 		common:        common,
 		theme:         common.theme,

@@ -29,7 +29,7 @@ type proposalItemWidgets struct {
 type proposalDetails struct {
 	theme               *decredmaterial.Theme
 	loadingDescription  bool
-	common              pageCommon
+	common              *pageCommon
 	descriptionCard     decredmaterial.Card
 	proposalItems       map[string]proposalItemWidgets
 	descriptionList     *layout.List
@@ -48,7 +48,7 @@ type proposalDetails struct {
 	refreshWindow       func()
 }
 
-func (win *Window) ProposalDetailsPage(common pageCommon) Page {
+func (win *Window) ProposalDetailsPage(common *pageCommon) Page {
 	pg := &proposalDetails{
 		theme:               common.theme,
 		loadingDescription:  false,

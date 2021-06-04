@@ -16,7 +16,7 @@ import (
 const PageSignMessage = "SignMessage"
 
 type signMessagePage struct {
-	common        pageCommon
+	common        *pageCommon
 	theme         *decredmaterial.Theme
 	container     layout.List
 	wallet        *wallet.Wallet
@@ -33,7 +33,7 @@ type signMessagePage struct {
 	gtx                                        *layout.Context
 }
 
-func (win *Window) SignMessagePage(common pageCommon) Page {
+func (win *Window) SignMessagePage(common *pageCommon) Page {
 	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
@@ -193,7 +193,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *signMessagePage) updateColors(common pageCommon) {
+func (pg *signMessagePage) updateColors(common *pageCommon) {
 	if pg.isSigningMessage || pg.addressEditor.Editor.Text() == "" || pg.messageEditor.Editor.Text() == "" {
 		pg.signButton.Background = common.theme.Color.Hint
 	} else {

@@ -15,7 +15,7 @@ const PageLog = "Log"
 
 type logPage struct {
 	theme  *decredmaterial.Theme
-	common pageCommon
+	common *pageCommon
 
 	copyLog  *widget.Clickable
 	copyIcon *widget.Image
@@ -26,7 +26,7 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func (win *Window) LogPage(common pageCommon) Page {
+func (win *Window) LogPage(common *pageCommon) Page {
 	pg := &logPage{
 		common: common,
 		theme:  common.theme,

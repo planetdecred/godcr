@@ -15,7 +15,7 @@ const PageVerifyMessage = "VerifyMessage"
 
 type verifyMessagePage struct {
 	theme                                 *decredmaterial.Theme
-	common                                pageCommon
+	common                                *pageCommon
 	addressInput, messageInput, signInput decredmaterial.Editor
 	clearBtn, verifyBtn                   decredmaterial.Button
 	verifyMessage                         decredmaterial.Label
@@ -23,7 +23,7 @@ type verifyMessagePage struct {
 	verifyMessageStatus *widget.Icon
 }
 
-func (win *Window) VerifyMessagePage(c pageCommon) Page {
+func (win *Window) VerifyMessagePage(c *pageCommon) Page {
 	pg := &verifyMessagePage{
 		theme:         c.theme,
 		common:        c,
@@ -55,7 +55,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			title:      "Verify message",
 			walletName: walletName,
 			back: func() {
-				pg.clearInputs(&c)
+				pg.clearInputs(c)
 				c.changePage(PageWallet)
 				c.changePage(*c.returnPage)
 			},
@@ -165,9 +165,9 @@ func (pg *verifyMessagePage) handle() {
 		}
 	}
 
-	pg.handlerEditorEvents(&c, pg.addressInput.Editor)
+	pg.handlerEditorEvents(c, pg.addressInput.Editor)
 	if pg.clearBtn.Button.Clicked() {
-		pg.clearInputs(&c)
+		pg.clearInputs(c)
 	}
 }
 
@@ -175,7 +175,7 @@ func (pg *verifyMessagePage) handlerEditorEvents(c *pageCommon, w *widget.Editor
 	for _, evt := range w.Events() {
 		switch evt.(type) {
 		case widget.ChangeEvent:
-			pg.validateAddress(*c)
+			pg.validateAddress(c)
 			return
 		}
 	}
@@ -192,7 +192,7 @@ func (pg *verifyMessagePage) clearInputs(c *pageCommon) {
 	pg.signInput.SetError("")
 }
 
-func (pg *verifyMessagePage) validateAddress(c pageCommon) bool {
+func (pg *verifyMessagePage) validateAddress(c *pageCommon) bool {
 	if isValid, _ := c.wallet.IsAddressValid(pg.addressInput.Editor.Text()); !isValid {
 		pg.addressInput.SetError("Invalid address")
 		return false
@@ -202,7 +202,7 @@ func (pg *verifyMessagePage) validateAddress(c pageCommon) bool {
 	return true
 }
 
-func (pg *verifyMessagePage) inputsNotEmpty(c pageCommon) bool {
+func (pg *verifyMessagePage) inputsNotEmpty(c *pageCommon) bool {
 	if strings.Trim(pg.addressInput.Editor.Text(), " ") == "" {
 		return false
 	}

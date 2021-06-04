@@ -28,7 +28,7 @@ type row struct {
 }
 
 type settingsPage struct {
-	common        pageCommon
+	common        *pageCommon
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
 	walletInfo    *wallet.MultiWalletInfo
@@ -60,7 +60,7 @@ type settingsPage struct {
 	languagePreference *preference.ListPreference
 }
 
-func (win *Window) SettingsPage(common pageCommon) Page {
+func (win *Window) SettingsPage(common *pageCommon) Page {
 	chevronRightIcon := common.icons.chevronRight
 
 	pg := &settingsPage{
@@ -89,7 +89,7 @@ func (win *Window) SettingsPage(common pageCommon) Page {
 		confirm: common.theme.Button(new(widget.Clickable), "Ok"),
 		cancel:  common.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
 
-		loadPage: win.loadPage,
+		// loadPage: win.loadPage, //TODO
 	}
 
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,

@@ -18,7 +18,7 @@ const PagePrivacy = "Privacy"
 
 type privacyPage struct {
 	theme                                *decredmaterial.Theme
-	common                               pageCommon
+	common                               *pageCommon
 	pageContainer                        layout.List
 	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
 	infoBtn                              decredmaterial.IconButton
@@ -28,7 +28,7 @@ type privacyPage struct {
 	acctMixerStatus                      *chan *wallet.AccountMixer
 }
 
-func (win *Window) PrivacyPage(common pageCommon) Page {
+func (win *Window) PrivacyPage(common *pageCommon) Page {
 	pg := &privacyPage{
 		theme:                   common.theme,
 		common:                  common,
@@ -63,22 +63,22 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 				if c.wallet.IsAccountMixerConfigSet(c.info.Wallets[*c.selectedWallet].ID) {
 					widgets := []func(gtx C) D{
 						func(gtx C) D {
-							return pg.mixerInfoLayout(gtx, &c)
+							return pg.mixerInfoLayout(gtx, c)
 						},
 						pg.gutter,
 						func(gtx C) D {
-							return pg.mixerSettingsLayout(gtx, &c)
+							return pg.mixerSettingsLayout(gtx, c)
 						},
 						pg.gutter,
 						func(gtx C) D {
-							return pg.dangerZoneLayout(gtx, &c)
+							return pg.dangerZoneLayout(gtx, c)
 						},
 					}
 					return pg.pageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
 						return widgets[i](gtx)
 					})
 				}
-				return pg.privacyIntroLayout(gtx, &c)
+				return pg.privacyIntroLayout(gtx, c)
 			},
 		}
 		return c.SubPageLayout(gtx, load)
@@ -336,12 +336,12 @@ func (pg *privacyPage) gutter(gtx layout.Context) layout.Dimensions {
 func (pg *privacyPage) handle() {
 	common := pg.common
 	if pg.toPrivacySetup.Button.Clicked() {
-		go pg.showModalSetupMixerInfo(&common)
+		go pg.showModalSetupMixerInfo(common)
 	}
 
 	if pg.toggleMixer.Changed() {
 		if pg.toggleMixer.Value {
-			go pg.showModalPasswordStartAccountMixer(&common)
+			go pg.showModalPasswordStartAccountMixer(common)
 		} else {
 			common.wallet.StopAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pg.errorReceiver)
 		}

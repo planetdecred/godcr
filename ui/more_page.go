@@ -17,13 +17,12 @@ type morePageHandler struct {
 }
 
 type morePage struct {
-	common            pageCommon
+	common            *pageCommon
 	container         layout.Flex
 	morePageListItems []morePageHandler
-	page              *string
 }
 
-func (win *Window) MorePage(common pageCommon) Page {
+func (win *Window) MorePage(common *pageCommon) Page {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),
@@ -59,14 +58,13 @@ func (win *Window) MorePage(common pageCommon) Page {
 	pg := &morePage{
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,
-		page:              &win.current,
 		common:            common,
 	}
 
 	return pg
 }
 
-func (pg *morePage) handleClickEvents(common pageCommon) {
+func (pg *morePage) handleClickEvents(common *pageCommon) {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {
 			common.changePage(pg.morePageListItems[i].page)
@@ -87,7 +85,7 @@ func (pg *morePage) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *morePage) layoutMoreItems(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *morePage) layoutMoreItems(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}

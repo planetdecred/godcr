@@ -19,10 +19,10 @@ type debugItem struct {
 type debugPage struct {
 	theme      *decredmaterial.Theme
 	debugItems []debugItem
-	common     pageCommon
+	common     *pageCommon
 }
 
-func (win *Window) DebugPage(common pageCommon) Page {
+func (win *Window) DebugPage(common *pageCommon) Page {
 	debugItems := []debugItem{
 		{
 			clickable: new(widget.Clickable),
@@ -55,7 +55,7 @@ func (pg *debugPage) handle() {
 
 func (pg *debugPage) onClose() {}
 
-func (pg *debugPage) debugItem(gtx C, i int, common pageCommon) D {
+func (pg *debugPage) debugItem(gtx C, i int, common *pageCommon) D {
 	return decredmaterial.Clickable(gtx, pg.debugItems[i].clickable, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -72,7 +72,7 @@ func (pg *debugPage) debugItem(gtx C, i int, common pageCommon) D {
 	})
 }
 
-func (pg *debugPage) layoutDebugItems(gtx C, common pageCommon) {
+func (pg *debugPage) layoutDebugItems(gtx C, common *pageCommon) {
 	background := common.theme.Color.Surface
 	card := common.theme.Card()
 	card.Color = background
