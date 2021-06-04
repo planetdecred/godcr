@@ -51,6 +51,7 @@ func TicketActivityPage(c *pageCommon) Page {
 
 func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "Ticket activity",
@@ -136,7 +137,6 @@ func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket
 
 func (pg *ticketsActivityPage) handle() {
 	c := pg.common
-	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 
 	sortSelection := pg.orderDropDown.SelectedIndex()
 	if pg.filterSorter != sortSelection {

@@ -57,6 +57,8 @@ func TicketPageList(c *pageCommon) Page {
 
 func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
+
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "All tickets",
@@ -292,7 +294,6 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c *pageCommon
 
 func (pg *ticketPageList) handle() {
 	c := pg.common
-	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
