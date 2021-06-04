@@ -83,9 +83,7 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return c.SubPageLayout(gtx, load)
 	}
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, d)
-	})
+	return c.UniformPadding(gtx, d)
 }
 
 func (pg *privacyPage) privacyIntroLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {

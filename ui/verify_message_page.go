@@ -77,9 +77,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return c.SubPageLayout(gtx, load)
 	}
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, body)
-	})
+	return c.UniformPadding(gtx, body)
 }
 
 func (pg *verifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widget {

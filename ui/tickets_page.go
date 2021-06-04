@@ -121,26 +121,24 @@ func (win *Window) TicketPage(c *pageCommon) Page {
 
 func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
-	dims := c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-			sections := []func(gtx C) D{
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketPriceSection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketsLiveSection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketsActivitySection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.stackingRecordSection(gtx, c)
-				},
-			}
+	dims := c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
+		sections := []func(gtx C) D{
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketPriceSection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketsLiveSection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketsActivitySection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.stackingRecordSection(gtx, c)
+			},
+		}
 
-			return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
-				return sections[i](gtx)
-			})
+		return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
+			return sections[i](gtx)
 		})
 	})
 

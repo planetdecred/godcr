@@ -106,9 +106,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 		return common.SubPageLayout(gtx, page)
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *signMessagePage) description() layout.Widget {

@@ -286,10 +286,8 @@ func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if common.info.LoadedWallets == 0 {
-		return common.Layout(gtx, func(gtx C) D {
-			return common.UniformPadding(gtx, func(gtx C) D {
-				return layout.Center.Layout(gtx, common.theme.H3(values.String(values.StrNoWalletLoaded)).Layout)
-			})
+		return common.UniformPadding(gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, common.theme.H3(values.String(values.StrNoWalletLoaded)).Layout)
 		})
 	}
 
@@ -356,23 +354,21 @@ func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 		)
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return layout.Stack{}.Layout(gtx,
-			layout.Expanded(func(gtx C) D {
-				return common.UniformPadding(gtx, body)
-			}),
-			layout.Expanded(func(gtx C) D {
-				if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
-					halfHeight := gtx.Constraints.Max.Y / 2
-					return pg.container.Layout(gtx, len(pg.backdrops), func(gtx C, i int) D {
-						gtx.Constraints.Min.Y = halfHeight
-						return pg.backdrops[i].Layout(gtx)
-					})
-				}
-				return D{}
-			}),
-		)
-	})
+	return layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return common.UniformPadding(gtx, body)
+		}),
+		layout.Expanded(func(gtx C) D {
+			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
+				halfHeight := gtx.Constraints.Max.Y / 2
+				return pg.container.Layout(gtx, len(pg.backdrops), func(gtx C, i int) D {
+					gtx.Constraints.Min.Y = halfHeight
+					return pg.backdrops[i].Layout(gtx)
+				})
+			}
+			return D{}
+		}),
+	)
 }
 
 func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int, isWatchOnlyWalletMenu bool) {

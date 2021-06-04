@@ -80,9 +80,7 @@ func (pg *morePage) Layout(gtx layout.Context) layout.Dimensions {
 		pg.layoutMoreItems(gtx, common)
 		return layout.Dimensions{Size: gtx.Constraints.Max}
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, container)
-	})
+	return pg.common.UniformPadding(gtx, container)
 }
 
 func (pg *morePage) layoutMoreItems(gtx layout.Context, common *pageCommon) layout.Dimensions {

@@ -99,7 +99,5 @@ func (pg *debugPage) Layout(gtx C) D {
 		return pg.common.SubPageLayout(gtx, page)
 
 	}
-	return pg.common.Layout(gtx, func(gtx C) D {
-		return pg.common.UniformPadding(gtx, container)
-	})
+	return pg.common.UniformPadding(gtx, container)
 }

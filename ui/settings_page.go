@@ -54,7 +54,6 @@ type settingsPage struct {
 	peerAddr          string
 	agentValue        string
 	errorReceiver     chan error
-	loadPage          func(pageIcons)
 
 	currencyPreference *preference.ListPreference
 	languagePreference *preference.ListPreference
@@ -88,8 +87,6 @@ func (win *Window) SettingsPage(common *pageCommon) Page {
 
 		confirm: common.theme.Button(new(widget.Clickable), "Ok"),
 		cancel:  common.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
-
-		// loadPage: win.loadPage, //TODO
 	}
 
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
@@ -152,20 +149,14 @@ func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if pg.currencyPreference.IsShowing {
-		return pg.currencyPreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
-			return common.UniformPadding(gtx, body)
-		}))
+		return pg.currencyPreference.Layout(gtx, common.UniformPadding(gtx, body))
 	}
 
 	if pg.languagePreference.IsShowing {
-		return pg.languagePreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
-			return common.UniformPadding(gtx, body)
-		}))
+		return pg.languagePreference.Layout(gtx, common.UniformPadding(gtx, body))
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *settingsPage) general() layout.Widget {
@@ -380,7 +371,6 @@ func (pg *settingsPage) handle() {
 	if pg.isDarkModeOn.Changed() {
 		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
-		pg.loadPage(common.icons)
 	}
 
 	if pg.spendUnconfirmed.Changed() {

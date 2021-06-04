@@ -106,13 +106,12 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.internalLog = internalLog
 
 	win.common = win.loadPages(decredIcons)
-	// win.pages[PageMain] = MainPage(common, win.pages)
-	// win.current = PageMain
 
 	return win, nil
 }
 
 func (win *Window) changePage(page string) {
+	_ = page
 	win.refresh()
 }
 

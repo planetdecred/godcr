@@ -110,7 +110,6 @@ type pageCommon struct {
 	icons           pageIcons
 	page            *string
 	returnPage      *string
-	usdExchangeRate float64
 	dcrUsdtBittrex  DCRUSDTBittrex
 	navTab          *decredmaterial.Tabs
 	keyEvents       chan *key.Event
@@ -140,7 +139,7 @@ type (
 	D = layout.Dimensions
 )
 
-func (win *Window) loadIcons(decredIcons map[string]image.Image) pageIcons {
+func (common *pageCommon) loadIcons(decredIcons map[string]image.Image) {
 	ic := pageIcons{
 		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
 		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
@@ -216,12 +215,10 @@ func (win *Window) loadIcons(decredIcons map[string]image.Image) pageIcons {
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
-	return ic
+	common.icons = ic
 }
 
 func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
-
-	ic := win.loadIcons(decredIcons)
 
 	common := &pageCommon{
 		printer:         message.NewPrinter(language.English),
@@ -230,23 +227,20 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
 		selectedWallet:  &win.selected,
 		selectedAccount: &win.selectedAccount,
 		theme:           win.theme,
-		icons:           ic,
-		// returnPage:      &win.previous,
-		// page:            &win.current,
-		keyEvents: win.keyEvents,
-		states:    &win.states,
+		keyEvents:       win.keyEvents,
+		states:          &win.states,
 
-		selectedUTXO:      make(map[int]map[int32]map[string]*wallet.UnspentOutput),
-		modal:             win.theme.Modal(),
-		modalReceiver:     win.modal,
-		modalLoad:         &modalLoad{},
-		subPageBackButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		subPageInfoButton: win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		// changePage:        win.changePage,
-		// setReturnPage:     win.setReturnPage,
+		selectedUTXO:  make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		modal:         win.theme.Modal(),
+		modalReceiver: win.modal,
+		modalLoad:     &modalLoad{},
 		refreshWindow: win.refresh,
 		toast:         &win.toast,
 	}
+
+	common.loadIcons(decredIcons)
+	common.subPageBackButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
+	common.subPageInfoButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
 
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
 		log.Info("Error fetching exchange value")
@@ -274,7 +268,7 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
 	}
 	iconColor := common.theme.Color.Gray3
 
-	common.wallAcctSelector.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo)
+	common.wallAcctSelector.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
 	common.wallAcctSelector.walletInfoButton.Color = iconColor
 	common.wallAcctSelector.walletInfoButton.Size = values.MarginPadding15
 	common.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
@@ -323,7 +317,7 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
 	return common
 }
 
-func (page *pageCommon) fetchExchangeValue(target interface{}) error {
+func (common *pageCommon) fetchExchangeValue(target interface{}) error {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	res, err := http.Get(url)
 	if err != nil {
@@ -340,102 +334,25 @@ func (page *pageCommon) fetchExchangeValue(target interface{}) error {
 	return nil
 }
 
-func (page *pageCommon) refreshPage() {
-	page.refreshWindow()
+func (common *pageCommon) refreshPage() {
+	common.refreshWindow()
 }
 
-func (page *pageCommon) notify(text string, success bool) {
-	*page.toast = &toast{
+func (common *pageCommon) notify(text string, success bool) {
+	*common.toast = &toast{
 		text:    text,
 		success: success,
 	}
 }
 
-func (page *pageCommon) closeModal() {
+func (common *pageCommon) closeModal() {
 	go func() {
-		page.modalReceiver <- &modalLoad{
+		common.modalReceiver <- &modalLoad{
 			title:   "",
 			confirm: nil,
 			cancel:  nil,
 		}
 	}()
-}
-
-func (page *pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	page.handler()
-
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			// fill the entire window with a color if a user has no wallet created
-			if *page.page == PageCreateRestore {
-				return decredmaterial.Fill(gtx, page.theme.Color.Surface)
-			}
-
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				// layout.Rigid(page.layoutTopBar),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						// layout.Rigid(func(gtx C) D {
-						// 	card := page.theme.Card()
-						// 	card.Radius = decredmaterial.CornerRadius{}
-						// 	return card.Layout(gtx, page.layoutNavDrawer)
-						// }),
-						layout.Rigid(body),
-					)
-				}),
-			)
-		}),
-		layout.Stacked(func(gtx C) D {
-			// stack the page content on the entire window if a user has no wallet
-			if *page.page == PageCreateRestore {
-				return body(gtx)
-			}
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			// global modal. Stack modal on all pages and contents
-		outer:
-			for {
-				select {
-				case load := <-page.modalReceiver:
-					page.modalLoad.template = load.template
-					page.modalLoad.title = load.title
-					page.modalLoad.confirm = load.confirm
-					page.modalLoad.confirmText = load.confirmText
-					page.modalLoad.cancel = load.cancel
-					page.modalLoad.cancelText = load.cancelText
-					page.modalLoad.isReset = false
-				default:
-					break outer
-				}
-			}
-
-			if page.modalLoad.cancel != nil {
-				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, page.modalLoad),
-					900)
-			}
-
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			// global toasts. Stack toast on all pages and contents
-			if *page.toast == nil {
-				return layout.Dimensions{}
-			}
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding65}.Layout(gtx, func(gtx C) D {
-					return displayToast(page.theme, gtx, *page.toast)
-				})
-			})
-		}),
-		layout.Stacked(func(gtx C) D {
-			if page.wallAcctSelector.isWalletAccountModalOpen {
-				return page.walletAccountModalLayout(gtx)
-			}
-			return layout.Dimensions{}
-		}),
-	)
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -448,7 +365,7 @@ func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions
 	return c.padding.Layout(gtx, w)
 }
 
-func (page *pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (common *pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.UniformInset(values.MarginPadding24).Layout(gtx, body)
 }
 
@@ -465,42 +382,42 @@ type SubPage struct {
 	handleExtra  func()
 }
 
-func (page *pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (common *pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-				return page.subpageHeader(gtx, sp)
+				return common.subpageHeader(gtx, sp)
 			})
 		}),
 		layout.Rigid(sp.body),
 	)
 }
 
-func (page *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
-	page.subpageEventHandler(sp)
+func (common *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
+	common.subpageEventHandler(sp)
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, page.subPageBackButton.Layout)
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, common.subPageBackButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
-				return page.theme.H6(sp.title).Layout(gtx)
+				return common.theme.H6(sp.title).Layout(gtx)
 			}
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(page.theme.H6(sp.title).Layout),
-				layout.Rigid(page.theme.Body1(sp.subTitle).Layout),
+				layout.Rigid(common.theme.H6(sp.title).Layout),
+				layout.Rigid(common.theme.Body1(sp.subTitle).Layout),
 			)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.walletName != "" {
 				return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Card{
-						Color: page.theme.Color.Surface,
+						Color: common.theme.Color.Surface,
 					}.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-							walletText := page.theme.Caption(sp.walletName)
-							walletText.Color = page.theme.Color.Gray
+							walletText := common.theme.Caption(sp.walletName)
+							walletText.Color = common.theme.Color.Gray
 							return walletText.Layout(gtx)
 						})
 					})
@@ -511,14 +428,14 @@ func (page *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dim
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
-					return page.subPageInfoButton.Layout(gtx)
+					return common.subPageInfoButton.Layout(gtx)
 				} else if sp.extraItem != nil {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							if sp.extraText != "" {
 								return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									text := page.theme.Caption(sp.extraText)
-									text.Color = page.theme.Color.DeepBlue
+									text := common.theme.Caption(sp.extraText)
+									text.Color = common.theme.Color.DeepBlue
 									return text.Layout(gtx)
 								})
 							}
@@ -535,30 +452,30 @@ func (page *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dim
 	)
 }
 
-func (page *pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
-	card := page.theme.Card()
+func (common *pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	card := common.theme.Card()
 	card.Color = color.NRGBA{}
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return page.subpageHeader(gtx, sp) }),
+			layout.Rigid(func(gtx C) D { return common.subpageHeader(gtx, sp) }),
 			layout.Rigid(sp.body),
 		)
 	})
 }
 
-func (page *pageCommon) subpageEventHandler(sp SubPage) {
-	if page.subPageInfoButton.Button.Clicked() {
+func (common *pageCommon) subpageEventHandler(sp SubPage) {
+	if common.subPageInfoButton.Button.Clicked() {
 		go func() {
-			page.modalReceiver <- &modalLoad{
+			common.modalReceiver <- &modalLoad{
 				template:   sp.infoTemplate,
 				title:      sp.title,
-				cancel:     page.closeModal,
+				cancel:     common.closeModal,
 				cancelText: "Got it",
 			}
 		}()
 	}
 
-	if page.subPageBackButton.Button.Clicked() {
+	if common.subPageBackButton.Button.Clicked() {
 		sp.back()
 	}
 

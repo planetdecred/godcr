@@ -224,53 +224,51 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	dims := common.Layout(gtx, func(gtx C) D {
-		return layout.Stack{Alignment: layout.S}.Layout(gtx,
-			layout.Expanded(func(gtx C) D {
-				return layout.Stack{Alignment: layout.NE}.Layout(gtx,
-					layout.Expanded(func(gtx C) D {
-						return common.UniformPadding(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return pg.topNav(gtx, common)
+	dims := layout.Stack{Alignment: layout.S}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return common.UniformPadding(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return pg.topNav(gtx, common)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+										return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
 									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-											return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
-										})
-									})
-								}),
-							)
-						})
-					}),
-					layout.Stacked(func(gtx C) D {
-						if pg.isMoreOption {
-							inset := layout.Inset{
-								Top:   values.MarginPadding40,
-								Right: values.MarginPadding20,
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
-								return border.Layout(gtx, pg.clearAllBtn.Layout)
-							})
-						}
-						return layout.Dimensions{}
-					}),
-				)
-			}),
-			layout.Stacked(func(gtx C) D {
-				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-				return layout.S.Layout(gtx, func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
-						return pg.balanceSection(gtx, common)
+								})
+							}),
+						)
 					})
+				}),
+				layout.Stacked(func(gtx C) D {
+					if pg.isMoreOption {
+						inset := layout.Inset{
+							Top:   values.MarginPadding40,
+							Right: values.MarginPadding20,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+							return border.Layout(gtx, pg.clearAllBtn.Layout)
+						})
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		}),
+		layout.Stacked(func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return layout.S.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
+					return pg.balanceSection(gtx, common)
 				})
-			}),
-		)
-	})
+			})
+		}),
+	)
 
 	if pg.isConfirmationModalOpen {
 		return common.Modal(gtx, dims, pg.confirmationModal(gtx, common))

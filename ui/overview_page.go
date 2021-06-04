@@ -57,8 +57,6 @@ type overviewPage struct {
 	syncDetailsVisibility bool
 	txnRowHeight          int
 	queue                 event.Queue
-
-	loadPage func(pageIcons)
 }
 
 func (win *Window) OverviewPage(c *pageCommon) Page {
@@ -83,8 +81,6 @@ func (win *Window) OverviewPage(c *pageCommon) Page {
 
 		isCheckingLockWL: false,
 		autoSyncWallet:   true,
-
-		// loadPage: win.loadPage, //TODO
 	}
 
 	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), c.icons.navigationArrowForward)
@@ -122,11 +118,9 @@ func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.queue = gtx
 	c := pg.common
 	if c.info.LoadedWallets == 0 {
-		return c.Layout(gtx, func(gtx C) D {
-			return c.UniformPadding(gtx, func(gtx C) D {
-				return layout.Center.Layout(gtx, func(gtx C) D {
-					return c.theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
-				})
+		return c.UniformPadding(gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return c.theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
 			})
 		})
 	}
@@ -140,11 +134,9 @@ func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, func(gtx C) D {
-			return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
-			})
+	return c.UniformPadding(gtx, func(gtx C) D {
+		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
 		})
 	})
 }
@@ -584,7 +576,6 @@ func (pg *overviewPage) handle() {
 		isDarkModeOn := wal.ReadBoolConfigValueForKey("isDarkModeOn")
 		if isDarkModeOn != pg.theme.DarkMode {
 			pg.theme.SwitchDarkMode(isDarkModeOn)
-			pg.loadPage(c.icons)
 		}
 	}
 

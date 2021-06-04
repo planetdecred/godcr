@@ -121,9 +121,7 @@ func (pg *statPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	// Refresh frames every 1 second
 	op.InvalidateOp{At: time.Now().Add(time.Second * 1)}.Add(gtx.Ops)
-	return pg.common.Layout(gtx, func(gtx C) D {
-		return pg.common.UniformPadding(gtx, container)
-	})
+	return pg.common.UniformPadding(gtx, container)
 }
 
 func (pg *statPage) handle()  {}

@@ -73,7 +73,7 @@ func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, body)
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *validateAddressPage) addressSection(common *pageCommon) layout.Widget {
