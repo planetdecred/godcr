@@ -22,7 +22,7 @@ type debugPage struct {
 	common     *pageCommon
 }
 
-func (win *Window) DebugPage(common *pageCommon) Page {
+func DebugPage(common *pageCommon) Page {
 	debugItems := []debugItem{
 		{
 			clickable: new(widget.Clickable),

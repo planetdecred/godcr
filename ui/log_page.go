@@ -26,7 +26,7 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func (win *Window) LogPage(common *pageCommon) Page {
+func LogPage(common *pageCommon) Page {
 	pg := &logPage{
 		common: common,
 		theme:  common.theme,
@@ -41,7 +41,7 @@ func (win *Window) LogPage(common *pageCommon) Page {
 	pg.copyIcon = common.icons.copyIcon
 	pg.copyIcon.Scale = 0.25
 
-	go pg.watchLogs(win.internalLog)
+	go pg.watchLogs(*common.internalLog)
 
 	return pg
 }

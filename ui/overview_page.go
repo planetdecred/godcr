@@ -59,17 +59,17 @@ type overviewPage struct {
 	queue                 event.Queue
 }
 
-func (win *Window) OverviewPage(c *pageCommon) Page {
+func OverviewPage(c *pageCommon) Page {
 	pg := &overviewPage{
 		theme:  c.theme,
 		common: c,
 		tab:    c.navTab,
 
-		wallet:             &win.wallet,
-		walletInfo:         win.walletInfo,
-		walletSyncStatus:   win.walletSyncStatus,
-		walletTransactions: &win.walletTransactions,
-		walletTransaction:  &win.walletTransaction,
+		wallet:             &c.wallet,
+		walletInfo:         c.info,
+		walletSyncStatus:   c.walletSyncStatus,
+		walletTransactions: c.walletTransactions,
+		walletTransaction:  c.walletTransaction,
 		listContainer:      &layout.List{Axis: layout.Vertical},
 		walletSyncList:     &layout.List{Axis: layout.Vertical},
 		transactionsList:   &layout.List{Axis: layout.Vertical},

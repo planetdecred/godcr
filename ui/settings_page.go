@@ -59,7 +59,7 @@ type settingsPage struct {
 	languagePreference *preference.ListPreference
 }
 
-func (win *Window) SettingsPage(common *pageCommon) Page {
+func SettingsPage(common *pageCommon) Page {
 	chevronRightIcon := common.icons.chevronRight
 
 	pg := &settingsPage{
@@ -67,7 +67,7 @@ func (win *Window) SettingsPage(common *pageCommon) Page {
 			Axis: layout.Vertical,
 		},
 		theme:      common.theme,
-		walletInfo: win.walletInfo,
+		walletInfo: common.info,
 		wal:        common.wallet,
 		common:     common,
 

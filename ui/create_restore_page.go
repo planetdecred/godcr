@@ -88,7 +88,7 @@ type createRestore struct {
 }
 
 // Loading lays out the loading widget with a faded background
-func (win *Window) CreateRestorePage(common *pageCommon) Page {
+func CreateRestorePage(common *pageCommon) Page {
 	pg := &createRestore{
 		common:        common,
 		theme:         common.theme,
@@ -107,7 +107,7 @@ func (win *Window) CreateRestorePage(common *pageCommon) Page {
 		createModal:           common.theme.Modal(),
 		warningModal:          common.theme.Modal(),
 		modalTitleLabel:       common.theme.H6(""),
-		passwordStrength:      win.theme.ProgressBar(0),
+		passwordStrength:      common.theme.ProgressBar(0),
 		openPopupIndex:        -1,
 		restoreContainer: layout.List{
 			Axis:      layout.Vertical,
@@ -161,7 +161,7 @@ func (win *Window) CreateRestorePage(common *pageCommon) Page {
 	for i := 0; i <= numberOfSeeds; i++ {
 		widgetEditor := new(widget.Editor)
 		widgetEditor.SingleLine, widgetEditor.Submit = true, true
-		pg.seedEditors.editors = append(pg.seedEditors.editors, win.theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
+		pg.seedEditors.editors = append(pg.seedEditors.editors, common.theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
 	}
 	pg.seedEditors.focusIndex = -1
 

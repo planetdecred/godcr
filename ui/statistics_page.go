@@ -25,9 +25,9 @@ type statPage struct {
 	netType     string
 }
 
-func (win *Window) StatPage(common *pageCommon) Page {
+func StatPage(common *pageCommon) Page {
 	pg := &statPage{
-		txs:    &win.walletTransactions,
+		txs:    common.walletTransactions,
 		common: common,
 		theme:  common.theme,
 		l: layout.List{
@@ -35,7 +35,7 @@ func (win *Window) StatPage(common *pageCommon) Page {
 		},
 	}
 	pg.startupTime = time.Now()
-	pg.syncStatus = win.walletSyncStatus
+	pg.syncStatus = common.walletSyncStatus
 	if common.wallet.Net == "testnet3" {
 		pg.netType = "Testnet"
 	} else {

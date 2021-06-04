@@ -81,20 +81,20 @@ var (
 	}
 )
 
-func (win *Window) ProposalsPage(common *pageCommon) Page {
+func ProposalsPage(common *pageCommon) Page {
 	pg := &proposalsPage{
 		common:           common,
 		theme:            common.theme,
-		wallet:           win.wallet,
+		wallet:           common.wallet,
 		proposalsList:    &layout.List{},
 		tabCard:          common.theme.Card(),
 		itemCard:         common.theme.Card(),
 		syncCard:         common.theme.Card(),
 		legendIcon:       common.icons.imageBrightness1,
 		infoIcon:         common.icons.actionInfo,
-		proposals:        &win.proposals,
-		selectedProposal: &win.selectedProposal,
-		syncedProposal:   win.proposal,
+		proposals:        common.proposals,
+		selectedProposal: common.selectedProposal,
+		syncedProposal:   common.syncedProposal,
 		updatedIcon:      common.icons.navigationCheck,
 		updatedLabel:     common.theme.Body2("Updated"),
 		syncButton:       new(widget.Clickable),

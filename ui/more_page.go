@@ -22,7 +22,7 @@ type morePage struct {
 	morePageListItems []morePageHandler
 }
 
-func (win *Window) MorePage(common *pageCommon) Page {
+func MorePage(common *pageCommon) Page {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),

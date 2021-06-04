@@ -18,7 +18,7 @@ type helpPage struct {
 	common        *pageCommon
 }
 
-func (win *Window) HelpPage(common *pageCommon) Page {
+func HelpPage(common *pageCommon) Page {
 	pg := &helpPage{
 		theme:         common.theme,
 		documentation: new(widget.Clickable),

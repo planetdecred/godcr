@@ -34,7 +34,7 @@ type transactionDetailsPage struct {
 	gtx                             *layout.Context
 }
 
-func (win *Window) TransactionDetailsPage(common *pageCommon) Page {
+func TransactionDetailsPage(common *pageCommon) Page {
 	pg := &transactionDetailsPage{
 		transactionDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -46,7 +46,7 @@ func (win *Window) TransactionDetailsPage(common *pageCommon) Page {
 			Axis: layout.Vertical,
 		},
 
-		txnInfo: &win.walletTransaction,
+		txnInfo: common.walletTransaction,
 		theme:   common.theme,
 		common:  common,
 

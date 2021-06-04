@@ -76,7 +76,7 @@ type backupPage struct {
 	privpass       []byte
 }
 
-func (win *Window) BackupPage(c *pageCommon) Page {
+func BackupPage(c *pageCommon) Page {
 	b := &backupPage{
 		theme:  c.theme,
 		wal:    c.wallet,

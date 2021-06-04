@@ -31,11 +31,11 @@ type ticketPageList struct {
 	common             *pageCommon
 }
 
-func (win *Window) TicketPageList(c *pageCommon) Page {
+func TicketPageList(c *pageCommon) Page {
 	pg := &ticketPageList{
 		th:             c.theme,
 		common:         c,
-		tickets:        &win.walletTickets,
+		tickets:        c.walletTickets,
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,

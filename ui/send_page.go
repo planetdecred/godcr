@@ -113,7 +113,7 @@ type sendPage struct {
 	walletSelected int
 }
 
-func (win *Window) SendPage(common *pageCommon) Page {
+func SendPage(common *pageCommon) Page {
 	pg := &sendPage{
 		pageContainer: layout.List{
 			Axis:      layout.Vertical,
@@ -123,8 +123,8 @@ func (win *Window) SendPage(common *pageCommon) Page {
 		common:          common,
 		theme:           common.theme,
 		wallet:          common.wallet,
-		txAuthor:        &win.txAuthor,
-		broadcastResult: &win.broadcastResult,
+		txAuthor:        common.txAuthor,
+		broadcastResult: common.broadcastResult,
 
 		currencySwap: new(widget.Clickable),
 
@@ -174,7 +174,7 @@ func (win *Window) SendPage(common *pageCommon) Page {
 	pg.rightAmountEditor.CustomButton.Text = "Max"
 	pg.rightAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	pg.passwordEditor = win.theme.EditorPassword(new(widget.Editor), "Spending password")
+	pg.passwordEditor = common.theme.EditorPassword(new(widget.Editor), "Spending password")
 	pg.passwordEditor.Editor.SetText("")
 	pg.passwordEditor.Editor.SingleLine = true
 	pg.passwordEditor.Editor.Submit = true

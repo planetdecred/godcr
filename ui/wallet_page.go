@@ -65,13 +65,12 @@ type walletPage struct {
 	watchOnlyWalletMoreButtons                 map[int]decredmaterial.IconButton
 	shadowBox                                  *decredmaterial.Shadow
 	separator                                  decredmaterial.Line
-	refreshPage                                *bool
 }
 
-func (win *Window) WalletPage(common *pageCommon) Page {
+func WalletPage(common *pageCommon) Page {
 	pg := &walletPage{
 		common:                   common,
-		walletInfo:               win.walletInfo,
+		walletInfo:               common.info,
 		container:                layout.List{Axis: layout.Vertical},
 		accountsList:             layout.List{Axis: layout.Vertical},
 		walletsList:              layout.List{Axis: layout.Vertical},
@@ -79,14 +78,13 @@ func (win *Window) WalletPage(common *pageCommon) Page {
 		theme:                    common.theme,
 		wallet:                   common.wallet,
 		card:                     common.theme.Card(),
-		walletAccount:            &win.walletAccount,
+		walletAccount:            common.walletAccount,
 		backdropList:             &layout.List{Axis: layout.Vertical},
 		errorReceiver:            make(chan error),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
 		shadowBox:                common.theme.Shadow(),
 		separator:                common.theme.Separator(),
-		refreshPage:              &win.refreshPage,
 	}
 
 	for i := 0; i < 4; i++ {
@@ -280,10 +278,10 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
 // Layout lays out the widgets for the main wallets pg.
 func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
-	if *pg.refreshPage {
-		common.refreshWindow()
-		*pg.refreshPage = false
-	}
+	// if *pg.refreshPage {
+	// 	common.refreshWindow()
+	// 	*pg.refreshPage = false
+	// }
 
 	if common.info.LoadedWallets == 0 {
 		return common.UniformPadding(gtx, func(gtx C) D {

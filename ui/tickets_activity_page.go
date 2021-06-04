@@ -27,11 +27,11 @@ type ticketsActivityPage struct {
 	common             *pageCommon
 }
 
-func (win *Window) TicketActivityPage(c *pageCommon) Page {
+func TicketActivityPage(c *pageCommon) Page {
 	pg := &ticketsActivityPage{
 		th:          c.theme,
 		common:      c,
-		tickets:     &win.walletTickets,
+		tickets:     c.walletTickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
 	}
 	pg.orderDropDown = createOrderDropDown(c)

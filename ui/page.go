@@ -15,6 +15,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -101,24 +102,39 @@ type walletAccountSelector struct {
 }
 
 type pageCommon struct {
-	printer         *message.Printer
-	wallet          *wallet.Wallet
-	info            *wallet.MultiWalletInfo
-	selectedWallet  *int
-	selectedAccount *int
-	theme           *decredmaterial.Theme
-	icons           pageIcons
-	page            *string
-	returnPage      *string
-	dcrUsdtBittrex  DCRUSDTBittrex
-	navTab          *decredmaterial.Tabs
-	keyEvents       chan *key.Event
-	toast           **toast
-	states          *states
-	modal           *decredmaterial.Modal
-	modalReceiver   chan *modalLoad
-	modalLoad       *modalLoad
-	modalTemplate   *ModalTemplate
+	printer            *message.Printer
+	wallet             *wallet.Wallet
+	walletAccount      **wallet.Account
+	info               *wallet.MultiWalletInfo
+	selectedWallet     *int
+	selectedAccount    *int
+	theme              *decredmaterial.Theme
+	icons              pageIcons
+	page               *string
+	returnPage         *string
+	dcrUsdtBittrex     DCRUSDTBittrex
+	navTab             *decredmaterial.Tabs
+	keyEvents          chan *key.Event
+	toast              **toast
+	states             *states
+	modal              *decredmaterial.Modal
+	modalReceiver      chan *modalLoad
+	modalLoad          *modalLoad
+	modalTemplate      *ModalTemplate
+	internalLog        *chan string
+	walletSyncStatus   *wallet.SyncStatus
+	walletTransactions **wallet.Transactions
+	walletTransaction  **wallet.Transaction
+	acctMixerStatus    *chan *wallet.AccountMixer
+	selectedProposal   **dcrlibwallet.Proposal
+	proposals          **wallet.Proposals
+	syncedProposal     chan *wallet.Proposal
+	txAuthor           *dcrlibwallet.TxAuthor
+	broadcastResult    *wallet.Broadcast
+	signatureResult    **wallet.Signature
+	walletTickets      **wallet.Tickets
+	vspInfo            **wallet.VSP
+	unspentOutputs     **wallet.UnspentOutputs
 
 	testButton decredmaterial.Button
 
@@ -139,7 +155,7 @@ type (
 	D = layout.Dimensions
 )
 
-func (common *pageCommon) loadIcons(decredIcons map[string]image.Image) {
+func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon {
 	ic := pageIcons{
 		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
 		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
@@ -215,20 +231,30 @@ func (common *pageCommon) loadIcons(decredIcons map[string]image.Image) {
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
-	common.icons = ic
-}
-
-func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
-
 	common := &pageCommon{
-		printer:         message.NewPrinter(language.English),
-		wallet:          win.wallet,
-		info:            win.walletInfo,
-		selectedWallet:  &win.selected,
-		selectedAccount: &win.selectedAccount,
-		theme:           win.theme,
-		keyEvents:       win.keyEvents,
-		states:          &win.states,
+		printer:            message.NewPrinter(language.English),
+		wallet:             win.wallet,
+		walletAccount:      &win.walletAccount,
+		info:               win.walletInfo,
+		selectedWallet:     &win.selected,
+		selectedAccount:    &win.selectedAccount,
+		theme:              win.theme,
+		keyEvents:          win.keyEvents,
+		states:             &win.states,
+		icons:              ic,
+		walletSyncStatus:   win.walletSyncStatus,
+		walletTransactions: &win.walletTransactions,
+		walletTransaction:  &win.walletTransaction,
+		acctMixerStatus:    &win.walletAcctMixerStatus,
+		selectedProposal:   &win.selectedProposal,
+		proposals:          &win.proposals,
+		syncedProposal:     win.proposal,
+		txAuthor:           &win.txAuthor,
+		broadcastResult:    &win.broadcastResult,
+		signatureResult:    &win.signatureResult,
+		walletTickets:      &win.walletTickets,
+		vspInfo:            &win.vspInfo,
+		unspentOutputs:     &win.walletUnspentOutputs,
 
 		selectedUTXO:  make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		modal:         win.theme.Modal(),
@@ -236,15 +262,20 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
 		modalLoad:     &modalLoad{},
 		refreshWindow: win.refresh,
 		toast:         &win.toast,
+		internalLog:   &win.internalLog,
 	}
 
-	common.loadIcons(decredIcons)
 	common.subPageBackButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
 	common.subPageInfoButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
 
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
 		log.Info("Error fetching exchange value")
 	}
+
+	return common
+}
+
+func (common *pageCommon) loadPages() map[string]Page {
 
 	common.wallAcctSelector = &walletAccountSelector{
 		sendAccountBtn:           new(widget.Clickable),
@@ -273,7 +304,7 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
 	common.wallAcctSelector.walletInfoButton.Size = values.MarginPadding15
 	common.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
-	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
+	common.testButton = common.theme.Button(new(widget.Clickable), "test button")
 
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 	common.subPageBackButton.Color, common.subPageInfoButton.Color = iconColor, iconColor
@@ -282,39 +313,40 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
 	common.subPageBackButton.Size, common.subPageInfoButton.Size = m25, m25
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
-	common.modalTemplate = win.LoadModalTemplates()
+	common.modalTemplate = common.LoadModalTemplates()
 
-	win.pages = make(map[string]Page)
+	pages := make(map[string]Page)
 
-	win.pages[PageWallet] = win.WalletPage(common)
-	win.pages[PageOverview] = win.OverviewPage(common)
-	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageMore] = win.MorePage(common)
-	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
-	win.pages[PageReceive] = win.ReceivePage(common)
-	win.pages[PageSend] = win.SendPage(common)
-	win.pages[PageTransactionDetails] = win.TransactionDetailsPage(common)
-	win.pages[PageSignMessage] = win.SignMessagePage(common)
-	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
-	win.pages[PageSeedBackup] = win.BackupPage(common)
-	win.pages[PageSettings] = win.SettingsPage(common)
-	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
-	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
-	win.pages[PageProposals] = win.ProposalsPage(common)
-	win.pages[PageProposalDetails] = win.ProposalDetailsPage(common)
-	win.pages[PageDebug] = win.DebugPage(common)
-	win.pages[PageLog] = win.LogPage(common)
-	win.pages[PageStat] = win.StatPage(common)
-	win.pages[PageAbout] = win.AboutPage(common)
-	win.pages[PageHelp] = win.HelpPage(common)
-	win.pages[PageUTXO] = win.UTXOPage(common)
-	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
-	win.pages[PagePrivacy] = win.PrivacyPage(common)
-	win.pages[PageTickets] = win.TicketPage(common)
-	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
-	win.pages[PageTicketsList] = win.TicketPageList(common)
-	win.pages[PageTicketsActivity] = win.TicketActivityPage(common)
-	return common
+	pages[PageWallet] = WalletPage(common)
+	pages[PageOverview] = OverviewPage(common)
+	pages[PageTransactions] = TransactionsPage(common)
+	pages[PageMore] = MorePage(common)
+	pages[PageCreateRestore] = CreateRestorePage(common)
+	pages[PageReceive] = ReceivePage(common)
+	pages[PageSend] = SendPage(common)
+	pages[PageTransactionDetails] = TransactionDetailsPage(common)
+	pages[PageSignMessage] = SignMessagePage(common)
+	pages[PageVerifyMessage] = VerifyMessagePage(common)
+	pages[PageSeedBackup] = BackupPage(common)
+	pages[PageSettings] = SettingsPage(common)
+	pages[PageWalletSettings] = WalletSettingsPage(common)
+	pages[PageSecurityTools] = SecurityToolsPage(common)
+	pages[PageProposals] = ProposalsPage(common)
+	pages[PageProposalDetails] = ProposalDetailsPage(common)
+	pages[PageDebug] = DebugPage(common)
+	pages[PageLog] = LogPage(common)
+	pages[PageStat] = StatPage(common)
+	pages[PageAbout] = AboutPage(common)
+	pages[PageHelp] = HelpPage(common)
+	pages[PageUTXO] = UTXOPage(common)
+	pages[PageAccountDetails] = AcctDetailsPage(common)
+	pages[PagePrivacy] = PrivacyPage(common)
+	pages[PageTickets] = TicketPage(common)
+	pages[ValidateAddress] = ValidateAddressPage(common)
+	pages[PageTicketsList] = TicketPageList(common)
+	pages[PageTicketsActivity] = TicketActivityPage(common)
+
+	return pages
 }
 
 func (common *pageCommon) fetchExchangeValue(target interface{}) error {

@@ -30,7 +30,7 @@ type validateAddressPage struct {
 	stateValidate         int
 }
 
-func (win *Window) ValidateAddressPage(common *pageCommon) Page {
+func ValidateAddressPage(common *pageCommon) Page {
 	pg := &validateAddressPage{
 		theme:       common.theme,
 		validateBtn: common.theme.Button(new(widget.Clickable), "Validate"),

@@ -19,7 +19,7 @@ type securityToolsPage struct {
 	common          *pageCommon
 }
 
-func (win *Window) SecurityToolsPage(common *pageCommon) Page {
+func SecurityToolsPage(common *pageCommon) Page {
 	pg := &securityToolsPage{
 		theme:           common.theme,
 		verifyMessage:   new(widget.Clickable),

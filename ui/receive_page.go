@@ -38,7 +38,7 @@ type receivePage struct {
 	backdrop *widget.Clickable
 }
 
-func (win *Window) ReceivePage(common *pageCommon) Page {
+func ReceivePage(common *pageCommon) Page {
 	page := &receivePage{
 		pageContainer: layout.List{
 			Axis: layout.Vertical,

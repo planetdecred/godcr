@@ -70,11 +70,11 @@ type ticketPage struct {
 	isPurchaseLoading bool
 }
 
-func (win *Window) TicketPage(c *pageCommon) Page {
+func TicketPage(c *pageCommon) Page {
 	pg := &ticketPage{
 		th:      c.theme,
-		wal:     win.wallet,
-		tickets: &win.walletTickets,
+		wal:     c.wallet,
+		tickets: c.walletTickets,
 		common:  c,
 
 		ticketsLive:           layout.List{Axis: layout.Horizontal},
@@ -97,7 +97,7 @@ func (win *Window) TicketPage(c *pageCommon) Page {
 		inputVSP:              c.theme.Editor(new(widget.Editor), "Add a new VSP..."),
 		addVSP:                c.theme.Button(new(widget.Clickable), "Save"),
 		spendingPassword:      c.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		vspInfo:               &win.vspInfo,
+		vspInfo:               c.vspInfo,
 		vspErrChan:            make(chan error),
 	}
 	pg.ticketAmount.Editor.SetText("1")

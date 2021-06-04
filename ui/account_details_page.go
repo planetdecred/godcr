@@ -27,14 +27,14 @@ type acctDetailsPage struct {
 	errorReceiver            chan error
 }
 
-func (win *Window) AcctDetailsPage(common *pageCommon) Page {
+func AcctDetailsPage(common *pageCommon) Page {
 	pg := &acctDetailsPage{
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
 		common:        common,
 		wallet:        common.wallet,
-		acctInfo:      &win.walletAccount,
+		acctInfo:      common.walletAccount,
 		theme:         common.theme,
 		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		editAccount:   new(widget.Clickable),

@@ -44,13 +44,13 @@ type transactionsPage struct {
 	walletDropDown *decredmaterial.DropDown
 }
 
-func (win *Window) TransactionsPage(common *pageCommon) Page {
+func TransactionsPage(common *pageCommon) Page {
 	pg := &transactionsPage{
 		common:             common,
 		container:          layout.Flex{Axis: layout.Vertical},
 		txsList:            layout.List{Axis: layout.Vertical},
-		walletTransactions: &win.walletTransactions,
-		walletTransaction:  &win.walletTransaction,
+		walletTransactions: common.walletTransactions,
+		walletTransaction:  common.walletTransaction,
 		separator:          common.theme.Separator(),
 		theme:              common.theme,
 	}

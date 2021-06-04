@@ -26,11 +26,11 @@ type walletSettingsPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) WalletSettingsPage(common *pageCommon) Page {
+func WalletSettingsPage(common *pageCommon) Page {
 	pg := &walletSettingsPage{
 		theme:         common.theme,
 		common:        common,
-		walletInfo:    win.walletInfo,
+		walletInfo:    common.info,
 		wal:           common.wallet,
 		notificationW: new(widget.Bool),
 		errorReceiver: make(chan error),

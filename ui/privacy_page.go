@@ -28,7 +28,7 @@ type privacyPage struct {
 	acctMixerStatus                      *chan *wallet.AccountMixer
 }
 
-func (win *Window) PrivacyPage(common *pageCommon) Page {
+func PrivacyPage(common *pageCommon) Page {
 	pg := &privacyPage{
 		theme:                   common.theme,
 		common:                  common,
@@ -38,7 +38,7 @@ func (win *Window) PrivacyPage(common *pageCommon) Page {
 		toPrivacySetup:          common.theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   common.theme.Collapsible(),
 		errorReceiver:           make(chan error),
-		acctMixerStatus:         &win.walletAcctMixerStatus,
+		acctMixerStatus:         common.acctMixerStatus,
 	}
 	pg.toPrivacySetup.Background = pg.theme.Color.Primary
 	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)

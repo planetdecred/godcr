@@ -32,11 +32,16 @@ type mainPage struct {
 	totalBalanceUSD string
 }
 
-func MainPage(common *pageCommon, pages map[string]Page) *mainPage {
+func MainPage(common *pageCommon) *mainPage {
+
+	isDarkModeOn := common.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
+	if isDarkModeOn != common.theme.DarkMode {
+		common.theme.SwitchDarkMode(isDarkModeOn)
+	}
 
 	mp := &mainPage{
 		pageCommon: common,
-		pages:      pages,
+		pages:      common.loadPages(),
 		current:    PageOverview,
 
 		minimizeNavDrawerButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),

@@ -33,7 +33,7 @@ type signMessagePage struct {
 	gtx                                        *layout.Context
 }
 
-func (win *Window) SignMessagePage(common *pageCommon) Page {
+func SignMessagePage(common *pageCommon) Page {
 	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
@@ -62,7 +62,7 @@ func (win *Window) SignMessagePage(common *pageCommon) Page {
 		clearButton:   clearButton,
 		signButton:    common.theme.Button(new(widget.Clickable), "Sign message"),
 		copyButton:    common.theme.Button(new(widget.Clickable), "Copy"),
-		result:        &win.signatureResult,
+		result:        common.signatureResult,
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
 		errorReceiver: make(chan error),

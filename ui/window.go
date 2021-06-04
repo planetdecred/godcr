@@ -53,7 +53,6 @@ type Window struct {
 
 	err string
 
-	pages                 map[string]Page
 	keyEvents             chan *key.Event
 	toast                 *toast
 	modal                 chan *modalLoad
@@ -105,7 +104,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.internalLog = internalLog
 
-	win.common = win.loadPages(decredIcons)
+	win.common = win.newPageCommon(decredIcons)
 
 	return win, nil
 }
@@ -247,7 +246,7 @@ func (win *Window) Loop(shutdown chan int) {
 					win.Loading(gtx)
 				} else {
 					if win.currentPage == nil {
-						win.currentPage = MainPage(win.common, win.pages)
+						win.currentPage = MainPage(win.common)
 					}
 					win.layoutPage(gtx, win.currentPage)
 				}

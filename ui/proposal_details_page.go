@@ -48,14 +48,14 @@ type proposalDetails struct {
 	refreshWindow       func()
 }
 
-func (win *Window) ProposalDetailsPage(common *pageCommon) Page {
+func ProposalDetailsPage(common *pageCommon) Page {
 	pg := &proposalDetails{
 		theme:               common.theme,
 		loadingDescription:  false,
 		common:              common,
 		descriptionCard:     common.theme.Card(),
 		descriptionList:     &layout.List{Axis: layout.Vertical},
-		selectedProposal:    &win.selectedProposal,
+		selectedProposal:    common.selectedProposal,
 		commentsBundleBtn:   new(widget.Clickable),
 		proposalBundleBtn:   new(widget.Clickable),
 		viewInGithubBtn:     new(widget.Clickable),

@@ -23,7 +23,7 @@ type verifyMessagePage struct {
 	verifyMessageStatus *widget.Icon
 }
 
-func (win *Window) VerifyMessagePage(c *pageCommon) Page {
+func VerifyMessagePage(c *pageCommon) Page {
 	pg := &verifyMessagePage{
 		theme:         c.theme,
 		common:        c,

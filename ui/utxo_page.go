@@ -41,15 +41,15 @@ type utxoPage struct {
 	selectedAccountID int32
 }
 
-func (win *Window) UTXOPage(common *pageCommon) Page {
+func UTXOPage(common *pageCommon) Page {
 	pg := &utxoPage{
 		theme:          common.theme,
 		common:         common,
-		unspentOutputs: &win.walletUnspentOutputs,
+		unspentOutputs: common.unspentOutputs,
 		utxoListContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		txAuthor:               &win.txAuthor,
+		txAuthor:               common.txAuthor,
 		unspentOutputsSelected: &common.selectedUTXO,
 		selecAllChexBox:        common.theme.CheckBox(new(widget.Bool), ""),
 		separator:              common.theme.Separator(),
