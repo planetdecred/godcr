@@ -148,7 +148,6 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 }
 
 func (mp *mainPage) handle() {
-	mp.pages[mp.current].handle()
 
 	for mp.minimizeNavDrawerButton.Button.Clicked() {
 		mp.isNavDrawerMinimized = true
@@ -186,7 +185,8 @@ func (mp *mainPage) setReturnPage(from string) {
 }
 
 func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
-
+	mp.handler() // pageCommon
+	mp.pages[mp.current].handle()
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			// fill the entire window with a color if a user has no wallet created
