@@ -110,9 +110,7 @@ type pageCommon struct {
 	icons           pageIcons
 	page            *string
 	returnPage      *string
-	amountDCRtoUSD  float64
 	usdExchangeRate float64
-	usdExchangeSet  bool
 	dcrUsdtBittrex  DCRUSDTBittrex
 	navTab          *decredmaterial.Tabs
 	keyEvents       chan *key.Event
@@ -123,12 +121,7 @@ type pageCommon struct {
 	modalLoad       *modalLoad
 	modalTemplate   *ModalTemplate
 
-	appBarNavItems          []navHandler
-	drawerNavItems          []navHandler
-	isNavDrawerMinimized    *bool
-	minimizeNavDrawerButton decredmaterial.IconButton
-	maximizeNavDrawerButton decredmaterial.IconButton
-	testButton              decredmaterial.Button
+	testButton decredmaterial.Button
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
@@ -226,92 +219,37 @@ func (win *Window) loadIcons(decredIcons map[string]image.Image) pageIcons {
 	return ic
 }
 
-func (win *Window) loadPages(decredIcons map[string]image.Image) {
+func (win *Window) loadPages(decredIcons map[string]image.Image) *pageCommon {
 
 	ic := win.loadIcons(decredIcons)
 
-	appBarNavItems := []navHandler{
-		{
-			clickable: new(widget.Clickable),
-			image:     ic.sendIcon,
-			page:      values.String(values.StrSend),
-		},
-		{
-			clickable: new(widget.Clickable),
-			image:     ic.receiveIcon,
-			page:      values.String(values.StrReceive),
-		},
-	}
+	common := &pageCommon{
+		printer:         message.NewPrinter(language.English),
+		wallet:          win.wallet,
+		info:            win.walletInfo,
+		selectedWallet:  &win.selected,
+		selectedAccount: &win.selectedAccount,
+		theme:           win.theme,
+		icons:           ic,
+		// returnPage:      &win.previous,
+		// page:            &win.current,
+		keyEvents: win.keyEvents,
+		states:    &win.states,
 
-	drawerNavItems := []navHandler{
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.overviewIcon,
-			imageInactive: ic.overviewIconInactive,
-			page:          values.String(values.StrOverview),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.transactionIcon,
-			imageInactive: ic.transactionIconInactive,
-			page:          values.String(values.StrTransactions),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.walletIcon,
-			imageInactive: ic.walletIconInactive,
-			page:          values.String(values.StrWallets),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.proposalIconActive,
-			imageInactive: ic.proposalIconInactive,
-			page:          PageProposals,
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.ticketIcon,
-			imageInactive: ic.ticketIconInactive,
-			page:          values.String(values.StrTickets),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.moreIcon,
-			imageInactive: ic.moreIconInactive,
-			page:          values.String(values.StrMore),
-		},
-	}
-
-	common := pageCommon{
-		printer:                 message.NewPrinter(language.English),
-		wallet:                  win.wallet,
-		info:                    win.walletInfo,
-		selectedWallet:          &win.selected,
-		selectedAccount:         &win.selectedAccount,
-		theme:                   win.theme,
-		icons:                   ic,
-		returnPage:              &win.previous,
-		page:                    &win.current,
-		keyEvents:               win.keyEvents,
-		states:                  &win.states,
-		appBarNavItems:          appBarNavItems,
-		drawerNavItems:          drawerNavItems,
-		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
-		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
-		modal:                   win.theme.Modal(),
-		modalReceiver:           win.modal,
-		modalLoad:               &modalLoad{},
-		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		changePage:              win.changePage,
-		setReturnPage:           win.setReturnPage,
-		refreshWindow:           win.refresh,
-		toast:                   &win.toast,
+		selectedUTXO:      make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		modal:             win.theme.Modal(),
+		modalReceiver:     win.modal,
+		modalLoad:         &modalLoad{},
+		subPageBackButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
+		subPageInfoButton: win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
+		// changePage:        win.changePage,
+		// setReturnPage:     win.setReturnPage,
+		refreshWindow: win.refresh,
+		toast:         &win.toast,
 	}
 
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
-		return
+		log.Info("Error fetching exchange value")
 	}
 
 	common.wallAcctSelector = &walletAccountSelector{
@@ -342,10 +280,6 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) {
 	common.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
-	isNavDrawerMinimized := false
-	common.isNavDrawerMinimized = &isNavDrawerMinimized
-
-	common.minimizeNavDrawerButton.Color, common.maximizeNavDrawerButton.Color = iconColor, iconColor
 
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 	common.subPageBackButton.Color, common.subPageInfoButton.Color = iconColor, iconColor
@@ -357,7 +291,7 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) {
 	common.modalTemplate = win.LoadModalTemplates()
 
 	win.pages = make(map[string]Page)
-	win.pages[PageMain] = MainPage(&common)
+
 	win.pages[PageWallet] = win.WalletPage(common)
 	win.pages[PageOverview] = win.OverviewPage(common)
 	win.pages[PageTransactions] = win.TransactionsPage(common)
@@ -386,6 +320,7 @@ func (win *Window) loadPages(decredIcons map[string]image.Image) {
 	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
 	win.pages[PageTicketsList] = win.TicketPageList(common)
 	win.pages[PageTicketsActivity] = win.TicketActivityPage(common)
+	return common
 }
 
 func (page *pageCommon) fetchExchangeValue(target interface{}) error {
@@ -405,18 +340,18 @@ func (page *pageCommon) fetchExchangeValue(target interface{}) error {
 	return nil
 }
 
-func (page pageCommon) refreshPage() {
+func (page *pageCommon) refreshPage() {
 	page.refreshWindow()
 }
 
-func (page pageCommon) notify(text string, success bool) {
+func (page *pageCommon) notify(text string, success bool) {
 	*page.toast = &toast{
 		text:    text,
 		success: success,
 	}
 }
 
-func (page pageCommon) closeModal() {
+func (page *pageCommon) closeModal() {
 	go func() {
 		page.modalReceiver <- &modalLoad{
 			title:   "",
@@ -426,7 +361,7 @@ func (page pageCommon) closeModal() {
 	}()
 }
 
-func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (page *pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	page.handler()
 
 	return layout.Stack{}.Layout(gtx,
@@ -437,14 +372,14 @@ func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dim
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(page.layoutTopBar),
+				// layout.Rigid(page.layoutTopBar),
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							card := page.theme.Card()
-							card.Radius = decredmaterial.CornerRadius{}
-							return card.Layout(gtx, page.layoutNavDrawer)
-						}),
+						// layout.Rigid(func(gtx C) D {
+						// 	card := page.theme.Card()
+						// 	card.Radius = decredmaterial.CornerRadius{}
+						// 	return card.Layout(gtx, page.layoutNavDrawer)
+						// }),
 						layout.Rigid(body),
 					)
 				}),
@@ -513,7 +448,7 @@ func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions
 	return c.padding.Layout(gtx, w)
 }
 
-func (page pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (page *pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.UniformInset(values.MarginPadding24).Layout(gtx, body)
 }
 
@@ -530,7 +465,7 @@ type SubPage struct {
 	handleExtra  func()
 }
 
-func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (page *pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
@@ -541,7 +476,7 @@ func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dime
 	)
 }
 
-func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (page *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
 	page.subpageEventHandler(sp)
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -600,7 +535,7 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 	)
 }
 
-func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (page *pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	card := page.theme.Card()
 	card.Color = color.NRGBA{}
 	return card.Layout(gtx, func(gtx C) D {
@@ -611,7 +546,7 @@ func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout
 	})
 }
 
-func (page pageCommon) subpageEventHandler(sp SubPage) {
+func (page *pageCommon) subpageEventHandler(sp SubPage) {
 	if page.subPageInfoButton.Button.Clicked() {
 		go func() {
 			page.modalReceiver <- &modalLoad{

@@ -39,7 +39,8 @@ type Window struct {
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
-	current, previous string
+	common      *pageCommon
+	currentPage *mainPage
 
 	signatureResult *wallet.Signature
 
@@ -104,15 +105,14 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.internalLog = internalLog
 
-	win.current = PageMain
-	win.loadPages(decredIcons)
+	win.common = win.loadPages(decredIcons)
+	// win.pages[PageMain] = MainPage(common, win.pages)
+	// win.current = PageMain
 
 	return win, nil
 }
 
 func (win *Window) changePage(page string) {
-	win.pages[win.current].onClose()
-	win.current = page
 	win.refresh()
 }
 
@@ -123,11 +123,6 @@ func (win *Window) changePageAndRefresh(page string) {
 
 func (win *Window) refresh() {
 	win.window.Invalidate()
-}
-
-func (win *Window) setReturnPage(from string) {
-	win.previous = from
-	win.refresh()
 }
 
 func (win *Window) unloaded() {
@@ -252,7 +247,10 @@ func (win *Window) Loop(shutdown chan int) {
 				if s.loading {
 					win.Loading(gtx)
 				} else {
-					win.layoutPage(gtx, win.pages[win.current])
+					if win.currentPage == nil {
+						win.currentPage = MainPage(win.common, win.pages)
+					}
+					win.layoutPage(gtx, win.currentPage)
 				}
 
 				evt.Frame(win.ops)

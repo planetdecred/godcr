@@ -6,7 +6,6 @@ package ui
 import (
 	"fmt"
 	"image"
-	"strconv"
 	"strings"
 	"time"
 
@@ -44,7 +43,7 @@ type (
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func (page pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitchColor bool) layout.Dimensions {
+func (page *pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitchColor bool) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
 	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
@@ -65,210 +64,10 @@ func (page pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitch
 	)
 }
 
-func (page *pageCommon) layoutUSDBalance(gtx layout.Context) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			currencyExchangeValue := page.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-			page.usdExchangeSet = false
-			if currencyExchangeValue == USDExchangeValue {
-				page.usdExchangeSet = true
-			}
-			if page.usdExchangeSet && page.dcrUsdtBittrex.LastTradeRate != "" {
-				page.usdExchangeRate, _ = strconv.ParseFloat(page.dcrUsdtBittrex.LastTradeRate, 64)
-				TotalBalanceFloat, _ := strconv.ParseFloat(page.info.TotalBalanceRaw, 64)
-				page.amountDCRtoUSD = TotalBalanceFloat * page.usdExchangeRate
-
-				inset := layout.Inset{
-					Top:  values.MarginPadding3,
-					Left: values.MarginPadding8,
-				}
-				border := widget.Border{Color: page.theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
-				return inset.Layout(gtx, func(gtx C) D {
-					padding := layout.Inset{
-						Top:    values.MarginPadding3,
-						Bottom: values.MarginPadding3,
-						Left:   values.MarginPadding6,
-						Right:  values.MarginPadding6,
-					}
-					return border.Layout(gtx, func(gtx C) D {
-						return padding.Layout(gtx, func(gtx C) D {
-							amountDCRtoUSDString := formatUSDBalance(page.printer, page.amountDCRtoUSD)
-							return page.theme.Body2(amountDCRtoUSDString).Layout(gtx)
-						})
-					})
-				})
-			}
-			return D{}
-		}),
-	)
-}
-
-// layoutTopBar is the top horizontal bar on every page of the app. It lays out the wallet balance, receive and send
-// buttons.
-func (page *pageCommon) layoutTopBar(gtx layout.Context) layout.Dimensions {
-	card := page.theme.Card()
-	card.Radius = decredmaterial.CornerRadius{}
-	return card.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.W.Layout(gtx, func(gtx C) D {
-							h := values.MarginPadding24
-							v := values.MarginPadding16
-							// Balance container
-							return Container{padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
-								func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											img := page.icons.logo
-											img.Scale = 1.0
-											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
-												func(gtx C) D {
-													return img.Layout(gtx)
-												})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return page.layoutBalance(gtx, page.info.TotalBalance, true)
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return page.layoutUSDBalance(gtx)
-										}),
-									)
-								})
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-								list := layout.List{Axis: layout.Horizontal}
-								return list.Layout(gtx, len(page.appBarNavItems), func(gtx C, i int) D {
-									// header buttons container
-									return Container{layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-										return decredmaterial.Clickable(gtx, page.appBarNavItems[i].clickable, func(gtx C) D {
-											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-														func(gtx C) D {
-															return layout.Center.Layout(gtx, func(gtx C) D {
-																img := page.appBarNavItems[i].image
-																img.Scale = 1.0
-																return page.appBarNavItems[i].image.Layout(gtx)
-															})
-														})
-												}),
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{
-														Left: values.MarginPadding0,
-													}.Layout(gtx, func(gtx C) D {
-														return layout.Center.Layout(gtx, func(gtx C) D {
-															return page.theme.Body1(page.appBarNavItems[i].page).Layout(gtx)
-														})
-													})
-												}),
-											)
-										})
-									})
-								})
-							})
-						})
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return page.theme.Separator().Layout(gtx)
-			}),
-		)
-	})
-}
-
 var (
 	navDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
 	navDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
 )
-
-// layoutNavDrawer is the left vertical pane on every page of the app. It vertically lays out buttons used to navigate
-// to different pages.
-func (page *pageCommon) layoutNavDrawer(gtx layout.Context) layout.Dimensions {
-	return layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(page.drawerNavItems), func(gtx C, i int) D {
-				background := page.theme.Color.Surface
-				if page.drawerNavItems[i].page == *page.page {
-					background = page.theme.Color.ActiveGray
-				}
-				txt := page.theme.Label(values.TextSize16, page.drawerNavItems[i].page)
-				return decredmaterial.Clickable(gtx, page.drawerNavItems[i].clickable, func(gtx C) D {
-					card := page.theme.Card()
-					card.Color = background
-					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
-					return card.Layout(gtx, func(gtx C) D {
-						return Container{
-							layout.Inset{
-								Top:    values.MarginPadding16,
-								Right:  values.MarginPadding24,
-								Bottom: values.MarginPadding16,
-								Left:   values.MarginPadding24,
-							},
-						}.Layout(gtx, func(gtx C) D {
-							axis := layout.Horizontal
-							leftInset := values.MarginPadding15
-							width := navDrawerWidth
-							if *page.isNavDrawerMinimized {
-								axis = layout.Vertical
-								txt.TextSize = values.TextSize10
-								leftInset = values.MarginPadding0
-								width = navDrawerMinimizedWidth
-							}
-
-							gtx.Constraints.Min.X = gtx.Px(width)
-							return layout.Flex{Axis: axis}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									img := page.drawerNavItems[i].imageInactive
-									if page.drawerNavItems[i].page == *page.page {
-										img = page.drawerNavItems[i].image
-									}
-									return layout.Center.Layout(gtx, func(gtx C) D {
-										img.Scale = 1.0
-										return img.Layout(gtx)
-									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: leftInset,
-										Top:  values.MarginPadding4,
-									}.Layout(gtx, func(gtx C) D {
-										textColor := page.theme.Color.Gray4
-										if page.drawerNavItems[i].page == *page.page {
-											textColor = page.theme.Color.DeepBlue
-										}
-										txt.Color = textColor
-										return layout.Center.Layout(gtx, txt.Layout)
-									})
-								}),
-							)
-						})
-					})
-				})
-			})
-		}),
-		layout.Expanded(func(gtx C) D {
-			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := page.minimizeNavDrawerButton
-				if *page.isNavDrawerMinimized {
-					btn = page.maximizeNavDrawerButton
-				}
-				return btn.Layout(gtx)
-			})
-		}),
-	)
-}
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
@@ -333,7 +132,7 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
-													return walletLabel(gtx, *common, row.transaction.WalletName)
+													return walletLabel(gtx, common, row.transaction.WalletName)
 												}
 												return layout.Dimensions{}
 											}),
@@ -382,7 +181,7 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
 // are transactions from multiple wallets
-func walletLabel(gtx layout.Context, c pageCommon, walletName string) D {
+func walletLabel(gtx layout.Context, c *pageCommon, walletName string) D {
 	return decredmaterial.Card{
 		Color: c.theme.Color.LightGray,
 	}.Layout(gtx, func(gtx C) D {
@@ -408,7 +207,7 @@ func endToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.D
 	)
 }
 
-func (page pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
+func (page *pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return body
@@ -832,9 +631,9 @@ func (page *pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimensions {
+func ticketCard(gtx layout.Context, c *pageCommon, t *wallet.Ticket) layout.Dimensions {
 	var itemWidth int
-	st := ticketStatusIcon(&c, t.Info.Status)
+	st := ticketStatusIcon(c, t.Info.Status)
 	if st == nil {
 		return layout.Dimensions{}
 	}
@@ -1074,7 +873,7 @@ func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout
 	})
 }
 
-func (page pageCommon) handleToast() {
+func (page *pageCommon) handleToast() {
 	if (*page.toast) == nil {
 		return
 	}
@@ -1121,27 +920,6 @@ func createOrderDropDown(c *pageCommon) *decredmaterial.DropDown {
 
 func (page *pageCommon) handler() {
 	page.handleToast()
-
-	for page.minimizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = true
-	}
-
-	for page.maximizeNavDrawerButton.Button.Clicked() {
-		*page.isNavDrawerMinimized = false
-	}
-
-	for i := range page.appBarNavItems {
-		for page.appBarNavItems[i].clickable.Clicked() {
-			page.setReturnPage(*page.page)
-			page.changePage(page.appBarNavItems[i].page)
-		}
-	}
-
-	for i := range page.drawerNavItems {
-		for page.drawerNavItems[i].clickable.Clicked() {
-			page.changePage(page.drawerNavItems[i].page)
-		}
-	}
 
 	for windex := 0; windex < page.info.LoadedWallets; windex++ {
 		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectSendAccount, windex)

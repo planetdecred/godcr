@@ -70,7 +70,7 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case wallet.CreatedSeed:
 		win.notifyOnSuccess("Wallet created")
-		win.changePage(PageWallet)
+		win.currentPage.changePage(PageWallet)
 	case wallet.Renamed:
 		win.notifyOnSuccess("Wallet renamed")
 	case wallet.Restored:
