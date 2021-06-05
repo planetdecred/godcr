@@ -36,7 +36,7 @@ type amountValue struct {
 
 type sendPage struct {
 	pageContainer layout.List
-	common        pageCommon
+	common        *pageCommon
 	theme         *decredmaterial.Theme
 
 	txAuthor        *dcrlibwallet.TxAuthor
@@ -113,7 +113,7 @@ type sendPage struct {
 	walletSelected int
 }
 
-func (win *Window) SendPage(common pageCommon) Page {
+func SendPage(common *pageCommon) Page {
 	pg := &sendPage{
 		pageContainer: layout.List{
 			Axis:      layout.Vertical,
@@ -123,8 +123,8 @@ func (win *Window) SendPage(common pageCommon) Page {
 		common:          common,
 		theme:           common.theme,
 		wallet:          common.wallet,
-		txAuthor:        &win.txAuthor,
-		broadcastResult: &win.broadcastResult,
+		txAuthor:        common.txAuthor,
+		broadcastResult: common.broadcastResult,
 
 		currencySwap: new(widget.Clickable),
 
@@ -174,7 +174,7 @@ func (win *Window) SendPage(common pageCommon) Page {
 	pg.rightAmountEditor.CustomButton.Text = "Max"
 	pg.rightAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	pg.passwordEditor = win.theme.EditorPassword(new(widget.Editor), "Spending password")
+	pg.passwordEditor = common.theme.EditorPassword(new(widget.Editor), "Spending password")
 	pg.passwordEditor.Editor.SetText("")
 	pg.passwordEditor.Editor.SingleLine = true
 	pg.passwordEditor.Editor.Submit = true
@@ -224,53 +224,51 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	dims := common.Layout(gtx, func(gtx C) D {
-		return layout.Stack{Alignment: layout.S}.Layout(gtx,
-			layout.Expanded(func(gtx C) D {
-				return layout.Stack{Alignment: layout.NE}.Layout(gtx,
-					layout.Expanded(func(gtx C) D {
-						return common.UniformPadding(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return pg.topNav(gtx, common)
+	dims := layout.Stack{Alignment: layout.S}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					return common.UniformPadding(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return pg.topNav(gtx, common)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+									return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+										return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
 									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-										return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-											return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
-										})
-									})
-								}),
-							)
-						})
-					}),
-					layout.Stacked(func(gtx C) D {
-						if pg.isMoreOption {
-							inset := layout.Inset{
-								Top:   values.MarginPadding40,
-								Right: values.MarginPadding20,
-							}
-							return inset.Layout(gtx, func(gtx C) D {
-								border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
-								return border.Layout(gtx, pg.clearAllBtn.Layout)
-							})
-						}
-						return layout.Dimensions{}
-					}),
-				)
-			}),
-			layout.Stacked(func(gtx C) D {
-				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-				return layout.S.Layout(gtx, func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
-						return pg.balanceSection(gtx, common)
+								})
+							}),
+						)
 					})
+				}),
+				layout.Stacked(func(gtx C) D {
+					if pg.isMoreOption {
+						inset := layout.Inset{
+							Top:   values.MarginPadding40,
+							Right: values.MarginPadding20,
+						}
+						return inset.Layout(gtx, func(gtx C) D {
+							border := widget.Border{Color: pg.theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+							return border.Layout(gtx, pg.clearAllBtn.Layout)
+						})
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		}),
+		layout.Stacked(func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			return layout.S.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
+					return pg.balanceSection(gtx, common)
 				})
-			}),
-		)
-	})
+			})
+		}),
+	)
 
 	if pg.isConfirmationModalOpen {
 		return common.Modal(gtx, dims, pg.confirmationModal(gtx, common))
@@ -279,7 +277,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) topNav(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -306,7 +304,7 @@ func (pg *sendPage) topNav(gtx layout.Context, common pageCommon) layout.Dimensi
 	)
 }
 
-func (pg *sendPage) toSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) toSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, "To", func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -409,7 +407,7 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) balanceSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	c := pg.theme.Card()
 	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	return c.Layout(gtx, func(gtx C) D {
@@ -447,7 +445,7 @@ func (pg *sendPage) balanceSection(gtx layout.Context, common pageCommon) layout
 	})
 }
 
-func (pg *sendPage) confirmationModal(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *sendPage) confirmationModal(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	receiveWallet := common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet]
 	receiveAcct := receiveWallet.Accounts[common.wallAcctSelector.selectedReceiveAccount]
 	sendWallet := common.info.Wallets[common.wallAcctSelector.selectedSendWallet]
@@ -666,7 +664,7 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue, wallet
 	)
 }
 
-func (pg *sendPage) validate(c pageCommon) bool {
+func (pg *sendPage) validate(c *pageCommon) bool {
 	if pg.sendToOption == "Address" {
 		isAmountValid := pg.validateLeftAmount()
 		if pg.rightAmountEditor.Editor.Focused() {
@@ -691,7 +689,7 @@ func (pg *sendPage) validate(c pageCommon) bool {
 	return true
 }
 
-func (pg *sendPage) validateDestinationAddress(c pageCommon) bool {
+func (pg *sendPage) validateDestinationAddress(c *pageCommon) bool {
 	if pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
 		isValid, _ := pg.wallet.IsAddressValid(pg.destinationAddressEditor.Editor.Text())
 		if !isValid {
@@ -745,7 +743,7 @@ func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (pg *sendPage) calculateValues(c pageCommon, isUpdateAmountInput bool) {
+func (pg *sendPage) calculateValues(c *pageCommon, isUpdateAmountInput bool) {
 	defaultLeftValues := fmt.Sprintf("- %s", "DCR")
 	defaultRightValues := "($ -)"
 
@@ -781,7 +779,7 @@ func (pg *sendPage) calculateValues(c pageCommon, isUpdateAmountInput bool) {
 	pg.balanceAfterSend(false, c)
 }
 
-func (pg *sendPage) updateAmountInputsValues(c pageCommon, isUpdateAmountInput bool) {
+func (pg *sendPage) updateAmountInputsValues(c *pageCommon, isUpdateAmountInput bool) {
 	switch {
 	case pg.leftExchangeValue == "USD" && pg.LastTradeRate != "" && pg.leftAmountEditor.Editor.Focused():
 		pg.rightAmountEditor.Editor.SetText(fmt.Sprintf("%f", pg.amountUSDtoDCR))
@@ -814,7 +812,7 @@ func (pg *sendPage) updateExchangeError() {
 	}
 }
 
-func (pg *sendPage) setDestinationAddr(sendAmount float64, common pageCommon) {
+func (pg *sendPage) setDestinationAddr(sendAmount float64, common *pageCommon) {
 	receiveWallet := common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet]
 	receiveAcct := receiveWallet.Accounts[common.wallAcctSelector.selectedReceiveAccount]
 
@@ -882,7 +880,7 @@ func (pg *sendPage) getTxFee() {
 	pg.txFeeSize = fmt.Sprintf("%v Bytes", feeAndSize.EstimatedSignedSize)
 }
 
-func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool, c pageCommon) {
+func (pg *sendPage) balanceAfterSend(isInputAmountEmpty bool, c *pageCommon) {
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
 	sendAcct := sendWallet.Accounts[c.wallAcctSelector.selectedSendAccount]
 
@@ -907,7 +905,7 @@ func (pg *sendPage) feeEstimationError(err, errorPath string) {
 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }
 
-func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
+func (pg *sendPage) watchForBroadcastResult(c *pageCommon) {
 	if pg.broadcastResult == nil {
 		return
 	}
@@ -931,7 +929,7 @@ func (pg *sendPage) watchForBroadcastResult(c pageCommon) {
 	}
 }
 
-func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c pageCommon) {
+func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c *pageCommon) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
 		pg.fetchExchangeValue()
@@ -979,7 +977,7 @@ func (pg *sendPage) fetchExchangeValue() {
 	}()
 }
 
-func (pg *sendPage) setMaxAmount(c pageCommon) {
+func (pg *sendPage) setMaxAmount(c *pageCommon) {
 
 	// Get spendable balance
 	sendWallet := c.info.Wallets[c.wallAcctSelector.selectedSendWallet]
@@ -1035,7 +1033,7 @@ func (pg *sendPage) updateAmountField(spendableBalanceDCR float64) {
 	}
 }
 
-func (pg *sendPage) sendFund(c pageCommon) {
+func (pg *sendPage) sendFund(c *pageCommon) {
 	if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
 		return
 	}

@@ -24,7 +24,7 @@ import (
 const PageReceive = "Receive"
 
 type receivePage struct {
-	common            pageCommon
+	common            *pageCommon
 	pageContainer     layout.List
 	theme             *decredmaterial.Theme
 	isNewAddr, isInfo bool
@@ -38,7 +38,7 @@ type receivePage struct {
 	backdrop *widget.Clickable
 }
 
-func (win *Window) ReceivePage(common pageCommon) Page {
+func ReceivePage(common *pageCommon) Page {
 	page := &receivePage{
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -123,23 +123,21 @@ func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	dims := common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return pg.topNav(gtx, common)
+	dims := common.UniformPadding(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return pg.topNav(gtx, common)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return common.theme.Card().Layout(gtx, func(gtx C) D {
+					return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+						return pageContent[i](gtx)
 					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return common.theme.Card().Layout(gtx, func(gtx C) D {
-						return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-							return pageContent[i](gtx)
-						})
-					})
-				}),
-			)
-		})
+				})
+			}),
+		)
 	})
 
 	return dims
@@ -164,7 +162,7 @@ func (pg *receivePage) pageBackdropLayout(gtx layout.Context) {
 	}
 }
 
-func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *receivePage) topNav(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -184,7 +182,7 @@ func (pg *receivePage) topNav(gtx layout.Context, common pageCommon) layout.Dime
 	)
 }
 
-func (pg *receivePage) titleLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *receivePage) titleLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := common.theme.Body2("Your Address")
@@ -209,7 +207,7 @@ func (pg *receivePage) titleLayout(gtx layout.Context, common pageCommon) layout
 	)
 }
 
-func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *receivePage) addressLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	card := decredmaterial.Card{
 		Inset: layout.Inset{
 			Top:    values.MarginPadding14,
@@ -240,7 +238,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c pageCommon) layout.Di
 	)
 }
 
-func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *receivePage) addressQRCodeLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	pg.addrs = common.info.Wallets[common.wallAcctSelector.selectedReceiveWallet].Accounts[common.wallAcctSelector.selectedReceiveAccount].CurrentAddress
 	absoluteWdPath, err := GetAbsolutePath()
 	if err != nil {

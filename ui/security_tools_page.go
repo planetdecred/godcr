@@ -16,10 +16,10 @@ type securityToolsPage struct {
 	theme           *decredmaterial.Theme
 	verifyMessage   *widget.Clickable
 	validateAddress *widget.Clickable
-	common          pageCommon
+	common          *pageCommon
 }
 
-func (win *Window) SecurityToolsPage(common pageCommon) Page {
+func SecurityToolsPage(common *pageCommon) Page {
 	pg := &securityToolsPage{
 		theme:           common.theme,
 		verifyMessage:   new(widget.Clickable),
@@ -55,18 +55,16 @@ func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 }
 
-func (pg *securityToolsPage) message(common pageCommon) layout.Widget {
+func (pg *securityToolsPage) message(common *pageCommon) layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, common.icons.verifyMessageIcon, pg.verifyMessage, common.theme.Body1("Verify Message").Layout)
 	}
 }
 
-func (pg *securityToolsPage) address(common pageCommon) layout.Widget {
+func (pg *securityToolsPage) address(common *pageCommon) layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, common.icons.locationPinIcon, pg.validateAddress, common.theme.Body1("Validate Address").Layout)
 	}

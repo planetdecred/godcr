@@ -28,7 +28,7 @@ type row struct {
 }
 
 type settingsPage struct {
-	common        pageCommon
+	common        *pageCommon
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
 	walletInfo    *wallet.MultiWalletInfo
@@ -54,13 +54,12 @@ type settingsPage struct {
 	peerAddr          string
 	agentValue        string
 	errorReceiver     chan error
-	loadPage          func(pageIcons)
 
 	currencyPreference *preference.ListPreference
 	languagePreference *preference.ListPreference
 }
 
-func (win *Window) SettingsPage(common pageCommon) Page {
+func SettingsPage(common *pageCommon) Page {
 	chevronRightIcon := common.icons.chevronRight
 
 	pg := &settingsPage{
@@ -68,7 +67,7 @@ func (win *Window) SettingsPage(common pageCommon) Page {
 			Axis: layout.Vertical,
 		},
 		theme:      common.theme,
-		walletInfo: win.walletInfo,
+		walletInfo: common.info,
 		wal:        common.wallet,
 		common:     common,
 
@@ -88,8 +87,6 @@ func (win *Window) SettingsPage(common pageCommon) Page {
 
 		confirm: common.theme.Button(new(widget.Clickable), "Ok"),
 		cancel:  common.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
-
-		loadPage: win.loadPage,
 	}
 
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
@@ -152,20 +149,14 @@ func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if pg.currencyPreference.IsShowing {
-		return pg.currencyPreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
-			return common.UniformPadding(gtx, body)
-		}))
+		return pg.currencyPreference.Layout(gtx, common.UniformPadding(gtx, body))
 	}
 
 	if pg.languagePreference.IsShowing {
-		return pg.languagePreference.Layout(gtx, common.Layout(gtx, func(gtx C) D {
-			return common.UniformPadding(gtx, body)
-		}))
+		return pg.languagePreference.Layout(gtx, common.UniformPadding(gtx, body))
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *settingsPage) general() layout.Widget {
@@ -380,7 +371,6 @@ func (pg *settingsPage) handle() {
 	if pg.isDarkModeOn.Changed() {
 		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
-		pg.loadPage(common.icons)
 	}
 
 	if pg.spendUnconfirmed.Changed() {

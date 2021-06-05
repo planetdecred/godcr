@@ -16,7 +16,7 @@ import (
 const PageSignMessage = "SignMessage"
 
 type signMessagePage struct {
-	common        pageCommon
+	common        *pageCommon
 	theme         *decredmaterial.Theme
 	container     layout.List
 	wallet        *wallet.Wallet
@@ -33,7 +33,7 @@ type signMessagePage struct {
 	gtx                                        *layout.Context
 }
 
-func (win *Window) SignMessagePage(common pageCommon) Page {
+func SignMessagePage(common *pageCommon) Page {
 	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
@@ -62,7 +62,7 @@ func (win *Window) SignMessagePage(common pageCommon) Page {
 		clearButton:   clearButton,
 		signButton:    common.theme.Button(new(widget.Clickable), "Sign message"),
 		copyButton:    common.theme.Button(new(widget.Clickable), "Copy"),
-		result:        &win.signatureResult,
+		result:        common.signatureResult,
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
 		errorReceiver: make(chan error),
@@ -106,9 +106,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 		return common.SubPageLayout(gtx, page)
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *signMessagePage) description() layout.Widget {
@@ -193,7 +191,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *signMessagePage) updateColors(common pageCommon) {
+func (pg *signMessagePage) updateColors(common *pageCommon) {
 	if pg.isSigningMessage || pg.addressEditor.Editor.Text() == "" || pg.messageEditor.Editor.Text() == "" {
 		pg.signButton.Background = common.theme.Color.Hint
 	} else {

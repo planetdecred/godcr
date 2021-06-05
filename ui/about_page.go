@@ -11,7 +11,7 @@ import (
 const PageAbout = "About"
 
 type aboutPage struct {
-	common    pageCommon
+	common    *pageCommon
 	theme     *decredmaterial.Theme
 	card      decredmaterial.Card
 	container *layout.List
@@ -27,7 +27,7 @@ type aboutPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) AboutPage(common pageCommon) Page {
+func AboutPage(common *pageCommon) Page {
 	pg := &aboutPage{
 		common:           common,
 		theme:            common.theme,
@@ -38,7 +38,7 @@ func (win *Window) AboutPage(common pageCommon) Page {
 		buildDate:        common.theme.Body1("Build date"),
 		buildDateValue:   common.theme.Body1("2020-09-10"),
 		network:          common.theme.Body1("Network"),
-		networkValue:     common.theme.Body1(win.wallet.Net),
+		networkValue:     common.theme.Body1(common.wallet.Net),
 		license:          common.theme.Body1("License"),
 		chevronRightIcon: common.icons.chevronRight,
 	}
@@ -67,9 +67,7 @@ func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 		return pg.common.SubPageLayout(gtx, page)
 	}
 
-	return pg.common.Layout(gtx, func(gtx C) D {
-		return pg.common.UniformPadding(gtx, body)
-	})
+	return pg.common.UniformPadding(gtx, body)
 }
 
 func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {

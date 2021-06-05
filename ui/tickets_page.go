@@ -28,7 +28,7 @@ type ticketPage struct {
 	th     *decredmaterial.Theme
 	wal    *wallet.Wallet
 	vspd   *dcrlibwallet.VSPD
-	common pageCommon
+	common *pageCommon
 
 	ticketPageContainer layout.List
 	ticketsLive         layout.List
@@ -70,11 +70,11 @@ type ticketPage struct {
 	isPurchaseLoading bool
 }
 
-func (win *Window) TicketPage(c pageCommon) Page {
+func TicketPage(c *pageCommon) Page {
 	pg := &ticketPage{
 		th:      c.theme,
-		wal:     win.wallet,
-		tickets: &win.walletTickets,
+		wal:     c.wallet,
+		tickets: c.walletTickets,
 		common:  c,
 
 		ticketsLive:           layout.List{Axis: layout.Horizontal},
@@ -97,7 +97,7 @@ func (win *Window) TicketPage(c pageCommon) Page {
 		inputVSP:              c.theme.Editor(new(widget.Editor), "Add a new VSP..."),
 		addVSP:                c.theme.Button(new(widget.Clickable), "Save"),
 		spendingPassword:      c.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		vspInfo:               &win.vspInfo,
+		vspInfo:               c.vspInfo,
 		vspErrChan:            make(chan error),
 	}
 	pg.ticketAmount.Editor.SetText("1")
@@ -121,26 +121,24 @@ func (win *Window) TicketPage(c pageCommon) Page {
 
 func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
-	dims := c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-			sections := []func(gtx C) D{
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketPriceSection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketsLiveSection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.ticketsActivitySection(gtx, c)
-				},
-				func(ctx layout.Context) layout.Dimensions {
-					return pg.stackingRecordSection(gtx, c)
-				},
-			}
+	dims := c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
+		sections := []func(gtx C) D{
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketPriceSection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketsLiveSection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.ticketsActivitySection(gtx, c)
+			},
+			func(ctx layout.Context) layout.Dimensions {
+				return pg.stackingRecordSection(gtx, c)
+			},
+		}
 
-			return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
-				return sections[i](gtx)
-			})
+		return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
+			return sections[i](gtx)
 		})
 	})
 
@@ -177,7 +175,7 @@ func (pg *ticketPage) titleRow(gtx layout.Context, leftWidget, rightWidget func(
 	)
 }
 
-func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -224,7 +222,7 @@ func (pg *ticketPage) ticketPriceSection(gtx layout.Context, c pageCommon) layou
 	})
 }
 
-func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -240,7 +238,7 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 								return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											st := ticketStatusIcon(&c, item.Status)
+											st := ticketStatusIcon(c, item.Status)
 											if st == nil {
 												return layout.Dimensions{}
 											}
@@ -275,7 +273,7 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c pageCommon) layou
 	})
 }
 
-func (pg *ticketPage) ticketsActivitySection(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) ticketsActivitySection(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	tickets := (*pg.tickets).RecentActivity
 	if len(tickets) == 0 {
 		return layout.Dimensions{}
@@ -294,14 +292,14 @@ func (pg *ticketPage) ticketsActivitySection(gtx layout.Context, c pageCommon) l
 			}),
 			layout.Rigid(func(gtx C) D {
 				return pg.ticketsActivity.Layout(gtx, len(tickets), func(gtx C, index int) D {
-					return ticketActivityRow(gtx, &c, tickets[index], index)
+					return ticketActivityRow(gtx, c, tickets[index], index)
 				})
 			}),
 		)
 	})
 }
 
-func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -326,7 +324,7 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								st := ticketStatusIcon(&c, item.Status)
+								st := ticketStatusIcon(c, item.Status)
 								if st == nil {
 									return layout.Dimensions{}
 								}
@@ -394,7 +392,7 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context, c pageCommon) la
 	})
 }
 
-func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) purchaseModal(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -461,7 +459,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c pageCommon) layout.Dim
 	}, 900)
 }
 
-func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c *pageCommon) layout.Dimensions {
 	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return pg.th.Label(values.TextSize20, "Confirm to purchase tickets").Layout(gtx)
@@ -531,7 +529,7 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c pageCommon) lay
 	}, 900)
 }
 
-func (pg *ticketPage) vspHostSelectorLayout(gtx C, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) vspHostSelectorLayout(gtx C, c *pageCommon) layout.Dimensions {
 	border := widget.Border{
 		Color:        pg.th.Color.Gray1,
 		CornerRadius: values.MarginPadding8,
@@ -577,7 +575,7 @@ func (pg *ticketPage) vspHostSelectorLayout(gtx C, c pageCommon) layout.Dimensio
 	})
 }
 
-func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions {
+func (pg *ticketPage) vspHostModalLayout(gtx C, c *pageCommon) layout.Dimensions {
 	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return pg.th.Label(values.TextSize20, "Voting service provider").Layout(gtx)
@@ -633,7 +631,7 @@ func (pg *ticketPage) vspHostModalLayout(gtx C, c pageCommon) layout.Dimensions 
 	}, 900)
 }
 
-func (pg *ticketPage) handlerSelectVSP(events []gesture.ClickEvent, v wallet.VSPInfo, c pageCommon) {
+func (pg *ticketPage) handlerSelectVSP(events []gesture.ClickEvent, v wallet.VSPInfo, c *pageCommon) {
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			pg.selectedVSP = v
@@ -659,7 +657,7 @@ func (pg *ticketPage) editorsNotEmpty(btn *decredmaterial.Button, editors ...*wi
 	return true
 }
 
-func (pg *ticketPage) calculateAndValidCost(c pageCommon) bool {
+func (pg *ticketPage) calculateAndValidCost(c *pageCommon) bool {
 	tprice, _ := c.wallet.TicketPrice()
 	tnumber, err := strconv.ParseInt(pg.ticketAmount.Editor.Text(), 10, 64)
 	pg.submitPurchase.Text = "Purchase tickets"
@@ -686,7 +684,7 @@ func (pg *ticketPage) calculateAndValidCost(c pageCommon) bool {
 	return true
 }
 
-func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmount uint32) {
+func (pg *ticketPage) doPurchaseTicket(c *pageCommon, password []byte, ticketAmount uint32) {
 	if pg.isPurchaseLoading {
 		log.Info("Please wait...")
 		return
@@ -695,7 +693,7 @@ func (pg *ticketPage) doPurchaseTicket(c pageCommon, password []byte, ticketAmou
 	c.wallet.PurchaseTicket(pg.walletSelectedID, pg.accountSelectedNumber, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
 }
 
-func (pg *ticketPage) createNewVSPD(c pageCommon) {
+func (pg *ticketPage) createNewVSPD(c *pageCommon) {
 	vspd, err := c.wallet.NewVSPD(pg.selectedVSP.Host, pg.walletSelectedID, pg.accountSelectedNumber)
 	if err != nil {
 		c.notify(err.Error(), false)

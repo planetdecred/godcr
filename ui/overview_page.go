@@ -29,7 +29,7 @@ type walletSyncDetails struct {
 }
 
 type overviewPage struct {
-	common pageCommon
+	common *pageCommon
 	listContainer, walletSyncList,
 	transactionsList *layout.List
 	theme *decredmaterial.Theme
@@ -57,21 +57,19 @@ type overviewPage struct {
 	syncDetailsVisibility bool
 	txnRowHeight          int
 	queue                 event.Queue
-
-	loadPage func(pageIcons)
 }
 
-func (win *Window) OverviewPage(c pageCommon) Page {
+func OverviewPage(c *pageCommon) Page {
 	pg := &overviewPage{
 		theme:  c.theme,
 		common: c,
 		tab:    c.navTab,
 
-		wallet:             &win.wallet,
-		walletInfo:         win.walletInfo,
-		walletSyncStatus:   win.walletSyncStatus,
-		walletTransactions: &win.walletTransactions,
-		walletTransaction:  &win.walletTransaction,
+		wallet:             &c.wallet,
+		walletInfo:         c.info,
+		walletSyncStatus:   c.walletSyncStatus,
+		walletTransactions: c.walletTransactions,
+		walletTransaction:  c.walletTransaction,
 		listContainer:      &layout.List{Axis: layout.Vertical},
 		walletSyncList:     &layout.List{Axis: layout.Vertical},
 		transactionsList:   &layout.List{Axis: layout.Vertical},
@@ -83,8 +81,6 @@ func (win *Window) OverviewPage(c pageCommon) Page {
 
 		isCheckingLockWL: false,
 		autoSyncWallet:   true,
-
-		loadPage: win.loadPage,
 	}
 
 	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), c.icons.navigationArrowForward)
@@ -122,11 +118,9 @@ func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.queue = gtx
 	c := pg.common
 	if c.info.LoadedWallets == 0 {
-		return c.Layout(gtx, func(gtx C) D {
-			return c.UniformPadding(gtx, func(gtx C) D {
-				return layout.Center.Layout(gtx, func(gtx C) D {
-					return c.theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
-				})
+		return c.UniformPadding(gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				return c.theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
 			})
 		})
 	}
@@ -140,11 +134,9 @@ func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, func(gtx C) D {
-			return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-				return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
-			})
+	return c.UniformPadding(gtx, func(gtx C) D {
+		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
 		})
 	})
 }
@@ -160,7 +152,7 @@ func (pg *overviewPage) syncDetail(name, status, headersFetched, progress string
 }
 
 // recentTransactionsSection lays out the list of recent transactions.
-func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pageCommon) layout.Dimensions {
+func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	var recentTransactions []wallet.Transaction
 	if len((*pg.walletTransactions).Txs) > 0 {
 		recentTransactions = (*pg.walletTransactions).Recent
@@ -202,7 +194,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common pag
 							showBadge:   showLabel(recentTransactions),
 						}
 						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							return transactionRow(gtx, &common, row)
+							return transactionRow(gtx, common, row)
 						})
 					})
 				}),
@@ -584,7 +576,6 @@ func (pg *overviewPage) handle() {
 		isDarkModeOn := wal.ReadBoolConfigValueForKey("isDarkModeOn")
 		if isDarkModeOn != pg.theme.DarkMode {
 			pg.theme.SwitchDarkMode(isDarkModeOn)
-			pg.loadPage(c.icons)
 		}
 	}
 
@@ -647,7 +638,7 @@ func (pg *overviewPage) handle() {
 
 func (pg *overviewPage) onClose() {}
 
-func showWalletUnlockModal(c pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
+func showWalletUnlockModal(c *pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
 	go func() {
 		c.modalReceiver <- &modalLoad{
 			template: UnlockWalletRestoreTemplate,

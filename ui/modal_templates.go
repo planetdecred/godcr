@@ -55,7 +55,6 @@ type ModalTemplate struct {
 	alert                 *widget.Icon
 	passwordStrength      decredmaterial.ProgressBarStyle
 	keyEvent              chan *key.Event
-	refreshWindow         func()
 	confirmKeyPressed     bool
 }
 
@@ -70,28 +69,28 @@ type modalLoad struct {
 	isReset     bool
 }
 
-func (win *Window) LoadModalTemplates() *ModalTemplate {
-	cancel := win.theme.Button(new(widget.Clickable), "Cancel")
-	confirm := win.theme.Button(new(widget.Clickable), "Confirm")
+func (common *pageCommon) LoadModalTemplates() *ModalTemplate {
+	cancel := common.theme.Button(new(widget.Clickable), "Cancel")
+	confirm := common.theme.Button(new(widget.Clickable), "Confirm")
 	cancel.TextSize, confirm.TextSize = values.TextSize16, values.TextSize16
 
-	spendingPassword := win.theme.EditorPassword(new(widget.Editor), "Spending password")
+	spendingPassword := common.theme.EditorPassword(new(widget.Editor), "Spending password")
 	spendingPassword.Editor.SingleLine, spendingPassword.Editor.Submit = true, true
 
-	matchSpendingPassword := win.theme.EditorPassword(new(widget.Editor), "Confirm spending password")
+	matchSpendingPassword := common.theme.EditorPassword(new(widget.Editor), "Confirm spending password")
 	matchSpendingPassword.Editor.Submit, matchSpendingPassword.Editor.SingleLine = true, true
 
-	oldSpendingPassword := win.theme.EditorPassword(new(widget.Editor), "Old spending password")
+	oldSpendingPassword := common.theme.EditorPassword(new(widget.Editor), "Old spending password")
 	oldSpendingPassword.Editor.Submit, oldSpendingPassword.Editor.SingleLine = true, true
 
-	walletName := win.theme.Editor(new(widget.Editor), "")
+	walletName := common.theme.Editor(new(widget.Editor), "")
 	walletName.Editor.SingleLine, walletName.Editor.Submit = true, true
 
-	extendedPublicKey := win.theme.Editor(new(widget.Editor), "Extended public key")
+	extendedPublicKey := common.theme.Editor(new(widget.Editor), "Extended public key")
 	extendedPublicKey.Editor.Submit = true
 
 	return &ModalTemplate{
-		th:                    win.theme,
+		th:                    common.theme,
 		confirm:               confirm,
 		cancel:                cancel,
 		walletName:            walletName,
@@ -100,9 +99,8 @@ func (win *Window) LoadModalTemplates() *ModalTemplate {
 		matchSpendingPassword: matchSpendingPassword,
 		extendedPublicKey:     extendedPublicKey,
 		alert:                 mustIcon(widget.NewIcon(icons.AlertError)),
-		passwordStrength:      win.theme.ProgressBar(0),
-		keyEvent:              win.keyEvents,
-		refreshWindow:         win.refresh,
+		passwordStrength:      common.theme.ProgressBar(0),
+		keyEvent:              common.keyEvents,
 	}
 }
 
@@ -711,7 +709,7 @@ func (m *ModalTemplate) handleButtonEvents(load *modalLoad) {
 	if m.cancel.Button.Clicked() {
 		load.cancel()
 	}
-	m.refreshWindow()
+	// m.refreshWindow()
 }
 
 func (m *ModalTemplate) handleConfirmEvent() {

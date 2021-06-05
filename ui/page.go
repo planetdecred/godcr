@@ -15,6 +15,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -101,34 +102,41 @@ type walletAccountSelector struct {
 }
 
 type pageCommon struct {
-	printer         *message.Printer
-	wallet          *wallet.Wallet
-	info            *wallet.MultiWalletInfo
-	selectedWallet  *int
-	selectedAccount *int
-	theme           *decredmaterial.Theme
-	icons           pageIcons
-	page            *string
-	returnPage      *string
-	amountDCRtoUSD  float64
-	usdExchangeRate float64
-	usdExchangeSet  bool
-	dcrUsdtBittrex  DCRUSDTBittrex
-	navTab          *decredmaterial.Tabs
-	keyEvents       chan *key.Event
-	toast           **toast
-	states          *states
-	modal           *decredmaterial.Modal
-	modalReceiver   chan *modalLoad
-	modalLoad       *modalLoad
-	modalTemplate   *ModalTemplate
+	printer            *message.Printer
+	wallet             *wallet.Wallet
+	walletAccount      **wallet.Account
+	info               *wallet.MultiWalletInfo
+	selectedWallet     *int
+	selectedAccount    *int
+	theme              *decredmaterial.Theme
+	icons              pageIcons
+	page               *string
+	returnPage         *string
+	dcrUsdtBittrex     DCRUSDTBittrex
+	navTab             *decredmaterial.Tabs
+	keyEvents          chan *key.Event
+	toast              **toast
+	states             *states
+	modal              *decredmaterial.Modal
+	modalReceiver      chan *modalLoad
+	modalLoad          *modalLoad
+	modalTemplate      *ModalTemplate
+	internalLog        *chan string
+	walletSyncStatus   *wallet.SyncStatus
+	walletTransactions **wallet.Transactions
+	walletTransaction  **wallet.Transaction
+	acctMixerStatus    *chan *wallet.AccountMixer
+	selectedProposal   **dcrlibwallet.Proposal
+	proposals          **wallet.Proposals
+	syncedProposal     chan *wallet.Proposal
+	txAuthor           *dcrlibwallet.TxAuthor
+	broadcastResult    *wallet.Broadcast
+	signatureResult    **wallet.Signature
+	walletTickets      **wallet.Tickets
+	vspInfo            **wallet.VSP
+	unspentOutputs     **wallet.UnspentOutputs
 
-	appBarNavItems          []navHandler
-	drawerNavItems          []navHandler
-	isNavDrawerMinimized    *bool
-	minimizeNavDrawerButton decredmaterial.IconButton
-	maximizeNavDrawerButton decredmaterial.IconButton
-	testButton              decredmaterial.Button
+	testButton decredmaterial.Button
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
@@ -137,7 +145,6 @@ type pageCommon struct {
 
 	changePage    func(string)
 	setReturnPage func(string)
-	refreshWindow func()
 
 	wallAcctSelector *walletAccountSelector
 }
@@ -147,7 +154,7 @@ type (
 	D = layout.Dimensions
 )
 
-func (win *Window) addPages(decredIcons map[string]image.Image) {
+func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon {
 	ic := pageIcons{
 		contentAdd:             mustIcon(widget.NewIcon(icons.ContentAdd)),
 		navigationCheck:        mustIcon(widget.NewIcon(icons.NavigationCheck)),
@@ -223,94 +230,50 @@ func (win *Window) addPages(decredIcons map[string]image.Image) {
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 	}
 
-	win.loadPage(ic)
-}
+	common := &pageCommon{
+		printer:            message.NewPrinter(language.English),
+		wallet:             win.wallet,
+		walletAccount:      &win.walletAccount,
+		info:               win.walletInfo,
+		selectedWallet:     &win.selected,
+		selectedAccount:    &win.selectedAccount,
+		theme:              win.theme,
+		keyEvents:          win.keyEvents,
+		states:             &win.states,
+		icons:              ic,
+		walletSyncStatus:   win.walletSyncStatus,
+		walletTransactions: &win.walletTransactions,
+		walletTransaction:  &win.walletTransaction,
+		acctMixerStatus:    &win.walletAcctMixerStatus,
+		selectedProposal:   &win.selectedProposal,
+		proposals:          &win.proposals,
+		syncedProposal:     win.proposal,
+		txAuthor:           &win.txAuthor,
+		broadcastResult:    &win.broadcastResult,
+		signatureResult:    &win.signatureResult,
+		walletTickets:      &win.walletTickets,
+		vspInfo:            &win.vspInfo,
+		unspentOutputs:     &win.walletUnspentOutputs,
 
-func (win *Window) loadPage(ic pageIcons) {
-
-	appBarNavItems := []navHandler{
-		{
-			clickable: new(widget.Clickable),
-			image:     ic.sendIcon,
-			page:      values.String(values.StrSend),
-		},
-		{
-			clickable: new(widget.Clickable),
-			image:     ic.receiveIcon,
-			page:      values.String(values.StrReceive),
-		},
+		selectedUTXO:  make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		modal:         win.theme.Modal(),
+		modalReceiver: win.modal,
+		modalLoad:     &modalLoad{},
+		toast:         &win.toast,
+		internalLog:   &win.internalLog,
 	}
 
-	drawerNavItems := []navHandler{
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.overviewIcon,
-			imageInactive: ic.overviewIconInactive,
-			page:          values.String(values.StrOverview),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.transactionIcon,
-			imageInactive: ic.transactionIconInactive,
-			page:          values.String(values.StrTransactions),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.walletIcon,
-			imageInactive: ic.walletIconInactive,
-			page:          values.String(values.StrWallets),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.proposalIconActive,
-			imageInactive: ic.proposalIconInactive,
-			page:          PageProposals,
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.ticketIcon,
-			imageInactive: ic.ticketIconInactive,
-			page:          values.String(values.StrTickets),
-		},
-		{
-			clickable:     new(widget.Clickable),
-			image:         ic.moreIcon,
-			imageInactive: ic.moreIconInactive,
-			page:          values.String(values.StrMore),
-		},
-	}
-
-	common := pageCommon{
-		printer:                 message.NewPrinter(language.English),
-		wallet:                  win.wallet,
-		info:                    win.walletInfo,
-		selectedWallet:          &win.selected,
-		selectedAccount:         &win.selectedAccount,
-		theme:                   win.theme,
-		icons:                   ic,
-		returnPage:              &win.previous,
-		page:                    &win.current,
-		keyEvents:               win.keyEvents,
-		states:                  &win.states,
-		appBarNavItems:          appBarNavItems,
-		drawerNavItems:          drawerNavItems,
-		minimizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		maximizeNavDrawerButton: win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowForward),
-		selectedUTXO:            make(map[int]map[int32]map[string]*wallet.UnspentOutput),
-		modal:                   win.theme.Modal(),
-		modalReceiver:           win.modal,
-		modalLoad:               &modalLoad{},
-		subPageBackButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.navigationArrowBack),
-		subPageInfoButton:       win.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo),
-		changePage:              win.changePage,
-		setReturnPage:           win.setReturnPage,
-		refreshWindow:           win.refresh,
-		toast:                   &win.toast,
-	}
+	common.subPageBackButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
+	common.subPageInfoButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
 
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
-		return
+		log.Info("Error fetching exchange value")
 	}
+
+	return common
+}
+
+func (common *pageCommon) loadPages() map[string]Page {
 
 	common.wallAcctSelector = &walletAccountSelector{
 		sendAccountBtn:           new(widget.Clickable),
@@ -334,16 +297,12 @@ func (win *Window) loadPage(ic pageIcons) {
 	}
 	iconColor := common.theme.Color.Gray3
 
-	common.wallAcctSelector.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), ic.actionInfo)
+	common.wallAcctSelector.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
 	common.wallAcctSelector.walletInfoButton.Color = iconColor
 	common.wallAcctSelector.walletInfoButton.Size = values.MarginPadding15
 	common.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
-	common.testButton = win.theme.Button(new(widget.Clickable), "test button")
-	isNavDrawerMinimized := false
-	common.isNavDrawerMinimized = &isNavDrawerMinimized
-
-	common.minimizeNavDrawerButton.Color, common.maximizeNavDrawerButton.Color = iconColor, iconColor
+	common.testButton = common.theme.Button(new(widget.Clickable), "test button")
 
 	zeroInset := layout.UniformInset(values.MarginPadding0)
 	common.subPageBackButton.Color, common.subPageInfoButton.Color = iconColor, iconColor
@@ -352,40 +311,43 @@ func (win *Window) loadPage(ic pageIcons) {
 	common.subPageBackButton.Size, common.subPageInfoButton.Size = m25, m25
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
-	common.modalTemplate = win.LoadModalTemplates()
+	common.modalTemplate = common.LoadModalTemplates()
 
-	win.pages = make(map[string]Page)
-	win.pages[PageWallet] = win.WalletPage(common)
-	win.pages[PageOverview] = win.OverviewPage(common)
-	win.pages[PageTransactions] = win.TransactionsPage(common)
-	win.pages[PageMore] = win.MorePage(common)
-	win.pages[PageCreateRestore] = win.CreateRestorePage(common)
-	win.pages[PageReceive] = win.ReceivePage(common)
-	win.pages[PageSend] = win.SendPage(common)
-	win.pages[PageTransactionDetails] = win.TransactionDetailsPage(common)
-	win.pages[PageSignMessage] = win.SignMessagePage(common)
-	win.pages[PageVerifyMessage] = win.VerifyMessagePage(common)
-	win.pages[PageSeedBackup] = win.BackupPage(common)
-	win.pages[PageSettings] = win.SettingsPage(common)
-	win.pages[PageWalletSettings] = win.WalletSettingsPage(common)
-	win.pages[PageSecurityTools] = win.SecurityToolsPage(common)
-	win.pages[PageProposals] = win.ProposalsPage(common)
-	win.pages[PageProposalDetails] = win.ProposalDetailsPage(common)
-	win.pages[PageDebug] = win.DebugPage(common)
-	win.pages[PageLog] = win.LogPage(common)
-	win.pages[PageStat] = win.StatPage(common)
-	win.pages[PageAbout] = win.AboutPage(common)
-	win.pages[PageHelp] = win.HelpPage(common)
-	win.pages[PageUTXO] = win.UTXOPage(common)
-	win.pages[PageAccountDetails] = win.AcctDetailsPage(common)
-	win.pages[PagePrivacy] = win.PrivacyPage(common)
-	win.pages[PageTickets] = win.TicketPage(common)
-	win.pages[ValidateAddress] = win.ValidateAddressPage(common)
-	win.pages[PageTicketsList] = win.TicketPageList(common)
-	win.pages[PageTicketsActivity] = win.TicketActivityPage(common)
+	pages := make(map[string]Page)
+
+	pages[PageWallet] = WalletPage(common)
+	pages[PageOverview] = OverviewPage(common)
+	pages[PageTransactions] = TransactionsPage(common)
+	pages[PageMore] = MorePage(common)
+	pages[PageCreateRestore] = CreateRestorePage(common)
+	pages[PageReceive] = ReceivePage(common)
+	pages[PageSend] = SendPage(common)
+	pages[PageTransactionDetails] = TransactionDetailsPage(common)
+	pages[PageSignMessage] = SignMessagePage(common)
+	pages[PageVerifyMessage] = VerifyMessagePage(common)
+	pages[PageSeedBackup] = BackupPage(common)
+	pages[PageSettings] = SettingsPage(common)
+	pages[PageWalletSettings] = WalletSettingsPage(common)
+	pages[PageSecurityTools] = SecurityToolsPage(common)
+	pages[PageProposals] = ProposalsPage(common)
+	pages[PageProposalDetails] = ProposalDetailsPage(common)
+	pages[PageDebug] = DebugPage(common)
+	pages[PageLog] = LogPage(common)
+	pages[PageStat] = StatPage(common)
+	pages[PageAbout] = AboutPage(common)
+	pages[PageHelp] = HelpPage(common)
+	pages[PageUTXO] = UTXOPage(common)
+	pages[PageAccountDetails] = AcctDetailsPage(common)
+	pages[PagePrivacy] = PrivacyPage(common)
+	pages[PageTickets] = TicketPage(common)
+	pages[ValidateAddress] = ValidateAddressPage(common)
+	pages[PageTicketsList] = TicketPageList(common)
+	pages[PageTicketsActivity] = TicketActivityPage(common)
+
+	return pages
 }
 
-func (page *pageCommon) fetchExchangeValue(target interface{}) error {
+func (common *pageCommon) fetchExchangeValue(target interface{}) error {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	res, err := http.Get(url)
 	if err != nil {
@@ -402,102 +364,21 @@ func (page *pageCommon) fetchExchangeValue(target interface{}) error {
 	return nil
 }
 
-func (page pageCommon) refreshPage() {
-	page.refreshWindow()
-}
-
-func (page pageCommon) notify(text string, success bool) {
-	*page.toast = &toast{
+func (common *pageCommon) notify(text string, success bool) {
+	*common.toast = &toast{
 		text:    text,
 		success: success,
 	}
 }
 
-func (page pageCommon) closeModal() {
+func (common *pageCommon) closeModal() {
 	go func() {
-		page.modalReceiver <- &modalLoad{
+		common.modalReceiver <- &modalLoad{
 			title:   "",
 			confirm: nil,
 			cancel:  nil,
 		}
 	}()
-}
-
-func (page pageCommon) Layout(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	page.handler()
-
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			// fill the entire window with a color if a user has no wallet created
-			if *page.page == PageCreateRestore {
-				return decredmaterial.Fill(gtx, page.theme.Color.Surface)
-			}
-
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(page.layoutTopBar),
-				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							card := page.theme.Card()
-							card.Radius = decredmaterial.CornerRadius{}
-							return card.Layout(gtx, page.layoutNavDrawer)
-						}),
-						layout.Rigid(body),
-					)
-				}),
-			)
-		}),
-		layout.Stacked(func(gtx C) D {
-			// stack the page content on the entire window if a user has no wallet
-			if *page.page == PageCreateRestore {
-				return body(gtx)
-			}
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			// global modal. Stack modal on all pages and contents
-		outer:
-			for {
-				select {
-				case load := <-page.modalReceiver:
-					page.modalLoad.template = load.template
-					page.modalLoad.title = load.title
-					page.modalLoad.confirm = load.confirm
-					page.modalLoad.confirmText = load.confirmText
-					page.modalLoad.cancel = load.cancel
-					page.modalLoad.cancelText = load.cancelText
-					page.modalLoad.isReset = false
-				default:
-					break outer
-				}
-			}
-
-			if page.modalLoad.cancel != nil {
-				return page.modal.Layout(gtx, page.modalTemplate.Layout(page.theme, page.modalLoad),
-					900)
-			}
-
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			// global toasts. Stack toast on all pages and contents
-			if *page.toast == nil {
-				return layout.Dimensions{}
-			}
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding65}.Layout(gtx, func(gtx C) D {
-					return displayToast(page.theme, gtx, *page.toast)
-				})
-			})
-		}),
-		layout.Stacked(func(gtx C) D {
-			if page.wallAcctSelector.isWalletAccountModalOpen {
-				return page.walletAccountModalLayout(gtx)
-			}
-			return layout.Dimensions{}
-		}),
-	)
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -510,7 +391,7 @@ func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions
 	return c.padding.Layout(gtx, w)
 }
 
-func (page pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (common *pageCommon) UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.UniformInset(values.MarginPadding24).Layout(gtx, body)
 }
 
@@ -527,42 +408,42 @@ type SubPage struct {
 	handleExtra  func()
 }
 
-func (page pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+func (common *pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-				return page.subpageHeader(gtx, sp)
+				return common.subpageHeader(gtx, sp)
 			})
 		}),
 		layout.Rigid(sp.body),
 	)
 }
 
-func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
-	page.subpageEventHandler(sp)
+func (common *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dimensions {
+	common.subpageEventHandler(sp)
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, page.subPageBackButton.Layout)
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, common.subPageBackButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
-				return page.theme.H6(sp.title).Layout(gtx)
+				return common.theme.H6(sp.title).Layout(gtx)
 			}
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(page.theme.H6(sp.title).Layout),
-				layout.Rigid(page.theme.Body1(sp.subTitle).Layout),
+				layout.Rigid(common.theme.H6(sp.title).Layout),
+				layout.Rigid(common.theme.Body1(sp.subTitle).Layout),
 			)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.walletName != "" {
 				return layout.Inset{Left: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Card{
-						Color: page.theme.Color.Surface,
+						Color: common.theme.Color.Surface,
 					}.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-							walletText := page.theme.Caption(sp.walletName)
-							walletText.Color = page.theme.Color.Gray
+							walletText := common.theme.Caption(sp.walletName)
+							walletText.Color = common.theme.Color.Gray
 							return walletText.Layout(gtx)
 						})
 					})
@@ -573,14 +454,14 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
-					return page.subPageInfoButton.Layout(gtx)
+					return common.subPageInfoButton.Layout(gtx)
 				} else if sp.extraItem != nil {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							if sp.extraText != "" {
 								return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									text := page.theme.Caption(sp.extraText)
-									text.Color = page.theme.Color.DeepBlue
+									text := common.theme.Caption(sp.extraText)
+									text.Color = common.theme.Color.DeepBlue
 									return text.Layout(gtx)
 								})
 							}
@@ -597,30 +478,30 @@ func (page pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.Dime
 	)
 }
 
-func (page pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
-	card := page.theme.Card()
+func (common *pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
+	card := common.theme.Card()
 	card.Color = color.NRGBA{}
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return page.subpageHeader(gtx, sp) }),
+			layout.Rigid(func(gtx C) D { return common.subpageHeader(gtx, sp) }),
 			layout.Rigid(sp.body),
 		)
 	})
 }
 
-func (page pageCommon) subpageEventHandler(sp SubPage) {
-	if page.subPageInfoButton.Button.Clicked() {
+func (common *pageCommon) subpageEventHandler(sp SubPage) {
+	if common.subPageInfoButton.Button.Clicked() {
 		go func() {
-			page.modalReceiver <- &modalLoad{
+			common.modalReceiver <- &modalLoad{
 				template:   sp.infoTemplate,
 				title:      sp.title,
-				cancel:     page.closeModal,
+				cancel:     common.closeModal,
 				cancelText: "Got it",
 			}
 		}()
 	}
 
-	if page.subPageBackButton.Button.Clicked() {
+	if common.subPageBackButton.Button.Clicked() {
 		sp.back()
 	}
 

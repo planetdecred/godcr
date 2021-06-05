@@ -24,17 +24,17 @@ type ticketsActivityPage struct {
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
-	common             pageCommon
+	common             *pageCommon
 }
 
-func (win *Window) TicketActivityPage(c pageCommon) Page {
+func TicketActivityPage(c *pageCommon) Page {
 	pg := &ticketsActivityPage{
 		th:          c.theme,
 		common:      c,
-		tickets:     &win.walletTickets,
+		tickets:     c.walletTickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
 	}
-	pg.orderDropDown = createOrderDropDown(&c)
+	pg.orderDropDown = createOrderDropDown(c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -51,6 +51,7 @@ func (win *Window) TicketActivityPage(c pageCommon) Page {
 
 func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "Ticket activity",
@@ -79,7 +80,7 @@ func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 									return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-										return ticketActivityRow(gtx, &c, tickets[index], index)
+										return ticketActivityRow(gtx, c, tickets[index], index)
 									})
 								})
 							})
@@ -94,9 +95,7 @@ func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 		return c.SubPageLayout(gtx, page)
 	}
 
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, body)
-	})
+	return c.UniformPadding(gtx, body)
 }
 
 func (pg *ticketsActivityPage) dropDowns(gtx layout.Context) layout.Dimensions {
@@ -138,7 +137,6 @@ func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket
 
 func (pg *ticketsActivityPage) handle() {
 	c := pg.common
-	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 
 	sortSelection := pg.orderDropDown.SelectedIndex()
 	if pg.filterSorter != sortSelection {
