@@ -273,6 +273,7 @@ func (pg *walletSettingsPage) handle() {
 				newPasswordModal(common).
 					title(values.String(values.StrConfirmToRemove)).
 					negativeButton(values.String(values.StrCancel), func() {}).
+					positiveButtonStyle(common.theme.Color.Surface, common.theme.Color.Danger).
 					positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
 						pg.wal.DeleteWallet(walletID, []byte(password), pg.errorReceiver)
 						pg.resetSelectedWallet(common)

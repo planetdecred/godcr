@@ -210,19 +210,7 @@ func (in *infoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnPositve.Text = in.positiveButtonText
-					//TODO
-					// if load.template == ConfirmRemoveTemplate {
-					// 	m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
-					// }
-					// if load.template == RescanWalletTemplate {
 					in.btnPositve.Background, in.btnPositve.Color = in.theme.Color.Surface, in.theme.Color.Primary
-					// }
-					// if load.loading {
-					// 	th := material.NewTheme(gofont.Collection())
-					// 	return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
-					// 		return material.Loader(th).Layout(gtx)
-					// 	})
-					// } //TODO
 					return in.btnPositve.Layout(gtx)
 				}),
 			)

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -44,7 +45,9 @@ func newPasswordModal(common *pageCommon) *passwordModal {
 	}
 
 	pm.btnPositve.TextSize, pm.btnNegative.TextSize = values.TextSize16, values.TextSize16
+	pm.btnNegative.Background, pm.btnNegative.Color = pm.theme.Color.Surface, pm.theme.Color.Primary
 	pm.btnPositve.Font.Weight, pm.btnNegative.Font.Weight = text.Bold, text.Bold
+	pm.btnPositve.Background, pm.btnPositve.Color = pm.theme.Color.Surface, pm.theme.Color.Primary
 
 	pm.password = common.theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
@@ -84,6 +87,11 @@ func (pm *passwordModal) hint(hint string) *passwordModal {
 	return pm
 }
 
+func (pm *passwordModal) positiveButtonStyle(background, text color.NRGBA) *passwordModal {
+	pm.btnPositve.Background, pm.btnPositve.Color = background, text
+	return pm
+}
+
 func (pm *passwordModal) positiveButton(text string, clicked func(password string, m *passwordModal) bool) *passwordModal {
 	pm.positiveButtonText = text
 	pm.positiveButtonClicked = clicked
@@ -112,7 +120,7 @@ func (pm *passwordModal) handle() {
 
 	for pm.btnPositve.Button.Clicked() {
 
-		if pm.isLoading {
+		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
 			continue
 		}
 
@@ -151,8 +159,6 @@ func (pm *passwordModal) Layout(gtx layout.Context) D {
 					}
 
 					pm.btnNegative.Text = pm.negativeButtonText
-					pm.btnNegative.Background = pm.theme.Color.Surface
-					pm.btnNegative.Color = pm.theme.Color.Primary
 					return pm.btnNegative.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -165,7 +171,6 @@ func (pm *passwordModal) Layout(gtx layout.Context) D {
 					}
 
 					pm.btnPositve.Text = pm.positiveButtonText
-					pm.btnPositve.Background, pm.btnPositve.Color = pm.theme.Color.Surface, pm.theme.Color.Primary
 					return pm.btnPositve.Layout(gtx)
 				}),
 			)

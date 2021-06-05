@@ -255,7 +255,6 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 		layout.Stacked(func(gtx C) D {
 			// global modal. Stack modal on all pages and contents
 			if len(mp.modals) > 0 {
-				// TODO: use a stacked list
 				return mp.modals[len(mp.modals)-1].Layout(gtx)
 			}
 			return layout.Dimensions{}
