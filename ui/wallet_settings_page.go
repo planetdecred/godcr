@@ -205,10 +205,12 @@ func (pg *walletSettingsPage) handle() {
 	for pg.rescan.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RescanWalletTemplate,
-				title:    values.String(values.StrRescanBlockchain),
-				confirm: func() {
+			info := newInfoModal(&common).
+				title(values.String(values.StrRescanBlockchain)).
+				body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
+					" blockchain for transactions").
+				negativeButton(values.String(values.StrCancel), func() {}).
+				positiveButton(values.String(values.StrRescan), func() {
 					err := pg.wal.RescanBlocks(walletID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
@@ -220,14 +222,9 @@ func (pg *walletSettingsPage) handle() {
 					}
 					msg := values.String(values.StrRescanProgressNotification)
 					common.notify(msg, true)
-					go func() {
-						common.modalReceiver <- &modalLoad{}
-					}()
-				},
-				confirmText: values.String(values.StrRescan),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
+				})
+
+			common.showModal(info)
 		}()
 		break
 	}
@@ -237,31 +234,30 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ConfirmRemoveTemplate,
-				title:    values.String(values.StrRemoveWallet),
-				confirm: func() {
-					walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-					go func() {
-						common.modalReceiver <- &modalLoad{
-							template: PasswordTemplate,
-							title:    values.String(values.StrConfirmToRemove),
-							confirm: func(pass string) {
-								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
-								pg.resetSelectedWallet(common)
-							},
-							confirmText: values.String(values.StrConfirm),
-							cancel:      common.closeModal,
-							cancelText:  values.String(values.StrCancel),
-						}
-					}()
-				},
-				confirmText: values.String(values.StrRemove),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+		info := newInfoModal(&common).
+			title(values.String(values.StrRemoveWallet)).
+			body("Make sure to have the seed phrase backed up before removing the wallet").
+			negativeButton(values.String(values.StrCancel), func() {}).
+			positiveButton(values.String(values.StrRemove), func() {
+				walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
+				go func() {
+					//TODO password dialog
+					common.modalReceiver <- &modalLoad{
+						template: PasswordTemplate,
+						title:    values.String(values.StrConfirmToRemove),
+						confirm: func(pass string) {
+							pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
+							pg.resetSelectedWallet(common)
+						},
+						confirmText: values.String(values.StrConfirm),
+						cancel:      common.closeModal,
+						cancelText:  values.String(values.StrCancel),
+					}
+				}()
+			})
+
+		common.showModal(info)
+
 		break
 	}
 

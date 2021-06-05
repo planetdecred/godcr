@@ -7,6 +7,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -361,29 +362,39 @@ func (pg *privacyPage) handle() {
 }
 
 func (pg *privacyPage) showModalSetupMixerInfo(common *pageCommon) {
-	common.modalReceiver <- &modalLoad{
-		template: SetupMixerInfoTemplate,
-		title:    "Set up mixer by creating two needed accounts",
-		confirm: func() {
-			go pg.showModalSetupMixerAcct(common)
-		},
-		confirmText: "Begin setup",
-		cancel:      common.closeModal,
-		cancelText:  "Cancel",
-	}
+	info := newInfoModal(common).
+		title("Set up mixer by creating two needed accounts").
+		body("Each time you receive a payment, a new address is generated to protect your privacy.").
+		negativeButton(values.String(values.StrCancel), func() {}).
+		positiveButton("Begin setup", func() {
+			pg.showModalSetupMixerAcct(common)
+		})
+	common.showModal(info)
 }
 
 func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
+	for _, acct := range common.info.Wallets[*common.selectedWallet].Accounts {
+		if acct.Name == "mixed" || acct.Name == "unmixed" {
+			alert := mustIcon(widget.NewIcon(icons.AlertError))
+			alert.Color = pg.theme.Color.DeepBlue
+
+			info := newInfoModal(common).
+				icon(alert).
+				title("Account name is taken").
+				body("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.").
+				positiveButton("Go back & rename", func() {
+					*common.page = PageWallet
+				})
+			common.showModal(info)
+			return
+		}
+	}
+
 	common.modalReceiver <- &modalLoad{
-		template: PasswordTemplate,
+		template: PasswordTemplate, //TODO
 		title:    "Confirm to create needed accounts",
 		confirm: func(p string) {
-			for _, acct := range common.info.Wallets[*common.selectedWallet].Accounts {
-				if acct.Name == "mixed" || acct.Name == "unmixed" {
-					go pg.showModalSetupExistAcct(common)
-					return
-				}
-			}
+
 			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errorReceiver)
 		},
 		confirmText: "Confirm",

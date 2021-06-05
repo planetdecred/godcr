@@ -11,9 +11,11 @@ import (
 const MadalInfo = "info_modal"
 
 type infoModal struct {
-	pageCommon
+	*pageCommon
 
 	modal decredmaterial.Modal
+
+	dialogIcon *widget.Icon
 
 	dialogTitle    string
 	subtitle       string
@@ -30,7 +32,7 @@ type infoModal struct {
 	//TODO: neutral button
 }
 
-func newInfoModal(common pageCommon) *infoModal {
+func newInfoModal(common *pageCommon) *infoModal {
 	in := &infoModal{
 		pageCommon:  common,
 		modal:       *common.theme.ModalFloatTitle(),
@@ -55,8 +57,18 @@ func (in *infoModal) OnDismiss() {
 
 }
 
+func (in *infoModal) icon(icon *widget.Icon) *infoModal {
+	in.dialogIcon = icon
+	return in
+}
+
 func (in *infoModal) title(title string) *infoModal {
 	in.dialogTitle = title
+	return in
+}
+
+func (in *infoModal) body(subtitle string) *infoModal {
+	in.subtitle = subtitle
 	return in
 }
 
@@ -74,13 +86,24 @@ func (in *infoModal) negativeButton(text string, clicked func()) *infoModal {
 
 // for backwards compatibilty
 func (in *infoModal) setupWithTemplate(template string) *infoModal {
-	var title string
-	var subtitle string
+	title := in.dialogTitle
+	subtitle := in.subtitle
 	var customTemplate []layout.Widget
 	switch template {
 	case TransactionDetailsInfoTemplate:
 		title = "How to copy"
-		customTemplate = transactionDetailsInfo(in.pageCommon.theme)
+		customTemplate = transactionDetailsInfo(in.theme)
+	case SignMessageInfoTemplate:
+		customTemplate = signMessageInfo(in.theme)
+	case VerifyMessageInfoTemplate:
+		customTemplate = verifyMessageInfo(in.theme)
+	case PrivacyInfoTemplate:
+		title = "How to use the mixer?"
+		customTemplate = privacyInfo(in.theme)
+	case SecurityToolsInfoTemplate:
+		subtitle = "Various tools that help in different aspects of crypto currency security will be located here."
+	case SetupMixerInfoTemplate:
+		customTemplate = setupMixerInfo(in.theme)
 	}
 
 	in.dialogTitle = title
@@ -92,21 +115,41 @@ func (in *infoModal) setupWithTemplate(template string) *infoModal {
 func (in *infoModal) handle() {
 
 	for in.btnPositve.Button.Clicked() {
-		in.positiveButtonClicked()
 		in.dismissModal(in)
+		in.positiveButtonClicked()
 	}
 
 	for in.btnNegative.Button.Clicked() {
-		in.negativeButtonClicked()
 		in.dismissModal(in)
+		in.negativeButtonClicked()
 	}
 }
 
 func (in *infoModal) Layout(gtx layout.Context) D {
+
+	icon := func(gtx C) D {
+		if in.dialogIcon == nil {
+			return layout.Dimensions{}
+		}
+
+		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+			return layout.Center.Layout(gtx, func(gtx C) D {
+				in.dialogIcon.Color = in.theme.Color.DeepBlue
+				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
+			})
+		})
+	}
+
 	title := func(gtx C) D {
 		t := in.theme.H6(in.dialogTitle)
 		t.Font.Weight = text.Bold
 		return t.Layout(gtx)
+	}
+
+	subtitle := func(gtx C) D {
+		text := in.theme.Body1(in.subtitle)
+		text.Color = in.theme.Color.Gray
+		return text.Layout(gtx)
 	}
 
 	actionButtons := func(gtx C) D { // action buttons
@@ -133,7 +176,7 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 					// 	m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Danger
 					// }
 					// if load.template == RescanWalletTemplate {
-					// 	m.confirm.Background, m.confirm.Color = th.Color.Surface, th.Color.Primary
+					in.btnPositve.Background, in.btnPositve.Color = in.theme.Color.Surface, in.theme.Color.Primary
 					// }
 					// if load.loading {
 					// 	th := material.NewTheme(gofont.Collection())
@@ -148,9 +191,18 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 	}
 
 	var w []layout.Widget
+
 	// Every section of the dialog is optional
+	if in.dialogIcon != nil {
+		w = append(w, icon)
+	}
+
 	if in.dialogTitle != "" {
 		w = append(w, title)
+	}
+
+	if in.subtitle != "" {
+		w = append(w, subtitle)
 	}
 
 	if in.customTemplate != nil {

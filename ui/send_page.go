@@ -1078,14 +1078,11 @@ func (pg *sendPage) handle() {
 	}
 
 	if c.subPageInfoButton.Button.Clicked() {
-		go func() {
-			c.modalReceiver <- &modalLoad{
-				template:   SendInfoTemplate,
-				title:      "Send DCR",
-				cancel:     c.closeModal,
-				cancelText: "Got it",
-			}
-		}()
+		info := newInfoModal(&c).
+			title("Send DCR").
+			body("Input or scan the destination wallet address and input the amount to send funds.").
+			positiveButton("Got it", func() {})
+		c.showModal(info)
 	}
 
 	for pg.moreOption.Button.Clicked() {
