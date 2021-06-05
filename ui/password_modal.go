@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -14,7 +16,7 @@ const ModalPassword = "password_modal"
 
 type passwordModal struct {
 	*pageCommon
-
+	randomID string
 	modal    decredmaterial.Modal
 	password decredmaterial.Editor
 
@@ -35,6 +37,7 @@ type passwordModal struct {
 func newPasswordModal(common *pageCommon) *passwordModal {
 	pm := &passwordModal{
 		pageCommon:  common,
+		randomID:    fmt.Sprintf("%s-%d", ModalPassword, generateRandomNumber()),
 		modal:       *common.theme.ModalFloatTitle(),
 		btnPositve:  common.theme.Button(new(widget.Clickable), "Confirm"),
 		btnNegative: common.theme.Button(new(widget.Clickable), "Cancel"),
@@ -53,7 +56,7 @@ func newPasswordModal(common *pageCommon) *passwordModal {
 }
 
 func (pm *passwordModal) modalID() string {
-	return MadalInfo + pm.dialogTitle // TODO
+	return pm.randomID
 }
 
 func (pm *passwordModal) OnResume() {

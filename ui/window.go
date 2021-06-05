@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"image"
+	"sync"
 	"time"
 
 	"gioui.org/app"
@@ -36,6 +37,7 @@ type Window struct {
 	proposals            *wallet.Proposals
 	selectedProposal     *dcrlibwallet.Proposal
 	proposal             chan *wallet.Proposal
+	modalMutex           sync.Mutex
 	modals               []Modal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
@@ -125,10 +127,14 @@ func (win *Window) unloaded() {
 
 func (win *Window) showModal(modal Modal) {
 	modal.OnResume() // setup display data
+	win.modalMutex.Lock()
 	win.modals = append(win.modals, modal)
+	win.modalMutex.Unlock()
 }
 
 func (win *Window) dismissModal(modal Modal) {
+	win.modalMutex.Lock()
+	defer win.modalMutex.Unlock()
 	for i, m := range win.modals {
 		if m.modalID() == modal.modalID() {
 			modal.OnDismiss() // do garbage collection in modal

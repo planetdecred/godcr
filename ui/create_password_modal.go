@@ -62,7 +62,7 @@ func newCreatePasswordModal(common *pageCommon) *createPasswordModal {
 }
 
 func (cm *createPasswordModal) modalID() string {
-	return MadalInfo + cm.dialogTitle // TODO
+	return ModalCreateWallet + cm.dialogTitle // TODO
 }
 
 func (cm *createPasswordModal) OnResume() {

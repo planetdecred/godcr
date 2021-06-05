@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -8,12 +10,12 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const MadalInfo = "info_modal"
+const ModalInfo = "info_modal"
 
 type infoModal struct {
 	*pageCommon
-
-	modal decredmaterial.Modal
+	randomID string
+	modal    decredmaterial.Modal
 
 	dialogIcon *widget.Icon
 
@@ -35,6 +37,7 @@ type infoModal struct {
 func newInfoModal(common *pageCommon) *infoModal {
 	in := &infoModal{
 		pageCommon:  common,
+		randomID:    fmt.Sprintf("%s-%d", ModalInfo, generateRandomNumber()),
 		modal:       *common.theme.ModalFloatTitle(),
 		btnPositve:  common.theme.Button(new(widget.Clickable), "Yes"),
 		btnNegative: common.theme.Button(new(widget.Clickable), "No"),
@@ -47,7 +50,7 @@ func newInfoModal(common *pageCommon) *infoModal {
 }
 
 func (in *infoModal) modalID() string {
-	return MadalInfo + in.dialogTitle // TODO
+	return in.randomID
 }
 
 func (in *infoModal) show() {

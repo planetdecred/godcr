@@ -6,6 +6,7 @@ package ui
 import (
 	"fmt"
 	"image/color"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -39,7 +40,9 @@ func editorsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-
+func generateRandomNumber() int {
+	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+}
 
 // getLockWallet returns a list of locked wallets
 func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {

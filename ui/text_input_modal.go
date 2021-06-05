@@ -1,10 +1,14 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
+
+const ModalTextInput = "text_input_modal"
 
 type textInputModal struct {
 	*infoModal
@@ -20,6 +24,8 @@ func newTextInputModal(common *pageCommon) *textInputModal {
 		infoModal: newInfoModal(common),
 	}
 
+	tm.randomID = fmt.Sprintf("%s-%d", ModalTextInput, generateRandomNumber())
+
 	tm.textInput = common.theme.Editor(new(widget.Editor), "Hint")
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
 
@@ -28,6 +34,10 @@ func newTextInputModal(common *pageCommon) *textInputModal {
 
 func (tm *textInputModal) show() {
 	tm.pageCommon.showModal(tm)
+}
+
+func (tm *textInputModal) dismiss() {
+	tm.pageCommon.dismissModal(tm)
 }
 
 func (tm *textInputModal) hint(hint string) *textInputModal {

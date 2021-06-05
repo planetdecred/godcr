@@ -69,8 +69,6 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.DeletedWallet:
 		win.selected = 0
 		win.notifyOnSuccess("Wallet removed")
-	case wallet.AddedAccount:
-		win.notifyOnSuccess("Account created")
 	case wallet.UpdatedAccount:
 		win.notifyOnSuccess("Account renamed")
 	case *wallet.Signature:
