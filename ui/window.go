@@ -25,18 +25,18 @@ type Window struct {
 	theme  *decredmaterial.Theme
 	ops    *op.Ops
 
-	wallet             *wallet.Wallet
-	walletInfo         *wallet.MultiWalletInfo
-	walletSyncStatus   *wallet.SyncStatus
-	walletTransactions *wallet.Transactions
-	walletTransaction  *wallet.Transaction
-	walletAccount      *wallet.Account
-	walletTickets      *wallet.Tickets
-	vspInfo            *wallet.VSP
-	proposals          *wallet.Proposals
-	selectedProposal   *dcrlibwallet.Proposal
-	proposal           chan *wallet.Proposal
-
+	wallet               *wallet.Wallet
+	walletInfo           *wallet.MultiWalletInfo
+	walletSyncStatus     *wallet.SyncStatus
+	walletTransactions   *wallet.Transactions
+	walletTransaction    *wallet.Transaction
+	walletAccount        *wallet.Account
+	walletTickets        *wallet.Tickets
+	vspInfo              *wallet.VSP
+	proposals            *wallet.Proposals
+	selectedProposal     *dcrlibwallet.Proposal
+	proposal             chan *wallet.Proposal
+	modals               []Modal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
 	common      *pageCommon
@@ -123,6 +123,20 @@ func (win *Window) unloaded() {
 	}
 }
 
+func (win *Window) showModal(modal Modal) {
+	modal.OnResume() // setup display data
+	win.modals = append(win.modals, modal)
+}
+
+func (win *Window) dismissModal(modal Modal) {
+	for i, m := range win.modals {
+		if m.modalID() == modal.modalID() {
+			modal.OnDismiss() // do garbage collection in modal
+			win.modals = append(win.modals[:i], win.modals[i+1:]...)
+		}
+	}
+}
+
 func (win *Window) layoutPage(gtx C, page Page) {
 	layout.Stack{
 		Alignment: layout.N,
@@ -133,6 +147,16 @@ func (win *Window) layoutPage(gtx C, page Page) {
 		layout.Stacked(func(gtx C) D {
 			page.handle()
 			return page.Layout(gtx)
+		}),
+		layout.Stacked(func(gtx C) D {
+			for _, modal := range win.modals {
+				modal.handle()
+			}
+			if len(win.modals) > 0 {
+				// TODO: use a stacked list
+				return win.modals[0].Layout(gtx)
+			}
+			return layout.Dimensions{}
 		}),
 	)
 }

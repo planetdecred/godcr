@@ -136,6 +136,8 @@ type pageCommon struct {
 	walletTickets      **wallet.Tickets
 	vspInfo            **wallet.VSP
 	unspentOutputs     **wallet.UnspentOutputs
+	showModal          func(Modal)
+	dismissModal       func(Modal)
 
 	testButton decredmaterial.Button
 
@@ -255,6 +257,8 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		walletTickets:      &win.walletTickets,
 		vspInfo:            &win.vspInfo,
 		unspentOutputs:     &win.walletUnspentOutputs,
+		showModal:          win.showModal,
+		dismissModal:       win.dismissModal,
 
 		selectedUTXO:  make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		modal:         win.theme.Modal(),

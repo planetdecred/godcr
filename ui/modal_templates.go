@@ -395,18 +395,18 @@ func (m *ModalTemplate) unlockWalletRestore() []layout.Widget {
 	}
 }
 
-func (m *ModalTemplate) transactionDetailsInfo() []layout.Widget {
+func transactionDetailsInfo(th *decredmaterial.Theme) []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					t := m.th.Body1("Tap on")
-					t.Color = m.th.Color.Gray
+					t := th.Body1("Tap on")
+					t.Color = th.Color.Gray
 					return t.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					t := m.th.Body1("blue text")
-					t.Color = m.th.Color.Primary
+					t := th.Body1("blue text")
+					t.Color = th.Color.Primary
 					m := values.MarginPadding2
 					return layout.Inset{
 						Left:  m,
@@ -416,8 +416,8 @@ func (m *ModalTemplate) transactionDetailsInfo() []layout.Widget {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					t := m.th.Body1("to copy the item.")
-					t.Color = m.th.Color.Gray
+					t := th.Body1("to copy the item.")
+					t.Color = th.Color.Gray
 					return t.Layout(gtx)
 				}),
 			)
@@ -692,7 +692,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		return
 	case TransactionDetailsInfoTemplate:
 		m.handleButtonEvents(load)
-		template = m.transactionDetailsInfo()
+		template = transactionDetailsInfo(m.th)
 		return
 	default:
 		return
