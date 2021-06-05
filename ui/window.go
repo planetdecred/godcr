@@ -39,7 +39,8 @@ type Window struct {
 
 	walletUnspentOutputs *wallet.UnspentOutputs
 
-	current, previous string
+	common      *pageCommon
+	currentPage *mainPage
 
 	signatureResult *wallet.Signature
 
@@ -52,14 +53,12 @@ type Window struct {
 
 	err string
 
-	pages                 map[string]Page
 	keyEvents             chan *key.Event
 	toast                 *toast
 	modal                 chan *modalLoad
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
-	refreshPage           bool
 }
 
 type WriteClipboard struct {
@@ -99,35 +98,14 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.wallet = wal
 	win.states.loading = true
-	win.current = PageOverview
 	win.keyEvents = make(chan *key.Event)
 	win.modal = make(chan *modalLoad)
 
 	win.internalLog = internalLog
 
-	win.addPages(decredIcons)
+	win.common = win.newPageCommon(decredIcons)
 
 	return win, nil
-}
-
-func (win *Window) changePage(page string) {
-	win.pages[win.current].onClose()
-	win.current = page
-	win.refresh()
-}
-
-func (win *Window) changePageAndRefresh(page string) {
-	win.refreshPage = true
-	win.changePage(page)
-}
-
-func (win *Window) refresh() {
-	win.window.Invalidate()
-}
-
-func (win *Window) setReturnPage(from string) {
-	win.previous = from
-	win.refresh()
 }
 
 func (win *Window) unloaded() {
@@ -245,14 +223,14 @@ func (win *Window) Loop(shutdown chan int) {
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
-				if win.walletInfo.LoadedWallets == 0 {
-					win.changePage(PageCreateRestore)
-				}
 
 				if s.loading {
 					win.Loading(gtx)
 				} else {
-					win.layoutPage(gtx, win.pages[win.current])
+					if win.currentPage == nil {
+						win.currentPage = newMainPage(win.common)
+					}
+					win.layoutPage(gtx, win.currentPage)
 				}
 
 				evt.Frame(win.ops)

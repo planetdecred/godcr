@@ -29,7 +29,7 @@ type proposalItemWidgets struct {
 type proposalDetails struct {
 	theme               *decredmaterial.Theme
 	loadingDescription  bool
-	common              pageCommon
+	common              *pageCommon
 	descriptionCard     decredmaterial.Card
 	proposalItems       map[string]proposalItemWidgets
 	descriptionList     *layout.List
@@ -45,17 +45,16 @@ type proposalDetails struct {
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
 	successIcon         *widget.Icon
-	refreshWindow       func()
 }
 
-func (win *Window) ProposalDetailsPage(common pageCommon) Page {
+func ProposalDetailsPage(common *pageCommon) Page {
 	pg := &proposalDetails{
 		theme:               common.theme,
 		loadingDescription:  false,
 		common:              common,
 		descriptionCard:     common.theme.Card(),
 		descriptionList:     &layout.List{Axis: layout.Vertical},
-		selectedProposal:    &win.selectedProposal,
+		selectedProposal:    common.selectedProposal,
 		commentsBundleBtn:   new(widget.Clickable),
 		proposalBundleBtn:   new(widget.Clickable),
 		viewInGithubBtn:     new(widget.Clickable),
@@ -67,7 +66,6 @@ func (win *Window) ProposalDetailsPage(common pageCommon) Page {
 		proposalItems:       make(map[string]proposalItemWidgets),
 		rejectedIcon:        common.icons.navigationCancel,
 		successIcon:         common.icons.actionCheckCircle,
-		refreshWindow:       common.refreshWindow,
 		timerIcon:           common.icons.timerIcon,
 	}
 
@@ -389,7 +387,6 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				clickables: proposalClickables,
 			}
 			pg.loadingDescription = false
-			pg.refreshWindow()
 		}()
 	}
 
@@ -419,9 +416,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 
 }
 

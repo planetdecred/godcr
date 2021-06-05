@@ -16,7 +16,7 @@ import (
 const PageAccountDetails = "AccountDetails"
 
 type acctDetailsPage struct {
-	common                   pageCommon
+	common                   *pageCommon
 	wallet                   *wallet.Wallet
 	current                  wallet.InfoShort
 	theme                    *decredmaterial.Theme
@@ -27,14 +27,14 @@ type acctDetailsPage struct {
 	errorReceiver            chan error
 }
 
-func (win *Window) AcctDetailsPage(common pageCommon) Page {
+func AcctDetailsPage(common *pageCommon) Page {
 	pg := &acctDetailsPage{
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
 		common:        common,
 		wallet:        common.wallet,
-		acctInfo:      &win.walletAccount,
+		acctInfo:      common.walletAccount,
 		theme:         common.theme,
 		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		editAccount:   new(widget.Clickable),
@@ -52,7 +52,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	widgets := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.accountBalanceLayout(gtx, &common)
+			return pg.accountBalanceLayout(gtx, common)
 		},
 		func(gtx C) D {
 			m := values.MarginPadding10
@@ -102,9 +102,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return pg.common.UniformPadding(gtx, body)
 }
 
 func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *pageCommon) layout.Dimensions {
@@ -248,7 +246,7 @@ func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
 }
 
-func (pg *acctDetailsPage) Handler(gtx layout.Context, common pageCommon) {
+func (pg *acctDetailsPage) Handler(gtx layout.Context, common *pageCommon) {
 	if pg.backButton.Button.Clicked() {
 		common.changePage(PageWallet)
 	}

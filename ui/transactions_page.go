@@ -37,25 +37,25 @@ type transactionsPage struct {
 	toTxnDetails                []*gesture.Click
 	separator                   decredmaterial.Line
 	theme                       *decredmaterial.Theme
-	common                      pageCommon
+	common                      *pageCommon
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
 	walletDropDown *decredmaterial.DropDown
 }
 
-func (win *Window) TransactionsPage(common pageCommon) Page {
+func TransactionsPage(common *pageCommon) Page {
 	pg := &transactionsPage{
 		common:             common,
 		container:          layout.Flex{Axis: layout.Vertical},
 		txsList:            layout.List{Axis: layout.Vertical},
-		walletTransactions: &win.walletTransactions,
-		walletTransaction:  &win.walletTransaction,
+		walletTransactions: common.walletTransactions,
+		walletTransaction:  common.walletTransaction,
 		separator:          common.theme.Separator(),
 		theme:              common.theme,
 	}
 
-	pg.orderDropDown = createOrderDropDown(&common)
+	pg.orderDropDown = createOrderDropDown(common)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
@@ -116,13 +116,13 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 									click := pg.toTxnDetails[index]
 									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 									click.Add(gtx.Ops)
-									pg.goToTxnDetails(click.Events(gtx), &common, &wallTxs[index])
+									pg.goToTxnDetails(click.Events(gtx), common, &wallTxs[index])
 									var row = TransactionRow{
 										transaction: wallTxs[index],
 										index:       index,
 										showBadge:   false,
 									}
-									return transactionRow(gtx, &common, row)
+									return transactionRow(gtx, common, row)
 								})
 							})
 					})
@@ -131,9 +131,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Stacked(pg.dropDowns),
 		)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, container)
-	})
+	return common.UniformPadding(gtx, container)
 }
 
 func filterTransactions(transactions []wallet.Transaction, f func(int) bool) []wallet.Transaction {
@@ -214,7 +212,7 @@ func (pg *transactionsPage) handle() {
 
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
-		pg.sortTransactions(&common)
+		pg.sortTransactions(common)
 	}
 }
 
@@ -245,7 +243,7 @@ func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, common *
 	}
 }
 
-func initTxnWidgets(common pageCommon, transaction wallet.Transaction) transactionWdg {
+func initTxnWidgets(common *pageCommon, transaction wallet.Transaction) transactionWdg {
 	var txn transactionWdg
 	t := time.Unix(transaction.Txn.Timestamp, 0).UTC()
 	txn.time = common.theme.Body1(t.Format(time.UnixDate))

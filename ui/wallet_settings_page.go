@@ -14,7 +14,7 @@ const PageWalletSettings = "WalletSettings"
 
 type walletSettingsPage struct {
 	theme      *decredmaterial.Theme
-	common     pageCommon
+	common     *pageCommon
 	walletInfo *wallet.MultiWalletInfo
 	wal        *wallet.Wallet
 
@@ -26,11 +26,11 @@ type walletSettingsPage struct {
 	chevronRightIcon *widget.Icon
 }
 
-func (win *Window) WalletSettingsPage(common pageCommon) Page {
+func WalletSettingsPage(common *pageCommon) Page {
 	pg := &walletSettingsPage{
 		theme:         common.theme,
 		common:        common,
-		walletInfo:    win.walletInfo,
+		walletInfo:    common.info,
 		wal:           common.wallet,
 		notificationW: new(widget.Bool),
 		errorReceiver: make(chan error),
@@ -80,9 +80,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return common.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, body)
-	})
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *walletSettingsPage) changePassphrase() layout.Widget {
@@ -177,7 +175,7 @@ func (pg *walletSettingsPage) bottomSectionLabel(title string) layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) resetSelectedWallet(common pageCommon) {
+func (pg *walletSettingsPage) resetSelectedWallet(common *pageCommon) {
 	common.wallAcctSelector.selectedSendWallet = 0
 	common.wallAcctSelector.selectedSendAccount = 0
 

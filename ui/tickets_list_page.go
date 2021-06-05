@@ -28,19 +28,19 @@ type ticketPageList struct {
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
 	isGridView         bool
-	common             pageCommon
+	common             *pageCommon
 }
 
-func (win *Window) TicketPageList(c pageCommon) Page {
+func TicketPageList(c *pageCommon) Page {
 	pg := &ticketPageList{
 		th:             c.theme,
 		common:         c,
-		tickets:        &win.walletTickets,
+		tickets:        c.walletTickets,
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,
 	}
-	pg.orderDropDown = createOrderDropDown(&c)
+	pg.orderDropDown = createOrderDropDown(c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -57,6 +57,8 @@ func (win *Window) TicketPageList(c pageCommon) Page {
 
 func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
+
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "All tickets",
@@ -149,9 +151,7 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 		return c.SubPageLayout(gtx, page)
 	}
 
-	return c.Layout(gtx, func(gtx C) D {
-		return c.UniformPadding(gtx, body)
-	})
+	return c.UniformPadding(gtx, body)
 }
 
 func (pg *ticketPageList) dropDowns(gtx layout.Context) layout.Dimensions {
@@ -177,9 +177,9 @@ func (pg *ticketPageList) dropDowns(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tickets []wallet.Ticket) layout.Dimensions {
+func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c *pageCommon, tickets []wallet.Ticket) layout.Dimensions {
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-		st := ticketStatusIcon(&c, tickets[index].Info.Status)
+		st := ticketStatusIcon(c, tickets[index].Info.Status)
 		if st == nil {
 			return layout.Dimensions{}
 		}
@@ -269,7 +269,7 @@ func (pg *ticketPageList) ticketListLayout(gtx layout.Context, c pageCommon, tic
 	})
 }
 
-func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c pageCommon, tickets []wallet.Ticket) layout.Dimensions {
+func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c *pageCommon, tickets []wallet.Ticket) layout.Dimensions {
 	// TODO: GridWrap's items not able to scroll vertically, will update when it fixed
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return pg.ticketsList.Layout(gtx, 1, func(gtx C, index int) D {
@@ -294,7 +294,6 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c pageCommon,
 
 func (pg *ticketPageList) handle() {
 	c := pg.common
-	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
 
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView

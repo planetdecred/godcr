@@ -15,7 +15,7 @@ const PageLog = "Log"
 
 type logPage struct {
 	theme  *decredmaterial.Theme
-	common pageCommon
+	common *pageCommon
 
 	copyLog  *widget.Clickable
 	copyIcon *widget.Image
@@ -26,7 +26,7 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func (win *Window) LogPage(common pageCommon) Page {
+func LogPage(common *pageCommon) Page {
 	pg := &logPage{
 		common: common,
 		theme:  common.theme,
@@ -41,7 +41,7 @@ func (win *Window) LogPage(common pageCommon) Page {
 	pg.copyIcon = common.icons.copyIcon
 	pg.copyIcon.Scale = 0.25
 
-	go pg.watchLogs(win.internalLog)
+	go pg.watchLogs(*common.internalLog)
 
 	return pg
 }
@@ -107,9 +107,7 @@ func (pg *logPage) Layout(gtx C) D {
 		}
 		return common.SubPageLayout(gtx, page)
 	}
-	return pg.common.Layout(gtx, func(gtx C) D {
-		return pg.common.UniformPadding(gtx, container)
-	})
+	return pg.common.UniformPadding(gtx, container)
 }
 
 func (pg *logPage) handle()  {}

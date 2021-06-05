@@ -44,7 +44,7 @@ type (
 
 type backupPage struct {
 	theme  *decredmaterial.Theme
-	common pageCommon
+	common *pageCommon
 	wal    *wallet.Wallet
 	info   *wallet.MultiWalletInfo
 
@@ -76,7 +76,7 @@ type backupPage struct {
 	privpass       []byte
 }
 
-func (win *Window) BackupPage(c pageCommon) Page {
+func BackupPage(c *pageCommon) Page {
 	b := &backupPage{
 		theme:  c.theme,
 		wal:    c.wallet,
@@ -471,7 +471,7 @@ func checkSlice(s []string) bool {
 	return true
 }
 
-func (pg *backupPage) resetPage(c pageCommon) {
+func (pg *backupPage) resetPage(c *pageCommon) {
 	c.changePage(PageWallet)
 	pg.active = infoView
 	pg.seedPhrase = []string{}

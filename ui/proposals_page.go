@@ -49,7 +49,7 @@ type tabs struct {
 
 type proposalsPage struct {
 	theme            *decredmaterial.Theme
-	common           pageCommon
+	common           *pageCommon
 	wallet           *wallet.Wallet
 	selectedProposal **dcrlibwallet.Proposal
 	proposals        **wallet.Proposals
@@ -81,20 +81,20 @@ var (
 	}
 )
 
-func (win *Window) ProposalsPage(common pageCommon) Page {
+func ProposalsPage(common *pageCommon) Page {
 	pg := &proposalsPage{
 		common:           common,
 		theme:            common.theme,
-		wallet:           win.wallet,
+		wallet:           common.wallet,
 		proposalsList:    &layout.List{},
 		tabCard:          common.theme.Card(),
 		itemCard:         common.theme.Card(),
 		syncCard:         common.theme.Card(),
 		legendIcon:       common.icons.imageBrightness1,
 		infoIcon:         common.icons.actionInfo,
-		proposals:        &win.proposals,
-		selectedProposal: &win.selectedProposal,
-		syncedProposal:   win.proposal,
+		proposals:        common.proposals,
+		selectedProposal: common.selectedProposal,
+		syncedProposal:   common.syncedProposal,
 		updatedIcon:      common.icons.navigationCheck,
 		updatedLabel:     common.theme.Body2("Updated"),
 		syncButton:       new(widget.Clickable),
@@ -141,7 +141,6 @@ func (pg *proposalsPage) handle() {
 
 	for pg.syncButton.Clicked() {
 		pg.wallet.SyncProposals()
-		common.refreshPage()
 	}
 
 	select {
@@ -154,10 +153,8 @@ func (pg *proposalsPage) handle() {
 			pg.isSynced = true
 		} else if prop.ProposalStatus == wallet.NewProposalFound {
 			pg.addDiscoveredProposal(false, *prop.Proposal)
-			common.refreshPage()
 		} else if prop.ProposalStatus == wallet.VoteStarted || prop.ProposalStatus == wallet.VoteFinished {
 			pg.updateProposalVoteStatus(*prop.Proposal)
-			common.refreshPage()
 		}
 	default:
 	}
@@ -166,7 +163,6 @@ func (pg *proposalsPage) handle() {
 		time.AfterFunc(time.Second*3, func() {
 			pg.isSynced = false
 		})
-		common.refreshPage()
 	}
 }
 
@@ -527,8 +523,6 @@ func (pg *proposalsPage) initializeProposaltabItems() {
 }
 
 func (pg *proposalsPage) Layout(gtx C) D {
-	common := pg.common
-
 	if !pg.proposalsItemSet {
 		pg.initializeProposaltabItems()
 	}
@@ -538,33 +532,31 @@ func (pg *proposalsPage) Layout(gtx C) D {
 		return border.Layout(gtx, body)
 	}
 
-	return common.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Flexed(1, func(gtx C) D {
-						return borderLayout(gtx, pg.layoutTabs)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return borderLayout(gtx, func(gtx C) D {
-							return pg.syncCard.Layout(gtx, func(gtx C) D {
-								m := values.MarginPadding12
-								if pg.isSynced {
-									m = values.MarginPadding14
-								} else if pg.wallet.IsSyncingProposals() {
-									m = values.MarginPadding15
-								}
-								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
-									return layout.Center.Layout(gtx, pg.layoutSyncSection)
-								})
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Flexed(1, func(gtx C) D {
+					return borderLayout(gtx, pg.layoutTabs)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return borderLayout(gtx, func(gtx C) D {
+						return pg.syncCard.Layout(gtx, func(gtx C) D {
+							m := values.MarginPadding12
+							if pg.isSynced {
+								m = values.MarginPadding14
+							} else if pg.wallet.IsSyncingProposals() {
+								m = values.MarginPadding15
+							}
+							return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
+								return layout.Center.Layout(gtx, pg.layoutSyncSection)
 							})
 						})
-					}),
-				)
-			}),
-			layout.Flexed(1, pg.layoutContent),
-		)
-	})
+					})
+				}),
+			)
+		}),
+		layout.Flexed(1, pg.layoutContent),
+	)
 }
 
 func (pg *proposalsPage) onClose() {}
