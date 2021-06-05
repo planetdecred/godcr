@@ -467,81 +467,26 @@ func (pg *settingsPage) handle() {
 	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey
 	if pg.connectToPeer.Changed() {
 		if pg.connectToPeer.Value {
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: ConnectToSpecificPeerTemplate,
-					title:    values.String(values.StrConnectToSpecificPeer),
-					confirm: func(ipAddress string) {
-						if ipAddress != "" {
-							pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
-							common.closeModal()
-						}
-					},
-					confirmText: values.String(values.StrConfirm),
-					cancel:      common.closeModal,
-					cancelText:  values.String(values.StrCancel),
-				}
-			}()
+			pg.showSPVPeerDialog()
 			return
 		}
 		pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
 	}
+
 	for pg.updateConnectToPeer.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ChangeSpecificPeerTemplate,
-				title:    values.String(values.StrChangeSpecificPeer),
-				confirm: func(ipAddress string) {
-					if ipAddress != "" {
-						pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
-						common.closeModal()
-					}
-				},
-				confirmText: values.String(values.StrConfirm),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+		pg.showSPVPeerDialog()
 		break
 	}
 
 	userAgentKey := dcrlibwallet.UserAgentConfigKey
 	for pg.updateUserAgent.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: UserAgentTemplate,
-				title:    values.String(values.StrChangeUserAgent),
-				confirm: func(agent string) {
-					if agent != "" {
-						pg.wal.SaveConfigValueForKey(userAgentKey, agent)
-						common.closeModal()
-					}
-				},
-				confirmText: values.String(values.StrGeneral),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+		pg.showUserAgentDialog()
 		break
 	}
 
 	if pg.userAgent.Changed() {
 		if pg.userAgent.Value {
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: UserAgentTemplate,
-					title:    values.String(values.StrChangeUserAgent),
-					confirm: func(agent string) {
-						if agent != "" {
-							pg.wal.SaveConfigValueForKey(userAgentKey, agent)
-							common.closeModal()
-						}
-					},
-					confirmText: values.String(values.StrConfirm),
-					cancel:      common.closeModal,
-					cancelText:  values.String(values.StrCancel),
-				}
-			}()
+			pg.showUserAgentDialog()
 			return
 		}
 		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
@@ -558,6 +503,36 @@ func (pg *settingsPage) handle() {
 		common.notify(err.Error(), false)
 	default:
 	}
+}
+
+func (pg *settingsPage) showSPVPeerDialog() {
+	textModal := newTextInputModal(&pg.common).
+		hint("IP address").
+		positiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *textInputModal) bool {
+			if ipAddress != "" {
+				pg.wal.SaveConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey, ipAddress)
+			}
+			return true
+		})
+
+	textModal.title(values.String(values.StrConnectToSpecificPeer)).
+		negativeButton(values.String(values.StrCancel), func() {})
+	textModal.show()
+}
+
+func (pg *settingsPage) showUserAgentDialog() {
+	textModal := newTextInputModal(&pg.common).
+		hint("User agent").
+		positiveButton(values.String(values.StrConfirm), func(userAgent string, tim *textInputModal) bool {
+			if userAgent != "" {
+				pg.wal.SaveConfigValueForKey(dcrlibwallet.UserAgentConfigKey, userAgent)
+			}
+			return true
+		})
+
+	textModal.title(values.String(values.StrChangeUserAgent)).
+		negativeButton(values.String(values.StrCancel), func() {})
+	textModal.show()
 }
 
 func (pg *settingsPage) updateSettingOptions() {

@@ -63,11 +63,6 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.loading = false
 		win.proposals = e
 		return
-	case wallet.CreatedSeed:
-		win.notifyOnSuccess("Wallet created")
-		win.currentPage.changePage(PageWallet)
-	case wallet.Renamed:
-		win.notifyOnSuccess("Wallet renamed")
 	case wallet.Restored:
 		win.states.creating = false
 		win.window.Invalidate()

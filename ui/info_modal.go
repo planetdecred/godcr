@@ -54,6 +54,10 @@ func (in *infoModal) show() {
 	in.pageCommon.showModal(in)
 }
 
+func (in *infoModal) dismiss() {
+	in.dismissModal(in)
+}
+
 func (in *infoModal) OnResume() {
 }
 
@@ -130,7 +134,6 @@ func (in *infoModal) handle() {
 }
 
 func (in *infoModal) Layout(gtx layout.Context) D {
-
 	icon := func(gtx C) D {
 		if in.dialogIcon == nil {
 			return layout.Dimensions{}
@@ -144,19 +147,48 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 		})
 	}
 
-	title := func(gtx C) D {
-		t := in.theme.H6(in.dialogTitle)
-		t.Font.Weight = text.Bold
-		return t.Layout(gtx)
-	}
-
 	subtitle := func(gtx C) D {
 		text := in.theme.Body1(in.subtitle)
 		text.Color = in.theme.Color.Gray
 		return text.Layout(gtx)
 	}
 
-	actionButtons := func(gtx C) D {
+	var w []layout.Widget
+
+	// Every section of the dialog is optional
+	if in.dialogIcon != nil {
+		w = append(w, icon)
+	}
+
+	if in.dialogTitle != "" {
+		w = append(w, in.titleLayout(gtx))
+	}
+
+	if in.subtitle != "" {
+		w = append(w, subtitle)
+	}
+
+	if in.customTemplate != nil {
+		w = append(w, in.customTemplate...)
+	}
+
+	if in.negativeButtonText != "" || in.positiveButtonText != "" {
+		w = append(w, in.actionButtonsLayout(gtx))
+	}
+
+	return in.modal.Layout(gtx, w, 850)
+}
+
+func (in *infoModal) titleLayout(gtx C) layout.Widget {
+	return func(gtx C) D {
+		t := in.theme.H6(in.dialogTitle)
+		t.Font.Weight = text.Bold
+		return t.Layout(gtx)
+	}
+}
+
+func (in *infoModal) actionButtonsLayout(gtx C) layout.Widget {
+	return func(gtx C) D {
 		return layout.E.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -193,34 +225,4 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 			)
 		})
 	}
-
-	var w []layout.Widget
-
-	// Every section of the dialog is optional
-	if in.dialogIcon != nil {
-		w = append(w, icon)
-	}
-
-	if in.dialogTitle != "" {
-		w = append(w, title)
-	}
-
-	if in.subtitle != "" {
-		w = append(w, subtitle)
-	}
-
-	if in.customTemplate != nil {
-		w = append(w, in.customTemplate...)
-	}
-
-	if in.negativeButtonText != "" || in.positiveButtonText != "" {
-		w = append(w, actionButtons)
-	}
-
-	return in.modal.Layout(gtx, w, 850)
-
-	// w := m.handle(th, load)
-	// w = append(title, w...)
-	// w = append(w, m.actions(th, load)...)
-	// return layout.Dimensions{}
 }

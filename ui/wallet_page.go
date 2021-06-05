@@ -164,19 +164,17 @@ func (pg *walletPage) initializeWalletMenu() {
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				go func() {
-					common.modalReceiver <- &modalLoad{
-						template: RenameWalletTemplate,
-						title:    values.String(values.StrRenameWalletSheetTitle),
-						confirm: func(name string) {
-							id := common.info.Wallets[*common.selectedWallet].ID
-							common.wallet.RenameWallet(id, name, pg.errorReceiver)
-						},
-						confirmText: values.String(values.StrRename),
-						cancel:      common.closeModal,
-						cancelText:  values.String(values.StrCancel),
-					}
-				}()
+				textModal := newTextInputModal(common).
+					hint("Wallet name").
+					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
+						id := common.info.Wallets[*common.selectedWallet].ID
+						common.wallet.RenameWallet(id, newName, pg.errorReceiver)
+						return true
+					})
+
+				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
+					negativeButton(values.String(values.StrCancel), func() {})
+				textModal.show()
 			},
 		},
 		{
@@ -220,19 +218,17 @@ func (pg *walletPage) initializeWalletMenu() {
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				go func() {
-					common.modalReceiver <- &modalLoad{
-						template: RenameWalletTemplate,
-						title:    values.String(values.StrRenameWalletSheetTitle),
-						confirm: func(name string) {
-							id := common.info.Wallets[*common.selectedWallet].ID
-							common.wallet.RenameWallet(id, name, pg.errorReceiver)
-						},
-						confirmText: values.String(values.StrRename),
-						cancel:      common.closeModal,
-						cancelText:  values.String(values.StrCancel),
-					}
-				}()
+				textModal := newTextInputModal(common).
+					hint("Wallet name").
+					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
+						id := common.info.Wallets[*common.selectedWallet].ID
+						common.wallet.RenameWallet(id, newName, pg.errorReceiver)
+						return true
+					})
+
+				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
+					negativeButton(values.String(values.StrCancel), func() {})
+				textModal.show()
 			},
 		},
 	}

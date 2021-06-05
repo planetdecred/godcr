@@ -253,19 +253,17 @@ func (pg *acctDetailsPage) Handler(gtx layout.Context, common *pageCommon) {
 
 	if pg.editAccount.Clicked() {
 		pg.current = common.info.Wallets[*common.selectedWallet]
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RenameAccountTemplate,
-				title:    "Rename account",
-				confirm: func(name string) {
-					pg.wallet.RenameAccount(pg.current.ID, (*pg.acctInfo).Number, name, pg.errorReceiver)
-					(*pg.acctInfo).Name = name
-				},
-				confirmText: "Rename",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
+		textModal := newTextInputModal(&common).
+			hint("Account name").
+			positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
+				pg.wallet.RenameAccount(pg.current.ID, (*pg.acctInfo).Number, newName, pg.errorReceiver)
+				(*pg.acctInfo).Name = newName
+				return true
+			})
+
+		textModal.title("Rename account").
+			negativeButton(values.String(values.StrCancel), func() {})
+		textModal.show()
 	}
 }
 

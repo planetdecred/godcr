@@ -15,19 +15,14 @@ import (
 )
 
 const (
-	RenameWalletTemplate           = "RenameWallet"
 	CreateAccountTemplate          = "CreateNewAccount"
-	RenameAccountTemplate          = "RenameAccount"
+	ImportWatchOnlyWalletTemplate  = "ImportWatchOnlyWallet"
+
 	VerifyMessageInfoTemplate      = "VerifyMessageInfo"
 	SignMessageInfoTemplate        = "SignMessageInfo"
 	PrivacyInfoTemplate            = "PrivacyInfo"
-	ConnectToSpecificPeerTemplate  = "ConnectToSpecificPeer"
-	ChangeSpecificPeerTemplate     = "ChangeSpecificPeer"
-	UserAgentTemplate              = "UserAgent"
 	SetupMixerInfoTemplate         = "ConfirmSetupMixer"
-	ConfirmMixerAcctExistTemplate  = "MixerAcctExistTemplate"
 	SecurityToolsInfoTemplate      = "SecurityToolsInfo"
-	ImportWatchOnlyWalletTemplate  = "ImportWatchOnlyWallet"
 	TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
 )
 
@@ -391,28 +386,6 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []lay
 func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []layout.Widget) {
 	m.walletName.Editor.SingleLine = true
 	switch load.template {
-	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, ChangeSpecificPeerTemplate, UserAgentTemplate:
-		if m.editorsNotEmpty(m.walletName.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor) {
-				load.confirm.(func(string))(m.walletName.Editor.Text())
-			}
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel()
-		}
-
-		template = m.renameWallet()
-		m.walletName.Hint = "Wallet name"
-		if load.template == RenameAccountTemplate {
-			m.walletName.Hint = "Account name"
-		}
-		if load.template == ConnectToSpecificPeerTemplate || load.template == ChangeSpecificPeerTemplate {
-			m.walletName.Hint = "IP address"
-		}
-		if load.template == UserAgentTemplate {
-			m.walletName.Hint = "User agent"
-		}
-		return
 	case CreateAccountTemplate:
 		if m.editorsNotEmpty(m.walletName.Editor, m.spendingPassword.Editor) {
 			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.spendingPassword.Editor) {
