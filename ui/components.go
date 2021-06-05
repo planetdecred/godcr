@@ -920,6 +920,9 @@ func createOrderDropDown(c *pageCommon) *decredmaterial.DropDown {
 
 func (page *pageCommon) handler() {
 	page.handleToast()
+	for _, modal := range page.modals {
+		modal.handle()
+	}
 
 	for windex := 0; windex < page.info.LoadedWallets; windex++ {
 		page.initSelectAccountWidget(page.wallAcctSelector.walletAccounts.selectSendAccount, windex)

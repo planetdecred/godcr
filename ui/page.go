@@ -117,6 +117,7 @@ type pageCommon struct {
 	keyEvents          chan *key.Event
 	toast              **toast
 	states             *states
+	modals             []Modal
 	modal              *decredmaterial.Modal
 	modalReceiver      chan *modalLoad
 	modalLoad          *modalLoad
@@ -379,6 +380,20 @@ func (common *pageCommon) closeModal() {
 			cancel:  nil,
 		}
 	}()
+}
+
+func (page pageCommon) showModal(modal Modal) {
+	modal.OnResume() // setup display data
+	page.modals = append(page.modals, modal)
+}
+
+func (page pageCommon) dismissModal(modal Modal) {
+	for i, m := range page.modals {
+		if m.modalID() == modal.modalID() {
+			modal.OnDismiss() // do garbage collection in modal
+			page.modals = append(page.modals[:i], page.modals[i+1:]...)
+		}
+	}
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
