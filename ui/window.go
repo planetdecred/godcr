@@ -228,7 +228,7 @@ func (win *Window) Loop(shutdown chan int) {
 					win.Loading(gtx)
 				} else {
 					if win.currentPage == nil {
-						win.currentPage = MainPage(win.common)
+						win.currentPage = newMainPage(win.common)
 					}
 					win.layoutPage(gtx, win.currentPage)
 				}

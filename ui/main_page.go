@@ -32,7 +32,7 @@ type mainPage struct {
 	totalBalanceUSD string
 }
 
-func MainPage(common *pageCommon) *mainPage {
+func newMainPage(common *pageCommon) *mainPage {
 
 	isDarkModeOn := common.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
 	if isDarkModeOn != common.theme.DarkMode {
