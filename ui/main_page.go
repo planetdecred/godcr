@@ -58,9 +58,6 @@ func MainPage(common *pageCommon) *mainPage {
 
 	mp.initNavItems()
 
-	currencyExchangeValue := mp.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	mp.usdExchangeSet = currencyExchangeValue == USDExchangeValue
-
 	mp.updateBalance()
 
 	return mp
@@ -121,6 +118,9 @@ func (mp *mainPage) initNavItems() {
 }
 
 func (mp *mainPage) updateBalance() {
+	currencyExchangeValue := mp.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	mp.usdExchangeSet = currencyExchangeValue == USDExchangeValue
+
 	totalBalance, err := mp.calculateTotalWalletsBalance()
 	if err == nil {
 		mp.totalBalance = totalBalance
@@ -153,6 +153,10 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 }
 
 func (mp *mainPage) handle() {
+
+	// TODO: This function should be only called when
+	// dcrlibwallet update notifications are receieved
+	mp.updateBalance()
 
 	for mp.minimizeNavDrawerButton.Button.Clicked() {
 		mp.isNavDrawerMinimized = true

@@ -16,9 +16,6 @@ type states struct {
 func (win *Window) updateStates(update interface{}) {
 	switch e := update.(type) {
 	case wallet.MultiWalletInfo:
-		if win.walletInfo.LoadedWallets == 0 && e.LoadedWallets > 0 {
-			win.changePage(PageMain)
-		}
 		*win.walletInfo = e
 		win.states.loading = false
 
@@ -58,11 +55,9 @@ func (win *Window) updateStates(update interface{}) {
 	case *wallet.VSPInfo:
 		win.states.loading = false
 		win.vspInfo.List = append(win.vspInfo.List, *e)
-		win.refresh()
 		return
 	case *wallet.VSP:
 		win.vspInfo = e
-		win.refresh()
 		return
 	case *wallet.Proposals:
 		win.states.loading = false
@@ -74,12 +69,10 @@ func (win *Window) updateStates(update interface{}) {
 	case wallet.Renamed:
 		win.notifyOnSuccess("Wallet renamed")
 	case wallet.Restored:
-		win.changePage(PageWallet)
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
 		win.selected = 0
-		win.changePageAndRefresh(PageWallet)
 		win.notifyOnSuccess("Wallet removed")
 	case wallet.AddedAccount:
 		win.notifyOnSuccess("Account created")

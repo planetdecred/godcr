@@ -45,7 +45,6 @@ type proposalDetails struct {
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
 	successIcon         *widget.Icon
-	refreshWindow       func()
 }
 
 func ProposalDetailsPage(common *pageCommon) Page {
@@ -67,7 +66,6 @@ func ProposalDetailsPage(common *pageCommon) Page {
 		proposalItems:       make(map[string]proposalItemWidgets),
 		rejectedIcon:        common.icons.navigationCancel,
 		successIcon:         common.icons.actionCheckCircle,
-		refreshWindow:       common.refreshWindow,
 		timerIcon:           common.icons.timerIcon,
 	}
 
@@ -389,7 +387,6 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				clickables: proposalClickables,
 			}
 			pg.loadingDescription = false
-			pg.refreshWindow()
 		}()
 	}
 

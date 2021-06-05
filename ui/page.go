@@ -145,7 +145,6 @@ type pageCommon struct {
 
 	changePage    func(string)
 	setReturnPage func(string)
-	refreshWindow func()
 
 	wallAcctSelector *walletAccountSelector
 }
@@ -260,7 +259,6 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		modal:         win.theme.Modal(),
 		modalReceiver: win.modal,
 		modalLoad:     &modalLoad{},
-		refreshWindow: win.refresh,
 		toast:         &win.toast,
 		internalLog:   &win.internalLog,
 	}
@@ -364,10 +362,6 @@ func (common *pageCommon) fetchExchangeValue(target interface{}) error {
 	}
 
 	return nil
-}
-
-func (common *pageCommon) refreshPage() {
-	common.refreshWindow()
 }
 
 func (common *pageCommon) notify(text string, success bool) {

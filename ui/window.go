@@ -59,7 +59,6 @@ type Window struct {
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
-	refreshPage           bool
 }
 
 type WriteClipboard struct {
@@ -107,20 +106,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.common = win.newPageCommon(decredIcons)
 
 	return win, nil
-}
-
-func (win *Window) changePage(page string) {
-	_ = page
-	win.refresh()
-}
-
-func (win *Window) changePageAndRefresh(page string) {
-	win.refreshPage = true
-	win.changePage(page)
-}
-
-func (win *Window) refresh() {
-	win.window.Invalidate()
 }
 
 func (win *Window) unloaded() {
@@ -238,9 +223,6 @@ func (win *Window) Loop(shutdown chan int) {
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
 				s := win.states
-				if win.walletInfo.LoadedWallets == 0 {
-					win.changePage(PageCreateRestore)
-				}
 
 				if s.loading {
 					win.Loading(gtx)

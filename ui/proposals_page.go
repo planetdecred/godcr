@@ -141,7 +141,6 @@ func (pg *proposalsPage) handle() {
 
 	for pg.syncButton.Clicked() {
 		pg.wallet.SyncProposals()
-		common.refreshPage()
 	}
 
 	select {
@@ -154,10 +153,8 @@ func (pg *proposalsPage) handle() {
 			pg.isSynced = true
 		} else if prop.ProposalStatus == wallet.NewProposalFound {
 			pg.addDiscoveredProposal(false, *prop.Proposal)
-			common.refreshPage()
 		} else if prop.ProposalStatus == wallet.VoteStarted || prop.ProposalStatus == wallet.VoteFinished {
 			pg.updateProposalVoteStatus(*prop.Proposal)
-			common.refreshPage()
 		}
 	default:
 	}
@@ -166,7 +163,6 @@ func (pg *proposalsPage) handle() {
 		time.AfterFunc(time.Second*3, func() {
 			pg.isSynced = false
 		})
-		common.refreshPage()
 	}
 }
 
