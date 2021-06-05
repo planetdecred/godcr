@@ -15,9 +15,6 @@ import (
 )
 
 const (
-	CreateAccountTemplate          = "CreateNewAccount"
-	ImportWatchOnlyWalletTemplate  = "ImportWatchOnlyWallet"
-
 	VerifyMessageInfoTemplate      = "VerifyMessageInfo"
 	SignMessageInfoTemplate        = "SignMessageInfo"
 	PrivacyInfoTemplate            = "PrivacyInfo"
@@ -386,35 +383,6 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []lay
 func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []layout.Widget) {
 	m.walletName.Editor.SingleLine = true
 	switch load.template {
-	case CreateAccountTemplate:
-		if m.editorsNotEmpty(m.walletName.Editor, m.spendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.spendingPassword.Editor) {
-				load.setLoading(true)
-				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
-			}
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel()
-		}
-
-		template = m.createNewAccount()
-		m.walletName.Hint = "Account name"
-		return
-	case ImportWatchOnlyWalletTemplate:
-		if m.editorsNotEmpty(m.walletName.Editor, m.extendedPublicKey.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.extendedPublicKey.Editor) {
-				load.setLoading(true)
-				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.extendedPublicKey.Editor.Text())
-			}
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel()
-		}
-
-		m.walletName.Hint = "Wallet name"
-
-		template = m.importWatchOnlyWallet()
-		return
 	case VerifyMessageInfoTemplate:
 		m.handleButtonEvents(load)
 		template = verifyMessageInfo(m.th)

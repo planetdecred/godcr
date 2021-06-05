@@ -253,25 +253,23 @@ func (pg *walletPage) showAddWalletModal(common *pageCommon) {
 }
 
 func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
-	go func() {
-		common.modalReceiver <- &modalLoad{
-			template: ImportWatchOnlyWalletTemplate,
-			title:    values.String(values.StrImportWatchingOnlyWallet),
-			confirm: func(name, extendedPubKey string) {
-				err := pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey)
+	newCreateWatchOnlyModal(common).
+		callbackFunc(func(walletName, extPubKey string, m *createWatchOnlyModal) bool {
+			go func() {
+				err := pg.wallet.ImportWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
 					common.notify(err.Error(), false)
+					m.setError(err.Error())
+					m.setLoading(false)
 				} else {
 					common.closeModal()
 					pg.wallet.GetMultiWalletInfo()
 					common.notify(values.String(values.StrWatchOnlyWalletImported), true)
+					m.dismiss()
 				}
-			},
-			confirmText: values.String(values.StrImport),
-			cancel:      common.closeModal,
-			cancelText:  values.String(values.StrCancel),
-		}
-	}()
+			}()
+			return false
+		}).show()
 }
 
 // Layout lays out the widgets for the main wallets pg.
@@ -878,11 +876,11 @@ func (pg *walletPage) handle() {
 			walletID := pg.walletInfo.Wallets[index].ID
 			walletIndex := index
 
-			textModal := newTextInputModal(&pg.common).
+			textModal := newTextInputModal(pg.common).
 				hint("Account name").
 				positiveButton(values.String(values.StrCreate), func(accountName string, tim *textInputModal) bool {
 					if accountName != "" {
-						newPasswordModal(&pg.common).
+						newPasswordModal(pg.common).
 							title(values.String(values.StrCreateNewAccount)).
 							hint("Spending password").
 							negativeButton(values.String(values.StrCancel), func() {}).
