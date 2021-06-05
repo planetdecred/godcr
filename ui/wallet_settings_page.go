@@ -188,7 +188,7 @@ func (pg *walletSettingsPage) handle() {
 	for pg.changePass.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 
-		newPasswordModal(&common).
+		newPasswordModal(common).
 			title(values.String(values.StrChangeSpendingPass)).
 			hint("Current spending password").
 			negativeButton(values.String(values.StrCancel), func() {}).
@@ -205,7 +205,7 @@ func (pg *walletSettingsPage) handle() {
 					pm.dismiss()
 
 					// change password
-					newCreatePasswordModal(&common).
+					newCreatePasswordModal(common).
 						title(values.String(values.StrChangeSpendingPass)).
 						enableName(false).
 						passwordHint("New spending password").
@@ -234,7 +234,7 @@ func (pg *walletSettingsPage) handle() {
 	for pg.rescan.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
-			info := newInfoModal(&common).
+			info := newInfoModal(common).
 				title(values.String(values.StrRescanBlockchain)).
 				body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
 					" blockchain for transactions").
@@ -263,14 +263,14 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		newInfoModal(&common).
+		newInfoModal(common).
 			title(values.String(values.StrRemoveWallet)).
 			body("Make sure to have the seed phrase backed up before removing the wallet").
 			negativeButton(values.String(values.StrCancel), func() {}).
 			positiveButton(values.String(values.StrRemove), func() {
 				walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 
-				newPasswordModal(&common).
+				newPasswordModal(common).
 					title(values.String(values.StrConfirmToRemove)).
 					negativeButton(values.String(values.StrCancel), func() {}).
 					positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {

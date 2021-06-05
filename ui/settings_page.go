@@ -383,7 +383,7 @@ func (pg *settingsPage) handle() {
 
 	for pg.changeStartupPass.Clicked() {
 
-		newPasswordModal(&common).
+		newPasswordModal(common).
 			title(values.String(values.StrConfirmRemoveStartupPass)).
 			hint("Current startup password").
 			negativeButton(values.String(values.StrCancel), func() {}).
@@ -398,7 +398,7 @@ func (pg *settingsPage) handle() {
 					pm.dismiss()
 
 					// change password
-					newCreatePasswordModal(&common).
+					newCreatePasswordModal(common).
 						title(values.String(values.StrCreateStartupPassword)).
 						enableName(false).
 						passwordHint("New startup password").
@@ -425,7 +425,7 @@ func (pg *settingsPage) handle() {
 
 	if pg.startupPassword.Changed() {
 		if pg.startupPassword.Value {
-			newCreatePasswordModal(&common).
+			newCreatePasswordModal(common).
 				title(values.String(values.StrCreateStartupPassword)).
 				enableName(false).
 				passwordHint("Startup password").
@@ -444,7 +444,7 @@ func (pg *settingsPage) handle() {
 				}).show()
 		} else {
 
-			newPasswordModal(&common).
+			newPasswordModal(common).
 				title(values.String(values.StrConfirmRemoveStartupPass)).
 				hint("Startup password").
 				negativeButton(values.String(values.StrCancel), func() {}).
@@ -506,7 +506,7 @@ func (pg *settingsPage) handle() {
 }
 
 func (pg *settingsPage) showSPVPeerDialog() {
-	textModal := newTextInputModal(&pg.common).
+	textModal := newTextInputModal(pg.common).
 		hint("IP address").
 		positiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *textInputModal) bool {
 			if ipAddress != "" {
@@ -521,7 +521,7 @@ func (pg *settingsPage) showSPVPeerDialog() {
 }
 
 func (pg *settingsPage) showUserAgentDialog() {
-	textModal := newTextInputModal(&pg.common).
+	textModal := newTextInputModal(pg.common).
 		hint("User agent").
 		positiveButton(values.String(values.StrConfirm), func(userAgent string, tim *textInputModal) bool {
 			if userAgent != "" {

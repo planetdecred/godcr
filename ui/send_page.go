@@ -1078,7 +1078,7 @@ func (pg *sendPage) handle() {
 	}
 
 	if c.subPageInfoButton.Button.Clicked() {
-		info := newInfoModal(&c).
+		info := newInfoModal(c).
 			title("Send DCR").
 			body("Input or scan the destination wallet address and input the amount to send funds.").
 			positiveButton("Got it", func() {})

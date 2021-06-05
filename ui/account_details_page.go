@@ -253,7 +253,7 @@ func (pg *acctDetailsPage) Handler(gtx layout.Context, common *pageCommon) {
 
 	if pg.editAccount.Clicked() {
 		pg.current = common.info.Wallets[*common.selectedWallet]
-		textModal := newTextInputModal(&common).
+		textModal := newTextInputModal(common).
 			hint("Account name").
 			positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
 				pg.wallet.RenameAccount(pg.current.ID, (*pg.acctInfo).Number, newName, pg.errorReceiver)

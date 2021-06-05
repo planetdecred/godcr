@@ -776,7 +776,7 @@ func (pg *createRestore) handle() {
 	}
 
 	for pg.unlock.Button.Clicked() {
-		newPasswordModal(&pg.common).
+		newPasswordModal(pg.common).
 			title("Enter startup wallet password").
 			hint("Startup password").
 			negativeButton("Cancel", func() {}).
@@ -787,7 +787,7 @@ func (pg *createRestore) handle() {
 	}
 
 	for pg.create.Button.Clicked() {
-		newCreatePasswordModal(&common).
+		newCreatePasswordModal(common).
 			title("Create new wallet").
 			enableName(true).
 			passwordCreated(func(walletName, password string, m *createPasswordModal) bool {

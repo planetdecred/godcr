@@ -212,7 +212,7 @@ func (pg *signMessagePage) handle() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()
 
-			newPasswordModal(&common).
+			newPasswordModal(common).
 				title("Confirm to sign").
 				negativeButton("Cancel", func() {}).
 				positiveButton("Confirm", func(password string, pm *passwordModal) bool {
