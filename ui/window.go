@@ -3,7 +3,6 @@ package ui
 import (
 	"errors"
 	"image"
-	"sync"
 	"time"
 
 	"gioui.org/app"
@@ -37,8 +36,6 @@ type Window struct {
 	proposals            *wallet.Proposals
 	selectedProposal     *dcrlibwallet.Proposal
 	proposal             chan *wallet.Proposal
-	modalMutex           sync.Mutex
-	modals               []Modal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
 	common      *pageCommon
@@ -125,24 +122,6 @@ func (win *Window) unloaded() {
 	}
 }
 
-func (win *Window) showModal(modal Modal) {
-	modal.OnResume() // setup display data
-	win.modalMutex.Lock()
-	win.modals = append(win.modals, modal)
-	win.modalMutex.Unlock()
-}
-
-func (win *Window) dismissModal(modal Modal) {
-	win.modalMutex.Lock()
-	defer win.modalMutex.Unlock()
-	for i, m := range win.modals {
-		if m.modalID() == modal.modalID() {
-			modal.OnDismiss() // do garbage collection in modal
-			win.modals = append(win.modals[:i], win.modals[i+1:]...)
-		}
-	}
-}
-
 func (win *Window) layoutPage(gtx C, page Page) {
 	layout.Stack{
 		Alignment: layout.N,
@@ -153,16 +132,6 @@ func (win *Window) layoutPage(gtx C, page Page) {
 		layout.Stacked(func(gtx C) D {
 			page.handle()
 			return page.Layout(gtx)
-		}),
-		layout.Stacked(func(gtx C) D {
-			for _, modal := range win.modals {
-				modal.handle()
-			}
-			if len(win.modals) > 0 {
-				// TODO: use a stacked list
-				return win.modals[0].Layout(gtx)
-			}
-			return layout.Dimensions{}
 		}),
 	)
 }

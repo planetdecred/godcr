@@ -2,6 +2,7 @@ package ui
 
 import (
 	"strconv"
+	"sync"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -16,6 +17,9 @@ const PageMain = "Main"
 
 type mainPage struct {
 	*pageCommon
+
+	modalMutex sync.Mutex
+	modals     []Modal
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
@@ -52,6 +56,8 @@ func newMainPage(common *pageCommon) *mainPage {
 	common.setReturnPage = mp.setReturnPage
 	common.returnPage = &mp.previous
 	common.page = &mp.current
+	common.showModal = mp.showModal
+	common.dismissModal = mp.dismissModal
 
 	iconColor := common.theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
@@ -152,6 +158,24 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	return dcrutil.Amount(totalBalance), nil
 }
 
+func (mp *mainPage) showModal(modal Modal) {
+	modal.OnResume() // setup display data
+	mp.modalMutex.Lock()
+	mp.modals = append(mp.modals, modal)
+	mp.modalMutex.Unlock()
+}
+
+func (mp *mainPage) dismissModal(modal Modal) {
+	mp.modalMutex.Lock()
+	defer mp.modalMutex.Unlock()
+	for i, m := range mp.modals {
+		if m.modalID() == modal.modalID() {
+			modal.OnDismiss() // do garbage collection in modal
+			mp.modals = append(mp.modals[:i], mp.modals[i+1:]...)
+		}
+	}
+}
+
 func (mp *mainPage) handle() {
 
 	// TODO: This function should be only called when
@@ -195,7 +219,11 @@ func (mp *mainPage) setReturnPage(from string) {
 
 func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 	mp.handler() // pageCommon
+	for _, modal := range mp.modals {
+		modal.handle()
+	}
 	mp.pages[mp.current].handle()
+
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			// fill the entire window with a color if a user has no wallet created
@@ -230,13 +258,11 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 			for {
 				select {
 				case load := <-mp.modalReceiver:
-					mp.modalLoad.template = load.template
-					mp.modalLoad.title = load.title
-					mp.modalLoad.confirm = load.confirm
-					mp.modalLoad.confirmText = load.confirmText
-					mp.modalLoad.cancel = load.cancel
-					mp.modalLoad.cancelText = load.cancelText
-					mp.modalLoad.isReset = false
+					newInfoModal(mp.pageCommon).
+						title(load.title).
+						setupWithTemplate(load.template).
+						positiveButton(load.confirmText, func() {}).
+						negativeButton(load.cancelText, func() {}).show()
 				default:
 					break outer
 				}
@@ -247,6 +273,13 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 					900)
 			}
 
+			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+			if len(mp.modals) > 0 {
+				// TODO: use a stacked list
+				return mp.modals[0].Layout(gtx)
+			}
 			return layout.Dimensions{}
 		}),
 		layout.Stacked(func(gtx C) D {
