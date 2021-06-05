@@ -579,7 +579,7 @@ func (pg *sendPage) confirmationModal(gtx layout.Context, common *pageCommon) la
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						if common.modalLoad.loading {
+						if false {
 							th := material.NewTheme(gofont.Collection())
 							return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
 								return material.Loader(th).Layout(gtx)
@@ -922,7 +922,6 @@ func (pg *sendPage) watchForBroadcastResult(c *pageCommon) {
 		pg.isConfirmationModalOpen = false
 		pg.isBroadcastingTransaction = false
 		pg.resetFields()
-		c.modalLoad.setLoading(false)
 		pg.broadcastResult.TxHash = ""
 		pg.calculateValues(c, true)
 		pg.destinationAddressEditor.Editor.SetText("")
@@ -935,7 +934,7 @@ func (pg *sendPage) handleEditorChange(evt widget.EditorEvent, c *pageCommon) {
 		pg.fetchExchangeValue()
 		pg.calculateValues(c, true)
 	case widget.SubmitEvent:
-		pg.sendFund(c)
+		pg.sendFund()
 	}
 }
 
@@ -1033,11 +1032,10 @@ func (pg *sendPage) updateAmountField(spendableBalanceDCR float64) {
 	}
 }
 
-func (pg *sendPage) sendFund(c *pageCommon) {
+func (pg *sendPage) sendFund() {
 	if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
 		return
 	}
-	c.modalLoad.setLoading(true)
 	pg.isBroadcastingTransaction = true
 	pg.wallet.BroadcastTransaction(pg.txAuthor, []byte(pg.passwordEditor.Editor.Text()), pg.broadcastErrChan)
 }
@@ -1167,7 +1165,7 @@ func (pg *sendPage) handle() {
 	pg.watchForBroadcastResult(c)
 
 	for pg.confirmButton.Button.Clicked() {
-		pg.sendFund(c)
+		pg.sendFund()
 	}
 
 	for pg.nextButton.Button.Clicked() {
@@ -1185,7 +1183,6 @@ func (pg *sendPage) handle() {
 	}
 
 	for pg.closeConfirmationModalButton.Button.Clicked() {
-		c.modalLoad.setLoading(false)
 		pg.isConfirmationModalOpen = false
 	}
 
@@ -1204,7 +1201,6 @@ func (pg *sendPage) handle() {
 			c.notify(err.Error(), false)
 			pg.isConfirmationModalOpen = false
 		}
-		c.modalLoad.setLoading(false)
 		pg.isBroadcastingTransaction = false
 	default:
 	}

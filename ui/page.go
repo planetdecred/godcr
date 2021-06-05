@@ -117,11 +117,6 @@ type pageCommon struct {
 	keyEvents          chan *key.Event
 	toast              **toast
 	states             *states
-	modals             []Modal
-	modal              *decredmaterial.Modal
-	modalReceiver      chan *modalLoad
-	modalLoad          *modalLoad
-	modalTemplate      *ModalTemplate
 	internalLog        *chan string
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions **wallet.Transactions
@@ -258,12 +253,9 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		vspInfo:            &win.vspInfo,
 		unspentOutputs:     &win.walletUnspentOutputs,
 
-		selectedUTXO:  make(map[int]map[int32]map[string]*wallet.UnspentOutput),
-		modal:         win.theme.Modal(),
-		modalReceiver: win.modal,
-		modalLoad:     &modalLoad{},
-		toast:         &win.toast,
-		internalLog:   &win.internalLog,
+		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+		toast:        &win.toast,
+		internalLog:  &win.internalLog,
 	}
 
 	common.subPageBackButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
@@ -313,8 +305,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	m25 := values.MarginPadding25
 	common.subPageBackButton.Size, common.subPageInfoButton.Size = m25, m25
 	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
-
-	common.modalTemplate = common.LoadModalTemplates()
 
 	pages := make(map[string]Page)
 
@@ -372,16 +362,6 @@ func (common *pageCommon) notify(text string, success bool) {
 		text:    text,
 		success: success,
 	}
-}
-
-func (common *pageCommon) closeModal() {
-	go func() {
-		common.modalReceiver <- &modalLoad{
-			title:   "",
-			confirm: nil,
-			cancel:  nil,
-		}
-	}()
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -494,14 +474,10 @@ func (common *pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) lay
 
 func (common *pageCommon) subpageEventHandler(sp SubPage) {
 	if common.subPageInfoButton.Button.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template:   sp.infoTemplate,
-				title:      sp.title,
-				cancel:     common.closeModal,
-				cancelText: "Got it",
-			}
-		}()
+		newInfoModal(common).
+			title(sp.title).
+			setupWithTemplate(sp.infoTemplate).
+			negativeButton("Got it", func() {}).show()
 	}
 
 	if common.subPageBackButton.Button.Clicked() {

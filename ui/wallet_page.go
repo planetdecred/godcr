@@ -262,7 +262,6 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
 					m.setError(err.Error())
 					m.setLoading(false)
 				} else {
-					common.closeModal()
 					pg.wallet.GetMultiWalletInfo()
 					common.notify(values.String(values.StrWatchOnlyWalletImported), true)
 					m.dismiss()
@@ -953,7 +952,6 @@ func (pg *walletPage) handle() {
 
 	select {
 	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 			e := values.String(values.StrInvalidPassphrase)
 			common.notify(e, false)

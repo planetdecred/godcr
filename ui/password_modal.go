@@ -116,7 +116,7 @@ func (pm *passwordModal) handle() {
 			continue
 		}
 
-		pm.isLoading = true
+		pm.setLoading(true)
 		pm.setError("")
 		if pm.positiveButtonClicked(pm.password.Editor.Text(), pm) {
 			pm.dismissModal(pm)

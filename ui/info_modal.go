@@ -164,7 +164,7 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 	}
 
 	if in.dialogTitle != "" {
-		w = append(w, in.titleLayout(gtx))
+		w = append(w, in.titleLayout())
 	}
 
 	if in.subtitle != "" {
@@ -176,13 +176,13 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 	}
 
 	if in.negativeButtonText != "" || in.positiveButtonText != "" {
-		w = append(w, in.actionButtonsLayout(gtx))
+		w = append(w, in.actionButtonsLayout())
 	}
 
 	return in.modal.Layout(gtx, w, 850)
 }
 
-func (in *infoModal) titleLayout(gtx C) layout.Widget {
+func (in *infoModal) titleLayout() layout.Widget {
 	return func(gtx C) D {
 		t := in.theme.H6(in.dialogTitle)
 		t.Font.Weight = text.Bold
@@ -190,7 +190,7 @@ func (in *infoModal) titleLayout(gtx C) layout.Widget {
 	}
 }
 
-func (in *infoModal) actionButtonsLayout(gtx C) layout.Widget {
+func (in *infoModal) actionButtonsLayout() layout.Widget {
 	return func(gtx C) D {
 		return layout.E.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,

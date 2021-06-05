@@ -129,7 +129,7 @@ func (cm *createPasswordModal) handle() {
 		if nameValid && editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
 			cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
 
-			cm.isLoading = true
+			cm.setLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
 				cm.dismiss()
 			}

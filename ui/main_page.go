@@ -254,31 +254,9 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global modal. Stack modal on all pages and contents
-		outer:
-			for {
-				select {
-				case load := <-mp.modalReceiver:
-					newInfoModal(mp.pageCommon).
-						title(load.title).
-						setupWithTemplate(load.template).
-						positiveButton(load.confirmText, func() {}).
-						negativeButton(load.cancelText, func() {}).show()
-				default:
-					break outer
-				}
-			}
-
-			if mp.modalLoad.cancel != nil {
-				return mp.modal.Layout(gtx, mp.modalTemplate.Layout(mp.theme, mp.modalLoad),
-					900)
-			}
-
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
 			if len(mp.modals) > 0 {
 				// TODO: use a stacked list
-				return mp.modals[0].Layout(gtx)
+				return mp.modals[len(mp.modals)-1].Layout(gtx)
 			}
 			return layout.Dimensions{}
 		}),

@@ -241,11 +241,7 @@ func (pg *signMessagePage) handle() {
 
 	select {
 	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
 		common.notify(err.Error(), false)
-		if err.Error() != dcrlibwallet.ErrInvalidPassphrase {
-			common.closeModal()
-		}
 	default:
 	}
 }

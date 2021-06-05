@@ -84,10 +84,6 @@ func (win *Window) updateStates(update interface{}) {
 		win.notifyOnSuccess("Spending password changed")
 	case *wallet.StartupPassphrase:
 		win.notifyOnSuccess(update.(*wallet.StartupPassphrase).Msg)
-	case wallet.OpenWallet:
-		go func() {
-			win.modal <- &modalLoad{}
-		}()
 	case wallet.SetupAccountMixer:
 		win.notifyOnSuccess("Mixer setup completed")
 	case *wallet.TicketPurchase:
@@ -108,8 +104,4 @@ func (win *Window) notifyOnSuccess(text string) {
 		text:    text,
 		success: true,
 	}
-
-	go func() {
-		win.modal <- &modalLoad{}
-	}()
 }

@@ -54,7 +54,6 @@ type Window struct {
 
 	keyEvents             chan *key.Event
 	toast                 *toast
-	modal                 chan *modalLoad
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
@@ -98,7 +97,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.wallet = wal
 	win.states.loading = true
 	win.keyEvents = make(chan *key.Event)
-	win.modal = make(chan *modalLoad)
 
 	win.internalLog = internalLog
 

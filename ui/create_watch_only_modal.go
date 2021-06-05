@@ -94,12 +94,10 @@ func (cm *createWatchOnlyModal) handle() {
 	if editorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor) ||
 		handleSubmitEvent(cm.walletName.Editor, cm.extendedPubKey.Editor) {
 		for cm.btnPositve.Button.Clicked() {
-			cm.isLoading = true
+			cm.setLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.extendedPubKey.Editor.Text(), cm) {
 				cm.dismiss()
 			}
-
-			break
 		}
 	}
 

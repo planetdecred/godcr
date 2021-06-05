@@ -86,12 +86,12 @@ func (tm *textInputModal) Layout(gtx layout.Context) D {
 	var w []layout.Widget
 
 	if tm.dialogTitle != "" {
-		w = append(w, tm.titleLayout(gtx))
+		w = append(w, tm.titleLayout())
 	}
 
 	w = append(w, tm.textInput.Layout)
 	if tm.negativeButtonText != "" || tm.positiveButtonText != "" {
-		w = append(w, tm.actionButtonsLayout(gtx))
+		w = append(w, tm.actionButtonsLayout())
 	}
 
 	return tm.modal.Layout(gtx, w, 850)
