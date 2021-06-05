@@ -187,18 +187,47 @@ func (pg *walletSettingsPage) handle() {
 	common := pg.common
 	for pg.changePass.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ChangePasswordTemplate,
-				title:    values.String(values.StrChangeSpendingPass),
-				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errorReceiver)
-				},
-				confirmText: values.String(values.StrChange),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+
+		newPasswordModal(&common).
+			title(values.String(values.StrChangeSpendingPass)).
+			hint("Current spending password").
+			negativeButton(values.String(values.StrCancel), func() {}).
+			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+				go func() {
+					wal := pg.wal.GetMultiWallet().WalletWithID(walletID)
+					err := wal.UnlockWallet([]byte(password))
+					if err != nil {
+						pm.setError(err.Error())
+						pm.setLoading(false)
+						return
+					}
+					wal.LockWallet()
+					pm.dismiss()
+
+					// change password
+					newCreatePasswordModal(&common).
+						title(values.String(values.StrChangeSpendingPass)).
+						enableName(false).
+						passwordHint("New spending password").
+						confirmPasswordHint("Confirm new spending password").
+						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
+							go func() {
+								err := pg.wal.GetMultiWallet().ChangePrivatePassphraseForWallet(walletID, []byte(password),
+									[]byte(newPassword), dcrlibwallet.PassphraseTypePass)
+								if err != nil {
+									m.setError(err.Error())
+									m.setLoading(false)
+									return
+								}
+								m.dismiss()
+							}()
+							return false
+						}).show()
+
+				}()
+
+				return false
+			}).show()
 		break
 	}
 

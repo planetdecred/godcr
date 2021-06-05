@@ -382,49 +382,86 @@ func (pg *settingsPage) handle() {
 	}
 
 	for pg.changeStartupPass.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ChangeStartupPasswordTemplate,
-				title:    values.String(values.StrChangeStartupPassword),
-				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeStartupPassphrase(oldPass, newPass, pg.errorReceiver)
-				},
-				confirmText: values.String(values.StrChange),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+
+		newPasswordModal(&common).
+			title(values.String(values.StrConfirmRemoveStartupPass)).
+			hint("Current startup password").
+			negativeButton(values.String(values.StrCancel), func() {}).
+			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+				go func() {
+					err := pg.wal.GetMultiWallet().VerifyStartupPassphrase([]byte(password))
+					if err != nil {
+						pm.setError(err.Error())
+						pm.setLoading(false)
+						return
+					}
+					pm.dismiss()
+
+					// change password
+					newCreatePasswordModal(&common).
+						title(values.String(values.StrCreateStartupPassword)).
+						enableName(false).
+						passwordHint("New startup password").
+						confirmPasswordHint("Confirm new startup password").
+						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
+							go func() {
+								err := pg.wal.GetMultiWallet().ChangeStartupPassphrase([]byte(password), []byte(newPassword), dcrlibwallet.PassphraseTypePass)
+								if err != nil {
+									m.setError(err.Error())
+									m.setLoading(false)
+									return
+								}
+								m.dismiss()
+							}()
+							return false
+						}).show()
+
+				}()
+
+				return false
+			}).show()
 		break
 	}
 
 	if pg.startupPassword.Changed() {
 		if pg.startupPassword.Value {
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: SetStartupPasswordTemplate,
-					title:    values.String(values.StrCreateStartupPassword),
-					confirm: func(pass string) {
-						pg.wal.SetStartupPassphrase(pass, pg.errorReceiver)
-					},
-					confirmText: values.String(values.StrCreate),
-					cancel:      common.closeModal,
-					cancelText:  values.String(values.StrCancel),
-				}
-			}()
-			return
+			newCreatePasswordModal(&common).
+				title(values.String(values.StrCreateStartupPassword)).
+				enableName(false).
+				passwordHint("Startup password").
+				confirmPasswordHint("Confirm startup password").
+				passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
+					go func() {
+						err := pg.wal.GetMultiWallet().SetStartupPassphrase([]byte(password), dcrlibwallet.PassphraseTypePass)
+						if err != nil {
+							m.setError(err.Error())
+							m.setLoading(false)
+							return
+						}
+						m.dismiss()
+					}()
+					return false
+				}).show()
+		} else {
+
+			newPasswordModal(&common).
+				title(values.String(values.StrConfirmRemoveStartupPass)).
+				hint("Startup password").
+				negativeButton(values.String(values.StrCancel), func() {}).
+				positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+					go func() {
+						err := pg.wal.GetMultiWallet().RemoveStartupPassphrase([]byte(password))
+						if err != nil {
+							pm.setError(err.Error())
+							pm.setLoading(false)
+							return
+						}
+						pm.dismiss()
+					}()
+
+					return false
+				}).show()
 		}
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RemoveStartupPasswordTemplate,
-				title:    values.String(values.StrConfirmRemoveStartupPass),
-				confirm: func(pass string) {
-					pg.wal.RemoveStartupPassphrase(pass, pg.errorReceiver)
-				},
-				confirmText: values.String(values.StrConfirm),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
 	}
 
 	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey

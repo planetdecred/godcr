@@ -640,23 +640,26 @@ func (pg *overviewPage) handle() {
 func (pg *overviewPage) onClose() {}
 
 func showWalletUnlockModal(c *pageCommon, lockedWallets []*dcrlibwallet.Wallet) {
-	go func() {
-		c.modalReceiver <- &modalLoad{
-			template: UnlockWalletRestoreTemplate,
-			title:    values.String(values.StrResumeAccountDiscoveryTitle),
-			confirm: func(pass string) {
-				err := c.wallet.UnlockWallet(lockedWallets[0].ID, []byte(pass))
+	newPasswordModal(c).
+		title(values.String(values.StrResumeAccountDiscoveryTitle)).
+		hint("Spending password").
+		negativeButton(values.String(values.StrCancel), func() {}).
+		positiveButton(values.String(values.StrUnlock), func(password string, pm *passwordModal) bool {
+			go func() {
+				err := c.wallet.UnlockWallet(lockedWallets[0].ID, []byte(password))
 				if err != nil {
 					errText := err.Error()
 					if err.Error() == "invalid_passphrase" {
 						errText = "Invalid passphrase"
 					}
-					c.notify(errText, false)
-				} else {
-					c.closeModal()
+					pm.setError(errText)
+					pm.setLoading(false)
+					return
 				}
-			},
-			confirmText: values.String(values.StrUnlock),
-		}
-	}()
+				pm.dismiss()
+			}()
+
+			return false
+		}).show()
+
 }

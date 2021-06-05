@@ -76,6 +76,11 @@ func (pm *passwordModal) title(title string) *passwordModal {
 	return pm
 }
 
+func (pm *passwordModal) hint(hint string) *passwordModal {
+	pm.password.Hint = hint
+	return pm
+}
+
 func (pm *passwordModal) positiveButton(text string, clicked func(password string, m *passwordModal) bool) *passwordModal {
 	pm.positiveButtonText = text
 	pm.positiveButtonClicked = clicked

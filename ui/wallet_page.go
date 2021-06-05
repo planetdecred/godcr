@@ -239,18 +239,21 @@ func (pg *walletPage) initializeWalletMenu() {
 }
 
 func (pg *walletPage) showAddWalletModal(common *pageCommon) {
-	go func() {
-		common.modalReceiver <- &modalLoad{
-			template: CreateWalletTemplate,
-			title:    values.String(values.StrCreate),
-			confirm: func(name string, passphrase string) {
-				pg.wallet.CreateWallet(name, passphrase, pg.errorReceiver)
-			},
-			confirmText: values.String(values.StrCreate),
-			cancel:      common.closeModal,
-			cancelText:  values.String(values.StrCancel),
-		}
-	}()
+	newCreatePasswordModal(common).
+		title("Create new wallet").
+		enableName(true).
+		passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
+			go func() {
+				_, err := pg.wallet.GetMultiWallet().CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
+				if err != nil {
+					m.setError(err.Error())
+					m.setLoading(false)
+					return
+				}
+				m.dismiss()
+			}()
+			return false
+		}).show()
 }
 
 func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {

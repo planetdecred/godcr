@@ -30,6 +30,17 @@ func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	return ic
 }
 
+func editorsNotEmpty(editors ...*widget.Editor) bool {
+	for _, e := range editors {
+		if e.Text() == "" {
+			return false
+		}
+	}
+	return true
+}
+
+
+
 // getLockWallet returns a list of locked wallets
 func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
 	var walletsLocked []*dcrlibwallet.Wallet

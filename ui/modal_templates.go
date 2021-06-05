@@ -15,18 +15,12 @@ import (
 )
 
 const (
-	CreateWalletTemplate           = "CreateWallet"
 	RenameWalletTemplate           = "RenameWallet"
 	CreateAccountTemplate          = "CreateNewAccount"
 	RenameAccountTemplate          = "RenameAccount"
-	ChangePasswordTemplate         = "ChangePassword"
 	VerifyMessageInfoTemplate      = "VerifyMessageInfo"
 	SignMessageInfoTemplate        = "SignMessageInfo"
 	PrivacyInfoTemplate            = "PrivacyInfo"
-	ChangeStartupPasswordTemplate  = "ChangeStartupPassword"
-	SetStartupPasswordTemplate     = "SetStartupPassword"
-	RemoveStartupPasswordTemplate  = "RemoveStartupPassword"
-	UnlockWalletTemplate           = "UnlockWallet"
 	ConnectToSpecificPeerTemplate  = "ConnectToSpecificPeer"
 	ChangeSpecificPeerTemplate     = "ChangeSpecificPeer"
 	UserAgentTemplate              = "UserAgent"
@@ -34,7 +28,6 @@ const (
 	ConfirmMixerAcctExistTemplate  = "MixerAcctExistTemplate"
 	SecurityToolsInfoTemplate      = "SecurityToolsInfo"
 	ImportWatchOnlyWalletTemplate  = "ImportWatchOnlyWallet"
-	UnlockWalletRestoreTemplate    = "UnlockWalletRestoreTemplate"
 	TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
 )
 
@@ -112,23 +105,6 @@ func (m *ModalTemplate) importWatchOnlyWallet() []layout.Widget {
 
 func (load *modalLoad) setLoading(isLoading bool) {
 	load.loading = isLoading
-}
-
-func (m *ModalTemplate) createNewWallet() []layout.Widget {
-	return []layout.Widget{
-		func(gtx C) D {
-			return m.walletName.Layout(gtx)
-		},
-		func(gtx C) D {
-			return m.spendingPassword.Layout(gtx)
-		},
-		func(gtx C) D {
-			return m.passwordStrength.Layout(gtx)
-		},
-		func(gtx C) D {
-			return m.matchSpendingPassword.Layout(gtx)
-		},
-	}
 }
 
 func (m *ModalTemplate) renameWallet() []layout.Widget {
@@ -415,29 +391,6 @@ func (m *ModalTemplate) actions(th *decredmaterial.Theme, load *modalLoad) []lay
 func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (template []layout.Widget) {
 	m.walletName.Editor.SingleLine = true
 	switch load.template {
-	case CreateWalletTemplate:
-		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
-			// reset error label when password and matching password fields match
-			m.matchSpendingPassword.SetError("")
-		}
-
-		if m.editorsNotEmpty(m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
-			m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-				load.setLoading(true)
-				load.confirm.(func(string, string))(m.walletName.Editor.Text(), m.spendingPassword.Editor.Text())
-			}
-		}
-
-		if m.cancel.Button.Clicked() {
-			load.cancel()
-		}
-
-		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
-
-		template = m.createNewWallet()
-		m.walletName.Hint = "Wallet name"
-		return
 	case RenameWalletTemplate, RenameAccountTemplate, ConnectToSpecificPeerTemplate, ChangeSpecificPeerTemplate, UserAgentTemplate:
 		if m.editorsNotEmpty(m.walletName.Editor) {
 			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor) {
@@ -474,54 +427,6 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.createNewAccount()
 		m.walletName.Hint = "Account name"
 		return
-	case UnlockWalletTemplate, RemoveStartupPasswordTemplate:
-		if m.editorsNotEmpty(m.spendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.spendingPassword.Editor) {
-				load.setLoading(true)
-				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
-			}
-		}
-		if m.cancel.Button.Clicked() {
-			load.cancel()
-		}
-
-		m.spendingPassword.Hint = "Spending password"
-		if load.template == RemoveStartupPasswordTemplate || load.template == UnlockWalletTemplate {
-			m.spendingPassword.Hint = "Startup password"
-		}
-
-		template = m.Password()
-		return
-	case ChangePasswordTemplate, ChangeStartupPasswordTemplate:
-		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
-			// reset error label when password and matching password fields match
-			m.matchSpendingPassword.SetError("")
-		}
-
-		if m.editorsNotEmpty(m.oldSpendingPassword.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
-			m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.oldSpendingPassword.Editor, m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-				load.setLoading(true)
-				load.confirm.(func(string, string))(m.oldSpendingPassword.Editor.Text(), m.spendingPassword.Editor.Text())
-			}
-		}
-
-		if m.cancel.Button.Clicked() {
-			load.cancel()
-		}
-
-		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
-
-		m.spendingPassword.Hint = "New spending password"
-		m.matchSpendingPassword.Hint = "Confirm new spending password"
-		if load.template == ChangeStartupPasswordTemplate {
-			m.oldSpendingPassword.Hint = "Old startup password"
-			m.spendingPassword.Hint = "New startup password"
-			m.matchSpendingPassword.Hint = "Confirm new startup password"
-		}
-
-		template = m.changePassword()
-		return
 	case ImportWatchOnlyWalletTemplate:
 		if m.editorsNotEmpty(m.walletName.Editor, m.extendedPublicKey.Editor) {
 			if m.confirm.Button.Clicked() || handleSubmitEvent(m.walletName.Editor, m.extendedPublicKey.Editor) {
@@ -548,40 +453,6 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 	case PrivacyInfoTemplate:
 		m.handleButtonEvents(load)
 		template = privacyInfo(m.th)
-		return
-	case SetStartupPasswordTemplate:
-		if m.spendingPassword.Editor.Text() == m.matchSpendingPassword.Editor.Text() {
-			// reset error label when password and matching password fields match
-			m.matchSpendingPassword.SetError("")
-		}
-
-		if m.editorsNotEmpty(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) &&
-			m.passwordsMatch(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.spendingPassword.Editor, m.matchSpendingPassword.Editor) {
-				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
-			}
-		}
-
-		if m.cancel.Button.Clicked() {
-			load.cancel()
-		}
-
-		computePasswordStrength(&m.passwordStrength, th, m.spendingPassword.Editor)
-		m.spendingPassword.Hint = "Startup password"
-		m.matchSpendingPassword.Hint = "Confirm startup password"
-
-		template = m.setStartupPassword()
-		return
-	case UnlockWalletRestoreTemplate:
-		if m.editorsNotEmpty(m.spendingPassword.Editor) {
-			if m.confirm.Button.Clicked() || handleSubmitEvent(m.spendingPassword.Editor) {
-				load.confirm.(func(string))(m.spendingPassword.Editor.Text())
-			}
-		}
-
-		m.spendingPassword.Hint = "Spending password"
-
-		template = m.unlockWalletRestore()
 		return
 	case TransactionDetailsInfoTemplate:
 		m.handleButtonEvents(load)
