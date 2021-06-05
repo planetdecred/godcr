@@ -50,6 +50,10 @@ func (in *infoModal) modalID() string {
 	return MadalInfo + in.dialogTitle // TODO
 }
 
+func (in *infoModal) show() {
+	in.pageCommon.showModal(in)
+}
+
 func (in *infoModal) OnResume() {
 }
 
@@ -152,7 +156,7 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 		return text.Layout(gtx)
 	}
 
-	actionButtons := func(gtx C) D { // action buttons
+	actionButtons := func(gtx C) D {
 		return layout.E.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {

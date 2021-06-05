@@ -586,6 +586,7 @@ func (pg *overviewPage) handle() {
 	if pg.autoSyncWallet && !pg.walletInfo.Synced {
 		walletsLocked := getLockedWallets(c.wallet.AllWallets())
 		if len(walletsLocked) == 0 {
+			log.Info("Starting sync")
 			c.wallet.StartSync()
 			pg.sync.Text = values.String(values.StrCancel)
 			pg.autoSyncWallet = false

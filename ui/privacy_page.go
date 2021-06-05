@@ -205,8 +205,8 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-							var mixedBalance string
-							var unmixedBalance string
+							var mixedBalance = "0.00"
+							var unmixedBalance = "0.00"
 							for _, acct := range c.info.Wallets[*c.selectedWallet].Accounts {
 								if acct.Name == "mixed" {
 									mixedBalance = acct.TotalBalance
@@ -390,45 +390,45 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 		}
 	}
 
-	common.modalReceiver <- &modalLoad{
-		template: PasswordTemplate, //TODO
-		title:    "Confirm to create needed accounts",
-		confirm: func(p string) {
+	newPasswordModal(common).
+		title("Confirm to create needed accounts").
+		negativeButton("Cancel", func() {}).
+		positiveButton("Confirm", func(password string, pm *passwordModal) bool {
+			go func() {
+				wal := common.wallet.GetMultiWallet().WalletWithID(pg.common.info.Wallets[*common.selectedWallet].ID)
+				err := wal.CreateMixerAccounts("mixed", "unmixed", password)
+				if err != nil {
+					pm.setError(err.Error())
+					pm.setLoading(false)
+					return
+				}
+				pm.dismiss()
+			}()
 
-			common.wallet.SetupAccountMixer(common.info.Wallets[*common.selectedWallet].ID, p, pg.errorReceiver)
-		},
-		confirmText: "Confirm",
-		cancel:      common.closeModal,
-		cancelText:  "Cancel",
-	}
-}
-
-func (pg *privacyPage) showModalSetupExistAcct(common *pageCommon) {
-	common.modalReceiver <- &modalLoad{
-		template:    ConfirmMixerAcctExistTemplate,
-		confirmText: "Go back & rename",
-		cancel:      common.closeModal,
-		confirm: func() {
-			common.closeModal()
-			*common.page = PageWallet
-		},
-	}
+			return false
+		}).show()
 }
 
 func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
-	common.modalReceiver <- &modalLoad{
-		template:    PasswordTemplate,
-		title:       "Confirm to mix account",
-		confirmText: "Confirm",
-		cancel: func() {
-			common.closeModal()
-			pg.toggleMixer.Value = false
-		},
-		cancelText: "Cancel",
-		confirm: func(pass string) {
-			common.wallet.StartAccountMixer(common.info.Wallets[*common.selectedWallet].ID, pass, pg.errorReceiver)
-		},
-	}
+
+	newPasswordModal(common).
+		title("Confirm to mix account").
+		negativeButton("Cancel", func() {}).
+		positiveButton("Confirm", func(password string, pm *passwordModal) bool {
+			go func() {
+				walID := pg.common.info.Wallets[*common.selectedWallet].ID
+				err := common.wallet.GetMultiWallet().StartAccountMixer(walID, password)
+				if err != nil {
+					pm.setError(err.Error())
+					pm.setLoading(false)
+					return
+				}
+				pm.dismiss()
+				common.notify("Start Successfully", true)
+			}()
+
+			return false
+		}).show()
 }
 
 func (pg *privacyPage) onClose() {}

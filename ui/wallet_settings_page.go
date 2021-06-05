@@ -234,30 +234,23 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		info := newInfoModal(&common).
+		newInfoModal(&common).
 			title(values.String(values.StrRemoveWallet)).
 			body("Make sure to have the seed phrase backed up before removing the wallet").
 			negativeButton(values.String(values.StrCancel), func() {}).
 			positiveButton(values.String(values.StrRemove), func() {
 				walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-				go func() {
-					//TODO password dialog
-					common.modalReceiver <- &modalLoad{
-						template: PasswordTemplate,
-						title:    values.String(values.StrConfirmToRemove),
-						confirm: func(pass string) {
-							pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
-							pg.resetSelectedWallet(common)
-						},
-						confirmText: values.String(values.StrConfirm),
-						cancel:      common.closeModal,
-						cancelText:  values.String(values.StrCancel),
-					}
-				}()
-			})
 
-		common.showModal(info)
+				newPasswordModal(&common).
+					title(values.String(values.StrConfirmToRemove)).
+					negativeButton(values.String(values.StrCancel), func() {}).
+					positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+						pg.wal.DeleteWallet(walletID, []byte(password), pg.errorReceiver)
+						pg.resetSelectedWallet(common)
+						return true
+					}).show()
 
+			}).show()
 		break
 	}
 

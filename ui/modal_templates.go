@@ -19,7 +19,6 @@ const (
 	RenameWalletTemplate           = "RenameWallet"
 	CreateAccountTemplate          = "CreateNewAccount"
 	RenameAccountTemplate          = "RenameAccount"
-	PasswordTemplate               = "Password"
 	ChangePasswordTemplate         = "ChangePassword"
 	VerifyMessageInfoTemplate      = "VerifyMessageInfo"
 	SignMessageInfoTemplate        = "SignMessageInfo"
@@ -475,7 +474,7 @@ func (m *ModalTemplate) handle(th *decredmaterial.Theme, load *modalLoad) (templ
 		template = m.createNewAccount()
 		m.walletName.Hint = "Account name"
 		return
-	case PasswordTemplate, UnlockWalletTemplate, RemoveStartupPasswordTemplate:
+	case UnlockWalletTemplate, RemoveStartupPasswordTemplate:
 		if m.editorsNotEmpty(m.spendingPassword.Editor) {
 			if m.confirm.Button.Clicked() || handleSubmitEvent(m.spendingPassword.Editor) {
 				load.setLoading(true)
