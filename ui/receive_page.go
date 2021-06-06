@@ -217,12 +217,24 @@ func (pg *receivePage) addressLayout(gtx layout.Context, c *pageCommon) layout.D
 	}
 
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			card.Radius = decredmaterial.CornerRadius{NE: 8, NW: 0, SE: 0, SW: 8}
+			return card.Layout(gtx, func(gtx C) D {
+				return layout.Inset{
+					Top:    values.MarginPadding30,
+					Bottom: values.MarginPadding30,
+					Left:   values.MarginPadding30,
+					Right:  values.MarginPadding30,
+				}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return layout.Dimensions{}
+				})
+			})
+		}),
 		layout.Flexed(1, func(gtx C) D {
 			pg.receiveAddress.Text = pg.addrs
 			pg.receiveAddress.Color = pg.theme.Color.DeepBlue
 			pg.receiveAddress.Alignment = text.Middle
 			pg.receiveAddress.MaxLines = 1
-			card.Radius = decredmaterial.CornerRadius{NE: 8, NW: 0, SE: 0, SW: 8}
 			return card.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.UniformInset(values.MarginPadding16).Layout(gtx, pg.receiveAddress.Layout)
