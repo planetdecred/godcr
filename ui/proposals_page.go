@@ -425,16 +425,12 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 	for i := range selected.proposals {
 		index := i
 		proposalItem := selected.proposals[index]
-		pt := values.MarginPadding5
-		if index == 0 {
-			pt = values.MarginPadding16
-		}
 		wdgs[index] = func(gtx C) D {
 			return layout.Inset{
-				Top:    pt,
-				Bottom: values.MarginPadding5,
-				Left:   values.MarginPadding24,
-				Right:  values.MarginPadding24,
+				Top:    values.MarginPadding2,
+				Bottom: values.MarginPadding2,
+				Left:   values.MarginPadding2,
+				Right:  values.MarginPadding2,
 			}.Layout(gtx, func(gtx C) D {
 				return decredmaterial.Clickable(gtx, selected.proposals[index].btn, func(gtx C) D {
 					return pg.itemCard.Layout(gtx, func(gtx C) D {
@@ -555,7 +551,9 @@ func (pg *proposalsPage) Layout(gtx C) D {
 				}),
 			)
 		}),
-		layout.Flexed(1, pg.layoutContent),
+		layout.Flexed(1, func(gtx C) D {
+			return pg.common.UniformPadding(gtx, pg.layoutContent)
+		}),
 	)
 }
 
