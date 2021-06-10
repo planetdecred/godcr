@@ -84,7 +84,7 @@ func (cm *createWatchOnlyModal) setError(err string) {
 	}
 }
 
-func (cm *createWatchOnlyModal) callbackFunc(callback func(walletName, extPubKey string, m *createWatchOnlyModal) bool) *createWatchOnlyModal {
+func (cm *createWatchOnlyModal) watchOnlyCreated(callback func(walletName, extPubKey string, m *createWatchOnlyModal) bool) *createWatchOnlyModal {
 	cm.callback = callback
 	return cm
 }

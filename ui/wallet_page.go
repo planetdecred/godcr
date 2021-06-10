@@ -254,7 +254,7 @@ func (pg *walletPage) showAddWalletModal(common *pageCommon) {
 
 func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
 	newCreateWatchOnlyModal(common).
-		callbackFunc(func(walletName, extPubKey string, m *createWatchOnlyModal) bool {
+		watchOnlyCreated(func(walletName, extPubKey string, m *createWatchOnlyModal) bool {
 			go func() {
 				err := pg.wallet.ImportWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
