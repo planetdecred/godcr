@@ -477,7 +477,7 @@ func (common *pageCommon) subpageEventHandler(sp SubPage) {
 		newInfoModal(common).
 			title(sp.title).
 			setupWithTemplate(sp.infoTemplate).
-			negativeButton("Got it", func() {}).show()
+			negativeButton("Got it", func() {}).Show()
 	}
 
 	if common.subPageBackButton.Button.Clicked() {

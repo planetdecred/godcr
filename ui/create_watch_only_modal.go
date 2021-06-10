@@ -64,11 +64,11 @@ func (cm *createWatchOnlyModal) OnDismiss() {
 
 }
 
-func (cm *createWatchOnlyModal) show() {
+func (cm *createWatchOnlyModal) Show() {
 	cm.showModal(cm)
 }
 
-func (cm *createWatchOnlyModal) dismiss() {
+func (cm *createWatchOnlyModal) Dismiss() {
 	cm.dismissModal(cm)
 }
 
@@ -96,14 +96,14 @@ func (cm *createWatchOnlyModal) handle() {
 		for cm.btnPositve.Button.Clicked() {
 			cm.setLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.extendedPubKey.Editor.Text(), cm) {
-				cm.dismiss()
+				cm.Dismiss()
 			}
 		}
 	}
 
 	if cm.btnNegative.Button.Clicked() {
 		if !cm.isLoading {
-			cm.dismiss()
+			cm.Dismiss()
 		}
 	}
 }

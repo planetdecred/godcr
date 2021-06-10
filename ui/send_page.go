@@ -758,7 +758,7 @@ func (pg *sendPage) watchForBroadcastResult(c *pageCommon) {
 		}
 		pg.remainingBalance = -1
 
-		pg.confirmTxModal.dismiss()
+		pg.confirmTxModal.Dismiss()
 		pg.isBroadcastingTransaction = false
 		pg.resetFields()
 		pg.broadcastResult.TxHash = ""
@@ -1010,13 +1010,13 @@ func (pg *sendPage) handle() {
 	for pg.nextButton.Button.Clicked() {
 		if pg.validate(c) && pg.calculateErrorText == "" {
 			pg.comfirmModalData.destinationAddress = pg.destinationAddressEditor.Editor.Text()
-			pg.confirmTxModal.show()
+			pg.confirmTxModal.Show()
 			pg.passwordEditor.Editor.Focus()
 		}
 	}
 
 	for pg.closeConfirmationModalButton.Button.Clicked() {
-		pg.confirmTxModal.dismiss()
+		pg.confirmTxModal.Dismiss()
 	}
 
 	for pg.clearAllBtn.Button.Clicked() {
@@ -1032,7 +1032,7 @@ func (pg *sendPage) handle() {
 			pg.passwordEditor.SetError("Wrong password")
 		} else {
 			c.notify(err.Error(), false)
-			pg.confirmTxModal.dismiss()
+			pg.confirmTxModal.Dismiss()
 		}
 		pg.isBroadcastingTransaction = false
 	default:

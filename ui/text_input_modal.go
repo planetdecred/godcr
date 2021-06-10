@@ -32,11 +32,11 @@ func newTextInputModal(common *pageCommon) *textInputModal {
 	return tm
 }
 
-func (tm *textInputModal) show() {
+func (tm *textInputModal) Show() {
 	tm.pageCommon.showModal(tm)
 }
 
-func (tm *textInputModal) dismiss() {
+func (tm *textInputModal) Dismiss() {
 	tm.pageCommon.dismissModal(tm)
 }
 
@@ -69,13 +69,13 @@ func (tm *textInputModal) handle() {
 		tm.isLoading = true
 		tm.setError("")
 		if tm.callback(tm.textInput.Editor.Text(), tm) {
-			tm.dismiss()
+			tm.Dismiss()
 		}
 	}
 
 	for tm.btnNegative.Button.Clicked() {
 		if !tm.isLoading {
-			tm.dismiss()
+			tm.Dismiss()
 			tm.negativeButtonClicked()
 		}
 	}

@@ -69,11 +69,11 @@ func (pm *passwordModal) OnDismiss() {
 
 }
 
-func (pm *passwordModal) show() {
+func (pm *passwordModal) Show() {
 	pm.showModal(pm)
 }
 
-func (pm *passwordModal) dismiss() {
+func (pm *passwordModal) Dismiss() {
 	pm.dismissModal(pm)
 }
 

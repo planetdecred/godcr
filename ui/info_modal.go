@@ -53,11 +53,11 @@ func (in *infoModal) modalID() string {
 	return in.randomID
 }
 
-func (in *infoModal) show() {
+func (in *infoModal) Show() {
 	in.pageCommon.showModal(in)
 }
 
-func (in *infoModal) dismiss() {
+func (in *infoModal) Dismiss() {
 	in.dismissModal(in)
 }
 

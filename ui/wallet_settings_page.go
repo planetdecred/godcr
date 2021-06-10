@@ -202,7 +202,7 @@ func (pg *walletSettingsPage) handle() {
 						return
 					}
 					wal.LockWallet()
-					pm.dismiss()
+					pm.Dismiss()
 
 					// change password
 					newCreatePasswordModal(common).
@@ -219,15 +219,15 @@ func (pg *walletSettingsPage) handle() {
 									m.setLoading(false)
 									return
 								}
-								m.dismiss()
+								m.Dismiss()
 							}()
 							return false
-						}).show()
+						}).Show()
 
 				}()
 
 				return false
-			}).show()
+			}).Show()
 		break
 	}
 
@@ -278,9 +278,9 @@ func (pg *walletSettingsPage) handle() {
 						pg.wal.DeleteWallet(walletID, []byte(password), pg.errorReceiver)
 						pg.resetSelectedWallet(common)
 						return true
-					}).show()
+					}).Show()
 
-			}).show()
+			}).Show()
 		break
 	}
 

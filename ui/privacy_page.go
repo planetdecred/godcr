@@ -400,11 +400,11 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 					pm.setLoading(false)
 					return
 				}
-				pm.dismiss()
+				pm.Dismiss()
 			}()
 
 			return false
-		}).show()
+		}).Show()
 }
 
 func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
@@ -421,12 +421,12 @@ func (pg *privacyPage) showModalPasswordStartAccountMixer(common *pageCommon) {
 					pm.setLoading(false)
 					return
 				}
-				pm.dismiss()
+				pm.Dismiss()
 				common.notify("Start Successfully", true)
 			}()
 
 			return false
-		}).show()
+		}).Show()
 }
 
 func (pg *privacyPage) onClose() {}

@@ -226,12 +226,12 @@ func (pg *signMessagePage) handle() {
 							return
 						}
 
-						pm.dismiss()
+						pm.Dismiss()
 						pg.signedMessageLabel.Text = dcrlibwallet.EncodeBase64(sig)
 
 					}()
 					return false
-				}).show()
+				}).Show()
 		}
 	}
 

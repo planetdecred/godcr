@@ -263,7 +263,7 @@ func (pg *acctDetailsPage) Handler(gtx layout.Context, common *pageCommon) {
 
 		textModal.title("Rename account").
 			negativeButton(values.String(values.StrCancel), func() {})
-		textModal.show()
+		textModal.Show()
 	}
 }
 

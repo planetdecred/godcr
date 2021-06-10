@@ -36,11 +36,11 @@ func (scm *sendConfirmModal) modalID() string {
 	return ModalSendConfirm
 }
 
-func (scm *sendConfirmModal) show() {
+func (scm *sendConfirmModal) Show() {
 	scm.pageCommon.showModal(scm)
 }
 
-func (scm *sendConfirmModal) dismiss() {
+func (scm *sendConfirmModal) Dismiss() {
 	scm.dismissModal(scm)
 }
 

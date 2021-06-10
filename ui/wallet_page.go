@@ -174,7 +174,7 @@ func (pg *walletPage) initializeWalletMenu() {
 
 				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
 					negativeButton(values.String(values.StrCancel), func() {})
-				textModal.show()
+				textModal.Show()
 			},
 		},
 		{
@@ -228,7 +228,7 @@ func (pg *walletPage) initializeWalletMenu() {
 
 				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
 					negativeButton(values.String(values.StrCancel), func() {})
-				textModal.show()
+				textModal.Show()
 			},
 		},
 	}
@@ -246,10 +246,10 @@ func (pg *walletPage) showAddWalletModal(common *pageCommon) {
 					m.setLoading(false)
 					return
 				}
-				m.dismiss()
+				m.Dismiss()
 			}()
 			return false
-		}).show()
+		}).Show()
 }
 
 func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
@@ -264,11 +264,11 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
 				} else {
 					pg.wallet.GetMultiWalletInfo()
 					common.notify(values.String(values.StrWatchOnlyWalletImported), true)
-					m.dismiss()
+					m.Dismiss()
 				}
 			}()
 			return false
-		}).show()
+		}).Show()
 }
 
 // Layout lays out the widgets for the main wallets pg.
@@ -895,18 +895,18 @@ func (pg *walletPage) handle() {
 										}
 										common.addAccount(walletAccount)
 									})
-									pm.dismiss()
+									pm.Dismiss()
 								}()
 
 								return false
-							}).show()
+							}).Show()
 					}
 					return true
 				})
 
 			textModal.title(values.String(values.StrCreateNewAccount)).
 				negativeButton(values.String(values.StrCancel), func() {})
-			textModal.show()
+			textModal.Show()
 			break
 		}
 

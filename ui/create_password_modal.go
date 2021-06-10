@@ -75,11 +75,11 @@ func (cm *createPasswordModal) OnDismiss() {
 
 }
 
-func (cm *createPasswordModal) show() {
+func (cm *createPasswordModal) Show() {
 	cm.showModal(cm)
 }
 
-func (cm *createPasswordModal) dismiss() {
+func (cm *createPasswordModal) Dismiss() {
 	cm.dismissModal(cm)
 }
 
@@ -134,7 +134,7 @@ func (cm *createPasswordModal) handle() {
 
 			cm.setLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
-				cm.dismiss()
+				cm.Dismiss()
 			}
 		}
 
@@ -142,7 +142,7 @@ func (cm *createPasswordModal) handle() {
 
 	if cm.btnNegative.Button.Clicked() {
 		if !cm.isLoading {
-			cm.dismiss()
+			cm.Dismiss()
 		}
 	}
 

@@ -42,5 +42,5 @@ jobs:
             --disable-all --enable govet \
             --enable staticcheck --enable gosimple \
             --enable unconvert --enable ineffassign \
-            --enable structcheck --enable goimports \
-            --enable unparam --enable golint
+            --enable golint --enable goimports \
+            --enable unparam

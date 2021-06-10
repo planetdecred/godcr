@@ -783,7 +783,7 @@ func (pg *createRestore) handle() {
 			positiveButton("Confirm", func(password string, pm *passwordModal) bool {
 				pg.wal.OpenWallets(password, pg.errorReceiver)
 				return true
-			}).show()
+			}).Show()
 	}
 
 	for pg.create.Button.Clicked() {
@@ -793,7 +793,7 @@ func (pg *createRestore) handle() {
 			passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
 				pg.wal.CreateWallet(walletName, password, pg.errorReceiver)
 				return true
-			}).show()
+			}).Show()
 	}
 
 	if pg.restoreWalletBtn.Button.Clicked() {

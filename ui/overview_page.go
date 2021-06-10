@@ -656,10 +656,10 @@ func showWalletUnlockModal(c *pageCommon, lockedWallets []*dcrlibwallet.Wallet) 
 					pm.setLoading(false)
 					return
 				}
-				pm.dismiss()
+				pm.Dismiss()
 			}()
 
 			return false
-		}).show()
+		}).Show()
 
 }

@@ -395,7 +395,7 @@ func (pg *settingsPage) handle() {
 						pm.setLoading(false)
 						return
 					}
-					pm.dismiss()
+					pm.Dismiss()
 
 					// change password
 					newCreatePasswordModal(common).
@@ -411,15 +411,15 @@ func (pg *settingsPage) handle() {
 									m.setLoading(false)
 									return
 								}
-								m.dismiss()
+								m.Dismiss()
 							}()
 							return false
-						}).show()
+						}).Show()
 
 				}()
 
 				return false
-			}).show()
+			}).Show()
 		break
 	}
 
@@ -438,10 +438,10 @@ func (pg *settingsPage) handle() {
 							m.setLoading(false)
 							return
 						}
-						m.dismiss()
+						m.Dismiss()
 					}()
 					return false
-				}).show()
+				}).Show()
 		} else {
 
 			newPasswordModal(common).
@@ -456,11 +456,11 @@ func (pg *settingsPage) handle() {
 							pm.setLoading(false)
 							return
 						}
-						pm.dismiss()
+						pm.Dismiss()
 					}()
 
 					return false
-				}).show()
+				}).Show()
 		}
 	}
 
@@ -516,7 +516,7 @@ func (pg *settingsPage) showSPVPeerDialog() {
 
 	textModal.title(values.String(values.StrConnectToSpecificPeer)).
 		negativeButton(values.String(values.StrCancel), func() {})
-	textModal.show()
+	textModal.Show()
 }
 
 func (pg *settingsPage) showUserAgentDialog() {
@@ -531,7 +531,7 @@ func (pg *settingsPage) showUserAgentDialog() {
 
 	textModal.title(values.String(values.StrChangeUserAgent)).
 		negativeButton(values.String(values.StrCancel), func() {})
-	textModal.show()
+	textModal.Show()
 }
 
 func (pg *settingsPage) updateSettingOptions() {
