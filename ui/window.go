@@ -21,9 +21,8 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
-	window *app.Window
-	theme  *decredmaterial.Theme
-	ops    *op.Ops
+	theme *decredmaterial.Theme
+	ops   *op.Ops
 
 	wallet             *wallet.Wallet
 	walletInfo         *wallet.MultiWalletInfo
@@ -70,7 +69,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace, internalLog chan string) (*Window, error) {
+func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace, internalLog chan string) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == "testnet3" {
@@ -78,10 +77,10 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	} else {
 		netType = wal.Net
 	}
-	win.window = app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
+	appWindow := app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
 	theme := decredmaterial.NewTheme(collection, decredIcons, false)
 	if theme == nil {
-		return nil, errors.New("Unexpected error while loading theme")
+		return nil, nil, errors.New("Unexpected error while loading theme")
 	}
 	win.theme = theme
 	win.ops = &op.Ops{}
@@ -105,13 +104,13 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.common = win.newPageCommon(decredIcons)
 
-	return win, nil
+	return win, appWindow, nil
 }
 
-func (win *Window) unloaded() {
+func (win *Window) unloaded(w *app.Window) {
 	lbl := win.theme.H3("Multiwallet not loaded\nIs another instance open?")
 	for {
-		e := <-win.window.Events()
+		e := <-w.Events()
 		switch evt := e.(type) {
 		case system.DestroyEvent:
 			return
@@ -138,7 +137,7 @@ func (win *Window) layoutPage(gtx C, page Page) {
 }
 
 // Loop runs main event handling and page rendering loop
-func (win *Window) Loop(shutdown chan int) {
+func (win *Window) Loop(w *app.Window, shutdown chan int) {
 	for {
 		select {
 		case e := <-win.wallet.Send:
@@ -147,7 +146,7 @@ func (win *Window) Loop(shutdown chan int) {
 				log.Error("Wallet Error: " + err)
 				if err == dcrlibwallet.ErrWalletDatabaseInUse {
 					close(shutdown)
-					win.unloaded()
+					win.unloaded(w)
 					return
 				}
 				win.err = err
@@ -156,7 +155,7 @@ func (win *Window) Loop(shutdown chan int) {
 					win.wallet.GetMultiWalletInfo()
 				}
 
-				win.window.Invalidate()
+				op.InvalidateOp{}.Add(win.ops)
 				break
 			}
 
@@ -208,8 +207,8 @@ func (win *Window) Loop(shutdown chan int) {
 					win.proposal <- &update.Proposal
 				}()
 			}
-			win.window.Invalidate()
-		case e := <-win.window.Events():
+			op.InvalidateOp{}.Add(win.ops)
+		case e := <-w.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
 				if win.walletInfo.Syncing || win.walletInfo.Synced {

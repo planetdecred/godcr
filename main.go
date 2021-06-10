@@ -82,13 +82,13 @@ func main() {
 
 	collection := fontCollection()
 
-	win, err := ui.CreateWindow(wal, decredIcons, collection, internalLog)
+	win, appWindow, err := ui.CreateWindow(wal, decredIcons, collection, internalLog)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
 	}
 
 	// Start the ui frontend
-	go win.Loop(shutdown)
+	go win.Loop(appWindow, shutdown)
 	app.Main()
 }
