@@ -164,19 +164,17 @@ func (pg *walletPage) initializeWalletMenu() {
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				go func() {
-					common.modalReceiver <- &modalLoad{
-						template: RenameWalletTemplate,
-						title:    values.String(values.StrRenameWalletSheetTitle),
-						confirm: func(name string) {
-							id := common.info.Wallets[*common.selectedWallet].ID
-							common.wallet.RenameWallet(id, name, pg.errorReceiver)
-						},
-						confirmText: values.String(values.StrRename),
-						cancel:      common.closeModal,
-						cancelText:  values.String(values.StrCancel),
-					}
-				}()
+				textModal := newTextInputModal(common).
+					hint("Wallet name").
+					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
+						id := common.info.Wallets[*common.selectedWallet].ID
+						common.wallet.RenameWallet(id, newName, pg.errorReceiver)
+						return true
+					})
+
+				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
+					negativeButton(values.String(values.StrCancel), func() {})
+				textModal.Show()
 			},
 		},
 		{
@@ -220,59 +218,57 @@ func (pg *walletPage) initializeWalletMenu() {
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				go func() {
-					common.modalReceiver <- &modalLoad{
-						template: RenameWalletTemplate,
-						title:    values.String(values.StrRenameWalletSheetTitle),
-						confirm: func(name string) {
-							id := common.info.Wallets[*common.selectedWallet].ID
-							common.wallet.RenameWallet(id, name, pg.errorReceiver)
-						},
-						confirmText: values.String(values.StrRename),
-						cancel:      common.closeModal,
-						cancelText:  values.String(values.StrCancel),
-					}
-				}()
+				textModal := newTextInputModal(common).
+					hint("Wallet name").
+					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
+						id := common.info.Wallets[*common.selectedWallet].ID
+						common.wallet.RenameWallet(id, newName, pg.errorReceiver)
+						return true
+					})
+
+				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
+					negativeButton(values.String(values.StrCancel), func() {})
+				textModal.Show()
 			},
 		},
 	}
 }
 
 func (pg *walletPage) showAddWalletModal(common *pageCommon) {
-	go func() {
-		common.modalReceiver <- &modalLoad{
-			template: CreateWalletTemplate,
-			title:    values.String(values.StrCreate),
-			confirm: func(name string, passphrase string) {
-				pg.wallet.CreateWallet(name, passphrase, pg.errorReceiver)
-			},
-			confirmText: values.String(values.StrCreate),
-			cancel:      common.closeModal,
-			cancelText:  values.String(values.StrCancel),
-		}
-	}()
+	newCreatePasswordModal(common).
+		title("Create new wallet").
+		enableName(true).
+		passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
+			go func() {
+				_, err := pg.wallet.GetMultiWallet().CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
+				if err != nil {
+					m.setError(err.Error())
+					m.setLoading(false)
+					return
+				}
+				m.Dismiss()
+			}()
+			return false
+		}).Show()
 }
 
 func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
-	go func() {
-		common.modalReceiver <- &modalLoad{
-			template: ImportWatchOnlyWalletTemplate,
-			title:    values.String(values.StrImportWatchingOnlyWallet),
-			confirm: func(name, extendedPubKey string) {
-				err := pg.wallet.ImportWatchOnlyWallet(name, extendedPubKey)
+	newCreateWatchOnlyModal(common).
+		watchOnlyCreated(func(walletName, extPubKey string, m *createWatchOnlyModal) bool {
+			go func() {
+				err := pg.wallet.ImportWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
 					common.notify(err.Error(), false)
+					m.setError(err.Error())
+					m.setLoading(false)
 				} else {
-					common.closeModal()
 					pg.wallet.GetMultiWalletInfo()
 					common.notify(values.String(values.StrWatchOnlyWalletImported), true)
+					m.Dismiss()
 				}
-			},
-			confirmText: values.String(values.StrImport),
-			cancel:      common.closeModal,
-			cancelText:  values.String(values.StrCancel),
-		}
-	}()
+			}()
+			return false
+		}).Show()
 }
 
 // Layout lays out the widgets for the main wallets pg.
@@ -878,26 +874,39 @@ func (pg *walletPage) handle() {
 		for pg.collapsibles[index].addAcctBtn.Button.Clicked() {
 			walletID := pg.walletInfo.Wallets[index].ID
 			walletIndex := index
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: CreateAccountTemplate,
-					title:    values.String(values.StrCreateNewAccount),
-					confirm: func(name string, passphrase string) {
-						pg.wallet.AddAccount(walletID, name, []byte(passphrase), pg.errorReceiver, func(acct *dcrlibwallet.Account) {
-							walletAccount := walletAccount{
-								walletIndex:  walletIndex,
-								accountName:  acct.Name,
-								totalBalance: dcrutil.Amount(acct.Balance.Total).String(),
-								spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
-							}
-							common.addAccount(walletAccount)
-						})
-					},
-					confirmText: values.String(values.StrCreate),
-					cancel:      common.closeModal,
-					cancelText:  values.String(values.StrCancel),
-				}
-			}()
+
+			textModal := newTextInputModal(pg.common).
+				hint("Account name").
+				positiveButton(values.String(values.StrCreate), func(accountName string, tim *textInputModal) bool {
+					if accountName != "" {
+						newPasswordModal(pg.common).
+							title(values.String(values.StrCreateNewAccount)).
+							hint("Spending password").
+							negativeButton(values.String(values.StrCancel), func() {}).
+							positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+								go func() {
+
+									pg.wallet.AddAccount(walletID, accountName, []byte(password), pg.errorReceiver, func(acct *dcrlibwallet.Account) {
+										walletAccount := walletAccount{
+											walletIndex:  walletIndex,
+											accountName:  acct.Name,
+											totalBalance: dcrutil.Amount(acct.Balance.Total).String(),
+											spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
+										}
+										common.addAccount(walletAccount)
+									})
+									pm.Dismiss()
+								}()
+
+								return false
+							}).Show()
+					}
+					return true
+				})
+
+			textModal.title(values.String(values.StrCreateNewAccount)).
+				negativeButton(values.String(values.StrCancel), func() {})
+			textModal.Show()
 			break
 		}
 
@@ -943,7 +952,6 @@ func (pg *walletPage) handle() {
 
 	select {
 	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 			e := values.String(values.StrInvalidPassphrase)
 			common.notify(e, false)

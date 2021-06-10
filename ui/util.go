@@ -6,6 +6,7 @@ package ui
 import (
 	"fmt"
 	"image/color"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path"
@@ -28,6 +29,19 @@ func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 		panic(err)
 	}
 	return ic
+}
+
+func editorsNotEmpty(editors ...*widget.Editor) bool {
+	for _, e := range editors {
+		if e.Text() == "" {
+			return false
+		}
+	}
+	return true
+}
+
+func generateRandomNumber() int {
+	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 }
 
 // getLockWallet returns a list of locked wallets

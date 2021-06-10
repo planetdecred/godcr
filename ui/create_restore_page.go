@@ -776,33 +776,24 @@ func (pg *createRestore) handle() {
 	}
 
 	for pg.unlock.Button.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: UnlockWalletTemplate,
-				title:    "Enter startup wallet password",
-				confirm: func(pass string) {
-					pg.wal.OpenWallets(pass, pg.errorReceiver)
-				},
-				confirmText: "Confirm",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
+		newPasswordModal(pg.common).
+			title("Enter startup wallet password").
+			hint("Startup password").
+			negativeButton("Cancel", func() {}).
+			positiveButton("Confirm", func(password string, pm *passwordModal) bool {
+				pg.wal.OpenWallets(password, pg.errorReceiver)
+				return true
+			}).Show()
 	}
 
 	for pg.create.Button.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: CreateWalletTemplate,
-				title:    "Create new wallet",
-				confirm: func(wallet, pass string) {
-					pg.wal.CreateWallet(wallet, pass, pg.errorReceiver)
-				},
-				confirmText: "Create",
-				cancel:      common.closeModal,
-				cancelText:  "Cancel",
-			}
-		}()
+		newCreatePasswordModal(common).
+			title("Create new wallet").
+			enableName(true).
+			passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
+				pg.wal.CreateWallet(walletName, password, pg.errorReceiver)
+				return true
+			}).Show()
 	}
 
 	if pg.restoreWalletBtn.Button.Clicked() {
@@ -882,7 +873,6 @@ func (pg *createRestore) handle() {
 		if err.Error() == "exists" {
 			errText = "Wallet name already exists"
 		}
-		common.modalLoad.setLoading(false)
 		common.notify(errText, false)
 	default:
 	}

@@ -187,28 +187,59 @@ func (pg *walletSettingsPage) handle() {
 	common := pg.common
 	for pg.changePass.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ChangePasswordTemplate,
-				title:    values.String(values.StrChangeSpendingPass),
-				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeWalletPassphrase(walletID, oldPass, newPass, pg.errorReceiver)
-				},
-				confirmText: values.String(values.StrChange),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+
+		newPasswordModal(common).
+			title(values.String(values.StrChangeSpendingPass)).
+			hint("Current spending password").
+			negativeButton(values.String(values.StrCancel), func() {}).
+			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+				go func() {
+					wal := pg.wal.GetMultiWallet().WalletWithID(walletID)
+					err := wal.UnlockWallet([]byte(password))
+					if err != nil {
+						pm.setError(err.Error())
+						pm.setLoading(false)
+						return
+					}
+					wal.LockWallet()
+					pm.Dismiss()
+
+					// change password
+					newCreatePasswordModal(common).
+						title(values.String(values.StrChangeSpendingPass)).
+						enableName(false).
+						passwordHint("New spending password").
+						confirmPasswordHint("Confirm new spending password").
+						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
+							go func() {
+								err := pg.wal.GetMultiWallet().ChangePrivatePassphraseForWallet(walletID, []byte(password),
+									[]byte(newPassword), dcrlibwallet.PassphraseTypePass)
+								if err != nil {
+									m.setError(err.Error())
+									m.setLoading(false)
+									return
+								}
+								m.Dismiss()
+							}()
+							return false
+						}).Show()
+
+				}()
+
+				return false
+			}).Show()
 		break
 	}
 
 	for pg.rescan.Clicked() {
 		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RescanWalletTemplate,
-				title:    values.String(values.StrRescanBlockchain),
-				confirm: func() {
+			info := newInfoModal(common).
+				title(values.String(values.StrRescanBlockchain)).
+				body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
+					" blockchain for transactions").
+				negativeButton(values.String(values.StrCancel), func() {}).
+				positiveButton(values.String(values.StrRescan), func() {
 					err := pg.wal.RescanBlocks(walletID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
@@ -220,14 +251,9 @@ func (pg *walletSettingsPage) handle() {
 					}
 					msg := values.String(values.StrRescanProgressNotification)
 					common.notify(msg, true)
-					go func() {
-						common.modalReceiver <- &modalLoad{}
-					}()
-				},
-				confirmText: values.String(values.StrRescan),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
+				})
+
+			common.showModal(info)
 		}()
 		break
 	}
@@ -237,37 +263,29 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ConfirmRemoveTemplate,
-				title:    values.String(values.StrRemoveWallet),
-				confirm: func() {
-					walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-					go func() {
-						common.modalReceiver <- &modalLoad{
-							template: PasswordTemplate,
-							title:    values.String(values.StrConfirmToRemove),
-							confirm: func(pass string) {
-								pg.wal.DeleteWallet(walletID, []byte(pass), pg.errorReceiver)
-								pg.resetSelectedWallet(common)
-							},
-							confirmText: values.String(values.StrConfirm),
-							cancel:      common.closeModal,
-							cancelText:  values.String(values.StrCancel),
-						}
-					}()
-				},
-				confirmText: values.String(values.StrRemove),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+		newInfoModal(common).
+			title(values.String(values.StrRemoveWallet)).
+			body("Make sure to have the seed phrase backed up before removing the wallet").
+			negativeButton(values.String(values.StrCancel), func() {}).
+			positiveButton(values.String(values.StrRemove), func() {
+				walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
+
+				newPasswordModal(common).
+					title(values.String(values.StrConfirmToRemove)).
+					negativeButton(values.String(values.StrCancel), func() {}).
+					positiveButtonStyle(common.theme.Color.Surface, common.theme.Color.Danger).
+					positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+						pg.wal.DeleteWallet(walletID, []byte(password), pg.errorReceiver)
+						pg.resetSelectedWallet(common)
+						return true
+					}).Show()
+
+			}).Show()
 		break
 	}
 
 	select {
 	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 			e := values.String(values.StrInvalidPassphrase)
 			common.notify(e, false)
