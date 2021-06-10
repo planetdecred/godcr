@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"gioui.org/op"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/wallet"
@@ -65,7 +66,7 @@ func (win *Window) updateStates(update interface{}) {
 		return
 	case wallet.Restored:
 		win.states.creating = false
-		win.window.Invalidate()
+		op.InvalidateOp{}.Add(win.ops)
 	case wallet.DeletedWallet:
 		win.selected = 0
 		win.notifyOnSuccess("Wallet removed")
@@ -95,7 +96,7 @@ func (win *Window) updateStates(update interface{}) {
 	win.wallet.GetAllTransactions(0, 0, 0)
 	win.wallet.GetAllTickets()
 	win.wallet.GetAllProposals()
-	win.window.Invalidate()
+	op.InvalidateOp{}.Add(win.ops)
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }
 
