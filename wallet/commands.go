@@ -445,6 +445,10 @@ func (wal *Wallet) GetMultiWalletInfo() {
 	}()
 }
 
+func (wal *Wallet) GetMultiWallet() *dcrlibwallet.MultiWallet {
+	return wal.multi
+}
+
 func (wal *Wallet) SignMessage(walletID int, passphrase []byte, address, message string, errChan chan error) {
 	go func() {
 		var resp Response

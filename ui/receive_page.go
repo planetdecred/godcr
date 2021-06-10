@@ -316,14 +316,11 @@ func (pg *receivePage) handle() {
 	}
 
 	if common.subPageInfoButton.Button.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template:   ReceiveInfoTemplate,
-				title:      "Receive DCR",
-				cancel:     common.closeModal,
-				cancelText: "Got it",
-			}
-		}()
+		info := newInfoModal(common).
+			title("Receive DCR").
+			body("Each time you receive a payment, a new address is generated to protect your privacy.").
+			positiveButton("Got it", func() {})
+		common.showModal(info)
 	}
 
 	if common.subPageBackButton.Button.Clicked() {

@@ -382,129 +382,111 @@ func (pg *settingsPage) handle() {
 	}
 
 	for pg.changeStartupPass.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ChangeStartupPasswordTemplate,
-				title:    values.String(values.StrChangeStartupPassword),
-				confirm: func(oldPass, newPass string) {
-					pg.wal.ChangeStartupPassphrase(oldPass, newPass, pg.errorReceiver)
-				},
-				confirmText: values.String(values.StrChange),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+
+		newPasswordModal(common).
+			title(values.String(values.StrConfirmRemoveStartupPass)).
+			hint("Current startup password").
+			negativeButton(values.String(values.StrCancel), func() {}).
+			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+				go func() {
+					err := pg.wal.GetMultiWallet().VerifyStartupPassphrase([]byte(password))
+					if err != nil {
+						pm.setError(err.Error())
+						pm.setLoading(false)
+						return
+					}
+					pm.Dismiss()
+
+					// change password
+					newCreatePasswordModal(common).
+						title(values.String(values.StrCreateStartupPassword)).
+						enableName(false).
+						passwordHint("New startup password").
+						confirmPasswordHint("Confirm new startup password").
+						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
+							go func() {
+								err := pg.wal.GetMultiWallet().ChangeStartupPassphrase([]byte(password), []byte(newPassword), dcrlibwallet.PassphraseTypePass)
+								if err != nil {
+									m.setError(err.Error())
+									m.setLoading(false)
+									return
+								}
+								m.Dismiss()
+							}()
+							return false
+						}).Show()
+
+				}()
+
+				return false
+			}).Show()
 		break
 	}
 
 	if pg.startupPassword.Changed() {
 		if pg.startupPassword.Value {
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: SetStartupPasswordTemplate,
-					title:    values.String(values.StrCreateStartupPassword),
-					confirm: func(pass string) {
-						pg.wal.SetStartupPassphrase(pass, pg.errorReceiver)
-					},
-					confirmText: values.String(values.StrCreate),
-					cancel:      common.closeModal,
-					cancelText:  values.String(values.StrCancel),
-				}
-			}()
-			return
+			newCreatePasswordModal(common).
+				title(values.String(values.StrCreateStartupPassword)).
+				enableName(false).
+				passwordHint("Startup password").
+				confirmPasswordHint("Confirm startup password").
+				passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
+					go func() {
+						err := pg.wal.GetMultiWallet().SetStartupPassphrase([]byte(password), dcrlibwallet.PassphraseTypePass)
+						if err != nil {
+							m.setError(err.Error())
+							m.setLoading(false)
+							return
+						}
+						m.Dismiss()
+					}()
+					return false
+				}).Show()
+		} else {
+
+			newPasswordModal(common).
+				title(values.String(values.StrConfirmRemoveStartupPass)).
+				hint("Startup password").
+				negativeButton(values.String(values.StrCancel), func() {}).
+				positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+					go func() {
+						err := pg.wal.GetMultiWallet().RemoveStartupPassphrase([]byte(password))
+						if err != nil {
+							pm.setError(err.Error())
+							pm.setLoading(false)
+							return
+						}
+						pm.Dismiss()
+					}()
+
+					return false
+				}).Show()
 		}
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: RemoveStartupPasswordTemplate,
-				title:    values.String(values.StrConfirmRemoveStartupPass),
-				confirm: func(pass string) {
-					pg.wal.RemoveStartupPassphrase(pass, pg.errorReceiver)
-				},
-				confirmText: values.String(values.StrConfirm),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
 	}
 
 	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey
 	if pg.connectToPeer.Changed() {
 		if pg.connectToPeer.Value {
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: ConnectToSpecificPeerTemplate,
-					title:    values.String(values.StrConnectToSpecificPeer),
-					confirm: func(ipAddress string) {
-						if ipAddress != "" {
-							pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
-							common.closeModal()
-						}
-					},
-					confirmText: values.String(values.StrConfirm),
-					cancel:      common.closeModal,
-					cancelText:  values.String(values.StrCancel),
-				}
-			}()
+			pg.showSPVPeerDialog()
 			return
 		}
 		pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
 	}
+
 	for pg.updateConnectToPeer.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: ChangeSpecificPeerTemplate,
-				title:    values.String(values.StrChangeSpecificPeer),
-				confirm: func(ipAddress string) {
-					if ipAddress != "" {
-						pg.wal.SaveConfigValueForKey(specificPeerKey, ipAddress)
-						common.closeModal()
-					}
-				},
-				confirmText: values.String(values.StrConfirm),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+		pg.showSPVPeerDialog()
 		break
 	}
 
 	userAgentKey := dcrlibwallet.UserAgentConfigKey
 	for pg.updateUserAgent.Clicked() {
-		go func() {
-			common.modalReceiver <- &modalLoad{
-				template: UserAgentTemplate,
-				title:    values.String(values.StrChangeUserAgent),
-				confirm: func(agent string) {
-					if agent != "" {
-						pg.wal.SaveConfigValueForKey(userAgentKey, agent)
-						common.closeModal()
-					}
-				},
-				confirmText: values.String(values.StrGeneral),
-				cancel:      common.closeModal,
-				cancelText:  values.String(values.StrCancel),
-			}
-		}()
+		pg.showUserAgentDialog()
 		break
 	}
 
 	if pg.userAgent.Changed() {
 		if pg.userAgent.Value {
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: UserAgentTemplate,
-					title:    values.String(values.StrChangeUserAgent),
-					confirm: func(agent string) {
-						if agent != "" {
-							pg.wal.SaveConfigValueForKey(userAgentKey, agent)
-							common.closeModal()
-						}
-					},
-					confirmText: values.String(values.StrConfirm),
-					cancel:      common.closeModal,
-					cancelText:  values.String(values.StrCancel),
-				}
-			}()
+			pg.showUserAgentDialog()
 			return
 		}
 		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
@@ -512,7 +494,6 @@ func (pg *settingsPage) handle() {
 
 	select {
 	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 			e := "Password is incorrect"
 			common.notify(e, false)
@@ -521,6 +502,36 @@ func (pg *settingsPage) handle() {
 		common.notify(err.Error(), false)
 	default:
 	}
+}
+
+func (pg *settingsPage) showSPVPeerDialog() {
+	textModal := newTextInputModal(pg.common).
+		hint("IP address").
+		positiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *textInputModal) bool {
+			if ipAddress != "" {
+				pg.wal.SaveConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey, ipAddress)
+			}
+			return true
+		})
+
+	textModal.title(values.String(values.StrConnectToSpecificPeer)).
+		negativeButton(values.String(values.StrCancel), func() {})
+	textModal.Show()
+}
+
+func (pg *settingsPage) showUserAgentDialog() {
+	textModal := newTextInputModal(pg.common).
+		hint("User agent").
+		positiveButton(values.String(values.StrConfirm), func(userAgent string, tim *textInputModal) bool {
+			if userAgent != "" {
+				pg.wal.SaveConfigValueForKey(dcrlibwallet.UserAgentConfigKey, userAgent)
+			}
+			return true
+		})
+
+	textModal.title(values.String(values.StrChangeUserAgent)).
+		negativeButton(values.String(values.StrCancel), func() {})
+	textModal.Show()
 }
 
 func (pg *settingsPage) updateSettingOptions() {

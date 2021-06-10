@@ -27,7 +27,6 @@ type signMessagePage struct {
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
-	result                                     **wallet.Signature
 	copySignature                              *widget.Clickable
 	copyIcon                                   *widget.Image
 	gtx                                        *layout.Context
@@ -62,7 +61,6 @@ func SignMessagePage(common *pageCommon) Page {
 		clearButton:   clearButton,
 		signButton:    common.theme.Button(new(widget.Clickable), "Sign message"),
 		copyButton:    common.theme.Button(new(widget.Clickable), "Copy"),
-		result:        common.signatureResult,
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
 		errorReceiver: make(chan error),
@@ -214,18 +212,26 @@ func (pg *signMessagePage) handle() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()
 
-			go func() {
-				common.modalReceiver <- &modalLoad{
-					template: PasswordTemplate,
-					title:    "Confirm to sign",
-					confirm: func(pass string) {
-						pg.wallet.SignMessage(pg.walletID, []byte(pass), address, message, pg.errorReceiver)
-					},
-					confirmText: "Confirm",
-					cancel:      common.closeModal,
-					cancelText:  "Cancel",
-				}
-			}()
+			newPasswordModal(common).
+				title("Confirm to sign").
+				negativeButton("Cancel", func() {}).
+				positiveButton("Confirm", func(password string, pm *passwordModal) bool {
+
+					go func() {
+						wal := common.wallet.GetMultiWallet().WalletWithID(pg.walletID)
+						sig, err := wal.SignMessage([]byte(password), address, message)
+						if err != nil {
+							pm.setError(err.Error())
+							pm.setLoading(false)
+							return
+						}
+
+						pm.Dismiss()
+						pg.signedMessageLabel.Text = dcrlibwallet.EncodeBase64(sig)
+
+					}()
+					return false
+				}).Show()
 		}
 	}
 
@@ -233,19 +239,9 @@ func (pg *signMessagePage) handle() {
 		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
 	}
 
-	if *pg.result != nil {
-		pg.signedMessageLabel.Text = (*pg.result).Signature
-		*pg.result = nil
-		pg.isSigningMessage = false
-	}
-
 	select {
 	case err := <-pg.errorReceiver:
-		common.modalLoad.setLoading(false)
 		common.notify(err.Error(), false)
-		if err.Error() != dcrlibwallet.ErrInvalidPassphrase {
-			common.closeModal()
-		}
 	default:
 	}
 }

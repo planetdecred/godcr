@@ -25,18 +25,17 @@ type Window struct {
 	theme  *decredmaterial.Theme
 	ops    *op.Ops
 
-	wallet             *wallet.Wallet
-	walletInfo         *wallet.MultiWalletInfo
-	walletSyncStatus   *wallet.SyncStatus
-	walletTransactions *wallet.Transactions
-	walletTransaction  *wallet.Transaction
-	walletAccount      *wallet.Account
-	walletTickets      *wallet.Tickets
-	vspInfo            *wallet.VSP
-	proposals          *wallet.Proposals
-	selectedProposal   *dcrlibwallet.Proposal
-	proposal           chan *wallet.Proposal
-
+	wallet               *wallet.Wallet
+	walletInfo           *wallet.MultiWalletInfo
+	walletSyncStatus     *wallet.SyncStatus
+	walletTransactions   *wallet.Transactions
+	walletTransaction    *wallet.Transaction
+	walletAccount        *wallet.Account
+	walletTickets        *wallet.Tickets
+	vspInfo              *wallet.VSP
+	proposals            *wallet.Proposals
+	selectedProposal     *dcrlibwallet.Proposal
+	proposal             chan *wallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
 	common      *pageCommon
@@ -55,7 +54,6 @@ type Window struct {
 
 	keyEvents             chan *key.Event
 	toast                 *toast
-	modal                 chan *modalLoad
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
@@ -99,7 +97,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.wallet = wal
 	win.states.loading = true
 	win.keyEvents = make(chan *key.Event)
-	win.modal = make(chan *modalLoad)
 
 	win.internalLog = internalLog
 

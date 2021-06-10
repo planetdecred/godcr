@@ -63,19 +63,12 @@ func (win *Window) updateStates(update interface{}) {
 		win.states.loading = false
 		win.proposals = e
 		return
-	case wallet.CreatedSeed:
-		win.notifyOnSuccess("Wallet created")
-		win.currentPage.changePage(PageWallet)
-	case wallet.Renamed:
-		win.notifyOnSuccess("Wallet renamed")
 	case wallet.Restored:
 		win.states.creating = false
 		win.window.Invalidate()
 	case wallet.DeletedWallet:
 		win.selected = 0
 		win.notifyOnSuccess("Wallet removed")
-	case wallet.AddedAccount:
-		win.notifyOnSuccess("Account created")
 	case wallet.UpdatedAccount:
 		win.notifyOnSuccess("Account renamed")
 	case *wallet.Signature:
@@ -91,10 +84,6 @@ func (win *Window) updateStates(update interface{}) {
 		win.notifyOnSuccess("Spending password changed")
 	case *wallet.StartupPassphrase:
 		win.notifyOnSuccess(update.(*wallet.StartupPassphrase).Msg)
-	case wallet.OpenWallet:
-		go func() {
-			win.modal <- &modalLoad{}
-		}()
 	case wallet.SetupAccountMixer:
 		win.notifyOnSuccess("Mixer setup completed")
 	case *wallet.TicketPurchase:
@@ -115,8 +104,4 @@ func (win *Window) notifyOnSuccess(text string) {
 		text:    text,
 		success: true,
 	}
-
-	go func() {
-		win.modal <- &modalLoad{}
-	}()
 }
