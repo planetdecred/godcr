@@ -369,8 +369,8 @@ func (pg *settingsPage) handle() {
 	pg.currencyPreference.Handle()
 
 	if pg.isDarkModeOn.Changed() {
-		pg.theme.SwitchDarkMode(pg.isDarkModeOn.Value)
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
+		common.refreshTheme()
 	}
 
 	if pg.spendUnconfirmed.Changed() {
