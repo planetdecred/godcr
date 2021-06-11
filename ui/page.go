@@ -106,6 +106,7 @@ type walletAccountSelector struct {
 type pageCommon struct {
 	printer            *message.Printer
 	multiWallet        *dcrlibwallet.MultiWallet
+	syncStatusUpdate   chan wallet.SyncStatusUpdate
 	wallet             *wallet.Wallet
 	walletAccount      **wallet.Account
 	info               *wallet.MultiWalletInfo
@@ -234,6 +235,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 	common := &pageCommon{
 		printer:            message.NewPrinter(language.English),
 		multiWallet:        win.wallet.GetMultiWallet(),
+		syncStatusUpdate:   make(chan wallet.SyncStatusUpdate, 10),
 		wallet:             win.wallet,
 		walletAccount:      &win.walletAccount,
 		info:               win.walletInfo,
@@ -268,6 +270,8 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
 		log.Info("Error fetching exchange value")
 	}
+
+	common.refreshTheme()
 
 	return common
 }
@@ -342,6 +346,13 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageTicketsActivity] = TicketActivityPage(common)
 
 	return pages
+}
+
+func (common *pageCommon) refreshTheme() {
+	isDarkModeOn := common.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
+	if isDarkModeOn != common.theme.DarkMode {
+		common.theme.SwitchDarkMode(isDarkModeOn)
+	}
 }
 
 func (common *pageCommon) fetchExchangeValue(target interface{}) error {

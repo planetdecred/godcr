@@ -11,15 +11,12 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageMain = "Main"
 
 type mainPage struct {
 	*pageCommon
-
-	syncStatusUpdate chan wallet.SyncStatusUpdate
 
 	modalMutex sync.Mutex
 	modals     []Modal
@@ -41,13 +38,7 @@ type mainPage struct {
 
 func newMainPage(common *pageCommon) *mainPage {
 
-	isDarkModeOn := common.wallet.ReadBoolConfigValueForKey("isDarkModeOn")
-	if isDarkModeOn != common.theme.DarkMode {
-		common.theme.SwitchDarkMode(isDarkModeOn)
-	}
-
 	mp := &mainPage{
-		syncStatusUpdate: make(chan wallet.SyncStatusUpdate, 10),
 
 		pageCommon: common,
 		pages:      common.loadPages(),
@@ -57,6 +48,7 @@ func newMainPage(common *pageCommon) *mainPage {
 		maximizeNavDrawerButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowForward),
 	}
 
+	// init shared page functions
 	common.changePage = mp.changePage
 	common.setReturnPage = mp.setReturnPage
 	common.returnPage = &mp.previous
@@ -69,8 +61,7 @@ func newMainPage(common *pageCommon) *mainPage {
 
 	mp.initNavItems()
 
-	mp.multiWallet.AddSyncProgressListener(mp, PageMain) // register for sync notifications
-	mp.updateBalance()                                   // update in onresume
+	mp.OnResume()
 
 	return mp
 }
@@ -127,6 +118,16 @@ func (mp *mainPage) initNavItems() {
 			page:          values.String(values.StrMore),
 		},
 	}
+}
+
+func (mp *mainPage) OnResume() {
+	// register for notifications
+	mp.multiWallet.SetAccountMixerNotification(mp)
+	mp.multiWallet.Politeia.AddNotificationListener(mp, PageMain)
+	mp.multiWallet.AddTxAndBlockNotificationListener(mp, PageMain)
+	mp.multiWallet.AddSyncProgressListener(mp, PageMain)
+
+	mp.updateBalance()
 }
 
 func (mp *mainPage) updateBalance() {
@@ -211,7 +212,9 @@ func (mp *mainPage) handle() {
 }
 
 func (mp *mainPage) onClose() {
-
+	mp.multiWallet.Politeia.RemoveNotificationListener(PageMain)
+	mp.multiWallet.RemoveTxAndBlockNotificationListener(PageMain)
+	mp.multiWallet.RemoveSyncProgressListener(PageMain)
 }
 
 func (mp *mainPage) changePage(page string) {

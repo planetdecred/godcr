@@ -5,8 +5,36 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
+// Transaction notifications
+
+func (mp *mainPage) OnTransaction(transaction string) {
+	mp.updateBalance()
+
+	// beeep send notification
+}
+
+func (mp *mainPage) OnBlockAttached(walletID int, blockHeight int32) {
+	mp.updateBalance()
+}
+
+func (mp *mainPage) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
+	mp.updateBalance()
+}
+
+// Account mixer
+func (mp *mainPage) OnAccountMixerStarted(walletID int) {}
+func (mp *mainPage) OnAccountMixerEnded(walletID int)   {}
+
+// Politeia notifications
+func (mp *mainPage) OnProposalsSynced()                            {}
+func (mp *mainPage) OnNewProposal(proposal *dcrlibwallet.Proposal) {}
+
+func (mp *mainPage) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal)  {}
+func (mp *mainPage) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {}
+
+// Sync notifications
+
 func (mp *mainPage) OnSyncStarted(wasRestarted bool) {
-	log.Info("Main page sync started")
 	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.SyncStarted,
 	}
@@ -52,6 +80,7 @@ func (mp *mainPage) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.
 	}
 }
 func (mp *mainPage) OnSyncCompleted() {
+	mp.updateBalance()
 	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.SyncCompleted,
 	}

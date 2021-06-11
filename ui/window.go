@@ -94,7 +94,9 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.proposal = make(chan *wallet.Proposal)
 
 	win.wallet = wal
+	win.wallet.LoadWallets()
 	win.states.loading = true
+
 	win.keyEvents = make(chan *key.Event)
 
 	win.internalLog = internalLog
