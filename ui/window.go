@@ -210,6 +210,10 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 		case e := <-w.Events():
 			switch evt := e.(type) {
 			case system.DestroyEvent:
+
+				if win.currentPage != nil {
+					win.currentPage.onClose()
+				}
 				if win.walletInfo.Syncing || win.walletInfo.Synced {
 					win.sysDestroyWithSync = true
 					win.wallet.CancelSync()
