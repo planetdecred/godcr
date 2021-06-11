@@ -72,7 +72,6 @@ func main() {
 		return
 	}
 
-	wal.LoadWallets()
 	shutdown := make(chan int)
 	go func() {
 		<-shutdown
