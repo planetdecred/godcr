@@ -11,12 +11,15 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageMain = "Main"
 
 type mainPage struct {
 	*pageCommon
+
+	syncStatusUpdate chan wallet.SyncStatusUpdate
 
 	modalMutex sync.Mutex
 	modals     []Modal
@@ -44,6 +47,8 @@ func newMainPage(common *pageCommon) *mainPage {
 	}
 
 	mp := &mainPage{
+		syncStatusUpdate: make(chan wallet.SyncStatusUpdate, 10),
+
 		pageCommon: common,
 		pages:      common.loadPages(),
 		current:    PageOverview,
@@ -64,7 +69,8 @@ func newMainPage(common *pageCommon) *mainPage {
 
 	mp.initNavItems()
 
-	mp.updateBalance()
+	mp.multiWallet.AddSyncProgressListener(mp, PageMain) // register for sync notifications
+	mp.updateBalance()                                   // update in onresume
 
 	return mp
 }

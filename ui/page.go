@@ -105,6 +105,7 @@ type walletAccountSelector struct {
 
 type pageCommon struct {
 	printer            *message.Printer
+	multiWallet        *dcrlibwallet.MultiWallet
 	wallet             *wallet.Wallet
 	walletAccount      **wallet.Account
 	info               *wallet.MultiWalletInfo
@@ -232,6 +233,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 
 	common := &pageCommon{
 		printer:            message.NewPrinter(language.English),
+		multiWallet:        win.wallet.GetMultiWallet(),
 		wallet:             win.wallet,
 		walletAccount:      &win.walletAccount,
 		info:               win.walletInfo,

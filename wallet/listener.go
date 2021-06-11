@@ -4,18 +4,21 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 )
 
-// SyncProgressStage represents the spv sync stage at which the multiwallet is currently
-type SyncProgressStage int
+// SyncNotificationType represents the spv sync stage at which the multiwallet is currently
+type SyncNotificationType int
 
 const (
 	// SyncStarted signifies that spv sync has started
-	SyncStarted SyncProgressStage = iota
+	SyncStarted SyncNotificationType = iota
 
 	// SyncCanceled is a pseudo stage that represents a canceled sync
 	SyncCanceled
 
 	// SyncCompleted signifies that spv sync has been completed
 	SyncCompleted
+
+	// CfiltersFetchProgress indicates a cfilters fetch signal
+	CfiltersFetchProgress
 
 	// HeadersFetchProgress indicates a headers fetch signal
 	HeadersFetchProgress
@@ -75,7 +78,7 @@ type (
 
 	// SyncStatusUpdate represents information about the status of the multiwallet spv sync
 	SyncStatusUpdate struct {
-		Stage          SyncProgressStage
+		Stage          SyncNotificationType
 		ProgressReport interface{}
 		ConnectedPeers int32
 		BlockInfo      NewBlock
