@@ -265,7 +265,7 @@ func (pg *ticketPage) ticketsLiveSection(gtx layout.Context, c *pageCommon) layo
 				tickets := (*pg.tickets).LiveRecent
 				return pg.ticketsLive.Layout(gtx, len(tickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, c, &tickets[index])
+						return ticketCard(gtx, c, &tickets[index], c.theme.Tooltip())
 					})
 				})
 			}),
