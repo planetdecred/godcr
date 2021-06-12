@@ -276,8 +276,6 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		log.Info("Error fetching exchange value")
 	}
 
-	// common.refreshTheme()
-
 	return common
 }
 

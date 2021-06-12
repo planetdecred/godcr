@@ -84,7 +84,7 @@ func CreateRestorePage(common *pageCommon) Page {
 
 		errLabel:              common.theme.Body1(""),
 		spendingPassword:      common.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		walletName:            common.theme.Editor(new(widget.Editor), "Wallet name (optional)"),
+		walletName:            common.theme.Editor(new(widget.Editor), "Wallet name"),
 		matchSpendingPassword: common.theme.EditorPassword(new(widget.Editor), "Confirm spending password"),
 		hideResetModal:        common.theme.Button(new(widget.Clickable), "cancel"),
 		suggestionLimit:       3,
@@ -97,6 +97,10 @@ func CreateRestorePage(common *pageCommon) Page {
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
+	}
+
+	if pg.common.multiWallet.LoadedWalletsCount() == 0 {
+		pg.walletName.Editor.SetText("mywallet")
 	}
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.theme.Color.Surface}
@@ -151,6 +155,7 @@ func (pg *createRestore) Layout(gtx layout.Context) layout.Dimensions {
 	dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			if pg.restoringWallet {
+				new(widget.Clickable).Layout(gtx)
 				return layout.Inset{Top: pd, Left: pd, Right: pd}.Layout(gtx, pg.processing)
 			}
 			return pg.restore(gtx)
@@ -523,6 +528,15 @@ func (pg createRestore) suggestionSeeds(text string) []string {
 	return seeds
 }
 
+func (pg *createRestore) validateWalletName() string {
+	name := pg.walletName.Editor.Text()
+	if name == "" {
+		pg.errLabel.Text = "wallet name required and cannot be empty"
+	}
+
+	return name
+}
+
 func (pg *createRestore) validatePassword() string {
 	pass := pg.spendingPassword.Editor.Text()
 	if pass == "" {
@@ -600,13 +614,28 @@ func (pg *createRestore) handle() {
 	}
 
 	if pg.restoreWalletBtn.Button.Clicked() {
+
 		pass := pg.validatePasswords()
-		if !pg.validateSeeds() || pass == "" {
+		walletName := pg.validateWalletName()
+		if !pg.validateSeeds() || pass == "" || walletName == "" {
 			return
 		}
-		// create wallet
-		pg.resetSeeds()
-		pg.resetPasswords()
+
+		go func() {
+			pg.restoringWallet = true
+			_, err := pg.common.multiWallet.RestoreWallet(walletName, pg.seedPhrase, pass, dcrlibwallet.PassphraseTypePass)
+			pg.restoringWallet = false
+			if err != nil {
+				pg.errLabel.Text = translateErr(err)
+				return
+			}
+
+			pg.resetSeeds()
+			pg.resetPasswords()
+
+			pg.common.wallet.SetupListeners()
+			pg.common.changeWindowPage(newMainPage(pg.common))
+		}()
 	}
 
 	if pg.matchSpendingPassword.Editor.Len() > 0 && pg.spendingPassword.Editor.Len() > 0 {

@@ -56,6 +56,9 @@ func (sp *startPage) OnResume() {
 	sp.wallet.InitMultiWallet()
 	sp.multiWallet = sp.wallet.GetMultiWallet()
 
+	// refresh theme now that config is available
+	sp.refreshTheme()
+
 	if sp.multiWallet.LoadedWalletsCount() > 0 {
 		sp.loadStatus.Text = "Opening wallets"
 
@@ -138,7 +141,7 @@ func (sp *startPage) onClose() {}
 
 func (sp *startPage) Layout(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
-	new(widget.Clickable).Layout(gtx)
+	new(widget.Clickable).Layout(gtx)         // temp
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
