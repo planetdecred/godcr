@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"image"
+	"sync"
 	"time"
 
 	"gioui.org/app"
@@ -37,8 +38,12 @@ type Window struct {
 	proposal             chan *wallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
-	common      *pageCommon
-	currentPage *mainPage
+	common *pageCommon
+
+	modalMutex sync.Mutex
+	modals     []Modal
+
+	currentPage Page
 
 	signatureResult *wallet.Signature
 
@@ -94,8 +99,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.proposal = make(chan *wallet.Proposal)
 
 	win.wallet = wal
-	win.wallet.LoadWallets()
-	win.states.loading = true
+	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)
 
@@ -104,6 +108,35 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.common = win.newPageCommon(decredIcons)
 
 	return win, appWindow, nil
+}
+
+func (win *Window) Start() {
+	sp := newStartPage(win.common)
+	sp.OnResume()
+	win.currentPage = sp
+}
+
+func (win *Window) changePage(page Page) {
+	win.currentPage = page
+	op.InvalidateOp{}.Add(win.ops)
+}
+
+func (win *Window) showModal(modal Modal) {
+	modal.OnResume() // setup display data
+	win.modalMutex.Lock()
+	win.modals = append(win.modals, modal)
+	win.modalMutex.Unlock()
+}
+
+func (win *Window) dismissModal(modal Modal) {
+	win.modalMutex.Lock()
+	defer win.modalMutex.Unlock()
+	for i, m := range win.modals {
+		if m.modalID() == modal.modalID() {
+			modal.OnDismiss() // do garbage collection in modal
+			win.modals = append(win.modals[:i], win.modals[i+1:]...)
+		}
+	}
 }
 
 func (win *Window) unloaded(w *app.Window) {
@@ -131,6 +164,17 @@ func (win *Window) layoutPage(gtx C, page Page) {
 		layout.Stacked(func(gtx C) D {
 			page.handle()
 			return page.Layout(gtx)
+		}),
+		layout.Stacked(func(gtx C) D {
+			for _, modal := range win.modals {
+				modal.handle()
+			}
+
+			// global modal. Stack modal on all pages and contents
+			if len(win.modals) > 0 {
+				return win.modals[len(win.modals)-1].Layout(gtx)
+			}
+			return layout.Dimensions{}
 		}),
 	)
 }
@@ -224,15 +268,11 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
 				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
-				s := win.states
 
-				if s.loading {
-					win.Loading(gtx)
-				} else {
-					if win.currentPage == nil {
-						win.currentPage = newMainPage(win.common)
-					}
+				if win.currentPage != nil {
 					win.layoutPage(gtx, win.currentPage)
+				} else {
+					win.Loading(gtx)
 				}
 
 				evt.Frame(win.ops)

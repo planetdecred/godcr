@@ -1,0 +1,181 @@
+package ui
+
+import (
+	"os"
+
+	"gioui.org/layout"
+	"gioui.org/text"
+	"gioui.org/widget"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
+)
+
+const PageStart = "start_page"
+
+type startPage struct {
+	*pageCommon
+
+	loading bool
+
+	decredSymbol  *widget.Image
+	networkType   decredmaterial.Label
+	loadStatus    decredmaterial.Label
+	welcomeText   decredmaterial.Label
+	createButton  decredmaterial.Button
+	restoreButton decredmaterial.Button
+}
+
+func newStartPage(common *pageCommon) *startPage {
+	sp := &startPage{
+		pageCommon: common,
+
+		loading: true,
+
+		decredSymbol: common.icons.decredSymbolIcon,
+		networkType:  common.theme.Label(values.TextSize20, "testnet"),
+		loadStatus:   common.theme.Label(values.TextSize20, "Loading"),
+		welcomeText:  common.theme.Label(values.TextSize24, "Welcome to Decred Wallet, a secure & open-source mobile wallet."),
+
+		createButton:  common.theme.Button(new(widget.Clickable), "Create a new wallet"),
+		restoreButton: common.theme.Button(new(widget.Clickable), "Restore an existing wallet"),
+	}
+
+	sp.decredSymbol.Scale = 0.5
+
+	sp.networkType.Color = sp.theme.Color.DeepBlue
+	sp.networkType.Font.Weight = text.Medium
+
+	sp.loadStatus.Color = sp.theme.Color.DeepBlue
+	sp.welcomeText.Color = sp.theme.Color.DeepBlue
+
+	return sp
+}
+
+func (sp *startPage) OnResume() {
+	sp.wallet.InitMultiWallet()
+	sp.multiWallet = sp.wallet.GetMultiWallet()
+
+	if sp.multiWallet.LoadedWalletsCount() > 0 {
+		sp.loadStatus.Text = "Opening wallets"
+
+		if sp.multiWallet.IsStartupSecuritySet() {
+			sp.unlock()
+		} else {
+			go sp.openWallets("")
+		}
+
+	} else {
+		sp.loading = false
+	}
+}
+
+func (sp *startPage) unlock() {
+	newPasswordModal(sp.pageCommon).
+		title("Unlock with passphrase").
+		negativeButton("Exit", func() {
+			sp.multiWallet.Shutdown()
+			os.Exit(0)
+		}).
+		positiveButton("Unlock", func(password string, m *passwordModal) bool {
+			go func() {
+				err := sp.openWallets(password)
+				if err != nil {
+					m.setError(translateErr(err))
+					m.setLoading(false)
+					return
+				}
+
+				m.Dismiss()
+			}()
+			return false
+		}).Show()
+}
+
+func (sp *startPage) openWallets(passphrase string) error {
+	err := sp.multiWallet.OpenWallets([]byte(passphrase))
+	if err != nil {
+		log.Info("Error opening wallet:", err)
+		// show err dialog
+		return err
+	}
+
+	sp.proceedToMainPage()
+	return nil
+}
+
+func (sp *startPage) proceedToMainPage() {
+	sp.wallet.SetupListeners()
+	sp.changeWindowPage(newMainPage(sp.pageCommon))
+}
+
+func (sp *startPage) handle() {
+	for sp.createButton.Button.Clicked() {
+		newCreatePasswordModal(sp.pageCommon).
+			title("Create new wallet").
+			passwordCreated(func(_, password string, m *createPasswordModal) bool {
+				go func() {
+					_, err := sp.multiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
+					if err != nil {
+						m.setError(err.Error())
+						m.setLoading(false)
+						return
+					}
+					m.Dismiss()
+
+					sp.proceedToMainPage()
+				}()
+				return false
+			}).Show()
+	}
+
+	for sp.restoreButton.Button.Clicked() {
+		sp.changeWindowPage(CreateRestorePage(sp.pageCommon))
+	}
+}
+
+func (sp *startPage) onClose() {}
+
+func (sp *startPage) Layout(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
+	new(widget.Clickable).Layout(gtx)
+	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Center.Layout(gtx, sp.decredSymbol.Layout)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return sp.networkType.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if sp.loading {
+						return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, sp.loadStatus.Layout)
+					}
+
+					return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, sp.welcomeText.Layout)
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if sp.loading {
+						return layout.Dimensions{}
+					}
+
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								return sp.createButton.Layout(gtx)
+							})
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								return sp.restoreButton.Layout(gtx)
+							})
+						}),
+					)
+				}),
+			)
+		}),
+	)
+}

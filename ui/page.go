@@ -37,7 +37,7 @@ type pageIcons struct {
 	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
 	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, proposalIconActive, proposalIconInactive,
 	restore, documentationIcon, downloadIcon, timerIcon, ticketIcon, ticketIconInactive, stakeyIcon,
-	list, listGridIcon *widget.Image
+	list, listGridIcon, decredSymbolIcon *widget.Image
 
 	ticketPurchasedIcon,
 	ticketImmatureIcon,
@@ -145,8 +145,9 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
-	changePage    func(string)
-	setReturnPage func(string)
+	changeWindowPage func(Page)
+	changePage       func(string)
+	setReturnPage    func(string)
 
 	wallAcctSelector *walletAccountSelector
 }
@@ -230,6 +231,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		ticketRevokedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked"])},
 		list:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
 		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
+		decredSymbolIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},
 	}
 
 	common := &pageCommon{
@@ -258,6 +260,9 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		walletTickets:      &win.walletTickets,
 		vspInfo:            &win.vspInfo,
 		unspentOutputs:     &win.walletUnspentOutputs,
+		showModal:          win.showModal,
+		dismissModal:       win.dismissModal,
+		changeWindowPage:   win.changePage,
 
 		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		toast:        &win.toast,
@@ -271,7 +276,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		log.Info("Error fetching exchange value")
 	}
 
-	common.refreshTheme()
+	// common.refreshTheme()
 
 	return common
 }
