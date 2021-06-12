@@ -29,6 +29,7 @@ type ticketPageList struct {
 	walletDropDown     *decredmaterial.DropDown
 	isGridView         bool
 	common             *pageCommon
+	statusTooltips     []*decredmaterial.Tooltip
 }
 
 func TicketPageList(c *pageCommon) Page {
@@ -58,6 +59,7 @@ func TicketPageList(c *pageCommon) Page {
 func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
+	pg.initTicketTooltips(*c)
 
 	body := func(gtx C) D {
 		page := SubPage{
@@ -284,12 +286,21 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c *pageCommon
 						Right:  values.MarginPadding4,
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, c, &tickets[index])
+						return ticketCard(gtx, c, &tickets[index], pg.statusTooltips[index])
 					})
 				})
 			})
 		})
 	})
+}
+
+func (pg *ticketPageList) initTicketTooltips(common pageCommon) {
+	walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
+	tickets := (*pg.tickets).Confirmed[walletID]
+
+	for range tickets {
+		pg.statusTooltips = append(pg.statusTooltips, common.theme.Tooltip())
+	}
 }
 
 func (pg *ticketPageList) handle() {
