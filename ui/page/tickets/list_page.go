@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"fmt"
 	"image/color"
 	"sort"
 	"strings"
@@ -288,8 +289,15 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 										)
 									}
 									r := func(gtx C) layout.Dimensions {
-										txt := pg.Theme.Label(values.TextSize14, tickets[index].DaysBehind)
-										txt.Color = pg.Theme.Color.Gray2
+
+										timeBehind, unit := getTimeBehind(tickets[index].DateTime)
+										if timeBehind == 0 && unit == "h" {
+											return layout.Dimensions{}
+										}
+
+										txt := pg.Load.Theme.Label(values.TextSize14, fmt.Sprintf("%d%s", timeBehind, unit))
+										txt.Color = pg.Load.Theme.Color.Gray2
+
 										return txt.Layout(gtx)
 									}
 									return components.EndToEndRow(gtx, l, r)

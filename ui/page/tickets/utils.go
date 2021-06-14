@@ -433,7 +433,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 	})
 }
 
-// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
+// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page.go and tickets_activity_page
 func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index int) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {

@@ -269,7 +269,7 @@ func Fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
 	return fill(gtx, col)
 }
 
-// mulAlpha scales all color components by alpha/255.
+// mulAlpha scales all color components.go by alpha/255.
 func mulAlpha(c color.NRGBA, alpha uint8) color.NRGBA {
 	a := uint16(alpha)
 	return color.NRGBA{
