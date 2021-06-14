@@ -1,4 +1,4 @@
-package ui
+package renderers
 
 import (
 	"fmt"
@@ -14,6 +14,11 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+)
+
+type (
+	C = layout.Context
+	D = layout.Dimensions
 )
 
 type labelFunc func(string) decredmaterial.Label

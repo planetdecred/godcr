@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	gioui.org v0.0.0-20210418151603-3b69b5ed0512
+	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/decred/dcrd/chaincfg v1.5.2 // indirect
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.3-0.20200921185235-6d75c7ec1199
@@ -21,6 +22,7 @@ require (
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
+	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/text v0.3.3
 )

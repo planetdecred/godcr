@@ -14,6 +14,7 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -422,7 +423,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				}
 			}
 
-			r := RenderMarkdown(gtx, pg.theme, proposalDescription)
+			r := renderers.RenderMarkdown(gtx, pg.theme, proposalDescription)
 			proposalWidgets, proposalClickables := r.Layout()
 			pg.proposalItems[proposal.Token] = proposalItemWidgets{
 				widgets:    proposalWidgets,
