@@ -89,7 +89,6 @@ func main() {
 
 	// Start the ui frontend
 	go win.Loop(appWindow, shutdown)
-	win.Start()
 
 	app.Main()
 }

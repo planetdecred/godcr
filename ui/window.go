@@ -22,8 +22,9 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
-	theme *decredmaterial.Theme
-	ops   *op.Ops
+	theme      *decredmaterial.Theme
+	ops        *op.Ops
+	invalidate chan struct{}
 
 	wallet               *wallet.Wallet
 	walletInfo           *wallet.MultiWalletInfo
@@ -97,6 +98,7 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.vspInfo = new(wallet.VSP)
 	win.proposals = new(wallet.Proposals)
 	win.proposal = make(chan *wallet.Proposal)
+	win.invalidate = make(chan struct{}, 2)
 
 	win.wallet = wal
 	win.states.loading = false
@@ -111,14 +113,16 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 }
 
 func (win *Window) Start() {
-	sp := newStartPage(win.common)
-	sp.OnResume()
-	win.currentPage = sp
+	if win.currentPage == nil {
+		sp := newStartPage(win.common)
+		sp.OnResume()
+		win.currentPage = sp
+	}
 }
 
 func (win *Window) changePage(page Page) {
 	win.currentPage = page
-	op.InvalidateOp{}.Add(win.ops)
+	win.invalidate <- struct{}{}
 }
 
 func (win *Window) showModal(modal Modal) {
@@ -183,6 +187,8 @@ func (win *Window) layoutPage(gtx C, page Page) {
 func (win *Window) Loop(w *app.Window, shutdown chan int) {
 	for {
 		select {
+		case <-win.invalidate:
+			w.Invalidate()
 		case e := <-win.wallet.Send:
 			if e.Err != nil {
 				err := e.Err.Error()
@@ -253,8 +259,12 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 			op.InvalidateOp{}.Add(win.ops)
 		case e := <-w.Events():
 			switch evt := e.(type) {
-			case system.DestroyEvent:
+			case system.StageEvent:
+				if evt.Stage == system.StageRunning {
+					win.Start()
+				}
 
+			case system.DestroyEvent:
 				if win.currentPage != nil {
 					win.currentPage.onClose()
 				}
@@ -275,7 +285,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 					win.Loading(gtx)
 				}
 
-				evt.Frame(win.ops)
+				evt.Frame(gtx.Ops)
 			case key.Event:
 				go func() {
 					win.keyEvents <- &evt
