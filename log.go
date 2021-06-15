@@ -20,14 +20,18 @@ import (
 // the write-end pipe of an initialized log rotator.
 type logWriter struct{}
 
-var internalLog = make(chan string, 10)
+var (
+	internalLog = make(chan string, 10)
+)
 
 // Write writes the data in p to standard out and the log rotator.
 func (l logWriter) Write(p []byte) (n int, err error) {
+	str := make([]byte, len(p))
+	copy(str, p)
 	os.Stdout.Write(p)
-	go func() {
-		internalLog <- string(p)
-	}()
+	go func(s string) {
+		internalLog <- s
+	}(string(str))
 	return logRotator.Write(p)
 }
 
