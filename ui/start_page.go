@@ -148,6 +148,10 @@ func (sp *startPage) Layout(gtx layout.Context) layout.Dimensions {
 					return sp.loadingSection(gtx)
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if sp.loading {
+						return layout.Dimensions{}
+					}
+
 					return sp.buttonSection(gtx)
 				}),
 			)
@@ -157,7 +161,12 @@ func (sp *startPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X // use maximum width
-	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 75) / 100 // use 75% of view height
+	if sp.loading {
+		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+	} else {
+		gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 75) / 100 // use 75% of view height
+	}
+
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
@@ -180,16 +189,12 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 }
 
 func (sp *startPage) buttonSection(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X // use maximum width
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X              // use maximum width
 	gtx.Constraints.Min.Y = (gtx.Constraints.Max.Y * 25) / 100 // use 25% of view height
 	return layout.Stack{Alignment: layout.S}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					if sp.loading {
-						return layout.Dimensions{}
-					}
-
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
