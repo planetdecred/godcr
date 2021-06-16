@@ -2,8 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"image/color"
-	"strconv"
 	"strings"
 	"time"
 
@@ -28,15 +26,6 @@ type proposalItemWidgets struct {
 	clickables map[string]*widget.Clickable
 }
 
-type inputVoteOptionsWidgets struct {
-	label      string
-	background color.NRGBA
-	input      decredmaterial.Editor
-	inc        decredmaterial.IconButton
-	dec        decredmaterial.IconButton
-	max        decredmaterial.Button
-}
-
 type proposalDetails struct {
 	theme               *decredmaterial.Theme
 	loadingDescription  bool
@@ -57,14 +46,7 @@ type proposalDetails struct {
 	timerIcon           *widget.Image
 	successIcon         *widget.Icon
 
-	vote             decredmaterial.Button
-	showVoteOptions  bool
-	voteOptions      *decredmaterial.Modal
-	spendingPassword decredmaterial.Editor
-	submitVote       decredmaterial.Button
-	cancelVote       decredmaterial.Button
-	yesVote          inputVoteOptionsWidgets
-	noVote           inputVoteOptionsWidgets
+	vote decredmaterial.Button
 }
 
 func ProposalDetailsPage(common *pageCommon) Page {
@@ -87,22 +69,9 @@ func ProposalDetailsPage(common *pageCommon) Page {
 		rejectedIcon:        common.icons.navigationCancel,
 		successIcon:         common.icons.actionCheckCircle,
 		timerIcon:           common.icons.timerIcon,
-		voteOptions:         common.theme.Modal(),
-		spendingPassword:    common.theme.EditorPassword(new(widget.Editor), "Spending password"),
-		submitVote:          common.theme.Button(new(widget.Clickable), "Vote"),
-		cancelVote:          common.theme.Button(new(widget.Clickable), "Cancel"),
 	}
 
 	pg.downloadIcon.Scale = 1
-
-	pg.cancelVote.Font.Weight = text.Bold
-	pg.submitVote.Font.Weight = text.Bold
-
-	pg.cancelVote.Background = common.theme.Color.Surface
-	pg.cancelVote.Color = common.theme.Color.Primary
-
-	pg.submitVote.Background = common.theme.Color.Gray1
-	pg.submitVote.Color = common.theme.Color.Surface
 
 	pg.vote = common.theme.Button(new(widget.Clickable), "Vote")
 	pg.vote.TextSize = values.TextSize14
@@ -115,10 +84,6 @@ func ProposalDetailsPage(common *pageCommon) Page {
 		Left:   values.MarginPadding12,
 		Right:  values.MarginPadding12,
 	}
-
-	pg.yesVote = newInputVoteOptions(common, "Yes")
-	pg.yesVote.background = common.theme.Color.Success2
-	pg.noVote = newInputVoteOptions(common, "No")
 
 	return pg
 }
@@ -147,15 +112,9 @@ func (pg *proposalDetails) handle() {
 	}
 
 	if pg.vote.Button.Clicked() {
-		pg.showVoteOptions = true
+		newvoteModal(pg.common).title("Vote").Show()
 	}
 
-	if pg.cancelVote.Button.Clicked() {
-		pg.showVoteOptions = false
-	}
-
-	pg.yesVote.handler()
-	pg.noVote.handler()
 }
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
@@ -473,7 +432,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 		}()
 	}
 
-	dims := common.UniformPadding(gtx, func(gtx C) D {
+	body := func(gtx C) D {
 		page := SubPage{
 			title: truncateString(proposal.Name, 40),
 			back: func() {
@@ -498,154 +457,8 @@ func (pg *proposalDetails) Layout(gtx C) D {
 			},
 		}
 		return common.SubPageLayout(gtx, page)
-	})
-
-	if pg.showVoteOptions {
-		return pg.voteOptionsLayout(gtx)
 	}
-
-	return dims
-}
-
-func (pg *proposalDetails) voteOptionsLayout(gtx C) D {
-	return pg.voteOptions.Layout(gtx, []layout.Widget{
-		func(gtx C) D {
-			return pg.theme.Label(values.TextSize20, "Vote").Layout(gtx)
-		},
-		func(gtx C) D {
-			return pg.theme.Label(values.TextSize16, "You have 5 votes").Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.inputOptions(gtx, &pg.yesVote)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Top: values.MarginPadding10,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.inputOptions(gtx, &pg.noVote)
-					})
-				}),
-			)
-		},
-		func(gtx C) D {
-			return pg.spendingPassword.Layout(gtx)
-		},
-		func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, pg.cancelVote.Layout)
-					}),
-					layout.Rigid(pg.submitVote.Layout),
-				)
-			})
-		},
-	}, 600)
-}
-
-func (pg *proposalDetails) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidgets) D {
-	wrap := pg.theme.Card()
-	wrap.Color = wdg.background
-	return wrap.Layout(gtx, func(gtx C) D {
-		inset := layout.Inset{
-			Top:    values.MarginPadding8,
-			Bottom: values.MarginPadding8,
-			Left:   values.MarginPadding16,
-			Right:  values.MarginPadding8,
-		}
-		return inset.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-				layout.Flexed(.4, func(gtx C) D {
-					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							icon := pg.common.icons.imageBrightness1
-							icon.Color = pg.theme.Color.Success
-							return icon.Layout(gtx, values.MarginPadding8)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								label := pg.theme.Body2(wdg.label)
-								return label.Layout(gtx)
-							})
-						}),
-					)
-				}),
-				layout.Flexed(.6, func(gtx C) D {
-					border := widget.Border{
-						Color:        pg.theme.Color.Gray1,
-						CornerRadius: values.MarginPadding8,
-						Width:        values.MarginPadding2,
-					}
-
-					return border.Layout(gtx, func(gtx C) D {
-						card := pg.theme.Card()
-						card.Color = pg.theme.Color.Surface
-						return card.Layout(gtx, func(gtx C) D {
-							var height int
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-								layout.Flexed(1, func(gtx C) D {
-									dims := layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return wdg.dec.Layout(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											gtx.Constraints.Min.X, gtx.Constraints.Max.X = 100, 100
-											return wdg.input.Layout(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return wdg.inc.Layout(gtx)
-										}),
-									)
-									height = dims.Size.Y
-									return dims
-								}),
-								layout.Flexed(0.02, func(gtx C) D {
-									line := pg.theme.Line(height, gtx.Px(values.MarginPadding2))
-									line.Color = pg.theme.Color.Gray1
-									return line.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return wdg.max.Layout(gtx)
-								}),
-							)
-						})
-					})
-				}),
-			)
-		})
-	})
-}
-
-func (i *inputVoteOptionsWidgets) handler() {
-	if i.inc.Button.Clicked() {
-		value, err := strconv.Atoi(i.input.Editor.Text())
-		if err != nil {
-			log.Error(err)
-			return
-		}
-		value++
-		i.input.Editor.SetText(fmt.Sprintf("%d", value))
-	}
-
-	if i.dec.Button.Clicked() {
-		value, err := strconv.Atoi(i.input.Editor.Text())
-		if err != nil {
-			log.Error(err)
-			return
-		}
-		value--
-		if value < 0 {
-			return
-		}
-		i.input.Editor.SetText(fmt.Sprintf("%d", value))
-	}
-
-	if i.max.Button.Clicked() {
-		i.input.Editor.SetText("5")
-	}
+	return common.UniformPadding(gtx, body)
 }
 
 func (pg *proposalDetails) onClose() {}
