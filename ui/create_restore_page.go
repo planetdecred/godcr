@@ -864,7 +864,7 @@ func (pg *createRestore) handle() {
 				pg.selected = len(pg.suggestions) - 1
 			}
 		}
-		if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && pg.openPopupIndex != -1 && evt.State == key.Press {
+		if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && pg.openPopupIndex != -1 && evt.State == key.Press && len(pg.suggestions) != 0 {
 			pg.seedMenu[pg.selected].button.Button.Click()
 		}
 	case err := <-pg.errorReceiver:
