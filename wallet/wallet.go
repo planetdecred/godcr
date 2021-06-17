@@ -40,6 +40,50 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 	return wal, nil
 }
 
+func (wal *Wallet) InitMultiWallet() error {
+	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net)
+	if err != nil {
+		return err
+	}
+
+	wal.multi = multiWal
+	return nil
+}
+
+func (wal *Wallet) SetupListeners() {
+	resp := Response{
+		Resp: LoadedWallets{},
+	}
+	l := &listener{
+		Send: wal.Sync,
+	}
+	err := wal.multi.AddSyncProgressListener(l, syncID)
+	if err != nil {
+		resp.Err = err
+		wal.Send <- resp
+		return
+	}
+
+	err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
+	if err != nil {
+		resp.Err = err
+		wal.Send <- resp
+		return
+	}
+
+	wal.multi.SetAccountMixerNotification(l)
+
+	wal.multi.Politeia.AddNotificationListener(l, syncID)
+
+	startupPassSet := wal.multi.IsStartupSecuritySet()
+
+	resp.Resp = LoadedWallets{
+		Count:              wal.multi.LoadedWalletsCount(),
+		StartUpSecuritySet: startupPassSet,
+	}
+	wal.Send <- resp
+}
+
 // LoadWallets loads the wallets for network in the root directory.
 // It adds a SyncProgressListener to the multiwallet and opens the wallets if no
 // startup passphrase was set.

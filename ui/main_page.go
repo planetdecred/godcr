@@ -2,7 +2,6 @@ package ui
 
 import (
 	"strconv"
-	"sync"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -17,9 +16,6 @@ const PageMain = "Main"
 
 type mainPage struct {
 	*pageCommon
-
-	modalMutex sync.Mutex
-	modals     []Modal
 
 	appBarNavItems          []navHandler
 	drawerNavItems          []navHandler
@@ -53,8 +49,6 @@ func newMainPage(common *pageCommon) *mainPage {
 	common.setReturnPage = mp.setReturnPage
 	common.returnPage = &mp.previous
 	common.page = &mp.current
-	common.showModal = mp.showModal
-	common.dismissModal = mp.dismissModal
 
 	iconColor := common.theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
@@ -165,24 +159,6 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	return dcrutil.Amount(totalBalance), nil
 }
 
-func (mp *mainPage) showModal(modal Modal) {
-	modal.OnResume() // setup display data
-	mp.modalMutex.Lock()
-	mp.modals = append(mp.modals, modal)
-	mp.modalMutex.Unlock()
-}
-
-func (mp *mainPage) dismissModal(modal Modal) {
-	mp.modalMutex.Lock()
-	defer mp.modalMutex.Unlock()
-	for i, m := range mp.modals {
-		if m.modalID() == modal.modalID() {
-			modal.OnDismiss() // do garbage collection in modal
-			mp.modals = append(mp.modals[:i], mp.modals[i+1:]...)
-		}
-	}
-}
-
 func (mp *mainPage) handle() {
 
 	// TODO: This function should be only called when
@@ -228,9 +204,6 @@ func (mp *mainPage) setReturnPage(from string) {
 
 func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 	mp.handler() // pageCommon
-	for _, modal := range mp.modals {
-		modal.handle()
-	}
 	mp.pages[mp.current].handle()
 
 	return layout.Stack{}.Layout(gtx,
@@ -258,13 +231,6 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 			// stack the page content on the entire window if a user has no wallet
 			if mp.current == PageCreateRestore {
 				return mp.pages[mp.current].Layout(gtx)
-			}
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			// global modal. Stack modal on all pages and contents
-			if len(mp.modals) > 0 {
-				return mp.modals[len(mp.modals)-1].Layout(gtx)
 			}
 			return layout.Dimensions{}
 		}),

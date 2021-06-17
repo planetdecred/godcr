@@ -7,12 +7,12 @@ import (
 )
 
 // updateSyncStatus updates the sync status in the walletInfo state.
-func (win Window) updateSyncStatus(syncing, synced bool) {
+func (win *Window) updateSyncStatus(syncing, synced bool) {
 	win.walletInfo.Syncing = syncing
 	win.walletInfo.Synced = synced
 }
 
-func (win Window) updateSyncProgress(report interface{}) {
+func (win *Window) updateSyncProgress(report interface{}) {
 	status := win.walletSyncStatus
 	switch t := report.(type) {
 	case wallet.SyncHeadersFetchProgress:
@@ -64,6 +64,6 @@ func (win Window) updateSyncProgress(report interface{}) {
 }
 
 // updateConnectedPeers updates connected peers in the SyncStatus state
-func (win Window) updateConnectedPeers(peers int32) {
+func (win *Window) updateConnectedPeers(peers int32) {
 	win.walletSyncStatus.ConnectedPeers = peers
 }

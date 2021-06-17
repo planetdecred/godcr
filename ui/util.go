@@ -20,9 +20,19 @@ import (
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/text/message"
 )
+
+func translateErr(err error) string {
+	switch err.Error() {
+	case dcrlibwallet.ErrInvalidPassphrase:
+		return values.String(values.StrInvalidPassphrase)
+	}
+
+	return err.Error()
+}
 
 func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
