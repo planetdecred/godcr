@@ -1448,3 +1448,16 @@ func (wal *Wallet) DataSize() string {
 	}
 	return fmt.Sprintf("%f GB", float64(v)*1e-9)
 }
+
+// GetAccountName returns the account name or 'external' if it does not belong to the wallet
+func (wal *Wallet) GetAccountName(walletID int, accountNumber int32) string {
+	wallet := wal.multi.WalletWithID(walletID)
+	if wallet == nil {
+		return "external"
+	}
+	account, err := wallet.GetAccount(accountNumber)
+	if err != nil {
+		return "external"
+	}
+	return account.Name
+}
