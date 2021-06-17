@@ -137,6 +137,7 @@ type pageCommon struct {
 	unspentOutputs     **wallet.UnspentOutputs
 	showModal          func(Modal)
 	dismissModal       func(Modal)
+	toggleSync         func()
 
 	testButton decredmaterial.Button
 
@@ -145,6 +146,7 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
+	refreshWindow    func()
 	changeWindowPage func(Page)
 	changePage       func(string)
 	setReturnPage    func(string)
@@ -263,6 +265,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		showModal:          win.showModal,
 		dismissModal:       win.dismissModal,
 		changeWindowPage:   win.changePage,
+		refreshWindow:      win.refreshWindow,
 
 		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		toast:        &win.toast,

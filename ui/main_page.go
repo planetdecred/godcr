@@ -23,6 +23,8 @@ type mainPage struct {
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
 
+	autoSync bool
+
 	current, previous string
 	pages             map[string]Page
 
@@ -37,6 +39,7 @@ func newMainPage(common *pageCommon) *mainPage {
 	mp := &mainPage{
 
 		pageCommon: common,
+		autoSync:   true,
 		pages:      common.loadPages(),
 		current:    PageOverview,
 
@@ -49,6 +52,13 @@ func newMainPage(common *pageCommon) *mainPage {
 	common.setReturnPage = mp.setReturnPage
 	common.returnPage = &mp.previous
 	common.page = &mp.current
+	common.toggleSync = func() {
+		if mp.multiWallet.IsConnectedToDecredNetwork() {
+			mp.multiWallet.CancelSync()
+		} else {
+			mp.startSyncing()
+		}
+	}
 
 	iconColor := common.theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
@@ -122,6 +132,11 @@ func (mp *mainPage) OnResume() {
 	mp.multiWallet.AddSyncProgressListener(mp, PageMain)
 
 	mp.updateBalance()
+
+	if mp.autoSync {
+		mp.autoSync = false
+		mp.startSyncing()
+	}
 }
 
 func (mp *mainPage) updateBalance() {
@@ -157,6 +172,47 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	}
 
 	return dcrutil.Amount(totalBalance), nil
+}
+
+func (mp *mainPage) startSyncing() {
+	for _, wal := range mp.multiWallet.AllWallets() {
+		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
+			mp.unlockWalletForSyncing(wal)
+			return
+		}
+	}
+
+	err := mp.multiWallet.SpvSync()
+	if err != nil {
+		// show error dialog
+		log.Info("Error starting sync:", err)
+	}
+}
+
+func (mp *mainPage) unlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
+	newPasswordModal(mp.pageCommon).
+		title(values.String(values.StrResumeAccountDiscoveryTitle)).
+		hint("Spending password").
+		negativeButton(values.String(values.StrCancel), func() {}).
+		positiveButton(values.String(values.StrUnlock), func(password string, pm *passwordModal) bool {
+			go func() {
+				err := mp.multiWallet.UnlockWallet(wal.ID, []byte(password))
+				if err != nil {
+					errText := err.Error()
+					if err.Error() == "invalid_passphrase" {
+						errText = "Invalid passphrase"
+					}
+					pm.setError(errText)
+					pm.setLoading(false)
+					return
+				}
+				pm.Dismiss()
+				mp.startSyncing()
+			}()
+
+			return false
+		}).Show()
+
 }
 
 func (mp *mainPage) handle() {
