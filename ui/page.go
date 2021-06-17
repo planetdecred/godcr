@@ -124,7 +124,7 @@ type pageCommon struct {
 	internalLog        *chan string
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions **wallet.Transactions
-	walletTransaction  **wallet.Transaction
+	walletTransaction  **dcrlibwallet.Transaction
 	acctMixerStatus    *chan *wallet.AccountMixer
 	selectedProposal   **dcrlibwallet.Proposal
 	proposals          **wallet.Proposals
@@ -150,6 +150,7 @@ type pageCommon struct {
 	changeWindowPage func(Page)
 	changePage       func(string)
 	setReturnPage    func(string)
+	changeFragment   func(Page, string)
 
 	wallAcctSelector *walletAccountSelector
 }
@@ -251,21 +252,21 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		icons:              ic,
 		walletSyncStatus:   win.walletSyncStatus,
 		walletTransactions: &win.walletTransactions,
-		walletTransaction:  &win.walletTransaction,
-		acctMixerStatus:    &win.walletAcctMixerStatus,
-		selectedProposal:   &win.selectedProposal,
-		proposals:          &win.proposals,
-		syncedProposal:     win.proposal,
-		txAuthor:           &win.txAuthor,
-		broadcastResult:    &win.broadcastResult,
-		signatureResult:    &win.signatureResult,
-		walletTickets:      &win.walletTickets,
-		vspInfo:            &win.vspInfo,
-		unspentOutputs:     &win.walletUnspentOutputs,
-		showModal:          win.showModal,
-		dismissModal:       win.dismissModal,
-		changeWindowPage:   win.changePage,
-		refreshWindow:      win.refreshWindow,
+		// walletTransaction:  &win.walletTransaction,
+		acctMixerStatus:  &win.walletAcctMixerStatus,
+		selectedProposal: &win.selectedProposal,
+		proposals:        &win.proposals,
+		syncedProposal:   win.proposal,
+		txAuthor:         &win.txAuthor,
+		broadcastResult:  &win.broadcastResult,
+		signatureResult:  &win.signatureResult,
+		walletTickets:    &win.walletTickets,
+		vspInfo:          &win.vspInfo,
+		unspentOutputs:   &win.walletUnspentOutputs,
+		showModal:        win.showModal,
+		dismissModal:     win.dismissModal,
+		changeWindowPage: win.changePage,
+		refreshWindow:    win.refreshWindow,
 
 		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		toast:        &win.toast,
@@ -329,7 +330,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageCreateRestore] = CreateRestorePage(common)
 	pages[PageReceive] = ReceivePage(common)
 	pages[PageSend] = SendPage(common)
-	pages[PageTransactionDetails] = TransactionDetailsPage(common)
 	pages[PageSignMessage] = SignMessagePage(common)
 	pages[PageVerifyMessage] = VerifyMessagePage(common)
 	pages[PageSeedBackup] = BackupPage(common)

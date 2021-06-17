@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -36,13 +37,13 @@ type overviewPage struct {
 	theme *decredmaterial.Theme
 	tab   *decredmaterial.Tabs
 
-	allWallets         []*dcrlibwallet.Wallet
-	wallet             **wallet.Wallet
-	walletTransactions **wallet.Transactions
-	walletTransaction  **wallet.Transaction
-	toTransactions     decredmaterial.TextAndIconButton
-	sync               decredmaterial.Button
-	toggleSyncDetails  decredmaterial.Button
+	allWallets        []*dcrlibwallet.Wallet
+	transactions      []dcrlibwallet.Transaction
+	walletTransaction **dcrlibwallet.Transaction
+
+	toTransactions    decredmaterial.TextAndIconButton
+	sync              decredmaterial.Button
+	toggleSyncDetails decredmaterial.Button
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon, cachedIcon *widget.Icon
 	syncingIcon          *widget.Image
@@ -74,13 +75,12 @@ func OverviewPage(c *pageCommon) Page {
 		theme:      c.theme,
 		tab:        c.navTab,
 
-		allWallets:         c.multiWallet.AllWallets(),
-		wallet:             &c.wallet,
-		walletTransactions: c.walletTransactions,
-		walletTransaction:  c.walletTransaction,
-		listContainer:      &layout.List{Axis: layout.Vertical},
-		walletSyncList:     &layout.List{Axis: layout.Vertical},
-		transactionsList:   &layout.List{Axis: layout.Vertical},
+		allWallets:        c.multiWallet.AllWallets(),
+		walletTransaction: c.walletTransaction,
+
+		listContainer:    &layout.List{Axis: layout.Vertical},
+		walletSyncList:   &layout.List{Axis: layout.Vertical},
+		transactionsList: &layout.List{Axis: layout.Vertical},
 
 		bestBlock: c.multiWallet.GetBestBlock(),
 
@@ -118,7 +118,25 @@ func OverviewPage(c *pageCommon) Page {
 	pg.cachedIcon = c.icons.cached
 
 	pg.listenForSyncNotifications()
+	pg.loadTransactions()
 	return pg
+}
+
+func (pg *overviewPage) loadTransactions() {
+	transactionsJSON, err := pg.multiWallet.GetTransactions(0, 5, dcrlibwallet.TxFilterAll, true)
+	if err != nil {
+		log.Error("Error getting transactions:", err)
+		return
+	}
+
+	var transactions []dcrlibwallet.Transaction
+	err = json.Unmarshal([]byte(transactionsJSON), &transactions)
+	if err != nil {
+		log.Error("Error decoding transactions:", err)
+		return
+	}
+
+	pg.transactions = transactions
 }
 
 // Layout lays out the entire content for overview pg.
@@ -161,12 +179,9 @@ func (pg *overviewPage) syncDetail(name, status, headersFetched, progress string
 
 // recentTransactionsSection lays out the list of recent transactions.
 func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	var recentTransactions []wallet.Transaction
-	if len((*pg.walletTransactions).Txs) > 0 {
-		recentTransactions = (*pg.walletTransactions).Recent
-		if len(recentTransactions) != len(pg.toTransactionDetails) {
-			pg.toTransactionDetails = createClickGestures(len(recentTransactions))
-		}
+
+	if len(pg.transactions) != len(pg.toTransactionDetails) {
+		pg.toTransactionDetails = createClickGestures(len(pg.transactions))
 	}
 
 	return pg.theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -182,7 +197,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common *pa
 					return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, pg.theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if len((*pg.walletTransactions).Txs) == 0 {
+					if len(pg.transactions) == 0 {
 						message := pg.theme.Body1(values.String(values.StrNoTransactionsYet))
 						message.Color = pg.theme.Color.Gray2
 						return Container{layout.Inset{
@@ -192,14 +207,14 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common *pa
 						}}.Layout(gtx, message.Layout)
 					}
 
-					return pg.transactionsList.Layout(gtx, len(recentTransactions), func(gtx C, i int) D {
+					return pg.transactionsList.Layout(gtx, len(pg.transactions), func(gtx C, i int) D {
 						click := pg.toTransactionDetails[i]
 						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 						click.Add(gtx.Ops)
 						var row = TransactionRow{
-							transaction: recentTransactions[i],
+							transaction: pg.transactions[i],
 							index:       i,
-							showBadge:   showLabel(recentTransactions),
+							showBadge:   len(pg.allWallets) > 1,
 						}
 						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 							return transactionRow(gtx, common, row)
@@ -588,11 +603,10 @@ func (pg *overviewPage) handle() {
 	for index, click := range pg.toTransactionDetails {
 		for _, e := range click.Events(eq) {
 			if e.Type == gesture.TypeClick {
-				txn := (*pg.walletTransactions).Recent[index]
-				*pg.walletTransaction = &txn
+				txn := pg.transactions[index]
 
 				pg.setReturnPage(PageOverview)
-				pg.changePage(PageTransactionDetails)
+				pg.changeFragment(TransactionDetailsPage(pg.pageCommon, &txn), "txdetails")
 				return
 			}
 		}

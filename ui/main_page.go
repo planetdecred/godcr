@@ -48,6 +48,7 @@ func newMainPage(common *pageCommon) *mainPage {
 	}
 
 	// init shared page functions
+	common.changeFragment = mp.changeFragment
 	common.changePage = mp.changePage
 	common.setReturnPage = mp.setReturnPage
 	common.returnPage = &mp.previous
@@ -247,6 +248,11 @@ func (mp *mainPage) onClose() {
 	mp.multiWallet.Politeia.RemoveNotificationListener(PageMain)
 	mp.multiWallet.RemoveTxAndBlockNotificationListener(PageMain)
 	mp.multiWallet.RemoveSyncProgressListener(PageMain)
+}
+
+func (mp *mainPage) changeFragment(page Page, id string) {
+	mp.pages[id] = page
+	mp.changePage(id)
 }
 
 func (mp *mainPage) changePage(page string) {

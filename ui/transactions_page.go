@@ -50,9 +50,9 @@ func TransactionsPage(common *pageCommon) Page {
 		container:          layout.Flex{Axis: layout.Vertical},
 		txsList:            layout.List{Axis: layout.Vertical},
 		walletTransactions: common.walletTransactions,
-		walletTransaction:  common.walletTransaction,
-		separator:          common.theme.Separator(),
-		theme:              common.theme,
+		// walletTransaction:  common.walletTransaction,
+		separator: common.theme.Separator(),
+		theme:     common.theme,
 	}
 
 	pg.orderDropDown = createOrderDropDown(common)
@@ -118,9 +118,9 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 									click.Add(gtx.Ops)
 									pg.goToTxnDetails(click.Events(gtx), common, &wallTxs[index])
 									var row = TransactionRow{
-										transaction: wallTxs[index],
-										index:       index,
-										showBadge:   false,
+										// transaction: wallTxs[index],
+										index:     index,
+										showBadge: false,
 									}
 									return transactionRow(gtx, common, row)
 								})
@@ -243,23 +243,24 @@ func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, common *
 	}
 }
 
-func initTxnWidgets(common *pageCommon, transaction wallet.Transaction) transactionWdg {
+func initTxnWidgets(common *pageCommon, transaction *dcrlibwallet.Transaction) transactionWdg {
+
 	var txn transactionWdg
-	t := time.Unix(transaction.Txn.Timestamp, 0).UTC()
+	t := time.Unix(transaction.Timestamp, 0).UTC()
 	txn.time = common.theme.Body1(t.Format(time.UnixDate))
 	txn.status = common.theme.Body1("")
-	txn.wallet = common.theme.Body2(transaction.WalletName)
+	txn.wallet = common.theme.Body2(common.multiWallet.WalletWithID(transaction.WalletID).Name)
 
-	if transaction.Status == "confirmed" {
-		txn.status.Text = formatDateOrTime(transaction.Txn.Timestamp)
+	if txConfirmations(common, *transaction) > 1 {
+		txn.status.Text = formatDateOrTime(transaction.Timestamp)
 		txn.statusIcon = common.icons.confirmIcon
 	} else {
-		txn.status.Text = transaction.Status
+		txn.status.Text = "pending"
 		txn.status.Color = common.theme.Color.Gray
 		txn.statusIcon = common.icons.pendingIcon
 	}
 
-	if transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
+	if transaction.Direction == dcrlibwallet.TxDirectionSent {
 		txn.direction = common.icons.sendIcon
 	} else {
 		txn.direction = common.icons.receiveIcon
