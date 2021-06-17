@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/PuerkitoBio/goquery"
@@ -17,20 +18,19 @@ import (
 
 type tagItem struct {
 	spaceBelow int
-	isLink     bool
 	label      decredmaterial.Label
+	linkHref   string
 }
 
 type HTMLRenderer struct {
 	theme *decredmaterial.Theme
 	doc   *goquery.Document
 	items []tagItem
-	//containers []layout.Widget
 	links map[string]*widget.Clickable
 }
 
 const (
-	pSpacing = 20
+	pSpacing   = 20
 	divSpacing = 5
 )
 
@@ -63,6 +63,8 @@ func (r *HTMLRenderer) render() {
 			r.renderHeading(node, nodeName)
 		case "span":
 			r.renderSpan(node)
+		case "div":
+			r.renderDiv(node)
 		default:
 			r.renderText(node)
 		}
@@ -102,18 +104,17 @@ func (r *HTMLRenderer) getStyleMap(node *goquery.Selection) map[string]string {
 }
 
 func (r *HTMLRenderer) renderParagraph(node *goquery.Selection) {
-	//r.renderWords(node)
-	//r.containers = append(r.containers, r.getEmptyLine())
 	r.addTag(node, pSpacing)
 }
 
 func (r *HTMLRenderer) renderHeading(node *goquery.Selection, nodeName string) {
 	node.SetAttr("label-type", nodeName)
-	r.renderWords(node)
+	r.addTag(node, pSpacing)
 }
 
 func (r *HTMLRenderer) renderStrong(node *goquery.Selection) {
-	r.renderWords(node)
+	r.addStyle(node, "font-weight: bold")
+	r.addTag(node, 0)
 }
 
 func (r *HTMLRenderer) renderSpan(node *goquery.Selection) {
@@ -124,28 +125,24 @@ func (r *HTMLRenderer) renderText(node *goquery.Selection) {
 	r.addTag(node, 0)
 }
 
+func (r *HTMLRenderer) renderDiv(node *goquery.Selection) {
+	r.addTag(node, divSpacing)
+}
+
 func (r *HTMLRenderer) renderLink(node *goquery.Selection) {
-	/**href, ok := node.Attr("href")
-	if ok {
+	r.addStyle(node, "text-color: #09c")
+	r.addTag(node, 0)
+
+	if r.links == nil {
+		r.links = make(map[string]*widget.Clickable)
+	}
+
+	if href, ok := node.Attr("href"); ok {
 		if _, ok := r.links[href]; !ok {
 			r.links[href] = new(widget.Clickable)
 		}
+		r.items[len(r.items)-1].linkHref = href
 	}
-
-
-	words, label := r.getWordsAndLabel(node)
-	wdgt := func(gtx C) D {
-		return decredmaterial.GridWrap{
-			Axis:      layout.Horizontal,
-			Alignment: layout.Start,
-		}.Layout(gtx, len(words), func(gtx C, i int) D {
-			return decredmaterial.Clickable(gtx, r.links[href], func(gtx C) D {
-				label.Text = words[i] + " "
-				return label.Layout(gtx)
-			})
-		})
-	}
-	r.containers = append(r.containers, wdgt)**/
 }
 
 func (r *HTMLRenderer) getLabel(lblType string) decredmaterial.Label {
@@ -168,7 +165,28 @@ func (r *HTMLRenderer) getLabel(lblType string) decredmaterial.Label {
 	return labelMap["body1"]("")
 }
 
-func (r *HTMLRenderer) getColor(col string) color.NRGBA {
+func (r *HTMLRenderer) addStyle(node *goquery.Selection, style string) {
+	var newStyle string
+
+	oldStyle, _ := node.Attr("style")
+	if oldStyle == "" {
+		newStyle = style
+	} else {
+		newStyle = strings.Trim(oldStyle, ";") + ";" + style
+	}
+	node.SetAttr("style", newStyle)
+}
+
+func (r *HTMLRenderer) getLabelWeight(weight string) text.Weight {
+	switch weight {
+	case "bold":
+		return text.Bold
+	}
+
+	return text.Normal
+}
+
+func (r *HTMLRenderer) getColorFromMap(col string) color.NRGBA {
 	colorMap := map[string]color.NRGBA{
 		"primary":       r.theme.Color.Primary,
 		"secondary":     r.theme.Color.Secondary,
@@ -207,7 +225,14 @@ func (r *HTMLRenderer) getColor(col string) color.NRGBA {
 
 func (r *HTMLRenderer) getLabelAndStyle(style map[string]string) decredmaterial.Label {
 	label := r.getLabel(style["label-type"])
-	label.Color = r.getColor(style["text-color"])
+	label.Font.Weight = r.getLabelWeight(style["font-weight"])
+
+	colStr := style["text-color"]
+	if col, ok := parseColorCode(colStr); ok {
+		label.Color = col
+	} else {
+		label.Color = r.getColorFromMap(colStr)
+	}
 
 	return label
 }
@@ -234,59 +259,47 @@ func (r *HTMLRenderer) addTag(node *goquery.Selection, spaceBelow int) {
 	r.items = append(r.items, item)
 }
 
-func (r *HTMLRenderer) renderWords(node *goquery.Selection) {
-
+func (r *HTMLRenderer) handle() {
+	for href, clickable := range r.links {
+		for clickable.Clicked() {
+			go goToURL(href)
+		}
+	}
 }
 
 func (r *HTMLRenderer) Layout(gtx C) D {
+	r.handle()
 	max := gtx.Constraints.Max.X
 
-	return decredmaterial.GridWrap{
-		Axis:      layout.Horizontal,
-		Alignment: layout.Start,
-	}.Layout(gtx, len(r.items), func(gtx C, i int) D {
-		if r.items[i].spaceBelow == 0 {
-			return r.items[i].label.Layout(gtx)
-		}
-
-		gtx.Constraints.Min.X = max
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, 
-			layout.Rigid(func(gtx C) D {
-				return D{
-					Size: image.Point{
-						Y: r.items[i].spaceBelow,
-					},
-				}
-			}),
-			layout.Rigid(r.items[i].label.Layout),
-		)
-	})
-}
-
-/**func (r *HTMLRenderer) renderWords(node *goquery.Selection) {
-	words, label := r.getWordsAndLabel(node)
-
-	wdgt := func(gtx C) D {
+	return layout.W.Layout(gtx, func(gtx C) D {
 		return decredmaterial.GridWrap{
 			Axis:      layout.Horizontal,
-			Alignment: layout.Start,
-		}.Layout(gtx, len(words), func(gtx C, i int) D {
-			label.Text = words[i] + " "
-			return label.Layout(gtx)
+			Alignment: layout.Middle,
+		}.Layout(gtx, len(r.items), func(gtx C, i int) D {
+			if r.items[i].linkHref != "" {
+				return decredmaterial.Clickable(gtx, r.links[r.items[i].linkHref], func(gtx C) D {
+					return r.items[i].label.Layout(gtx)
+				})
+			}
+
+			if r.items[i].spaceBelow == 0 {
+				return r.items[i].label.Layout(gtx)
+			}
+
+			gtx.Constraints.Min.X = max
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return D{
+						Size: image.Point{
+							Y: r.items[i].spaceBelow,
+						},
+					}
+				}),
+				layout.Rigid(r.items[i].label.Layout),
+			)
 		})
-	}
-	r.containers = append(r.containers, wdgt)
-}**/
-
-/**func (r *HTMLRenderer) Layout() []layout.Widget {
-	for href, clickable := range r.links {
-		for clickable.Clicked() {
-			goToURL(href)
-		}
-	}
-
-	return r.containers
-}**/
+	})
+}
 
 func goToURL(url string) {
 	var err error

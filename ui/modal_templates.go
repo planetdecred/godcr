@@ -6,6 +6,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -22,23 +23,21 @@ const (
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			text := th.Body1("After you or your counterparty has genrated a signature, you can use this form to verify the" +
-				" validity of the  signature. \n \nOnce you have entered the address, the message and the corresponding " +
-				"signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID.")
-			text.Color = th.Color.Gray
-			return text.Layout(gtx)
+			text := `<div style="text-color: gray">After you or your counterparty has genrated a signature, you can use this form to verify the
+				 validity of the  signature.</div><div> </div>
+				 <div style="text-color: gray">Once you have entered the address, the message and the corresponding 
+				signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID</div>`
+
+			return renderers.RenderHTML(text, th).Layout(gtx)
 		},
 	}
 }
 
 func signMessageInfo(th *decredmaterial.Theme) []layout.Widget {
+	text := `<span style="text-color: gray">Signing a message with an address' private key allows you to prove that you are the owner of a given address  to a possible counterparty.</span>`
+
 	return []layout.Widget{
-		func(gtx C) D {
-			text := th.Body1("Signing a message with an address' private key allows you to prove that you are the owner of a given address" +
-				" to a possible counterparty.")
-			text.Color = th.Color.Gray
-			return text.Layout(gtx)
-		},
+		renderers.RenderHTML(text, th).Layout,
 	}
 }
 
@@ -81,45 +80,21 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
+	text := `<div style="text-color: gray">Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.</div>
+	<h4>This action cannot be undone.</h4>`
+
 	return []layout.Widget{
-		func(gtx C) D {
-			txt := th.Body1("Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.")
-			txt.Color = th.Color.Gray
-			return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, txt.Layout)
-		},
-		func(gtx C) D {
-			txt := th.Label(values.TextSize18, "This action cannot be undone.")
-			return txt.Layout(gtx)
-		},
+		renderers.RenderHTML(text, th).Layout,
 	}
 }
 
 func transactionDetailsInfo(th *decredmaterial.Theme) []layout.Widget {
+	text := `<a href="google.com">ssss</a>
+			<span style="text-color: gray">Tap on</span>
+			<span style="text-color: primary">blue text</span>
+			<span style="text-color: gray">to copy the item</span>`
+
 	return []layout.Widget{
-		func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					t := th.Body1("Tap on")
-					t.Color = th.Color.Gray
-					return t.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					t := th.Body1("blue text")
-					t.Color = th.Color.Primary
-					m := values.MarginPadding2
-					return layout.Inset{
-						Left:  m,
-						Right: m,
-					}.Layout(gtx, func(gtx C) D {
-						return t.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					t := th.Body1("to copy the item.")
-					t.Color = th.Color.Gray
-					return t.Layout(gtx)
-				}),
-			)
-		},
+		renderers.RenderHTML(text, th).Layout,
 	}
 }
