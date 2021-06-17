@@ -91,7 +91,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 						return pg.separator(gtx)
 					},
 					func(gtx C) D {
-						return pg.txnInputs(gtx)
+						return pg.txnInputs(gtx, common)
 					},
 					func(gtx C) D {
 						return pg.separator(gtx)
@@ -284,7 +284,7 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 
 	)
 }
 
-func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
+func (pg *transactionDetailsPage) txnInputs(gtx layout.Context, common *pageCommon) layout.Dimensions {
 	transaction := *pg.txnInfo
 	x := len(transaction.Txn.Inputs) + len(transaction.Txn.Outputs)
 	for i := 0; i < x; i++ {
@@ -299,11 +299,7 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 
 	collapsibleBody := func(gtx C) D {
 		return pg.transactionInputsContainer.Layout(gtx, len(transaction.Txn.Inputs), func(gtx C, i int) D {
-			amount := dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String()
-			acctName := fmt.Sprintf("(%s)", transaction.AccountName)
-			walName := transaction.WalletName
-			hashAcct := transaction.Txn.Inputs[i].PreviousOutpoint
-			return pg.txnIORow(gtx, amount, acctName, walName, hashAcct, i)
+			return pg.txnIORow(gtx, common, transaction, "INPUT", i)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -322,12 +318,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 
 	collapsibleBody := func(gtx C) D {
 		return pg.transactionOutputsContainer.Layout(gtx, len(transaction.Txn.Outputs), func(gtx C, i int) D {
-			amount := dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String()
-			acctName := fmt.Sprintf("(%s)", transaction.AccountName)
-			walName := transaction.WalletName
-			hashAcct := transaction.Txn.Outputs[i].Address
-			x := len(transaction.Txn.Inputs)
-			return pg.txnIORow(gtx, amount, acctName, walName, hashAcct, i+x)
+			return pg.txnIORow(gtx, common, transaction, "OUTPUT", i)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -335,7 +326,30 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 	})
 }
 
-func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName, walName, hashAcct string, i int) layout.Dimensions {
+func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, common *pageCommon, transaction *wallet.Transaction, txType string, i int) layout.Dimensions {
+
+	var (
+		amount        string
+		accountNumber int32
+		hashAcct      string
+	)
+
+	if txType == "INPUT" {
+		amount = dcrutil.Amount(transaction.Txn.Inputs[i].Amount).String()
+		accountNumber = transaction.Txn.Inputs[i].AccountNumber
+		hashAcct = transaction.Txn.Inputs[i].PreviousOutpoint
+	} else {
+		amount = dcrutil.Amount(transaction.Txn.Outputs[i].Amount).String()
+		accountNumber = transaction.Txn.Outputs[i].AccountNumber
+		hashAcct = transaction.Txn.Outputs[i].Address
+		i += len(transaction.Txn.Inputs)
+	}
+
+	walletID := transaction.Txn.WalletID
+	accountName := common.wallet.GetAccountName(walletID, accountNumber)
+	acctName := fmt.Sprintf("(%s)", accountName)
+	walName := transaction.WalletName
+
 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 		card := pg.theme.Card()
 		card.Color = pg.theme.Color.LightGray
