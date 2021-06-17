@@ -246,7 +246,8 @@ func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
 }
 
-func (pg *acctDetailsPage) Handler(gtx layout.Context, common *pageCommon) {
+func (pg *acctDetailsPage) handle() {
+	common := pg.common
 	if pg.backButton.Button.Clicked() {
 		common.changePage(PageWallet)
 	}
@@ -267,5 +268,4 @@ func (pg *acctDetailsPage) Handler(gtx layout.Context, common *pageCommon) {
 	}
 }
 
-func (pg *acctDetailsPage) handle()  {}
 func (pg *acctDetailsPage) onClose() {}
