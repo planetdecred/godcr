@@ -953,7 +953,7 @@ func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimen
 								return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										txt := c.theme.Label(values.MarginPadding14, t.Info.Status)
-										txt.TextSize = unit.Px(12)
+										txt.TextSize = unit.Sp(12)
 										txt.Color = st.color
 										return txt.Layout(gtx)
 									}),
@@ -969,7 +969,7 @@ func ticketCard(gtx layout.Context, c pageCommon, t *wallet.Ticket) layout.Dimen
 									}),
 									layout.Rigid(func(gtx C) D {
 										txt := c.theme.Label(values.MarginPadding14, t.WalletName)
-										txt.TextSize = unit.Px(14)
+										txt.TextSize = unit.Sp(14)
 										return txt.Layout(gtx)
 									}),
 								)
