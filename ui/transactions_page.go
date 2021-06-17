@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageTransactions = "Transactions"
@@ -24,6 +25,7 @@ type transactionWdg struct {
 
 type transactionsPage struct {
 	*pageCommon
+	pageClosing  chan bool
 	container    layout.Flex
 	txsList      layout.List
 	toTxnDetails []*gesture.Click
@@ -40,11 +42,12 @@ type transactionsPage struct {
 
 func TransactionsPage(common *pageCommon) Page {
 	pg := &transactionsPage{
-		pageCommon: common,
-		container:  layout.Flex{Axis: layout.Vertical},
-		txsList:    layout.List{Axis: layout.Vertical},
-		separator:  common.theme.Separator(),
-		theme:      common.theme,
+		pageCommon:  common,
+		pageClosing: make(chan bool, 1),
+		container:   layout.Flex{Axis: layout.Vertical},
+		txsList:     layout.List{Axis: layout.Vertical},
+		separator:   common.theme.Separator(),
+		theme:       common.theme,
 
 		wallets: common.multiWallet.AllWallets(),
 	}
@@ -69,6 +72,7 @@ func TransactionsPage(common *pageCommon) Page {
 		},
 	}, 1)
 
+	pg.listenForTxNotifications()
 	pg.loadTransactions()
 	return pg
 }
@@ -195,6 +199,33 @@ func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcr
 	}
 }
 
+func (pg *transactionsPage) listenForTxNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.notificationsUpdate:
+			case <-pg.pageClosing:
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.NewTransaction:
+				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+				if selectedWallet.ID == n.Transaction.WalletID {
+					pg.loadTransactions()
+					pg.refreshWindow()
+				}
+			}
+		}
+	}()
+}
+
+func (pg *transactionsPage) onClose() {
+	pg.pageClosing <- true
+}
+
 func initTxnWidgets(common *pageCommon, transaction *dcrlibwallet.Transaction) transactionWdg {
 
 	var txn transactionWdg
@@ -220,5 +251,3 @@ func initTxnWidgets(common *pageCommon, transaction *dcrlibwallet.Transaction) t
 
 	return txn
 }
-
-func (pg *transactionsPage) onClose() {}
