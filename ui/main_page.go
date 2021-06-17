@@ -41,7 +41,6 @@ func newMainPage(common *pageCommon) *mainPage {
 		pageCommon: common,
 		autoSync:   true,
 		pages:      common.loadPages(),
-		current:    PageOverview,
 
 		minimizeNavDrawerButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		maximizeNavDrawerButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowForward),
@@ -133,6 +132,8 @@ func (mp *mainPage) OnResume() {
 	mp.multiWallet.AddSyncProgressListener(mp, PageMain)
 
 	mp.updateBalance()
+
+	mp.changeFragment(OverviewPage(mp.pageCommon), PageOverview)
 
 	if mp.autoSync {
 		mp.autoSync = false
@@ -239,12 +240,13 @@ func (mp *mainPage) handle() {
 
 	for i := range mp.drawerNavItems {
 		for mp.drawerNavItems[i].clickable.Clicked() {
-			if i == 1 { // transactions page
+			if i == 0 {
+				mp.changeFragment(OverviewPage(mp.pageCommon), PageOverview)
+			} else if i == 1 {
 				mp.changeFragment(TransactionsPage(mp.pageCommon), PageTransactions)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}
-
 		}
 	}
 }
@@ -261,7 +263,9 @@ func (mp *mainPage) changeFragment(page Page, id string) {
 }
 
 func (mp *mainPage) changePage(page string) {
-	mp.pages[mp.current].onClose()
+	if pg, ok := mp.pages[mp.current]; ok {
+		pg.onClose()
+	}
 	mp.current = page
 }
 

@@ -32,6 +32,7 @@ type walletSyncDetails struct {
 
 type overviewPage struct {
 	*pageCommon
+	pageClosing chan bool
 	listContainer, walletSyncList,
 	transactionsList *layout.List
 	theme *decredmaterial.Theme
@@ -70,9 +71,10 @@ type overviewPage struct {
 
 func OverviewPage(c *pageCommon) Page {
 	pg := &overviewPage{
-		pageCommon: c,
-		theme:      c.theme,
-		tab:        c.navTab,
+		pageCommon:  c,
+		pageClosing: make(chan bool, 1),
+		theme:       c.theme,
+		tab:         c.navTab,
 
 		allWallets: c.multiWallet.AllWallets(),
 
@@ -117,6 +119,19 @@ func OverviewPage(c *pageCommon) Page {
 
 	pg.listenForSyncNotifications()
 	pg.loadTransactions()
+
+	pg.walletSyncing = pg.multiWallet.IsSyncing()
+	pg.walletSynced = pg.multiWallet.IsSynced()
+	pg.isConnnected = pg.multiWallet.IsConnectedToDecredNetwork()
+	pg.connectedPeers = pg.multiWallet.ConnectedPeers()
+	pg.bestBlock = pg.multiWallet.GetBestBlock()
+
+	if pg.isConnnected {
+		pg.sync.Text = values.String(values.StrDisconnect)
+	} else {
+		pg.sync.Text = values.String(values.StrReconnect)
+	}
+
 	return pg
 }
 
@@ -365,7 +380,8 @@ func (pg *overviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, pg.theme.Body1(wallet.SecondsToDays(pg.bestBlock.Timestamp)).Layout)
+			currentSeconds := time.Now().UnixNano() / int64(time.Second)
+			return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, pg.theme.Body1(wallet.SecondsToDays(currentSeconds-pg.bestBlock.Timestamp)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
 			lastSyncedLabel := pg.theme.Body1(values.String(values.StrAgo))
@@ -444,8 +460,10 @@ func (pg *overviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 							Right:  values.MarginPadding10,
 						}
 						pg.sync.CornerRadius = values.MarginPadding10
-
-						if pg.sync.Text == values.String(values.StrReconnect) {
+						if pg.isConnnected {
+							pg.sync.Text = values.String(values.StrDisconnect)
+						} else {
+							pg.sync.Text = values.String(values.StrReconnect)
 							pg.sync.Inset.Left = values.MarginPadding25
 							layout.Inset{Top: values.MarginPadding4, Left: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 								pg.cachedIcon.Color = pg.theme.Color.Gray
@@ -595,7 +613,7 @@ func (pg *overviewPage) handle() {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.changePage(PageTransactions)
+		pg.changeFragment(TransactionsPage(pg.pageCommon), PageTransactions)
 	}
 
 	for index, click := range pg.toTransactionDetails {
@@ -623,49 +641,58 @@ func (pg *overviewPage) handle() {
 func (pg *overviewPage) listenForSyncNotifications() {
 	go func() {
 		for {
-			syncStatus := <-pg.syncStatusUpdate
-			switch t := syncStatus.ProgressReport.(type) {
-			case wallet.SyncHeadersFetchProgress:
-				pg.headerFetchProgress = t.Progress.HeadersFetchProgress
-				pg.headersToFetchOrScan = t.Progress.TotalHeadersToFetch
-				pg.syncProgress = int(t.Progress.TotalSyncProgress)
-				pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
-				pg.syncStep = wallet.FetchHeadersSteps
-			case wallet.SyncAddressDiscoveryProgress:
-				pg.syncProgress = int(t.Progress.TotalSyncProgress)
-				pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
-				pg.syncStep = wallet.AddressDiscoveryStep
-			case wallet.SyncHeadersRescanProgress:
-				pg.headersToFetchOrScan = t.Progress.TotalHeadersToScan
-				pg.syncProgress = int(t.Progress.TotalSyncProgress)
-				pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
-				pg.syncStep = wallet.RescanHeadersStep
+			var notification interface{}
+
+			select {
+			case notification = <-pg.notificationsUpdate:
+			case <-pg.pageClosing:
+				return
 			}
 
-			switch syncStatus.Stage {
-			case wallet.PeersConnected:
-				pg.connectedPeers = syncStatus.ConnectedPeers
-			case wallet.SyncStarted:
-				fallthrough
-			case wallet.SyncCanceled:
-				fallthrough
-			case wallet.SyncCompleted:
-				pg.walletSyncing = pg.multiWallet.IsSyncing()
-				pg.walletSynced = pg.multiWallet.IsSynced()
-				pg.isConnnected = pg.multiWallet.IsConnectedToDecredNetwork()
-			case wallet.BlockAttached:
-				pg.bestBlock = pg.multiWallet.GetBestBlock()
-			}
+			switch n := notification.(type) {
+			case wallet.NewTransaction:
+				pg.loadTransactions()
+			case wallet.SyncStatusUpdate:
+				switch t := n.ProgressReport.(type) {
+				case wallet.SyncHeadersFetchProgress:
+					pg.headerFetchProgress = t.Progress.HeadersFetchProgress
+					pg.headersToFetchOrScan = t.Progress.TotalHeadersToFetch
+					pg.syncProgress = int(t.Progress.TotalSyncProgress)
+					pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
+					pg.syncStep = wallet.FetchHeadersSteps
+				case wallet.SyncAddressDiscoveryProgress:
+					pg.syncProgress = int(t.Progress.TotalSyncProgress)
+					pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
+					pg.syncStep = wallet.AddressDiscoveryStep
+				case wallet.SyncHeadersRescanProgress:
+					pg.headersToFetchOrScan = t.Progress.TotalHeadersToScan
+					pg.syncProgress = int(t.Progress.TotalSyncProgress)
+					pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
+					pg.syncStep = wallet.RescanHeadersStep
+				}
 
-			if pg.isConnnected {
-				pg.sync.Text = values.String(values.StrDisconnect)
-			} else {
-				pg.sync.Text = values.String(values.StrReconnect)
+				switch n.Stage {
+				case wallet.PeersConnected:
+					pg.connectedPeers = n.ConnectedPeers
+				case wallet.SyncStarted:
+					fallthrough
+				case wallet.SyncCanceled:
+					fallthrough
+				case wallet.SyncCompleted:
+					pg.walletSyncing = pg.multiWallet.IsSyncing()
+					pg.walletSynced = pg.multiWallet.IsSynced()
+					pg.isConnnected = pg.multiWallet.IsConnectedToDecredNetwork()
+				case wallet.BlockAttached:
+					pg.bestBlock = pg.multiWallet.GetBestBlock()
+				}
 			}
 
 			pg.refreshWindow()
+
 		}
 	}()
 }
 
-func (pg *overviewPage) onClose() {}
+func (pg *overviewPage) onClose() {
+	pg.pageClosing <- true
+}

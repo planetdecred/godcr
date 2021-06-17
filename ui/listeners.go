@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"encoding/json"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -11,10 +13,21 @@ func (mp *mainPage) OnTransaction(transaction string) {
 	mp.updateBalance()
 
 	// beeep send notification
+
+	var tx dcrlibwallet.Transaction
+	err := json.Unmarshal([]byte(transaction), &tx)
+	if err == nil {
+		mp.notificationsUpdate <- wallet.NewTransaction{
+			Transaction: &tx,
+		}
+	}
 }
 
 func (mp *mainPage) OnBlockAttached(walletID int, blockHeight int32) {
 	mp.updateBalance()
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
+		Stage: wallet.BlockAttached,
+	}
 }
 
 func (mp *mainPage) OnTransactionConfirmed(walletID int, hash string, blockHeight int32) {
@@ -35,27 +48,27 @@ func (mp *mainPage) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {}
 // Sync notifications
 
 func (mp *mainPage) OnSyncStarted(wasRestarted bool) {
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.SyncStarted,
 	}
 }
 
 func (mp *mainPage) OnPeerConnectedOrDisconnected(numberOfConnectedPeers int32) {
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage:          wallet.PeersConnected,
 		ConnectedPeers: numberOfConnectedPeers,
 	}
 }
 
 func (mp *mainPage) OnCFiltersFetchProgress(cfiltersFetchProgress *dcrlibwallet.CFiltersFetchProgressReport) {
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage:          wallet.CfiltersFetchProgress,
 		ProgressReport: cfiltersFetchProgress,
 	}
 }
 
 func (mp *mainPage) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.HeadersFetchProgressReport) {
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.HeadersFetchProgress,
 		ProgressReport: wallet.SyncHeadersFetchProgress{
 			Progress: headersFetchProgress,
@@ -63,7 +76,7 @@ func (mp *mainPage) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.He
 	}
 }
 func (mp *mainPage) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.AddressDiscoveryProgress,
 		ProgressReport: wallet.SyncAddressDiscoveryProgress{
 			Progress: addressDiscoveryProgress,
@@ -72,7 +85,7 @@ func (mp *mainPage) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibw
 }
 
 func (mp *mainPage) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.HeadersRescanProgressReport) {
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.HeadersRescanProgress,
 		ProgressReport: wallet.SyncHeadersRescanProgress{
 			Progress: headersRescanProgress,
@@ -81,13 +94,13 @@ func (mp *mainPage) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.
 }
 func (mp *mainPage) OnSyncCompleted() {
 	mp.updateBalance()
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.SyncCompleted,
 	}
 }
 
 func (mp *mainPage) OnSyncCanceled(willRestart bool) {
-	mp.syncStatusUpdate <- wallet.SyncStatusUpdate{
+	mp.notificationsUpdate <- wallet.SyncStatusUpdate{
 		Stage: wallet.SyncCanceled,
 	}
 }

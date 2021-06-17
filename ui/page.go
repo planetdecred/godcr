@@ -104,39 +104,39 @@ type walletAccountSelector struct {
 }
 
 type pageCommon struct {
-	printer            *message.Printer
-	multiWallet        *dcrlibwallet.MultiWallet
-	syncStatusUpdate   chan wallet.SyncStatusUpdate
-	wallet             *wallet.Wallet
-	walletAccount      **wallet.Account
-	info               *wallet.MultiWalletInfo
-	selectedWallet     *int
-	selectedAccount    *int
-	theme              *decredmaterial.Theme
-	icons              pageIcons
-	page               *string
-	returnPage         *string
-	dcrUsdtBittrex     DCRUSDTBittrex
-	navTab             *decredmaterial.Tabs
-	keyEvents          chan *key.Event
-	toast              **toast
-	states             *states
-	internalLog        *chan string
-	walletSyncStatus   *wallet.SyncStatus
-	walletTransactions **wallet.Transactions
-	acctMixerStatus    *chan *wallet.AccountMixer
-	selectedProposal   **dcrlibwallet.Proposal
-	proposals          **wallet.Proposals
-	syncedProposal     chan *wallet.Proposal
-	txAuthor           *dcrlibwallet.TxAuthor
-	broadcastResult    *wallet.Broadcast
-	signatureResult    **wallet.Signature
-	walletTickets      **wallet.Tickets
-	vspInfo            **wallet.VSP
-	unspentOutputs     **wallet.UnspentOutputs
-	showModal          func(Modal)
-	dismissModal       func(Modal)
-	toggleSync         func()
+	printer             *message.Printer
+	multiWallet         *dcrlibwallet.MultiWallet
+	notificationsUpdate chan interface{}
+	wallet              *wallet.Wallet
+	walletAccount       **wallet.Account
+	info                *wallet.MultiWalletInfo
+	selectedWallet      *int
+	selectedAccount     *int
+	theme               *decredmaterial.Theme
+	icons               pageIcons
+	page                *string
+	returnPage          *string
+	dcrUsdtBittrex      DCRUSDTBittrex
+	navTab              *decredmaterial.Tabs
+	keyEvents           chan *key.Event
+	toast               **toast
+	states              *states
+	internalLog         *chan string
+	walletSyncStatus    *wallet.SyncStatus
+	walletTransactions  **wallet.Transactions
+	acctMixerStatus     *chan *wallet.AccountMixer
+	selectedProposal    **dcrlibwallet.Proposal
+	proposals           **wallet.Proposals
+	syncedProposal      chan *wallet.Proposal
+	txAuthor            *dcrlibwallet.TxAuthor
+	broadcastResult     *wallet.Broadcast
+	signatureResult     **wallet.Signature
+	walletTickets       **wallet.Tickets
+	vspInfo             **wallet.VSP
+	unspentOutputs      **wallet.UnspentOutputs
+	showModal           func(Modal)
+	dismissModal        func(Modal)
+	toggleSync          func()
 
 	testButton decredmaterial.Button
 
@@ -237,20 +237,20 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 	}
 
 	common := &pageCommon{
-		printer:            message.NewPrinter(language.English),
-		multiWallet:        win.wallet.GetMultiWallet(),
-		syncStatusUpdate:   make(chan wallet.SyncStatusUpdate, 10),
-		wallet:             win.wallet,
-		walletAccount:      &win.walletAccount,
-		info:               win.walletInfo,
-		selectedWallet:     &win.selected,
-		selectedAccount:    &win.selectedAccount,
-		theme:              win.theme,
-		keyEvents:          win.keyEvents,
-		states:             &win.states,
-		icons:              ic,
-		walletSyncStatus:   win.walletSyncStatus,
-		walletTransactions: &win.walletTransactions,
+		printer:             message.NewPrinter(language.English),
+		multiWallet:         win.wallet.GetMultiWallet(),
+		notificationsUpdate: make(chan interface{}, 10),
+		wallet:              win.wallet,
+		walletAccount:       &win.walletAccount,
+		info:                win.walletInfo,
+		selectedWallet:      &win.selected,
+		selectedAccount:     &win.selectedAccount,
+		theme:               win.theme,
+		keyEvents:           win.keyEvents,
+		states:              &win.states,
+		icons:               ic,
+		walletSyncStatus:    win.walletSyncStatus,
+		walletTransactions:  &win.walletTransactions,
 		// walletTransaction:  &win.walletTransaction,
 		acctMixerStatus:  &win.walletAcctMixerStatus,
 		selectedProposal: &win.selectedProposal,
@@ -323,7 +323,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages := make(map[string]Page)
 
 	pages[PageWallet] = WalletPage(common)
-	pages[PageOverview] = OverviewPage(common)
 	pages[PageMore] = MorePage(common)
 	pages[PageCreateRestore] = CreateRestorePage(common)
 	pages[PageReceive] = ReceivePage(common)
