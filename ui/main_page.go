@@ -239,7 +239,12 @@ func (mp *mainPage) handle() {
 
 	for i := range mp.drawerNavItems {
 		for mp.drawerNavItems[i].clickable.Clicked() {
-			mp.changePage(mp.drawerNavItems[i].page)
+			if i == 1 { // transactions page
+				mp.changeFragment(TransactionsPage(mp.pageCommon), PageTransactions)
+			} else {
+				mp.changePage(mp.drawerNavItems[i].page)
+			}
+
 		}
 	}
 }

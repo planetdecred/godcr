@@ -2,21 +2,16 @@ package ui
 
 import (
 	"image"
-	"sort"
 	"time"
 
-	"gioui.org/f32"
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/op"
-	"gioui.org/op/paint"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageTransactions = "Transactions"
@@ -28,33 +23,33 @@ type transactionWdg struct {
 }
 
 type transactionsPage struct {
-	container                   layout.Flex
-	txsList                     layout.List
-	walletTransactions          **wallet.Transactions
-	walletTransaction           **wallet.Transaction
-	filterSorter                int
-	filterDirection, filterSort []decredmaterial.RadioButton
-	toTxnDetails                []*gesture.Click
-	separator                   decredmaterial.Line
-	theme                       *decredmaterial.Theme
-	common                      *pageCommon
+	*pageCommon
+	container    layout.Flex
+	txsList      layout.List
+	toTxnDetails []*gesture.Click
+	separator    decredmaterial.Line
+	theme        *decredmaterial.Theme
 
 	orderDropDown  *decredmaterial.DropDown
 	txTypeDropDown *decredmaterial.DropDown
 	walletDropDown *decredmaterial.DropDown
+
+	transactions []dcrlibwallet.Transaction
+	wallets      []*dcrlibwallet.Wallet
 }
 
 func TransactionsPage(common *pageCommon) Page {
 	pg := &transactionsPage{
-		common:             common,
-		container:          layout.Flex{Axis: layout.Vertical},
-		txsList:            layout.List{Axis: layout.Vertical},
-		walletTransactions: common.walletTransactions,
-		// walletTransaction:  common.walletTransaction,
-		separator: common.theme.Separator(),
-		theme:     common.theme,
+		pageCommon: common,
+		container:  layout.Flex{Axis: layout.Vertical},
+		txsList:    layout.List{Axis: layout.Vertical},
+		separator:  common.theme.Separator(),
+		theme:      common.theme,
+
+		wallets: common.multiWallet.AllWallets(),
 	}
 
+	common.createOrUpdateWalletDropDown(&pg.walletDropDown)
 	pg.orderDropDown = createOrderDropDown(common)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
@@ -74,21 +69,39 @@ func TransactionsPage(common *pageCommon) Page {
 		},
 	}, 1)
 
+	pg.loadTransactions()
 	return pg
 }
 
-func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
-	common := pg.common
-	common.createOrUpdateWalletDropDown(&pg.walletDropDown)
-	container := func(gtx C) D {
-		walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
-		wallTxs := (*pg.walletTransactions).Txs[walletID]
-		if pg.txTypeDropDown.SelectedIndex()-1 != -1 {
-			wallTxs = filterTransactions(wallTxs, func(i int) bool {
-				return i == pg.txTypeDropDown.SelectedIndex()-1
-			})
-		}
+func (pg *transactionsPage) loadTransactions() {
+	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 
+	txFilter := dcrlibwallet.TxFilterAll
+	switch pg.txTypeDropDown.SelectedIndex() {
+	case 1:
+		txFilter = dcrlibwallet.TxFilterSent
+	case 2:
+		txFilter = dcrlibwallet.TxFilterReceived
+	case 3:
+		txFilter = dcrlibwallet.TxFilterTransferred
+	case 4:
+		txFilter = dcrlibwallet.TxFilterStaking
+	}
+
+	wallTxs, err := selectedWallet.GetTransactionsRaw(0, 0, txFilter, newestFirst) //TODO
+	if err != nil {
+		log.Error("Error loading transactions:", err)
+	} else {
+		pg.transactions = wallTxs
+	}
+}
+
+func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
+	common := pg.pageCommon
+
+	container := func(gtx C) D {
+		wallTxs := pg.transactions
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return layout.Inset{
@@ -116,11 +129,11 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 									click := pg.toTxnDetails[index]
 									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 									click.Add(gtx.Ops)
-									pg.goToTxnDetails(click.Events(gtx), common, &wallTxs[index])
+									pg.goToTxnDetails(click.Events(gtx), &wallTxs[index])
 									var row = TransactionRow{
-										// transaction: wallTxs[index],
-										index:     index,
-										showBadge: false,
+										transaction: wallTxs[index],
+										index:       index,
+										showBadge:   false,
 									}
 									return transactionRow(gtx, common, row)
 								})
@@ -132,16 +145,6 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 		)
 	}
 	return common.UniformPadding(gtx, container)
-}
-
-func filterTransactions(transactions []wallet.Transaction, f func(int) bool) []wallet.Transaction {
-	t := make([]wallet.Transaction, 0)
-	for _, v := range transactions {
-		if f(int(v.Txn.Direction)) {
-			t = append(t, v)
-		}
-	}
-	return t
 }
 
 func (pg *transactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
@@ -169,76 +172,25 @@ func (pg *transactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *transactionsPage) txsFilters(common *pageCommon) layout.Widget {
-	return func(gtx C) D {
-		return layout.Inset{
-			Top:    values.MarginPadding15,
-			Left:   values.MarginPadding15,
-			Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return (&layout.List{Axis: layout.Horizontal}).
-						Layout(gtx, len(pg.filterSort), func(gtx C, index int) D {
-							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, pg.filterSort[index].Layout)
-						})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left:  values.MarginPadding35,
-						Right: values.MarginPadding35,
-						Top:   values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-						dims := image.Point{X: 1, Y: 35}
-						rect := f32.Rectangle{Max: layout.FPt(dims)}
-						rect.Size()
-						op.TransformOp{}.Add(gtx.Ops)
-						paint.Fill(gtx.Ops, common.theme.Color.Hint)
-						return layout.Dimensions{Size: dims}
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return (&layout.List{Axis: layout.Horizontal}).
-						Layout(gtx, len(pg.filterDirection), func(gtx C, index int) D {
-							return layout.Inset{Right: values.MarginPadding15}.Layout(gtx, pg.filterDirection[index].Layout)
-						})
-				}),
-			)
-		})
-	}
-}
-
 func (pg *transactionsPage) handle() {
-	common := pg.common
-	sortSelection := pg.orderDropDown.SelectedIndex()
+	for pg.txTypeDropDown.Changed() {
+		pg.loadTransactions()
+	}
 
-	if pg.filterSorter != sortSelection {
-		pg.filterSorter = sortSelection
-		pg.sortTransactions(common)
+	for pg.orderDropDown.Changed() {
+		pg.loadTransactions()
+	}
+
+	for pg.walletDropDown.Changed() {
+		pg.loadTransactions()
 	}
 }
 
-func (pg *transactionsPage) sortTransactions(common *pageCommon) {
-	newestFirst := pg.filterSorter == 0
-
-	for _, wal := range common.info.Wallets {
-		transactions := (*pg.walletTransactions).Txs[wal.ID]
-		sort.SliceStable(transactions, func(i, j int) bool {
-			backTime := time.Unix(transactions[j].Txn.Timestamp, 0)
-			frontTime := time.Unix(transactions[i].Txn.Timestamp, 0)
-			if newestFirst {
-				return backTime.Before(frontTime)
-			}
-			return frontTime.Before(backTime)
-		})
-	}
-}
-
-func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, common *pageCommon, txn *wallet.Transaction) {
+func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcrlibwallet.Transaction) {
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
-			*pg.walletTransaction = txn
-
-			common.setReturnPage(PageTransactions)
-			common.changePage(PageTransactionDetails)
+			pg.setReturnPage(PageTransactions)
+			pg.changeFragment(TransactionDetailsPage(pg.pageCommon, txn), "txdetails")
 		}
 	}
 }

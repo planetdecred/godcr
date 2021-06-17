@@ -124,7 +124,6 @@ type pageCommon struct {
 	internalLog        *chan string
 	walletSyncStatus   *wallet.SyncStatus
 	walletTransactions **wallet.Transactions
-	walletTransaction  **dcrlibwallet.Transaction
 	acctMixerStatus    *chan *wallet.AccountMixer
 	selectedProposal   **dcrlibwallet.Proposal
 	proposals          **wallet.Proposals
@@ -325,7 +324,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 
 	pages[PageWallet] = WalletPage(common)
 	pages[PageOverview] = OverviewPage(common)
-	pages[PageTransactions] = TransactionsPage(common)
 	pages[PageMore] = MorePage(common)
 	pages[PageCreateRestore] = CreateRestorePage(common)
 	pages[PageReceive] = ReceivePage(common)

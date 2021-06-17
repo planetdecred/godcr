@@ -37,9 +37,8 @@ type overviewPage struct {
 	theme *decredmaterial.Theme
 	tab   *decredmaterial.Tabs
 
-	allWallets        []*dcrlibwallet.Wallet
-	transactions      []dcrlibwallet.Transaction
-	walletTransaction **dcrlibwallet.Transaction
+	allWallets   []*dcrlibwallet.Wallet
+	transactions []dcrlibwallet.Transaction
 
 	toTransactions    decredmaterial.TextAndIconButton
 	sync              decredmaterial.Button
@@ -75,8 +74,7 @@ func OverviewPage(c *pageCommon) Page {
 		theme:      c.theme,
 		tab:        c.navTab,
 
-		allWallets:        c.multiWallet.AllWallets(),
-		walletTransaction: c.walletTransaction,
+		allWallets: c.multiWallet.AllWallets(),
 
 		listContainer:    &layout.List{Axis: layout.Vertical},
 		walletSyncList:   &layout.List{Axis: layout.Vertical},
