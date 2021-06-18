@@ -23,10 +23,14 @@ const (
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			text := `<div style="text-color: gray">After you or your counterparty has genrated a signature, you can use this form to verify the
-				 validity of the  signature.</div><div> </div>
-				 <div style="text-color: gray">Once you have entered the address, the message and the corresponding 
-				signature, you will see VALID if the signature appropriately matches the address and message, otherwise INVALID</div>`
+			text := `<div style="text-color: gray">
+						After you or your counterparty has genrated a signature, you can use this form to verify the
+				 		validity of the  signature.
+				 	</div>
+					<p style="text-color: gray">
+						Once you have entered the address, the message and the corresponding signature, you will see VALID 
+						if the signature appropriately matches the address and message, otherwise INVALID
+					</p>`
 
 			return renderers.RenderHTML(text, th).Layout(gtx)
 		},
@@ -34,7 +38,10 @@ func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func signMessageInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := `<span style="text-color: gray">Signing a message with an address' private key allows you to prove that you are the owner of a given address  to a possible counterparty.</span>`
+	text := `<span style="text-color: gray">
+				Signing a message with an address' private key allows you to prove that 
+				you are the owner of a given address  to a possible counterparty.
+			</span>`
 
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
@@ -80,8 +87,10 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := `<div style="text-color: gray">Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.</div>
-	<h4>This action cannot be undone.</h4>`
+	text := `<div style="text-color: gray">
+				Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.
+			</div>
+			<h4>This action cannot be undone.</h4>`
 
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,

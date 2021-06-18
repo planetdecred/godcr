@@ -52,7 +52,7 @@ func (r *HTMLRenderer) render() {
 	r.doc.Find("*").Each(func(_ int, node *goquery.Selection) {
 		nodeName := goquery.NodeName(node)
 		switch nodeName {
-		case "html", "head", "body":
+		case "html", "head":
 		case "a":
 			r.renderLink(node)
 		case "p":
@@ -65,8 +65,10 @@ func (r *HTMLRenderer) render() {
 			r.renderSpan(node)
 		case "div":
 			r.renderDiv(node)
-		default:
-			r.renderText(node)
+		case "body":
+			if node.Text() != "" && node.Children().Length() == 0 {
+				r.renderSpan(node)
+			}
 		}
 	})
 }
@@ -118,10 +120,6 @@ func (r *HTMLRenderer) renderStrong(node *goquery.Selection) {
 }
 
 func (r *HTMLRenderer) renderSpan(node *goquery.Selection) {
-	r.addTag(node, 0)
-}
-
-func (r *HTMLRenderer) renderText(node *goquery.Selection) {
 	r.addTag(node, 0)
 }
 
@@ -239,7 +237,7 @@ func (r *HTMLRenderer) getLabelAndStyle(style map[string]string) decredmaterial.
 
 func (r *HTMLRenderer) getWordsAndLabel(node *goquery.Selection) ([]string, decredmaterial.Label) {
 	style := r.getStyleMap(node)
-	content := strings.TrimSpace(node.Text())
+	content := removeLineBreak(strings.TrimSpace(node.Text()))
 	words := strings.Split(content, " ")
 	label := r.getLabelAndStyle(style)
 
@@ -269,13 +267,15 @@ func (r *HTMLRenderer) handle() {
 
 func (r *HTMLRenderer) Layout(gtx C) D {
 	r.handle()
-	max := gtx.Constraints.Max.X
 
+	max := gtx.Constraints.Max.X
 	return layout.W.Layout(gtx, func(gtx C) D {
 		return decredmaterial.GridWrap{
 			Axis:      layout.Horizontal,
 			Alignment: layout.Middle,
 		}.Layout(gtx, len(r.items), func(gtx C, i int) D {
+			gtx.Constraints.Min.X = max
+			gtx.Constraints.Max.X = max
 			if r.items[i].linkHref != "" {
 				return decredmaterial.Clickable(gtx, r.links[r.items[i].linkHref], func(gtx C) D {
 					return r.items[i].label.Layout(gtx)
@@ -286,7 +286,6 @@ func (r *HTMLRenderer) Layout(gtx C) D {
 				return r.items[i].label.Layout(gtx)
 			}
 
-			gtx.Constraints.Min.X = max
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return D{
