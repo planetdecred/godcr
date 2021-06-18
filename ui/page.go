@@ -50,6 +50,7 @@ type pageIcons struct {
 }
 
 type Page interface {
+	OnResume()
 	Layout(layout.Context) layout.Dimensions
 	handle()
 	onClose()

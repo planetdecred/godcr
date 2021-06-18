@@ -71,6 +71,10 @@ func SignMessagePage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *signMessagePage) OnResume() {
+
+}
+
 func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx

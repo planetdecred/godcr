@@ -64,6 +64,10 @@ func MorePage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *morePage) OnResume() {
+
+}
+
 func (pg *morePage) handleClickEvents(common *pageCommon) {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {

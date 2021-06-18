@@ -28,6 +28,10 @@ func HelpPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *helpPage) OnResume() {
+
+}
+
 // main settings layout
 func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {

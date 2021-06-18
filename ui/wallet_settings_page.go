@@ -47,6 +47,10 @@ func WalletSettingsPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *walletSettingsPage) OnResume() {
+
+}
+
 func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 

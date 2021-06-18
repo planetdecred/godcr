@@ -135,6 +135,10 @@ func OverviewPage(c *pageCommon) Page {
 	return pg
 }
 
+func (pg *overviewPage) OnResume() {
+
+}
+
 func (pg *overviewPage) loadTransactions() {
 	transactionsJSON, err := pg.multiWallet.GetTransactions(0, 5, dcrlibwallet.TxFilterAll, true)
 	if err != nil {

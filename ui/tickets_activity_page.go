@@ -53,6 +53,10 @@ func TicketActivityPage(c *pageCommon) Page {
 	return pg
 }
 
+func (pg *ticketsActivityPage) OnResume() {
+
+}
+
 func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	c.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)

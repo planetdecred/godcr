@@ -77,6 +77,10 @@ func TransactionsPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *transactionsPage) OnResume() {
+
+}
+
 func (pg *transactionsPage) loadTransactions() {
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0

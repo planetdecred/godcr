@@ -97,6 +97,10 @@ func TransactionDetailsPage(common *pageCommon, transaction *dcrlibwallet.Transa
 	return pg
 }
 
+func (pg *transactionDetailsPage) OnResume() {
+
+}
+
 func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	if pg.gtx == nil {

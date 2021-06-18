@@ -43,6 +43,10 @@ func VerifyMessagePage(c *pageCommon) Page {
 	return pg
 }
 
+func (pg *verifyMessagePage) OnResume() {
+
+}
+
 func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 

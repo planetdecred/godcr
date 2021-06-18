@@ -54,6 +54,10 @@ func ValidateAddressPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *validateAddressPage) OnResume() {
+
+}
+
 func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID

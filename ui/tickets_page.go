@@ -119,6 +119,10 @@ func TicketPage(c *pageCommon) Page {
 	return pg
 }
 
+func (pg *ticketPage) OnResume() {
+
+}
+
 func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	dims := c.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
