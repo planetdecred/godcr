@@ -25,4 +25,7 @@ require (
 	golang.org/x/text v0.3.3
 )
 
-replace github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
+replace (
+	github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
+	github.com/planetdecred/dcrlibwallet => github.com/planetdecred/dcrlibwallet v1.6.1-0.20210618124747-f776ef63322f
+)

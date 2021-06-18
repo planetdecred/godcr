@@ -27,7 +27,7 @@ const PageTickets = "Tickets"
 type ticketPage struct {
 	th     *decredmaterial.Theme
 	wal    *wallet.Wallet
-	vspd   *dcrlibwallet.VSPD
+	vspd   *dcrlibwallet.VSP
 	common *pageCommon
 
 	ticketPageContainer layout.List

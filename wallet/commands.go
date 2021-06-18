@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"context"
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
@@ -163,15 +164,8 @@ func (wal *Wallet) AddAccount(walletID int, name string, pass []byte, errChan ch
 func (wal *Wallet) CreateTransaction(walletID int, accountID int32, errChan chan error) {
 	go func() {
 		var resp Response
-		wall := wal.multi.WalletWithID(walletID)
-		_, err := wall.GetAccount(accountID)
+		txAuthor, err := wal.multi.NewUnsignedTx(walletID, accountID)
 		if err != nil {
-			errChan <- err
-			return
-		}
-
-		txAuthor := wal.multi.NewUnsignedTx(wall, accountID)
-		if txAuthor == nil {
 			errChan <- err
 			return
 		}
@@ -690,7 +684,7 @@ func (wal *Wallet) GetAllProposals() {
 }
 
 func (wal *Wallet) FetchProposalDescription(token string) (string, error) {
-	return wal.multi.Politeia.FetchProposalDescription(token)
+	return wal.multi.Politeia.FetchProposalDescription(dcrlibwallet.PoliteiaMainnetHost, token)
 }
 
 func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
@@ -750,7 +744,7 @@ func (wal *Wallet) CancelSync() {
 }
 
 func (wal *Wallet) SyncProposals() {
-	go wal.multi.Politeia.Sync()
+	go wal.multi.Politeia.Sync(dcrlibwallet.PoliteiaMainnetHost)
 }
 
 func (wal *Wallet) IsSyncingProposals() bool {
@@ -952,7 +946,7 @@ func (wal *Wallet) TicketPrice() (int64, string) {
 	return pr.TicketPrice, dcrutil.Amount(pr.TicketPrice).String()
 }
 
-func (wal *Wallet) NewVSPD(host string, walletID int, accountID int32) (*dcrlibwallet.VSPD, error) {
+func (wal *Wallet) NewVSPD(host string, walletID int, accountID int32) (*dcrlibwallet.VSP, error) {
 	if host == "" {
 		return nil, fmt.Errorf("Host is required")
 	}
@@ -960,15 +954,15 @@ func (wal *Wallet) NewVSPD(host string, walletID int, accountID int32) (*dcrlibw
 	if wall == nil {
 		return nil, ErrIDNotExist
 	}
-	vspd := wal.multi.NewVSPD(host, walletID, accountID)
-	if vspd == nil {
-		return nil, fmt.Errorf("Something wrong when creating new VSPD")
+	vspd, err := wal.multi.NewVSPClient(host, walletID, uint32(accountID))
+	if err != nil {
+		return nil, fmt.Errorf("Something wrong when creating new VSPD: %v", err)
 	}
 	return vspd, nil
 }
 
 // PurchaseTicket buy a ticket with given parameters
-func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, vspd *dcrlibwallet.VSPD, errChan chan error) {
+func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, vspd *dcrlibwallet.VSP, errChan chan error) {
 	go func() {
 		var resp Response
 		wall := wal.multi.WalletWithID(walletID)
@@ -979,7 +973,7 @@ func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32,
 			return
 		}
 
-		_, err := vspd.GetInfo()
+		_, err := vspd.GetInfo(context.Background())
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -987,45 +981,12 @@ func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32,
 			return
 		}
 
-		request := &dcrlibwallet.PurchaseTicketsRequest{
-			Account:               uint32(accountID),
-			Passphrase:            passphrase,
-			NumTickets:            tickets,
-			Expiry:                uint32(wal.multi.GetBestBlock().Height) + 256,
-			RequiredConfirmations: dcrlibwallet.DefaultRequiredConfirmations,
-		}
-
-		hashes, err := wall.PurchaseTickets(request, "")
+		err = vspd.PurchaseTickets(int32(tickets), wal.multi.GetBestBlock().Height+256, passphrase)
 		if err != nil {
 			go func() {
 				errChan <- err
 			}()
 			return
-		}
-
-		for _, hash := range hashes {
-			r, err := vspd.GetVSPFeeAddress(hash, passphrase)
-			if err != nil {
-				go func() {
-					errChan <- err
-				}()
-				return
-			}
-
-			transactionResponse, err := vspd.CreateTicketFeeTx(r.FeeAmount, hash, r.FeeAddress, passphrase)
-			if err != nil {
-				go func() {
-					errChan <- err
-				}()
-				return
-			}
-			_, err = vspd.PayVSPFee(transactionResponse, hash, "", passphrase)
-			if err != nil {
-				go func() {
-					errChan <- err
-				}()
-				return
-			}
 		}
 
 		go func() {
@@ -1365,7 +1326,7 @@ func (wal *Wallet) GetRememberVSP() string {
 }
 
 // getVSPInfo returns the information of the specified VSP base URL
-func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
+func getVSPInfo(url string) (*dcrlibwallet.VspInfoResponse, error) {
 	rq := new(http.Client)
 	resp, err := rq.Get((url + "/api/v3/vspinfo"))
 
@@ -1383,7 +1344,7 @@ func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
 		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
 	}
 
-	var vspInfoResponse dcrlibwallet.GetVspInfoResponse
+	var vspInfoResponse dcrlibwallet.VspInfoResponse
 	err = json.Unmarshal(b, &vspInfoResponse)
 	if err != nil {
 		return nil, err
@@ -1397,7 +1358,7 @@ func getVSPInfo(url string) (*dcrlibwallet.GetVspInfoResponse, error) {
 }
 
 // getInitVSPInfo returns the list information of the VSP
-func getInitVSPInfo(url string) (map[string]*dcrlibwallet.GetVspInfoResponse, error) {
+func getInitVSPInfo(url string) (map[string]*dcrlibwallet.VspInfoResponse, error) {
 	rq := new(http.Client)
 	resp, err := rq.Get((url))
 	if err != nil {
@@ -1414,7 +1375,7 @@ func getInitVSPInfo(url string) (map[string]*dcrlibwallet.GetVspInfoResponse, er
 		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
 	}
 
-	var vspInfoResponse map[string]*dcrlibwallet.GetVspInfoResponse
+	var vspInfoResponse map[string]*dcrlibwallet.VspInfoResponse
 	err = json.Unmarshal(b, &vspInfoResponse)
 	if err != nil {
 		return nil, err

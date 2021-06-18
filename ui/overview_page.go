@@ -667,6 +667,7 @@ func (pg *overviewPage) listenForSyncNotifications() {
 				case wallet.SyncCanceled:
 					fallthrough
 				case wallet.SyncCompleted:
+					pg.loadTransactions()
 					pg.walletSyncing = pg.multiWallet.IsSyncing()
 					pg.walletSynced = pg.multiWallet.IsSynced()
 					pg.isConnnected = pg.multiWallet.IsConnectedToDecredNetwork()

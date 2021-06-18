@@ -126,7 +126,7 @@ func (mp *mainPage) initNavItems() {
 
 func (mp *mainPage) OnResume() {
 	// register for notifications
-	mp.multiWallet.SetAccountMixerNotification(mp)
+	mp.multiWallet.AddAccountMixerNotificationListener(mp, PageMain)
 	mp.multiWallet.Politeia.AddNotificationListener(mp, PageMain)
 	mp.multiWallet.AddTxAndBlockNotificationListener(mp, PageMain)
 	mp.multiWallet.AddSyncProgressListener(mp, PageMain)
@@ -255,6 +255,7 @@ func (mp *mainPage) onClose() {
 	if pg, ok := mp.pages[mp.current]; ok {
 		pg.onClose()
 	}
+	mp.multiWallet.RemoveAccountMixerNotificationListener(PageMain)
 	mp.multiWallet.Politeia.RemoveNotificationListener(PageMain)
 	mp.multiWallet.RemoveTxAndBlockNotificationListener(PageMain)
 	mp.multiWallet.RemoveSyncProgressListener(PageMain)
