@@ -23,7 +23,8 @@ type transactionDetailsPage struct {
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
-	hashBtn                         decredmaterial.Button
+	hashClickable                   *widget.Clickable
+	destAddressClickable            *widget.Clickable
 	copyTextBtn                     []decredmaterial.Button
 	dot                             *widget.Icon
 	toDcrdata                       *widget.Clickable
@@ -56,8 +57,9 @@ func TransactionDetailsPage(common *pageCommon, transaction *dcrlibwallet.Transa
 		outputsCollapsible: common.theme.Collapsible(),
 		inputsCollapsible:  common.theme.Collapsible(),
 
-		hashBtn:   common.theme.Button(new(widget.Clickable), ""),
-		toDcrdata: new(widget.Clickable),
+		hashClickable:        new(widget.Clickable),
+		destAddressClickable: new(widget.Clickable),
+		toDcrdata:            new(widget.Clickable),
 
 		transaction: transaction,
 		wallet:      common.multiWallet.WalletWithID(transaction.WalletID),
@@ -238,87 +240,84 @@ func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 		m := values.MarginPadding10
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return pg.txnInfoSection(gtx, values.String(values.StrFrom), pg.wallet.Name, pg.txSourceAccount, true, false)
+				return pg.txnInfoSection(gtx, values.String(values.StrFrom), pg.txSourceAccount, true, nil)
 			}),
 			layout.Rigid(func(gtx C) D {
 				if transaction.Direction == dcrlibwallet.TxDirectionSent {
 					return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
-						return pg.txnInfoSection(gtx, values.String(values.StrTo), "", pg.txDestinationAddress, false, true)
+						return pg.txnInfoSection(gtx, values.String(values.StrTo), pg.txDestinationAddress, false, pg.destAddressClickable)
 					})
 				}
 				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, values.String(values.StrFee), "", dcrutil.Amount(transaction.Fee).String(), false, false)
+					return pg.txnInfoSection(gtx, values.String(values.StrFee), dcrutil.Amount(transaction.Fee).String(), false, nil)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				if transaction.BlockHeight != -1 {
-					return pg.txnInfoSection(gtx, values.String(values.StrIncludedInBlock), "", fmt.Sprintf("%d", transaction.BlockHeight), false, false)
+					return pg.txnInfoSection(gtx, values.String(values.StrIncludedInBlock), fmt.Sprintf("%d", transaction.BlockHeight), false, nil)
 				}
 				return layout.Dimensions{}
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, values.String(values.StrType), "", transaction.Type, false, false)
+					return pg.txnInfoSection(gtx, values.String(values.StrType), transaction.Type, false, nil)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				trimmedHash := transaction.Hash[:24] + "..." + transaction.Hash[len(transaction.Hash)-24:]
 				return layout.Inset{Bottom: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), "", trimmedHash, false, true)
+					return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), trimmedHash, false, pg.hashClickable)
 				})
 			}),
 		)
 	})
 }
 
-func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, t1, t2, t3 string, first, copy bool) layout.Dimensions {
+func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, label, value string, showWalletBadge bool, clickable *widget.Clickable) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			t := pg.theme.Body1(t1)
+			t := pg.theme.Body1(label)
 			t.Color = pg.theme.Color.Gray
 			return t.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if t2 != "" {
-						if first {
-							card := pg.theme.Card()
-							card.Radius = decredmaterial.CornerRadius{
-								NE: 0,
-								NW: 0,
-								SE: 0,
-								SW: 0,
-							}
-							card.Color = pg.theme.Color.LightGray
-							return card.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-									txt := pg.theme.Body2(strings.Title(strings.ToLower(t2)))
-									txt.Color = pg.theme.Color.Gray
-									return txt.Layout(gtx)
-								})
-							})
+					if showWalletBadge {
+						card := pg.theme.Card()
+						card.Radius = decredmaterial.CornerRadius{
+							NE: 0,
+							NW: 0,
+							SE: 0,
+							SW: 0,
 						}
-						return pg.theme.Body1(t2).Layout(gtx)
+						card.Color = pg.theme.Color.LightGray
+						return card.Layout(gtx, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+								txt := pg.theme.Body2(pg.wallet.Name)
+								txt.Color = pg.theme.Color.Gray
+								return txt.Layout(gtx)
+							})
+						})
 					}
 					return layout.Dimensions{}
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						if first || !copy {
-							txt := pg.theme.Body1(strings.Title(strings.ToLower(t3)))
+						if clickable == nil {
+							txt := pg.theme.Body1(value)
 							return txt.Layout(gtx)
 						}
 
-						pg.hashBtn.Color = pg.theme.Color.Primary
-						pg.hashBtn.Background = color.NRGBA{}
-						pg.hashBtn.Text = t3
-						pg.hashBtn.Inset = layout.UniformInset(values.MarginPadding0)
-						return pg.hashBtn.Layout(gtx)
+						btn := pg.theme.Button(clickable, value)
+						btn.Color = pg.theme.Color.Primary
+						btn.Background = color.NRGBA{}
+						btn.Inset = layout.UniformInset(values.MarginPadding0)
+						return btn.Layout(gtx)
 					})
 				}),
 			)
@@ -485,8 +484,12 @@ func (pg *transactionDetailsPage) handle() {
 		}
 	}
 
-	for pg.hashBtn.Button.Clicked() {
+	for pg.hashClickable.Clicked() {
 		clipboard.WriteOp{Text: pg.transaction.Hash}.Add(gtx.Ops)
+	}
+
+	for pg.destAddressClickable.Clicked() {
+		clipboard.WriteOp{Text: pg.txDestinationAddress}.Add(gtx.Ops)
 	}
 }
 
