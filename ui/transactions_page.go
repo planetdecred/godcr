@@ -52,7 +52,7 @@ func TransactionsPage(common *pageCommon) Page {
 		wallets: common.multiWallet.AllWallets(),
 	}
 
-	common.createOrUpdateWalletDropDown(&pg.walletDropDown)
+	common.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
 	pg.orderDropDown = createOrderDropDown(common)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{

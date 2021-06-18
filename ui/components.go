@@ -975,9 +975,9 @@ func (page *pageCommon) handleToast() {
 
 // createOrUpdateWalletDropDown check for len of wallets to create dropDown,
 // also update the list when create, update, delete a wallet.
-func (page *pageCommon) createOrUpdateWalletDropDown(dwn **decredmaterial.DropDown) {
+func (page *pageCommon) createOrUpdateWalletDropDown(dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
 	var walletDropDownItems []decredmaterial.DropDownItem
-	for _, wal := range page.multiWallet.AllWallets() {
+	for _, wal := range wallets {
 		item := decredmaterial.DropDownItem{
 			Text: wal.Name,
 			Icon: page.icons.walletIcon,

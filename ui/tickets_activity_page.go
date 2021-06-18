@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
 
 	"gioui.org/layout"
@@ -25,6 +26,8 @@ type ticketsActivityPage struct {
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
 	common             *pageCommon
+
+	wallets []*dcrlibwallet.Wallet
 }
 
 func TicketActivityPage(c *pageCommon) Page {
@@ -33,6 +36,7 @@ func TicketActivityPage(c *pageCommon) Page {
 		common:      c,
 		tickets:     c.walletTickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
+		wallets:     c.multiWallet.AllWallets(),
 	}
 	pg.orderDropDown = createOrderDropDown(c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
@@ -51,7 +55,7 @@ func TicketActivityPage(c *pageCommon) Page {
 
 func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
-	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
 	body := func(gtx C) D {
 		page := SubPage{
 			title: "Ticket activity",
@@ -59,7 +63,7 @@ func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 				c.changePage(PageTickets)
 			},
 			body: func(gtx C) D {
-				walletID := c.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
+				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 				tickets := (*pg.tickets).Confirmed[walletID]
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
@@ -136,13 +140,12 @@ func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket
 }
 
 func (pg *ticketsActivityPage) handle() {
-	c := pg.common
 
 	sortSelection := pg.orderDropDown.SelectedIndex()
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
 		newestFirst := pg.filterSorter == 0
-		for _, wal := range c.info.Wallets {
+		for _, wal := range pg.wallets {
 			tickets := (*pg.tickets).Confirmed[wal.ID]
 			sort.SliceStable(tickets, func(i, j int) bool {
 				backTime := time.Unix(tickets[j].Info.Ticket.Timestamp, 0)
