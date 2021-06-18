@@ -52,7 +52,6 @@ func TransactionsPage(common *pageCommon) Page {
 		wallets: common.multiWallet.AllWallets(),
 	}
 
-	common.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
 	pg.orderDropDown = createOrderDropDown(common)
 	pg.txTypeDropDown = common.theme.DropDown([]decredmaterial.DropDownItem{
 		{
@@ -72,13 +71,13 @@ func TransactionsPage(common *pageCommon) Page {
 		},
 	}, 1)
 
-	pg.listenForTxNotifications()
-	pg.loadTransactions()
 	return pg
 }
 
 func (pg *transactionsPage) OnResume() {
-
+	pg.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
+	pg.listenForTxNotifications()
+	pg.loadTransactions()
 }
 
 func (pg *transactionsPage) loadTransactions() {

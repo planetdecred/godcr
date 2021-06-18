@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/color"
@@ -117,39 +116,24 @@ func OverviewPage(c *pageCommon) Page {
 	pg.walletStatusIcon = c.icons.imageBrightness1
 	pg.cachedIcon = c.icons.cached
 
-	pg.listenForSyncNotifications()
-	pg.loadTransactions()
+	return pg
+}
 
+func (pg *overviewPage) OnResume() {
 	pg.walletSyncing = pg.multiWallet.IsSyncing()
 	pg.walletSynced = pg.multiWallet.IsSynced()
 	pg.isConnnected = pg.multiWallet.IsConnectedToDecredNetwork()
 	pg.connectedPeers = pg.multiWallet.ConnectedPeers()
 	pg.bestBlock = pg.multiWallet.GetBestBlock()
 
-	if pg.isConnnected {
-		pg.sync.Text = values.String(values.StrDisconnect)
-	} else {
-		pg.sync.Text = values.String(values.StrReconnect)
-	}
-
-	return pg
-}
-
-func (pg *overviewPage) OnResume() {
-
+	pg.loadTransactions()
+	pg.listenForSyncNotifications()
 }
 
 func (pg *overviewPage) loadTransactions() {
-	transactionsJSON, err := pg.multiWallet.GetTransactions(0, 5, dcrlibwallet.TxFilterAll, true)
+	transactions, err := pg.multiWallet.GetTransactionsRaw(0, 5, dcrlibwallet.TxFilterAll, true)
 	if err != nil {
 		log.Error("Error getting transactions:", err)
-		return
-	}
-
-	var transactions []dcrlibwallet.Transaction
-	err = json.Unmarshal([]byte(transactionsJSON), &transactions)
-	if err != nil {
-		log.Error("Error decoding transactions:", err)
 		return
 	}
 

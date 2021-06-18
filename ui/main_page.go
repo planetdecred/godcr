@@ -252,6 +252,9 @@ func (mp *mainPage) handle() {
 }
 
 func (mp *mainPage) onClose() {
+	if pg, ok := mp.pages[mp.current]; ok {
+		pg.onClose()
+	}
 	mp.multiWallet.Politeia.RemoveNotificationListener(PageMain)
 	mp.multiWallet.RemoveTxAndBlockNotificationListener(PageMain)
 	mp.multiWallet.RemoveSyncProgressListener(PageMain)
@@ -266,7 +269,11 @@ func (mp *mainPage) changePage(page string) {
 	if pg, ok := mp.pages[mp.current]; ok {
 		pg.onClose()
 	}
-	mp.current = page
+
+	if pg, ok := mp.pages[page]; ok {
+		pg.OnResume()
+		mp.current = page
+	}
 }
 
 func (mp *mainPage) setReturnPage(from string) {

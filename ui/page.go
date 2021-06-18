@@ -50,7 +50,7 @@ type pageIcons struct {
 }
 
 type Page interface {
-	OnResume()
+	OnResume() // called when a page is starting or resuming from a paused state.
 	Layout(layout.Context) layout.Dimensions
 	handle()
 	onClose()
