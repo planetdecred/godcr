@@ -46,6 +46,10 @@ func LogPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *logPage) OnResume() {
+
+}
+
 func (pg *logPage) copyLogEntries(gtx C) {
 	go func() {
 		pg.entriesLock.Lock()

@@ -78,6 +78,10 @@ func ReceivePage(common *pageCommon) Page {
 	return page
 }
 
+func (pg *receivePage) OnResume() {
+
+}
+
 func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	if pg.gtx == nil {

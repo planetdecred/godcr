@@ -30,6 +30,10 @@ func SecurityToolsPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *securityToolsPage) OnResume() {
+
+}
+
 // main settings layout
 func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common

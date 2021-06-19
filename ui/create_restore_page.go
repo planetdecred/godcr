@@ -150,6 +150,10 @@ func CreateRestorePage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *createRestore) OnResume() {
+
+}
+
 func (pg *createRestore) Layout(gtx layout.Context) layout.Dimensions {
 	pd := values.MarginPadding15
 	dims := layout.Flex{Axis: layout.Vertical, Spacing: layout.SpaceBetween}.Layout(gtx,

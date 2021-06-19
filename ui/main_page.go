@@ -23,6 +23,8 @@ type mainPage struct {
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
 
+	autoSync bool
+
 	current, previous string
 	pages             map[string]Page
 
@@ -37,18 +39,26 @@ func newMainPage(common *pageCommon) *mainPage {
 	mp := &mainPage{
 
 		pageCommon: common,
+		autoSync:   true,
 		pages:      common.loadPages(),
-		current:    PageOverview,
 
 		minimizeNavDrawerButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		maximizeNavDrawerButton: common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowForward),
 	}
 
 	// init shared page functions
+	common.changeFragment = mp.changeFragment
 	common.changePage = mp.changePage
 	common.setReturnPage = mp.setReturnPage
 	common.returnPage = &mp.previous
 	common.page = &mp.current
+	common.toggleSync = func() {
+		if mp.multiWallet.IsConnectedToDecredNetwork() {
+			mp.multiWallet.CancelSync()
+		} else {
+			mp.startSyncing()
+		}
+	}
 
 	iconColor := common.theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
@@ -116,12 +126,19 @@ func (mp *mainPage) initNavItems() {
 
 func (mp *mainPage) OnResume() {
 	// register for notifications
-	mp.multiWallet.SetAccountMixerNotification(mp)
+	mp.multiWallet.AddAccountMixerNotificationListener(mp, PageMain)
 	mp.multiWallet.Politeia.AddNotificationListener(mp, PageMain)
 	mp.multiWallet.AddTxAndBlockNotificationListener(mp, PageMain)
 	mp.multiWallet.AddSyncProgressListener(mp, PageMain)
 
 	mp.updateBalance()
+
+	mp.changeFragment(OverviewPage(mp.pageCommon), PageOverview)
+
+	if mp.autoSync {
+		mp.autoSync = false
+		mp.startSyncing()
+	}
 }
 
 func (mp *mainPage) updateBalance() {
@@ -159,6 +176,47 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	return dcrutil.Amount(totalBalance), nil
 }
 
+func (mp *mainPage) startSyncing() {
+	for _, wal := range mp.multiWallet.AllWallets() {
+		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
+			mp.unlockWalletForSyncing(wal)
+			return
+		}
+	}
+
+	err := mp.multiWallet.SpvSync()
+	if err != nil {
+		// show error dialog
+		log.Info("Error starting sync:", err)
+	}
+}
+
+func (mp *mainPage) unlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
+	newPasswordModal(mp.pageCommon).
+		title(values.String(values.StrResumeAccountDiscoveryTitle)).
+		hint(wal.Name+" Spending password").
+		negativeButton(values.String(values.StrCancel), func() {}).
+		positiveButton(values.String(values.StrUnlock), func(password string, pm *passwordModal) bool {
+			go func() {
+				err := mp.multiWallet.UnlockWallet(wal.ID, []byte(password))
+				if err != nil {
+					errText := err.Error()
+					if err.Error() == "invalid_passphrase" {
+						errText = "Invalid passphrase"
+					}
+					pm.setError(errText)
+					pm.setLoading(false)
+					return
+				}
+				pm.Dismiss()
+				mp.startSyncing()
+			}()
+
+			return false
+		}).Show()
+
+}
+
 func (mp *mainPage) handle() {
 
 	// TODO: This function should be only called when
@@ -182,20 +240,41 @@ func (mp *mainPage) handle() {
 
 	for i := range mp.drawerNavItems {
 		for mp.drawerNavItems[i].clickable.Clicked() {
-			mp.changePage(mp.drawerNavItems[i].page)
+			if i == 0 {
+				mp.changeFragment(OverviewPage(mp.pageCommon), PageOverview)
+			} else if i == 1 {
+				mp.changeFragment(TransactionsPage(mp.pageCommon), PageTransactions)
+			} else {
+				mp.changePage(mp.drawerNavItems[i].page)
+			}
 		}
 	}
 }
 
 func (mp *mainPage) onClose() {
+	if pg, ok := mp.pages[mp.current]; ok {
+		pg.onClose()
+	}
+	mp.multiWallet.RemoveAccountMixerNotificationListener(PageMain)
 	mp.multiWallet.Politeia.RemoveNotificationListener(PageMain)
 	mp.multiWallet.RemoveTxAndBlockNotificationListener(PageMain)
 	mp.multiWallet.RemoveSyncProgressListener(PageMain)
 }
 
+func (mp *mainPage) changeFragment(page Page, id string) {
+	mp.pages[id] = page
+	mp.changePage(id)
+}
+
 func (mp *mainPage) changePage(page string) {
-	mp.pages[mp.current].onClose()
-	mp.current = page
+	if pg, ok := mp.pages[mp.current]; ok {
+		pg.onClose()
+	}
+
+	if pg, ok := mp.pages[page]; ok {
+		pg.OnResume()
+		mp.current = page
+	}
 }
 
 func (mp *mainPage) setReturnPage(from string) {

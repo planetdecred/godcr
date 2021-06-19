@@ -47,6 +47,10 @@ func AcctDetailsPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *acctDetailsPage) OnResume() {
+
+}
+
 func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 

@@ -74,6 +74,10 @@ func ProposalDetailsPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *proposalDetails) OnResume() {
+
+}
+
 func (pg *proposalDetails) handle() {
 	for token := range pg.proposalItems {
 		for location, clickable := range pg.proposalItems[token].clickables {

@@ -235,7 +235,7 @@ type Balance struct {
 // CreateVSP is sent when the Wallet is done creating a new VSP
 type VSPInfo struct {
 	Host string
-	Info *dcrlibwallet.GetVspInfoResponse
+	Info *dcrlibwallet.VspInfoResponse
 }
 
 // VSP is sent when the Wallet is done getting all VSP info

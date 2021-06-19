@@ -45,6 +45,10 @@ func StatPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *statPage) OnResume() {
+
+}
+
 func (pg *statPage) layoutStats(gtx C) D {
 	background := pg.common.theme.Color.Surface
 	card := pg.common.theme.Card()

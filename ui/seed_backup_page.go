@@ -145,6 +145,10 @@ func BackupPage(c *pageCommon) Page {
 	return b
 }
 
+func (pg *backupPage) OnResume() {
+
+}
+
 func (pg *backupPage) activeButton() {
 	pg.action.Background = pg.theme.Color.Primary
 	pg.action.Color = pg.theme.Color.InvText
