@@ -3,6 +3,8 @@ package ui
 import (
 	"image/color"
 
+	"gioui.org/text"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -28,6 +30,7 @@ type validateAddressPage struct {
 	wallet                *wallet.Wallet
 	walletID              int
 	stateValidate         int
+	walletName            string
 }
 
 func ValidateAddressPage(common *pageCommon) Page {
@@ -46,7 +49,9 @@ func ValidateAddressPage(common *pageCommon) Page {
 
 	pg.validateBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14
 	pg.validateBtn.Background = pg.theme.Color.Primary
+	pg.validateBtn.Font.Weight = text.Bold
 	pg.clearBtn.Color = pg.theme.Color.Primary
+	pg.clearBtn.Font.Weight = text.Bold
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
 
 	pg.stateValidate = none
@@ -59,7 +64,7 @@ func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	body := func(gtx C) D {
 		page := SubPage{
-			title: ValidateAddress,
+			title: "Validate address",
 			back: func() {
 				common.changePage(*common.returnPage)
 			},
@@ -183,13 +188,12 @@ func (pg *validateAddressPage) showDisplayResult(c *pageCommon) layout.Widget {
 									}),
 									layout.Rigid(func(gtx C) D {
 										if pg.stateValidate == valid {
-											walletName := c.info.Wallets[*c.selectedWallet].Name
-											if walletName != "" {
+											if pg.walletName != "" {
 												return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 													return decredmaterial.Card{
 														Color: pg.theme.Color.Surface,
 													}.Layout(gtx, func(gtx C) D {
-														walletText := pg.theme.Caption(walletName)
+														walletText := pg.theme.Caption(pg.walletName)
 														walletText.Color = pg.theme.Color.Gray
 														return walletText.Layout(gtx)
 													})
@@ -254,15 +258,14 @@ func (pg *validateAddressPage) validateAddress() {
 			return
 		}
 
-		exist, err := pg.wallet.HaveAddress(pg.walletID, address)
-		if err != nil {
-			return
-		}
+		exist, walletName := pg.wallet.HaveAddress(address)
+
 		if !exist {
 			pg.stateValidate = notOwned
 			return
 		}
 		pg.stateValidate = valid
+		pg.walletName = walletName
 		return
 	}
 }

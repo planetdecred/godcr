@@ -721,12 +721,14 @@ func (wal *Wallet) IsAddressValid(address string) (bool, error) {
 }
 
 // HaveAddress checks if the given address is valid for the wallet
-func (wal *Wallet) HaveAddress(walletID int, address string) (bool, error) {
-	wall := wal.multi.WalletWithID(walletID)
-	if wall == nil {
-		return false, ErrIDNotExist
+func (wal *Wallet) HaveAddress(address string) (bool, string) {
+	for _, wallet := range wal.multi.AllWallets() {
+		result := wallet.HaveAddress(address)
+		if result {
+			return true, wallet.Name
+		}
 	}
-	return wall.HaveAddress(address), nil
+	return false, ""
 }
 
 // VerifyMessage checks if the given message matches the signature for the address.
