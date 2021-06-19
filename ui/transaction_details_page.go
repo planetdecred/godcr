@@ -345,19 +345,7 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 	collapsibleBody := func(gtx C) D {
 		return pg.transactionInputsContainer.Layout(gtx, len(transaction.Inputs), func(gtx C, i int) D {
 			input := transaction.Inputs[i]
-			accountName := "external"
-			walletName := ""
-			if input.AccountNumber != -1 {
-				name, err := pg.wallet.AccountName(input.AccountNumber)
-				if err == nil {
-					accountName = name
-					walletName = pg.wallet.Name
-				}
-			}
-			amount := dcrutil.Amount(input.Amount).String()
-			acctName := fmt.Sprintf("(%s)", accountName)
-			hashAcct := input.PreviousOutpoint
-			return pg.txnIORow(gtx, amount, acctName, walletName, hashAcct, i)
+			return pg.txnIORow(gtx, input.Amount, input.AccountNumber, input.PreviousOutpoint, i)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -377,20 +365,8 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 	collapsibleBody := func(gtx C) D {
 		return pg.transactionOutputsContainer.Layout(gtx, len(transaction.Outputs), func(gtx C, i int) D {
 			output := transaction.Outputs[i]
-			accountName := "external"
-			walletName := ""
-			if output.AccountNumber != -1 {
-				name, err := pg.wallet.AccountName(output.AccountNumber)
-				if err == nil {
-					accountName = name
-					walletName = pg.wallet.Name
-				}
-			}
-			amount := dcrutil.Amount(output.Amount).String()
-			acctName := fmt.Sprintf("(%s)", accountName)
-			hashAcct := output.Address
 			x := len(transaction.Inputs)
-			return pg.txnIORow(gtx, amount, acctName, walletName, hashAcct, i+x)
+			return pg.txnIORow(gtx, output.Amount, output.AccountNumber, output.Address, i+x)
 		})
 	}
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -398,7 +374,20 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context, common *pageCom
 	})
 }
 
-func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName, walName, hashAcct string, i int) layout.Dimensions {
+func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int32, address string, i int) layout.Dimensions {
+
+	accountName := "external"
+	walletName := ""
+	if acctNum != -1 {
+		name, err := pg.wallet.AccountName(acctNum)
+		if err == nil {
+			accountName = name
+			walletName = pg.wallet.Name
+		}
+	}
+
+	accountName = fmt.Sprintf("(%s)", accountName)
+	amt := dcrutil.Amount(amount).String()
 
 	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 		card := pg.theme.Card()
@@ -409,13 +398,13 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(pg.theme.Body1(amount).Layout),
+							layout.Rigid(pg.theme.Body1(amt).Layout),
 							layout.Rigid(func(gtx C) D {
 								m := values.MarginPadding5
 								return layout.Inset{
 									Left:  m,
 									Right: m,
-								}.Layout(gtx, pg.theme.Body1(acctName).Layout)
+								}.Layout(gtx, pg.theme.Body1(accountName).Layout)
 							}),
 							layout.Rigid(func(gtx C) D {
 								card := pg.theme.Card()
@@ -428,7 +417,7 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 								card.Color = pg.theme.Color.LightGray
 								return card.Layout(gtx, func(gtx C) D {
 									return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-										txt := pg.theme.Body2(walName)
+										txt := pg.theme.Body2(walletName)
 										txt.Color = pg.theme.Color.Gray
 										return txt.Layout(gtx)
 									})
@@ -439,7 +428,7 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount, acctName,
 					layout.Rigid(func(gtx C) D {
 						pg.copyTextBtn[i].Color = pg.theme.Color.Primary
 						pg.copyTextBtn[i].Background = color.NRGBA{}
-						pg.copyTextBtn[i].Text = hashAcct
+						pg.copyTextBtn[i].Text = address
 						pg.copyTextBtn[i].Inset = layout.UniformInset(values.MarginPadding0)
 
 						return layout.W.Layout(gtx, pg.copyTextBtn[i].Layout)
