@@ -348,9 +348,9 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 			accountName := "external"
 			walletName := ""
 			if input.AccountNumber != -1 {
-				account, err := pg.wallet.GetAccount(input.AccountNumber)
+				name, err := pg.wallet.AccountName(input.AccountNumber)
 				if err == nil {
-					accountName = account.Name
+					accountName = name
 					walletName = pg.wallet.Name
 				}
 			}
