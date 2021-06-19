@@ -563,30 +563,34 @@ func diff(a, b []int) []int {
 func (pg *createRestore) editorSeedsEventsHandler() {
 	var focused []int
 
+	seedEvent := func(i int, text string) {
+		if pg.seedClicked {
+			pg.seedEditors.focusIndex = -1
+			pg.seedClicked = false
+		} else {
+			pg.seedEditors.focusIndex = i
+		}
+
+		if text == "" {
+			pg.openPopupIndex = -1
+		} else {
+			pg.openPopupIndex = i
+		}
+	}
+
 	for i := 0; i < len(pg.seedEditors.editors); i++ {
 		editor := &pg.seedEditors.editors[i]
+		text := editor.Edit.Editor.Text()
 
 		if editor.Edit.Editor.Focused() {
+			seedEvent(i, text)
 			focused = append(focused, i)
 		}
 
 		for _, e := range editor.Edit.Editor.Events() {
 			switch e.(type) {
 			case widget.ChangeEvent:
-				// hide suggestions if seed clicked
-				if pg.seedClicked {
-					pg.seedEditors.focusIndex = -1
-					pg.seedClicked = false
-				} else {
-					pg.seedEditors.focusIndex = i
-				}
-				text := editor.Edit.Editor.Text()
-				if text == "" {
-					pg.openPopupIndex = -1
-				} else {
-					pg.openPopupIndex = i
-				}
-
+				seedEvent(i, text)
 				pg.resetSeedFields.Color = pg.theme.Color.Primary
 				pg.suggestions = pg.suggestionSeeds(text)
 				pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
@@ -596,6 +600,7 @@ func (pg *createRestore) editorSeedsEventsHandler() {
 			case widget.SubmitEvent:
 				if i != numberOfSeeds {
 					pg.seedEditors.editors[i+1].Edit.Editor.Focus()
+					pg.selected = 0
 				}
 			}
 		}
@@ -865,6 +870,9 @@ func (pg *createRestore) handle() {
 			}
 		}
 		if (evt.Name == key.NameReturn || evt.Name == key.NameEnter) && pg.openPopupIndex != -1 && evt.State == key.Press && len(pg.suggestions) != 0 {
+			if pg.seedEditors.focusIndex == -1 && len(pg.suggestions) == 1 {
+				return
+			}
 			pg.seedMenu[pg.selected].button.Button.Click()
 		}
 	case err := <-pg.errorReceiver:
