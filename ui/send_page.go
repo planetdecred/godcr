@@ -916,6 +916,7 @@ func (pg *sendPage) handle() {
 		pg.resetErrorText()
 		pg.resetFields()
 		c.changePage(*c.returnPage)
+		c.subPageBackButton.Icon = c.icons.navigationArrowBack
 	}
 
 	if c.subPageInfoButton.Button.Clicked() {
