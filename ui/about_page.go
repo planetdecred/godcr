@@ -51,6 +51,10 @@ func AboutPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *aboutPage) OnResume() {
+
+}
+
 func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{

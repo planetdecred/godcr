@@ -125,6 +125,10 @@ func WalletPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *walletPage) OnResume() {
+
+}
+
 func (pg *walletPage) initializeWalletMenu() {
 	pg.optionsMenu = []menuItem{
 		{

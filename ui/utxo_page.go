@@ -63,6 +63,10 @@ func UTXOPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *utxoPage) OnResume() {
+
+}
+
 func (pg *utxoPage) handle() {
 	common := pg.common
 	pg.selectedWalletID = common.info.Wallets[*common.selectedWallet].ID

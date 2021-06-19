@@ -122,6 +122,10 @@ func SettingsPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *settingsPage) OnResume() {
+
+}
+
 func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	pg.updateSettingOptions()

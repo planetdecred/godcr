@@ -45,6 +45,10 @@ func DebugPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *debugPage) OnResume() {
+
+}
+
 func (pg *debugPage) handle() {
 	for i := range pg.debugItems {
 		for pg.debugItems[i].clickable.Clicked() {

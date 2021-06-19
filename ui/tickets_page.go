@@ -27,7 +27,7 @@ const PageTickets = "Tickets"
 type ticketPage struct {
 	th     *decredmaterial.Theme
 	wal    *wallet.Wallet
-	vspd   *dcrlibwallet.VSPD
+	vspd   *dcrlibwallet.VSP
 	common *pageCommon
 
 	ticketPageContainer layout.List
@@ -117,6 +117,10 @@ func TicketPage(c *pageCommon) Page {
 	pg.toTicketsActivity.BackgroundColor = c.theme.Color.Surface
 
 	return pg
+}
+
+func (pg *ticketPage) OnResume() {
+
 }
 
 func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {

@@ -50,6 +50,10 @@ func PrivacyPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *privacyPage) OnResume() {
+
+}
+
 func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	d := func(gtx C) D {

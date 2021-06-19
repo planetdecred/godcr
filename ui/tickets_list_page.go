@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
 
 	"gioui.org/layout"
@@ -30,6 +31,8 @@ type ticketPageList struct {
 	isGridView         bool
 	common             *pageCommon
 	statusTooltips     []*decredmaterial.Tooltip
+
+	wallets []*dcrlibwallet.Wallet
 }
 
 func TicketPageList(c *pageCommon) Page {
@@ -40,6 +43,8 @@ func TicketPageList(c *pageCommon) Page {
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,
+
+		wallets: c.multiWallet.AllWallets(),
 	}
 	pg.orderDropDown = createOrderDropDown(c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
@@ -56,9 +61,13 @@ func TicketPageList(c *pageCommon) Page {
 	return pg
 }
 
+func (pg *ticketPageList) OnResume() {
+
+}
+
 func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
-	c.createOrUpdateWalletDropDown(&pg.walletDropDown)
+	c.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
 	pg.initTicketTooltips(*c)
 
 	body := func(gtx C) D {
@@ -68,7 +77,7 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 				c.changePage(PageTickets)
 			},
 			body: func(gtx C) D {
-				walletID := c.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
+				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 				tickets := (*pg.tickets).Confirmed[walletID]
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
@@ -295,7 +304,7 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c *pageCommon
 }
 
 func (pg *ticketPageList) initTicketTooltips(common pageCommon) {
-	walletID := common.info.Wallets[pg.walletDropDown.SelectedIndex()].ID
+	walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 	tickets := (*pg.tickets).Confirmed[walletID]
 
 	for range tickets {
@@ -304,7 +313,6 @@ func (pg *ticketPageList) initTicketTooltips(common pageCommon) {
 }
 
 func (pg *ticketPageList) handle() {
-	c := pg.common
 
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
@@ -314,7 +322,7 @@ func (pg *ticketPageList) handle() {
 	if pg.filterSorter != sortSelection {
 		pg.filterSorter = sortSelection
 		newestFirst := pg.filterSorter == 0
-		for _, wal := range c.info.Wallets {
+		for _, wal := range pg.wallets {
 			tickets := (*pg.tickets).Confirmed[wal.ID]
 			sort.SliceStable(tickets, func(i, j int) bool {
 				backTime := time.Unix(tickets[j].Info.Ticket.Timestamp, 0)

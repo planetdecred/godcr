@@ -219,6 +219,10 @@ func SendPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *sendPage) OnResume() {
+
+}
+
 func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	pageContent := []func(gtx C) D{

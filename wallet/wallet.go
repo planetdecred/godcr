@@ -71,7 +71,7 @@ func (wal *Wallet) SetupListeners() {
 		return
 	}
 
-	wal.multi.SetAccountMixerNotification(l)
+	wal.multi.AddAccountMixerNotificationListener(l, syncID)
 
 	wal.multi.Politeia.AddNotificationListener(l, syncID)
 
@@ -117,7 +117,7 @@ func (wal *Wallet) LoadWallets() {
 		return
 	}
 
-	wal.multi.SetAccountMixerNotification(l)
+	wal.multi.AddAccountMixerNotificationListener(l, syncID)
 
 	wal.multi.Politeia.AddNotificationListener(l, syncID)
 

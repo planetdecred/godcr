@@ -30,7 +30,7 @@ const (
 
 type (
 	TransactionRow struct {
-		transaction wallet.Transaction
+		transaction dcrlibwallet.Transaction
 		index       int
 		showBadge   bool
 	}
@@ -82,11 +82,13 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 		directionIconTopMargin = values.MarginPadding0
 	}
 
+	wal := common.multiWallet.WalletWithID(row.transaction.WalletID)
+
 	return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				icon := common.icons.receiveIcon
-				if row.transaction.Txn.Direction == dcrlibwallet.TxDirectionSent {
+				if row.transaction.Direction == dcrlibwallet.TxDirectionSent {
 					icon = common.icons.sendIcon
 				}
 				icon.Scale = 1.0
@@ -128,11 +130,11 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return common.layoutBalance(gtx, row.transaction.Balance, true)
+												return common.layoutBalance(gtx, dcrutil.Amount(row.transaction.Amount).String(), true)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
-													return walletLabel(gtx, common, row.transaction.WalletName)
+													return walletLabel(gtx, common, wal.Name)
 												}
 												return layout.Dimensions{}
 											}),
@@ -144,15 +146,12 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 												func(gtx C) D {
-													s := formatDateOrTime(row.transaction.Txn.Timestamp)
-													if row.transaction.Status != "confirmed" {
-														s = row.transaction.Status
-													}
-													status := common.theme.Body1(s)
-													if row.transaction.Status != "confirmed" {
+													status := common.theme.Body1("pending")
+													if txConfirmations(common, row.transaction) <= 1 {
 														status.Color = common.theme.Color.Gray5
 													} else {
 														status.Color = common.theme.Color.Gray4
+														status.Text = formatDateOrTime(row.transaction.Timestamp)
 													}
 													status.Alignment = text.Middle
 													return status.Layout(gtx)
@@ -161,7 +160,7 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 												statusIcon := common.icons.confirmIcon
-												if row.transaction.Status != "confirmed" {
+												if txConfirmations(common, row.transaction) <= 1 {
 													statusIcon = common.icons.pendingIcon
 												}
 												statusIcon.Scale = 1.0
@@ -177,6 +176,15 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 			}),
 		)
 	})
+}
+
+func txConfirmations(common *pageCommon, transaction dcrlibwallet.Transaction) int32 {
+	if transaction.BlockHeight != -1 {
+		// TODO
+		return (common.multiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
+	}
+
+	return 0
 }
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
@@ -967,26 +975,16 @@ func (page *pageCommon) handleToast() {
 
 // createOrUpdateWalletDropDown check for len of wallets to create dropDown,
 // also update the list when create, update, delete a wallet.
-func (page *pageCommon) createOrUpdateWalletDropDown(dwn **decredmaterial.DropDown) {
-	init := func() {
-		var walletDropDownItems []decredmaterial.DropDownItem
-		for i := range page.info.Wallets {
-			item := decredmaterial.DropDownItem{
-				Text: page.info.Wallets[i].Name,
-				Icon: page.icons.walletIcon,
-			}
-			walletDropDownItems = append(walletDropDownItems, item)
+func (page *pageCommon) createOrUpdateWalletDropDown(dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
+	var walletDropDownItems []decredmaterial.DropDownItem
+	for _, wal := range wallets {
+		item := decredmaterial.DropDownItem{
+			Text: wal.Name,
+			Icon: page.icons.walletIcon,
 		}
-		*dwn = page.theme.DropDown(walletDropDownItems, 2)
+		walletDropDownItems = append(walletDropDownItems, item)
 	}
-
-	if *dwn == nil && len(page.info.Wallets) > 0 {
-		init()
-		return
-	}
-	if (*dwn).Len() != len(page.info.Wallets) {
-		init()
-	}
+	*dwn = page.theme.DropDown(walletDropDownItems, 2)
 }
 
 func createOrderDropDown(c *pageCommon) *decredmaterial.DropDown {

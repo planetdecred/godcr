@@ -1,7 +1,6 @@
 package wallet
 
-// NewTransaction is sent when a new transaction is received.
-type NewTransaction string
+import "github.com/planetdecred/dcrlibwallet"
 
 // NewBlock is sent when a block is attached to the multiwallet.
 type NewBlock struct {
@@ -14,6 +13,10 @@ type TxConfirmed struct {
 	WalletID int
 	Height   int32
 	Hash     string
+}
+
+type NewTransaction struct {
+	Transaction *dcrlibwallet.Transaction
 }
 
 func (l *listener) OnTransaction(transaction string) {

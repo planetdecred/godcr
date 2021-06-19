@@ -124,6 +124,10 @@ func ProposalsPage(common *pageCommon) Page {
 	return pg
 }
 
+func (pg *proposalsPage) OnResume() {
+
+}
+
 func (pg *proposalsPage) handle() {
 	common := pg.common
 	for i := range pg.tabs.tabs {

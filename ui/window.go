@@ -122,6 +122,10 @@ func (win *Window) Start() {
 
 func (win *Window) changePage(page Page) {
 	win.currentPage = page
+	win.refreshWindow()
+}
+
+func (win *Window) refreshWindow() {
 	win.invalidate <- struct{}{}
 }
 

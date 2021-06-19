@@ -50,6 +50,7 @@ type pageIcons struct {
 }
 
 type Page interface {
+	OnResume() // called when a page is starting or resuming from a paused state.
 	Layout(layout.Context) layout.Dimensions
 	handle()
 	onClose()
@@ -104,39 +105,39 @@ type walletAccountSelector struct {
 }
 
 type pageCommon struct {
-	printer            *message.Printer
-	multiWallet        *dcrlibwallet.MultiWallet
-	syncStatusUpdate   chan wallet.SyncStatusUpdate
-	wallet             *wallet.Wallet
-	walletAccount      **wallet.Account
-	info               *wallet.MultiWalletInfo
-	selectedWallet     *int
-	selectedAccount    *int
-	theme              *decredmaterial.Theme
-	icons              pageIcons
-	page               *string
-	returnPage         *string
-	dcrUsdtBittrex     DCRUSDTBittrex
-	navTab             *decredmaterial.Tabs
-	keyEvents          chan *key.Event
-	toast              **toast
-	states             *states
-	internalLog        *chan string
-	walletSyncStatus   *wallet.SyncStatus
-	walletTransactions **wallet.Transactions
-	walletTransaction  **wallet.Transaction
-	acctMixerStatus    *chan *wallet.AccountMixer
-	selectedProposal   **dcrlibwallet.Proposal
-	proposals          **wallet.Proposals
-	syncedProposal     chan *wallet.Proposal
-	txAuthor           *dcrlibwallet.TxAuthor
-	broadcastResult    *wallet.Broadcast
-	signatureResult    **wallet.Signature
-	walletTickets      **wallet.Tickets
-	vspInfo            **wallet.VSP
-	unspentOutputs     **wallet.UnspentOutputs
-	showModal          func(Modal)
-	dismissModal       func(Modal)
+	printer             *message.Printer
+	multiWallet         *dcrlibwallet.MultiWallet
+	notificationsUpdate chan interface{}
+	wallet              *wallet.Wallet
+	walletAccount       **wallet.Account
+	info                *wallet.MultiWalletInfo
+	selectedWallet      *int
+	selectedAccount     *int
+	theme               *decredmaterial.Theme
+	icons               pageIcons
+	page                *string
+	returnPage          *string
+	dcrUsdtBittrex      DCRUSDTBittrex
+	navTab              *decredmaterial.Tabs
+	keyEvents           chan *key.Event
+	toast               **toast
+	states              *states
+	internalLog         *chan string
+	walletSyncStatus    *wallet.SyncStatus
+	walletTransactions  **wallet.Transactions
+	acctMixerStatus     *chan *wallet.AccountMixer
+	selectedProposal    **dcrlibwallet.Proposal
+	proposals           **wallet.Proposals
+	syncedProposal      chan *wallet.Proposal
+	txAuthor            *dcrlibwallet.TxAuthor
+	broadcastResult     *wallet.Broadcast
+	signatureResult     **wallet.Signature
+	walletTickets       **wallet.Tickets
+	vspInfo             **wallet.VSP
+	unspentOutputs      **wallet.UnspentOutputs
+	showModal           func(Modal)
+	dismissModal        func(Modal)
+	toggleSync          func()
 
 	testButton decredmaterial.Button
 
@@ -145,9 +146,11 @@ type pageCommon struct {
 	subPageBackButton decredmaterial.IconButton
 	subPageInfoButton decredmaterial.IconButton
 
+	refreshWindow    func()
 	changeWindowPage func(Page)
 	changePage       func(string)
 	setReturnPage    func(string)
+	changeFragment   func(Page, string)
 
 	wallAcctSelector *walletAccountSelector
 }
@@ -235,34 +238,35 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 	}
 
 	common := &pageCommon{
-		printer:            message.NewPrinter(language.English),
-		multiWallet:        win.wallet.GetMultiWallet(),
-		syncStatusUpdate:   make(chan wallet.SyncStatusUpdate, 10),
-		wallet:             win.wallet,
-		walletAccount:      &win.walletAccount,
-		info:               win.walletInfo,
-		selectedWallet:     &win.selected,
-		selectedAccount:    &win.selectedAccount,
-		theme:              win.theme,
-		keyEvents:          win.keyEvents,
-		states:             &win.states,
-		icons:              ic,
-		walletSyncStatus:   win.walletSyncStatus,
-		walletTransactions: &win.walletTransactions,
-		walletTransaction:  &win.walletTransaction,
-		acctMixerStatus:    &win.walletAcctMixerStatus,
-		selectedProposal:   &win.selectedProposal,
-		proposals:          &win.proposals,
-		syncedProposal:     win.proposal,
-		txAuthor:           &win.txAuthor,
-		broadcastResult:    &win.broadcastResult,
-		signatureResult:    &win.signatureResult,
-		walletTickets:      &win.walletTickets,
-		vspInfo:            &win.vspInfo,
-		unspentOutputs:     &win.walletUnspentOutputs,
-		showModal:          win.showModal,
-		dismissModal:       win.dismissModal,
-		changeWindowPage:   win.changePage,
+		printer:             message.NewPrinter(language.English),
+		multiWallet:         win.wallet.GetMultiWallet(),
+		notificationsUpdate: make(chan interface{}, 10),
+		wallet:              win.wallet,
+		walletAccount:       &win.walletAccount,
+		info:                win.walletInfo,
+		selectedWallet:      &win.selected,
+		selectedAccount:     &win.selectedAccount,
+		theme:               win.theme,
+		keyEvents:           win.keyEvents,
+		states:              &win.states,
+		icons:               ic,
+		walletSyncStatus:    win.walletSyncStatus,
+		walletTransactions:  &win.walletTransactions,
+		// walletTransaction:  &win.walletTransaction,
+		acctMixerStatus:  &win.walletAcctMixerStatus,
+		selectedProposal: &win.selectedProposal,
+		proposals:        &win.proposals,
+		syncedProposal:   win.proposal,
+		txAuthor:         &win.txAuthor,
+		broadcastResult:  &win.broadcastResult,
+		signatureResult:  &win.signatureResult,
+		walletTickets:    &win.walletTickets,
+		vspInfo:          &win.vspInfo,
+		unspentOutputs:   &win.walletUnspentOutputs,
+		showModal:        win.showModal,
+		dismissModal:     win.dismissModal,
+		changeWindowPage: win.changePage,
+		refreshWindow:    win.refreshWindow,
 
 		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
 		toast:        &win.toast,
@@ -320,13 +324,10 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages := make(map[string]Page)
 
 	pages[PageWallet] = WalletPage(common)
-	pages[PageOverview] = OverviewPage(common)
-	pages[PageTransactions] = TransactionsPage(common)
 	pages[PageMore] = MorePage(common)
 	pages[PageCreateRestore] = CreateRestorePage(common)
 	pages[PageReceive] = ReceivePage(common)
 	pages[PageSend] = SendPage(common)
-	pages[PageTransactionDetails] = TransactionDetailsPage(common)
 	pages[PageSignMessage] = SignMessagePage(common)
 	pages[PageVerifyMessage] = VerifyMessagePage(common)
 	pages[PageSeedBackup] = BackupPage(common)
