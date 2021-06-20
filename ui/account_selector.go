@@ -38,7 +38,7 @@ func newAccountSelector(common *pageCommon) *accountSelector {
 		accountIsValid:     func(a *dcrlibwallet.Account) bool { return true },
 		openSelectorDialog: new(widget.Clickable),
 
-		wallets: common.multiWallet.AllWallets(),
+		wallets: common.sortedWalletList(),
 	}
 }
 
