@@ -167,7 +167,7 @@ func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 	})
 
 	if pg.showPurchaseConfirm {
-		return pg.confirmPurchaseModal(gtx, c)
+		return pg.confirmPurchaseModal(gtx)
 	}
 
 	if pg.showVSPHosts {
@@ -483,7 +483,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c *pageCommon) layout.Di
 	}, 900)
 }
 
-func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c *pageCommon) layout.Dimensions {
+func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context) layout.Dimensions {
 	return pg.purchaseOptions.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			return pg.th.Label(values.TextSize20, "Confirm to purchase tickets").Layout(gtx)

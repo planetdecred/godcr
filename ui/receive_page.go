@@ -379,5 +379,6 @@ generateAddress:
 }
 
 func (pg *receivePage) onClose() {
-	pg.common.subPageBackButton.Icon = pg.common.icons.navigationArrowBack
+	// TODO
+	pg.pageCommon.subPageBackButton.Icon = pg.pageCommon.icons.navigationArrowBack
 }
