@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"net/http"
+	"sort"
 
 	"gioui.org/unit"
 
@@ -381,6 +382,16 @@ func (common *pageCommon) notify(text string, success bool) {
 		text:    text,
 		success: success,
 	}
+}
+
+func (common *pageCommon) sortedWalletList() []*dcrlibwallet.Wallet {
+	wallets := common.multiWallet.AllWallets()
+
+	sort.Slice(wallets, func(i, j int) bool {
+		return wallets[i].ID < wallets[j].ID
+	})
+
+	return wallets
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or

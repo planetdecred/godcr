@@ -162,7 +162,7 @@ func (mp *mainPage) updateBalance() {
 
 func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	totalBalance := int64(0)
-	for _, wallet := range mp.wallet.AllWallets() {
+	for _, wallet := range mp.sortedWalletList() {
 		accountsResult, err := wallet.GetAccountsRaw()
 		if err != nil {
 			return 0, err
@@ -177,7 +177,7 @@ func (mp *mainPage) calculateTotalWalletsBalance() (dcrutil.Amount, error) {
 }
 
 func (mp *mainPage) startSyncing() {
-	for _, wal := range mp.multiWallet.AllWallets() {
+	for _, wal := range mp.sortedWalletList() {
 		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
 			mp.unlockWalletForSyncing(wal)
 			return
