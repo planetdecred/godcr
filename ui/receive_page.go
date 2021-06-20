@@ -93,9 +93,8 @@ func ReceivePage(common *pageCommon) Page {
 
 			// Filter out imported account and mixed.
 			wal := page.multiWallet.WalletWithID(account.WalletID)
-			mixedAccountNumber := wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, -1)
 			if account.Number == MaxInt32 ||
-				account.Number == mixedAccountNumber {
+				account.Number == wal.MixedAccountNumber() {
 				return false
 			}
 			return true

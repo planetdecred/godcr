@@ -47,13 +47,12 @@ type ticketPage struct {
 	showPurchaseOptions   bool
 	showPurchaseConfirm   bool
 
-	purchaseOptions       *decredmaterial.Modal
-	autoPurchaseEnabled   *widget.Bool
-	toTickets             decredmaterial.TextAndIconButton
-	toTicketsActivity     decredmaterial.TextAndIconButton
-	purchaseErrChan       chan error
-	walletSelectedID      int
-	accountSelectedNumber int32
+	purchaseAccountSelector *accountSelector
+	purchaseOptions         *decredmaterial.Modal
+	autoPurchaseEnabled     *widget.Bool
+	toTickets               decredmaterial.TextAndIconButton
+	toTicketsActivity       decredmaterial.TextAndIconButton
+	purchaseErrChan         chan error
 
 	vspInfo          **wallet.VSP
 	vspHosts         layout.List
@@ -116,11 +115,32 @@ func TicketPage(c *pageCommon) Page {
 	pg.toTicketsActivity.Color = c.theme.Color.Primary
 	pg.toTicketsActivity.BackgroundColor = c.theme.Color.Surface
 
+	pg.purchaseAccountSelector = newAccountSelector(c).
+		title("Purchasing account").
+		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
+			if pg.selectedVSP.Host != "" {
+				pg.createNewVSPD(c)
+			}
+		}).
+		accountValidator(func(account *dcrlibwallet.Account) bool {
+			wal := pg.common.multiWallet.WalletWithID(account.WalletID)
+
+			// Imported and watch only wallet accounts are invalid for sending
+			accountIsValid := account.Number != MaxInt32 && !wal.IsWatchingOnlyWallet()
+
+			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
+				// privacy is enabled for selected wallet
+
+				accountIsValid = account.Number == wal.MixedAccountNumber()
+			}
+			return accountIsValid
+		})
+
 	return pg
 }
 
 func (pg *ticketPage) OnResume() {
-
+	pg.purchaseAccountSelector.selectFirstWalletValidAccount()
 }
 
 func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -438,7 +458,7 @@ func (pg *ticketPage) purchaseModal(gtx layout.Context, c *pageCommon) layout.Di
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return c.accountSelectorLayout(gtx, "purchase", "")
+					return pg.purchaseAccountSelector.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -491,8 +511,9 @@ func (pg *ticketPage) confirmPurchaseModal(gtx layout.Context, c *pageCommon) la
 				layout.Rigid(func(gtx C) D {
 					tleft := pg.th.Label(values.TextSize14, "Account")
 					tleft.Color = pg.th.Color.Gray2
-					wallAcct := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet].Accounts
-					tright := pg.th.Label(values.TextSize14, wallAcct[c.wallAcctSelector.selectedPurchaseTicketAccount].Name)
+					selectedAccount := pg.purchaseAccountSelector.selectedAccount
+					selectedWallet := pg.common.multiWallet.WalletWithID(selectedAccount.WalletID)
+					tright := pg.th.Label(values.TextSize14, selectedWallet.Name)
 					return endToEndRow(gtx, tleft.Layout, tright.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -671,8 +692,8 @@ func (pg *ticketPage) calculateAndValidCost(c *pageCommon) bool {
 	}
 	pg.submitPurchase.Text = fmt.Sprintf("Purchase %d tickets", tnumber)
 
-	selectWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
-	accountBalance := selectWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount].Balance.Spendable
+	selectedAccount := pg.purchaseAccountSelector.selectedAccount
+	accountBalance := selectedAccount.Balance.Spendable
 	feePercentage := pg.selectedVSP.Info.FeePercentage
 	total := tprice * tnumber
 	feeDCR := int64((float64(total) / 100) * feePercentage)
@@ -694,11 +715,13 @@ func (pg *ticketPage) doPurchaseTicket(c *pageCommon, password []byte, ticketAmo
 		return
 	}
 	pg.isPurchaseLoading = true
-	c.wallet.PurchaseTicket(pg.walletSelectedID, pg.accountSelectedNumber, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
+	selectedAccount := pg.purchaseAccountSelector.selectedAccount
+	c.wallet.PurchaseTicket(selectedAccount.WalletID, selectedAccount.Number, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
 }
 
 func (pg *ticketPage) createNewVSPD(c *pageCommon) {
-	vspd, err := c.wallet.NewVSPD(pg.selectedVSP.Host, pg.walletSelectedID, pg.accountSelectedNumber)
+	selectedAccount := pg.purchaseAccountSelector.selectedAccount
+	vspd, err := c.wallet.NewVSPD(pg.selectedVSP.Host, selectedAccount.WalletID, selectedAccount.Number)
 	if err != nil {
 		c.notify(err.Error(), false)
 	}
@@ -712,18 +735,6 @@ func (pg *ticketPage) handle() {
 		_, priceText := c.wallet.TicketPrice()
 		pg.ticketPrice = priceText
 		c.wallet.GetAllVSP()
-	}
-
-	selectedWallet := c.info.Wallets[c.wallAcctSelector.selectedPurchaseTicketWallet]
-	selectedAccount := selectedWallet.Accounts[c.wallAcctSelector.selectedPurchaseTicketAccount]
-
-	if pg.walletSelectedID != selectedWallet.ID ||
-		pg.accountSelectedNumber != selectedAccount.Number {
-		pg.walletSelectedID = selectedWallet.ID
-		pg.accountSelectedNumber = selectedAccount.Number
-		if pg.selectedVSP.Host != "" {
-			pg.createNewVSPD(c)
-		}
 	}
 
 	if len((*pg.vspInfo).List) != len(pg.selectVSP) {

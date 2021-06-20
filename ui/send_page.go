@@ -228,16 +228,14 @@ func SendPage(common *pageCommon) Page {
 			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
 				// privacy is enabled for selected wallet
 
-				mixedAccountNumber := wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, -1)
-
 				if pg.sendToOption == "Address" { //Todo
 					// only mixed can send to address
-					accountIsValid = account.Number == mixedAccountNumber
+					accountIsValid = account.Number == wal.MixedAccountNumber()
 				} else {
 					// send to account, check if selected destination account belongs to wallet
 					destinationAccount := pg.destinationAccountSelector.selectedAccount
 					if destinationAccount.WalletID != account.WalletID {
-						accountIsValid = account.Number == mixedAccountNumber
+						accountIsValid = account.Number == wal.MixedAccountNumber()
 					}
 				}
 			}
@@ -255,9 +253,8 @@ func SendPage(common *pageCommon) Page {
 
 			// Filter out imported account and mixed.
 			wal := pg.common.multiWallet.WalletWithID(account.WalletID)
-			mixedAccountNumber := wal.ReadInt32ConfigValueForKey(dcrlibwallet.AccountMixerMixedAccount, -1)
 			if account.Number == MaxInt32 ||
-				account.Number == mixedAccountNumber {
+				account.Number == wal.MixedAccountNumber() {
 				return false
 			}
 
