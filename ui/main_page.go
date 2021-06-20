@@ -325,12 +325,6 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 				})
 			})
 		}),
-		layout.Stacked(func(gtx C) D {
-			if mp.wallAcctSelector.isWalletAccountModalOpen {
-				return mp.walletAccountModalLayout(gtx)
-			}
-			return layout.Dimensions{}
-		}),
 	)
 }
 

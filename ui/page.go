@@ -84,27 +84,6 @@ type DCRUSDTBittrex struct {
 	LastTradeRate string
 }
 
-type walletAccountSelector struct {
-	title                     string
-	walletAccount             decredmaterial.Modal
-	walletsList, accountsList layout.List
-	isWalletAccountModalOpen  bool
-	isWalletAccountInfo       bool
-	walletAccounts            *wallectAccountOption
-	sendAccountBtn            *widget.Clickable
-	receivingAccountBtn       *widget.Clickable
-	purchaseTicketAccountBtn  *widget.Clickable
-	sendOption                string
-	walletInfoButton          decredmaterial.IconButton
-
-	selectedSendAccount,
-	selectedSendWallet,
-	selectedReceiveAccount,
-	selectedReceiveWallet,
-	selectedPurchaseTicketAccount,
-	selectedPurchaseTicketWallet int
-}
-
 type pageCommon struct {
 	printer             *message.Printer
 	multiWallet         *dcrlibwallet.MultiWallet
@@ -152,8 +131,6 @@ type pageCommon struct {
 	changePage       func(string)
 	setReturnPage    func(string)
 	changeFragment   func(Page, string)
-
-	wallAcctSelector *walletAccountSelector
 }
 
 type (
@@ -286,32 +263,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 
 func (common *pageCommon) loadPages() map[string]Page {
 
-	common.wallAcctSelector = &walletAccountSelector{
-		sendAccountBtn:           new(widget.Clickable),
-		receivingAccountBtn:      new(widget.Clickable),
-		purchaseTicketAccountBtn: new(widget.Clickable),
-		walletAccount:            *common.theme.ModalFloatTitle(),
-		walletsList:              layout.List{Axis: layout.Vertical},
-		accountsList:             layout.List{Axis: layout.Vertical},
-		walletAccounts: &wallectAccountOption{
-			selectSendAccount:           make(map[int][]walletAccount),
-			selectReceiveAccount:        make(map[int][]walletAccount),
-			selectPurchaseTicketAccount: make(map[int][]walletAccount),
-		},
-		isWalletAccountModalOpen:      false,
-		selectedSendAccount:           *common.selectedAccount,
-		selectedSendWallet:            *common.selectedWallet,
-		selectedReceiveAccount:        *common.selectedAccount,
-		selectedReceiveWallet:         *common.selectedWallet,
-		selectedPurchaseTicketAccount: *common.selectedAccount,
-		selectedPurchaseTicketWallet:  *common.selectedWallet,
-	}
 	iconColor := common.theme.Color.Gray3
-
-	common.wallAcctSelector.walletInfoButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
-	common.wallAcctSelector.walletInfoButton.Color = iconColor
-	common.wallAcctSelector.walletInfoButton.Size = values.MarginPadding15
-	common.wallAcctSelector.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	common.testButton = common.theme.Button(new(widget.Clickable), "test button")
 

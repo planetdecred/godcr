@@ -154,7 +154,7 @@ func (pg *ticketPage) Layout(gtx layout.Context) layout.Dimensions {
 		return pg.vspHostModalLayout(gtx, c)
 	}
 
-	if pg.showPurchaseOptions && !c.wallAcctSelector.isWalletAccountModalOpen {
+	if pg.showPurchaseOptions {
 		return pg.purchaseModal(gtx, c)
 	}
 

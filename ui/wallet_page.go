@@ -877,7 +877,6 @@ func (pg *walletPage) handle() {
 
 		for pg.collapsibles[index].addAcctBtn.Button.Clicked() {
 			walletID := pg.walletInfo.Wallets[index].ID
-			walletIndex := index
 
 			textModal := newTextInputModal(pg.common).
 				hint("Account name").
@@ -891,13 +890,7 @@ func (pg *walletPage) handle() {
 								go func() {
 
 									pg.wallet.AddAccount(walletID, accountName, []byte(password), pg.errorReceiver, func(acct *dcrlibwallet.Account) {
-										walletAccount := walletAccount{
-											walletIndex:  walletIndex,
-											accountName:  acct.Name,
-											totalBalance: dcrutil.Amount(acct.Balance.Total).String(),
-											spendable:    dcrutil.Amount(acct.Balance.Spendable).String(),
-										}
-										common.addAccount(walletAccount)
+
 									})
 									pm.Dismiss()
 								}()

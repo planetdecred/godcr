@@ -179,14 +179,6 @@ func (pg *walletSettingsPage) bottomSectionLabel(title string) layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) resetSelectedWallet(common *pageCommon) {
-	common.wallAcctSelector.selectedSendWallet = 0
-	common.wallAcctSelector.selectedSendAccount = 0
-
-	common.wallAcctSelector.selectedReceiveWallet = 0
-	common.wallAcctSelector.selectedReceiveAccount = 0
-}
-
 func (pg *walletSettingsPage) handle() {
 	common := pg.common
 	for pg.changePass.Clicked() {
@@ -280,7 +272,6 @@ func (pg *walletSettingsPage) handle() {
 					positiveButtonStyle(common.theme.Color.Surface, common.theme.Color.Danger).
 					positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
 						pg.wal.DeleteWallet(walletID, []byte(password), pg.errorReceiver)
-						pg.resetSelectedWallet(common)
 						return true
 					}).Show()
 
