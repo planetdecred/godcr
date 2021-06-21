@@ -72,78 +72,99 @@ func ticketStatusIcon(l *load.Load, ticketStatus string) *struct {
 	return &st
 }
 
+func ticketStatusTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimensions {
+	st := ticketStatusIcon(l, t.Info.Status)
+	var title, message, message2 string
+	switch t.Info.Status {
+	case "UNMINED":
+		title = "This ticket is waiting in mempool to be included in a block."
+		message, message2 = "", ""
+	case "IMMATURE":
+		title = "This ticket will enter the ticket pool and become a live ticket after 256 blocks (~20 hrs)."
+		message, message2 = "", ""
+	case "LIVE":
+		title = "Waiting to be chosen to vote."
+		message = "The average vote time is 28 days, but can take up to 142 days."
+		message2 = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original ticket price without a reward)."
+	case "VOTED":
+		title = "Congratulations! This ticket has voted."
+		message = "The ticket price + reward will become spendable after 256 blocks (~20 hrs)."
+		message2 = ""
+	case "MISSED":
+		title = "This ticket was chosen to vote, but missed the voting window."
+		message = "Missed tickets will be revoked to return the original ticket price to you."
+		message2 = "If a ticket is not revoked automatically, use the revoke button."
+	case "EXPIRED":
+		title = "This ticket has not been chosen to vote within 40960 blocks, and thus expired. "
+		message = "Expired tickets will be revoked to return the original ticket price to you."
+		message2 = "If a ticket is not revoked automatically, use the revoke button."
+	case "REVOKED":
+		title = "This ticket has been revoked."
+		message = "The ticket price will become spendable after 256 blocks (~20 hrs)."
+		message2 = ""
+	}
+	titleLabel, messageLabel, messageLabel2 := l.Theme.Body2(title), l.Theme.Body2(message), l.Theme.Body2(message2)
+	messageLabel.Color, messageLabel2.Color = l.Theme.Color.Gray, l.Theme.Color.Gray
+
+	status := l.Theme.Body2(t.Info.Status)
+	status.Color = st.color
+	st.icon.Scale = .5
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(st.icon.Layout),
+				layout.Rigid(toolTipContent(layout.Inset{Left: values.MarginPadding4}, status.Layout)),
+			)
+		}),
+		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, titleLabel.Layout)),
+		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, messageLabel.Layout)),
+		layout.Rigid(func(gtx C) D {
+			if message2 != "" {
+				toolTipContent(layout.Inset{Top: values.MarginPadding8}, messageLabel2.Layout)
+			}
+			return layout.Dimensions{}
+		}),
+	)
+}
+
+func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, body layout.Widget) layout.Dimensions {
+	inset := layout.Inset{
+		Top:   values.MarginPadding15,
+		Right: unit.Dp(-150),
+		Left:  values.MarginPadding15,
+	}
+
+	rect := image.Rectangle{
+		Max: image.Point{
+			X: rectLayout.Size.X,
+			Y: rectLayout.Size.Y,
+		},
+	}
+
+	return tooltip.Layout(gtx, rect, inset, body)
+}
+
+func walletNameTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimensions {
+	walletNameLabel := l.Theme.Body2("Wallet name")
+	walletNameLabel.Color = l.Theme.Color.Gray
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(walletNameLabel.Layout),
+		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout)),
+	)
+}
+
 func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	return func(gtx C) D {
 		return inset.Layout(gtx, body)
 	}
 }
 
-func ticketStatusTooltip(gtx C, l *load.Load, rect image.Rectangle, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
-	inset := layout.Inset{
-		Top:   values.MarginPadding15,
-		Right: unit.Dp(-150),
-		Left:  values.MarginPadding15,
-	}
-	return tooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		st := ticketStatusIcon(l, t.Info.Status)
-		var title, message, message2 string
-		switch t.Info.Status {
-		case "UNMINED":
-			title = "This ticket is waiting in mempool to be included in a block."
-			message, message2 = "", ""
-		case "IMMATURE":
-			title = "This ticket will enter the ticket pool and become a live ticket after 256 blocks (~20 hrs)."
-			message, message2 = "", ""
-		case "LIVE":
-			title = "Waiting to be chosen to vote."
-			message = "The average vote time is 28 days, but can take up to 142 days."
-			message2 = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original ticket price without a reward)."
-		case "VOTED":
-			title = "Congratulations! This ticket has voted."
-			message = "The ticket price + reward will become spendable after 256 blocks (~20 hrs)."
-			message2 = ""
-		case "MISSED":
-			title = "This ticket was chosen to vote, but missed the voting window."
-			message = "Missed tickets will be revoked to return the original ticket price to you."
-			message2 = "If a ticket is not revoked automatically, use the revoke button."
-		case "EXPIRED":
-			title = "This ticket has not been chosen to vote within 40960 blocks, and thus expired. "
-			message = "Expired tickets will be revoked to return the original ticket price to you."
-			message2 = "If a ticket is not revoked automatically, use the revoke button."
-		case "REVOKED":
-			title = "This ticket has been revoked."
-			message = "The ticket price will become spendable after 256 blocks (~20 hrs)."
-			message2 = ""
-		}
-		titleLabel, messageLabel, messageLabel2 := l.Theme.Body2(title), l.Theme.Body2(message), l.Theme.Body2(message2)
-		messageLabel.Color, messageLabel2.Color = l.Theme.Color.Gray, l.Theme.Color.Gray
-
-		status := l.Theme.Body2(t.Info.Status)
-		status.Color = st.color
-		st.icon.Scale = .5
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(st.icon.Layout),
-					layout.Rigid(toolTipContent(layout.Inset{Left: values.MarginPadding4}, status.Layout)),
-				)
-			}),
-			layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, titleLabel.Layout)),
-			layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, messageLabel.Layout)),
-			layout.Rigid(func(gtx C) D {
-				if message2 != "" {
-					toolTipContent(layout.Inset{Top: values.MarginPadding8}, messageLabel2.Layout)
-				}
-				return layout.Dimensions{}
-			}),
-		)
-	})
-}
-
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip interface{}) layout.Dimensions {
 	var itemWidth int
-	st := ticketStatusIcon(l, t.Info.Status)
+	tp := tooltip.(tooltips)
+	st := ticketStatusIcon(c, t.Info.Status)
 	if st == nil {
 		return layout.Dimensions{}
 	}
@@ -216,7 +237,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 								return layout.Inset{
 									Top: values.MarginPadding16,
 								}.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, l, t.Amount)
+									return c.layoutBalance(gtx, t.Amount, true)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -225,13 +246,9 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 										txt := l.Theme.Label(values.MarginPadding14, t.Info.Status)
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
-										rect := image.Rectangle{
-											Max: image.Point{
-												X: txtLayout.Size.X,
-												Y: txtLayout.Size.Y,
-											},
-										}
-										ticketStatusTooltip(gtx, l, rect, t, tooltip)
+										ticketCardTooltip(gtx, txtLayout, tp.statusTooltip, func(gtx C) D {
+											return ticketStatusTooltip(gtx, c, t)
+										})
 										return txtLayout
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -239,13 +256,19 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 											Left:  values.MarginPadding4,
 											Right: values.MarginPadding4,
 										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.ImageBrightness1
+											ic := c.icons.imageBrightness1
 											ic.Color = l.Theme.Color.Gray2
-											return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
+											return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
-										return l.Theme.Label(values.MarginPadding14, t.WalletName).Layout(gtx)
+										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
+										txt.Color = l.Theme.Color.Gray
+										txtLayout := txt.Layout(gtx)
+										ticketCardTooltip(gtx, txtLayout, tp.walletNameTooltip, func(gtx C) D {
+											return walletNameTooltip(gtx, c, t)
+										})
+										return txtLayout
 									}),
 								)
 							}),
@@ -265,9 +288,9 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 												Left:  values.MarginPadding4,
 												Right: values.MarginPadding4,
 											}.Layout(gtx, func(gtx C) D {
-												ic := l.Icons.ImageBrightness1
+												ic := c.icons.imageBrightness1
 												ic.Color = l.Theme.Color.Gray2
-												return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
+												return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
@@ -290,7 +313,7 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				st := ticketStatusIcon(l, t.Info.Status)
+				st := ticketStatusIcon(c, t.Info.Status)
 				if st == nil {
 					return layout.Dimensions{}
 				}
@@ -324,7 +347,7 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 								labelDaysBehind := l.Theme.Label(values.TextSize14, t.DaysBehind)
 								labelDaysBehind.Color = l.Theme.Color.DeepBlue
 
-								return components.EndToEndRow(gtx,
+								return endToEndRow(gtx,
 									labelStatus.Layout,
 									labelDaysBehind.Layout)
 							}),
@@ -342,16 +365,16 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 											Left:  values.MarginPadding4,
 											Right: values.MarginPadding4,
 										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.ImageBrightness1
+											ic := c.icons.imageBrightness1
 											ic.Color = l.Theme.Color.Gray2
-											return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
+											return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
 										return layout.Inset{
 											Right: values.MarginPadding4,
 										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.TicketIconInactive
+											ic := c.icons.ticketIconInactive
 											ic.Scale = 0.5
 											return ic.Layout(gtx)
 										})

@@ -26,17 +26,16 @@ type ListPage struct {
 	tickets      **wallet.Tickets
 	ticketsList  layout.List
 	filterSorter int
+	isGridView         bool
 
 	toggleViewType     *widget.Clickable
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
-	isGridView         bool
-	statusTooltips     []*decredmaterial.Tooltip
-
-	wallets []*dcrlibwallet.Wallet
-
 	backButton decredmaterial.IconButton
+
+	ticketTooltips     []tooltips
+	wallets []*dcrlibwallet.Wallet
 }
 
 func newListPage(l *load.Load) *ListPage {
@@ -72,7 +71,6 @@ func (pg *ListPage) OnResume() {
 
 func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
-	pg.initTicketTooltips()
 
 	body := func(gtx C) D {
 		page := components.SubPage{
@@ -85,6 +83,13 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 			Body: func(gtx C) D {
 				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 				tickets := (*pg.tickets).Confirmed[walletID]
+				for range tickets {
+					pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
+						statusTooltip:     c.theme.Tooltip(),
+						walletNameTooltip: c.theme.Tooltip(),
+						dateTooltip:       c.theme.Tooltip(),
+					})
+				}
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
@@ -303,21 +308,12 @@ func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []wallet.Ti
 						Right:  values.MarginPadding4,
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, pg.Load, &tickets[index], pg.statusTooltips[index])
+						return ticketCard(gtx, c, &tickets[index], pg.ticketTooltips[index])
 					})
 				})
 			})
 		})
 	})
-}
-
-func (pg *ListPage) initTicketTooltips() {
-	walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
-	tickets := (*pg.tickets).Confirmed[walletID]
-
-	for range tickets {
-		pg.statusTooltips = append(pg.statusTooltips, pg.Theme.Tooltip())
-	}
 }
 
 func (pg *ListPage) Handle() {
