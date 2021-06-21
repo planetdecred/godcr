@@ -144,13 +144,13 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 	return tooltip.Layout(gtx, rect, inset, body)
 }
 
-func walletNameTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimensions {
-	walletNameLabel := l.Theme.Body2("Wallet name")
+func walletNameAndDateTooltip(gtx C, l *load.Load, title string, body layout.Widget) layout.Dimensions {
+	walletNameLabel := l.Theme.Body2(title)
 	walletNameLabel.Color = l.Theme.Color.Gray
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(walletNameLabel.Layout),
-		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout)),
+		layout.Rigid(body),
 	)
 }
 
@@ -266,7 +266,8 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip inte
 										txt.Color = l.Theme.Color.Gray
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tp.walletNameTooltip, func(gtx C) D {
-											return walletNameTooltip(gtx, c, t)
+											return walletNameAndDateTooltip(gtx, l, "Wallet name",
+												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout))
 										})
 										return txtLayout
 									}),
@@ -281,7 +282,18 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip inte
 									txt.Color = l.Theme.Color.Gray2
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return txt.Layout(gtx)
+											txtLayout := txt.Layout(gtx)
+											ticketCardTooltip(gtx, txtLayout, tp.dateTooltip, func(gtx C) D {
+												dt := strings.Split(t.DateTime, " ")
+												s1 := []string{dt[0], dt[1], dt[2]}
+												date := strings.Join(s1, " ")
+												s2 := []string{dt[3], dt[4]}
+												time := strings.Join(s2, " ")
+												dateTime := fmt.Sprintf("%s at %s", date, time)
+												return walletNameAndDateTooltip(gtx, l, "Purchased",
+													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(dateTime).Layout))
+											})
+											return txtLayout
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{

@@ -88,6 +88,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 						statusTooltip:     c.theme.Tooltip(),
 						walletNameTooltip: c.theme.Tooltip(),
 						dateTooltip:       c.theme.Tooltip(),
+						daysBehindTooltip: c.theme.Tooltip(),
 					})
 				}
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
