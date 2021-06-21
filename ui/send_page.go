@@ -518,7 +518,17 @@ func (pg *sendPage) validate(c *pageCommon) bool {
 			}
 		}
 
-		if !pg.validateDestinationAddress(c) || !isAmountValid || pg.calculateErrorText != "" {
+		if !pg.validateDestinationAddress(c) {
+			pg.nextButton.Background = pg.theme.Color.Hint
+			return false
+		}
+
+		if !isAmountValid {
+			pg.nextButton.Background = pg.theme.Color.Hint
+			return false
+		}
+
+		if pg.calculateErrorText != "" {
 			pg.nextButton.Background = pg.theme.Color.Hint
 			return false
 		}
@@ -529,6 +539,13 @@ func (pg *sendPage) validate(c *pageCommon) bool {
 }
 
 func (pg *sendPage) validateDestinationAddress(c *pageCommon) bool {
+	if !pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
+		if pg.destinationAddressEditor.Editor.Focused() {
+			pg.destinationAddressEditor.SetError("Input address")
+			return false
+		}
+	}
+
 	if pg.inputsNotEmpty(pg.destinationAddressEditor.Editor) {
 		isValid, _ := pg.wallet.IsAddressValid(pg.destinationAddressEditor.Editor.Text())
 		if !isValid {
