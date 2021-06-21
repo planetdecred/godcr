@@ -45,8 +45,6 @@ func newListPage(l *load.Load) *ListPage {
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,
-
-		wallets: l.WL.MultiWallet.AllWallets(),
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
 
@@ -66,11 +64,13 @@ func newListPage(l *load.Load) *ListPage {
 }
 
 func (pg *ListPage) OnResume() {
-
+	pg.wallets = pg.WL.SortedWalletList()
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 }
 
 func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+	walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
+	tickets := (*pg.tickets).Confirmed[walletID]
 
 	body := func(gtx C) D {
 		page := components.SubPage{
@@ -81,8 +81,6 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.ChangeFragment(NewTicketPage(pg.Load), PageID)
 			},
 			Body: func(gtx C) D {
-				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
-				tickets := (*pg.tickets).Confirmed[walletID]
 				for range tickets {
 					pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
 						statusTooltip:     pg.Load.Theme.Tooltip(),
