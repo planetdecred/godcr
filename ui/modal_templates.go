@@ -23,14 +23,12 @@ const (
 func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
-			text := `<div style="text-color: gray">
+			text := `<span style="text-color: gray">
 						After you or your counterparty has genrated a signature, you can use this form to verify the
 				 		validity of the  signature.
-				 	</div>
-					<p style="text-color: gray">
-						Once you have entered the address, the message and the corresponding signature, you will see VALID 
+				 		<br /> Once you have entered the address, the message and the corresponding signature, you will see VALID 
 						if the signature appropriately matches the address and message, otherwise INVALID
-					</p>`
+					</span>`
 
 			return renderers.RenderHTML(text, th).Layout(gtx)
 		},
@@ -87,10 +85,10 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := `<div style="text-color: gray">
+	text := `<span style="text-color: gray">
 				Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.
-			</div>
-			<h4>This action cannot be undone.</h4>`
+				<b>This action cannot be undone.</b>
+			</span>`
 
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
@@ -98,9 +96,7 @@ func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func transactionDetailsInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := `<span style="text-color: gray">Tap on</span>
-			<span style="text-color: primary">blue text</span>
-			<span style="text-color: gray">to copy the item</span>`
+	text := `<span style="text-color: gray">Tap on <span style="text-color: primary">blue text</span> to copy the item</span>`
 
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,

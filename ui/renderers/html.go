@@ -1,86 +1,144 @@
 package renderers
 
 import (
+	"bytes"
 	"fmt"
-	"image"
-	"image/color"
-	"os/exec"
-	"runtime"
 	"strings"
 
 	"gioui.org/layout"
-	"gioui.org/text"
-	"gioui.org/widget"
 
+	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/parser"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-type tagItem struct {
-	spaceBelow int
-	label      decredmaterial.Label
-	linkHref   string
-}
-
 type HTMLRenderer struct {
-	theme *decredmaterial.Theme
-	doc   *goquery.Document
-	items []tagItem
-	links map[string]*widget.Clickable
+	doc       ast.Node
+	container *layout.List
+	*Renderer
 }
 
-const (
-	pSpacing   = 20
-	divSpacing = 5
+var (
+	blockEls = []string{"div", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li"}
 )
 
-func RenderHTML(text string, theme *decredmaterial.Theme) *HTMLRenderer {
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(text))
+func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLRenderer {
+	converter := md.NewConverter("", true, nil)
+
+	r := &HTMLRenderer{
+		container: &layout.List{Axis: layout.Vertical},
+		Renderer:  newRenderer(theme),
+	}
+
+	docStr := r.prepareHTML(html)
+
+	docStr, err := converter.ConvertString(docStr)
+	if err != nil {
+		fmt.Println(err)
+		return r
+	}
+
+	extensions := parser.NoIntraEmphasis        // Ignore emphasis markers inside words
+	extensions |= parser.Tables                 // Parse tables
+	extensions |= parser.FencedCode             // Parse fenced code blocks
+	extensions |= parser.Autolink               // Detect embedded URLs that are not explicitly marked
+	extensions |= parser.Strikethrough          // Strikethrough text using ~~test~~
+	extensions |= parser.SpaceHeadings          // Be strict about prefix heading rules
+	extensions |= parser.HeadingIDs             // specify heading IDs  with {#id}
+	extensions |= parser.BackslashLineBreak     // Translate trailing backslashes into line breaks
+	extensions |= parser.DefinitionLists        // Parse definition lists
+	extensions |= parser.LaxHTMLBlocks          // more in HTMLBlock, less in HTMLSpan
+	extensions |= parser.NoEmptyLineBeforeBlock // no need for new line before a list
+	extensions |= parser.Attributes
+
+	p := parser.NewWithExtensions(extensions)
+
+	r.doc = p.Parse([]byte(docStr))
+	r.parse()
+
+	return r
+}
+
+func (r *HTMLRenderer) prepareHTML(html string) string {
+	//html = strings.Replace(html, "<br/>", " \n\n ", -1)
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		panic(err)
 	}
 
-	renderer := &HTMLRenderer{
-		doc:   doc,
-		theme: theme,
-	}
-	renderer.render()
-	return renderer
-}
-
-func (r *HTMLRenderer) render() {
-	r.doc.Find("*").Each(func(_ int, node *goquery.Selection) {
+	doc.Find("*").Each(func(_ int, node *goquery.Selection) {
 		nodeName := goquery.NodeName(node)
 		switch nodeName {
-		case "html", "head":
-		case "a":
-			r.renderLink(node)
-		case "p":
-			r.renderParagraph(node)
-		case "strong":
-			r.renderStrong(node)
-		case "h1", "h2", "h3":
-			r.renderHeading(node, nodeName)
-		case "span":
-			r.renderSpan(node)
-		case "div":
-			r.renderDiv(node)
-		case "body":
-			if node.Text() != "" && node.Children().Length() == 0 {
-				r.renderSpan(node)
-			}
+		case "i":
+			r.prepareItalic(node)
+		case "em":
+			r.prepareItalic(node)
+		case "b":
+			r.prepareBold(node)
+		case "font":
+			r.prepareFont(node)
+		case "br":
+			r.prepareBreak(node)
 		}
 	})
+
+	doc.Find("body > *").Each(func(_ int, node *goquery.Selection) {
+		styleMap := r.getStyleMap(node)
+		newStyleMap := r.setNodeStyle(node, styleMap)
+		r.traverse(node, newStyleMap)
+	})
+
+	return doc.Text()
 }
 
-func (r *HTMLRenderer) getEmptyLine() layout.Widget {
-	return func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		dims := r.theme.Body2("").Layout(gtx)
-		dims.Size.Y -= 40
-
-		return dims
+func (r *HTMLRenderer) prepareItalic(node *goquery.Selection) {
+	style, ok := node.Attr("style")
+	if ok {
+		style += "; font-style: italic"
+	} else {
+		style = "font-style: italic"
 	}
+
+	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
+}
+
+func (r *HTMLRenderer) prepareBold(node *goquery.Selection) {
+	style, ok := node.Attr("style")
+	if ok {
+		style += "; font-weight: bold"
+	} else {
+		style = "font-weight: bold"
+	}
+
+	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
+}
+
+func (r *HTMLRenderer) prepareFont(node *goquery.Selection) {
+	style := ""
+	if color, ok := node.Attr("color"); ok {
+		style += "text-color: " + color + "; "
+	}
+
+	if weight, ok := node.Attr("weight"); ok {
+		style += "font-weight: " + weight + "; "
+	}
+
+	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
+}
+
+func (r *HTMLRenderer) prepareBreak(node *goquery.Selection) {
+	node.ReplaceWithHtml(" \n\n ")
+}
+
+func (r *HTMLRenderer) mapToString(m map[string]string) string {
+	b := new(bytes.Buffer)
+	for key, value := range m {
+		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
+	}
+	return b.String()
 }
 
 func (r *HTMLRenderer) getStyleMap(node *goquery.Selection) map[string]string {
@@ -90,13 +148,9 @@ func (r *HTMLRenderer) getStyleMap(node *goquery.Selection) map[string]string {
 
 		for _, v := range spl {
 			items := strings.Split(v, ":")
-			styleMap[strings.Trim(items[0], " ")] = strings.Trim(items[1], " ")
-		}
-
-		if labelType, ok := node.Attr("label-type"); ok {
-			styleMap["label-type"] = labelType
-		} else {
-			styleMap["label-type"] = "body1"
+			if len(items) == 2 {
+				styleMap[strings.Trim(items[0], " ")] = strings.Trim(items[1], " ")
+			}
 		}
 
 		return styleMap
@@ -105,215 +159,64 @@ func (r *HTMLRenderer) getStyleMap(node *goquery.Selection) map[string]string {
 	return map[string]string{}
 }
 
-func (r *HTMLRenderer) renderParagraph(node *goquery.Selection) {
-	r.addTag(node, pSpacing)
-}
-
-func (r *HTMLRenderer) renderHeading(node *goquery.Selection, nodeName string) {
-	node.SetAttr("label-type", nodeName)
-	r.addTag(node, pSpacing)
-}
-
-func (r *HTMLRenderer) renderStrong(node *goquery.Selection) {
-	r.addStyle(node, "font-weight: bold")
-	r.addTag(node, 0)
-}
-
-func (r *HTMLRenderer) renderSpan(node *goquery.Selection) {
-	r.addTag(node, 0)
-}
-
-func (r *HTMLRenderer) renderDiv(node *goquery.Selection) {
-	r.addTag(node, divSpacing)
-}
-
-func (r *HTMLRenderer) renderLink(node *goquery.Selection) {
-	r.addStyle(node, "text-color: #09c")
-	r.addTag(node, 0)
-
-	if r.links == nil {
-		r.links = make(map[string]*widget.Clickable)
+func (r *HTMLRenderer) styleMapToString(m map[string]string) string {
+	str := ""
+	for k, v := range m {
+		str += "#" + k + "--" + v
 	}
 
-	if href, ok := node.Attr("href"); ok {
-		if _, ok := r.links[href]; !ok {
-			r.links[href] = new(widget.Clickable)
-		}
-		r.items[len(r.items)-1].linkHref = href
-	}
+	return str
 }
 
-func (r *HTMLRenderer) getLabel(lblType string) decredmaterial.Label {
-	labelMap := map[string]func(string) decredmaterial.Label{
-		"body1":   r.theme.Body1,
-		"body2":   r.theme.Body2,
-		"caption": r.theme.Caption,
-		"h1":      r.theme.H1,
-		"h2":      r.theme.H2,
-		"h3":      r.theme.H3,
-		"h4":      r.theme.H4,
-		"h5":      r.theme.H5,
-		"h6":      r.theme.H6,
-	}
-
-	if label, ok := labelMap[lblType]; ok {
-		return label("")
-	}
-
-	return labelMap["body1"]("")
-}
-
-func (r *HTMLRenderer) addStyle(node *goquery.Selection, style string) {
-	var newStyle string
-
-	oldStyle, _ := node.Attr("style")
-	if oldStyle == "" {
-		newStyle = style
-	} else {
-		newStyle = strings.Trim(oldStyle, ";") + ";" + style
-	}
-	node.SetAttr("style", newStyle)
-}
-
-func (r *HTMLRenderer) getLabelWeight(weight string) text.Weight {
-	switch weight {
-	case "bold":
-		return text.Bold
-	}
-
-	return text.Normal
-}
-
-func (r *HTMLRenderer) getColorFromMap(col string) color.NRGBA {
-	colorMap := map[string]color.NRGBA{
-		"primary":       r.theme.Color.Primary,
-		"secondary":     r.theme.Color.Secondary,
-		"text":          r.theme.Color.Text,
-		"hint":          r.theme.Color.Hint,
-		"overlay":       r.theme.Color.Overlay,
-		"inv-text":      r.theme.Color.InvText,
-		"success":       r.theme.Color.Success,
-		"success2":      r.theme.Color.Success2,
-		"danger":        r.theme.Color.Danger,
-		"background":    r.theme.Color.Background,
-		"surface":       r.theme.Color.Surface,
-		"gray":          r.theme.Color.Gray,
-		"black":         r.theme.Color.Black,
-		"deep-blue":     r.theme.Color.DeepBlue,
-		"light-blue":    r.theme.Color.LightBlue,
-		"light-gray":    r.theme.Color.LightGray,
-		"inactive-gray": r.theme.Color.InactiveGray,
-		"active-gray":   r.theme.Color.ActiveGray,
-		"gray1":         r.theme.Color.Gray1,
-		"gray2":         r.theme.Color.Gray2,
-		"gray3":         r.theme.Color.Gray3,
-		"gray4":         r.theme.Color.Gray4,
-		"gray5":         r.theme.Color.Gray5,
-		"gray6":         r.theme.Color.Gray6,
-		"orange":        r.theme.Color.Orange,
-		"orange2":       r.theme.Color.Orange2,
-	}
-
-	if color, ok := colorMap[col]; ok {
-		return color
-	}
-
-	return colorMap["text"]
-}
-
-func (r *HTMLRenderer) getLabelAndStyle(style map[string]string) decredmaterial.Label {
-	label := r.getLabel(style["label-type"])
-	label.Font.Weight = r.getLabelWeight(style["font-weight"])
-
-	colStr := style["text-color"]
-	if col, ok := parseColorCode(colStr); ok {
-		label.Color = col
-	} else {
-		label.Color = r.getColorFromMap(colStr)
-	}
-
-	return label
-}
-
-func (r *HTMLRenderer) getWordsAndLabel(node *goquery.Selection) ([]string, decredmaterial.Label) {
-	style := r.getStyleMap(node)
-	content := removeLineBreak(strings.TrimSpace(node.Text()))
-	words := strings.Split(content, " ")
-	label := r.getLabelAndStyle(style)
-
-	return words, label
-}
-
-func (r *HTMLRenderer) addTag(node *goquery.Selection, spaceBelow int) {
-	words, label := r.getWordsAndLabel(node)
-	for i := range words {
-		label.Text += words[i] + " "
-	}
-
-	item := tagItem{
-		spaceBelow: spaceBelow,
-		label:      label,
-	}
-	r.items = append(r.items, item)
-}
-
-func (r *HTMLRenderer) handle() {
-	for href, clickable := range r.links {
-		for clickable.Clicked() {
-			go goToURL(href)
-		}
-	}
-}
-
-func (r *HTMLRenderer) Layout(gtx C) D {
-	r.handle()
-
-	max := gtx.Constraints.Max.X
-	return layout.W.Layout(gtx, func(gtx C) D {
-		return decredmaterial.GridWrap{
-			Axis:      layout.Horizontal,
-			Alignment: layout.Middle,
-		}.Layout(gtx, len(r.items), func(gtx C, i int) D {
-			gtx.Constraints.Min.X = max
-			gtx.Constraints.Max.X = max
-			if r.items[i].linkHref != "" {
-				return decredmaterial.Clickable(gtx, r.links[r.items[i].linkHref], func(gtx C) D {
-					return r.items[i].label.Layout(gtx)
-				})
-			}
-
-			if r.items[i].spaceBelow == 0 {
-				return r.items[i].label.Layout(gtx)
-			}
-
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return D{
-						Size: image.Point{
-							Y: r.items[i].spaceBelow,
-						},
-					}
-				}),
-				layout.Rigid(r.items[i].label.Layout),
-			)
-		})
+func (r *HTMLRenderer) traverse(node *goquery.Selection, parentStyle map[string]string) {
+	node.Children().Each(func(_ int, s *goquery.Selection) {
+		newStyle := r.setNodeStyle(s, parentStyle)
+		r.traverse(s, newStyle)
 	})
 }
 
-func goToURL(url string) {
-	var err error
+func (r *HTMLRenderer) isBlockElement(element string) bool {
+	for i := range blockEls {
+		if element == blockEls[i] {
+			return true
+		}
+	}
 
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
+	return false
+}
+
+func (r *HTMLRenderer) setNodeStyle(node *goquery.Selection, parentStyle map[string]string) map[string]string {
+	styleMap := r.getStyleMap(node)
+	for key, val := range parentStyle {
+		if _, ok := styleMap[key]; !ok {
+			styleMap[key] = val
+		}
 	}
-	if err != nil {
-		fmt.Println(err.Error())
+
+	styleTag := "{#" + r.styleMapToString(styleMap) + " "
+	endTag := " {/#} "
+	node = node.PrependHtml(styleTag)
+	if r.isBlockElement(goquery.NodeName(node)) {
+		endTag += " \n "
 	}
+	node.AppendHtml(endTag)
+
+	return styleMap
+}
+
+func (r *HTMLRenderer) parse() []byte {
+	var buf bytes.Buffer
+	ast.WalkFunc(r.doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		return r.RenderNode(&buf, node, entering)
+	})
+
+	return buf.Bytes()
+}
+
+func (r *HTMLRenderer) Layout(gtx C) D {
+	w, _ := r.Renderer.Layout()
+
+	return r.container.Layout(gtx, len(w), func(gtx C, i int) D {
+		return w[i](gtx)
+	})
 }

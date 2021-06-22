@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	gioui.org v0.0.0-20210418151603-3b69b5ed0512
+	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d
 	github.com/decred/dcrd/chaincfg v1.5.2 // indirect
