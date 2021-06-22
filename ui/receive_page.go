@@ -329,7 +329,6 @@ func (pg *receivePage) handle() {
 
 	if common.subPageBackButton.Button.Clicked() {
 		common.changePage(*common.returnPage)
-		common.subPageBackButton.Icon = common.icons.navigationArrowBack
 	}
 
 	if pg.copy.Button.Clicked() {
@@ -347,4 +346,6 @@ func (pg *receivePage) handle() {
 	}
 }
 
-func (pg *receivePage) onClose() {}
+func (pg *receivePage) onClose() {
+	pg.common.subPageBackButton.Icon = pg.common.icons.navigationArrowBack
+}
