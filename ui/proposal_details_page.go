@@ -27,48 +27,38 @@ type proposalItemWidgets struct {
 }
 
 type proposalDetails struct {
-	theme               *decredmaterial.Theme
-	loadingDescription  bool
-	common              *pageCommon
-	descriptionCard     decredmaterial.Card
-	proposalItems       map[string]proposalItemWidgets
-	descriptionList     *layout.List
-	selectedProposal    **dcrlibwallet.Proposal
-	redirectIcon        *widget.Image
-	commentsBundleBtn   *widget.Clickable
-	proposalBundleBtn   *widget.Clickable
-	viewInGithubBtn     *widget.Clickable
-	viewInPoliteiaBtn   *widget.Clickable
-	viewInPoliteiaLabel decredmaterial.Label
-	voteBar             decredmaterial.VoteBar
-	rejectedIcon        *widget.Icon
-	downloadIcon        *widget.Image
-	timerIcon           *widget.Image
-	successIcon         *widget.Icon
-	vote                decredmaterial.Button
-	backButton          decredmaterial.IconButton
+	theme              *decredmaterial.Theme
+	loadingDescription bool
+	common             *pageCommon
+	descriptionCard    decredmaterial.Card
+	proposalItems      map[string]proposalItemWidgets
+	descriptionList    *layout.List
+	selectedProposal   **dcrlibwallet.Proposal
+	redirectIcon       *widget.Image
+	voteBar            decredmaterial.VoteBar
+	rejectedIcon       *widget.Icon
+	downloadIcon       *widget.Image
+	timerIcon          *widget.Image
+	successIcon        *widget.Icon
+	vote               decredmaterial.Button
+	backButton         decredmaterial.IconButton
 }
 
 func ProposalDetailsPage(common *pageCommon) Page {
 	pg := &proposalDetails{
-		theme:               common.theme,
-		loadingDescription:  false,
-		common:              common,
-		descriptionCard:     common.theme.Card(),
-		descriptionList:     &layout.List{Axis: layout.Vertical},
-		selectedProposal:    common.selectedProposal,
-		commentsBundleBtn:   new(widget.Clickable),
-		proposalBundleBtn:   new(widget.Clickable),
-		viewInGithubBtn:     new(widget.Clickable),
-		viewInPoliteiaBtn:   new(widget.Clickable),
-		redirectIcon:        common.icons.redirectIcon,
-		downloadIcon:        common.icons.downloadIcon,
-		viewInPoliteiaLabel: common.theme.Body2("View on Politeia"),
-		voteBar:             common.theme.VoteBar(common.icons.actionInfo, common.icons.imageBrightness1),
-		proposalItems:       make(map[string]proposalItemWidgets),
-		rejectedIcon:        common.icons.navigationCancel,
-		successIcon:         common.icons.actionCheckCircle,
-		timerIcon:           common.icons.timerIcon,
+		theme:              common.theme,
+		loadingDescription: false,
+		common:             common,
+		descriptionCard:    common.theme.Card(),
+		descriptionList:    &layout.List{Axis: layout.Vertical},
+		selectedProposal:   common.selectedProposal,
+		redirectIcon:       common.icons.redirectIcon,
+		downloadIcon:       common.icons.downloadIcon,
+		voteBar:            common.theme.VoteBar(common.icons.actionInfo, common.icons.imageBrightness1),
+		proposalItems:      make(map[string]proposalItemWidgets),
+		rejectedIcon:       common.icons.navigationCancel,
+		successIcon:        common.icons.actionCheckCircle,
+		timerIcon:          common.icons.timerIcon,
 	}
 
 	pg.downloadIcon.Scale = 1
@@ -101,21 +91,6 @@ func (pg *proposalDetails) handle() {
 			}
 		}
 	}
-
-	for pg.viewInPoliteiaBtn.Clicked() {
-		proposal := *pg.selectedProposal
-		goToURL("https://proposals.decred.org/proposals/" + proposal.Token)
-	}
-
-	for pg.viewInGithubBtn.Clicked() {
-		proposal := *pg.selectedProposal
-		goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
-	}
-
-	if pg.vote.Button.Clicked() {
-		newvoteModal(pg.common).Show()
-	}
-
 }
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
@@ -351,11 +326,6 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 		w = append(w, loading)
 	}
 
-	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
-	w = append(w, pg.layoutRedirect("View on GitHub", pg.redirectIcon, pg.viewInGithubBtn))
-	w = append(w, pg.layoutRedirect("Download Proposal Bundle", pg.downloadIcon, pg.proposalBundleBtn))
-	w = append(w, pg.layoutRedirect("Download Comments Bundle", pg.downloadIcon, pg.commentsBundleBtn))
-
 	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
@@ -449,8 +419,6 @@ func (pg *proposalDetails) Layout(gtx C) D {
 					layout.Rigid(pg.layoutDescription),
 				)
 			},
-			extraItem: pg.viewInPoliteiaBtn,
-			extraText: "View on Politeia",
 			extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					pg.redirectIcon.Scale = 1
