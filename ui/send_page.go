@@ -1052,4 +1052,6 @@ func (pg *sendPage) handle() {
 	}
 }
 
-func (pg *sendPage) onClose() {}
+func (pg *sendPage) onClose() {
+	pg.common.subPageBackButton.Icon = pg.common.icons.navigationArrowBack
+}
