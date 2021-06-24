@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/planetdecred/godcr/ui/modal"
 	"os"
 
 	"gioui.org/layout"
@@ -114,9 +115,9 @@ func (sp *startPage) proceedToMainPage() {
 
 func (sp *startPage) handle() {
 	for sp.createButton.Button.Clicked() {
-		newCreatePasswordModal(sp.pageCommon).
+		modal.NewCreatePasswordModal(sp.pageCommon).
 			title("Create new wallet").
-			passwordCreated(func(_, password string, m *createPasswordModal) bool {
+			passwordCreated(func(_, password string, m *modal.createPasswordModal) bool {
 				go func() {
 					_, err := sp.multiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {

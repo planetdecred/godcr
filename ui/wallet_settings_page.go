@@ -3,6 +3,7 @@ package ui
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"github.com/planetdecred/godcr/ui/modal"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -194,12 +195,12 @@ func (pg *walletSettingsPage) handle() {
 					pm.Dismiss()
 
 					// change password
-					newCreatePasswordModal(common).
+					modal.NewCreatePasswordModal(common).
 						title(values.String(values.StrChangeSpendingPass)).
 						enableName(false).
 						passwordHint("New spending password").
 						confirmPasswordHint("Confirm new spending password").
-						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
+						passwordCreated(func(walletName, newPassword string, m *modal.createPasswordModal) bool {
 							go func() {
 								err := pg.common.multiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
 									[]byte(newPassword), dcrlibwallet.PassphraseTypePass)

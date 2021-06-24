@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/planetdecred/godcr/ui/modal"
 	"image/color"
 
 	"gioui.org/gesture"
@@ -273,10 +274,10 @@ func (pg *walletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 }
 
 func (pg *walletPage) showAddWalletModal(common *pageCommon) {
-	newCreatePasswordModal(common).
+	modal.NewCreatePasswordModal(common).
 		title("Create new wallet").
 		enableName(true).
-		passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
+		passwordCreated(func(walletName, password string, m *modal.createPasswordModal) bool {
 			go func() {
 				_, err := pg.multiWallet.CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
 				if err != nil {
@@ -877,7 +878,6 @@ func (pg *walletPage) handle() {
 				pg.openPopupIndex = -1
 			}
 		}
-
 	}
 
 	for index := range pg.addWalletMenu {

@@ -44,7 +44,7 @@ func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	return ic
 }
 
-func editorsNotEmpty(editors ...*widget.Editor) bool {
+func EditorsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {
 			return false
@@ -53,7 +53,7 @@ func editorsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func generateRandomNumber() int {
+func GenerateRandomNumber() int {
 	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 }
 
@@ -151,7 +151,7 @@ func goToURL(url string) {
 	}
 }
 
-func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
+func ComputePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
 	pb.Progress = float32(strength * 100)
@@ -211,7 +211,7 @@ func ticketStatusIcon(c *pageCommon, ticketStatus string) *struct {
 	return &st
 }
 
-func handleSubmitEvent(editors ...*widget.Editor) bool {
+func HandleSubmitEvent(editors ...*widget.Editor) bool {
 	var submit bool
 	for _, editor := range editors {
 		for _, e := range editor.Events() {

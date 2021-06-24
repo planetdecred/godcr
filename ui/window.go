@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	modals2 "github.com/planetdecred/godcr/ui/modal"
 	"image"
 	"sync"
 	"time"
@@ -42,7 +43,7 @@ type Window struct {
 	common *pageCommon
 
 	modalMutex sync.Mutex
-	modals     []Modal
+	modals     []modals2.Modal
 
 	currentPage   Page
 	pageBackStack []Page
@@ -155,14 +156,14 @@ func (win *Window) refreshWindow() {
 	win.invalidate <- struct{}{}
 }
 
-func (win *Window) showModal(modal Modal) {
+func (win *Window) showModal(modal modals2.Modal) {
 	modal.OnResume() // setup display data
 	win.modalMutex.Lock()
 	win.modals = append(win.modals, modal)
 	win.modalMutex.Unlock()
 }
 
-func (win *Window) dismissModal(modal Modal) {
+func (win *Window) dismissModal(modal modals2.Modal) {
 	win.modalMutex.Lock()
 	defer win.modalMutex.Unlock()
 	for i, m := range win.modals {
