@@ -275,10 +275,8 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 			return false
 		}
 
-		exist, err := pg.wallet.HaveAddress(pg.walletID, address)
-		if err != nil {
-			return false
-		}
+		exist, _ := pg.wallet.HaveAddress(address)
+
 		if !exist {
 			pg.addressEditor.SetError("Address not owned by this wallet")
 			return false
