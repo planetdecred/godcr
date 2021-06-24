@@ -60,10 +60,11 @@ func (scm *sendConfirmModal) handle() {
 }
 
 func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
-	receiveWallet := scm.info.Wallets[scm.wallAcctSelector.selectedReceiveWallet]
-	receiveAcct := receiveWallet.Accounts[scm.wallAcctSelector.selectedReceiveAccount]
-	sendWallet := scm.info.Wallets[scm.wallAcctSelector.selectedSendWallet]
-	sendAcct := sendWallet.Accounts[scm.wallAcctSelector.selectedSendAccount]
+	receiveAcct := scm.destinationAccountSelector.selectedAccount
+	receiveWallet := scm.multiWallet.WalletWithID(receiveAcct.WalletID)
+	sendAcct := scm.sourceAccountSelector.selectedAccount
+	sendWallet := scm.multiWallet.WalletWithID(sendAcct.WalletID)
+
 	w := []layout.Widget{
 		func(gtx C) D {
 			return scm.theme.H6("Confim to send").Layout(gtx)
