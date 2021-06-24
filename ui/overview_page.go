@@ -75,7 +75,7 @@ func OverviewPage(c *pageCommon) Page {
 		theme:       c.theme,
 		tab:         c.navTab,
 
-		allWallets: c.multiWallet.AllWallets(),
+		allWallets: c.sortedWalletList(),
 
 		listContainer:    &layout.List{Axis: layout.Vertical},
 		walletSyncList:   &layout.List{Axis: layout.Vertical},

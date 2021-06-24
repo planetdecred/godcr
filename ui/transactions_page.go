@@ -48,8 +48,6 @@ func TransactionsPage(common *pageCommon) Page {
 		txsList:     layout.List{Axis: layout.Vertical},
 		separator:   common.theme.Separator(),
 		theme:       common.theme,
-
-		wallets: common.multiWallet.AllWallets(),
 	}
 
 	pg.orderDropDown = createOrderDropDown(common)
@@ -75,6 +73,7 @@ func TransactionsPage(common *pageCommon) Page {
 }
 
 func (pg *transactionsPage) OnResume() {
+	pg.wallets = pg.sortedWalletList()
 	pg.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
 	pg.listenForTxNotifications()
 	pg.loadTransactions()
