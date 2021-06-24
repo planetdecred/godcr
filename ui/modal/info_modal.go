@@ -1,7 +1,8 @@
-package ui
+package modal
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -10,10 +11,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const ModalInfo = "info_modal"
+const Info = "info_modal"
 
 type infoModal struct {
-	*pageCommon
+	*ui.Common
 	randomID string
 	modal    decredmaterial.Modal
 
@@ -34,13 +35,13 @@ type infoModal struct {
 	//TODO: neutral button
 }
 
-func newInfoModal(common *pageCommon) *infoModal {
+func NewInfoModal(c *ui.Common) *infoModal {
 	in := &infoModal{
-		pageCommon:  common,
-		randomID:    fmt.Sprintf("%s-%d", ModalInfo, generateRandomNumber()),
-		modal:       *common.theme.ModalFloatTitle(),
-		btnPositve:  common.theme.Button(new(widget.Clickable), "Yes"),
-		btnNegative: common.theme.Button(new(widget.Clickable), "No"),
+		Common:  c,
+		randomID:    fmt.Sprintf("%s-%d", Info, ui.GenerateRandomNumber()),
+		modal:       *c.Theme.ModalFloatTitle(),
+		btnPositve:  c.Theme.Button(new(widget.Clickable), "Yes"),
+		btnNegative: c.Theme.Button(new(widget.Clickable), "No"),
 	}
 
 	in.btnPositve.TextSize, in.btnNegative.TextSize = values.TextSize16, values.TextSize16
@@ -49,16 +50,16 @@ func newInfoModal(common *pageCommon) *infoModal {
 	return in
 }
 
-func (in *infoModal) modalID() string {
+func (in *infoModal) ModalID() string {
 	return in.randomID
 }
 
 func (in *infoModal) Show() {
-	in.pageCommon.showModal(in)
+	in.ShowModal(in)
 }
 
 func (in *infoModal) Dismiss() {
-	in.dismissModal(in)
+	in.DismissModal(in)
 }
 
 func (in *infoModal) OnResume() {
@@ -103,18 +104,18 @@ func (in *infoModal) setupWithTemplate(template string) *infoModal {
 	switch template {
 	case TransactionDetailsInfoTemplate:
 		title = "How to copy"
-		customTemplate = transactionDetailsInfo(in.theme)
+		customTemplate = transactionDetailsInfo(in.Theme)
 	case SignMessageInfoTemplate:
-		customTemplate = signMessageInfo(in.theme)
+		customTemplate = signMessageInfo(in.Theme)
 	case VerifyMessageInfoTemplate:
-		customTemplate = verifyMessageInfo(in.theme)
+		customTemplate = verifyMessageInfo(in.Theme)
 	case PrivacyInfoTemplate:
 		title = "How to use the mixer?"
-		customTemplate = privacyInfo(in.theme)
+		customTemplate = privacyInfo(in.Theme)
 	case SecurityToolsInfoTemplate:
 		subtitle = "Various tools that help in different aspects of crypto currency security will be located here."
 	case SetupMixerInfoTemplate:
-		customTemplate = setupMixerInfo(in.theme)
+		customTemplate = setupMixerInfo(in.Theme)
 	}
 
 	in.dialogTitle = title
@@ -126,33 +127,33 @@ func (in *infoModal) setupWithTemplate(template string) *infoModal {
 func (in *infoModal) handle() {
 
 	for in.btnPositve.Button.Clicked() {
-		in.dismissModal(in)
+		in.DismissModal(in)
 		in.positiveButtonClicked()
 	}
 
 	for in.btnNegative.Button.Clicked() {
-		in.dismissModal(in)
+		in.DismissModal(in)
 		in.negativeButtonClicked()
 	}
 }
 
-func (in *infoModal) Layout(gtx layout.Context) D {
-	icon := func(gtx C) D {
+func (in *infoModal) Layout(gtx layout.Context) ui.D {
+	icon := func(gtx ui.C) ui.D {
 		if in.dialogIcon == nil {
 			return layout.Dimensions{}
 		}
 
-		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				in.dialogIcon.Color = in.theme.Color.DeepBlue
+		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx ui.C) ui.D {
+			return layout.Center.Layout(gtx, func(gtx ui.C) ui.D {
+				in.dialogIcon.Color = in.Theme.Color.DeepBlue
 				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
 			})
 		})
 	}
 
-	subtitle := func(gtx C) D {
-		text := in.theme.Body1(in.subtitle)
-		text.Color = in.theme.Color.Gray
+	subtitle := func(gtx ui.C) ui.D {
+		text := in.Theme.Body1(in.subtitle)
+		text.Color = in.Theme.Color.Gray
 		return text.Layout(gtx)
 	}
 
@@ -183,34 +184,34 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 }
 
 func (in *infoModal) titleLayout() layout.Widget {
-	return func(gtx C) D {
-		t := in.theme.H6(in.dialogTitle)
+	return func(gtx ui.C) ui.D {
+		t := in.Theme.H6(in.dialogTitle)
 		t.Font.Weight = text.Bold
 		return t.Layout(gtx)
 	}
 }
 
 func (in *infoModal) actionButtonsLayout() layout.Widget {
-	return func(gtx C) D {
-		return layout.E.Layout(gtx, func(gtx C) D {
+	return func(gtx ui.C) ui.D {
+		return layout.E.Layout(gtx, func(gtx ui.C) ui.D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
+				layout.Rigid(func(gtx ui.C) ui.D {
 					if in.negativeButtonText == "" {
 						return layout.Dimensions{}
 					}
 
 					in.btnNegative.Text = in.negativeButtonText
-					in.btnNegative.Background = in.theme.Color.Surface
-					in.btnNegative.Color = in.theme.Color.Primary
+					in.btnNegative.Background = in.Theme.Color.Surface
+					in.btnNegative.Color = in.Theme.Color.Primary
 					return in.btnNegative.Layout(gtx)
 				}),
-				layout.Rigid(func(gtx C) D {
+				layout.Rigid(func(gtx ui.C) ui.D {
 					if in.positiveButtonText == "" {
 						return layout.Dimensions{}
 					}
 
 					in.btnPositve.Text = in.positiveButtonText
-					in.btnPositve.Background, in.btnPositve.Color = in.theme.Color.Surface, in.theme.Color.Primary
+					in.btnPositve.Background, in.btnPositve.Color = in.Theme.Color.Surface, in.Theme.Color.Primary
 					return in.btnPositve.Layout(gtx)
 				}),
 			)

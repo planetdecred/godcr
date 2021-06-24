@@ -1,14 +1,15 @@
-package ui
+package modal
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const ModalTextInput = "text_input_modal"
+const TextInput = "text_input_modal"
 
 type textInputModal struct {
 	*infoModal
@@ -19,25 +20,25 @@ type textInputModal struct {
 	callback  func(string, *textInputModal) bool
 }
 
-func newTextInputModal(common *pageCommon) *textInputModal {
+func NewTextInputModal(common *ui.Common) *textInputModal {
 	tm := &textInputModal{
-		infoModal: newInfoModal(common),
+		infoModal: NewInfoModal(common),
 	}
 
-	tm.randomID = fmt.Sprintf("%s-%d", ModalTextInput, generateRandomNumber())
+	tm.randomID = fmt.Sprintf("%s-%d", TextInput, ui.GenerateRandomNumber())
 
-	tm.textInput = common.theme.Editor(new(widget.Editor), "Hint")
+	tm.textInput = common.Theme.Editor(new(widget.Editor), "Hint")
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
 
 	return tm
 }
 
 func (tm *textInputModal) Show() {
-	tm.pageCommon.showModal(tm)
+	tm.ShowModal(tm)
 }
 
 func (tm *textInputModal) Dismiss() {
-	tm.pageCommon.dismissModal(tm)
+	tm.DismissModal(tm)
 }
 
 func (tm *textInputModal) hint(hint string) *textInputModal {
@@ -81,7 +82,7 @@ func (tm *textInputModal) handle() {
 	}
 }
 
-func (tm *textInputModal) Layout(gtx layout.Context) D {
+func (tm *textInputModal) Layout(gtx layout.Context) ui.D {
 
 	var w []layout.Widget
 

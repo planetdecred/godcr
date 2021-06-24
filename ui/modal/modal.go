@@ -5,7 +5,7 @@ import (
 )
 
 type Modal interface {
-	modalID() string
+	ModalID() string
 	OnResume()
 	Layout(gtx layout.Context) layout.Dimensions
 	OnDismiss()

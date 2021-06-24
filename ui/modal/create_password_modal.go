@@ -65,7 +65,7 @@ func NewCreatePasswordModal(common *ui.Common) *CreatePasswordModal {
 	return cm
 }
 
-func (cm *CreatePasswordModal) modalID() string {
+func (cm *CreatePasswordModal) ModalID() string {
 	return cm.randomID
 }
 

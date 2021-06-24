@@ -1,7 +1,8 @@
-package ui
+package modal
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui"
 	"image/color"
 
 	"gioui.org/font/gofont"
@@ -13,10 +14,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const ModalPassword = "password_modal"
+const Password = "password_modal"
 
 type passwordModal struct {
-	*pageCommon
+	*ui.Common
 	randomID string
 	modal    decredmaterial.Modal
 	password decredmaterial.Editor
@@ -35,21 +36,21 @@ type passwordModal struct {
 	btnNegative           decredmaterial.Button
 }
 
-func newPasswordModal(common *pageCommon) *passwordModal {
+func NewPasswordModal(c *ui.Common) *passwordModal {
 	pm := &passwordModal{
-		pageCommon:  common,
-		randomID:    fmt.Sprintf("%s-%d", ModalPassword, generateRandomNumber()),
-		modal:       *common.theme.ModalFloatTitle(),
-		btnPositve:  common.theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative: common.theme.Button(new(widget.Clickable), "Cancel"),
+		Common:  c,
+		randomID:    fmt.Sprintf("%s-%d", Password, ui.GenerateRandomNumber()),
+		modal:       *c.Theme.ModalFloatTitle(),
+		btnPositve:  c.Theme.Button(new(widget.Clickable), "Confirm"),
+		btnNegative: c.Theme.Button(new(widget.Clickable), "Cancel"),
 	}
 
 	pm.btnPositve.TextSize, pm.btnNegative.TextSize = values.TextSize16, values.TextSize16
-	pm.btnNegative.Background, pm.btnNegative.Color = pm.theme.Color.Surface, pm.theme.Color.Primary
+	pm.btnNegative.Background, pm.btnNegative.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
 	pm.btnPositve.Font.Weight, pm.btnNegative.Font.Weight = text.Bold, text.Bold
-	pm.btnPositve.Background, pm.btnPositve.Color = pm.theme.Color.Surface, pm.theme.Color.Primary
+	pm.btnPositve.Background, pm.btnPositve.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
 
-	pm.password = common.theme.EditorPassword(new(widget.Editor), "Spending password")
+	pm.password = c.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
 
 	th := material.NewTheme(gofont.Collection())
@@ -58,7 +59,7 @@ func newPasswordModal(common *pageCommon) *passwordModal {
 	return pm
 }
 
-func (pm *passwordModal) modalID() string {
+func (pm *passwordModal) ModalID() string {
 	return pm.randomID
 }
 
@@ -70,11 +71,11 @@ func (pm *passwordModal) OnDismiss() {
 }
 
 func (pm *passwordModal) Show() {
-	pm.showModal(pm)
+	pm.ShowModal(pm)
 }
 
 func (pm *passwordModal) Dismiss() {
-	pm.dismissModal(pm)
+	pm.DismissModal(pm)
 }
 
 func (pm *passwordModal) title(title string) *passwordModal {
@@ -120,40 +121,40 @@ func (pm *passwordModal) handle() {
 
 	for pm.btnPositve.Button.Clicked() {
 
-		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
+		if pm.isLoading || !ui.EditorsNotEmpty(pm.password.Editor) {
 			continue
 		}
 
 		pm.setLoading(true)
 		pm.setError("")
 		if pm.positiveButtonClicked(pm.password.Editor.Text(), pm) {
-			pm.dismissModal(pm)
+			pm.DismissModal(pm)
 		}
 	}
 
 	for pm.btnNegative.Button.Clicked() {
 		if !pm.isLoading {
-			pm.dismissModal(pm)
+			pm.DismissModal(pm)
 			pm.negativeButtonClicked()
 		}
 	}
 }
 
-func (pm *passwordModal) Layout(gtx layout.Context) D {
-	title := func(gtx C) D {
-		t := pm.theme.H6(pm.dialogTitle)
+func (pm *passwordModal) Layout(gtx layout.Context) ui.D {
+	title := func(gtx ui.C) ui.D {
+		t := pm.Theme.H6(pm.dialogTitle)
 		t.Font.Weight = text.Bold
 		return t.Layout(gtx)
 	}
 
-	editor := func(gtx C) D {
+	editor := func(gtx ui.C) ui.D {
 		return pm.password.Layout(gtx)
 	}
 
-	actionButtons := func(gtx C) D {
-		return layout.E.Layout(gtx, func(gtx C) D {
+	actionButtons := func(gtx ui.C) ui.D {
+		return layout.E.Layout(gtx, func(gtx ui.C) ui.D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
+				layout.Rigid(func(gtx ui.C) ui.D {
 					if pm.negativeButtonText == "" {
 						return layout.Dimensions{}
 					}
@@ -161,7 +162,7 @@ func (pm *passwordModal) Layout(gtx layout.Context) D {
 					pm.btnNegative.Text = pm.negativeButtonText
 					return pm.btnNegative.Layout(gtx)
 				}),
-				layout.Rigid(func(gtx C) D {
+				layout.Rigid(func(gtx ui.C) ui.D {
 					if pm.isLoading {
 						return pm.materialLoader.Layout(gtx)
 					}

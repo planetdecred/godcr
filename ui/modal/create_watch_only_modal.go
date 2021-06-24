@@ -1,7 +1,8 @@
-package ui
+package modal
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -12,8 +13,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+const CreateWatchOnly = "create_watch_only_modal"
+
 type createWatchOnlyModal struct {
-	*pageCommon
+	*ui.Common
 	randomID string
 	modal    decredmaterial.Modal
 
@@ -29,22 +32,22 @@ type createWatchOnlyModal struct {
 	btnNegative decredmaterial.Button
 }
 
-func newCreateWatchOnlyModal(common *pageCommon) *createWatchOnlyModal {
+func NewCreateWatchOnlyModal(c *ui.Common) *createWatchOnlyModal {
 	cm := &createWatchOnlyModal{
-		pageCommon:  common,
-		randomID:    fmt.Sprintf("%s-%d", ModalInfo, generateRandomNumber()),
-		modal:       *common.theme.ModalFloatTitle(),
-		btnPositve:  common.theme.Button(new(widget.Clickable), values.String(values.StrImport)),
-		btnNegative: common.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+		Common:  c,
+		randomID:    fmt.Sprintf("%s-%d", CreateWatchOnly, ui.GenerateRandomNumber()),
+		modal:       *c.Theme.ModalFloatTitle(),
+		btnPositve:  c.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
+		btnNegative: c.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
 	}
 
 	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
 	cm.btnPositve.Font.Weight, cm.btnNegative.Font.Weight = text.Bold, text.Bold
 
-	cm.walletName = common.theme.Editor(new(widget.Editor), "Wallet name")
+	cm.walletName = c.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
 
-	cm.extendedPubKey = common.theme.EditorPassword(new(widget.Editor), "Extended public key")
+	cm.extendedPubKey = c.Theme.EditorPassword(new(widget.Editor), "Extended public key")
 	cm.extendedPubKey.Editor.Submit = true
 
 	th := material.NewTheme(gofont.Collection())
@@ -53,7 +56,7 @@ func newCreateWatchOnlyModal(common *pageCommon) *createWatchOnlyModal {
 	return cm
 }
 
-func (cm *createWatchOnlyModal) modalID() string {
+func (cm *createWatchOnlyModal) ModalID() string {
 	return cm.randomID
 }
 
@@ -65,11 +68,11 @@ func (cm *createWatchOnlyModal) OnDismiss() {
 }
 
 func (cm *createWatchOnlyModal) Show() {
-	cm.showModal(cm)
+	cm.ShowModal(cm)
 }
 
 func (cm *createWatchOnlyModal) Dismiss() {
-	cm.dismissModal(cm)
+	cm.DismissModal(cm)
 }
 
 func (cm *createWatchOnlyModal) setLoading(loading bool) {
@@ -91,8 +94,8 @@ func (cm *createWatchOnlyModal) watchOnlyCreated(callback func(walletName, extPu
 
 func (cm *createWatchOnlyModal) handle() {
 
-	if editorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor) ||
-		handleSubmitEvent(cm.walletName.Editor, cm.extendedPubKey.Editor) {
+	if ui.EditorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor) ||
+		ui.HandleSubmitEvent(cm.walletName.Editor, cm.extendedPubKey.Editor) {
 		for cm.btnPositve.Button.Clicked() {
 			cm.setLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.extendedPubKey.Editor.Text(), cm) {
@@ -108,33 +111,33 @@ func (cm *createWatchOnlyModal) handle() {
 	}
 }
 
-func (cm *createWatchOnlyModal) Layout(gtx layout.Context) D {
+func (cm *createWatchOnlyModal) Layout(gtx layout.Context) ui.D {
 	w := []layout.Widget{
-		func(gtx C) D {
-			t := cm.theme.H6(values.String(values.StrImportWatchingOnlyWallet))
+		func(gtx ui.C) ui.D {
+			t := cm.Theme.H6(values.String(values.StrImportWatchingOnlyWallet))
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
-		func(gtx C) D {
+		func(gtx ui.C) ui.D {
 			return cm.walletName.Layout(gtx)
 		},
-		func(gtx C) D {
+		func(gtx ui.C) ui.D {
 			return cm.extendedPubKey.Layout(gtx)
 		},
-		func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
+		func(gtx ui.C) ui.D {
+			return layout.E.Layout(gtx, func(gtx ui.C) ui.D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
+					layout.Rigid(func(gtx ui.C) ui.D {
 
-						cm.btnNegative.Background = cm.theme.Color.Surface
-						cm.btnNegative.Color = cm.theme.Color.Primary
+						cm.btnNegative.Background = cm.Theme.Color.Surface
+						cm.btnNegative.Color = cm.Theme.Color.Primary
 						return cm.btnNegative.Layout(gtx)
 					}),
-					layout.Rigid(func(gtx C) D {
+					layout.Rigid(func(gtx ui.C) ui.D {
 						if cm.isLoading {
 							return cm.materialLoader.Layout(gtx)
 						}
-						cm.btnPositve.Background, cm.btnPositve.Color = cm.theme.Color.Surface, cm.theme.Color.Primary
+						cm.btnPositve.Background, cm.btnPositve.Color = cm.Theme.Color.Surface, cm.Theme.Color.Primary
 						return cm.btnPositve.Layout(gtx)
 					}),
 				)
