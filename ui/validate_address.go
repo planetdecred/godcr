@@ -31,6 +31,8 @@ type validateAddressPage struct {
 	walletID              int
 	stateValidate         int
 	walletName            string
+
+	backButton decredmaterial.IconButton
 }
 
 func ValidateAddressPage(common *pageCommon) Page {
@@ -41,6 +43,8 @@ func ValidateAddressPage(common *pageCommon) Page {
 		wallet:      common.wallet,
 		common:      common,
 	}
+
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	pg.addressEditor = common.theme.Editor(new(widget.Editor), "Address")
 	pg.addressEditor.IsRequired = false
@@ -68,7 +72,8 @@ func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.walletID = common.info.Wallets[*common.selectedWallet].ID
 	body := func(gtx C) D {
 		page := SubPage{
-			title: "Validate address",
+			title:      "Validate address",
+			backButton: pg.backButton,
 			back: func() {
 				common.changePage(*common.returnPage)
 			},

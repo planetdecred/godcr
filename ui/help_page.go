@@ -16,6 +16,8 @@ type helpPage struct {
 	theme         *decredmaterial.Theme
 	documentation *widget.Clickable
 	common        *pageCommon
+
+	backButton decredmaterial.IconButton
 }
 
 func HelpPage(common *pageCommon) Page {
@@ -24,6 +26,8 @@ func HelpPage(common *pageCommon) Page {
 		documentation: new(widget.Clickable),
 		common:        common,
 	}
+
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -36,8 +40,9 @@ func (pg *helpPage) OnResume() {
 func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
-			title:    "Help",
-			subTitle: "For more information, please visit the Decred documentation.",
+			title:      "Help",
+			subTitle:   "For more information, please visit the Decred documentation.",
+			backButton: pg.backButton,
 			back: func() {
 				pg.common.changePage(PageMore)
 			},

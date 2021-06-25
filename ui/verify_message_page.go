@@ -21,6 +21,9 @@ type verifyMessagePage struct {
 	verifyMessage                         decredmaterial.Label
 
 	verifyMessageStatus *widget.Icon
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func VerifyMessagePage(c *pageCommon) Page {
@@ -40,6 +43,8 @@ func VerifyMessagePage(c *pageCommon) Page {
 	pg.verifyBtn.TextSize, pg.clearBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
 
+	pg.backButton, pg.infoButton = c.SubPageHeaderButtons()
+
 	return pg
 }
 
@@ -58,6 +63,8 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 		load := SubPage{
 			title:      "Verify message",
 			walletName: walletName,
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			back: func() {
 				pg.clearInputs(c)
 				c.changePage(PageWallet)

@@ -33,6 +33,8 @@ type ticketPageList struct {
 	statusTooltips     []*decredmaterial.Tooltip
 
 	wallets []*dcrlibwallet.Wallet
+
+	backButton decredmaterial.IconButton
 }
 
 func TicketPageList(c *pageCommon) Page {
@@ -46,6 +48,8 @@ func TicketPageList(c *pageCommon) Page {
 
 		wallets: c.multiWallet.AllWallets(),
 	}
+	pg.backButton, _ = c.SubPageHeaderButtons()
+
 	pg.orderDropDown = createOrderDropDown(c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
@@ -72,7 +76,8 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 
 	body := func(gtx C) D {
 		page := SubPage{
-			title: "All tickets",
+			title:      "All tickets",
+			backButton: pg.backButton,
 			back: func() {
 				c.changePage(PageTickets)
 			},

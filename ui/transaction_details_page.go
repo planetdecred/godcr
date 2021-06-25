@@ -30,6 +30,8 @@ type transactionDetailsPage struct {
 	toDcrdata                       *widget.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
+	backButton                      decredmaterial.IconButton
+	infoButton                      decredmaterial.IconButton
 	gtx                             *layout.Context
 
 	transaction *dcrlibwallet.Transaction
@@ -64,6 +66,8 @@ func TransactionDetailsPage(common *pageCommon, transaction *dcrlibwallet.Transa
 		transaction: transaction,
 		wallet:      common.multiWallet.WalletWithID(transaction.WalletID),
 	}
+
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
@@ -108,7 +112,9 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 	body := func(gtx C) D {
 		page := SubPage{
-			title: dcrlibwallet.TransactionDirectionName(pg.transaction.Direction),
+			title:      dcrlibwallet.TransactionDirectionName(pg.transaction.Direction),
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			back: func() {
 				common.changePage(*common.returnPage)
 			},

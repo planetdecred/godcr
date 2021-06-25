@@ -37,7 +37,9 @@ type receivePage struct {
 
 	selector *accountSelector
 
-	backdrop *widget.Clickable
+	backdrop   *widget.Clickable
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func ReceivePage(common *pageCommon) Page {
@@ -75,6 +77,9 @@ func ReceivePage(common *pageCommon) Page {
 	page.newAddr.Color = common.theme.Color.Text
 	page.newAddr.Background = common.theme.Color.Surface
 	page.newAddr.TextSize = values.TextSize16
+
+	page.backButton, page.infoButton = common.SubPageHeaderButtons()
+	page.backButton.Icon = page.icons.contentClear
 
 	page.selector = newAccountSelector(common).
 		title("Receiving account").
@@ -229,8 +234,7 @@ func (pg *receivePage) topNav(gtx layout.Context) layout.Dimensions {
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					pg.subPageBackButton.Icon = pg.icons.contentClear
-					return pg.subPageBackButton.Layout(gtx)
+					return pg.backButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: m}.Layout(gtx, pg.theme.H6("Receive DCR").Layout)
@@ -238,7 +242,7 @@ func (pg *receivePage) topNav(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, pg.subPageInfoButton.Layout)
+			return layout.E.Layout(gtx, pg.infoButton.Layout)
 		}),
 	)
 }
@@ -337,7 +341,7 @@ func (pg *receivePage) handle() {
 		pg.isNewAddr = false
 	}
 
-	if common.subPageInfoButton.Button.Clicked() {
+	if pg.infoButton.Button.Clicked() {
 		info := newInfoModal(common).
 			title("Receive DCR").
 			body("Each time you receive a payment, a new address is generated to protect your privacy.").
@@ -345,7 +349,7 @@ func (pg *receivePage) handle() {
 		common.showModal(info)
 	}
 
-	if common.subPageBackButton.Button.Clicked() {
+	if pg.backButton.Button.Clicked() {
 		common.changePage(*common.returnPage)
 	}
 
@@ -379,6 +383,4 @@ generateAddress:
 }
 
 func (pg *receivePage) onClose() {
-	// TODO
-	pg.pageCommon.subPageBackButton.Icon = pg.pageCommon.icons.navigationArrowBack
 }

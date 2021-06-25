@@ -44,6 +44,8 @@ type sendPage struct {
 	leftAmountEditor         decredmaterial.Editor
 	rightAmountEditor        decredmaterial.Editor
 
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 	moreOption decredmaterial.IconButton
 
 	nextButton   decredmaterial.Button
@@ -196,6 +198,9 @@ func SendPage(common *pageCommon) Page {
 	pg.closeConfirmationModalButton.Background = color.NRGBA{}
 	pg.closeConfirmationModalButton.Color = common.theme.Color.Primary
 
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
+	pg.backButton.Icon = common.icons.contentClear
+
 	pg.moreOption = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon)
 	pg.moreOption.Color = common.theme.Color.Gray3
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
@@ -295,7 +300,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-									return pg.topNav(gtx, common)
+									return pg.topNav(gtx)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -336,14 +341,13 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *sendPage) topNav(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *sendPage) topNav(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					common.subPageBackButton.Icon = common.icons.contentClear
-					return common.subPageBackButton.Layout(gtx)
+					return pg.backButton.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: m}.Layout(gtx, pg.theme.H6("Send DCR").Layout)
@@ -353,7 +357,7 @@ func (pg *sendPage) topNav(gtx layout.Context, common *pageCommon) layout.Dimens
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(common.subPageInfoButton.Layout),
+					layout.Rigid(pg.infoButton.Layout),
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Left: m}.Layout(gtx, pg.moreOption.Layout)
 					}),
@@ -978,13 +982,13 @@ func (pg *sendPage) handle() {
 
 	pg.sendToOption = pg.accountSwitch.SelectedOption()
 
-	if c.subPageBackButton.Button.Clicked() {
+	if pg.backButton.Button.Clicked() {
 		pg.resetErrorText()
 		pg.resetFields()
 		c.changePage(*c.returnPage)
 	}
 
-	if c.subPageInfoButton.Button.Clicked() {
+	if pg.infoButton.Button.Clicked() {
 		info := newInfoModal(c).
 			title("Send DCR").
 			body("Input or scan the destination wallet address and input the amount to send funds.").
@@ -1114,5 +1118,5 @@ func (pg *sendPage) handle() {
 }
 
 func (pg *sendPage) onClose() {
-	pg.common.subPageBackButton.Icon = pg.common.icons.navigationArrowBack
+
 }

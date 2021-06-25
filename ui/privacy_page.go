@@ -22,11 +22,13 @@ type privacyPage struct {
 	common                               *pageCommon
 	pageContainer                        layout.List
 	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
-	infoBtn                              decredmaterial.IconButton
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
 	errorReceiver                        chan error
 	acctMixerStatus                      *chan *wallet.AccountMixer
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func PrivacyPage(common *pageCommon) Page {
@@ -42,10 +44,7 @@ func PrivacyPage(common *pageCommon) Page {
 		acctMixerStatus:         common.acctMixerStatus,
 	}
 	pg.toPrivacySetup.Background = pg.theme.Color.Primary
-	pg.infoBtn = common.theme.IconButton(new(widget.Clickable), common.icons.actionInfo)
-	pg.infoBtn.Color = common.theme.Color.Gray
-	pg.infoBtn.Background = common.theme.Color.Surface
-	pg.infoBtn.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -60,6 +59,8 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 		load := SubPage{
 			title:      "Privacy",
 			walletName: c.info.Wallets[*c.selectedWallet].Name,
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			back: func() {
 				c.changePage(PageWallet)
 			},

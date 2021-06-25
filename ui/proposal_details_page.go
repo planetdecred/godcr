@@ -45,8 +45,8 @@ type proposalDetails struct {
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
 	successIcon         *widget.Icon
-
-	vote decredmaterial.Button
+	vote                decredmaterial.Button
+	backButton          decredmaterial.IconButton
 }
 
 func ProposalDetailsPage(common *pageCommon) Page {
@@ -72,6 +72,7 @@ func ProposalDetailsPage(common *pageCommon) Page {
 	}
 
 	pg.downloadIcon.Scale = 1
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	pg.vote = common.theme.Button(new(widget.Clickable), "Vote")
 	pg.vote.TextSize = values.TextSize14
@@ -434,7 +435,8 @@ func (pg *proposalDetails) Layout(gtx C) D {
 
 	body := func(gtx C) D {
 		page := SubPage{
-			title: truncateString(proposal.Name, 40),
+			title:      truncateString(proposal.Name, 40),
+			backButton: pg.backButton,
 			back: func() {
 				common.changePage(PageProposals)
 				pg.descriptionList.Position.First, pg.descriptionList.Position.Offset = 0, 0

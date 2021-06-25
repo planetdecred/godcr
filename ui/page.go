@@ -123,9 +123,6 @@ type pageCommon struct {
 
 	selectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
 
-	subPageBackButton decredmaterial.IconButton
-	subPageInfoButton decredmaterial.IconButton
-
 	refreshWindow    func()
 	changeWindowPage func(Page, bool)
 	popWindowPage    func() bool
@@ -254,9 +251,6 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		internalLog:  &win.internalLog,
 	}
 
-	common.subPageBackButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
-	common.subPageInfoButton = win.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
-
 	if common.fetchExchangeValue(&common.dcrUsdtBittrex) != nil {
 		log.Info("Error fetching exchange value")
 	}
@@ -266,16 +260,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 
 func (common *pageCommon) loadPages() map[string]Page {
 
-	iconColor := common.theme.Color.Gray3
-
 	common.testButton = common.theme.Button(new(widget.Clickable), "test button")
-
-	zeroInset := layout.UniformInset(values.MarginPadding0)
-	common.subPageBackButton.Color, common.subPageInfoButton.Color = iconColor, iconColor
-
-	m25 := values.MarginPadding25
-	common.subPageBackButton.Size, common.subPageInfoButton.Size = m25, m25
-	common.subPageBackButton.Inset, common.subPageInfoButton.Inset = zeroInset, zeroInset
 
 	pages := make(map[string]Page)
 
@@ -380,6 +365,20 @@ func (common *pageCommon) UniformPadding(gtx layout.Context, body layout.Widget)
 	}.Layout(gtx, body)
 }
 
+func (common *pageCommon) SubPageHeaderButtons() (decredmaterial.IconButton, decredmaterial.IconButton) {
+	backButton := common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
+	infoButton := common.theme.PlainIconButton(new(widget.Clickable), common.icons.actionInfo)
+
+	zeroInset := layout.UniformInset(values.MarginPadding0)
+	backButton.Color, infoButton.Color = common.theme.Color.Gray3, common.theme.Color.Gray3
+
+	m25 := values.MarginPadding25
+	backButton.Size, infoButton.Size = m25, m25
+	backButton.Inset, infoButton.Inset = zeroInset, zeroInset
+
+	return backButton, infoButton
+}
+
 type SubPage struct {
 	title        string
 	subTitle     string
@@ -391,6 +390,9 @@ type SubPage struct {
 	extra        layout.Widget
 	extraText    string
 	handleExtra  func()
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func (common *pageCommon) SubPageLayout(gtx layout.Context, sp SubPage) layout.Dimensions {
@@ -409,7 +411,7 @@ func (common *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.D
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, common.subPageBackButton.Layout)
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, sp.backButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
@@ -439,7 +441,7 @@ func (common *pageCommon) subpageHeader(gtx layout.Context, sp SubPage) layout.D
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
-					return common.subPageInfoButton.Layout(gtx)
+					return sp.infoButton.Layout(gtx)
 				} else if sp.extraItem != nil {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -475,14 +477,16 @@ func (common *pageCommon) SubpageSplitLayout(gtx layout.Context, sp SubPage) lay
 }
 
 func (common *pageCommon) subpageEventHandler(sp SubPage) {
-	if common.subPageInfoButton.Button.Clicked() {
-		newInfoModal(common).
-			title(sp.title).
-			setupWithTemplate(sp.infoTemplate).
-			negativeButton("Got it", func() {}).Show()
+	if sp.infoTemplate != "" {
+		if sp.infoButton.Button.Clicked() {
+			newInfoModal(common).
+				title(sp.title).
+				setupWithTemplate(sp.infoTemplate).
+				negativeButton("Got it", func() {}).Show()
+		}
 	}
 
-	if common.subPageBackButton.Button.Clicked() {
+	if sp.backButton.Button.Clicked() {
 		sp.back()
 	}
 
