@@ -149,7 +149,6 @@ func (pg *walletPage) initializeWalletMenu() {
 			button:   new(widget.Clickable),
 			separate: true,
 			action: func(common *pageCommon) {
-				common.changePage(PageHelp)
 			},
 		},
 		{

@@ -144,14 +144,14 @@ func (pg *verifyMessagePage) handle() {
 			pg.verifyMessageStatus = nil
 			valid, err := c.wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
 			if err != nil {
-				pg.signInput.SetError("Invalid signature")
+				pg.signInput.SetError("Invalid signature or message")
 				return
 			}
 			pg.signInput.SetError("")
 
 			if !valid {
 				pg.verifyMessageStatus = c.icons.navigationCancel
-				pg.verifyMessage.Text = "Invalid signature"
+				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = c.theme.Color.Danger
 				return
 			}

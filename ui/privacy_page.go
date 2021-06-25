@@ -54,7 +54,7 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	d := func(gtx C) D {
 		load := SubPage{
-			title:      "Privacy",
+			title:      "StakeShuffle",
 			walletName: c.info.Wallets[*c.selectedWallet].Name,
 			back: func() {
 				c.changePage(PageWallet)
