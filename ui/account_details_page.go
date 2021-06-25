@@ -25,6 +25,7 @@ type acctDetailsPage struct {
 	backButton               decredmaterial.IconButton
 	editAccount              *widget.Clickable
 
+	stakingBalance   int64
 	totalBalance     string
 	spendable        string
 	immatureRewards  string
@@ -55,12 +56,18 @@ func AcctDetailsPage(common *pageCommon, account *dcrlibwallet.Account) Page {
 }
 
 func (pg *acctDetailsPage) OnResume() {
-	pg.totalBalance = dcrutil.Amount(pg.account.TotalBalance).String()
-	pg.spendable = dcrutil.Amount(pg.account.Balance.Spendable).String()
-	pg.immatureRewards = dcrutil.Amount(pg.account.Balance.ImmatureReward).String()
-	pg.lockedByTickets = dcrutil.Amount(pg.account.Balance.LockedByTickets).String()
-	pg.votingAuthority = dcrutil.Amount(pg.account.Balance.VotingAuthority).String()
-	pg.immatureStakeGen = dcrutil.Amount(pg.account.Balance.ImmatureStakeGeneration).String()
+
+	balance := pg.account.Balance
+
+	pg.stakingBalance = balance.ImmatureReward + balance.LockedByTickets + balance.VotingAuthority +
+		balance.ImmatureStakeGeneration
+
+	pg.totalBalance = dcrutil.Amount(balance.Total).String()
+	pg.spendable = dcrutil.Amount(balance.Spendable).String()
+	pg.immatureRewards = dcrutil.Amount(balance.ImmatureReward).String()
+	pg.lockedByTickets = dcrutil.Amount(balance.LockedByTickets).String()
+	pg.votingAuthority = dcrutil.Amount(balance.VotingAuthority).String()
+	pg.immatureStakeGen = dcrutil.Amount(balance.ImmatureStakeGeneration).String()
 
 	pg.hdPath = pg.common.HDPrefix() + strconv.Itoa(int(pg.account.Number)) + "'"
 
@@ -149,16 +156,24 @@ func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *page
 				return pg.acctBalLayout(gtx, "Spendable", pg.spendable, false)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.acctBalLayout(gtx, "Immature Rewards", pg.immatureRewards, false)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.acctBalLayout(gtx, "Locked By Tickets", pg.lockedByTickets, false)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.acctBalLayout(gtx, "Voting Authority", pg.votingAuthority, false)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.acctBalLayout(gtx, "Immature Stake Gen", pg.immatureStakeGen, false)
+				if pg.stakingBalance == 0 {
+					return layout.Dimensions{}
+				}
+
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.acctBalLayout(gtx, "Immature Rewards", pg.immatureRewards, false)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.acctBalLayout(gtx, "Locked By Tickets", pg.lockedByTickets, false)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.acctBalLayout(gtx, "Voting Authority", pg.votingAuthority, false)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return pg.acctBalLayout(gtx, "Immature Stake Gen", pg.immatureStakeGen, false)
+					}),
+				)
 			}),
 		)
 	})
