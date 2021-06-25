@@ -223,10 +223,6 @@ func (mp *mainPage) unlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 
 func (mp *mainPage) handle() {
 
-	// TODO: This function should be only called when
-	// dcrlibwallet update notifications are receieved
-	mp.updateBalance()
-
 	for mp.minimizeNavDrawerButton.Button.Clicked() {
 		mp.isNavDrawerMinimized = true
 	}
@@ -248,6 +244,8 @@ func (mp *mainPage) handle() {
 				mp.changeFragment(OverviewPage(mp.pageCommon), PageOverview)
 			} else if i == 1 {
 				mp.changeFragment(TransactionsPage(mp.pageCommon), PageTransactions)
+			} else if i == 2 {
+				mp.changeFragment(WalletPage(mp.pageCommon), PageWallet)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}

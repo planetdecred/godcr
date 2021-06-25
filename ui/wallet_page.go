@@ -24,6 +24,7 @@ const PageWallet = "Wallets"
 
 type menuItem struct {
 	text     string
+	id       string
 	button   *widget.Clickable
 	action   func(*pageCommon)
 	separate bool
@@ -36,7 +37,11 @@ type collapsible struct {
 }
 
 type walletPage struct {
-	common                                     *pageCommon
+	common      *pageCommon
+	multiWallet *dcrlibwallet.MultiWallet
+	wallets     []*dcrlibwallet.Wallet
+	accounts    map[int][]*dcrlibwallet.Account // key = wallet id
+
 	walletInfo                                 *wallet.MultiWalletInfo
 	wallet                                     *wallet.Wallet
 	walletAccount                              **wallet.Account
@@ -54,9 +59,9 @@ type walletPage struct {
 	backdrops                                  []*widget.Clickable
 	backdropList                               *layout.List
 	optionsMenuCard                            decredmaterial.Card
-	optionsMenu                                []menuItem
+	optionsMenu                                map[int][]menuItem
 	addWalletMenu                              []menuItem
-	watchOnlyWalletMenu                        []menuItem
+	watchOnlyWalletMenu                        map[int][]menuItem
 	openPopupIndex                             int
 	openAddWalletPopupButton                   *widget.Clickable
 	isAddWalletMenuOpen                        bool
@@ -70,7 +75,9 @@ type walletPage struct {
 func WalletPage(common *pageCommon) Page {
 	pg := &walletPage{
 		common:                   common,
+		multiWallet:              common.multiWallet,
 		walletInfo:               common.info,
+		accounts:                 make(map[int][]*dcrlibwallet.Account),
 		container:                layout.List{Axis: layout.Vertical},
 		accountsList:             layout.List{Axis: layout.Vertical},
 		walletsList:              layout.List{Axis: layout.Vertical},
@@ -126,70 +133,37 @@ func WalletPage(common *pageCommon) Page {
 }
 
 func (pg *walletPage) OnResume() {
+	pg.wallets = pg.multiWallet.AllWallets()
+	for _, wal := range pg.wallets {
+		pg.loadAccounts(wal)
+	}
+}
 
+func (pg *walletPage) loadAccounts(wal *dcrlibwallet.Wallet) error {
+	accountsResult, err := wal.GetAccountsRaw()
+	if err != nil {
+		return err
+	}
+
+	pg.accounts[wal.ID] = accountsResult.Acc
+
+	return nil
 }
 
 func (pg *walletPage) initializeWalletMenu() {
-	pg.optionsMenu = []menuItem{
-		{
-			text:   values.String(values.StrSignMessage),
-			button: new(widget.Clickable),
-			action: func(common *pageCommon) {
-				common.changePage(PageSignMessage)
-			},
-		},
-		{
-			text:     values.String(values.StrVerifyMessage),
-			button:   new(widget.Clickable),
-			separate: true,
-			action: func(common *pageCommon) {
-				*common.returnPage = PageWallet
-				common.setReturnPage(PageWallet)
-				common.changePage(PageVerifyMessage)
-			},
-		},
-		{
-			text:     values.String(values.StrViewProperty),
-			button:   new(widget.Clickable),
-			separate: true,
-			action: func(common *pageCommon) {
-				common.changePage(PageHelp)
-			},
-		},
-		{
-			text:     values.String(values.StrStakeShuffle),
-			button:   new(widget.Clickable),
-			separate: true,
-			action: func(common *pageCommon) {
-				common.changePage(PagePrivacy)
-			},
-		},
-		{
-			text:   values.String(values.StrRename),
-			button: new(widget.Clickable),
-			action: func(common *pageCommon) {
-				textModal := newTextInputModal(common).
-					hint("Wallet name").
-					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
-						id := common.info.Wallets[*common.selectedWallet].ID
-						common.wallet.RenameWallet(id, newName, pg.errorReceiver)
-						return true
-					})
+	///todo: should be improved,
+	pg.optionsMenu = make(map[int][]menuItem)
+	pg.watchOnlyWalletMenu = make(map[int][]menuItem)
+	for _, wallet := range pg.wallets {
+		if !wallet.IsWatchingOnlyWallet() {
+			pg.optionsMenu[wallet.ID] = pg.getWalletMenu(wallet)
+		}
 
-				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
-					negativeButton(values.String(values.StrCancel), func() {})
-				textModal.Show()
-			},
-		},
-		{
-			text:   values.String(values.StrSettings),
-			button: new(widget.Clickable),
-			action: func(common *pageCommon) {
-				common.changePage(PageWalletSettings)
-			},
-		},
+		if wallet.IsWatchingOnlyWallet() {
+			pg.watchOnlyWalletMenu[wallet.ID] = pg.getWatchOnlyWalletMenu(wallet)
+		}
+
 	}
-
 	pg.addWalletMenu = []menuItem{
 		{
 			text:   values.String(values.StrCreateANewWallet),
@@ -209,14 +183,36 @@ func (pg *walletPage) initializeWalletMenu() {
 			action: pg.showImportWatchOnlyWalletModal,
 		},
 	}
+}
 
-	pg.watchOnlyWalletMenu = []menuItem{
+func (pg *walletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
+	return []menuItem{
 		{
-			text:   values.String(values.StrSettings),
+			text:   values.String(values.StrSignMessage),
 			button: new(widget.Clickable),
+			id:     PageSignMessage,
+		},
+		{
+			text:     values.String(values.StrVerifyMessage),
+			button:   new(widget.Clickable),
+			separate: true,
 			action: func(common *pageCommon) {
-				common.changePage(PageWalletSettings)
+				common.changeFragment(VerifyMessagePage(common), PageVerifyMessage)
 			},
+		},
+		{
+			text:     values.String(values.StrViewProperty),
+			button:   new(widget.Clickable),
+			separate: true,
+			action: func(common *pageCommon) {
+				common.changeFragment(HelpPage(common), PageHelp)
+			},
+		},
+		{
+			text:     values.String(values.StrStakeShuffle),
+			button:   new(widget.Clickable),
+			separate: true,
+			id:       PagePrivacy,
 		},
 		{
 			text:   values.String(values.StrRename),
@@ -225,8 +221,40 @@ func (pg *walletPage) initializeWalletMenu() {
 				textModal := newTextInputModal(common).
 					hint("Wallet name").
 					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
-						id := common.info.Wallets[*common.selectedWallet].ID
-						common.wallet.RenameWallet(id, newName, pg.errorReceiver)
+						// todo handle error
+						pg.multiWallet.RenameWallet(wal.ID, newName)
+						return true
+					})
+
+				textModal.title(values.String(values.StrRenameWalletSheetTitle)).
+					negativeButton(values.String(values.StrCancel), func() {})
+				textModal.Show()
+			},
+		},
+		{
+			text:   values.String(values.StrSettings),
+			button: new(widget.Clickable),
+			id:     PageSettings,
+		},
+	}
+}
+
+func (pg *walletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
+	return []menuItem{
+		{
+			text:   values.String(values.StrSettings),
+			button: new(widget.Clickable),
+			id:     PageSettings,
+		},
+		{
+			text:   values.String(values.StrRename),
+			button: new(widget.Clickable),
+			action: func(common *pageCommon) {
+				textModal := newTextInputModal(common).
+					hint("Wallet name").
+					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
+						//TODO
+						pg.multiWallet.RenameWallet(wal.ID, newName)
 						return true
 					})
 
@@ -278,19 +306,9 @@ func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
 // Layout lays out the widgets for the main wallets pg.
 func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
-	// if *pg.refreshPage {
-	// 	common.refreshWindow()
-	// 	*pg.refreshPage = false
-	// }
 
-	if common.info.LoadedWallets == 0 {
-		return common.UniformPadding(gtx, func(gtx C) D {
-			return layout.Center.Layout(gtx, common.theme.H3(values.String(values.StrNoWalletLoaded)).Layout)
-		})
-	}
-
-	for index := 0; index < common.info.LoadedWallets; index++ {
-		if common.info.Wallets[index].IsWatchingOnly {
+	for index := 0; index < len(pg.wallets); index++ {
+		if pg.wallets[index].IsWatchingOnlyWallet() {
 			if _, ok := pg.watchOnlyWalletMoreButtons[index]; !ok {
 				pg.watchOnlyWalletMoreButtons[index] = decredmaterial.IconButton{
 					IconButtonStyle: material.IconButtonStyle{
@@ -369,7 +387,7 @@ func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int, isWatchOnlyWalletMenu bool) {
+func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex, walletID int, isWatchOnlyWalletMenu bool) {
 	if pg.openPopupIndex != optionsMenuIndex {
 		return
 	}
@@ -377,10 +395,10 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 	var menu []menuItem
 	var leftInset float32
 	if isWatchOnlyWalletMenu {
-		menu = pg.watchOnlyWalletMenu
+		menu = pg.watchOnlyWalletMenu[walletID]
 		leftInset = -35
 	} else {
-		menu = pg.optionsMenu
+		menu = pg.optionsMenu[walletID]
 		leftInset = -120
 	}
 
@@ -422,20 +440,21 @@ func (pg *walletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 }
 
 func (pg *walletPage) walletSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
-	return pg.walletsList.Layout(gtx, common.info.LoadedWallets, func(gtx C, i int) D {
-		if common.info.Wallets[i].IsWatchingOnly {
+	return pg.walletsList.Layout(gtx, len(pg.wallets), func(gtx C, i int) D {
+		wal := pg.wallets[i]
+		if wal.IsWatchingOnlyWallet() {
 			return D{}
 		}
 
-		accounts := common.info.Wallets[i].Accounts
-		pg.updateAcctDetailsButtons(&accounts)
+		accounts := pg.accounts[pg.wallets[i].ID]
+		pg.updateAcctDetailsButtons(accounts)
 
 		collapsibleMore := func(gtx C) {
-			pg.layoutOptionsMenu(gtx, i, false)
+			pg.layoutOptionsMenu(gtx, i, wal.ID, false)
 		}
 
 		collapsibleHeader := func(gtx C) D {
-			return pg.layoutCollapsibleHeader(gtx, common.info.Wallets[i])
+			return pg.layoutCollapsibleHeader(gtx, wal)
 		}
 
 		collapsibleBody := func(gtx C) D {
@@ -455,8 +474,9 @@ func (pg *walletPage) walletSection(gtx layout.Context, common *pageCommon) layo
 							click := pg.toAcctDetails[x]
 							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 							click.Add(gtx.Ops)
-							pg.goToAcctDetails(gtx, common, &accounts[x], i, click)
-							return pg.walletAccountsLayout(gtx, accounts[x].Name, accounts[x].TotalBalance, dcrutil.Amount(accounts[x].SpendableBalance).String(), common)
+							pg.goToAcctDetails(gtx, common, accounts, i, click)
+							return pg.walletAccountsLayout(gtx, accounts[x].Name, dcrutil.Amount(accounts[x].TotalBalance).String(),
+								dcrutil.Amount(accounts[x].Balance.Spendable).String(), common)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -544,9 +564,11 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context, common *pageCom
 	})
 }
 
+//TODO simplify
 func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common *pageCommon) D {
-	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, common.info.LoadedWallets, func(gtx C, i int) D {
-		if !common.info.Wallets[i].IsWatchingOnly {
+	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.wallets), func(gtx C, i int) D {
+		wal := pg.wallets[i]
+		if !wal.IsWatchingOnlyWallet() {
 			return D{}
 		}
 		m := values.MarginPadding10
@@ -566,11 +588,12 @@ func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common *pageCom
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return layout.Flex{}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										spendableBalanceText := dcrutil.Amount(common.info.Wallets[i].SpendableBalance).String()
-										return pg.theme.Body2(spendableBalanceText).Layout(gtx)
+										//TODO get this value in handle
+										totalBalanceText, _ := pg.common.totalWalletBalance(pg.wallets[i].ID)
+										return pg.theme.Body2(totalBalanceText.String()).Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-										pg.layoutOptionsMenu(gtx, i, true)
+										pg.layoutOptionsMenu(gtx, i, wal.ID, true)
 										return layout.Inset{Top: unit.Dp(-3)}.Layout(gtx, pg.watchOnlyWalletMoreButtons[i].Layout)
 									}),
 								)
@@ -591,7 +614,7 @@ func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context, common *pageCom
 	})
 }
 
-func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wallet.InfoShort) D {
+func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, wal *dcrlibwallet.Wallet) D {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
@@ -601,10 +624,10 @@ func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wal
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.theme.Body1(strings.Title(strings.ToLower(walletInfo.Name))).Layout(gtx)
+					return pg.theme.Body1(wal.Name).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if len(walletInfo.Seed) > 0 {
+					if len(wal.EncryptedSeed) > 0 {
 						txt := pg.theme.Caption(values.String(values.StrNotBackedUp))
 						txt.Color = pg.theme.Color.Danger
 						return txt.Layout(gtx)
@@ -615,7 +638,8 @@ func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, walletInfo wal
 		}),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
-				balanceLabel := pg.theme.Body1(walletInfo.Balance)
+				totalBalance, _ := pg.common.totalWalletBalance(wal.ID)
+				balanceLabel := pg.theme.Body1(totalBalance.String())
 				balanceLabel.Color = pg.theme.Color.Gray
 				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
 			})
@@ -820,18 +844,19 @@ func (pg *walletPage) layoutAddWalletSection(gtx layout.Context, common *pageCom
 	})
 }
 
-func (pg *walletPage) updateAcctDetailsButtons(walAcct *[]wallet.Account) {
-	if len(*walAcct) != len(pg.toAcctDetails) {
-		for i := 0; i < len(*walAcct); i++ {
+func (pg *walletPage) updateAcctDetailsButtons(walAcct []*dcrlibwallet.Account) {
+	if len(walAcct) != len(pg.toAcctDetails) {
+		for i := 0; i < len(walAcct); i++ {
 			pg.toAcctDetails = append(pg.toAcctDetails, &gesture.Click{})
 		}
 	}
 }
 
-func (pg *walletPage) goToAcctDetails(gtx layout.Context, common *pageCommon, acct *wallet.Account, index int, click *gesture.Click) {
+func (pg *walletPage) goToAcctDetails(gtx layout.Context, common *pageCommon, accts []*dcrlibwallet.Account, index int, click *gesture.Click) {
 	for _, e := range click.Events(gtx) {
 		if e.Type == gesture.TypeClick {
-			*pg.walletAccount = acct
+			// TODO
+			// *pg.walletAccount = acct
 			common.changePage(PageAccountDetails)
 			*common.selectedWallet = index
 		}
@@ -921,19 +946,44 @@ func (pg *walletPage) handle() {
 		}
 	}
 
-	for index := range pg.optionsMenu {
-		if pg.optionsMenu[index].button.Clicked() {
-			pg.openPopupIndex = -1
-			common.setReturnPage(PageWallet)
-			pg.optionsMenu[index].action(common)
+	for _, optionsMenu := range pg.optionsMenu {
+		for i := range optionsMenu {
+			if optionsMenu[i].button.Clicked() {
+				switch optionsMenu[i].id {
+				case PageSignMessage:
+					//TODO
+					// common.changeFragment(SignMessagePage(common, walletID))
+				case PagePrivacy:
+					//TODO
+					// common.changeFragment(PrivacyPage(common, walletID))
+				case PageSettings:
+					//TODO
+					// common.changeFragment(WalletSettingsPage(common, walletID))
+				default:
+					optionsMenu[i].action(common)
+				}
+
+				pg.openPopupIndex = -1
+			}
 		}
+
 	}
 
-	for index := range pg.watchOnlyWalletMenu {
-		if pg.watchOnlyWalletMenu[index].button.Clicked() {
-			pg.openPopupIndex = -1
-			pg.watchOnlyWalletMenu[index].action(common)
+	for _, optionsMenu := range pg.watchOnlyWalletMenu {
+		for i := range optionsMenu {
+			if optionsMenu[i].button.Clicked() {
+				switch optionsMenu[i].id {
+				case PageSettings:
+					//TODO
+					common.changeFragment(WalletSettingsPage(common), PageWalletSettings)
+				default:
+					optionsMenu[i].action(common)
+				}
+
+				pg.openPopupIndex = -1
+			}
 		}
+
 	}
 
 	for index := range pg.addWalletMenu {

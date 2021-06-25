@@ -18,6 +18,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -264,7 +265,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 
 	pages := make(map[string]Page)
 
-	pages[PageWallet] = WalletPage(common)
 	pages[PageMore] = MorePage(common)
 	pages[PageReceive] = ReceivePage(common)
 	pages[PageSend] = SendPage(common)
@@ -331,6 +331,21 @@ func (common *pageCommon) sortedWalletList() []*dcrlibwallet.Wallet {
 	})
 
 	return wallets
+}
+
+func (c *pageCommon) totalWalletBalance(walletID int) (dcrutil.Amount, error) {
+	wal := c.multiWallet.WalletWithID(walletID)
+	accountsResult, err := wal.GetAccountsRaw()
+	if err != nil {
+		return -1, err
+	}
+
+	var totalBalance int64
+	for _, account := range accountsResult.Acc {
+		totalBalance += account.TotalBalance
+	}
+
+	return dcrutil.Amount(totalBalance), nil
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
