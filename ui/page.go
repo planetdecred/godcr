@@ -330,8 +330,8 @@ func (common *pageCommon) sortedWalletList() []*dcrlibwallet.Wallet {
 	return wallets
 }
 
-func (c *pageCommon) HDPrefix() string {
-	switch c.network {
+func (common *pageCommon) HDPrefix() string {
+	switch common.network {
 	case "testnet3": // should use a constant
 		return dcrlibwallet.TestnetHDPath
 	case "mainnet":

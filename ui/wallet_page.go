@@ -54,6 +54,7 @@ type walletPage struct {
 	accountIcon              *widget.Image
 	walletAlertIcon          *widget.Image
 	container, walletsList   layout.List
+	watchWalletsList         *decredmaterial.ClickableList
 	toAcctDetails            []*gesture.Click
 	iconButton               decredmaterial.IconButton
 	card                     decredmaterial.Card
@@ -75,6 +76,7 @@ func WalletPage(common *pageCommon) Page {
 		multiWallet:              common.multiWallet,
 		container:                layout.List{Axis: layout.Vertical},
 		walletsList:              layout.List{Axis: layout.Vertical},
+		watchWalletsList:         common.theme.NewClickableList(layout.Vertical),
 		theme:                    common.theme,
 		card:                     common.theme.Card(),
 		backdrop:                 new(widget.Clickable),
@@ -408,8 +410,6 @@ func (pg *walletPage) walletSection(gtx layout.Context, common *pageCommon) layo
 			return D{}
 		}
 
-		pg.updateAcctDetailsButtons(listItem.accounts)
-
 		collapsibleMore := func(gtx C) {
 			pg.layoutOptionsMenu(gtx, i, listItem)
 		}
@@ -522,7 +522,7 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensio
 }
 
 func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
-	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.listItems), func(gtx C, i int) D {
+	return pg.watchWalletsList.Layout(gtx, len(pg.listItems), func(gtx C, i int) D {
 		listItem := pg.listItems[i]
 		if !listItem.wal.IsWatchingOnlyWallet() {
 			return D{}
@@ -780,25 +780,6 @@ func (pg *walletPage) layoutAddWalletSection(gtx layout.Context, common *pageCom
 	})
 }
 
-func (pg *walletPage) updateAcctDetailsButtons(walAcct []*dcrlibwallet.Account) {
-	if len(walAcct) != len(pg.toAcctDetails) {
-		for i := 0; i < len(walAcct); i++ {
-			pg.toAcctDetails = append(pg.toAcctDetails, &gesture.Click{})
-		}
-	}
-}
-
-func (pg *walletPage) goToAcctDetails(gtx layout.Context, common *pageCommon, accts []*dcrlibwallet.Account, index int, click *gesture.Click) {
-	for _, e := range click.Events(gtx) {
-		if e.Type == gesture.TypeClick {
-			// TODO
-			// *pg.walletAccount = acct
-			common.changePage(PageAccountDetails)
-			// *common.selectedWallet = index
-		}
-	}
-}
-
 func (pg *walletPage) closePopups() {
 	pg.openPopupIndex = -1
 	pg.isAddWalletMenuOpen = false
@@ -809,12 +790,10 @@ func (pg *walletPage) openPopup(index int) {
 		if pg.openPopupIndex == index {
 			pg.closePopups()
 			return
-		} else {
-			pg.closePopups()
 		}
+		pg.closePopups()
 	}
 
-	// *common.selectedWallet = index TODO
 	pg.openPopupIndex = index
 }
 
@@ -823,6 +802,12 @@ func (pg *walletPage) handle() {
 
 	for pg.backdrop.Clicked() {
 		pg.closePopups()
+	}
+
+	if ok, selectedItem := pg.watchWalletsList.ItemClicked(); ok {
+		listItem := pg.listItems[selectedItem]
+		// TODO: find default account using number
+		pg.common.changeFragment(AcctDetailsPage(common, listItem.accounts[0]), PageAccountDetails)
 	}
 
 	for index, listItem := range pg.listItems {
