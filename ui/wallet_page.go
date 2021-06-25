@@ -58,8 +58,7 @@ type walletPage struct {
 	toAcctDetails            []*gesture.Click
 	iconButton               decredmaterial.IconButton
 	card                     decredmaterial.Card
-	backdrops                []*widget.Clickable
-	backdropList             *layout.List
+	backdrop                 *widget.Clickable
 	optionsMenuCard          decredmaterial.Card
 	addWalletMenu            []menuItem
 	openPopupIndex           int
@@ -79,15 +78,11 @@ func WalletPage(common *pageCommon) Page {
 		walletsList:              layout.List{Axis: layout.Vertical},
 		theme:                    common.theme,
 		card:                     common.theme.Card(),
-		backdropList:             &layout.List{Axis: layout.Vertical},
+		backdrop:                 new(widget.Clickable),
 		openAddWalletPopupButton: new(widget.Clickable),
 		openPopupIndex:           -1,
 		shadowBox:                common.theme.Shadow(),
 		separator:                common.theme.Separator(),
-	}
-
-	for i := 0; i < 4; i++ {
-		pg.backdrops = append(pg.backdrops, new(widget.Clickable))
 	}
 
 	pg.separator.Color = common.theme.Color.Background
@@ -350,11 +345,7 @@ func (pg *walletPage) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Expanded(func(gtx C) D {
 			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
-				halfHeight := gtx.Constraints.Max.Y / 2
-				return pg.container.Layout(gtx, len(pg.backdrops), func(gtx C, i int) D {
-					gtx.Constraints.Min.Y = halfHeight
-					return pg.backdrops[i].Layout(gtx)
-				})
+				return pg.backdrop.Layout(gtx)
 			}
 			return D{}
 		}),
@@ -854,10 +845,8 @@ func (pg *walletPage) openPopup(index int) {
 func (pg *walletPage) handle() {
 	common := pg.common
 
-	for index := range pg.backdrops {
-		for pg.backdrops[index].Clicked() {
-			pg.closePopups()
-		}
+	for pg.backdrop.Clicked() {
+		pg.closePopups()
 	}
 
 	for index, listItem := range pg.listItems {
