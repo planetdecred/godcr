@@ -3,6 +3,7 @@ package modal
 import (
 	"fmt"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/page"
 	"image/color"
 
 	"gioui.org/font/gofont"
@@ -117,7 +118,7 @@ func (pm *passwordModal) setError(err string) {
 	}
 }
 
-func (pm *passwordModal) handle() {
+func (pm *passwordModal) Handle() {
 
 	for pm.btnPositve.Button.Clicked() {
 
@@ -140,21 +141,21 @@ func (pm *passwordModal) handle() {
 	}
 }
 
-func (pm *passwordModal) Layout(gtx layout.Context) ui.D {
-	title := func(gtx ui.C) ui.D {
+func (pm *passwordModal) Layout(gtx layout.Context) page.D {
+	title := func(gtx page.C) page.D {
 		t := pm.Theme.H6(pm.dialogTitle)
 		t.Font.Weight = text.Bold
 		return t.Layout(gtx)
 	}
 
-	editor := func(gtx ui.C) ui.D {
+	editor := func(gtx page.C) page.D {
 		return pm.password.Layout(gtx)
 	}
 
-	actionButtons := func(gtx ui.C) ui.D {
-		return layout.E.Layout(gtx, func(gtx ui.C) ui.D {
+	actionButtons := func(gtx page.C) page.D {
+		return layout.E.Layout(gtx, func(gtx page.C) page.D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx ui.C) ui.D {
+				layout.Rigid(func(gtx page.C) page.D {
 					if pm.negativeButtonText == "" {
 						return layout.Dimensions{}
 					}
@@ -162,7 +163,7 @@ func (pm *passwordModal) Layout(gtx layout.Context) ui.D {
 					pm.btnNegative.Text = pm.negativeButtonText
 					return pm.btnNegative.Layout(gtx)
 				}),
-				layout.Rigid(func(gtx ui.C) ui.D {
+				layout.Rigid(func(gtx page.C) page.D {
 					if pm.isLoading {
 						return pm.materialLoader.Layout(gtx)
 					}

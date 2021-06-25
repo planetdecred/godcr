@@ -1,6 +1,7 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"image/color"
 
@@ -17,7 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageWallet = "Wallets"
+const Wallet = "Wallets"
 
 type walletListItem struct {
 	wal      *dcrlibwallet.Wallet
@@ -71,7 +72,7 @@ type walletPage struct {
 	separator                decredmaterial.Line
 }
 
-func WalletPage(common *pageCommon) Page {
+func WalletPage(l *load.Load) load.Page {
 	pg := &walletPage{
 		common:                   common,
 		multiWallet:              common.multiWallet,
@@ -225,7 +226,7 @@ func (pg *walletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				textModal := newTextInputModal(common).
+				textModal := modal.newTextInputModal(common).
 					hint("Wallet name").
 					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
 						// todo handle error
@@ -257,7 +258,7 @@ func (pg *walletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				textModal := newTextInputModal(common).
+				textModal := modal.newTextInputModal(common).
 					hint("Wallet name").
 					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
 						//TODO
@@ -292,8 +293,8 @@ func (pg *walletPage) showAddWalletModal(common *pageCommon) {
 }
 
 func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
-	newCreateWatchOnlyModal(common).
-		watchOnlyCreated(func(walletName, extPubKey string, m *createWatchOnlyModal) bool {
+	modal.newCreateWatchOnlyModal(common).
+		watchOnlyCreated(func(walletName, extPubKey string, m *modal.createWatchOnlyModal) bool {
 			go func() {
 				_, err := pg.multiWallet.CreateWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
@@ -829,16 +830,16 @@ func (pg *walletPage) handle() {
 			for listItem.addAcctBtn.Button.Clicked() {
 				walletID := listItem.wal.ID
 
-				textModal := newTextInputModal(pg.common).
-					hint("Account name").
-					positiveButton(values.String(values.StrCreate), func(accountName string, tim *textInputModal) bool {
-						if accountName != "" {
-							newPasswordModal(pg.common).
-								title(values.String(values.StrCreateNewAccount)).
-								hint("Spending password").
-								negativeButton(values.String(values.StrCancel), func() {}).
-								positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
-									go func() {
+			textModal := modal.newTextInputModal(pg.common).
+				hint("Account name").
+				positiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.textInputModal) bool {
+					if accountName != "" {
+						modal.newPasswordModal(pg.common).
+							title(values.String(values.StrCreateNewAccount)).
+							hint("Spending password").
+							negativeButton(values.String(values.StrCancel), func() {}).
+							positiveButton(values.String(values.StrConfirm), func(password string, pm *modal.passwordModal) bool {
+								go func() {
 
 										wal := pg.multiWallet.WalletWithID(walletID)
 										wal.CreateNewAccount(accountName, []byte(password)) // TODO

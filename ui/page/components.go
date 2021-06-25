@@ -1,7 +1,7 @@
 // components contain layout code that are shared by multiple pages but aren't widely used enough to be defined as
 // widgets
 
-package ui
+package page
 
 import (
 	"image"

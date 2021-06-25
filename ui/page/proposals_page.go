@@ -1,7 +1,8 @@
-package ui
+package page
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"image/color"
 	"strconv"
@@ -25,7 +26,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageProposals = "Proposals"
+const Proposals = "Proposals"
 
 type proposalItem struct {
 	proposal     dcrlibwallet.Proposal
@@ -70,7 +71,7 @@ var (
 	}
 )
 
-func ProposalsPage(common *pageCommon) Page {
+func ProposalsPage(l *load.Load) load.Page {
 	pg := &proposalsPage{
 		pageCommon:            common,
 		pageClosing:           make(chan bool, 1),

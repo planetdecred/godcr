@@ -1,14 +1,14 @@
-package ui
+package page
 
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageMore = "More"
+const More = "More"
 
 type morePageHandler struct {
 	clickable *widget.Clickable
@@ -22,7 +22,7 @@ type morePage struct {
 	morePageListItems []morePageHandler
 }
 
-func MorePage(common *pageCommon) Page {
+func MorePage(l *load.Load) load.Page {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),

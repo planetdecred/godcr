@@ -1,7 +1,8 @@
-package ui
+package page
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui/load"
 	"image/color"
 	"math/rand"
 	"strings"
@@ -21,7 +22,7 @@ import (
 )
 
 const (
-	PageSeedBackup = "SeedBackup"
+	SeedBackup = "SeedBackup"
 	infoView       = iota
 	seedView
 	verifyView
@@ -76,7 +77,7 @@ type backupPage struct {
 	privpass       []byte
 }
 
-func BackupPage(c *pageCommon) Page {
+func BackupPage(l *load.Load) load.Page {
 	b := &backupPage{
 		theme:  c.theme,
 		wal:    c.wallet,

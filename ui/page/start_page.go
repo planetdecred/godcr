@@ -1,6 +1,8 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"os"
 
@@ -12,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageStart = "start_page"
+const Start = "start_page"
 
 type startPage struct {
 	*pageCommon
@@ -27,7 +29,7 @@ type startPage struct {
 	restoreButton decredmaterial.Button
 }
 
-func newStartPage(common *pageCommon) *startPage {
+func newStartPage(common *load.Load) *startPage {
 	sp := &startPage{
 		pageCommon: common,
 
@@ -75,17 +77,17 @@ func (sp *startPage) OnResume() {
 }
 
 func (sp *startPage) unlock() {
-	newPasswordModal(sp.pageCommon).
+	modal.newPasswordModal(sp.pageCommon).
 		title("Unlock with passphrase").
 		negativeButton("Exit", func() {
 			sp.multiWallet.Shutdown()
 			os.Exit(0)
 		}).
-		positiveButton("Unlock", func(password string, m *passwordModal) bool {
+		positiveButton("Unlock", func(password string, m *modal.passwordModal) bool {
 			go func() {
 				err := sp.openWallets(password)
 				if err != nil {
-					m.setError(translateErr(err))
+					m.setError(ui.translateErr(err))
 					m.setLoading(false)
 					return
 				}
@@ -99,7 +101,7 @@ func (sp *startPage) unlock() {
 func (sp *startPage) openWallets(passphrase string) error {
 	err := sp.multiWallet.OpenWallets([]byte(passphrase))
 	if err != nil {
-		log.Info("Error opening wallet:", err)
+		ui.log.Info("Error opening wallet:", err)
 		// show err dialog
 		return err
 	}

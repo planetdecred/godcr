@@ -1,14 +1,14 @@
-package ui
+package page
 
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageDebug = "Debug"
+const Debug = "Debug"
 
 type debugItem struct {
 	clickable *widget.Clickable
@@ -24,7 +24,7 @@ type debugPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func DebugPage(common *pageCommon) Page {
+func DebugPage(l *load.Load) load.Page {
 	debugItems := []debugItem{
 		{
 			clickable: new(widget.Clickable),

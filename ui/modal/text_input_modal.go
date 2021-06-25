@@ -3,6 +3,7 @@ package modal
 import (
 	"fmt"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/page"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -60,7 +61,7 @@ func (tm *textInputModal) setError(err string) {
 	}
 }
 
-func (tm *textInputModal) handle() {
+func (tm *textInputModal) Handle() {
 
 	for tm.btnPositve.Button.Clicked() {
 		if tm.isLoading {
@@ -82,7 +83,7 @@ func (tm *textInputModal) handle() {
 	}
 }
 
-func (tm *textInputModal) Layout(gtx layout.Context) ui.D {
+func (tm *textInputModal) Layout(gtx layout.Context) page.D {
 
 	var w []layout.Widget
 

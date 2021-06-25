@@ -1,7 +1,8 @@
-package ui
+package page
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageStat = "Stat"
+const Statistics = "Statistics"
 
 type statPage struct {
 	common      *pageCommon
@@ -70,7 +71,7 @@ func (pg *statPage) layoutStats(gtx C) D {
 			r := pg.theme.Body2(v)
 			r.Color = pg.theme.Color.Gray
 			return inset.Layout(gtx, func(gtx C) D {
-				return endToEndRow(gtx, l.Layout, r.Layout)
+				return ui.endToEndRow(gtx, l.Layout, r.Layout)
 			})
 		}
 	}

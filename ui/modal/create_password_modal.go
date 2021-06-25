@@ -3,6 +3,7 @@ package modal
 import (
 	"fmt"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/page"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -117,7 +118,7 @@ func (cm *CreatePasswordModal) SetError(err string) {
 
 }
 
-func (cm *CreatePasswordModal) handle() {
+func (cm *CreatePasswordModal) Handle() {
 	if cm.passwordEditor.Editor.Text() == cm.confirmPasswordEditor.Editor.Text() {
 		// reset error label when password and matching password fields match
 		cm.confirmPasswordEditor.SetError("")
@@ -169,38 +170,38 @@ func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (cm *CreatePasswordModal) Layout(gtx layout.Context) ui.D {
+func (cm *CreatePasswordModal) Layout(gtx layout.Context) page.D {
 	w := []layout.Widget{
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			t := cm.Theme.H6(cm.dialogTitle)
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			if cm.walletNameEnabled {
 				return cm.walletName.Layout(gtx)
 			}
 			return layout.Dimensions{}
 		},
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			return cm.passwordEditor.Layout(gtx)
 		},
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			return cm.passwordStrength.Layout(gtx)
 		},
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			return cm.confirmPasswordEditor.Layout(gtx)
 		},
-		func(gtx ui.C) ui.D {
-			return layout.E.Layout(gtx, func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
+			return layout.E.Layout(gtx, func(gtx page.C) page.D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx ui.C) ui.D {
+					layout.Rigid(func(gtx page.C) page.D {
 
 						cm.btnNegative.Background = cm.Theme.Color.Surface
 						cm.btnNegative.Color = cm.Theme.Color.Primary
 						return cm.btnNegative.Layout(gtx)
 					}),
-					layout.Rigid(func(gtx ui.C) ui.D {
+					layout.Rigid(func(gtx page.C) page.D {
 						if cm.isLoading {
 							return cm.materialLoader.Layout(gtx)
 						}

@@ -1,6 +1,8 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"image/color"
 
 	"gioui.org/io/clipboard"
@@ -13,7 +15,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageSignMessage = "SignMessage"
+const SignMessage = "SignMessage"
 
 type signMessagePage struct {
 	common    *pageCommon
@@ -107,7 +109,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			infoTemplate: SignMessageInfoTemplate,
+			infoTemplate: modal.SignMessageInfoTemplate,
 		}
 		return common.SubPageLayout(gtx, page)
 	}
@@ -224,10 +226,10 @@ func (pg *signMessagePage) handle() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()
 
-			newPasswordModal(common).
+			modal.newPasswordModal(common).
 				title("Confirm to sign").
 				negativeButton("Cancel", func() {}).
-				positiveButton("Confirm", func(password string, pm *passwordModal) bool {
+				positiveButton("Confirm", func(password string, pm *modal.passwordModal) bool {
 
 					go func() {
 						sig, err := pg.wallet.SignMessage([]byte(password), address, message)

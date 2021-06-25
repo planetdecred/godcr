@@ -1,17 +1,17 @@
-package ui
+package page
 
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageAbout = "About"
+const About = "About"
 
 type aboutPage struct {
-	common    *pageCommon
+	*load.Load
 	theme     *decredmaterial.Theme
 	card      decredmaterial.Card
 	container *layout.List
@@ -30,24 +30,22 @@ type aboutPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func AboutPage(common *pageCommon) Page {
+func AboutPage(l *load.Load) load.Page {
 	pg := &aboutPage{
-		common:           common,
-		theme:            common.theme,
-		card:             common.theme.Card(),
+		card:             l.Theme.Card(),
 		container:        &layout.List{Axis: layout.Vertical},
-		version:          common.theme.Body1("Version"),
-		versionValue:     common.theme.Body1("v1.5.2"),
-		buildDate:        common.theme.Body1("Build date"),
-		buildDateValue:   common.theme.Body1("2020-09-10"),
-		network:          common.theme.Body1("Network"),
-		networkValue:     common.theme.Body1(common.wallet.Net),
-		license:          common.theme.Body1("License"),
+		version:          l.Theme.Body1("Version"),
+		versionValue:     l.Theme.Body1("v1.5.2"),
+		buildDate:        l.Theme.Body1("Build date"),
+		buildDateValue:   l.Theme.Body1("2020-09-10"),
+		network:          l.Theme.Body1("Network"),
+		networkValue:     l.Theme.Body1(l.WL.Wallet.Net),
+		license:          l.Theme.Body1("License"),
 		licenseRow:       new(widget.Clickable),
-		chevronRightIcon: common.icons.chevronRight,
+		chevronRightIcon: l.Icons.ChevronRight,
 	}
 
-	pg.backButton, _ = common.SubPageHeaderButtons()
+	pg.backButton, _ = subpageHeaderButtons(l)
 	pg.versionValue.Color = pg.theme.Color.Gray
 	pg.buildDateValue.Color = pg.theme.Color.Gray
 	pg.networkValue.Color = pg.theme.Color.Gray
@@ -66,7 +64,7 @@ func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 			title:      "About",
 			backButton: pg.backButton,
 			back: func() {
-				pg.common.changePage(PageMore)
+				pg.ChangePage(PageMore)
 			},
 			body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
@@ -74,10 +72,10 @@ func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 				})
 			},
 		}
-		return pg.common.SubPageLayout(gtx, page)
+		return page.Layout(gtx)
 	}
 
-	return pg.common.UniformPadding(gtx, body)
+	return uniformPadding(gtx, body)
 }
 
 func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
@@ -131,9 +129,10 @@ func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *aboutPage) handle() {
+func (pg *aboutPage) Handle() {
 	if pg.licenseRow.Clicked() {
-		pg.common.changeFragment(LicensePage(pg.common), PageLicense)
+		pg.ChangeFragment(LicensePage(pg.common), PageLicense)
 	}
 }
-func (pg *aboutPage) onClose() {}
+
+func (pg *aboutPage) OnClose() {}

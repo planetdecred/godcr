@@ -1,16 +1,16 @@
-package ui
+package page
 
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/planetdecred/godcr/ui/modal"
-
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageWalletSettings = "WalletSettings"
+const WalletSettings = "WalletSettings"
 
 type walletSettingsPage struct {
 	theme  *decredmaterial.Theme
@@ -183,7 +183,7 @@ func (pg *walletSettingsPage) handle() {
 			title(values.String(values.StrChangeSpendingPass)).
 			hint("Current spending password").
 			negativeButton(values.String(values.StrCancel), func() {}).
-			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+			positiveButton(values.String(values.StrConfirm), func(password string, pm *modal.passwordModal) bool {
 				go func() {
 					err := pg.wallet.UnlockWallet([]byte(password))
 					if err != nil {
@@ -223,7 +223,7 @@ func (pg *walletSettingsPage) handle() {
 
 	for pg.rescan.Clicked() {
 		go func() {
-			info := newInfoModal(common).
+			info := modal.newInfoModal(common).
 				title(values.String(values.StrRescanBlockchain)).
 				body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
 					" blockchain for transactions").
@@ -252,13 +252,13 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		newInfoModal(common).
+		modal.newInfoModal(common).
 			title(values.String(values.StrRemoveWallet)).
 			body("Make sure to have the seed phrase backed up before removing the wallet").
 			negativeButton(values.String(values.StrCancel), func() {}).
 			positiveButton(values.String(values.StrRemove), func() {
 
-				newPasswordModal(common).
+				modal.newPasswordModal(common).
 					title(values.String(values.StrConfirmToRemove)).
 					negativeButton(values.String(values.StrCancel), func() {}).
 					positiveButtonStyle(common.theme.Color.Surface, common.theme.Color.Danger).

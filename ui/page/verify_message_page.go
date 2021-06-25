@@ -1,6 +1,8 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"image/color"
 	"strings"
 
@@ -12,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageVerifyMessage = "VerifyMessage"
+const VerifyMessage = "VerifyMessage"
 
 type verifyMessagePage struct {
 	theme                                 *decredmaterial.Theme
@@ -27,7 +29,7 @@ type verifyMessagePage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func VerifyMessagePage(c *pageCommon) Page {
+func VerifyMessagePage(l *load.Load) load.Page {
 	pg := &verifyMessagePage{
 		theme:         c.theme,
 		common:        c,
@@ -87,7 +89,7 @@ func (pg *verifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			infoTemplate: VerifyMessageInfoTemplate,
+			infoTemplate: modal.VerifyMessageInfoTemplate,
 		}
 		return c.SubPageLayout(gtx, load)
 	}

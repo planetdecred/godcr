@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/planetdecred/godcr/ui/load"
+
 	"gioui.org/gesture"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
@@ -37,7 +39,7 @@ func translateErr(err error) string {
 	return err.Error()
 }
 
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
+func MustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}
@@ -158,7 +160,7 @@ func ComputePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 	pb.Color = th.Color.Success
 }
 
-func ticketStatusIcon(c *pageCommon, ticketStatus string) *struct {
+func ticketStatusIcon(th *decredmaterial.Theme, ic load.Icons, ticketStatus string) *struct {
 	icon       *widget.Image
 	color      color.NRGBA
 	background color.NRGBA
@@ -169,39 +171,39 @@ func ticketStatusIcon(c *pageCommon, ticketStatus string) *struct {
 		background color.NRGBA
 	}{
 		"UNMINED": {
-			c.icons.ticketUnminedIcon,
-			c.theme.Color.DeepBlue,
-			c.theme.Color.LightBlue,
+			ic.TicketUnminedIcon,
+			th.Color.DeepBlue,
+			th.Color.LightBlue,
 		},
 		"IMMATURE": {
-			c.icons.ticketImmatureIcon,
-			c.theme.Color.DeepBlue,
-			c.theme.Color.LightBlue,
+			ic.TicketImmatureIcon,
+			th.Color.DeepBlue,
+			th.Color.LightBlue,
 		},
 		"LIVE": {
-			c.icons.ticketLiveIcon,
-			c.theme.Color.Primary,
-			c.theme.Color.LightBlue,
+			ic.TicketLiveIcon,
+			th.Color.Primary,
+			th.Color.LightBlue,
 		},
 		"VOTED": {
-			c.icons.ticketVotedIcon,
-			c.theme.Color.Success,
-			c.theme.Color.Success2,
+			ic.TicketVotedIcon,
+			th.Color.Success,
+			th.Color.Success2,
 		},
 		"MISSED": {
-			c.icons.ticketMissedIcon,
-			c.theme.Color.Gray,
-			c.theme.Color.LightGray,
+			ic.TicketMissedIcon,
+			th.Color.Gray,
+			th.Color.LightGray,
 		},
 		"EXPIRED": {
-			c.icons.ticketExpiredIcon,
-			c.theme.Color.Gray,
-			c.theme.Color.LightGray,
+			ic.TicketExpiredIcon,
+			th.Color.Gray,
+			th.Color.LightGray,
 		},
 		"REVOKED": {
-			c.icons.ticketRevokedIcon,
-			c.theme.Color.Orange,
-			c.theme.Color.Orange2,
+			ic.TicketRevokedIcon,
+			th.Color.Orange,
+			th.Color.Orange2,
 		},
 	}
 	st, ok := m[ticketStatus]

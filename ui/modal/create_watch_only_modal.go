@@ -3,6 +3,7 @@ package modal
 import (
 	"fmt"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/page"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -92,7 +93,7 @@ func (cm *createWatchOnlyModal) watchOnlyCreated(callback func(walletName, extPu
 	return cm
 }
 
-func (cm *createWatchOnlyModal) handle() {
+func (cm *createWatchOnlyModal) Handle() {
 
 	if ui.EditorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor) ||
 		ui.HandleSubmitEvent(cm.walletName.Editor, cm.extendedPubKey.Editor) {
@@ -111,29 +112,29 @@ func (cm *createWatchOnlyModal) handle() {
 	}
 }
 
-func (cm *createWatchOnlyModal) Layout(gtx layout.Context) ui.D {
+func (cm *createWatchOnlyModal) Layout(gtx layout.Context) page.D {
 	w := []layout.Widget{
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			t := cm.Theme.H6(values.String(values.StrImportWatchingOnlyWallet))
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			return cm.walletName.Layout(gtx)
 		},
-		func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
 			return cm.extendedPubKey.Layout(gtx)
 		},
-		func(gtx ui.C) ui.D {
-			return layout.E.Layout(gtx, func(gtx ui.C) ui.D {
+		func(gtx page.C) page.D {
+			return layout.E.Layout(gtx, func(gtx page.C) page.D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx ui.C) ui.D {
+					layout.Rigid(func(gtx page.C) page.D {
 
 						cm.btnNegative.Background = cm.Theme.Color.Surface
 						cm.btnNegative.Color = cm.Theme.Color.Primary
 						return cm.btnNegative.Layout(gtx)
 					}),
-					layout.Rigid(func(gtx ui.C) ui.D {
+					layout.Rigid(func(gtx page.C) page.D {
 						if cm.isLoading {
 							return cm.materialLoader.Layout(gtx)
 						}

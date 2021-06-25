@@ -1,6 +1,8 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"image"
 
 	"gioui.org/layout"
@@ -10,7 +12,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageSecurityTools = "SecurityTools"
+const SecurityTools = "SecurityTools"
 
 type securityToolsPage struct {
 	theme           *decredmaterial.Theme
@@ -22,7 +24,7 @@ type securityToolsPage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func SecurityToolsPage(common *pageCommon) Page {
+func SecurityToolsPage(l *load.Load) load.Page {
 	pg := &securityToolsPage{
 		theme:           common.theme,
 		verifyMessage:   new(widget.Clickable),
@@ -62,7 +64,7 @@ func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 					)
 				})
 			},
-			infoTemplate: SecurityToolsInfoTemplate,
+			infoTemplate: modal.SecurityToolsInfoTemplate,
 		}
 		return common.SubPageLayout(gtx, page)
 	}

@@ -1,7 +1,9 @@
-package ui
+package page
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/load"
 	"image/color"
 	"strings"
 
@@ -19,7 +21,7 @@ import (
 )
 
 const (
-	PageCreateRestore = "CreateRestore"
+	CreateRestore = "CreateRestore"
 	numberOfSeeds     = 32
 )
 
@@ -75,7 +77,7 @@ type createRestore struct {
 }
 
 // Loading lays out the loading widget with a faded background
-func CreateRestorePage(common *pageCommon) Page {
+func CreateRestorePage(l *load.Load) load.Page {
 	pg := &createRestore{
 		common:   common,
 		theme:    common.theme,
@@ -632,7 +634,7 @@ func (pg *createRestore) handle() {
 			_, err := pg.common.multiWallet.RestoreWallet(walletName, pg.seedPhrase, pass, dcrlibwallet.PassphraseTypePass)
 			pg.restoringWallet = false
 			if err != nil {
-				pg.errLabel.Text = translateErr(err)
+				pg.errLabel.Text = ui.translateErr(err)
 				return
 			}
 

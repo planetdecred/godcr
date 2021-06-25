@@ -1,6 +1,7 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
 	"image/color"
 
 	"gioui.org/text"
@@ -35,7 +36,7 @@ type validateAddressPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func ValidateAddressPage(common *pageCommon) Page {
+func ValidateAddressPage(l *load.Load) load.Page {
 	pg := &validateAddressPage{
 		theme:       common.theme,
 		validateBtn: common.theme.Button(new(widget.Clickable), "Validate"),

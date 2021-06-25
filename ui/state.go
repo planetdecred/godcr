@@ -4,6 +4,7 @@ import (
 	"gioui.org/op"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -101,7 +102,7 @@ func (win *Window) updateStates(update interface{}) {
 }
 
 func (win *Window) notifyOnSuccess(text string) {
-	win.toast = &toast{
+	win.toast = &page.toast{
 		text:    text,
 		success: true,
 	}

@@ -1,12 +1,13 @@
-package ui
+package page
 
 import (
 	"fmt"
-
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
+	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/load"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -17,7 +18,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageUTXO = "unspentTransactionOutput"
+const UTXO = "unspentTransactionOutput"
 
 type utxoPage struct {
 	theme                  *decredmaterial.Theme
@@ -41,7 +42,7 @@ type utxoPage struct {
 	selectedAccountID int32
 }
 
-func UTXOPage(common *pageCommon) Page {
+func UTXOPage(l *load.Load) load.Page {
 	pg := &utxoPage{
 		theme:          common.theme,
 		common:         common,
@@ -133,12 +134,12 @@ func (pg *utxoPage) calculateAmountAndFeeUTXO() {
 	}
 	err := pg.txAuthor.UseInputs(utxoKeys)
 	if err != nil {
-		log.Error(err)
+		ui.log.Error(err)
 		return
 	}
 	feeAndSize, err := pg.txAuthor.EstimateFeeAndSize()
 	if err != nil {
-		log.Error(err)
+		ui.log.Error(err)
 		return
 	}
 	pg.txnAmount = dcrutil.Amount(totalAmount).String()

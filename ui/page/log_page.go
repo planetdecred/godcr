@@ -1,6 +1,7 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
 	"sync"
 
 	"gioui.org/io/clipboard"
@@ -11,7 +12,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageLog = "Log"
+const Log = "Log"
 
 type logPage struct {
 	theme  *decredmaterial.Theme
@@ -27,7 +28,7 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func LogPage(common *pageCommon) Page {
+func LogPage(l *load.Load) load.Page {
 	pg := &logPage{
 		common: common,
 		theme:  common.theme,

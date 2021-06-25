@@ -1,6 +1,7 @@
-package ui
+package page
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
 	"image"
 
 	"gioui.org/layout"
@@ -10,7 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageHelp = "Help"
+const Help = "Help"
 
 type helpPage struct {
 	theme         *decredmaterial.Theme
@@ -20,7 +21,7 @@ type helpPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func HelpPage(common *pageCommon) Page {
+func HelpPage(l *load.Load) load.Page {
 	pg := &helpPage{
 		theme:         common.theme,
 		documentation: new(widget.Clickable),
