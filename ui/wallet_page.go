@@ -1,12 +1,10 @@
 package ui
 
 import (
-	"image"
 	"image/color"
 	"strings"
 
 	"gioui.org/gesture"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/unit"
@@ -27,6 +25,7 @@ type walletListItem struct {
 
 	totalBalance string
 	optionsMenu  []menuItem
+	accountsList *decredmaterial.ClickableList
 
 	// normal wallets
 	collapsible   *decredmaterial.CollapsibleWithOption
@@ -52,24 +51,24 @@ type walletPage struct {
 	common *pageCommon
 	theme  *decredmaterial.Theme
 
-	walletIcon                                 *widget.Image
-	accountIcon                                *widget.Image
-	walletAlertIcon                            *widget.Image
-	container, accountsList, walletsList, list layout.List
-	toAcctDetails                              []*gesture.Click
-	iconButton                                 decredmaterial.IconButton
-	card                                       decredmaterial.Card
-	backdrops                                  []*widget.Clickable
-	backdropList                               *layout.List
-	optionsMenuCard                            decredmaterial.Card
-	addWalletMenu                              []menuItem
-	openPopupIndex                             int
-	openAddWalletPopupButton                   *widget.Clickable
-	isAddWalletMenuOpen                        bool
-	watchOnlyWalletLabel                       decredmaterial.Label
-	watchOnlyWalletIcon                        *widget.Image
-	shadowBox                                  *decredmaterial.Shadow
-	separator                                  decredmaterial.Line
+	walletIcon               *widget.Image
+	accountIcon              *widget.Image
+	walletAlertIcon          *widget.Image
+	container, walletsList   layout.List
+	toAcctDetails            []*gesture.Click
+	iconButton               decredmaterial.IconButton
+	card                     decredmaterial.Card
+	backdrops                []*widget.Clickable
+	backdropList             *layout.List
+	optionsMenuCard          decredmaterial.Card
+	addWalletMenu            []menuItem
+	openPopupIndex           int
+	openAddWalletPopupButton *widget.Clickable
+	isAddWalletMenuOpen      bool
+	watchOnlyWalletLabel     decredmaterial.Label
+	watchOnlyWalletIcon      *widget.Image
+	shadowBox                *decredmaterial.Shadow
+	separator                decredmaterial.Line
 }
 
 func WalletPage(common *pageCommon) Page {
@@ -77,9 +76,7 @@ func WalletPage(common *pageCommon) Page {
 		common:                   common,
 		multiWallet:              common.multiWallet,
 		container:                layout.List{Axis: layout.Vertical},
-		accountsList:             layout.List{Axis: layout.Vertical},
 		walletsList:              layout.List{Axis: layout.Vertical},
-		list:                     layout.List{Axis: layout.Vertical},
 		theme:                    common.theme,
 		card:                     common.theme.Card(),
 		backdropList:             &layout.List{Axis: layout.Vertical},
@@ -143,8 +140,9 @@ func (pg *walletPage) OnResume() {
 			wal:      wal,
 			accounts: accountsResult.Acc,
 
-			optionsMenu:  pg.getWalletMenu(wal),
 			totalBalance: dcrutil.Amount(totalBalance).String(),
+			optionsMenu:  pg.getWalletMenu(wal),
+			accountsList: pg.theme.NewClickableList(layout.Vertical),
 		}
 
 		if wal.IsWatchingOnlyWallet() {
@@ -443,11 +441,9 @@ func (pg *walletPage) walletSection(gtx layout.Context, common *pageCommon) layo
 						}.Layout(gtx, pg.theme.Separator().Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.accountsList.Layout(gtx, len(listItem.accounts), func(gtx C, x int) D {
-							click := pg.toAcctDetails[x]
-							pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-							click.Add(gtx.Ops)
-							pg.goToAcctDetails(gtx, common, listItem.accounts, i, click)
+						return listItem.accountsList.Layout(gtx, len(listItem.accounts), func(gtx C, x int) D {
+							// TODO
+							// pg.goToAcctDetails(gtx, common, listItem.accounts, i, click)
 							account := listItem.accounts[x]
 							return pg.walletAccountsLayout(gtx, account.Name, dcrutil.Amount(account.TotalBalance).String(),
 								dcrutil.Amount(account.Balance.Spendable).String(), common)
@@ -865,6 +861,10 @@ func (pg *walletPage) handle() {
 	}
 
 	for index, listItem := range pg.listItems {
+
+		if ok, _ := listItem.accountsList.ItemClicked(); ok {
+			// TODO
+		}
 
 		if listItem.wal.IsWatchingOnlyWallet() {
 			for listItem.moreButton.Button.Clicked() {
