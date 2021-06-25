@@ -109,7 +109,7 @@ func (sp *startPage) openWallets(passphrase string) error {
 
 func (sp *startPage) proceedToMainPage() {
 	sp.wallet.SetupListeners()
-	sp.changeWindowPage(newMainPage(sp.pageCommon))
+	sp.changeWindowPage(newMainPage(sp.pageCommon), false)
 }
 
 func (sp *startPage) handle() {
@@ -133,7 +133,7 @@ func (sp *startPage) handle() {
 	}
 
 	for sp.restoreButton.Button.Clicked() {
-		sp.changeWindowPage(CreateRestorePage(sp.pageCommon))
+		sp.changeWindowPage(CreateRestorePage(sp.pageCommon), true)
 	}
 }
 
