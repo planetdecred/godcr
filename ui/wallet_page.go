@@ -883,8 +883,7 @@ func (pg *walletPage) handle() {
 				case PageSignMessage:
 					common.changeFragment(SignMessagePage(common, listItem.wal), PageSignMessage)
 				case PagePrivacy:
-					//TODO
-					// common.changeFragment(PrivacyPage(common, walletID))
+					common.changeFragment(PrivacyPage(common, listItem.wal), PagePrivacy)
 				case PageSettings:
 					common.changeFragment(WalletSettingsPage(common, listItem.wal), PageWalletSettings)
 				default:

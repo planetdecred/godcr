@@ -98,7 +98,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			title:      pg.account.Name,
-			walletName: common.info.Wallets[*common.selectedWallet].Name,
+			walletName: pg.wallet.Name,
 			backButton: pg.backButton,
 			back: func() {
 				common.changePage(PageWallet)

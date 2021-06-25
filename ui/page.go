@@ -281,7 +281,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageAbout] = AboutPage(common)
 	pages[PageHelp] = HelpPage(common)
 	pages[PageUTXO] = UTXOPage(common)
-	pages[PagePrivacy] = PrivacyPage(common)
 	pages[PageTickets] = TicketPage(common)
 	pages[ValidateAddress] = ValidateAddressPage(common)
 	pages[PageTicketsList] = TicketPageList(common)
