@@ -273,7 +273,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageVerifyMessage] = VerifyMessagePage(common)
 	pages[PageSeedBackup] = BackupPage(common)
 	pages[PageSettings] = SettingsPage(common)
-	pages[PageWalletSettings] = WalletSettingsPage(common)
 	pages[PageSecurityTools] = SecurityToolsPage(common)
 	pages[PageProposals] = ProposalsPage(common)
 	pages[PageProposalDetails] = ProposalDetailsPage(common)

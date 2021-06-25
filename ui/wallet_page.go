@@ -891,8 +891,7 @@ func (pg *walletPage) handle() {
 					//TODO
 					// common.changeFragment(PrivacyPage(common, walletID))
 				case PageSettings:
-					//TODO
-					// common.changeFragment(WalletSettingsPage(common, walletID))
+					common.changeFragment(WalletSettingsPage(common, listItem.wal), PageWalletSettings)
 				default:
 					menu.action(common)
 				}
