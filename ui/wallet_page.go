@@ -2,7 +2,6 @@ package ui
 
 import (
 	"image/color"
-	"strings"
 
 	"gioui.org/gesture"
 	"gioui.org/layout"
@@ -433,11 +432,7 @@ func (pg *walletPage) walletSection(gtx layout.Context, common *pageCommon) layo
 					}),
 					layout.Rigid(func(gtx C) D {
 						return listItem.accountsList.Layout(gtx, len(listItem.accounts), func(gtx C, x int) D {
-							// TODO
-							// pg.goToAcctDetails(gtx, common, listItem.accounts, i, click)
-							account := listItem.accounts[x]
-							return pg.walletAccountsLayout(gtx, account.Name, dcrutil.Amount(account.TotalBalance).String(),
-								dcrutil.Amount(account.Balance.Spendable).String(), common)
+							return pg.walletAccountsLayout(gtx, listItem.accounts[x])
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -526,7 +521,6 @@ func (pg *walletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensio
 	})
 }
 
-//TODO simplify
 func (pg *walletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.listItems), func(gtx C, i int) D {
 		listItem := pg.listItems[i]
@@ -607,22 +601,10 @@ func (pg *walletPage) layoutCollapsibleHeader(gtx layout.Context, listItem *wall
 	)
 }
 
-func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label, isIcon bool, seed int) layout.Dimensions {
+func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decredmaterial.Label) layout.Dimensions {
 	m := values.MarginPadding0
-	if seed > 0 {
-		m = values.MarginPaddingMinus5
-	}
 
 	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			if isIcon {
-				inset := layout.Inset{
-					Right: values.MarginPadding10,
-				}
-				return inset.Layout(gtx, pg.walletIcon.Layout)
-			}
-			return layout.Dimensions{}
-		}),
 		layout.Rigid(func(gtx C) D {
 			inset := layout.Inset{
 				Top: m,
@@ -631,19 +613,6 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return leftLabel.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						if isIcon {
-							if seed > 0 {
-								txt := pg.theme.Caption(values.String(values.StrNotBackedUp))
-								txt.Color = pg.theme.Color.Danger
-								inset := layout.Inset{
-									Bottom: values.MarginPadding5,
-								}
-								return inset.Layout(gtx, txt.Layout)
-							}
-						}
-						return layout.Dimensions{}
 					}),
 				)
 			})
@@ -654,10 +623,15 @@ func (pg *walletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 	)
 }
 
-func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, spendableBal string, common *pageCommon) layout.Dimensions {
+func (pg *walletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwallet.Account) layout.Dimensions {
+	common := pg.common
+
 	pg.accountIcon = common.icons.accountIcon
-	if name == "imported" {
+	if account.Number == MaxInt32 {
 		pg.accountIcon = common.icons.importedAccountIcon
+		if account.TotalBalance == 0 {
+			return D{}
+		}
 	}
 	pg.accountIcon.Scale = 1.0
 
@@ -686,11 +660,11 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 								return inset.Layout(gtx, func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											acctName := strings.Title(strings.ToLower(name))
-											return pg.theme.H6(acctName).Layout(gtx)
+											return pg.theme.H6(account.Name).Layout(gtx)
 										}),
 										layout.Flexed(1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
+												totalBal := dcrutil.Amount(account.Balance.Spendable).String()
 												return common.layoutBalance(gtx, totalBal, true)
 											})
 										}),
@@ -702,11 +676,13 @@ func (pg *walletPage) walletAccountsLayout(gtx layout.Context, name, totalBal, s
 									Right: values.MarginPadding10,
 								}
 								return inset.Layout(gtx, func(gtx C) D {
-									spendibleLabel := pg.theme.Body2(values.String(values.StrLabelSpendable))
-									spendibleLabel.Color = pg.theme.Color.Gray
-									spendibleBalLabel := pg.theme.Body2(spendableBal)
-									spendibleBalLabel.Color = pg.theme.Color.Gray
-									return pg.tableLayout(gtx, spendibleLabel, spendibleBalLabel, false, 0)
+									spendableLabel := pg.theme.Body2(values.String(values.StrLabelSpendable))
+									spendableLabel.Color = pg.theme.Color.Gray
+
+									spendableBal := dcrutil.Amount(account.Balance.Spendable).String()
+									spendableBalLabel := pg.theme.Body2(spendableBal)
+									spendableBalLabel.Color = pg.theme.Color.Gray
+									return pg.tableLayout(gtx, spendableLabel, spendableBalLabel)
 								})
 							}),
 						)
