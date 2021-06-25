@@ -269,7 +269,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageMore] = MorePage(common)
 	pages[PageReceive] = ReceivePage(common)
 	pages[PageSend] = SendPage(common)
-	pages[PageSignMessage] = SignMessagePage(common)
 	pages[PageVerifyMessage] = VerifyMessagePage(common)
 	pages[PageSeedBackup] = BackupPage(common)
 	pages[PageSettings] = SettingsPage(common)

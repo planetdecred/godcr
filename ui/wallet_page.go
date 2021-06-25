@@ -826,6 +826,7 @@ func (pg *walletPage) handle() {
 	}
 
 	for index, listItem := range pg.listItems {
+		*common.selectedWallet = index
 
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
 			pg.common.changeFragment(AcctDetailsPage(common, listItem.accounts[selectedItem]), PageAccountDetails)
@@ -833,9 +834,7 @@ func (pg *walletPage) handle() {
 
 		if listItem.wal.IsWatchingOnlyWallet() {
 			for listItem.moreButton.Button.Clicked() {
-				// *common.selectedWallet = walletIndex
 				pg.openPopup(index)
-				//TODO
 			}
 		} else {
 			for listItem.collapsible.MoreTriggered() {
@@ -874,9 +873,6 @@ func (pg *walletPage) handle() {
 			}
 
 			for listItem.backupAcctBtn.Button.Clicked() {
-				// todo
-				// *common.selectedWallet = index
-				// pg.current = pg.walletInfo.Wallets[index]
 				common.changePage(PageSeedBackup)
 			}
 		}
@@ -885,8 +881,7 @@ func (pg *walletPage) handle() {
 			if menu.button.Clicked() {
 				switch menu.id {
 				case PageSignMessage:
-					//TODO
-					// common.changeFragment(SignMessagePage(common, walletID))
+					common.changeFragment(SignMessagePage(common, listItem.wal), PageSignMessage)
 				case PagePrivacy:
 					//TODO
 					// common.changeFragment(PrivacyPage(common, walletID))
