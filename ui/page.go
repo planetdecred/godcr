@@ -18,7 +18,6 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -88,6 +87,7 @@ type DCRUSDTBittrex struct {
 type pageCommon struct {
 	printer             *message.Printer
 	multiWallet         *dcrlibwallet.MultiWallet
+	network             string
 	notificationsUpdate chan interface{}
 	wallet              *wallet.Wallet
 	walletAccount       **wallet.Account
@@ -218,6 +218,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 	common := &pageCommon{
 		printer:             message.NewPrinter(language.English),
 		multiWallet:         win.wallet.GetMultiWallet(),
+		network:             win.wallet.Net,
 		notificationsUpdate: make(chan interface{}, 10),
 		wallet:              win.wallet,
 		walletAccount:       &win.walletAccount,
@@ -282,7 +283,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageAbout] = AboutPage(common)
 	pages[PageHelp] = HelpPage(common)
 	pages[PageUTXO] = UTXOPage(common)
-	pages[PageAccountDetails] = AcctDetailsPage(common)
 	pages[PagePrivacy] = PrivacyPage(common)
 	pages[PageTickets] = TicketPage(common)
 	pages[ValidateAddress] = ValidateAddressPage(common)
@@ -333,19 +333,15 @@ func (common *pageCommon) sortedWalletList() []*dcrlibwallet.Wallet {
 	return wallets
 }
 
-func (c *pageCommon) totalWalletBalance(walletID int) (dcrutil.Amount, error) {
-	wal := c.multiWallet.WalletWithID(walletID)
-	accountsResult, err := wal.GetAccountsRaw()
-	if err != nil {
-		return -1, err
+func (c *pageCommon) HDPrefix() string {
+	switch c.network {
+	case "testnet3": // should use a constant
+		return dcrlibwallet.TestnetHDPath
+	case "mainnet":
+		return dcrlibwallet.MainnetHDPath
+	default:
+		return ""
 	}
-
-	var totalBalance int64
-	for _, account := range accountsResult.Acc {
-		totalBalance += account.TotalBalance
-	}
-
-	return dcrutil.Amount(totalBalance), nil
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or

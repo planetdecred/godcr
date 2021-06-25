@@ -117,7 +117,7 @@ func WalletPage(common *pageCommon) Page {
 }
 
 func (pg *walletPage) OnResume() {
-	wallets := pg.multiWallet.AllWallets()
+	wallets := pg.common.sortedWalletList()
 
 	pg.listItems = make([]*walletListItem, 0)
 	for _, wal := range wallets {
@@ -851,8 +851,8 @@ func (pg *walletPage) handle() {
 
 	for index, listItem := range pg.listItems {
 
-		if ok, _ := listItem.accountsList.ItemClicked(); ok {
-			// TODO
+		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
+			pg.common.changeFragment(AcctDetailsPage(common, listItem.accounts[selectedItem]), PageAccountDetails)
 		}
 
 		if listItem.wal.IsWatchingOnlyWallet() {
