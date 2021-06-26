@@ -21,6 +21,7 @@ const (
 	sendingAccountTitle    = "Sending account"
 	receivingAccountTitle  = "Receiving account"
 	ticketAge              = "Ticket age"
+	durationMsg            = "10 hrs 47 mins (118/256 blocks)"
 )
 
 type (
@@ -39,6 +40,7 @@ type (
 		walletNameTooltip *decredmaterial.Tooltip
 		dateTooltip       *decredmaterial.Tooltip
 		daysBehindTooltip *decredmaterial.Tooltip
+		durationTooltip   *decredmaterial.Tooltip
 	}
 )
 
@@ -46,11 +48,18 @@ type (
 // balance at the baseline of the row.
 func (page *pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
-	mainText, subText := breakBalance(page.printer, amount)
+	mainMsg, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
+<<<<<<< HEAD
 			label := page.theme.Label(values.TextSize20, mainText)
 			label.Color = page.theme.Color.DeepBlue
+=======
+			label := page.theme.Label(values.TextSize20, mainMsg)
+			if isSwitchColor {
+				label.Color = page.theme.Color.DeepBlue
+			}
+>>>>>>> add ticket duration hover with dummy data
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -64,6 +73,12 @@ func (page *pageCommon) layoutBalance(gtx layout.Context, amount string) layout.
 var (
 	navDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
 	navDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+	title                   = ""
+	mainMsg                 = ""
+	mainMsgDesc             = ""
+	dayBehind               = ""
+	durationTitle           = ""
+	durationDesc            = ""
 )
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
