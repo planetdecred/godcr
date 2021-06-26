@@ -117,7 +117,11 @@ func (r *HTMLRenderer) prepareBold(node *goquery.Selection) {
 }
 
 func (r *HTMLRenderer) prepareFont(node *goquery.Selection) {
-	style := ""
+	style, _ := node.Attr("style")
+	if style != "" {
+		style += "; "
+	}
+
 	if color, ok := node.Attr("color"); ok {
 		style += "text-color: " + color + "; "
 	}
@@ -162,7 +166,7 @@ func (r *HTMLRenderer) getStyleMap(node *goquery.Selection) map[string]string {
 func (r *HTMLRenderer) styleMapToString(m map[string]string) string {
 	str := ""
 	for k, v := range m {
-		str += "#" + k + "--" + v
+		str += "##" + k + "--" + v
 	}
 
 	return str
@@ -193,7 +197,7 @@ func (r *HTMLRenderer) setNodeStyle(node *goquery.Selection, parentStyle map[str
 		}
 	}
 
-	styleTag := "{#" + r.styleMapToString(styleMap) + " "
+	styleTag := "{##" + r.styleMapToString(styleMap) + " "
 	endTag := " {/#} "
 	node = node.PrependHtml(styleTag)
 	if r.isBlockElement(goquery.NodeName(node)) {

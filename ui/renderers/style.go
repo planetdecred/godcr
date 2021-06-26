@@ -66,6 +66,10 @@ func (r *Renderer) styleLabel(label decredmaterial.Label) decredmaterial.Label {
 	label.Font.Weight = r.getLabelWeight(style["font-weight"])
 
 	colStr := style["text-color"]
+	if colStr == "" {
+		colStr = style["color"]
+	}
+
 	if col, ok := parseColorCode(colStr); ok {
 		label.Color = col
 	} else {

@@ -173,7 +173,7 @@ func (r *Renderer) renderText(node *ast.Text) {
 }
 
 func (r *Renderer) addStyleGroup(str string) {
-	parts := strings.Split(str, "#")
+	parts := strings.Split(str, "##")
 	styleMap := map[string]string{}
 
 	for i := range parts {
