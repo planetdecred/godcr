@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"encoding/json"

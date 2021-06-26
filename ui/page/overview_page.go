@@ -1,7 +1,8 @@
-package ui
+package page
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"image/color"
 	"time"
@@ -68,7 +69,7 @@ type overviewPage struct {
 	queue                 event.Queue
 }
 
-func OverviewPage(c *pageCommon) Page {
+func OverviewPage(l *load.Load) load.Page {
 	pg := &overviewPage{
 		pageCommon:  c,
 		pageClosing: make(chan bool, 1),

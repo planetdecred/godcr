@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageReceive = "Receive"
+const Receive = "Receive"
 
 type receivePage struct {
 	*pageCommon

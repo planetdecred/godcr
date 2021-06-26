@@ -1,4 +1,4 @@
-package ui
+package modal
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ type sendConfirmModal struct {
 	*comfirmModalData
 }
 
-func newSendConfirmModal(common *pageCommon, data *comfirmModalData) *sendConfirmModal {
+func NewSendConfirmModal(common *pageCommon, data *comfirmModalData) *sendConfirmModal {
 	scm := &sendConfirmModal{
 		pageCommon: common,
 		modal:      *common.theme.ModalFloatTitle(),

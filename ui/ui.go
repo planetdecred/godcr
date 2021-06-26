@@ -78,7 +78,7 @@ type Common struct {
 	walletTickets      **wallet.Tickets
 	vspInfo            **wallet.VSP
 	unspentOutputs     **wallet.UnspentOutputs
-	ShowModal          func()
+	ShowModal          func(Modal)
 	DismissModal       func(Modal)
 
 	testButton decredmaterial.Button

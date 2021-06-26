@@ -1,7 +1,8 @@
-package ui
+package page
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"image/color"
 	"strconv"
@@ -22,7 +23,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const PageTickets = "Tickets"
+const Tickets = "Tickets"
 
 type ticketPage struct {
 	th     *decredmaterial.Theme
@@ -69,7 +70,7 @@ type ticketPage struct {
 	isPurchaseLoading bool
 }
 
-func TicketPage(c *pageCommon) Page {
+func TicketPage(l *load.Load) load.Page {
 	pg := &ticketPage{
 		th:      c.theme,
 		wal:     c.wallet,

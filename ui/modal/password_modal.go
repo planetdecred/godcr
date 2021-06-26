@@ -3,6 +3,7 @@ package modal
 import (
 	"fmt"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
 	"image/color"
 
@@ -17,7 +18,7 @@ import (
 
 const Password = "password_modal"
 
-type passwordModal struct {
+type PasswordModal struct {
 	*ui.Common
 	randomID string
 	modal    decredmaterial.Modal
@@ -29,7 +30,7 @@ type passwordModal struct {
 	materialLoader material.LoaderStyle
 
 	positiveButtonText    string
-	positiveButtonClicked func(password string, m *passwordModal) bool // return true to dismiss dialog
+	positiveButtonClicked func(password string, m *PasswordModal) bool // return true to dismiss dialog
 	btnPositve            decredmaterial.Button
 
 	negativeButtonText    string
@@ -37,8 +38,8 @@ type passwordModal struct {
 	btnNegative           decredmaterial.Button
 }
 
-func NewPasswordModal(c *ui.Common) *passwordModal {
-	pm := &passwordModal{
+func NewPasswordModal(l *load.Load) *PasswordModal {
+	pm := &PasswordModal{
 		Common:  c,
 		randomID:    fmt.Sprintf("%s-%d", Password, ui.GenerateRandomNumber()),
 		modal:       *c.Theme.ModalFloatTitle(),
@@ -60,57 +61,57 @@ func NewPasswordModal(c *ui.Common) *passwordModal {
 	return pm
 }
 
-func (pm *passwordModal) ModalID() string {
+func (pm *PasswordModal) ModalID() string {
 	return pm.randomID
 }
 
-func (pm *passwordModal) OnResume() {
+func (pm *PasswordModal) OnResume() {
 }
 
-func (pm *passwordModal) OnDismiss() {
+func (pm *PasswordModal) OnDismiss() {
 
 }
 
-func (pm *passwordModal) Show() {
+func (pm *PasswordModal) Show() {
 	pm.ShowModal(pm)
 }
 
-func (pm *passwordModal) Dismiss() {
+func (pm *PasswordModal) Dismiss() {
 	pm.DismissModal(pm)
 }
 
-func (pm *passwordModal) title(title string) *passwordModal {
+func (pm *PasswordModal) Title(title string) *PasswordModal {
 	pm.dialogTitle = title
 	return pm
 }
 
-func (pm *passwordModal) hint(hint string) *passwordModal {
+func (pm *PasswordModal) Hint(hint string) *PasswordModal {
 	pm.password.Hint = hint
 	return pm
 }
 
-func (pm *passwordModal) positiveButtonStyle(background, text color.NRGBA) *passwordModal {
+func (pm *PasswordModal) PositiveButtonStyle(background, text color.NRGBA) *PasswordModal {
 	pm.btnPositve.Background, pm.btnPositve.Color = background, text
 	return pm
 }
 
-func (pm *passwordModal) positiveButton(text string, clicked func(password string, m *passwordModal) bool) *passwordModal {
+func (pm *PasswordModal) PositiveButton(text string, clicked func(password string, m *PasswordModal) bool) *PasswordModal {
 	pm.positiveButtonText = text
 	pm.positiveButtonClicked = clicked
 	return pm
 }
 
-func (pm *passwordModal) negativeButton(text string, clicked func()) *passwordModal {
+func (pm *PasswordModal) NegativeButton(text string, clicked func()) *PasswordModal {
 	pm.negativeButtonText = text
 	pm.negativeButtonClicked = clicked
 	return pm
 }
 
-func (pm *passwordModal) setLoading(loading bool) {
+func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
 }
 
-func (pm *passwordModal) setError(err string) {
+func (pm *PasswordModal) SetError(err string) {
 	if err == "" {
 		pm.password.ClearError()
 	} else {
@@ -118,7 +119,7 @@ func (pm *passwordModal) setError(err string) {
 	}
 }
 
-func (pm *passwordModal) Handle() {
+func (pm *PasswordModal) Handle() {
 
 	for pm.btnPositve.Button.Clicked() {
 
@@ -126,8 +127,8 @@ func (pm *passwordModal) Handle() {
 			continue
 		}
 
-		pm.setLoading(true)
-		pm.setError("")
+		pm.SetLoading(true)
+		pm.SetError("")
 		if pm.positiveButtonClicked(pm.password.Editor.Text(), pm) {
 			pm.DismissModal(pm)
 		}
@@ -141,7 +142,7 @@ func (pm *passwordModal) Handle() {
 	}
 }
 
-func (pm *passwordModal) Layout(gtx layout.Context) page.D {
+func (pm *PasswordModal) Layout(gtx layout.Context) page.D {
 	title := func(gtx page.C) page.D {
 		t := pm.Theme.H6(pm.dialogTitle)
 		t.Font.Weight = text.Bold

@@ -31,11 +31,6 @@ type (
 		index       int
 		showBadge   bool
 	}
-	toast struct {
-		text    string
-		success bool
-		timer   *time.Timer
-	}
 )
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
