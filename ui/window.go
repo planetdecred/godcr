@@ -2,8 +2,7 @@ package ui
 
 import (
 	"errors"
-	"github.com/planetdecred/godcr/ui/modal"
-	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"sync"
 	"time"
@@ -41,6 +40,7 @@ type Window struct {
 	proposal             chan *wallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
+	load   *load.Load
 	common *pageCommon
 
 	modalMutex sync.Mutex
@@ -56,7 +56,7 @@ type Window struct {
 	broadcastResult wallet.Broadcast
 
 	selected int
-	states
+	states   states
 
 	err string
 
@@ -112,12 +112,83 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.common = win.newPageCommon(decredIcons)
 
+	win.load = win.NewLoad(decredIcons)
+
 	return win, appWindow, nil
+}
+
+func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
+	l := load.NewLoad(win.theme, decredIcons)
+	l.WL = &load.WalletLoad{
+		MultiWallet:     win.wallet.GetMultiWallet(),
+		Wallet:          win.wallet,
+		Account:         win.walletAccount,
+		Info:            win.walletInfo,
+		SyncStatus:      win.walletSyncStatus,
+		Transactions:    win.walletTransactions,
+		UnspentOutputs:  win.walletUnspentOutputs,
+		Tickets:         win.walletTickets,
+		VspInfo:         win.vspInfo,
+		BroadcastResult: win.broadcastResult,
+		Proposals:       win.proposals,
+
+		SelectedProposal: win.selectedProposal,
+		TxAuthor:         win.txAuthor,
+	}
+
+	l.Receiver = &load.Receiver{
+		KeyEvents:           win.keyEvents,
+		AcctMixerStatus:     win.walletAcctMixerStatus,
+		InternalLog:         win.internalLog,
+		SyncedProposal:      win.proposal,
+		NotificationsUpdate: make(chan interface{}, 10),
+	}
+
+	l.SelectedWallet = &win.selected
+	l.RefreshWindow = win.refreshWindow
+	l.ShowModal = win._showModal
+	l.DismissModal = win._dismissModal
+	//l := &load.Load{
+	//	printer:             message.NewPrinter(language.English),
+	//	multiWallet:         win.wallet.GetMultiWallet(),
+	//	notificationsUpdate: make(chan interface{}, 10),
+	//	wallet:              win.wallet,
+	//	walletAccount:       &win.walletAccount,
+	//	info:                win.walletInfo,
+	//	selectedWallet:      &win.selected,
+	//	selectedAccount:     &win.selectedAccount,
+	//	theme:               win.theme,
+	//	keyEvents:           win.keyEvents,
+	//	states:              &win.states,
+	//	icons:               ic,
+	//	walletSyncStatus:    win.walletSyncStatus,
+	//	walletTransactions:  &win.walletTransactions,
+	//	// walletTransaction:  &win.walletTransaction,
+	//	acctMixerStatus:  &win.walletAcctMixerStatus,
+	//	selectedProposal: &win.selectedProposal,
+	//	proposals:        &win.proposals,
+	//	syncedProposal:   win.proposal,
+	//	txAuthor:         &win.txAuthor,
+	//	broadcastResult:  &win.broadcastResult,
+	//	signatureResult:  &win.signatureResult,
+	//	walletTickets:    &win.walletTickets,
+	//	vspInfo:          &win.vspInfo,
+	//	unspentOutputs:   &win.walletUnspentOutputs,
+	//	showModal:        win.showModal,
+	//	dismissModal:     win.dismissModal,
+	//	changeWindowPage: win.changePage,
+	//	refreshWindow:    win.refreshWindow,
+	//
+	//	selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
+	//	toast:        &win.toast,
+	//	internalLog:  &win.internalLog,
+	//}
+	return l
 }
 
 func (win *Window) Start() {
 	if win.currentPage == nil {
-		sp := newStartPage(win.common)
+		sp := newStartPage(win.common, win.load)
 		sp.OnResume()
 		win.currentPage = sp
 	}
@@ -125,7 +196,7 @@ func (win *Window) Start() {
 
 func (win *Window) changePage(page Page, keepBackStack bool) {
 	if win.currentPage != nil && keepBackStack {
-		win.currentPage.onClose()
+		win.currentPage.OnClose()
 		win.pageBackStack = append(win.pageBackStack, win.currentPage)
 	}
 
@@ -141,7 +212,7 @@ func (win *Window) popPage() bool {
 		previousPage := win.pageBackStack[len(win.pageBackStack)-1]
 		win.pageBackStack = win.pageBackStack[:len(win.pageBackStack)-1]
 
-		win.currentPage.onClose()
+		win.currentPage.OnClose()
 
 		previousPage.OnResume()
 		win.currentPage = previousPage
@@ -164,12 +235,32 @@ func (win *Window) showModal(modal Modal) {
 	win.modalMutex.Unlock()
 }
 
+func (win *Window) _showModal(modal interface{}) {
+	m := modal.(Modal)
+	m.OnResume() // setup display data
+	win.modalMutex.Lock()
+	win.modals = append(win.modals, m)
+	win.modalMutex.Unlock()
+}
+
 func (win *Window) dismissModal(modal Modal) {
 	win.modalMutex.Lock()
 	defer win.modalMutex.Unlock()
 	for i, m := range win.modals {
 		if m.ModalID() == modal.ModalID() {
 			modal.OnDismiss() // do garbage collection in modal
+			win.modals = append(win.modals[:i], win.modals[i+1:]...)
+		}
+	}
+}
+
+func (win *Window) _dismissModal(modal interface{}) {
+	mod := modal.(Modal)
+	win.modalMutex.Lock()
+	defer win.modalMutex.Unlock()
+	for i, m := range win.modals {
+		if m.ModalID() == mod.ModalID() {
+			mod.OnDismiss() // do garbage collection in modal
 			win.modals = append(win.modals[:i], win.modals[i+1:]...)
 		}
 	}
@@ -198,12 +289,12 @@ func (win *Window) layoutPage(gtx C, page Page) {
 			return decredmaterial.Fill(gtx, win.theme.Color.LightGray)
 		}),
 		layout.Stacked(func(gtx C) D {
-			page.handle()
+			page.Handle()
 			return page.Layout(gtx)
 		}),
 		layout.Stacked(func(gtx C) D {
 			for _, modal := range win.modals {
-				modal.handle()
+				modal.Handle()
 			}
 
 			// global modal. Stack modal on all pages and contents
@@ -298,7 +389,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 
 			case system.DestroyEvent:
 				if win.currentPage != nil {
-					win.currentPage.onClose()
+					win.currentPage.OnClose()
 				}
 				if win.walletInfo.Syncing || win.walletInfo.Synced {
 					win.sysDestroyWithSync = true

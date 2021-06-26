@@ -1,8 +1,7 @@
-package page
+package ui
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui/load"
 	"image/color"
 	"math/rand"
 	"strings"
@@ -22,7 +21,7 @@ import (
 )
 
 const (
-	SeedBackup = "SeedBackup"
+	PageSeedBackup = "SeedBackup"
 	infoView       = iota
 	seedView
 	verifyView
@@ -77,7 +76,7 @@ type backupPage struct {
 	privpass       []byte
 }
 
-func BackupPage(l *load.Load) load.Page {
+func BackupPage(c *pageCommon) Page {
 	b := &backupPage{
 		theme:  c.theme,
 		wal:    c.wallet,
@@ -511,7 +510,7 @@ func (pg *backupPage) cancel() {
 	pg.isPasswordModalOpen = false
 }
 
-func (pg *backupPage) handle() {
+func (pg *backupPage) Handle() {
 	c := pg.common
 	if pg.backButton.Button.Clicked() {
 		pg.resetPage(c)
@@ -560,4 +559,4 @@ func (pg *backupPage) handle() {
 	}
 }
 
-func (pg *backupPage) onClose() {}
+func (pg *backupPage) OnClose() {}

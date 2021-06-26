@@ -16,8 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/planetdecred/godcr/ui/load"
-
 	"gioui.org/gesture"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
@@ -39,14 +37,14 @@ func translateErr(err error) string {
 	return err.Error()
 }
 
-func MustIcon(ic *widget.Icon, err error) *widget.Icon {
+func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}
 	return ic
 }
 
-func EditorsNotEmpty(editors ...*widget.Editor) bool {
+func editorsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {
 			return false
@@ -55,7 +53,7 @@ func EditorsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func GenerateRandomNumber() int {
+func generateRandomNumber() int {
 	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 }
 
@@ -153,14 +151,14 @@ func goToURL(url string) {
 	}
 }
 
-func ComputePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
+func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
 	pb.Progress = float32(strength * 100)
 	pb.Color = th.Color.Success
 }
 
-func ticketStatusIcon(th *decredmaterial.Theme, ic load.Icons, ticketStatus string) *struct {
+func ticketStatusIcon(c *pageCommon, ticketStatus string) *struct {
 	icon       *widget.Image
 	color      color.NRGBA
 	background color.NRGBA
@@ -171,39 +169,39 @@ func ticketStatusIcon(th *decredmaterial.Theme, ic load.Icons, ticketStatus stri
 		background color.NRGBA
 	}{
 		"UNMINED": {
-			ic.TicketUnminedIcon,
-			th.Color.DeepBlue,
-			th.Color.LightBlue,
+			c.icons.ticketUnminedIcon,
+			c.theme.Color.DeepBlue,
+			c.theme.Color.LightBlue,
 		},
 		"IMMATURE": {
-			ic.TicketImmatureIcon,
-			th.Color.DeepBlue,
-			th.Color.LightBlue,
+			c.icons.ticketImmatureIcon,
+			c.theme.Color.DeepBlue,
+			c.theme.Color.LightBlue,
 		},
 		"LIVE": {
-			ic.TicketLiveIcon,
-			th.Color.Primary,
-			th.Color.LightBlue,
+			c.icons.ticketLiveIcon,
+			c.theme.Color.Primary,
+			c.theme.Color.LightBlue,
 		},
 		"VOTED": {
-			ic.TicketVotedIcon,
-			th.Color.Success,
-			th.Color.Success2,
+			c.icons.ticketVotedIcon,
+			c.theme.Color.Success,
+			c.theme.Color.Success2,
 		},
 		"MISSED": {
-			ic.TicketMissedIcon,
-			th.Color.Gray,
-			th.Color.LightGray,
+			c.icons.ticketMissedIcon,
+			c.theme.Color.Gray,
+			c.theme.Color.LightGray,
 		},
 		"EXPIRED": {
-			ic.TicketExpiredIcon,
-			th.Color.Gray,
-			th.Color.LightGray,
+			c.icons.ticketExpiredIcon,
+			c.theme.Color.Gray,
+			c.theme.Color.LightGray,
 		},
 		"REVOKED": {
-			ic.TicketRevokedIcon,
-			th.Color.Orange,
-			th.Color.Orange2,
+			c.icons.ticketRevokedIcon,
+			c.theme.Color.Orange,
+			c.theme.Color.Orange2,
 		},
 	}
 	st, ok := m[ticketStatus]
@@ -213,7 +211,7 @@ func ticketStatusIcon(th *decredmaterial.Theme, ic load.Icons, ticketStatus stri
 	return &st
 }
 
-func HandleSubmitEvent(editors ...*widget.Editor) bool {
+func handleSubmitEvent(editors ...*widget.Editor) bool {
 	var submit bool
 	for _, editor := range editors {
 		for _, e := range editor.Events() {

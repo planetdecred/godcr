@@ -1,11 +1,14 @@
 // components contain layout code that are shared by multiple pages but aren't widely used enough to be defined as
 // widgets
 
-package page
+package ui
 
 import (
-	"github.com/planetdecred/godcr/ui/load"
+	"image"
+	"strings"
+	"time"
 
+	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -13,6 +16,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -27,62 +31,44 @@ type (
 		index       int
 		showBadge   bool
 	}
+	toast struct {
+		text    string
+		success bool
+		timer   *time.Timer
+	}
 )
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-//func (page *pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitchColor bool) layout.Dimensions {
-//	// todo: make "DCR" symbols small when there are no decimals in the balance
-//	mainText, subText := breakBalance(page.printer, amount)
-//	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-//		layout.Rigid(func(gtx C) D {
-//			label := page.theme.Label(values.TextSize20, mainText)
-//			if isSwitchColor {
-//				label.Color = page.theme.Color.DeepBlue
-//			}
-//			return label.Layout(gtx)
-//		}),
-//		layout.Rigid(func(gtx C) D {
-//			label := page.theme.Label(values.TextSize14, subText)
-//			if isSwitchColor {
-//				label.Color = page.theme.Color.DeepBlue
-//			}
-//			return label.Layout(gtx)
-//		}),
-//	)
-//}
-
-var (
-	navDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
-	navDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
-)
-
-// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
-// balance at the baseline of the row.
-func layoutBalance(gtx layout.Context, l *load.Load, amount string, isSwitchColor bool) layout.Dimensions {
+func (page *pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitchColor bool) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
-	mainText, subText := breakBalance(l.Printer, amount)
+	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			label := l.Theme.Label(values.TextSize20, mainText)
+			label := page.theme.Label(values.TextSize20, mainText)
 			if isSwitchColor {
-				label.Color = l.Theme.Color.DeepBlue
+				label.Color = page.theme.Color.DeepBlue
 			}
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			label := l.Theme.Label(values.TextSize14, subText)
+			label := page.theme.Label(values.TextSize14, subText)
 			if isSwitchColor {
-				label.Color = l.Theme.Color.DeepBlue
+				label.Color = page.theme.Color.DeepBlue
 			}
 			return label.Layout(gtx)
 		}),
 	)
 }
 
+var (
+	navDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
+	navDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+)
+
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
-func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {
+func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	directionIconTopMargin := values.MarginPadding16
 
@@ -93,14 +79,14 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 		directionIconTopMargin = values.MarginPadding0
 	}
 
-	wal := l.WL.MultiWallet.WalletWithID(row.transaction.WalletID)
+	wal := common.multiWallet.WalletWithID(row.transaction.WalletID)
 
 	return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				icon := l.Icons.ReceiveIcon
+				icon := common.icons.receiveIcon
 				if row.transaction.Direction == dcrlibwallet.TxDirectionSent {
-					icon = l.Icons.SendIcon
+					icon = common.icons.sendIcon
 				}
 				icon.Scale = 1.0
 
@@ -115,7 +101,7 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 							return layout.Dimensions{}
 						}
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						separator := l.Theme.Separator()
+						separator := common.theme.Separator()
 						separator.Width = gtx.Constraints.Max.X - gtx.Px(unit.Dp(16))
 						return layout.E.Layout(gtx, func(gtx C) D {
 							// Todo: add comment
@@ -141,11 +127,11 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return layoutBalance(gtx, l, dcrutil.Amount(row.transaction.Amount).String(), true)
+												return common.layoutBalance(gtx, dcrutil.Amount(row.transaction.Amount).String(), true)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {
-													return walletLabel(gtx, l, wal.Name)
+													return walletLabel(gtx, common, wal.Name)
 												}
 												return layout.Dimensions{}
 											}),
@@ -157,11 +143,11 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 												func(gtx C) D {
-													status := l.Theme.Body1("pending")
-													if txConfirmations(l, row.transaction) <= 1 {
-														status.Color = l.Theme.Color.Gray5
+													status := common.theme.Body1("pending")
+													if txConfirmations(common, row.transaction) <= 1 {
+														status.Color = common.theme.Color.Gray5
 													} else {
-														status.Color = l.Theme.Color.Gray4
+														status.Color = common.theme.Color.Gray4
 														status.Text = formatDateOrTime(row.transaction.Timestamp)
 													}
 													status.Alignment = text.Middle
@@ -170,9 +156,9 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-												statusIcon := l.Icons.ConfirmIcon
-												if txConfirmations(l, row.transaction) <= 1 {
-													statusIcon = l.Icons.PendingIcon
+												statusIcon := common.icons.confirmIcon
+												if txConfirmations(common, row.transaction) <= 1 {
+													statusIcon = common.icons.pendingIcon
 												}
 												statusIcon.Scale = 1.0
 												return statusIcon.Layout(gtx)
@@ -189,28 +175,28 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 	})
 }
 
-func txConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {
+func txConfirmations(common *pageCommon, transaction dcrlibwallet.Transaction) int32 {
 	if transaction.BlockHeight != -1 {
 		// TODO
-		return (l.WL.MultiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
+		return (common.multiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
 	}
 
 	return 0
 }
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
-//// are transactions from multiple wallets
-func walletLabel(gtx layout.Context, l *load.Load, walletName string) D {
+// are transactions from multiple wallets
+func walletLabel(gtx layout.Context, c *pageCommon, walletName string) D {
 	return decredmaterial.Card{
-		Color: l.Theme.Color.LightGray,
+		Color: c.theme.Color.LightGray,
 	}.Layout(gtx, func(gtx C) D {
 		return Container{
 			layout.Inset{
 				Left:  values.MarginPadding4,
 				Right: values.MarginPadding4,
 			}}.Layout(gtx, func(gtx C) D {
-			name := l.Theme.Label(values.TextSize12, walletName)
-			name.Color = l.Theme.Color.Gray
+			name := c.theme.Label(values.TextSize12, walletName)
+			name.Color = c.theme.Color.Gray
 			return name.Layout(gtx)
 		})
 	})
@@ -226,7 +212,6 @@ func endToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.D
 	)
 }
 
-/*
 func (page *pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
@@ -261,9 +246,9 @@ func (page *pageCommon) initSelectAccountWidget(wallAcct map[int][]walletAccount
 			}
 		}
 	}
-}*/
+}
 
-/*func ticketStatusTooltip(gtx C, c *pageCommon, rect image.Rectangle, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+func ticketStatusTooltip(gtx C, c *pageCommon, rect image.Rectangle, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
 	inset := layout.Inset{
 		Top:   values.MarginPadding15,
 		Right: unit.Dp(-150),
@@ -329,10 +314,10 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	return func(gtx C) D {
 		return inset.Layout(gtx, body)
 	}
-}*/
+}
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-/*func ticketCard(gtx layout.Context, c *pageCommon, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+func ticketCard(gtx layout.Context, c *pageCommon, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
 	var itemWidth int
 	st := ticketStatusIcon(c, t.Info.Status)
 	if st == nil {
@@ -474,10 +459,10 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 			}),
 		)
 	})
-}*/
+}
 
 // ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
-/*func ticketActivityRow(gtx layout.Context, c *pageCommon, t wallet.Ticket, index int) layout.Dimensions {
+func ticketActivityRow(gtx layout.Context, c *pageCommon, t wallet.Ticket, index int) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -560,30 +545,29 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 			)
 		}),
 	)
-}*/
-
-func displayToast(th *decredmaterial.Theme, gtx layout.Context, t *load.Toast) layout.Dimensions {
-	//color := th.Color.Success
-	//if !n.success {
-	//	color = th.Color.Danger
-	//}
-	//
-	//card := th.Card()
-	//card.Color = color
-	//return card.Layout(gtx, func(gtx C) D {
-	//	return layout.Inset{
-	//		Top: values.MarginPadding7, Bottom: values.MarginPadding7,
-	//		Left: values.MarginPadding15, Right: values.MarginPadding15,
-	//	}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-	//		t := th.Body1(n.text)
-	//		t.Color = th.Color.Surface
-	//		return t.Layout(gtx)
-	//	})
-	//})
-	return layout.Dimensions{}
 }
 
-/*func (page *pageCommon) handleToast() {
+func displayToast(th *decredmaterial.Theme, gtx layout.Context, n *toast) layout.Dimensions {
+	color := th.Color.Success
+	if !n.success {
+		color = th.Color.Danger
+	}
+
+	card := th.Card()
+	card.Color = color
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Inset{
+			Top: values.MarginPadding7, Bottom: values.MarginPadding7,
+			Left: values.MarginPadding15, Right: values.MarginPadding15,
+		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			t := th.Body1(n.text)
+			t.Color = th.Color.Surface
+			return t.Layout(gtx)
+		})
+	})
+}
+
+func (page *pageCommon) handleToast() {
 	if (*page.toast) == nil {
 		return
 	}
@@ -597,23 +581,27 @@ func displayToast(th *decredmaterial.Theme, gtx layout.Context, t *load.Toast) l
 		*page.toast = nil
 	default:
 	}
-}*/
+}
 
 // createOrUpdateWalletDropDown check for len of wallets to create dropDown,
 // also update the list when create, update, delete a wallet.
-func createOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
+func (page *pageCommon) createOrUpdateWalletDropDown(dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
 	var walletDropDownItems []decredmaterial.DropDownItem
 	for _, wal := range wallets {
 		item := decredmaterial.DropDownItem{
 			Text: wal.Name,
-			Icon: l.Icons.WalletIcon,
+			Icon: page.icons.walletIcon,
 		}
 		walletDropDownItems = append(walletDropDownItems, item)
 	}
-	*dwn = l.Theme.DropDown(walletDropDownItems, 2)
+	*dwn = page.theme.DropDown(walletDropDownItems, 2)
 }
 
-func createOrderDropDown(l *load.Load) *decredmaterial.DropDown {
-	return l.Theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
+func createOrderDropDown(c *pageCommon) *decredmaterial.DropDown {
+	return c.theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
 		{Text: values.String(values.StrOldest)}}, 1)
+}
+
+func (page *pageCommon) handler() {
+	page.handleToast()
 }

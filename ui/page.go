@@ -53,8 +53,8 @@ type pageIcons struct {
 type Page interface {
 	OnResume() // called when a page is starting or resuming from a paused state.
 	Layout(layout.Context) layout.Dimensions
-	handle()
-	onClose()
+	Handle()
+	OnClose()
 }
 
 type navHandler struct {
@@ -260,18 +260,18 @@ func (common *pageCommon) loadPages() map[string]Page {
 
 	pages := make(map[string]Page)
 
-	pages[PageMore] = MorePage(common)
-	pages[PageReceive] = ReceivePage(common)
+	pages[page.More] = page.MorePage(l)
+	pages[page.Receive] = page.ReceivePage(l)
 	pages[PageSend] = SendPage(common)
-	pages[PageVerifyMessage] = VerifyMessagePage(common)
+	pages[page.VerifyMessage] = page.VerifyMessagePage(l)
 	pages[PageSeedBackup] = BackupPage(common)
-	pages[PageSettings] = SettingsPage(common)
-	pages[PageSecurityTools] = SecurityToolsPage(common)
-	pages[PageDebug] = DebugPage(common)
-	pages[PageLog] = LogPage(common)
-	pages[PageStat] = StatPage(common)
-	pages[PageAbout] = AboutPage(common)
-	pages[PageHelp] = HelpPage(common)
+	pages[page.Settings] = page.SettingsPage(l)
+	pages[page.SecurityTools] = page.SecurityToolsPage(l)
+	pages[page.Debug] = page.DebugPage(l)
+	pages[page.Log] = page.LogPage(l)
+	pages[page.Statistics] = page.StatPage(l)
+	pages[page.About] = page.AboutPage(l)
+	pages[page.Help] = page.HelpPage(l)
 	pages[PageUTXO] = UTXOPage(common)
 	pages[PageTickets] = TicketPage(common)
 	pages[ValidateAddress] = ValidateAddressPage(common)

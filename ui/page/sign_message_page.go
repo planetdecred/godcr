@@ -1,8 +1,6 @@
 package page
 
 import (
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
 	"image/color"
 
 	"gioui.org/io/clipboard"
@@ -12,13 +10,15 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const SignMessage = "SignMessage"
 
 type signMessagePage struct {
-	common    *pageCommon
+	*load.Load
 	theme     *decredmaterial.Theme
 	container layout.List
 	wallet    *dcrlibwallet.Wallet
@@ -35,12 +35,12 @@ type signMessagePage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func SignMessagePage(common *pageCommon, wallet *dcrlibwallet.Wallet) Page {
-	addressEditor := common.theme.Editor(new(widget.Editor), "Address")
+func SignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *signMessagePage {
+	addressEditor := l.Theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
-	messageEditor := common.theme.Editor(new(widget.Editor), "Message")
+	messageEditor := l.Theme.Editor(new(widget.Editor), "Message")
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
-	clearButton := common.theme.Button(new(widget.Clickable), "Clear all")
+	clearButton := l.Theme.Button(new(widget.Clickable), "Clear all")
 	clearButton.Background = color.NRGBA{}
 	clearButton.Color = common.theme.Color.Gray
 	clearButton.Font.Weight = text.Bold
@@ -49,6 +49,8 @@ func SignMessagePage(common *pageCommon, wallet *dcrlibwallet.Wallet) Page {
 	copyIcon := common.icons.copyIcon
 
 	pg := &signMessagePage{
+		Load:   l,
+		wallet: wallet,
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -56,21 +58,21 @@ func SignMessagePage(common *pageCommon, wallet *dcrlibwallet.Wallet) Page {
 		theme:  common.theme,
 		wallet: wallet,
 
-		titleLabel:         common.theme.H5("Sign Message"),
-		signedMessageLabel: common.theme.Body1(""),
+		titleLabel:         l.Theme.H5("Sign Message"),
+		signedMessageLabel: l.Theme.Body1(""),
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
 		messageEditor:      messageEditor,
 
 		clearButton:   clearButton,
-		signButton:    common.theme.Button(new(widget.Clickable), "Sign message"),
-		copyButton:    common.theme.Button(new(widget.Clickable), "Copy"),
+		signButton:    l.Theme.Button(new(widget.Clickable), "Sign message"),
+		copyButton:    l.Theme.Button(new(widget.Clickable), "Copy"),
 		copySignature: new(widget.Clickable),
 		copyIcon:      copyIcon,
 	}
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
-	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
+	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
 	pg.signButton.Font.Weight = text.Bold
 
 	return pg
@@ -84,20 +86,21 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
 	}
-	common := pg.common
 
 	body := func(gtx C) D {
-		page := SubPage{
+		sp := SubPage{
+			Load:       pg.Load,
 			title:      "Sign message",
 			walletName: pg.wallet.Name,
 			backButton: pg.backButton,
 			infoButton: pg.infoButton,
 			back: func() {
 				pg.clearForm()
-				common.changePage(PageWallet)
+				// todo: uncomment after wallet page has been moved
+				// pg.ChangePage(PageWallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
-				return common.theme.Card().Layout(gtx, func(gtx C) D {
+				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(pg.description()),
@@ -111,16 +114,16 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			},
 			infoTemplate: modal.SignMessageInfoTemplate,
 		}
-		return common.SubPageLayout(gtx, page)
+		return sp.Layout(gtx)
 	}
 
-	return common.UniformPadding(gtx, body)
+	return uniformPadding(gtx, body)
 }
 
 func (pg *signMessagePage) description() layout.Widget {
 	return func(gtx C) D {
-		desc := pg.theme.Caption("Enter an address and message to sign:")
-		desc.Color = pg.theme.Color.Gray
+		desc := pg.Theme.Caption("Enter an address and message to sign:")
+		desc.Color = pg.Theme.Color.Gray
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
 }
@@ -159,7 +162,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				m := values.MarginPadding30
-				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
+				return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.Theme.Separator().Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
@@ -190,9 +193,9 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 							Top:  values.MarginPaddingMinus10,
 							Left: values.MarginPadding10,
 						}.Layout(gtx, func(gtx C) D {
-							return pg.theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-								label := pg.theme.Body1("Signature")
-								label.Color = pg.theme.Color.Gray
+							return pg.Theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+								label := pg.Theme.Body1("Signature")
+								label.Color = pg.Theme.Color.Gray
 								return label.Layout(gtx)
 							})
 						})
@@ -203,18 +206,17 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *signMessagePage) updateColors(common *pageCommon) {
+func (pg *signMessagePage) updateColors() {
 	if pg.isSigningMessage || pg.addressEditor.Editor.Text() == "" || pg.messageEditor.Editor.Text() == "" {
-		pg.signButton.Background = common.theme.Color.Hint
+		pg.signButton.Background = pg.Theme.Color.Hint
 	} else {
-		pg.signButton.Background = common.theme.Color.Primary
+		pg.signButton.Background = pg.Theme.Color.Primary
 	}
 }
 
-func (pg *signMessagePage) handle() {
+func (pg *signMessagePage) Handle() {
 	gtx := pg.gtx
-	common := pg.common
-	pg.updateColors(common)
+	pg.updateColors()
 	pg.validate(true)
 
 	for pg.clearButton.Button.Clicked() {
@@ -226,16 +228,16 @@ func (pg *signMessagePage) handle() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()
 
-			modal.newPasswordModal(common).
-				title("Confirm to sign").
-				negativeButton("Cancel", func() {}).
-				positiveButton("Confirm", func(password string, pm *modal.passwordModal) bool {
+			modal.NewPasswordModal(pg.Load).
+				Title("Confirm to sign").
+				NegativeButton("Cancel", func() {}).
+				PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 
 					go func() {
 						sig, err := pg.wallet.SignMessage([]byte(password), address, message)
 						if err != nil {
-							pm.setError(err.Error())
-							pm.setLoading(false)
+							pm.SetError(err.Error())
+							pm.SetLoading(false)
 							return
 						}
 
@@ -303,4 +305,4 @@ func (pg *signMessagePage) clearForm() {
 	pg.errorLabel.Text = ""
 }
 
-func (pg *signMessagePage) onClose() {}
+func (pg *signMessagePage) OnClose() {}

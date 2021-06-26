@@ -1,9 +1,7 @@
-package page
+package ui
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui"
-	"github.com/planetdecred/godcr/ui/load"
 	"image/color"
 	"strings"
 
@@ -21,7 +19,7 @@ import (
 )
 
 const (
-	CreateRestore = "CreateRestore"
+	PageCreateRestore = "CreateRestore"
 	numberOfSeeds     = 32
 )
 
@@ -77,7 +75,7 @@ type createRestore struct {
 }
 
 // Loading lays out the loading widget with a faded background
-func CreateRestorePage(l *load.Load) load.Page {
+func CreateRestorePage(common *pageCommon) Page {
 	pg := &createRestore{
 		common:   common,
 		theme:    common.theme,
@@ -615,7 +613,7 @@ func (pg *createRestore) resetSeeds() {
 	}
 }
 
-func (pg *createRestore) handle() {
+func (pg *createRestore) Handle() {
 	common := pg.common
 
 	for pg.closePageBtn.Button.Clicked() {
@@ -634,7 +632,7 @@ func (pg *createRestore) handle() {
 			_, err := pg.common.multiWallet.RestoreWallet(walletName, pg.seedPhrase, pass, dcrlibwallet.PassphraseTypePass)
 			pg.restoringWallet = false
 			if err != nil {
-				pg.errLabel.Text = ui.translateErr(err)
+				pg.errLabel.Text = translateErr(err)
 				return
 			}
 
@@ -647,7 +645,7 @@ func (pg *createRestore) handle() {
 				pg.common.popWindowPage()
 			} else {
 				pg.common.wallet.SetupListeners()
-				pg.common.changeWindowPage(newMainPage(pg.common), false)
+				pg.common.changeWindowPage(newMainPage(pg.common, nil), false)
 			}
 		}()
 	}
@@ -699,4 +697,4 @@ func (pg *createRestore) handle() {
 	pg.suggestionSeedEffect()
 }
 
-func (pg *createRestore) onClose() {}
+func (pg *createRestore) OnClose() {}

@@ -2,10 +2,11 @@ package page
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"image/color"
 	"time"
+
+	"github.com/planetdecred/godcr/ui/load"
 
 	"gioui.org/gesture"
 	"gioui.org/io/event"
@@ -19,7 +20,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageOverview = "Overview"
+const Overview = "Overview"
 
 // walletSyncDetails contains sync data for each wallet when a sync
 // is in progress.
@@ -31,7 +32,7 @@ type walletSyncDetails struct {
 }
 
 type overviewPage struct {
-	*pageCommon
+	*load.Load
 	pageClosing chan bool
 	listContainer, walletSyncList,
 	transactionsList *layout.List
@@ -69,20 +70,19 @@ type overviewPage struct {
 	queue                 event.Queue
 }
 
-func OverviewPage(l *load.Load) load.Page {
+func OverviewPage(l *load.Load) *overviewPage {
 	pg := &overviewPage{
-		pageCommon:  c,
+		Load:        l,
 		pageClosing: make(chan bool, 1),
-		theme:       c.theme,
-		tab:         c.navTab,
+		theme:       l.Theme,
 
-		allWallets: c.sortedWalletList(),
+		allWallets: l.WL.SortedWalletList(),
 
 		listContainer:    &layout.List{Axis: layout.Vertical},
 		walletSyncList:   &layout.List{Axis: layout.Vertical},
 		transactionsList: &layout.List{Axis: layout.Vertical},
 
-		bestBlock: c.multiWallet.GetBestBlock(),
+		bestBlock: l.WL.MultiWallet.GetBestBlock(),
 
 		syncButtonHeight: 50,
 		moreButtonWidth:  115,
@@ -90,49 +90,49 @@ func OverviewPage(l *load.Load) load.Page {
 		txnRowHeight:     56,
 	}
 
-	pg.toTransactions = c.theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), c.icons.navigationArrowForward)
-	pg.toTransactions.Color = c.theme.Color.Primary
-	pg.toTransactions.BackgroundColor = c.theme.Color.Surface
+	pg.toTransactions = l.Theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), l.Icons.NavigationArrowForward)
+	pg.toTransactions.Color = l.Theme.Color.Primary
+	pg.toTransactions.BackgroundColor = l.Theme.Color.Surface
 
-	pg.sync = c.theme.Button(new(widget.Clickable), values.String(values.StrReconnect))
+	pg.sync = l.Theme.Button(new(widget.Clickable), values.String(values.StrReconnect))
 	pg.sync.TextSize = values.TextSize10
 	pg.sync.Background = color.NRGBA{}
-	pg.sync.Color = c.theme.Color.Text
+	pg.sync.Color = l.Theme.Color.Text
 
-	pg.toggleSyncDetails = c.theme.Button(new(widget.Clickable), values.String(values.StrShowDetails))
+	pg.toggleSyncDetails = l.Theme.Button(new(widget.Clickable), values.String(values.StrShowDetails))
 	pg.toggleSyncDetails.TextSize = values.TextSize16
 	pg.toggleSyncDetails.Background = color.NRGBA{}
-	pg.toggleSyncDetails.Color = c.theme.Color.Primary
+	pg.toggleSyncDetails.Color = l.Theme.Color.Primary
 	pg.toggleSyncDetails.Inset = layout.Inset{}
 
-	pg.syncedIcon = c.icons.actionCheckCircle
-	pg.syncedIcon.Color = c.theme.Color.Success
+	pg.syncedIcon = l.Icons.ActionCheckCircle
+	pg.syncedIcon.Color = l.Theme.Color.Success
 
-	pg.syncingIcon = c.icons.syncingIcon
+	pg.syncingIcon = l.Icons.SyncingIcon
 	pg.syncingIcon.Scale = 1
 
-	pg.notSyncedIcon = c.icons.navigationCancel
-	pg.notSyncedIcon.Color = c.theme.Color.Danger
+	pg.notSyncedIcon = l.Icons.NavigationCancel
+	pg.notSyncedIcon.Color = l.Theme.Color.Danger
 
-	pg.walletStatusIcon = c.icons.imageBrightness1
-	pg.cachedIcon = c.icons.cached
+	pg.walletStatusIcon = l.Icons.ImageBrightness1
+	pg.cachedIcon = l.Icons.Cached
 
 	return pg
 }
 
 func (pg *overviewPage) OnResume() {
-	pg.walletSyncing = pg.multiWallet.IsSyncing()
-	pg.walletSynced = pg.multiWallet.IsSynced()
-	pg.isConnnected = pg.multiWallet.IsConnectedToDecredNetwork()
-	pg.connectedPeers = pg.multiWallet.ConnectedPeers()
-	pg.bestBlock = pg.multiWallet.GetBestBlock()
+	pg.walletSyncing = pg.WL.MultiWallet.IsSyncing()
+	pg.walletSynced = pg.WL.MultiWallet.IsSynced()
+	pg.isConnnected = pg.WL.MultiWallet.IsConnectedToDecredNetwork()
+	pg.connectedPeers = pg.WL.MultiWallet.ConnectedPeers()
+	pg.bestBlock = pg.WL.MultiWallet.GetBestBlock()
 
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
 }
 
 func (pg *overviewPage) loadTransactions() {
-	transactions, err := pg.multiWallet.GetTransactionsRaw(0, 5, dcrlibwallet.TxFilterAll, true)
+	transactions, err := pg.WL.MultiWallet.GetTransactionsRaw(0, 5, dcrlibwallet.TxFilterAll, true)
 	if err != nil {
 		log.Error("Error getting transactions:", err)
 		return
@@ -144,25 +144,24 @@ func (pg *overviewPage) loadTransactions() {
 // Layout lays out the entire content for overview pg.
 func (pg *overviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.queue = gtx
-	c := pg.pageCommon
-	if c.info.LoadedWallets == 0 {
-		return c.UniformPadding(gtx, func(gtx C) D {
+	if pg.WL.Info.LoadedWallets == 0 {
+		return uniformPadding(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
-				return c.theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
+				return pg.Theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
 			})
 		})
 	}
 
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.recentTransactionsSection(gtx, c)
+			return pg.recentTransactionsSection(gtx)
 		},
 		func(gtx C) D {
 			return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, pg.syncStatusSection)
 		},
 	}
 
-	return c.UniformPadding(gtx, func(gtx C) D {
+	return uniformPadding(gtx, func(gtx C) D {
 		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
 			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
 		})
@@ -180,7 +179,7 @@ func (pg *overviewPage) syncDetail(name, status, headersFetched, progress string
 }
 
 // recentTransactionsSection lays out the list of recent transactions.
-func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *overviewPage) recentTransactionsSection(gtx layout.Context) layout.Dimensions {
 
 	if len(pg.transactions) != len(pg.toTransactionDetails) {
 		pg.toTransactionDetails = createClickGestures(len(pg.transactions))
@@ -219,7 +218,7 @@ func (pg *overviewPage) recentTransactionsSection(gtx layout.Context, common *pa
 							showBadge:   len(pg.allWallets) > 1,
 						}
 						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							return transactionRow(gtx, common, row)
+							return transactionRow(gtx, pg.Load, row)
 						})
 					})
 				}),
@@ -594,24 +593,25 @@ func (pg *overviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 	})
 }
 
-func (pg *overviewPage) handle() {
+func (pg *overviewPage) Handle() {
 	eq := pg.queue
 
 	if pg.sync.Button.Clicked() {
-		go pg.toggleSync()
+		go pg.ToggleSync()
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.changeFragment(TransactionsPage(pg.pageCommon), PageTransactions)
+		pg.ChangeFragment(TransactionsPage(pg.Load), Transactions)
 	}
 
+	// todo: resolve navigation to transaction details page
 	for index, click := range pg.toTransactionDetails {
 		for _, e := range click.Events(eq) {
 			if e.Type == gesture.TypeClick {
 				txn := pg.transactions[index]
 
-				pg.setReturnPage(PageOverview)
-				pg.changeFragment(TransactionDetailsPage(pg.pageCommon, &txn), "txdetails")
+				pg.SetReturnPage(Overview)
+				pg.ChangeFragment(TransactionDetailsPage(pg.Load, &txn), "txdetails")
 				return
 			}
 		}
@@ -633,7 +633,7 @@ func (pg *overviewPage) listenForSyncNotifications() {
 			var notification interface{}
 
 			select {
-			case notification = <-pg.notificationsUpdate:
+			case notification = <-pg.Receiver.NotificationsUpdate:
 			case <-pg.pageClosing:
 				return
 			}
@@ -669,20 +669,20 @@ func (pg *overviewPage) listenForSyncNotifications() {
 					fallthrough
 				case wallet.SyncCompleted:
 					pg.loadTransactions()
-					pg.walletSyncing = pg.multiWallet.IsSyncing()
-					pg.walletSynced = pg.multiWallet.IsSynced()
-					pg.isConnnected = pg.multiWallet.IsConnectedToDecredNetwork()
+					pg.walletSyncing = pg.WL.MultiWallet.IsSyncing()
+					pg.walletSynced = pg.WL.MultiWallet.IsSynced()
+					pg.isConnnected = pg.WL.MultiWallet.IsConnectedToDecredNetwork()
 				case wallet.BlockAttached:
-					pg.bestBlock = pg.multiWallet.GetBestBlock()
+					pg.bestBlock = pg.WL.MultiWallet.GetBestBlock()
 				}
 			}
 
-			pg.refreshWindow()
+			pg.RefreshWindow()
 
 		}
 	}()
 }
 
-func (pg *overviewPage) onClose() {
+func (pg *overviewPage) OnClose() {
 	pg.pageClosing <- true
 }

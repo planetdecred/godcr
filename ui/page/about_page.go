@@ -3,6 +3,7 @@ package page
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -12,7 +13,6 @@ const About = "About"
 
 type aboutPage struct {
 	*load.Load
-	theme     *decredmaterial.Theme
 	card      decredmaterial.Card
 	container *layout.List
 
@@ -30,8 +30,9 @@ type aboutPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func AboutPage(l *load.Load) load.Page {
+func AboutPage(l *load.Load) *aboutPage {
 	pg := &aboutPage{
+		Load:             l,
 		card:             l.Theme.Card(),
 		container:        &layout.List{Axis: layout.Vertical},
 		version:          l.Theme.Body1("Version"),
@@ -46,10 +47,10 @@ func AboutPage(l *load.Load) load.Page {
 	}
 
 	pg.backButton, _ = subpageHeaderButtons(l)
-	pg.versionValue.Color = pg.theme.Color.Gray
-	pg.buildDateValue.Color = pg.theme.Color.Gray
-	pg.networkValue.Color = pg.theme.Color.Gray
-	pg.chevronRightIcon.Color = pg.theme.Color.Gray
+	pg.versionValue.Color = pg.Theme.Color.Gray
+	pg.buildDateValue.Color = pg.Theme.Color.Gray
+	pg.networkValue.Color = pg.Theme.Color.Gray
+	pg.chevronRightIcon.Color = pg.Theme.Color.Gray
 
 	return pg
 }
@@ -61,10 +62,11 @@ func (pg *aboutPage) OnResume() {
 func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
+			Load:       pg.Load,
 			title:      "About",
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(PageMore)
+				pg.ChangePage(More)
 			},
 			body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
@@ -122,7 +124,7 @@ func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 					}
 					return layout.Inset{
 						Left: values.MarginPadding16,
-					}.Layout(gtx, pg.theme.Separator().Layout)
+					}.Layout(gtx, pg.Theme.Separator().Layout)
 				}),
 			)
 		})

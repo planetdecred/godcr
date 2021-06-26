@@ -1,9 +1,7 @@
-package page
+package ui
 
 import (
-	"github.com/planetdecred/godcr/ui"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
 	"os"
 
 	"gioui.org/layout"
@@ -18,6 +16,7 @@ const Start = "start_page"
 
 type startPage struct {
 	*pageCommon
+	load *load.Load
 
 	loading bool
 
@@ -29,9 +28,10 @@ type startPage struct {
 	restoreButton decredmaterial.Button
 }
 
-func newStartPage(common *load.Load) *startPage {
+func newStartPage(common *pageCommon, l *load.Load) Page {
 	sp := &startPage{
 		pageCommon: common,
+		load:       l,
 
 		loading: true,
 
@@ -58,6 +58,7 @@ func newStartPage(common *load.Load) *startPage {
 func (sp *startPage) OnResume() {
 	sp.wallet.InitMultiWallet()
 	sp.multiWallet = sp.wallet.GetMultiWallet()
+	sp.load.WL.MultiWallet = sp.wallet.GetMultiWallet()
 
 	// refresh theme now that config is available
 	sp.refreshTheme()
@@ -77,17 +78,17 @@ func (sp *startPage) OnResume() {
 }
 
 func (sp *startPage) unlock() {
-	modal.newPasswordModal(sp.pageCommon).
+	newPasswordModal(sp.pageCommon).
 		title("Unlock with passphrase").
 		negativeButton("Exit", func() {
 			sp.multiWallet.Shutdown()
 			os.Exit(0)
 		}).
-		positiveButton("Unlock", func(password string, m *modal.passwordModal) bool {
+		positiveButton("Unlock", func(password string, m *passwordModal) bool {
 			go func() {
 				err := sp.openWallets(password)
 				if err != nil {
-					m.setError(ui.translateErr(err))
+					m.setError(translateErr(err))
 					m.setLoading(false)
 					return
 				}
@@ -101,7 +102,7 @@ func (sp *startPage) unlock() {
 func (sp *startPage) openWallets(passphrase string) error {
 	err := sp.multiWallet.OpenWallets([]byte(passphrase))
 	if err != nil {
-		ui.log.Info("Error opening wallet:", err)
+		log.Info("Error opening wallet:", err)
 		// show err dialog
 		return err
 	}
@@ -112,14 +113,14 @@ func (sp *startPage) openWallets(passphrase string) error {
 
 func (sp *startPage) proceedToMainPage() {
 	sp.wallet.SetupListeners()
-	sp.changeWindowPage(newMainPage(sp.pageCommon), false)
+	sp.changeWindowPage(newMainPage(sp.pageCommon, sp.load), false)
 }
 
-func (sp *startPage) handle() {
+func (sp *startPage) Handle() {
 	for sp.createButton.Button.Clicked() {
-		modal.NewCreatePasswordModal(sp.pageCommon).
+		newCreatePasswordModal(sp.pageCommon).
 			title("Create new wallet").
-			passwordCreated(func(_, password string, m *modal.createPasswordModal) bool {
+			passwordCreated(func(_, password string, m *createPasswordModal) bool {
 				go func() {
 					_, err := sp.multiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {
@@ -140,7 +141,7 @@ func (sp *startPage) handle() {
 	}
 }
 
-func (sp *startPage) onClose() {}
+func (sp *startPage) OnClose() {}
 
 func (sp *startPage) Layout(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width

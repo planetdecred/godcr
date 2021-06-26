@@ -267,7 +267,7 @@ func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
 }
 
-func (pg *acctDetailsPage) handle() {
+func (pg *acctDetailsPage) Handle() {
 	common := pg.common
 
 	if pg.editAccount.Clicked() {
@@ -291,4 +291,4 @@ func (pg *acctDetailsPage) handle() {
 	}
 }
 
-func (pg *acctDetailsPage) onClose() {}
+func (pg *acctDetailsPage) OnClose() {}

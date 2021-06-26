@@ -1,8 +1,8 @@
-package page
+package ui
 
 import (
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page"
+	"image"
 	"image/color"
 
 	"gioui.org/gesture"
@@ -18,24 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Wallet = "Wallets"
-
-type walletListItem struct {
-	wal      *dcrlibwallet.Wallet
-	accounts []*dcrlibwallet.Account
-
-	totalBalance string
-	optionsMenu  []menuItem
-	accountsList *decredmaterial.ClickableList
-
-	// normal wallets
-	collapsible   *decredmaterial.CollapsibleWithOption
-	addAcctBtn    decredmaterial.IconButton
-	backupAcctBtn decredmaterial.IconButton
-
-	// watch only
-	moreButton decredmaterial.IconButton
-}
+const PageWallet = "Wallets"
 
 type menuItem struct {
 	text     string
@@ -72,7 +55,7 @@ type walletPage struct {
 	separator                decredmaterial.Line
 }
 
-func WalletPage(l *load.Load) load.Page {
+func WalletPage(common *pageCommon) Page {
 	pg := &walletPage{
 		common:                   common,
 		multiWallet:              common.multiWallet,

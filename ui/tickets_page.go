@@ -1,8 +1,7 @@
-package page
+package ui
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"image/color"
 	"strconv"
@@ -23,7 +22,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const Tickets = "Tickets"
+const PageTickets = "Tickets"
 
 type ticketPage struct {
 	th     *decredmaterial.Theme
@@ -70,7 +69,7 @@ type ticketPage struct {
 	isPurchaseLoading bool
 }
 
-func TicketPage(l *load.Load) load.Page {
+func TicketPage(c *pageCommon) Page {
 	pg := &ticketPage{
 		th:      c.theme,
 		wal:     c.wallet,
@@ -729,7 +728,7 @@ func (pg *ticketPage) createNewVSPD(c *pageCommon) {
 	pg.vspd = vspd
 }
 
-func (pg *ticketPage) handle() {
+func (pg *ticketPage) Handle() {
 	c := pg.common
 	// TODO: frefresh when ticket price update from remote
 	if len(c.info.Wallets) > 0 && pg.ticketPrice == "" {
@@ -834,4 +833,4 @@ func (pg *ticketPage) handle() {
 	}
 }
 
-func (pg *ticketPage) onClose() {}
+func (pg *ticketPage) OnClose() {}

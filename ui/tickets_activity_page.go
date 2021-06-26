@@ -1,8 +1,6 @@
-package page
+package ui
 
 import (
-	"github.com/planetdecred/godcr/ui"
-	"github.com/planetdecred/godcr/ui/load"
 	"sort"
 	"strings"
 	"time"
@@ -16,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const TicketsActivity = "TicketsActivity"
+const PageTicketsActivity = "TicketsActivity"
 
 type ticketsActivityPage struct {
 	th           *decredmaterial.Theme
@@ -34,7 +32,7 @@ type ticketsActivityPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func TicketActivityPage(l *load.Load) load.Page {
+func TicketActivityPage(c *pageCommon) Page {
 	pg := &ticketsActivityPage{
 		th:          c.theme,
 		common:      c,
@@ -42,7 +40,7 @@ func TicketActivityPage(l *load.Load) load.Page {
 		ticketsList: layout.List{Axis: layout.Vertical},
 		wallets:     c.multiWallet.AllWallets(),
 	}
-	pg.orderDropDown = ui.createOrderDropDown(c)
+	pg.orderDropDown = createOrderDropDown(c)
 	pg.ticketTypeDropDown = c.theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -95,7 +93,7 @@ func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 									return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-										return ui.ticketActivityRow(gtx, c, tickets[index], index)
+										return ticketActivityRow(gtx, c, tickets[index], index)
 									})
 								})
 							})
@@ -150,7 +148,7 @@ func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket
 	return t
 }
 
-func (pg *ticketsActivityPage) handle() {
+func (pg *ticketsActivityPage) Handle() {
 
 	sortSelection := pg.orderDropDown.SelectedIndex()
 	if pg.filterSorter != sortSelection {
@@ -171,4 +169,4 @@ func (pg *ticketsActivityPage) handle() {
 
 }
 
-func (pg *ticketsActivityPage) onClose() {}
+func (pg *ticketsActivityPage) OnClose() {}

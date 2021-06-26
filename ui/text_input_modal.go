@@ -1,59 +1,57 @@
-package modal
+package ui
 
 import (
 	"fmt"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 )
 
-const TextInput = "text_input_modal"
+const ModalTextInput = "text_input_modal"
 
-type TextInputModal struct {
+type textInputModal struct {
 	*infoModal
 
 	isLoading bool
 
 	textInput decredmaterial.Editor
-	callback  func(string, *TextInputModal) bool
+	callback  func(string, *textInputModal) bool
 }
 
-func NewTextInputModal(l *load.Load) *TextInputModal {
-	tm := &TextInputModal{
-		infoModal: NewInfoModal(l),
+func newTextInputModal(common *pageCommon) *textInputModal {
+	tm := &textInputModal{
+		infoModal: newInfoModal(common),
 	}
 
-	tm.randomID = fmt.Sprintf("%s-%d", TextInput, generateRandomNumber())
+	tm.randomID = fmt.Sprintf("%s-%d", ModalTextInput, generateRandomNumber())
 
-	tm.textInput = l.Theme.Editor(new(widget.Editor), "Hint")
+	tm.textInput = common.theme.Editor(new(widget.Editor), "Hint")
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
 
 	return tm
 }
 
-func (tm *TextInputModal) Show() {
-	tm.ShowModal(tm)
+func (tm *textInputModal) Show() {
+	tm.pageCommon.showModal(tm)
 }
 
-func (tm *TextInputModal) Dismiss() {
-	tm.DismissModal(tm)
+func (tm *textInputModal) Dismiss() {
+	tm.pageCommon.dismissModal(tm)
 }
 
-func (tm *TextInputModal) Hint(hint string) *TextInputModal {
+func (tm *textInputModal) hint(hint string) *textInputModal {
 	tm.textInput.Hint = hint
 	return tm
 }
 
-func (tm *TextInputModal) PositiveButton(text string, callback func(string, *TextInputModal) bool) *TextInputModal {
+func (tm *textInputModal) positiveButton(text string, callback func(string, *textInputModal) bool) *textInputModal {
 	tm.positiveButtonText = text
 	tm.callback = callback
 	return tm
 }
 
-func (tm *TextInputModal) setError(err string) {
+func (tm *textInputModal) setError(err string) {
 	if err == "" {
 		tm.textInput.ClearError()
 	} else {
@@ -61,7 +59,7 @@ func (tm *TextInputModal) setError(err string) {
 	}
 }
 
-func (tm *TextInputModal) Handle() {
+func (tm *textInputModal) handle() {
 
 	for tm.btnPositve.Button.Clicked() {
 		if tm.isLoading {
@@ -83,7 +81,7 @@ func (tm *TextInputModal) Handle() {
 	}
 }
 
-func (tm *TextInputModal) Layout(gtx layout.Context) D {
+func (tm *textInputModal) Layout(gtx layout.Context) D {
 
 	var w []layout.Widget
 

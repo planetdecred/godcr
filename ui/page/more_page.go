@@ -3,8 +3,9 @@ package page
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -17,37 +18,37 @@ type morePageHandler struct {
 }
 
 type morePage struct {
-	common            *pageCommon
+	*load.Load
 	container         layout.Flex
 	morePageListItems []morePageHandler
 }
 
-func MorePage(l *load.Load) load.Page {
+func MorePage(l *load.Load) *morePage {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),
-			image:     common.icons.settingsIcon,
-			page:      PageSettings,
+			image:     l.Icons.SettingsIcon,
+			page:      Settings,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     common.icons.securityIcon,
-			page:      PageSecurityTools,
+			image:     l.Icons.SecurityIcon,
+			page:      SecurityTools,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     common.icons.helpIcon,
-			page:      PageHelp,
+			image:     l.Icons.HelpIcon,
+			page:      Help,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     common.icons.aboutIcon,
-			page:      PageAbout,
+			image:     l.Icons.AboutIcon,
+			page:      About,
 		},
 		{
 			clickable: new(widget.Clickable),
-			image:     common.icons.debugIcon,
-			page:      PageDebug,
+			image:     l.Icons.DebugIcon,
+			page:      Debug,
 		},
 	}
 
@@ -58,7 +59,7 @@ func MorePage(l *load.Load) load.Page {
 	pg := &morePage{
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,
-		common:            common,
+		Load:              l,
 	}
 
 	return pg
@@ -68,34 +69,33 @@ func (pg *morePage) OnResume() {
 
 }
 
-func (pg *morePage) handleClickEvents(common *pageCommon) {
+func (pg *morePage) handleClickEvents(l *load.Load) {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {
-			common.changePage(pg.morePageListItems[i].page)
+			l.ChangePage(pg.morePageListItems[i].page)
 		}
 	}
 }
 
 func (pg *morePage) Layout(gtx layout.Context) layout.Dimensions {
-	common := pg.common
-	pg.handleClickEvents(common)
+	pg.handleClickEvents(pg.Load)
 
 	container := func(gtx C) D {
-		pg.layoutMoreItems(gtx, common)
+		pg.layoutMoreItems(gtx)
 		return layout.Dimensions{Size: gtx.Constraints.Max}
 	}
-	return pg.common.UniformPadding(gtx, container)
+	return uniformPadding(gtx, container)
 }
 
-func (pg *morePage) layoutMoreItems(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *morePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
 			return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
 				return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
-						background := common.theme.Color.Surface
-						card := common.theme.Card()
+						background := pg.Theme.Color.Surface
+						card := pg.Theme.Card()
 						card.Color = background
 						return card.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -114,10 +114,11 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common *pageCommon) layo
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
 														page := pg.morePageListItems[i].page
-														if page == PageSecurityTools {
-															page = "Security Tools"
-														}
-														return common.theme.Body1(page).Layout(gtx)
+														// todo: uncomment when security tools has been moved to the page package
+														//if page == SecurityTools {
+														//	page = "Security Tools"
+														//}
+														return pg.Theme.Body1(page).Layout(gtx)
 													})
 												})
 											}),
@@ -133,5 +134,5 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context, common *pageCommon) layo
 	)
 }
 
-func (pg *morePage) handle()  {}
-func (pg *morePage) onClose() {}
+func (pg *morePage) Handle()  {}
+func (pg *morePage) OnClose() {}

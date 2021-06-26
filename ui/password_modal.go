@@ -1,4 +1,4 @@
-package modal
+package ui
 
 import (
 	"fmt"
@@ -9,16 +9,14 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Password = "password_modal"
+const ModalPassword = "password_modal"
 
-type PasswordModal struct {
-	*load.Load
+type passwordModal struct {
+	*pageCommon
 	randomID string
 	modal    decredmaterial.Modal
 	password decredmaterial.Editor
@@ -29,7 +27,7 @@ type PasswordModal struct {
 	materialLoader material.LoaderStyle
 
 	positiveButtonText    string
-	positiveButtonClicked func(password string, m *PasswordModal) bool // return true to dismiss dialog
+	positiveButtonClicked func(password string, m *passwordModal) bool // return true to dismiss dialog
 	btnPositve            decredmaterial.Button
 
 	negativeButtonText    string
@@ -37,21 +35,21 @@ type PasswordModal struct {
 	btnNegative           decredmaterial.Button
 }
 
-func NewPasswordModal(l *load.Load) *PasswordModal {
-	pm := &PasswordModal{
-		Load:        l,
-		randomID:    fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
-		modal:       *l.Theme.ModalFloatTitle(),
-		btnPositve:  l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
+func newPasswordModal(common *pageCommon) *passwordModal {
+	pm := &passwordModal{
+		pageCommon:  common,
+		randomID:    fmt.Sprintf("%s-%d", ModalPassword, generateRandomNumber()),
+		modal:       *common.theme.ModalFloatTitle(),
+		btnPositve:  common.theme.Button(new(widget.Clickable), "Confirm"),
+		btnNegative: common.theme.Button(new(widget.Clickable), "Cancel"),
 	}
 
 	pm.btnPositve.TextSize, pm.btnNegative.TextSize = values.TextSize16, values.TextSize16
-	pm.btnNegative.Background, pm.btnNegative.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
+	pm.btnNegative.Background, pm.btnNegative.Color = pm.theme.Color.Surface, pm.theme.Color.Primary
 	pm.btnPositve.Font.Weight, pm.btnNegative.Font.Weight = text.Bold, text.Bold
-	pm.btnPositve.Background, pm.btnPositve.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
+	pm.btnPositve.Background, pm.btnPositve.Color = pm.theme.Color.Surface, pm.theme.Color.Primary
 
-	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	pm.password = common.theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
 
 	th := material.NewTheme(gofont.Collection())
@@ -60,57 +58,57 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 	return pm
 }
 
-func (pm *PasswordModal) ModalID() string {
+func (pm *passwordModal) ModalID() string {
 	return pm.randomID
 }
 
-func (pm *PasswordModal) OnResume() {
+func (pm *passwordModal) OnResume() {
 }
 
-func (pm *PasswordModal) OnDismiss() {
+func (pm *passwordModal) OnDismiss() {
 
 }
 
-func (pm *PasswordModal) Show() {
-	pm.ShowModal(pm)
+func (pm *passwordModal) Show() {
+	pm.showModal(pm)
 }
 
-func (pm *PasswordModal) Dismiss() {
-	pm.DismissModal(pm)
+func (pm *passwordModal) Dismiss() {
+	pm.dismissModal(pm)
 }
 
-func (pm *PasswordModal) Title(title string) *PasswordModal {
+func (pm *passwordModal) title(title string) *passwordModal {
 	pm.dialogTitle = title
 	return pm
 }
 
-func (pm *PasswordModal) Hint(hint string) *PasswordModal {
+func (pm *passwordModal) hint(hint string) *passwordModal {
 	pm.password.Hint = hint
 	return pm
 }
 
-func (pm *PasswordModal) PositiveButtonStyle(background, text color.NRGBA) *PasswordModal {
+func (pm *passwordModal) positiveButtonStyle(background, text color.NRGBA) *passwordModal {
 	pm.btnPositve.Background, pm.btnPositve.Color = background, text
 	return pm
 }
 
-func (pm *PasswordModal) PositiveButton(text string, clicked func(password string, m *PasswordModal) bool) *PasswordModal {
+func (pm *passwordModal) positiveButton(text string, clicked func(password string, m *passwordModal) bool) *passwordModal {
 	pm.positiveButtonText = text
 	pm.positiveButtonClicked = clicked
 	return pm
 }
 
-func (pm *PasswordModal) NegativeButton(text string, clicked func()) *PasswordModal {
+func (pm *passwordModal) negativeButton(text string, clicked func()) *passwordModal {
 	pm.negativeButtonText = text
 	pm.negativeButtonClicked = clicked
 	return pm
 }
 
-func (pm *PasswordModal) SetLoading(loading bool) {
+func (pm *passwordModal) setLoading(loading bool) {
 	pm.isLoading = loading
 }
 
-func (pm *PasswordModal) SetError(err string) {
+func (pm *passwordModal) setError(err string) {
 	if err == "" {
 		pm.password.ClearError()
 	} else {
@@ -118,7 +116,7 @@ func (pm *PasswordModal) SetError(err string) {
 	}
 }
 
-func (pm *PasswordModal) Handle() {
+func (pm *passwordModal) Handle() {
 
 	for pm.btnPositve.Button.Clicked() {
 
@@ -126,24 +124,24 @@ func (pm *PasswordModal) Handle() {
 			continue
 		}
 
-		pm.SetLoading(true)
-		pm.SetError("")
+		pm.setLoading(true)
+		pm.setError("")
 		if pm.positiveButtonClicked(pm.password.Editor.Text(), pm) {
-			pm.DismissModal(pm)
+			pm.dismissModal(pm)
 		}
 	}
 
 	for pm.btnNegative.Button.Clicked() {
 		if !pm.isLoading {
-			pm.DismissModal(pm)
+			pm.dismissModal(pm)
 			pm.negativeButtonClicked()
 		}
 	}
 }
 
-func (pm *PasswordModal) Layout(gtx layout.Context) D {
+func (pm *passwordModal) Layout(gtx layout.Context) D {
 	title := func(gtx C) D {
-		t := pm.Theme.H6(pm.dialogTitle)
+		t := pm.theme.H6(pm.dialogTitle)
 		t.Font.Weight = text.Bold
 		return t.Layout(gtx)
 	}

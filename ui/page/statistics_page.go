@@ -2,14 +2,15 @@ package page
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui"
 	"strconv"
 	"strings"
 	"time"
 
 	"gioui.org/layout"
 	"gioui.org/op"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -17,8 +18,8 @@ import (
 const Statistics = "Statistics"
 
 type statPage struct {
-	common      *pageCommon
-	txs         **wallet.Transactions
+	*load.Load
+	txs         *wallet.Transactions
 	theme       *decredmaterial.Theme
 	l           layout.List
 	startupTime time.Time
@@ -28,24 +29,24 @@ type statPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func StatPage(common *pageCommon) Page {
+func StatPage(l *load.Load) *statPage {
 	pg := &statPage{
-		txs:    common.walletTransactions,
-		common: common,
-		theme:  common.theme,
+		Load: l,
+		txs:  l.WL.Transactions,
 		l: layout.List{
 			Axis: layout.Vertical,
 		},
+		netType: l.WL.Wallet.Net,
 	}
 	pg.startupTime = time.Now()
-	pg.syncStatus = common.walletSyncStatus
-	if common.wallet.Net == "testnet3" {
+	pg.syncStatus = l.WL.SyncStatus
+	if pg.netType == "testnet3" {
 		pg.netType = "Testnet"
 	} else {
-		pg.netType = strings.Title(common.wallet.Net)
+		pg.netType = strings.Title(pg.netType)
 	}
 
-	pg.backButton, _ = common.SubPageHeaderButtons()
+	pg.backButton, _ = subpageHeaderButtons(l)
 
 	return pg
 }
@@ -55,8 +56,8 @@ func (pg *statPage) OnResume() {
 }
 
 func (pg *statPage) layoutStats(gtx C) D {
-	background := pg.common.theme.Color.Surface
-	card := pg.common.theme.Card()
+	background := pg.Theme.Color.Surface
+	card := pg.Theme.Card()
 	card.Color = background
 	inset := layout.Inset{
 		Top:    values.MarginPadding12,
@@ -71,7 +72,7 @@ func (pg *statPage) layoutStats(gtx C) D {
 			r := pg.theme.Body2(v)
 			r.Color = pg.theme.Color.Gray
 			return inset.Layout(gtx, func(gtx C) D {
-				return ui.endToEndRow(gtx, l.Layout, r.Layout)
+				return endToEndRow(gtx, l.Layout, r.Layout)
 			})
 		}
 	}
@@ -92,19 +93,19 @@ func (pg *statPage) layoutStats(gtx C) D {
 		pg.theme.Separator().Layout,
 		item("Network", pg.netType),
 		pg.theme.Separator().Layout,
-		item("Best block", fmt.Sprintf("%d", pg.common.info.BestBlockHeight)),
+		item("Best block", fmt.Sprintf("%d", pg.WL.Info.BestBlockHeight)),
 		pg.theme.Separator().Layout,
-		item("Best block timestamp", time.Unix(pg.common.info.BestBlockTime, 0).Format("2006-01-02 03:04:05 -0700")),
+		item("Best block timestamp", time.Unix(pg.WL.Info.BestBlockTime, 0).Format("2006-01-02 03:04:05 -0700")),
 		pg.theme.Separator().Layout,
-		item("Best block age", pg.common.info.LastSyncTime),
+		item("Best block age", pg.WL.Info.LastSyncTime),
 		pg.theme.Separator().Layout,
-		item("Wallet data directory", pg.common.wallet.WalletDirectory()),
+		item("Wallet data directory", pg.WL.Wallet.WalletDirectory()),
 		pg.theme.Separator().Layout,
-		item("Wallet data", pg.common.wallet.DataSize()),
+		item("Wallet data", pg.WL.Wallet.DataSize()),
 		pg.theme.Separator().Layout,
 		item("Transactions", fmt.Sprintf("%d", (*pg.txs).Total)),
 		pg.theme.Separator().Layout,
-		item("Wallets", fmt.Sprintf("%d", len(pg.common.info.Wallets))),
+		item("Wallets", fmt.Sprintf("%d", len(pg.WL.Info.Wallets))),
 	}
 
 	return card.Layout(gtx, func(gtx C) D {
@@ -118,21 +119,22 @@ func (pg *statPage) layoutStats(gtx C) D {
 
 func (pg *statPage) Layout(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
-		page := SubPage{
+		sp := SubPage{
+			Load:       pg.Load,
 			title:      "Statistics",
 			backButton: pg.backButton,
 			back: func() {
-				pg.common.changePage(PageDebug)
+				pg.ChangePage(Debug)
 			},
 			body: pg.layoutStats,
 		}
-		return pg.common.SubPageLayout(gtx, page)
+		return sp.Layout(gtx)
 	}
 
 	// Refresh frames every 1 second
 	op.InvalidateOp{At: time.Now().Add(time.Second * 1)}.Add(gtx.Ops)
-	return pg.common.UniformPadding(gtx, container)
+	return uniformPadding(gtx, container)
 }
 
-func (pg *statPage) handle()  {}
-func (pg *statPage) onClose() {}
+func (pg *statPage) Handle()  {}
+func (pg *statPage) OnClose() {}

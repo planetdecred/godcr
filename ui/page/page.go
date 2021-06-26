@@ -1,16 +1,17 @@
 package page
 
 import (
+	"image/color"
+
 	"gioui.org/gesture"
 	"gioui.org/unit"
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
-	"image/color"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -36,7 +37,6 @@ type wallectAccountOption struct {
 	selectReceiveAccount        map[int][]walletAccount
 	selectPurchaseTicketAccount map[int][]walletAccount
 }
-
 
 type WalletAccountSelector struct {
 	title                     string
@@ -90,6 +90,23 @@ type SubPage struct {
 	extra        layout.Widget
 	extraText    string
 	handleExtra  func()
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
+}
+
+func subpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmaterial.IconButton) {
+	backButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack)
+	infoButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ActionInfo)
+
+	zeroInset := layout.UniformInset(values.MarginPadding0)
+	backButton.Color, infoButton.Color = l.Theme.Color.Gray3, l.Theme.Color.Gray3
+
+	m25 := values.MarginPadding25
+	backButton.Size, infoButton.Size = m25, m25
+	backButton.Inset, infoButton.Inset = zeroInset, zeroInset
+
+	return backButton, infoButton
 }
 
 func (sp *SubPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -108,7 +125,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, sp.SubPageBackButton.Layout)
+			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, sp.backButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			if sp.subTitle == "" {
@@ -138,7 +155,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				if sp.infoTemplate != "" {
-					return sp.SubPageInfoButton.Layout(gtx)
+					return sp.infoButton.Layout(gtx)
 				} else if sp.extraItem != nil {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -167,21 +184,23 @@ func (sp *SubPage) SplitLayout(gtx layout.Context) layout.Dimensions {
 	card.Color = color.NRGBA{}
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D { return sp.Header(gtx)}),
+			layout.Rigid(func(gtx C) D { return sp.Header(gtx) }),
 			layout.Rigid(sp.body),
 		)
 	})
 }
 
 func (sp *SubPage) EventHandler() {
-	if sp.SubPageInfoButton.Button.Clicked() {
-		modal.NewInfoModal(sp.Load).
-			Title(sp.title).
-			SetupWithTemplate(sp.infoTemplate).
-			NegativeButton("Got it", func() {}).Show()
+	if sp.infoTemplate != "" {
+		if sp.infoButton.Button.Clicked() {
+			modal.NewInfoModal(sp.Load).
+				Title(sp.title).
+				SetupWithTemplate(sp.infoTemplate).
+				NegativeButton("Got it", func() {}).Show()
+		}
 	}
 
-	if sp.SubPageBackButton.Button.Clicked() {
+	if sp.backButton.Button.Clicked() {
 		sp.back()
 	}
 
@@ -208,7 +227,7 @@ func uniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	}.Layout(gtx, body)
 }
 
-func loadPages(l *load.Load) map[string]load.Page {
+/*func loadPages(l *load.Load) map[string]load.Page {
 
 	iconColor := l.Theme.Color.Gray3
 
@@ -248,4 +267,4 @@ func loadPages(l *load.Load) map[string]load.Page {
 	pages[TicketsActivity] = TicketActivityPage(l)
 
 	return pages
-}
+}*/

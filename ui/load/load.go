@@ -1,15 +1,21 @@
+// The load package contains data structures that are shared by components in the ui package. It is not a dumping ground
+// for code you feel might be shared with other components in the future. Before adding code here, ask yourself, can
+// the code be isolated in the package you're calling it from? Is it really needed by other packages in the ui package?
+// or you're just planning for a use case that might never used.
+
+// todo: fix toast notifications
+// todo: clean up NewLoad method
+
 package load
 
 import (
-	"encoding/json"
-	"golang.org/x/text/language"
 	"image"
-	"net/http"
 	"sort"
 	"time"
 
+	"golang.org/x/text/language"
+
 	"gioui.org/io/key"
-	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
@@ -23,39 +29,22 @@ type DCRUSDTBittrex struct {
 	LastTradeRate string
 }
 
-type Modal interface {
-	ModalID() string
-	OnResume()
-	Layout(gtx layout.Context) layout.Dimensions
-	OnDismiss()
-	Dismiss()
-	Show()
-	Handle()
-}
-
-type Page interface {
-	Layout(layout.Context) layout.Dimensions
-	Handle()
-	OnClose()
-	OnResume()
-}
-
 type Toast struct {
 	text    string
 	success bool
 	Timer   *time.Timer
 }
 
-type walletLoad struct {
+type WalletLoad struct {
 	MultiWallet      *dcrlibwallet.MultiWallet
-	TxAuthor         *dcrlibwallet.TxAuthor
+	TxAuthor         dcrlibwallet.TxAuthor
 	SelectedProposal *dcrlibwallet.Proposal
 
 	Proposals       *wallet.Proposals
 	SyncStatus      *wallet.SyncStatus
 	Transactions    *wallet.Transactions
 	Transaction     *wallet.Transaction
-	BroadcastResult *wallet.Broadcast
+	BroadcastResult wallet.Broadcast
 	Tickets         *wallet.Tickets
 	VspInfo         *wallet.VSP
 	UnspentOutputs  *wallet.UnspentOutputs
@@ -82,12 +71,12 @@ type Icons struct {
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, TransactionIcon, TransactionIconInactive, SendIcon, MoreIcon, MoreIconInactive,
-	pendingIcon, Logo, redirectIcon, confirmIcon, newWalletIcon, walletAlertIcon,
-	importedAccountIcon, accountIcon, editIcon, expandIcon, copyIcon, mixer, mixerSmall,
-	arrowForwardIcon, transactionFingerPrintIcon, settingsIcon, securityIcon, helpIcon,
-	aboutIcon, debugIcon, verifyMessageIcon, locationPinIcon, alertGray, arrowDownIcon,
-	watchOnlyWalletIcon, currencySwapIcon, syncingIcon, ProposalIconActive, ProposalIconInactive,
-	restore, documentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, stakeyIcon,
+	PendingIcon, Logo, RedirectIcon, ConfirmIcon, newWalletIcon, WalletAlertIcon,
+	importedAccountIcon, AccountIcon, editIcon, expandIcon, CopyIcon, mixer, mixerSmall,
+	arrowForwardIcon, transactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
+	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, alertGray, arrowDownIcon,
+	WatchOnlyWalletIcon, currencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
+	restore, DocumentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, stakeyIcon,
 	list, listGridIcon, decredSymbolIcon *widget.Image
 
 	ticketPurchasedIcon,
@@ -103,7 +92,7 @@ type Icons struct {
 type Load struct {
 	Theme *decredmaterial.Theme
 
-	WL       *walletLoad
+	WL       *WalletLoad
 	Receiver *Receiver
 	Printer  *message.Printer
 
@@ -114,17 +103,17 @@ type Load struct {
 
 	Toast *Toast
 
-	SelectedUTXO map[int]map[int32]map[string]*wallet.UnspentOutput
-
-	SubPageBackButton decredmaterial.IconButton
-	SubPageInfoButton decredmaterial.IconButton
+	SelectedWallet  *int
+	SelectedAccount *int
+	SelectedUTXO    map[int]map[int32]map[string]*wallet.UnspentOutput
 
 	ToggleSync       func()
-	ShowModal        func(Modal)
-	DismissModal     func(Modal)
-	ChangeWindowPage func(Page)
+	RefreshWindow    func()
+	ShowModal        func(modal interface{})
+	DismissModal     func(modal interface{})
+	ChangeWindowPage func(page interface{})
+	ChangeFragment   func(page interface{}, id string)
 	ChangePage       func(string)
-	ChangeFragment   func(Page, string)
 	SetReturnPage    func(string)
 }
 
@@ -146,79 +135,77 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		DropDownIcon:           mustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		Cached:                 mustIcon(widget.NewIcon(icons.ActionCached)),
 
-		OverviewIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
-		OverviewIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
-		WalletIconInactive:      &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
-		ReceiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
-		TransactionIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
-		TransactionIconInactive: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
-		SendIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
-		MoreIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
-		MoreIconInactive:        &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
-		Logo:                    &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
-		confirmIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
-		pendingIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
-		redirectIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
-		newWalletIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
-		walletAlertIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
-		accountIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
-		importedAccountIcon:     &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
-		editIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
-		expandIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
-		copyIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
+		OverviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
+		OverviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
+		WalletIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
+		ReceiveIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
+		TransactionIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
+		TransactionIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
+		SendIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
+		MoreIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["more"])},
+		MoreIconInactive:           &widget.Image{Src: paint.NewImageOp(decredIcons["more_inactive"])},
+		Logo:                       &widget.Image{Src: paint.NewImageOp(decredIcons["logo"])},
+		ConfirmIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
+		PendingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
+		RedirectIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
+		newWalletIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
+		WalletAlertIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
+		AccountIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
+		importedAccountIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
+		editIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
+		expandIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
+		CopyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
 		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
 		mixerSmall:                 &widget.Image{Src: paint.NewImageOp(decredIcons["mixer_small"])},
 		transactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
 		arrowForwardIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
-		settingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
-		securityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
-		helpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
-		aboutIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["about_icon"])},
-		debugIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
-		verifyMessageIcon:    &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
-		locationPinIcon:      &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
-		alertGray:            &widget.Image{Src: paint.NewImageOp(decredIcons["alert_gray"])},
-		arrowDownIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
-		watchOnlyWalletIcon:  &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
-		currencySwapIcon:     &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
-		syncingIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["syncing"])},
-		documentationIcon:    &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
-		ProposalIconActive:   &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
-		ProposalIconInactive: &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaInactive"])},
-		restore:              &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
-		downloadIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
-		timerIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
-		WalletIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
-		TicketIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
-		TicketIconInactive:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},
-		stakeyIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["stakey"])},
-		ticketPurchasedIcon:  &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased"])},
-		TicketImmatureIcon:   &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature"])},
-		TicketUnminedIcon:    &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined"])},
-		TicketLiveIcon:       &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live"])},
-		TicketVotedIcon:      &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_voted"])},
-		TicketMissedIcon:     &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed"])},
-		TicketExpiredIcon:    &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired"])},
-		TicketRevokedIcon:    &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked"])},
-		list:                 &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
-		listGridIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
-		decredSymbolIcon:    &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},
+		SettingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
+		SecurityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
+		HelpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
+		AboutIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["about_icon"])},
+		DebugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
+		VerifyMessageIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
+		LocationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
+		alertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert_gray"])},
+		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
+		WatchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
+		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
+		SyncingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["syncing"])},
+		DocumentationIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
+		ProposalIconActive:         &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
+		ProposalIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaInactive"])},
+		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
+		downloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
+		timerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
+		WalletIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
+		TicketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
+		TicketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},
+		stakeyIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["stakey"])},
+		ticketPurchasedIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased"])},
+		TicketImmatureIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature"])},
+		TicketUnminedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined"])},
+		TicketLiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live"])},
+		TicketVotedIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_voted"])},
+		TicketMissedIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed"])},
+		TicketExpiredIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired"])},
+		TicketRevokedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked"])},
+		list:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
+		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
+		decredSymbolIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},
 	}
 
-	wl := &walletLoad{
-		Wallet:          new(wallet.Wallet),
-		Account:         new(wallet.Account),
-		Info:            new(wallet.MultiWalletInfo),
-		SyncStatus:      new(wallet.SyncStatus),
-		Transactions:    new(wallet.Transactions),
-		UnspentOutputs:  new(wallet.UnspentOutputs),
-		Tickets:         new(wallet.Tickets),
-		VspInfo:         new(wallet.VSP),
-		BroadcastResult: new(wallet.Broadcast),
-		Proposals:       new(wallet.Proposals),
+	wl := &WalletLoad{
+		Wallet:         new(wallet.Wallet),
+		Account:        new(wallet.Account),
+		Info:           new(wallet.MultiWalletInfo),
+		SyncStatus:     new(wallet.SyncStatus),
+		Transactions:   new(wallet.Transactions),
+		UnspentOutputs: new(wallet.UnspentOutputs),
+		Tickets:        new(wallet.Tickets),
+		VspInfo:        new(wallet.VSP),
+		Proposals:      new(wallet.Proposals),
 
 		SelectedProposal: new(dcrlibwallet.Proposal),
-		TxAuthor:         new(dcrlibwallet.TxAuthor),
 	}
 
 	r := &Receiver{
@@ -226,38 +213,39 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		SyncedProposal:  make(chan *wallet.Proposal),
 	}
 
-	l :=  &Load{
+	l := &Load{
 		Theme:    th,
 		Icons:    ic,
 		WL:       wl,
 		Receiver: r,
-		Toast: &Toast{},
+		Toast:    &Toast{},
 
 		Printer: message.NewPrinter(language.English),
-
-		SubPageBackButton: th.PlainIconButton(new(widget.Clickable), ic.NavigationArrowBack),
-		SubPageInfoButton: th.PlainIconButton(new(widget.Clickable), ic.ActionInfo),
 	}
 	fetchExchangeValue(l.DcrUsdtBittrex)
 
 	return l
 }
 
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
-	if err != nil {
-		panic(err)
+func (l *Load) RefreshTheme() {
+	isDarkModeOn := l.WL.Wallet.ReadBoolConfigValueForKey("isDarkModeOn")
+	if isDarkModeOn != l.Theme.DarkMode {
+		l.Theme.SwitchDarkMode(isDarkModeOn)
 	}
-	return ic
 }
 
 func (l *Load) CreateToast(text string, success bool) {
-	   l.Toast = &Toast{
-	   	  text: text,
-	   	  success: success,
-	   }
+	l.Toast = &Toast{
+		text:    text,
+		success: success,
+	}
 }
 
-func (wl *walletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
+func (l *Load) DestroyToast() {
+	l.Toast = nil
+}
+
+func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 	wallets := wl.MultiWallet.AllWallets()
 
 	sort.Slice(wallets, func(i, j int) bool {
@@ -267,17 +255,3 @@ func (wl *walletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 	return wallets
 }
 
-func fetchExchangeValue(target interface{}) {
-	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
-	res, err := http.Get(url)
-	if err != nil {
-		log.Error(err)
-	}
-
-	defer res.Body.Close()
-
-	err = json.NewDecoder(res.Body).Decode(target)
-	if err != nil {
-		log.Error(err)
-	}
-}

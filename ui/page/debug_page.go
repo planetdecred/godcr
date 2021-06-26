@@ -3,6 +3,7 @@ package page
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -17,34 +18,32 @@ type debugItem struct {
 }
 
 type debugPage struct {
-	theme      *decredmaterial.Theme
+	*load.Load
 	debugItems []debugItem
-	common     *pageCommon
 
 	backButton decredmaterial.IconButton
 }
 
-func DebugPage(l *load.Load) load.Page {
+func DebugPage(l *load.Load) *debugPage {
 	debugItems := []debugItem{
 		{
 			clickable: new(widget.Clickable),
 			text:      "Check wallet logs",
-			page:      PageLog,
+			page:      Log,
 		},
 		{
 			clickable: new(widget.Clickable),
 			text:      "Check statistics",
-			page:      PageStat,
+			page:      Statistics,
 		},
 	}
 
 	pg := &debugPage{
-		theme:      common.theme,
+		Load:       l,
 		debugItems: debugItems,
-		common:     common,
 	}
 
-	pg.backButton, _ = common.SubPageHeaderButtons()
+	pg.backButton, _ = subpageHeaderButtons(l)
 
 	return pg
 }
@@ -53,26 +52,26 @@ func (pg *debugPage) OnResume() {
 
 }
 
-func (pg *debugPage) handle() {
+func (pg *debugPage) Handle() {
 	for i := range pg.debugItems {
 		for pg.debugItems[i].clickable.Clicked() {
-			pg.common.changePage(pg.debugItems[i].page)
+			pg.ChangePage(pg.debugItems[i].page)
 		}
 	}
 }
 
-func (pg *debugPage) onClose() {}
+func (pg *debugPage) OnClose() {}
 
-func (pg *debugPage) debugItem(gtx C, i int, common *pageCommon) D {
+func (pg *debugPage) debugItem(gtx C, i int) D {
 	return decredmaterial.Clickable(gtx, pg.debugItems[i].clickable, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, common.theme.Body1(pg.debugItems[i].text).Layout)
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, pg.Theme.Body1(pg.debugItems[i].text).Layout)
 			}),
 			layout.Flexed(1, func(gtx C) D {
 				return layout.E.Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return common.icons.chevronRight.Layout(gtx, values.MarginPadding22)
+						return pg.Icons.ChevronRight.Layout(gtx, values.MarginPadding22)
 					})
 				})
 			}),
@@ -80,33 +79,34 @@ func (pg *debugPage) debugItem(gtx C, i int, common *pageCommon) D {
 	})
 }
 
-func (pg *debugPage) layoutDebugItems(gtx C, common *pageCommon) {
-	background := common.theme.Color.Surface
-	card := common.theme.Card()
+func (pg *debugPage) layoutDebugItems(gtx C) {
+	background := pg.Theme.Color.Surface
+	card := pg.Theme.Card()
 	card.Color = background
 	card.Layout(gtx, func(gtx C) D {
 		list := layout.List{Axis: layout.Vertical}
 		return list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
-			return pg.debugItem(gtx, i, common)
+			return pg.debugItem(gtx, i)
 		})
 	})
 }
 
 func (pg *debugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
-		page := SubPage{
+		sp := SubPage{
+			Load:       pg.Load,
 			title:      "Debug",
 			backButton: pg.backButton,
 			back: func() {
-				pg.common.changePage(PageMore)
+				pg.ChangePage(More)
 			},
 			body: func(gtx C) D {
-				pg.layoutDebugItems(gtx, pg.common)
+				pg.layoutDebugItems(gtx)
 				return layout.Dimensions{Size: gtx.Constraints.Max}
 			},
 		}
-		return pg.common.SubPageLayout(gtx, page)
+		return sp.Layout(gtx)
 
 	}
-	return pg.common.UniformPadding(gtx, container)
+	return uniformPadding(gtx, container)
 }
