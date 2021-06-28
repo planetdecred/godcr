@@ -127,7 +127,8 @@ type pageCommon struct {
 	subPageInfoButton decredmaterial.IconButton
 
 	refreshWindow    func()
-	changeWindowPage func(Page)
+	changeWindowPage func(Page, bool)
+	popWindowPage    func() bool
 	changePage       func(string)
 	setReturnPage    func(string)
 	changeFragment   func(Page, string)
@@ -244,6 +245,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		showModal:        win.showModal,
 		dismissModal:     win.dismissModal,
 		changeWindowPage: win.changePage,
+		popWindowPage:    win.popPage,
 		refreshWindow:    win.refreshWindow,
 
 		selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
@@ -278,7 +280,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 
 	pages[PageWallet] = WalletPage(common)
 	pages[PageMore] = MorePage(common)
-	pages[PageCreateRestore] = CreateRestorePage(common)
 	pages[PageReceive] = ReceivePage(common)
 	pages[PageSend] = SendPage(common)
 	pages[PageSignMessage] = SignMessagePage(common)

@@ -200,7 +200,7 @@ func (pg *walletPage) initializeWalletMenu() {
 			text:   values.String(values.StrImportExistingWallet),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				common.changePage(PageCreateRestore)
+				common.changeWindowPage(CreateRestorePage(common), true)
 			},
 		},
 		{

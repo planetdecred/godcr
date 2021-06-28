@@ -133,7 +133,11 @@ func (mp *mainPage) OnResume() {
 
 	mp.updateBalance()
 
-	mp.changeFragment(OverviewPage(mp.pageCommon), PageOverview)
+	if pg, ok := mp.pages[mp.current]; ok {
+		pg.OnResume()
+	} else {
+		mp.changeFragment(OverviewPage(mp.pageCommon), PageOverview)
+	}
 
 	if mp.autoSync {
 		mp.autoSync = false
