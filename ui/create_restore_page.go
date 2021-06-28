@@ -639,6 +639,8 @@ func (pg *createRestore) handle() {
 			pg.resetSeeds()
 			pg.resetPasswords()
 
+			// Go back to wallets page if there's more than one wallet
+			// or launch main page.
 			if pg.common.multiWallet.LoadedWalletsCount() > 1 {
 				pg.common.popWindowPage()
 			} else {
