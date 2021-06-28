@@ -44,7 +44,8 @@ type Window struct {
 	modalMutex sync.Mutex
 	modals     []Modal
 
-	currentPage Page
+	currentPage   Page
+	pageBackStack []Page
 
 	signatureResult *wallet.Signature
 
@@ -120,9 +121,34 @@ func (win *Window) Start() {
 	}
 }
 
-func (win *Window) changePage(page Page) {
+func (win *Window) changePage(page Page, keepBackStack bool) {
+	if win.currentPage != nil && keepBackStack {
+		win.currentPage.onClose()
+		win.pageBackStack = append(win.pageBackStack, win.currentPage)
+	}
+
 	win.currentPage = page
 	win.refreshWindow()
+}
+
+// popPage goes back to the previous page
+// returns true if page was popped.
+func (win *Window) popPage() bool {
+	if len(win.pageBackStack) > 0 {
+		// get and remove last page
+		previousPage := win.pageBackStack[len(win.pageBackStack)-1]
+		win.pageBackStack = win.pageBackStack[:len(win.pageBackStack)-1]
+
+		win.currentPage.onClose()
+
+		previousPage.OnResume()
+		win.currentPage = previousPage
+		win.refreshWindow()
+
+		return true
+	}
+
+	return false
 }
 
 func (win *Window) refreshWindow() {

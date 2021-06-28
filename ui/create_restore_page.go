@@ -50,10 +50,9 @@ type createRestore struct {
 	openPopupIndex  int
 	selected        int
 
-	hideRestoreWallet decredmaterial.IconButton
-	restoreWalletBtn  decredmaterial.Button
-	resetSeedFields   decredmaterial.Button
-	hideResetModal    decredmaterial.Button
+	closePageBtn     decredmaterial.IconButton
+	restoreWalletBtn decredmaterial.Button
+	resetSeedFields  decredmaterial.Button
 
 	spendingPassword      decredmaterial.Editor
 	walletName            decredmaterial.Editor
@@ -86,7 +85,6 @@ func CreateRestorePage(common *pageCommon) Page {
 		spendingPassword:      common.theme.EditorPassword(new(widget.Editor), "Spending password"),
 		walletName:            common.theme.Editor(new(widget.Editor), "Wallet name"),
 		matchSpendingPassword: common.theme.EditorPassword(new(widget.Editor), "Confirm spending password"),
-		hideResetModal:        common.theme.Button(new(widget.Clickable), "cancel"),
 		suggestionLimit:       3,
 		createModal:           common.theme.Modal(),
 		warningModal:          common.theme.Modal(),
@@ -108,9 +106,9 @@ func CreateRestorePage(common *pageCommon) Page {
 
 	pg.restoreWalletBtn = common.theme.Button(new(widget.Clickable), "Restore")
 
-	pg.hideRestoreWallet = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationClose)))
-	pg.hideRestoreWallet.Background = color.NRGBA{}
-	pg.hideRestoreWallet.Color = common.theme.Color.Hint
+	pg.closePageBtn = common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationClose)))
+	pg.closePageBtn.Background = color.NRGBA{}
+	pg.closePageBtn.Color = common.theme.Color.Hint
 
 	pg.resetSeedFields = common.theme.Button(new(widget.Clickable), "Clear all")
 	pg.resetSeedFields.Color = common.theme.Color.Hint
@@ -179,7 +177,7 @@ func (pg *createRestore) restore(gtx layout.Context) layout.Dimensions {
 						return layout.W.Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Top: values.MarginPadding6}.Layout(gtx, pg.hideRestoreWallet.Layout)
+									return layout.Inset{Top: values.MarginPadding6}.Layout(gtx, pg.closePageBtn.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, pg.theme.H6("Restore wallet").Layout)
@@ -618,12 +616,11 @@ func (pg *createRestore) resetSeeds() {
 func (pg *createRestore) handle() {
 	common := pg.common
 
-	for pg.hideRestoreWallet.Button.Clicked() {
-		// go back to previous page
+	for pg.closePageBtn.Button.Clicked() {
+		common.popWindowPage()
 	}
 
 	if pg.restoreWalletBtn.Button.Clicked() {
-
 		pass := pg.validatePasswords()
 		walletName := pg.validateWalletName()
 		if !pg.validateSeeds() || pass == "" || walletName == "" {
@@ -642,8 +639,14 @@ func (pg *createRestore) handle() {
 			pg.resetSeeds()
 			pg.resetPasswords()
 
-			pg.common.wallet.SetupListeners()
-			pg.common.changeWindowPage(newMainPage(pg.common))
+			// Go back to wallets page if there's more than one wallet
+			// or launch main page.
+			if pg.common.multiWallet.LoadedWalletsCount() > 1 {
+				pg.common.popWindowPage()
+			} else {
+				pg.common.wallet.SetupListeners()
+				pg.common.changeWindowPage(newMainPage(pg.common), false)
+			}
 		}()
 	}
 
