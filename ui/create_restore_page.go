@@ -621,7 +621,6 @@ func (pg *createRestore) handle() {
 	}
 
 	if pg.restoreWalletBtn.Button.Clicked() {
-
 		pass := pg.validatePasswords()
 		walletName := pg.validateWalletName()
 		if !pg.validateSeeds() || pass == "" || walletName == "" {
@@ -646,7 +645,6 @@ func (pg *createRestore) handle() {
 				pg.common.wallet.SetupListeners()
 				pg.common.changeWindowPage(newMainPage(pg.common), false)
 			}
-
 		}()
 	}
 
