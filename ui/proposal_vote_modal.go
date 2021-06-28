@@ -27,7 +27,6 @@ type voteModal struct {
 	*pageCommon
 	randomID       string
 	modal          decredmaterial.Modal
-	dialogTitle    string
 	passwordEditor decredmaterial.Editor
 	callback       func(password string, m *voteModal) bool // return true to dismiss dialog
 	btnPositve     decredmaterial.Button
@@ -99,25 +98,6 @@ func (cm *voteModal) Dismiss() {
 	cm.dismissModal(cm)
 }
 
-func (cm *voteModal) title(title string) *voteModal {
-	cm.dialogTitle = title
-	return cm
-}
-
-func (cm *voteModal) passwordHint(hint string) *voteModal {
-	cm.passwordEditor.Hint = hint
-	return cm
-}
-
-func (cm *voteModal) passwordSubmitted(callback func(password string, m *voteModal) bool) *voteModal {
-	cm.callback = callback
-	return cm
-}
-
-func (cm *voteModal) setError(err string) {
-
-}
-
 func (i *inputVoteOptionsWidgets) handleVoteCountButtons() {
 	if i.increment.Button.Clicked() {
 		value, err := strconv.Atoi(i.input.Editor.Text())
@@ -159,7 +139,7 @@ func (cm *voteModal) handle() {
 func (cm *voteModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
-			t := cm.theme.H6(cm.dialogTitle)
+			t := cm.theme.H6("Vote")
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
