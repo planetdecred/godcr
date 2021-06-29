@@ -28,7 +28,7 @@ import (
 type pageIcons struct {
 	contentAdd, navigationCheck, navigationMore, actionCheckCircle, actionInfo, navigationArrowBack,
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
-	imageBrightness1, contentClear, dropDownIcon, cached *widget.Icon
+	imageBrightness1, contentClear, dropDownIcon, cached, contentRemove *widget.Icon
 
 	overviewIcon, overviewIconInactive, walletIcon, walletIconInactive,
 	receiveIcon, transactionIcon, transactionIconInactive, sendIcon, moreIcon, moreIconInactive,
@@ -156,6 +156,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		navMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		dropDownIcon:           mustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		cached:                 mustIcon(widget.NewIcon(icons.ActionCached)),
+		contentRemove:          mustIcon(widget.NewIcon(icons.ContentRemove)),
 
 		overviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		overviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},

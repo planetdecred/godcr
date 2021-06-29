@@ -45,6 +45,8 @@ type proposalDetails struct {
 	downloadIcon        *widget.Image
 	timerIcon           *widget.Image
 	successIcon         *widget.Icon
+
+	vote decredmaterial.Button
 }
 
 func ProposalDetailsPage(common *pageCommon) Page {
@@ -71,6 +73,18 @@ func ProposalDetailsPage(common *pageCommon) Page {
 
 	pg.downloadIcon.Scale = 1
 
+	pg.vote = common.theme.Button(new(widget.Clickable), "Vote")
+	pg.vote.TextSize = values.TextSize14
+	pg.vote.Background = common.theme.Color.Primary
+	pg.vote.Color = common.theme.Color.Surface
+	pg.vote.CornerRadius = values.MarginPadding8
+	pg.vote.Inset = layout.Inset{
+		Top:    values.MarginPadding8,
+		Bottom: values.MarginPadding8,
+		Left:   values.MarginPadding12,
+		Right:  values.MarginPadding12,
+	}
+
 	return pg
 }
 
@@ -96,6 +110,11 @@ func (pg *proposalDetails) handle() {
 		proposal := *pg.selectedProposal
 		goToURL("https://github.com/decred-proposals/mainnet/tree/master/" + proposal.Token)
 	}
+
+	if pg.vote.Button.Clicked() {
+		newvoteModal(pg.common).Show()
+	}
+
 }
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
@@ -108,6 +127,16 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 	eligibleTickets := float32(proposal.EligibleTickets)
 
 	return pg.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
+}
+
+func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {
+	proposal := *pg.selectedProposal
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	txt := pg.theme.Label(values.TextSize14, fmt.Sprintf("%d eligible tickets", proposal.EligibleTickets))
+	return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(pg.vote.Layout),
+		layout.Rigid(txt.Layout),
+	)
 }
 
 func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet.Proposal) D {
@@ -234,6 +263,15 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C, proposal *dcrlibwallet.Propo
 		}),
 		layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10})),
 		layout.Rigid(pg.layoutProposalVoteBar),
+		layout.Rigid(func(gtx C) D {
+			if proposal.Category != dcrlibwallet.ProposalCategoryActive {
+				return D{}
+			}
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10})),
+				layout.Rigid(pg.layoutProposalVoteAction),
+			)
+		}),
 	)
 }
 
@@ -421,7 +459,6 @@ func (pg *proposalDetails) Layout(gtx C) D {
 		return common.SubPageLayout(gtx, page)
 	}
 	return common.UniformPadding(gtx, body)
-
 }
 
 func (pg *proposalDetails) onClose() {}
