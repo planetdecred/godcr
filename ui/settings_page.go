@@ -40,6 +40,7 @@ type settingsPage struct {
 	chevronRightIcon    *widget.Icon
 	confirm             decredmaterial.Button
 	cancel              decredmaterial.Button
+	backButton          decredmaterial.IconButton
 
 	isDarkModeOn     *widget.Bool
 	spendUnconfirmed *widget.Bool
@@ -89,6 +90,8 @@ func SettingsPage(common *pageCommon) Page {
 		cancel:  common.theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
 	}
 
+	pg.backButton, _ = common.SubPageHeaderButtons()
+
 	languagePreference := preference.NewListPreference(common.wallet, common.theme, languagePreferenceKey,
 		values.DefaultLangauge, values.ArrLanguages).
 		Title(values.StrLanguage).
@@ -132,7 +135,8 @@ func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	body := func(gtx C) D {
 		page := SubPage{
-			title: values.String(values.StrSettings),
+			title:      values.String(values.StrSettings),
+			backButton: pg.backButton,
 			back: func() {
 				common.changePage(PageMore)
 			},

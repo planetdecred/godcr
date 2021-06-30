@@ -25,6 +25,8 @@ type aboutPage struct {
 	license        decredmaterial.Label
 
 	chevronRightIcon *widget.Icon
+
+	backButton decredmaterial.IconButton
 }
 
 func AboutPage(common *pageCommon) Page {
@@ -43,6 +45,7 @@ func AboutPage(common *pageCommon) Page {
 		chevronRightIcon: common.icons.chevronRight,
 	}
 
+	pg.backButton, _ = common.SubPageHeaderButtons()
 	pg.versionValue.Color = pg.theme.Color.Gray
 	pg.buildDateValue.Color = pg.theme.Color.Gray
 	pg.networkValue.Color = pg.theme.Color.Gray
@@ -58,7 +61,8 @@ func (pg *aboutPage) OnResume() {
 func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
-			title: "About",
+			title:      "About",
+			backButton: pg.backButton,
 			back: func() {
 				pg.common.changePage(PageMore)
 			},
