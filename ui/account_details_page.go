@@ -36,13 +36,11 @@ func AcctDetailsPage(common *pageCommon) Page {
 		wallet:        common.wallet,
 		acctInfo:      common.walletAccount,
 		theme:         common.theme,
-		backButton:    common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack),
 		editAccount:   new(widget.Clickable),
 		errorReceiver: make(chan error),
 	}
 
-	pg.backButton.Color = common.theme.Color.Text
-	pg.backButton.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -78,6 +76,7 @@ func (pg *acctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 		page := SubPage{
 			title:      acctName,
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
+			backButton: pg.backButton,
 			back: func() {
 				common.changePage(PageWallet)
 			},
@@ -124,7 +123,7 @@ func (pg *acctDetailsPage) accountBalanceLayout(gtx layout.Context, common *page
 
 	return pg.pageSections(gtx, func(gtx C) D {
 		accountIcon := common.icons.accountIcon
-		if (*pg.acctInfo).Name == "imported" {
+		if (*pg.acctInfo).Name == "imported" { //TODO
 			accountIcon = common.icons.importedAccountIcon
 		}
 		accountIcon.Scale = 1
@@ -252,9 +251,6 @@ func (pg *acctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 
 func (pg *acctDetailsPage) handle() {
 	common := pg.common
-	if pg.backButton.Button.Clicked() {
-		common.changePage(PageWallet)
-	}
 
 	if pg.editAccount.Clicked() {
 		pg.current = common.info.Wallets[*common.selectedWallet]

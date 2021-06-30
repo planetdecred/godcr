@@ -23,6 +23,8 @@ type statPage struct {
 	startupTime time.Time
 	syncStatus  *wallet.SyncStatus
 	netType     string
+
+	backButton decredmaterial.IconButton
 }
 
 func StatPage(common *pageCommon) Page {
@@ -41,6 +43,8 @@ func StatPage(common *pageCommon) Page {
 	} else {
 		pg.netType = strings.Title(common.wallet.Net)
 	}
+
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -114,7 +118,8 @@ func (pg *statPage) layoutStats(gtx C) D {
 func (pg *statPage) Layout(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
 		page := SubPage{
-			title: "Statistics",
+			title:      "Statistics",
+			backButton: pg.backButton,
 			back: func() {
 				pg.common.changePage(PageDebug)
 			},

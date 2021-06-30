@@ -20,6 +20,8 @@ type debugPage struct {
 	theme      *decredmaterial.Theme
 	debugItems []debugItem
 	common     *pageCommon
+
+	backButton decredmaterial.IconButton
 }
 
 func DebugPage(common *pageCommon) Page {
@@ -41,6 +43,8 @@ func DebugPage(common *pageCommon) Page {
 		debugItems: debugItems,
 		common:     common,
 	}
+
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -91,7 +95,8 @@ func (pg *debugPage) layoutDebugItems(gtx C, common *pageCommon) {
 func (pg *debugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		page := SubPage{
-			title: "Debug",
+			title:      "Debug",
+			backButton: pg.backButton,
 			back: func() {
 				pg.common.changePage(PageMore)
 			},

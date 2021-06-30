@@ -17,6 +17,9 @@ type securityToolsPage struct {
 	verifyMessage   *widget.Clickable
 	validateAddress *widget.Clickable
 	common          *pageCommon
+
+	backButton decredmaterial.IconButton
+	infoButton decredmaterial.IconButton
 }
 
 func SecurityToolsPage(common *pageCommon) Page {
@@ -26,6 +29,8 @@ func SecurityToolsPage(common *pageCommon) Page {
 		validateAddress: new(widget.Clickable),
 		common:          common,
 	}
+
+	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -39,7 +44,9 @@ func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 	body := func(gtx C) D {
 		page := SubPage{
-			title: "Security Tools",
+			title:      "Security Tools",
+			backButton: pg.backButton,
+			infoButton: pg.infoButton,
 			back: func() {
 				*common.page = PageMore
 			},

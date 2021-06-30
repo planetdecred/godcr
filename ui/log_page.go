@@ -17,8 +17,9 @@ type logPage struct {
 	theme  *decredmaterial.Theme
 	common *pageCommon
 
-	copyLog  *widget.Clickable
-	copyIcon *widget.Image
+	copyLog    *widget.Clickable
+	copyIcon   *widget.Image
+	backButton decredmaterial.IconButton
 
 	entriesList layout.List
 	fullLog     string
@@ -40,6 +41,8 @@ func LogPage(common *pageCommon) Page {
 
 	pg.copyIcon = common.icons.copyIcon
 	pg.copyIcon.Scale = 0.25
+
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	go pg.watchLogs(*common.internalLog)
 
@@ -73,7 +76,8 @@ func (pg *logPage) Layout(gtx C) D {
 
 	container := func(gtx C) D {
 		page := SubPage{
-			title: "Wallet log",
+			title:      "Wallet log",
+			backButton: pg.backButton,
 			back: func() {
 				common.changePage(PageDebug)
 			},

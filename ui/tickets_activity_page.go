@@ -28,6 +28,8 @@ type ticketsActivityPage struct {
 	common             *pageCommon
 
 	wallets []*dcrlibwallet.Wallet
+
+	backButton decredmaterial.IconButton
 }
 
 func TicketActivityPage(c *pageCommon) Page {
@@ -50,6 +52,8 @@ func TicketActivityPage(c *pageCommon) Page {
 		{Text: "Revoked"},
 	}, 1)
 
+	pg.backButton, _ = c.SubPageHeaderButtons()
+
 	return pg
 }
 
@@ -62,7 +66,8 @@ func (pg *ticketsActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	c.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
 	body := func(gtx C) D {
 		page := SubPage{
-			title: "Ticket activity",
+			title:      "Ticket activity",
+			backButton: pg.backButton,
 			back: func() {
 				c.changePage(PageTickets)
 			},

@@ -24,6 +24,7 @@ type walletSettingsPage struct {
 	errorReceiver chan error
 
 	chevronRightIcon *widget.Icon
+	backButton       decredmaterial.IconButton
 }
 
 func WalletSettingsPage(common *pageCommon) Page {
@@ -43,6 +44,7 @@ func WalletSettingsPage(common *pageCommon) Page {
 	}
 
 	pg.chevronRightIcon.Color = pg.theme.Color.LightGray
+	pg.backButton, _ = common.SubPageHeaderButtons()
 
 	return pg
 }
@@ -64,6 +66,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 		page := SubPage{
 			title:      values.String(values.StrSettings),
 			walletName: common.info.Wallets[*common.selectedWallet].Name,
+			backButton: pg.backButton,
 			back: func() {
 				common.changePage(PageWallet)
 			},
@@ -80,7 +83,6 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(pg.dangerZone()),
 				)
 			},
-			infoTemplate: "",
 		}
 		return common.SubPageLayout(gtx, page)
 	}
