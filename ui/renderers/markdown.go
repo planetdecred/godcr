@@ -35,7 +35,7 @@ func RenderMarkdown(gtx layout.Context, theme *decredmaterial.Theme, source stri
 	p := parser.NewWithExtensions(extensions)
 
 	r := &MarkdownRenderer{
-		newRenderer(theme),
+		newRenderer(theme, false),
 	}
 
 	source = r.prepareDocForTable(source)

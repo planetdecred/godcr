@@ -24,12 +24,18 @@ var (
 	blockEls = []string{"div", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li"}
 )
 
+const (
+	openStyleTag = "{@@"
+	halfCloseStyleTag = "@}"
+	closeStyleTag = "{/@}"
+)
+
 func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLRenderer {
 	converter := md.NewConverter("", true, nil)
 
 	r := &HTMLRenderer{
 		container: &layout.List{Axis: layout.Vertical},
-		Renderer:  newRenderer(theme),
+		Renderer:  newRenderer(theme, true),
 	}
 
 	docStr := r.prepareHTML(html)
@@ -197,8 +203,8 @@ func (r *HTMLRenderer) setNodeStyle(node *goquery.Selection, parentStyle map[str
 		}
 	}
 
-	styleTag := "{##" + r.styleMapToString(styleMap) + " "
-	endTag := " {/#} "
+	styleTag := openStyleTag + r.styleMapToString(styleMap) + halfCloseStyleTag
+	endTag := closeStyleTag
 	node = node.PrependHtml(styleTag)
 	if r.isBlockElement(goquery.NodeName(node)) {
 		endTag += " \n "

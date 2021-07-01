@@ -3,6 +3,7 @@ package renderers
 import (
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"unicode"
 
@@ -28,6 +29,7 @@ type Renderer struct {
 	stringBuilder  strings.Builder
 	containers     []layout.Widget
 	styleGroups    []map[string]string
+	isHTML         bool
 
 	table *tableRenderer
 }
@@ -38,9 +40,14 @@ const (
 	linkSpacer    = "@@@@"
 )
 
-func newRenderer(theme *decredmaterial.Theme) *Renderer {
+var (
+	textBeforeCloseRegexp = regexp.MustCompile("(.*){/#}")
+)
+
+func newRenderer(theme *decredmaterial.Theme, isHTML bool) *Renderer {
 	return &Renderer{
 		theme: theme,
+		isHTML: isHTML,
 	}
 }
 
@@ -195,7 +202,24 @@ func (r *Renderer) removeLastStyleGroup() {
 	}
 }
 
+func (r *Renderer) getNextChar(content string, currIndex int) byte {
+	if currIndex+2 <= len(content) {
+		return content[currIndex+1]
+	}
+
+	return 0
+}
+
 func (r *Renderer) renderWords(lbl decredmaterial.Label) {
+	if r.isHTML {
+		r.renderHTML(lbl)
+		return 
+	}
+
+	r.renderMarkdown(lbl)
+}
+
+func (r *Renderer) renderMarkdown(lbl decredmaterial.Label) {
 	content := r.stringBuilder.String()
 	r.stringBuilder.Reset()
 
@@ -208,16 +232,6 @@ func (r *Renderer) renderWords(lbl decredmaterial.Label) {
 			Axis:      layout.Horizontal,
 			Alignment: layout.Start,
 		}.Layout(gtx, len(words), func(gtx C, i int) D {
-			if strings.HasPrefix(words[i], "{#") {
-				r.addStyleGroup(words[i])
-				return D{}
-			}
-
-			if words[i] == "{/#}" {
-				r.removeLastStyleGroup()
-				return D{}
-			}
-
 			if strings.HasPrefix(words[i], linkTag) {
 				return r.getLinkWidget(gtx, words[i])
 			}
@@ -226,9 +240,83 @@ func (r *Renderer) renderWords(lbl decredmaterial.Label) {
 			if i == 0 {
 				word = words[i]
 			}
-			lbl.Text = word
-			lbl = r.styleLabel(lbl)
+			lbl.Text = word 
 			return lbl.Layout(gtx)
+		})
+	}
+	r.containers = append(r.containers, wdgt)
+}
+
+func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
+	content := r.stringBuilder.String()
+	r.stringBuilder.Reset()
+
+	fmt.Println(content)
+
+	var labels []decredmaterial.Label
+	var inStyleBlock bool
+	var isClosingStyle bool
+	var isClosingBlock bool
+	var currStyle string
+	var currText string
+	for i := range content {
+		curr := content[i]
+		
+		if curr == openStyleTag[0] && r.getNextChar(content, i) == openStyleTag[1] {
+			inStyleBlock = true 
+		} 
+
+		if curr == halfCloseStyleTag[0] && r.getNextChar(content, i) == halfCloseStyleTag[1] {
+			isClosingStyle = true
+		}
+
+		if curr == closeStyleTag[0] && r.getNextChar(content, i) == closeStyleTag[1] {
+			isClosingBlock = true
+		}
+
+
+		if inStyleBlock && !isClosingStyle {
+			currStyle += string(curr)
+		}
+
+		if !inStyleBlock && !isClosingBlock {
+			currStr := string(curr)
+			if currStr == "" || currStr == " " {
+				l := lbl 
+				l.Text = currText
+				l = r.styleLabel(l)
+				labels = append(labels, l)
+				currText = currStr
+			} else {
+				currText += currStr
+			}
+		}
+
+		if isClosingBlock && curr == closeStyleTag[3] {
+			l := lbl 
+			l.Text = currText 
+			l = r.styleLabel(l)
+			labels = append(labels, l)
+			currText = ""
+			r.removeLastStyleGroup()
+			isClosingBlock = false
+			
+		}
+
+		if isClosingStyle && curr == halfCloseStyleTag[1] {
+			isClosingStyle = false 
+			inStyleBlock = false 
+			r.addStyleGroup(currStyle)
+			currStyle = ""
+		}
+	}
+
+	wdgt := func(gtx C) D {
+		return decredmaterial.GridWrap{
+			Axis: layout.Horizontal,
+			Alignment: layout.Start,
+		}.Layout(gtx, len(labels), func(gtx C, i int) D {
+			return labels[i].Layout(gtx)
 		})
 	}
 	r.containers = append(r.containers, wdgt)
