@@ -2,19 +2,25 @@ package decredmaterial
 
 import (
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 )
 
 type ClickableList struct {
 	layout.List
-	clickables   []*widget.Clickable
-	selectedItem int
+	theme              *Theme
+	clickables         []*widget.Clickable
+	selectedItem       int
+	ClickableHighlight bool
+	DividerHeight      unit.Value
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 	return &ClickableList{
-		List:         layout.List{Axis: layout.Vertical},
-		selectedItem: -1,
+		theme:              t,
+		List:               layout.List{Axis: axis},
+		ClickableHighlight: true,
+		selectedItem:       -1,
 	}
 }
 
@@ -44,9 +50,26 @@ func (cl *ClickableList) handleClickables(count int) {
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
 	return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
-		return Clickable(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
-			return w(gtx, i)
-		})
+		var row layout.Dimensions = w(gtx, i)
+		if cl.ClickableHighlight {
+			row = Clickable(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
+				return row
+			})
+		}
 
+		// add divider to all rows except last
+		if i < (count-1) && cl.DividerHeight.V > 0 {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return row
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Min.Y += gtx.Px(cl.DividerHeight)
+
+					return layout.Dimensions{Size: gtx.Constraints.Min}
+				}),
+			)
+		}
+		return row
 	})
 }

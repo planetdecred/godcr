@@ -39,11 +39,31 @@ func (mp *mainPage) OnAccountMixerStarted(walletID int) {}
 func (mp *mainPage) OnAccountMixerEnded(walletID int)   {}
 
 // Politeia notifications
-func (mp *mainPage) OnProposalsSynced()                            {}
-func (mp *mainPage) OnNewProposal(proposal *dcrlibwallet.Proposal) {}
+func (mp *mainPage) OnProposalsSynced() {
+	mp.notificationsUpdate <- wallet.Proposal{
+		ProposalStatus: wallet.Synced,
+	}
+}
 
-func (mp *mainPage) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal)  {}
-func (mp *mainPage) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {}
+func (mp *mainPage) OnNewProposal(proposal *dcrlibwallet.Proposal) {
+	mp.notificationsUpdate <- wallet.Proposal{
+		ProposalStatus: wallet.NewProposalFound,
+		Proposal:       proposal,
+	}
+}
+
+func (mp *mainPage) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
+	mp.notificationsUpdate <- wallet.Proposal{
+		ProposalStatus: wallet.VoteStarted,
+		Proposal:       proposal,
+	}
+}
+func (mp *mainPage) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
+	mp.notificationsUpdate <- wallet.Proposal{
+		ProposalStatus: wallet.VoteFinished,
+		Proposal:       proposal,
+	}
+}
 
 // Sync notifications
 

@@ -108,7 +108,6 @@ type pageCommon struct {
 	walletTransactions  **wallet.Transactions
 	acctMixerStatus     *chan *wallet.AccountMixer
 	selectedProposal    **dcrlibwallet.Proposal
-	proposals           **wallet.Proposals
 	syncedProposal      chan *wallet.Proposal
 	txAuthor            *dcrlibwallet.TxAuthor
 	broadcastResult     *wallet.Broadcast
@@ -234,7 +233,6 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		// walletTransaction:  &win.walletTransaction,
 		acctMixerStatus:  &win.walletAcctMixerStatus,
 		selectedProposal: &win.selectedProposal,
-		proposals:        &win.proposals,
 		syncedProposal:   win.proposal,
 		txAuthor:         &win.txAuthor,
 		broadcastResult:  &win.broadcastResult,
