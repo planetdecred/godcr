@@ -82,7 +82,6 @@ func ProposalsPage(common *pageCommon) Page {
 		syncCard:              common.theme.Card(),
 		legendIcon:            common.icons.imageBrightness1,
 		infoIcon:              common.icons.actionInfo,
-		selectedProposal:      common.selectedProposal,
 		updatedIcon:           common.icons.navigationCheck,
 		updatedLabel:          common.theme.Body2("Updated"),
 		syncButton:            new(widget.Clickable),
@@ -99,7 +98,6 @@ func ProposalsPage(common *pageCommon) Page {
 	pg.syncCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 
 	pg.proposalsList.DividerHeight = values.MarginPadding8
-	pg.proposalsList.ClickableHighlight = false
 
 	return pg
 }
@@ -174,6 +172,14 @@ func (pg *proposalsPage) handle() {
 
 	if clicked, selectedItem := pg.categoryList.ItemClicked(); clicked {
 		go pg.loadProposals(selectedItem)
+	}
+
+	if clicked, selectedItem := pg.proposalsList.ItemClicked(); clicked {
+		pg.proposalMu.Lock()
+		selectedProposal := pg.proposalItems[selectedItem].proposal
+		pg.proposalMu.Unlock()
+
+		pg.changeFragment(ProposalDetailsPage(pg.pageCommon, selectedProposal), PageProposalDetails)
 	}
 
 	for pg.syncButton.Clicked() {
@@ -265,7 +271,7 @@ func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
 	return layout.Center.Layout(gtx, pg.theme.Body1(str).Layout)
 }
 
-func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, item proposalItem) D {
+func (pg *proposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 	proposal := item.proposal
 	grayCol := pg.theme.Color.Gray
 
@@ -374,7 +380,7 @@ func (pg *proposalsPage) layoutTitle(gtx C, proposal dcrlibwallet.Proposal) D {
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
-func (pg *proposalsPage) layoutProposalVoteBar(gtx C, i int, item proposalItem) D {
+func (pg *proposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 	proposal := item.proposal
 	yes := float32(proposal.YesVotes)
 	no := float32(proposal.NoVotes)
@@ -404,7 +410,7 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 						proposal := item.proposal
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return pg.layoutAuthorAndDate(gtx, i, item)
+								return pg.layoutAuthorAndDate(gtx, item)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return pg.layoutTitle(gtx, proposal)
@@ -413,7 +419,7 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 								if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
 									proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
 									proposal.Category == dcrlibwallet.ProposalCategoryRejected {
-									return pg.layoutProposalVoteBar(gtx, i, item)
+									return pg.layoutProposalVoteBar(gtx, item)
 								}
 								return D{}
 							}),

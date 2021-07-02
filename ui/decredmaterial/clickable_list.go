@@ -8,19 +8,17 @@ import (
 
 type ClickableList struct {
 	layout.List
-	theme              *Theme
-	clickables         []*widget.Clickable
-	selectedItem       int
-	ClickableHighlight bool
-	DividerHeight      unit.Value
+	theme         *Theme
+	clickables    []*widget.Clickable
+	selectedItem  int
+	DividerHeight unit.Value
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 	return &ClickableList{
-		theme:              t,
-		List:               layout.List{Axis: axis},
-		ClickableHighlight: true,
-		selectedItem:       -1,
+		theme:        t,
+		List:         layout.List{Axis: axis},
+		selectedItem: -1,
 	}
 }
 
@@ -50,12 +48,9 @@ func (cl *ClickableList) handleClickables(count int) {
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
 	return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
-		var row layout.Dimensions = w(gtx, i)
-		if cl.ClickableHighlight {
-			row = Clickable(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
-				return row
-			})
-		}
+		row := Clickable(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
+			return w(gtx, i)
+		})
 
 		// add divider to all rows except last
 		if i < (count-1) && cl.DividerHeight.V > 0 {
