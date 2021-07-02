@@ -87,6 +87,7 @@ type DCRUSDTBittrex struct {
 type pageCommon struct {
 	printer             *message.Printer
 	multiWallet         *dcrlibwallet.MultiWallet
+	network             string
 	notificationsUpdate chan interface{}
 	wallet              *wallet.Wallet
 	walletAccount       **wallet.Account
@@ -217,6 +218,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 	common := &pageCommon{
 		printer:             message.NewPrinter(language.English),
 		multiWallet:         win.wallet.GetMultiWallet(),
+		network:             win.wallet.Net,
 		notificationsUpdate: make(chan interface{}, 10),
 		wallet:              win.wallet,
 		walletAccount:       &win.walletAccount,
@@ -264,15 +266,12 @@ func (common *pageCommon) loadPages() map[string]Page {
 
 	pages := make(map[string]Page)
 
-	pages[PageWallet] = WalletPage(common)
 	pages[PageMore] = MorePage(common)
 	pages[PageReceive] = ReceivePage(common)
 	pages[PageSend] = SendPage(common)
-	pages[PageSignMessage] = SignMessagePage(common)
 	pages[PageVerifyMessage] = VerifyMessagePage(common)
 	pages[PageSeedBackup] = BackupPage(common)
 	pages[PageSettings] = SettingsPage(common)
-	pages[PageWalletSettings] = WalletSettingsPage(common)
 	pages[PageSecurityTools] = SecurityToolsPage(common)
 	pages[PageProposals] = ProposalsPage(common)
 	pages[PageProposalDetails] = ProposalDetailsPage(common)
@@ -282,8 +281,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageAbout] = AboutPage(common)
 	pages[PageHelp] = HelpPage(common)
 	pages[PageUTXO] = UTXOPage(common)
-	pages[PageAccountDetails] = AcctDetailsPage(common)
-	pages[PagePrivacy] = PrivacyPage(common)
 	pages[PageTickets] = TicketPage(common)
 	pages[ValidateAddress] = ValidateAddressPage(common)
 	pages[PageTicketsList] = TicketPageList(common)
@@ -331,6 +328,17 @@ func (common *pageCommon) sortedWalletList() []*dcrlibwallet.Wallet {
 	})
 
 	return wallets
+}
+
+func (common *pageCommon) HDPrefix() string {
+	switch common.network {
+	case "testnet3": // should use a constant
+		return dcrlibwallet.TestnetHDPath
+	case "mainnet":
+		return dcrlibwallet.MainnetHDPath
+	default:
+		return ""
+	}
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or

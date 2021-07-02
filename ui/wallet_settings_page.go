@@ -7,38 +7,32 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageWalletSettings = "WalletSettings"
 
 type walletSettingsPage struct {
-	theme      *decredmaterial.Theme
-	common     *pageCommon
-	walletInfo *wallet.MultiWalletInfo
-	wal        *wallet.Wallet
+	theme  *decredmaterial.Theme
+	common *pageCommon
+	wallet *dcrlibwallet.Wallet
 
 	changePass, rescan, deleteWallet *widget.Clickable
 
 	notificationW *widget.Bool
-	errorReceiver chan error
 
 	chevronRightIcon *widget.Icon
 	backButton       decredmaterial.IconButton
 }
 
-func WalletSettingsPage(common *pageCommon) Page {
+func WalletSettingsPage(common *pageCommon, wal *dcrlibwallet.Wallet) Page {
 	pg := &walletSettingsPage{
 		theme:         common.theme,
 		common:        common,
-		walletInfo:    common.info,
-		wal:           common.wallet,
+		wallet:        wal,
 		notificationW: new(widget.Bool),
-		errorReceiver: make(chan error),
-
-		changePass:   new(widget.Clickable),
-		rescan:       new(widget.Clickable),
-		deleteWallet: new(widget.Clickable),
+		changePass:    new(widget.Clickable),
+		rescan:        new(widget.Clickable),
+		deleteWallet:  new(widget.Clickable),
 
 		chevronRightIcon: common.icons.chevronRight,
 	}
@@ -56,8 +50,8 @@ func (pg *walletSettingsPage) OnResume() {
 func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	common := pg.common
 
-	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
-	pg.notificationW.Value = false
+	beep := pg.wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
+	pg.notificationW.Value = beep
 	if beep {
 		pg.notificationW.Value = true
 	}
@@ -65,7 +59,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			title:      values.String(values.StrSettings),
-			walletName: common.info.Wallets[*common.selectedWallet].Name,
+			walletName: pg.wallet.Name,
 			backButton: pg.backButton,
 			back: func() {
 				common.changePage(PageWallet)
@@ -184,22 +178,19 @@ func (pg *walletSettingsPage) bottomSectionLabel(title string) layout.Widget {
 func (pg *walletSettingsPage) handle() {
 	common := pg.common
 	for pg.changePass.Clicked() {
-		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
-
 		newPasswordModal(common).
 			title(values.String(values.StrChangeSpendingPass)).
 			hint("Current spending password").
 			negativeButton(values.String(values.StrCancel), func() {}).
 			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
 				go func() {
-					wal := pg.wal.GetMultiWallet().WalletWithID(walletID)
-					err := wal.UnlockWallet([]byte(password))
+					err := pg.wallet.UnlockWallet([]byte(password))
 					if err != nil {
 						pm.setError(err.Error())
 						pm.setLoading(false)
 						return
 					}
-					wal.LockWallet()
+					pg.wallet.LockWallet()
 					pm.Dismiss()
 
 					// change password
@@ -210,7 +201,7 @@ func (pg *walletSettingsPage) handle() {
 						confirmPasswordHint("Confirm new spending password").
 						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
 							go func() {
-								err := pg.wal.GetMultiWallet().ChangePrivatePassphraseForWallet(walletID, []byte(password),
+								err := pg.common.multiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
 									[]byte(newPassword), dcrlibwallet.PassphraseTypePass)
 								if err != nil {
 									m.setError(err.Error())
@@ -230,7 +221,6 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.rescan.Clicked() {
-		walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 		go func() {
 			info := newInfoModal(common).
 				title(values.String(values.StrRescanBlockchain)).
@@ -238,7 +228,7 @@ func (pg *walletSettingsPage) handle() {
 					" blockchain for transactions").
 				negativeButton(values.String(values.StrCancel), func() {}).
 				positiveButton(values.String(values.StrRescan), func() {
-					err := pg.wal.RescanBlocks(walletID)
+					err := pg.common.multiWallet.RescanBlocks(pg.wallet.ID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
 							common.notify(values.String(values.StrNotConnected), false)
@@ -257,7 +247,7 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	if pg.notificationW.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notificationW.Value)
+		pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notificationW.Value)
 	}
 
 	for pg.deleteWallet.Clicked() {
@@ -266,28 +256,27 @@ func (pg *walletSettingsPage) handle() {
 			body("Make sure to have the seed phrase backed up before removing the wallet").
 			negativeButton(values.String(values.StrCancel), func() {}).
 			positiveButton(values.String(values.StrRemove), func() {
-				walletID := pg.walletInfo.Wallets[*common.selectedWallet].ID
 
 				newPasswordModal(common).
 					title(values.String(values.StrConfirmToRemove)).
 					negativeButton(values.String(values.StrCancel), func() {}).
 					positiveButtonStyle(common.theme.Color.Surface, common.theme.Color.Danger).
 					positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
-						pg.wal.DeleteWallet(walletID, []byte(password), pg.errorReceiver)
-						return true
+						go func() {
+							err := pg.common.multiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
+							if err != nil {
+								pm.setError(err.Error())
+								pm.setLoading(false)
+								return
+							}
+							pm.Dismiss()
+							pm.changePage(PageWallet)
+						}()
+						return false
 					}).Show()
 
 			}).Show()
 		break
-	}
-
-	select {
-	case err := <-pg.errorReceiver:
-		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-			e := values.String(values.StrInvalidPassphrase)
-			common.notify(e, false)
-		}
-	default:
 	}
 }
 
