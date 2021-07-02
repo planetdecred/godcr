@@ -92,5 +92,9 @@ func (pg *helpPage) pageSections(gtx layout.Context, icon *widget.Image, action 
 	})
 }
 
-func (pg *helpPage) handle()  {}
+func (pg *helpPage) handle() {
+	if pg.documentation.Clicked() {
+		goToURL("https://docs.decred.org")
+	}
+}
 func (pg *helpPage) onClose() {}
