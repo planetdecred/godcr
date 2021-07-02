@@ -46,7 +46,7 @@ var (
 
 func newRenderer(theme *decredmaterial.Theme, isHTML bool) *Renderer {
 	return &Renderer{
-		theme: theme,
+		theme:  theme,
 		isHTML: isHTML,
 	}
 }
@@ -179,29 +179,6 @@ func (r *Renderer) renderText(node *ast.Text) {
 	r.stringBuilder.WriteString(content)
 }
 
-func (r *Renderer) addStyleGroup(str string) {
-	parts := strings.Split(str, "##")
-	styleMap := map[string]string{}
-
-	for i := range parts {
-		if parts[i] != " " && parts[i] != "{" {
-			styleParts := strings.Split(parts[i], "--")
-
-			if len(styleParts) == 2 {
-				styleMap[styleParts[0]] = styleParts[1]
-			}
-		}
-	}
-
-	r.styleGroups = append(r.styleGroups, styleMap)
-}
-
-func (r *Renderer) removeLastStyleGroup() {
-	if len(r.styleGroups) > 0 {
-		r.styleGroups = r.styleGroups[:len(r.styleGroups)-1]
-	}
-}
-
 func (r *Renderer) getNextChar(content string, currIndex int) byte {
 	if currIndex+2 <= len(content) {
 		return content[currIndex+1]
@@ -213,7 +190,7 @@ func (r *Renderer) getNextChar(content string, currIndex int) byte {
 func (r *Renderer) renderWords(lbl decredmaterial.Label) {
 	if r.isHTML {
 		r.renderHTML(lbl)
-		return 
+		return
 	}
 
 	r.renderMarkdown(lbl)
@@ -240,18 +217,23 @@ func (r *Renderer) renderMarkdown(lbl decredmaterial.Label) {
 			if i == 0 {
 				word = words[i]
 			}
-			lbl.Text = word 
+			lbl.Text = word
 			return lbl.Layout(gtx)
 		})
 	}
 	r.containers = append(r.containers, wdgt)
 }
 
+func (r *Renderer) getLabel(lbl decredmaterial.Label, text string) decredmaterial.Label {
+	l := lbl
+	l.Text = text
+	l = r.styleLabel(l)
+	return l
+}
+
 func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
 	content := r.stringBuilder.String()
 	r.stringBuilder.Reset()
-
-	fmt.Println(content)
 
 	var labels []decredmaterial.Label
 	var inStyleBlock bool
@@ -261,10 +243,12 @@ func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
 	var currText string
 	for i := range content {
 		curr := content[i]
-		
+
 		if curr == openStyleTag[0] && r.getNextChar(content, i) == openStyleTag[1] {
-			inStyleBlock = true 
-		} 
+			inStyleBlock = true
+			labels = append(labels, r.getLabel(lbl, currText))
+			currText = ""
+		}
 
 		if curr == halfCloseStyleTag[0] && r.getNextChar(content, i) == halfCloseStyleTag[1] {
 			isClosingStyle = true
@@ -274,38 +258,31 @@ func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
 			isClosingBlock = true
 		}
 
+		if !inStyleBlock && !isClosingBlock {
+			currStr := string(curr)
+			currText += currStr
+
+			if i+1 == len(content) || currStr == "" || currStr == " " {
+				labels = append(labels, r.getLabel(lbl, currText))
+				currText = ""
+			}
+		}
+
+		if isClosingBlock && curr == closeStyleTag[3] {
+			labels = append(labels, r.getLabel(lbl, currText))
+			currText = ""
+			r.removeLastStyleGroup()
+			isClosingBlock = false
+
+		}
 
 		if inStyleBlock && !isClosingStyle {
 			currStyle += string(curr)
 		}
 
-		if !inStyleBlock && !isClosingBlock {
-			currStr := string(curr)
-			if currStr == "" || currStr == " " {
-				l := lbl 
-				l.Text = currText
-				l = r.styleLabel(l)
-				labels = append(labels, l)
-				currText = currStr
-			} else {
-				currText += currStr
-			}
-		}
-
-		if isClosingBlock && curr == closeStyleTag[3] {
-			l := lbl 
-			l.Text = currText 
-			l = r.styleLabel(l)
-			labels = append(labels, l)
-			currText = ""
-			r.removeLastStyleGroup()
-			isClosingBlock = false
-			
-		}
-
 		if isClosingStyle && curr == halfCloseStyleTag[1] {
-			isClosingStyle = false 
-			inStyleBlock = false 
+			isClosingStyle = false
+			inStyleBlock = false
 			r.addStyleGroup(currStyle)
 			currStyle = ""
 		}
@@ -313,7 +290,7 @@ func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
 
 	wdgt := func(gtx C) D {
 		return decredmaterial.GridWrap{
-			Axis: layout.Horizontal,
+			Axis:      layout.Horizontal,
 			Alignment: layout.Start,
 		}.Layout(gtx, len(labels), func(gtx C, i int) D {
 			return labels[i].Layout(gtx)

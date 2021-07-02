@@ -26,8 +26,8 @@ func verifyMessageInfo(th *decredmaterial.Theme) []layout.Widget {
 			text := `<span style="text-color: gray">
 						After you or your counterparty has genrated a signature, you can use this form to verify the
 				 		validity of the signature.
-				 		<br /> Once you have entered the address, the message and the corresponding signature, you will see VALID 
-						if the signature appropriately matches the address and message, otherwise INVALID
+				 		<br /> Once you have entered the address, the message and the corresponding signature, you will see <font color="success">VALID</font> 
+						if the signature appropriately matches the address and message, otherwise <font color="danger">INVALID</font>.
 					</span>`
 
 			return renderers.RenderHTML(text, th).Layout(gtx)

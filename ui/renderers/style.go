@@ -2,6 +2,7 @@ package renderers
 
 import (
 	"image/color"
+	"strings"
 
 	"gioui.org/text"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -59,7 +60,7 @@ func (r *Renderer) getColorFromMap(col string) color.NRGBA {
 
 func (r *Renderer) styleLabel(label decredmaterial.Label) decredmaterial.Label {
 	if len(r.styleGroups) == 0 {
-		return r.theme.Body1(label.Text)
+		return label
 	}
 
 	style := r.styleGroups[len(r.styleGroups)-1]
@@ -83,4 +84,29 @@ func (r *Renderer) styleLabel(label decredmaterial.Label) decredmaterial.Label {
 	}
 
 	return label
+}
+
+func (r *Renderer) addStyleGroup(str string) {
+	parts := strings.Split(str, "##")
+	styleMap := map[string]string{}
+
+	for i := range parts {
+		if parts[i] != " " && parts[i] != "{" {
+			styleParts := strings.Split(parts[i], "--")
+
+			if len(styleParts) == 2 {
+				styleMap[styleParts[0]] = styleParts[1]
+			}
+		}
+	}
+
+	if len(styleMap) > 0 {
+		r.styleGroups = append(r.styleGroups, styleMap)
+	}
+}
+
+func (r *Renderer) removeLastStyleGroup() {
+	if len(r.styleGroups) > 0 {
+		r.styleGroups = r.styleGroups[:len(r.styleGroups)-1]
+	}
 }

@@ -25,9 +25,9 @@ var (
 )
 
 const (
-	openStyleTag = "{@@"
+	openStyleTag      = "{@@"
 	halfCloseStyleTag = "@}"
-	closeStyleTag = "{/@}"
+	closeStyleTag     = "{/@}"
 )
 
 func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLRenderer {
@@ -82,7 +82,7 @@ func (r *HTMLRenderer) prepareHTML(html string) string {
 			r.prepareItalic(node)
 		case "em":
 			r.prepareItalic(node)
-		case "b":
+		case "b", "strong":
 			r.prepareBold(node)
 		case "font":
 			r.prepareFont(node)
@@ -140,7 +140,7 @@ func (r *HTMLRenderer) prepareFont(node *goquery.Selection) {
 }
 
 func (r *HTMLRenderer) prepareBreak(node *goquery.Selection) {
-	node.ReplaceWithHtml(" \n\n ")
+	node.ReplaceWithHtml("\n\n")
 }
 
 func (r *HTMLRenderer) mapToString(m map[string]string) string {
