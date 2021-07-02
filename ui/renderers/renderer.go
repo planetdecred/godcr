@@ -1,40 +1,35 @@
-package ui
+package renderers
 
 import (
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"unicode"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	md "github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
-	"github.com/gomarkdown/markdown/parser"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
 type labelFunc func(string) decredmaterial.Label
 
 type Renderer struct {
-	gtx      layout.Context
-	theme    *decredmaterial.Theme
-	maxWidth int
-	isList   bool
+	theme  *decredmaterial.Theme
+	isList bool
 
-	prefix string
-
-	// constant left padding to apply
-	leftPad int
-	// all the custom left paddings, without the fixed space from leftPad
+	prefix         string
 	padAccumulator []string
-
-	links map[string]*widget.Clickable
-	//accumulatedLabels []labelWidget
-	stringBuilder strings.Builder
-	containers    []layout.Widget
+	leftPad        int
+	links          map[string]*widget.Clickable
+	stringBuilder  strings.Builder
+	containers     []layout.Widget
+	styleGroups    []map[string]string
+	isHTML         bool
 
 	table *tableRenderer
 }
@@ -45,44 +40,15 @@ const (
 	linkSpacer    = "@@@@"
 )
 
-func RenderMarkdown(gtx layout.Context, theme *decredmaterial.Theme, source string) *Renderer {
-	extensions := parser.NoIntraEmphasis        // Ignore emphasis markers inside words
-	extensions |= parser.Tables                 // Parse tables
-	extensions |= parser.FencedCode             // Parse fenced code blocks
-	extensions |= parser.Autolink               // Detect embedded URLs that are not explicitly marked
-	extensions |= parser.Strikethrough          // Strikethrough text using ~~test~~
-	extensions |= parser.SpaceHeadings          // Be strict about prefix heading rules
-	extensions |= parser.HeadingIDs             // specify heading IDs  with {#id}
-	extensions |= parser.BackslashLineBreak     // Translate trailing backslashes into line breaks
-	extensions |= parser.DefinitionLists        // Parse definition lists
-	extensions |= parser.LaxHTMLBlocks          // more in HTMLBlock, less in HTMLSpan
-	extensions |= parser.NoEmptyLineBeforeBlock // no need for new line before a list
+var (
+	textBeforeCloseRegexp = regexp.MustCompile("(.*){/#}")
+)
 
-	p := parser.NewWithExtensions(extensions)
-
-	source = prepareDocForTable(source)
-	nodes := md.Parse([]byte(source), p)
-	renderer := newRenderer(gtx, theme)
-	md.Render(nodes, renderer)
-
-	return renderer
-}
-
-func newRenderer(gtx layout.Context, theme *decredmaterial.Theme) *Renderer {
+func newRenderer(theme *decredmaterial.Theme, isHTML bool) *Renderer {
 	return &Renderer{
-		gtx:      gtx,
-		theme:    theme,
-		maxWidth: gtx.Constraints.Max.X - 100,
+		theme:  theme,
+		isHTML: isHTML,
 	}
-}
-
-func prepareDocForTable(doc string) string {
-	d := strings.Replace(doc, ":|", "------:|", -1)
-	d = strings.Replace(d, "-|", "------|", -1)
-	d = strings.Replace(d, "|-", "|------", -1)
-	d = strings.Replace(d, "|:-", "|:------", -1)
-
-	return d
 }
 
 func (r *Renderer) pad() string {
@@ -112,7 +78,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 				r.renderEmptyLine()
 			}
 		}
-
 	case *ast.ListItem:
 		r.renderList(node, entering)
 	case *ast.Paragraph:
@@ -124,9 +89,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			r.renderHeading(node.Level, true)
 		}
 	case *ast.Strong:
-		if !entering {
-			r.renderHeading(6, false)
-		}
+		r.renderStrong()
 	case *ast.Link:
 		if !entering {
 			r.renderLink(node)
@@ -147,8 +110,15 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	return ast.GoToNext
 }
 
+func (r *Renderer) renderStrong() {
+	label := r.theme.Body1("")
+	label.Font.Weight = text.Bold
+
+	r.renderWords(label)
+}
+
 func (r *Renderer) renderParagraph() {
-	r.renderWords(r.theme.Body2)
+	r.renderWords(r.theme.Body1(""))
 	// add dummy widget for new line
 	r.renderEmptyLine()
 }
@@ -165,7 +135,7 @@ func (r *Renderer) renderHeading(level int, block bool) {
 		lblFunc = r.theme.H6
 	}
 
-	r.renderWords(lblFunc)
+	r.renderWords(lblFunc(""))
 	if block {
 		// add dummy widget for new line
 		r.renderEmptyLine()
@@ -209,7 +179,24 @@ func (r *Renderer) renderText(node *ast.Text) {
 	r.stringBuilder.WriteString(content)
 }
 
-func (r *Renderer) renderWords(lblFunc labelFunc) {
+func (r *Renderer) getNextChar(content string, currIndex int) byte {
+	if currIndex+2 <= len(content) {
+		return content[currIndex+1]
+	}
+
+	return 0
+}
+
+func (r *Renderer) renderWords(lbl decredmaterial.Label) {
+	if r.isHTML {
+		r.renderHTML(lbl)
+		return
+	}
+
+	r.renderMarkdown(lbl)
+}
+
+func (r *Renderer) renderMarkdown(lbl decredmaterial.Label) {
 	content := r.stringBuilder.String()
 	r.stringBuilder.Reset()
 
@@ -230,7 +217,83 @@ func (r *Renderer) renderWords(lblFunc labelFunc) {
 			if i == 0 {
 				word = words[i]
 			}
-			return lblFunc(word).Layout(gtx)
+			lbl.Text = word
+			return lbl.Layout(gtx)
+		})
+	}
+	r.containers = append(r.containers, wdgt)
+}
+
+func (r *Renderer) getLabel(lbl decredmaterial.Label, text string) decredmaterial.Label {
+	l := lbl
+	l.Text = text
+	l = r.styleLabel(l)
+	return l
+}
+
+func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
+	content := r.stringBuilder.String()
+	r.stringBuilder.Reset()
+
+	var labels []decredmaterial.Label
+	var inStyleBlock bool
+	var isClosingStyle bool
+	var isClosingBlock bool
+	var currStyle string
+	var currText string
+	for i := range content {
+		curr := content[i]
+
+		if curr == openStyleTag[0] && r.getNextChar(content, i) == openStyleTag[1] {
+			inStyleBlock = true
+			labels = append(labels, r.getLabel(lbl, currText))
+			currText = ""
+		}
+
+		if curr == halfCloseStyleTag[0] && r.getNextChar(content, i) == halfCloseStyleTag[1] {
+			isClosingStyle = true
+		}
+
+		if curr == closeStyleTag[0] && r.getNextChar(content, i) == closeStyleTag[1] {
+			isClosingBlock = true
+		}
+
+		if !inStyleBlock && !isClosingBlock {
+			currStr := string(curr)
+			currText += currStr
+
+			if i+1 == len(content) || currStr == "" || currStr == " " {
+				labels = append(labels, r.getLabel(lbl, currText))
+				currText = ""
+			}
+		}
+
+		if isClosingBlock && curr == closeStyleTag[3] {
+			labels = append(labels, r.getLabel(lbl, currText))
+			currText = ""
+			r.removeLastStyleGroup()
+			isClosingBlock = false
+
+		}
+
+		if inStyleBlock && !isClosingStyle {
+			currStyle += string(curr)
+		}
+
+		if isClosingStyle && curr == halfCloseStyleTag[1] {
+			isClosingStyle = false
+			inStyleBlock = false
+			r.addStyleGroup(currStyle)
+			currStyle = ""
+		}
+	}
+
+	wdgt := func(gtx C) D {
+		return decredmaterial.GridWrap{
+			Axis:      layout.Horizontal,
+			Alignment: layout.Start,
+		}.Layout(gtx, len(labels), func(gtx C, i int) D {
+			return labels[i].Layout(gtx)
 		})
 	}
 	r.containers = append(r.containers, wdgt)
