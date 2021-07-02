@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
@@ -487,9 +488,11 @@ func (pg *proposalsPage) layoutIsSyncedSection(gtx C) D {
 }
 
 func (pg *proposalsPage) layoutIsSyncingSection(gtx C) D {
-	txt := pg.theme.Body2("Fetching...")
-	txt.Color = pg.theme.Color.Gray
-	return txt.Layout(gtx)
+	th := material.NewTheme(gofont.Collection())
+	gtx.Constraints.Min.X = gtx.Px(unit.Dp(20))
+	loader := material.Loader(th)
+	loader.Color = pg.theme.Color.Gray
+	return loader.Layout(gtx)
 }
 
 func (pg *proposalsPage) layoutStartSyncSection(gtx C) D {
@@ -542,10 +545,8 @@ func (pg *proposalsPage) Layout(gtx C) D {
 					return borderLayout(gtx, func(gtx C) D {
 						return pg.syncCard.Layout(gtx, func(gtx C) D {
 							m := values.MarginPadding12
-							if pg.isSynced {
+							if pg.isSynced || pg.wallet.IsSyncingProposals() {
 								m = values.MarginPadding14
-							} else if pg.wallet.IsSyncingProposals() {
-								m = values.MarginPadding15
 							}
 							return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
 								return layout.Center.Layout(gtx, pg.layoutSyncSection)
