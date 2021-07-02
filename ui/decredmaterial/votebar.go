@@ -56,11 +56,11 @@ const (
 )
 
 func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
-	return VoteBar{
+	voteBar := VoteBar{
 		yesColor:                      t.Color.Success,
 		noColor:                       t.Color.Danger,
-		yesLabel:                      t.Body1("Yes:"),
-		noLabel:                       t.Body1("No:"),
+		yesLabel:                      t.Body1("Yes: "),
+		noLabel:                       t.Body1("No: "),
 		legendLabel:                   t.Body1(""),
 		requirementLabel:              t.Body2(""),
 		totalVotesLabel:               t.Body2(""),
@@ -77,6 +77,8 @@ func (t *Theme) VoteBar(infoIcon, legendIcon *widget.Icon) VoteBar {
 		totalVotesCountLabel:          t.Caption(""),
 		quorumRequirementCountLabel:   t.Caption(""),
 	}
+	voteBar.requirementLabel.Color = t.Color.Gray
+	return voteBar
 }
 
 func (v *VoteBar) SetParams(yesVotes, noVotes, eligibleVotes, requiredPercentage, passPercentage float32) *VoteBar {
