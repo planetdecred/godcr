@@ -7,6 +7,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
@@ -42,6 +43,8 @@ func VerifyMessagePage(c *pageCommon) Page {
 	pg.signInput.Editor.Submit, pg.addressInput.Editor.Submit, pg.messageInput.Editor.Submit = true, true, true
 	pg.verifyBtn.TextSize, pg.clearBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
 	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
+	pg.verifyBtn.Font.Weight = text.Bold
+	pg.clearBtn.Font.Weight = text.Bold
 
 	pg.backButton, pg.infoButton = c.SubPageHeaderButtons()
 
@@ -155,14 +158,14 @@ func (pg *verifyMessagePage) handle() {
 			pg.verifyMessageStatus = nil
 			valid, err := c.wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
 			if err != nil {
-				pg.signInput.SetError("Invalid signature")
+				pg.signInput.SetError("Invalid signature or message")
 				return
 			}
 			pg.signInput.SetError("")
 
 			if !valid {
 				pg.verifyMessageStatus = c.icons.navigationCancel
-				pg.verifyMessage.Text = "Invalid signature"
+				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = c.theme.Color.Danger
 				return
 			}
