@@ -58,7 +58,7 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	d := func(gtx C) D {
 		load := SubPage{
-			title:      "Privacy",
+			title:      "StakeShuffle",
 			walletName: pg.wallet.Name,
 			backButton: pg.backButton,
 			infoButton: pg.infoButton,
@@ -178,9 +178,24 @@ func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context, c *pageComm
 					c.icons.alertGray.Scale = 1.0
 					return c.icons.alertGray.Layout(gtx)
 				}),
-				layout.Rigid(subtxt.Layout),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, subtxt.Layout)
+				}),
 			)
 		}),
+	)
+}
+
+func (pg *privacyPage) mixersubInfolayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
+	txt := pg.theme.Body2("")
+
+	if pg.wallet.IsAccountMixerActive() {
+		txt = pg.theme.Body2("The mixer will automatically stop when unmixed balance are fully mixed.")
+		txt.Color = c.theme.Color.Gray
+	}
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(txt.Layout),
 	)
 }
 
@@ -254,6 +269,13 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 							)
 						})
 					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+						layout.Flexed(1, func(gtx C) D {
+							return pg.mixersubInfolayout(gtx, c)
+						}),
+					)
 				}),
 			)
 		})
