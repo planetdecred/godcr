@@ -20,7 +20,6 @@ const Statistics = "Statistics"
 type statPage struct {
 	*load.Load
 	txs         *wallet.Transactions
-	theme       *decredmaterial.Theme
 	l           layout.List
 	startupTime time.Time
 	syncStatus  *wallet.SyncStatus
@@ -68,9 +67,9 @@ func (pg *statPage) layoutStats(gtx C) D {
 
 	item := func(t, v string) layout.Widget {
 		return func(gtx C) D {
-			l := pg.theme.Body2(t)
-			r := pg.theme.Body2(v)
-			r.Color = pg.theme.Color.Gray
+			l := pg.Theme.Body2(t)
+			r := pg.Theme.Body2(v)
+			r.Color = pg.Theme.Color.Gray
 			return inset.Layout(gtx, func(gtx C) D {
 				return endToEndRow(gtx, l.Layout, r.Layout)
 			})
@@ -86,25 +85,25 @@ func (pg *statPage) layoutStats(gtx C) D {
 
 	items := []layout.Widget{
 		item("Build", pg.netType+", "+time.Now().Format("2006-01-02")),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Peers connected", strconv.Itoa(int(pg.syncStatus.ConnectedPeers))),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Uptime", uptime),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Network", pg.netType),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Best block", fmt.Sprintf("%d", pg.WL.Info.BestBlockHeight)),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Best block timestamp", time.Unix(pg.WL.Info.BestBlockTime, 0).Format("2006-01-02 03:04:05 -0700")),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Best block age", pg.WL.Info.LastSyncTime),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Wallet data directory", pg.WL.Wallet.WalletDirectory()),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Wallet data", pg.WL.Wallet.DataSize()),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Transactions", fmt.Sprintf("%d", (*pg.txs).Total)),
-		pg.theme.Separator().Layout,
+		pg.Theme.Separator().Layout,
 		item("Wallets", fmt.Sprintf("%d", len(pg.WL.Info.Wallets))),
 	}
 

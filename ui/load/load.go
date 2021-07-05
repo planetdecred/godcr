@@ -254,4 +254,3 @@ func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 
 	return wallets
 }
-
