@@ -1,6 +1,7 @@
 package page
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/planetdecred/godcr/ui/load"
@@ -223,12 +224,25 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		{
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
-			action: func(l *load.Load) {
-				textModal := modal.NewTextInputModal(l).
-					Hint("Wallet name").
-					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
-						// todo handle error
-						pg.multiWallet.RenameWallet(wal.ID, newName)
+			action: func(common *pageCommon) {
+				textModal := newTextInputModal(common).
+					hint("Wallet name").
+					positiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
+						tim.setError("") // clear error first
+
+						if err := pg.validateWalletName(newName); err != nil {
+							tim.setLoadingState(false)
+							tim.setError(err.Error())
+							return false
+						}
+
+						err := pg.multiWallet.RenameWallet(wal.ID, newName)
+						if err != nil {
+							tim.setLoadingState(false)
+							tim.setError(err.Error())
+							return false
+						}
+
 						return true
 					})
 
@@ -245,7 +259,19 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 	}
 }
 
+<<<<<<< HEAD:ui/page/wallet_page.go
 func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
+=======
+func (pg *walletPage) validateWalletName(walletName string) error {
+	if walletName == "" {
+		return fmt.Errorf("%s %s", values.String(values.StrWalletName), values.String(values.StrCannotBeEmpty))
+	}
+
+	return nil
+}
+
+func (pg *walletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
+>>>>>>> fd8ecb8... prevent using empty string as new wallet name:ui/wallet_page.go
 	return []menuItem{
 		{
 			text:   values.String(values.StrSettings),
