@@ -212,7 +212,6 @@ func (pg *walletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			button:   new(widget.Clickable),
 			separate: true,
 			action: func(common *pageCommon) {
-				common.changeFragment(HelpPage(common), PageHelp)
 			},
 		},
 		{

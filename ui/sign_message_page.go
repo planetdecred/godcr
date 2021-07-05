@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -40,6 +41,7 @@ func SignMessagePage(common *pageCommon, wallet *dcrlibwallet.Wallet) Page {
 	clearButton := common.theme.Button(new(widget.Clickable), "Clear all")
 	clearButton.Background = color.NRGBA{}
 	clearButton.Color = common.theme.Color.Gray
+	clearButton.Font.Weight = text.Bold
 	errorLabel := common.theme.Caption("")
 	errorLabel.Color = common.theme.Color.Danger
 	copyIcon := common.icons.copyIcon
@@ -67,6 +69,7 @@ func SignMessagePage(common *pageCommon, wallet *dcrlibwallet.Wallet) Page {
 
 	pg.signedMessageLabel.Color = common.theme.Color.Gray
 	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
+	pg.signButton.Font.Weight = text.Bold
 
 	return pg
 }
@@ -160,19 +163,23 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
 						border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						wrapper := pg.theme.Card()
+						wrapper.Color = pg.theme.Color.LightGray
 						return border.Layout(gtx, func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Flexed(0.9, pg.signedMessageLabel.Layout),
-									layout.Flexed(0.1, func(gtx C) D {
-										return layout.E.Layout(gtx, func(gtx C) D {
-											return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-												pg.copyIcon.Scale = 1.0
-												return decredmaterial.Clickable(gtx, pg.copySignature, pg.copyIcon.Layout)
+							return wrapper.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(0.9, pg.signedMessageLabel.Layout),
+										layout.Flexed(0.1, func(gtx C) D {
+											return layout.E.Layout(gtx, func(gtx C) D {
+												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+													pg.copyIcon.Scale = 1.0
+													return decredmaterial.Clickable(gtx, pg.copySignature, pg.copyIcon.Layout)
+												})
 											})
-										})
-									}),
-								)
+										}),
+									)
+								})
 							})
 						})
 					}),
