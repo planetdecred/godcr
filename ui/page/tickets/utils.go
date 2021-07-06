@@ -16,8 +16,13 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-const maxInt32 = 1<<(uint32Size-1) - 1
+const (
+	uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
+	maxInt32 = 1<<(uint32Size-1) - 1
+	
+	ticketAge              = "Ticket age"
+	durationMsg            = "10 hrs 47 mins (118/256 blocks)"
+)
 
 type tooltips struct {
 	statusTooltip     *decredmaterial.Tooltip
@@ -166,7 +171,7 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 	return tooltip.Layout(gtx, rect, inset, body)
 }
 
-func walletNameAndDateTooltip(gtx C, l *load.Load, title string, body layout.Widget) layout.Dimensions {
+func walletNameDateTimeTooltip(gtx C, l *load.Load, title string, body layout.Widget) layout.Dimensions {
 	walletNameLabel := l.Theme.Body2(title)
 	walletNameLabel.Color = l.Theme.Color.Gray
 
@@ -185,7 +190,6 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
 func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tooltips) layout.Dimensions {
 	var itemWidth int
-	tp := tooltip.(tooltips)
 	st := ticketStatusIcon(c, t.Info.Status)
 	if st == nil {
 		return layout.Dimensions{}
@@ -294,8 +298,8 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
 										txt.Color = l.Theme.Color.Gray
 										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tp.walletNameTooltip, func(gtx C) D {
-											return walletNameAndDateTooltip(gtx, l, "Wallet name",
+										ticketCardTooltip(gtx, txtLayout, tooltip.walletNameTooltip, func(gtx C) D {
+											return walletNameDateTimeTooltip(gtx, l, "Wallet name",
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout))
 										})
 										return txtLayout
@@ -312,14 +316,14 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											txtLayout := txt.Layout(gtx)
-											ticketCardTooltip(gtx, txtLayout, tp.dateTooltip, func(gtx C) D {
+											ticketCardTooltip(gtx, txtLayout, tooltip.dateTooltip, func(gtx C) D {
 												dt := strings.Split(t.DateTime, " ")
 												s1 := []string{dt[0], dt[1], dt[2]}
 												date := strings.Join(s1, " ")
 												s2 := []string{dt[3], dt[4]}
 												time := strings.Join(s2, " ")
 												dateTime := fmt.Sprintf("%s at %s", date, time)
-												return walletNameAndDateTooltip(gtx, l, "Purchased",
+												return walletNameDateTimeTooltip(gtx, l, "Purchased",
 													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(dateTime).Layout))
 											})
 											return txtLayout
