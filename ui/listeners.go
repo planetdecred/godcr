@@ -52,6 +52,7 @@ func (mp *mainPage) OnNewProposal(proposal *dcrlibwallet.Proposal) {
 		ProposalStatus: wallet.NewProposalFound,
 		Proposal:       proposal,
 	}
+	mp.desktopNotifier(prop)
 }
 
 func (mp *mainPage) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
@@ -59,12 +60,14 @@ func (mp *mainPage) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
 		ProposalStatus: wallet.VoteStarted,
 		Proposal:       proposal,
 	}
+	mp.desktopNotifier(prop)
 }
 func (mp *mainPage) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
 	mp.notificationsUpdate <- wallet.Proposal{
 		ProposalStatus: wallet.VoteFinished,
 		Proposal:       proposal,
 	}
+	mp.desktopNotifier(prop)
 }
 
 // Sync notifications
@@ -97,6 +100,7 @@ func (mp *mainPage) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.He
 		},
 	})
 }
+
 func (mp *mainPage) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
 	mp.updateNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.AddressDiscoveryProgress,
@@ -114,6 +118,7 @@ func (mp *mainPage) OnHeadersRescanProgress(headersRescanProgress *dcrlibwallet.
 		},
 	})
 }
+
 func (mp *mainPage) OnSyncCompleted() {
 	mp.updateBalance()
 	mp.updateNotification(wallet.SyncStatusUpdate{
@@ -126,7 +131,9 @@ func (mp *mainPage) OnSyncCanceled(willRestart bool) {
 		Stage: wallet.SyncCanceled,
 	})
 }
-func (mp *mainPage) OnSyncEndedWithError(err error)          {}
+
+func (mp *mainPage) OnSyncEndedWithError(err error) {}
+
 func (mp *mainPage) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
 
 // todo: this will be removed when all pages have been moved to the page package
@@ -203,8 +210,20 @@ func (mp *mainPage) desktopNotifier(notifier interface{}) {
 		default:
 			notification = fmt.Sprintf(defaultNotification+" to/from (%s wallet) account %s", amount, wallet.Name, txSourceAccount)
 		}
-	case dcrlibwallet.Proposal:
+	case wallet.Proposal:
+		fmt.Println(t.ProposalStatus)
+		switch {
+		case t.ProposalStatus == wallet.NewProposalFound:
+			notification = fmt.Sprintf("A new proposal has been added Token: %s", t.Proposal.Token)
+		case t.ProposalStatus == wallet.VoteStarted:
+			notification = fmt.Sprintf("Voting has started for proposal with Token: %s", t.Proposal.Token)
+		case t.ProposalStatus == wallet.VoteFinished:
+			notification = fmt.Sprintf("Voting has ended for proposal with Token: %s", t.Proposal.Token)
+		default:
+			notification = fmt.Sprintf("New update for proposal with Token", t.Proposal.Token)
+		}
 	}
+	fmt.Println(t)
 
 	err := beeep.Notify("Decred Godcr Wallet", notification, "assets/information.png")
 	if err != nil {
