@@ -51,15 +51,8 @@ func (page *pageCommon) layoutBalance(gtx layout.Context, amount string) layout.
 	mainMsg, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-<<<<<<< HEAD
 			label := page.theme.Label(values.TextSize20, mainText)
 			label.Color = page.theme.Color.DeepBlue
-=======
-			label := page.theme.Label(values.TextSize20, mainMsg)
-			if isSwitchColor {
-				label.Color = page.theme.Color.DeepBlue
-			}
->>>>>>> add ticket duration hover with dummy data
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
