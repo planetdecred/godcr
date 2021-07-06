@@ -1,12 +1,14 @@
 package modal
 
 import (
-	"gioui.org/layout"
-	"gioui.org/widget"
-	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"math/rand"
 	"time"
+
+	"gioui.org/layout"
+	"gioui.org/widget"
+
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
 type (

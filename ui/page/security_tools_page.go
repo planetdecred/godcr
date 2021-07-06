@@ -16,7 +16,7 @@ import (
 
 const SecurityTools = "SecurityTools"
 
-type securityToolsPage struct {
+type SecurityToolsPage struct {
 	*load.Load
 	verifyMessage   *widget.Clickable
 	validateAddress *widget.Clickable
@@ -25,8 +25,8 @@ type securityToolsPage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func SecurityToolsPage(l *load.Load) *securityToolsPage {
-	pg := &securityToolsPage{
+func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
+	pg := &SecurityToolsPage{
 		Load:            l,
 		verifyMessage:   new(widget.Clickable),
 		validateAddress: new(widget.Clickable),
@@ -37,12 +37,12 @@ func SecurityToolsPage(l *load.Load) *securityToolsPage {
 	return pg
 }
 
-func (pg *securityToolsPage) OnResume() {
+func (pg *SecurityToolsPage) OnResume() {
 
 }
 
 // main settings layout
-func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := SubPage{
 			Load:       pg.Load,
@@ -71,19 +71,19 @@ func (pg *securityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, body)
 }
 
-func (pg *securityToolsPage) message() layout.Widget {
+func (pg *SecurityToolsPage) message() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Icons.VerifyMessageIcon, pg.verifyMessage, pg.Theme.Body1("Verify Message").Layout)
 	}
 }
 
-func (pg *securityToolsPage) address() layout.Widget {
+func (pg *SecurityToolsPage) address() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Icons.LocationPinIcon, pg.validateAddress, pg.Theme.Body1("Validate Address").Layout)
 	}
 }
 
-func (pg *securityToolsPage) pageSections(gtx layout.Context, icon *widget.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
+func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *widget.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			return decredmaterial.Clickable(gtx, action, func(gtx C) D {
@@ -106,7 +106,7 @@ func (pg *securityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 	})
 }
 
-func (pg *securityToolsPage) Handle() {
+func (pg *SecurityToolsPage) Handle() {
 	if pg.verifyMessage.Clicked() {
 		pg.SetReturnPage(SecurityTools)
 		pg.ChangePage(VerifyMessage)
@@ -118,4 +118,4 @@ func (pg *securityToolsPage) Handle() {
 	}
 }
 
-func (pg *securityToolsPage) OnClose() {}
+func (pg *SecurityToolsPage) OnClose() {}

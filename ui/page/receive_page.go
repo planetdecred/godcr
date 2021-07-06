@@ -26,7 +26,7 @@ import (
 
 const Receive = "Receive"
 
-type receivePage struct {
+type ReceivePage struct {
 	*load.Load
 	multiWallet       *dcrlibwallet.MultiWallet
 	pageContainer     layout.List
@@ -46,8 +46,8 @@ type receivePage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func ReceivePage(l *load.Load) *receivePage {
-	pg := &receivePage{
+func NewReceivePage(l *load.Load) *ReceivePage {
+	pg := &ReceivePage{
 		Load:        l,
 		multiWallet: l.WL.MultiWallet,
 		pageContainer: layout.List{
@@ -113,11 +113,11 @@ func ReceivePage(l *load.Load) *receivePage {
 	return pg
 }
 
-func (pg *receivePage) OnResume() {
+func (pg *ReceivePage) OnResume() {
 	pg.selector.selectFirstWalletValidAccount()
 }
 
-func (pg *receivePage) generateQRForAddress() {
+func (pg *ReceivePage) generateQRForAddress() {
 	absoluteWdPath, err := GetAbsolutePath()
 	if err != nil {
 		log.Error(err.Error())
@@ -146,7 +146,7 @@ func (pg *receivePage) generateQRForAddress() {
 	pg.qrImage = &imgdec
 }
 
-func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
 	}
@@ -214,7 +214,7 @@ func (pg *receivePage) Layout(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *receivePage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *ReceivePage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
@@ -223,7 +223,7 @@ func (pg *receivePage) pageSections(gtx layout.Context, body layout.Widget) layo
 
 // pageBackdropLayout layout of background overlay when the popup button generate new address is show,
 // click outside of the generate new address button to hide the button
-func (pg *receivePage) pageBackdropLayout(gtx layout.Context) {
+func (pg *ReceivePage) pageBackdropLayout(gtx layout.Context) {
 	if pg.isNewAddr {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
@@ -233,7 +233,7 @@ func (pg *receivePage) pageBackdropLayout(gtx layout.Context) {
 	}
 }
 
-func (pg *receivePage) topNav(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) topNav(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -252,7 +252,7 @@ func (pg *receivePage) topNav(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *receivePage) titleLayout(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2("Your Address")
@@ -277,7 +277,7 @@ func (pg *receivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *receivePage) addressLayout(gtx layout.Context) layout.Dimensions {
+func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 	card := decredmaterial.Card{
 		Inset: layout.Inset{
 			Top:    values.MarginPadding14,
@@ -320,7 +320,7 @@ func (pg *receivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *receivePage) Handle() {
+func (pg *ReceivePage) Handle() {
 	gtx := pg.gtx
 	if pg.backdrop.Clicked() {
 		pg.isNewAddr = false
@@ -370,7 +370,7 @@ func (pg *receivePage) Handle() {
 		return
 	}
 }
-func (pg *receivePage) generateNewAddress() (string, error) {
+func (pg *ReceivePage) generateNewAddress() (string, error) {
 	selectedWallet := pg.multiWallet.WalletWithID(pg.selector.selectedAccount.WalletID)
 
 generateAddress:
@@ -386,5 +386,5 @@ generateAddress:
 	return newAddr, nil
 }
 
-func (pg *receivePage) OnClose() {
+func (pg *ReceivePage) OnClose() {
 }

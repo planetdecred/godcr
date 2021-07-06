@@ -15,7 +15,7 @@ import (
 
 const Log = "Log"
 
-type logPage struct {
+type LogPage struct {
 	*load.Load
 
 	internalLog chan string
@@ -29,8 +29,8 @@ type logPage struct {
 	entriesLock sync.Mutex
 }
 
-func LogPage(l *load.Load) *logPage {
-	pg := &logPage{
+func NewLogPage(l *load.Load) *LogPage {
+	pg := &LogPage{
 		Load:        l,
 		internalLog: l.Receiver.InternalLog,
 		entriesList: layout.List{
@@ -51,11 +51,11 @@ func LogPage(l *load.Load) *logPage {
 	return pg
 }
 
-func (pg *logPage) OnResume() {
+func (pg *LogPage) OnResume() {
 
 }
 
-func (pg *logPage) copyLogEntries(gtx C) {
+func (pg *LogPage) copyLogEntries(gtx C) {
 	go func() {
 		pg.entriesLock.Lock()
 		defer pg.entriesLock.Unlock()
@@ -63,7 +63,7 @@ func (pg *logPage) copyLogEntries(gtx C) {
 	}()
 }
 
-func (pg *logPage) watchLogs(internalLog chan string) {
+func (pg *LogPage) watchLogs(internalLog chan string) {
 	for l := range internalLog {
 		entry := l[:len(l)-1]
 		pg.entriesLock.Lock()
@@ -73,7 +73,7 @@ func (pg *logPage) watchLogs(internalLog chan string) {
 	}
 }
 
-func (pg *logPage) Layout(gtx C) D {
+func (pg *LogPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := SubPage{
 			Load:       pg.Load,
@@ -119,5 +119,5 @@ func (pg *logPage) Layout(gtx C) D {
 	return uniformPadding(gtx, container)
 }
 
-func (pg *logPage) Handle()  {}
-func (pg *logPage) OnClose() {}
+func (pg *LogPage) Handle()  {}
+func (pg *LogPage) OnClose() {}

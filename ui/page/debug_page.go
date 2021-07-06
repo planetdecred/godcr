@@ -17,14 +17,14 @@ type debugItem struct {
 	page      string
 }
 
-type debugPage struct {
+type DebugPage struct {
 	*load.Load
 	debugItems []debugItem
 
 	backButton decredmaterial.IconButton
 }
 
-func DebugPage(l *load.Load) *debugPage {
+func NewDebugPage(l *load.Load) *DebugPage {
 	debugItems := []debugItem{
 		{
 			clickable: new(widget.Clickable),
@@ -38,7 +38,7 @@ func DebugPage(l *load.Load) *debugPage {
 		},
 	}
 
-	pg := &debugPage{
+	pg := &DebugPage{
 		Load:       l,
 		debugItems: debugItems,
 	}
@@ -48,11 +48,11 @@ func DebugPage(l *load.Load) *debugPage {
 	return pg
 }
 
-func (pg *debugPage) OnResume() {
+func (pg *DebugPage) OnResume() {
 
 }
 
-func (pg *debugPage) Handle() {
+func (pg *DebugPage) Handle() {
 	for i := range pg.debugItems {
 		for pg.debugItems[i].clickable.Clicked() {
 			pg.ChangePage(pg.debugItems[i].page)
@@ -60,9 +60,9 @@ func (pg *debugPage) Handle() {
 	}
 }
 
-func (pg *debugPage) OnClose() {}
+func (pg *DebugPage) OnClose() {}
 
-func (pg *debugPage) debugItem(gtx C, i int) D {
+func (pg *DebugPage) debugItem(gtx C, i int) D {
 	return decredmaterial.Clickable(gtx, pg.debugItems[i].clickable, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -79,7 +79,7 @@ func (pg *debugPage) debugItem(gtx C, i int) D {
 	})
 }
 
-func (pg *debugPage) layoutDebugItems(gtx C) {
+func (pg *DebugPage) layoutDebugItems(gtx C) {
 	background := pg.Theme.Color.Surface
 	card := pg.Theme.Card()
 	card.Color = background
@@ -91,7 +91,7 @@ func (pg *debugPage) layoutDebugItems(gtx C) {
 	})
 }
 
-func (pg *debugPage) Layout(gtx C) D {
+func (pg *DebugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
 		sp := SubPage{
 			Load:       pg.Load,

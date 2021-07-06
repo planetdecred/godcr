@@ -2,9 +2,9 @@ package ui
 
 import (
 	"encoding/json"
-	"github.com/planetdecred/godcr/ui/page"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
 )
 

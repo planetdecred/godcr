@@ -17,7 +17,7 @@ import (
 
 const SignMessage = "SignMessage"
 
-type signMessagePage struct {
+type SignMessagePage struct {
 	*load.Load
 	theme     *decredmaterial.Theme
 	container layout.List
@@ -35,7 +35,7 @@ type signMessagePage struct {
 	infoButton decredmaterial.IconButton
 }
 
-func SignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *signMessagePage {
+func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessagePage {
 	addressEditor := l.Theme.Editor(new(widget.Editor), "Address")
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := l.Theme.Editor(new(widget.Editor), "Message")
@@ -48,7 +48,7 @@ func SignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *signMessagePage
 	errorLabel.Color = l.Theme.Color.Danger
 	copyIcon := l.Icons.CopyIcon
 
-	pg := &signMessagePage{
+	pg := &SignMessagePage{
 		Load:   l,
 		wallet: wallet,
 		container: layout.List{
@@ -75,11 +75,11 @@ func SignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *signMessagePage
 	return pg
 }
 
-func (pg *signMessagePage) OnResume() {
+func (pg *SignMessagePage) OnResume() {
 
 }
 
-func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
 	}
@@ -117,7 +117,7 @@ func (pg *signMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, body)
 }
 
-func (pg *signMessagePage) description() layout.Widget {
+func (pg *SignMessagePage) description() layout.Widget {
 	return func(gtx C) D {
 		desc := pg.Theme.Caption("Enter an address and message to sign:")
 		desc.Color = pg.Theme.Color.Gray
@@ -125,13 +125,13 @@ func (pg *signMessagePage) description() layout.Widget {
 	}
 }
 
-func (pg *signMessagePage) editors(editor decredmaterial.Editor) layout.Widget {
+func (pg *SignMessagePage) editors(editor decredmaterial.Editor) layout.Widget {
 	return func(gtx C) D {
 		return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, editor.Layout)
 	}
 }
 
-func (pg *signMessagePage) drawButtonsRow() layout.Widget {
+func (pg *SignMessagePage) drawButtonsRow() layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
@@ -151,7 +151,7 @@ func (pg *signMessagePage) drawButtonsRow() layout.Widget {
 	}
 }
 
-func (pg *signMessagePage) drawResult() layout.Widget {
+func (pg *SignMessagePage) drawResult() layout.Widget {
 	return func(gtx C) D {
 		if pg.signedMessageLabel.Text == "" {
 			return layout.Dimensions{}
@@ -203,7 +203,7 @@ func (pg *signMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *signMessagePage) updateColors() {
+func (pg *SignMessagePage) updateColors() {
 	if pg.isSigningMessage || pg.addressEditor.Editor.Text() == "" || pg.messageEditor.Editor.Text() == "" {
 		pg.signButton.Background = pg.Theme.Color.Hint
 	} else {
@@ -211,7 +211,7 @@ func (pg *signMessagePage) updateColors() {
 	}
 }
 
-func (pg *signMessagePage) Handle() {
+func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
 	pg.updateColors()
 	pg.validate(true)
@@ -252,7 +252,7 @@ func (pg *signMessagePage) Handle() {
 	}
 }
 
-func (pg *signMessagePage) validate(ignoreEmpty bool) bool {
+func (pg *SignMessagePage) validate(ignoreEmpty bool) bool {
 	isAddressValid := pg.validateAddress(ignoreEmpty)
 	isMessageValid := pg.validateMessage(ignoreEmpty)
 	if !isAddressValid || !isMessageValid {
@@ -261,7 +261,7 @@ func (pg *signMessagePage) validate(ignoreEmpty bool) bool {
 	return true
 }
 
-func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
+func (pg *SignMessagePage) validateAddress(ignoreEmpty bool) bool {
 	address := pg.addressEditor.Editor.Text()
 	pg.addressEditor.SetError("")
 
@@ -287,7 +287,7 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 	return true
 }
 
-func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
+func (pg *SignMessagePage) validateMessage(ignoreEmpty bool) bool {
 	message := pg.messageEditor.Editor.Text()
 	if message == "" && !ignoreEmpty {
 		return false
@@ -295,11 +295,11 @@ func (pg *signMessagePage) validateMessage(ignoreEmpty bool) bool {
 	return true
 }
 
-func (pg *signMessagePage) clearForm() {
+func (pg *SignMessagePage) clearForm() {
 	pg.addressEditor.Editor.SetText("")
 	pg.messageEditor.Editor.SetText("")
 	pg.signedMessageLabel.Text = ""
 	pg.errorLabel.Text = ""
 }
 
-func (pg *signMessagePage) OnClose() {}
+func (pg *SignMessagePage) OnClose() {}

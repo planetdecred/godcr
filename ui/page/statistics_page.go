@@ -17,7 +17,7 @@ import (
 
 const Statistics = "Statistics"
 
-type statPage struct {
+type StatPage struct {
 	*load.Load
 	txs         *wallet.Transactions
 	l           layout.List
@@ -28,8 +28,8 @@ type statPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func StatPage(l *load.Load) *statPage {
-	pg := &statPage{
+func NewStatPage(l *load.Load) *StatPage {
+	pg := &StatPage{
 		Load: l,
 		txs:  l.WL.Transactions,
 		l: layout.List{
@@ -50,11 +50,11 @@ func StatPage(l *load.Load) *statPage {
 	return pg
 }
 
-func (pg *statPage) OnResume() {
+func (pg *StatPage) OnResume() {
 
 }
 
-func (pg *statPage) layoutStats(gtx C) D {
+func (pg *StatPage) layoutStats(gtx C) D {
 	background := pg.Theme.Color.Surface
 	card := pg.Theme.Card()
 	card.Color = background
@@ -116,7 +116,7 @@ func (pg *statPage) layoutStats(gtx C) D {
 	})
 }
 
-func (pg *statPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
 		sp := SubPage{
 			Load:       pg.Load,
@@ -135,5 +135,5 @@ func (pg *statPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, container)
 }
 
-func (pg *statPage) Handle()  {}
-func (pg *statPage) OnClose() {}
+func (pg *StatPage) Handle()  {}
+func (pg *StatPage) OnClose() {}

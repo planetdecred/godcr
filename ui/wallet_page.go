@@ -869,7 +869,7 @@ func (pg *walletPage) Handle() {
 			if menu.button.Clicked() {
 				switch menu.id {
 				case page.SignMessage:
-					common.changeFragment(page.SignMessagePage(pg.load, listItem.wal), page.SignMessage)
+					common.changeFragment(page.NewSignMessagePage(pg.load, listItem.wal), page.SignMessage)
 				case PagePrivacy:
 					common.changeFragment(PrivacyPage(common, listItem.wal), PagePrivacy)
 				case page.Settings:

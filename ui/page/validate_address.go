@@ -23,7 +23,7 @@ const (
 	notOwned
 )
 
-type validateAddressPage struct {
+type ValidateAddressPage struct {
 	*load.Load
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
@@ -34,8 +34,8 @@ type validateAddressPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func ValidateAddressPage(l *load.Load) *validateAddressPage {
-	pg := &validateAddressPage{
+func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
+	pg := &ValidateAddressPage{
 		Load:        l,
 		validateBtn: l.Theme.Button(new(widget.Clickable), "Validate"),
 		clearBtn:    l.Theme.Button(new(widget.Clickable), "Clear"),
@@ -61,11 +61,11 @@ func ValidateAddressPage(l *load.Load) *validateAddressPage {
 	return pg
 }
 
-func (pg *validateAddressPage) OnResume() {
+func (pg *ValidateAddressPage) OnResume() {
 
 }
 
-func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := SubPage{
 			Load:       pg.Load,
@@ -87,7 +87,7 @@ func (pg *validateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, body)
 }
 
-func (pg *validateAddressPage) addressSection() layout.Widget {
+func (pg *ValidateAddressPage) addressSection() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -102,7 +102,7 @@ func (pg *validateAddressPage) addressSection() layout.Widget {
 	}
 }
 
-func (pg *validateAddressPage) description() layout.Widget {
+func (pg *ValidateAddressPage) description() layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		desc := pg.Theme.Caption("Enter an address to validate:")
 		desc.Color = pg.Theme.Color.Gray
@@ -112,7 +112,7 @@ func (pg *validateAddressPage) description() layout.Widget {
 	}
 }
 
-func (pg *validateAddressPage) actionButtons() layout.Widget {
+func (pg *ValidateAddressPage) actionButtons() layout.Widget {
 	return func(gtx C) D {
 		dims := layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
@@ -136,14 +136,14 @@ func (pg *validateAddressPage) actionButtons() layout.Widget {
 	}
 }
 
-func (pg *validateAddressPage) lineSeparator(gtx layout.Context) layout.Dimensions {
+func (pg *ValidateAddressPage) lineSeparator(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding10
 	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Separator().Layout(gtx)
 	})
 }
 
-func (pg *validateAddressPage) showDisplayResult() layout.Widget {
+func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 	if pg.stateValidate == none {
 		return func(gtx C) D {
 			return layout.Dimensions{}
@@ -218,7 +218,7 @@ func (pg *validateAddressPage) showDisplayResult() layout.Widget {
 	}
 }
 
-func (pg *validateAddressPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *ValidateAddressPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -230,7 +230,7 @@ func (pg *validateAddressPage) pageSections(gtx layout.Context, body layout.Widg
 	})
 }
 
-func (pg *validateAddressPage) Handle() {
+func (pg *ValidateAddressPage) Handle() {
 	pg.updateColors()
 
 	if pg.validateBtn.Button.Clicked() {
@@ -242,12 +242,12 @@ func (pg *validateAddressPage) Handle() {
 	}
 }
 
-func (pg *validateAddressPage) clearPage() {
+func (pg *ValidateAddressPage) clearPage() {
 	pg.stateValidate = none
 	pg.addressEditor.Editor.SetText("")
 }
 
-func (pg *validateAddressPage) validateAddress() {
+func (pg *ValidateAddressPage) validateAddress() {
 	address := pg.addressEditor.Editor.Text()
 	pg.addressEditor.SetError("")
 
@@ -275,7 +275,7 @@ func (pg *validateAddressPage) validateAddress() {
 	}
 }
 
-func (pg *validateAddressPage) updateColors() {
+func (pg *ValidateAddressPage) updateColors() {
 	if pg.addressEditor.Editor.Text() == "" {
 		pg.validateBtn.Background = pg.Theme.Color.Hint
 	} else {
@@ -283,9 +283,9 @@ func (pg *validateAddressPage) updateColors() {
 	}
 }
 
-func (pg *validateAddressPage) clearInputs() {
+func (pg *ValidateAddressPage) clearInputs() {
 	pg.validateBtn.Background = pg.Theme.Color.Hint
 	pg.addressEditor.Editor.SetText("")
 }
 
-func (pg *validateAddressPage) OnClose() {}
+func (pg *ValidateAddressPage) OnClose() {}

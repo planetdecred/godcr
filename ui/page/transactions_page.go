@@ -24,7 +24,7 @@ type transactionWdg struct {
 	time, status, wallet decredmaterial.Label
 }
 
-type transactionsPage struct {
+type TransactionsPage struct {
 	*load.Load
 	pageClosing  chan bool
 	container    layout.Flex
@@ -41,8 +41,8 @@ type transactionsPage struct {
 	wallets      []*dcrlibwallet.Wallet
 }
 
-func TransactionsPage(l *load.Load) *transactionsPage {
-	pg := &transactionsPage{
+func NewTransactionsPage(l *load.Load) *TransactionsPage {
+	pg := &TransactionsPage{
 		Load:        l,
 		pageClosing: make(chan bool, 1),
 		container:   layout.Flex{Axis: layout.Vertical},
@@ -73,7 +73,7 @@ func TransactionsPage(l *load.Load) *transactionsPage {
 	return pg
 }
 
-func (pg *transactionsPage) OnResume() {
+func (pg *TransactionsPage) OnResume() {
 	log.Infof("WALLETS GUY! MULTI %v\n", pg.Load)
 	pg.wallets = pg.WL.SortedWalletList()
 	createOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
@@ -81,7 +81,7 @@ func (pg *transactionsPage) OnResume() {
 	pg.loadTransactions()
 }
 
-func (pg *transactionsPage) loadTransactions() {
+func (pg *TransactionsPage) loadTransactions() {
 	selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 
@@ -105,7 +105,7 @@ func (pg *transactionsPage) loadTransactions() {
 	}
 }
 
-func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
 		wallTxs := pg.transactions
 		return layout.Stack{Alignment: layout.N}.Layout(gtx,
@@ -153,7 +153,7 @@ func (pg *transactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, container)
 }
 
-func (pg *transactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
 	return layout.Inset{
 		Bottom: values.MarginPadding10,
 	}.Layout(gtx, func(gtx C) D {
@@ -178,7 +178,7 @@ func (pg *transactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *transactionsPage) Handle() {
+func (pg *TransactionsPage) Handle() {
 	for pg.txTypeDropDown.Changed() {
 		pg.loadTransactions()
 	}
@@ -192,17 +192,16 @@ func (pg *transactionsPage) Handle() {
 	}
 }
 
-func (pg *transactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcrlibwallet.Transaction) {
+func (pg *TransactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcrlibwallet.Transaction) {
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			pg.SetReturnPage(Transactions)
-			// todo: fix transaction details page
-			// pg.ChangeFragment(TransactionDetailsPage(pg.Load, txn), "txdetails")
+			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, txn), "txdetails")
 		}
 	}
 }
 
-func (pg *transactionsPage) listenForTxNotifications() {
+func (pg *TransactionsPage) listenForTxNotifications() {
 	go func() {
 		for {
 			var notification interface{}
@@ -225,7 +224,7 @@ func (pg *transactionsPage) listenForTxNotifications() {
 	}()
 }
 
-func (pg *transactionsPage) OnClose() {
+func (pg *TransactionsPage) OnClose() {
 	pg.pageClosing <- true
 }
 

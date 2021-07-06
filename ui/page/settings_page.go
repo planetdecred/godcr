@@ -28,7 +28,7 @@ type row struct {
 	label     decredmaterial.Label
 }
 
-type settingsPage struct {
+type SettingsPage struct {
 	*load.Load
 	pageContainer layout.List
 	theme         *decredmaterial.Theme
@@ -61,10 +61,10 @@ type settingsPage struct {
 	languagePreference *preference.ListPreference
 }
 
-func SettingsPage(l *load.Load) *settingsPage {
+func NewSettingsPage(l *load.Load) *SettingsPage {
 	chevronRightIcon := l.Icons.ChevronRight
 
-	pg := &settingsPage{
+	pg := &SettingsPage{
 		Load: l,
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -126,11 +126,11 @@ func SettingsPage(l *load.Load) *settingsPage {
 	return pg
 }
 
-func (pg *settingsPage) OnResume() {
+func (pg *SettingsPage) OnResume() {
 
 }
 
-func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.updateSettingOptions()
 
 	body := func(gtx C) D {
@@ -168,7 +168,7 @@ func (pg *settingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, body)
 }
 
-func (pg *settingsPage) general() layout.Widget {
+func (pg *SettingsPage) general() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrGeneral), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -203,7 +203,7 @@ func (pg *settingsPage) general() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) notification() layout.Widget {
+func (pg *SettingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrNotifications), func(gtx C) D {
 			return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
@@ -211,7 +211,7 @@ func (pg *settingsPage) notification() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) security() layout.Widget {
+func (pg *SettingsPage) security() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrSecurity), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -234,7 +234,7 @@ func (pg *settingsPage) security() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) connection() layout.Widget {
+func (pg *SettingsPage) connection() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrConnection), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -259,7 +259,7 @@ func (pg *settingsPage) connection() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) agent() layout.Widget {
+func (pg *SettingsPage) agent() layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -301,7 +301,7 @@ func (pg *settingsPage) agent() layout.Widget {
 	}
 }
 
-func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *SettingsPage) mainSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.theme.Card().Layout(gtx, func(gtx C) D {
 			m15 := values.MarginPadding15
@@ -319,7 +319,7 @@ func (pg *settingsPage) mainSection(gtx layout.Context, title string, body layou
 	})
 }
 
-func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *SettingsPage) subSection(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(pg.subSectionLabel(title)),
@@ -330,11 +330,11 @@ func (pg *settingsPage) subSection(gtx layout.Context, title string, body layout
 	})
 }
 
-func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
+func (pg *SettingsPage) subSectionSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
 	return pg.subSection(gtx, title, pg.theme.Switch(option).Layout)
 }
 
-func (pg *settingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensions {
+func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensions {
 	return decredmaterial.Clickable(gtx, row.clickable, func(gtx C) D {
 		return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
 			return pg.subSection(gtx, row.title, func(gtx C) D {
@@ -349,7 +349,7 @@ func (pg *settingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 	})
 }
 
-func (pg *settingsPage) conditionalDisplay(gtx layout.Context, display bool, body layout.Widget) layout.Dimensions {
+func (pg *SettingsPage) conditionalDisplay(gtx layout.Context, display bool, body layout.Widget) layout.Dimensions {
 	if display {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator()),
@@ -359,20 +359,20 @@ func (pg *settingsPage) conditionalDisplay(gtx layout.Context, display bool, bod
 	return layout.Dimensions{}
 }
 
-func (pg *settingsPage) subSectionLabel(title string) layout.Widget {
+func (pg *SettingsPage) subSectionLabel(title string) layout.Widget {
 	return func(gtx C) D {
 		return pg.theme.Body1(title).Layout(gtx)
 	}
 }
 
-func (pg *settingsPage) lineSeparator() layout.Widget {
+func (pg *SettingsPage) lineSeparator() layout.Widget {
 	m := values.MarginPadding1
 	return func(gtx C) D {
 		return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 	}
 }
 
-func (pg *settingsPage) Handle() {
+func (pg *SettingsPage) Handle() {
 	pg.languagePreference.Handle()
 	pg.currencyPreference.Handle()
 
@@ -512,7 +512,7 @@ func (pg *settingsPage) Handle() {
 	}
 }
 
-func (pg *settingsPage) showSPVPeerDialog() {
+func (pg *SettingsPage) showSPVPeerDialog() {
 	textModal := modal.NewTextInputModal(pg.Load).
 		Hint("IP address").
 		PositiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *modal.TextInputModal) bool {
@@ -527,7 +527,7 @@ func (pg *settingsPage) showSPVPeerDialog() {
 	textModal.Show()
 }
 
-func (pg *settingsPage) showUserAgentDialog() {
+func (pg *SettingsPage) showUserAgentDialog() {
 	textModal := modal.NewTextInputModal(pg.Load).
 		Hint("User agent").
 		PositiveButton(values.String(values.StrConfirm), func(userAgent string, tim *modal.TextInputModal) bool {
@@ -542,7 +542,7 @@ func (pg *settingsPage) showUserAgentDialog() {
 	textModal.Show()
 }
 
-func (pg *settingsPage) updateSettingOptions() {
+func (pg *SettingsPage) updateSettingOptions() {
 	isPassword := pg.wal.IsStartupSecuritySet()
 	pg.startupPassword.Value = false
 	pg.isStartupPassword = false
@@ -584,4 +584,4 @@ func (pg *settingsPage) updateSettingOptions() {
 	}
 }
 
-func (pg *settingsPage) OnClose() {}
+func (pg *SettingsPage) OnClose() {}

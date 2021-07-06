@@ -13,15 +13,15 @@ import (
 
 const Help = "Help"
 
-type helpPage struct {
+type HelpPage struct {
 	*load.Load
 	documentation *widget.Clickable
 
 	backButton decredmaterial.IconButton
 }
 
-func HelpPage(l *load.Load) *helpPage {
-	pg := &helpPage{
+func NewHelpPage(l *load.Load) *HelpPage {
+	pg := &HelpPage{
 		Load:          l,
 		documentation: new(widget.Clickable),
 	}
@@ -31,12 +31,12 @@ func HelpPage(l *load.Load) *helpPage {
 	return pg
 }
 
-func (pg *helpPage) OnResume() {
+func (pg *HelpPage) OnResume() {
 
 }
 
 // main settings layout
-func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := SubPage{
 			Load:       pg.Load,
@@ -59,7 +59,7 @@ func (pg *helpPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, body)
 }
 
-func (pg *helpPage) document() layout.Widget {
+func (pg *HelpPage) document() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, pg.Icons.DocumentationIcon, pg.documentation, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -69,7 +69,7 @@ func (pg *helpPage) document() layout.Widget {
 	}
 }
 
-func (pg *helpPage) pageSections(gtx layout.Context, icon *widget.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
+func (pg *HelpPage) pageSections(gtx layout.Context, icon *widget.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			return decredmaterial.Clickable(gtx, action, func(gtx C) D {
@@ -92,10 +92,10 @@ func (pg *helpPage) pageSections(gtx layout.Context, icon *widget.Image, action 
 	})
 }
 
-func (pg *helpPage) Handle() {
+func (pg *HelpPage) Handle() {
 	if pg.documentation.Clicked() {
 		goToURL("https://docs.decred.org")
 	}
 }
 
-func (pg *helpPage) OnClose() {}
+func (pg *HelpPage) OnClose() {}

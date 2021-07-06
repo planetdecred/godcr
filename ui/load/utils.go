@@ -2,8 +2,9 @@ package load
 
 import (
 	"encoding/json"
-	"gioui.org/widget"
 	"net/http"
+
+	"gioui.org/widget"
 )
 
 func fetchExchangeValue(target interface{}) {

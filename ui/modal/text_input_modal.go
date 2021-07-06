@@ -13,7 +13,7 @@ import (
 const TextInput = "text_input_modal"
 
 type TextInputModal struct {
-	*infoModal
+	*InfoModal
 
 	isLoading bool
 
@@ -23,7 +23,7 @@ type TextInputModal struct {
 
 func NewTextInputModal(l *load.Load) *TextInputModal {
 	tm := &TextInputModal{
-		infoModal: NewInfoModal(l),
+		InfoModal: NewInfoModal(l),
 	}
 
 	tm.randomID = fmt.Sprintf("%s-%d", TextInput, generateRandomNumber())

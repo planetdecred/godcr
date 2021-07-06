@@ -20,7 +20,7 @@ import (
 
 const TransactionDetails = "TransactionDetails"
 
-type transactionDetailsPage struct {
+type TransactionDetailsPage struct {
 	*load.Load
 	theme                           *decredmaterial.Theme
 	transactionDetailsPageContainer layout.List
@@ -44,8 +44,8 @@ type transactionDetailsPage struct {
 	txDestinationAddress string
 }
 
-func TransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *transactionDetailsPage {
-	pg := &transactionDetailsPage{
+func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TransactionDetailsPage {
+	pg := &TransactionDetailsPage{
 		Load: l,
 		transactionDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
@@ -104,11 +104,11 @@ func TransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction)
 	return pg
 }
 
-func (pg *transactionDetailsPage) OnResume() {
+func (pg *TransactionDetailsPage) OnResume() {
 
 }
 
-func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
 	}
@@ -166,7 +166,7 @@ func (pg *transactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, body)
 }
 
-func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {
 	txnWidgets := initTxnWidgets(pg.Load, pg.transaction)
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
@@ -239,7 +239,7 @@ func (pg *transactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 }
 
 //TODO: do this at startup
-func (pg *transactionDetailsPage) txConfirmations() int32 {
+func (pg *TransactionDetailsPage) txConfirmations() int32 {
 	transaction := pg.transaction
 	if transaction.BlockHeight != -1 {
 		return (pg.WL.MultiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
@@ -248,7 +248,7 @@ func (pg *transactionDetailsPage) txConfirmations() int32 {
 	return 0
 }
 
-func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
 	return pg.pageSections(gtx, func(gtx C) D {
 		m := values.MarginPadding10
@@ -290,7 +290,7 @@ func (pg *transactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 	})
 }
 
-func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, label, value string, showWalletBadge bool, clickable *widget.Clickable) layout.Dimensions {
+func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, value string, showWalletBadge bool, clickable *widget.Clickable) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -339,7 +339,7 @@ func (pg *transactionDetailsPage) txnInfoSection(gtx layout.Context, label, valu
 	)
 }
 
-func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
 	x := len(transaction.Inputs) + len(transaction.Outputs)
 	for i := 0; i < x; i++ {
@@ -363,7 +363,7 @@ func (pg *transactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 	})
 }
 
-func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
 
 	collapsibleHeader := func(gtx C) D {
@@ -384,7 +384,7 @@ func (pg *transactionDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensio
 	})
 }
 
-func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int32, address string, i int) layout.Dimensions {
+func (pg *TransactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int32, address string, i int) layout.Dimensions {
 
 	accountName := "external"
 	walletName := ""
@@ -449,7 +449,7 @@ func (pg *transactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acc
 	})
 }
 
-func (pg *transactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -463,18 +463,18 @@ func (pg *transactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions 
 	})
 }
 
-func (pg *transactionDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *TransactionDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	m := values.MarginPadding20
 	mtb := values.MarginPadding5
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
 }
 
-func (pg *transactionDetailsPage) separator(gtx layout.Context) layout.Dimensions {
+func (pg *TransactionDetailsPage) separator(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding5
 	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
 }
 
-func (pg *transactionDetailsPage) Handle() {
+func (pg *TransactionDetailsPage) Handle() {
 	gtx := pg.gtx
 	if pg.toDcrdata.Clicked() {
 		goToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
@@ -495,4 +495,4 @@ func (pg *transactionDetailsPage) Handle() {
 	}
 }
 
-func (pg *transactionDetailsPage) OnClose() {}
+func (pg *TransactionDetailsPage) OnClose() {}

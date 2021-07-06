@@ -141,7 +141,7 @@ func (mp *mainPage) OnResume() {
 
 	mp.updateBalance()
 
-	mp.changeFragment(page.OverviewPage(mp.load), page.Overview)
+	mp.changeFragment(page.NewOverviewPage(mp.load), page.Overview)
 
 	if mp.autoSync {
 		mp.autoSync = false
@@ -249,9 +249,9 @@ func (mp *mainPage) Handle() {
 	for i := range mp.drawerNavItems {
 		for mp.drawerNavItems[i].clickable.Clicked() {
 			if i == 0 {
-				mp.changeFragment(page.OverviewPage(mp.load), page.Overview)
+				mp.changeFragment(page.NewOverviewPage(mp.load), page.Overview)
 			} else if i == 1 {
-				mp.changeFragment(page.TransactionsPage(mp.load), page.Transactions)
+				mp.changeFragment(page.NewTransactionsPage(mp.load), page.Transactions)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}

@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui/page"
+
 	"image/color"
 	"reflect"
 	"strconv"
@@ -14,6 +14,7 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )

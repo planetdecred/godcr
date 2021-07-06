@@ -17,7 +17,7 @@ const Info = "info_modal"
 type Common interface {
 }
 
-type infoModal struct {
+type InfoModal struct {
 	*load.Load
 	randomID string
 	modal    decredmaterial.Modal
@@ -39,8 +39,8 @@ type infoModal struct {
 	//TODO: neutral button
 }
 
-func NewInfoModal(l *load.Load) *infoModal {
-	in := &infoModal{
+func NewInfoModal(l *load.Load) *InfoModal {
+	in := &InfoModal{
 		Load:        l,
 		randomID:    fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
 		modal:       *l.Theme.ModalFloatTitle(),
@@ -54,54 +54,54 @@ func NewInfoModal(l *load.Load) *infoModal {
 	return in
 }
 
-func (in *infoModal) ModalID() string {
+func (in *InfoModal) ModalID() string {
 	return in.randomID
 }
 
-func (in *infoModal) Show() {
+func (in *InfoModal) Show() {
 	in.ShowModal(in)
 }
 
-func (in *infoModal) Dismiss() {
+func (in *InfoModal) Dismiss() {
 	in.DismissModal(in)
 }
 
-func (in *infoModal) OnResume() {
+func (in *InfoModal) OnResume() {
 }
 
-func (in *infoModal) OnDismiss() {
+func (in *InfoModal) OnDismiss() {
 
 }
 
-func (in *infoModal) icon(icon *widget.Icon) *infoModal {
+func (in *InfoModal) icon(icon *widget.Icon) *InfoModal {
 	in.dialogIcon = icon
 	return in
 }
 
-func (in *infoModal) Title(title string) *infoModal {
+func (in *InfoModal) Title(title string) *InfoModal {
 	in.dialogTitle = title
 	return in
 }
 
-func (in *infoModal) Body(subtitle string) *infoModal {
+func (in *InfoModal) Body(subtitle string) *InfoModal {
 	in.subtitle = subtitle
 	return in
 }
 
-func (in *infoModal) PositiveButton(text string, clicked func()) *infoModal {
+func (in *InfoModal) PositiveButton(text string, clicked func()) *InfoModal {
 	in.positiveButtonText = text
 	in.positiveButtonClicked = clicked
 	return in
 }
 
-func (in *infoModal) NegativeButton(text string, clicked func()) *infoModal {
+func (in *InfoModal) NegativeButton(text string, clicked func()) *InfoModal {
 	in.negativeButtonText = text
 	in.negativeButtonClicked = clicked
 	return in
 }
 
 // for backwards compatibilty
-func (in *infoModal) SetupWithTemplate(template string) *infoModal {
+func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	title := in.dialogTitle
 	subtitle := in.subtitle
 	var customTemplate []layout.Widget
@@ -128,7 +128,7 @@ func (in *infoModal) SetupWithTemplate(template string) *infoModal {
 	return in
 }
 
-func (in *infoModal) Handle() {
+func (in *InfoModal) Handle() {
 
 	for in.btnPositve.Button.Clicked() {
 		in.DismissModal(in)
@@ -141,7 +141,7 @@ func (in *infoModal) Handle() {
 	}
 }
 
-func (in *infoModal) Layout(gtx layout.Context) D {
+func (in *InfoModal) Layout(gtx layout.Context) D {
 	icon := func(gtx C) D {
 		if in.dialogIcon == nil {
 			return layout.Dimensions{}
@@ -187,7 +187,7 @@ func (in *infoModal) Layout(gtx layout.Context) D {
 	return in.modal.Layout(gtx, w, 850)
 }
 
-func (in *infoModal) titleLayout() layout.Widget {
+func (in *InfoModal) titleLayout() layout.Widget {
 	return func(gtx C) D {
 		t := in.Theme.H6(in.dialogTitle)
 		t.Font.Weight = text.Bold
@@ -195,7 +195,7 @@ func (in *infoModal) titleLayout() layout.Widget {
 	}
 }
 
-func (in *infoModal) actionButtonsLayout() layout.Widget {
+func (in *InfoModal) actionButtonsLayout() layout.Widget {
 	return func(gtx C) D {
 		return layout.E.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,

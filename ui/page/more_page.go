@@ -17,13 +17,13 @@ type morePageHandler struct {
 	page      string
 }
 
-type morePage struct {
+type MorePage struct {
 	*load.Load
 	container         layout.Flex
 	morePageListItems []morePageHandler
 }
 
-func MorePage(l *load.Load) *morePage {
+func NewMorePage(l *load.Load) *MorePage {
 	morePageListItems := []morePageHandler{
 		{
 			clickable: new(widget.Clickable),
@@ -56,7 +56,7 @@ func MorePage(l *load.Load) *morePage {
 		morePageListItems[i].image.Scale = 1
 	}
 
-	pg := &morePage{
+	pg := &MorePage{
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,
 		Load:              l,
@@ -65,11 +65,11 @@ func MorePage(l *load.Load) *morePage {
 	return pg
 }
 
-func (pg *morePage) OnResume() {
+func (pg *MorePage) OnResume() {
 
 }
 
-func (pg *morePage) handleClickEvents(l *load.Load) {
+func (pg *MorePage) handleClickEvents(l *load.Load) {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {
 			l.ChangePage(pg.morePageListItems[i].page)
@@ -77,7 +77,7 @@ func (pg *morePage) handleClickEvents(l *load.Load) {
 	}
 }
 
-func (pg *morePage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.handleClickEvents(pg.Load)
 
 	container := func(gtx C) D {
@@ -87,7 +87,7 @@ func (pg *morePage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, container)
 }
 
-func (pg *morePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
+func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
@@ -134,5 +134,5 @@ func (pg *morePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *morePage) Handle()  {}
-func (pg *morePage) OnClose() {}
+func (pg *MorePage) Handle()  {}
+func (pg *MorePage) OnClose() {}

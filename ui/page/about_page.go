@@ -11,7 +11,7 @@ import (
 
 const About = "About"
 
-type aboutPage struct {
+type AboutPage struct {
 	*load.Load
 	card      decredmaterial.Card
 	container *layout.List
@@ -30,8 +30,8 @@ type aboutPage struct {
 	backButton decredmaterial.IconButton
 }
 
-func AboutPage(l *load.Load) *aboutPage {
-	pg := &aboutPage{
+func NewAboutPage(l *load.Load) *AboutPage {
+	pg := &AboutPage{
 		Load:             l,
 		card:             l.Theme.Card(),
 		container:        &layout.List{Axis: layout.Vertical},
@@ -55,11 +55,11 @@ func AboutPage(l *load.Load) *aboutPage {
 	return pg
 }
 
-func (pg *aboutPage) OnResume() {
+func (pg *AboutPage) OnResume() {
 
 }
 
-func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := SubPage{
 			Load:       pg.Load,
@@ -80,7 +80,7 @@ func (pg *aboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	return uniformPadding(gtx, body)
 }
 
-func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
+func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	w := []func(gtx C) D{
 		func(gtx C) D {
 			return endToEndRow(gtx, pg.version.Layout, pg.versionValue.Layout)
