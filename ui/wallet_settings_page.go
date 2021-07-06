@@ -1,16 +1,14 @@
-package page
+package ui
 
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const WalletSettings = "WalletSettings"
+const PageWalletSettings = "WalletSettings"
 
 type walletSettingsPage struct {
 	theme  *decredmaterial.Theme
@@ -176,14 +174,14 @@ func (pg *walletSettingsPage) bottomSectionLabel(title string) layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) handle() {
+func (pg *walletSettingsPage) Handle() {
 	common := pg.common
 	for pg.changePass.Clicked() {
 		newPasswordModal(common).
 			title(values.String(values.StrChangeSpendingPass)).
 			hint("Current spending password").
 			negativeButton(values.String(values.StrCancel), func() {}).
-			positiveButton(values.String(values.StrConfirm), func(password string, pm *modal.passwordModal) bool {
+			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
 				go func() {
 					err := pg.wallet.UnlockWallet([]byte(password))
 					if err != nil {
@@ -195,12 +193,12 @@ func (pg *walletSettingsPage) handle() {
 					pm.Dismiss()
 
 					// change password
-					modal.NewCreatePasswordModal(common).
+					newCreatePasswordModal(common).
 						title(values.String(values.StrChangeSpendingPass)).
 						enableName(false).
 						passwordHint("New spending password").
 						confirmPasswordHint("Confirm new spending password").
-						passwordCreated(func(walletName, newPassword string, m *modal.createPasswordModal) bool {
+						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
 							go func() {
 								err := pg.common.multiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
 									[]byte(newPassword), dcrlibwallet.PassphraseTypePass)
@@ -223,7 +221,7 @@ func (pg *walletSettingsPage) handle() {
 
 	for pg.rescan.Clicked() {
 		go func() {
-			info := modal.newInfoModal(common).
+			info := newInfoModal(common).
 				title(values.String(values.StrRescanBlockchain)).
 				body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
 					" blockchain for transactions").
@@ -252,13 +250,13 @@ func (pg *walletSettingsPage) handle() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		modal.newInfoModal(common).
+		newInfoModal(common).
 			title(values.String(values.StrRemoveWallet)).
 			body("Make sure to have the seed phrase backed up before removing the wallet").
 			negativeButton(values.String(values.StrCancel), func() {}).
 			positiveButton(values.String(values.StrRemove), func() {
 
-				modal.newPasswordModal(common).
+				newPasswordModal(common).
 					title(values.String(values.StrConfirmToRemove)).
 					negativeButton(values.String(values.StrCancel), func() {}).
 					positiveButtonStyle(common.theme.Color.Surface, common.theme.Color.Danger).
@@ -281,4 +279,4 @@ func (pg *walletSettingsPage) handle() {
 	}
 }
 
-func (pg *walletSettingsPage) onClose() {}
+func (pg *walletSettingsPage) OnClose() {}

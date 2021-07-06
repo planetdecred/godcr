@@ -42,11 +42,11 @@ func SignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *signMessagePage
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
 	clearButton := l.Theme.Button(new(widget.Clickable), "Clear all")
 	clearButton.Background = color.NRGBA{}
-	clearButton.Color = common.theme.Color.Gray
+	clearButton.Color = l.Theme.Color.Gray
 	clearButton.Font.Weight = text.Bold
-	errorLabel := common.theme.Caption("")
-	errorLabel.Color = common.theme.Color.Danger
-	copyIcon := common.icons.copyIcon
+	errorLabel := l.Theme.Caption("")
+	errorLabel.Color = l.Theme.Color.Danger
+	copyIcon := l.Icons.CopyIcon
 
 	pg := &signMessagePage{
 		Load:   l,
@@ -54,9 +54,6 @@ func SignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *signMessagePage
 		container: layout.List{
 			Axis: layout.Vertical,
 		},
-		common: common,
-		theme:  common.theme,
-		wallet: wallet,
 
 		titleLabel:         l.Theme.H5("Sign Message"),
 		signedMessageLabel: l.Theme.Body1(""),
@@ -71,7 +68,7 @@ func SignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *signMessagePage
 		copyIcon:      copyIcon,
 	}
 
-	pg.signedMessageLabel.Color = common.theme.Color.Gray
+	pg.signedMessageLabel.Color = l.Theme.Color.Gray
 	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
 	pg.signButton.Font.Weight = text.Bold
 
@@ -274,7 +271,7 @@ func (pg *signMessagePage) validateAddress(ignoreEmpty bool) bool {
 	}
 
 	if address != "" {
-		isValid := pg.common.multiWallet.IsAddressValid(address)
+		isValid := pg.WL.MultiWallet.IsAddressValid(address)
 		if !isValid {
 			pg.addressEditor.SetError("Invalid address")
 			return false

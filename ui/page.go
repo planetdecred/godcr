@@ -7,22 +7,23 @@ import (
 	"net/http"
 	"sort"
 
-	"gioui.org/unit"
-
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
+	"gioui.org/unit"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
-	"golang.org/x/exp/shiny/materialdesign/icons"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page"
 )
 
 type pageIcons struct {
@@ -254,7 +255,7 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 	return common
 }
 
-func (common *pageCommon) loadPages() map[string]Page {
+func loadPages(common *pageCommon, l *load.Load) map[string]Page {
 
 	common.testButton = common.theme.Button(new(widget.Clickable), "test button")
 

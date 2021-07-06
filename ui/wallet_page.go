@@ -1,8 +1,8 @@
 package ui
 
 import (
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
-	"image"
 	"image/color"
 
 	"gioui.org/gesture"
@@ -20,6 +20,23 @@ import (
 
 const PageWallet = "Wallets"
 
+type walletListItem struct {
+	wal      *dcrlibwallet.Wallet
+	accounts []*dcrlibwallet.Account
+
+	totalBalance string
+	optionsMenu  []menuItem
+	accountsList *decredmaterial.ClickableList
+
+	// normal wallets
+	collapsible   *decredmaterial.CollapsibleWithOption
+	addAcctBtn    decredmaterial.IconButton
+	backupAcctBtn decredmaterial.IconButton
+
+	// watch only
+	moreButton decredmaterial.IconButton
+}
+
 type menuItem struct {
 	text     string
 	id       string
@@ -32,6 +49,7 @@ type walletPage struct {
 	multiWallet *dcrlibwallet.MultiWallet
 	listItems   []*walletListItem
 
+	load   *load.Load
 	common *pageCommon
 	theme  *decredmaterial.Theme
 
@@ -55,9 +73,10 @@ type walletPage struct {
 	separator                decredmaterial.Line
 }
 
-func WalletPage(common *pageCommon) Page {
+func WalletPage(common *pageCommon, l *load.Load) Page {
 	pg := &walletPage{
 		common:                   common,
+		load:                     l,
 		multiWallet:              common.multiWallet,
 		container:                layout.List{Axis: layout.Vertical},
 		walletsList:              layout.List{Axis: layout.Vertical},
@@ -190,7 +209,7 @@ func (pg *walletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		{
 			text:   values.String(values.StrSignMessage),
 			button: new(widget.Clickable),
-			id:     PageSignMessage,
+			id:     page.SignMessage,
 		},
 		{
 			text:     values.String(values.StrViewProperty),
@@ -209,7 +228,7 @@ func (pg *walletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				textModal := modal.newTextInputModal(common).
+				textModal := newTextInputModal(common).
 					hint("Wallet name").
 					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
 						// todo handle error
@@ -225,7 +244,7 @@ func (pg *walletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		{
 			text:   values.String(values.StrSettings),
 			button: new(widget.Clickable),
-			id:     PageSettings,
+			id:     page.Settings,
 		},
 	}
 }
@@ -235,13 +254,13 @@ func (pg *walletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 		{
 			text:   values.String(values.StrSettings),
 			button: new(widget.Clickable),
-			id:     PageSettings,
+			id:     page.Settings,
 		},
 		{
 			text:   values.String(values.StrRename),
 			button: new(widget.Clickable),
 			action: func(common *pageCommon) {
-				textModal := modal.newTextInputModal(common).
+				textModal := newTextInputModal(common).
 					hint("Wallet name").
 					positiveButton(values.String(values.StrRename), func(newName string, tim *textInputModal) bool {
 						//TODO
@@ -258,10 +277,10 @@ func (pg *walletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 }
 
 func (pg *walletPage) showAddWalletModal(common *pageCommon) {
-	modal.NewCreatePasswordModal(common).
+	newCreatePasswordModal(common).
 		title("Create new wallet").
 		enableName(true).
-		passwordCreated(func(walletName, password string, m *modal.createPasswordModal) bool {
+		passwordCreated(func(walletName, password string, m *createPasswordModal) bool {
 			go func() {
 				_, err := pg.multiWallet.CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)
 				if err != nil {
@@ -276,8 +295,8 @@ func (pg *walletPage) showAddWalletModal(common *pageCommon) {
 }
 
 func (pg *walletPage) showImportWatchOnlyWalletModal(common *pageCommon) {
-	modal.newCreateWatchOnlyModal(common).
-		watchOnlyCreated(func(walletName, extPubKey string, m *modal.createWatchOnlyModal) bool {
+	newCreateWatchOnlyModal(common).
+		watchOnlyCreated(func(walletName, extPubKey string, m *createWatchOnlyModal) bool {
 			go func() {
 				_, err := pg.multiWallet.CreateWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
@@ -781,7 +800,7 @@ func (pg *walletPage) openPopup(index int) {
 	pg.openPopupIndex = index
 }
 
-func (pg *walletPage) handle() {
+func (pg *walletPage) Handle() {
 	common := pg.common
 
 	for pg.backdrop.Clicked() {
@@ -813,16 +832,16 @@ func (pg *walletPage) handle() {
 			for listItem.addAcctBtn.Button.Clicked() {
 				walletID := listItem.wal.ID
 
-			textModal := modal.newTextInputModal(pg.common).
-				hint("Account name").
-				positiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.textInputModal) bool {
-					if accountName != "" {
-						modal.newPasswordModal(pg.common).
-							title(values.String(values.StrCreateNewAccount)).
-							hint("Spending password").
-							negativeButton(values.String(values.StrCancel), func() {}).
-							positiveButton(values.String(values.StrConfirm), func(password string, pm *modal.passwordModal) bool {
-								go func() {
+				textModal := newTextInputModal(pg.common).
+					hint("Account name").
+					positiveButton(values.String(values.StrCreate), func(accountName string, tim *textInputModal) bool {
+						if accountName != "" {
+							newPasswordModal(pg.common).
+								title(values.String(values.StrCreateNewAccount)).
+								hint("Spending password").
+								negativeButton(values.String(values.StrCancel), func() {}).
+								positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+									go func() {
 
 										wal := pg.multiWallet.WalletWithID(walletID)
 										wal.CreateNewAccount(accountName, []byte(password)) // TODO
@@ -849,11 +868,11 @@ func (pg *walletPage) handle() {
 		for _, menu := range listItem.optionsMenu {
 			if menu.button.Clicked() {
 				switch menu.id {
-				case PageSignMessage:
-					common.changeFragment(SignMessagePage(common, listItem.wal), PageSignMessage)
+				case page.SignMessage:
+					common.changeFragment(page.SignMessagePage(pg.load, listItem.wal), page.SignMessage)
 				case PagePrivacy:
 					common.changeFragment(PrivacyPage(common, listItem.wal), PagePrivacy)
-				case PageSettings:
+				case page.Settings:
 					common.changeFragment(WalletSettingsPage(common, listItem.wal), PageWalletSettings)
 				default:
 					menu.action(common)
@@ -876,6 +895,6 @@ func (pg *walletPage) handle() {
 	}
 }
 
-func (pg *walletPage) onClose() {
+func (pg *walletPage) OnClose() {
 	pg.closePopups()
 }

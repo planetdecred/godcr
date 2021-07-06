@@ -11,6 +11,7 @@ func fetchExchangeValue(target interface{}) {
 	res, err := http.Get(url)
 	if err != nil {
 		log.Error(err)
+		return
 	}
 
 	defer res.Body.Close()

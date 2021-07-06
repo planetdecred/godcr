@@ -92,7 +92,7 @@ func (pg *helpPage) pageSections(gtx layout.Context, icon *widget.Image, action 
 	})
 }
 
-func (pg *helpPage) Handle()  {
+func (pg *helpPage) Handle() {
 	if pg.documentation.Clicked() {
 		goToURL("https://docs.decred.org")
 	}
