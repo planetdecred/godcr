@@ -114,10 +114,9 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
 														page := pg.morePageListItems[i].page
-														// todo: uncomment when security tools has been moved to the page package
-														//if page == SecurityTools {
-														//	page = "Security Tools"
-														//}
+														if page == SecurityTools {
+															page = "Security Tools"
+														}
 														return pg.Theme.Body1(page).Layout(gtx)
 													})
 												})

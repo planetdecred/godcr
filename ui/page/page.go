@@ -15,6 +15,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+// pages that haven't been migrated
+// todo: to be removed when the page is migrated
+const PagePrivacy = "Privacy"
+
 type navHandler struct {
 	clickable     *widget.Clickable
 	image         *widget.Image
@@ -225,4 +229,17 @@ func uniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 		Bottom: values.MarginPadding24,
 		Left:   padding,
 	}.Layout(gtx, body)
+}
+
+// todo: this method will be removed when the new modal implementation is used on the seedbackup page
+func _modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
+	dims := layout.Stack{}.Layout(gtx,
+		layout.Expanded(func(gtx C) D {
+			return body
+		}),
+		layout.Stacked(func(gtx C) D {
+			return modal
+		}),
+	)
+	return dims
 }

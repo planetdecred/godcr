@@ -15,7 +15,7 @@ const TextInput = "text_input_modal"
 type TextInputModal struct {
 	*InfoModal
 
-	isLoading bool
+	IsLoading bool
 
 	textInput decredmaterial.Editor
 	callback  func(string, *TextInputModal) bool
@@ -53,7 +53,7 @@ func (tm *TextInputModal) PositiveButton(text string, callback func(string, *Tex
 	return tm
 }
 
-func (tm *TextInputModal) setError(err string) {
+func (tm *TextInputModal) SetError(err string) {
 	if err == "" {
 		tm.textInput.ClearError()
 	} else {
@@ -64,19 +64,19 @@ func (tm *TextInputModal) setError(err string) {
 func (tm *TextInputModal) Handle() {
 
 	for tm.btnPositve.Button.Clicked() {
-		if tm.isLoading {
+		if tm.IsLoading {
 			continue
 		}
 
-		tm.isLoading = true
-		tm.setError("")
+		tm.IsLoading = true
+		tm.SetError("")
 		if tm.callback(tm.textInput.Editor.Text(), tm) {
 			tm.Dismiss()
 		}
 	}
 
 	for tm.btnNegative.Button.Clicked() {
-		if !tm.isLoading {
+		if !tm.IsLoading {
 			tm.Dismiss()
 			tm.negativeButtonClicked()
 		}

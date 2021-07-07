@@ -1,9 +1,10 @@
 package ui
 
 import (
+	"strconv"
+
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
-	"strconv"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -252,6 +253,8 @@ func (mp *mainPage) Handle() {
 				mp.changeFragment(page.NewOverviewPage(mp.load), page.Overview)
 			} else if i == 1 {
 				mp.changeFragment(page.NewTransactionsPage(mp.load), page.Transactions)
+			} else if i == 2 {
+				mp.changeFragment(page.NewWalletPage(mp.load), page.Wallet)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}
@@ -301,7 +304,7 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			// fill the entire window with a color if a user has no wallet created
-			if mp.current == PageCreateRestore {
+			if mp.current == page.PageCreateRestore {
 				return decredmaterial.Fill(gtx, mp.theme.Color.Surface)
 			}
 
@@ -321,7 +324,7 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Stacked(func(gtx C) D {
 			// stack the page content on the entire window if a user has no wallet
-			if mp.current == PageCreateRestore {
+			if mp.current == page.PageCreateRestore {
 				return mp.pages[mp.current].Layout(gtx)
 			}
 			return layout.Dimensions{}

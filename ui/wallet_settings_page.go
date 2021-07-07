@@ -5,6 +5,7 @@ import (
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -61,7 +62,7 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			walletName: pg.wallet.Name,
 			backButton: pg.backButton,
 			back: func() {
-				common.changePage(PageWallet)
+				common.changePage(page.Wallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -269,7 +270,7 @@ func (pg *walletSettingsPage) Handle() {
 								return
 							}
 							pm.Dismiss()
-							pm.changePage(PageWallet)
+							pm.changePage(page.Wallet)
 						}()
 						return false
 					}).Show()

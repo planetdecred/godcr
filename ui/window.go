@@ -2,10 +2,11 @@ package ui
 
 import (
 	"errors"
-	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"sync"
 	"time"
+
+	"github.com/planetdecred/godcr/ui/load"
 
 	"gioui.org/app"
 	"gioui.org/io/key"
@@ -148,41 +149,9 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 	l.RefreshWindow = win.refreshWindow
 	l.ShowModal = win._showModal
 	l.DismissModal = win._dismissModal
-	//l := &load.Load{
-	//	printer:             message.NewPrinter(language.English),
-	//	multiWallet:         win.wallet.GetMultiWallet(),
-	//	notificationsUpdate: make(chan interface{}, 10),
-	//	wallet:              win.wallet,
-	//	walletAccount:       &win.walletAccount,
-	//	info:                win.walletInfo,
-	//	selectedWallet:      &win.selected,
-	//	selectedAccount:     &win.selectedAccount,
-	//	theme:               win.theme,
-	//	keyEvents:           win.keyEvents,
-	//	states:              &win.states,
-	//	icons:               ic,
-	//	walletSyncStatus:    win.walletSyncStatus,
-	//	walletTransactions:  &win.walletTransactions,
-	//	// walletTransaction:  &win.walletTransaction,
-	//	acctMixerStatus:  &win.walletAcctMixerStatus,
-	//	selectedProposal: &win.selectedProposal,
-	//	proposals:        &win.proposals,
-	//	syncedProposal:   win.proposal,
-	//	txAuthor:         &win.txAuthor,
-	//	broadcastResult:  &win.broadcastResult,
-	//	signatureResult:  &win.signatureResult,
-	//	walletTickets:    &win.walletTickets,
-	//	vspInfo:          &win.vspInfo,
-	//	unspentOutputs:   &win.walletUnspentOutputs,
-	//	showModal:        win.showModal,
-	//	dismissModal:     win.dismissModal,
-	//	changeWindowPage: win.changePage,
-	//	refreshWindow:    win.refreshWindow,
-	//
-	//	selectedUTXO: make(map[int]map[int32]map[string]*wallet.UnspentOutput),
-	//	toast:        &win.toast,
-	//	internalLog:  &win.internalLog,
-	//}
+	l.PopWindowPage = win.popPage
+	l.ChangeWindowPage = win._changePage
+
 	return l
 }
 
@@ -201,6 +170,17 @@ func (win *Window) changePage(page Page, keepBackStack bool) {
 	}
 
 	win.currentPage = page
+	win.refreshWindow()
+}
+
+// todo: to be cleaned up when all pages have been migrated to the page package
+func (win *Window) _changePage(page interface{}, keepBackStack bool) {
+	if win.currentPage != nil && keepBackStack {
+		win.currentPage.OnClose()
+		win.pageBackStack = append(win.pageBackStack, win.currentPage)
+	}
+
+	win.currentPage = page.(Page)
 	win.refreshWindow()
 }
 

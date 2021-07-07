@@ -39,7 +39,7 @@ func translateErr(err error) string {
 	return err.Error()
 }
 
-func MustIcon(ic *widget.Icon, err error) *widget.Icon {
+func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}
@@ -153,7 +153,7 @@ func goToURL(url string) {
 	}
 }
 
-func ComputePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
+func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
 	pb.Progress = float32(strength * 100)

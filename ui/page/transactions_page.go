@@ -74,7 +74,6 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 }
 
 func (pg *TransactionsPage) OnResume() {
-	log.Infof("WALLETS GUY! MULTI %v\n", pg.Load)
 	pg.wallets = pg.WL.SortedWalletList()
 	createOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.listenForTxNotifications()

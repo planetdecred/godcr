@@ -10,7 +10,6 @@ package load
 
 import (
 	"image"
-	"sort"
 	"time"
 
 	"golang.org/x/text/language"
@@ -35,27 +34,6 @@ type Toast struct {
 	Timer   *time.Timer
 }
 
-type WalletLoad struct {
-	MultiWallet      *dcrlibwallet.MultiWallet
-	TxAuthor         dcrlibwallet.TxAuthor
-	SelectedProposal *dcrlibwallet.Proposal
-
-	Proposals       *wallet.Proposals
-	SyncStatus      *wallet.SyncStatus
-	Transactions    *wallet.Transactions
-	Transaction     *wallet.Transaction
-	BroadcastResult wallet.Broadcast
-	Tickets         *wallet.Tickets
-	VspInfo         *wallet.VSP
-	UnspentOutputs  *wallet.UnspentOutputs
-	Wallet          *wallet.Wallet
-	Account         *wallet.Account
-	Info            *wallet.MultiWalletInfo
-
-	SelectedWallet  *int
-	SelectedAccount *int
-}
-
 type Receiver struct {
 	InternalLog         chan string
 	NotificationsUpdate chan interface{}
@@ -71,10 +49,10 @@ type Icons struct {
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, TransactionIcon, TransactionIconInactive, SendIcon, MoreIcon, MoreIconInactive,
-	PendingIcon, Logo, RedirectIcon, ConfirmIcon, newWalletIcon, WalletAlertIcon,
-	importedAccountIcon, AccountIcon, editIcon, expandIcon, CopyIcon, mixer, mixerSmall,
+	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon,
+	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, mixer, mixerSmall,
 	arrowForwardIcon, transactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
-	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, alertGray, arrowDownIcon,
+	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, arrowDownIcon,
 	WatchOnlyWalletIcon, currencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	restore, DocumentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, stakeyIcon,
 	list, listGridIcon, decredSymbolIcon *widget.Image
@@ -95,6 +73,7 @@ type Load struct {
 	WL       *WalletLoad
 	Receiver *Receiver
 	Printer  *message.Printer
+	Network  string
 
 	Icons          Icons
 	Page           *string
@@ -111,7 +90,8 @@ type Load struct {
 	RefreshWindow    func()
 	ShowModal        func(modal interface{})
 	DismissModal     func(modal interface{})
-	ChangeWindowPage func(page interface{})
+	ChangeWindowPage func(page interface{}, keepBackStack bool)
+	PopWindowPage    func() bool
 	ChangeFragment   func(page interface{}, id string)
 	ChangePage       func(string)
 	SetReturnPage    func(string)
@@ -148,11 +128,11 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		ConfirmIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["confirmed"])},
 		PendingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["pending"])},
 		RedirectIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["redirect"])},
-		newWalletIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
+		NewWalletIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["addNewWallet"])},
 		WalletAlertIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["walletAlert"])},
 		AccountIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["account"])},
-		importedAccountIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
-		editIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
+		ImportedAccountIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["imported_account"])},
+		EditIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
 		expandIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
 		CopyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
 		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
@@ -166,7 +146,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		DebugIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["debug"])},
 		VerifyMessageIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["verify_message"])},
 		LocationPinIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["location_pin"])},
-		alertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert_gray"])},
+		AlertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert_gray"])},
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
 		WatchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
 		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
@@ -243,14 +223,4 @@ func (l *Load) CreateToast(text string, success bool) {
 
 func (l *Load) DestroyToast() {
 	l.Toast = nil
-}
-
-func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
-	wallets := wl.MultiWallet.AllWallets()
-
-	sort.Slice(wallets, func(i, j int) bool {
-		return wallets[i].ID < wallets[j].ID
-	})
-
-	return wallets
 }

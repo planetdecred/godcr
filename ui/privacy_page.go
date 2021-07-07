@@ -3,6 +3,8 @@ package ui
 import (
 	"fmt"
 
+	"github.com/planetdecred/godcr/ui/page"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -64,7 +66,7 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			backButton: pg.backButton,
 			infoButton: pg.infoButton,
 			back: func() {
-				c.changePage(PageWallet)
+				c.changePage(page.Wallet)
 			},
 			infoTemplate: modal.PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
@@ -403,7 +405,7 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 				title("Account name is taken").
 				body("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.").
 				positiveButton("Go back & rename", func() {
-					*common.page = PageWallet
+					*common.page = page.Wallet
 				})
 			common.showModal(info)
 			return

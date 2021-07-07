@@ -1,8 +1,10 @@
 package ui
 
 import (
-	"github.com/planetdecred/godcr/ui/load"
 	"os"
+
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -137,7 +139,7 @@ func (sp *startPage) Handle() {
 	}
 
 	for sp.restoreButton.Button.Clicked() {
-		sp.changeWindowPage(CreateRestorePage(sp.pageCommon), true)
+		sp.changeWindowPage(page.NewCreateRestorePage(sp.load), true)
 	}
 }
 

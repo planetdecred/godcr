@@ -93,8 +93,7 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			infoButton: pg.infoButton,
 			back: func() {
 				pg.clearForm()
-				// todo: uncomment after wallet page has been moved
-				// pg.ChangePage(PageWallet)
+				pg.ChangePage(Wallet)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
