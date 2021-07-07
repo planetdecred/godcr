@@ -51,8 +51,8 @@ func newMainPage(common *pageCommon, l *load.Load) *mainPage {
 	}
 
 	// init shared page functions
-	// todo: common methods will be removed when
-	common.changeFragment, l.ChangeFragment = mp.changeFragment, mp._changeFragment
+	// todo: common methods will be removed when all pages have been moved to the page package
+	common.changeFragment, l.ChangeFragment = mp.changeFragment, mp.changeFragment
 	common.changePage, l.ChangePage = mp.changePage, mp.changePage
 	common.setReturnPage, l.SetReturnPage = mp.setReturnPage, mp.setReturnPage
 	common.returnPage, l.ReturnPage = &mp.previous, &mp.previous
@@ -227,11 +227,6 @@ func (mp *mainPage) unlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 }
 
 func (mp *mainPage) Handle() {
-
-	// TODO: This function should be only called when
-	// dcrlibwallet update notifications are receieved
-	mp.updateBalance()
-
 	for mp.minimizeNavDrawerButton.Button.Clicked() {
 		mp.isNavDrawerMinimized = true
 	}
@@ -274,11 +269,6 @@ func (mp *mainPage) OnClose() {
 
 func (mp *mainPage) changeFragment(page Page, id string) {
 	mp.pages[id] = page
-	mp.changePage(id)
-}
-
-func (mp *mainPage) _changeFragment(page interface{}, id string) {
-	mp.pages[id] = page.(Page)
 	mp.changePage(id)
 }
 

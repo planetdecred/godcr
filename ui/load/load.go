@@ -88,11 +88,11 @@ type Load struct {
 
 	ToggleSync       func()
 	RefreshWindow    func()
-	ShowModal        func(modal interface{})
-	DismissModal     func(modal interface{})
-	ChangeWindowPage func(page interface{}, keepBackStack bool)
+	ShowModal        func(Modal)
+	DismissModal     func(Modal)
+	ChangeWindowPage func(page Page, keepBackStack bool)
 	PopWindowPage    func() bool
-	ChangeFragment   func(page interface{}, id string)
+	ChangeFragment   func(page Page, id string)
 	ChangePage       func(string)
 	SetReturnPage    func(string)
 }

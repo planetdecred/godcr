@@ -26,6 +26,11 @@ import (
 	"github.com/planetdecred/godcr/ui/page"
 )
 
+type (
+	Page  = load.Page
+	Modal = load.Modal
+)
+
 type pageIcons struct {
 	contentAdd, navigationCheck, navigationMore, actionCheckCircle, actionInfo, navigationArrowBack,
 	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
@@ -51,13 +56,6 @@ type pageIcons struct {
 	ticketUnminedIcon *widget.Image
 }
 
-type Page interface {
-	OnResume() // called when a page is starting or resuming from a paused state.
-	Layout(layout.Context) layout.Dimensions
-	Handle()
-	OnClose()
-}
-
 type navHandler struct {
 	clickable     *widget.Clickable
 	image         *widget.Image
@@ -73,12 +71,6 @@ type walletAccount struct {
 	totalBalance string
 	spendable    string
 	number       int32
-}
-
-type wallectAccountOption struct {
-	selectSendAccount           map[int][]walletAccount
-	selectReceiveAccount        map[int][]walletAccount
-	selectPurchaseTicketAccount map[int][]walletAccount
 }
 
 type DCRUSDTBittrex struct {

@@ -386,5 +386,4 @@ generateAddress:
 	return newAddr, nil
 }
 
-func (pg *ReceivePage) OnClose() {
-}
+func (pg *ReceivePage) OnClose() {}

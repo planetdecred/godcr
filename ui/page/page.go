@@ -19,13 +19,6 @@ import (
 // todo: to be removed when the page is migrated
 const PagePrivacy = "Privacy"
 
-type navHandler struct {
-	clickable     *widget.Clickable
-	image         *widget.Image
-	imageInactive *widget.Image
-	page          string
-}
-
 type walletAccount struct {
 	evt          *gesture.Click
 	walletIndex  int

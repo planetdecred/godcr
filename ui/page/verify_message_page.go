@@ -154,7 +154,7 @@ func (pg *VerifyMessagePage) Handle() {
 		if pg.verifyBtn.Button.Clicked() || handleSubmitEvent(pg.addressInput.Editor, pg.messageInput.Editor, pg.signInput.Editor) {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
-			valid, err := pg.WL.Wallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
+			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
 			if err != nil {
 				pg.signInput.SetError("Invalid signature or message")
 				return

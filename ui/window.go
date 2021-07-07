@@ -147,10 +147,10 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 
 	l.SelectedWallet = &win.selected
 	l.RefreshWindow = win.refreshWindow
-	l.ShowModal = win._showModal
-	l.DismissModal = win._dismissModal
+	l.ShowModal = win.showModal
+	l.DismissModal = win.dismissModal
 	l.PopWindowPage = win.popPage
-	l.ChangeWindowPage = win._changePage
+	l.ChangeWindowPage = win.changePage
 
 	return l
 }
@@ -170,17 +170,6 @@ func (win *Window) changePage(page Page, keepBackStack bool) {
 	}
 
 	win.currentPage = page
-	win.refreshWindow()
-}
-
-// todo: to be cleaned up when all pages have been migrated to the page package
-func (win *Window) _changePage(page interface{}, keepBackStack bool) {
-	if win.currentPage != nil && keepBackStack {
-		win.currentPage.OnClose()
-		win.pageBackStack = append(win.pageBackStack, win.currentPage)
-	}
-
-	win.currentPage = page.(Page)
 	win.refreshWindow()
 }
 
@@ -215,32 +204,12 @@ func (win *Window) showModal(modal Modal) {
 	win.modalMutex.Unlock()
 }
 
-func (win *Window) _showModal(modal interface{}) {
-	m := modal.(Modal)
-	m.OnResume() // setup display data
-	win.modalMutex.Lock()
-	win.modals = append(win.modals, m)
-	win.modalMutex.Unlock()
-}
-
 func (win *Window) dismissModal(modal Modal) {
 	win.modalMutex.Lock()
 	defer win.modalMutex.Unlock()
 	for i, m := range win.modals {
 		if m.ModalID() == modal.ModalID() {
 			modal.OnDismiss() // do garbage collection in modal
-			win.modals = append(win.modals[:i], win.modals[i+1:]...)
-		}
-	}
-}
-
-func (win *Window) _dismissModal(modal interface{}) {
-	mod := modal.(Modal)
-	win.modalMutex.Lock()
-	defer win.modalMutex.Unlock()
-	for i, m := range win.modals {
-		if m.ModalID() == mod.ModalID() {
-			mod.OnDismiss() // do garbage collection in modal
 			win.modals = append(win.modals[:i], win.modals[i+1:]...)
 		}
 	}
