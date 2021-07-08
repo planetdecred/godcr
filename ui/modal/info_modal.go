@@ -14,9 +14,6 @@ import (
 
 const Info = "info_modal"
 
-type Common interface {
-}
-
 type InfoModal struct {
 	*load.Load
 	randomID string

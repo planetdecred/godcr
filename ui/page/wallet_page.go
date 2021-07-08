@@ -206,7 +206,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		{
 			text:   values.String(values.StrSignMessage),
 			button: new(widget.Clickable),
-			id:     SignMessage,
+			id:     SignMessagePageID,
 		},
 		{
 			text:     values.String(values.StrViewProperty),
@@ -800,14 +800,14 @@ func (pg *WalletPage) Handle() {
 	if ok, selectedItem := pg.watchWalletsList.ItemClicked(); ok {
 		listItem := pg.listItems[selectedItem]
 		// TODO: find default account using number
-		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]), AccountDetails)
+		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]), AccountDetailsPageID)
 	}
 
 	for index, listItem := range pg.listItems {
 		*pg.SelectedWallet = index
 
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
-			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]), AccountDetails)
+			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]), AccountDetailsPageID)
 		}
 
 		if listItem.wal.IsWatchingOnlyWallet() {
@@ -851,15 +851,15 @@ func (pg *WalletPage) Handle() {
 			}
 
 			for listItem.backupAcctBtn.Button.Clicked() {
-				pg.ChangePage(PageSeedBackup)
+				pg.ChangePage(SeedBackupPageID)
 			}
 		}
 
 		for _, menu := range listItem.optionsMenu {
 			if menu.button.Clicked() {
 				switch menu.id {
-				case SignMessage:
-					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal), SignMessage)
+				case SignMessagePageID:
+					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal), SignMessagePageID)
 				case PagePrivacy:
 					// todo: uncomment after moving privacy page to the page package
 					// pg.ChangeFragment(PrivacyPage(common, listItem.wal), PagePrivacy)

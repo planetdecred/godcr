@@ -195,7 +195,7 @@ func (pg *TransactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcr
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			pg.SetReturnPage(Transactions)
-			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, txn), "txdetails")
+			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, txn), TransactionDetailsPageID)
 		}
 	}
 }

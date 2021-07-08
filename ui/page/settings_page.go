@@ -139,7 +139,7 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			title:      values.String(values.StrSettings),
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(More)
+				pg.ChangePage(MorePageID)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{

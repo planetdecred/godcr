@@ -827,7 +827,7 @@ func (pg *sendPage) watchForBroadcastResult(c *pageCommon) {
 	}
 
 	if pg.broadcastResult.TxHash != "" {
-		*c.page = page.Overview
+		*c.page = page.OverviewPageID
 		c.notify("1 Transaction Sent", true)
 
 		if pg.remainingBalance != -1 {

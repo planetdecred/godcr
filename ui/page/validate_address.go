@@ -14,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const ValidateAddress = "ValidateAddress"
+const ValidateAddressPageID = "ValidateAddress"
 
 const (
 	none = iota

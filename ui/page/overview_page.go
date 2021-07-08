@@ -20,7 +20,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const Overview = "Overview"
+const OverviewPageID = "Overview"
 
 // walletSyncDetails contains sync data for each wallet when a sync
 // is in progress.
@@ -610,8 +610,8 @@ func (pg *OverviewPage) Handle() {
 			if e.Type == gesture.TypeClick {
 				txn := pg.transactions[index]
 
-				pg.SetReturnPage(Overview)
-				pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &txn), "txdetails")
+				pg.SetReturnPage(OverviewPageID)
+				pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &txn), TransactionDetailsPageID)
 				return
 			}
 		}

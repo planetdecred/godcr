@@ -14,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-const SecurityTools = "SecurityTools"
+const SecurityToolsPageID = "SecurityTools"
 
 type SecurityToolsPage struct {
 	*load.Load
@@ -50,7 +50,7 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 			backButton: pg.backButton,
 			infoButton: pg.infoButton,
 			back: func() {
-				pg.ChangePage(More)
+				pg.ChangePage(MorePageID)
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -108,13 +108,13 @@ func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 
 func (pg *SecurityToolsPage) Handle() {
 	if pg.verifyMessage.Clicked() {
-		pg.SetReturnPage(SecurityTools)
+		pg.SetReturnPage(SecurityToolsPageID)
 		pg.ChangePage(VerifyMessage)
 	}
 
 	if pg.validateAddress.Clicked() {
-		pg.SetReturnPage(SecurityTools)
-		pg.ChangePage(ValidateAddress)
+		pg.SetReturnPage(SecurityToolsPageID)
+		pg.ChangePage(ValidateAddressPageID)
 	}
 }
 

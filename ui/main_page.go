@@ -3,15 +3,15 @@ package ui
 import (
 	"strconv"
 
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -142,7 +142,11 @@ func (mp *mainPage) OnResume() {
 
 	mp.updateBalance()
 
-	mp.changeFragment(page.NewOverviewPage(mp.load), page.Overview)
+	if pg, ok := mp.pages[mp.current]; ok {
+		pg.OnResume()
+	} else {
+		mp.changeFragment(page.NewOverviewPage(mp.load), page.OverviewPageID)
+	}
 
 	if mp.autoSync {
 		mp.autoSync = false
@@ -245,7 +249,7 @@ func (mp *mainPage) Handle() {
 	for i := range mp.drawerNavItems {
 		for mp.drawerNavItems[i].clickable.Clicked() {
 			if i == 0 {
-				mp.changeFragment(page.NewOverviewPage(mp.load), page.Overview)
+				mp.changeFragment(page.NewOverviewPage(mp.load), page.OverviewPageID)
 			} else if i == 1 {
 				mp.changeFragment(page.NewTransactionsPage(mp.load), page.Transactions)
 			} else if i == 2 {
@@ -294,7 +298,7 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			// fill the entire window with a color if a user has no wallet created
-			if mp.current == page.PageCreateRestore {
+			if mp.current == page.CreateRestorePageID {
 				return decredmaterial.Fill(gtx, mp.theme.Color.Surface)
 			}
 
@@ -314,7 +318,7 @@ func (mp *mainPage) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Stacked(func(gtx C) D {
 			// stack the page content on the entire window if a user has no wallet
-			if mp.current == page.PageCreateRestore {
+			if mp.current == page.CreateRestorePageID {
 				return mp.pages[mp.current].Layout(gtx)
 			}
 			return layout.Dimensions{}

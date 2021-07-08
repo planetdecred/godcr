@@ -3,7 +3,6 @@ package page
 import (
 	"image/color"
 
-	"gioui.org/gesture"
 	"gioui.org/unit"
 
 	"gioui.org/layout"
@@ -16,45 +15,8 @@ import (
 )
 
 // pages that haven't been migrated
-// todo: to be removed when the page is migrated
+// todo: to be removed when the page is migrated but their IDs are need for page navigation
 const PagePrivacy = "Privacy"
-
-type walletAccount struct {
-	evt          *gesture.Click
-	walletIndex  int
-	accountIndex int
-	accountName  string
-	totalBalance string
-	spendable    string
-	number       int32
-}
-
-type wallectAccountOption struct {
-	selectSendAccount           map[int][]walletAccount
-	selectReceiveAccount        map[int][]walletAccount
-	selectPurchaseTicketAccount map[int][]walletAccount
-}
-
-type WalletAccountSelector struct {
-	title                     string
-	walletAccount             decredmaterial.Modal
-	walletsList, accountsList layout.List
-	isWalletAccountModalOpen  bool
-	isWalletAccountInfo       bool
-	walletAccounts            *wallectAccountOption
-	sendAccountBtn            *widget.Clickable
-	receivingAccountBtn       *widget.Clickable
-	purchaseTicketAccountBtn  *widget.Clickable
-	sendOption                string
-	walletInfoButton          decredmaterial.IconButton
-
-	selectedSendAccount,
-	selectedSendWallet,
-	selectedReceiveAccount,
-	selectedReceiveWallet,
-	selectedPurchaseTicketAccount,
-	selectedPurchaseTicketWallet int
-}
 
 type (
 	C = layout.Context

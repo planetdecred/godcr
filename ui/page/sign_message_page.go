@@ -15,7 +15,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const SignMessage = "SignMessage"
+const SignMessagePageID = "SignMessage"
 
 type SignMessagePage struct {
 	*load.Load

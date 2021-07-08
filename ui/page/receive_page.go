@@ -24,7 +24,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const Receive = "Receive"
+const ReceivePageID = "Receive"
 
 type ReceivePage struct {
 	*load.Load

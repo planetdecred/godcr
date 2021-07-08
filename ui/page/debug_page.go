@@ -9,7 +9,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Debug = "Debug"
+const DebugPageID = "Debug"
 
 type debugItem struct {
 	clickable *widget.Clickable
@@ -29,7 +29,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 		{
 			clickable: new(widget.Clickable),
 			text:      "Check wallet logs",
-			page:      Log,
+			page:      LogPageID,
 		},
 		{
 			clickable: new(widget.Clickable),
@@ -98,7 +98,7 @@ func (pg *DebugPage) Layout(gtx C) D {
 			title:      "Debug",
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(More)
+				pg.ChangePage(MorePageID)
 			},
 			body: func(gtx C) D {
 				pg.layoutDebugItems(gtx)

@@ -9,7 +9,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const More = "More"
+const MorePageID = "More"
 
 type morePageHandler struct {
 	clickable *widget.Clickable
@@ -33,22 +33,22 @@ func NewMorePage(l *load.Load) *MorePage {
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.SecurityIcon,
-			page:      SecurityTools,
+			page:      SecurityToolsPageID,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.HelpIcon,
-			page:      Help,
+			page:      HelpPageID,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.AboutIcon,
-			page:      About,
+			page:      AboutPageID,
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.DebugIcon,
-			page:      Debug,
+			page:      DebugPageID,
 		},
 	}
 
@@ -114,7 +114,7 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 												}.Layout(gtx, func(gtx C) D {
 													return layout.Center.Layout(gtx, func(gtx C) D {
 														page := pg.morePageListItems[i].page
-														if page == SecurityTools {
+														if page == SecurityToolsPageID {
 															page = "Security Tools"
 														}
 														return pg.Theme.Body1(page).Layout(gtx)

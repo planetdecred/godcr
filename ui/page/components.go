@@ -15,46 +15,12 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const (
-	purchasingAccountTitle = "Purchasing account"
-	sendingAccountTitle    = "Sending account"
-	receivingAccountTitle  = "Receiving account"
-)
-
 type (
 	TransactionRow struct {
 		transaction dcrlibwallet.Transaction
 		index       int
 		showBadge   bool
 	}
-)
-
-// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
-// balance at the baseline of the row.
-//func (page *pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitchColor bool) layout.Dimensions {
-//	// todo: make "DCR" symbols small when there are no decimals in the balance
-//	mainText, subText := breakBalance(page.printer, amount)
-//	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-//		layout.Rigid(func(gtx C) D {
-//			label := page.theme.Label(values.TextSize20, mainText)
-//			if isSwitchColor {
-//				label.Color = page.theme.Color.DeepBlue
-//			}
-//			return label.Layout(gtx)
-//		}),
-//		layout.Rigid(func(gtx C) D {
-//			label := page.theme.Label(values.TextSize14, subText)
-//			if isSwitchColor {
-//				label.Color = page.theme.Color.DeepBlue
-//			}
-//			return label.Layout(gtx)
-//		}),
-//	)
-//}
-
-var (
-	navDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
-	navDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
 )
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub

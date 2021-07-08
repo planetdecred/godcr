@@ -56,21 +56,15 @@ func (pg *VerifyMessagePage) OnResume() {
 }
 
 func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
-	var walletName = pg.WL.Info.Wallets[*pg.SelectedWallet].Name
-	if *pg.ReturnPage == SecurityTools {
-		walletName = ""
-	}
 	body := func(gtx C) D {
 		sp := SubPage{
 			Load:       pg.Load,
 			title:      "Verify message",
-			walletName: walletName,
 			backButton: pg.backButton,
 			infoButton: pg.infoButton,
 			back: func() {
 				pg.clearInputs()
-				// todo: uncomment when the Wallet page has been moved
-				// pg.ChangePage(Wallet)
+				pg.ChangePage(Wallet)
 				pg.ChangePage(*pg.ReturnPage)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {

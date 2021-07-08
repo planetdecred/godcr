@@ -18,7 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const TransactionDetails = "TransactionDetails"
+const TransactionDetailsPageID = "TransactionDetails"
 
 type TransactionDetailsPage struct {
 	*load.Load

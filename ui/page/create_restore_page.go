@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	PageCreateRestore = "CreateRestore"
-	numberOfSeeds     = 32
+	CreateRestorePageID = "CreateRestore"
+	numberOfSeeds       = 32
 )
 
 type (

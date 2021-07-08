@@ -11,7 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Help = "Help"
+const HelpPageID = "Help"
 
 type HelpPage struct {
 	*load.Load
@@ -44,7 +44,7 @@ func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 			subTitle:   "For more information, please visit the Decred documentation.",
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(More)
+				pg.ChangePage(MorePageID)
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {

@@ -9,7 +9,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const About = "About"
+const AboutPageID = "About"
 
 type AboutPage struct {
 	*load.Load
@@ -66,7 +66,7 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 			title:      "About",
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(More)
+				pg.ChangePage(MorePageID)
 			},
 			body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {

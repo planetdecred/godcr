@@ -13,7 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Log = "Log"
+const LogPageID = "Log"
 
 type LogPage struct {
 	*load.Load
@@ -80,7 +80,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			title:      "Wallet log",
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(Debug)
+				pg.ChangePage(DebugPageID)
 			},
 			extraItem: pg.copyLog,
 			extra: func(gtx C) D {

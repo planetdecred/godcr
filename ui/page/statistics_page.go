@@ -123,7 +123,7 @@ func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
 			title:      "Statistics",
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(Debug)
+				pg.ChangePage(DebugPageID)
 			},
 			body: pg.layoutStats,
 		}

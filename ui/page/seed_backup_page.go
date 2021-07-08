@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	PageSeedBackup = "SeedBackup"
-	infoView       = iota
+	SeedBackupPageID = "SeedBackup"
+	infoView         = iota
 	seedView
 	verifyView
 	successView
