@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gioui.org/font/gofont"
@@ -27,48 +28,35 @@ import (
 const PageProposals = "Proposals"
 
 type proposalItem struct {
-	btn               *widget.Clickable
-	proposal          dcrlibwallet.Proposal
-	voteBar           decredmaterial.VoteBar
-	infoIcon          *widget.Icon
-	stateInfoTooltip  *decredmaterial.Tooltip
-	stateTooltipLabel decredmaterial.Label
-}
-
-type tab struct {
-	title     string
-	btn       *widget.Clickable
-	category  int32
-	proposals []proposalItem
-	container *layout.List
-}
-
-type tabs struct {
-	tabs     []tab
-	selected int
+	proposal     dcrlibwallet.Proposal
+	voteBar      decredmaterial.VoteBar
+	tooltip      *decredmaterial.Tooltip
+	tooltipLabel decredmaterial.Label
 }
 
 type proposalsPage struct {
-	theme            *decredmaterial.Theme
-	common           *pageCommon
-	wallet           *wallet.Wallet
-	selectedProposal **dcrlibwallet.Proposal
-	proposals        **wallet.Proposals
-	syncedProposal   chan *wallet.Proposal
-	proposalsList    *layout.List
-	tabs             tabs
-	tabCard          decredmaterial.Card
-	itemCard         decredmaterial.Card
-	syncCard         decredmaterial.Card
-	updatedLabel     decredmaterial.Label
-	legendIcon       *widget.Icon
-	infoIcon         *widget.Icon
-	updatedIcon      *widget.Icon
-	syncButton       *widget.Clickable
-	startSyncIcon    *widget.Image
-	timerIcon        *widget.Image
-	isSynced         bool
-	proposalsItemSet bool
+	*pageCommon
+	pageClosing           chan bool
+	proposalMu            sync.Mutex
+	proposalItems         []proposalItem
+	selectedProposal      **dcrlibwallet.Proposal
+	proposalCount         []int
+	selectedCategoryIndex int
+	categoryList          *decredmaterial.ClickableList
+	proposalsList         *decredmaterial.ClickableList
+	tabCard               decredmaterial.Card
+	itemCard              decredmaterial.Card
+	syncCard              decredmaterial.Card
+	updatedLabel          decredmaterial.Label
+	legendIcon            *widget.Icon
+	infoIcon              *widget.Icon
+	updatedIcon           *widget.Icon
+	syncButton            *widget.Clickable
+	startSyncIcon         *widget.Image
+	timerIcon             *widget.Image
+
+	showSyncedCompleted bool
+	isSyncing           bool
 }
 
 var (
@@ -84,23 +72,21 @@ var (
 
 func ProposalsPage(common *pageCommon) Page {
 	pg := &proposalsPage{
-		common:           common,
-		theme:            common.theme,
-		wallet:           common.wallet,
-		proposalsList:    &layout.List{},
-		tabCard:          common.theme.Card(),
-		itemCard:         common.theme.Card(),
-		syncCard:         common.theme.Card(),
-		legendIcon:       common.icons.imageBrightness1,
-		infoIcon:         common.icons.actionInfo,
-		proposals:        common.proposals,
-		selectedProposal: common.selectedProposal,
-		syncedProposal:   common.syncedProposal,
-		updatedIcon:      common.icons.navigationCheck,
-		updatedLabel:     common.theme.Body2("Updated"),
-		syncButton:       new(widget.Clickable),
-		startSyncIcon:    common.icons.restore,
-		timerIcon:        common.icons.timerIcon,
+		pageCommon:            common,
+		pageClosing:           make(chan bool, 1),
+		selectedCategoryIndex: -1,
+		categoryList:          common.theme.NewClickableList(layout.Horizontal),
+		proposalsList:         common.theme.NewClickableList(layout.Vertical),
+		tabCard:               common.theme.Card(),
+		itemCard:              common.theme.Card(),
+		syncCard:              common.theme.Card(),
+		legendIcon:            common.icons.imageBrightness1,
+		infoIcon:              common.icons.actionInfo,
+		updatedIcon:           common.icons.navigationCheck,
+		updatedLabel:          common.theme.Body2("Updated"),
+		syncButton:            new(widget.Clickable),
+		startSyncIcon:         common.icons.restore,
+		timerIcon:             common.icons.timerIcon,
 	}
 	pg.infoIcon.Color = common.theme.Color.Gray
 	pg.legendIcon.Color = common.theme.Color.InactiveGray
@@ -111,117 +97,155 @@ func ProposalsPage(common *pageCommon) Page {
 	pg.tabCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	pg.syncCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 
-	for i := range proposalCategoryTitles {
-		pg.tabs.tabs = append(pg.tabs.tabs,
-			tab{
-				title:     proposalCategoryTitles[i],
-				btn:       new(widget.Clickable),
-				category:  proposalCategories[i],
-				container: &layout.List{Axis: layout.Vertical},
-			},
-		)
-	}
+	pg.proposalsList.DividerHeight = values.MarginPadding8
 
 	return pg
 }
 
 func (pg *proposalsPage) OnResume() {
+	pg.listenForSyncNotifications()
 
+	pg.proposalMu.Lock()
+	selectedCategory := pg.selectedCategoryIndex
+	pg.proposalMu.Unlock()
+	if selectedCategory == -1 {
+		pg.countProposals()
+		pg.loadProposals(0)
+	}
+
+	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
+}
+
+func (pg *proposalsPage) countProposals() {
+	proposalCount := make([]int, len(proposalCategories))
+	for i, category := range proposalCategories {
+		count, err := pg.multiWallet.Politeia.Count(category)
+		if err == nil {
+			proposalCount[i] = int(count)
+		}
+	}
+
+	pg.proposalMu.Lock()
+	pg.proposalCount = proposalCount
+	pg.proposalMu.Unlock()
+}
+
+func (pg *proposalsPage) loadProposals(category int) {
+	proposals, err := pg.multiWallet.Politeia.GetProposalsRaw(proposalCategories[category], 0, 0, true)
+	if err != nil {
+		log.Error("Error loading proposals:", err)
+		pg.proposalMu.Lock()
+		pg.proposalItems = make([]proposalItem, 0)
+		pg.proposalMu.Unlock()
+	} else {
+		proposalItems := make([]proposalItem, len(proposals))
+		for i := 0; i < len(proposals); i++ {
+			proposal := proposals[i]
+			item := proposalItem{
+				proposal: proposals[i],
+				voteBar:  pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
+			}
+
+			if proposal.Category == dcrlibwallet.ProposalCategoryPre {
+				tooltipLabel := pg.theme.Caption("")
+				tooltipLabel.Color = pg.theme.Color.Gray
+				if proposal.VoteStatus == 1 {
+					tooltipLabel.Text = "Waiting for author to authorize voting"
+				} else if proposal.VoteStatus == 2 {
+					tooltipLabel.Text = "Waiting for admin to trigger the start of voting"
+				}
+
+				item.tooltip = pg.theme.Tooltip()
+				item.tooltipLabel = tooltipLabel
+			}
+
+			proposalItems[i] = item
+		}
+		pg.proposalMu.Lock()
+		pg.selectedCategoryIndex = category
+		pg.proposalItems = proposalItems
+		pg.proposalMu.Unlock()
+	}
 }
 
 func (pg *proposalsPage) handle() {
-	common := pg.common
-	for i := range pg.tabs.tabs {
-		if pg.tabs.tabs[i].btn.Clicked() {
-			pg.tabs.selected = i
-		}
 
-		for k := range pg.tabs.tabs[i].proposals {
-			for pg.tabs.tabs[i].proposals[k].btn.Clicked() {
-				*pg.selectedProposal = &pg.tabs.tabs[i].proposals[k].proposal
-				common.changePage(PageProposalDetails)
-			}
-		}
+	if clicked, selectedItem := pg.categoryList.ItemClicked(); clicked {
+		go pg.loadProposals(selectedItem)
+	}
+
+	if clicked, selectedItem := pg.proposalsList.ItemClicked(); clicked {
+		pg.proposalMu.Lock()
+		selectedProposal := pg.proposalItems[selectedItem].proposal
+		pg.proposalMu.Unlock()
+
+		pg.changeFragment(ProposalDetailsPage(pg.pageCommon, selectedProposal), PageProposalDetails)
 	}
 
 	for pg.syncButton.Clicked() {
-		pg.wallet.SyncProposals()
+		pg.isSyncing = true
+		go pg.multiWallet.Politeia.Sync(dcrlibwallet.PoliteiaMainnetHost)
 	}
 
-	select {
-	case prop := <-pg.syncedProposal:
-		if prop.ProposalStatus == wallet.Synced {
-			if !pg.proposalsItemSet {
-				pg.initializeProposaltabItems()
-			}
-			go pg.updateProposalState()
-			pg.isSynced = true
-		} else if prop.ProposalStatus == wallet.NewProposalFound {
-			pg.addDiscoveredProposal(false, *prop.Proposal)
-		} else if prop.ProposalStatus == wallet.VoteStarted || prop.ProposalStatus == wallet.VoteFinished {
-			pg.updateProposalVoteStatus(*prop.Proposal)
-		}
-	default:
-	}
-
-	if pg.isSynced {
+	if pg.showSyncedCompleted {
 		time.AfterFunc(time.Second*3, func() {
-			pg.isSynced = false
+			pg.showSyncedCompleted = false
 		})
 	}
 }
 
 func (pg *proposalsPage) layoutTabs(gtx C) D {
-	width := float32(gtx.Constraints.Max.X-20) / float32(len(pg.tabs.tabs))
+	width := float32(gtx.Constraints.Max.X-20) / float32(len(proposalCategoryTitles))
+	pg.proposalMu.Lock()
+	selectedCategory := pg.selectedCategoryIndex
+	pg.proposalMu.Unlock()
 
 	return pg.tabCard.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
 			Left:  values.MarginPadding12,
 			Right: values.MarginPadding12,
 		}.Layout(gtx, func(gtx C) D {
-			return pg.proposalsList.Layout(gtx, len(pg.tabs.tabs), func(gtx C, i int) D {
+			return pg.categoryList.Layout(gtx, len(proposalCategoryTitles), func(gtx C, i int) D {
 				gtx.Constraints.Min.X = int(width)
 				return layout.Stack{Alignment: layout.S}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
-						return decredmaterial.Clickable(gtx, pg.tabs.tabs[i].btn, func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding14).Layout(gtx, func(gtx C) D {
-								return layout.Center.Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											lbl := pg.theme.Body1(pg.tabs.tabs[i].title)
+						return layout.UniformInset(values.MarginPadding14).Layout(gtx, func(gtx C) D {
+							return layout.Center.Layout(gtx, func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										lbl := pg.theme.Body1(proposalCategoryTitles[i])
+										lbl.Color = pg.theme.Color.Gray
+										if selectedCategory == i {
+											lbl.Color = pg.theme.Color.Primary
+										}
+										return lbl.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Left: values.MarginPadding4, Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+											c := pg.theme.Card()
+											c.Color = pg.theme.Color.LightGray
+											r := float32(8.5)
+											c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
+											lbl := pg.theme.Body2(strconv.Itoa(pg.proposalCount[i]))
 											lbl.Color = pg.theme.Color.Gray
-											if pg.tabs.selected == i {
-												lbl.Color = pg.theme.Color.Primary
+											if selectedCategory == i {
+												c.Color = pg.theme.Color.Primary
+												lbl.Color = pg.theme.Color.Surface
 											}
-											return lbl.Layout(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Left: values.MarginPadding4, Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-												c := pg.theme.Card()
-												c.Color = pg.theme.Color.LightGray
-												r := float32(8.5)
-												c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
-												lbl := pg.theme.Body2(strconv.Itoa(len(pg.tabs.tabs[i].proposals)))
-												lbl.Color = pg.theme.Color.Gray
-												if pg.tabs.selected == i {
-													c.Color = pg.theme.Color.Primary
-													lbl.Color = pg.theme.Color.Surface
-												}
-												return c.Layout(gtx, func(gtx C) D {
-													return layout.Inset{
-														Left:  values.MarginPadding5,
-														Right: values.MarginPadding5,
-													}.Layout(gtx, lbl.Layout)
-												})
+											return c.Layout(gtx, func(gtx C) D {
+												return layout.Inset{
+													Left:  values.MarginPadding5,
+													Right: values.MarginPadding5,
+												}.Layout(gtx, lbl.Layout)
 											})
-										}),
-									)
-								})
+										})
+									}),
+								)
 							})
 						})
 					}),
 					layout.Stacked(func(gtx C) D {
-						if pg.tabs.selected != i {
+						if selectedCategory != i {
 							return D{}
 						}
 						tabHeight := gtx.Px(unit.Dp(2))
@@ -237,73 +261,18 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) addDiscoveredProposal(first bool, proposal dcrlibwallet.Proposal) {
-	for i := range pg.tabs.tabs {
-		if pg.tabs.tabs[i].category == proposal.Category {
-			item := proposalItem{
-				btn:               new(widget.Clickable),
-				proposal:          proposal,
-				voteBar:           pg.theme.VoteBar(pg.infoIcon, pg.legendIcon),
-				infoIcon:          pg.infoIcon,
-				stateInfoTooltip:  pg.theme.Tooltip(),
-				stateTooltipLabel: pg.theme.Caption(""),
-			}
-			if first {
-				pg.tabs.tabs[i].proposals = append(pg.tabs.tabs[i].proposals, item)
-				break
-			} else {
-				pg.tabs.tabs[i].proposals = append([]proposalItem{item}, pg.tabs.tabs[i].proposals...)
-				break
-			}
-		}
-	}
-}
-
-// updateProposalVoteStatus is called when voting has either started or ended for a particular proposal
-func (pg *proposalsPage) updateProposalVoteStatus(proposal dcrlibwallet.Proposal) {
-out:
-	for i := range pg.tabs.tabs {
-		for k := range pg.tabs.tabs[i].proposals {
-			if pg.tabs.tabs[i].proposals[k].proposal.Token == proposal.Token {
-				pg.tabs.tabs[i].proposals = append(pg.tabs.tabs[i].proposals[:k], pg.tabs.tabs[i].proposals[k+1:]...)
-				break out
-			}
-		}
-	}
-	pg.addDiscoveredProposal(false, proposal)
-}
-
-func (pg *proposalsPage) updateProposalState() {
-	for p := range (*pg.proposals).Proposals {
-		for i := range pg.tabs.tabs {
-			if pg.tabs.tabs[i].category == dcrlibwallet.ProposalCategoryPre || pg.tabs.tabs[i].category == dcrlibwallet.ProposalCategoryActive {
-				for k := range pg.tabs.tabs[i].proposals {
-					if pg.tabs.tabs[i].proposals[k].proposal.Token == (*pg.proposals).Proposals[p].Token {
-						if pg.tabs.tabs[i].proposals[k].proposal.VoteStatus != (*pg.proposals).Proposals[p].VoteStatus {
-							pg.tabs.tabs[i].proposals[k].proposal.VoteStatus = (*pg.proposals).Proposals[p].VoteStatus
-						}
-						if pg.tabs.tabs[i].proposals[k].proposal.YesVotes != (*pg.proposals).Proposals[k].YesVotes {
-							pg.tabs.tabs[i].proposals[k].proposal.YesVotes = (*pg.proposals).Proposals[p].YesVotes
-						}
-						if pg.tabs.tabs[i].proposals[k].proposal.NoVotes != (*pg.proposals).Proposals[k].NoVotes {
-							pg.tabs.tabs[i].proposals[k].proposal.NoVotes = (*pg.proposals).Proposals[p].NoVotes
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
 func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
-	str := "No " + strings.ToLower(proposalCategoryTitles[pg.tabs.selected]) + " proposals"
+	pg.proposalMu.Lock()
+	selectedCategory := pg.selectedCategoryIndex
+	pg.proposalMu.Unlock()
+	str := fmt.Sprintf("No %s proposals", strings.ToLower(proposalCategoryTitles[selectedCategory]))
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, pg.theme.Body1(str).Layout)
 }
 
-func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet.Proposal) D {
-	p := pg.tabs.tabs[pg.tabs.selected]
+func (pg *proposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
+	proposal := item.proposal
 	grayCol := pg.theme.Color.Gray
 
 	nameLabel := pg.theme.Body2(proposal.Username)
@@ -342,6 +311,10 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 	}
 	categoryLabel.Color = categoryLabelColor
 
+	pg.proposalMu.Lock()
+	selectedCategory := pg.selectedCategoryIndex
+	pg.proposalMu.Unlock()
+
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
@@ -359,7 +332,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 					return layout.Inset{Top: values.MarginPaddingMinus22}.Layout(gtx, dotLabel.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if p.title == "In discussion" {
+					if proposalCategories[selectedCategory] == dcrlibwallet.ProposalCategoryPre {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(stateLabel.Layout),
 							layout.Rigid(func(gtx C) D {
@@ -368,9 +341,9 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 									Max: gtx.Constraints.Max,
 								}
 								rect.Max.Y = 20
-								pg.layoutInfoTooltip(gtx, i, proposal.VoteStatus, rect)
+								pg.layoutInfoTooltip(gtx, rect, item)
 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									return p.proposals[i].infoIcon.Layout(gtx, unit.Dp(20))
+									return pg.infoIcon.Layout(gtx, unit.Dp(20))
 								})
 							}),
 						)
@@ -378,7 +351,7 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 					pg.timerIcon.Scale = 1
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							if p.title == "Voting" {
+							if proposalCategories[selectedCategory] == dcrlibwallet.ProposalCategoryActive {
 								return layout.Inset{
 									Right: values.MarginPadding4,
 									Top:   values.MarginPadding3,
@@ -394,17 +367,10 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, i int, proposal dcrlibwallet
 	)
 }
 
-func (pg *proposalsPage) layoutInfoTooltip(gtx C, i int, state int32, rect image.Rectangle) {
-	proposal := pg.tabs.tabs[pg.tabs.selected].proposals[i]
+func (pg *proposalsPage) layoutInfoTooltip(gtx C, rect image.Rectangle, item proposalItem) {
 	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus230}
-	proposal.stateInfoTooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		proposal.stateTooltipLabel.Color = pg.theme.Color.Gray
-		if state == 1 {
-			proposal.stateTooltipLabel.Text = "Waiting for author to authorize voting"
-		} else if state == 2 {
-			proposal.stateTooltipLabel.Text = "Waiting for admin to trigger the start of voting"
-		}
-		return proposal.stateTooltipLabel.Layout(gtx)
+	item.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
+		return item.tooltipLabel.Layout(gtx)
 	})
 }
 
@@ -414,63 +380,62 @@ func (pg *proposalsPage) layoutTitle(gtx C, proposal dcrlibwallet.Proposal) D {
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
-func (pg *proposalsPage) layoutProposalVoteBar(gtx C, proposalItem proposalItem) D {
-	yes := float32(proposalItem.proposal.YesVotes)
-	no := float32(proposalItem.proposal.NoVotes)
-	quorumPercent := float32(proposalItem.proposal.QuorumPercentage)
-	passPercentage := float32(proposalItem.proposal.PassPercentage)
-	eligibleTickets := float32(proposalItem.proposal.EligibleTickets)
+func (pg *proposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
+	proposal := item.proposal
+	yes := float32(proposal.YesVotes)
+	no := float32(proposal.NoVotes)
+	quorumPercent := float32(proposal.QuorumPercentage)
+	passPercentage := float32(proposal.PassPercentage)
+	eligibleTickets := float32(proposal.EligibleTickets)
 
-	return proposalItem.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
+	return item.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
 }
 
 func (pg *proposalsPage) layoutProposalsList(gtx C) D {
-	selected := pg.tabs.tabs[pg.tabs.selected]
-	wdgs := make([]func(gtx C) D, len(selected.proposals))
-	for i := range selected.proposals {
-		index := i
-		proposalItem := selected.proposals[index]
-		wdgs[index] = func(gtx C) D {
+	pg.proposalMu.Lock()
+	proposalItems := pg.proposalItems
+	pg.proposalMu.Unlock()
+	return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
+		return layout.Inset{}.Layout(gtx, func(gtx C) D {
 			return layout.Inset{
 				Top:    values.MarginPadding2,
 				Bottom: values.MarginPadding2,
 				Left:   values.MarginPadding2,
 				Right:  values.MarginPadding2,
 			}.Layout(gtx, func(gtx C) D {
-				return decredmaterial.Clickable(gtx, selected.proposals[index].btn, func(gtx C) D {
-					return pg.itemCard.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return pg.layoutAuthorAndDate(gtx, index, proposalItem.proposal)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return pg.layoutTitle(gtx, proposalItem.proposal)
-								}),
-								layout.Rigid(func(gtx C) D {
-									if proposalItem.proposal.Category == dcrlibwallet.ProposalCategoryActive ||
-										proposalItem.proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
-										proposalItem.proposal.Category == dcrlibwallet.ProposalCategoryRejected {
-										return pg.layoutProposalVoteBar(gtx, proposalItem)
-									}
-									return D{}
-								}),
-							)
-						})
+				return pg.itemCard.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+						item := proposalItems[i]
+						proposal := item.proposal
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return pg.layoutAuthorAndDate(gtx, item)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.layoutTitle(gtx, proposal)
+							}),
+							layout.Rigid(func(gtx C) D {
+								if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
+									proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
+									proposal.Category == dcrlibwallet.ProposalCategoryRejected {
+									return pg.layoutProposalVoteBar(gtx, item)
+								}
+								return D{}
+							}),
+						)
 					})
 				})
 			})
-		}
-	}
-	return selected.container.Layout(gtx, len(wdgs), func(gtx C, i int) D {
-		return layout.Inset{}.Layout(gtx, wdgs[i])
+		})
 	})
 }
 
 func (pg *proposalsPage) layoutContent(gtx C) D {
-	selected := pg.tabs.tabs[pg.tabs.selected]
-	if len(selected.proposals) == 0 {
+	pg.proposalMu.Lock()
+	proposalItems := pg.proposalItems
+	pg.proposalMu.Unlock()
+	if len(proposalItems) == 0 {
 		return pg.layoutNoProposalsFound(gtx)
 	}
 	return pg.layoutProposalsList(gtx)
@@ -503,32 +468,15 @@ func (pg *proposalsPage) layoutStartSyncSection(gtx C) D {
 }
 
 func (pg *proposalsPage) layoutSyncSection(gtx C) D {
-	if pg.isSynced {
+	if pg.showSyncedCompleted {
 		return pg.layoutIsSyncedSection(gtx)
-	} else if pg.wallet.IsSyncingProposals() {
+	} else if pg.multiWallet.Politeia.IsSyncing() {
 		return pg.layoutIsSyncingSection(gtx)
 	}
 	return pg.layoutStartSyncSection(gtx)
 }
 
-func (pg *proposalsPage) initializeProposaltabItems() {
-	pg.proposalsItemSet = true
-	if len((*pg.proposals).Proposals) == 0 {
-		pg.wallet.SyncProposals()
-		pg.proposalsItemSet = false
-	}
-
-	for i := range (*pg.proposals).Proposals {
-		if i != len((*pg.proposals).Proposals) {
-			pg.addDiscoveredProposal(true, (*pg.proposals).Proposals[i])
-		}
-	}
-}
-
 func (pg *proposalsPage) Layout(gtx C) D {
-	if !pg.proposalsItemSet {
-		pg.initializeProposaltabItems()
-	}
 
 	border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
 	borderLayout := func(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -545,7 +493,7 @@ func (pg *proposalsPage) Layout(gtx C) D {
 					return borderLayout(gtx, func(gtx C) D {
 						return pg.syncCard.Layout(gtx, func(gtx C) D {
 							m := values.MarginPadding12
-							if pg.isSynced || pg.wallet.IsSyncingProposals() {
+							if pg.showSyncedCompleted || pg.isSyncing {
 								m = values.MarginPadding14
 							}
 							return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
@@ -557,12 +505,44 @@ func (pg *proposalsPage) Layout(gtx C) D {
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return pg.common.UniformPadding(gtx, pg.layoutContent)
+			return pg.UniformPadding(gtx, pg.layoutContent)
 		}),
 	)
 }
 
-func (pg *proposalsPage) onClose() {}
+func (pg *proposalsPage) listenForSyncNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.notificationsUpdate:
+			case <-pg.pageClosing:
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					pg.isSyncing = false
+					pg.showSyncedCompleted = true
+
+					pg.proposalMu.Lock()
+					selectedCategory := pg.selectedCategoryIndex
+					pg.proposalMu.Unlock()
+					if selectedCategory != -1 {
+						pg.countProposals()
+						pg.loadProposals(selectedCategory)
+					}
+				}
+			}
+		}
+	}()
+}
+
+func (pg *proposalsPage) onClose() {
+	pg.pageClosing <- true
+}
 
 func timeAgo(timestamp int64) string {
 	timeAgo, _ := timeago.TimeAgoWithTime(time.Now(), time.Unix(timestamp, 0))

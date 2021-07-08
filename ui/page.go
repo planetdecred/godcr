@@ -107,9 +107,6 @@ type pageCommon struct {
 	walletSyncStatus    *wallet.SyncStatus
 	walletTransactions  **wallet.Transactions
 	acctMixerStatus     *chan *wallet.AccountMixer
-	selectedProposal    **dcrlibwallet.Proposal
-	proposals           **wallet.Proposals
-	syncedProposal      chan *wallet.Proposal
 	txAuthor            *dcrlibwallet.TxAuthor
 	broadcastResult     *wallet.Broadcast
 	signatureResult     **wallet.Signature
@@ -233,9 +230,6 @@ func (win *Window) newPageCommon(decredIcons map[string]image.Image) *pageCommon
 		walletTransactions:  &win.walletTransactions,
 		// walletTransaction:  &win.walletTransaction,
 		acctMixerStatus:  &win.walletAcctMixerStatus,
-		selectedProposal: &win.selectedProposal,
-		proposals:        &win.proposals,
-		syncedProposal:   win.proposal,
 		txAuthor:         &win.txAuthor,
 		broadcastResult:  &win.broadcastResult,
 		signatureResult:  &win.signatureResult,
@@ -273,8 +267,6 @@ func (common *pageCommon) loadPages() map[string]Page {
 	pages[PageSeedBackup] = BackupPage(common)
 	pages[PageSettings] = SettingsPage(common)
 	pages[PageSecurityTools] = SecurityToolsPage(common)
-	pages[PageProposals] = ProposalsPage(common)
-	pages[PageProposalDetails] = ProposalDetailsPage(common)
 	pages[PageDebug] = DebugPage(common)
 	pages[PageLog] = LogPage(common)
 	pages[PageStat] = StatPage(common)
