@@ -265,7 +265,7 @@ func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
 	pg.proposalMu.Lock()
 	selectedCategory := pg.selectedCategoryIndex
 	pg.proposalMu.Unlock()
-	str := "No " + strings.ToLower(proposalCategoryTitles[selectedCategory]) + " proposals"
+	str := fmt.Sprintf("No %s proposals", strings.ToLower(proposalCategoryTitles[selectedCategory]))
 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Center.Layout(gtx, pg.theme.Body1(str).Layout)
