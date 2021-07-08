@@ -23,6 +23,7 @@ type aboutPage struct {
 	network        decredmaterial.Label
 	networkValue   decredmaterial.Label
 	license        decredmaterial.Label
+	licenseRow     *widget.Clickable
 
 	chevronRightIcon *widget.Icon
 
@@ -42,6 +43,7 @@ func AboutPage(common *pageCommon) Page {
 		network:          common.theme.Body1("Network"),
 		networkValue:     common.theme.Body1(common.wallet.Net),
 		license:          common.theme.Body1("License"),
+		licenseRow:       new(widget.Clickable),
 		chevronRightIcon: common.icons.chevronRight,
 	}
 
@@ -90,8 +92,15 @@ func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 			return endToEndRow(gtx, pg.network.Layout, pg.networkValue.Layout)
 		},
 		func(gtx C) D {
-			return endToEndRow(gtx, pg.license.Layout, func(gtx C) D {
-				return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+			return decredmaterial.Clickable(gtx, pg.licenseRow, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Rigid(pg.license.Layout),
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+						})
+					}),
+				)
 			})
 		},
 	}
@@ -122,5 +131,9 @@ func (pg *aboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *aboutPage) handle()  {}
+func (pg *aboutPage) handle() {
+	if pg.licenseRow.Clicked() {
+		pg.common.changeFragment(LicensePage(pg.common), PageLicense)
+	}
+}
 func (pg *aboutPage) onClose() {}
