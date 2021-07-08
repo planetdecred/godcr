@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"gioui.org/font/gofont"
@@ -31,10 +30,10 @@ type proposalDetails struct {
 	theme              *decredmaterial.Theme
 	loadingDescription bool
 	common             *pageCommon
+	proposal           dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
-	selectedProposal   **dcrlibwallet.Proposal
 	redirectIcon       *widget.Image
 	voteBar            decredmaterial.VoteBar
 	rejectedIcon       *widget.Icon
@@ -45,14 +44,14 @@ type proposalDetails struct {
 	backButton         decredmaterial.IconButton
 }
 
-func ProposalDetailsPage(common *pageCommon) Page {
+func ProposalDetailsPage(common *pageCommon, proposal dcrlibwallet.Proposal) Page {
 	pg := &proposalDetails{
 		theme:              common.theme,
 		loadingDescription: false,
 		common:             common,
+		proposal:           proposal,
 		descriptionCard:    common.theme.Card(),
 		descriptionList:    &layout.List{Axis: layout.Vertical},
-		selectedProposal:   common.selectedProposal,
 		redirectIcon:       common.icons.redirectIcon,
 		downloadIcon:       common.icons.downloadIcon,
 		voteBar:            common.theme.VoteBar(common.icons.actionInfo, common.icons.imageBrightness1),
@@ -95,7 +94,7 @@ func (pg *proposalDetails) handle() {
 }
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
-	proposal := *pg.selectedProposal
+	proposal := pg.proposal
 
 	yes := float32(proposal.YesVotes)
 	no := float32(proposal.NoVotes)
@@ -107,7 +106,7 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 }
 
 func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {
-	proposal := *pg.selectedProposal
+	proposal := pg.proposal
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	txt := pg.theme.Label(values.TextSize14, fmt.Sprintf("%d eligible tickets", proposal.EligibleTickets))
 	return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -116,9 +115,11 @@ func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {
 	)
 }
 
-func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet.Proposal) D {
+func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 	stateText1 := "Waiting for author to authorize voting"
 	stateText2 := "Waiting for admin to trigger the start of voting"
+
+	proposal := pg.proposal
 
 	c := func(gtx layout.Context, val int32, info string) layout.Dimensions {
 		return layout.Flex{}.Layout(gtx,
@@ -188,9 +189,10 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C, proposal *dcrlibwallet
 	)
 }
 
-func (pg *proposalDetails) layoutNormalTitle(gtx C, proposal *dcrlibwallet.Proposal) D {
+func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 	var label decredmaterial.Label
 	var icon *widget.Icon
+	proposal := pg.proposal
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
 		label = pg.theme.Body2("Approved")
@@ -223,7 +225,7 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C, proposal *dcrlibwallet.Propo
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								if strings.Contains(label.Text, "Voting") {
+								if proposal.Category == dcrlibwallet.ProposalCategoryActive {
 									pg.timerIcon.Scale = 1
 									return layout.Inset{
 										Right: values.MarginPadding4,
@@ -253,21 +255,21 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C, proposal *dcrlibwallet.Propo
 }
 
 func (pg *proposalDetails) layoutTitle(gtx C) D {
-	proposal := *pg.selectedProposal
+	proposal := pg.proposal
 
 	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			if proposal.Category == dcrlibwallet.ProposalCategoryPre {
-				return pg.layoutInDiscussionState(gtx, proposal)
+				return pg.layoutInDiscussionState(gtx)
 			}
-			return pg.layoutNormalTitle(gtx, proposal)
+			return pg.layoutNormalTitle(gtx)
 		})
 	})
 }
 
 func (pg *proposalDetails) layoutDescription(gtx C) D {
 	grayCol := pg.theme.Color.Gray
-	proposal := *pg.selectedProposal
+	proposal := pg.proposal
 
 	dotLabel := pg.theme.H4(" . ")
 	dotLabel.Color = grayCol
@@ -367,15 +369,10 @@ func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 	}
 }
 
-func (pg *proposalDetails) layoutParsingState(gtx C) D {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, pg.theme.Body1("Preparing document...").Layout)
-}
-
 func (pg *proposalDetails) Layout(gtx C) D {
 	common := pg.common
 
-	proposal := *pg.selectedProposal
+	proposal := pg.proposal
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok && !pg.loadingDescription {
 		pg.loadingDescription = true
