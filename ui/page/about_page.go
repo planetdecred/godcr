@@ -131,10 +131,10 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *aboutPage) Handle() {
+func (pg *AboutPage) Handle() {
 	if pg.licenseRow.Clicked() {
-		pg.ChangeFragment(LicensePage(pg.common), PageLicense)
+		pg.ChangeFragment(NewLicensePage(pg.Load), License)
 	}
 }
 
-func (pg *aboutPage) OnClose() {}
+func (pg *AboutPage) OnClose() {}
