@@ -3,18 +3,18 @@ package ui
 import (
 	"fmt"
 
-	"github.com/planetdecred/godcr/ui/page"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/planetdecred/godcr/ui/modal"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -66,7 +66,7 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			backButton: pg.backButton,
 			infoButton: pg.infoButton,
 			back: func() {
-				c.changePage(page.Wallet)
+				c.changePage(page.WalletPageID)
 			},
 			infoTemplate: modal.PrivacyInfoTemplate,
 			body: func(gtx layout.Context) layout.Dimensions {
@@ -405,7 +405,7 @@ func (pg *privacyPage) showModalSetupMixerAcct(common *pageCommon) {
 				title("Account name is taken").
 				body("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.").
 				positiveButton("Go back & rename", func() {
-					*common.page = page.Wallet
+					*common.page = page.WalletPageID
 				})
 			common.showModal(info)
 			return

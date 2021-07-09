@@ -34,7 +34,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 		{
 			clickable: new(widget.Clickable),
 			text:      "Check statistics",
-			page:      Statistics,
+			page:      StatisticsPageID,
 		},
 	}
 

@@ -15,7 +15,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const Statistics = "Statistics"
+const StatisticsPageID = "Statistics"
 
 type StatPage struct {
 	*load.Load

@@ -14,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const VerifyMessage = "VerifyMessage"
+const VerifyMessagePageID = "VerifyMessage"
 
 type VerifyMessagePage struct {
 	*load.Load
@@ -64,7 +64,7 @@ func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			infoButton: pg.infoButton,
 			back: func() {
 				pg.clearInputs()
-				pg.ChangePage(Wallet)
+				pg.ChangePage(WalletPageID)
 				pg.ChangePage(*pg.ReturnPage)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {

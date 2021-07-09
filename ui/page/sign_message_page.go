@@ -93,7 +93,7 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			infoButton: pg.infoButton,
 			back: func() {
 				pg.clearForm()
-				pg.ChangePage(Wallet)
+				pg.ChangePage(WalletPageID)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {

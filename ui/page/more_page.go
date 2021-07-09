@@ -28,7 +28,7 @@ func NewMorePage(l *load.Load) *MorePage {
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.SettingsIcon,
-			page:      Settings,
+			page:      SettingsPageID,
 		},
 		{
 			clickable: new(widget.Clickable),

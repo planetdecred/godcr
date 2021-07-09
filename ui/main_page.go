@@ -253,7 +253,9 @@ func (mp *mainPage) Handle() {
 			} else if i == 1 {
 				mp.changeFragment(page.NewTransactionsPage(mp.load), page.Transactions)
 			} else if i == 2 {
-				mp.changeFragment(page.NewWalletPage(mp.load), page.Wallet)
+				mp.changeFragment(page.NewWalletPage(mp.load), page.WalletPageID)
+			} else if i == 3 {
+				mp.changeFragment(ProposalsPage(mp.pageCommon), PageProposals)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}

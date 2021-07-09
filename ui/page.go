@@ -7,23 +7,23 @@ import (
 	"net/http"
 	"sort"
 
+	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"gioui.org/gesture"
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
-	"gioui.org/widget"
 	"gioui.org/unit"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 type (
@@ -256,13 +256,13 @@ func loadPages(common *pageCommon, l *load.Load) map[string]Page {
 	pages[page.MorePageID] = page.NewMorePage(l)
 	pages[page.ReceivePageID] = page.NewReceivePage(l)
 	pages[PageSend] = SendPage(common)
-	pages[page.VerifyMessage] = page.NewVerifyMessagePage(l)
+	pages[page.VerifyMessagePageID] = page.NewVerifyMessagePage(l)
 	pages[page.SeedBackupPageID] = page.NewBackupPage(l)
-	pages[page.Settings] = page.NewSettingsPage(l)
+	pages[page.SettingsPageID] = page.NewSettingsPage(l)
 	pages[page.SecurityToolsPageID] = page.NewSecurityToolsPage(l)
 	pages[page.DebugPageID] = page.NewDebugPage(l)
 	pages[page.LogPageID] = page.NewLogPage(l)
-	pages[page.Statistics] = page.NewStatPage(l)
+	pages[page.StatisticsPageID] = page.NewStatPage(l)
 	pages[page.AboutPageID] = page.NewAboutPage(l)
 	pages[page.HelpPageID] = page.NewHelpPage(l)
 	pages[PageUTXO] = UTXOPage(common)

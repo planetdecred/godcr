@@ -12,7 +12,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const Settings = "Settings"
+const SettingsPageID = "Settings"
 
 const (
 	USDExchangeValue     = "usd_bittrex"

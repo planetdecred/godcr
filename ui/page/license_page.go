@@ -8,9 +8,9 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const License = "License"
+const LicensePageID = "License"
 
-const license = `ISC LicenseText
+const license = `ISC License
 
 Copyright (c) 2018-2021, Raedah Group
 
@@ -43,9 +43,7 @@ func NewLicensePage(l *load.Load) *LicensePage {
 	return pg
 }
 
-func (pg *LicensePage) OnResume() {
-
-}
+func (pg *LicensePage) OnResume() {}
 
 //main page layout
 func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {

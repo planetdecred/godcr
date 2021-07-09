@@ -103,7 +103,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			walletName: pg.wallet.Name,
 			backButton: pg.backButton,
 			back: func() {
-				pg.ChangePage(Wallet)
+				pg.ChangePage(WalletPageID)
 			},
 			body: func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {

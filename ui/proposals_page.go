@@ -1,8 +1,7 @@
-package page
+package ui
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui/load"
 	"image"
 	"image/color"
 	"strconv"
@@ -26,7 +25,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const Proposals = "Proposals"
+const PageProposals = "Proposals"
 
 type proposalItem struct {
 	proposal     dcrlibwallet.Proposal
@@ -71,7 +70,7 @@ var (
 	}
 )
 
-func ProposalsPage(l *load.Load) load.Page {
+func ProposalsPage(common *pageCommon) Page {
 	pg := &proposalsPage{
 		pageCommon:            common,
 		pageClosing:           make(chan bool, 1),
@@ -169,7 +168,7 @@ func (pg *proposalsPage) loadProposals(category int) {
 	}
 }
 
-func (pg *proposalsPage) handle() {
+func (pg *proposalsPage) Handle() {
 
 	if clicked, selectedItem := pg.categoryList.ItemClicked(); clicked {
 		go pg.loadProposals(selectedItem)
@@ -541,7 +540,7 @@ func (pg *proposalsPage) listenForSyncNotifications() {
 	}()
 }
 
-func (pg *proposalsPage) onClose() {
+func (pg *proposalsPage) OnClose() {
 	pg.pageClosing <- true
 }
 

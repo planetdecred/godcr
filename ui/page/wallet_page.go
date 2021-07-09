@@ -19,7 +19,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Wallet = "Wallets"
+const WalletPageID = "Wallets"
 
 type walletListItem struct {
 	wal      *dcrlibwallet.Wallet
@@ -240,7 +240,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		{
 			text:   values.String(values.StrSettings),
 			button: new(widget.Clickable),
-			id:     Settings,
+			id:     SettingsPageID,
 		},
 	}
 }
@@ -250,7 +250,7 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 		{
 			text:   values.String(values.StrSettings),
 			button: new(widget.Clickable),
-			id:     Settings,
+			id:     SettingsPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
@@ -863,7 +863,7 @@ func (pg *WalletPage) Handle() {
 				case PagePrivacy:
 					// todo: uncomment after moving privacy page to the page package
 					// pg.ChangeFragment(PrivacyPage(common, listItem.wal), PagePrivacy)
-				case Settings:
+				case SettingsPageID:
 					// todo: uncomment after moving wallet settings page to the page package
 					// pg.ChangeFragment(WalletSettingsPage(common, listItem.wal), PageWalletSettings)
 				default:
