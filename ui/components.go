@@ -324,7 +324,7 @@ func ticketStatusTooltip(gtx C, c *pageCommon, t *wallet.Ticket) layout.Dimensio
 	)
 }
 
-func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, body layout.Widget) layout.Dimensions {
+func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, body layout.Widget) {
 	inset := layout.Inset{
 		Top:   values.MarginPadding15,
 		Right: unit.Dp(-150),
@@ -337,7 +337,7 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 			Y: rectLayout.Size.Y,
 		},
 	}
-	return tooltip.Layout(gtx, rect, inset, body)
+	tooltip.Layout(gtx, rect, inset, body)
 }
 
 func walletNameDateTimeTooltip(gtx C, c *pageCommon, title string, body layout.Widget) layout.Dimensions {

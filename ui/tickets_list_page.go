@@ -19,6 +19,7 @@ import (
 const PageTicketsList = "TicketsList"
 
 type ticketPageList struct {
+	common       *pageCommon
 	th           *decredmaterial.Theme
 	tickets      **wallet.Tickets
 	ticketsList  layout.List
@@ -28,13 +29,11 @@ type ticketPageList struct {
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
+	backButton         decredmaterial.IconButton
 	isGridView         bool
-	common             *pageCommon
 
-	wallets []*dcrlibwallet.Wallet
-
-	backButton decredmaterial.IconButton
-	ticketTooltips     []tooltips
+	wallets        []*dcrlibwallet.Wallet
+	ticketTooltips []tooltips
 }
 
 func TicketPageList(c *pageCommon) Page {
