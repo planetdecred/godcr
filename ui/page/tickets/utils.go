@@ -19,7 +19,7 @@ import (
 const (
 	uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
 	maxInt32 = 1<<(uint32Size-1) - 1
-	
+
 	ticketAge              = "Ticket age"
 	durationMsg            = "10 hrs 47 mins (118/256 blocks)"
 )
@@ -154,7 +154,7 @@ func ticketStatusTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimension
 	)
 }
 
-func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, body layout.Widget) layout.Dimensions {
+func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, body layout.Widget) {
 	inset := layout.Inset{
 		Top:   values.MarginPadding15,
 		Right: unit.Dp(-150),
@@ -168,7 +168,7 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 		},
 	}
 
-	return tooltip.Layout(gtx, rect, inset, body)
+	tooltip.Layout(gtx, rect, inset, body)
 }
 
 func walletNameDateTimeTooltip(gtx C, l *load.Load, title string, body layout.Widget) layout.Dimensions {
