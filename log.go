@@ -28,11 +28,11 @@ var (
 func (l logWriter) Write(p []byte) (n int, err error) {
 	str := make([]byte, len(p))
 	copy(str, p)
-	os.Stdout.Write(p)
-	go func(s string) {
-		internalLog <- s
-	}(string(str))
-	return logRotator.Write(p)
+	os.Stdout.Write(str)
+	go func() {
+		internalLog <- string(str)
+	}()
+	return logRotator.Write(str)
 }
 
 // Loggers per subsystem.  A single backend logger is created and all subsytem
