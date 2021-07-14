@@ -7,20 +7,22 @@ import (
 	"gioui.org/widget"
 )
 
-func fetchExchangeValue(target interface{}) {
+func GetUSDExchangeValue(target interface{}) error {
 	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
 	res, err := http.Get(url)
+	// TODO: include user agent in req header
 	if err != nil {
-		log.Error(err)
-		return
+		return err
 	}
 
 	defer res.Body.Close()
 
 	err = json.NewDecoder(res.Body).Decode(target)
 	if err != nil {
-		log.Error(err)
+		return err
 	}
+
+	return nil
 }
 
 func mustIcon(ic *widget.Icon, err error) *widget.Icon {

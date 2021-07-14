@@ -202,7 +202,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 
 		Printer: message.NewPrinter(language.English),
 	}
-	fetchExchangeValue(l.DcrUsdtBittrex)
+	GetUSDExchangeValue(l.DcrUsdtBittrex)
 
 	return l
 }

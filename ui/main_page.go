@@ -241,6 +241,11 @@ func (mp *mainPage) Handle() {
 
 	for i := range mp.appBarNavItems {
 		for mp.appBarNavItems[i].clickable.Clicked() {
+			if i == 0 {
+				mp.changeFragment(page.NewSendPage(mp.load), page.SendPageID)
+				continue
+			}
+
 			mp.setReturnPage(mp.current)
 			mp.changePage(mp.appBarNavItems[i].page)
 		}
