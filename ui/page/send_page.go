@@ -48,8 +48,8 @@ type sendPage struct {
 	*comfirmModalData
 	confirmTxModal *sendConfirmModal
 
-	amountErrorText string
-	isMoreOption    bool
+	amountErrorText  string
+	MoreOptionIsOpen bool
 
 	sendToAddress bool
 	sendMax       bool
@@ -94,7 +94,9 @@ func NewSendPage(l *load.Load) *sendPage {
 		clearAllBtn:      l.Theme.Button(new(widget.Clickable), "Clear all fields"),
 		txFeeCollapsible: l.Theme.Collapsible(),
 
-		comfirmModalData: &comfirmModalData{},
+		comfirmModalData: &comfirmModalData{
+			exchangeRate: -1,
+		},
 	}
 
 	pg.closeConfirmationModalButton = l.Theme.Button(new(widget.Clickable), "Cancel")
@@ -161,6 +163,7 @@ func NewSendPage(l *load.Load) *sendPage {
 	pg.sourceAccountSelector = NewAccountSelector(l).
 		title("Sending account").
 		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
+			pg.validateAndConstructTx()
 		}).
 		accountValidator(func(account *dcrlibwallet.Account) bool {
 			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
@@ -189,6 +192,8 @@ func NewSendPage(l *load.Load) *sendPage {
 	pg.destinationAccountSelector = NewAccountSelector(pg.Load).
 		title("Receiving account").
 		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
+			pg.validateAndConstructTx()
+
 			pg.sourceAccountSelector.selectFirstWalletValidAccount() // refresh source account
 		}).
 		accountValidator(func(account *dcrlibwallet.Account) bool {
@@ -210,7 +215,10 @@ func (pg *sendPage) OnResume() {
 	pg.destinationAccountSelector.selectFirstWalletValidAccount()
 	pg.sourceAccountSelector.selectFirstWalletValidAccount()
 
-	pg.fetchExchangeValue()
+	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if currencyExchangeValue == USDExchangeValue {
+		pg.fetchExchangeValue()
+	}
 }
 
 func (pg *sendPage) fetchExchangeValue() {
@@ -218,16 +226,18 @@ func (pg *sendPage) fetchExchangeValue() {
 		var dcrUsdtBittrex load.DCRUSDTBittrex
 		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
 		if err != nil {
-			pg.updateExchangeError(err)
+			pg.usdAmountEditor.SetError(err.Error())
 			return
 		}
 
 		exchangeRate, err := strconv.ParseFloat(dcrUsdtBittrex.LastTradeRate, 64)
 		if err != nil {
-			pg.updateExchangeError(err)
+			pg.usdAmountEditor.SetError(err.Error())
 			return
 		}
+
 		pg.exchangeRate = exchangeRate
+		pg.usdAmountEditor.SetError("")
 	}()
 }
 
@@ -268,7 +278,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 				layout.Stacked(func(gtx C) D {
-					if pg.isMoreOption {
+					if pg.MoreOptionIsOpen {
 						inset := layout.Inset{
 							Top:   values.MarginPadding40,
 							Right: values.MarginPadding20,
@@ -372,22 +382,11 @@ func (pg *sendPage) toSection(gtx layout.Context) layout.Dimensions {
 
 func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.Theme.Body1(pg.txFee).Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				b := pg.Theme.Body1(pg.txFeeUSD)
-				b.Color = pg.Theme.Color.Gray
-				inset := layout.Inset{
-					Left: values.MarginPadding5,
-				}
-				if pg.exchangeRate != -1 {
-					return inset.Layout(gtx, b.Layout)
-				}
-				return layout.Dimensions{}
-			}),
-		)
+		feeText := pg.txFee
+		if pg.exchangeRate != -1 {
+			feeText = fmt.Sprintf("%s (%s)", pg.txFee, pg.txFeeUSD)
+		}
+		return pg.Theme.Body1(feeText).Layout(gtx)
 	}
 
 	collapsibleBody := func(gtx C) D {
@@ -447,10 +446,11 @@ func (pg *sendPage) balanceSection(gtx layout.Context) layout.Dimensions {
 									Bottom: values.MarginPadding10,
 								}
 								return inset.Layout(gtx, func(gtx C) D {
+									totalCostText := pg.totalCost
 									if pg.exchangeRate != -1 {
-										return pg.contentRow(gtx, "Total cost", pg.totalCost+" "+pg.totalCostUSD)
+										totalCostText = fmt.Sprintf("%s (%s)", pg.totalCost, pg.totalCostUSD)
 									}
-									return pg.contentRow(gtx, "Total cost", pg.totalCost)
+									return pg.contentRow(gtx, "Total cost", totalCostText)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -528,21 +528,6 @@ func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (pg *sendPage) updateExchangeError(err error) {
-	pg.usdAmountEditor.SetError("Exchange rate not fetched: " + err.Error())
-}
-
-func (pg *sendPage) feeEstimationError(err string) {
-	if err == dcrlibwallet.ErrInsufficientBalance {
-		pg.amountErrorText = "Not enough funds"
-	} else if strings.Contains(err, "invalid amount") {
-		pg.amountErrorText = "Invalid amount"
-	} else {
-		pg.amountErrorText = err
-		pg.CreateToast("Error estimating transaction: "+err, false)
-	}
-}
-
 func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 	switch evt.(type) {
 	case widget.ChangeEvent:
@@ -550,13 +535,6 @@ func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
 	case widget.SubmitEvent:
 		pg.sendFund()
 	}
-}
-
-func (pg *sendPage) resetFields() {
-	pg.destinationAddressEditor.SetError("")
-	pg.dcrAmountEditor.Editor.SetText("")
-	pg.usdAmountEditor.Editor.SetText("")
-	pg.passwordEditor.Editor.SetText("")
 }
 
 func (pg *sendPage) resetErrorText() {
@@ -571,18 +549,6 @@ func (pg *sendPage) sendFund() {
 	if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
 		return
 	}
-}
-
-func (pg *sendPage) clearEstimates() {
-	pg.txFee = " - "
-	pg.txFeeUSD = " - "
-	pg.estSignedSize = " - "
-	pg.totalCost = " - "
-	pg.totalCostUSD = " - "
-	pg.balanceAfterSend = " - "
-	pg.balanceAfterSendUSD = " - "
-	pg.sendAmount = " - "
-	pg.sendAmountUSD = " - "
 }
 
 func (pg *sendPage) validateAndConstructTx() {
@@ -603,8 +569,9 @@ func (pg *sendPage) validate() bool {
 	}
 
 	validForSending := (amountIsValid || pg.sendMax) && addressIsValid
-
 	if validForSending {
+		pg.amountErrorText = ""
+		pg.destinationAddressEditor.SetError("")
 		pg.nextButton.Background = pg.Theme.Color.Primary
 	} else {
 		pg.nextButton.Background = pg.Theme.Color.Hint
@@ -651,7 +618,6 @@ func (pg *sendPage) validateDestinationAddress() (bool, string) {
 func (pg *sendPage) validateDCRAmount() bool {
 	pg.amountErrorText = ""
 	if pg.inputsNotEmpty(pg.dcrAmountEditor.Editor) {
-		log.Info("Amount:", pg.dcrAmountEditor.Editor.Text())
 		dcrAmount, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
 		if err != nil {
 			// empty usd input
@@ -770,6 +736,31 @@ func (pg *sendPage) constructTx() {
 	pg.txAuthor = unsignedTx
 }
 
+func (pg *sendPage) feeEstimationError(err string) {
+	if err == dcrlibwallet.ErrInsufficientBalance {
+		pg.amountErrorText = "Not enough funds"
+	} else if strings.Contains(err, "invalid amount") {
+		pg.amountErrorText = "Invalid amount"
+	} else {
+		pg.amountErrorText = err
+		pg.CreateToast("Error estimating transaction: "+err, false)
+	}
+
+	pg.clearEstimates()
+}
+
+func (pg *sendPage) clearEstimates() {
+	pg.txFee = " - "
+	pg.txFeeUSD = " - "
+	pg.estSignedSize = " - "
+	pg.totalCost = " - "
+	pg.totalCostUSD = " - "
+	pg.balanceAfterSend = " - "
+	pg.balanceAfterSendUSD = " - "
+	pg.sendAmount = " - "
+	pg.sendAmountUSD = " - "
+}
+
 func (pg *sendPage) Handle() {
 	sendToAddress := pg.accountSwitch.SelectedIndex() == 1
 	if sendToAddress != pg.sendToAddress { // switch changed
@@ -779,7 +770,6 @@ func (pg *sendPage) Handle() {
 
 	if pg.backButton.Button.Clicked() {
 		pg.resetErrorText()
-		pg.resetFields()
 		pg.ChangePage(*pg.ReturnPage)
 	}
 
@@ -792,8 +782,9 @@ func (pg *sendPage) Handle() {
 	}
 
 	for pg.moreOption.Button.Clicked() {
-		pg.isMoreOption = !pg.isMoreOption
+		pg.MoreOptionIsOpen = !pg.MoreOptionIsOpen
 	}
+
 	for _, evt := range pg.destinationAddressEditor.Editor.Events() {
 		if pg.destinationAddressEditor.Editor.Focused() {
 			switch evt.(type) {
@@ -823,7 +814,6 @@ func (pg *sendPage) Handle() {
 				pg.sendMax = false
 				pg.validateUSDAmount()
 				pg.validateAndConstructTx()
-
 			}
 		}
 	}
@@ -851,7 +841,15 @@ func (pg *sendPage) Handle() {
 	}
 
 	for pg.clearAllBtn.Button.Clicked() {
-		pg.resetFields()
+		pg.MoreOptionIsOpen = true
+
+		pg.destinationAddressEditor.SetError("")
+		pg.destinationAddressEditor.Editor.SetText("")
+
+		pg.amountErrorText = ""
+		pg.dcrAmountEditor.Editor.SetText("")
+		pg.usdAmountEditor.Editor.SetText("")
+		pg.passwordEditor.Editor.SetText("")
 	}
 }
 
