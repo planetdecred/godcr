@@ -255,7 +255,6 @@ func loadPages(common *pageCommon, l *load.Load) map[string]Page {
 
 	pages[page.MorePageID] = page.NewMorePage(l)
 	pages[page.ReceivePageID] = page.NewReceivePage(l)
-	pages[PageSend] = SendPage(common)
 	pages[page.VerifyMessagePageID] = page.NewVerifyMessagePage(l)
 	pages[page.SeedBackupPageID] = page.NewBackupPage(l)
 	pages[page.SettingsPageID] = page.NewSettingsPage(l)
@@ -265,7 +264,6 @@ func loadPages(common *pageCommon, l *load.Load) map[string]Page {
 	pages[page.StatisticsPageID] = page.NewStatPage(l)
 	pages[page.AboutPageID] = page.NewAboutPage(l)
 	pages[page.HelpPageID] = page.NewHelpPage(l)
-	pages[PageUTXO] = UTXOPage(common)
 	pages[PageTickets] = TicketPage(common)
 	pages[page.ValidateAddressPageID] = page.NewValidateAddressPage(l)
 	pages[PageTicketsList] = TicketPageList(common)

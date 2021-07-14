@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"fmt"
@@ -13,7 +13,8 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -33,8 +34,8 @@ type amountValue struct {
 }
 
 type sendPage struct {
+	*load.Load
 	pageContainer layout.List
-	common        *pageCommon
 	theme         *decredmaterial.Theme
 
 	txAuthor        *dcrlibwallet.TxAuthor
@@ -105,8 +106,8 @@ type comfirmModalData struct {
 	confirmButton                decredmaterial.Button
 	passwordEditor               decredmaterial.Editor
 
-	sourceAccountSelector      *accountSelector
-	destinationAccountSelector *accountSelector
+	sourceAccountSelector      *AccountSelector
+	destinationAccountSelector *AccountSelector
 
 	totalCostDCR int64
 
@@ -125,29 +126,27 @@ type comfirmModalData struct {
 	destinationAddress string //pg.destinationAddressEditor.Editor.Text()
 }
 
-func SendPage(common *pageCommon) Page {
+func SendPage(l *load.Load) *sendPage {
 	pg := &sendPage{
+		Load: l,
 		pageContainer: layout.List{
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
-
-		common:          common,
-		theme:           common.theme,
-		wallet:          common.wallet,
-		txAuthor:        common.txAuthor,
-		broadcastResult: common.broadcastResult,
+		wallet:          l.WL.Wallet,
+		txAuthor:        &l.WL.TxAuthor,
+		broadcastResult: &l.WL.BroadcastResult,
 
 		currencySwap: new(widget.Clickable),
 
 		leftExchangeValue:  "DCR",
 		rightExchangeValue: "USD",
 		noExchangeErrMsg:   "Exchange rate not fetched",
-		maxButton:          common.theme.Button(new(widget.Clickable), "MAX"),
-		clearAllBtn:        common.theme.Button(new(widget.Clickable), "Clear all fields"),
-		txFeeCollapsible:   common.theme.Collapsible(),
+		maxButton:          l.Theme.Button(new(widget.Clickable), "MAX"),
+		clearAllBtn:        l.Theme.Button(new(widget.Clickable), "Clear all fields"),
+		txFeeCollapsible:   l.Theme.Collapsible(),
 
-		confirmModal:              common.theme.Modal(),
+		confirmModal:              l.Theme.Modal(),
 		isBroadcastingTransaction: false,
 
 		broadcastErrChan: make(chan error),
@@ -155,78 +154,78 @@ func SendPage(common *pageCommon) Page {
 		comfirmModalData: &comfirmModalData{},
 	}
 
-	pg.closeConfirmationModalButton = common.theme.Button(new(widget.Clickable), "Cancel")
-	pg.confirmButton = common.theme.Button(new(widget.Clickable), "")
+	pg.closeConfirmationModalButton = l.Theme.Button(new(widget.Clickable), "Cancel")
+	pg.confirmButton = l.Theme.Button(new(widget.Clickable), "")
 
-	pg.confirmTxModal = newSendConfirmModal(common, pg.comfirmModalData)
+	pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.comfirmModalData)
 
-	pg.accountSwitch = common.theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
+	pg.accountSwitch = l.Theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
 
 	pg.balanceAfterSendValue = "- DCR"
 
-	pg.nextButton = common.theme.Button(new(widget.Clickable), "Next")
+	pg.nextButton = l.Theme.Button(new(widget.Clickable), "Next")
 	pg.nextButton.Background = pg.theme.Color.InactiveGray
 
 	activeEditorHint := fmt.Sprintf("Amount (%s)", pg.leftExchangeValue)
-	pg.leftAmountEditor = common.theme.Editor(new(widget.Editor), activeEditorHint)
+	pg.leftAmountEditor = l.Theme.Editor(new(widget.Editor), activeEditorHint)
 	pg.leftAmountEditor.Editor.SetText("")
 	pg.leftAmountEditor.IsCustomButton = true
 	pg.leftAmountEditor.Editor.SingleLine = true
-	pg.leftAmountEditor.CustomButton.Background = common.theme.Color.Gray
+	pg.leftAmountEditor.CustomButton.Background = l.Theme.Color.Gray
 	pg.leftAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
 	pg.leftAmountEditor.CustomButton.Text = "Max"
 	pg.leftAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
 	inactiveEditorHint := fmt.Sprintf("Amount (%s)", pg.rightExchangeValue)
-	pg.rightAmountEditor = common.theme.Editor(new(widget.Editor), inactiveEditorHint)
+	pg.rightAmountEditor = l.Theme.Editor(new(widget.Editor), inactiveEditorHint)
 	pg.rightAmountEditor.Editor.SetText("")
 	pg.rightAmountEditor.IsCustomButton = true
 	pg.rightAmountEditor.Editor.SingleLine = true
-	pg.rightAmountEditor.CustomButton.Background = common.theme.Color.Gray
+	pg.rightAmountEditor.CustomButton.Background = l.Theme.Color.Gray
 	pg.rightAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
 	pg.rightAmountEditor.CustomButton.Text = "Max"
 	pg.rightAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	pg.passwordEditor = common.theme.EditorPassword(new(widget.Editor), "Spending password")
+	pg.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	pg.passwordEditor.Editor.SetText("")
 	pg.passwordEditor.Editor.SingleLine = true
 	pg.passwordEditor.Editor.Submit = true
 
-	pg.destinationAddressEditor = common.theme.Editor(new(widget.Editor), "Address")
+	pg.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Address")
 	pg.destinationAddressEditor.Editor.SingleLine = true
 	pg.destinationAddressEditor.Editor.SetText("")
 
 	pg.closeConfirmationModalButton.Background = color.NRGBA{}
-	pg.closeConfirmationModalButton.Color = common.theme.Color.Primary
+	pg.closeConfirmationModalButton.Color = l.Theme.Color.Primary
 
-	pg.backButton, pg.infoButton = common.SubPageHeaderButtons()
-	pg.backButton.Icon = common.icons.contentClear
+	pg.backButton, pg.infoButton = subpageHeaderButtons(pg.Load)
+	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.moreOption = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navMoreIcon)
-	pg.moreOption.Color = common.theme.Color.Gray3
+	pg.moreOption = l.Theme.PlainIconButton(new(widget.Clickable), pg.Icons.NavMoreIcon)
+	pg.moreOption.Color = l.Theme.Color.Gray3
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.maxButton.Background = common.theme.Color.Gray3
+	pg.maxButton.Background = l.Theme.Color.Gray3
 	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
-	pg.sendToButton = common.theme.Button(new(widget.Clickable), "Send to account")
+	pg.sendToButton = l.Theme.Button(new(widget.Clickable), "Send to account")
 	pg.sendToButton.TextSize = values.TextSize14
 	pg.sendToButton.Background = color.NRGBA{}
-	pg.sendToButton.Color = common.theme.Color.Primary
+	pg.sendToButton.Color = l.Theme.Color.Primary
 	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.clearAllBtn.Background = common.theme.Color.Surface
-	pg.clearAllBtn.Color = common.theme.Color.Text
+	pg.clearAllBtn.Background = l.Theme.Color.Surface
+	pg.clearAllBtn.Color = l.Theme.Color.Text
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
 
 	// Source account picker
-	pg.sourceAccountSelector = newAccountSelector(common).
+	pg.sourceAccountSelector = NewAccountSelector(l).
 		title("Sending account").
 		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.shouldInitializeTxAuthor = true
 		}).
 		accountValidator(func(account *dcrlibwallet.Account) bool {
-			wal := pg.common.multiWallet.WalletWithID(account.WalletID)
+			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
 
 			// Imported and watch only wallet accounts are invalid for sending
 			accountIsValid := account.Number != MaxInt32 && !wal.IsWatchingOnlyWallet()
@@ -249,7 +248,7 @@ func SendPage(common *pageCommon) Page {
 		})
 
 	// Destination account picker
-	pg.destinationAccountSelector = newAccountSelector(common).
+	pg.destinationAccountSelector = NewAccountSelector(pg.Load).
 		title("Receiving account").
 		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.shouldInitializeTxAuthor = true
@@ -258,7 +257,7 @@ func SendPage(common *pageCommon) Page {
 		accountValidator(func(account *dcrlibwallet.Account) bool {
 
 			// Filter out imported account and mixed.
-			wal := pg.common.multiWallet.WalletWithID(account.WalletID)
+			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
 			if account.Number == MaxInt32 ||
 				account.Number == wal.MixedAccountNumber() {
 				return false
@@ -278,7 +277,6 @@ func (pg *sendPage) OnResume() {
 }
 
 func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
-	common := pg.common
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", func(gtx C) D {
@@ -286,7 +284,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 			})
 		},
 		func(gtx C) D {
-			return pg.toSection(gtx, common)
+			return pg.toSection(gtx)
 		},
 		func(gtx C) D {
 			return pg.feeSection(gtx)
@@ -297,7 +295,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					return common.UniformPadding(gtx, func(gtx C) D {
+					return uniformPadding(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -333,7 +331,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 			return layout.S.Layout(gtx, func(gtx C) D {
 				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
-					return pg.balanceSection(gtx, common)
+					return pg.balanceSection(gtx)
 				})
 			})
 		}),
@@ -368,7 +366,7 @@ func (pg *sendPage) topNav(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *sendPage) toSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *sendPage) toSection(gtx layout.Context) layout.Dimensions {
 	return pg.pageSections(gtx, "To", func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -392,7 +390,7 @@ func (pg *sendPage) toSection(gtx layout.Context, common *pageCommon) layout.Dim
 							return layout.Center.Layout(gtx, func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 									return decredmaterial.Clickable(gtx, pg.currencySwap, func(gtx C) D {
-										icon := common.icons.currencySwapIcon
+										icon := pg.Icons.CurrencySwapIcon
 										icon.Scale = 0.45
 										return icon.Layout(gtx)
 									})
@@ -471,11 +469,11 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *sendPage) balanceSection(gtx layout.Context, common *pageCommon) layout.Dimensions {
+func (pg *sendPage) balanceSection(gtx layout.Context) layout.Dimensions {
 	c := pg.theme.Card()
 	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	return c.Layout(gtx, func(gtx C) D {
-		return common.UniformPadding(gtx, func(gtx C) D {
+		return uniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Flexed(0.6, func(gtx C) D {
 					inset := layout.Inset{
@@ -742,7 +740,7 @@ func (pg *sendPage) setDestinationAddr(sendAmount float64) {
 	addr := pg.destinationAddressEditor.Editor.Text()
 	if pg.sendToOption == "My account" {
 		selectedAccount := pg.destinationAccountSelector.selectedAccount
-		wal := pg.common.multiWallet.WalletWithID(selectedAccount.WalletID)
+		wal := pg.WL.MultiWallet.WalletWithID(selectedAccount.WalletID)
 		address, err := wal.CurrentAddress(selectedAccount.Number)
 		if err != nil {
 			pg.feeEstimationError(err.Error(), "destination address")
@@ -821,14 +819,14 @@ func (pg *sendPage) feeEstimationError(err, errorPath string) {
 	pg.calculateErrorText = fmt.Sprintf("error estimating transaction %s: %s", errorPath, err)
 }
 
-func (pg *sendPage) watchForBroadcastResult(c *pageCommon) {
+func (pg *sendPage) watchForBroadcastResult() {
 	if pg.broadcastResult == nil {
 		return
 	}
 
 	if pg.broadcastResult.TxHash != "" {
-		*c.page = page.OverviewPageID
-		c.notify("1 Transaction Sent", true)
+		// *c.page = page.OverviewPageID
+		pg.CreateToast("1 Transaction Sent", true)
 
 		if pg.remainingBalance != -1 {
 			pg.spendableBalance = pg.remainingBalance
@@ -956,10 +954,9 @@ func (pg *sendPage) sendFund() {
 }
 
 func (pg *sendPage) Handle() {
-	c := pg.common
 	sendAcct := pg.sourceAccountSelector.selectedAccount
 
-	if len(c.info.Wallets) == 0 {
+	if len(pg.WL.Info.Wallets) == 0 {
 		return
 	}
 
@@ -978,7 +975,7 @@ func (pg *sendPage) Handle() {
 	pg.updateExchangeError()
 
 	if pg.exchangeErr != "" {
-		c.notify(pg.exchangeErr, false)
+		pg.CreateToast(pg.exchangeErr, false)
 	}
 
 	pg.sendToOption = pg.accountSwitch.SelectedOption()
@@ -986,15 +983,15 @@ func (pg *sendPage) Handle() {
 	if pg.backButton.Button.Clicked() {
 		pg.resetErrorText()
 		pg.resetFields()
-		c.changePage(*c.returnPage)
+		pg.ChangePage(*pg.ReturnPage)
 	}
 
 	if pg.infoButton.Button.Clicked() {
-		info := newInfoModal(c).
-			title("Send DCR").
-			body("Input or scan the destination wallet address and input the amount to send funds.").
-			positiveButton("Got it", func() {})
-		c.showModal(info)
+		info := modal.NewInfoModal(pg.Load).
+			Title("Send DCR").
+			Body("Input or scan the destination wallet address and input the amount to send funds.").
+			PositiveButton("Got it", func() {})
+		pg.ShowModal(info)
 	}
 
 	for pg.moreOption.Button.Clicked() {
@@ -1003,7 +1000,7 @@ func (pg *sendPage) Handle() {
 
 	currencyExchangeValue := pg.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	pg.usdExchangeSet = false
-	if currencyExchangeValue == page.USDExchangeValue {
+	if currencyExchangeValue == USDExchangeValue {
 		pg.usdExchangeSet = true
 	}
 
@@ -1045,7 +1042,7 @@ func (pg *sendPage) Handle() {
 	if pg.calculateErrorText != "" {
 		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Danger, pg.theme.Color.Danger
-		c.notify(pg.calculateErrorText, false)
+		pg.CreateToast(pg.calculateErrorText, false)
 	} else {
 		pg.leftAmountEditor.LineColor, pg.leftAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.Gray3
 		pg.rightAmountEditor.LineColor, pg.rightAmountEditor.TitleLabelColor = pg.theme.Color.Gray1, pg.theme.Color.Gray3
@@ -1060,7 +1057,7 @@ func (pg *sendPage) Handle() {
 		pg.leftAmountEditor.Editor.SetText("")
 		pg.rightAmountEditor.Editor.SetText("")
 		pg.calculateErrorText = ""
-		c.wallet.CreateTransaction(sendAcct.WalletID, sendAcct.Number, pg.txAuthorErrChan)
+		pg.Load.WL.Wallet.CreateTransaction(sendAcct.WalletID, sendAcct.Number, pg.txAuthorErrChan)
 	}
 
 	activeAmountEditor := pg.leftAmountEditor.Editor
@@ -1071,7 +1068,7 @@ func (pg *sendPage) Handle() {
 		pg.balanceAfterSend(true)
 	}
 
-	pg.watchForBroadcastResult(c)
+	pg.watchForBroadcastResult()
 
 	for pg.confirmButton.Button.Clicked() {
 		pg.sendFund()
@@ -1096,12 +1093,13 @@ func (pg *sendPage) Handle() {
 	select {
 	case err := <-pg.txAuthorErrChan:
 		pg.calculateErrorText = err.Error()
-		c.notify(pg.calculateErrorText, false)
+		pg.CreateToast(pg.calculateErrorText, false)
+
 	case err := <-pg.broadcastErrChan:
 		if err.Error() == invalidPassphraseError {
 			pg.passwordEditor.SetError("Wrong password")
 		} else {
-			c.notify(err.Error(), false)
+			pg.CreateToast(err.Error(), false)
 			pg.confirmTxModal.Dismiss()
 		}
 		pg.isBroadcastingTransaction = false

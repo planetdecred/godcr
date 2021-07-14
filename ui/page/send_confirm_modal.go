@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"fmt"
@@ -9,22 +9,23 @@ import (
 	"gioui.org/widget/material"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const ModalSendConfirm = "send_confirm_modal"
 
 type sendConfirmModal struct {
-	*pageCommon
-	modal decredmaterial.Modal
+	*load.Load
+	modal *decredmaterial.Modal
 
 	*comfirmModalData
 }
 
-func newSendConfirmModal(common *pageCommon, data *comfirmModalData) *sendConfirmModal {
+func newSendConfirmModal(l *load.Load, data *comfirmModalData) *sendConfirmModal {
 	scm := &sendConfirmModal{
-		pageCommon: common,
-		modal:      *common.theme.ModalFloatTitle(),
+		Load:  l,
+		modal: l.Theme.ModalFloatTitle(),
 
 		comfirmModalData: data,
 	}
@@ -37,11 +38,11 @@ func (scm *sendConfirmModal) ModalID() string {
 }
 
 func (scm *sendConfirmModal) Show() {
-	scm.pageCommon.showModal(scm)
+	scm.ShowModal(scm)
 }
 
 func (scm *sendConfirmModal) Dismiss() {
-	scm.dismissModal(scm)
+	scm.DismissModal(scm)
 }
 
 func (scm *sendConfirmModal) OnResume() {
@@ -53,26 +54,26 @@ func (scm *sendConfirmModal) OnDismiss() {
 
 func (scm *sendConfirmModal) Handle() {
 	if scm.passwordEditor.Editor.Text() == "" {
-		scm.confirmButton.Background = scm.theme.Color.InactiveGray
+		scm.confirmButton.Background = scm.Theme.Color.InactiveGray
 	} else {
-		scm.confirmButton.Background = scm.theme.Color.Primary
+		scm.confirmButton.Background = scm.Theme.Color.Primary
 	}
 }
 
 func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 	receiveAcct := scm.destinationAccountSelector.selectedAccount
-	receiveWallet := scm.multiWallet.WalletWithID(receiveAcct.WalletID)
+	receiveWallet := scm.WL.MultiWallet.WalletWithID(receiveAcct.WalletID)
 	sendAcct := scm.sourceAccountSelector.selectedAccount
-	sendWallet := scm.multiWallet.WalletWithID(sendAcct.WalletID)
+	sendWallet := scm.WL.MultiWallet.WalletWithID(sendAcct.WalletID)
 
 	w := []layout.Widget{
 		func(gtx C) D {
-			return scm.theme.H6("Confim to send").Layout(gtx)
+			return scm.Theme.H6("Confim to send").Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					icon := scm.icons.sendIcon
+					icon := scm.Icons.SendIcon
 					icon.Scale = 0.7
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
@@ -81,13 +82,13 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return scm.layoutBalance(gtx, scm.sendAmountDCR, true)
+									return layoutBalance(gtx, scm.Load, scm.sendAmountDCR, true)
 								}),
 								layout.Flexed(1, func(gtx C) D {
 									if scm.usdExchangeSet {
 										return layout.E.Layout(gtx, func(gtx C) D {
-											txt := scm.theme.Body1(scm.sendAmountUSD)
-											txt.Color = scm.theme.Color.Gray
+											txt := scm.Theme.Body1(scm.sendAmountUSD)
+											txt.Color = scm.Theme.Color.Gray
 											return txt.Layout(gtx)
 										})
 									}
@@ -100,8 +101,8 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							icon := scm.icons.navigationArrowForward
-							icon.Color = scm.theme.Color.Gray3
+							icon := scm.Icons.NavigationArrowForward
+							icon.Color = scm.Theme.Color.Gray3
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								return icon.Layout(gtx, values.MarginPadding15)
 							})
@@ -111,20 +112,20 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return scm.theme.Body2(receiveAcct.Name).Layout(gtx)
+											return scm.Theme.Body2(receiveAcct.Name).Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											card := scm.theme.Card()
+											card := scm.Theme.Card()
 											card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
-											card.Color = scm.theme.Color.LightGray
+											card.Color = scm.Theme.Color.LightGray
 											inset := layout.Inset{
 												Left: values.MarginPadding5,
 											}
 											return inset.Layout(gtx, func(gtx C) D {
 												return card.Layout(gtx, func(gtx C) D {
 													return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-														txt := scm.theme.Caption(receiveWallet.Name)
-														txt.Color = scm.theme.Color.Gray
+														txt := scm.Theme.Caption(receiveWallet.Name)
+														txt.Color = scm.Theme.Color.Gray
 														return txt.Layout(gtx)
 													})
 												})
@@ -133,14 +134,14 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 									)
 								})
 							}
-							return scm.theme.Body2(scm.destinationAddress).Layout(gtx)
+							return scm.Theme.Body2(scm.destinationAddress).Layout(gtx)
 						}),
 					)
 				}),
 			)
 		},
 		func(gtx C) D {
-			return scm.theme.Separator().Layout(gtx)
+			return scm.Theme.Separator().Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -169,15 +170,15 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					icon := scm.icons.actionInfo
-					icon.Color = scm.theme.Color.Gray
+					icon := scm.Icons.ActionInfo
+					icon.Color = scm.Theme.Color.Gray
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 						return icon.Layout(gtx, values.MarginPadding20)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					txt := scm.theme.Body2("Your DCR will be sent after this step.")
-					txt.Color = scm.theme.Color.Gray3
+					txt := scm.Theme.Body2("Your DCR will be sent after this step.")
+					txt.Color = scm.Theme.Color.Gray3
 					return txt.Layout(gtx)
 				}),
 			)
@@ -214,27 +215,27 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 func (scm *sendConfirmModal) contentRow(gtx layout.Context, leftValue, rightValue, walletName string) layout.Dimensions {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			txt := scm.theme.Body2(leftValue)
-			txt.Color = scm.theme.Color.Gray
+			txt := scm.Theme.Body2(leftValue)
+			txt.Color = scm.Theme.Color.Gray
 			return txt.Layout(gtx)
 		}),
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(scm.theme.Body1(rightValue).Layout),
+					layout.Rigid(scm.Theme.Body1(rightValue).Layout),
 					layout.Rigid(func(gtx C) D {
 						if walletName != "" {
-							card := scm.theme.Card()
+							card := scm.Theme.Card()
 							card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
-							card.Color = scm.theme.Color.LightGray
+							card.Color = scm.Theme.Color.LightGray
 							inset := layout.Inset{
 								Left: values.MarginPadding5,
 							}
 							return inset.Layout(gtx, func(gtx C) D {
 								return card.Layout(gtx, func(gtx C) D {
 									return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-										txt := scm.theme.Caption(walletName)
-										txt.Color = scm.theme.Color.Gray
+										txt := scm.Theme.Caption(walletName)
+										txt.Color = scm.Theme.Color.Gray
 										return txt.Layout(gtx)
 									})
 								})

@@ -39,7 +39,7 @@ type ReceivePage struct {
 	receiveAddress    decredmaterial.Label
 	gtx               *layout.Context
 
-	selector *accountSelector
+	selector *AccountSelector
 
 	backdrop   *widget.Clickable
 	backButton decredmaterial.IconButton
@@ -86,7 +86,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.selector = newAccountSelector(pg.Load).
+	pg.selector = NewAccountSelector(pg.Load).
 		title("Receiving account").
 		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
