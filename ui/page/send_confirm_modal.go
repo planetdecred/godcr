@@ -2,11 +2,14 @@ package page
 
 import (
 	"fmt"
+	"image/color"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/unit"
+	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -18,16 +21,39 @@ type sendConfirmModal struct {
 	*load.Load
 	modal *decredmaterial.Modal
 
-	*comfirmModalData
+	closeConfirmationModalButton decredmaterial.Button
+	confirmButton                decredmaterial.Button
+	passwordEditor               decredmaterial.Editor
+
+	txSent    func()
+	isSending bool
+
+	*authoredTxData
+	exchangeRateSet    bool
+	destinationAddress string
+	destinationAccount *dcrlibwallet.Account
+	sourceAccount      *dcrlibwallet.Account
 }
 
-func newSendConfirmModal(l *load.Load, data *comfirmModalData) *sendConfirmModal {
+func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 	scm := &sendConfirmModal{
 		Load:  l,
 		modal: l.Theme.ModalFloatTitle(),
 
-		comfirmModalData: data,
+		authoredTxData: data,
 	}
+
+	scm.closeConfirmationModalButton = l.Theme.Button(new(widget.Clickable), "Cancel")
+	scm.closeConfirmationModalButton.Background = color.NRGBA{}
+	scm.closeConfirmationModalButton.Color = l.Theme.Color.Primary
+
+	scm.confirmButton = l.Theme.Button(new(widget.Clickable), "")
+	scm.confirmButton.Background = scm.Theme.Color.InactiveGray
+
+	scm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
+	scm.passwordEditor.Editor.SetText("")
+	scm.passwordEditor.Editor.SingleLine = true
+	scm.passwordEditor.Editor.Submit = true
 
 	return scm
 }
@@ -45,25 +71,63 @@ func (scm *sendConfirmModal) Dismiss() {
 }
 
 func (scm *sendConfirmModal) OnResume() {
+	scm.passwordEditor.Editor.Focus()
 }
 
 func (scm *sendConfirmModal) OnDismiss() {
 
 }
 
+func (scm *sendConfirmModal) broadcastTransaction() {
+	password := scm.passwordEditor.Editor.Text()
+	if password == "" || scm.isSending {
+		return
+	}
+
+	scm.isSending = true
+	go func() {
+		_, err := scm.authoredTxData.txAuthor.Broadcast([]byte(password))
+		scm.isSending = false
+		if err != nil {
+			scm.CreateToast(err.Error(), false)
+			log.Error(err)
+			return
+		}
+		scm.CreateToast("Transaction sent!", true)
+
+		scm.txSent()
+		scm.Dismiss()
+	}()
+}
+
 func (scm *sendConfirmModal) Handle() {
-	if scm.passwordEditor.Editor.Text() == "" {
-		scm.confirmButton.Background = scm.Theme.Color.InactiveGray
-	} else {
-		scm.confirmButton.Background = scm.Theme.Color.Primary
+	for _, evt := range scm.passwordEditor.Editor.Events() {
+		if scm.passwordEditor.Editor.Focused() {
+			switch evt.(type) {
+			case widget.ChangeEvent:
+				if scm.passwordEditor.Editor.Text() == "" {
+					scm.confirmButton.Background = scm.Theme.Color.InactiveGray
+				} else {
+					scm.confirmButton.Background = scm.Theme.Color.Primary
+				}
+			case widget.SubmitEvent:
+				scm.broadcastTransaction()
+			}
+		}
+	}
+
+	for scm.confirmButton.Button.Clicked() {
+		scm.broadcastTransaction()
+	}
+
+	for scm.closeConfirmationModalButton.Button.Clicked() {
+		if !scm.isSending {
+			scm.Dismiss()
+		}
 	}
 }
 
 func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
-	receiveAcct := scm.destinationAccountSelector.selectedAccount
-	receiveWallet := scm.WL.MultiWallet.WalletWithID(receiveAcct.WalletID)
-	sendAcct := scm.sourceAccountSelector.selectedAccount
-	sendWallet := scm.WL.MultiWallet.WalletWithID(sendAcct.WalletID)
 
 	w := []layout.Widget{
 		func(gtx C) D {
@@ -84,7 +148,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 									return layoutBalance(gtx, scm.Load, scm.sendAmount, true)
 								}),
 								layout.Flexed(1, func(gtx C) D {
-									if scm.exchangeRate != -1 {
+									if scm.exchangeRateSet {
 										return layout.E.Layout(gtx, func(gtx C) D {
 											txt := scm.Theme.Body1(scm.sendAmountUSD)
 											txt.Color = scm.Theme.Color.Gray
@@ -107,11 +171,11 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							if !scm.sendToAddress {
+							if scm.destinationAccount != nil {
 								return layout.E.Layout(gtx, func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return scm.Theme.Body2(receiveAcct.Name).Layout(gtx)
+											return scm.Theme.Body2(scm.destinationAccount.Name).Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
 											card := scm.Theme.Card()
@@ -123,7 +187,8 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 											return inset.Layout(gtx, func(gtx C) D {
 												return card.Layout(gtx, func(gtx C) D {
 													return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
-														txt := scm.Theme.Caption(receiveWallet.Name)
+														destinationWallet := scm.WL.MultiWallet.WalletWithID(scm.destinationAccount.WalletID)
+														txt := scm.Theme.Caption(destinationWallet.Name)
 														txt.Color = scm.Theme.Color.Gray
 														return txt.Layout(gtx)
 													})
@@ -145,21 +210,26 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return scm.contentRow(gtx, "Sending from", sendAcct.Name, sendWallet.Name)
+					sendWallet := scm.WL.MultiWallet.WalletWithID(scm.sourceAccount.WalletID)
+					return scm.contentRow(gtx, "Sending from", scm.sourceAccount.Name, sendWallet.Name)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding8, Bottom: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						if scm.exchangeRate != -1 {
-							return scm.contentRow(gtx, "Fee", scm.txFee+" "+scm.txFeeUSD, "")
+						txFeeText := scm.txFee
+						if scm.exchangeRateSet {
+							txFeeText = fmt.Sprintf("%s (%s)", scm.txFee, scm.txFeeUSD)
 						}
-						return scm.contentRow(gtx, "Fee", scm.txFee, "")
+
+						return scm.contentRow(gtx, "Fee", txFeeText, "")
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					if scm.exchangeRate != -1 {
-						return scm.contentRow(gtx, "Total cost", scm.totalCost+" "+scm.totalCostUSD, "")
+					totalCostText := scm.totalCost
+					if scm.exchangeRateSet {
+						totalCostText = fmt.Sprintf("%s (%s)", scm.totalCost, scm.totalCostUSD)
 					}
-					return scm.contentRow(gtx, "Total cost", scm.totalCost, "")
+
+					return scm.contentRow(gtx, "Total cost", totalCostText, "")
 				}),
 			)
 		},
@@ -194,7 +264,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						if false {
+						if scm.isSending {
 							th := material.NewTheme(gofont.Collection())
 							return layout.Inset{Top: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
 								return material.Loader(th).Layout(gtx)

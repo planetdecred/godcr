@@ -15,7 +15,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -27,8 +26,8 @@ type sendPage struct {
 	*load.Load
 	pageContainer layout.List
 
-	txAuthor *dcrlibwallet.TxAuthor
-	wallet   *wallet.Wallet
+	sourceAccountSelector      *AccountSelector
+	destinationAccountSelector *AccountSelector
 
 	destinationAddressEditor decredmaterial.Editor
 	dcrAmountEditor          decredmaterial.Editor
@@ -45,27 +44,18 @@ type sendPage struct {
 	accountSwitch    *decredmaterial.SwitchButtonText
 	txFeeCollapsible *decredmaterial.Collapsible
 
-	*comfirmModalData
-	confirmTxModal *sendConfirmModal
+	moreOptionIsOpen bool
+	sendToAddress    bool
+	sendMax          bool
 
-	amountErrorText  string
-	MoreOptionIsOpen bool
+	amountErrorText string
+	exchangeRate    float64
 
-	sendToAddress bool
-	sendMax       bool
+	*authoredTxData
 }
 
-// shared between send page and confirm modal
-type comfirmModalData struct {
-	closeConfirmationModalButton decredmaterial.Button
-	confirmButton                decredmaterial.Button
-	passwordEditor               decredmaterial.Editor
-
-	sourceAccountSelector      *AccountSelector
-	destinationAccountSelector *AccountSelector
-	exchangeRate               float64
-	sendToAddress              bool
-
+type authoredTxData struct {
+	txAuthor            *dcrlibwallet.TxAuthor
 	txFee               string
 	txFeeUSD            string
 	estSignedSize       string
@@ -75,9 +65,6 @@ type comfirmModalData struct {
 	balanceAfterSendUSD string
 	sendAmount          string
 	sendAmountUSD       string
-
-	// others
-	destinationAddress string //pg.destinationAddressEditor.Editor.Text()
 }
 
 func NewSendPage(l *load.Load) *sendPage {
@@ -87,22 +74,15 @@ func NewSendPage(l *load.Load) *sendPage {
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
-		wallet:   l.WL.Wallet,
-		txAuthor: &l.WL.TxAuthor,
 
 		maxButton:        l.Theme.Button(new(widget.Clickable), "MAX"),
 		clearAllBtn:      l.Theme.Button(new(widget.Clickable), "Clear all fields"),
 		txFeeCollapsible: l.Theme.Collapsible(),
 
-		comfirmModalData: &comfirmModalData{
-			exchangeRate: -1,
-		},
+		exchangeRate: -1,
+
+		authoredTxData: &authoredTxData{},
 	}
-
-	pg.closeConfirmationModalButton = l.Theme.Button(new(widget.Clickable), "Cancel")
-	pg.confirmButton = l.Theme.Button(new(widget.Clickable), "")
-
-	pg.confirmTxModal = newSendConfirmModal(pg.Load, pg.comfirmModalData)
 
 	pg.accountSwitch = l.Theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
 
@@ -127,17 +107,9 @@ func NewSendPage(l *load.Load) *sendPage {
 	pg.usdAmountEditor.CustomButton.Text = "Max"
 	pg.usdAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
 
-	pg.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
-	pg.passwordEditor.Editor.SetText("")
-	pg.passwordEditor.Editor.SingleLine = true
-	pg.passwordEditor.Editor.Submit = true
-
 	pg.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Address")
 	pg.destinationAddressEditor.Editor.SingleLine = true
 	pg.destinationAddressEditor.Editor.SetText("")
-
-	pg.closeConfirmationModalButton.Background = color.NRGBA{}
-	pg.closeConfirmationModalButton.Color = l.Theme.Color.Primary
 
 	pg.backButton, pg.infoButton = subpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
@@ -278,7 +250,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 				layout.Stacked(func(gtx C) D {
-					if pg.MoreOptionIsOpen {
+					if pg.moreOptionIsOpen {
 						inset := layout.Inset{
 							Top:   values.MarginPadding40,
 							Right: values.MarginPadding20,
@@ -528,27 +500,11 @@ func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (pg *sendPage) handleEditorChange(evt widget.EditorEvent) {
-	switch evt.(type) {
-	case widget.ChangeEvent:
-		pg.fetchExchangeValue()
-	case widget.SubmitEvent:
-		pg.sendFund()
-	}
-}
-
 func (pg *sendPage) resetErrorText() {
 	pg.amountErrorText = ""
 	pg.destinationAddressEditor.SetError("")
 	pg.dcrAmountEditor.SetError("")
 	pg.usdAmountEditor.SetError("")
-	pg.passwordEditor.SetError("")
-}
-
-func (pg *sendPage) sendFund() {
-	if !pg.inputsNotEmpty(pg.passwordEditor.Editor) {
-		return
-	}
 }
 
 func (pg *sendPage) validateAndConstructTx() {
@@ -690,6 +646,10 @@ func (pg *sendPage) constructTx() {
 	}
 
 	unsignedTx, err := pg.WL.MultiWallet.NewUnsignedTx(sourceAccount.WalletID, sourceAccount.Number)
+	if err != nil {
+		pg.feeEstimationError(err.Error())
+		return
+	}
 
 	err = unsignedTx.AddSendDestination(address, amountAtom, pg.sendMax)
 	if err != nil {
@@ -761,6 +721,15 @@ func (pg *sendPage) clearEstimates() {
 	pg.sendAmountUSD = " - "
 }
 
+func (pg *sendPage) resetFields() {
+	pg.destinationAddressEditor.SetError("")
+	pg.destinationAddressEditor.Editor.SetText("")
+
+	pg.amountErrorText = ""
+	pg.dcrAmountEditor.Editor.SetText("")
+	pg.usdAmountEditor.Editor.SetText("")
+}
+
 func (pg *sendPage) Handle() {
 	sendToAddress := pg.accountSwitch.SelectedIndex() == 1
 	if sendToAddress != pg.sendToAddress { // switch changed
@@ -782,7 +751,7 @@ func (pg *sendPage) Handle() {
 	}
 
 	for pg.moreOption.Button.Clicked() {
-		pg.MoreOptionIsOpen = !pg.MoreOptionIsOpen
+		pg.moreOptionIsOpen = !pg.moreOptionIsOpen
 	}
 
 	for _, evt := range pg.destinationAddressEditor.Editor.Events() {
@@ -818,30 +787,28 @@ func (pg *sendPage) Handle() {
 		}
 	}
 
-	for _, evt := range pg.passwordEditor.Editor.Events() {
-		if pg.passwordEditor.Editor.Focused() {
-			pg.handleEditorChange(evt)
-		}
-	}
-
-	for pg.confirmButton.Button.Clicked() {
-		pg.sendFund()
-	}
-
 	for pg.nextButton.Button.Clicked() {
 		if pg.validate() {
-			pg.comfirmModalData.destinationAddress = pg.destinationAddressEditor.Editor.Text()
-			pg.confirmTxModal.Show()
-			pg.passwordEditor.Editor.Focus()
-		}
-	}
+			confirmTxModal := newSendConfirmModal(pg.Load, pg.authoredTxData)
+			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1
+			confirmTxModal.sourceAccount = pg.sourceAccountSelector.selectedAccount
+			if sendToAddress {
+				confirmTxModal.destinationAddress = pg.destinationAddressEditor.Editor.Text()
+			} else {
+				confirmTxModal.destinationAccount = pg.destinationAccountSelector.selectedAccount
+			}
 
-	for pg.closeConfirmationModalButton.Button.Clicked() {
-		pg.confirmTxModal.Dismiss()
+			confirmTxModal.txSent = func() {
+				pg.resetFields()
+				pg.clearEstimates()
+			}
+
+			confirmTxModal.Show()
+		}
 	}
 
 	for pg.clearAllBtn.Button.Clicked() {
-		pg.MoreOptionIsOpen = true
+		pg.moreOptionIsOpen = true
 
 		pg.destinationAddressEditor.SetError("")
 		pg.destinationAddressEditor.Editor.SetText("")
@@ -849,7 +816,6 @@ func (pg *sendPage) Handle() {
 		pg.amountErrorText = ""
 		pg.dcrAmountEditor.Editor.SetText("")
 		pg.usdAmountEditor.Editor.SetText("")
-		pg.passwordEditor.Editor.SetText("")
 	}
 }
 
