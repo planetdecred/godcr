@@ -395,6 +395,40 @@ func (common *pageCommon) GetVSPList()  {
 	(*common.vspInfo).List = loadedVSP
 }
 
+func (common *pageCommon) AddVSP(host string) (err error) {
+	var valueOut struct {
+		Remember string
+		List     []string
+	}
+
+	// check if host already exists
+	_ = common.multiWallet.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+	for _, v := range valueOut.List {
+		if v == host {
+			return fmt.Errorf("existing host %s", host)
+		}
+	}
+
+	// validate host network
+	info, err := getVSPInfo(host)
+	if err != nil {
+		return err
+	}
+
+	if info.Network != common.wallet.Net {
+		return fmt.Errorf("invalid net %s", info.Network)
+	}
+
+	valueOut.List = append(valueOut.List, host)
+	common.multiWallet.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
+	(*common.vspInfo).List = append((*common.vspInfo).List, wallet.VSPInfo{
+		Host: host,
+		Info: info,
+	})
+
+	return
+}
+
 func (common *pageCommon) HDPrefix() string {
 	switch common.network {
 	case "testnet3": // should use a constant

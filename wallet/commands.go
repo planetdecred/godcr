@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -939,13 +938,13 @@ func (wal *Wallet) SetupAccountMixer(walletID int, walletPassphrase string, errC
 }
 
 // TicketPrice get ticket price
-func (wal *Wallet) TicketPrice() (int64, string) {
+func (wal *Wallet) TicketPrice() int64 {
 	pr, err := wal.multi.WalletsIterator().Next().TicketPrice()
 	if err != nil {
 		log.Error(err)
-		return 0, ""
+		return 0
 	}
-	return pr.TicketPrice, dcrutil.Amount(pr.TicketPrice).String()
+	return pr.TicketPrice
 }
 
 func (wal *Wallet) NewVSPD(host string, walletID int, accountID int32) (*dcrlibwallet.VSP, error) {
@@ -1270,50 +1269,16 @@ func (wal *Wallet) AddVSP(host string, errChan chan error) {
 	}()
 }
 
-func (wal *Wallet) GetAllVSP() {
-	go func() {
-		var valueOut struct {
-			Remember string
-			List     []string
-		}
-
-		wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
-		var loadedVSP []VSPInfo
-
-		for _, host := range valueOut.List {
-			v, err := getVSPInfo(host)
-			if err == nil {
-				loadedVSP = append(loadedVSP, VSPInfo{
-					Host: host,
-					Info: v,
-				})
-			}
-		}
-
-		l, _ := getInitVSPInfo("https://api.decred.org/?c=vsp")
-		for h, v := range l {
-			if strings.Contains(wal.Net, v.Network) {
-				loadedVSP = append(loadedVSP, VSPInfo{
-					Host: fmt.Sprintf("https://%s", h),
-					Info: v,
-				})
-			}
-		}
-
-		var resp Response
-		resp.Resp = &VSP{
-			List: loadedVSP,
-		}
-		wal.Send <- resp
-	}()
-}
-
 func (wal *Wallet) RememberVSP(host string) {
 	var valueOut struct {
 		Remember string
 		List     []string
 	}
-	wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+	err := wal.multi.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
+	if err != nil {
+		log.Error(err.Error())
+	}
+
 	valueOut.Remember = host
 	wal.multi.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
 }
@@ -1359,8 +1324,8 @@ func getVSPInfo(url string) (*dcrlibwallet.VspInfoResponse, error) {
 	return &vspInfoResponse, nil
 }
 
-// getInitVSPInfo returns the list information of the VSP
-func getInitVSPInfo(url string) (map[string]*dcrlibwallet.VspInfoResponse, error) {
+// GetInitVSPInfo returns the list information of the VSP
+func GetInitVSPInfo(url string) (map[string]*dcrlibwallet.VspInfoResponse, error) {
 	rq := new(http.Client)
 	resp, err := rq.Get((url))
 	if err != nil {

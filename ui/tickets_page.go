@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
-	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -21,8 +19,6 @@ const PageTickets = "Tickets"
 
 type ticketPage struct {
 	*pageCommon
-	wal  *wallet.Wallet
-	vspd *dcrlibwallet.VSP
 
 	ticketPageContainer layout.List
 	ticketsLive         layout.List
@@ -37,18 +33,11 @@ type ticketPage struct {
 	autoPurchaseEnabled *widget.Bool
 	toTickets           decredmaterial.TextAndIconButton
 	toTicketsActivity   decredmaterial.TextAndIconButton
-
-	vspInfo     **wallet.VSP
-	selectVSP   []*gesture.Click
-	selectedVSP wallet.VSPInfo
-
-	isPurchaseLoading bool
 }
 
 func TicketPage(c *pageCommon) Page {
 	pg := &ticketPage{
 		pageCommon: c,
-		wal:        c.wallet,
 		tickets:    c.walletTickets,
 
 		ticketsLive:           layout.List{Axis: layout.Horizontal},
@@ -59,8 +48,6 @@ func TicketPage(c *pageCommon) Page {
 		autoPurchaseEnabled: new(widget.Bool),
 		toTickets:           c.theme.TextAndIconButton(new(widget.Clickable), "See All", c.icons.navigationArrowForward),
 		toTicketsActivity:   c.theme.TextAndIconButton(new(widget.Clickable), "See All", c.icons.navigationArrowForward),
-
-		vspInfo:    c.vspInfo,
 	}
 
 	pg.purchaseTicket.TextSize = values.TextSize12
@@ -339,39 +326,11 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context) layout.Dimension
 	})
 }
 
-func (pg *ticketPage) doPurchaseTicket(password []byte, ticketAmount uint32) {
-	if pg.isPurchaseLoading {
-		log.Info("Please wait...")
-		return
-	}
-	pg.isPurchaseLoading = true
-	//selectedAccount := pg.purchaseAccountSelector.selectedAccount
-	//pg.wallet.PurchaseTicket(selectedAccount.WalletID, selectedAccount.Number, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
-}
-
-func (pg *ticketPage) createNewVSPD() {
-	/*selectedAccount := pg.purchaseAccountSelector.selectedAccount
-	vspd, err := pg.wallet.NewVSPD(pg.selectedVSP.Host, selectedAccount.WalletID, selectedAccount.Number)
-	if err != nil {
-		pg.notify(err.Error(), false)
-	}
-	pg.vspd = vspd*/
-}
-
 func (pg *ticketPage) handle() {
-	if len((*pg.vspInfo).List) != len(pg.selectVSP) {
-		pg.selectVSP = createClickGestures(len((*pg.vspInfo).List))
-	}
-
 	if pg.purchaseTicket.Button.Clicked() {
 		newTicketPurchaseModal(pg.pageCommon).
 			Show()
 	}
-
-	//if pg.editorsNotEmpty(&pg.addVSP, pg.inputVSP.Editor) && pg.addVSP.Button.Clicked() {
-	//	// c.wallet.AddVSP("http://dev.planetdecred.org:23125", pg.vspErrChan)
-	//	pg.wallet.AddVSP(pg.inputVSP.Editor.Text(), pg.vspErrChan)
-	//}
 
 	if pg.toTickets.Button.Clicked() {
 		pg.changePage(PageTicketsList)

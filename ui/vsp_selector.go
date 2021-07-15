@@ -164,11 +164,14 @@ func (v *vspSelectorModal) Dismiss() {
 
 func (v *vspSelectorModal) handle() {
 	if v.editorsNotEmpty(&v.addVSP, v.inputVSP.Editor) && v.addVSP.Button.Clicked() {
-		// c.wallet.AddVSP("http://dev.planetdecred.org:23125", v.vspErrChan)
-		err := v.wallet.AddVSP_(v.inputVSP.Editor.Text())
-		if err != nil {
-			v.notify(err.Error(), false)
-		}
+		go func() {
+			err := v.AddVSP(v.inputVSP.Editor.Text())
+			if err != nil {
+				v.notify(err.Error(), false)
+			} else {
+				v.inputVSP.Editor.SetText("")
+			}
+		}()
 	}
 
 	vspList := (*v.vspInfo).List

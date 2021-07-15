@@ -19,11 +19,12 @@ const TicketPurchaseModalID = "ticket_purchase_modal"
 type ticketPurchaseModal struct {
 	*pageCommon
 
-	randomID        string
-	ticketPrice     string
-	totalCost       int64
-	balanceLessCost int64
-	vspIsFetched    bool
+	randomID          string
+	ticketPrice       string
+	totalCost         int64
+	balanceLessCost   int64
+	vspIsFetched      bool
+	isPurchaseLoading bool
 
 	modal          decredmaterial.Modal
 	tickets        decredmaterial.Editor
@@ -66,6 +67,16 @@ func (tp *ticketPurchaseModal) createNewVSPD() {
 		tp.notify(err.Error(), false)
 	}
 	tp.vsp = vspd
+}
+
+func (tp *ticketPurchaseModal) doPurchaseTicket(password []byte, ticketAmount uint32) {
+	if tp.isPurchaseLoading {
+		log.Info("Please wait...")
+		return
+	}
+	tp.isPurchaseLoading = true
+	//selectedAccount := pg.purchaseAccountSelector.selectedAccount
+	//pg.wallet.PurchaseTicket(selectedAccount.WalletID, selectedAccount.Number, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
 }
 
 func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
