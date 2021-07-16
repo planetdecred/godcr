@@ -256,10 +256,9 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Left: values.MarginPadding5,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
+						return layout.Inset{
+							Right: values.MarginPadding8,
+						}.Layout(gtx, func(gtx C) D {
 							return scm.closeConfirmationModalButton.Layout(gtx)
 						})
 					}),

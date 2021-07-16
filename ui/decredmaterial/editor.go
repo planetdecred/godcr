@@ -37,8 +37,8 @@ type Editor struct {
 	//IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
 	//Bordered if true makes the adds a border around the editor.
-	IsCustomButton bool
-	CustomButton   Button
+	HasCustomButton bool
+	CustomButton    Button
 
 	Bordered bool
 	//IsPassword if true, displays the show and hide button.
@@ -229,7 +229,7 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 			return layout.Dimensions{}
 		}),
 		layout.Rigid(func(gtx C) D {
-			if e.IsCustomButton {
+			if e.HasCustomButton {
 				inset := layout.Inset{
 					Top:   e.m5,
 					Left:  e.m5,
