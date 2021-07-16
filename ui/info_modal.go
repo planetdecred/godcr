@@ -210,13 +210,7 @@ func (in *infoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnPositve.Text = in.positiveButtonText
-
-					bgCol, textCol := in.theme.Color.Surface, in.theme.Color.Primary
-					if in.btnPositve.IsDisabled() {
-						bgCol, textCol = in.theme.Color.Gray, in.theme.Color.Surface
-					}
-					in.btnPositve.Background, in.btnPositve.Color = bgCol, textCol
-
+					in.btnPositve.Background, in.btnPositve.Color = in.theme.Color.Surface, in.theme.Color.Primary
 					return in.btnPositve.Layout(gtx)
 				}),
 			)
