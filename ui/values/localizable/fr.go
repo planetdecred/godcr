@@ -86,6 +86,4 @@ const FR = `
 "connectToSpecificPeer" = "Se connecter à un pair spécifique";
 "english" = "Anglais";
 "french" = "Français";
-"walletName" = "Nom du portefeuille";
-"cannotBeEmpty" = "ne peux pas être vide";
 `

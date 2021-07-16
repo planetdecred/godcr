@@ -116,6 +116,4 @@ const EN = `
 "french" = "French";
 "usdBittrex" = "USD (Bittrex)";
 "none" = "None";
-"walletName" = "Wallet name";
-"cannotBeEmpty" = "cannot be empty";
 `

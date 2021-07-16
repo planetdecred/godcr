@@ -3,6 +3,7 @@
 package decredmaterial
 
 import (
+	//"fmt"
 	"image"
 	"image/color"
 
@@ -15,6 +16,8 @@ import (
 
 type Button struct {
 	material.ButtonStyle
+	isDisabled         bool
+	disabledBackground color.NRGBA
 }
 
 type IconButton struct {
@@ -22,7 +25,10 @@ type IconButton struct {
 }
 
 func (t *Theme) Button(button *widget.Clickable, txt string) Button {
-	return Button{material.Button(t.Base, button, txt)}
+	return Button{
+		ButtonStyle:        material.Button(t.Base, button, txt),
+		disabledBackground: t.Color.Gray1,
+	}
 }
 
 func (t *Theme) IconButton(button *widget.Clickable, icon *widget.Icon) IconButton {
@@ -39,7 +45,19 @@ func Clickable(gtx layout.Context, button *widget.Clickable, w layout.Widget) la
 	return material.Clickable(gtx, button, w)
 }
 
-func (b Button) Layout(gtx layout.Context) layout.Dimensions {
+func (b *Button) SetIsDisabled(isDisabled bool) {
+	b.isDisabled = isDisabled
+}
+
+func (b *Button) IsDisabled() bool {
+	return b.isDisabled
+}
+
+func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
+	if b.IsDisabled() {
+		gtx.Queue = nil
+	}
+
 	return b.ButtonStyle.Layout(gtx)
 }
 
