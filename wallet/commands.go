@@ -7,12 +7,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/decred/dcrd/chaincfg/v3"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"sort"
 	"strconv"
 	"time"
+
+	"decred.org/dcrwallet/wallet"
 
 	"golang.org/x/sync/errgroup"
 
@@ -247,6 +250,7 @@ func (wal *Wallet) GetAllTransactions(offset, limit, txfilter int32) {
 				}
 				recentTxs = append(recentTxs, txn)
 				if txn.Txn.Type == dcrlibwallet.TxTypeTicketPurchase {
+					fmt.Printf("TXN %v \n", txn.Txn.Hash)
 					ticketTxs[wall.ID] = append(ticketTxs[wall.ID], txn)
 				}
 				transactions[txnRaw.WalletID] = append(transactions[txnRaw.WalletID], txn)
@@ -1114,6 +1118,168 @@ func (wal *Wallet) GetAllTickets() {
 		}
 		wal.Send <- resp
 	}()
+}
+
+// ticketMatured returns whether a ticket mined at txHeight has
+// reached ticket maturity in a chain with a tip height curHeight.
+func ticketMatured(network string, txHeight, curHeight int32) bool {
+	//todo: change testnet string to a constant and include other chain params in switch cases
+	var params *chaincfg.Params
+	switch network {
+	case "testnet3":
+		params = chaincfg.TestNet3Params()
+	default:
+		params = chaincfg.MainNetParams()
+	}
+
+	return txHeight >= 0 && curHeight-txHeight > int32(params.TicketMaturity)
+}
+
+func (wal *Wallet) FilterTicketTransactions(txs []dcrlibwallet.Transaction, status wallet.TicketStatus) []dcrlibwallet.Transaction {
+	var filtered []dcrlibwallet.Transaction
+
+	for _, tx := range txs {
+		switch status {
+		case wallet.TicketStatusImmature:
+			if ticketMatured(wal.Net, tx.BlockHeight, wal.OverallBlockHeight) {
+				filtered = append(filtered)
+			}
+		case wallet.TicketStatusUnmined:
+			if tx.BlockHeight == int32(-1) {
+				filtered = append(filtered)
+			}
+		case wallet.TicketStatusLive:
+
+		}
+	}
+
+	return filtered
+}
+
+func (wal *Wallet) GetAllTickets_() (tickets *Tickets, err error) {
+	wallets, err := wal.wallets()
+	if err != nil {
+		return
+	}
+
+	var liveRecentTickets []Ticket
+	var recentActivity []Ticket
+
+	tickets := make(map[int][]Ticket)
+	unconfirmedTickets := make(map[int][]UnconfirmedPurchase)
+
+	stackingRecordCounter := []struct {
+		Status string
+		Count  int
+	}{
+		{"UNMINED", 0},
+		{"IMMATURE", 0},
+		{"LIVE", 0},
+		{"VOTED", 0},
+		{"MISSED", 0},
+		{"EXPIRED", 0},
+		{"REVOKED", 0},
+	}
+
+	liveCounter := []struct {
+		Status string
+		Count  int
+	}{
+		{"UNMINED", 0},
+		{"IMMATURE", 0},
+		{"LIVE", 0},
+	}
+
+	for _, wall := range wallets {
+		ticketsInfo, err := wall.GetTickets(0, wall.GetBestBlock(), math.MaxInt32)
+		if err != nil {
+			return
+		}
+
+		for _, tinfo := range ticketsInfo {
+			if tinfo.Status == "UNKNOWN" {
+				continue
+			}
+
+			var amount dcrutil.Amount
+			for _, output := range tinfo.Ticket.MyOutputs {
+				amount += output.Amount
+			}
+			info := Ticket{
+				Info:       *tinfo,
+				DateTime:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
+				MonthDay:   time.Unix(tinfo.Ticket.Timestamp, 0).Format("Jan 2"),
+				DaysBehind: calculateDaysBehind(tinfo.Ticket.Timestamp),
+				Amount:     amount.String(),
+				Fee:        tinfo.Ticket.Fee.String(),
+				WalletName: wall.Name,
+			}
+			tickets[wall.ID] = append(tickets[wall.ID], info)
+
+			for i := range liveCounter {
+				if liveCounter[i].Status == tinfo.Status {
+					liveCounter[i].Count++
+				}
+			}
+
+			if tinfo.Status == "UNMINED" || tinfo.Status == "IMMATURE" || tinfo.Status == "LIVE" {
+				liveRecentTickets = append(liveRecentTickets, info)
+			}
+
+			recentActivity = append(recentActivity, info)
+
+			for i := range stackingRecordCounter {
+				if stackingRecordCounter[i].Status == tinfo.Status {
+					stackingRecordCounter[i].Count++
+				}
+			}
+		}
+
+		sort.SliceStable(tickets[wall.ID], func(i, j int) bool {
+			backTime := time.Unix(tickets[wall.ID][j].Info.Ticket.Timestamp, 0)
+			frontTime := time.Unix(tickets[wall.ID][i].Info.Ticket.Timestamp, 0)
+			return backTime.Before(frontTime)
+		})
+
+		unconfirmedTicketPurchases, err := getUnconfirmedPurchases(wall, tickets[wall.ID])
+		if err != nil {
+			resp.Err = err
+			wal.Send <- resp
+			return
+		}
+		unconfirmedTickets[wall.ID] = unconfirmedTicketPurchases
+	}
+
+	sort.SliceStable(liveRecentTickets, func(i, j int) bool {
+		backTime := time.Unix(liveRecentTickets[j].Info.Ticket.Timestamp, 0)
+		frontTime := time.Unix(liveRecentTickets[i].Info.Ticket.Timestamp, 0)
+		return backTime.Before(frontTime)
+	})
+
+	recentLimit := 5
+	if len(liveRecentTickets) > recentLimit {
+		liveRecentTickets = liveRecentTickets[:recentLimit]
+	}
+
+	sort.SliceStable(recentActivity, func(i, j int) bool {
+		backTime := time.Unix(recentActivity[j].Info.Ticket.Timestamp, 0)
+		frontTime := time.Unix(recentActivity[i].Info.Ticket.Timestamp, 0)
+		return backTime.Before(frontTime)
+	})
+
+	if len(recentActivity) > recentLimit {
+		recentActivity = recentActivity[:recentLimit]
+	}
+
+	resp.Resp = &Tickets{
+		Confirmed:             tickets,
+		Unconfirmed:           unconfirmedTickets,
+		RecentActivity:        recentActivity,
+		StackingRecordCounter: stackingRecordCounter,
+		LiveRecent:            liveRecentTickets,
+		LiveCounter:           liveCounter,
+	}
+	wal.Send <- resp
 }
 
 func getUnconfirmedPurchases(wall dcrlibwallet.Wallet, tickets []Ticket) (unconfirmed []UnconfirmedPurchase, err error) {

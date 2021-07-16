@@ -18,14 +18,14 @@ type vspSelector struct {
 
 	dialogTitle string
 
-	changed   bool
-	showVSPModal        *widget.Clickable
-	selectedVSP         wallet.VSPInfo
+	changed      bool
+	showVSPModal *widget.Clickable
+	selectedVSP  wallet.VSPInfo
 }
 
 func newVSPSelector(common *pageCommon) *vspSelector {
 	v := &vspSelector{
-		pageCommon: common,
+		pageCommon:   common,
 		showVSPModal: new(widget.Clickable),
 	}
 	return v
@@ -150,7 +150,7 @@ func (v *vspSelectorModal) OnResume() {
 
 }
 
-func (v *vspSelectorModal) modalID() string {
+func (v *vspSelectorModal) ModalID() string {
 	return VSPSelectorModalID
 }
 
@@ -162,7 +162,7 @@ func (v *vspSelectorModal) Dismiss() {
 	v.dismissModal(v)
 }
 
-func (v *vspSelectorModal) handle() {
+func (v *vspSelectorModal) Handle() {
 	if v.editorsNotEmpty(&v.addVSP, v.inputVSP.Editor) && v.addVSP.Button.Clicked() {
 		go func() {
 			err := v.AddVSP(v.inputVSP.Editor.Text())

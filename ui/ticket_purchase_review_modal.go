@@ -123,7 +123,7 @@ func (t *ticketReviewModal) Layout(gtx layout.Context) layout.Dimensions {
 	return t.modal.Layout(gtx, l, 850)
 }
 
-func (t *ticketReviewModal) modalID() string {
+func (t *ticketReviewModal) ModalID() string {
 	return t.randomID
 }
 func (t *ticketReviewModal) OnDismiss() {}
@@ -138,7 +138,7 @@ func (t *ticketReviewModal) Dismiss() {
 
 func (t *ticketReviewModal) OnResume() {}
 
-func (t *ticketReviewModal) handle() {
+func (t *ticketReviewModal) Handle() {
 	for t.cancelPurchase.Button.Clicked() {
 		t.Dismiss()
 	}
@@ -174,8 +174,7 @@ func (t *ticketReviewModal) BalanceLessCost(remaining int64) *ticketReviewModal 
 	return t
 }
 
-
-func (t *ticketReviewModal) TicketPurchase(purchaseTickets func ([]byte)) *ticketReviewModal {
+func (t *ticketReviewModal) TicketPurchase(purchaseTickets func([]byte)) *ticketReviewModal {
 	t.purchaseTickets = purchaseTickets
 	return t
 }

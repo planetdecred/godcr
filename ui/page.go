@@ -363,7 +363,7 @@ func validateVSPServerSignature(resp *http.Response, pubKey, body []byte) error 
 	return nil
 }
 
-func (common *pageCommon) GetVSPList()  {
+func (common *pageCommon) GetVSPList() {
 	var valueOut struct {
 		Remember string
 		List     []string

@@ -20,15 +20,15 @@ const PageTickets = "Tickets"
 type ticketPage struct {
 	*pageCommon
 
-	ticketPageContainer layout.List
-	ticketsLive         layout.List
-	ticketsActivity     layout.List
+	ticketPageContainer *layout.List
+	ticketsLive         *layout.List
+	ticketsActivity     *layout.List
 
-	purchaseTicket        decredmaterial.Button
+	purchaseTicket decredmaterial.Button
 
-	tickets               **wallet.Tickets
-	ticketPrice           string
-	remainingBalance      string
+	tickets          **wallet.Tickets
+	ticketPrice      string
+	remainingBalance string
 
 	autoPurchaseEnabled *widget.Bool
 	toTickets           decredmaterial.TextAndIconButton
@@ -40,10 +40,10 @@ func TicketPage(c *pageCommon) Page {
 		pageCommon: c,
 		tickets:    c.walletTickets,
 
-		ticketsLive:           layout.List{Axis: layout.Horizontal},
-		ticketsActivity:       layout.List{Axis: layout.Vertical},
-		ticketPageContainer:   layout.List{Axis: layout.Vertical},
-		purchaseTicket:        c.theme.Button(new(widget.Clickable), "Purchase"),
+		ticketsLive:         &layout.List{Axis: layout.Horizontal},
+		ticketsActivity:     &layout.List{Axis: layout.Vertical},
+		ticketPageContainer: &layout.List{Axis: layout.Vertical},
+		purchaseTicket:      c.theme.Button(new(widget.Clickable), "Purchase"),
 
 		autoPurchaseEnabled: new(widget.Bool),
 		toTickets:           c.theme.TextAndIconButton(new(widget.Clickable), "See All", c.icons.navigationArrowForward),
@@ -52,7 +52,6 @@ func TicketPage(c *pageCommon) Page {
 
 	pg.purchaseTicket.TextSize = values.TextSize12
 	pg.purchaseTicket.Background = c.theme.Color.Primary
-
 
 	pg.toTickets.Color = c.theme.Color.Primary
 	pg.toTickets.BackgroundColor = c.theme.Color.Surface
@@ -326,7 +325,7 @@ func (pg *ticketPage) stackingRecordSection(gtx layout.Context) layout.Dimension
 	})
 }
 
-func (pg *ticketPage) handle() {
+func (pg *ticketPage) Handle() {
 	if pg.purchaseTicket.Button.Clicked() {
 		newTicketPurchaseModal(pg.pageCommon).
 			Show()
@@ -341,4 +340,4 @@ func (pg *ticketPage) handle() {
 	}
 }
 
-func (pg *ticketPage) onClose() {}
+func (pg *ticketPage) OnClose() {}

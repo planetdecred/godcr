@@ -162,7 +162,7 @@ func (tp *ticketPurchaseModal) canPurchase() bool {
 	return true
 }
 
-func (tp *ticketPurchaseModal) modalID() string {
+func (tp *ticketPurchaseModal) ModalID() string {
 	return tp.randomID
 }
 
@@ -245,7 +245,7 @@ func (tp *ticketPurchaseModal) purchaseTickets(password []byte) {
 	}()
 }
 
-func (tp *ticketPurchaseModal) handle() {
+func (tp *ticketPurchaseModal) Handle() {
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.vspInfo).List) > 0 {
 		if tp.wallet.GetRememberVSP() != "" {
