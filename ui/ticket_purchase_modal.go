@@ -59,26 +59,6 @@ func newTicketPurchaseModal(common *pageCommon) *ticketPurchaseModal {
 	return tp
 }
 
-func (tp *ticketPurchaseModal) createNewVSPD() {
-	selectedAccount := tp.accountSelector.selectedAccount
-	selectedVSP := tp.vspSelector.SelectedVSP()
-	vspd, err := tp.wallet.NewVSPD(selectedVSP.Host, selectedAccount.WalletID, selectedAccount.Number)
-	if err != nil {
-		tp.notify(err.Error(), false)
-	}
-	tp.vsp = vspd
-}
-
-func (tp *ticketPurchaseModal) doPurchaseTicket(password []byte, ticketAmount uint32) {
-	if tp.isPurchaseLoading {
-		log.Info("Please wait...")
-		return
-	}
-	tp.isPurchaseLoading = true
-	//selectedAccount := pg.purchaseAccountSelector.selectedAccount
-	//pg.wallet.PurchaseTicket(selectedAccount.WalletID, selectedAccount.Number, ticketAmount, password, pg.vspd, pg.purchaseErrChan)
-}
-
 func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
@@ -240,6 +220,31 @@ func (tp *ticketPurchaseModal) calculateTotals() {
 	tp.balanceLessCost = accountBalance - tp.totalCost
 }
 
+func (tp *ticketPurchaseModal) createNewVSPD() {
+	selectedAccount := tp.accountSelector.selectedAccount
+	selectedVSP := tp.vspSelector.SelectedVSP()
+	vspd, err := tp.wallet.NewVSPD(selectedVSP.Host, selectedAccount.WalletID, selectedAccount.Number)
+	if err != nil {
+		tp.notify(err.Error(), false)
+	}
+	tp.vsp = vspd
+}
+
+func (tp *ticketPurchaseModal) purchaseTickets(password []byte) {
+	tp.Dismiss()
+	tp.notify(fmt.Sprintf("attempting to purchase %v ticket(s)", tp.ticketCount()), true)
+
+	go func() {
+		account := tp.accountSelector.selectedAccount
+		err := tp.wallet.PurchaseTicket(account.WalletID, uint32(tp.ticketCount()), password, tp.vsp)
+		if err != nil {
+			tp.notify(err.Error(), false)
+			return
+		}
+		tp.notify(fmt.Sprintf("%v ticket(s) purchased successfully", tp.ticketCount()), true)
+	}()
+}
+
 func (tp *ticketPurchaseModal) handle() {
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.vspInfo).List) > 0 {
@@ -268,6 +273,7 @@ func (tp *ticketPurchaseModal) handle() {
 			TicketCount(tp.ticketCount()).
 			TotalCost(tp.totalCost).
 			BalanceLessCost(tp.balanceLessCost).
+			TicketPurchase(tp.purchaseTickets).
 			Show()
 	}
 }

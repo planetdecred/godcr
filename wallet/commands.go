@@ -962,41 +962,23 @@ func (wal *Wallet) NewVSPD(host string, walletID int, accountID int32) (*dcrlibw
 	return vspd, nil
 }
 
-// PurchaseTicket buy a ticket with given parameters
-func (wal *Wallet) PurchaseTicket(walletID int, accountID int32, tickets uint32, passphrase []byte, vspd *dcrlibwallet.VSP, errChan chan error) {
-	go func() {
-		var resp Response
-		wall := wal.multi.WalletWithID(walletID)
-		if wall == nil {
-			go func() {
-				errChan <- ErrIDNotExist
-			}()
-			return
-		}
+func (wal *Wallet) PurchaseTicket(walletID int, tickets uint32, passphrase []byte, vspd *dcrlibwallet.VSP) (err error) {
+	wall := wal.multi.WalletWithID(walletID)
+	if wall == nil {
+		return fmt.Errorf("wallet ID does not exist")
+	}
 
-		_, err := vspd.GetInfo(context.Background())
-		if err != nil {
-			go func() {
-				errChan <- err
-			}()
-			return
-		}
+	_, err = vspd.GetInfo(context.Background())
+	if err != nil {
+		return err
+	}
 
-		err = vspd.PurchaseTickets(int32(tickets), wal.multi.GetBestBlock().Height+256, passphrase)
-		if err != nil {
-			go func() {
-				errChan <- err
-			}()
-			return
-		}
+	err = vspd.PurchaseTickets(int32(tickets), wal.multi.GetBestBlock().Height+256, passphrase)
+	if err != nil {
+		return
+	}
 
-		go func() {
-			errChan <- nil
-		}()
-
-		resp.Resp = &TicketPurchase{}
-		wal.Send <- resp
-	}()
+	return
 }
 
 // GetAllTickets collects a per-wallet slice of tickets fitting the parameters.

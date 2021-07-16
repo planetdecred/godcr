@@ -27,6 +27,7 @@ type ticketReviewModal struct {
 	spendingPassword decredmaterial.Editor
 	purchase         decredmaterial.Button
 	cancelPurchase   decredmaterial.Button
+	purchaseTickets  func(password []byte)
 
 	account *dcrlibwallet.Account
 }
@@ -141,6 +142,11 @@ func (t *ticketReviewModal) handle() {
 	for t.cancelPurchase.Button.Clicked() {
 		t.Dismiss()
 	}
+
+	for t.purchase.Button.Clicked() {
+		t.purchaseTickets([]byte(t.spendingPassword.Editor.Text()))
+		t.Dismiss()
+	}
 }
 
 func (t *ticketReviewModal) VSPHost(host string) *ticketReviewModal {
@@ -165,5 +171,11 @@ func (t *ticketReviewModal) TotalCost(total int64) *ticketReviewModal {
 
 func (t *ticketReviewModal) BalanceLessCost(remaining int64) *ticketReviewModal {
 	t.balanceLessCost = remaining
+	return t
+}
+
+
+func (t *ticketReviewModal) TicketPurchase(purchaseTickets func ([]byte)) *ticketReviewModal {
+	t.purchaseTickets = purchaseTickets
 	return t
 }
