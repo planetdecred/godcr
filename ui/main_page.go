@@ -31,6 +31,7 @@ type mainPage struct {
 
 	current, previous string
 	pages             map[string]Page
+	sendPage          *page.SendPage
 
 	// page state variables
 	usdExchangeSet  bool
@@ -242,7 +243,10 @@ func (mp *mainPage) Handle() {
 	for i := range mp.appBarNavItems {
 		for mp.appBarNavItems[i].clickable.Clicked() {
 			if i == 0 {
-				mp.changeFragment(page.NewSendPage(mp.load), page.SendPageID)
+				if mp.sendPage == nil {
+					mp.sendPage = page.NewSendPage(mp.load)
+				}
+				mp.changeFragment(mp.sendPage, page.SendPageID)
 				continue
 			}
 
