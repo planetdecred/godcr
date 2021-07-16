@@ -62,11 +62,11 @@ func (tm *TextInputModal) SetError(err string) {
 }
 
 func (tm *TextInputModal) Handle() {
-	var isPositiveButtonDisabled bool
 	if tm.textInput.Editor.Len() == 0 {
-		isPositiveButtonDisabled = true
+		tm.btnPositve.Disable()
+	} else {
+		tm.btnPositve.Enable()
 	}
-	tm.btnPositve.SetIsDisabled(isPositiveButtonDisabled)
 
 	for tm.btnPositve.Button.Clicked() {
 		if tm.IsLoading {
