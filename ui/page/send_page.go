@@ -22,7 +22,7 @@ const (
 	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
 )
 
-type sendPage struct {
+type SendPage struct {
 	*load.Load
 	pageContainer layout.List
 
@@ -69,8 +69,8 @@ type authoredTxData struct {
 	sendAmountUSD       string
 }
 
-func NewSendPage(l *load.Load) *sendPage {
-	pg := &sendPage{
+func NewSendPage(l *load.Load) *SendPage {
+	pg := &SendPage{
 		Load: l,
 		pageContainer: layout.List{
 			Axis:      layout.Vertical,
@@ -185,7 +185,7 @@ func NewSendPage(l *load.Load) *sendPage {
 	return pg
 }
 
-func (pg *sendPage) OnResume() {
+func (pg *SendPage) OnResume() {
 	pg.destinationAccountSelector.selectFirstWalletValidAccount()
 	pg.sourceAccountSelector.selectFirstWalletValidAccount()
 
@@ -195,7 +195,7 @@ func (pg *sendPage) OnResume() {
 	}
 }
 
-func (pg *sendPage) fetchExchangeValue() {
+func (pg *SendPage) fetchExchangeValue() {
 	go func() {
 		var dcrUsdtBittrex load.DCRUSDTBittrex
 		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
@@ -217,7 +217,7 @@ func (pg *sendPage) fetchExchangeValue() {
 	}()
 }
 
-func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SendPage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", func(gtx C) D {
@@ -281,7 +281,7 @@ func (pg *sendPage) Layout(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *sendPage) topNav(gtx layout.Context) layout.Dimensions {
+func (pg *SendPage) topNav(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -307,7 +307,7 @@ func (pg *sendPage) topNav(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *sendPage) toSection(gtx layout.Context) layout.Dimensions {
+func (pg *SendPage) toSection(gtx layout.Context) layout.Dimensions {
 	pg.dcrAmountEditor.SetError(pg.amountErrorText)
 
 	if pg.amountErrorText != "" {
@@ -364,7 +364,7 @@ func (pg *sendPage) toSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
+func (pg *SendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
 		feeText := pg.txFee
 		if pg.exchangeRate != -1 {
@@ -413,7 +413,7 @@ func (pg *sendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *sendPage) balanceSection(gtx layout.Context) layout.Dimensions {
+func (pg *SendPage) balanceSection(gtx layout.Context) layout.Dimensions {
 	c := pg.Theme.Card()
 	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	return c.Layout(gtx, func(gtx C) D {
@@ -452,7 +452,7 @@ func (pg *sendPage) balanceSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *SendPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -483,7 +483,7 @@ func (pg *sendPage) pageSections(gtx layout.Context, title string, body layout.W
 	})
 }
 
-func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue string) layout.Dimensions {
+func (pg *SendPage) contentRow(gtx layout.Context, leftValue, rightValue string) layout.Dimensions {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2(leftValue)
@@ -503,7 +503,7 @@ func (pg *sendPage) contentRow(gtx layout.Context, leftValue, rightValue string)
 	)
 }
 
-func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
+func (pg *SendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {
 			return false
@@ -512,14 +512,14 @@ func (pg *sendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func (pg *sendPage) resetErrorText() {
+func (pg *SendPage) resetErrorText() {
 	pg.amountErrorText = ""
 	pg.destinationAddressEditor.SetError("")
 	pg.dcrAmountEditor.SetError("")
 	pg.usdAmountEditor.SetError("")
 }
 
-func (pg *sendPage) validateAndConstructTx() {
+func (pg *SendPage) validateAndConstructTx() {
 	if pg.validate() {
 		pg.constructTx()
 	} else {
@@ -527,7 +527,7 @@ func (pg *sendPage) validateAndConstructTx() {
 	}
 }
 
-func (pg *sendPage) validate() bool {
+func (pg *SendPage) validate() bool {
 
 	_, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
 	amountIsValid := err == nil
@@ -548,7 +548,7 @@ func (pg *sendPage) validate() bool {
 	return validForSending
 }
 
-func (pg *sendPage) destinationAddress() (string, error) {
+func (pg *SendPage) destinationAddress() (string, error) {
 	if pg.sendToAddress {
 		valid, address := pg.validateDestinationAddress()
 		if valid {
@@ -564,7 +564,7 @@ func (pg *sendPage) destinationAddress() (string, error) {
 	return wal.CurrentAddress(destinationAccount.Number)
 }
 
-func (pg *sendPage) validateDestinationAddress() (bool, string) {
+func (pg *SendPage) validateDestinationAddress() (bool, string) {
 
 	address := pg.destinationAddressEditor.Editor.Text()
 	address = strings.TrimSpace(address)
@@ -583,7 +583,7 @@ func (pg *sendPage) validateDestinationAddress() (bool, string) {
 	return false, address
 }
 
-func (pg *sendPage) validateDCRAmount() bool {
+func (pg *SendPage) validateDCRAmount() {
 	pg.amountErrorText = ""
 	if pg.inputsNotEmpty(pg.dcrAmountEditor.Editor) {
 		dcrAmount, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
@@ -592,7 +592,7 @@ func (pg *sendPage) validateDCRAmount() bool {
 			pg.usdAmountEditor.Editor.SetText("")
 			pg.amountErrorText = "Invalid amount"
 			// todo: invalid decimal places error
-			return false
+			return
 		}
 
 		if pg.exchangeRate != -1 {
@@ -600,16 +600,15 @@ func (pg *sendPage) validateDCRAmount() bool {
 			pg.usdAmountEditor.Editor.SetText(fmt.Sprintf("%.2f", usdAmount)) // 2 decimal places
 		}
 
-		return true
+		return
 	}
 
 	// empty usd input since this is empty
 	pg.usdAmountEditor.Editor.SetText("")
-	return false
 }
 
 // validateUSDAmount is called when usd text changes
-func (pg *sendPage) validateUSDAmount() bool {
+func (pg *SendPage) validateUSDAmount() bool {
 	pg.amountErrorText = ""
 	if pg.inputsNotEmpty(pg.usdAmountEditor.Editor) {
 		usdAmount, err := strconv.ParseFloat(pg.usdAmountEditor.Editor.Text(), 64)
@@ -633,7 +632,7 @@ func (pg *sendPage) validateUSDAmount() bool {
 	return false
 }
 
-func (pg *sendPage) constructTx() {
+func (pg *SendPage) constructTx() {
 	address, err := pg.destinationAddress()
 	if err != nil {
 		pg.feeEstimationError(err.Error())
@@ -709,7 +708,7 @@ func (pg *sendPage) constructTx() {
 	pg.txAuthor = unsignedTx
 }
 
-func (pg *sendPage) feeEstimationError(err string) {
+func (pg *SendPage) feeEstimationError(err string) {
 	if err == dcrlibwallet.ErrInsufficientBalance {
 		pg.amountErrorText = "Not enough funds"
 	} else if strings.Contains(err, "invalid amount") {
@@ -722,7 +721,7 @@ func (pg *sendPage) feeEstimationError(err string) {
 	pg.clearEstimates()
 }
 
-func (pg *sendPage) clearEstimates() {
+func (pg *SendPage) clearEstimates() {
 	pg.txFee = " - "
 	pg.txFeeUSD = " - "
 	pg.estSignedSize = " - "
@@ -734,7 +733,7 @@ func (pg *sendPage) clearEstimates() {
 	pg.sendAmountUSD = " - "
 }
 
-func (pg *sendPage) resetFields() {
+func (pg *SendPage) resetFields() {
 	pg.sendMax = false
 
 	pg.destinationAddressEditor.SetError("")
@@ -745,7 +744,7 @@ func (pg *sendPage) resetFields() {
 	pg.usdAmountEditor.Editor.SetText("")
 }
 
-func (pg *sendPage) Handle() {
+func (pg *SendPage) Handle() {
 	sendToAddress := pg.accountSwitch.SelectedIndex() == 1
 	if sendToAddress != pg.sendToAddress { // switch changed
 		pg.sendToAddress = sendToAddress
@@ -847,6 +846,6 @@ func (pg *sendPage) Handle() {
 	}
 }
 
-func (pg *sendPage) OnClose() {
+func (pg *SendPage) OnClose() {
 
 }

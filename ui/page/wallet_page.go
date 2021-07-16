@@ -663,7 +663,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 										layout.Flexed(1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												totalBal := dcrutil.Amount(account.Balance.Spendable).String()
-												return layoutBalance(gtx, pg.Load, totalBal, true)
+												return layoutBalance(gtx, pg.Load, totalBal)
 											})
 										}),
 									)

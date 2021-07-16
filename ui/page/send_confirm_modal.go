@@ -145,7 +145,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return layoutBalance(gtx, scm.Load, scm.sendAmount, true)
+									return layoutBalance(gtx, scm.Load, scm.sendAmount)
 								}),
 								layout.Flexed(1, func(gtx C) D {
 									if scm.exchangeRateSet {
