@@ -864,8 +864,7 @@ func (pg *WalletPage) Handle() {
 					// todo: uncomment after moving privacy page to the page package
 					// pg.ChangeFragment(PrivacyPage(common, listItem.wal), PagePrivacy)
 				case SettingsPageID:
-					// todo: uncomment after moving wallet settings page to the page package
-					// pg.ChangeFragment(WalletSettingsPage(common, listItem.wal), PageWalletSettings)
+					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal), WalletSettingsPageID)
 				default:
 					menu.action(pg.Load)
 				}
