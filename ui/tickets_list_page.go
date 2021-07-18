@@ -315,7 +315,7 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c *pageCommon
 	})
 }
 
-func (pg *ticketPageList) handle() {
+func (pg *ticketPageList) Handle() {
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
 	}
