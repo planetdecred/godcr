@@ -19,6 +19,7 @@ import (
 const PageTicketsList = "TicketsList"
 
 type ticketPageList struct {
+	common       *pageCommon
 	th           *decredmaterial.Theme
 	tickets      **wallet.Tickets
 	ticketsList  layout.List
@@ -28,13 +29,11 @@ type ticketPageList struct {
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
+	backButton         decredmaterial.IconButton
 	isGridView         bool
-	common             *pageCommon
-	statusTooltips     []*decredmaterial.Tooltip
 
-	wallets []*dcrlibwallet.Wallet
-
-	backButton decredmaterial.IconButton
+	wallets        []*dcrlibwallet.Wallet
+	ticketTooltips []tooltips
 }
 
 func TicketPageList(c *pageCommon) Page {
@@ -72,7 +71,6 @@ func (pg *ticketPageList) OnResume() {
 func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 	c := pg.common
 	c.createOrUpdateWalletDropDown(&pg.walletDropDown, pg.wallets)
-	pg.initTicketTooltips(*c)
 
 	body := func(gtx C) D {
 		page := SubPage{
@@ -84,6 +82,15 @@ func (pg *ticketPageList) Layout(gtx layout.Context) layout.Dimensions {
 			body: func(gtx C) D {
 				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 				tickets := (*pg.tickets).Confirmed[walletID]
+				for range tickets {
+					pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
+						statusTooltip:     c.theme.Tooltip(),
+						walletNameTooltip: c.theme.Tooltip(),
+						dateTooltip:       c.theme.Tooltip(),
+						daysBehindTooltip: c.theme.Tooltip(),
+						durationTooltip:   c.theme.Tooltip(),
+					})
+				}
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
@@ -300,7 +307,7 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c *pageCommon
 						Right:  values.MarginPadding4,
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, c, &tickets[index], pg.statusTooltips[index])
+						return ticketCard(gtx, c, &tickets[index], pg.ticketTooltips[index])
 					})
 				})
 			})
@@ -308,17 +315,7 @@ func (pg *ticketPageList) ticketListGridLayout(gtx layout.Context, c *pageCommon
 	})
 }
 
-func (pg *ticketPageList) initTicketTooltips(common pageCommon) {
-	walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
-	tickets := (*pg.tickets).Confirmed[walletID]
-
-	for range tickets {
-		pg.statusTooltips = append(pg.statusTooltips, common.theme.Tooltip())
-	}
-}
-
 func (pg *ticketPageList) Handle() {
-
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
 	}
