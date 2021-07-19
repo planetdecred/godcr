@@ -15,7 +15,7 @@ import (
 
 type Button struct {
 	material.ButtonStyle
-	isDisabled         bool
+	isEnabled          bool
 	disabledBackground color.NRGBA
 	surfaceColor       color.NRGBA
 }
@@ -29,6 +29,7 @@ func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 		ButtonStyle:        material.Button(t.Base, button, txt),
 		disabledBackground: t.Color.Gray,
 		surfaceColor:       t.Color.Surface,
+		isEnabled:          true,
 	}
 }
 
@@ -46,16 +47,12 @@ func Clickable(gtx layout.Context, button *widget.Clickable, w layout.Widget) la
 	return material.Clickable(gtx, button, w)
 }
 
-func (b *Button) Disable() {
-	b.isDisabled = true
-}
-
-func (b *Button) Enable() {
-	b.isDisabled = false
+func (b *Button) SetEnabled(enabled bool) {
+	b.isEnabled = enabled
 }
 
 func (b *Button) Enabled() bool {
-	return !b.isDisabled
+	return b.isEnabled
 }
 
 func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
