@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"gioui.org/layout"
@@ -6,15 +6,15 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const PageWalletSettings = "WalletSettings"
+const WalletSettingsPageID = "WalletSettings"
 
-type walletSettingsPage struct {
-	theme  *decredmaterial.Theme
-	common *pageCommon
+type WalletSettingsPage struct {
+	*load.Load
 	wallet *dcrlibwallet.Wallet
 
 	changePass, rescan, deleteWallet *widget.Clickable
@@ -25,31 +25,29 @@ type walletSettingsPage struct {
 	backButton       decredmaterial.IconButton
 }
 
-func WalletSettingsPage(common *pageCommon, wal *dcrlibwallet.Wallet) Page {
-	pg := &walletSettingsPage{
-		theme:         common.theme,
-		common:        common,
+func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
+	pg := &WalletSettingsPage{
+		Load:          l,
 		wallet:        wal,
 		notificationW: new(widget.Bool),
 		changePass:    new(widget.Clickable),
 		rescan:        new(widget.Clickable),
 		deleteWallet:  new(widget.Clickable),
 
-		chevronRightIcon: common.icons.chevronRight,
+		chevronRightIcon: l.Icons.ChevronRight,
 	}
 
-	pg.chevronRightIcon.Color = pg.theme.Color.LightGray
-	pg.backButton, _ = common.SubPageHeaderButtons()
+	pg.chevronRightIcon.Color = l.Theme.Color.LightGray
+	pg.backButton, _ = subpageHeaderButtons(l)
 
 	return pg
 }
 
-func (pg *walletSettingsPage) OnResume() {
+func (pg *WalletSettingsPage) OnResume() {
 
 }
 
-func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
-	common := pg.common
+func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	beep := pg.wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
 	pg.notificationW.Value = beep
@@ -58,17 +56,18 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	body := func(gtx C) D {
-		page := SubPage{
+		sp := SubPage{
+			Load:       pg.Load,
 			title:      values.String(values.StrSettings),
 			walletName: pg.wallet.Name,
 			backButton: pg.backButton,
 			back: func() {
-				common.changePage(page.WalletPageID)
+				pg.ChangePage(WalletPageID)
 			},
 			body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if !common.info.Wallets[*common.selectedWallet].IsWatchingOnly {
+						if !pg.wallet.IsWatchingOnlyWallet() {
 							return pg.changePassphrase()(gtx)
 						}
 						return layout.Dimensions{}
@@ -79,12 +78,12 @@ func (pg *walletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 				)
 			},
 		}
-		return common.SubPageLayout(gtx, page)
+		return sp.Layout(gtx)
 	}
-	return common.UniformPadding(gtx, body)
+	return uniformPadding(gtx, body)
 }
 
-func (pg *walletSettingsPage) changePassphrase() layout.Widget {
+func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrSpendingPassword), pg.changePass, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -99,14 +98,14 @@ func (pg *walletSettingsPage) changePassphrase() layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) notification() layout.Widget {
+func (pg *WalletSettingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrNotifications), nil, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrBeepForNewBlocks))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.theme.Switch(pg.notificationW).Layout(gtx)
+						return pg.Theme.Switch(pg.notificationW).Layout(gtx)
 					})
 				}),
 			)
@@ -114,7 +113,7 @@ func (pg *walletSettingsPage) notification() layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) debug() layout.Widget {
+func (pg *WalletSettingsPage) debug() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrDebug), pg.rescan, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -129,7 +128,7 @@ func (pg *walletSettingsPage) debug() layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) dangerZone() layout.Widget {
+func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrDangerZone), pg.deleteWallet, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -144,13 +143,13 @@ func (pg *walletSettingsPage) dangerZone() layout.Widget {
 	}
 }
 
-func (pg *walletSettingsPage) pageSections(gtx layout.Context, title string, clickable *widget.Clickable, body layout.Widget) layout.Dimensions {
+func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, clickable *widget.Clickable, body layout.Widget) layout.Dimensions {
 	dims := func(gtx layout.Context, title string, body layout.Widget) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := pg.theme.Body2(title)
-					txt.Color = pg.theme.Color.Gray
+					txt := pg.Theme.Body2(title)
+					txt.Color = pg.Theme.Color.Gray
 					return txt.Layout(gtx)
 				}),
 				layout.Rigid(body),
@@ -159,7 +158,7 @@ func (pg *walletSettingsPage) pageSections(gtx layout.Context, title string, cli
 	}
 
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return pg.theme.Card().Layout(gtx, func(gtx C) D {
+		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			if clickable == nil {
 				return dims(gtx, title, body)
 			}
@@ -170,43 +169,42 @@ func (pg *walletSettingsPage) pageSections(gtx layout.Context, title string, cli
 	})
 }
 
-func (pg *walletSettingsPage) bottomSectionLabel(title string) layout.Widget {
+func (pg *WalletSettingsPage) bottomSectionLabel(title string) layout.Widget {
 	return func(gtx C) D {
-		return pg.theme.Body1(title).Layout(gtx)
+		return pg.Theme.Body1(title).Layout(gtx)
 	}
 }
 
-func (pg *walletSettingsPage) Handle() {
-	common := pg.common
+func (pg *WalletSettingsPage) Handle() {
 	for pg.changePass.Clicked() {
-		newPasswordModal(common).
-			title(values.String(values.StrChangeSpendingPass)).
-			hint("Current spending password").
-			negativeButton(values.String(values.StrCancel), func() {}).
-			positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+		modal.NewPasswordModal(pg.Load).
+			Title(values.String(values.StrChangeSpendingPass)).
+			Hint("Current spending password").
+			NegativeButton(values.String(values.StrCancel), func() {}).
+			PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 				go func() {
 					err := pg.wallet.UnlockWallet([]byte(password))
 					if err != nil {
-						pm.setError(err.Error())
-						pm.setLoading(false)
+						pm.SetError(err.Error())
+						pm.SetLoading(false)
 						return
 					}
 					pg.wallet.LockWallet()
 					pm.Dismiss()
 
 					// change password
-					newCreatePasswordModal(common).
-						title(values.String(values.StrChangeSpendingPass)).
-						enableName(false).
-						passwordHint("New spending password").
-						confirmPasswordHint("Confirm new spending password").
-						passwordCreated(func(walletName, newPassword string, m *createPasswordModal) bool {
+					modal.NewCreatePasswordModal(pg.Load).
+						Title(values.String(values.StrChangeSpendingPass)).
+						EnableName(false).
+						PasswordHint("New spending password").
+						ConfirmPasswordHint("Confirm new spending password").
+						PasswordCreated(func(walletName, newPassword string, m *modal.CreatePasswordModal) bool {
 							go func() {
-								err := pg.common.multiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
+								err := pg.WL.MultiWallet.ChangePrivatePassphraseForWallet(pg.wallet.ID, []byte(password),
 									[]byte(newPassword), dcrlibwallet.PassphraseTypePass)
 								if err != nil {
-									m.setError(err.Error())
-									m.setLoading(false)
+									m.SetError(err.Error())
+									m.SetLoading(false)
 									return
 								}
 								m.Dismiss()
@@ -223,26 +221,26 @@ func (pg *walletSettingsPage) Handle() {
 
 	for pg.rescan.Clicked() {
 		go func() {
-			info := newInfoModal(common).
-				title(values.String(values.StrRescanBlockchain)).
-				body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
+			info := modal.NewInfoModal(pg.Load).
+				Title(values.String(values.StrRescanBlockchain)).
+				Body("Rescanning may help resolve some balance errors. This will take some time, as it scans the entire"+
 					" blockchain for transactions").
-				negativeButton(values.String(values.StrCancel), func() {}).
-				positiveButton(values.String(values.StrRescan), func() {
-					err := pg.common.multiWallet.RescanBlocks(pg.wallet.ID)
+				NegativeButton(values.String(values.StrCancel), func() {}).
+				PositiveButton(values.String(values.StrRescan), func() {
+					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
-							common.notify(values.String(values.StrNotConnected), false)
+							pg.CreateToast(values.String(values.StrNotConnected), false)
 							return
 						}
-						common.notify(err.Error(), false)
+						pg.CreateToast(err.Error(), false)
 						return
 					}
 					msg := values.String(values.StrRescanProgressNotification)
-					common.notify(msg, true)
+					pg.CreateToast(msg, true)
 				})
 
-			common.showModal(info)
+			pg.ShowModal(info)
 		}()
 		break
 	}
@@ -252,26 +250,26 @@ func (pg *walletSettingsPage) Handle() {
 	}
 
 	for pg.deleteWallet.Clicked() {
-		newInfoModal(common).
-			title(values.String(values.StrRemoveWallet)).
-			body("Make sure to have the seed phrase backed up before removing the wallet").
-			negativeButton(values.String(values.StrCancel), func() {}).
-			positiveButton(values.String(values.StrRemove), func() {
+		modal.NewInfoModal(pg.Load).
+			Title(values.String(values.StrRemoveWallet)).
+			Body("Make sure to have the seed phrase backed up before removing the wallet").
+			NegativeButton(values.String(values.StrCancel), func() {}).
+			PositiveButton(values.String(values.StrRemove), func() {
 
-				newPasswordModal(common).
-					title(values.String(values.StrConfirmToRemove)).
-					negativeButton(values.String(values.StrCancel), func() {}).
-					positiveButtonStyle(common.theme.Color.Surface, common.theme.Color.Danger).
-					positiveButton(values.String(values.StrConfirm), func(password string, pm *passwordModal) bool {
+				modal.NewPasswordModal(pg.Load).
+					Title(values.String(values.StrConfirmToRemove)).
+					NegativeButton(values.String(values.StrCancel), func() {}).
+					PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
+					PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 						go func() {
-							err := pg.common.multiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
+							err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
 							if err != nil {
-								pm.setError(err.Error())
-								pm.setLoading(false)
+								pm.SetError(err.Error())
+								pm.SetLoading(false)
 								return
 							}
 							pm.Dismiss()
-							pm.changePage(page.WalletPageID)
+							pm.ChangePage(WalletPageID)
 						}()
 						return false
 					}).Show()
@@ -281,4 +279,4 @@ func (pg *walletSettingsPage) Handle() {
 	}
 }
 
-func (pg *walletSettingsPage) OnClose() {}
+func (pg *WalletSettingsPage) OnClose() {}
