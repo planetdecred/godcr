@@ -1,0 +1,2 @@
+transaction page freezing is cause of the channel
+Make account selector instance reusable

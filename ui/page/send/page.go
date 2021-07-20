@@ -15,16 +15,11 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 )
 
-type (
-	C = layout.Context
-	D = layout.Dimensions
-)
-
 const (
-	SendPageID = "Send"
+	PageID = "Send"
 )
 
-type SendPage struct {
+type Page struct {
 	*load.Load
 	pageContainer layout.List
 
@@ -64,8 +59,8 @@ type authoredTxData struct {
 	sendAmountUSD       string
 }
 
-func NewSendPage(l *load.Load) *SendPage {
-	pg := &SendPage{
+func NewSendPage(l *load.Load) *Page {
+	pg := &Page{
 		Load:            l,
 		sendDestination: newSendDestination(l),
 		amount:          newSendAmount(l),
@@ -122,7 +117,7 @@ func NewSendPage(l *load.Load) *SendPage {
 	return pg
 }
 
-func (pg *SendPage) OnResume() {
+func (pg *Page) OnResume() {
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 
@@ -132,7 +127,7 @@ func (pg *SendPage) OnResume() {
 	}
 }
 
-func (pg *SendPage) fetchExchangeValue() {
+func (pg *Page) fetchExchangeValue() {
 	go func() {
 		var dcrUsdtBittrex load.DCRUSDTBittrex
 		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
@@ -153,7 +148,7 @@ func (pg *SendPage) fetchExchangeValue() {
 	}()
 }
 
-func (pg *SendPage) validateAndConstructTx() {
+func (pg *Page) validateAndConstructTx() {
 	if pg.validate() {
 		pg.constructTx()
 	} else {
@@ -161,7 +156,7 @@ func (pg *SendPage) validateAndConstructTx() {
 	}
 }
 
-func (pg *SendPage) validate() bool {
+func (pg *Page) validate() bool {
 
 	amountIsValid := pg.amount.amountIsValid()
 	addressIsValid := pg.sendDestination.validate()
@@ -176,7 +171,7 @@ func (pg *SendPage) validate() bool {
 	return validForSending
 }
 
-func (pg *SendPage) constructTx() {
+func (pg *Page) constructTx() {
 	destinationAddress, err := pg.sendDestination.destinationAddress()
 	if err != nil {
 		pg.feeEstimationError(err.Error())
@@ -245,7 +240,7 @@ func (pg *SendPage) constructTx() {
 	pg.txAuthor = unsignedTx
 }
 
-func (pg *SendPage) feeEstimationError(err string) {
+func (pg *Page) feeEstimationError(err string) {
 	if err == dcrlibwallet.ErrInsufficientBalance {
 		pg.amount.setError("Not enough funds")
 	} else if strings.Contains(err, invalidAmountErr) {
@@ -258,7 +253,7 @@ func (pg *SendPage) feeEstimationError(err string) {
 	pg.clearEstimates()
 }
 
-func (pg *SendPage) clearEstimates() {
+func (pg *Page) clearEstimates() {
 	pg.txAuthor = nil
 	pg.txFee = " - "
 	pg.txFeeUSD = " - "
@@ -271,13 +266,13 @@ func (pg *SendPage) clearEstimates() {
 	pg.sendAmountUSD = " - "
 }
 
-func (pg *SendPage) resetFields() {
+func (pg *Page) resetFields() {
 	pg.sendDestination.clearAddressInput()
 
 	pg.amount.resetFields()
 }
 
-func (pg *SendPage) Handle() {
+func (pg *Page) Handle() {
 
 	pg.sendDestination.handle()
 	pg.amount.handle()
@@ -313,7 +308,7 @@ func (pg *SendPage) Handle() {
 	}
 
 	for pg.clearAllBtn.Clicked() {
-		pg.moreOptionIsOpen = true
+		pg.moreOptionIsOpen = false
 
 		pg.sendDestination.clearAddressInput()
 
@@ -322,6 +317,6 @@ func (pg *SendPage) Handle() {
 
 }
 
-func (pg *SendPage) OnClose() {
+func (pg *Page) OnClose() {
 
 }

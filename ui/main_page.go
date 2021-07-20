@@ -33,7 +33,7 @@ type mainPage struct {
 
 	current, previous string
 	pages             map[string]Page
-	sendPage          *send.SendPage
+	sendPage          *send.Page
 
 	// page state variables
 	usdExchangeSet  bool
@@ -248,7 +248,7 @@ func (mp *mainPage) Handle() {
 				if mp.sendPage == nil {
 					mp.sendPage = send.NewSendPage(mp.load)
 				}
-				mp.changeFragment(mp.sendPage, send.SendPageID)
+				mp.changeFragment(mp.sendPage, send.PageID)
 				continue
 			}
 

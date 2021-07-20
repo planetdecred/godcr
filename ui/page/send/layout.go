@@ -11,7 +11,12 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-func (pg *SendPage) initLayoutWidgets() {
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
+func (pg *Page) initLayoutWidgets() {
 	pg.pageContainer = layout.List{
 		Axis:      layout.Vertical,
 		Alignment: layout.Middle,
@@ -41,7 +46,7 @@ func (pg *SendPage) initLayoutWidgets() {
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
 }
 
-func (pg *SendPage) topNav(gtx layout.Context) layout.Dimensions {
+func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding20
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -67,7 +72,7 @@ func (pg *SendPage) topNav(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *SendPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.pageSections(gtx, "From", false, func(gtx C) D {
@@ -131,7 +136,7 @@ func (pg *SendPage) Layout(gtx layout.Context) layout.Dimensions {
 	return dims
 }
 
-func (pg *SendPage) pageSections(gtx layout.Context, title string, showAccountSwitch bool, body layout.Widget) layout.Dimensions {
+func (pg *Page) pageSections(gtx layout.Context, title string, showAccountSwitch bool, body layout.Widget) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -162,7 +167,7 @@ func (pg *SendPage) pageSections(gtx layout.Context, title string, showAccountSw
 	})
 }
 
-func (pg *SendPage) toSection(gtx layout.Context) layout.Dimensions {
+func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 
 	return pg.pageSections(gtx, "To", true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -202,7 +207,7 @@ func (pg *SendPage) toSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *SendPage) feeSection(gtx layout.Context) layout.Dimensions {
+func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
 		feeText := pg.txFee
 		if pg.exchangeRate != -1 {
@@ -252,7 +257,7 @@ func (pg *SendPage) feeSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *SendPage) balanceSection(gtx layout.Context) layout.Dimensions {
+func (pg *Page) balanceSection(gtx layout.Context) layout.Dimensions {
 	c := pg.Theme.Card()
 	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	return c.Layout(gtx, func(gtx C) D {
@@ -291,7 +296,7 @@ func (pg *SendPage) balanceSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *SendPage) contentRow(gtx layout.Context, leftValue, rightValue string) layout.Dimensions {
+func (pg *Page) contentRow(gtx layout.Context, leftValue, rightValue string) layout.Dimensions {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2(leftValue)
