@@ -20,7 +20,7 @@ import (
 
 const PageUTXO = "unspentTransactionOutput"
 
-type UtxoPage struct {
+type UTXOPage struct {
 	*load.Load
 	utxoListContainer      layout.List
 	txAuthor               *dcrlibwallet.TxAuthor
@@ -41,8 +41,8 @@ type UtxoPage struct {
 	selectedAccountID int32
 }
 
-func UTXOPage(l *load.Load) *UtxoPage {
-	pg := &UtxoPage{
+func NewUTXOPage(l *load.Load) *UTXOPage {
+	pg := &UTXOPage{
 		unspentOutputs: &l.WL.UnspentOutputs,
 		utxoListContainer: layout.List{
 			Axis: layout.Vertical,
@@ -61,11 +61,11 @@ func UTXOPage(l *load.Load) *UtxoPage {
 	return pg
 }
 
-func (pg *UtxoPage) OnResume() {
+func (pg *UTXOPage) OnResume() {
 
 }
 
-func (pg *UtxoPage) Handle() {
+func (pg *UTXOPage) Handle() {
 	pg.selectedWalletID = pg.WL.Info.Wallets[*pg.SelectedWallet].ID
 	pg.selectedAccountID = pg.WL.Info.Wallets[*pg.SelectedWallet].Accounts[*pg.SelectedAccount].Number
 
@@ -110,7 +110,7 @@ func (pg *UtxoPage) Handle() {
 	}
 }
 
-func (pg *UtxoPage) handlerCheckboxes(cb *decredmaterial.CheckBoxStyle, utxo *wallet.UnspentOutput) {
+func (pg *UTXOPage) handlerCheckboxes(cb *decredmaterial.CheckBoxStyle, utxo *wallet.UnspentOutput) {
 	if cb.CheckBox.Changed() {
 		if cb.CheckBox.Value {
 			(*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID][utxo.UTXO.OutputKey] = utxo
@@ -121,7 +121,7 @@ func (pg *UtxoPage) handlerCheckboxes(cb *decredmaterial.CheckBoxStyle, utxo *wa
 	}
 }
 
-func (pg *UtxoPage) calculateAmountAndFeeUTXO() {
+func (pg *UTXOPage) calculateAmountAndFeeUTXO() {
 	var utxoKeys []string
 	var totalAmount int64
 	for utxoKey, utxo := range (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID] {
@@ -143,12 +143,12 @@ func (pg *UtxoPage) calculateAmountAndFeeUTXO() {
 	pg.txnAmountAfterFee = dcrutil.Amount(totalAmount - feeAndSize.Fee.AtomValue).String()
 }
 
-func (pg *UtxoPage) clearPageData() {
+func (pg *UTXOPage) clearPageData() {
 	pg.checkboxes = nil
 	pg.txnFee = ""
 }
 
-func (pg *UtxoPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *UTXOPage) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -209,7 +209,7 @@ func (pg *UtxoPage) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *UtxoPage) textData(gtx layout.Context, txt, value string) layout.Dimensions {
+func (pg *UTXOPage) textData(gtx layout.Context, txt, value string) layout.Dimensions {
 	txt1 := pg.Theme.Label(values.MarginPadding15, txt)
 	txt2 := pg.Theme.Label(values.MarginPadding15, value)
 	txt1.MaxLines, txt2.MaxLines = 1, 1
@@ -219,7 +219,7 @@ func (pg *UtxoPage) textData(gtx layout.Context, txt, value string) layout.Dimen
 	)
 }
 
-func (pg *UtxoPage) utxoRowHeader(gtx layout.Context) layout.Dimensions {
+func (pg *UTXOPage) utxoRowHeader(gtx layout.Context) layout.Dimensions {
 	txt := pg.Theme.Label(values.MarginPadding15, "")
 	txt.MaxLines = 1
 	return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -250,7 +250,7 @@ func (pg *UtxoPage) utxoRowHeader(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *UtxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, index int) layout.Dimensions {
+func (pg *UTXOPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, index int) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(pg.checkboxes[index].Layout),
 		layout.Rigid(func(gtx C) D {
@@ -290,4 +290,4 @@ func (pg *UtxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, inde
 	)
 }
 
-func (pg *UtxoPage) OnClose() {}
+func (pg *UTXOPage) OnClose() {}

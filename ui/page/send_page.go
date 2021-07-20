@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	SendPageID             = "Send"
-	invalidPassphraseError = "error broadcasting transaction: " + dcrlibwallet.ErrInvalidPassphrase
+	SendPageID       = "Send"
+	invalidAmountErr = "Invalid amount" //TODO: use localized strings
 )
 
 type SendPage struct {
@@ -384,6 +384,7 @@ func (pg *SendPage) feeSection(gtx layout.Context) layout.Dimensions {
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
+							//TODO
 							return pg.contentRow(gtx, "Estimated time", "10 minutes (2 blocks)")
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -465,7 +466,7 @@ func (pg *SendPage) pageSections(gtx layout.Context, title string, body layout.W
 							return inset.Layout(gtx, pg.Theme.Body1(title).Layout)
 						}),
 						layout.Flexed(1, func(gtx C) D {
-							if title == "To" { //TODO
+							if title == "To" { //TODO: use proper comparison
 								return layout.E.Layout(gtx, func(gtx C) D {
 									inset := layout.Inset{
 										Top: values.MarginPaddingMinus5,
@@ -590,7 +591,7 @@ func (pg *SendPage) validateDCRAmount() {
 		if err != nil {
 			// empty usd input
 			pg.usdAmountEditor.Editor.SetText("")
-			pg.amountErrorText = "Invalid amount"
+			pg.amountErrorText = invalidAmountErr
 			// todo: invalid decimal places error
 			return
 		}
@@ -615,7 +616,7 @@ func (pg *SendPage) validateUSDAmount() bool {
 		if err != nil {
 			// empty dcr input
 			pg.dcrAmountEditor.Editor.SetText("")
-			pg.amountErrorText = "Invalid amount"
+			pg.amountErrorText = invalidAmountErr
 			return false
 		}
 
@@ -711,8 +712,8 @@ func (pg *SendPage) constructTx() {
 func (pg *SendPage) feeEstimationError(err string) {
 	if err == dcrlibwallet.ErrInsufficientBalance {
 		pg.amountErrorText = "Not enough funds"
-	} else if strings.Contains(err, "invalid amount") {
-		pg.amountErrorText = "Invalid amount"
+	} else if strings.Contains(err, invalidAmountErr) {
+		pg.amountErrorText = invalidAmountErr
 	} else {
 		pg.amountErrorText = err
 		pg.CreateToast("Error estimating transaction: "+err, false)
