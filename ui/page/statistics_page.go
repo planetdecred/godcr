@@ -11,6 +11,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -45,7 +46,7 @@ func NewStatPage(l *load.Load) *StatPage {
 		pg.netType = strings.Title(pg.netType)
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -71,7 +72,7 @@ func (pg *StatPage) layoutStats(gtx C) D {
 			r := pg.Theme.Body2(v)
 			r.Color = pg.Theme.Color.Gray
 			return inset.Layout(gtx, func(gtx C) D {
-				return endToEndRow(gtx, l.Layout, r.Layout)
+				return components.EndToEndRow(gtx, l.Layout, r.Layout)
 			})
 		}
 	}
@@ -118,21 +119,21 @@ func (pg *StatPage) layoutStats(gtx C) D {
 
 func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
 	container := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Statistics",
-			backButton: pg.backButton,
-			back: func() {
+			Title:      "Statistics",
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(DebugPageID)
 			},
-			body: pg.layoutStats,
+			Body: pg.layoutStats,
 		}
 		return sp.Layout(gtx)
 	}
 
 	// Refresh frames every 1 second
 	op.InvalidateOp{At: time.Now().Add(time.Second * 1)}.Add(gtx.Ops)
-	return uniformPadding(gtx, container)
+	return components.UniformPadding(gtx, container)
 }
 
 func (pg *StatPage) Handle()  {}

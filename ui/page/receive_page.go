@@ -9,6 +9,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
@@ -39,7 +40,7 @@ type ReceivePage struct {
 	receiveAddress    decredmaterial.Label
 	gtx               *layout.Context
 
-	selector *AccountSelector
+	selector *components.AccountSelector
 
 	backdrop   *widget.Clickable
 	backButton decredmaterial.IconButton
@@ -83,12 +84,12 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.newAddr.Background = pg.Theme.Color.Surface
 	pg.newAddr.TextSize = values.TextSize16
 
-	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.selector = NewAccountSelector(pg.Load).
-		title("Receiving account").
-		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
+	pg.selector = components.NewAccountSelector(pg.Load).
+		Title("Receiving account").
+		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
 			currentAddress, err := selectedWallet.CurrentAddress(selectedAccount.Number)
 			if err != nil {
@@ -99,11 +100,11 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 
 			pg.generateQRForAddress()
 		}).
-		accountValidator(func(account *dcrlibwallet.Account) bool {
+		AccountValidator(func(account *dcrlibwallet.Account) bool {
 
 			// Filter out imported account and mixed.
 			wal := pg.multiWallet.WalletWithID(account.WalletID)
-			if account.Number == MaxInt32 ||
+			if account.Number == load.MaxInt32 ||
 				account.Number == wal.MixedAccountNumber() {
 				return false
 			}
@@ -114,7 +115,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 }
 
 func (pg *ReceivePage) OnResume() {
-	pg.selector.selectFirstWalletValidAccount()
+	pg.selector.SelectFirstWalletValidAccount()
 }
 
 func (pg *ReceivePage) generateQRForAddress() {
@@ -194,7 +195,7 @@ func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	dims := uniformPadding(gtx, func(gtx C) D {
+	dims := components.UniformPadding(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -371,10 +372,11 @@ func (pg *ReceivePage) Handle() {
 	}
 }
 func (pg *ReceivePage) generateNewAddress() (string, error) {
-	selectedWallet := pg.multiWallet.WalletWithID(pg.selector.selectedAccount.WalletID)
+	selectedAccount := pg.selector.SelectedAccount()
+	selectedWallet := pg.multiWallet.WalletWithID(selectedAccount.WalletID)
 
 generateAddress:
-	newAddr, err := selectedWallet.NextAddress(pg.selector.selectedAccount.Number)
+	newAddr, err := selectedWallet.NextAddress(selectedAccount.Number)
 	if err != nil {
 		return "", err
 	}

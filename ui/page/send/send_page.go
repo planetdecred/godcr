@@ -1,4 +1,4 @@
-package page
+package send
 
 import (
 	"fmt"
@@ -14,7 +14,13 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+)
+
+type (
+	C = layout.Context
+	D = layout.Dimensions
 )
 
 const (
@@ -26,8 +32,8 @@ type SendPage struct {
 	*load.Load
 	pageContainer layout.List
 
-	sourceAccountSelector      *AccountSelector
-	destinationAccountSelector *AccountSelector
+	sourceAccountSelector      *components.AccountSelector
+	destinationAccountSelector *components.AccountSelector
 
 	destinationAddressEditor decredmaterial.Editor
 	dcrAmountEditor          decredmaterial.Editor
@@ -113,7 +119,7 @@ func NewSendPage(l *load.Load) *SendPage {
 	pg.destinationAddressEditor.Editor.SingleLine = true
 	pg.destinationAddressEditor.Editor.SetText("")
 
-	pg.backButton, pg.infoButton = subpageHeaderButtons(pg.Load)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
 	pg.moreOption = l.Theme.PlainIconButton(new(widget.Clickable), pg.Icons.NavMoreIcon)
@@ -134,16 +140,16 @@ func NewSendPage(l *load.Load) *SendPage {
 	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
 
 	// Source account picker
-	pg.sourceAccountSelector = NewAccountSelector(l).
-		title("Sending account").
-		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
+	pg.sourceAccountSelector = components.NewAccountSelector(l).
+		Title("Sending account").
+		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.validateAndConstructTx()
 		}).
-		accountValidator(func(account *dcrlibwallet.Account) bool {
+		AccountValidator(func(account *dcrlibwallet.Account) bool {
 			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
 
 			// Imported and watch only wallet accounts are invalid for sending
-			accountIsValid := account.Number != MaxInt32 && !wal.IsWatchingOnlyWallet()
+			accountIsValid := account.Number != load.MaxInt32 && !wal.IsWatchingOnlyWallet()
 
 			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
 				// privacy is enabled for selected wallet
@@ -153,7 +159,7 @@ func NewSendPage(l *load.Load) *SendPage {
 					accountIsValid = account.Number == wal.MixedAccountNumber()
 				} else {
 					// send to account, check if selected destination account belongs to wallet
-					destinationAccount := pg.destinationAccountSelector.selectedAccount
+					destinationAccount := pg.destinationAccountSelector.SelectedAccount()
 					if destinationAccount.WalletID != account.WalletID {
 						accountIsValid = account.Number == wal.MixedAccountNumber()
 					}
@@ -163,18 +169,18 @@ func NewSendPage(l *load.Load) *SendPage {
 		})
 
 	// Destination account picker
-	pg.destinationAccountSelector = NewAccountSelector(pg.Load).
-		title("Receiving account").
-		accountSelected(func(selectedAccount *dcrlibwallet.Account) {
+	pg.destinationAccountSelector = components.NewAccountSelector(pg.Load).
+		Title("Receiving account").
+		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 			pg.validateAndConstructTx()
 
-			pg.sourceAccountSelector.selectFirstWalletValidAccount() // refresh source account
+			pg.sourceAccountSelector.SelectFirstWalletValidAccount() // refresh source account
 		}).
-		accountValidator(func(account *dcrlibwallet.Account) bool {
+		AccountValidator(func(account *dcrlibwallet.Account) bool {
 
 			// Filter out imported account and mixed.
 			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
-			if account.Number == MaxInt32 ||
+			if account.Number == components.MaxInt32 ||
 				account.Number == wal.MixedAccountNumber() {
 				return false
 			}
@@ -186,11 +192,11 @@ func NewSendPage(l *load.Load) *SendPage {
 }
 
 func (pg *SendPage) OnResume() {
-	pg.destinationAccountSelector.selectFirstWalletValidAccount()
-	pg.sourceAccountSelector.selectFirstWalletValidAccount()
+	pg.destinationAccountSelector.SelectFirstWalletValidAccount()
+	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if currencyExchangeValue == USDExchangeValue {
+	if currencyExchangeValue == components.USDExchangeValue {
 		pg.fetchExchangeValue()
 	}
 }
@@ -236,7 +242,7 @@ func (pg *SendPage) Layout(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			return layout.Stack{Alignment: layout.NE}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					return uniformPadding(gtx, func(gtx C) D {
+					return components.UniformPadding(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
@@ -418,7 +424,7 @@ func (pg *SendPage) balanceSection(gtx layout.Context) layout.Dimensions {
 	c := pg.Theme.Card()
 	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	return c.Layout(gtx, func(gtx C) D {
-		return uniformPadding(gtx, func(gtx C) D {
+		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Flexed(0.6, func(gtx C) D {
 					inset := layout.Inset{
@@ -559,7 +565,7 @@ func (pg *SendPage) destinationAddress() (string, error) {
 		return "", fmt.Errorf("invalid address")
 	}
 
-	destinationAccount := pg.destinationAccountSelector.selectedAccount
+	destinationAccount := pg.destinationAccountSelector.SelectedAccount()
 	wal := pg.WL.MultiWallet.WalletWithID(destinationAccount.WalletID)
 
 	return wal.CurrentAddress(destinationAccount.Number)
@@ -597,7 +603,7 @@ func (pg *SendPage) validateDCRAmount() {
 		}
 
 		if pg.exchangeRate != -1 {
-			usdAmount := dcrTOUSD(pg.exchangeRate, dcrAmount)
+			usdAmount := load.DCRToUSD(pg.exchangeRate, dcrAmount)
 			pg.usdAmountEditor.Editor.SetText(fmt.Sprintf("%.2f", usdAmount)) // 2 decimal places
 		}
 
@@ -621,7 +627,7 @@ func (pg *SendPage) validateUSDAmount() bool {
 		}
 
 		if pg.exchangeRate != -1 { //TODO usd amount should not be visible.
-			dcrAmount := usdToDCR(pg.exchangeRate, usdAmount)
+			dcrAmount := load.USDToDCR(pg.exchangeRate, usdAmount)
 			pg.dcrAmountEditor.Editor.SetText(fmt.Sprintf("%.8f", dcrAmount)) // 8 decimal places
 		}
 
@@ -651,7 +657,7 @@ func (pg *SendPage) constructTx() {
 		amountAtom = dcrlibwallet.AmountAtom(amount)
 	}
 
-	sourceAccount := pg.sourceAccountSelector.selectedAccount
+	sourceAccount := pg.sourceAccountSelector.SelectedAccount()
 	unsignedTx, err := pg.WL.MultiWallet.NewUnsignedTx(sourceAccount.WalletID, sourceAccount.Number)
 	if err != nil {
 		pg.feeEstimationError(err.Error())
@@ -693,12 +699,12 @@ func (pg *SendPage) constructTx() {
 	}
 
 	if pg.exchangeRate != -1 {
-		pg.txFeeUSD = fmt.Sprintf("$%.4f", dcrTOUSD(pg.exchangeRate, feeAndSize.Fee.DcrValue))
-		pg.totalCostUSD = formatUSDBalance(pg.Printer, dcrTOUSD(pg.exchangeRate, totalSendingAmount.ToCoin()))
-		pg.balanceAfterSendUSD = formatUSDBalance(pg.Printer, dcrTOUSD(pg.exchangeRate, balanceAfterSend.ToCoin()))
+		pg.txFeeUSD = fmt.Sprintf("$%.4f", load.DCRToUSD(pg.exchangeRate, feeAndSize.Fee.DcrValue))
+		pg.totalCostUSD = load.FormatUSDBalance(pg.Printer, load.DCRToUSD(pg.exchangeRate, totalSendingAmount.ToCoin()))
+		pg.balanceAfterSendUSD = load.FormatUSDBalance(pg.Printer, load.DCRToUSD(pg.exchangeRate, balanceAfterSend.ToCoin()))
 
-		usdAmount := dcrTOUSD(pg.exchangeRate, dcrutil.Amount(amountAtom).ToCoin())
-		pg.sendAmountUSD = formatUSDBalance(pg.Printer, usdAmount)
+		usdAmount := load.DCRToUSD(pg.exchangeRate, dcrutil.Amount(amountAtom).ToCoin())
+		pg.sendAmountUSD = load.FormatUSDBalance(pg.Printer, usdAmount)
 
 		if pg.sendMax {
 			pg.usdSendMaxChangeEvent = true
@@ -813,11 +819,11 @@ func (pg *SendPage) Handle() {
 		if pg.validate() {
 			confirmTxModal := newSendConfirmModal(pg.Load, pg.authoredTxData)
 			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1
-			confirmTxModal.sourceAccount = pg.sourceAccountSelector.selectedAccount
+			confirmTxModal.sourceAccount = pg.sourceAccountSelector.SelectedAccount()
 			if sendToAddress {
 				confirmTxModal.destinationAddress = pg.destinationAddressEditor.Editor.Text()
 			} else {
-				confirmTxModal.destinationAccount = pg.destinationAccountSelector.selectedAccount
+				confirmTxModal.destinationAccount = pg.destinationAccountSelector.SelectedAccount()
 			}
 
 			confirmTxModal.txSent = func() {

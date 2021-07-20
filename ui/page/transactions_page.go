@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -51,7 +52,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 		theme:       l.Theme,
 	}
 
-	pg.orderDropDown = createOrderDropDown(l)
+	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
@@ -75,7 +76,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 
 func (pg *TransactionsPage) OnResume() {
 	pg.wallets = pg.WL.SortedWalletList()
-	createOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.listenForTxNotifications()
 	pg.loadTransactions()
 }
@@ -114,7 +115,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 						padding := values.MarginPadding16
-						return Container{layout.Inset{Bottom: padding, Left: padding}}.Layout(gtx,
+						return components.Container{layout.Inset{Bottom: padding, Left: padding}}.Layout(gtx,
 							func(gtx C) D {
 								// return "No transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {
@@ -135,12 +136,12 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 									click.Add(gtx.Ops)
 									pg.goToTxnDetails(click.Events(gtx), &wallTxs[index])
-									var row = TransactionRow{
-										transaction: wallTxs[index],
-										index:       index,
-										showBadge:   false,
+									var row = components.TransactionRow{
+										Transaction: wallTxs[index],
+										Index:       index,
+										ShowBadge:   false,
 									}
-									return transactionRow(gtx, pg.Load, row)
+									return components.LayoutTransactionRow(gtx, pg.Load, row)
 								})
 							})
 					})
@@ -149,7 +150,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 			layout.Stacked(pg.dropDowns),
 		)
 	}
-	return uniformPadding(gtx, container)
+	return components.UniformPadding(gtx, container)
 }
 
 func (pg *TransactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
@@ -235,8 +236,8 @@ func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transac
 	txn.status = l.Theme.Body1("")
 	txn.wallet = l.Theme.Body2(l.WL.MultiWallet.WalletWithID(transaction.WalletID).Name)
 
-	if txConfirmations(l, *transaction) > 1 {
-		txn.status.Text = formatDateOrTime(transaction.Timestamp)
+	if components.TxConfirmations(l, *transaction) > 1 {
+		txn.status.Text = components.FormatDateOrTime(transaction.Timestamp)
 		txn.statusIcon = l.Icons.ConfirmIcon
 	} else {
 		txn.status.Text = "pending"

@@ -7,6 +7,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/preference"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -15,7 +16,6 @@ import (
 const SettingsPageID = "Settings"
 
 const (
-	USDExchangeValue     = "usd_bittrex"
 	DefaultExchangeValue = "none"
 
 	languagePreferenceKey = "app_language"
@@ -91,7 +91,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		cancel:  l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	languagePreference := preference.NewListPreference(pg.WL.Wallet, pg.Theme, languagePreferenceKey,
 		values.DefaultLangauge, values.ArrLanguages).
@@ -104,7 +104,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 	currencyMap := make(map[string]string)
 	currencyMap[DefaultExchangeValue] = values.StrNone
-	currencyMap[USDExchangeValue] = values.StrUsdBittrex
+	currencyMap[components.USDExchangeValue] = values.StrUsdBittrex
 
 	currencyPreference := preference.NewListPreference(pg.WL.Wallet, pg.Theme,
 		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue, currencyMap).
@@ -134,14 +134,14 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.updateSettingOptions()
 
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      values.String(values.StrSettings),
-			backButton: pg.backButton,
-			back: func() {
+			Title:      values.String(values.StrSettings),
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(MorePageID)
 			},
-			body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{
 					pg.general(),
 					pg.security(),
@@ -158,14 +158,14 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if pg.currencyPreference.IsShowing {
-		return pg.currencyPreference.Layout(gtx, uniformPadding(gtx, body))
+		return pg.currencyPreference.Layout(gtx, components.UniformPadding(gtx, body))
 	}
 
 	if pg.languagePreference.IsShowing {
-		return pg.languagePreference.Layout(gtx, uniformPadding(gtx, body))
+		return pg.languagePreference.Layout(gtx, components.UniformPadding(gtx, body))
 	}
 
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *SettingsPage) general() layout.Widget {

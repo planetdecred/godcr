@@ -6,8 +6,6 @@ import (
 	"image/color"
 	"time"
 
-	"github.com/planetdecred/godcr/ui/load"
-
 	"gioui.org/gesture"
 	"gioui.org/io/event"
 	"gioui.org/io/pointer"
@@ -16,6 +14,8 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -37,7 +37,6 @@ type OverviewPage struct {
 	listContainer, walletSyncList,
 	transactionsList *layout.List
 	theme *decredmaterial.Theme
-	tab   *decredmaterial.Tabs
 
 	allWallets   []*dcrlibwallet.Wallet
 	transactions []dcrlibwallet.Transaction
@@ -145,7 +144,7 @@ func (pg *OverviewPage) loadTransactions() {
 func (pg *OverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.queue = gtx
 	if pg.WL.Info.LoadedWallets == 0 {
-		return uniformPadding(gtx, func(gtx C) D {
+		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				return pg.Theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
 			})
@@ -161,7 +160,7 @@ func (pg *OverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return uniformPadding(gtx, func(gtx C) D {
+	return components.UniformPadding(gtx, func(gtx C) D {
 		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
 			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
 		})
@@ -187,7 +186,7 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 
 	return pg.theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		padding := values.MarginPadding15
-		return Container{layout.Inset{Top: padding, Bottom: padding}}.Layout(gtx, func(gtx C) D {
+		return components.Container{Padding: layout.Inset{Top: padding, Bottom: padding}}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					title := pg.theme.Body2(values.String(values.StrRecentTransactions))
@@ -201,7 +200,7 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 					if len(pg.transactions) == 0 {
 						message := pg.theme.Body1(values.String(values.StrNoTransactionsYet))
 						message.Color = pg.theme.Color.Gray2
-						return Container{layout.Inset{
+						return components.Container{Padding: layout.Inset{
 							Left:   values.MarginPadding16,
 							Bottom: values.MarginPadding3,
 							Top:    values.MarginPadding18,
@@ -212,13 +211,13 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 						click := pg.toTransactionDetails[i]
 						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 						click.Add(gtx.Ops)
-						var row = TransactionRow{
-							transaction: pg.transactions[i],
-							index:       i,
-							showBadge:   len(pg.allWallets) > 1,
+						var row = components.TransactionRow{
+							Transaction: pg.transactions[i],
+							Index:       i,
+							ShowBadge:   len(pg.allWallets) > 1,
 						}
 						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							return transactionRow(gtx, pg.Load, row)
+							return components.LayoutTransactionRow(gtx, pg.Load, row)
 						})
 					})
 				}),
@@ -231,7 +230,7 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 func (pg *OverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions {
 	uniform := layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}
 	return pg.theme.Card().Layout(gtx, func(gtx C) D {
-		return Container{layout.Inset{
+		return components.Container{Padding: layout.Inset{
 			Top:    values.MarginPadding15,
 			Bottom: values.MarginPadding16,
 		}}.Layout(gtx, func(gtx C) D {
@@ -243,7 +242,7 @@ func (pg *OverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions 
 					return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, pg.theme.Separator().Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return Container{layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
+					return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return pg.syncStatusIcon(gtx)
@@ -284,7 +283,7 @@ func (pg *OverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions 
 				}),
 				layout.Rigid(func(gtx C) D {
 					if pg.walletSyncing && pg.syncDetailsVisibility {
-						return Container{layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
+						return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
 							return pg.walletSyncRow(gtx, uniform)
 						})
 					}
@@ -313,7 +312,7 @@ func (pg *OverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensions 
 func (pg OverviewPage) titleRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	titlePadding := values.MarginPadding15
-	return Container{layout.Inset{
+	return components.Container{Padding: layout.Inset{
 		Left:   titlePadding,
 		Right:  titlePadding,
 		Bottom: titlePadding,
@@ -502,7 +501,7 @@ func (pg *OverviewPage) progressStatusRow(gtx layout.Context, inset layout.Inset
 	percentageLabel := pg.theme.Body1(fmt.Sprintf("%v%%", pg.syncProgress))
 	timeLeftLabel := pg.theme.Body1(fmt.Sprintf("%v Left", timeLeft))
 	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return endToEndRow(gtx, percentageLabel.Layout, timeLeftLabel.Layout)
+		return components.EndToEndRow(gtx, percentageLabel.Layout, timeLeftLabel.Layout)
 	})
 
 }
@@ -516,7 +515,7 @@ func (pg *OverviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 				completedSteps.Color = pg.theme.Color.Gray
 				headersFetched := pg.theme.Body1(values.StringF(values.StrFetchingBlockHeaders, pg.headerFetchProgress))
 				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return endToEndRow(gtx, completedSteps.Layout, headersFetched.Layout)
+					return components.EndToEndRow(gtx, completedSteps.Layout, headersFetched.Layout)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -524,7 +523,7 @@ func (pg *OverviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 				connectedPeersTitleLabel.Color = pg.theme.Color.Gray
 				connectedPeersLabel := pg.theme.Body1(fmt.Sprintf("%d", pg.connectedPeers))
 				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return endToEndRow(gtx, connectedPeersTitleLabel.Layout, connectedPeersLabel.Layout)
+					return components.EndToEndRow(gtx, connectedPeersTitleLabel.Layout, connectedPeersLabel.Layout)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -564,27 +563,25 @@ func (pg *OverviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset, de
 		card := pg.theme.Card()
 		card.Color = pg.theme.Color.LightGray
 		return card.Layout(gtx, func(gtx C) D {
-			return Container{
-				layout.UniformInset(values.MarginPadding16),
-			}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-							return endToEndRow(gtx, details.name.Layout, details.status.Layout)
+							return components.EndToEndRow(gtx, details.name.Layout, details.status.Layout)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						headersFetchedTitleLabel := pg.theme.Body2(values.String(values.StrBlockHeaderFetched))
 						headersFetchedTitleLabel.Color = pg.theme.Color.Gray
 						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-							return endToEndRow(gtx, headersFetchedTitleLabel.Layout, details.blockHeaderFetched.Layout)
+							return components.EndToEndRow(gtx, headersFetchedTitleLabel.Layout, details.blockHeaderFetched.Layout)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						progressTitleLabel := pg.theme.Body2(values.String(values.StrSyncingProgress))
 						progressTitleLabel.Color = pg.theme.Color.Gray
 						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-							return endToEndRow(gtx, progressTitleLabel.Layout, details.syncingProgress.Layout)
+							return components.EndToEndRow(gtx, progressTitleLabel.Layout, details.syncingProgress.Layout)
 						})
 					}),
 				)

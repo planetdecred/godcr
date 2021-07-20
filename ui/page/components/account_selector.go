@@ -1,7 +1,8 @@
-package page
+package components
 
 import (
 	"errors"
+	"fmt"
 	"image"
 
 	"gioui.org/gesture"
@@ -46,17 +47,17 @@ func NewAccountSelector(l *load.Load) *AccountSelector {
 	}
 }
 
-func (as *AccountSelector) title(title string) *AccountSelector {
+func (as *AccountSelector) Title(title string) *AccountSelector {
 	as.dialogTitle = title
 	return as
 }
 
-func (as *AccountSelector) accountValidator(accountIsValid func(*dcrlibwallet.Account) bool) *AccountSelector {
+func (as *AccountSelector) AccountValidator(accountIsValid func(*dcrlibwallet.Account) bool) *AccountSelector {
 	as.accountIsValid = accountIsValid
 	return as
 }
 
-func (as *AccountSelector) accountSelected(callback func(*dcrlibwallet.Account)) *AccountSelector {
+func (as *AccountSelector) AccountSelected(callback func(*dcrlibwallet.Account)) *AccountSelector {
 	as.callback = callback
 	return as
 }
@@ -74,7 +75,7 @@ func (as *AccountSelector) Handle() {
 	}
 }
 
-func (as *AccountSelector) selectFirstWalletValidAccount() error {
+func (as *AccountSelector) SelectFirstWalletValidAccount() error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		// no need to select account
 		return nil
@@ -105,6 +106,10 @@ func (as *AccountSelector) setupSelectedAccount(account *dcrlibwallet.Account) {
 	as.selectedAccount = account
 	as.selectedWalletName = wal.Name
 	as.totalBalance = dcrutil.Amount(account.TotalBalance).String()
+}
+
+func (as *AccountSelector) SelectedAccount() *dcrlibwallet.Account {
+	return as.selectedAccount
 }
 
 func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
@@ -237,7 +242,7 @@ func (asm *AccountSelectorModal) OnResume() {
 		// filter all accounts
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
-			log.Errorf("Error getting accounts: %v", err)
+			fmt.Println("Error getting accounts:", err)
 			return
 		}
 
@@ -412,8 +417,8 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 							layout.Rigid(func(gtx C) D {
 								acct := asm.Theme.Label(values.TextSize18, account.Name)
 								acct.Color = asm.Theme.Color.Text
-								return endToEndRow(gtx, acct.Layout, func(gtx C) D {
-									return layoutBalance(gtx, asm.Load, dcrutil.Amount(account.TotalBalance).String())
+								return EndToEndRow(gtx, acct.Layout, func(gtx C) D {
+									return LayoutBalance(gtx, asm.Load, dcrutil.Amount(account.TotalBalance).String())
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -421,7 +426,7 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 								spendable.Color = asm.Theme.Color.Gray
 								spendableBal := asm.Theme.Label(values.TextSize14, dcrutil.Amount(account.Balance.Spendable).String())
 								spendableBal.Color = asm.Theme.Color.Gray
-								return endToEndRow(gtx, spendable.Layout, spendableBal.Layout)
+								return EndToEndRow(gtx, spendable.Layout, spendableBal.Layout)
 							}),
 						)
 					}),

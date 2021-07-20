@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -53,7 +54,7 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		editAccount: new(widget.Clickable),
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -97,15 +98,15 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      pg.account.Name,
-			walletName: pg.wallet.Name,
-			backButton: pg.backButton,
-			back: func() {
+			Title:      pg.account.Name,
+			WalletName: pg.wallet.Name,
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(WalletPageID)
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 					return pg.theme.Card().Layout(gtx, func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -116,8 +117,8 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			extraItem: pg.editAccount,
-			extra: func(gtx C) D {
+			ExtraItem: pg.editAccount,
+			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					edit := pg.Icons.EditIcon
 					edit.Scale = 1
@@ -127,14 +128,14 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimensions {
 
 	return pg.pageSections(gtx, func(gtx C) D {
 		accountIcon := pg.Icons.AccountIcon
-		if pg.account.Number == MaxInt32 {
+		if pg.account.Number == load.MaxInt32 {
 			accountIcon = pg.Icons.ImportedAccountIcon
 		}
 		accountIcon.Scale = 1
@@ -183,7 +184,7 @@ func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimen
 
 func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, balance string, isTotalBalance bool) layout.Dimensions {
 
-	mainBalance, subBalance := breakBalance(pg.Printer, balance)
+	mainBalance, subBalance := components.BreakBalance(pg.Printer, balance)
 
 	mainLabel := pg.theme.Body1(mainBalance)
 	subLabel := pg.theme.Caption(subBalance)

@@ -1,4 +1,4 @@
-package page
+package send
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -90,7 +91,6 @@ func (scm *sendConfirmModal) broadcastTransaction() {
 		scm.isSending = false
 		if err != nil {
 			scm.CreateToast(err.Error(), false)
-			log.Error(err)
 			return
 		}
 		scm.CreateToast("Transaction sent!", true)
@@ -145,7 +145,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return layoutBalance(gtx, scm.Load, scm.sendAmount)
+									return components.LayoutBalance(gtx, scm.Load, scm.sendAmount)
 								}),
 								layout.Flexed(1, func(gtx C) D {
 									if scm.exchangeRateSet {

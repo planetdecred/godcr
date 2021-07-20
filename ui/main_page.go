@@ -12,6 +12,8 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -31,7 +33,7 @@ type mainPage struct {
 
 	current, previous string
 	pages             map[string]Page
-	sendPage          *page.SendPage
+	sendPage          *send.SendPage
 
 	// page state variables
 	usdExchangeSet  bool
@@ -157,7 +159,7 @@ func (mp *mainPage) OnResume() {
 
 func (mp *mainPage) updateBalance() {
 	currencyExchangeValue := mp.wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	mp.usdExchangeSet = currencyExchangeValue == page.USDExchangeValue
+	mp.usdExchangeSet = currencyExchangeValue == components.USDExchangeValue
 
 	totalBalance, err := mp.calculateTotalWalletsBalance()
 	if err == nil {
@@ -244,9 +246,9 @@ func (mp *mainPage) Handle() {
 		for mp.appBarNavItems[i].clickable.Clicked() {
 			if i == 0 {
 				if mp.sendPage == nil {
-					mp.sendPage = page.NewSendPage(mp.load)
+					mp.sendPage = send.NewSendPage(mp.load)
 				}
-				mp.changeFragment(mp.sendPage, page.SendPageID)
+				mp.changeFragment(mp.sendPage, send.SendPageID)
 				continue
 			}
 

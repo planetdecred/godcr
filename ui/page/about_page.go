@@ -6,6 +6,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -46,7 +47,7 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		chevronRightIcon: l.Icons.ChevronRight,
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.versionValue.Color = pg.Theme.Color.Gray
 	pg.buildDateValue.Color = pg.Theme.Color.Gray
 	pg.networkValue.Color = pg.Theme.Color.Gray
@@ -61,14 +62,14 @@ func (pg *AboutPage) OnResume() {
 
 func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
-		page := SubPage{
+		page := components.SubPage{
 			Load:       pg.Load,
-			title:      "About",
-			backButton: pg.backButton,
-			back: func() {
+			Title:      "About",
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(MorePageID)
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
 					return pg.layoutRows(gtx)
 				})
@@ -77,19 +78,19 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 		return page.Layout(gtx)
 	}
 
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	w := []func(gtx C) D{
 		func(gtx C) D {
-			return endToEndRow(gtx, pg.version.Layout, pg.versionValue.Layout)
+			return components.EndToEndRow(gtx, pg.version.Layout, pg.versionValue.Layout)
 		},
 		func(gtx C) D {
-			return endToEndRow(gtx, pg.buildDate.Layout, pg.buildDateValue.Layout)
+			return components.EndToEndRow(gtx, pg.buildDate.Layout, pg.buildDateValue.Layout)
 		},
 		func(gtx C) D {
-			return endToEndRow(gtx, pg.network.Layout, pg.networkValue.Layout)
+			return components.EndToEndRow(gtx, pg.network.Layout, pg.networkValue.Layout)
 		},
 		func(gtx C) D {
 			return decredmaterial.Clickable(gtx, pg.licenseRow, func(gtx C) D {
@@ -109,8 +110,8 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return Container{
-						layout.Inset{
+					return components.Container{
+						Padding: layout.Inset{
 							Top:    values.MarginPadding20,
 							Bottom: values.MarginPadding20,
 							Left:   values.MarginPadding16,
