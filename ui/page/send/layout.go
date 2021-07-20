@@ -2,7 +2,6 @@ package send
 
 import (
 	"fmt"
-	"image/color"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -35,11 +34,14 @@ func (pg *Page) initLayoutWidgets() {
 	pg.moreOption.Color = pg.Theme.Color.Gray3
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.sendToButton = pg.Theme.Button(new(widget.Clickable), "Send to account")
-	pg.sendToButton.TextSize = values.TextSize14
-	pg.sendToButton.Background = color.NRGBA{}
-	pg.sendToButton.Color = pg.Theme.Color.Primary
-	pg.sendToButton.Inset = layout.UniformInset(values.MarginPadding0)
+	pg.retryExchange = pg.Theme.Button(new(widget.Clickable), "Retry")
+	pg.retryExchange.Background = pg.Theme.Color.Gray1
+	pg.retryExchange.Color = pg.Theme.Color.Primary
+	pg.retryExchange.Inset = layout.Inset{
+		Top:    values.MarginPadding5,
+		Right:  values.MarginPadding8,
+		Bottom: values.MarginPadding5,
+		Left:   values.MarginPadding8}
 
 	pg.clearAllBtn.Background = pg.Theme.Color.Surface
 	pg.clearAllBtn.Color = pg.Theme.Color.Text
@@ -202,6 +204,33 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 					)
 				}
 				return pg.amount.dcrAmountEditor.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if pg.exchangeError == "" {
+					return layout.Dimensions{}
+				}
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							gtx.Constraints.Min.Y = gtx.Px(values.MarginPadding1)
+							return decredmaterial.Fill(gtx, pg.Theme.Color.Gray1)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								label := pg.Theme.Body2("Exchange rate not fetched")
+								label.Color = pg.Theme.Color.Danger
+								return label.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								return layout.E.Layout(gtx, pg.retryExchange.Layout)
+							}),
+						)
+					}),
+				)
 			}),
 		)
 	})

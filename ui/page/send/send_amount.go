@@ -133,7 +133,7 @@ func (sa *sendAmount) validateUSDAmount() bool {
 			return false
 		}
 
-		if sa.exchangeRate != -1 { //TODO usd amount should not be visible.
+		if sa.exchangeRate != -1 {
 			dcrAmount := load.USDToDCR(sa.exchangeRate, usdAmount)
 			sa.dcrAmountEditor.Editor.SetText(fmt.Sprintf("%.8f", dcrAmount)) // 8 decimal places
 		}

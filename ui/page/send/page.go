@@ -27,18 +27,19 @@ type Page struct {
 	sendDestination       *destination
 	amount                *sendAmount
 
-	backButton   decredmaterial.IconButton
-	infoButton   decredmaterial.IconButton
-	moreOption   decredmaterial.IconButton
-	nextButton   decredmaterial.Button
-	sendToButton decredmaterial.Button
-	clearAllBtn  decredmaterial.Button
+	backButton    decredmaterial.IconButton
+	infoButton    decredmaterial.IconButton
+	moreOption    decredmaterial.IconButton
+	retryExchange decredmaterial.Button
+	nextButton    decredmaterial.Button
+	clearAllBtn   decredmaterial.Button
 
 	txFeeCollapsible *decredmaterial.Collapsible
 
 	moreOptionIsOpen bool
 
-	exchangeRate float64
+	exchangeRate  float64
+	exchangeError string
 
 	*authoredTxData
 }
@@ -128,20 +129,22 @@ func (pg *Page) OnResume() {
 }
 
 func (pg *Page) fetchExchangeValue() {
+	pg.exchangeError = ""
 	go func() {
 		var dcrUsdtBittrex load.DCRUSDTBittrex
 		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
 		if err != nil {
-			// TODO: handle exchange error
+			pg.exchangeError = err.Error()
 			return
 		}
 
 		exchangeRate, err := strconv.ParseFloat(dcrUsdtBittrex.LastTradeRate, 64)
 		if err != nil {
-			// TODO: handle exchange error
+			pg.exchangeError = err.Error()
 			return
 		}
 
+		pg.exchangeError = ""
 		pg.exchangeRate = exchangeRate
 		pg.amount.setExchangeRate(exchangeRate)
 		pg.validateAndConstructTx() // convert estimates to usd
@@ -293,7 +296,11 @@ func (pg *Page) Handle() {
 		pg.moreOptionIsOpen = !pg.moreOptionIsOpen
 	}
 
-	for pg.nextButton.Button.Clicked() {
+	for pg.retryExchange.Clicked() {
+		pg.fetchExchangeValue()
+	}
+
+	for pg.nextButton.Clicked() {
 		if pg.txAuthor != nil {
 			confirmTxModal := newSendConfirmModal(pg.Load, pg.authoredTxData)
 			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1
