@@ -227,8 +227,11 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 				textModal := modal.NewTextInputModal(l).
 					Hint("Wallet name").
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
-						// todo handle error
-						pg.multiWallet.RenameWallet(wal.ID, newName)
+						err := pg.multiWallet.RenameWallet(wal.ID, newName)
+						if err != nil {
+							l.CreateToast(err.Error(), false)
+							return false
+						}
 						return true
 					})
 
