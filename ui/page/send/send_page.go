@@ -24,8 +24,7 @@ type (
 )
 
 const (
-	SendPageID       = "Send"
-	invalidAmountErr = "Invalid amount" //TODO: use localized strings
+	SendPageID = "Send"
 )
 
 type SendPage struct {
@@ -34,15 +33,12 @@ type SendPage struct {
 
 	sourceAccountSelector *components.AccountSelector
 	sendDestination       *destination
-
-	dcrAmountEditor decredmaterial.Editor
-	usdAmountEditor decredmaterial.Editor
+	amount                *sendAmount
 
 	backButton   decredmaterial.IconButton
 	infoButton   decredmaterial.IconButton
 	moreOption   decredmaterial.IconButton
 	nextButton   decredmaterial.Button
-	maxButton    decredmaterial.Button
 	sendToButton decredmaterial.Button
 	clearAllBtn  decredmaterial.Button
 
@@ -50,12 +46,7 @@ type SendPage struct {
 
 	moreOptionIsOpen bool
 
-	sendMax               bool
-	dcrSendMaxChangeEvent bool
-	usdSendMaxChangeEvent bool
-
-	amountErrorText string
-	exchangeRate    float64
+	exchangeRate float64
 
 	*authoredTxData
 }
@@ -84,8 +75,8 @@ func NewSendPage(l *load.Load) *SendPage {
 			Alignment: layout.Middle,
 		},
 		sendDestination: newSendDestination(l),
+		amount:          newSendAmount(l),
 
-		maxButton:        l.Theme.Button(new(widget.Clickable), "MAX"),
 		clearAllBtn:      l.Theme.Button(new(widget.Clickable), "Clear all fields"),
 		txFeeCollapsible: l.Theme.Collapsible(),
 
@@ -97,33 +88,12 @@ func NewSendPage(l *load.Load) *SendPage {
 	pg.nextButton = l.Theme.Button(new(widget.Clickable), "Next")
 	pg.nextButton.Background = l.Theme.Color.InactiveGray
 
-	pg.dcrAmountEditor = l.Theme.Editor(new(widget.Editor), "Amount (DCR)")
-	pg.dcrAmountEditor.Editor.SetText("")
-	pg.dcrAmountEditor.HasCustomButton = true
-	pg.dcrAmountEditor.Editor.SingleLine = true
-	pg.dcrAmountEditor.CustomButton.Background = l.Theme.Color.Gray
-	pg.dcrAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
-	pg.dcrAmountEditor.CustomButton.Text = "Max"
-	pg.dcrAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
-
-	pg.usdAmountEditor = l.Theme.Editor(new(widget.Editor), "Amount (USD)")
-	pg.usdAmountEditor.Editor.SetText("")
-	pg.usdAmountEditor.HasCustomButton = true
-	pg.usdAmountEditor.Editor.SingleLine = true
-	pg.usdAmountEditor.CustomButton.Background = l.Theme.Color.Gray
-	pg.usdAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
-	pg.usdAmountEditor.CustomButton.Text = "Max"
-	pg.usdAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
-
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
 	pg.moreOption = l.Theme.PlainIconButton(new(widget.Clickable), pg.Icons.NavMoreIcon)
 	pg.moreOption.Color = l.Theme.Color.Gray3
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
-
-	pg.maxButton.Background = l.Theme.Color.Gray3
-	pg.maxButton.Inset = layout.UniformInset(values.MarginPadding5)
 
 	pg.sendToButton = l.Theme.Button(new(widget.Clickable), "Send to account")
 	pg.sendToButton.TextSize = values.TextSize14
@@ -173,6 +143,10 @@ func NewSendPage(l *load.Load) *SendPage {
 		pg.validateAndConstructTx()
 	}
 
+	pg.amount.amountChanged = func() {
+		pg.validateAndConstructTx()
+	}
+
 	return pg
 }
 
@@ -191,19 +165,18 @@ func (pg *SendPage) fetchExchangeValue() {
 		var dcrUsdtBittrex load.DCRUSDTBittrex
 		err := load.GetUSDExchangeValue(&dcrUsdtBittrex)
 		if err != nil {
-			pg.usdAmountEditor.SetError(err.Error())
+			// TODO: handle exchange error
 			return
 		}
 
 		exchangeRate, err := strconv.ParseFloat(dcrUsdtBittrex.LastTradeRate, 64)
 		if err != nil {
-			pg.usdAmountEditor.SetError(err.Error())
+			// TODO: handle exchange error
 			return
 		}
 
 		pg.exchangeRate = exchangeRate
-		pg.usdAmountEditor.SetError("")
-		pg.validateDCRAmount()      // convert dcr input to usd
+		pg.amount.setExchangeRate(exchangeRate)
 		pg.validateAndConstructTx() // convert estimates to usd
 	}()
 }
@@ -299,23 +272,6 @@ func (pg *SendPage) topNav(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *SendPage) toSection(gtx layout.Context) layout.Dimensions {
-	pg.dcrAmountEditor.SetError(pg.amountErrorText)
-
-	if pg.amountErrorText != "" {
-		pg.dcrAmountEditor.LineColor, pg.dcrAmountEditor.TitleLabelColor = pg.Theme.Color.Danger, pg.Theme.Color.Danger
-		pg.usdAmountEditor.LineColor, pg.usdAmountEditor.TitleLabelColor = pg.Theme.Color.Danger, pg.Theme.Color.Danger
-	} else {
-		pg.dcrAmountEditor.LineColor, pg.dcrAmountEditor.TitleLabelColor = pg.Theme.Color.Gray1, pg.Theme.Color.Gray3
-		pg.usdAmountEditor.LineColor, pg.usdAmountEditor.TitleLabelColor = pg.Theme.Color.Gray1, pg.Theme.Color.Gray3
-	}
-
-	if pg.sendMax {
-		pg.dcrAmountEditor.CustomButton.Background = pg.Theme.Color.Primary
-		pg.usdAmountEditor.CustomButton.Background = pg.Theme.Color.Primary
-	} else {
-		pg.dcrAmountEditor.CustomButton.Background = pg.Theme.Color.Gray
-		pg.usdAmountEditor.CustomButton.Background = pg.Theme.Color.Gray
-	}
 
 	return pg.pageSections(gtx, "To", true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -333,7 +289,7 @@ func (pg *SendPage) toSection(gtx layout.Context) layout.Dimensions {
 				if pg.exchangeRate != -1 {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Flexed(0.45, func(gtx C) D {
-							return pg.dcrAmountEditor.Layout(gtx)
+							return pg.amount.dcrAmountEditor.Layout(gtx)
 						}),
 						layout.Flexed(0.1, func(gtx C) D {
 							return layout.Center.Layout(gtx, func(gtx C) D {
@@ -345,11 +301,11 @@ func (pg *SendPage) toSection(gtx layout.Context) layout.Dimensions {
 							})
 						}),
 						layout.Flexed(0.45, func(gtx C) D {
-							return pg.usdAmountEditor.Layout(gtx)
+							return pg.amount.usdAmountEditor.Layout(gtx)
 						}),
 					)
 				}
-				return pg.dcrAmountEditor.Layout(gtx)
+				return pg.amount.dcrAmountEditor.Layout(gtx)
 			}),
 		)
 	})
@@ -495,22 +451,6 @@ func (pg *SendPage) contentRow(gtx layout.Context, leftValue, rightValue string)
 	)
 }
 
-func (pg *SendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
-	for _, e := range editors {
-		if e.Text() == "" {
-			return false
-		}
-	}
-	return true
-}
-
-func (pg *SendPage) resetErrorText() {
-	pg.amountErrorText = ""
-	// pg.destinationAddressEditor.SetError("")
-	pg.dcrAmountEditor.SetError("")
-	pg.usdAmountEditor.SetError("")
-}
-
 func (pg *SendPage) validateAndConstructTx() {
 	if pg.validate() {
 		pg.constructTx()
@@ -521,68 +461,17 @@ func (pg *SendPage) validateAndConstructTx() {
 
 func (pg *SendPage) validate() bool {
 
-	_, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
-	amountIsValid := err == nil
+	amountIsValid := pg.amount.amountIsValid()
 	addressIsValid := pg.sendDestination.validate()
 
-	validForSending := (amountIsValid || pg.sendMax) && addressIsValid
+	validForSending := amountIsValid && addressIsValid
 	if validForSending {
-		pg.amountErrorText = ""
 		pg.nextButton.Background = pg.Theme.Color.Primary
 	} else {
 		pg.nextButton.Background = pg.Theme.Color.Hint
 	}
 
 	return validForSending
-}
-
-func (pg *SendPage) validateDCRAmount() {
-	pg.amountErrorText = ""
-	if pg.inputsNotEmpty(pg.dcrAmountEditor.Editor) {
-		dcrAmount, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
-		if err != nil {
-			// empty usd input
-			pg.usdAmountEditor.Editor.SetText("")
-			pg.amountErrorText = invalidAmountErr
-			// todo: invalid decimal places error
-			return
-		}
-
-		if pg.exchangeRate != -1 {
-			usdAmount := load.DCRToUSD(pg.exchangeRate, dcrAmount)
-			pg.usdAmountEditor.Editor.SetText(fmt.Sprintf("%.2f", usdAmount)) // 2 decimal places
-		}
-
-		return
-	}
-
-	// empty usd input since this is empty
-	pg.usdAmountEditor.Editor.SetText("")
-}
-
-// validateUSDAmount is called when usd text changes
-func (pg *SendPage) validateUSDAmount() bool {
-	pg.amountErrorText = ""
-	if pg.inputsNotEmpty(pg.usdAmountEditor.Editor) {
-		usdAmount, err := strconv.ParseFloat(pg.usdAmountEditor.Editor.Text(), 64)
-		if err != nil {
-			// empty dcr input
-			pg.dcrAmountEditor.Editor.SetText("")
-			pg.amountErrorText = invalidAmountErr
-			return false
-		}
-
-		if pg.exchangeRate != -1 { //TODO usd amount should not be visible.
-			dcrAmount := load.USDToDCR(pg.exchangeRate, usdAmount)
-			pg.dcrAmountEditor.Editor.SetText(fmt.Sprintf("%.8f", dcrAmount)) // 8 decimal places
-		}
-
-		return true
-	}
-
-	// empty dcr input since this is empty
-	pg.dcrAmountEditor.Editor.SetText("")
-	return false
 }
 
 func (pg *SendPage) constructTx() {
@@ -593,15 +482,10 @@ func (pg *SendPage) constructTx() {
 	}
 	destinationAccount := pg.sendDestination.destinationAccount()
 
-	amountAtom := int64(0)
-
-	if !pg.sendMax {
-		amount, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
-		if err != nil {
-			pg.feeEstimationError(err.Error())
-			return
-		}
-		amountAtom = dcrlibwallet.AmountAtom(amount)
+	amountAtom, sendMax, err := pg.amount.validAmount()
+	if err != nil {
+		pg.feeEstimationError(err.Error())
+		return
 	}
 
 	sourceAccount := pg.sourceAccountSelector.SelectedAccount()
@@ -611,7 +495,7 @@ func (pg *SendPage) constructTx() {
 		return
 	}
 
-	err = unsignedTx.AddSendDestination(destinationAddress, amountAtom, pg.sendMax)
+	err = unsignedTx.AddSendDestination(destinationAddress, amountAtom, sendMax)
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
@@ -624,7 +508,7 @@ func (pg *SendPage) constructTx() {
 	}
 
 	feeAtom := feeAndSize.Fee.AtomValue
-	if pg.sendMax {
+	if sendMax {
 		amountAtom = sourceAccount.Balance.Spendable - feeAtom
 	}
 
@@ -641,11 +525,10 @@ func (pg *SendPage) constructTx() {
 	pg.destinationAccount = destinationAccount
 	pg.sourceAccount = sourceAccount
 
-	if pg.sendMax {
+	if sendMax {
 		// TODO: this workaround ignores the change events from the
 		// amount input to avoid construct tx cycle.
-		pg.dcrSendMaxChangeEvent = true
-		pg.dcrAmountEditor.Editor.SetText(fmt.Sprintf("%.8f", dcrutil.Amount(amountAtom).ToCoin()))
+		pg.amount.setAmount(amountAtom)
 	}
 
 	if pg.exchangeRate != -1 {
@@ -655,11 +538,6 @@ func (pg *SendPage) constructTx() {
 
 		usdAmount := load.DCRToUSD(pg.exchangeRate, dcrutil.Amount(amountAtom).ToCoin())
 		pg.sendAmountUSD = load.FormatUSDBalance(pg.Printer, usdAmount)
-
-		if pg.sendMax {
-			pg.usdSendMaxChangeEvent = true
-			pg.usdAmountEditor.Editor.SetText(fmt.Sprintf("%.2f", usdAmount))
-		}
 	}
 
 	pg.txAuthor = unsignedTx
@@ -667,11 +545,11 @@ func (pg *SendPage) constructTx() {
 
 func (pg *SendPage) feeEstimationError(err string) {
 	if err == dcrlibwallet.ErrInsufficientBalance {
-		pg.amountErrorText = "Not enough funds"
+		pg.amount.setError("Not enough funds")
 	} else if strings.Contains(err, invalidAmountErr) {
-		pg.amountErrorText = invalidAmountErr
+		pg.amount.setError(invalidAmountErr)
 	} else {
-		pg.amountErrorText = err
+		pg.amount.setError(err)
 		pg.CreateToast("Error estimating transaction: "+err, false)
 	}
 
@@ -679,6 +557,7 @@ func (pg *SendPage) feeEstimationError(err string) {
 }
 
 func (pg *SendPage) clearEstimates() {
+	pg.txAuthor = nil
 	pg.txFee = " - "
 	pg.txFeeUSD = " - "
 	pg.estSignedSize = " - "
@@ -691,21 +570,17 @@ func (pg *SendPage) clearEstimates() {
 }
 
 func (pg *SendPage) resetFields() {
-	pg.sendMax = false
-
 	pg.sendDestination.clearAddressInput()
 
-	pg.amountErrorText = ""
-	pg.dcrAmountEditor.Editor.SetText("")
-	pg.usdAmountEditor.Editor.SetText("")
+	pg.amount.resetFields()
 }
 
 func (pg *SendPage) Handle() {
 
 	pg.sendDestination.handle()
+	pg.amount.handle()
 
 	if pg.backButton.Button.Clicked() {
-		pg.resetErrorText()
 		pg.ChangePage(*pg.ReturnPage)
 	}
 
@@ -721,39 +596,8 @@ func (pg *SendPage) Handle() {
 		pg.moreOptionIsOpen = !pg.moreOptionIsOpen
 	}
 
-	for _, evt := range pg.dcrAmountEditor.Editor.Events() {
-		if pg.dcrAmountEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				if pg.dcrSendMaxChangeEvent {
-					pg.dcrSendMaxChangeEvent = false
-					continue
-				}
-				pg.sendMax = false
-				pg.validateDCRAmount()
-				pg.validateAndConstructTx()
-
-			}
-		}
-	}
-
-	for _, evt := range pg.usdAmountEditor.Editor.Events() {
-		if pg.usdAmountEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				if pg.usdSendMaxChangeEvent {
-					pg.usdSendMaxChangeEvent = false
-					continue
-				}
-				pg.sendMax = false
-				pg.validateUSDAmount()
-				pg.validateAndConstructTx()
-			}
-		}
-	}
-
 	for pg.nextButton.Button.Clicked() {
-		if pg.validate() {
+		if pg.txAuthor != nil {
 			confirmTxModal := newSendConfirmModal(pg.Load, pg.authoredTxData)
 			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1
 
@@ -771,16 +615,9 @@ func (pg *SendPage) Handle() {
 
 		pg.sendDestination.clearAddressInput()
 
-		pg.amountErrorText = ""
-		pg.dcrAmountEditor.Editor.SetText("")
-		pg.usdAmountEditor.Editor.SetText("")
+		pg.amount.clearAmount()
 	}
 
-	for pg.dcrAmountEditor.CustomButton.Clicked() ||
-		pg.usdAmountEditor.CustomButton.Clicked() {
-		pg.sendMax = true
-		pg.validateAndConstructTx()
-	}
 }
 
 func (pg *SendPage) OnClose() {
