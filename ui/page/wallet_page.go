@@ -5,6 +5,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/notification"
 
 	"gioui.org/gesture"
 	"gioui.org/layout"
@@ -296,12 +297,13 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 			go func() {
 				_, err := pg.multiWallet.CreateWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
-					l.CreateToast(err.Error(), false)
-					m.SetError(err.Error())
+					e := err.Error()
+					pg.Notfier.Notify(e, notification.Error)
+					m.SetError(e)
 					m.SetLoading(false)
 				} else {
 					// pg.wallet.GetMultiWalletInfo() TODO
-					l.CreateToast(values.String(values.StrWatchOnlyWalletImported), true)
+					pg.Notfier.Notify(values.String(values.StrWatchOnlyWalletImported), notification.Success)
 					m.Dismiss()
 				}
 			}()

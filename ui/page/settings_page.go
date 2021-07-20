@@ -7,6 +7,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/ui/preference"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -502,12 +503,11 @@ func (pg *SettingsPage) Handle() {
 
 	select {
 	case err := <-pg.errorReceiver:
-		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
-			e := "Password is incorrect"
-			pg.CreateToast(e, false)
-			return
+		e := err.Error()
+		if e == dcrlibwallet.ErrInvalidPassphrase {
+			e = "Password is incorrect"
 		}
-		pg.CreateToast(err.Error(), false)
+		pg.Notfier.Notify(e, notification.Error)
 	default:
 	}
 }

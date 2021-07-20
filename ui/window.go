@@ -233,13 +233,16 @@ func (win *Window) layoutPage(gtx C, page Page) {
 	layout.Stack{
 		Alignment: layout.N,
 	}.Layout(gtx,
+		// Background
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.Fill(gtx, win.theme.Color.LightGray)
 		}),
+		// Page foregrounds
 		layout.Stacked(func(gtx C) D {
 			page.Handle()
 			return page.Layout(gtx)
 		}),
+		// Modals
 		layout.Stacked(func(gtx C) D {
 			for _, modal := range win.modals {
 				modal.Handle()
@@ -251,6 +254,8 @@ func (win *Window) layoutPage(gtx C, page Page) {
 			}
 			return layout.Dimensions{}
 		}),
+		// Notifications
+		layout.Stacked(win.load.LayoutNotifications),
 	)
 }
 

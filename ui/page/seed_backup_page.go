@@ -17,6 +17,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -528,13 +529,13 @@ func (pg *BackupPage) Handle() {
 			errMessage := "Failed to verify. Please go through every word and try again."
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
-				pg.CreateToast(errMessage, false)
+				pg.Notfier.Notify(errMessage, notification.Warning)
 				return
 			}
 
 			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, s, pg.privpass)
 			if err != nil {
-				pg.CreateToast(errMessage, false)
+				pg.Notfier.Notify(errMessage, notification.Warning)
 				return
 			}
 			pg.info.Wallets[*pg.selectedWallet].Seed = nil

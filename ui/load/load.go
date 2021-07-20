@@ -10,15 +10,16 @@ package load
 
 import (
 	"image"
-	"time"
 
 	"golang.org/x/text/language"
 
 	"gioui.org/io/key"
+	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/message"
@@ -26,12 +27,6 @@ import (
 
 type DCRUSDTBittrex struct {
 	LastTradeRate string
-}
-
-type Toast struct {
-	text    string
-	success bool
-	Timer   *time.Timer
 }
 
 type Receiver struct {
@@ -75,12 +70,13 @@ type Load struct {
 	Printer  *message.Printer
 	Network  string
 
+	Notfier   notification.Notifier
+	conductor *notification.Conductor
+
 	Icons          Icons
 	Page           *string
 	ReturnPage     *string
 	DcrUsdtBittrex *DCRUSDTBittrex
-
-	Toast *Toast
 
 	SelectedWallet  *int
 	SelectedAccount *int
@@ -193,12 +189,15 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		SyncedProposal:  make(chan *wallet.Proposal),
 	}
 
+	c := notification.NewConductor()
+
 	l := &Load{
-		Theme:    th,
-		Icons:    ic,
-		WL:       wl,
-		Receiver: r,
-		Toast:    &Toast{},
+		Theme:     th,
+		Icons:     ic,
+		WL:        wl,
+		Receiver:  r,
+		conductor: c,
+		Notfier:   c.NewNotifier(),
 
 		Printer: message.NewPrinter(language.English),
 	}
@@ -214,13 +213,6 @@ func (l *Load) RefreshTheme() {
 	}
 }
 
-func (l *Load) CreateToast(text string, success bool) {
-	l.Toast = &Toast{
-		text:    text,
-		success: success,
-	}
-}
-
-func (l *Load) DestroyToast() {
-	l.Toast = nil
+func (l *Load) LayoutNotifications(gtx layout.Context) layout.Dimensions {
+	return l.conductor.LayoutNotifications(l.Theme, gtx)
 }

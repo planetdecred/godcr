@@ -528,43 +528,6 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	)
 }*/
 
-func displayToast(th *decredmaterial.Theme, gtx layout.Context, t *load.Toast) layout.Dimensions {
-	//color := th.Color.Success
-	//if !n.success {
-	//	color = th.Color.Danger
-	//}
-	//
-	//card := th.Card()
-	//card.Color = color
-	//return card.Layout(gtx, func(gtx C) D {
-	//	return layout.Inset{
-	//		Top: values.MarginPadding7, Bottom: values.MarginPadding7,
-	//		Left: values.MarginPadding15, Right: values.MarginPadding15,
-	//	}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-	//		t := th.Body1(n.text)
-	//		t.Color = th.Color.Surface
-	//		return t.Layout(gtx)
-	//	})
-	//})
-	return layout.Dimensions{}
-}
-
-/*func (page *pageCommon) handleToast() {
-	if (*page.toast) == nil {
-		return
-	}
-
-	if (*page.toast).timer == nil {
-		(*page.toast).timer = time.NewTimer(time.Second * 3)
-	}
-
-	select {
-	case <-(*page.toast).timer.C:
-		*page.toast = nil
-	default:
-	}
-}*/
-
 // createOrUpdateWalletDropDown check for len of wallets to create dropDown,
 // also update the list when create, update, delete a wallet.
 func createOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
