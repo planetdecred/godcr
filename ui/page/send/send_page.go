@@ -32,12 +32,11 @@ type SendPage struct {
 	*load.Load
 	pageContainer layout.List
 
-	sourceAccountSelector      *components.AccountSelector
-	destinationAccountSelector *components.AccountSelector
+	sourceAccountSelector *components.AccountSelector
+	sendDestination       *destination
 
-	destinationAddressEditor decredmaterial.Editor
-	dcrAmountEditor          decredmaterial.Editor
-	usdAmountEditor          decredmaterial.Editor
+	dcrAmountEditor decredmaterial.Editor
+	usdAmountEditor decredmaterial.Editor
 
 	backButton   decredmaterial.IconButton
 	infoButton   decredmaterial.IconButton
@@ -47,11 +46,10 @@ type SendPage struct {
 	sendToButton decredmaterial.Button
 	clearAllBtn  decredmaterial.Button
 
-	accountSwitch    *decredmaterial.SwitchButtonText
 	txFeeCollapsible *decredmaterial.Collapsible
 
-	moreOptionIsOpen      bool
-	sendToAddress         bool
+	moreOptionIsOpen bool
+
 	sendMax               bool
 	dcrSendMaxChangeEvent bool
 	usdSendMaxChangeEvent bool
@@ -64,6 +62,9 @@ type SendPage struct {
 
 type authoredTxData struct {
 	txAuthor            *dcrlibwallet.TxAuthor
+	destinationAddress  string
+	destinationAccount  *dcrlibwallet.Account
+	sourceAccount       *dcrlibwallet.Account
 	txFee               string
 	txFeeUSD            string
 	estSignedSize       string
@@ -82,6 +83,7 @@ func NewSendPage(l *load.Load) *SendPage {
 			Axis:      layout.Vertical,
 			Alignment: layout.Middle,
 		},
+		sendDestination: newSendDestination(l),
 
 		maxButton:        l.Theme.Button(new(widget.Clickable), "MAX"),
 		clearAllBtn:      l.Theme.Button(new(widget.Clickable), "Clear all fields"),
@@ -91,8 +93,6 @@ func NewSendPage(l *load.Load) *SendPage {
 
 		authoredTxData: &authoredTxData{},
 	}
-
-	pg.accountSwitch = l.Theme.SwitchButtonText([]decredmaterial.SwitchItem{{Text: "Address"}, {Text: "My account"}})
 
 	pg.nextButton = l.Theme.Button(new(widget.Clickable), "Next")
 	pg.nextButton.Background = l.Theme.Color.InactiveGray
@@ -114,10 +114,6 @@ func NewSendPage(l *load.Load) *SendPage {
 	pg.usdAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
 	pg.usdAmountEditor.CustomButton.Text = "Max"
 	pg.usdAmountEditor.CustomButton.CornerRadius = values.MarginPadding0
-
-	pg.destinationAddressEditor = l.Theme.Editor(new(widget.Editor), "Address")
-	pg.destinationAddressEditor.Editor.SingleLine = true
-	pg.destinationAddressEditor.Editor.SetText("")
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
@@ -154,12 +150,12 @@ func NewSendPage(l *load.Load) *SendPage {
 			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
 				// privacy is enabled for selected wallet
 
-				if pg.sendToAddress {
+				if pg.sendDestination.sendToAddress {
 					// only mixed can send to address
 					accountIsValid = account.Number == wal.MixedAccountNumber()
 				} else {
 					// send to account, check if selected destination account belongs to wallet
-					destinationAccount := pg.destinationAccountSelector.SelectedAccount()
+					destinationAccount := pg.sendDestination.destinationAccountSelector.SelectedAccount()
 					if destinationAccount.WalletID != account.WalletID {
 						accountIsValid = account.Number == wal.MixedAccountNumber()
 					}
@@ -168,31 +164,20 @@ func NewSendPage(l *load.Load) *SendPage {
 			return accountIsValid
 		})
 
-	// Destination account picker
-	pg.destinationAccountSelector = components.NewAccountSelector(pg.Load).
-		Title("Receiving account").
-		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
-			pg.validateAndConstructTx()
+	pg.sendDestination.destinationAccountSelector.AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
+		pg.validateAndConstructTx()
+		pg.sourceAccountSelector.SelectFirstWalletValidAccount() // refresh source account
+	})
 
-			pg.sourceAccountSelector.SelectFirstWalletValidAccount() // refresh source account
-		}).
-		AccountValidator(func(account *dcrlibwallet.Account) bool {
-
-			// Filter out imported account and mixed.
-			wal := pg.Load.WL.MultiWallet.WalletWithID(account.WalletID)
-			if account.Number == components.MaxInt32 ||
-				account.Number == wal.MixedAccountNumber() {
-				return false
-			}
-
-			return true
-		})
+	pg.sendDestination.addressChanged = func() {
+		pg.validateAndConstructTx()
+	}
 
 	return pg
 }
 
 func (pg *SendPage) OnResume() {
-	pg.destinationAccountSelector.SelectFirstWalletValidAccount()
+	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
 
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
@@ -226,7 +211,7 @@ func (pg *SendPage) fetchExchangeValue() {
 func (pg *SendPage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
-			return pg.pageSections(gtx, "From", func(gtx C) D {
+			return pg.pageSections(gtx, "From", false, func(gtx C) D {
 				return pg.sourceAccountSelector.Layout(gtx)
 			})
 		},
@@ -332,16 +317,16 @@ func (pg *SendPage) toSection(gtx layout.Context) layout.Dimensions {
 		pg.usdAmountEditor.CustomButton.Background = pg.Theme.Color.Gray
 	}
 
-	return pg.pageSections(gtx, "To", func(gtx C) D {
+	return pg.pageSections(gtx, "To", true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
 					Bottom: values.MarginPadding16,
 				}.Layout(gtx, func(gtx C) D {
-					if !pg.sendToAddress {
-						return pg.destinationAccountSelector.Layout(gtx)
+					if !pg.sendDestination.sendToAddress {
+						return pg.sendDestination.destinationAccountSelector.Layout(gtx)
 					}
-					return pg.destinationAddressEditor.Layout(gtx)
+					return pg.sendDestination.destinationAddressEditor.Layout(gtx)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -414,7 +399,7 @@ func (pg *SendPage) feeSection(gtx layout.Context) layout.Dimensions {
 		Bottom: values.MarginPadding75,
 	}
 	return inset.Layout(gtx, func(gtx C) D {
-		return pg.pageSections(gtx, "Fee", func(gtx C) D {
+		return pg.pageSections(gtx, "Fee", false, func(gtx C) D {
 			return pg.txFeeCollapsible.Layout(gtx, collapsibleHeader, collapsibleBody)
 		})
 	})
@@ -459,7 +444,7 @@ func (pg *SendPage) balanceSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *SendPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
+func (pg *SendPage) pageSections(gtx layout.Context, title string, showAccountSwitch bool, body layout.Widget) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -472,12 +457,12 @@ func (pg *SendPage) pageSections(gtx layout.Context, title string, body layout.W
 							return inset.Layout(gtx, pg.Theme.Body1(title).Layout)
 						}),
 						layout.Flexed(1, func(gtx C) D {
-							if title == "To" { //TODO: use proper comparison
+							if showAccountSwitch {
 								return layout.E.Layout(gtx, func(gtx C) D {
 									inset := layout.Inset{
 										Top: values.MarginPaddingMinus5,
 									}
-									return inset.Layout(gtx, pg.accountSwitch.Layout)
+									return inset.Layout(gtx, pg.sendDestination.accountSwitch.Layout)
 								})
 							}
 							return layout.Dimensions{}
@@ -521,7 +506,7 @@ func (pg *SendPage) inputsNotEmpty(editors ...*widget.Editor) bool {
 
 func (pg *SendPage) resetErrorText() {
 	pg.amountErrorText = ""
-	pg.destinationAddressEditor.SetError("")
+	// pg.destinationAddressEditor.SetError("")
 	pg.dcrAmountEditor.SetError("")
 	pg.usdAmountEditor.SetError("")
 }
@@ -538,56 +523,17 @@ func (pg *SendPage) validate() bool {
 
 	_, err := strconv.ParseFloat(pg.dcrAmountEditor.Editor.Text(), 64)
 	amountIsValid := err == nil
-	addressIsValid := true // default send to account
-	if pg.sendToAddress {
-		addressIsValid, _ = pg.validateDestinationAddress()
-	}
+	addressIsValid := pg.sendDestination.validate()
 
 	validForSending := (amountIsValid || pg.sendMax) && addressIsValid
 	if validForSending {
 		pg.amountErrorText = ""
-		pg.destinationAddressEditor.SetError("")
 		pg.nextButton.Background = pg.Theme.Color.Primary
 	} else {
 		pg.nextButton.Background = pg.Theme.Color.Hint
 	}
 
 	return validForSending
-}
-
-func (pg *SendPage) destinationAddress() (string, error) {
-	if pg.sendToAddress {
-		valid, address := pg.validateDestinationAddress()
-		if valid {
-			return address, nil
-		}
-
-		return "", fmt.Errorf("invalid address")
-	}
-
-	destinationAccount := pg.destinationAccountSelector.SelectedAccount()
-	wal := pg.WL.MultiWallet.WalletWithID(destinationAccount.WalletID)
-
-	return wal.CurrentAddress(destinationAccount.Number)
-}
-
-func (pg *SendPage) validateDestinationAddress() (bool, string) {
-
-	address := pg.destinationAddressEditor.Editor.Text()
-	address = strings.TrimSpace(address)
-
-	if len(address) == 0 {
-		pg.destinationAddressEditor.SetError("")
-		return false, address
-	}
-
-	if pg.WL.MultiWallet.IsAddressValid(address) {
-		pg.destinationAddressEditor.SetError("")
-		return true, address
-	}
-
-	pg.destinationAddressEditor.SetError("Invalid address")
-	return false, address
 }
 
 func (pg *SendPage) validateDCRAmount() {
@@ -640,11 +586,12 @@ func (pg *SendPage) validateUSDAmount() bool {
 }
 
 func (pg *SendPage) constructTx() {
-	address, err := pg.destinationAddress()
+	destinationAddress, err := pg.sendDestination.destinationAddress()
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
 	}
+	destinationAccount := pg.sendDestination.destinationAccount()
 
 	amountAtom := int64(0)
 
@@ -664,7 +611,7 @@ func (pg *SendPage) constructTx() {
 		return
 	}
 
-	err = unsignedTx.AddSendDestination(address, amountAtom, pg.sendMax)
+	err = unsignedTx.AddSendDestination(destinationAddress, amountAtom, pg.sendMax)
 	if err != nil {
 		pg.feeEstimationError(err.Error())
 		return
@@ -690,6 +637,9 @@ func (pg *SendPage) constructTx() {
 	pg.totalCost = totalSendingAmount.String()
 	pg.balanceAfterSend = balanceAfterSend.String()
 	pg.sendAmount = dcrutil.Amount(amountAtom).String()
+	pg.destinationAddress = destinationAddress
+	pg.destinationAccount = destinationAccount
+	pg.sourceAccount = sourceAccount
 
 	if pg.sendMax {
 		// TODO: this workaround ignores the change events from the
@@ -743,8 +693,7 @@ func (pg *SendPage) clearEstimates() {
 func (pg *SendPage) resetFields() {
 	pg.sendMax = false
 
-	pg.destinationAddressEditor.SetError("")
-	pg.destinationAddressEditor.Editor.SetText("")
+	pg.sendDestination.clearAddressInput()
 
 	pg.amountErrorText = ""
 	pg.dcrAmountEditor.Editor.SetText("")
@@ -752,11 +701,8 @@ func (pg *SendPage) resetFields() {
 }
 
 func (pg *SendPage) Handle() {
-	sendToAddress := pg.accountSwitch.SelectedIndex() == 1
-	if sendToAddress != pg.sendToAddress { // switch changed
-		pg.sendToAddress = sendToAddress
-		pg.validateAndConstructTx()
-	}
+
+	pg.sendDestination.handle()
 
 	if pg.backButton.Button.Clicked() {
 		pg.resetErrorText()
@@ -773,15 +719,6 @@ func (pg *SendPage) Handle() {
 
 	for pg.moreOption.Button.Clicked() {
 		pg.moreOptionIsOpen = !pg.moreOptionIsOpen
-	}
-
-	for _, evt := range pg.destinationAddressEditor.Editor.Events() {
-		if pg.destinationAddressEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				pg.validateAndConstructTx()
-			}
-		}
 	}
 
 	for _, evt := range pg.dcrAmountEditor.Editor.Events() {
@@ -819,12 +756,6 @@ func (pg *SendPage) Handle() {
 		if pg.validate() {
 			confirmTxModal := newSendConfirmModal(pg.Load, pg.authoredTxData)
 			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1
-			confirmTxModal.sourceAccount = pg.sourceAccountSelector.SelectedAccount()
-			if sendToAddress {
-				confirmTxModal.destinationAddress = pg.destinationAddressEditor.Editor.Text()
-			} else {
-				confirmTxModal.destinationAccount = pg.destinationAccountSelector.SelectedAccount()
-			}
 
 			confirmTxModal.txSent = func() {
 				pg.resetFields()
@@ -838,8 +769,7 @@ func (pg *SendPage) Handle() {
 	for pg.clearAllBtn.Clicked() {
 		pg.moreOptionIsOpen = true
 
-		pg.destinationAddressEditor.SetError("")
-		pg.destinationAddressEditor.Editor.SetText("")
+		pg.sendDestination.clearAddressInput()
 
 		pg.amountErrorText = ""
 		pg.dcrAmountEditor.Editor.SetText("")

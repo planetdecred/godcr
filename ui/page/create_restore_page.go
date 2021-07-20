@@ -345,7 +345,7 @@ func (pg *CreateRestore) restorePageSections(gtx layout.Context, title string, p
 									return border.Layout(gtx, func(gtx C) D {
 										m := values.MarginPadding8
 										v := values.MarginPadding5
-										return components.Container{layout.Inset{
+										return components.Container{Padding: layout.Inset{
 											Right:  m,
 											Left:   m,
 											Top:    v,

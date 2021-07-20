@@ -9,7 +9,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -30,10 +29,7 @@ type sendConfirmModal struct {
 	isSending bool
 
 	*authoredTxData
-	exchangeRateSet    bool
-	destinationAddress string
-	destinationAccount *dcrlibwallet.Account
-	sourceAccount      *dcrlibwallet.Account
+	exchangeRateSet bool
 }
 
 func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
