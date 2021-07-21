@@ -43,12 +43,12 @@ type SettingsPage struct {
 	cancel              decredmaterial.Button
 	backButton          decredmaterial.IconButton
 
-	isDarkModeOn     *widget.Bool
-	spendUnconfirmed *widget.Bool
-	startupPassword  *widget.Bool
-	beepNewBlocks    *widget.Bool
-	connectToPeer    *widget.Bool
-	userAgent        *widget.Bool
+	isDarkModeOn     *decredmaterial.Switch
+	spendUnconfirmed *decredmaterial.Switch
+	startupPassword  *decredmaterial.Switch
+	beepNewBlocks    *decredmaterial.Switch
+	connectToPeer    *decredmaterial.Switch
+	userAgent        *decredmaterial.Switch
 
 	peerLabel, agentLabel decredmaterial.Label
 
@@ -73,12 +73,12 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		walletInfo: l.WL.Info,
 		wal:        l.WL.Wallet,
 
-		isDarkModeOn:     new(widget.Bool),
-		spendUnconfirmed: new(widget.Bool),
-		startupPassword:  new(widget.Bool),
-		beepNewBlocks:    new(widget.Bool),
-		connectToPeer:    new(widget.Bool),
-		userAgent:        new(widget.Bool),
+		isDarkModeOn:     common.theme.Switch(),
+		spendUnconfirmed: common.theme.Switch(),
+		startupPassword:  common.theme.Switch(),
+		beepNewBlocks:    common.theme.Switch(),
+		connectToPeer:    common.theme.Switch(),
+		userAgent:        common.theme.Switch(),
 		chevronRightIcon: chevronRightIcon,
 
 		errorReceiver: make(chan error),
@@ -281,7 +281,7 @@ func (pg *SettingsPage) agent() layout.Widget {
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-							return layout.E.Layout(gtx, pg.theme.Switch(pg.userAgent).Layout)
+							return layout.E.Layout(gtx, pg.userAgent.Layout)
 						})
 					}),
 				)
@@ -330,8 +330,8 @@ func (pg *SettingsPage) subSection(gtx layout.Context, title string, body layout
 	})
 }
 
-func (pg *SettingsPage) subSectionSwitch(gtx layout.Context, title string, option *widget.Bool) layout.Dimensions {
-	return pg.subSection(gtx, title, pg.theme.Switch(option).Layout)
+func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, option *decredmaterial.Switch) layout.Dimensions {
+	return pg.subSection(gtx, title, option.Layout)
 }
 
 func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensions {
@@ -377,16 +377,16 @@ func (pg *SettingsPage) Handle() {
 	pg.currencyPreference.Handle()
 
 	if pg.isDarkModeOn.Changed() {
-		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.Value)
-		pg.RefreshTheme()
+		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.IsChecked())
+		common.refreshTheme()
 	}
 
 	if pg.spendUnconfirmed.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.Value)
+		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.IsChecked())
 	}
 
 	if pg.beepNewBlocks.Changed() {
-		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.Value)
+		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.IsChecked())
 	}
 
 	for pg.changeStartupPass.Clicked() {
@@ -432,7 +432,7 @@ func (pg *SettingsPage) Handle() {
 	}
 
 	if pg.startupPassword.Changed() {
-		if pg.startupPassword.Value {
+		if pg.startupPassword.IsChecked() {
 			modal.NewCreatePasswordModal(pg.Load).
 				Title(values.String(values.StrCreateStartupPassword)).
 				EnableName(false).
@@ -451,7 +451,6 @@ func (pg *SettingsPage) Handle() {
 					return false
 				}).Show()
 		} else {
-
 			modal.NewPasswordModal(pg.Load).
 				Title(values.String(values.StrConfirmRemoveStartupPass)).
 				Hint("Startup password").
@@ -474,7 +473,7 @@ func (pg *SettingsPage) Handle() {
 
 	specificPeerKey := dcrlibwallet.SpvPersistentPeerAddressesConfigKey
 	if pg.connectToPeer.Changed() {
-		if pg.connectToPeer.Value {
+		if pg.connectToPeer.IsChecked() {
 			pg.showSPVPeerDialog()
 			return
 		}
@@ -493,7 +492,7 @@ func (pg *SettingsPage) Handle() {
 	}
 
 	if pg.userAgent.Changed() {
-		if pg.userAgent.Value {
+		if pg.userAgent.IsChecked() {
 			pg.showUserAgentDialog()
 			return
 		}
@@ -544,43 +543,43 @@ func (pg *SettingsPage) showUserAgentDialog() {
 
 func (pg *SettingsPage) updateSettingOptions() {
 	isPassword := pg.wal.IsStartupSecuritySet()
-	pg.startupPassword.Value = false
+	pg.startupPassword.SetChecked(false)
 	pg.isStartupPassword = false
 	if isPassword {
-		pg.startupPassword.Value = true
+		pg.startupPassword.SetChecked(true)
 		pg.isStartupPassword = true
 	}
 
 	isDarkModeOn := pg.wal.ReadBoolConfigValueForKey("isDarkModeOn")
-	pg.isDarkModeOn.Value = false
+	pg.isDarkModeOn.SetChecked(false)
 	if isDarkModeOn {
-		pg.isDarkModeOn.Value = true
+		pg.isDarkModeOn.SetChecked(true)
 	}
 
 	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)
-	pg.spendUnconfirmed.Value = false
+	pg.spendUnconfirmed.SetChecked(false)
 	if isSpendUnconfirmed {
-		pg.spendUnconfirmed.Value = true
+		pg.spendUnconfirmed.SetChecked(true)
 	}
 
 	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
-	pg.beepNewBlocks.Value = false
+	pg.beepNewBlocks.SetChecked(false)
 	if beep {
-		pg.beepNewBlocks.Value = true
+		pg.beepNewBlocks.SetChecked(true)
 	}
 
 	pg.peerAddr = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)
-	pg.connectToPeer.Value = false
+	pg.connectToPeer.SetChecked(false)
 	if pg.peerAddr != "" {
 		pg.peerLabel.Text = pg.peerAddr
-		pg.connectToPeer.Value = true
+		pg.connectToPeer.SetChecked(true)
 	}
 
 	pg.agentValue = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.UserAgentConfigKey)
-	pg.userAgent.Value = false
+	pg.userAgent.SetChecked(false)
 	if pg.agentValue != "" {
 		pg.agentLabel.Text = pg.agentValue
-		pg.userAgent.Value = true
+		pg.userAgent.SetChecked(true)
 	}
 }
 

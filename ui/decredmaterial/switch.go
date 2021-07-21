@@ -7,7 +7,6 @@ import (
 	"image/color"
 
 	"gioui.org/f32"
-	// "gioui.org/internal/f32color"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -15,14 +14,13 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	// "gioui.org/widget/material"
 )
 
 type Switch struct {
-	Enabled    color.NRGBA
-	Disabled   color.NRGBA
-	thumbColor color.NRGBA
-	Switch     *widget.Bool
+	active       color.NRGBA
+	inactive     color.NRGBA
+	thumbColor   color.NRGBA
+	switchWidget *widget.Bool
 }
 
 type SwitchItem struct {
@@ -38,11 +36,11 @@ type SwitchButtonText struct {
 	selected                           int
 }
 
-func (t *Theme) Switch(swtch *widget.Bool) *Switch {
+func (t *Theme) Switch() *Switch {
 	sw := &Switch{
-		Switch: swtch,
+		switchWidget: new(widget.Bool),
 	}
-	sw.Enabled, sw.Disabled, sw.thumbColor = t.Color.Primary, t.Color.InactiveGray, t.Color.Surface
+	sw.active, sw.inactive, sw.thumbColor = t.Color.Primary, t.Color.InactiveGray, t.Color.Surface
 	return sw
 }
 
@@ -81,9 +79,9 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 		X: float32(trackWidth),
 		Y: float32(trackHeight),
 	}}
-	col := s.Disabled
-	if s.Switch.Value {
-		col = s.Enabled
+	col := s.inactive
+	if s.IsChecked() {
+		col = s.active
 	}
 
 	trackColor := col
@@ -95,7 +93,7 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 
 	// Compute thumb offset and color.
 	stack = op.Save(gtx.Ops)
-	if s.Switch.Value {
+	if s.IsChecked() {
 		off := trackWidth - thumbSize
 		op.Offset(f32.Point{X: float32(off)}).Add(gtx.Ops)
 	}
@@ -129,11 +127,31 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	sz := image.Pt(clickSize, clickSize)
 	pointer.Ellipse(image.Rectangle{Max: sz}).Add(gtx.Ops)
 	gtx.Constraints.Min = sz
-	s.Switch.Layout(gtx)
+	s.switchWidget.Layout(gtx)
 	stack.Load()
 
 	dims := image.Point{X: trackWidth, Y: thumbSize}
 	return layout.Dimensions{Size: dims}
+}
+
+func (s *Switch) Changed() bool {
+	return s.switchWidget.Changed()
+}
+
+func (s *Switch) IsChecked() bool {
+	return s.switchWidget.Value
+}
+
+func (s *Switch) SetChecked(value bool) {
+	s.switchWidget.Value = value
+}
+
+func (s *Switch) SetThumbColor(color color.NRGBA) {
+	s.thumbColor = color
+}
+
+func (s *Switch) SetTrackColor(activeColor, inactiveColor color.NRGBA) {
+	s.inactive, s.active = inactiveColor, activeColor
 }
 
 func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
