@@ -73,12 +73,12 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		walletInfo: l.WL.Info,
 		wal:        l.WL.Wallet,
 
-		isDarkModeOn:     common.theme.Switch(),
-		spendUnconfirmed: common.theme.Switch(),
-		startupPassword:  common.theme.Switch(),
-		beepNewBlocks:    common.theme.Switch(),
-		connectToPeer:    common.theme.Switch(),
-		userAgent:        common.theme.Switch(),
+		isDarkModeOn:     l.Theme.Switch(),
+		spendUnconfirmed: l.Theme.Switch(),
+		startupPassword:  l.Theme.Switch(),
+		beepNewBlocks:    l.Theme.Switch(),
+		connectToPeer:    l.Theme.Switch(),
+		userAgent:        l.Theme.Switch(),
 		chevronRightIcon: chevronRightIcon,
 
 		errorReceiver: make(chan error),
@@ -329,7 +329,7 @@ func (pg *SettingsPage) subSection(gtx layout.Context, title string, body layout
 	})
 }
 
-func (pg *settingsPage) subSectionSwitch(gtx layout.Context, title string, option *decredmaterial.Switch) layout.Dimensions {
+func (pg *SettingsPage) subSectionSwitch(gtx layout.Context, title string, option *decredmaterial.Switch) layout.Dimensions {
 	return pg.subSection(gtx, title, option.Layout)
 }
 
@@ -377,7 +377,7 @@ func (pg *SettingsPage) Handle() {
 
 	if pg.isDarkModeOn.Changed() {
 		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.IsChecked())
-		common.refreshTheme()
+		pg.RefreshTheme()
 	}
 
 	if pg.spendUnconfirmed.Changed() {
@@ -545,26 +545,26 @@ func (pg *SettingsPage) updateSettingOptions() {
 	pg.startupPassword.SetChecked(false)
 	pg.isStartupPassword = false
 	if isPassword {
-		pg.startupPassword.SetChecked(true)
+		pg.startupPassword.SetChecked(isPassword)
 		pg.isStartupPassword = true
 	}
 
 	isDarkModeOn := pg.wal.ReadBoolConfigValueForKey("isDarkModeOn")
 	pg.isDarkModeOn.SetChecked(false)
 	if isDarkModeOn {
-		pg.isDarkModeOn.SetChecked(true)
+		pg.isDarkModeOn.SetChecked(isDarkModeOn)
 	}
 
 	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)
 	pg.spendUnconfirmed.SetChecked(false)
 	if isSpendUnconfirmed {
-		pg.spendUnconfirmed.SetChecked(true)
+		pg.spendUnconfirmed.SetChecked(isSpendUnconfirmed)
 	}
 
 	beep := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey)
 	pg.beepNewBlocks.SetChecked(false)
 	if beep {
-		pg.beepNewBlocks.SetChecked(true)
+		pg.beepNewBlocks.SetChecked(beep)
 	}
 
 	pg.peerAddr = pg.wal.ReadStringConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey)

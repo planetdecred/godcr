@@ -20,7 +20,7 @@ type WalletSettingsPage struct {
 
 	changePass, rescan, deleteWallet *widget.Clickable
 
-	notificationW *widget.Bool
+	notification *decredmaterial.Switch
 
 	chevronRightIcon *widget.Icon
 	backButton       decredmaterial.IconButton
@@ -28,12 +28,12 @@ type WalletSettingsPage struct {
 
 func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
 	pg := &WalletSettingsPage{
-		Load:          l,
-		wallet:        wal,
-		notificationW: new(widget.Bool),
-		changePass:    new(widget.Clickable),
-		rescan:        new(widget.Clickable),
-		deleteWallet:  new(widget.Clickable),
+		Load:         l,
+		wallet:       wal,
+		notification: l.Theme.Switch(),
+		changePass:   new(widget.Clickable),
+		rescan:       new(widget.Clickable),
+		deleteWallet: new(widget.Clickable),
 
 		chevronRightIcon: l.Icons.ChevronRight,
 	}
@@ -51,9 +51,9 @@ func (pg *WalletSettingsPage) OnResume() {
 func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	beep := pg.wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
-	pg.notificationW.Value = beep
+	pg.notification.SetChecked(beep)
 	if beep {
-		pg.notificationW.Value = true
+		pg.notification.SetChecked(true)
 	}
 
 	body := func(gtx C) D {
@@ -73,7 +73,7 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 						}
 						return layout.Dimensions{}
 					}),
-					layout.Rigid(pg.notification()),
+					layout.Rigid(pg.notificationSection()),
 					layout.Rigid(pg.debug()),
 					layout.Rigid(pg.dangerZone()),
 				)
@@ -99,14 +99,14 @@ func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 	}
 }
 
-func (pg *WalletSettingsPage) notification() layout.Widget {
+func (pg *WalletSettingsPage) notificationSection() layout.Widget {
 	return func(gtx C) D {
 		return pg.pageSections(gtx, values.String(values.StrNotifications), nil, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrBeepForNewBlocks))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.Theme.Switch(pg.notificationW).Layout(gtx)
+						return pg.notification.Layout(gtx)
 					})
 				}),
 			)
@@ -246,8 +246,8 @@ func (pg *WalletSettingsPage) Handle() {
 		break
 	}
 
-	if pg.notificationW.Changed() {
-		pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notificationW.Value)
+	if pg.notification.Changed() {
+		pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notification.IsChecked())
 	}
 
 	for pg.deleteWallet.Clicked() {
@@ -256,7 +256,6 @@ func (pg *WalletSettingsPage) Handle() {
 			Body("Make sure to have the seed phrase backed up before removing the wallet").
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrRemove), func() {
-
 				modal.NewPasswordModal(pg.Load).
 					Title(values.String(values.StrConfirmToRemove)).
 					NegativeButton(values.String(values.StrCancel), func() {}).
