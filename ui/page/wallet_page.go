@@ -864,8 +864,7 @@ func (pg *WalletPage) Handle() {
 				case SignMessagePageID:
 					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal), SignMessagePageID)
 				case PagePrivacy:
-					// todo: uncomment after moving privacy page to the page package
-					// pg.ChangeFragment(PrivacyPage(common, listItem.wal), PagePrivacy)
+					pg.ChangeFragment(PrivacyPage(pg.Load, listItem.wal), PagePrivacy)
 				case SettingsPageID:
 					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal), WalletSettingsPageID)
 				default:
