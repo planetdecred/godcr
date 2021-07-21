@@ -20,6 +20,7 @@ type Switch struct {
 	active       color.NRGBA
 	inactive     color.NRGBA
 	thumbColor   color.NRGBA
+	disabled     bool
 	switchWidget *widget.Bool
 }
 
@@ -79,7 +80,12 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 		X: float32(trackWidth),
 		Y: float32(trackHeight),
 	}}
+
 	col := s.inactive
+	if s.disabled {
+		col = Disabled(s.inactive)
+		s.thumbColor = Disabled(s.thumbColor)
+	}
 	if s.IsChecked() {
 		col = s.active
 	}
@@ -139,6 +145,9 @@ func (s *Switch) Changed() bool {
 }
 
 func (s *Switch) IsChecked() bool {
+	if s.disabled {
+		s.SetChecked(false)
+	}
 	return s.switchWidget.Value
 }
 
@@ -152,6 +161,10 @@ func (s *Switch) SetThumbColor(color color.NRGBA) {
 
 func (s *Switch) SetTrackColor(activeColor, inactiveColor color.NRGBA) {
 	s.inactive, s.active = inactiveColor, activeColor
+}
+
+func (s *Switch) Disabled() {
+	s.disabled = true
 }
 
 func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {

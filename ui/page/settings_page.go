@@ -122,7 +122,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	pg.agentLabel.Color = pg.Theme.Color.Gray
 
 	pg.chevronRightIcon.Color = color
-
 	return pg
 }
 
