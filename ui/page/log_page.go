@@ -10,6 +10,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -44,7 +45,7 @@ func NewLogPage(l *load.Load) *LogPage {
 	pg.copyIcon = pg.Icons.CopyIcon
 	pg.copyIcon.Scale = 0.25
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	go pg.watchLogs(pg.internalLog)
 
@@ -75,15 +76,15 @@ func (pg *LogPage) watchLogs(internalLog chan string) {
 
 func (pg *LogPage) Layout(gtx C) D {
 	container := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Wallet log",
-			backButton: pg.backButton,
-			back: func() {
+			Title:      "Wallet log",
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(DebugPageID)
 			},
-			extraItem: pg.copyLog,
-			extra: func(gtx C) D {
+			ExtraItem: pg.copyLog,
+			Extra: func(gtx C) D {
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.copyLog, func(gtx C) D {
 						sz := gtx.Constraints.Max.X
@@ -93,10 +94,10 @@ func (pg *LogPage) Layout(gtx C) D {
 
 				})
 			},
-			handleExtra: func() {
+			HandleExtra: func() {
 				pg.copyLogEntries(gtx)
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				background := pg.Theme.Color.Surface
 				card := pg.Theme.Card()
 				card.Color = background
@@ -116,7 +117,7 @@ func (pg *LogPage) Layout(gtx C) D {
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, container)
+	return components.UniformPadding(gtx, container)
 }
 
 func (pg *LogPage) Handle()  {}

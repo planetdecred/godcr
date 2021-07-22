@@ -7,6 +7,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
@@ -70,7 +71,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		wallet:      l.WL.MultiWallet.WalletWithID(transaction.WalletID),
 	}
 
-	pg.backButton, pg.infoButton = subpageHeaderButtons(pg.Load)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 
 	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
@@ -114,15 +115,15 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      dcrlibwallet.TransactionDirectionName(pg.transaction.Direction),
-			backButton: pg.backButton,
-			infoButton: pg.infoButton,
-			back: func() {
+			Title:      dcrlibwallet.TransactionDirectionName(pg.transaction.Direction),
+			BackButton: pg.backButton,
+			InfoButton: pg.infoButton,
+			Back: func() {
 				pg.ChangePage(*pg.ReturnPage)
 			},
-			body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{
 					func(gtx C) D {
 						return pg.txnBalanceAndStatus(gtx)
@@ -158,12 +159,12 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			infoTemplate: modal.TransactionDetailsInfoTemplate,
+			InfoTemplate: modal.TransactionDetailsInfoTemplate,
 		}
 		return sp.Layout(gtx)
 	}
 
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {

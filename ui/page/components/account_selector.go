@@ -1,7 +1,8 @@
-package page
+package components
 
 import (
 	"errors"
+	"fmt"
 	"image"
 
 	"gioui.org/gesture"
@@ -18,7 +19,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-type accountSelector struct {
+type AccountSelector struct {
 	*load.Load
 	multiWallet *dcrlibwallet.MultiWallet
 	dialogTitle string
@@ -34,9 +35,9 @@ type accountSelector struct {
 	totalBalance       string
 }
 
-func newAccountSelector(l *load.Load) *accountSelector {
+func NewAccountSelector(l *load.Load) *AccountSelector {
 
-	return &accountSelector{
+	return &AccountSelector{
 		Load:               l,
 		multiWallet:        l.WL.MultiWallet,
 		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
@@ -46,22 +47,22 @@ func newAccountSelector(l *load.Load) *accountSelector {
 	}
 }
 
-func (as *accountSelector) title(title string) *accountSelector {
+func (as *AccountSelector) Title(title string) *AccountSelector {
 	as.dialogTitle = title
 	return as
 }
 
-func (as *accountSelector) accountValidator(accountIsValid func(*dcrlibwallet.Account) bool) *accountSelector {
+func (as *AccountSelector) AccountValidator(accountIsValid func(*dcrlibwallet.Account) bool) *AccountSelector {
 	as.accountIsValid = accountIsValid
 	return as
 }
 
-func (as *accountSelector) accountSelected(callback func(*dcrlibwallet.Account)) *accountSelector {
+func (as *AccountSelector) AccountSelected(callback func(*dcrlibwallet.Account)) *AccountSelector {
 	as.callback = callback
 	return as
 }
 
-func (as *accountSelector) Handle() {
+func (as *AccountSelector) Handle() {
 	for as.openSelectorDialog.Clicked() {
 		newAccountSelectorModal(as.Load, as.selectedAccount, as.wallets).
 			title(as.dialogTitle).
@@ -74,7 +75,7 @@ func (as *accountSelector) Handle() {
 	}
 }
 
-func (as *accountSelector) selectFirstWalletValidAccount() error {
+func (as *AccountSelector) SelectFirstWalletValidAccount() error {
 	if as.selectedAccount != nil && as.accountIsValid(as.selectedAccount) {
 		// no need to select account
 		return nil
@@ -99,7 +100,7 @@ func (as *accountSelector) selectFirstWalletValidAccount() error {
 	return errors.New("no valid account found")
 }
 
-func (as *accountSelector) setupSelectedAccount(account *dcrlibwallet.Account) {
+func (as *AccountSelector) setupSelectedAccount(account *dcrlibwallet.Account) {
 	wal := as.multiWallet.WalletWithID(account.WalletID)
 
 	as.selectedAccount = account
@@ -107,7 +108,11 @@ func (as *accountSelector) setupSelectedAccount(account *dcrlibwallet.Account) {
 	as.totalBalance = dcrutil.Amount(account.TotalBalance).String()
 }
 
-func (as *accountSelector) Layout(gtx layout.Context) layout.Dimensions {
+func (as *AccountSelector) SelectedAccount() *dcrlibwallet.Account {
+	return as.selectedAccount
+}
+
+func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 	as.Handle()
 
 	border := widget.Border{
@@ -185,7 +190,7 @@ func (as *accountSelector) Layout(gtx layout.Context) layout.Dimensions {
 
 const ModalAccountSelector = "AccountSelectorModal"
 
-type accountSelectorModal struct {
+type AccountSelectorModal struct {
 	*load.Load
 	dialogTitle string
 
@@ -209,8 +214,8 @@ type selectorAccount struct {
 	clickEvent *gesture.Click
 }
 
-func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account, wallets []*dcrlibwallet.Wallet) *accountSelectorModal {
-	asm := &accountSelectorModal{
+func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account, wallets []*dcrlibwallet.Wallet) *AccountSelectorModal {
+	asm := &AccountSelectorModal{
 		Load:         l,
 		modal:        *l.Theme.ModalFloatTitle(),
 		walletsList:  layout.List{Axis: layout.Vertical},
@@ -228,7 +233,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 	return asm
 }
 
-func (asm *accountSelectorModal) OnResume() {
+func (asm *AccountSelectorModal) OnResume() {
 	wallets := make([]*dcrlibwallet.Wallet, 0)
 	walletAccounts := make(map[int][]*selectorAccount)
 
@@ -237,7 +242,7 @@ func (asm *accountSelectorModal) OnResume() {
 		// filter all accounts
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
-			log.Errorf("Error getting accounts: %v", err)
+			fmt.Println("Error getting accounts:", err)
 			return
 		}
 
@@ -262,19 +267,19 @@ func (asm *accountSelectorModal) OnResume() {
 	asm.accounts = walletAccounts
 }
 
-func (asm *accountSelectorModal) ModalID() string {
+func (asm *AccountSelectorModal) ModalID() string {
 	return ModalAccountSelector
 }
 
-func (asm *accountSelectorModal) Show() {
+func (asm *AccountSelectorModal) Show() {
 	asm.ShowModal(asm)
 }
 
-func (asm *accountSelectorModal) Dismiss() {
+func (asm *AccountSelectorModal) Dismiss() {
 	asm.DismissModal(asm)
 }
 
-func (asm *accountSelectorModal) Handle() {
+func (asm *AccountSelectorModal) Handle() {
 	if asm.eventQueue != nil {
 		for _, accounts := range asm.accounts {
 			for _, account := range accounts {
@@ -289,26 +294,26 @@ func (asm *accountSelectorModal) Handle() {
 	}
 }
 
-func (asm *accountSelectorModal) title(title string) *accountSelectorModal {
+func (asm *AccountSelectorModal) title(title string) *AccountSelectorModal {
 	asm.dialogTitle = title
 	return asm
 }
 
-func (asm *accountSelectorModal) accountValidator(accountIsValid func(*dcrlibwallet.Account) bool) *accountSelectorModal {
+func (asm *AccountSelectorModal) accountValidator(accountIsValid func(*dcrlibwallet.Account) bool) *AccountSelectorModal {
 	asm.accountIsValid = accountIsValid
 	return asm
 }
 
-func (asm *accountSelectorModal) accountSelected(callback func(*dcrlibwallet.Account)) *accountSelectorModal {
+func (asm *AccountSelectorModal) accountSelected(callback func(*dcrlibwallet.Account)) *AccountSelectorModal {
 	asm.callback = callback
 	return asm
 }
 
-func (asm *accountSelectorModal) OnDismiss() {
+func (asm *AccountSelectorModal) OnDismiss() {
 
 }
 
-func (asm *accountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
+func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	asm.eventQueue = gtx
 
 	wallAcctGroup := func(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
@@ -385,7 +390,7 @@ func (asm *accountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	return asm.modal.Layout(gtx, w, 850)
 }
 
-func (asm *accountSelectorModal) walletAccountLayout(gtx layout.Context, account *selectorAccount) layout.Dimensions {
+func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account *selectorAccount) layout.Dimensions {
 
 	// click listeners
 	pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
@@ -412,8 +417,8 @@ func (asm *accountSelectorModal) walletAccountLayout(gtx layout.Context, account
 							layout.Rigid(func(gtx C) D {
 								acct := asm.Theme.Label(values.TextSize18, account.Name)
 								acct.Color = asm.Theme.Color.Text
-								return endToEndRow(gtx, acct.Layout, func(gtx C) D {
-									return layoutBalance(gtx, asm.Load, dcrutil.Amount(account.TotalBalance).String(), true)
+								return EndToEndRow(gtx, acct.Layout, func(gtx C) D {
+									return LayoutBalance(gtx, asm.Load, dcrutil.Amount(account.TotalBalance).String())
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -421,7 +426,7 @@ func (asm *accountSelectorModal) walletAccountLayout(gtx layout.Context, account
 								spendable.Color = asm.Theme.Color.Gray
 								spendableBal := asm.Theme.Label(values.TextSize14, dcrutil.Amount(account.Balance.Spendable).String())
 								spendableBal.Color = asm.Theme.Color.Gray
-								return endToEndRow(gtx, spendable.Layout, spendableBal.Layout)
+								return EndToEndRow(gtx, spendable.Layout, spendableBal.Layout)
 							}),
 						)
 					}),
@@ -451,7 +456,7 @@ func (asm *accountSelectorModal) walletAccountLayout(gtx layout.Context, account
 	})
 }
 
-func (asm *accountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dimensions {
+func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dimensions {
 	title := "Some accounts are hidden."
 	desc := "Some accounts are disabled by StakeShuffle settings to protect your privacy."
 	card := asm.Theme.Card()

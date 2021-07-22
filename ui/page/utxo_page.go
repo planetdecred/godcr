@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"fmt"
@@ -11,6 +11,8 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 
@@ -19,9 +21,8 @@ import (
 
 const PageUTXO = "unspentTransactionOutput"
 
-type utxoPage struct {
-	theme                  *decredmaterial.Theme
-	common                 *pageCommon
+type UTXOPage struct {
+	*load.Load
 	utxoListContainer      layout.List
 	txAuthor               *dcrlibwallet.TxAuthor
 	backButton             decredmaterial.IconButton
@@ -41,36 +42,33 @@ type utxoPage struct {
 	selectedAccountID int32
 }
 
-func UTXOPage(common *pageCommon) Page {
-	pg := &utxoPage{
-		theme:          common.theme,
-		common:         common,
-		unspentOutputs: common.unspentOutputs,
+func NewUTXOPage(l *load.Load) *UTXOPage {
+	pg := &UTXOPage{
+		unspentOutputs: &l.WL.UnspentOutputs,
 		utxoListContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		txAuthor:               common.txAuthor,
-		unspentOutputsSelected: &common.selectedUTXO,
-		selecAllChexBox:        common.theme.CheckBox(new(widget.Bool), ""),
-		separator:              common.theme.Separator(),
+		txAuthor:               &l.WL.TxAuthor,
+		unspentOutputsSelected: &l.SelectedUTXO,
+		selecAllChexBox:        l.Theme.CheckBox(new(widget.Bool), ""),
+		separator:              l.Theme.Separator(),
 	}
 
-	pg.backButton = common.theme.PlainIconButton(new(widget.Clickable), common.icons.navigationArrowBack)
-	pg.backButton.Color = common.theme.Color.Hint
+	pg.backButton = l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack)
+	pg.backButton.Color = l.Theme.Color.Hint
 	pg.backButton.Size = values.MarginPadding30
-	pg.useUTXOButton = common.theme.Button(new(widget.Clickable), "OK")
+	pg.useUTXOButton = l.Theme.Button(new(widget.Clickable), "OK")
 
 	return pg
 }
 
-func (pg *utxoPage) OnResume() {
+func (pg *UTXOPage) OnResume() {
 
 }
 
-func (pg *utxoPage) Handle() {
-	common := pg.common
-	pg.selectedWalletID = common.info.Wallets[*common.selectedWallet].ID
-	pg.selectedAccountID = common.info.Wallets[*common.selectedWallet].Accounts[*common.selectedAccount].Number
+func (pg *UTXOPage) Handle() {
+	pg.selectedWalletID = pg.WL.Info.Wallets[*pg.SelectedWallet].ID
+	pg.selectedAccountID = pg.WL.Info.Wallets[*pg.SelectedWallet].Accounts[*pg.SelectedAccount].Number
 
 	if len(pg.checkboxes) != len((*pg.unspentOutputs).List) {
 		pg.checkboxes = make([]decredmaterial.CheckBoxStyle, len((*pg.unspentOutputs).List))
@@ -78,13 +76,13 @@ func (pg *utxoPage) Handle() {
 
 		for i := 0; i < len((*pg.unspentOutputs).List); i++ {
 			utxo := (*pg.unspentOutputs).List[i]
-			pg.checkboxes[i] = common.theme.CheckBox(new(widget.Bool), "")
+			pg.checkboxes[i] = pg.Theme.CheckBox(new(widget.Bool), "")
 			if _, ok := (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID][utxo.UTXO.OutputKey]; ok {
 				pg.checkboxes[i].CheckBox.Value = true
 			}
-			icoBtn := common.theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy)))
+			icoBtn := pg.Theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ContentContentCopy)))
 			icoBtn.Inset, icoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
-			icoBtn.Background = common.theme.Color.LightGray
+			icoBtn.Background = pg.Theme.Color.LightGray
 			pg.copyButtons[i] = icoBtn
 		}
 		pg.calculateAmountAndFeeUTXO()
@@ -92,11 +90,11 @@ func (pg *utxoPage) Handle() {
 
 	if pg.backButton.Button.Clicked() {
 		pg.clearPageData()
-		common.changePage(PageSend)
+		pg.ChangePage(send.PageID)
 	}
 
 	if pg.useUTXOButton.Button.Clicked() {
-		common.changePage(PageSend)
+		pg.ChangePage(send.PageID)
 	}
 
 	if pg.selecAllChexBox.CheckBox.Changed() {
@@ -113,7 +111,7 @@ func (pg *utxoPage) Handle() {
 	}
 }
 
-func (pg *utxoPage) handlerCheckboxes(cb *decredmaterial.CheckBoxStyle, utxo *wallet.UnspentOutput) {
+func (pg *UTXOPage) handlerCheckboxes(cb *decredmaterial.CheckBoxStyle, utxo *wallet.UnspentOutput) {
 	if cb.CheckBox.Changed() {
 		if cb.CheckBox.Value {
 			(*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID][utxo.UTXO.OutputKey] = utxo
@@ -124,7 +122,7 @@ func (pg *utxoPage) handlerCheckboxes(cb *decredmaterial.CheckBoxStyle, utxo *wa
 	}
 }
 
-func (pg *utxoPage) calculateAmountAndFeeUTXO() {
+func (pg *UTXOPage) calculateAmountAndFeeUTXO() {
 	var utxoKeys []string
 	var totalAmount int64
 	for utxoKey, utxo := range (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID] {
@@ -146,13 +144,12 @@ func (pg *utxoPage) calculateAmountAndFeeUTXO() {
 	pg.txnAmountAfterFee = dcrutil.Amount(totalAmount - feeAndSize.Fee.AtomValue).String()
 }
 
-func (pg *utxoPage) clearPageData() {
+func (pg *UTXOPage) clearPageData() {
 	pg.checkboxes = nil
 	pg.txnFee = ""
 }
 
-func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
-	c := pg.common
+func (pg *UTXOPage) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -163,7 +160,7 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{
 						Left: values.MarginPadding10,
 						Top:  values.MarginPadding10,
-					}.Layout(gtx, c.theme.H5("Coin Control").Layout)
+					}.Layout(gtx, pg.Theme.H5("Coin Control").Layout)
 				}),
 			)
 		}),
@@ -175,23 +172,23 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 								layout.Flexed(0.25, func(gtx C) D {
 									utxos := (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID]
-									return textData(gtx, c, "Selected:  ", fmt.Sprintf("%d", len(utxos)))
+									return pg.textData(gtx, "Selected:  ", fmt.Sprintf("%d", len(utxos)))
 								}),
 								layout.Flexed(0.25, func(gtx C) D {
-									return textData(gtx, c, "Amount:  ", pg.txnAmount)
+									return pg.textData(gtx, "Amount:  ", pg.txnAmount)
 								}),
 								layout.Flexed(0.25, func(gtx C) D {
-									return textData(gtx, c, "Fee:  ", pg.txnFee)
+									return pg.textData(gtx, "Fee:  ", pg.txnFee)
 								}),
 								layout.Flexed(0.25, func(gtx C) D {
-									return textData(gtx, c, "After Fee:  ", pg.txnAmountAfterFee)
+									return pg.textData(gtx, "After Fee:  ", pg.txnAmountAfterFee)
 								}),
 							)
 						})
 					}),
 					layout.Rigid(pg.separator.Layout),
 					layout.Rigid(func(gtx C) D {
-						return pg.utxoRowHeader(gtx, c)
+						return pg.utxoRowHeader(gtx)
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						if len(pg.checkboxes) == 0 {
@@ -200,7 +197,7 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 						return pg.utxoListContainer.Layout(gtx, len((*pg.unspentOutputs).List), func(gtx C, index int) D {
 							utxo := (*pg.unspentOutputs).List[index]
 							pg.handlerCheckboxes(&pg.checkboxes[index], utxo)
-							return pg.utxoRow(gtx, utxo, c, index)
+							return pg.utxoRow(gtx, utxo, index)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -213,9 +210,9 @@ func (pg *utxoPage) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func textData(gtx layout.Context, c *pageCommon, txt, value string) layout.Dimensions {
-	txt1 := c.theme.Label(values.MarginPadding15, txt)
-	txt2 := c.theme.Label(values.MarginPadding15, value)
+func (pg *UTXOPage) textData(gtx layout.Context, txt, value string) layout.Dimensions {
+	txt1 := pg.Theme.Label(values.MarginPadding15, txt)
+	txt2 := pg.Theme.Label(values.MarginPadding15, value)
 	txt1.MaxLines, txt2.MaxLines = 1, 1
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(txt1.Layout),
@@ -223,8 +220,8 @@ func textData(gtx layout.Context, c *pageCommon, txt, value string) layout.Dimen
 	)
 }
 
-func (pg *utxoPage) utxoRowHeader(gtx layout.Context, c *pageCommon) layout.Dimensions {
-	txt := c.theme.Label(values.MarginPadding15, "")
+func (pg *UTXOPage) utxoRowHeader(gtx layout.Context) layout.Dimensions {
+	txt := pg.Theme.Label(values.MarginPadding15, "")
 	txt.MaxLines = 1
 	return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -254,32 +251,32 @@ func (pg *utxoPage) utxoRowHeader(gtx layout.Context, c *pageCommon) layout.Dime
 	})
 }
 
-func (pg *utxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, c *pageCommon, index int) layout.Dimensions {
+func (pg *UTXOPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, index int) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(pg.checkboxes[index].Layout),
 		layout.Rigid(func(gtx C) D {
-			txt := c.theme.Body2(data.Amount)
+			txt := pg.Theme.Body2(data.Amount)
 			txt.MaxLines = 1
 			txt.Alignment = text.Start
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			txt := c.theme.Body2(data.UTXO.Addresses)
+			txt := pg.Theme.Body2(data.UTXO.Addresses)
 			txt.MaxLines = 1
 			gtx.Constraints.Max.X = gtx.Px(values.MarginPadding200)
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding200)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			txt := c.theme.Body2(data.DateTime)
+			txt := pg.Theme.Body2(data.DateTime)
 			txt.MaxLines = 1
 			txt.Alignment = text.End
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			txt := c.theme.Body2(fmt.Sprintf("%d", data.UTXO.Confirmations))
+			txt := pg.Theme.Body2(fmt.Sprintf("%d", data.UTXO.Confirmations))
 			txt.MaxLines = 1
 			txt.Alignment = text.End
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding100)
@@ -294,4 +291,4 @@ func (pg *utxoPage) utxoRow(gtx layout.Context, data *wallet.UnspentOutput, c *p
 	)
 }
 
-func (pg *utxoPage) OnClose() {}
+func (pg *UTXOPage) OnClose() {}

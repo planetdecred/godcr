@@ -6,6 +6,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -43,7 +44,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 		debugItems: debugItems,
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -93,14 +94,14 @@ func (pg *DebugPage) layoutDebugItems(gtx C) {
 
 func (pg *DebugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Debug",
-			backButton: pg.backButton,
-			back: func() {
+			Title:      "Debug",
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(MorePageID)
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				pg.layoutDebugItems(gtx)
 				return layout.Dimensions{Size: gtx.Constraints.Max}
 			},
@@ -108,5 +109,5 @@ func (pg *DebugPage) Layout(gtx C) D {
 		return sp.Layout(gtx)
 
 	}
-	return uniformPadding(gtx, container)
+	return components.UniformPadding(gtx, container)
 }

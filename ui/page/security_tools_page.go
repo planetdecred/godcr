@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 
 	"github.com/planetdecred/godcr/ui/load"
 
@@ -32,7 +33,7 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 		validateAddress: new(widget.Clickable),
 	}
 
-	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -44,15 +45,15 @@ func (pg *SecurityToolsPage) OnResume() {
 // main settings layout
 func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Security Tools",
-			backButton: pg.backButton,
-			infoButton: pg.infoButton,
-			back: func() {
+			Title:      "Security Tools",
+			BackButton: pg.backButton,
+			InfoButton: pg.infoButton,
+			Back: func() {
 				pg.ChangePage(MorePageID)
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Flexed(.5, pg.message()),
@@ -64,11 +65,11 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 					)
 				})
 			},
-			infoTemplate: modal.SecurityToolsInfoTemplate,
+			InfoTemplate: modal.SecurityToolsInfoTemplate,
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *SecurityToolsPage) message() layout.Widget {

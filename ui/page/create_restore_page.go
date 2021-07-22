@@ -16,6 +16,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -189,7 +190,7 @@ func (pg *CreateRestore) restore(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					m := values.MarginPadding24
 					v := values.MarginPadding6
-					return Container{padding: layout.Inset{Right: m, Left: m, Top: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
+					return components.Container{Padding: layout.Inset{Right: m, Left: m, Top: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
 						pageContent := []func(gtx C) D{
 							func(gtx C) D {
 								return pg.restorePageSections(gtx, "Enter your seed phase", "1/3", pg.enterSeedPhase)
@@ -326,7 +327,7 @@ func (pg *CreateRestore) restorePageSections(gtx layout.Context, title string, p
 					layout.Rigid(func(gtx C) D {
 						m := values.MarginPadding10
 						v := values.MarginPadding5
-						return Container{padding: layout.Inset{Right: v, Left: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
+						return components.Container{Padding: layout.Inset{Right: v, Left: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							txt := pg.Theme.Body1(title)
 							return layout.Flex{
@@ -344,7 +345,7 @@ func (pg *CreateRestore) restorePageSections(gtx layout.Context, title string, p
 									return border.Layout(gtx, func(gtx C) D {
 										m := values.MarginPadding8
 										v := values.MarginPadding5
-										return Container{padding: layout.Inset{
+										return components.Container{Padding: layout.Inset{
 											Right:  m,
 											Left:   m,
 											Top:    v,

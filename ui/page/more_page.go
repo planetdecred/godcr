@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -84,7 +85,7 @@ func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
 		pg.layoutMoreItems(gtx)
 		return layout.Dimensions{Size: gtx.Constraints.Max}
 	}
-	return uniformPadding(gtx, container)
+	return components.UniformPadding(gtx, container)
 }
 
 func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {

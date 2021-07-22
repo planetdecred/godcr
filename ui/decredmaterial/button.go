@@ -55,6 +55,10 @@ func (b *Button) Enabled() bool {
 	return b.isEnabled
 }
 
+func (b Button) Clicked() bool {
+	return b.Button.Clicked()
+}
+
 func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 	if !b.Enabled() {
 		gtx.Queue = nil

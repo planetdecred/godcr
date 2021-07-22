@@ -3,9 +3,6 @@ package page
 import (
 	"image/color"
 
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
-
 	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -16,6 +13,9 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -342,7 +342,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return uniformPadding(gtx, body)
+			return components.UniformPadding(gtx, body)
 		}),
 		layout.Expanded(func(gtx C) D {
 			if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
@@ -625,7 +625,7 @@ func (pg *WalletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 
 func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwallet.Account) layout.Dimensions {
 	pg.accountIcon = pg.Icons.AccountIcon
-	if account.Number == MaxInt32 {
+	if account.Number == load.MaxInt32 {
 		pg.accountIcon = pg.Icons.ImportedAccountIcon
 		if account.TotalBalance == 0 {
 			return D{}
@@ -663,7 +663,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 										layout.Flexed(1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												totalBal := dcrutil.Amount(account.Balance.Spendable).String()
-												return layoutBalance(gtx, pg.Load, totalBal, true)
+												return components.LayoutBalance(gtx, pg.Load, totalBal)
 											})
 										}),
 									)

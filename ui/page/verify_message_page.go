@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -46,7 +47,7 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg.verifyBtn.Font.Weight = text.Bold
 	pg.clearBtn.Font.Weight = text.Bold
 
-	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -57,17 +58,17 @@ func (pg *VerifyMessagePage) OnResume() {
 
 func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Verify message",
-			backButton: pg.backButton,
-			infoButton: pg.infoButton,
-			back: func() {
+			Title:      "Verify message",
+			BackButton: pg.backButton,
+			InfoButton: pg.infoButton,
+			Back: func() {
 				pg.clearInputs()
 				pg.ChangePage(WalletPageID)
 				pg.ChangePage(*pg.ReturnPage)
 			},
-			body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -81,11 +82,11 @@ func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			infoTemplate: modal.VerifyMessageInfoTemplate,
+			InfoTemplate: modal.VerifyMessageInfoTemplate,
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *VerifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widget {
