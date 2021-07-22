@@ -33,7 +33,7 @@ type mainPage struct {
 
 	current, previous string
 	pages             map[string]Page
-	sendPage          *send.Page
+	sendPage          *send.Page // reuse value to keep data persistent onresume.
 
 	// page state variables
 	usdExchangeSet  bool
@@ -244,16 +244,22 @@ func (mp *mainPage) Handle() {
 
 	for i := range mp.appBarNavItems {
 		for mp.appBarNavItems[i].clickable.Clicked() {
+			var pg load.Page
+			var id string
 			if i == 0 {
 				if mp.sendPage == nil {
 					mp.sendPage = send.NewSendPage(mp.load)
 				}
-				mp.changeFragment(mp.sendPage, send.PageID)
-				continue
+
+				pg = mp.sendPage
+				id = send.PageID
+			} else {
+				pg = page.NewReceivePage(mp.load)
+				id = page.ReceivePageID
 			}
 
 			mp.setReturnPage(mp.current)
-			mp.changePage(mp.appBarNavItems[i].page)
+			mp.changeFragment(pg, id)
 		}
 	}
 

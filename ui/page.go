@@ -254,7 +254,6 @@ func loadPages(common *pageCommon, l *load.Load) map[string]Page {
 	pages := make(map[string]Page)
 
 	pages[page.MorePageID] = page.NewMorePage(l)
-	pages[page.ReceivePageID] = page.NewReceivePage(l)
 	pages[page.VerifyMessagePageID] = page.NewVerifyMessagePage(l)
 	pages[page.SeedBackupPageID] = page.NewBackupPage(l)
 	pages[page.SettingsPageID] = page.NewSettingsPage(l)
