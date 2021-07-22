@@ -1,10 +1,16 @@
 // components contain layout code that are shared by multiple pages but aren't widely used enough to be defined as
 // widgets
 
-package page
+package components
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/planetdecred/godcr/ui/load"
+	"golang.org/x/text/message"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -15,32 +21,90 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+const (
+	Uint32Size       = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
+	MaxInt32         = 1<<(Uint32Size-1) - 1
+	USDExchangeValue = "usd_bittrex"
+)
+
+var MaxWidth = unit.Dp(800)
+
 type (
+	C              = layout.Context
+	D              = layout.Dimensions
 	TransactionRow struct {
-		transaction dcrlibwallet.Transaction
-		index       int
-		showBadge   bool
+		Transaction dcrlibwallet.Transaction
+		Index       int
+		ShowBadge   bool
 	}
 )
 
-// layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
+// Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
+// margin, making it easier to visualize the structure of a layout when reading UI code.
+type Container struct {
+	Padding layout.Inset
+}
+
+func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
+	return c.Padding.Layout(gtx, w)
+}
+
+func UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	width := gtx.Constraints.Max.X
+
+	padding := values.MarginPadding24
+
+	if (width - 2*gtx.Px(padding)) > gtx.Px(MaxWidth) {
+		paddingValue := float32(width-gtx.Px(MaxWidth)) / 2
+		padding = unit.Px(paddingValue)
+	}
+
+	return layout.Inset{
+		Top:    values.MarginPadding24,
+		Right:  padding,
+		Bottom: values.MarginPadding24,
+		Left:   padding,
+	}.Layout(gtx, body)
+}
+
+// breakBalance takes the balance string and returns it in two slices
+func BreakBalance(p *message.Printer, balance string) (b1, b2 string) {
+	var isDecimal = true
+	balanceParts := strings.Split(balance, ".")
+	if len(balanceParts) == 1 {
+		isDecimal = false
+		balanceParts = strings.Split(balance, " ")
+	}
+
+	b1 = balanceParts[0]
+	if bal, err := strconv.Atoi(b1); err == nil {
+		b1 = p.Sprint(bal)
+	}
+
+	b2 = balanceParts[1]
+	if isDecimal {
+		b1 = b1 + "." + b2[:2]
+		b2 = b2[2:]
+		return
+	}
+	b2 = " " + b2
+	return
+}
+
+// LayoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func layoutBalance(gtx layout.Context, l *load.Load, amount string, isSwitchColor bool) layout.Dimensions {
+func LayoutBalance(gtx layout.Context, l *load.Load, amount string) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
-	mainText, subText := breakBalance(l.Printer, amount)
+	mainText, subText := BreakBalance(l.Printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			label := l.Theme.Label(values.TextSize20, mainText)
-			if isSwitchColor {
-				label.Color = l.Theme.Color.DeepBlue
-			}
+			label.Color = l.Theme.Color.DeepBlue
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			label := l.Theme.Label(values.TextSize14, subText)
-			if isSwitchColor {
-				label.Color = l.Theme.Color.DeepBlue
-			}
+			label.Color = l.Theme.Color.DeepBlue
 			return label.Layout(gtx)
 		}),
 	)
@@ -48,24 +112,24 @@ func layoutBalance(gtx layout.Context, l *load.Load, amount string, isSwitchColo
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
-func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {
+func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	directionIconTopMargin := values.MarginPadding16
 
-	if row.index == 0 && row.showBadge {
+	if row.Index == 0 && row.ShowBadge {
 		directionIconTopMargin = values.MarginPadding14
-	} else if row.index == 0 {
+	} else if row.Index == 0 {
 		// todo: remove top margin from container
 		directionIconTopMargin = values.MarginPadding0
 	}
 
-	wal := l.WL.MultiWallet.WalletWithID(row.transaction.WalletID)
+	wal := l.WL.MultiWallet.WalletWithID(row.Transaction.WalletID)
 
 	return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				icon := l.Icons.ReceiveIcon
-				if row.transaction.Direction == dcrlibwallet.TxDirectionSent {
+				if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
 					icon = l.Icons.SendIcon
 				}
 				icon.Scale = 1.0
@@ -77,7 +141,7 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if row.index == 0 {
+						if row.Index == 0 {
 							return layout.Dimensions{}
 						}
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -86,7 +150,7 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 						return layout.E.Layout(gtx, func(gtx C) D {
 							// Todo: add comment
 							marginBottom := values.MarginPadding16
-							if row.showBadge {
+							if row.ShowBadge {
 								marginBottom = values.MarginPadding5
 							}
 							return layout.Inset{Bottom: marginBottom}.Layout(gtx,
@@ -107,11 +171,11 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return layoutBalance(gtx, l, dcrutil.Amount(row.transaction.Amount).String(), true)
+												return LayoutBalance(gtx, l, dcrutil.Amount(row.Transaction.Amount).String())
 											}),
 											layout.Rigid(func(gtx C) D {
-												if row.showBadge {
-													return walletLabel(gtx, l, wal.Name)
+												if row.ShowBadge {
+													return WalletLabel(gtx, l, wal.Name)
 												}
 												return layout.Dimensions{}
 											}),
@@ -124,11 +188,11 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 												func(gtx C) D {
 													status := l.Theme.Body1("pending")
-													if txConfirmations(l, row.transaction) <= 1 {
+													if TxConfirmations(l, row.Transaction) <= 1 {
 														status.Color = l.Theme.Color.Gray5
 													} else {
 														status.Color = l.Theme.Color.Gray4
-														status.Text = formatDateOrTime(row.transaction.Timestamp)
+														status.Text = FormatDateOrTime(row.Transaction.Timestamp)
 													}
 													status.Alignment = text.Middle
 													return status.Layout(gtx)
@@ -137,7 +201,7 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 												statusIcon := l.Icons.ConfirmIcon
-												if txConfirmations(l, row.transaction) <= 1 {
+												if TxConfirmations(l, row.Transaction) <= 1 {
 													statusIcon = l.Icons.PendingIcon
 												}
 												statusIcon.Scale = 1.0
@@ -155,7 +219,7 @@ func transactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout
 	})
 }
 
-func txConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {
+func TxConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {
 	if transaction.BlockHeight != -1 {
 		// TODO
 		return (l.WL.MultiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
@@ -164,9 +228,23 @@ func txConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {
 	return 0
 }
 
+func FormatDateOrTime(timestamp int64) string {
+	utcTime := time.Unix(timestamp, 0).UTC()
+	if time.Now().UTC().Sub(utcTime).Hours() < 168 {
+		return utcTime.Weekday().String()
+	}
+
+	t := strings.Split(utcTime.Format(time.UnixDate), " ")
+	t2 := t[2]
+	if t[2] == "" {
+		t2 = t[3]
+	}
+	return fmt.Sprintf("%s %s", t[1], t2)
+}
+
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
 //// are transactions from multiple wallets
-func walletLabel(gtx layout.Context, l *load.Load, walletName string) D {
+func WalletLabel(gtx layout.Context, l *load.Load, walletName string) D {
 	return decredmaterial.Card{
 		Color: l.Theme.Color.LightGray,
 	}.Layout(gtx, func(gtx C) D {
@@ -182,8 +260,8 @@ func walletLabel(gtx layout.Context, l *load.Load, walletName string) D {
 	})
 }
 
-// endToEndRow layouts out its content on both ends of its horizontal layout.
-func endToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
+// EndToEndRow layouts out its content on both ends of its horizontal layout.
+func EndToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(leftWidget),
 		layout.Flexed(1, func(gtx C) D {
@@ -567,7 +645,7 @@ func displayToast(th *decredmaterial.Theme, gtx layout.Context, t *load.Toast) l
 
 // createOrUpdateWalletDropDown check for len of wallets to create dropDown,
 // also update the list when create, update, delete a wallet.
-func createOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
+func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
 	var walletDropDownItems []decredmaterial.DropDownItem
 	for _, wal := range wallets {
 		item := decredmaterial.DropDownItem{
@@ -579,7 +657,7 @@ func createOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, w
 	*dwn = l.Theme.DropDown(walletDropDownItems, 2)
 }
 
-func createOrderDropDown(l *load.Load) *decredmaterial.DropDown {
+func CreateOrderDropDown(l *load.Load) *decredmaterial.DropDown {
 	return l.Theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
 		{Text: values.String(values.StrOldest)}}, 1)
 }

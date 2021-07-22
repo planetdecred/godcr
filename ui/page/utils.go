@@ -12,8 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/planetdecred/godcr/ui/load"
@@ -24,11 +22,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
-	"golang.org/x/text/message"
 )
-
-const Uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-const MaxInt32 = 1<<(Uint32Size-1) - 1
 
 func translateErr(err error) string {
 	switch err.Error() {
@@ -71,20 +65,6 @@ func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
 	return walletsLocked
 }
 
-func formatDateOrTime(timestamp int64) string {
-	utcTime := time.Unix(timestamp, 0).UTC()
-	if time.Now().UTC().Sub(utcTime).Hours() < 168 {
-		return utcTime.Weekday().String()
-	}
-
-	t := strings.Split(utcTime.Format(time.UnixDate), " ")
-	t2 := t[2]
-	if t[2] == "" {
-		t2 = t[3]
-	}
-	return fmt.Sprintf("%s %s", t[1], t2)
-}
-
 // createClickGestures returns a slice of click gestures
 func createClickGestures(count int) []*gesture.Click {
 	var gestures = make([]*gesture.Click, count)
@@ -105,34 +85,6 @@ func showLabel(recentTransactions []wallet.Transaction) bool {
 		name = t.WalletName
 	}
 	return false
-}
-
-// breakBalance takes the balance string and returns it in two slices
-func breakBalance(p *message.Printer, balance string) (b1, b2 string) {
-	var isDecimal = true
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		isDecimal = false
-		balanceParts = strings.Split(balance, " ")
-	}
-
-	b1 = balanceParts[0]
-	if bal, err := strconv.Atoi(b1); err == nil {
-		b1 = p.Sprint(bal)
-	}
-
-	b2 = balanceParts[1]
-	if isDecimal {
-		b1 = b1 + "." + b2[:2]
-		b2 = b2[2:]
-		return
-	}
-	b2 = " " + b2
-	return
-}
-
-func formatUSDBalance(p *message.Printer, balance float64) string {
-	return p.Sprintf("$%.2f", balance)
 }
 
 func goToURL(url string) {

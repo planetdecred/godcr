@@ -1,27 +1,11 @@
 package load
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"gioui.org/widget"
 )
 
-func fetchExchangeValue(target interface{}) {
-	url := "https://api.bittrex.com/v3/markets/DCR-USDT/ticker"
-	res, err := http.Get(url)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	defer res.Body.Close()
-
-	err = json.NewDecoder(res.Body).Decode(target)
-	if err != nil {
-		log.Error(err)
-	}
-}
+const Uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
+const MaxInt32 = 1<<(Uint32Size-1) - 1
 
 func mustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {

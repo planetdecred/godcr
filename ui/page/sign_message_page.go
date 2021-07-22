@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -69,7 +70,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	}
 
 	pg.signedMessageLabel.Color = l.Theme.Color.Gray
-	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.signButton.Font.Weight = text.Bold
 
 	return pg
@@ -85,17 +86,17 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Sign message",
-			walletName: pg.wallet.Name,
-			backButton: pg.backButton,
-			infoButton: pg.infoButton,
-			back: func() {
+			Title:      "Sign message",
+			WalletName: pg.wallet.Name,
+			BackButton: pg.backButton,
+			InfoButton: pg.infoButton,
+			Back: func() {
 				pg.clearForm()
 				pg.ChangePage(WalletPageID)
 			},
-			body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -108,12 +109,12 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			infoTemplate: modal.SignMessageInfoTemplate,
+			InfoTemplate: modal.SignMessageInfoTemplate,
 		}
 		return sp.Layout(gtx)
 	}
 
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *SignMessagePage) description() layout.Widget {

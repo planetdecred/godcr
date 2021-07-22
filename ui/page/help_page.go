@@ -8,6 +8,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -26,7 +27,7 @@ func NewHelpPage(l *load.Load) *HelpPage {
 		documentation: new(widget.Clickable),
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -38,15 +39,15 @@ func (pg *HelpPage) OnResume() {
 // main settings layout
 func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Help",
-			subTitle:   "For more information, please visit the Decred documentation.",
-			backButton: pg.backButton,
-			back: func() {
+			Title:      "Help",
+			SubTitle:   "For more information, please visit the Decred documentation.",
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(MorePageID)
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween, WeightSum: 2}.Layout(gtx,
 						layout.Flexed(1, pg.document()),
@@ -56,7 +57,7 @@ func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *HelpPage) document() layout.Widget {

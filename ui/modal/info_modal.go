@@ -70,7 +70,7 @@ func (in *InfoModal) OnDismiss() {
 
 }
 
-func (in *InfoModal) icon(icon *widget.Icon) *InfoModal {
+func (in *InfoModal) Icon(icon *widget.Icon) *InfoModal {
 	in.dialogIcon = icon
 	return in
 }

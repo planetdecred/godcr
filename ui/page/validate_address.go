@@ -10,6 +10,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -42,7 +43,7 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 		wallet:      l.WL.Wallet,
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
 	pg.addressEditor.IsRequired = false
@@ -67,14 +68,14 @@ func (pg *ValidateAddressPage) OnResume() {
 
 func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Validate address",
-			backButton: pg.backButton,
-			back: func() {
+			Title:      "Validate address",
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(*pg.ReturnPage)
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Rigid(pg.addressSection()),
@@ -84,7 +85,7 @@ func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *ValidateAddressPage) addressSection() layout.Widget {

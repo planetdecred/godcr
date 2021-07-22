@@ -13,6 +13,7 @@ import (
 	"github.com/jrick/logrotate/rotator"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -54,6 +55,7 @@ var (
 	walletLog = backendLog.Logger("WALL")
 	winLog    = backendLog.Logger("UI")
 	dlwlLog   = backendLog.Logger("DLWL")
+	pageLog   = backendLog.Logger("PAGE")
 )
 
 // Initialize package-global logger variables.
@@ -61,6 +63,7 @@ func init() {
 	wallet.UseLogger(walletLog)
 	ui.UseLogger(winLog)
 	dcrlibwallet.UseLogger(dlwlLog)
+	page.UseLogger(pageLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -69,6 +72,7 @@ var subsystemLoggers = map[string]slog.Logger{
 	"DLWL": dlwlLog,
 	"UI":   winLog,
 	"GDCR": log,
+	"PAGE": pageLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and

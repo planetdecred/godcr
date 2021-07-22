@@ -53,7 +53,7 @@ type Icons struct {
 	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, mixer, mixerSmall,
 	arrowForwardIcon, transactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, arrowDownIcon,
-	WatchOnlyWalletIcon, currencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
+	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	restore, DocumentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, stakeyIcon,
 	list, listGridIcon, decredSymbolIcon *widget.Image
 
@@ -149,7 +149,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		AlertGray:                  &widget.Image{Src: paint.NewImageOp(decredIcons["alert_gray"])},
 		arrowDownIcon:              &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_down"])},
 		WatchOnlyWalletIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["watch_only_wallet"])},
-		currencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
+		CurrencySwapIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["swap"])},
 		SyncingIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["syncing"])},
 		DocumentationIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
 		ProposalIconActive:         &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
@@ -202,7 +202,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 
 		Printer: message.NewPrinter(language.English),
 	}
-	fetchExchangeValue(l.DcrUsdtBittrex)
+	GetUSDExchangeValue(l.DcrUsdtBittrex)
 
 	return l
 }
