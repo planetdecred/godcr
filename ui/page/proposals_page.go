@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"fmt"
@@ -21,11 +21,13 @@ import (
 	"github.com/ararog/timeago"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageProposals = "Proposals"
+const ProposalsPageID = "Proposals"
 
 type proposalItem struct {
 	proposal     dcrlibwallet.Proposal
@@ -34,26 +36,34 @@ type proposalItem struct {
 	tooltipLabel decredmaterial.Label
 }
 
-type proposalsPage struct {
-	*pageCommon
-	pageClosing           chan bool
-	proposalMu            sync.Mutex
+type ProposalsPage struct {
+	*load.Load
+
+	pageClosing chan bool
+	proposalMu  sync.Mutex
+
+	selectedProposal **dcrlibwallet.Proposal
+	multiWallet      *dcrlibwallet.MultiWallet
+
+	theme         *decredmaterial.Theme
+	categoryList  *decredmaterial.ClickableList
+	proposalsList *decredmaterial.ClickableList
+
+	tabCard      decredmaterial.Card
+	itemCard     decredmaterial.Card
+	syncCard     decredmaterial.Card
+	updatedLabel decredmaterial.Label
+
 	proposalItems         []proposalItem
-	selectedProposal      **dcrlibwallet.Proposal
 	proposalCount         []int
 	selectedCategoryIndex int
-	categoryList          *decredmaterial.ClickableList
-	proposalsList         *decredmaterial.ClickableList
-	tabCard               decredmaterial.Card
-	itemCard              decredmaterial.Card
-	syncCard              decredmaterial.Card
-	updatedLabel          decredmaterial.Label
-	legendIcon            *widget.Icon
-	infoIcon              *widget.Icon
-	updatedIcon           *widget.Icon
-	syncButton            *widget.Clickable
-	startSyncIcon         *widget.Image
-	timerIcon             *widget.Image
+
+	legendIcon    *widget.Icon
+	infoIcon      *widget.Icon
+	updatedIcon   *widget.Icon
+	syncButton    *widget.Clickable
+	startSyncIcon *widget.Image
+	timerIcon     *widget.Image
 
 	showSyncedCompleted bool
 	isSyncing           bool
@@ -70,29 +80,32 @@ var (
 	}
 )
 
-func ProposalsPage(common *pageCommon) Page {
-	pg := &proposalsPage{
-		pageCommon:            common,
+func NewProposalsPage(l *load.Load) *ProposalsPage {
+	pg := &ProposalsPage{
+		Load:                  l,
+		theme:                 l.Theme,
+		multiWallet:           l.WL.MultiWallet,
 		pageClosing:           make(chan bool, 1),
 		selectedCategoryIndex: -1,
-		categoryList:          common.theme.NewClickableList(layout.Horizontal),
-		proposalsList:         common.theme.NewClickableList(layout.Vertical),
-		tabCard:               common.theme.Card(),
-		itemCard:              common.theme.Card(),
-		syncCard:              common.theme.Card(),
-		legendIcon:            common.icons.imageBrightness1,
-		infoIcon:              common.icons.actionInfo,
-		updatedIcon:           common.icons.navigationCheck,
-		updatedLabel:          common.theme.Body2("Updated"),
+		categoryList:          l.Theme.NewClickableList(layout.Horizontal),
+		proposalsList:         l.Theme.NewClickableList(layout.Vertical),
+		tabCard:               l.Theme.Card(),
+		itemCard:              l.Theme.Card(),
+		syncCard:              l.Theme.Card(),
+		legendIcon:            l.Icons.ImageBrightness1,
+		infoIcon:              l.Icons.ActionInfo,
+		updatedIcon:           l.Icons.NavigationCheck,
+		updatedLabel:          l.Theme.Body2("Updated"),
 		syncButton:            new(widget.Clickable),
-		startSyncIcon:         common.icons.restore,
-		timerIcon:             common.icons.timerIcon,
+		startSyncIcon:         l.Icons.Restore,
+		timerIcon:             l.Icons.TimerIcon,
 	}
-	pg.infoIcon.Color = common.theme.Color.Gray
-	pg.legendIcon.Color = common.theme.Color.InactiveGray
 
-	pg.updatedIcon.Color = common.theme.Color.Success
-	pg.updatedLabel.Color = common.theme.Color.Success
+	pg.infoIcon.Color = l.Theme.Color.Gray
+	pg.legendIcon.Color = l.Theme.Color.InactiveGray
+
+	pg.updatedIcon.Color = l.Theme.Color.Success
+	pg.updatedLabel.Color = l.Theme.Color.Success
 
 	pg.tabCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 	pg.syncCard.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
@@ -102,7 +115,7 @@ func ProposalsPage(common *pageCommon) Page {
 	return pg
 }
 
-func (pg *proposalsPage) OnResume() {
+func (pg *ProposalsPage) OnResume() {
 	pg.listenForSyncNotifications()
 
 	pg.proposalMu.Lock()
@@ -116,7 +129,7 @@ func (pg *proposalsPage) OnResume() {
 	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 }
 
-func (pg *proposalsPage) countProposals() {
+func (pg *ProposalsPage) countProposals() {
 	proposalCount := make([]int, len(proposalCategories))
 	for i, category := range proposalCategories {
 		count, err := pg.multiWallet.Politeia.Count(category)
@@ -130,7 +143,7 @@ func (pg *proposalsPage) countProposals() {
 	pg.proposalMu.Unlock()
 }
 
-func (pg *proposalsPage) loadProposals(category int) {
+func (pg *ProposalsPage) loadProposals(category int) {
 	proposals, err := pg.multiWallet.Politeia.GetProposalsRaw(proposalCategories[category], 0, 0, true)
 	if err != nil {
 		log.Error("Error loading proposals:", err)
@@ -168,8 +181,7 @@ func (pg *proposalsPage) loadProposals(category int) {
 	}
 }
 
-func (pg *proposalsPage) Handle() {
-
+func (pg *ProposalsPage) Handle() {
 	if clicked, selectedItem := pg.categoryList.ItemClicked(); clicked {
 		go pg.loadProposals(selectedItem)
 	}
@@ -179,7 +191,7 @@ func (pg *proposalsPage) Handle() {
 		selectedProposal := pg.proposalItems[selectedItem].proposal
 		pg.proposalMu.Unlock()
 
-		pg.changeFragment(ProposalDetailsPage(pg.pageCommon, selectedProposal), PageProposalDetails)
+		pg.ChangeFragment(ProposalDetailsPage(pg.Load, selectedProposal), PageProposalDetails)
 	}
 
 	for pg.syncButton.Clicked() {
@@ -194,7 +206,7 @@ func (pg *proposalsPage) Handle() {
 	}
 }
 
-func (pg *proposalsPage) layoutTabs(gtx C) D {
+func (pg *ProposalsPage) layoutTabs(gtx C) D {
 	width := float32(gtx.Constraints.Max.X-20) / float32(len(proposalCategoryTitles))
 	pg.proposalMu.Lock()
 	selectedCategory := pg.selectedCategoryIndex
@@ -261,7 +273,7 @@ func (pg *proposalsPage) layoutTabs(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
+func (pg *ProposalsPage) layoutNoProposalsFound(gtx C) D {
 	pg.proposalMu.Lock()
 	selectedCategory := pg.selectedCategoryIndex
 	pg.proposalMu.Unlock()
@@ -271,7 +283,7 @@ func (pg *proposalsPage) layoutNoProposalsFound(gtx C) D {
 	return layout.Center.Layout(gtx, pg.theme.Body1(str).Layout)
 }
 
-func (pg *proposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
+func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 	proposal := item.proposal
 	grayCol := pg.theme.Color.Gray
 
@@ -367,20 +379,20 @@ func (pg *proposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 	)
 }
 
-func (pg *proposalsPage) layoutInfoTooltip(gtx C, rect image.Rectangle, item proposalItem) {
+func (pg *ProposalsPage) layoutInfoTooltip(gtx C, rect image.Rectangle, item proposalItem) {
 	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus230}
 	item.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		return item.tooltipLabel.Layout(gtx)
 	})
 }
 
-func (pg *proposalsPage) layoutTitle(gtx C, proposal dcrlibwallet.Proposal) D {
+func (pg *ProposalsPage) layoutTitle(gtx C, proposal dcrlibwallet.Proposal) D {
 	lbl := pg.theme.H6(proposal.Name)
 	lbl.Font.Weight = text.Bold
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
-func (pg *proposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
+func (pg *ProposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 	proposal := item.proposal
 	yes := float32(proposal.YesVotes)
 	no := float32(proposal.NoVotes)
@@ -391,7 +403,7 @@ func (pg *proposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 	return item.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
 }
 
-func (pg *proposalsPage) layoutProposalsList(gtx C) D {
+func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
 	pg.proposalMu.Lock()
 	proposalItems := pg.proposalItems
 	pg.proposalMu.Unlock()
@@ -431,7 +443,7 @@ func (pg *proposalsPage) layoutProposalsList(gtx C) D {
 	})
 }
 
-func (pg *proposalsPage) layoutContent(gtx C) D {
+func (pg *ProposalsPage) layoutContent(gtx C) D {
 	pg.proposalMu.Lock()
 	proposalItems := pg.proposalItems
 	pg.proposalMu.Unlock()
@@ -441,7 +453,7 @@ func (pg *proposalsPage) layoutContent(gtx C) D {
 	return pg.layoutProposalsList(gtx)
 }
 
-func (pg *proposalsPage) layoutIsSyncedSection(gtx C) D {
+func (pg *ProposalsPage) layoutIsSyncedSection(gtx C) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return pg.updatedIcon.Layout(gtx, values.MarginPadding20)
@@ -452,7 +464,7 @@ func (pg *proposalsPage) layoutIsSyncedSection(gtx C) D {
 	)
 }
 
-func (pg *proposalsPage) layoutIsSyncingSection(gtx C) D {
+func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 	th := material.NewTheme(gofont.Collection())
 	gtx.Constraints.Min.X = gtx.Px(unit.Dp(20))
 	loader := material.Loader(th)
@@ -460,14 +472,14 @@ func (pg *proposalsPage) layoutIsSyncingSection(gtx C) D {
 	return loader.Layout(gtx)
 }
 
-func (pg *proposalsPage) layoutStartSyncSection(gtx C) D {
+func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
 		pg.startSyncIcon.Scale = 0.68
 		return pg.startSyncIcon.Layout(gtx)
 	})
 }
 
-func (pg *proposalsPage) layoutSyncSection(gtx C) D {
+func (pg *ProposalsPage) layoutSyncSection(gtx C) D {
 	if pg.showSyncedCompleted {
 		return pg.layoutIsSyncedSection(gtx)
 	} else if pg.multiWallet.Politeia.IsSyncing() {
@@ -476,8 +488,7 @@ func (pg *proposalsPage) layoutSyncSection(gtx C) D {
 	return pg.layoutStartSyncSection(gtx)
 }
 
-func (pg *proposalsPage) Layout(gtx C) D {
-
+func (pg *ProposalsPage) Layout(gtx C) D {
 	border := widget.Border{Color: pg.theme.Color.Gray1, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
 	borderLayout := func(gtx layout.Context, body layout.Widget) layout.Dimensions {
 		return border.Layout(gtx, body)
@@ -505,18 +516,18 @@ func (pg *proposalsPage) Layout(gtx C) D {
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return pg.UniformPadding(gtx, pg.layoutContent)
+			return components.UniformPadding(gtx, pg.layoutContent)
 		}),
 	)
 }
 
-func (pg *proposalsPage) listenForSyncNotifications() {
+func (pg *ProposalsPage) listenForSyncNotifications() {
 	go func() {
 		for {
 			var notification interface{}
 
 			select {
-			case notification = <-pg.notificationsUpdate:
+			case notification = <-pg.Receiver.NotificationsUpdate:
 			case <-pg.pageClosing:
 				return
 			}
@@ -540,7 +551,7 @@ func (pg *proposalsPage) listenForSyncNotifications() {
 	}()
 }
 
-func (pg *proposalsPage) OnClose() {
+func (pg *ProposalsPage) OnClose() {
 	pg.pageClosing <- true
 }
 

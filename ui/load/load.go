@@ -54,7 +54,7 @@ type Icons struct {
 	arrowForwardIcon, transactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, arrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
-	restore, DocumentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
+	Restore, DocumentationIcon, DownloadIcon, TimerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
 	List, ListGridIcon, decredSymbolIcon *widget.Image
 
 	TicketPurchasedIcon,
@@ -154,9 +154,9 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		DocumentationIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
 		ProposalIconActive:         &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
 		ProposalIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaInactive"])},
-		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
-		downloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
-		timerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
+		Restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
+		DownloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
+		TimerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
 		WalletIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
 		TicketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
 		TicketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},

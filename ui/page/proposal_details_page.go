@@ -1,4 +1,4 @@
-package ui
+package page
 
 import (
 	"fmt"
@@ -13,8 +13,11 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -27,9 +30,11 @@ type proposalItemWidgets struct {
 }
 
 type proposalDetails struct {
-	theme              *decredmaterial.Theme
+	*load.Load
+	theme  *decredmaterial.Theme
+	wallet *wallet.Wallet
+
 	loadingDescription bool
-	common             *pageCommon
 	proposal           dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
@@ -44,30 +49,31 @@ type proposalDetails struct {
 	backButton         decredmaterial.IconButton
 }
 
-func ProposalDetailsPage(common *pageCommon, proposal dcrlibwallet.Proposal) Page {
+func ProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *proposalDetails {
 	pg := &proposalDetails{
-		theme:              common.theme,
+		Load:               l,
+		theme:              l.Theme,
+		wallet:             l.WL.Wallet,
 		loadingDescription: false,
-		common:             common,
 		proposal:           proposal,
-		descriptionCard:    common.theme.Card(),
+		descriptionCard:    l.Theme.Card(),
 		descriptionList:    &layout.List{Axis: layout.Vertical},
-		redirectIcon:       common.icons.redirectIcon,
-		downloadIcon:       common.icons.downloadIcon,
-		voteBar:            common.theme.VoteBar(common.icons.actionInfo, common.icons.imageBrightness1),
+		redirectIcon:       l.Icons.RedirectIcon,
+		downloadIcon:       l.Icons.DownloadIcon,
+		voteBar:            l.Theme.VoteBar(l.Icons.ActionInfo, l.Icons.ImageBrightness1),
 		proposalItems:      make(map[string]proposalItemWidgets),
-		rejectedIcon:       common.icons.navigationCancel,
-		successIcon:        common.icons.actionCheckCircle,
-		timerIcon:          common.icons.timerIcon,
+		rejectedIcon:       l.Icons.NavigationCancel,
+		successIcon:        l.Icons.ActionCheckCircle,
+		timerIcon:          l.Icons.TimerIcon,
 	}
 
 	pg.downloadIcon.Scale = 1
-	pg.backButton, _ = common.SubPageHeaderButtons()
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	pg.vote = common.theme.Button(new(widget.Clickable), "Vote")
+	pg.vote = l.Theme.Button(new(widget.Clickable), "Vote")
 	pg.vote.TextSize = values.TextSize14
-	pg.vote.Background = common.theme.Color.Primary
-	pg.vote.Color = common.theme.Color.Surface
+	pg.vote.Background = l.Theme.Color.Primary
+	pg.vote.Color = l.Theme.Color.Surface
 	pg.vote.CornerRadius = values.MarginPadding8
 	pg.vote.Inset = layout.Inset{
 		Top:    values.MarginPadding8,
@@ -370,8 +376,6 @@ func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 }
 
 func (pg *proposalDetails) Layout(gtx C) D {
-	common := pg.common
-
 	proposal := pg.proposal
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok && !pg.loadingDescription {
@@ -382,7 +386,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				proposalDescription = proposal.IndexFile
 			} else {
 				var err error
-				proposalDescription, err = common.wallet.FetchProposalDescription(proposal.Token)
+				proposalDescription, err = pg.wallet.FetchProposalDescription(proposal.Token)
 				if err != nil {
 					log.Infof("Error loading proposal description: %v", err)
 					time.Sleep(7 * time.Second)
@@ -402,14 +406,15 @@ func (pg *proposalDetails) Layout(gtx C) D {
 	}
 
 	body := func(gtx C) D {
-		page := SubPage{
-			title:      truncateString(proposal.Name, 40),
-			backButton: pg.backButton,
-			back: func() {
-				common.changePage(PageProposals)
+		page := components.SubPage{
+			Load:       pg.Load,
+			Title:      truncateString(proposal.Name, 40),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ChangePage(*pg.ReturnPage)
 				pg.descriptionList.Position.First, pg.descriptionList.Position.Offset = 0, 0
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.layoutTitle)
@@ -417,16 +422,16 @@ func (pg *proposalDetails) Layout(gtx C) D {
 					layout.Rigid(pg.layoutDescription),
 				)
 			},
-			extra: func(gtx C) D {
+			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					pg.redirectIcon.Scale = 1
 					return layout.E.Layout(gtx, pg.redirectIcon.Layout)
 				})
 			},
 		}
-		return common.SubPageLayout(gtx, page)
+		return page.Layout(gtx)
 	}
-	return common.UniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *proposalDetails) OnClose() {}

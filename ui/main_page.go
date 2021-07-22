@@ -134,7 +134,7 @@ func (mp *mainPage) initNavItems() {
 			clickable:     new(widget.Clickable),
 			image:         mp.icons.proposalIconActive,
 			imageInactive: mp.icons.proposalIconInactive,
-			page:          PageProposals,
+			page:          values.String(values.StrProposal),
 		},
 		{
 			clickable:     new(widget.Clickable),
@@ -283,7 +283,7 @@ func (mp *mainPage) Handle() {
 			} else if i == TicketsNavID {
 				mp.changeFragment(tickets.NewTicketPage(mp.load), tickets.PageID)
 			} else if i == ProposalsNavID {
-				mp.changeFragment(ProposalsPage(mp.pageCommon), PageProposals)
+				mp.changeFragment(page.NewProposalsPage(mp.load), page.ProposalsPageID)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}
