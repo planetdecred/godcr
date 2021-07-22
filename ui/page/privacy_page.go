@@ -15,27 +15,26 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
-const PagePrivacy = "Privacy"
+const PrivacyPageID = "Privacy"
 
-type privacyPage struct {
+type PrivacyPage struct {
 	*load.Load
 	wallet                               *dcrlibwallet.Wallet
 	pageContainer                        layout.List
 	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
 	toPrivacySetup                       decredmaterial.Button
 	dangerZoneCollapsible                *decredmaterial.Collapsible
-	acctMixerStatus                      *chan *wallet.AccountMixer
 
 	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
 }
 
-func PrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *privacyPage {
-	pg := &privacyPage{
+func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
+	pg := &PrivacyPage{
 		Load:                    l,
 		wallet:                  wallet,
 		pageContainer:           layout.List{Axis: layout.Vertical},
@@ -43,31 +42,30 @@ func PrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *privacyPage {
 		allowUnspendUnmixedAcct: new(widget.Bool),
 		toPrivacySetup:          l.Theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   l.Theme.Collapsible(),
-		acctMixerStatus:         &l.Receiver.AcctMixerStatus,
 	}
 	pg.toPrivacySetup.Background = l.Theme.Color.Primary
-	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
 }
 
-func (pg *privacyPage) OnResume() {
+func (pg *PrivacyPage) OnResume() {
 
 }
 
-func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "StakeShuffle",
-			walletName: pg.wallet.Name,
-			backButton: pg.backButton,
-			infoButton: pg.infoButton,
-			back: func() {
+			Title:      "StakeShuffle",
+			WalletName: pg.wallet.Name,
+			BackButton: pg.backButton,
+			InfoButton: pg.infoButton,
+			Back: func() {
 				pg.ChangePage(WalletPageID)
 			},
-			infoTemplate: modal.PrivacyInfoTemplate,
-			body: func(gtx layout.Context) layout.Dimensions {
+			InfoTemplate: modal.PrivacyInfoTemplate,
+			Body: func(gtx layout.Context) layout.Dimensions {
 				if pg.wallet.AccountMixerConfigIsSet() {
 					widgets := []func(gtx C) D{
 						func(gtx C) D {
@@ -91,10 +89,10 @@ func (pg *privacyPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, d)
+	return components.UniformPadding(gtx, d)
 }
 
-func (pg *privacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -156,7 +154,7 @@ func (pg *privacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions 
 	})
 }
 
-func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) mixerInfoStatusTextLayout(gtx layout.Context) layout.Dimensions {
 	txt := pg.Theme.H6("Mixer")
 	subtxt := pg.Theme.Body2("Ready to mix")
 	subtxt.Color = pg.Theme.Color.Gray
@@ -187,7 +185,7 @@ func (pg *privacyPage) mixerInfoStatusTextLayout(gtx layout.Context) layout.Dime
 	)
 }
 
-func (pg *privacyPage) mixersubInfolayout(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) mixersubInfolayout(gtx layout.Context) layout.Dimensions {
 	txt := pg.Theme.Body2("")
 
 	if pg.wallet.IsAccountMixerActive() {
@@ -200,7 +198,7 @@ func (pg *privacyPage) mixersubInfolayout(gtx layout.Context) layout.Dimensions 
 	)
 }
 
-func (pg *privacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -247,7 +245,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 											return txt.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return layoutBalance(gtx, pg.Load, unmixedBalance, true)
+											return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
 										}),
 									)
 								}),
@@ -263,7 +261,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return layoutBalance(gtx, pg.Load, mixedBalance, true)
+											return components.LayoutBalance(gtx, pg.Load, mixedBalance)
 										}),
 									)
 								}),
@@ -283,7 +281,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
@@ -318,7 +316,7 @@ func (pg *privacyPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions
 	})
 }
 
-func (pg *privacyPage) shufflePortForCurrentNet() string {
+func (pg *PrivacyPage) shufflePortForCurrentNet() string {
 	if pg.WL.Wallet.Net == "testnet3" {
 		return dcrlibwallet.TestnetShufflePort
 	}
@@ -326,7 +324,7 @@ func (pg *privacyPage) shufflePortForCurrentNet() string {
 	return dcrlibwallet.MainnetShufflePort
 }
 
-func (pg *privacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
@@ -349,13 +347,13 @@ func (pg *privacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *privacyPage) gutter(gtx layout.Context) layout.Dimensions {
+func (pg *PrivacyPage) gutter(gtx layout.Context) layout.Dimensions {
 	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Dimensions{}
 	})
 }
 
-func (pg *privacyPage) Handle() {
+func (pg *PrivacyPage) Handle() {
 	if pg.toPrivacySetup.Button.Clicked() {
 		go pg.showModalSetupMixerInfo()
 	}
@@ -367,22 +365,9 @@ func (pg *privacyPage) Handle() {
 			go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
 		}
 	}
-
-	select {
-	case stt := <-*pg.acctMixerStatus:
-		if stt.RunStatus == wallet.MixerStarted {
-			log.Info("Start Successfully")
-			// TODO: will use when notify implemented
-			// common.notify("Start Successfully", true)
-		} else {
-			log.Info("Stop Successfully")
-			// common.notify("Stop Successfully", true)
-		}
-	default:
-	}
 }
 
-func (pg *privacyPage) showModalSetupMixerInfo() {
+func (pg *PrivacyPage) showModalSetupMixerInfo() {
 	info := modal.NewInfoModal(pg.Load).
 		Title("Set up mixer by creating two needed accounts").
 		Body("Each time you receive a payment, a new address is generated to protect your privacy.").
@@ -393,7 +378,7 @@ func (pg *privacyPage) showModalSetupMixerInfo() {
 	pg.ShowModal(info)
 }
 
-func (pg *privacyPage) showModalSetupMixerAcct() {
+func (pg *PrivacyPage) showModalSetupMixerAcct() {
 	accounts, _ := pg.wallet.GetAccountsRaw()
 	for _, acct := range accounts.Acc {
 		if acct.Name == "mixed" || acct.Name == "unmixed" {
@@ -430,7 +415,7 @@ func (pg *privacyPage) showModalSetupMixerAcct() {
 		}).Show()
 }
 
-func (pg *privacyPage) showModalPasswordStartAccountMixer() {
+func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm to mix account").
 		NegativeButton("Cancel", func() {}).
@@ -451,4 +436,4 @@ func (pg *privacyPage) showModalPasswordStartAccountMixer() {
 		}).Show()
 }
 
-func (pg *privacyPage) OnClose() {}
+func (pg *PrivacyPage) OnClose() {}

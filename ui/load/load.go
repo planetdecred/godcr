@@ -50,9 +50,9 @@ type Icons struct {
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, TransactionIcon, TransactionIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon,
-	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, mixer, mixerSmall,
-	arrowForwardIcon, transactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
-	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, arrowDownIcon,
+	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, mixer, MixerSmall,
+	ArrowForwardIcon, TransactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
+	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, ArrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
 	List, ListGridIcon, decredSymbolIcon *widget.Image

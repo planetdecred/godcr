@@ -218,7 +218,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			text:     values.String(values.StrStakeShuffle),
 			button:   new(widget.Clickable),
 			separate: true,
-			id:       PagePrivacy,
+			id:       PrivacyPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
@@ -863,8 +863,8 @@ func (pg *WalletPage) Handle() {
 				switch menu.id {
 				case SignMessagePageID:
 					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal), SignMessagePageID)
-				case PagePrivacy:
-					pg.ChangeFragment(PrivacyPage(pg.Load, listItem.wal), PagePrivacy)
+				case PrivacyPageID:
+					pg.ChangeFragment(NewPrivacyPage(pg.Load, listItem.wal), PrivacyPageID)
 				case SettingsPageID:
 					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal), WalletSettingsPageID)
 				default:
