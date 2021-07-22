@@ -201,8 +201,8 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
-									Right: values.MarginPadding5,
-									Top:   values.MarginPadding2,
+									Right: values.MarginPadding4,
+									Top:   values.MarginPadding4,
 								}.Layout(gtx, txnWidgets.statusIcon.Layout)
 							}),
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -211,6 +211,7 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 									txt.Text = strings.Title("confirmed")
 									txt.Color = pg.Theme.Color.Success
 								} else {
+									txt.Text = strings.Title("pending")
 									txt.Color = pg.Theme.Color.Gray
 								}
 								return txt.Layout(gtx)
