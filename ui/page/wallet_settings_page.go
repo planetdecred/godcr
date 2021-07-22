@@ -8,6 +8,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -38,7 +39,7 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	}
 
 	pg.chevronRightIcon.Color = l.Theme.Color.LightGray
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -56,15 +57,15 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      values.String(values.StrSettings),
-			walletName: pg.wallet.Name,
-			backButton: pg.backButton,
-			back: func() {
+			Title:      values.String(values.StrSettings),
+			WalletName: pg.wallet.Name,
+			BackButton: pg.backButton,
+			Back: func() {
 				pg.ChangePage(WalletPageID)
 			},
-			body: func(gtx layout.Context) layout.Dimensions {
+			Body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 						if !pg.wallet.IsWatchingOnlyWallet() {
@@ -80,7 +81,7 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
