@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/proposal"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/tickets"
 	"github.com/planetdecred/godcr/ui/values"
@@ -43,6 +44,7 @@ type mainPage struct {
 	current, previous string
 	pages             map[string]Page
 	sendPage          *send.Page // reuse value to keep data persistent onresume.
+	// proposalPage *proposal.Page
 
 	// page state variables
 	usdExchangeSet  bool
@@ -283,7 +285,7 @@ func (mp *mainPage) Handle() {
 			} else if i == TicketsNavID {
 				mp.changeFragment(tickets.NewTicketPage(mp.load), tickets.PageID)
 			} else if i == ProposalsNavID {
-				mp.changeFragment(page.NewProposalsPage(mp.load), page.ProposalsPageID)
+				mp.changeFragment(proposal.NewProposalsPage(mp.load), proposal.ProposalsPageID)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}

@@ -8,10 +8,8 @@ import (
 	"image/color"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
-	"runtime"
 	"time"
 
 	"github.com/planetdecred/godcr/ui/load"
@@ -85,24 +83,6 @@ func showLabel(recentTransactions []wallet.Transaction) bool {
 		name = t.WalletName
 	}
 	return false
-}
-
-func goToURL(url string) {
-	var err error
-
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-	if err != nil {
-		log.Error(err)
-	}
 }
 
 func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {

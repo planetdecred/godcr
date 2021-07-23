@@ -5,19 +5,22 @@ package components
 
 import (
 	"fmt"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/planetdecred/godcr/ui/load"
-	"golang.org/x/text/message"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
+	"golang.org/x/text/message"
+
+	"github.com/ararog/timeago"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -268,6 +271,40 @@ func EndToEndRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.D
 			return layout.E.Layout(gtx, rightWidget)
 		}),
 	)
+}
+
+func TimeAgo(timestamp int64) string {
+	timeAgo, _ := timeago.TimeAgoWithTime(time.Now(), time.Unix(timestamp, 0))
+	return timeAgo
+}
+
+func TruncateString(str string, num int) string {
+	bnoden := str
+	if len(str) > num {
+		if num > 3 {
+			num -= 3
+		}
+		bnoden = str[0:num] + "..."
+	}
+	return bnoden
+}
+
+func GoToURL(url string) {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 /*
