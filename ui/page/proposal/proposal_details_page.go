@@ -93,6 +93,10 @@ func (pg *proposalDetails) Handle() {
 			}
 		}
 	}
+
+	if pg.vote.Button.Clicked() {
+		newVoteModal(pg.Load).Show()
+	}
 }
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {

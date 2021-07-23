@@ -45,7 +45,7 @@ type Receiver struct {
 type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
-	ImageBrightness1, ContentClear, DropDownIcon, Cached *widget.Icon
+	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, TransactionIcon, TransactionIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -114,6 +114,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		NavMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		DropDownIcon:           mustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		Cached:                 mustIcon(widget.NewIcon(icons.ActionCached)),
+		ContentRemove:          mustIcon(widget.NewIcon(icons.ContentRemove)),
 
 		OverviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		OverviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
