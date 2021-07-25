@@ -80,6 +80,7 @@ type BackupPage struct {
 
 func NewBackupPage(l *load.Load) *BackupPage {
 	b := &BackupPage{
+		Load:  l,
 		theme: l.Theme,
 		wal:   l.WL.Wallet,
 		info:  l.WL.Info,
