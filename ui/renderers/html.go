@@ -10,14 +10,12 @@ import (
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gomarkdown/markdown/ast"
-	"github.com/gomarkdown/markdown/parser"
+	//"github.com/gomarkdown/markdown/parser"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-type HTMLRenderer struct {
-	doc       ast.Node
+type HTMLProvider struct {
 	container *layout.List
-	*Renderer
 }
 
 var (
@@ -30,7 +28,83 @@ const (
 	closeStyleTag     = "{/@}"
 )
 
-func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLRenderer {
+func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLProvider {
+	htmlProvider := &HTMLProvider{}
+
+	converter := md.NewConverter("", true, nil)
+	docStr, err := converter.ConvertString(htmlProvider.prepare(html))
+	if err != nil {
+		fmt.Println(err)
+		return &HTMLProvider{}
+	}
+
+	/**htmlProvider := &HTMLProvider{}
+
+	converter := md.NewConverter("", true, nil)
+
+	docStr, err := converter.ConvertString(docStr)
+	if err != nil {
+		fmt.Println(err)
+		return r
+	}
+
+	return newRenderer(theme,  &HTMLProvider{})**/
+	newNodeWalker(docStr, htmlProvider)
+
+	return htmlProvider
+}
+
+func (p *HTMLProvider) prepareBlockQuote(node *ast.BlockQuote, entering bool) {
+
+}
+
+func (p *HTMLProvider) prepareList(node *ast.List, entering bool) {
+
+}
+
+func (p *HTMLProvider) prepareListItem(node *ast.ListItem, entering bool) {
+
+}
+
+func (p *HTMLProvider) prepareParagraph(node *ast.Paragraph, entering bool) {
+
+}
+
+func (p *HTMLProvider) prepareHeading(node *ast.Heading, entering bool) {
+
+}
+
+func (p *HTMLProvider) prepareStrong(node *ast.Strong, entering bool) {
+
+}
+func (p *HTMLProvider) prepareDel(node *ast.Del, entering bool) {
+
+}
+func (p *HTMLProvider) prepareEmph(node *ast.Emph, entering bool) {
+
+}
+func (p *HTMLProvider) prepareLink(node *ast.Link, entering bool) {
+
+}
+
+func (p *HTMLProvider) prepareHorizontalRule(node *ast.HorizontalRule, entering bool) {
+
+}
+
+func (p *HTMLProvider) prepareText(node *ast.Text, entering bool) {
+
+}
+func (p *HTMLProvider) prepareTable(node *ast.Table, entering bool) {
+
+}
+func (p *HTMLProvider) prepareTableCell(node *ast.TableCell, entering bool) {
+
+}
+func (p *HTMLProvider) prepareTableRow(node *ast.TableRow, entering bool) {
+
+}
+
+/**func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLRenderer {
 	converter := md.NewConverter("", true, nil)
 
 	r := &HTMLRenderer{
@@ -66,8 +140,9 @@ func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLRenderer {
 
 	return r
 }
+**/
 
-func (r *HTMLRenderer) prepareHTML(html string) string {
+func (r *HTMLProvider) prepare(html string) string {
 	//html = strings.Replace(html, "<br/>", " \n\n ", -1)
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
@@ -100,7 +175,7 @@ func (r *HTMLRenderer) prepareHTML(html string) string {
 	return doc.Text()
 }
 
-func (r *HTMLRenderer) prepareItalic(node *goquery.Selection) {
+func (r *HTMLProvider) prepareItalic(node *goquery.Selection) {
 	style, ok := node.Attr("style")
 	if ok {
 		style += "; font-style: italic"
@@ -111,7 +186,7 @@ func (r *HTMLRenderer) prepareItalic(node *goquery.Selection) {
 	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
 }
 
-func (r *HTMLRenderer) prepareBold(node *goquery.Selection) {
+func (r *HTMLProvider) prepareBold(node *goquery.Selection) {
 	style, ok := node.Attr("style")
 	if ok {
 		style += "; font-weight: bold"
@@ -122,7 +197,7 @@ func (r *HTMLRenderer) prepareBold(node *goquery.Selection) {
 	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
 }
 
-func (r *HTMLRenderer) prepareFont(node *goquery.Selection) {
+func (r *HTMLProvider) prepareFont(node *goquery.Selection) {
 	style, _ := node.Attr("style")
 	if style != "" {
 		style += "; "
@@ -139,11 +214,11 @@ func (r *HTMLRenderer) prepareFont(node *goquery.Selection) {
 	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
 }
 
-func (r *HTMLRenderer) prepareBreak(node *goquery.Selection) {
+func (r *HTMLProvider) prepareBreak(node *goquery.Selection) {
 	node.ReplaceWithHtml("\n\n")
 }
 
-func (r *HTMLRenderer) mapToString(m map[string]string) string {
+func (r *HTMLProvider) mapToString(m map[string]string) string {
 	b := new(bytes.Buffer)
 	for key, value := range m {
 		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
@@ -151,7 +226,7 @@ func (r *HTMLRenderer) mapToString(m map[string]string) string {
 	return b.String()
 }
 
-func (r *HTMLRenderer) getStyleMap(node *goquery.Selection) map[string]string {
+func (r *HTMLProvider) getStyleMap(node *goquery.Selection) map[string]string {
 	if styleStr, ok := node.Attr("style"); ok {
 		spl := strings.Split(styleStr, ";")
 		styleMap := map[string]string{}
@@ -169,7 +244,7 @@ func (r *HTMLRenderer) getStyleMap(node *goquery.Selection) map[string]string {
 	return map[string]string{}
 }
 
-func (r *HTMLRenderer) styleMapToString(m map[string]string) string {
+func (r *HTMLProvider) styleMapToString(m map[string]string) string {
 	str := ""
 	for k, v := range m {
 		str += "##" + k + "--" + v
@@ -178,14 +253,14 @@ func (r *HTMLRenderer) styleMapToString(m map[string]string) string {
 	return str
 }
 
-func (r *HTMLRenderer) traverse(node *goquery.Selection, parentStyle map[string]string) {
+func (r *HTMLProvider) traverse(node *goquery.Selection, parentStyle map[string]string) {
 	node.Children().Each(func(_ int, s *goquery.Selection) {
 		newStyle := r.setNodeStyle(s, parentStyle)
 		r.traverse(s, newStyle)
 	})
 }
 
-func (r *HTMLRenderer) isBlockElement(element string) bool {
+func (r *HTMLProvider) isBlockElement(element string) bool {
 	for i := range blockEls {
 		if element == blockEls[i] {
 			return true
@@ -195,7 +270,7 @@ func (r *HTMLRenderer) isBlockElement(element string) bool {
 	return false
 }
 
-func (r *HTMLRenderer) setNodeStyle(node *goquery.Selection, parentStyle map[string]string) map[string]string {
+func (r *HTMLProvider) setNodeStyle(node *goquery.Selection, parentStyle map[string]string) map[string]string {
 	styleMap := r.getStyleMap(node)
 	for key, val := range parentStyle {
 		if _, ok := styleMap[key]; !ok {
@@ -214,19 +289,20 @@ func (r *HTMLRenderer) setNodeStyle(node *goquery.Selection, parentStyle map[str
 	return styleMap
 }
 
-func (r *HTMLRenderer) parse() []byte {
+func (r *HTMLProvider) parse() []byte {
 	var buf bytes.Buffer
-	ast.WalkFunc(r.doc, func(node ast.Node, entering bool) ast.WalkStatus {
+	/**ast.WalkFunc(r.doc, func(node ast.Node, entering bool) ast.WalkStatus {
 		return r.RenderNode(&buf, node, entering)
-	})
+	})**/
 
 	return buf.Bytes()
 }
 
-func (r *HTMLRenderer) Layout(gtx C) D {
-	w, _ := r.Renderer.Layout()
+func (r *HTMLProvider) Layout(gtx C) D {
+	/**w, _ := r.Renderer.Layout()
 
 	return r.container.Layout(gtx, len(w), func(gtx C, i int) D {
 		return w[i](gtx)
-	})
+	})**/
+	return D{}
 }

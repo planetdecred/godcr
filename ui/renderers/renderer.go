@@ -1,26 +1,185 @@
 package renderers
 
 import (
-	"fmt"
-	"image"
+	//"fmt"
+	//"image"
 	"io"
-	"regexp"
-	"strings"
-	"unicode"
+	//"reflect"
+	//"regexp"
+	//"strings"
+	//"unicode"
 
-	"gioui.org/layout"
-	"gioui.org/text"
-	"gioui.org/widget"
-	"gioui.org/widget/material"
+	//"gioui.org/layout"
+	//"gioui.org/text"
+	//"gioui.org/unit"
+	//"gioui.org/widget"
+	//"gioui.org/widget/material"
 
+	//md "github.com/JohannesKaufmann/html-to-markdown"
+	md "github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
-	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/gomarkdown/markdown/parser"
+	//"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-type labelFunc func(string) decredmaterial.Label
+type renderer interface {
+	prepareText(node *ast.Text, entering bool)
+	prepareBlockQuote(node *ast.BlockQuote, entering bool)
+	prepareList(node *ast.List, entering bool)
+	prepareListItem(node *ast.ListItem, entering bool)
+	prepareParagraph(node *ast.Paragraph, entering bool)
+	prepareHeading(node *ast.Heading, entering bool)
+	prepareStrong(node *ast.Strong, entering bool)
+	prepareDel(node *ast.Del, entering bool)
+	prepareEmph(node *ast.Emph, entering bool)
+	prepareLink(node *ast.Link, entering bool)
+	prepareTable(node *ast.Table, entering bool)
+	prepareTableCell(node *ast.TableCell, entering bool)
+	prepareTableRow(node *ast.TableRow, entering bool)
+	prepareHorizontalRule(node *ast.HorizontalRule, entering bool)
+	//layout() ([]layout.Widget, map[string]*widget.Clickable)
+}
+
+type nodeWalker struct {
+	rootNode ast.Node
+	renderer renderer
+}
+
+func newNodeWalker(doc string, renderer renderer) *nodeWalker {
+	extensions := parser.NoIntraEmphasis // Ignore emphasis markers inside words
+	extensions |= parser.Tables          // Parse tables
+	extensions |= parser.FencedCode      // Parse fenced code blocks
+	extensions |= parser.Autolink        // Detect embedded URLs that are not explicitly marked
+	extensions |= parser.Strikethrough   // Strikethrough text using ~~test~~
+	extensions |= parser.SpaceHeadings   // Be strict about prefix heading rules
+	//extensions |= parser.HeadingIDs             // specify heading IDs  with {#id}
+	extensions |= parser.BackslashLineBreak // Translate trailing backslashes into line breaks
+	extensions |= parser.DefinitionLists    // Parse definition lists
+	extensions |= parser.LaxHTMLBlocks      // more in HTMLBlock, less in HTMLSpan
+	//extensions |= parser.NoEmptyLineBeforeBlock // no need for new line before a list
+	extensions |= parser.Attributes
+	//extensions |= parser.EmptyLinesBreakList
+	extensions |= parser.Mmark
+	extensions |= parser.LaxHTMLBlocks
+
+	p := parser.NewWithExtensions(extensions)
+
+	return &nodeWalker{
+		rootNode: md.Parse([]byte(doc), p),
+		renderer: renderer,
+	}
+}
+
+func (nw *nodeWalker) walk() {
+	md.Render(nw.rootNode, nw)
+}
+
+func (nw *nodeWalker) walkerFunc() {
+
+}
+
+func (nw *nodeWalker) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
+	switch node := node.(type) {
+	case *ast.Document:
+		//fmt.Println(string(node.Literal))
+	case *ast.BlockQuote:
+		nw.renderer.prepareBlockQuote(node, entering)
+	case *ast.List:
+		nw.renderer.prepareList(node, entering)
+	case *ast.ListItem:
+		nw.renderer.prepareListItem(node, entering)
+	case *ast.Paragraph:
+		nw.renderer.prepareParagraph(node, entering)
+	case *ast.Heading:
+		nw.renderer.prepareHeading(node, entering)
+	case *ast.Strong:
+		nw.renderer.prepareStrong(node, entering)
+	case *ast.Del:
+		nw.renderer.prepareDel(node, entering)
+	case *ast.Emph:
+		nw.renderer.prepareEmph(node, entering)
+	case *ast.Link:
+		if !entering {
+			nw.renderer.prepareLink(node, entering)
+			return ast.SkipChildren
+		}
+	case *ast.Text:
+		nw.renderer.prepareText(node, entering)
+	case *ast.HorizontalRule:
+		nw.renderer.prepareHorizontalRule(node, entering)
+	case *ast.Table:
+		nw.renderer.prepareTable(node, entering)
+	case *ast.TableRow:
+		nw.renderer.prepareTableRow(node, entering)
+	case *ast.TableCell:
+		if !entering {
+			nw.renderer.prepareTableCell(node, entering)
+		}
+	}
+	return ast.GoToNext
+}
+
+/**func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
+	switch node := node.(type) {
+	case *ast.Document:
+		// Nothing to do
+	case *ast.BlockQuote:
+		r.renderBlockQuote(entering)
+	case *ast.List:
+		// extra new line at the end of a list *if* next is not a list
+		if next := ast.GetNextNode(node); !entering && next != nil {
+			_, parentIsListItem := node.GetParent().(*ast.ListItem)
+			_, nextIsList := next.(*ast.List)
+			if !nextIsList && !parentIsListItem {
+				r.renderEmptyLine()
+			}
+		}
+	case *ast.ListItem:
+		r.renderList(node, entering)
+	case *ast.Paragraph:
+		if !entering {
+			r.renderParagraph()
+		}
+	case *ast.Heading:
+		if !entering {
+			r.renderHeading(node.Level, true)
+		}
+	case *ast.Strong:
+		r.renderStrong(entering)
+	case *ast.Del:
+		r.renderDel(entering)
+	case *ast.Emph:
+		r.renderEmph(entering)
+	case *ast.Link:
+		if !entering {
+			r.renderLink(node)
+			return ast.SkipChildren
+		}
+	case *ast.Text:
+		r.renderText(node)
+	case *ast.Table:
+		r.renderTable(entering)
+	case *ast.TableCell:
+		if !entering {
+			r.renderTableCell(node)
+		}
+	case *ast.TableRow:
+		r.renderTableRow(node, entering)
+	}
+
+	return ast.GoToNext
+}
+**/
+
+func (*nodeWalker) RenderHeader(w io.Writer, node ast.Node) {}
+
+func (*nodeWalker) RenderFooter(w io.Writer, node ast.Node) {}
+
+/**type labelFunc func(string) decredmaterial.Label
 
 type Renderer struct {
 	theme      *decredmaterial.Theme
+	provider   provider
 	isList     bool
 	isListItem bool
 
@@ -46,13 +205,13 @@ var (
 	textBeforeCloseRegexp = regexp.MustCompile("(.*){/#}")
 )
 
-func newRenderer(theme *decredmaterial.Theme, isHTML bool) *Renderer {
+/**func newRenderer(theme *decredmaterial.Theme, isHTML bool) *Renderer {
 	return &Renderer{
 		theme:  theme,
 		isHTML: isHTML,
 	}
 }
-
+/**
 func (r *Renderer) pad() string {
 	return strings.Repeat(" ", r.leftPad) + strings.Join(r.padAccumulator, "")
 }
@@ -70,7 +229,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Document:
 		// Nothing to do
 	case *ast.BlockQuote:
-
+		r.renderBlockQuote(entering)
 	case *ast.List:
 		// extra new line at the end of a list *if* next is not a list
 		if next := ast.GetNextNode(node); !entering && next != nil {
@@ -91,7 +250,11 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			r.renderHeading(node.Level, true)
 		}
 	case *ast.Strong:
-		r.renderStrong()
+		r.renderStrong(entering)
+	case *ast.Del:
+		r.renderDel(entering)
+	case *ast.Emph:
+		r.renderEmph(entering)
 	case *ast.Link:
 		if !entering {
 			r.renderLink(node)
@@ -112,16 +275,59 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	return ast.GoToNext
 }
 
-func (r *Renderer) renderStrong() {
-	label := r.theme.Body1("")
-	label.Font.Weight = text.Bold
+func (r *Renderer) openMarkdownTag(tagName string) {
+	tag := openTagPrefix + tagName + openTagSuffix
+	r.stringBuilder.WriteString(tag)
+}
 
-	r.renderWords(label)
+func (r *Renderer) closeMarkdownTag() {
+	r.stringBuilder.WriteString(closeTag)
+}
+
+func (r *Renderer) renderBlockQuote(entering bool) {
+	if r.isHTML {
+		return
+	} else if entering {
+		r.openMarkdownTag(blockQuoteTagName)
+	} else {
+		r.closeMarkdownTag()
+	}
+}
+
+func (r *Renderer) renderStrong(entering bool) {
+	if r.isHTML {
+		label := r.theme.Body1("")
+		label.Font.Weight = text.Bold
+		r.renderWords(label)
+	} else if entering {
+		r.openMarkdownTag(strongTagName)
+	} else {
+		r.closeMarkdownTag()
+	}
+}
+
+func (r *Renderer) renderEmph(entering bool) {
+	if r.isHTML {
+		return
+	} else if entering {
+		r.openMarkdownTag(emphTagName)
+	} else {
+		r.closeMarkdownTag()
+	}
+}
+
+func (r *Renderer) renderDel(entering bool) {
+	if r.isHTML {
+		return
+	} else if entering {
+		r.openMarkdownTag(strikeTagName)
+	} else {
+		r.closeMarkdownTag()
+	}
 }
 
 func (r *Renderer) renderParagraph() {
 	r.renderWords(r.theme.Body1(""))
-	// add dummy widget for new line
 	r.renderEmptyLine()
 }
 
@@ -198,62 +404,112 @@ func (r *Renderer) renderWords(lbl decredmaterial.Label) {
 	r.renderMarkdown(lbl)
 }
 
+func (r *Renderer) getLabel(lbl decredmaterial.Label, text string) decredmaterial.Label {
+	l := lbl
+	l.Text = text
+	if r.isHTML {
+		l = r.styleHTMLLabel(l)
+	} else {
+
+	}
+	return l
+}
+
+func (r *Renderer) getMarkdownWidget(lbl decredmaterial.Label, text string) layout.Widget {
+	l := lbl
+	l.Text = text
+
+	return r.getMarkdownWidgetAndStyle(l)
+}
+
 func (r *Renderer) renderMarkdown(lbl decredmaterial.Label) {
 	content := r.stringBuilder.String()
-	if strings.TrimSpace(r.prefix) != "" && strings.TrimSpace(content) == "" {
-		return
-	}
-
 	r.stringBuilder.Reset()
 
-	labelText := lbl.Text
-	words := strings.Fields(content)
-	words = append([]string{r.prefix}, words...)
-	r.prefix = ""
+	var wdgts []layout.Widget
+	var isGettingTagName bool
+	var isClosingBlock bool
+	var currentTag string
+	var currText string
+
+	for i := range content {
+		curr := content[i]
+
+		if curr == openTagPrefix[0] && r.getNextChar(content, i) == openTagPrefix[1] {
+			wdgts = append(wdgts,r.getMarkdownWidget(lbl, currText))
+			currText = ""
+
+			isGettingTagName = true
+			currentTag = string(curr)
+			continue
+		}
+
+		if isGettingTagName {
+			currentTag += string(curr)
+			if curr == openTagSuffix[1] {
+				isGettingTagName = false
+				currentTag = strings.Replace(currentTag, openTagPrefix, "", -1)
+				currentTag = strings.Replace(currentTag, openTagSuffix, "", -1)
+				r.addStyleGroupFromTagName(currentTag)
+				currentTag = ""
+			}
+			continue
+		}
+
+		if curr == closeTag[0] && r.getNextChar(content, i) == closeTag[1] {
+			isClosingBlock = true
+			continue
+		}
+
+		if isClosingBlock {
+			if curr == closeTag[2] {
+				wdgts = append(wdgts,r.getMarkdownWidget(lbl, currText))
+				r.removeLastStyleGroup()
+				currText = ""
+				isClosingBlock = false
+			}
+			continue
+		}
+
+		currText += string(curr)
+	}
 
 	wdgt := func(gtx C) D {
 		return decredmaterial.GridWrap{
 			Axis:      layout.Horizontal,
 			Alignment: layout.Start,
-		}.Layout(gtx, len(words), func(gtx C, i int) D {
-			if strings.HasPrefix(words[i], linkTag) {
-				return r.getLinkWidget(gtx, words[i])
+		}.Layout(gtx, len(wdgts), func(gtx C, i int) D {
+			if wdgts[i] == nil {
+				return D{}
 			}
 
-			word := words[i] + " "
-			if i == 0 {
-				word = labelText + " " + words[i]
-			}
-			lbl.Text = word
-			return lbl.Layout(gtx)
+			return wdgts[i](gtx)
 		})
 	}
+	r.containers = append(r.containers, wdgt)
 
-	var container layout.Widget
-	if r.isListItem {
-		container = func(gtx C) D {
-			return layout.Flex{}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return D{
-						Size: image.Point{
-							X: 10,
-						},
-					}
-				}),
-				layout.Flexed(1, wdgt),
-			)
-		}
-	} else {
-		container = wdgt
-	}
-	r.containers = append(r.containers, container)
 }
 
-func (r *Renderer) getLabel(lbl decredmaterial.Label, text string) decredmaterial.Label {
-	l := lbl
-	l.Text = text
-	l = r.styleLabel(l)
-	return l
+func (r *Renderer) strikeLabel(label decredmaterial.Label) layout.Widget {
+	return func(gtx C) D {
+		var dims D
+		return layout.Stack{}.Layout(gtx,
+			layout.Stacked(func(gtx C) D {
+				dims = label.Layout(gtx)
+				return dims
+			}),
+			layout.Expanded(func(gtx C) D {
+				return layout.Inset{
+					Top: unit.Dp((float32(dims.Size.Y) / float32(2))),
+				}.Layout(gtx, func(gtx C) D {
+					l := r.theme.Separator()
+					l.Color = label.Color
+					l.Width = dims.Size.X
+					return l.Layout(gtx)
+				})
+			}),
+		)
+	}
 }
 
 func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
@@ -308,7 +564,7 @@ func (r *Renderer) renderHTML(lbl decredmaterial.Label) {
 		if isClosingStyle && curr == halfCloseStyleTag[1] {
 			isClosingStyle = false
 			inStyleBlock = false
-			r.addStyleGroup(currStyle)
+			r.addHTMLStyleGroup(currStyle)
 			currStyle = ""
 		}
 	}
@@ -462,4 +718,4 @@ func (r *Renderer) getLinkWidget(gtx layout.Context, linkWord string) D {
 		lbl.Color = r.theme.Color.Primary
 		return lbl.Layout(gtx)
 	})
-}
+}**/

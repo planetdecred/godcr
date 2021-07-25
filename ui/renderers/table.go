@@ -48,13 +48,17 @@ func (t *table) startNextRow() {
 }
 
 func (t *table) addCell(content string, alignment cellAlign, isHeader bool) {
+	if len(t.rows) == 0 {
+		return
+	}
+
 	cell := cell{
 		content:       content,
 		contentLength: float64(len(content)),
 		alignment:     alignment,
 	}
 
-	rowIndex := len(t.rows) - 1
+	rowIndex := len(t.rows) - 1	
 	t.rows[rowIndex].isHeader = isHeader
 	t.rows[rowIndex].cells = append(t.rows[rowIndex].cells, cell)
 }
