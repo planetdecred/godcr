@@ -127,7 +127,7 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 		SyncStatus:      win.walletSyncStatus,
 		Transactions:    win.walletTransactions,
 		UnspentOutputs:  win.walletUnspentOutputs,
-		Tickets:         win.walletTickets,
+		Tickets:         &win.walletTickets,
 		VspInfo:         win.vspInfo,
 		BroadcastResult: win.broadcastResult,
 		Proposals:       win.proposals,

@@ -598,7 +598,7 @@ func (pg *OverviewPage) Handle() {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.ChangeFragment(NewTransactionsPage(pg.Load), Transactions)
+		pg.ChangeFragment(NewTransactionsPage(pg.Load), TransactionsPageID)
 	}
 
 	// todo: resolve navigation to transaction details page
