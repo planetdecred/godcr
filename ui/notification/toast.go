@@ -1,12 +1,12 @@
 package notification
 
 import (
-	"github.com/planetdecred/godcr/ui/values"
 	"time"
 
 	"gioui.org/layout"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type (
@@ -15,10 +15,10 @@ type (
 )
 
 type Toast struct {
-	theme *decredmaterial.Theme
+	theme   *decredmaterial.Theme
 	success bool
 	message string
-	timer *time.Timer
+	timer   *time.Timer
 
 	show bool
 }
@@ -65,15 +65,19 @@ func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (t *Toast) handleToastDisplay() {
+	if t.show {
+		// create a new timer if the Notify method is called by another process
+		t.timer = time.NewTimer(time.Second * 3)
+	}
+
 	if t.timer == nil {
 		t.timer = time.NewTimer(time.Second * 3)
 	}
 
 	select {
-	case <- t.timer.C:
+	case <-t.timer.C:
 		t.show = false
 		t.timer = nil
 	default:
 	}
 }
-

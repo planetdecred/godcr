@@ -6,18 +6,20 @@
 package load
 
 import (
-	"github.com/planetdecred/godcr/ui/notification"
-	"golang.org/x/text/language"
 	"image"
+
+	"golang.org/x/exp/shiny/materialdesign/icons"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 
 	"gioui.org/io/key"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/wallet"
-	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/text/message"
 )
 
 type DCRUSDTBittrex struct {
@@ -67,7 +69,7 @@ type Load struct {
 
 	Icons Icons
 
-	Toast 		   *notification.Toast
+	Toast *notification.Toast
 
 	SelectedWallet  *int
 	SelectedAccount *int

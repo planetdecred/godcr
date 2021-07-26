@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/planetdecred/godcr/ui/notification"
 	"os"
 	"path/filepath"
 
@@ -56,6 +57,7 @@ var (
 	winLog    = backendLog.Logger("UI")
 	dlwlLog   = backendLog.Logger("DLWL")
 	pageLog   = backendLog.Logger("PAGE")
+	notfLog   = backendLog.Logger("NOTF")
 )
 
 // Initialize package-global logger variables.
@@ -64,6 +66,7 @@ func init() {
 	ui.UseLogger(winLog)
 	dcrlibwallet.UseLogger(dlwlLog)
 	page.UseLogger(pageLog)
+	notification.UseLogger(notfLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -73,6 +76,7 @@ var subsystemLoggers = map[string]slog.Logger{
 	"UI":   winLog,
 	"GDCR": log,
 	"PAGE": pageLog,
+	"NOTF": notfLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
