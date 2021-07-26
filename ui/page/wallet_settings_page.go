@@ -235,14 +235,14 @@ func (pg *WalletSettingsPage) Handle() {
 					err := pg.WL.MultiWallet.RescanBlocks(pg.wallet.ID)
 					if err != nil {
 						if err.Error() == dcrlibwallet.ErrNotConnected {
-							pg.CreateToast(values.String(values.StrNotConnected), false)
+							pg.Toast.Notify(values.String(values.StrNotConnected), false)
 							return
 						}
-						pg.CreateToast(err.Error(), false)
+						pg.Toast.Notify(err.Error(), false)
 						return
 					}
 					msg := values.String(values.StrRescanProgressNotification)
-					pg.CreateToast(msg, true)
+					pg.Toast.Notify(msg, true)
 				})
 
 			pg.ShowModal(info)
