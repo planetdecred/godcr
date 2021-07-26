@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gioui.org/layout"
+	"gioui.org/op"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -32,6 +33,7 @@ func NewToast(th *decredmaterial.Theme) *Toast {
 func (t *Toast) Notify(message string, success bool) {
 	t.message = message
 	t.success = success
+	t.timer = time.NewTimer(time.Second * 3)
 	t.show = true
 }
 
@@ -40,7 +42,7 @@ func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{}
 	}
 
-	t.handleToastDisplay()
+	t.handleToastDisplay(gtx)
 	color := t.theme.Color.Success
 	if !t.success {
 		color = t.theme.Color.Danger
@@ -64,20 +66,12 @@ func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (t *Toast) handleToastDisplay() {
-	if t.show {
-		// create a new timer if the Notify method is called by another process
-		t.timer = time.NewTimer(time.Second * 3)
-	}
-
-	if t.timer == nil {
-		t.timer = time.NewTimer(time.Second * 3)
-	}
-
+func (t *Toast) handleToastDisplay(gtx layout.Context) {
 	select {
 	case <-t.timer.C:
 		t.show = false
 		t.timer = nil
+		op.InvalidateOp{}.Add(gtx.Ops)
 	default:
 	}
 }

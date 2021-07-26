@@ -261,6 +261,9 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 
 			return layout.Dimensions{}
 		}),
+		layout.Stacked(func(gtx C) D {
+			return win.load.Toast.Layout(gtx)
+		}),
 	)
 }
 
