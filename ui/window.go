@@ -61,7 +61,6 @@ type Window struct {
 	err string
 
 	keyEvents             chan *key.Event
-	toast                 *load.Toast
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
