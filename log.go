@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/planetdecred/godcr/ui/notification"
 	"os"
 	"path/filepath"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/jrick/logrotate/rotator"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui"
+	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
 )
