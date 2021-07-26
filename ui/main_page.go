@@ -20,6 +20,14 @@ import (
 
 const PageMain = "Main"
 
+const (
+	OverviewNavID = iota
+	TransactionsNavID
+	WalletsNavID
+	TicketsNavID
+	ProposalsNavID
+)
+
 type mainPage struct {
 	*pageCommon
 
@@ -233,14 +241,6 @@ func (mp *mainPage) unlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 		}).Show()
 
 }
-
-const (
-	OverviewNavID = iota
-	TransactionsNavID
-	WalletsNavID
-	TicketsNavID
-	ProposalsNavID
-)
 
 func (mp *mainPage) Handle() {
 	for mp.minimizeNavDrawerButton.Button.Clicked() {
