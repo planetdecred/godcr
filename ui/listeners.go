@@ -132,7 +132,7 @@ func (mp *mainPage) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
 // updateNotification sends notification to the notification channel depending on which channel the page uses
 func (mp *mainPage) updateNotification(signal interface{}) {
 	switch *mp.page {
-	case page.OverviewPageID, page.Transactions:
+	case page.OverviewPageID, page.TransactionsPageID:
 		mp.load.Receiver.NotificationsUpdate <- signal
 	default:
 		mp.notificationsUpdate <- signal

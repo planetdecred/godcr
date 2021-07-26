@@ -1,11 +1,14 @@
 package load
 
 import (
-	"sort"
-
+	"errors"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
+	"sort"
 )
+
+// ErrIDNotExist is returned when a given ID does not exist
+var ErrIDNotExist = errors.New("ID does not exist")
 
 type WalletLoad struct {
 	MultiWallet      *dcrlibwallet.MultiWallet
@@ -17,7 +20,7 @@ type WalletLoad struct {
 	Transactions    *wallet.Transactions
 	Transaction     *wallet.Transaction
 	BroadcastResult wallet.Broadcast
-	Tickets         *wallet.Tickets
+	Tickets         **wallet.Tickets
 	VspInfo         *wallet.VSP
 	UnspentOutputs  *wallet.UnspentOutputs
 	Wallet          *wallet.Wallet

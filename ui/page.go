@@ -1,17 +1,11 @@
 package ui
 
 import (
-	"crypto/ed25519"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"image"
 	"image/color"
-	"io/ioutil"
 	"net/http"
 	"sort"
-	"strings"
 
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/language"
@@ -269,10 +263,7 @@ func loadPages(common *pageCommon, l *load.Load) map[string]Page {
 	pages[page.StatisticsPageID] = page.NewStatPage(l)
 	pages[page.AboutPageID] = page.NewAboutPage(l)
 	pages[page.HelpPageID] = page.NewHelpPage(l)
-	pages[PageTickets] = TicketPage(common)
 	pages[page.ValidateAddressPageID] = page.NewValidateAddressPage(l)
-	pages[PageTicketsList] = TicketPageList(common)
-	pages[PageTicketsActivity] = TicketActivityPage(common)
 
 	return pages
 }
@@ -316,128 +307,6 @@ func (common *pageCommon) sortedWalletList() []*dcrlibwallet.Wallet {
 	})
 
 	return wallets
-}
-
-func getVSPInfo(url string) (*dcrlibwallet.VspInfoResponse, error) {
-	rq := new(http.Client)
-	resp, err := rq.Get((url + "/api/v3/vspinfo"))
-
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
-	}
-
-	var vspInfoResponse dcrlibwallet.VspInfoResponse
-	err = json.Unmarshal(b, &vspInfoResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	err = validateVSPServerSignature(resp, vspInfoResponse.PubKey, b)
-	if err != nil {
-		return nil, err
-	}
-	return &vspInfoResponse, nil
-}
-
-func validateVSPServerSignature(resp *http.Response, pubKey, body []byte) error {
-	sigStr := resp.Header.Get("VSP-Server-Signature")
-	sig, err := base64.StdEncoding.DecodeString(sigStr)
-	if err != nil {
-		return fmt.Errorf("error validating VSP signature: %v", err)
-	}
-
-	if !ed25519.Verify(pubKey, body, sig) {
-		return errors.New("bad signature from VSP")
-	}
-
-	return nil
-}
-
-func (common *pageCommon) GetVSPList() {
-	var valueOut struct {
-		Remember string
-		List     []string
-	}
-
-	common.multiWallet.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
-	var loadedVSP []wallet.VSPInfo
-
-	for _, host := range valueOut.List {
-		v, err := getVSPInfo(host)
-		if err == nil {
-			loadedVSP = append(loadedVSP, wallet.VSPInfo{
-				Host: host,
-				Info: v,
-			})
-		}
-	}
-
-	l, _ := wallet.GetInitVSPInfo("https://api.decred.org/?c=vsp")
-	for h, v := range l {
-		if strings.Contains(common.wallet.Net, v.Network) {
-			loadedVSP = append(loadedVSP, wallet.VSPInfo{
-				Host: fmt.Sprintf("https://%s", h),
-				Info: v,
-			})
-		}
-	}
-
-	(*common.vspInfo).List = loadedVSP
-}
-
-func (common *pageCommon) AddVSP(host string) (err error) {
-	var valueOut struct {
-		Remember string
-		List     []string
-	}
-
-	// check if host already exists
-	_ = common.multiWallet.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
-	for _, v := range valueOut.List {
-		if v == host {
-			return fmt.Errorf("existing host %s", host)
-		}
-	}
-
-	// validate host network
-	info, err := getVSPInfo(host)
-	if err != nil {
-		return err
-	}
-
-	if info.Network != common.wallet.Net {
-		return fmt.Errorf("invalid net %s", info.Network)
-	}
-
-	valueOut.List = append(valueOut.List, host)
-	common.multiWallet.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
-	(*common.vspInfo).List = append((*common.vspInfo).List, wallet.VSPInfo{
-		Host: host,
-		Info: info,
-	})
-
-	return
-}
-
-func (common *pageCommon) HDPrefix() string {
-	switch common.network {
-	case "testnet3": // should use a constant
-		return dcrlibwallet.TestnetHDPath
-	case "mainnet":
-		return dcrlibwallet.MainnetHDPath
-	default:
-		return ""
-	}
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
