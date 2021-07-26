@@ -249,7 +249,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return txt.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return c.layoutBalance(gtx, unmixedBalance, true)
+											return c.layoutBalance(gtx, unmixedBalance)
 										}),
 									)
 								}),
@@ -265,7 +265,7 @@ func (pg *privacyPage) mixerInfoLayout(gtx layout.Context, c *pageCommon) layout
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											return c.layoutBalance(gtx, mixedBalance, true)
+											return c.layoutBalance(gtx, mixedBalance)
 										}),
 									)
 								}),

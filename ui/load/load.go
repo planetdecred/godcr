@@ -54,10 +54,10 @@ type Icons struct {
 	arrowForwardIcon, transactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, arrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
-	restore, DocumentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, stakeyIcon,
-	list, listGridIcon, decredSymbolIcon *widget.Image
+	restore, DocumentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
+	List, ListGridIcon, decredSymbolIcon *widget.Image
 
-	ticketPurchasedIcon,
+	TicketPurchasedIcon,
 	TicketImmatureIcon,
 	TicketLiveIcon,
 	TicketVotedIcon,
@@ -160,8 +160,8 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		WalletIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
 		TicketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
 		TicketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},
-		stakeyIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["stakey"])},
-		ticketPurchasedIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased"])},
+		StakeyIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["stakey"])},
+		TicketPurchasedIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased"])},
 		TicketImmatureIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature"])},
 		TicketUnminedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined"])},
 		TicketLiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live"])},
@@ -169,8 +169,8 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		TicketMissedIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed"])},
 		TicketExpiredIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired"])},
 		TicketRevokedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked"])},
-		list:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
-		listGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
+		List:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
+		ListGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 		decredSymbolIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},
 	}
 
@@ -181,7 +181,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		SyncStatus:     new(wallet.SyncStatus),
 		Transactions:   new(wallet.Transactions),
 		UnspentOutputs: new(wallet.UnspentOutputs),
-		Tickets:        new(wallet.Tickets),
+		Tickets:        new(*wallet.Tickets),
 		VspInfo:        new(wallet.VSP),
 		Proposals:      new(wallet.Proposals),
 

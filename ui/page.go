@@ -263,10 +263,7 @@ func loadPages(common *pageCommon, l *load.Load) map[string]Page {
 	pages[page.StatisticsPageID] = page.NewStatPage(l)
 	pages[page.AboutPageID] = page.NewAboutPage(l)
 	pages[page.HelpPageID] = page.NewHelpPage(l)
-	pages[PageTickets] = TicketPage(common)
 	pages[page.ValidateAddressPageID] = page.NewValidateAddressPage(l)
-	pages[PageTicketsList] = TicketPageList(common)
-	pages[PageTicketsActivity] = TicketActivityPage(common)
 
 	return pages
 }
@@ -310,17 +307,6 @@ func (common *pageCommon) sortedWalletList() []*dcrlibwallet.Wallet {
 	})
 
 	return wallets
-}
-
-func (common *pageCommon) HDPrefix() string {
-	switch common.network {
-	case "testnet3": // should use a constant
-		return dcrlibwallet.TestnetHDPath
-	case "mainnet":
-		return dcrlibwallet.MainnetHDPath
-	default:
-		return ""
-	}
 }
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or

@@ -17,7 +17,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const Transactions = "Transactions"
+const TransactionsPageID = "Transactions"
 
 type transactionWdg struct {
 	statusIcon           *widget.Image
@@ -195,7 +195,7 @@ func (pg *TransactionsPage) Handle() {
 func (pg *TransactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcrlibwallet.Transaction) {
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
-			pg.SetReturnPage(Transactions)
+			pg.SetReturnPage(TransactionsPageID)
 			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, txn), TransactionDetailsPageID)
 		}
 	}

@@ -14,10 +14,19 @@ import (
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/send"
+	"github.com/planetdecred/godcr/ui/page/tickets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
 const PageMain = "Main"
+
+const (
+	OverviewNavID = iota
+	TransactionsNavID
+	WalletsNavID
+	TicketsNavID
+	ProposalsNavID
+)
 
 type mainPage struct {
 	*pageCommon
@@ -117,15 +126,15 @@ func (mp *mainPage) initNavItems() {
 		},
 		{
 			clickable:     new(widget.Clickable),
-			image:         mp.icons.proposalIconActive,
-			imageInactive: mp.icons.proposalIconInactive,
-			page:          PageProposals,
-		},
-		{
-			clickable:     new(widget.Clickable),
 			image:         mp.icons.ticketIcon,
 			imageInactive: mp.icons.ticketIconInactive,
 			page:          values.String(values.StrTickets),
+		},
+		{
+			clickable:     new(widget.Clickable),
+			image:         mp.icons.proposalIconActive,
+			imageInactive: mp.icons.proposalIconInactive,
+			page:          PageProposals,
 		},
 		{
 			clickable:     new(widget.Clickable),
@@ -265,13 +274,15 @@ func (mp *mainPage) Handle() {
 
 	for i := range mp.drawerNavItems {
 		for mp.drawerNavItems[i].clickable.Clicked() {
-			if i == 0 {
+			if i == OverviewNavID {
 				mp.changeFragment(page.NewOverviewPage(mp.load), page.OverviewPageID)
-			} else if i == 1 {
-				mp.changeFragment(page.NewTransactionsPage(mp.load), page.Transactions)
-			} else if i == 2 {
+			} else if i == TransactionsNavID {
+				mp.changeFragment(page.NewTransactionsPage(mp.load), page.TransactionsPageID)
+			} else if i == WalletsNavID {
 				mp.changeFragment(page.NewWalletPage(mp.load), page.WalletPageID)
-			} else if i == 3 {
+			} else if i == TicketsNavID {
+				mp.changeFragment(tickets.NewTicketPage(mp.load), tickets.PageID)
+			} else if i == ProposalsNavID {
 				mp.changeFragment(ProposalsPage(mp.pageCommon), PageProposals)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
@@ -382,7 +393,7 @@ func (mp *mainPage) layoutTopBar(gtx layout.Context) layout.Dimensions {
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return mp.layoutBalance(gtx, mp.totalBalance.String(), true)
+												return mp.layoutBalance(gtx, mp.totalBalance.String())
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
