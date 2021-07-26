@@ -2,9 +2,10 @@ package load
 
 import (
 	"errors"
+	"sort"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
-	"sort"
 )
 
 // ErrIDNotExist is returned when a given ID does not exist

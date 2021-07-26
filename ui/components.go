@@ -37,22 +37,18 @@ type (
 
 // layoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
-func (page *pageCommon) layoutBalance(gtx layout.Context, amount string, isSwitchColor bool) layout.Dimensions {
+func (page *pageCommon) layoutBalance(gtx layout.Context, amount string) layout.Dimensions {
 	// todo: make "DCR" symbols small when there are no decimals in the balance
 	mainText, subText := breakBalance(page.printer, amount)
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			label := page.theme.Label(values.TextSize20, mainText)
-			if isSwitchColor {
-				label.Color = page.theme.Color.DeepBlue
-			}
+			label.Color = page.theme.Color.DeepBlue
 			return label.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			label := page.theme.Label(values.TextSize14, subText)
-			if isSwitchColor {
-				label.Color = page.theme.Color.DeepBlue
-			}
+			label.Color = page.theme.Color.DeepBlue
 			return label.Layout(gtx)
 		}),
 	)
@@ -124,7 +120,7 @@ func transactionRow(gtx layout.Context, common *pageCommon, row TransactionRow) 
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return common.layoutBalance(gtx, dcrutil.Amount(row.transaction.Amount).String(), true)
+												return common.layoutBalance(gtx, dcrutil.Amount(row.transaction.Amount).String())
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.showBadge {

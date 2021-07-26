@@ -4,15 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/decred/dcrd/chaincfg/v3"
 	"io/ioutil"
 	"math"
 	"net/http"
 	"sort"
 	"strconv"
 	"time"
-
-	"decred.org/dcrwallet/wallet"
 
 	"golang.org/x/sync/errgroup"
 
@@ -1071,42 +1068,6 @@ func (wal *Wallet) GetAllTickets() {
 		}
 		wal.Send <- resp
 	}()
-}
-
-// ticketMatured returns whether a ticket mined at txHeight has
-// reached ticket maturity in a chain with a tip height curHeight.
-func ticketMatured(network string, txHeight, curHeight int32) bool {
-	//todo: change testnet string to a constant and include other chain params in switch cases
-	var params *chaincfg.Params
-	switch network {
-	case "testnet3":
-		params = chaincfg.TestNet3Params()
-	default:
-		params = chaincfg.MainNetParams()
-	}
-
-	return txHeight >= 0 && curHeight-txHeight > int32(params.TicketMaturity)
-}
-
-func (wal *Wallet) FilterTicketTransactions(txs []dcrlibwallet.Transaction, status wallet.TicketStatus) []dcrlibwallet.Transaction {
-	var filtered []dcrlibwallet.Transaction
-
-	for _, tx := range txs {
-		switch status {
-		case wallet.TicketStatusImmature:
-			if ticketMatured(wal.Net, tx.BlockHeight, wal.OverallBlockHeight) {
-				filtered = append(filtered)
-			}
-		case wallet.TicketStatusUnmined:
-			if tx.BlockHeight == int32(-1) {
-				filtered = append(filtered)
-			}
-		case wallet.TicketStatusLive:
-
-		}
-	}
-
-	return filtered
 }
 
 func getUnconfirmedPurchases(wall dcrlibwallet.Wallet, tickets []Ticket) (unconfirmed []UnconfirmedPurchase, err error) {

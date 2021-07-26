@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"github.com/planetdecred/godcr/ui/page/tickets"
 	"strconv"
 
 	"gioui.org/layout"
@@ -15,6 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/send"
+	"github.com/planetdecred/godcr/ui/page/tickets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -393,7 +393,7 @@ func (mp *mainPage) layoutTopBar(gtx layout.Context) layout.Dimensions {
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return mp.layoutBalance(gtx, mp.totalBalance.String(), true)
+												return mp.layoutBalance(gtx, mp.totalBalance.String())
 											})
 										}),
 										layout.Rigid(func(gtx C) D {

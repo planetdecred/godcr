@@ -138,8 +138,6 @@ type vspSelectorModal struct {
 	selectedVSP wallet.VSPInfo
 
 	vspSelectedCallback func(wallet.VSPInfo)
-
-	vspListClickables []*widget.Clickable
 }
 
 func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
@@ -187,16 +185,6 @@ func (v *vspSelectorModal) Handle() {
 	vspList := (*v.vspInfo).List
 	if len(vspList) != len(v.selectVSP) {
 		v.selectVSP = createClickGestures(len(vspList))
-	}
-
-	if len(vspList) != len(v.vspListClickables) {
-		v.vspListClickables = func() []*widget.Clickable {
-			var c []*widget.Clickable
-			for _ = range vspList {
-				c = append(c, new(widget.Clickable))
-			}
-			return c
-		}()
 	}
 }
 
