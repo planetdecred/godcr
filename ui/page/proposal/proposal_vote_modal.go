@@ -101,7 +101,6 @@ func (i *inputVoteOptionsWidgets) handleVoteCountButtons() {
 	if i.increment.Button.Clicked() {
 		value, err := strconv.Atoi(i.input.Editor.Text())
 		if err != nil {
-			log.Error(err)
 			return
 		}
 		value++
@@ -111,7 +110,6 @@ func (i *inputVoteOptionsWidgets) handleVoteCountButtons() {
 	if i.decrement.Button.Clicked() {
 		value, err := strconv.Atoi(i.input.Editor.Text())
 		if err != nil {
-			log.Error(err)
 			return
 		}
 		value--

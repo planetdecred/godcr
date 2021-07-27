@@ -44,7 +44,6 @@ type mainPage struct {
 	current, previous string
 	pages             map[string]Page
 	sendPage          *send.Page // reuse value to keep data persistent onresume.
-	// proposalPage *proposal.Page
 
 	// page state variables
 	usdExchangeSet  bool

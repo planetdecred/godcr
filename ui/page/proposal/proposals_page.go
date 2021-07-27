@@ -1,6 +1,7 @@
 package proposal
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -105,7 +106,7 @@ func (pg *Page) countProposals() {
 func (pg *Page) loadProposals(category int) {
 	proposals, err := pg.multiWallet.Politeia.GetProposalsRaw(proposalCategories[category], 0, 0, true)
 	if err != nil {
-		log.Error("Error loading proposals:", err)
+		fmt.Printf("Error loading proposals:", err)
 		pg.proposalMu.Lock()
 		pg.proposalItems = make([]proposalItem, 0)
 		pg.proposalMu.Unlock()
@@ -150,6 +151,7 @@ func (pg *Page) Handle() {
 		selectedProposal := pg.proposalItems[selectedItem].proposal
 		pg.proposalMu.Unlock()
 
+		pg.SetReturnPage(ProposalsPageID)
 		pg.ChangeFragment(newProposalDetailsPage(pg.Load, selectedProposal), PageProposalDetails)
 	}
 

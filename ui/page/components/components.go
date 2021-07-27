@@ -14,7 +14,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"golang.org/x/text/message"
 
 	"github.com/ararog/timeago"
 	"github.com/decred/dcrd/dcrutil"
@@ -22,6 +21,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
+	"golang.org/x/text/message"
 )
 
 const (
@@ -303,7 +303,7 @@ func GoToURL(url string) {
 		err = fmt.Errorf("unsupported platform")
 	}
 	if err != nil {
-		log.Error(err)
+		fmt.Printf(err.Error())
 	}
 }
 

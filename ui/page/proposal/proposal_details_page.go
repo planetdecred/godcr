@@ -17,7 +17,6 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageProposalDetails = "proposal_details"
@@ -29,7 +28,6 @@ type proposalItemWidgets struct {
 
 type proposalDetails struct {
 	*load.Load
-	wallet *wallet.Wallet
 
 	loadingDescription bool
 	proposal           dcrlibwallet.Proposal
@@ -48,8 +46,8 @@ type proposalDetails struct {
 
 func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *proposalDetails {
 	pg := &proposalDetails{
-		Load:               l,
-		wallet:             l.WL.Wallet,
+		Load: l,
+
 		loadingDescription: false,
 		proposal:           proposal,
 		descriptionCard:    l.Theme.Card(),
@@ -386,9 +384,9 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				proposalDescription = proposal.IndexFile
 			} else {
 				var err error
-				proposalDescription, err = pg.wallet.FetchProposalDescription(proposal.Token)
+				proposalDescription, err = pg.WL.MultiWallet.Politeia.FetchProposalDescription(dcrlibwallet.PoliteiaMainnetHost, proposal.Token)
 				if err != nil {
-					log.Infof("Error loading proposal description: %v", err)
+					fmt.Printf("Error loading proposal description: %v", err)
 					time.Sleep(7 * time.Second)
 					pg.loadingDescription = false
 					return
