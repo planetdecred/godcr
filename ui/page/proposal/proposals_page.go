@@ -1,7 +1,6 @@
 package proposal
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -106,7 +105,6 @@ func (pg *Page) countProposals() {
 func (pg *Page) loadProposals(category int) {
 	proposals, err := pg.multiWallet.Politeia.GetProposalsRaw(proposalCategories[category], 0, 0, true)
 	if err != nil {
-		fmt.Printf("Error loading proposals:", err)
 		pg.proposalMu.Lock()
 		pg.proposalItems = make([]proposalItem, 0)
 		pg.proposalMu.Unlock()
