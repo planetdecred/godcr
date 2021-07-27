@@ -26,16 +26,16 @@ type ListPage struct {
 	tickets      **wallet.Tickets
 	ticketsList  layout.List
 	filterSorter int
-	isGridView         bool
+	isGridView   bool
 
 	toggleViewType     *widget.Clickable
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
-	backButton decredmaterial.IconButton
+	backButton         decredmaterial.IconButton
 
-	ticketTooltips     []tooltips
-	wallets []*dcrlibwallet.Wallet
+	ticketTooltips []tooltips
+	wallets        []*dcrlibwallet.Wallet
 }
 
 func newListPage(l *load.Load) *ListPage {

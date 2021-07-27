@@ -18,10 +18,10 @@ import (
 
 const (
 	uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-	maxInt32 = 1<<(uint32Size-1) - 1
+	maxInt32   = 1<<(uint32Size-1) - 1
 
-	ticketAge              = "Ticket age"
-	durationMsg            = "10 hrs 47 mins (118/256 blocks)"
+	ticketAge   = "Ticket age"
+	durationMsg = "10 hrs 47 mins (118/256 blocks)"
 )
 
 type tooltips struct {
@@ -33,12 +33,12 @@ type tooltips struct {
 }
 
 var (
-	title                   = ""
-	mainMsg                 = ""
-	mainMsgDesc             = ""
-	dayBehind               = ""
-	durationTitle           = ""
-	durationDesc            = ""
+	title         = ""
+	mainMsg       = ""
+	mainMsgDesc   = ""
+	dayBehind     = ""
+	durationTitle = ""
+	durationDesc  = ""
 )
 
 func ticketStatusIcon(l *load.Load, ticketStatus string) *struct {
