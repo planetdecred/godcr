@@ -40,6 +40,7 @@ type Page struct {
 	autoPurchaseEnabled *widget.Bool
 	toTickets           decredmaterial.TextAndIconButton
 	toTicketsActivity   decredmaterial.TextAndIconButton
+	ticketTooltips      []tooltips
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -203,9 +204,19 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				tickets := (*pg.tickets).LiveRecent
+				for range tickets {
+					pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
+						statusTooltip:     pg.Load.Theme.Tooltip(),
+						walletNameTooltip: pg.Load.Theme.Tooltip(),
+						dateTooltip:       pg.Load.Theme.Tooltip(),
+						daysBehindTooltip: pg.Load.Theme.Tooltip(),
+						durationTooltip:   pg.Load.Theme.Tooltip(),
+					})
+				}
+
 				return pg.ticketsLive.Layout(gtx, len(tickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, pg.Load, &tickets[index], pg.Theme.Tooltip())
+						return ticketCard(gtx, pg.Load, &tickets[index], pg.ticketTooltips[index])
 					})
 				})
 			}),

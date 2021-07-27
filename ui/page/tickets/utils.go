@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"strings"
@@ -129,7 +130,7 @@ func setText(t string) {
 
 func ticketStatusTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimensions {
 	setText(t.Info.Status)
-	st := ticketStatusIcon(c, t.Info.Status)
+	st := ticketStatusIcon(l, t.Info.Status)
 	status := l.Theme.Body2(t.Info.Status)
 	status.Color = st.color
 	st.icon.Scale = .5
@@ -190,7 +191,7 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
 func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tooltips) layout.Dimensions {
 	var itemWidth int
-	st := ticketStatusIcon(c, t.Info.Status)
+	st := ticketStatusIcon(l, t.Info.Status)
 	if st == nil {
 		return layout.Dimensions{}
 	}
@@ -217,7 +218,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 										txt := l.Theme.Label(values.TextSize14, "10h 47m")
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.durationTooltip, func(gtx C) D {
-											setText(status)
+											setText(t.Info.Status)
 											return walletNameDateTimeTooltip(gtx, l, durationTitle,
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
 										})
@@ -269,7 +270,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 								return layout.Inset{
 									Top: values.MarginPadding16,
 								}.Layout(gtx, func(gtx C) D {
-									return c.layoutBalance(gtx, t.Amount, true)
+									return components.LayoutBalance(gtx, l, t.Amount)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -279,8 +280,8 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {
-											setText(status)
-											return ticketStatusTooltip(gtx, c, t)
+											setText(t.Info.Status)
+											return ticketStatusTooltip(gtx, l, t)
 										})
 										return txtLayout
 									}),
@@ -289,9 +290,9 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 											Left:  values.MarginPadding4,
 											Right: values.MarginPadding4,
 										}.Layout(gtx, func(gtx C) D {
-											ic := c.icons.imageBrightness1
+											ic := l.Icons.ImageBrightness1
 											ic.Color = l.Theme.Color.Gray2
-											return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+											return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -333,16 +334,16 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 												Left:  values.MarginPadding4,
 												Right: values.MarginPadding4,
 											}.Layout(gtx, func(gtx C) D {
-												ic := c.icons.imageBrightness1
+												ic := l.Icons.ImageBrightness1
 												ic.Color = l.Theme.Color.Gray2
-												return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+												return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
 											txt.Text = t.DaysBehind
 											txtLayout := txt.Layout(gtx)
 											ticketCardTooltip(gtx, txtLayout, tooltip.daysBehindTooltip, func(gtx C) D {
-												setText(status)
+												setText(t.Info.Status)
 												return walletNameDateTimeTooltip(gtx, l, dayBehind,
 													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.DaysBehind).Layout))
 											})
@@ -364,7 +365,7 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				st := ticketStatusIcon(c, t.Info.Status)
+				st := ticketStatusIcon(l, t.Info.Status)
 				if st == nil {
 					return layout.Dimensions{}
 				}
@@ -398,7 +399,7 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 								labelDaysBehind := l.Theme.Label(values.TextSize14, t.DaysBehind)
 								labelDaysBehind.Color = l.Theme.Color.DeepBlue
 
-								return endToEndRow(gtx,
+								return components.EndToEndRow(gtx,
 									labelStatus.Layout,
 									labelDaysBehind.Layout)
 							}),
@@ -416,16 +417,16 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 											Left:  values.MarginPadding4,
 											Right: values.MarginPadding4,
 										}.Layout(gtx, func(gtx C) D {
-											ic := c.icons.imageBrightness1
+											ic := l.Icons.ImageBrightness1
 											ic.Color = l.Theme.Color.Gray2
-											return c.icons.imageBrightness1.Layout(gtx, values.MarginPadding5)
+											return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
 										return layout.Inset{
 											Right: values.MarginPadding4,
 										}.Layout(gtx, func(gtx C) D {
-											ic := c.icons.ticketIconInactive
+											ic := l.Icons.TicketIconInactive
 											ic.Scale = 0.5
 											return ic.Layout(gtx)
 										})

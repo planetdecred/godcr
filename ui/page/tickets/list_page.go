@@ -50,8 +50,8 @@ func newListPage(l *load.Load) *ListPage {
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
 
-	pg.orderDropDown = createOrderDropDown(pg.Theme)
-	pg.ticketTypeDropDown = pg.Theme.DropDown([]decredmaterial.DropDownItem{
+	pg.orderDropDown = createOrderDropDown(l.Theme)
+	pg.ticketTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
 		{Text: "Immature"},
@@ -85,11 +85,11 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 				tickets := (*pg.tickets).Confirmed[walletID]
 				for range tickets {
 					pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
-						statusTooltip:     c.theme.Tooltip(),
-						walletNameTooltip: c.theme.Tooltip(),
-						dateTooltip:       c.theme.Tooltip(),
-						daysBehindTooltip: c.theme.Tooltip(),
-						durationTooltip:   c.theme.Tooltip(),
+						statusTooltip:     pg.Load.Theme.Tooltip(),
+						walletNameTooltip: pg.Load.Theme.Tooltip(),
+						dateTooltip:       pg.Load.Theme.Tooltip(),
+						daysBehindTooltip: pg.Load.Theme.Tooltip(),
+						durationTooltip:   pg.Load.Theme.Tooltip(),
 					})
 				}
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
@@ -310,7 +310,7 @@ func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []wallet.Ti
 						Right:  values.MarginPadding4,
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, c, &tickets[index], pg.ticketTooltips[index])
+						return ticketCard(gtx, pg.Load, &tickets[index], pg.ticketTooltips[index])
 					})
 				})
 			})
