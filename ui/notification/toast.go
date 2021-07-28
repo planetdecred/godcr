@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"sync"
 	"time"
 
 	"gioui.org/layout"
@@ -16,12 +17,11 @@ type (
 )
 
 type Toast struct {
+	sync.Mutex
 	theme   *decredmaterial.Theme
 	success bool
 	message string
 	timer   *time.Timer
-
-	show bool
 }
 
 func NewToast(th *decredmaterial.Theme) *Toast {
@@ -31,14 +31,15 @@ func NewToast(th *decredmaterial.Theme) *Toast {
 }
 
 func (t *Toast) Notify(message string, success bool) {
+	t.Lock()
 	t.message = message
 	t.success = success
 	t.timer = time.NewTimer(time.Second * 3)
-	t.show = true
+	t.Unlock()
 }
 
 func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
-	if !t.show {
+	if t.timer == nil {
 		return layout.Dimensions{}
 	}
 
@@ -69,7 +70,6 @@ func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
 func (t *Toast) handleToastDisplay(gtx layout.Context) {
 	select {
 	case <-t.timer.C:
-		t.show = false
 		t.timer = nil
 		op.InvalidateOp{}.Add(gtx.Ops)
 	default:
