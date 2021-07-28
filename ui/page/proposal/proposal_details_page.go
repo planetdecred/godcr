@@ -1,4 +1,4 @@
-package ui
+package proposal
 
 import (
 	"fmt"
@@ -13,13 +13,13 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const (
-	PageProposalDetails = "ProposalDetails"
-)
+const PageProposalDetails = "proposal_details"
 
 type proposalItemWidgets struct {
 	widgets    []layout.Widget
@@ -27,9 +27,9 @@ type proposalItemWidgets struct {
 }
 
 type proposalDetails struct {
-	theme              *decredmaterial.Theme
+	*load.Load
+
 	loadingDescription bool
-	common             *pageCommon
 	proposal           dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
@@ -44,30 +44,30 @@ type proposalDetails struct {
 	backButton         decredmaterial.IconButton
 }
 
-func ProposalDetailsPage(common *pageCommon, proposal dcrlibwallet.Proposal) Page {
+func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *proposalDetails {
 	pg := &proposalDetails{
-		theme:              common.theme,
+		Load: l,
+
 		loadingDescription: false,
-		common:             common,
 		proposal:           proposal,
-		descriptionCard:    common.theme.Card(),
+		descriptionCard:    l.Theme.Card(),
 		descriptionList:    &layout.List{Axis: layout.Vertical},
-		redirectIcon:       common.icons.redirectIcon,
-		downloadIcon:       common.icons.downloadIcon,
-		voteBar:            common.theme.VoteBar(common.icons.actionInfo, common.icons.imageBrightness1),
+		redirectIcon:       l.Icons.RedirectIcon,
+		downloadIcon:       l.Icons.DownloadIcon,
+		voteBar:            l.Theme.VoteBar(l.Icons.ActionInfo, l.Icons.ImageBrightness1),
 		proposalItems:      make(map[string]proposalItemWidgets),
-		rejectedIcon:       common.icons.navigationCancel,
-		successIcon:        common.icons.actionCheckCircle,
-		timerIcon:          common.icons.timerIcon,
+		rejectedIcon:       l.Icons.NavigationCancel,
+		successIcon:        l.Icons.ActionCheckCircle,
+		timerIcon:          l.Icons.TimerIcon,
 	}
 
 	pg.downloadIcon.Scale = 1
-	pg.backButton, _ = common.SubPageHeaderButtons()
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	pg.vote = common.theme.Button(new(widget.Clickable), "Vote")
+	pg.vote = l.Theme.Button(new(widget.Clickable), "Vote")
 	pg.vote.TextSize = values.TextSize14
-	pg.vote.Background = common.theme.Color.Primary
-	pg.vote.Color = common.theme.Color.Surface
+	pg.vote.Background = l.Theme.Color.Primary
+	pg.vote.Color = l.Theme.Color.Surface
 	pg.vote.CornerRadius = values.MarginPadding8
 	pg.vote.Inset = layout.Inset{
 		Top:    values.MarginPadding8,
@@ -87,9 +87,13 @@ func (pg *proposalDetails) Handle() {
 	for token := range pg.proposalItems {
 		for location, clickable := range pg.proposalItems[token].clickables {
 			if clickable.Clicked() {
-				goToURL(location)
+				components.GoToURL(location)
 			}
 		}
+	}
+
+	if pg.vote.Button.Clicked() {
+		newVoteModal(pg.Load).Show()
 	}
 }
 
@@ -108,7 +112,7 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {
 	proposal := pg.proposal
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	txt := pg.theme.Label(values.TextSize14, fmt.Sprintf("%d eligible tickets", proposal.EligibleTickets))
+	txt := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%d eligible tickets", proposal.EligibleTickets))
 	return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(pg.vote.Layout),
 		layout.Rigid(txt.Layout),
@@ -125,16 +129,16 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				if proposal.VoteStatus == val || proposal.VoteStatus < val {
-					c := pg.theme.Card()
-					c.Color = pg.theme.Color.Primary
+					c := pg.Theme.Card()
+					c.Color = pg.Theme.Color.Primary
 
 					r := float32(9.5)
 					c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
-					lbl := pg.theme.Body1(fmt.Sprint(val))
-					lbl.Color = pg.theme.Color.Surface
+					lbl := pg.Theme.Body1(fmt.Sprint(val))
+					lbl.Color = pg.Theme.Color.Surface
 					if proposal.VoteStatus < val {
-						c.Color = pg.theme.Color.LightGray
-						lbl.Color = pg.theme.Color.Hint
+						c.Color = pg.Theme.Color.LightGray
+						lbl.Color = pg.Theme.Color.Hint
 					}
 					return c.Layout(gtx, func(gtx C) D {
 						m := values.MarginPadding6
@@ -142,7 +146,7 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 					})
 				}
 				icon := pg.successIcon
-				icon.Color = pg.theme.Color.Primary
+				icon.Color = pg.Theme.Color.Primary
 				return layout.Inset{
 					Left:   values.MarginPaddingMinus2,
 					Right:  values.MarginPaddingMinus2,
@@ -152,16 +156,16 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				col := pg.theme.Color.Primary
+				col := pg.Theme.Color.Primary
 				txt := info + "..."
 				if proposal.VoteStatus != val {
 					txt = info
-					col = pg.theme.Color.Hint
+					col = pg.Theme.Color.Hint
 					if proposal.VoteStatus > 1 {
-						col = pg.theme.Color.DeepBlue
+						col = pg.Theme.Color.DeepBlue
 					}
 				}
-				lbl := pg.theme.Body1(txt)
+				lbl := pg.Theme.Body1(txt)
 				lbl.Color = col
 				return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, lbl.Layout)
 			}),
@@ -175,11 +179,11 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 		}),
 		layout.Rigid(func(gtx C) D {
 			height, width := gtx.Px(values.MarginPadding26), gtx.Px(values.MarginPadding4)
-			line := pg.theme.Line(height, width)
+			line := pg.Theme.Line(height, width)
 			if proposal.VoteStatus > 1 {
-				line.Color = pg.theme.Color.Primary
+				line.Color = pg.Theme.Color.Primary
 			} else {
-				line.Color = pg.theme.Color.Gray1
+				line.Color = pg.Theme.Color.Gray1
 			}
 			return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, line.Layout)
 		}),
@@ -195,19 +199,19 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 	proposal := pg.proposal
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
-		label = pg.theme.Body2("Approved")
+		label = pg.Theme.Body2("Approved")
 		icon = pg.successIcon
-		icon.Color = pg.theme.Color.Success
+		icon.Color = pg.Theme.Color.Success
 	case dcrlibwallet.ProposalCategoryRejected:
-		label = pg.theme.Body2("Rejected")
+		label = pg.Theme.Body2("Rejected")
 		icon = pg.rejectedIcon
-		icon.Color = pg.theme.Color.Danger
+		icon.Color = pg.Theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
-		label = pg.theme.Body2("Abandoned")
+		label = pg.Theme.Body2("Abandoned")
 	case dcrlibwallet.ProposalCategoryActive:
-		label = pg.theme.Body2("Voting in progress...")
+		label = pg.Theme.Body2("Voting in progress...")
 	}
-	timeagoLabel := pg.theme.Body2(timeAgo(proposal.Timestamp))
+	timeagoLabel := pg.Theme.Body2(components.TimeAgo(proposal.Timestamp))
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -268,27 +272,27 @@ func (pg *proposalDetails) layoutTitle(gtx C) D {
 }
 
 func (pg *proposalDetails) layoutDescription(gtx C) D {
-	grayCol := pg.theme.Color.Gray
+	grayCol := pg.Theme.Color.Gray
 	proposal := pg.proposal
 
-	dotLabel := pg.theme.H4(" . ")
+	dotLabel := pg.Theme.H4(" . ")
 	dotLabel.Color = grayCol
 
-	userLabel := pg.theme.Body2(proposal.Username)
+	userLabel := pg.Theme.Body2(proposal.Username)
 	userLabel.Color = grayCol
 
-	versionLabel := pg.theme.Body2("Version " + proposal.Version)
+	versionLabel := pg.Theme.Body2("Version " + proposal.Version)
 	versionLabel.Color = grayCol
 
-	publishedLabel := pg.theme.Body2("Published " + timeAgo(proposal.PublishedAt))
+	publishedLabel := pg.Theme.Body2("Published " + components.TimeAgo(proposal.PublishedAt))
 	publishedLabel.Color = grayCol
 
-	updatedLabel := pg.theme.Body2("Updated " + timeAgo(proposal.Timestamp))
+	updatedLabel := pg.Theme.Body2("Updated " + components.TimeAgo(proposal.Timestamp))
 	updatedLabel.Color = grayCol
 
 	w := []layout.Widget{
 		func(gtx C) D {
-			lbl := pg.theme.H5(proposal.Name)
+			lbl := pg.Theme.H5(proposal.Name)
 			lbl.Font.Weight = text.Bold
 			return lbl.Layout(gtx)
 		},
@@ -346,8 +350,8 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						txt := pg.theme.Body1(text)
-						txt.Color = pg.theme.Color.DeepBlue
+						txt := pg.Theme.Body1(text)
+						txt.Color = pg.Theme.Color.DeepBlue
 						return txt.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -365,13 +369,11 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *
 
 func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 	return func(gtx C) D {
-		return inset.Layout(gtx, pg.theme.Separator().Layout)
+		return inset.Layout(gtx, pg.Theme.Separator().Layout)
 	}
 }
 
 func (pg *proposalDetails) Layout(gtx C) D {
-	common := pg.common
-
 	proposal := pg.proposal
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok && !pg.loadingDescription {
@@ -382,16 +384,16 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				proposalDescription = proposal.IndexFile
 			} else {
 				var err error
-				proposalDescription, err = common.wallet.FetchProposalDescription(proposal.Token)
+				proposalDescription, err = pg.WL.MultiWallet.Politeia.FetchProposalDescription(dcrlibwallet.PoliteiaMainnetHost, proposal.Token)
 				if err != nil {
-					log.Infof("Error loading proposal description: %v", err)
+					fmt.Printf("Error loading proposal description: %v", err)
 					time.Sleep(7 * time.Second)
 					pg.loadingDescription = false
 					return
 				}
 			}
 
-			r := renderers.RenderMarkdown(gtx, pg.theme, proposalDescription)
+			r := renderers.RenderMarkdown(gtx, pg.Theme, proposalDescription)
 			proposalWidgets, proposalClickables := r.Layout()
 			pg.proposalItems[proposal.Token] = proposalItemWidgets{
 				widgets:    proposalWidgets,
@@ -402,14 +404,15 @@ func (pg *proposalDetails) Layout(gtx C) D {
 	}
 
 	body := func(gtx C) D {
-		page := SubPage{
-			title:      truncateString(proposal.Name, 40),
-			backButton: pg.backButton,
-			back: func() {
-				common.changePage(PageProposals)
+		page := components.SubPage{
+			Load:       pg.Load,
+			Title:      components.TruncateString(proposal.Name, 40),
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.ChangePage(*pg.ReturnPage)
 				pg.descriptionList.Position.First, pg.descriptionList.Position.Offset = 0, 0
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.layoutTitle)
@@ -417,16 +420,16 @@ func (pg *proposalDetails) Layout(gtx C) D {
 					layout.Rigid(pg.layoutDescription),
 				)
 			},
-			extra: func(gtx C) D {
+			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					pg.redirectIcon.Scale = 1
 					return layout.E.Layout(gtx, pg.redirectIcon.Layout)
 				})
 			},
 		}
-		return common.SubPageLayout(gtx, page)
+		return page.Layout(gtx)
 	}
-	return common.UniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *proposalDetails) OnClose() {}
