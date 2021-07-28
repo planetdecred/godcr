@@ -30,9 +30,9 @@ type walletListItem struct {
 	accountsList *decredmaterial.ClickableList
 
 	// normal wallets
-	collapsible   *decredmaterial.CollapsibleWithOption
-	addAcctBtn    decredmaterial.IconButton
-	backupAcctBtn decredmaterial.IconButton
+	collapsible         *decredmaterial.CollapsibleWithOption
+	addAcctClickable    *widget.Clickable
+	backupAcctClickable *widget.Clickable
 
 	// watch only
 	moreButton decredmaterial.IconButton
@@ -70,6 +70,8 @@ type WalletPage struct {
 	watchOnlyWalletIcon      *widget.Image
 	shadowBox                *decredmaterial.Shadow
 	separator                decredmaterial.Line
+	addAcctIcon              *widget.Icon
+	backupAcctIcon           *widget.Icon
 }
 
 func NewWalletPage(l *load.Load) *WalletPage {
@@ -85,9 +87,12 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		openPopupIndex:           -1,
 		shadowBox:                l.Theme.Shadow(),
 		separator:                l.Theme.Separator(),
+		addAcctIcon:              l.Icons.ContentAdd,
+		backupAcctIcon:           l.Icons.NavigationArrowForward,
 	}
 
 	pg.separator.Color = l.Theme.Color.Background
+	pg.addAcctIcon.Color = l.Theme.Color.Text
 
 	pg.watchOnlyWalletLabel = pg.Theme.Body1(values.String(values.StrWatchOnlyWallets))
 	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.Gray
@@ -155,19 +160,8 @@ func (pg *WalletPage) OnResume() {
 			}
 			listItem.moreButton = moreBtn
 		} else {
-			addAcctBtn := pg.Theme.IconButton(new(widget.Clickable), pg.Icons.ContentAdd)
-			addAcctBtn.Inset = layout.UniformInset(values.MarginPadding0)
-			addAcctBtn.Size = values.MarginPadding25
-			addAcctBtn.Background = color.NRGBA{}
-			addAcctBtn.Color = pg.Theme.Color.Text
-
-			backupBtn := pg.Theme.PlainIconButton(new(widget.Clickable), pg.Icons.NavigationArrowForward)
-			backupBtn.Color = pg.Theme.Color.Surface
-			backupBtn.Inset = layout.UniformInset(values.MarginPadding0)
-			backupBtn.Size = values.MarginPadding20
-
-			listItem.addAcctBtn = addAcctBtn
-			listItem.backupAcctBtn = backupBtn
+			listItem.addAcctClickable = new(widget.Clickable)
+			listItem.backupAcctClickable = new(widget.Clickable)
 			listItem.collapsible = pg.Theme.CollapsibleWithOption()
 		}
 
@@ -436,21 +430,27 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Right: values.MarginPadding10,
-										Left:  values.MarginPadding38,
-									}.Layout(gtx, listItem.addAcctBtn.Layout)
-								}),
-								layout.Rigid(func(gtx C) D {
-									txt := pg.Theme.H6(values.String(values.StrAddNewAccount))
-									txt.Color = pg.Theme.Color.Gray
-									return txt.Layout(gtx)
-								}),
-							)
+						return decredmaterial.Clickable(gtx, pg.listItems[i].addAcctClickable, func(gtx C) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{
+											Right: values.MarginPadding10,
+											Left:  values.MarginPadding38,
+										}.Layout(gtx, func(gtx C) D {
+											return pg.addAcctIcon.Layout(gtx, values.MarginPadding25)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										txt := pg.Theme.H6(values.String(values.StrAddNewAccount))
+										txt.Color = pg.Theme.Color.Gray
+										return txt.Layout(gtx)
+									}),
+								)
+							})
 						})
+
 					}),
 				)
 			})
@@ -700,39 +700,44 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	textColour := pg.Theme.Color.InvText
-	return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.walletAlertIcon.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				inset := layout.Inset{
-					Left: values.MarginPadding10,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Body2(values.String(values.StrBackupSeedPhrase))
-							txt.Color = textColour
-							return txt.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Caption(values.String(values.StrVerifySeedInfo))
-							txt.Color = textColour
-							return txt.Layout(gtx)
-						}),
-					)
-				})
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				inset := layout.Inset{
-					Top: values.MarginPadding5,
-				}
-				return inset.Layout(gtx, func(gtx C) D {
-					return layout.E.Layout(gtx, listItem.backupAcctBtn.Layout)
-				})
-			}),
-		)
+	return decredmaterial.Clickable(gtx, listItem.backupAcctClickable, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.walletAlertIcon.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					inset := layout.Inset{
+						Left: values.MarginPadding10,
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := pg.Theme.Body2(values.String(values.StrBackupSeedPhrase))
+								txt.Color = textColour
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := pg.Theme.Caption(values.String(values.StrVerifySeedInfo))
+								txt.Color = textColour
+								return txt.Layout(gtx)
+							}),
+						)
+					})
+				}),
+				layout.Flexed(1, func(gtx C) D {
+					inset := layout.Inset{
+						Top: values.MarginPadding5,
+					}
+					pg.backupAcctIcon.Color = textColour
+					return inset.Layout(gtx, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return pg.backupAcctIcon.Layout(gtx, values.MarginPadding20)
+						})
+					})
+				}),
+			)
+		})
 	})
 }
 
@@ -822,9 +827,8 @@ func (pg *WalletPage) Handle() {
 				pg.openPopup(index)
 			}
 
-			for listItem.addAcctBtn.Button.Clicked() {
+			for listItem.addAcctClickable.Clicked() {
 				walletID := listItem.wal.ID
-
 				textModal := modal.NewTextInputModal(pg.Load).
 					Hint("Account name").
 					PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
@@ -835,25 +839,22 @@ func (pg *WalletPage) Handle() {
 								NegativeButton(values.String(values.StrCancel), func() {}).
 								PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 									go func() {
-
 										wal := pg.multiWallet.WalletWithID(walletID)
 										wal.CreateNewAccount(accountName, []byte(password)) // TODO
 										pm.Dismiss()
 									}()
-
 									return false
 								}).Show()
 						}
 						return true
 					})
-
 				textModal.Title(values.String(values.StrCreateNewAccount)).
 					NegativeButton(values.String(values.StrCancel), func() {})
 				textModal.Show()
 				break
 			}
 
-			for listItem.backupAcctBtn.Button.Clicked() {
+			for listItem.backupAcctClickable.Clicked() {
 				pg.ChangePage(SeedBackupPageID)
 			}
 		}
