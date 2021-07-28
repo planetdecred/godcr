@@ -3,6 +3,7 @@ package page
 import (
 	"gioui.org/layout"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"

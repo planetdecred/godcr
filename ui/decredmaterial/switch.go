@@ -17,11 +17,13 @@ import (
 )
 
 type Switch struct {
-	active       color.NRGBA
-	inactive     color.NRGBA
-	thumbColor   color.NRGBA
-	disabled     bool
-	switchWidget *widget.Bool
+	active     color.NRGBA
+	inactive   color.NRGBA
+	thumbColor color.NRGBA
+	disabled   bool
+	value      bool
+	changed    bool
+	clk        *widget.Clickable
 }
 
 type SwitchItem struct {
@@ -39,7 +41,7 @@ type SwitchButtonText struct {
 
 func (t *Theme) Switch() *Switch {
 	sw := &Switch{
-		switchWidget: new(widget.Bool),
+		clk: new(widget.Clickable),
 	}
 	sw.active, sw.inactive, sw.thumbColor = t.Color.Primary, t.Color.InactiveGray, t.Color.Surface
 	return sw
@@ -82,10 +84,6 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	}}
 
 	col := s.inactive
-	if s.disabled {
-		col = Disabled(s.inactive)
-		s.thumbColor = Disabled(s.thumbColor)
-	}
 	if s.IsChecked() {
 		col = s.active
 	}
@@ -133,7 +131,7 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	sz := image.Pt(clickSize, clickSize)
 	pointer.Ellipse(image.Rectangle{Max: sz}).Add(gtx.Ops)
 	gtx.Constraints.Min = sz
-	s.switchWidget.Layout(gtx)
+	s.clk.Layout(gtx)
 	stack.Load()
 
 	dims := image.Point{X: trackWidth, Y: thumbSize}
@@ -141,18 +139,19 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (s *Switch) Changed() bool {
-	return s.switchWidget.Changed()
+	s.handleClickEvent()
+	changed := s.changed
+	s.changed = false
+	return changed
 }
 
 func (s *Switch) IsChecked() bool {
-	if s.disabled {
-		s.SetChecked(false)
-	}
-	return s.switchWidget.Value
+	s.handleClickEvent()
+	return s.value
 }
 
 func (s *Switch) SetChecked(value bool) {
-	s.switchWidget.Value = value
+	s.value = value
 }
 
 func (s *Switch) SetThumbColor(color color.NRGBA) {
@@ -165,6 +164,18 @@ func (s *Switch) SetTrackColor(activeColor, inactiveColor color.NRGBA) {
 
 func (s *Switch) Disabled() {
 	s.disabled = true
+	s.SetTrackColor(Disabled(s.active), Disabled(s.inactive))
+	s.SetThumbColor(Disabled(s.thumbColor))
+}
+
+func (s *Switch) handleClickEvent() {
+	for s.clk.Clicked() {
+		if s.disabled {
+			return
+		}
+		s.value = !s.value
+		s.changed = true
+	}
 }
 
 func (s *SwitchButtonText) Layout(gtx layout.Context) layout.Dimensions {
