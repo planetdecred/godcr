@@ -45,7 +45,7 @@ type Receiver struct {
 type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
-	ImageBrightness1, ContentClear, DropDownIcon, Cached *widget.Icon
+	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, TransactionIcon, TransactionIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -54,7 +54,7 @@ type Icons struct {
 	arrowForwardIcon, transactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, arrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
-	restore, DocumentationIcon, downloadIcon, timerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
+	Restore, DocumentationIcon, DownloadIcon, TimerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
 	List, ListGridIcon, decredSymbolIcon *widget.Image
 
 	TicketPurchasedIcon,
@@ -114,6 +114,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		NavMoreIcon:            mustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		DropDownIcon:           mustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		Cached:                 mustIcon(widget.NewIcon(icons.ActionCached)),
+		ContentRemove:          mustIcon(widget.NewIcon(icons.ContentRemove)),
 
 		OverviewIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["overview"])},
 		OverviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
@@ -154,9 +155,9 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		DocumentationIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["documentation"])},
 		ProposalIconActive:         &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaActive"])},
 		ProposalIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["politeiaInactive"])},
-		restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
-		downloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
-		timerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
+		Restore:                    &widget.Image{Src: paint.NewImageOp(decredIcons["restore"])},
+		DownloadIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["downloadIcon"])},
+		TimerIcon:                  &widget.Image{Src: paint.NewImageOp(decredIcons["timerIcon"])},
 		WalletIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["wallet"])},
 		TicketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
 		TicketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},

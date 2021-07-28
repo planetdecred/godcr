@@ -222,4 +222,5 @@ const (
 	StrFrench                      = "french"
 	StrUsdBittrex                  = "usdBittrex"
 	StrNone                        = "none"
+	StrProposal                    = "proposals"
 )

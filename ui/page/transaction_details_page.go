@@ -479,7 +479,7 @@ func (pg *TransactionDetailsPage) separator(gtx layout.Context) layout.Dimension
 func (pg *TransactionDetailsPage) Handle() {
 	gtx := pg.gtx
 	if pg.toDcrdata.Clicked() {
-		goToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
+		components.GoToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
 	}
 
 	for _, b := range pg.copyTextBtn {

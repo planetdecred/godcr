@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/proposal"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/tickets"
 	"github.com/planetdecred/godcr/ui/values"
@@ -134,7 +135,7 @@ func (mp *mainPage) initNavItems() {
 			clickable:     new(widget.Clickable),
 			image:         mp.icons.proposalIconActive,
 			imageInactive: mp.icons.proposalIconInactive,
-			page:          PageProposals,
+			page:          values.String(values.StrProposal),
 		},
 		{
 			clickable:     new(widget.Clickable),
@@ -283,7 +284,7 @@ func (mp *mainPage) Handle() {
 			} else if i == TicketsNavID {
 				mp.changeFragment(tickets.NewTicketPage(mp.load), tickets.PageID)
 			} else if i == ProposalsNavID {
-				mp.changeFragment(ProposalsPage(mp.pageCommon), PageProposals)
+				mp.changeFragment(proposal.NewProposalsPage(mp.load), proposal.ProposalsPageID)
 			} else {
 				mp.changePage(mp.drawerNavItems[i].page)
 			}

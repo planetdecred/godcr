@@ -1,4 +1,4 @@
-package ui
+package proposal
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -24,8 +25,7 @@ type inputVoteOptionsWidgets struct {
 }
 
 type voteModal struct {
-	*pageCommon
-	randomID       string
+	*load.Load
 	modal          decredmaterial.Modal
 	passwordEditor decredmaterial.Editor
 	callback       func(password string, m *voteModal) bool // return true to dismiss dialog
@@ -35,20 +35,20 @@ type voteModal struct {
 	noVote         inputVoteOptionsWidgets
 }
 
-func newInputVoteOptions(c *pageCommon, label string) inputVoteOptionsWidgets {
+func newInputVoteOptions(l *load.Load, label string) inputVoteOptionsWidgets {
 	i := inputVoteOptionsWidgets{
 		label:      label,
-		background: c.theme.Color.LightGray,
-		input:      c.theme.Editor(new(widget.Editor), ""),
-		increment:  c.theme.PlainIconButton(new(widget.Clickable), c.icons.contentAdd),
-		decrement:  c.theme.PlainIconButton(new(widget.Clickable), c.icons.contentRemove),
-		max:        c.theme.Button(new(widget.Clickable), "MAX"),
+		background: l.Theme.Color.LightGray,
+		input:      l.Theme.Editor(new(widget.Editor), ""),
+		increment:  l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ContentAdd),
+		decrement:  l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ContentRemove),
+		max:        l.Theme.Button(new(widget.Clickable), "MAX"),
 	}
-	i.max.Background = c.theme.Color.Surface
-	i.max.Color = c.theme.Color.Gray2
+	i.max.Background = l.Theme.Color.Surface
+	i.max.Color = l.Theme.Color.Gray2
 	i.max.Font.Weight = text.Bold
 
-	i.increment.Color, i.decrement.Color = c.theme.Color.Text, c.theme.Color.Text
+	i.increment.Color, i.decrement.Color = l.Theme.Color.Text, l.Theme.Color.Text
 	i.increment.Size, i.decrement.Size = values.TextSize18, values.TextSize18
 	i.input.Bordered = false
 	i.input.Editor.SetText("0")
@@ -56,31 +56,30 @@ func newInputVoteOptions(c *pageCommon, label string) inputVoteOptionsWidgets {
 	return i
 }
 
-func newvoteModal(common *pageCommon) *voteModal {
+func newVoteModal(l *load.Load) *voteModal {
 	cm := &voteModal{
-		pageCommon:  common,
-		randomID:    fmt.Sprintf("%s-%d", ModalInputVote, generateRandomNumber()),
-		modal:       *common.theme.ModalFloatTitle(),
-		btnPositve:  common.theme.Button(new(widget.Clickable), "Vote"),
-		btnNegative: common.theme.Button(new(widget.Clickable), "Cancel"),
+		Load:        l,
+		modal:       *l.Theme.ModalFloatTitle(),
+		btnPositve:  l.Theme.Button(new(widget.Clickable), "Vote"),
+		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
 	}
 
 	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
 	cm.btnPositve.Font.Weight, cm.btnNegative.Font.Weight = text.Bold, text.Bold
-	cm.btnPositve.Background = common.theme.Color.Gray1
-	cm.btnPositve.Color = common.theme.Color.Surface
+	cm.btnPositve.Background = l.Theme.Color.Gray1
+	cm.btnPositve.Color = l.Theme.Color.Surface
 
-	cm.passwordEditor = common.theme.EditorPassword(new(widget.Editor), "Spending password")
+	cm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	cm.passwordEditor.Editor.SingleLine, cm.passwordEditor.Editor.Submit = true, true
 
-	cm.yesVote = newInputVoteOptions(common, "Yes")
-	cm.yesVote.background = common.theme.Color.Success2
-	cm.noVote = newInputVoteOptions(common, "No")
+	cm.yesVote = newInputVoteOptions(cm.Load, "Yes")
+	cm.yesVote.background = l.Theme.Color.Success2
+	cm.noVote = newInputVoteOptions(cm.Load, "No")
 	return cm
 }
 
 func (cm *voteModal) ModalID() string {
-	return cm.randomID
+	return ModalInputVote
 }
 
 func (cm *voteModal) OnResume() {
@@ -91,18 +90,17 @@ func (cm *voteModal) OnDismiss() {
 }
 
 func (cm *voteModal) Show() {
-	cm.showModal(cm)
+	cm.ShowModal(cm)
 }
 
 func (cm *voteModal) Dismiss() {
-	cm.dismissModal(cm)
+	cm.DismissModal(cm)
 }
 
 func (i *inputVoteOptionsWidgets) handleVoteCountButtons() {
 	if i.increment.Button.Clicked() {
 		value, err := strconv.Atoi(i.input.Editor.Text())
 		if err != nil {
-			log.Error(err)
 			return
 		}
 		value++
@@ -112,7 +110,6 @@ func (i *inputVoteOptionsWidgets) handleVoteCountButtons() {
 	if i.decrement.Button.Clicked() {
 		value, err := strconv.Atoi(i.input.Editor.Text())
 		if err != nil {
-			log.Error(err)
 			return
 		}
 		value--
@@ -139,12 +136,12 @@ func (cm *voteModal) Handle() {
 func (cm *voteModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
-			t := cm.theme.H6("Vote")
+			t := cm.Theme.H6("Vote")
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {
-			return cm.theme.Label(values.TextSize16, "You have 5 votes").Layout(gtx)
+			return cm.Theme.Label(values.TextSize16, "You have 5 votes").Layout(gtx)
 		},
 
 		func(gtx C) D {
@@ -171,8 +168,8 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 
-						cm.btnNegative.Background = cm.theme.Color.Surface
-						cm.btnNegative.Color = cm.theme.Color.Primary
+						cm.btnNegative.Background = cm.Theme.Color.Surface
+						cm.btnNegative.Color = cm.Theme.Color.Primary
 						return cm.btnNegative.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -187,7 +184,7 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 }
 
 func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidgets) D {
-	wrap := cm.theme.Card()
+	wrap := cm.Theme.Card()
 	wrap.Color = wdg.background
 	return wrap.Layout(gtx, func(gtx C) D {
 		inset := layout.Inset{
@@ -201,13 +198,13 @@ func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 				layout.Flexed(.4, func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							icon := cm.icons.imageBrightness1
-							icon.Color = cm.theme.Color.Success
+							icon := cm.Icons.ImageBrightness1
+							icon.Color = cm.Theme.Color.Success
 							return icon.Layout(gtx, values.MarginPadding8)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-								label := cm.theme.Body2(wdg.label)
+								label := cm.Theme.Body2(wdg.label)
 								return label.Layout(gtx)
 							})
 						}),
@@ -215,14 +212,14 @@ func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 				}),
 				layout.Flexed(.6, func(gtx C) D {
 					border := widget.Border{
-						Color:        cm.theme.Color.Gray1,
+						Color:        cm.Theme.Color.Gray1,
 						CornerRadius: values.MarginPadding8,
 						Width:        values.MarginPadding2,
 					}
 
 					return border.Layout(gtx, func(gtx C) D {
-						card := cm.theme.Card()
-						card.Color = cm.theme.Color.Surface
+						card := cm.Theme.Card()
+						card.Color = cm.Theme.Color.Surface
 						return card.Layout(gtx, func(gtx C) D {
 							var height int
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -244,8 +241,8 @@ func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 									return dims
 								}),
 								layout.Flexed(0.02, func(gtx C) D {
-									line := cm.theme.Line(height, gtx.Px(values.MarginPadding2))
-									line.Color = cm.theme.Color.Gray1
+									line := cm.Theme.Line(height, gtx.Px(values.MarginPadding2))
+									line.Color = cm.Theme.Color.Gray1
 									return line.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
