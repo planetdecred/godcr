@@ -24,26 +24,49 @@ type Toast struct {
 	timer   *time.Timer
 }
 
+type delay int32
+
+const (
+	Short delay = iota
+	Long
+)
+
 func NewToast(th *decredmaterial.Theme) *Toast {
 	return &Toast{
 		theme: th,
 	}
 }
 
-func (t *Toast) Notify(message string, success bool) {
+func getDurationFromDelay(d delay) time.Duration {
+	switch d {
+	case Short:
+		return 2 * time.Second
+	case Long:
+		return 5 * time.Second
+	default:
+		return 2 * time.Second
+	}
+}
+
+func (t *Toast) Notify(message string, success bool, d ...delay) {
+	var notificationDelay delay
+	if len(d) > 0 {
+		notificationDelay = d[0]
+	}
+
 	t.Lock()
 	t.message = message
 	t.success = success
-	t.timer = time.NewTimer(time.Second * 3)
+	t.timer = time.NewTimer(getDurationFromDelay(notificationDelay))
 	t.Unlock()
 }
 
 func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
+	t.handleToastDisplay(gtx)
 	if t.timer == nil {
 		return layout.Dimensions{}
 	}
 
-	t.handleToastDisplay(gtx)
 	color := t.theme.Color.Success
 	if !t.success {
 		color = t.theme.Color.Danger
@@ -68,6 +91,10 @@ func (t *Toast) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (t *Toast) handleToastDisplay(gtx layout.Context) {
+	if t.timer == nil {
+		return
+	}
+
 	select {
 	case <-t.timer.C:
 		t.timer = nil

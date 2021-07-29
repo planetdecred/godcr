@@ -19,22 +19,24 @@ type SystemNotification struct {
 	message  string
 }
 
-func NewSystemNotification() *SystemNotification {
+func NewSystemNotification() (*SystemNotification, error) {
 	absolutePath, err := getAbsolutePath()
 	if err != nil {
-		log.Error(err.Error())
+		return nil, err
 	}
 
 	return &SystemNotification{
 		iconPath: filepath.Join(absolutePath, icon),
-	}
+	}, nil
 }
 
-func (s *SystemNotification) Notify(message string) {
+func (s *SystemNotification) Notify(message string) error {
 	err := beeep.Notify(title, message, s.iconPath)
 	if err != nil {
-		log.Info("could not initiate desktop notification, reason:", err.Error())
+		return err
 	}
+
+	return nil
 }
 
 func getAbsolutePath() (string, error) {
