@@ -37,7 +37,6 @@ var _ = BeforeSuite(func() {
 	var err error
 	wal, err = NewWallet(getTestDir(), testnet, make(chan Response), 2)
 	Expect(err).To(BeNil())
-	wal.LoadWallets()
 	resp := <-wal.Send
 	Expect(resp.Resp).To(BeAssignableToTypeOf(LoadedWallets{}))
 	tempChan := make(chan error)

@@ -103,6 +103,9 @@ func (pg *proposalDetails) Handle() {
 		components.GoToURL("https://proposals.decred.org/record/" + pg.proposal.Token)
 	}
 }
+func (pg *proposalDetails) OnClose() {}
+
+// - Layout
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 	proposal := pg.proposal
@@ -443,5 +446,3 @@ func (pg *proposalDetails) Layout(gtx C) D {
 	}
 	return components.UniformPadding(gtx, body)
 }
-
-func (pg *proposalDetails) OnClose() {}
