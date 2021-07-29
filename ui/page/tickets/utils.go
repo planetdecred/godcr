@@ -258,20 +258,6 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
 										})
 										return layoutTimer
-										// =======
-										//return wTimeLabel.Layout(gtx, func(gtx C) D {
-										//
-										//	hours := totalTime / 60
-										//	minute := totalTime % 60
-										//	return layout.Inset{
-										//		Top:    values.MarginPadding4,
-										//		Bottom: values.MarginPadding4,
-										//		Right:  values.MarginPadding4,
-										//		Left:   values.MarginPadding4,
-										//	}.Layout(gtx, func(gtx C) D {
-
-										//})
-										// >>>>>>> Ticket page design details
 									})
 								})
 							})
@@ -355,18 +341,14 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 									}),
 									layout.Rigid(func(gtx C) D {
 										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
-										// <<<<<<< HEAD
 										txt.Color = l.Theme.Color.Gray
+										txt.TextSize = unit.Sp(14)
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.walletNameTooltip, func(gtx C) D {
 											return walletNameDateTimeTooltip(gtx, l, "Wallet name",
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout))
 										})
 										return txtLayout
-										// =======
-										// 										txt.TextSize = unit.Sp(14)
-										// 										return txt.Layout(gtx)
-										// >>>>>>> Ticket page design details
 									}),
 								)
 							}),
@@ -403,8 +385,12 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
-											// <<<<<<< HEAD
-											txt.Text = t.DaysBehind
+											timeBehind, unit := getTimeBehind(t.DateTime)
+											if timeBehind == 0 && unit == "h" {
+												return layout.Dimensions{}
+											}
+
+											txt.Text = fmt.Sprintf("%d%s", timeBehind, unit)
 											txtLayout := txt.Layout(gtx)
 											ticketCardTooltip(gtx, txtLayout, tooltip.daysBehindTooltip, func(gtx C) D {
 												setText(t.Info.Status)
@@ -412,15 +398,6 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.DaysBehind).Layout))
 											})
 											return txtLayout
-											// =======
-											// 											timeBehind, unit := getTimeBehind(t.DateTime)
-											// 											if timeBehind == 0 && unit == "h" {
-											// 												return layout.Dimensions{}
-											// 											}
-
-											// 											txt.Text = fmt.Sprintf("%d%s", timeBehind, unit)
-											// 											return txt.Layout(gtx)
-											// >>>>>>> Ticket page design details
 										}),
 									)
 								})

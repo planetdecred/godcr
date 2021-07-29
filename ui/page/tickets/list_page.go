@@ -346,6 +346,7 @@ func (pg *ListPage) Handle() {
 		newestFirst := pg.filterSorter == 0
 		for _, wal := range pg.wallets {
 			tickets := (*pg.tickets).Confirmed[wal.ID]
+
 			sort.SliceStable(tickets, func(i, j int) bool {
 				backTime := time.Unix(tickets[j].Info.Ticket.Timestamp, 0)
 				frontTime := time.Unix(tickets[i].Info.Ticket.Timestamp, 0)
