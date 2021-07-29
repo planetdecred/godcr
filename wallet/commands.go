@@ -679,10 +679,6 @@ func (wal *Wallet) GetAllProposals() {
 	}()
 }
 
-func (wal *Wallet) FetchProposalDescription(token string) (string, error) {
-	return wal.multi.Politeia.FetchProposalDescription(dcrlibwallet.PoliteiaMainnetHost, token)
-}
-
 func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
 	return wal.multi.UnlockWallet(walletID, passphrase)
 }
@@ -739,10 +735,6 @@ func (wal *Wallet) RescanBlocks(walletID int) error {
 // CancelSync cancels the SPV sync
 func (wal *Wallet) CancelSync() {
 	go wal.multi.CancelSync()
-}
-
-func (wal *Wallet) SyncProposals() {
-	go wal.multi.Politeia.Sync(dcrlibwallet.PoliteiaMainnetHost)
 }
 
 func (wal *Wallet) IsSyncingProposals() bool {

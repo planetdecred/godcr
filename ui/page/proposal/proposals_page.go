@@ -155,7 +155,7 @@ func (pg *Page) Handle() {
 
 	for pg.syncButton.Clicked() {
 		pg.isSyncing = true
-		go pg.multiWallet.Politeia.Sync(dcrlibwallet.PoliteiaMainnetHost)
+		go pg.multiWallet.Politeia.Sync()
 	}
 
 	if pg.showSyncedCompleted {
