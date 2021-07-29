@@ -42,6 +42,7 @@ type proposalDetails struct {
 	successIcon        *widget.Icon
 	vote               decredmaterial.Button
 	backButton         decredmaterial.IconButton
+	viewInPoliteiaBtn  *widget.Clickable
 }
 
 func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *proposalDetails {
@@ -59,8 +60,10 @@ func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *propo
 		rejectedIcon:       l.Icons.NavigationCancel,
 		successIcon:        l.Icons.ActionCheckCircle,
 		timerIcon:          l.Icons.TimerIcon,
+		viewInPoliteiaBtn:  new(widget.Clickable),
 	}
 
+	pg.redirectIcon.Scale = 1
 	pg.downloadIcon.Scale = 1
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
@@ -94,6 +97,10 @@ func (pg *proposalDetails) Handle() {
 
 	if pg.vote.Button.Clicked() {
 		newVoteModal(pg.Load).Show()
+	}
+
+	for pg.viewInPoliteiaBtn.Clicked() {
+		components.GoToURL("https://proposals.decred.org/record/" + pg.proposal.Token)
 	}
 }
 
@@ -333,6 +340,8 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 		w = append(w, loading)
 	}
 
+	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
+
 	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
@@ -348,20 +357,21 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12})),
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						txt := pg.Theme.Body1(text)
-						txt.Color = pg.Theme.Color.DeepBlue
-						return txt.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return decredmaterial.Clickable(gtx, btn, func(gtx C) D {
+				return decredmaterial.Clickable(gtx, btn, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := pg.Theme.Body1(text)
+							txt.Color = pg.Theme.Color.DeepBlue
+							return txt.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
 							return layout.Inset{}.Layout(gtx, func(gtx C) D {
 								return layout.E.Layout(gtx, icon.Layout)
 							})
-						})
-					}),
-				)
+						}),
+					)
+				})
 			}),
 		)
 	}
@@ -420,6 +430,8 @@ func (pg *proposalDetails) Layout(gtx C) D {
 					layout.Rigid(pg.layoutDescription),
 				)
 			},
+			ExtraItem: pg.viewInPoliteiaBtn,
+			ExtraText: "View on Politeia",
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					pg.redirectIcon.Scale = 1
