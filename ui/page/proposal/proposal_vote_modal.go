@@ -97,6 +97,15 @@ func (cm *voteModal) Dismiss() {
 	cm.DismissModal(cm)
 }
 
+func (cm *voteModal) Handle() {
+	if cm.btnNegative.Button.Clicked() {
+		cm.Dismiss()
+	}
+
+	cm.yesVote.handleVoteCountButtons()
+	cm.noVote.handleVoteCountButtons()
+}
+
 func (i *inputVoteOptionsWidgets) handleVoteCountButtons() {
 	if i.increment.Button.Clicked() {
 		value, err := strconv.Atoi(i.input.Editor.Text())
@@ -124,14 +133,7 @@ func (i *inputVoteOptionsWidgets) handleVoteCountButtons() {
 	}
 }
 
-func (cm *voteModal) Handle() {
-	if cm.btnNegative.Button.Clicked() {
-		cm.Dismiss()
-	}
-
-	cm.yesVote.handleVoteCountButtons()
-	cm.noVote.handleVoteCountButtons()
-}
+// - Layout
 
 func (cm *voteModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{

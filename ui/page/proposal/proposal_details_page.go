@@ -120,13 +120,8 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 }
 
 func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {
-	proposal := pg.proposal
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	txt := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%d eligible tickets", proposal.EligibleTickets))
-	return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(pg.vote.Layout),
-		layout.Rigid(txt.Layout),
-	)
+	return pg.vote.Layout(gtx)
 }
 
 func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
