@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -28,19 +29,18 @@ type voteModal struct {
 	voteDetails    *dcrlibwallet.ProposalVoteDetails
 	voteDetailsErr error
 
-	proposal dcrlibwallet.Proposal
+	proposal *dcrlibwallet.Proposal
 	isVoting bool
 
 	walletSelector *WalletSelector
 	materialLoader material.LoaderStyle
-	callback       func(password string, m *voteModal) bool // return true to dismiss dialog
 	yesVote        *inputVoteOptionsWidgets
 	noVote         *inputVoteOptionsWidgets
 	voteBtn        decredmaterial.Button
 	cancelBtn      decredmaterial.Button
 }
 
-func newVoteModal(l *load.Load, proposal dcrlibwallet.Proposal) *voteModal {
+func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 	vm := &voteModal{
 		Load:           l,
 		modal:          *l.Theme.ModalFloatTitle(),
@@ -170,6 +170,28 @@ func (vm *voteModal) sendVotes() {
 
 	addVotes(dcrlibwallet.VoteBitYes, vm.yesVote.voteCount())
 	addVotes(dcrlibwallet.VoteBitNo, vm.noVote.voteCount())
+
+	modal.NewPasswordModal(vm.Load).
+		Title("Confirm to vote").
+		NegativeButton("Cancel", func() {
+			vm.isVoting = false
+		}).
+		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+			go func() {
+				err := vm.WL.MultiWallet.Politeia.CastVotes(vm.walletSelector.selectedWallet.ID, votes, vm.proposal.Token, password)
+				if err != nil {
+					pm.SetError(err.Error())
+					pm.SetLoading(false)
+					return
+				}
+				pm.Dismiss()
+				vm.CreateToast("Vote sent successfully, refreshing proposals!", true)
+				go vm.WL.MultiWallet.Politeia.Sync()
+				vm.Dismiss()
+			}()
+
+			return false
+		}).Show()
 }
 
 func (vm *voteModal) Handle() {

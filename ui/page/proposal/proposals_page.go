@@ -171,7 +171,7 @@ func (pg *ProposalsPage) Handle() {
 		pg.proposalMu.Unlock()
 
 		pg.SetReturnPage(ProposalsPageID)
-		pg.ChangeFragment(newProposalDetailsPage(pg.Load, selectedProposal), PageProposalDetails)
+		pg.ChangeFragment(newProposalDetailsPage(pg.Load, &selectedProposal), PageProposalDetails)
 	}
 
 	for pg.syncButton.Clicked() {

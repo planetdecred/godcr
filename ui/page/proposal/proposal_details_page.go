@@ -1,6 +1,7 @@
 package proposal
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageProposalDetails = "proposal_details"
@@ -28,9 +30,11 @@ type proposalItemWidgets struct {
 
 type proposalDetails struct {
 	*load.Load
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	loadingDescription bool
-	proposal           dcrlibwallet.Proposal
+	proposal           *dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
@@ -45,7 +49,7 @@ type proposalDetails struct {
 	viewInPoliteiaBtn  *widget.Clickable
 }
 
-func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *proposalDetails {
+func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *proposalDetails {
 	pg := &proposalDetails{
 		Load: l,
 
@@ -62,6 +66,8 @@ func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *propo
 		timerIcon:          l.Icons.TimerIcon,
 		viewInPoliteiaBtn:  new(widget.Clickable),
 	}
+
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.redirectIcon.Scale = 1
 	pg.downloadIcon.Scale = 1
@@ -83,7 +89,7 @@ func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *propo
 }
 
 func (pg *proposalDetails) OnResume() {
-
+	pg.listenForSyncNotifications()
 }
 
 func (pg *proposalDetails) Handle() {
@@ -103,7 +109,36 @@ func (pg *proposalDetails) Handle() {
 		components.GoToURL("https://proposals.decred.org/record/" + pg.proposal.Token)
 	}
 }
-func (pg *proposalDetails) OnClose() {}
+
+func (pg *proposalDetails) listenForSyncNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			default:
+				if components.ContextDone(pg.ctx) {
+					return
+				}
+			}
+
+			switch n := notification.(type) {
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
+					if err == nil {
+						pg.proposal = proposal
+						pg.RefreshWindow()
+					}
+				}
+			}
+		}
+	}()
+}
+func (pg *proposalDetails) OnClose() {
+	pg.ctxCancel()
+}
 
 // - Layout
 
