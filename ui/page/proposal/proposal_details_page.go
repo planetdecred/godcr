@@ -67,8 +67,6 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		viewInPoliteiaBtn:  new(widget.Clickable),
 	}
 
-	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-
 	pg.redirectIcon.Scale = 1
 	pg.downloadIcon.Scale = 1
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -89,6 +87,7 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 }
 
 func (pg *proposalDetails) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 }
 

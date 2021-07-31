@@ -1,6 +1,7 @@
 package page
 
 import (
+	"context"
 	"time"
 
 	"gioui.org/layout"
@@ -24,9 +25,10 @@ type transactionWdg struct {
 
 type TransactionsPage struct {
 	*load.Load
-	pageClosing chan bool
-	container   layout.Flex
-	separator   decredmaterial.Line
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+	container layout.Flex
+	separator decredmaterial.Line
 
 	orderDropDown   *decredmaterial.DropDown
 	txTypeDropDown  *decredmaterial.DropDown
@@ -40,7 +42,6 @@ type TransactionsPage struct {
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
 		Load:            l,
-		pageClosing:     make(chan bool, 1),
 		container:       layout.Flex{Axis: layout.Vertical},
 		separator:       l.Theme.Separator(),
 		transactionList: l.Theme.NewClickableList(layout.Vertical),
@@ -69,6 +70,8 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 }
 
 func (pg *TransactionsPage) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
 	pg.wallets = pg.WL.SortedWalletList()
 	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.listenForTxNotifications()
@@ -188,8 +191,10 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 
 			select {
 			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.pageClosing:
-				return
+			default:
+				if components.ContextDone(pg.ctx) {
+					return
+				}
 			}
 
 			switch n := notification.(type) {
@@ -205,7 +210,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 }
 
 func (pg *TransactionsPage) OnClose() {
-	pg.pageClosing <- true
+	pg.ctxCancel()
 }
 
 func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {

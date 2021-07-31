@@ -1,6 +1,7 @@
 package proposal
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -43,8 +44,9 @@ type proposalItem struct {
 type ProposalsPage struct {
 	*load.Load
 
-	pageClosing chan bool
-	proposalMu  sync.Mutex
+	ctx        context.Context // page context
+	ctxCancel  context.CancelFunc
+	proposalMu sync.Mutex
 
 	multiWallet *dcrlibwallet.MultiWallet
 
@@ -85,7 +87,6 @@ var (
 func NewProposalsPage(l *load.Load) *ProposalsPage {
 	pg := &ProposalsPage{
 		Load:                  l,
-		pageClosing:           make(chan bool, 1),
 		multiWallet:           l.WL.MultiWallet,
 		selectedCategoryIndex: -1,
 	}
@@ -96,6 +97,8 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 }
 
 func (pg *ProposalsPage) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
 	pg.listenForSyncNotifications()
 
 	pg.proposalMu.Lock()
@@ -193,8 +196,10 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 
 			select {
 			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.pageClosing:
-				return
+			default:
+				if components.ContextDone(pg.ctx) {
+					return
+				}
 			}
 
 			switch n := notification.(type) {
@@ -217,7 +222,7 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 }
 
 func (pg *ProposalsPage) OnClose() {
-	pg.pageClosing <- true
+	pg.ctxCancel()
 }
 
 // - Layout
