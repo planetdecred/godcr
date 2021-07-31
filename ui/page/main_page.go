@@ -494,7 +494,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 				return decredmaterial.Clickable(gtx, mp.DrawerNavItems[i].Clickable, func(gtx C) D {
 					card := mp.Theme.Card()
 					card.Color = background
-					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+					card.Radius = decredmaterial.Radius(0)
 					return card.Layout(gtx, func(gtx C) D {
 						return components.Container{
 							Padding: layout.Inset{

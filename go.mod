@@ -29,5 +29,5 @@ require (
 
 replace (
 	github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
-	github.com/planetdecred/dcrlibwallet => github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210729060828-32b568e1c982
+	github.com/planetdecred/dcrlibwallet => github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210731113438-7fe19588412e
 )

@@ -103,7 +103,7 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	}
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
-	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{NE: 5, NW: 5, SE: 5, SW: 5}
+	pg.optionsMenuCard.Radius = decredmaterial.Radius(8)
 
 	pg.restoreWalletBtn = l.Theme.Button(new(widget.Clickable), "Restore")
 
@@ -223,7 +223,7 @@ func (pg *CreateRestore) restore(gtx layout.Context) layout.Dimensions {
 
 func (pg *CreateRestore) restoreButtonSection(gtx layout.Context) layout.Dimensions {
 	card := pg.Theme.Card()
-	card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+	card.Radius = decredmaterial.Radius(0)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {

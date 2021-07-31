@@ -107,7 +107,7 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	}
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
-	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{NE: 5, NW: 5, SE: 5, SW: 5}
+	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
 
 	pg.walletIcon = pg.Icons.WalletIcon
 	pg.walletIcon.Scale = 1
@@ -473,7 +473,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								pg.card.Color = pg.Theme.Color.Danger
-								pg.card.Radius = decredmaterial.CornerRadius{SW: 10, SE: 10}
+								pg.card.Radius = decredmaterial.CornerRadius{BottomLeft: 10, BottomRight: 10}
 								return pg.card.Layout(gtx, func(gtx C) D {
 									return pg.backupSeedNotification(gtx, listItem)
 								})
@@ -500,7 +500,7 @@ func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensio
 	}
 	card := pg.card
 	card.Color = pg.Theme.Color.Surface
-	card.Radius = decredmaterial.CornerRadius{NE: 10, NW: 10, SE: 10, SW: 10}
+	card.Radius = decredmaterial.Radius(10)
 
 	return card.Layout(gtx, func(gtx C) D {
 		m := values.MarginPadding20

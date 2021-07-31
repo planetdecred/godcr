@@ -288,7 +288,7 @@ func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 
 func (pg *Page) balanceSection(gtx layout.Context) layout.Dimensions {
 	c := pg.Theme.Card()
-	c.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+	c.Radius = decredmaterial.Radius(0)
 	return c.Layout(gtx, func(gtx C) D {
 		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,

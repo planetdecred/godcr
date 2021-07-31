@@ -16,10 +16,19 @@ type Card struct {
 }
 
 type CornerRadius struct {
-	NE float32
-	NW float32
-	SE float32
-	SW float32
+	TopLeft     float32
+	TopRight    float32
+	BottomRight float32
+	BottomLeft  float32
+}
+
+func Radius(radius float32) CornerRadius {
+	return CornerRadius{
+		TopLeft:     radius,
+		TopRight:    radius,
+		BottomRight: radius,
+		BottomLeft:  radius,
+	}
 }
 
 const (
@@ -28,13 +37,8 @@ const (
 
 func (t *Theme) Card() Card {
 	return Card{
-		Color: t.Color.Surface,
-		Radius: CornerRadius{
-			NE: defaultRadius,
-			SE: defaultRadius,
-			NW: defaultRadius,
-			SW: defaultRadius,
-		},
+		Color:  t.Color.Surface,
+		Radius: Radius(defaultRadius),
 	}
 }
 
@@ -44,10 +48,10 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 			return c.Inset.Layout(gtx, func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
-						tr := float32(gtx.Px(unit.Dp(c.Radius.NE)))
-						tl := float32(gtx.Px(unit.Dp(c.Radius.NW)))
-						br := float32(gtx.Px(unit.Dp(c.Radius.SE)))
-						bl := float32(gtx.Px(unit.Dp(c.Radius.SW)))
+						tr := float32(gtx.Px(unit.Dp(c.Radius.TopRight)))
+						tl := float32(gtx.Px(unit.Dp(c.Radius.TopLeft)))
+						br := float32(gtx.Px(unit.Dp(c.Radius.BottomRight)))
+						bl := float32(gtx.Px(unit.Dp(c.Radius.BottomLeft)))
 						clip.RRect{
 							Rect: f32.Rectangle{Max: f32.Point{
 								X: float32(gtx.Constraints.Min.X),

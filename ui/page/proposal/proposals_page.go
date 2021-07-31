@@ -239,7 +239,7 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.updatedLabel = pg.Theme.Body2("Updated")
 	pg.updatedLabel.Color = pg.Theme.Color.Success
 
-	radius := decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+	radius := decredmaterial.Radius(0)
 	pg.tabCard = pg.Theme.Card()
 	pg.tabCard.Radius = radius
 
@@ -388,8 +388,7 @@ func (pg *ProposalsPage) layoutTabs(gtx C) D {
 										return layout.Inset{Left: values.MarginPadding4, Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 											c := pg.Theme.Card()
 											c.Color = pg.Theme.Color.LightGray
-											r := float32(8.5)
-											c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
+											c.Radius = decredmaterial.Radius(8.5)
 											lbl := pg.Theme.Body2(strconv.Itoa(pg.proposalCount[i]))
 											lbl.Color = pg.Theme.Color.Gray
 											if selectedCategory == i {

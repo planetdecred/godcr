@@ -289,7 +289,7 @@ func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			card.Radius = decredmaterial.CornerRadius{NE: 8, NW: 0, SE: 0, SW: 8}
+			card.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 0, BottomLeft: 8}
 			return card.Layout(gtx, func(gtx C) D {
 				return layout.Inset{
 					Top:    values.MarginPadding30,
@@ -315,7 +315,7 @@ func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 			return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
 		}),
 		layout.Rigid(func(gtx C) D {
-			card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 8, SE: 8, SW: 0}
+			card.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 8, BottomLeft: 0}
 			return card.Layout(gtx, pg.copy.Layout)
 		}),
 	)

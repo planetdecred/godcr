@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sort"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -40,6 +41,60 @@ func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 	})
 
 	return wallets
+}
+
+func (wl *WalletLoad) TotalWalletsBalance() (dcrutil.Amount, error) {
+	totalBalance := int64(0)
+	for _, wallet := range wl.MultiWallet.AllWallets() {
+		accountsResult, err := wallet.GetAccountsRaw()
+		if err != nil {
+			return -1, err
+		}
+
+		for _, account := range accountsResult.Acc {
+			totalBalance += account.TotalBalance
+		}
+	}
+
+	return dcrutil.Amount(totalBalance), nil
+}
+
+func (wl *WalletLoad) TotalWalletBalance(walletID int) (dcrutil.Amount, error) {
+	totalBalance := int64(0)
+	wallet := wl.MultiWallet.WalletWithID(walletID)
+	if wallet == nil {
+		return -1, errors.New(dcrlibwallet.ErrNotExist)
+	}
+
+	accountsResult, err := wallet.GetAccountsRaw()
+	if err != nil {
+		return -1, err
+	}
+
+	for _, account := range accountsResult.Acc {
+		totalBalance += account.TotalBalance
+	}
+
+	return dcrutil.Amount(totalBalance), nil
+}
+
+func (wl *WalletLoad) SpendableWalletBalance(walletID int) (dcrutil.Amount, error) {
+	spendableBal := int64(0)
+	wallet := wl.MultiWallet.WalletWithID(walletID)
+	if wallet == nil {
+		return -1, errors.New(dcrlibwallet.ErrNotExist)
+	}
+
+	accountsResult, err := wallet.GetAccountsRaw()
+	if err != nil {
+		return -1, err
+	}
+
+	for _, account := range accountsResult.Acc {
+		spendableBal += account.Balance.Spendable
+	}
+
+	return dcrutil.Amount(spendableBal), nil
 }
 
 func (wl *WalletLoad) HDPrefix() string {

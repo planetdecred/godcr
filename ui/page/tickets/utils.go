@@ -152,7 +152,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				wrap := l.Theme.Card()
-				wrap.Radius = decredmaterial.CornerRadius{NE: 8, NW: 8, SE: 0, SW: 0}
+				wrap.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 8, BottomRight: 0, BottomLeft: 0}
 				wrap.Color = st.background
 				return wrap.Layout(gtx, func(gtx C) D {
 					return layout.Stack{Alignment: layout.S}.Layout(gtx,
@@ -160,7 +160,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 						layout.Expanded(func(gtx C) D {
 							return layout.NE.Layout(gtx, func(gtx C) D {
 								wTimeLabel := l.Theme.Card()
-								wTimeLabel.Radius = decredmaterial.CornerRadius{NE: 0, NW: 8, SE: 0, SW: 8}
+								wTimeLabel.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 0, BottomLeft: 8}
 								return wTimeLabel.Layout(gtx, func(gtx C) D {
 									return layout.Inset{
 										Top:    values.MarginPadding4,
@@ -203,7 +203,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 			}),
 			layout.Rigid(func(gtx C) D {
 				wrap := l.Theme.Card()
-				wrap.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 8, SW: 8}
+				wrap.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 0, BottomRight: 8, BottomLeft: 8}
 				return wrap.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X, gtx.Constraints.Max.X = itemWidth, itemWidth
 					return layout.Inset{

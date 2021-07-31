@@ -96,7 +96,7 @@ func (pg *proposalDetails) Handle() {
 	}
 
 	if pg.vote.Button.Clicked() {
-		newVoteModal(pg.Load).Show()
+		newVoteModal(pg.Load, pg.proposal).Show()
 	}
 
 	for pg.viewInPoliteiaBtn.Clicked() {
@@ -136,9 +136,7 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 				if proposal.VoteStatus == val || proposal.VoteStatus < val {
 					c := pg.Theme.Card()
 					c.Color = pg.Theme.Color.Primary
-
-					r := float32(9.5)
-					c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
+					c.Radius = decredmaterial.Radius(9.5)
 					lbl := pg.Theme.Body1(fmt.Sprint(val))
 					lbl.Color = pg.Theme.Color.Surface
 					if proposal.VoteStatus < val {
