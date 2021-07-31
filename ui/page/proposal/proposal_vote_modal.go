@@ -283,6 +283,15 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 			)
 		},
 		func(gtx C) D {
+			if voteDetails != nil && cm.yesVote.voteCount()+cm.noVote.voteCount() > len(voteDetails.EligibleTickets) {
+				label := cm.Theme.Label(values.TextSize14, "You don’t have enough votes")
+				label.Color = cm.Theme.Color.Danger
+				return label.Layout(gtx)
+			}
+
+			return D{}
+		},
+		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
