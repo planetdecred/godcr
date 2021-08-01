@@ -57,7 +57,7 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 								X: float32(gtx.Constraints.Min.X),
 								Y: float32(gtx.Constraints.Min.Y),
 							}},
-							NE: tl, NW: tr, SE: br, SW: bl,
+							NW: tl, NE: tr, SE: br, SW: bl,
 						}.Add(gtx.Ops)
 						return fill(gtx, c.Color)
 					}),

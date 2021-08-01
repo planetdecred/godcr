@@ -237,14 +237,6 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {
-			if voteDetails == nil {
-				return D{}
-			}
-
-			text := fmt.Sprintf("You have %d votes", len(voteDetails.EligibleTickets))
-			return cm.Theme.Label(values.TextSize16, text).Layout(gtx)
-		},
-		func(gtx C) D {
 			return cm.walletSelector.Layout(gtx)
 		},
 		func(gtx C) D {
@@ -266,12 +258,105 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						// Top: values.MarginPadding16,
-					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return cm.inputOptions(gtx, cm.yesVote)
-					})
+					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtc C) D {
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								if voteDetails.YesVotes == 0 {
+									return layout.Dimensions{}
+								}
 
+								wrap := cm.Theme.Card()
+								wrap.Color = cm.Theme.Color.Green50
+								wrap.Radius = decredmaterial.Radius(8)
+								if voteDetails.NoVotes > 0 {
+									wrap.Radius.TopRight = 0
+									wrap.Radius.BottomRight = 0
+								}
+								return wrap.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+									inset := layout.Inset{
+										Left:   values.MarginPadding12,
+										Top:    values.MarginPadding8,
+										Right:  values.MarginPadding12,
+										Bottom: values.MarginPadding8,
+									}
+									return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												card := cm.Theme.Card()
+												card.Color = cm.Theme.Color.Green500
+												card.Radius = decredmaterial.Radius(4)
+												return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+													gtx.Constraints.Min.X += gtx.Px(values.MarginPadding8)
+													gtx.Constraints.Min.Y += gtx.Px(values.MarginPadding8)
+													return layout.Dimensions{Size: gtx.Constraints.Min}
+												})
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+													label := cm.Theme.Body2(fmt.Sprintf("Yes: %d", voteDetails.YesVotes))
+													label.Color = cm.Theme.Color.DeepBlue
+													return label.Layout(gtx)
+												})
+											}),
+										)
+									})
+								})
+							}),
+							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+								if voteDetails.NoVotes == 0 {
+									return layout.Dimensions{}
+								}
+
+								wrap := cm.Theme.Card()
+								wrap.Color = cm.Theme.Color.Orange2
+								wrap.Radius = decredmaterial.Radius(8)
+								if voteDetails.YesVotes > 0 {
+									wrap.Radius.TopLeft = 0
+									wrap.Radius.BottomLeft = 0
+								}
+								return wrap.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+									inset := layout.Inset{
+										Left:   values.MarginPadding12,
+										Top:    values.MarginPadding8,
+										Right:  values.MarginPadding12,
+										Bottom: values.MarginPadding8,
+									}
+									return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												card := cm.Theme.Card()
+												card.Color = cm.Theme.Color.Danger
+												card.Radius = decredmaterial.Radius(4)
+												return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+													gtx.Constraints.Min.X += gtx.Px(values.MarginPadding8)
+													gtx.Constraints.Min.Y += gtx.Px(values.MarginPadding8)
+													return layout.Dimensions{Size: gtx.Constraints.Min}
+												})
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+													label := cm.Theme.Body2(fmt.Sprintf("No: %d", voteDetails.NoVotes))
+													label.Color = cm.Theme.Color.DeepBlue
+													return label.Layout(gtx)
+												})
+											}),
+										)
+									})
+								})
+							}),
+						)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					if voteDetails == nil {
+						return D{}
+					}
+
+					text := fmt.Sprintf("You have %d votes", len(voteDetails.EligibleTickets))
+					return cm.Theme.Label(values.TextSize16, text).Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return cm.inputOptions(gtx, cm.yesVote)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
