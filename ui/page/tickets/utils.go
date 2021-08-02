@@ -160,7 +160,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 						layout.Expanded(func(gtx C) D {
 							return layout.NE.Layout(gtx, func(gtx C) D {
 								wTimeLabel := l.Theme.Card()
-								wTimeLabel.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 0, BottomLeft: 8}
+								wTimeLabel.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 0, BottomLeft: 8}
 								return wTimeLabel.Layout(gtx, func(gtx C) D {
 									return layout.Inset{
 										Top:    values.MarginPadding4,

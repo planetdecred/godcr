@@ -290,7 +290,7 @@ func (scm *sendConfirmModal) contentRow(gtx layout.Context, leftValue, rightValu
 					layout.Rigid(func(gtx C) D {
 						if walletName != "" {
 							card := scm.Theme.Card()
-							card.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 0, BottomRight: 0, BottomLeft: 0}
+							card.Radius = decredmaterial.Radius(0)
 							card.Color = scm.Theme.Color.LightGray
 							inset := layout.Inset{
 								Left: values.MarginPadding5,

@@ -348,7 +348,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							card := mp.Theme.Card()
-							card.Radius = decredmaterial.CornerRadius{}
+							card.Radius = decredmaterial.Radius(0)
 							return card.Layout(gtx, mp.LayoutNavDrawer)
 						}),
 						layout.Rigid(mp.Pages[mp.Current].Layout),
@@ -374,7 +374,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 	card := mp.Theme.Card()
-	card.Radius = decredmaterial.CornerRadius{}
+	card.Radius = decredmaterial.Radius(0)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
