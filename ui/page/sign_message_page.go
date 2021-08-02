@@ -20,7 +20,6 @@ const SignMessagePageID = "SignMessage"
 
 type SignMessagePage struct {
 	*load.Load
-	theme     *decredmaterial.Theme
 	container layout.List
 	wallet    *dcrlibwallet.Wallet
 
@@ -42,9 +41,11 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	messageEditor := l.Theme.Editor(new(widget.Editor), "Message")
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
 	clearButton := l.Theme.Button(new(widget.Clickable), "Clear all")
-	clearButton.Background = color.NRGBA{}
+	signButton := l.Theme.Button(new(widget.Clickable), "Sign message")
+	clearButton.Background, signButton.Background = color.NRGBA{}, l.Theme.Color.Hint
 	clearButton.Color = l.Theme.Color.Gray
-	clearButton.Font.Weight = text.Bold
+	clearButton.Font.Weight, signButton.Font.Weight = text.Bold, text.Bold
+
 	errorLabel := l.Theme.Caption("")
 	errorLabel.Color = l.Theme.Color.Danger
 	copyIcon := l.Icons.CopyIcon
@@ -61,17 +62,15 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		errorLabel:         errorLabel,
 		addressEditor:      addressEditor,
 		messageEditor:      messageEditor,
-
-		clearButton:   clearButton,
-		signButton:    l.Theme.Button(new(widget.Clickable), "Sign message"),
-		copyButton:    l.Theme.Button(new(widget.Clickable), "Copy"),
-		copySignature: new(widget.Clickable),
-		copyIcon:      copyIcon,
+		clearButton:        clearButton,
+		signButton:         signButton,
+		copyButton:         l.Theme.Button(new(widget.Clickable), "Copy"),
+		copySignature:      new(widget.Clickable),
+		copyIcon:           copyIcon,
 	}
 
 	pg.signedMessageLabel.Color = l.Theme.Color.Gray
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
-	pg.signButton.Font.Weight = text.Bold
 
 	return pg
 }
@@ -164,9 +163,9 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
-						border := widget.Border{Color: pg.theme.Color.LightGray, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
-						wrapper := pg.theme.Card()
-						wrapper.Color = pg.theme.Color.LightGray
+						border := widget.Border{Color: pg.Theme.Color.LightGray, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						wrapper := pg.Theme.Card()
+						wrapper.Color = pg.Theme.Color.LightGray
 						return border.Layout(gtx, func(gtx C) D {
 							return wrapper.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
