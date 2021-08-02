@@ -203,7 +203,7 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 }
 
 func (pg *SignMessagePage) updateColors() {
-	if pg.isSigningMessage || pg.addressEditor.Editor.Text() == "" || pg.messageEditor.Editor.Text() == "" {
+	if pg.isSigningMessage || !pg.validate(false) {
 		pg.signButton.Background = pg.Theme.Color.Hint
 	} else {
 		pg.signButton.Background = pg.Theme.Color.Primary
