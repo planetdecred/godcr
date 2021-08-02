@@ -25,9 +25,9 @@ type WalletSelector struct {
 
 	openSelectorDialog *widget.Clickable
 
-	wallets          []*dcrlibwallet.Wallet
-	selectedWallet   *dcrlibwallet.Wallet
-	totalBalance     string
+	wallets        []*dcrlibwallet.Wallet
+	selectedWallet *dcrlibwallet.Wallet
+	totalBalance   string
 }
 
 func NewWalletSelector(l *load.Load) *WalletSelector {

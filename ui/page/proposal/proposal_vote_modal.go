@@ -102,7 +102,7 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 	return vm
 }
 
-func (cm *voteModal) ModalID() string {
+func (vm *voteModal) ModalID() string {
 	return ModalInputVote
 }
 
@@ -110,16 +110,16 @@ func (vm *voteModal) OnResume() {
 	vm.walletSelector.SelectFirstValidWallet()
 }
 
-func (cm *voteModal) OnDismiss() {
+func (vm *voteModal) OnDismiss() {
 
 }
 
-func (cm *voteModal) Show() {
-	cm.ShowModal(cm)
+func (vm *voteModal) Show() {
+	vm.ShowModal(vm)
 }
 
-func (cm *voteModal) Dismiss() {
-	cm.DismissModal(cm)
+func (vm *voteModal) Dismiss() {
+	vm.DismissModal(vm)
 }
 
 func (vm *voteModal) eligibleVotes() int {
@@ -225,19 +225,19 @@ func (vm *voteModal) Handle() {
 
 // - Layout
 
-func (cm *voteModal) Layout(gtx layout.Context) D {
-	cm.detailsMu.Lock()
-	voteDetails := cm.voteDetails
-	voteDetailsErr := cm.voteDetailsErr
-	cm.detailsMu.Unlock()
+func (vm *voteModal) Layout(gtx layout.Context) D {
+	vm.detailsMu.Lock()
+	voteDetails := vm.voteDetails
+	voteDetailsErr := vm.voteDetailsErr
+	vm.detailsMu.Unlock()
 	w := []layout.Widget{
 		func(gtx C) D {
-			t := cm.Theme.H6("Vote")
+			t := vm.Theme.H6("Vote")
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {
-			return cm.walletSelector.Layout(gtx)
+			return vm.walletSelector.Layout(gtx)
 		},
 		func(gtx C) D {
 			if voteDetails != nil {
@@ -245,11 +245,11 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 			}
 
 			if voteDetailsErr != nil {
-				return cm.Theme.Label(values.TextSize16, voteDetailsErr.Error()).Layout(gtx)
+				return vm.Theme.Label(values.TextSize16, voteDetailsErr.Error()).Layout(gtx)
 			}
 
 			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
-			return cm.materialLoader.Layout(gtx)
+			return vm.materialLoader.Layout(gtx)
 		},
 		func(gtx C) D {
 			if voteDetails == nil {
@@ -265,8 +265,8 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 									return layout.Dimensions{}
 								}
 
-								wrap := cm.Theme.Card()
-								wrap.Color = cm.Theme.Color.Green50
+								wrap := vm.Theme.Card()
+								wrap.Color = vm.Theme.Color.Green50
 								wrap.Radius = decredmaterial.Radius(8)
 								if voteDetails.NoVotes > 0 {
 									wrap.Radius.TopRight = 0
@@ -282,8 +282,8 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 									return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												card := cm.Theme.Card()
-												card.Color = cm.Theme.Color.Green500
+												card := vm.Theme.Card()
+												card.Color = vm.Theme.Color.Green500
 												card.Radius = decredmaterial.Radius(4)
 												return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 													gtx.Constraints.Min.X += gtx.Px(values.MarginPadding8)
@@ -293,8 +293,8 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 											}),
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-													label := cm.Theme.Body2(fmt.Sprintf("Yes: %d", voteDetails.YesVotes))
-													label.Color = cm.Theme.Color.DeepBlue
+													label := vm.Theme.Body2(fmt.Sprintf("Yes: %d", voteDetails.YesVotes))
+													label.Color = vm.Theme.Color.DeepBlue
 													return label.Layout(gtx)
 												})
 											}),
@@ -307,8 +307,8 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 									return layout.Dimensions{}
 								}
 
-								wrap := cm.Theme.Card()
-								wrap.Color = cm.Theme.Color.Orange2
+								wrap := vm.Theme.Card()
+								wrap.Color = vm.Theme.Color.Orange2
 								wrap.Radius = decredmaterial.Radius(8)
 								if voteDetails.YesVotes > 0 {
 									wrap.Radius.TopLeft = 0
@@ -324,8 +324,8 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 									return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												card := cm.Theme.Card()
-												card.Color = cm.Theme.Color.Danger
+												card := vm.Theme.Card()
+												card.Color = vm.Theme.Color.Danger
 												card.Radius = decredmaterial.Radius(4)
 												return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 													gtx.Constraints.Min.X += gtx.Px(values.MarginPadding8)
@@ -335,8 +335,8 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 											}),
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-													label := cm.Theme.Body2(fmt.Sprintf("No: %d", voteDetails.NoVotes))
-													label.Color = cm.Theme.Color.DeepBlue
+													label := vm.Theme.Body2(fmt.Sprintf("No: %d", voteDetails.NoVotes))
+													label.Color = vm.Theme.Color.DeepBlue
 													return label.Layout(gtx)
 												})
 											}),
@@ -353,24 +353,24 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 					}
 
 					text := fmt.Sprintf("You have %d votes", len(voteDetails.EligibleTickets))
-					return cm.Theme.Label(values.TextSize16, text).Layout(gtx)
+					return vm.Theme.Label(values.TextSize16, text).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return cm.inputOptions(gtx, cm.yesVote)
+					return vm.inputOptions(gtx, vm.yesVote)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Top: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
-						return cm.inputOptions(gtx, cm.noVote)
+						return vm.inputOptions(gtx, vm.noVote)
 					})
 				}),
 			)
 		},
 		func(gtx C) D {
-			if voteDetails != nil && cm.yesVote.voteCount()+cm.noVote.voteCount() > len(voteDetails.EligibleTickets) {
-				label := cm.Theme.Label(values.TextSize14, "You don’t have enough votes")
-				label.Color = cm.Theme.Color.Danger
+			if voteDetails != nil && vm.yesVote.voteCount()+vm.noVote.voteCount() > len(voteDetails.EligibleTickets) {
+				label := vm.Theme.Label(values.TextSize14, "You don’t have enough votes")
+				label.Color = vm.Theme.Color.Danger
 				return label.Layout(gtx)
 			}
 
@@ -380,26 +380,26 @@ func (cm *voteModal) Layout(gtx layout.Context) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, cm.cancelBtn.Layout)
+						return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, vm.cancelBtn.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						if cm.isVoting {
-							return cm.materialLoader.Layout(gtx)
+						if vm.isVoting {
+							return vm.materialLoader.Layout(gtx)
 						}
-						return cm.voteBtn.Layout(gtx)
+						return vm.voteBtn.Layout(gtx)
 					}),
 				)
 			})
 		},
 	}
 
-	return cm.modal.Layout(gtx, w, 850)
+	return vm.modal.Layout(gtx, w, 850)
 }
 
-func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidgets) D {
-	wrap := cm.Theme.Card()
-	wrap.Color = cm.Theme.Color.LightGray
-	dotColor := cm.Theme.Color.InactiveGray
+func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidgets) D {
+	wrap := vm.Theme.Card()
+	wrap.Color = vm.Theme.Color.LightGray
+	dotColor := vm.Theme.Color.InactiveGray
 	if wdg.voteCount() > 0 {
 		wrap.Color = wdg.activeBg
 		dotColor = wdg.dotColor
@@ -416,7 +416,7 @@ func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 				layout.Flexed(.4, func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							card := cm.Theme.Card()
+							card := vm.Theme.Card()
 							card.Color = dotColor
 							card.Radius = decredmaterial.Radius(4)
 							return card.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -427,8 +427,8 @@ func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-								label := cm.Theme.Body2(wdg.label)
-								label.Color = cm.Theme.Color.DeepBlue
+								label := vm.Theme.Body2(wdg.label)
+								label.Color = vm.Theme.Color.DeepBlue
 								return label.Layout(gtx)
 							})
 						}),
@@ -436,14 +436,14 @@ func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 				}),
 				layout.Flexed(.6, func(gtx C) D {
 					border := widget.Border{
-						Color:        cm.Theme.Color.Gray1,
+						Color:        vm.Theme.Color.Gray1,
 						CornerRadius: values.MarginPadding8,
 						Width:        values.MarginPadding2,
 					}
 
 					return border.Layout(gtx, func(gtx C) D {
-						card := cm.Theme.Card()
-						card.Color = cm.Theme.Color.Surface
+						card := vm.Theme.Card()
+						card.Color = vm.Theme.Color.Surface
 						return card.Layout(gtx, func(gtx C) D {
 							var height int
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -465,8 +465,8 @@ func (cm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 									return dims
 								}),
 								layout.Flexed(0.02, func(gtx C) D {
-									line := cm.Theme.Line(height, gtx.Px(values.MarginPadding2))
-									line.Color = cm.Theme.Color.Gray1
+									line := vm.Theme.Line(height, gtx.Px(values.MarginPadding2))
+									line.Color = vm.Theme.Color.Gray1
 									return line.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
