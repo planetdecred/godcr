@@ -4,18 +4,27 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/widget"
+	"gioui.org/text"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gomarkdown/markdown/ast"
-	//"github.com/gomarkdown/markdown/parser"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
 type HTMLProvider struct {
-	container *layout.List
+	containers []layout.Widget
+	theme *decredmaterial.Theme
+	stringBuilder strings.Builder
+	styleGroups    []map[string]string
+	links          map[string]*widget.Clickable
+	table *table
+	isList bool
+	prefix string
 }
 
 var (
@@ -26,10 +35,14 @@ const (
 	openStyleTag      = "{@@"
 	halfCloseStyleTag = "@}"
 	closeStyleTag     = "{/@}"
+	linkTag       = "[[link"
+	linkSpacer    = "@@@@"
 )
 
 func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLProvider {
-	htmlProvider := &HTMLProvider{}
+	htmlProvider := &HTMLProvider{
+		theme: theme,
+	}
 
 	converter := md.NewConverter("", true, nil)
 	docStr, err := converter.ConvertString(htmlProvider.prepare(html))
@@ -38,113 +51,361 @@ func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLProvider {
 		return &HTMLProvider{}
 	}
 
-	/**htmlProvider := &HTMLProvider{}
-
-	converter := md.NewConverter("", true, nil)
-
-	docStr, err := converter.ConvertString(docStr)
-	if err != nil {
-		fmt.Println(err)
-		return r
-	}
-
-	return newRenderer(theme,  &HTMLProvider{})**/
-	newNodeWalker(docStr, htmlProvider)
-
+	newNodeWalker(docStr, htmlProvider).walk()
 	return htmlProvider
 }
 
-func (p *HTMLProvider) prepareBlockQuote(node *ast.BlockQuote, entering bool) {
-
+func (p *HTMLProvider) renderSoftBreak() {
+	p.renderEmptyLine()
 }
 
-func (p *HTMLProvider) prepareList(node *ast.List, entering bool) {
+func (p *HTMLProvider) renderHardBreak() {
+	p.renderEmptyLine()
+}
 
+func (p *HTMLProvider) prepareBlockQuote(node *ast.BlockQuote, entering bool) {}
+
+func (p *HTMLProvider) prepareList(node *ast.List, entering bool) {
+	if next := ast.GetNextNode(node); !entering && next != nil {
+			_, parentIsListItem := node.GetParent().(*ast.ListItem)
+			_, nextIsList := next.(*ast.List)
+			if !nextIsList && !parentIsListItem {
+				p.renderEmptyLine()
+			}
+		}
 }
 
 func (p *HTMLProvider) prepareListItem(node *ast.ListItem, entering bool) {
+	if entering {
+		p.isList = true
+		switch {
+		// numbered list
+		case node.ListFlags&ast.ListTypeOrdered != 0:
+			itemNumber := 1
+			siblings := node.GetParent().GetChildren()
+			for _, sibling := range siblings {
+				if sibling == node {
+					break
+				}
+				itemNumber++
+			}
+			p.prefix += fmt.Sprintf("%d. ", itemNumber)
 
+		// content of a definition
+		case node.ListFlags&ast.ListTypeDefinition != 0:
+			p.prefix += " "
+
+		// no flags means it's the normal bullet point list
+		default:
+			p.prefix += " " + bulletUnicode + " "
+		}
+	}
 }
 
 func (p *HTMLProvider) prepareParagraph(node *ast.Paragraph, entering bool) {
-
+	if !entering {
+		p.render(p.theme.Body1(""))
+		p.renderEmptyLine()
+	}
 }
 
 func (p *HTMLProvider) prepareHeading(node *ast.Heading, entering bool) {
+	lblFunc := p.theme.H6
 
+	switch node.Level {
+	case 1:
+		lblFunc = p.theme.H4
+	case 2:
+		lblFunc = p.theme.H5
+	case 3:
+		lblFunc = p.theme.H6
+	}
+
+	p.render(lblFunc(""))
+	p.renderEmptyLine()
 }
 
 func (p *HTMLProvider) prepareStrong(node *ast.Strong, entering bool) {
-
+	label := p.theme.Body1("")
+	label.Font.Weight = text.Bold
+	p.render(label)
 }
-func (p *HTMLProvider) prepareDel(node *ast.Del, entering bool) {
+func (p *HTMLProvider) prepareDel(node *ast.Del, entering bool) {}
 
-}
-func (p *HTMLProvider) prepareEmph(node *ast.Emph, entering bool) {
+// Will be taken care off by the render function
+func (p *HTMLProvider) prepareEmph(node *ast.Emph, entering bool) {}
 
-}
 func (p *HTMLProvider) prepareLink(node *ast.Link, entering bool) {
+	dest := string(node.Destination)
+	text := string(ast.GetFirstChild(node).AsLeaf().Literal)
 
+	if p.links == nil {
+		p.links = map[string]*widget.Clickable{}
+	}
+
+	if _, ok := p.links[dest]; !ok {
+		p.links[dest] = new(widget.Clickable)
+	}
+
+	// fix a bug that causes the link to be written to the builder before this is called
+	content := p.stringBuilder.String()
+	p.stringBuilder.Reset()
+	parts := strings.Split(content, " ")
+	parts = parts[:len(parts)-1]
+	for i := range parts {
+		p.stringBuilder.WriteString(parts[i] + " ")
+	}
+
+	word := linkTag + linkSpacer + dest + linkSpacer + text
+	p.stringBuilder.WriteString(word)
 }
 
-func (p *HTMLProvider) prepareHorizontalRule(node *ast.HorizontalRule, entering bool) {
-
-}
+func (p *HTMLProvider) prepareHorizontalRule(node *ast.HorizontalRule, entering bool) {}
 
 func (p *HTMLProvider) prepareText(node *ast.Text, entering bool) {
+	if string(node.Literal) == "\n" {
+		return
+	}
 
+	content := string(node.Literal)
+	if shouldCleanText(node) {
+		content = removeLineBreak(content)
+	}
+	p.stringBuilder.WriteString(content)
 }
 func (p *HTMLProvider) prepareTable(node *ast.Table, entering bool) {
-
+	if entering {
+		p.table = newTable(p.theme)
+	} else {
+		p.containers = append(p.containers, p.table.render())
+		p.table = nil
+	}
 }
 func (p *HTMLProvider) prepareTableCell(node *ast.TableCell, entering bool) {
+	content := p.stringBuilder.String()
+	p.stringBuilder.Reset()
 
+	align := cellAlignLeft
+	switch node.Align {
+	case ast.TableAlignmentRight:
+		align = cellAlignRight
+	case ast.TableAlignmentCenter:
+		align = cellAlignCenter
+	}
+
+	if node.IsHeader {
+		p.table.addCell(content, align, true)
+	} else {
+		p.table.addCell(content, cellAlignCopyHeader, false)
+	}
 }
 func (p *HTMLProvider) prepareTableRow(node *ast.TableRow, entering bool) {
-
+	if _, ok := node.Parent.(*ast.TableBody); ok && entering {
+		p.table.startNextRow()
+	}
+	if _, ok := node.Parent.(*ast.TableFooter); ok && entering {
+		p.table.startNextRow()
+	}
 }
 
-/**func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLRenderer {
-	converter := md.NewConverter("", true, nil)
+func (p *HTMLProvider) render(lbl decredmaterial.Label) {
+	content := p.stringBuilder.String()
+	p.stringBuilder.Reset()
 
-	r := &HTMLRenderer{
-		container: &layout.List{Axis: layout.Vertical},
-		Renderer:  newRenderer(theme, true),
+	if p.prefix != "" {
+		content = p.prefix + " " + content
 	}
 
-	docStr := r.prepareHTML(html)
+	var labels []decredmaterial.Label
+	var inStyleBlock bool
+	var isClosingStyle bool
+	var isClosingBlock bool
+	var currStyle string
+	var currText string
+	for i := range content {
+		curr := content[i]
 
-	docStr, err := converter.ConvertString(docStr)
-	if err != nil {
-		fmt.Println(err)
-		return r
+		if curr == openStyleTag[0] && getNextChar(content, i) == openStyleTag[1] {
+			inStyleBlock = true
+			labels = append(labels, p.getLabel(lbl, currText))
+			currText = ""
+		}
+
+		if curr == halfCloseStyleTag[0] && getNextChar(content, i) == halfCloseStyleTag[1] {
+			isClosingStyle = true
+		}
+
+		if curr == closeStyleTag[0] && getNextChar(content, i) == closeStyleTag[1] {
+			isClosingBlock = true
+		}
+
+		if !inStyleBlock && !isClosingBlock {
+			currStr := string(curr)
+			currText += currStr
+
+			if i+1 == len(content) || currStr == "" || currStr == " " {
+				labels = append(labels, p.getLabel(lbl, currText))
+				currText = ""
+			}
+		}
+
+		if isClosingBlock && curr == closeStyleTag[3] {
+			labels = append(labels, p.getLabel(lbl, currText))
+			currText = ""
+			p.removeLastStyleGroup()
+			isClosingBlock = false
+
+		}
+
+		if inStyleBlock && !isClosingStyle {
+			currStyle += string(curr)
+		}
+
+		if isClosingStyle && curr == halfCloseStyleTag[1] {
+			isClosingStyle = false
+			inStyleBlock = false
+			p.addStyleGroup(currStyle)
+			currStyle = ""
+		}
 	}
 
-	extensions := parser.NoIntraEmphasis        // Ignore emphasis markers inside words
-	extensions |= parser.Tables                 // Parse tables
-	extensions |= parser.FencedCode             // Parse fenced code blocks
-	extensions |= parser.Autolink               // Detect embedded URLs that are not explicitly marked
-	extensions |= parser.Strikethrough          // Strikethrough text using ~~test~~
-	extensions |= parser.SpaceHeadings          // Be strict about prefix heading rules
-	extensions |= parser.HeadingIDs             // specify heading IDs  with {#id}
-	extensions |= parser.BackslashLineBreak     // Translate trailing backslashes into line breaks
-	extensions |= parser.DefinitionLists        // Parse definition lists
-	extensions |= parser.LaxHTMLBlocks          // more in HTMLBlock, less in HTMLSpan
-	extensions |= parser.NoEmptyLineBeforeBlock // no need for new line before a list
-	extensions |= parser.Attributes
-
-	p := parser.NewWithExtensions(extensions)
-
-	r.doc = p.Parse([]byte(docStr))
-	r.parse()
-
-	return r
+	wdgt := func(gtx C) D {
+		return decredmaterial.GridWrap{
+			Axis:      layout.Horizontal,
+			Alignment: layout.Start,
+		}.Layout(gtx, len(labels), func(gtx C, i int) D {
+			return labels[i].Layout(gtx)
+		})
+	}
+	p.containers = append(p.containers, wdgt)
 }
-**/
+
+func (p *HTMLProvider) getLabel(lbl decredmaterial.Label, text string) decredmaterial.Label {
+	l := lbl
+	l.Text = text
+	l = p.styleLabel(l)
+	return l
+}
+
+func (p *HTMLProvider) removeLastStyleGroup() {
+	if len(p.styleGroups) > 0 {
+		p.styleGroups = p.styleGroups[:len(p.styleGroups)-1]
+	}
+}
+
+func (p *HTMLProvider) addStyleGroup(str string) {
+	parts := strings.Split(str, "##")
+	styleMap := map[string]string{}
+
+	for i := range parts {
+		if parts[i] != " " && parts[i] != "{" {
+			styleParts := strings.Split(parts[i], "--")
+
+			if len(styleParts) == 2 {
+				styleMap[styleParts[0]] = styleParts[1]
+			}
+		}
+	}
+
+	if len(styleMap) > 0 {
+		p.styleGroups = append(p.styleGroups, styleMap)
+	}
+}
+
+func (p *HTMLProvider) styleLabel(label decredmaterial.Label) decredmaterial.Label {
+	if len(p.styleGroups) == 0 {
+		return label
+	}
+
+	style := p.styleGroups[len(p.styleGroups)-1]
+	label.Font.Weight = p.getLabelWeight(style["font-weight"])
+
+	colStr := style["text-color"]
+	if colStr == "" {
+		colStr = style["color"]
+	}
+
+	if col, ok := parseColorCode(colStr); ok {
+		label.Color = col
+	} else {
+		label.Color = p.getColorFromMap(colStr)
+	}
+
+	if fontStyle, ok := style["font-style"]; ok {
+		if fontStyle == "italic" {
+			label.Font.Style = text.Italic
+		}
+	}
+
+	return label
+}
+
+func (p *HTMLProvider) getLabelWeight(weight string) text.Weight {
+	switch weight {
+	case "normal":
+		return text.Normal
+	case "medium":
+		return text.Medium
+	case "bold":
+		return text.Bold
+	}
+
+	return text.Normal
+}
+
+func (p *HTMLProvider) getColorFromMap(col string) color.NRGBA {
+	colorMap := map[string]color.NRGBA{
+		"primary":       p.theme.Color.Primary,
+		"secondary":     p.theme.Color.Secondary,
+		"text":          p.theme.Color.Text,
+		"hint":          p.theme.Color.Hint,
+		"overlay":       p.theme.Color.Overlay,
+		"inv-text":      p.theme.Color.InvText,
+		"success":       p.theme.Color.Success,
+		"success2":      p.theme.Color.Success2,
+		"danger":        p.theme.Color.Danger,
+		"background":    p.theme.Color.Background,
+		"surface":       p.theme.Color.Surface,
+		"gray":          p.theme.Color.Gray,
+		"black":         p.theme.Color.Black,
+		"deep-blue":     p.theme.Color.DeepBlue,
+		"light-blue":    p.theme.Color.LightBlue,
+		"light-gray":    p.theme.Color.LightGray,
+		"inactive-gray": p.theme.Color.InactiveGray,
+		"active-gray":   p.theme.Color.ActiveGray,
+		"gray1":         p.theme.Color.Gray1,
+		"gray2":         p.theme.Color.Gray2,
+		"gray3":         p.theme.Color.Gray3,
+		"gray4":         p.theme.Color.Gray4,
+		"gray5":         p.theme.Color.Gray5,
+		"gray6":         p.theme.Color.Gray6,
+		"orange":        p.theme.Color.Orange,
+		"orange2":       p.theme.Color.Orange2,
+	}
+
+	if color, ok := colorMap[col]; ok {
+		return color
+	}
+
+	return colorMap["text"]
+}
+
+func (p *HTMLProvider) renderEmptyLine() {
+	var padding = -5
+
+	if p.isList {
+		padding = -10
+		p.isList = false
+	}
+
+	p.containers = append(p.containers, func(gtx C) D {
+		dims := p.theme.Body2("").Layout(gtx)
+		dims.Size.Y = dims.Size.Y + padding
+		return dims
+	})
+}
 
 func (r *HTMLProvider) prepare(html string) string {
-	//html = strings.Replace(html, "<br/>", " \n\n ", -1)
-
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		panic(err)
@@ -289,20 +550,8 @@ func (r *HTMLProvider) setNodeStyle(node *goquery.Selection, parentStyle map[str
 	return styleMap
 }
 
-func (r *HTMLProvider) parse() []byte {
-	var buf bytes.Buffer
-	/**ast.WalkFunc(r.doc, func(node ast.Node, entering bool) ast.WalkStatus {
-		return r.RenderNode(&buf, node, entering)
-	})**/
-
-	return buf.Bytes()
-}
-
 func (r *HTMLProvider) Layout(gtx C) D {
-	/**w, _ := r.Renderer.Layout()
-
-	return r.container.Layout(gtx, len(w), func(gtx C, i int) D {
-		return w[i](gtx)
-	})**/
-	return D{}
+	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(r.containers), func(gtx C, i int) D {
+		return r.containers[i](gtx)
+	})
 }

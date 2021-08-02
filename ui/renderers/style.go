@@ -1,27 +1,32 @@
 package renderers
 
 import (
-	//"fmt"
-	//"image/color"
 	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"gioui.org/widget/material"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 )
 
-func setStyle(lbl decredmaterial.Label, style string) decredmaterial.Label {
-	switch style {
-	case italicsTagName, emphTagName:
-		lbl.Font.Style = text.Italic
-	}
-
+func getLabel(lbl decredmaterial.Label) decredmaterial.Label {
 	return lbl
 }
 
-func setWeight(lbl decredmaterial.Label, weight string) decredmaterial.Label {
+func setStyle(lbl *decredmaterial.Label, style string) {
+	var s text.Style
+
+	switch style {
+	case "italic":
+		s = text.Italic
+	case "regular":
+		s = text.Regular
+	}
+
+	lbl.Font.Style = s
+}
+
+func setWeight(lbl *decredmaterial.Label, weight string) {
 	var w text.Weight
 
 	switch weight {
@@ -36,22 +41,24 @@ func setWeight(lbl decredmaterial.Label, weight string) decredmaterial.Label {
 	}
 
 	lbl.Font.Weight = w
-	return lbl
 }
 
-func getHeading(txt string, tagName string, theme *decredmaterial.Theme) decredmaterial.Label {
+func getHeading(txt string, level int, theme *decredmaterial.Theme) decredmaterial.Label {
 	var lblWdgt func(string) decredmaterial.Label
 
-	switch tagName {
-	case h5TagName:
+	switch level {
+	case 5:
 		lblWdgt = theme.H5
-	case h6TagName:
+	case 6:
 		lblWdgt = theme.H6
 	default:
 		lblWdgt = theme.H4
 	}
 
-	return lblWdgt(txt)
+	lbl := lblWdgt(txt)
+	lbl.Font.Weight = text.Bold
+
+	return lbl
 }
 
 func renderStrike(lbl decredmaterial.Label, theme *decredmaterial.Theme) layout.Widget {
@@ -107,31 +114,6 @@ func renderBlockQuote(lbl decredmaterial.Label, theme *decredmaterial.Theme) lay
 	}
 }
 
-func (p *MarkdownProvider) getLinkWidget(linkWord string) layout.Widget {
-	parts := strings.Split(linkWord, linkSpacer)
-
-	return func(gtx C) D {
-		gtx.Constraints.Max.X = gtx.Constraints.Max.X - 200
-		return material.Clickable(gtx, p.links[parts[1]], func(gtx C) D {
-			lbl := p.theme.Body2(strings.Replace(parts[2], "---", " ", -1) + " ")
-			lbl.Color = p.theme.Color.Primary
-			return lbl.Layout(gtx)
-		})
-	}
-}
-
-/**func (p *MarkdownProvider) getLinkWidget(gtx layout.Context, linkWord string) D {
-	parts := strings.Split(linkWord, linkSpacer)
-
-	gtx.Constraints.Max.X = gtx.Constraints.Max.X - 200
-	return material.Clickable(gtx, p.links[parts[1]], func(gtx C) D {
-		lbl := p.theme.Body2(parts[2] + " ")
-		lbl.Color = p.theme.Color.Primary
-		return lbl.Layout(gtx)
-	})
-}
-**/
-
 func renderHorizontalLine(theme *decredmaterial.Theme) layout.Widget {
 	l := theme.Separator()
 	l.Width = 1
@@ -179,182 +161,3 @@ func renderListItem(lbl decredmaterial.Label, theme *decredmaterial.Theme) layou
 		)
 	}
 }
-
-/**
-func (r *Renderer) getLabelWeight(weight string) text.Weight {
-	switch weight {
-	case "normal":
-		return text.Normal
-	case "medium":
-		return text.Medium
-	case "bold":
-		return text.Bold
-	}
-
-	return text.Normal
-}
-
-func (r *Renderer) getColorFromMap(col string) color.NRGBA {
-	colorMap := map[string]color.NRGBA{
-		"primary":       r.theme.Color.Primary,
-		"secondary":     r.theme.Color.Secondary,
-		"text":          r.theme.Color.Text,
-		"hint":          r.theme.Color.Hint,
-		"overlay":       r.theme.Color.Overlay,
-		"inv-text":      r.theme.Color.InvText,
-		"success":       r.theme.Color.Success,
-		"success2":      r.theme.Color.Success2,
-		"danger":        r.theme.Color.Danger,
-		"background":    r.theme.Color.Background,
-		"surface":       r.theme.Color.Surface,
-		"gray":          r.theme.Color.Gray,
-		"black":         r.theme.Color.Black,
-		"deep-blue":     r.theme.Color.DeepBlue,
-		"light-blue":    r.theme.Color.LightBlue,
-		"light-gray":    r.theme.Color.LightGray,
-		"inactive-gray": r.theme.Color.InactiveGray,
-		"active-gray":   r.theme.Color.ActiveGray,
-		"gray1":         r.theme.Color.Gray1,
-		"gray2":         r.theme.Color.Gray2,
-		"gray3":         r.theme.Color.Gray3,
-		"gray4":         r.theme.Color.Gray4,
-		"gray5":         r.theme.Color.Gray5,
-		"gray6":         r.theme.Color.Gray6,
-		"orange":        r.theme.Color.Orange,
-		"orange2":       r.theme.Color.Orange2,
-	}
-
-	if color, ok := colorMap[col]; ok {
-		return color
-	}
-
-	return colorMap["text"]
-}
-
-func (r *Renderer) styleHTMLLabel(label decredmaterial.Label) decredmaterial.Label {
-	if len(r.styleGroups) == 0 {
-		return label
-	}
-
-	style := r.styleGroups[len(r.styleGroups)-1]
-	label.Font.Weight = r.getLabelWeight(style["font-weight"])
-
-	colStr := style["text-color"]
-	if colStr == "" {
-		colStr = style["color"]
-	}
-
-	if col, ok := parseColorCode(colStr); ok {
-		label.Color = col
-	} else {
-		label.Color = r.getColorFromMap(colStr)
-	}
-
-	if fontStyle, ok := style["font-style"]; ok {
-		if fontStyle == "italic" {
-			label.Font.Style = text.Italic
-		}
-	}
-
-	return label
-}
-
-func (r *Renderer) setLabelStyle(label decredmaterial.Label, value string) decredmaterial.Label {
-	if value == "italic" {
-		label.Font.Style = text.Italic
-	}
-
-	return label
-}
-
-func (r *Renderer) setLabelWeight(label decredmaterial.Label, value string) decredmaterial.Label {
-	switch value {
-	case "bold":
-		label.Font.Weight = text.Bold
-	case "normal":
-		label.Font.Weight = text.Normal
-	}
-
-	return label
-}
-
-func (r *Renderer) styleMarkdownLabel(label decredmaterial.Label) layout.Widget {
-	var wdgt layout.Widget
-
-	 for i := range r.styleGroups {
-		for style, value := range r.styleGroups[i] {
-			switch style {
-			case "font-style":
-				wdgt = r.setLabelStyle(label, value).Layout
-			case "font-weight":
-				wdgt = r.setLabelWeight(label, value).Layout
-			case "font-decoration":
-				if value == strikeTagName {
-					wdgt = r.strikeLabel(label)
-				}
-			}
-		}
-	}
-
-	if wdgt == nil {
-		return label.Layout
-	}
-	return wdgt
-}
-
-func (r *Renderer) getMarkdownWidgetAndStyle(label decredmaterial.Label) layout.Widget {
-	return r.styleMarkdownLabel(label)
-}
-
-func (r *Renderer) addHTMLStyleGroup(str string) {
-	parts := strings.Split(str, "##")
-	styleMap := map[string]string{}
-
-	for i := range parts {
-		if parts[i] != " " && parts[i] != "{" {
-			styleParts := strings.Split(parts[i], "--")
-
-			if len(styleParts) == 2 {
-				styleMap[styleParts[0]] = styleParts[1]
-			}
-		}
-	}
-
-	if len(styleMap) > 0 {
-		r.styleGroups = append(r.styleGroups, styleMap)
-	}
-}
-
-func (r *Renderer) addStyleItem(style, value string) {
-	styleMap := map[string]string{
-		style: value,
-	}
-
-	r.styleGroups = append(r.styleGroups, styleMap)
-}
-
-func (r *Renderer) addStyleGroupFromTagName(tagName string) {
-	var key, val string
-
-	switch tagName {
-	case italicsTagName:
-		key, val = "font-style", "italic"
-	case emphTagName:
-		key, val = "font-style", "italic"
-	case strongTagName:
-		key, val = "font-weight", "bold"
-	case strikeTagName:
-		key, val = "font-decoration", "strike"
-	}
-
-	if key != "" && val != "" {
-		r.addStyleItem(key, val)
-	}
-}
-
-func (r *Renderer) removeLastStyleGroup() {
-	if len(r.styleGroups) > 0 {
-		r.styleGroups = r.styleGroups[:len(r.styleGroups)-1]
-	}
-}
-**/
