@@ -14,7 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Start = "start_page"
+const StartPageID = "start_page"
 
 type startPage struct {
 	load *load.Load
@@ -29,7 +29,7 @@ type startPage struct {
 	restoreButton decredmaterial.Button
 }
 
-func newStartPage(l *load.Load) load.Page {
+func NewStartPage(l *load.Load) load.Page {
 	sp := &startPage{
 		load: l,
 

@@ -19,7 +19,7 @@ type morePageHandler struct {
 }
 
 type MorePage struct {
-	*load.Load
+	Load              *load.Load
 	container         layout.Flex
 	morePageListItems []morePageHandler
 }
@@ -95,8 +95,8 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 			return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
 				return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
-						background := pg.Theme.Color.Surface
-						card := pg.Theme.Card()
+						background := pg.Load.Theme.Color.Surface
+						card := pg.Load.Theme.Card()
 						card.Color = background
 						return card.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -118,7 +118,7 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 														if page == SecurityToolsPageID {
 															page = "Security Tools"
 														}
-														return pg.Theme.Body1(page).Layout(gtx)
+														return pg.Load.Theme.Body1(page).Layout(gtx)
 													})
 												})
 											}),

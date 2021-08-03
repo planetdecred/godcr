@@ -40,6 +40,12 @@ type (
 		Index       int
 		ShowBadge   bool
 	}
+
+	Toast struct {
+		Text    string
+		Success bool
+		Timer   *time.Timer
+	}
 )
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -112,6 +118,11 @@ func LayoutBalance(gtx layout.Context, l *load.Load, amount string) layout.Dimen
 		}),
 	)
 }
+
+var (
+	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
+	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+)
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
@@ -643,24 +654,24 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	)
 }*/
 
-func displayToast(th *decredmaterial.Theme, gtx layout.Context, t *load.Toast) layout.Dimensions {
-	//color := th.Color.Success
-	//if !n.success {
-	//	color = th.Color.Danger
-	//}
-	//
-	//card := th.Card()
-	//card.Color = color
-	//return card.Layout(gtx, func(gtx C) D {
-	//	return layout.Inset{
-	//		Top: values.MarginPadding7, Bottom: values.MarginPadding7,
-	//		Left: values.MarginPadding15, Right: values.MarginPadding15,
-	//	}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-	//		t := th.Body1(n.text)
-	//		t.Color = th.Color.Surface
-	//		return t.Layout(gtx)
-	//	})
-	//})
+func DisplayToast(th *decredmaterial.Theme, gtx layout.Context, n *Toast) layout.Dimensions {
+	color := th.Color.Success
+	if !n.Success {
+		color = th.Color.Danger
+	}
+
+	card := th.Card()
+	card.Color = color
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.Inset{
+			Top: values.MarginPadding7, Bottom: values.MarginPadding7,
+			Left: values.MarginPadding15, Right: values.MarginPadding15,
+		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			t := th.Body1(n.Text)
+			t.Color = th.Color.Surface
+			return t.Layout(gtx)
+		})
+	})
 	return layout.Dimensions{}
 }
 

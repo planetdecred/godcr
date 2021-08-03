@@ -16,6 +16,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -156,7 +157,7 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 
 func (win *Window) Start() {
 	if win.currentPage == nil {
-		sp := newStartPage(win.common, win.load)
+		sp := page.NewStartPage(win.load)
 		sp.OnResume()
 		win.currentPage = sp
 	}
