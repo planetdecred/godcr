@@ -40,14 +40,12 @@ type TransactionsPage struct {
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
-		Load:        l,
-		pageClosing: make(chan bool, 1),
-		container:   layout.Flex{Axis: layout.Vertical},
-		separator:   l.Theme.Separator(),
-		theme:       l.Theme,
+		Load:            l,
+		pageClosing:     make(chan bool, 1),
+		container:       layout.Flex{Axis: layout.Vertical},
+		separator:       l.Theme.Separator(),
+		transactionList: l.Theme.NewClickableList(layout.Vertical),
 	}
-
-	pg.transactionList = pg.Theme.NewClickableList(layout.Vertical)
 
 	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
