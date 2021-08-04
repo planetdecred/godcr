@@ -54,7 +54,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp := &MainPage{
 		Load:     l,
 		AutoSync: true,
-		Pages:    load.LoadPages(l),
+		Pages:    make(map[string]load.Page),
 
 		MinimizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
 		MaximizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowForward),
@@ -63,7 +63,6 @@ func NewMainPage(l *load.Load) *MainPage {
 	// init shared page functions
 	// todo: common methods will be removed when all pages have been moved to the page package
 	l.ChangeFragment = mp.Load.ChangeFragment
-	l.ChangePage = mp.Load.ChangePage
 	l.SetReturnPage = mp.Load.SetReturnPage
 	l.ReturnPage = &mp.Previous
 	l.Page = &mp.Current
@@ -283,7 +282,7 @@ func (mp *MainPage) Handle() {
 			} else if i == ProposalsNavID {
 				mp.Load.ChangeFragment(proposal.NewProposalsPage(mp.Load), proposal.ProposalsPageID)
 			} else {
-				mp.Load.ChangePage(mp.DrawerNavItems[i].Page)
+				mp.Load.ChangeFragment(NewMorePage(mp.Load), MorePageID)
 			}
 		}
 	}
@@ -301,7 +300,7 @@ func (mp *MainPage) OnClose() {
 
 func (mp *MainPage) changeFragment(page load.Page, id string) {
 	mp.Pages[id] = page
-	mp.Load.ChangePage(id)
+	mp.changePage(id)
 }
 
 func (mp *MainPage) changePage(page string) {
@@ -320,7 +319,6 @@ func (mp *MainPage) setReturnPage(from string) {
 }
 
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	mp.handler() // pageCommon
 	mp.Pages[mp.Current].Handle()
 
 	return layout.Stack{}.Layout(gtx,
@@ -353,15 +351,9 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global toasts. Stack toast on all pages and contents
-			if *mp.toast == nil {
-				return layout.Dimensions{}
-			}
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding65}.Layout(gtx, func(gtx C) D {
-					return components.DisplayToast(mp.Load.Theme, gtx, *mp.toast)
-				})
-			})
+			//TODO: show toasts here
+			return layout.Dimensions{}
+
 		}),
 	)
 }

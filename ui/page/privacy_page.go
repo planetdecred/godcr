@@ -62,7 +62,8 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.ChangePage(WalletPageID)
+				//TODO
+				//pg.ChangePage(WalletPageID)
 			},
 			InfoTemplate: modal.PrivacyInfoTemplate,
 			Body: func(gtx layout.Context) layout.Dimensions {

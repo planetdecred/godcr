@@ -21,7 +21,6 @@ import (
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/message"
@@ -98,7 +97,6 @@ type Load struct {
 	ChangeWindowPage func(page Page, keepBackStack bool)
 	PopWindowPage    func() bool
 	ChangeFragment   func(page Page, id string)
-	ChangePage       func(string)
 	SetReturnPage    func(string)
 }
 
@@ -211,27 +209,6 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 	GetUSDExchangeValue(l.DcrUsdtBittrex)
 
 	return l
-}
-
-func LoadPages(l *Load) map[string]Page {
-
-	l.TestButton = l.Theme.Button(new(widget.Clickable), "test button")
-
-	pages := make(map[string]Page)
-
-	pages[page.MorePageID] = page.NewMorePage(l)
-	pages[page.VerifyMessagePageID] = page.NewVerifyMessagePage(l)
-	pages[page.SeedBackupPageID] = page.NewBackupPage(l)
-	pages[page.SettingsPageID] = page.NewSettingsPage(l)
-	pages[page.SecurityToolsPageID] = page.NewSecurityToolsPage(l)
-	pages[page.DebugPageID] = page.NewDebugPage(l)
-	pages[page.LogPageID] = page.NewLogPage(l)
-	pages[page.StatisticsPageID] = page.NewStatPage(l)
-	pages[page.AboutPageID] = page.NewAboutPage(l)
-	pages[page.HelpPageID] = page.NewHelpPage(l)
-	pages[page.ValidateAddressPageID] = page.NewValidateAddressPage(l)
-
-	return pages
 }
 
 type NavHandler struct {

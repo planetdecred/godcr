@@ -51,7 +51,8 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.ChangePage(MorePageID)
+				//TODO
+				//pg.ChangePage(MorePageID)
 			},
 			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -110,12 +111,14 @@ func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 func (pg *SecurityToolsPage) Handle() {
 	if pg.verifyMessage.Clicked() {
 		pg.SetReturnPage(SecurityToolsPageID)
-		pg.ChangePage(VerifyMessagePageID)
+		//TODO
+		//pg.ChangePage(VerifyMessagePageID)
 	}
 
 	if pg.validateAddress.Clicked() {
 		pg.SetReturnPage(SecurityToolsPageID)
-		pg.ChangePage(ValidateAddressPageID)
+		//TODO
+		//pg.ChangePage(ValidateAddressPageID)
 	}
 }
 

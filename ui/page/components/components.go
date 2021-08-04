@@ -40,12 +40,6 @@ type (
 		Index       int
 		ShowBadge   bool
 	}
-
-	Toast struct {
-		Text    string
-		Success bool
-		Timer   *time.Timer
-	}
 )
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -653,27 +647,6 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 		}),
 	)
 }*/
-
-func DisplayToast(th *decredmaterial.Theme, gtx layout.Context, n *Toast) layout.Dimensions {
-	color := th.Color.Success
-	if !n.Success {
-		color = th.Color.Danger
-	}
-
-	card := th.Card()
-	card.Color = color
-	return card.Layout(gtx, func(gtx C) D {
-		return layout.Inset{
-			Top: values.MarginPadding7, Bottom: values.MarginPadding7,
-			Left: values.MarginPadding15, Right: values.MarginPadding15,
-		}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			t := th.Body1(n.Text)
-			t.Color = th.Color.Surface
-			return t.Layout(gtx)
-		})
-	})
-	return layout.Dimensions{}
-}
 
 /*func (page *pageCommon) handleToast() {
 	if (*page.toast) == nil {

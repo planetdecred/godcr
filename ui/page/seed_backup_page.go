@@ -477,7 +477,8 @@ func checkSlice(s []string) bool {
 }
 
 func (pg *BackupPage) resetPage() {
-	pg.ChangePage(WalletPageID)
+	//TODO
+	//pg.ChangePage(WalletPageID)
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)

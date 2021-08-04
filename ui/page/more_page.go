@@ -70,16 +70,19 @@ func (pg *MorePage) OnResume() {
 
 }
 
-func (pg *MorePage) handleClickEvents(l *load.Load) {
+//TODO
+//func (pg *MorePage) handleClickEvents(l *load.Load)
+func (pg *MorePage) handleClickEvents() {
 	for i := range pg.morePageListItems {
 		for pg.morePageListItems[i].clickable.Clicked() {
-			l.ChangePage(pg.morePageListItems[i].page)
+			//TODO
+			//l.ChangePage(pg.morePageListItems[i].page)
 		}
 	}
 }
 
 func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
-	pg.handleClickEvents(pg.Load)
+	pg.handleClickEvents()
 
 	container := func(gtx C) D {
 		pg.layoutMoreItems(gtx)

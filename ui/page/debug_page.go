@@ -56,7 +56,8 @@ func (pg *DebugPage) OnResume() {
 func (pg *DebugPage) Handle() {
 	for i := range pg.debugItems {
 		for pg.debugItems[i].clickable.Clicked() {
-			pg.ChangePage(pg.debugItems[i].page)
+			//TODO
+			//pg.ChangePage(pg.debugItems[i].page)
 		}
 	}
 }
@@ -99,7 +100,8 @@ func (pg *DebugPage) Layout(gtx C) D {
 			Title:      "Debug",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangePage(MorePageID)
+				//TODO
+				//pg.ChangePage(MorePageID)
 			},
 			Body: func(gtx C) D {
 				pg.layoutDebugItems(gtx)
