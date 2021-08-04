@@ -1,11 +1,8 @@
 package page
 
 import (
-	"image"
 	"time"
 
-	"gioui.org/gesture"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -27,16 +24,14 @@ type transactionWdg struct {
 
 type TransactionsPage struct {
 	*load.Load
-	pageClosing  chan bool
-	container    layout.Flex
-	txsList      layout.List
-	toTxnDetails []*gesture.Click
-	separator    decredmaterial.Line
-	theme        *decredmaterial.Theme
+	pageClosing chan bool
+	container   layout.Flex
+	separator   decredmaterial.Line
 
-	orderDropDown  *decredmaterial.DropDown
-	txTypeDropDown *decredmaterial.DropDown
-	walletDropDown *decredmaterial.DropDown
+	orderDropDown   *decredmaterial.DropDown
+	txTypeDropDown  *decredmaterial.DropDown
+	walletDropDown  *decredmaterial.DropDown
+	transactionList *decredmaterial.ClickableList
 
 	transactions []dcrlibwallet.Transaction
 	wallets      []*dcrlibwallet.Wallet
@@ -44,12 +39,11 @@ type TransactionsPage struct {
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
-		Load:        l,
-		pageClosing: make(chan bool, 1),
-		container:   layout.Flex{Axis: layout.Vertical},
-		txsList:     layout.List{Axis: layout.Vertical},
-		separator:   l.Theme.Separator(),
-		theme:       l.Theme,
+		Load:            l,
+		pageClosing:     make(chan bool, 1),
+		container:       layout.Flex{Axis: layout.Vertical},
+		separator:       l.Theme.Separator(),
+		transactionList: l.Theme.NewClickableList(layout.Vertical),
 	}
 
 	pg.orderDropDown = components.CreateOrderDropDown(l)
@@ -122,20 +116,10 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
 									txt.Color = pg.Theme.Color.Gray2
-									return txt.Layout(gtx)
+									return layout.Center.Layout(gtx, txt.Layout)
 								}
 
-								// update transaction row click gesture when the length of the click gesture slice and
-								// transactions list are different.
-								if len(wallTxs) != len(pg.toTxnDetails) {
-									pg.toTxnDetails = createClickGestures(len(wallTxs))
-								}
-
-								return pg.txsList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
-									click := pg.toTxnDetails[index]
-									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-									click.Add(gtx.Ops)
-									pg.goToTxnDetails(click.Events(gtx), &wallTxs[index])
+								return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
 									var row = components.TransactionRow{
 										Transaction: wallTxs[index],
 										Index:       index,
@@ -190,14 +174,10 @@ func (pg *TransactionsPage) Handle() {
 	for pg.walletDropDown.Changed() {
 		pg.loadTransactions()
 	}
-}
 
-func (pg *TransactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcrlibwallet.Transaction) {
-	for _, e := range events {
-		if e.Type == gesture.TypeClick {
-			pg.SetReturnPage(TransactionsPageID)
-			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, txn), TransactionDetailsPageID)
-		}
+	if clicked, selectedItem := pg.transactionList.ItemClicked(); clicked {
+		pg.SetReturnPage(TransactionsPageID)
+		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]), TransactionDetailsPageID)
 	}
 }
 
