@@ -27,7 +27,6 @@ type TransactionsPage struct {
 	pageClosing chan bool
 	container   layout.Flex
 	separator   decredmaterial.Line
-	theme       *decredmaterial.Theme
 
 	orderDropDown   *decredmaterial.DropDown
 	txTypeDropDown  *decredmaterial.DropDown
