@@ -25,8 +25,6 @@ type SignMessagePage struct {
 	wallet    *dcrlibwallet.Wallet
 
 	isSigningMessage                           bool
-	isValidatedMsg                             bool
-	isValidatedAddress                         bool
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
@@ -205,8 +203,8 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *SignMessagePage) updateColors() {
-	if pg.isSigningMessage || !pg.isValidatedMsg || !pg.isValidatedAddress {
+func (pg *SignMessagePage) updateColors(validated bool) {
+	if pg.isSigningMessage || !validated {
 		pg.signButton.Background = pg.Theme.Color.Hint
 	} else {
 		pg.signButton.Background = pg.Theme.Color.Primary
@@ -215,7 +213,6 @@ func (pg *SignMessagePage) updateColors() {
 
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
-	pg.updateColors()
 
 	for _, evt := range pg.addressEditor.Editor.Events() {
 		if pg.addressEditor.Editor.Focused() {
@@ -230,7 +227,7 @@ func (pg *SignMessagePage) Handle() {
 		if pg.messageEditor.Editor.Focused() {
 			switch evt.(type) {
 			case widget.ChangeEvent:
-				pg.validateMessage()
+				pg.validate()
 			}
 		}
 	}
@@ -272,11 +269,11 @@ func (pg *SignMessagePage) Handle() {
 }
 
 func (pg *SignMessagePage) validate() bool {
-	isAddressValid := pg.validateAddress()
-	isMessageValid := pg.validateMessage()
-	if !isAddressValid || !isMessageValid {
+	if !pg.validateAddress() || !pg.validateMessage() {
+		pg.updateColors(false)
 		return false
 	}
+	pg.updateColors(true)
 	return true
 }
 
@@ -284,29 +281,24 @@ func (pg *SignMessagePage) validateAddress() bool {
 	address := pg.addressEditor.Editor.Text()
 	pg.addressEditor.SetError("")
 
-	if address == "" {
+	var valid bool
+
+	switch {
+	case address == "":
 		pg.addressEditor.SetError("Please enter a valid address")
-		pg.isValidatedAddress = false
-		return false
+		valid = false
+	case address != "" && !pg.WL.MultiWallet.IsAddressValid(address):
+		pg.addressEditor.SetError("Invalid address")
+		valid = false
+	case address != "" && !pg.wallet.HaveAddress(address):
+		pg.addressEditor.SetError("Address not owned by this wallet")
+		valid = false
+	default:
+		valid = true
 	}
 
-	if address != "" {
-		isValid := pg.WL.MultiWallet.IsAddressValid(address)
-		if !isValid {
-			pg.addressEditor.SetError("Invalid address")
-			pg.isValidatedAddress = false
-			return false
-		}
-
-		if !pg.wallet.HaveAddress(address) {
-			pg.addressEditor.SetError("Address not owned by this wallet")
-			pg.isValidatedAddress = false
-			return false
-		}
-	}
-
-	pg.isValidatedAddress = true
-	return true
+	pg.updateColors(valid)
+	return valid
 }
 
 func (pg *SignMessagePage) validateMessage() bool {
@@ -314,12 +306,10 @@ func (pg *SignMessagePage) validateMessage() bool {
 	pg.messageEditor.SetError("")
 
 	if message == "" || strings.TrimSpace(message) == "" {
-		pg.isValidatedMsg = false
 		pg.messageEditor.SetError("Please enter a valid message to sign")
-		return pg.isValidatedMsg
+		return false
 	}
 
-	pg.isValidatedMsg = true
 	return true
 }
 
@@ -330,10 +320,7 @@ func (pg *SignMessagePage) clearForm() {
 	pg.messageEditor.SetError("")
 	pg.signedMessageLabel.Text = ""
 	pg.errorLabel.Text = ""
-	pg.isValidatedMsg = false
-	pg.isValidatedAddress = false
+	pg.updateColors(false)
 }
 
-func (pg *SignMessagePage) OnClose() {
-	pg.clearForm()
-}
+func (pg *SignMessagePage) OnClose() {}
