@@ -25,6 +25,8 @@ type SignMessagePage struct {
 	wallet    *dcrlibwallet.Wallet
 
 	isSigningMessage                           bool
+	addressIsValid                             bool
+	messageIsValid                             bool
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
@@ -203,8 +205,8 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *SignMessagePage) updateColors(validated bool) {
-	if pg.isSigningMessage || !validated {
+func (pg *SignMessagePage) updateColors() {
+	if pg.isSigningMessage || !pg.messageIsValid || !pg.addressIsValid {
 		pg.signButton.Background = pg.Theme.Color.Hint
 	} else {
 		pg.signButton.Background = pg.Theme.Color.Primary
@@ -213,6 +215,7 @@ func (pg *SignMessagePage) updateColors(validated bool) {
 
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
+	pg.updateColors()
 
 	for _, evt := range pg.addressEditor.Editor.Events() {
 		if pg.addressEditor.Editor.Focused() {
@@ -227,7 +230,7 @@ func (pg *SignMessagePage) Handle() {
 		if pg.messageEditor.Editor.Focused() {
 			switch evt.(type) {
 			case widget.ChangeEvent:
-				pg.validate()
+				pg.validateMessage()
 			}
 		}
 	}
@@ -270,10 +273,8 @@ func (pg *SignMessagePage) Handle() {
 
 func (pg *SignMessagePage) validate() bool {
 	if !pg.validateAddress() || !pg.validateMessage() {
-		pg.updateColors(false)
 		return false
 	}
-	pg.updateColors(true)
 	return true
 }
 
@@ -297,7 +298,7 @@ func (pg *SignMessagePage) validateAddress() bool {
 		valid = true
 	}
 
-	pg.updateColors(valid)
+	pg.addressIsValid = valid
 	return valid
 }
 
@@ -307,9 +308,10 @@ func (pg *SignMessagePage) validateMessage() bool {
 
 	if message == "" || strings.TrimSpace(message) == "" {
 		pg.messageEditor.SetError("Please enter a valid message to sign")
+		pg.messageIsValid = false
 		return false
 	}
-
+	pg.messageIsValid = true
 	return true
 }
 
@@ -320,7 +322,6 @@ func (pg *SignMessagePage) clearForm() {
 	pg.messageEditor.SetError("")
 	pg.signedMessageLabel.Text = ""
 	pg.errorLabel.Text = ""
-	pg.updateColors(false)
 }
 
 func (pg *SignMessagePage) OnClose() {}
