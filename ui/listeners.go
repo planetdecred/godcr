@@ -176,7 +176,7 @@ func (mp *mainPage) desktopNotifier(notifier interface{}) {
 			return account
 		}
 
-		//get distination account
+		//get destination account
 		var txDestAccount string
 		if t.Transaction.Direction == dcrlibwallet.TxDirectionReceived ||
 			(t.Transaction.Type != dcrlibwallet.TxTypeRegular &&
