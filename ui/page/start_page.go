@@ -3,9 +3,6 @@ package page
 import (
 	"os"
 
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -13,7 +10,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/values"
 )
 

@@ -24,10 +24,10 @@ type Toast struct {
 	timer   *time.Timer
 }
 
-type delay int32
+type duration int32
 
 const (
-	Short delay = iota
+	Short duration = iota
 	Long
 )
 
@@ -37,7 +37,7 @@ func NewToast(th *decredmaterial.Theme) *Toast {
 	}
 }
 
-func getDurationFromDelay(d delay) time.Duration {
+func getDurationFromDelay(d duration) time.Duration {
 	switch d {
 	case Short:
 		return 2 * time.Second
@@ -48,8 +48,8 @@ func getDurationFromDelay(d delay) time.Duration {
 	}
 }
 
-func (t *Toast) Notify(message string, success bool, d ...delay) {
-	var notificationDelay delay
+func (t *Toast) Notify(message string, success bool, d ...duration) {
+	var notificationDelay duration
 	if len(d) > 0 {
 		notificationDelay = d[0]
 	}
