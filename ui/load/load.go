@@ -77,10 +77,9 @@ type Load struct {
 	Printer  *message.Printer
 	Network  string
 
-	Icons          Icons
-	Page           *string
-	ReturnPage     *string
-	DcrUsdtBittrex *DCRUSDTBittrex
+	Icons      Icons
+	Page       *string
+	ReturnPage *string
 
 	Toast *Toast
 
@@ -206,7 +205,6 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 
 		Printer: message.NewPrinter(language.English),
 	}
-	GetUSDExchangeValue(l.DcrUsdtBittrex)
 
 	return l
 }

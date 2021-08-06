@@ -44,6 +44,7 @@ type MainPage struct {
 	SendPage          *send.Page // reuse value to keep data persistent onresume.
 
 	// page state variables
+	DcrUsdtBittrex  load.DCRUSDTBittrex
 	UsdExchangeSet  bool
 	TotalBalance    dcrutil.Amount
 	TotalBalanceUSD string
@@ -62,8 +63,8 @@ func NewMainPage(l *load.Load) *MainPage {
 
 	// init shared page functions
 	// todo: common methods will be removed when all pages have been moved to the page package
-	l.ChangeFragment = mp.Load.ChangeFragment
-	l.SetReturnPage = mp.Load.SetReturnPage
+	l.ChangeFragment = mp.changeFragment
+	l.SetReturnPage = mp.setReturnPage
 	l.ReturnPage = &mp.Previous
 	l.Page = &mp.Current
 
@@ -171,8 +172,8 @@ func (mp *MainPage) UpdateBalance() {
 	if err == nil {
 		mp.TotalBalance = totalBalance
 
-		if mp.UsdExchangeSet && mp.Load.DcrUsdtBittrex.LastTradeRate != "" {
-			usdExchangeRate, err := strconv.ParseFloat(mp.Load.DcrUsdtBittrex.LastTradeRate, 64)
+		if mp.UsdExchangeSet && mp.DcrUsdtBittrex.LastTradeRate != "" {
+			usdExchangeRate, err := strconv.ParseFloat(mp.DcrUsdtBittrex.LastTradeRate, 64)
 			if err == nil {
 				balanceInUSD := totalBalance.ToCoin() * usdExchangeRate
 				mp.TotalBalanceUSD = load.FormatUSDBalance(mp.Load.Printer, balanceInUSD)
@@ -442,7 +443,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			if mp.UsdExchangeSet && mp.Load.DcrUsdtBittrex.LastTradeRate != "" {
+			if mp.UsdExchangeSet && mp.DcrUsdtBittrex.LastTradeRate != "" {
 				inset := layout.Inset{
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
