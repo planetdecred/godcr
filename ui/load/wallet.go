@@ -2,6 +2,7 @@ package load
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -106,4 +107,16 @@ func (wl *WalletLoad) HDPrefix() string {
 	default:
 		return ""
 	}
+}
+
+func (wl *WalletLoad) WalletDirectory() string {
+	return fmt.Sprintf("%s/%s", wl.Wallet.Root, wl.Wallet.Net)
+}
+
+func (wl *WalletLoad) DataSize() string {
+	v, err := wl.MultiWallet.RootDirFileSizeInBytes()
+	if err != nil {
+		return "Unknown"
+	}
+	return fmt.Sprintf("%f GB", float64(v)*1e-9)
 }

@@ -61,6 +61,33 @@ func getVSPInfo(url string) (*dcrlibwallet.VspInfoResponse, error) {
 	return &vspInfoResponse, nil
 }
 
+// getInitVSPInfo returns the list information of the VSP
+func getInitVSPInfo(url string) (map[string]*dcrlibwallet.VspInfoResponse, error) {
+	rq := new(http.Client)
+	resp, err := rq.Get((url))
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
+	}
+
+	var vspInfoResponse map[string]*dcrlibwallet.VspInfoResponse
+	err = json.Unmarshal(b, &vspInfoResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return vspInfoResponse, nil
+}
+
 func (wl *WalletLoad) GetVSPList() {
 	var valueOut struct {
 		Remember string
@@ -80,7 +107,7 @@ func (wl *WalletLoad) GetVSPList() {
 		}
 	}
 
-	l, _ := wallet.GetInitVSPInfo("https://api.decred.org/?c=vsp")
+	l, _ := getInitVSPInfo("https://api.decred.org/?c=vsp")
 	for h, v := range l {
 		if strings.Contains(wl.Wallet.Net, v.Network) {
 			loadedVSP = append(loadedVSP, wallet.VSPInfo{

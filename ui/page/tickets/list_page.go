@@ -189,7 +189,7 @@ func (pg *ListPage) Layout(gtx C) D {
 
 func (pg *ListPage) ticketListLayout(gtx C, tickets []wallet.Ticket) D {
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-		st := ticketStatusIcon(pg.Load, tickets[index].Info.Status)
+		st := ticketStatusProfile(pg.Load, tickets[index].Info.Status)
 		if st == nil {
 			return D{}
 		}

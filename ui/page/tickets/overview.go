@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/planetdecred/dcrlibwallet"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -39,6 +41,9 @@ type Page struct {
 	toTickets           decredmaterial.TextAndIconButton
 	toTicketsActivity   decredmaterial.TextAndIconButton
 	ticketTooltips      []tooltips
+
+	stakingOverview *dcrlibwallet.StakingOverview
+	liveTickets     []dcrlibwallet.Transaction
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -65,6 +70,7 @@ func NewTicketPage(l *load.Load) *Page {
 	pg.toTicketsActivity.Color = l.Theme.Color.Primary
 	pg.toTicketsActivity.BackgroundColor = l.Theme.Color.Surface
 
+	pg.stakingOverview = new(dcrlibwallet.StakingOverview)
 	return pg
 }
 
@@ -74,6 +80,25 @@ func (pg *Page) ID() string {
 
 func (pg *Page) OnResume() {
 	pg.ticketPrice = dcrutil.Amount(pg.WL.TicketPrice()).String()
+	wallets := pg.WL.MultiWallet.AllWallets()
+
+	for _, w := range wallets {
+		ov, _ := w.StakingOverview()
+		pg.stakingOverview.All += ov.All
+		pg.stakingOverview.Expired += ov.Expired
+		pg.stakingOverview.Immature += ov.Immature
+		pg.stakingOverview.Live += ov.Live
+		pg.stakingOverview.Revoked += ov.Revoked
+		pg.stakingOverview.Voted += ov.Voted
+	}
+
+	lt, err := pg.WL.AllLiveTickets()
+	if err != nil {
+		fmt.Printf("ERROR FETCHING LIVE TICKETS %v \n", err.Error())
+		pg.CreateToast(err.Error(), false)
+	}
+	pg.liveTickets = lt
+	fmt.Printf("LIVE TICKETS %v \n", lt)
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
 	pg.autoPurchaseEnabled.Disabled()
@@ -92,7 +117,7 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 				return pg.ticketsActivitySection(gtx)
 			},
 			func(ctx layout.Context) layout.Dimensions {
-				return pg.stackingRecordSection(gtx)
+				return pg.stakingRecordSection(gtx)
 			},
 		}
 
@@ -176,38 +201,55 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+func (pg *Page) stakingCounts() []struct {
+	Status string
+	Count  int
+} {
+	return []struct {
+		Status string
+		Count  int
+	}{
+		{"IMMATURE", pg.stakingOverview.Immature},
+		{"LIVE", pg.stakingOverview.Live},
+		{"VOTED", pg.stakingOverview.Voted},
+		{"EXPIRED", pg.stakingOverview.Expired},
+		{"REVOKED", pg.stakingOverview.Revoked},
+	}
+}
+
 func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
-					tit := pg.Theme.Label(values.TextSize14, "Live Tickets")
-					tit.Color = pg.Theme.Color.Gray2
-					return pg.titleRow(gtx, tit.Layout, func(gtx C) D {
-						ticketLiveCounter := (*pg.tickets).LiveCounter
+					title := pg.Theme.Label(values.TextSize14, "Live Tickets")
+					title.Color = pg.Theme.Color.Gray2
+					return pg.titleRow(gtx, title.Layout, func(gtx C) D {
 						var elements []layout.FlexChild
-						for i := 0; i < len(ticketLiveCounter); i++ {
-							item := ticketLiveCounter[i]
-							elements = append(elements, layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
-									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											st := ticketStatusIcon(pg.Load, item.Status)
-											if st == nil {
-												return layout.Dimensions{}
-											}
-											return st.icon.Layout16dp(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-												label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%d", item.Count))
-												label.Color = pg.Theme.Color.DeepBlue
-												return label.Layout(gtx)
-											})
-										}),
-									)
-								})
-							}))
+						for i := 0; i < len(pg.stakingCounts()); i++ {
+							item := pg.stakingCounts()[i]
+							if item.Status == LIVE || item.Status == IMMATURE {
+								elements = append(elements, layout.Rigid(func(gtx C) D {
+									return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
+										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												st := ticketStatusProfile(pg.Load, item.Status)
+												if st == nil {
+													return layout.Dimensions{}
+												}
+												return st.icon.Layout16dp(gtx)
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+													label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%d", item.Count))
+													label.Color = pg.Theme.Color.DeepBlue
+													return label.Layout(gtx)
+												})
+											}),
+										)
+									})
+								}))
+							}
 						}
 						elements = append(elements, layout.Rigid(pg.toTickets.Layout))
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx, elements...)
@@ -262,7 +304,7 @@ func (pg *Page) ticketsActivitySection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *Page) stackingRecordSection(gtx layout.Context) layout.Dimensions {
+func (pg *Page) stakingRecordSection(gtx layout.Context) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -275,19 +317,19 @@ func (pg *Page) stackingRecordSection(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				stackingRecords := (*pg.tickets).StackingRecordCounter
+				counts := pg.stakingCounts()
 				return decredmaterial.GridWrap{
 					Axis:      layout.Horizontal,
 					Alignment: layout.End,
-				}.Layout(gtx, len(stackingRecords), func(gtx layout.Context, i int) layout.Dimensions {
-					item := stackingRecords[i]
+				}.Layout(gtx, len(counts), func(gtx layout.Context, i int) layout.Dimensions {
+					count := counts[i]
 					width := unit.Value{U: unit.UnitDp, V: 118}
 					gtx.Constraints.Min.X = gtx.Px(width)
 
 					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								st := ticketStatusIcon(pg.Load, item.Status)
+								st := ticketStatusProfile(pg.Load, count.Status)
 								if st == nil {
 									return layout.Dimensions{}
 								}
@@ -297,13 +339,13 @@ func (pg *Page) stackingRecordSection(gtx layout.Context) layout.Dimensions {
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											label := pg.Theme.Label(values.TextSize16, fmt.Sprintf("%d", item.Count))
+											label := pg.Theme.Label(values.TextSize16, fmt.Sprintf("%d", count.Count))
 											label.Color = pg.Theme.Color.DeepBlue
 											return label.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-												txt := pg.Theme.Label(values.TextSize12, strings.Title(strings.ToLower(item.Status)))
+												txt := pg.Theme.Label(values.TextSize12, strings.Title(strings.ToLower(count.Status)))
 												txt.Color = pg.Theme.Color.Gray2
 												return txt.Layout(gtx)
 											})

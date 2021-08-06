@@ -16,7 +16,7 @@ const syncID = "godcr"
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi              *dcrlibwallet.MultiWallet
-	root, Net          string
+	Root, Net          string
 	Send               chan Response
 	Sync               chan SyncStatusUpdate
 	confirms           int32
@@ -30,7 +30,7 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
 	wal := &Wallet{
-		root:     root,
+		Root:     root,
 		Net:      net,
 		Sync:     make(chan SyncStatusUpdate, 2),
 		Send:     send,
