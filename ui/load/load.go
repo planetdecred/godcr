@@ -10,13 +10,11 @@ package load
 
 import (
 	"image"
-	"sort"
 	"time"
 
 	"golang.org/x/text/language"
 
 	"gioui.org/io/key"
-	"gioui.org/layout"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
@@ -82,8 +80,6 @@ type Load struct {
 	ReturnPage *string
 
 	Toast *Toast
-
-	TestButton decredmaterial.Button
 
 	SelectedWallet  *int
 	SelectedAccount *int
@@ -207,31 +203,6 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 	}
 
 	return l
-}
-
-type NavHandler struct {
-	Clickable     *widget.Clickable
-	Image         *widget.Image
-	ImageInactive *widget.Image
-	Page          string
-}
-
-type Container struct {
-	Padding layout.Inset
-}
-
-func (c Container) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
-	return c.Padding.Layout(gtx, w)
-}
-
-func (l *Load) SortedWalletList() []*dcrlibwallet.Wallet {
-	wallets := l.WL.MultiWallet.AllWallets()
-
-	sort.Slice(wallets, func(i, j int) bool {
-		return wallets[i].ID < wallets[j].ID
-	})
-
-	return wallets
 }
 
 func (l *Load) RefreshTheme() {

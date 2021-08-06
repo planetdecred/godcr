@@ -113,11 +113,6 @@ func LayoutBalance(gtx layout.Context, l *load.Load, amount string) layout.Dimen
 	)
 }
 
-var (
-	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
-	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
-)
-
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
 func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {

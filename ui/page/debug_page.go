@@ -16,6 +16,7 @@ type debugItem struct {
 	clickable *widget.Clickable
 	text      string
 	page      string
+	action    func()
 }
 
 type DebugPage struct {
@@ -31,11 +32,17 @@ func NewDebugPage(l *load.Load) *DebugPage {
 			clickable: new(widget.Clickable),
 			text:      "Check wallet logs",
 			page:      LogPageID,
+			action: func() {
+				l.ChangeFragment(NewLogPage(l), LogPageID)
+			},
 		},
 		{
 			clickable: new(widget.Clickable),
 			text:      "Check statistics",
 			page:      StatisticsPageID,
+			action: func() {
+				l.ChangeFragment(NewStatPage(l), StatisticsPageID)
+			},
 		},
 	}
 
@@ -54,10 +61,9 @@ func (pg *DebugPage) OnResume() {
 }
 
 func (pg *DebugPage) Handle() {
-	for i := range pg.debugItems {
-		for pg.debugItems[i].clickable.Clicked() {
-			//TODO
-			//pg.ChangePage(pg.debugItems[i].page)
+	for _, item := range pg.debugItems {
+		for item.clickable.Clicked() {
+			item.action()
 		}
 	}
 }

@@ -29,10 +29,22 @@ const (
 	ProposalsNavID
 )
 
+var (
+	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
+	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+)
+
+type NavHandler struct {
+	Clickable     *widget.Clickable
+	Image         *widget.Image
+	ImageInactive *widget.Image
+	Page          string
+}
+
 type MainPage struct {
 	Load                    *load.Load
-	AppBarNavItems          []load.NavHandler
-	DrawerNavItems          []load.NavHandler
+	AppBarNavItems          []NavHandler
+	DrawerNavItems          []NavHandler
 	IsNavDrawerMinimized    bool
 	MinimizeNavDrawerButton decredmaterial.IconButton
 	MaximizeNavDrawerButton decredmaterial.IconButton
@@ -90,7 +102,7 @@ func NewMainPage(l *load.Load) *MainPage {
 }
 
 func (mp *MainPage) initNavItems() {
-	mp.AppBarNavItems = []load.NavHandler{
+	mp.AppBarNavItems = []NavHandler{
 		{
 			Clickable: new(widget.Clickable),
 			Image:     mp.Load.Icons.SendIcon,
@@ -103,7 +115,7 @@ func (mp *MainPage) initNavItems() {
 		},
 	}
 
-	mp.DrawerNavItems = []load.NavHandler{
+	mp.DrawerNavItems = []NavHandler{
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Load.Icons.OverviewIcon,
@@ -185,7 +197,7 @@ func (mp *MainPage) UpdateBalance() {
 
 func (mp *MainPage) CalculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	totalBalance := int64(0)
-	for _, wallet := range mp.Load.SortedWalletList() {
+	for _, wallet := range mp.Load.WL.SortedWalletList() {
 		accountsResult, err := wallet.GetAccountsRaw()
 		if err != nil {
 			return 0, err
@@ -200,7 +212,7 @@ func (mp *MainPage) CalculateTotalWalletsBalance() (dcrutil.Amount, error) {
 }
 
 func (mp *MainPage) StartSyncing() {
-	for _, wal := range mp.Load.SortedWalletList() {
+	for _, wal := range mp.Load.WL.SortedWalletList() {
 		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
 			mp.UnlockWalletForSyncing(wal)
 			return
@@ -371,7 +383,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 							h := values.MarginPadding24
 							v := values.MarginPadding16
 							// Balance container
-							return load.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
+							return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
 								func(gtx C) D {
 									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
@@ -401,7 +413,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 								list := layout.List{Axis: layout.Horizontal}
 								return list.Layout(gtx, len(mp.AppBarNavItems), func(gtx C, i int) D {
 									// header buttons container
-									return load.Container{layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
+									return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
 										return decredmaterial.Clickable(gtx, mp.AppBarNavItems[i].Clickable, func(gtx C) D {
 											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
@@ -483,8 +495,8 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 					card.Color = background
 					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
 					return card.Layout(gtx, func(gtx C) D {
-						return load.Container{
-							layout.Inset{
+						return components.Container{
+							Padding: layout.Inset{
 								Top:    values.MarginPadding16,
 								Right:  values.MarginPadding24,
 								Bottom: values.MarginPadding16,
@@ -493,12 +505,12 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx, func(gtx C) D {
 							axis := layout.Horizontal
 							leftInset := values.MarginPadding15
-							width := components.NavDrawerWidth
+							width := NavDrawerWidth
 							if mp.IsNavDrawerMinimized {
 								axis = layout.Vertical
 								txt.TextSize = values.TextSize10
 								leftInset = values.MarginPadding0
-								width = components.NavDrawerMinimizedWidth
+								width = NavDrawerMinimizedWidth
 							}
 
 							gtx.Constraints.Min.X = gtx.Px(width)

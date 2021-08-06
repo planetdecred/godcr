@@ -127,13 +127,7 @@ func (mp *MainPage) OnSyncCanceled(willRestart bool) {
 func (mp *MainPage) OnSyncEndedWithError(err error)          {}
 func (mp *MainPage) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
 
-// todo: this will be removed when all pages have been moved to the page package
-// updateNotification sends notification to the notification channel depending on which channel the page uses
+// UpdateNotification sends notification to the notification channel
 func (mp *MainPage) UpdateNotification(signal interface{}) {
-	switch *mp.Load.Page {
-	case OverviewPageID, TransactionsPageID:
-		mp.Load.Receiver.NotificationsUpdate <- signal
-	default:
-		mp.Load.Receiver.NotificationsUpdate <- signal
-	}
+	mp.Load.Receiver.NotificationsUpdate <- signal
 }

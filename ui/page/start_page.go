@@ -17,7 +17,7 @@ import (
 const StartPageID = "start_page"
 
 type startPage struct {
-	load *load.Load
+	*load.Load
 
 	loading bool
 
@@ -31,7 +31,7 @@ type startPage struct {
 
 func NewStartPage(l *load.Load) load.Page {
 	sp := &startPage{
-		load: l,
+		Load: l,
 
 		loading: true,
 
@@ -56,17 +56,17 @@ func NewStartPage(l *load.Load) load.Page {
 }
 
 func (sp *startPage) OnResume() {
-	sp.load.WL.Wallet.InitMultiWallet()
-	sp.load.WL.MultiWallet = sp.load.WL.Wallet.GetMultiWallet()
-	sp.load.WL.MultiWallet = sp.load.WL.Wallet.GetMultiWallet()
+	sp.WL.Wallet.InitMultiWallet()
+	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
+	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
 
 	// refresh theme now that config is available
-	sp.load.RefreshTheme()
+	sp.RefreshTheme()
 
-	if sp.load.WL.MultiWallet.LoadedWalletsCount() > 0 {
+	if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
 		sp.loadStatus.Text = "Opening wallets"
 
-		if sp.load.WL.MultiWallet.IsStartupSecuritySet() {
+		if sp.WL.MultiWallet.IsStartupSecuritySet() {
 			sp.unlock()
 		} else {
 			go sp.openWallets("")
@@ -78,10 +78,10 @@ func (sp *startPage) OnResume() {
 }
 
 func (sp *startPage) unlock() {
-	modal.NewPasswordModal(sp.load).
+	modal.NewPasswordModal(sp.Load).
 		Title("Unlock with passphrase").
 		NegativeButton("Exit", func() {
-			sp.load.WL.MultiWallet.Shutdown()
+			sp.WL.MultiWallet.Shutdown()
 			os.Exit(0)
 		}).
 		PositiveButton("Unlock", func(password string, m *modal.PasswordModal) bool {
@@ -100,7 +100,7 @@ func (sp *startPage) unlock() {
 }
 
 func (sp *startPage) openWallets(passphrase string) error {
-	err := sp.load.WL.MultiWallet.OpenWallets([]byte(passphrase))
+	err := sp.WL.MultiWallet.OpenWallets([]byte(passphrase))
 	if err != nil {
 		log.Info("Error opening wallet:", err)
 		// show err dialog
@@ -112,17 +112,17 @@ func (sp *startPage) openWallets(passphrase string) error {
 }
 
 func (sp *startPage) proceedToMainPage() {
-	sp.load.WL.Wallet.SetupListeners()
-	sp.load.ChangeWindowPage(NewMainPage(sp.load), false)
+	sp.WL.Wallet.SetupListeners()
+	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
 }
 
 func (sp *startPage) Handle() {
 	for sp.createButton.Button.Clicked() {
-		modal.NewCreatePasswordModal(sp.load).
+		modal.NewCreatePasswordModal(sp.Load).
 			Title("Create new wallet").
 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
-					_, err := sp.load.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
+					_, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {
 						m.SetError(err.Error())
 						m.SetLoading(false)
@@ -137,7 +137,7 @@ func (sp *startPage) Handle() {
 	}
 
 	for sp.restoreButton.Button.Clicked() {
-		sp.load.ChangeWindowPage(NewCreateRestorePage(sp.load), true)
+		sp.ChangeWindowPage(NewCreateRestorePage(sp.Load), true)
 	}
 }
 

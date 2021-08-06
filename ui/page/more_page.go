@@ -16,10 +16,11 @@ type morePageHandler struct {
 	clickable *widget.Clickable
 	image     *widget.Image
 	page      string
+	action    func()
 }
 
 type MorePage struct {
-	Load              *load.Load
+	*load.Load
 	container         layout.Flex
 	morePageListItems []morePageHandler
 }
@@ -30,26 +31,41 @@ func NewMorePage(l *load.Load) *MorePage {
 			clickable: new(widget.Clickable),
 			image:     l.Icons.SettingsIcon,
 			page:      SettingsPageID,
+			action: func() {
+				l.ChangeFragment(NewSettingsPage(l), SettingsPageID)
+			},
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.SecurityIcon,
 			page:      SecurityToolsPageID,
+			action: func() {
+				l.ChangeFragment(NewSecurityToolsPage(l), SecurityToolsPageID)
+			},
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.HelpIcon,
 			page:      HelpPageID,
+			action: func() {
+				l.ChangeFragment(NewHelpPage(l), HelpPageID)
+			},
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.AboutIcon,
 			page:      AboutPageID,
+			action: func() {
+				l.ChangeFragment(NewAboutPage(l), AboutPageID)
+			},
 		},
 		{
 			clickable: new(widget.Clickable),
 			image:     l.Icons.DebugIcon,
 			page:      DebugPageID,
+			action: func() {
+				l.ChangeFragment(NewDebugPage(l), DebugPageID)
+			},
 		},
 	}
 
@@ -70,20 +86,16 @@ func (pg *MorePage) OnResume() {
 
 }
 
-//TODO
-//func (pg *MorePage) handleClickEvents(l *load.Load)
-func (pg *MorePage) handleClickEvents() {
-	for i := range pg.morePageListItems {
-		for pg.morePageListItems[i].clickable.Clicked() {
-			//TODO
-			//l.ChangePage(pg.morePageListItems[i].page)
+func (pg *MorePage) Handle() {
+	for _, item := range pg.morePageListItems {
+		for item.clickable.Clicked() {
+			item.action()
 		}
 	}
 }
+func (pg *MorePage) OnClose() {}
 
 func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
-	pg.handleClickEvents()
-
 	container := func(gtx C) D {
 		pg.layoutMoreItems(gtx)
 		return layout.Dimensions{Size: gtx.Constraints.Max}
@@ -98,8 +110,8 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 			return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
 				return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
-						background := pg.Load.Theme.Color.Surface
-						card := pg.Load.Theme.Card()
+						background := pg.Theme.Color.Surface
+						card := pg.Theme.Card()
 						card.Color = background
 						return card.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -121,7 +133,7 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 														if page == SecurityToolsPageID {
 															page = "Security Tools"
 														}
-														return pg.Load.Theme.Body1(page).Layout(gtx)
+														return pg.Theme.Body1(page).Layout(gtx)
 													})
 												})
 											}),
@@ -136,6 +148,3 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 		}),
 	)
 }
-
-func (pg *MorePage) Handle()  {}
-func (pg *MorePage) OnClose() {}

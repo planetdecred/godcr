@@ -111,14 +111,12 @@ func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 func (pg *SecurityToolsPage) Handle() {
 	if pg.verifyMessage.Clicked() {
 		pg.SetReturnPage(SecurityToolsPageID)
-		//TODO
-		//pg.ChangePage(VerifyMessagePageID)
+		pg.ChangeFragment(NewVerifyMessagePage(pg.Load), VerifyMessagePageID)
 	}
 
 	if pg.validateAddress.Clicked() {
 		pg.SetReturnPage(SecurityToolsPageID)
-		//TODO
-		//pg.ChangePage(ValidateAddressPageID)
+		pg.ChangeFragment(NewValidateAddressPage(pg.Load), ValidateAddressPageID)
 	}
 }
 
