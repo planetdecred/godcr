@@ -3,12 +3,9 @@ package page
 import (
 	"fmt"
 
-	"golang.org/x/exp/shiny/materialdesign/icons"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
@@ -17,20 +14,22 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 const PrivacyPageID = "Privacy"
 
 type PrivacyPage struct {
 	*load.Load
-	wallet                               *dcrlibwallet.Wallet
-	pageContainer                        layout.List
-	toggleMixer, allowUnspendUnmixedAcct *widget.Bool
-	toPrivacySetup                       decredmaterial.Button
-	dangerZoneCollapsible                *decredmaterial.Collapsible
+	wallet                *dcrlibwallet.Wallet
+	pageContainer         layout.List
+	toPrivacySetup        decredmaterial.Button
+	dangerZoneCollapsible *decredmaterial.Collapsible
 
-	backButton decredmaterial.IconButton
-	infoButton decredmaterial.IconButton
+	backButton              decredmaterial.IconButton
+	infoButton              decredmaterial.IconButton
+	toggleMixer             *decredmaterial.Switch
+	allowUnspendUnmixedAcct *decredmaterial.Switch
 }
 
 func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
@@ -38,14 +37,14 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 		Load:                    l,
 		wallet:                  wallet,
 		pageContainer:           layout.List{Axis: layout.Vertical},
-		toggleMixer:             new(widget.Bool),
-		allowUnspendUnmixedAcct: new(widget.Bool),
+		toggleMixer:             l.Theme.Switch(),
+		allowUnspendUnmixedAcct: l.Theme.Switch(),
 		toPrivacySetup:          l.Theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
 		dangerZoneCollapsible:   l.Theme.Collapsible(),
 	}
 	pg.toPrivacySetup.Background = l.Theme.Color.Primary
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
-
+	pg.allowUnspendUnmixedAcct.Disabled()
 	return pg
 }
 
@@ -54,6 +53,7 @@ func (pg *PrivacyPage) OnResume() {
 }
 
 func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
+	pg.updateMixerOptions()
 	d := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -215,7 +215,7 @@ func (pg *PrivacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 								return pg.mixerInfoStatusTextLayout(gtx)
 							})
 						}),
-						layout.Rigid(material.Switch(pg.Theme.Base, pg.toggleMixer).Layout),
+						layout.Rigid(pg.toggleMixer.Layout),
 					)
 				}),
 				layout.Rigid(pg.gutter),
@@ -338,7 +338,7 @@ func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Flexed(1, pg.Theme.Label(values.TextSize16, "Allow spending from unmixed accounts").Layout),
-							layout.Rigid(material.Switch(pg.Theme.Base, pg.allowUnspendUnmixedAcct).Layout),
+							layout.Rigid(pg.allowUnspendUnmixedAcct.Layout),
 						)
 					})
 				},
@@ -359,7 +359,7 @@ func (pg *PrivacyPage) Handle() {
 	}
 
 	if pg.toggleMixer.Changed() {
-		if pg.toggleMixer.Value {
+		if pg.toggleMixer.IsChecked() {
 			go pg.showModalPasswordStartAccountMixer()
 		} else {
 			go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
@@ -434,6 +434,10 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 
 			return false
 		}).Show()
+}
+
+func (pg *PrivacyPage) updateMixerOptions() {
+	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
 }
 
 func (pg *PrivacyPage) OnClose() {}
