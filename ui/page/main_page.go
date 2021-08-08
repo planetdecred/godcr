@@ -27,6 +27,7 @@ const (
 	WalletsNavID
 	TicketsNavID
 	ProposalsNavID
+	MoreNavID
 )
 
 var (
@@ -285,19 +286,35 @@ func (mp *MainPage) Handle() {
 
 	for i := range mp.DrawerNavItems {
 		for mp.DrawerNavItems[i].Clickable.Clicked() {
+			var pg load.Page
+			var id string
 			if i == OverviewNavID {
-				mp.ChangeFragment(NewOverviewPage(mp.Load), OverviewPageID)
+				pg = NewOverviewPage(mp.Load)
+				id = OverviewPageID
 			} else if i == TransactionsNavID {
-				mp.ChangeFragment(NewTransactionsPage(mp.Load), TransactionsPageID)
+				pg = NewTransactionsPage(mp.Load)
+				id = TransactionsPageID
 			} else if i == WalletsNavID {
-				mp.ChangeFragment(NewWalletPage(mp.Load), WalletPageID)
+				pg = NewWalletPage(mp.Load)
+				id = WalletPageID
 			} else if i == TicketsNavID {
-				mp.ChangeFragment(tickets.NewTicketPage(mp.Load), tickets.PageID)
+				pg = tickets.NewTicketPage(mp.Load)
+				id = tickets.PageID
 			} else if i == ProposalsNavID {
-				mp.ChangeFragment(proposal.NewProposalsPage(mp.Load), proposal.ProposalsPageID)
+				pg = proposal.NewProposalsPage(mp.Load)
+				id = proposal.ProposalsPageID
+			} else if i == MoreNavID {
+				pg = NewMorePage(mp.Load)
+				id = MorePageID
 			} else {
-				mp.ChangeFragment(NewMorePage(mp.Load), MorePageID)
+				continue
 			}
+
+			if id == mp.Current {
+				continue
+			}
+
+			mp.changeFragment(pg, id)
 		}
 	}
 }
