@@ -105,7 +105,12 @@ func (pg *proposalDetails) Handle() {
 	}
 
 	for pg.viewInPoliteiaBtn.Clicked() {
-		components.GoToURL("https://proposals.decred.org/record/" + pg.proposal.Token)
+		host := "https://proposals.decred.org/record/"
+		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
+			host = "https://test-proposals.decred.org/record/"
+		}
+
+		components.GoToURL(host + pg.proposal.Token)
 	}
 }
 

@@ -41,7 +41,11 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 }
 
 func (wal *Wallet) InitMultiWallet() error {
-	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net, dcrlibwallet.PoliteiaMainnetHost)
+	politeiaHost := dcrlibwallet.PoliteiaMainnetHost
+	if wal.Net == dcrlibwallet.Testnet3 {
+		politeiaHost = dcrlibwallet.PoliteiaTestnetHost
+	}
+	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net, politeiaHost)
 	if err != nil {
 		return err
 	}
