@@ -246,7 +246,6 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 			modals := win.modals
 
 			if len(modals) > 0 {
-
 				modalLayouts := make([]layout.StackChild, 0)
 				for _, modal := range modals {
 					modal.Handle()

@@ -86,7 +86,6 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 			vm.RefreshWindow()
 
 			go func() {
-
 				voteDetails, err := vm.WL.MultiWallet.Politeia.ProposalVoteDetailsRaw(w.ID, vm.proposal.Token)
 				vm.detailsMu.Lock()
 				if !components.ContextDone(ctx) {
