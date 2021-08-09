@@ -41,11 +41,6 @@ var (
 	durationDesc  = ""
 )
 
-const (
-	LIVE     = "LIVE"
-	IMMATURE = "IMMATURE"
-)
-
 func ticketStatusProfile(l *load.Load, ticketStatus string) *struct {
 	icon       *decredmaterial.Image
 	color      color.NRGBA
@@ -192,9 +187,9 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tooltips) layout.Dimensions {
+func ticketCard(gtx layout.Context, l *load.Load, t load.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
 	var itemWidth int
-	st := ticketStatusProfile(l, t.Info.Status)
+	st := ticketStatusProfile(l, t.Status)
 	if st == nil {
 		return layout.Dimensions{}
 	}
@@ -278,7 +273,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 							layout.Rigid(func(gtx C) D {
 								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.Label(values.MarginPadding14, t.Info.Status)
+										txt := l.Theme.Label(values.MarginPadding14, t.Status)
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {

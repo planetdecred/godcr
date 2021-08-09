@@ -1,21 +1,17 @@
 package tickets
 
 import (
-	"image/color"
-	"sort"
-	"strings"
-	"time"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
+	"image/color"
+	"strings"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const listPageID = "TicketsList"
@@ -23,7 +19,7 @@ const listPageID = "TicketsList"
 type ListPage struct {
 	*load.Load
 
-	tickets      **wallet.Tickets
+	tickets      []load.Ticket
 	ticketsList  layout.List
 	filterSorter int
 	isGridView   bool
@@ -42,7 +38,6 @@ type ListPage struct {
 func newListPage(l *load.Load) *ListPage {
 	pg := &ListPage{
 		Load:           l,
-		tickets:        l.WL.Tickets,
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
 		isGridView:     true,
@@ -56,7 +51,6 @@ func newListPage(l *load.Load) *ListPage {
 		{Text: "Immature"},
 		{Text: "Live"},
 		{Text: "Voted"},
-		{Text: "Missed"},
 		{Text: "Expired"},
 		{Text: "Revoked"},
 	}, 1)
@@ -69,8 +63,42 @@ func (pg *ListPage) ID() string {
 }
 
 func (pg *ListPage) OnResume() {
-	pg.wallets = pg.WL.SortedWalletList()
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+}
+
+func (pg *ListPage) fetchTickets() {
+	var txFilter int32
+	switch pg.ticketTypeDropDown.Selected() {
+	case "All":
+		txFilter = dcrlibwallet.TxFilterStaking
+	case "Immature":
+		txFilter = dcrlibwallet.TxFilterImmature
+	case "Live":
+		txFilter = dcrlibwallet.TxFilterLive
+	case "Voted":
+		txFilter = dcrlibwallet.TxFilterVoted
+	case "Expired":
+		txFilter = dcrlibwallet.TxFilterExpired
+	case "Revoked":
+		txFilter = dcrlibwallet.TxFilterRevoked
+	default:
+		return
+	}
+
+	var newestFirst bool
+	switch pg.orderDropDown.Selected() {
+	case values.StrNewest:
+		newestFirst = true
+	case values.StrOldest:
+		newestFirst = false
+	}
+
+	selectedWalletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
+	tickets, err := pg.WL.GetTickets(selectedWalletID, txFilter, newestFirst)
+	if err != nil {
+		pg.CreateToast(err.Error(), false)
+	} else {
+		pg.tickets = tickets
+	}
 }
 
 func (pg *ListPage) Layout(gtx C) D {
@@ -100,7 +128,7 @@ func (pg *ListPage) Layout(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
 							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 								gtx.Constraints.Min = gtx.Constraints.Max
-
+								var tickets []load.Ticket
 								if pg.ticketTypeDropDown.SelectedIndex()-1 != -1 {
 									tickets = filterTickets(tickets, func(ticketStatus string) bool {
 										return ticketStatus == strings.ToUpper(pg.ticketTypeDropDown.Selected())
@@ -187,9 +215,32 @@ func (pg *ListPage) Layout(gtx C) D {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *ListPage) ticketListLayout(gtx C, tickets []wallet.Ticket) D {
+func (pg *ListPage) dropDowns(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return pg.walletDropDown.Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Left: values.MarginPadding5,
+					}.Layout(gtx, pg.ticketTypeDropDown.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Left: values.MarginPadding5,
+					}.Layout(gtx, pg.orderDropDown.Layout)
+				}),
+			)
+		}),
+	)
+}
+
+func (pg *ListPage) ticketListLayout(gtx C, tickets []load.Ticket) D {
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-		st := ticketStatusProfile(pg.Load, tickets[index].Info.Status)
+		st := ticketStatusProfile(pg.Load, tickets[index].Status)
 		if st == nil {
 			return D{}
 		}
@@ -247,7 +298,7 @@ func (pg *ListPage) ticketListLayout(gtx C, tickets []wallet.Ticket) D {
 									l := func(gtx C) D {
 										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												txt := pg.Theme.Label(values.MarginPadding14, tickets[index].Info.Status)
+												txt := pg.Theme.Label(values.MarginPadding14, tickets[index].Status)
 												txt.Color = st.color
 												return txt.Layout(gtx)
 											}),
@@ -280,7 +331,7 @@ func (pg *ListPage) ticketListLayout(gtx C, tickets []wallet.Ticket) D {
 	})
 }
 
-func (pg *ListPage) ticketListGridLayout(gtx C, tickets []wallet.Ticket) D {
+func (pg *ListPage) ticketListGridLayout(gtx C, tickets []load.Ticket) D {
 	// TODO: GridWrap's items not able to scroll vertically, will update when it fixed
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return pg.ticketsList.Layout(gtx, 1, func(gtx C, index int) D {
@@ -304,26 +355,8 @@ func (pg *ListPage) ticketListGridLayout(gtx C, tickets []wallet.Ticket) D {
 }
 
 func (pg *ListPage) Handle() {
-
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
-	}
-
-	sortSelection := pg.orderDropDown.SelectedIndex()
-	if pg.filterSorter != sortSelection {
-		pg.filterSorter = sortSelection
-		newestFirst := pg.filterSorter == 0
-		for _, wal := range pg.wallets {
-			tickets := (*pg.tickets).Confirmed[wal.ID]
-			sort.SliceStable(tickets, func(i, j int) bool {
-				backTime := time.Unix(tickets[j].Info.Ticket.Timestamp, 0)
-				frontTime := time.Unix(tickets[i].Info.Ticket.Timestamp, 0)
-				if newestFirst {
-					return backTime.Before(frontTime)
-				}
-				return frontTime.Before(backTime)
-			})
-		}
 	}
 }
 

@@ -134,6 +134,11 @@ func walletSyncStatus(isWaiting bool, walletBestBlock, bestBlockHeight int32) st
 	return "synced"
 }
 
+// CancelSync cancels the SPV sync
+func (wal *Wallet) CancelSync() {
+	go wal.multi.CancelSync()
+}
+
 // GetMultiWalletInfo gets bulk information about the loaded wallets.
 // Information regarding transactions is collected with respect to wal.confirms as the
 // number of required confirmations for said transactions.

@@ -43,7 +43,7 @@ type Page struct {
 	ticketTooltips      []tooltips
 
 	stakingOverview *dcrlibwallet.StakingOverview
-	liveTickets     []dcrlibwallet.Transaction
+	liveTickets     []load.Ticket
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -80,17 +80,7 @@ func (pg *Page) ID() string {
 
 func (pg *Page) OnResume() {
 	pg.ticketPrice = dcrutil.Amount(pg.WL.TicketPrice()).String()
-	wallets := pg.WL.MultiWallet.AllWallets()
-
-	for _, w := range wallets {
-		ov, _ := w.StakingOverview()
-		pg.stakingOverview.All += ov.All
-		pg.stakingOverview.Expired += ov.Expired
-		pg.stakingOverview.Immature += ov.Immature
-		pg.stakingOverview.Live += ov.Live
-		pg.stakingOverview.Revoked += ov.Revoked
-		pg.stakingOverview.Voted += ov.Voted
-	}
+	pg.stakingOverview = pg.WL.StakingOverviewAllWallets()
 
 	lt, err := pg.WL.AllLiveTickets()
 	if err != nil {
@@ -98,7 +88,7 @@ func (pg *Page) OnResume() {
 		pg.CreateToast(err.Error(), false)
 	}
 	pg.liveTickets = lt
-	fmt.Printf("LIVE TICKETS %v \n", lt)
+	fmt.Printf("LIVE TICKETS %+v \n", lt)
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
 	pg.autoPurchaseEnabled.Disabled()
@@ -113,9 +103,9 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 			func(ctx layout.Context) layout.Dimensions {
 				return pg.ticketsLiveSection(gtx)
 			},
-			func(ctx layout.Context) layout.Dimensions {
-				return pg.ticketsActivitySection(gtx)
-			},
+			//func(ctx layout.Context) layout.Dimensions {
+			//	return pg.ticketsActivitySection(gtx)
+			//},
 			func(ctx layout.Context) layout.Dimensions {
 				return pg.stakingRecordSection(gtx)
 			},
@@ -228,7 +218,7 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 						var elements []layout.FlexChild
 						for i := 0; i < len(pg.stakingCounts()); i++ {
 							item := pg.stakingCounts()[i]
-							if item.Status == LIVE || item.Status == IMMATURE {
+							if item.Status == load.StakingLive || item.Status == load.StakingImmature {
 								elements = append(elements, layout.Rigid(func(gtx C) D {
 									return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
@@ -268,9 +258,9 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 					})
 				}
 
-				return pg.ticketsLive.Layout(gtx, len(tickets), func(gtx C, index int) D {
+				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, pg.Load, &tickets[index], pg.ticketTooltips[index])
+						return ticketCard(gtx, pg.Load, pg.liveTickets[index], pg.ticketTooltips[index])
 					})
 				})
 			}),
@@ -278,31 +268,31 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *Page) ticketsActivitySection(gtx layout.Context) layout.Dimensions {
-	tickets := (*pg.tickets).RecentActivity
-	if len(tickets) == 0 {
-		return layout.Dimensions{}
-	}
-
-	return pg.pageSections(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{
-					Bottom: values.MarginPadding14,
-				}.Layout(gtx, func(gtx C) D {
-					tit := pg.Theme.Label(values.TextSize14, "Recent Activity")
-					tit.Color = pg.Theme.Color.Gray2
-					return pg.titleRow(gtx, tit.Layout, pg.toTicketsActivity.Layout)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.ticketsActivity.Layout(gtx, len(tickets), func(gtx C, index int) D {
-					return ticketActivityRow(gtx, pg.Load, tickets[index], index)
-				})
-			}),
-		)
-	})
-}
+//func (pg *Page) ticketsActivitySection(gtx layout.Context) layout.Dimensions {
+//	//tickets := (*pg.tickets).RecentActivity
+//	if len(tickets) == 0 {
+//		return layout.Dimensions{}
+//	}
+//
+//	return pg.pageSections(gtx, func(gtx C) D {
+//		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+//			layout.Rigid(func(gtx C) D {
+//				return layout.Inset{
+//					Bottom: values.MarginPadding14,
+//				}.Layout(gtx, func(gtx C) D {
+//					title := pg.Theme.Label(values.TextSize14, "Recent Activity")
+//					title.Color = pg.Theme.Color.Gray2
+//					return pg.titleRow(gtx, title.Layout, pg.toTicketsActivity.Layout)
+//				})
+//			}),
+//			layout.Rigid(func(gtx C) D {
+//				return pg.ticketsActivity.Layout(gtx, len(tickets), func(gtx C, index int) D {
+//					return ticketActivityRow(gtx, pg.Load, tickets[index], index)
+//				})
+//			}),
+//		)
+//	})
+//}
 
 func (pg *Page) stakingRecordSection(gtx layout.Context) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
@@ -311,9 +301,9 @@ func (pg *Page) stakingRecordSection(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Bottom: values.MarginPadding14,
 				}.Layout(gtx, func(gtx C) D {
-					tit := pg.Theme.Label(values.TextSize14, "Staking Record")
-					tit.Color = pg.Theme.Color.Gray2
-					return pg.titleRow(gtx, tit.Layout, func(gtx C) D { return layout.Dimensions{} })
+					title := pg.Theme.Label(values.TextSize14, "Staking Record")
+					title.Color = pg.Theme.Color.Gray2
+					return pg.titleRow(gtx, title.Layout, func(gtx C) D { return layout.Dimensions{} })
 				})
 			}),
 			layout.Rigid(func(gtx C) D {

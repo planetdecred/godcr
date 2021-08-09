@@ -119,10 +119,10 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket {
-	t := make([]wallet.Ticket, 0)
+func filterTickets(tickets []load.Ticket, f func(string) bool) []load.Ticket {
+	t := make([]load.Ticket, 0)
 	for _, v := range tickets {
-		if f(v.Info.Status) {
+		if f(v.Status) {
 			t = append(t, v)
 		}
 	}
