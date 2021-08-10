@@ -176,17 +176,10 @@ func (pg *VerifyMessagePage) Handle() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
 			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
-			fmt.Println(err.Error())
-			if err != nil {
-				pg.signatureEditor.SetError("Invalid signature or message")
-				return
-			}
-			pg.signatureEditor.SetError("")
-
-			if !valid {
-				pg.verifyMessageStatus = pg.Icons.NavigationCancel
+			if err != nil || !valid {
 				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = pg.Theme.Color.Danger
+				pg.verifyMessageStatus = pg.Icons.NavigationCancel
 				return
 			}
 
@@ -210,10 +203,11 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 
 func (pg *VerifyMessagePage) updateColors() {
 	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
-	if pg.addressIsValid || pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
+	if pg.stringNotEmpty(pg.addressEditor.Editor.Text()) ||
+	 pg.stringNotEmpty(pg.messageEditor.Editor.Text()) ||
+		pg.stringNotEmpty(pg.signatureEditor.Editor.Text()) {
 		pg.clearBtn.Color = pg.Theme.Color.Primary
 	}
-
 	if pg.addressIsValid && pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
 		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
 	}
@@ -227,7 +221,6 @@ func (pg *VerifyMessagePage) clearInputs() {
 	pg.messageEditor.Editor.SetText("")
 	pg.verifyMessage.Text = ""
 	pg.addressEditor.SetError("")
-	pg.signatureEditor.SetError("")
 }
 
 func (pg *VerifyMessagePage) validateAddress() bool {
