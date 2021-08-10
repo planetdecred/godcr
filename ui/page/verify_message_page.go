@@ -14,6 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/dcrlibwallet"
 )
 
 const VerifyMessagePageID = "VerifyMessage"
@@ -211,6 +212,14 @@ func (pg *VerifyMessagePage) updateColors() {
 	if pg.addressIsValid && pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
 		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
 	}
+	return true
+}
+
+func (pg *VerifyMessagePage) updateColors() {
+	if pg.stringNotEmpty(pg.addressEditor.Editor.Text()) || pg.stringNotEmpty(pg.messageEditor.Editor.Text()) ||
+	 pg.stringNotEmpty(pg.signatureEditor.Editor.Text()) {
+		pg.clearBtn.Color = pg.Theme.Color.Primary
+	} 
 }
 
 func (pg *VerifyMessagePage) clearInputs() {
