@@ -19,9 +19,11 @@ const VerifyMessagePageID = "VerifyMessage"
 
 type VerifyMessagePage struct {
 	*load.Load
-	addressInput, messageInput, signInput decredmaterial.Editor
-	clearBtn, verifyBtn                   decredmaterial.Button
-	verifyMessage                         decredmaterial.Label
+	addressEditor          decredmaterial.Editor
+	messageEditor          decredmaterial.Editor
+	signatureEditor        decredmaterial.Editor
+	clearBtn, verifyButton decredmaterial.Button
+	verifyMessage          decredmaterial.Label
 
 	verifyMessageStatus *widget.Icon
 
@@ -32,19 +34,30 @@ type VerifyMessagePage struct {
 func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
 		Load:          l,
-		addressInput:  l.Theme.Editor(new(widget.Editor), "Address"),
-		messageInput:  l.Theme.Editor(new(widget.Editor), "Message"),
-		signInput:     l.Theme.Editor(new(widget.Editor), "Signature"),
 		verifyMessage: l.Theme.Body1(""),
-		verifyBtn:     l.Theme.Button(new(widget.Clickable), "Verify message"),
-		clearBtn:      l.Theme.Button(new(widget.Clickable), "Clear all"),
 	}
 
-	pg.addressInput.Editor.SingleLine, pg.messageInput.Editor.SingleLine = true, true
-	pg.signInput.Editor.Submit, pg.addressInput.Editor.Submit, pg.messageInput.Editor.Submit = true, true, true
-	pg.verifyBtn.TextSize, pg.clearBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14, values.TextSize14
-	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
-	pg.verifyBtn.Font.Weight = text.Bold
+	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
+	pg.addressEditor.Editor.SingleLine = true
+	pg.addressEditor.Editor.Submit = true
+
+	pg.messageEditor = l.Theme.Editor(new(widget.Editor), "Message")
+	pg.messageEditor.Editor.SingleLine = true
+	pg.messageEditor.Editor.Submit = true
+
+	pg.signatureEditor = l.Theme.Editor(new(widget.Editor), "Signature")
+	pg.signatureEditor.Editor.Submit = true
+
+	buttonTextSize := values.TextSize14
+	pg.verifyButton = l.Theme.Button(new(widget.Clickable), "Verify message")
+	pg.verifyButton.TextSize = buttonTextSize
+	pg.verifyButton.Font.Weight = text.Bold
+	pg.verifyButton.Background = l.Theme.Color.Hint
+
+	pg.clearBtn = l.Theme.Button(new(widget.Clickable), "Clear all")
+	pg.clearBtn.TextSize = buttonTextSize
+	pg.clearBtn.Background = color.NRGBA{}
+	pg.clearBtn.Color = l.Theme.Color.Hint
 	pg.clearBtn.Font.Weight = text.Bold
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -73,9 +86,9 @@ func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(pg.description()),
-							layout.Rigid(pg.inputRow(pg.addressInput)),
-							layout.Rigid(pg.inputRow(pg.signInput)),
-							layout.Rigid(pg.inputRow(pg.messageInput)),
+							layout.Rigid(pg.inputRow(pg.addressEditor)),
+							layout.Rigid(pg.inputRow(pg.signatureEditor)),
+							layout.Rigid(pg.inputRow(pg.messageEditor)),
 							layout.Rigid(pg.verifyAndClearButtons()),
 							layout.Rigid(pg.verifyMessageResponse()),
 						)
@@ -112,7 +125,7 @@ func (pg *VerifyMessagePage) verifyAndClearButtons() layout.Widget {
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pg.clearBtn.Layout)
 						}),
-						layout.Rigid(pg.verifyBtn.Layout),
+						layout.Rigid(pg.verifyButton.Layout),
 					)
 				})
 			}),
@@ -143,18 +156,18 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 }
 
 func (pg *VerifyMessagePage) Handle() {
-	pg.verifyBtn.Background, pg.clearBtn.Color = pg.Theme.Color.Hint, pg.Theme.Color.Hint
+	// pg.verifyButton.Background, pg.clearBtn.Color = pg.Theme.Color.Hint, pg.Theme.Color.Hint
 	if pg.inputsNotEmpty() {
-		pg.verifyBtn.Background, pg.clearBtn.Color = pg.Theme.Color.Primary, pg.Theme.Color.Primary
-		if pg.verifyBtn.Button.Clicked() || handleSubmitEvent(pg.addressInput.Editor, pg.messageInput.Editor, pg.signInput.Editor) {
+		pg.verifyButton.Background, pg.clearBtn.Color = pg.Theme.Color.Primary, pg.Theme.Color.Primary
+		if pg.verifyButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
-			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressInput.Editor.Text(), pg.messageInput.Editor.Text(), pg.signInput.Editor.Text())
+			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
 			if err != nil {
-				pg.signInput.SetError("Invalid signature or message")
+				pg.signatureEditor.SetError("Invalid signature or message")
 				return
 			}
-			pg.signInput.SetError("")
+			pg.signatureEditor.SetError("")
 
 			if !valid {
 				pg.verifyMessageStatus = pg.Icons.NavigationCancel
@@ -170,7 +183,7 @@ func (pg *VerifyMessagePage) Handle() {
 		}
 	}
 
-	pg.handlerEditorEvents(pg.addressInput.Editor)
+	pg.handlerEditorEvents(pg.addressEditor.Editor)
 	if pg.clearBtn.Button.Clicked() {
 		pg.clearInputs()
 	}
@@ -188,37 +201,37 @@ func (pg *VerifyMessagePage) handlerEditorEvents(w *widget.Editor) {
 
 func (pg *VerifyMessagePage) clearInputs() {
 	pg.verifyMessageStatus = nil
-	pg.verifyBtn.Background = pg.Theme.Color.Hint
-	pg.addressInput.Editor.SetText("")
-	pg.signInput.Editor.SetText("")
-	pg.messageInput.Editor.SetText("")
+	pg.verifyButton.Background = pg.Theme.Color.Hint
+	pg.addressEditor.Editor.SetText("")
+	pg.signatureEditor.Editor.SetText("")
+	pg.messageEditor.Editor.SetText("")
 	pg.verifyMessage.Text = ""
-	pg.addressInput.SetError("")
-	pg.signInput.SetError("")
+	pg.addressEditor.SetError("")
+	pg.signatureEditor.SetError("")
 }
 
 func (pg *VerifyMessagePage) validateAddress() bool {
-	if isValid, _ := pg.WL.Wallet.IsAddressValid(pg.addressInput.Editor.Text()); !isValid {
-		pg.addressInput.SetError("Invalid address")
+	if isValid, _ := pg.WL.Wallet.IsAddressValid(pg.addressEditor.Editor.Text()); !isValid {
+		pg.addressEditor.SetError("Invalid address")
 		return false
 	}
 
-	pg.addressInput.SetError("")
+	pg.addressEditor.SetError("")
 	return true
 }
 
 func (pg *VerifyMessagePage) inputsNotEmpty() bool {
-	if strings.Trim(pg.addressInput.Editor.Text(), " ") == "" {
+	if strings.Trim(pg.addressEditor.Editor.Text(), " ") == "" {
 		return false
 	}
-	if strings.Trim(pg.messageInput.Editor.Text(), " ") == "" {
+	if strings.Trim(pg.messageEditor.Editor.Text(), " ") == "" {
 		return false
 	}
-	if strings.Trim(pg.signInput.Editor.Text(), " ") == "" {
+	if strings.Trim(pg.signatureEditor.Editor.Text(), " ") == "" {
 		return false
 	}
 
-	pg.verifyBtn.Background = pg.Theme.Color.Primary
+	pg.verifyButton.Background = pg.Theme.Color.Primary
 	return true
 }
 
