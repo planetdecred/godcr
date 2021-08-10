@@ -1,6 +1,7 @@
 package page
 
 import (
+	"fmt"
 	"image/color"
 	"strings"
 
@@ -19,6 +20,7 @@ const VerifyMessagePageID = "VerifyMessage"
 
 type VerifyMessagePage struct {
 	*load.Load
+
 	addressEditor          decredmaterial.Editor
 	messageEditor          decredmaterial.Editor
 	signatureEditor        decredmaterial.Editor
@@ -27,8 +29,9 @@ type VerifyMessagePage struct {
 
 	verifyMessageStatus *widget.Icon
 
-	backButton decredmaterial.IconButton
-	infoButton decredmaterial.IconButton
+	backButton     decredmaterial.IconButton
+	infoButton     decredmaterial.IconButton
+	addressIsValid bool
 }
 
 func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
@@ -156,13 +159,24 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 }
 
 func (pg *VerifyMessagePage) Handle() {
-	// pg.verifyButton.Background, pg.clearBtn.Color = pg.Theme.Color.Hint, pg.Theme.Color.Hint
-	if pg.inputsNotEmpty() {
-		pg.verifyButton.Background, pg.clearBtn.Color = pg.Theme.Color.Primary, pg.Theme.Color.Primary
-		if pg.verifyButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
+	pg.updateColors()
+
+	for _, evt := range pg.addressEditor.Editor.Events() {
+		if pg.addressEditor.Editor.Focused() {
+			switch evt.(type) {
+			case widget.ChangeEvent:
+				pg.validateAddress()
+			}
+		}
+	}
+
+	if pg.verifyButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
+		if pg.validateAllInputs() {
+			fmt.Println("im here")
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
 			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
+			fmt.Println(err.Error())
 			if err != nil {
 				pg.signatureEditor.SetError("Invalid signature or message")
 				return
@@ -183,19 +197,25 @@ func (pg *VerifyMessagePage) Handle() {
 		}
 	}
 
-	pg.handlerEditorEvents(pg.addressEditor.Editor)
 	if pg.clearBtn.Button.Clicked() {
 		pg.clearInputs()
 	}
 }
+func (pg *VerifyMessagePage) validateAllInputs() bool {
+	if !pg.validateAddress() || !pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
+		return false
+	}
+	return true
+}
 
-func (pg *VerifyMessagePage) handlerEditorEvents(w *widget.Editor) {
-	for _, evt := range w.Events() {
-		switch evt.(type) {
-		case widget.ChangeEvent:
-			pg.validateAddress()
-			return
-		}
+func (pg *VerifyMessagePage) updateColors() {
+	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
+	if pg.addressIsValid || pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
+		pg.clearBtn.Color = pg.Theme.Color.Primary
+	}
+
+	if pg.addressIsValid && pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
+		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
 	}
 }
 
@@ -211,27 +231,38 @@ func (pg *VerifyMessagePage) clearInputs() {
 }
 
 func (pg *VerifyMessagePage) validateAddress() bool {
-	if isValid, _ := pg.WL.Wallet.IsAddressValid(pg.addressEditor.Editor.Text()); !isValid {
-		pg.addressEditor.SetError("Invalid address")
-		return false
+	address := pg.addressEditor.Editor.Text()
+	pg.addressEditor.SetError("")
+	exist, _ := pg.WL.Wallet.HaveAddress(address)
+
+	var valid bool
+	var errorMessage string
+
+	switch {
+	case !pg.stringNotEmpty(address):
+		errorMessage, valid = "Please enter a valid address", false
+	case !pg.WL.MultiWallet.IsAddressValid(address):
+		errorMessage, valid = "Invalid address", false
+	case !exist:
+		errorMessage, valid = "Address not owned by any wallet", false
+	default:
+		errorMessage, valid = "", true
+	}
+	if !valid {
+		pg.addressEditor.SetError(errorMessage)
 	}
 
-	pg.addressEditor.SetError("")
-	return true
+	pg.addressIsValid = valid
+	return valid
 }
 
-func (pg *VerifyMessagePage) inputsNotEmpty() bool {
-	if strings.Trim(pg.addressEditor.Editor.Text(), " ") == "" {
-		return false
-	}
-	if strings.Trim(pg.messageEditor.Editor.Text(), " ") == "" {
-		return false
-	}
-	if strings.Trim(pg.signatureEditor.Editor.Text(), " ") == "" {
-		return false
+func (pg *VerifyMessagePage) stringNotEmpty(texts ...string) bool {
+	for _, t := range texts {
+		if strings.Trim(t, " ") == "" {
+			return false
+		}
 	}
 
-	pg.verifyButton.Background = pg.Theme.Color.Primary
 	return true
 }
 
