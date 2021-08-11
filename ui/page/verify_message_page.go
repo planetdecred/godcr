@@ -65,8 +65,10 @@ func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			InfoButton: pg.infoButton,
 			Back: func() {
 				pg.clearInputs()
-				pg.ChangePage(WalletPageID)
-				pg.ChangePage(*pg.ReturnPage)
+				//TODO
+				//pg.ChangePage(WalletPageID)
+				//TODO
+				//pg.ChangePage(*pg.ReturnPage)
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {

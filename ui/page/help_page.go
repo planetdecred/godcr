@@ -45,7 +45,8 @@ func (pg *HelpPage) Layout(gtx layout.Context) layout.Dimensions {
 			SubTitle:   "For more information, please visit the Decred documentation.",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangePage(MorePageID)
+				//TODO
+				//pg.ChangePage(MorePageID)
 			},
 			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {

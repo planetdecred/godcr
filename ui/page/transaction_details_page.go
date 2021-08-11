@@ -121,7 +121,8 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.ChangePage(*pg.ReturnPage)
+				//TODO
+				//pg.ChangePage(*pg.ReturnPage)
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{

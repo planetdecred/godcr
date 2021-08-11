@@ -409,7 +409,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 			Title:      components.TruncateString(proposal.Name, 40),
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangePage(*pg.ReturnPage)
+				//pg.ChangePage(*pg.ReturnPage)
 				pg.descriptionList.Position.First, pg.descriptionList.Position.Offset = 0, 0
 			},
 			Body: func(gtx C) D {

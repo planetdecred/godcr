@@ -69,11 +69,14 @@ func (win *Window) updateStates(update interface{}) {
 		op.InvalidateOp{}.Add(win.ops)
 	case wallet.DeletedWallet:
 		win.selected = 0
-		win.notifyOnSuccess("Wallet removed")
-	case wallet.UpdatedAccount:
-		win.notifyOnSuccess("Account renamed")
+		//TODO
+		//win.notifyOnSuccess("Wallet removed")
+	//TODO
+	/*case wallet.UpdatedAccount:
+	win.notifyOnSuccess("Account renamed")*/
 	case *wallet.Signature:
-		win.notifyOnSuccess("Message signed")
+		//TODO
+		//win.notifyOnSuccess("Message signed")
 		win.signatureResult = update.(*wallet.Signature)
 	case *dcrlibwallet.TxAuthor:
 		txAuthor := update.(*dcrlibwallet.TxAuthor)
@@ -81,7 +84,9 @@ func (win *Window) updateStates(update interface{}) {
 	case *wallet.Broadcast:
 		broadcastResult := update.(*wallet.Broadcast)
 		win.broadcastResult = *broadcastResult
-	case *wallet.ChangePassword:
+	}
+	//TODO
+	/*case *wallet.ChangePassword:
 		win.notifyOnSuccess("Spending password changed")
 	case *wallet.StartupPassphrase:
 		win.notifyOnSuccess(update.(*wallet.StartupPassphrase).Msg)
@@ -90,6 +95,7 @@ func (win *Window) updateStates(update interface{}) {
 	case *wallet.TicketPurchase:
 		win.notifyOnSuccess("Ticket(s) purchased, attempting to pay fee")
 	}
+	*/
 
 	win.states.loading = true
 	win.wallet.GetMultiWalletInfo()
@@ -100,9 +106,12 @@ func (win *Window) updateStates(update interface{}) {
 	log.Debugf("Updated with multiwallet info: %+v\n and window state %+v", win.walletInfo, win.states)
 }
 
-func (win *Window) notifyOnSuccess(text string) {
-	win.toast = &toast{
-		text:    text,
-		success: true,
+//TODO
+/*func (win *Window) notifyOnSuccess(text string) {
+	win.toast = &load.Toast{
+		//TODO
+		//text:    text,
+		//success: true,
 	}
 }
+*/

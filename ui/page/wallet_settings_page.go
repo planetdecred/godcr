@@ -63,7 +63,8 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangePage(WalletPageID)
+				//TODO
+				//pg.ChangePage(WalletPageID)
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -269,7 +270,8 @@ func (pg *WalletSettingsPage) Handle() {
 								return
 							}
 							pm.Dismiss()
-							pm.ChangePage(WalletPageID)
+							//TODO
+							//pm.ChangePage(WalletPageID)
 						}()
 						return false
 					}).Show()

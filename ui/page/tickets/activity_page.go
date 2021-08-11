@@ -69,7 +69,6 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "Ticket activity",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangePage(PageID)
 			},
 			Body: func(gtx C) D {
 				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID

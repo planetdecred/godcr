@@ -1,10 +1,10 @@
-package ui
+package page
 
 import (
 	"os"
 
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page"
+	"github.com/planetdecred/godcr/ui/modal"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -14,11 +14,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const Start = "start_page"
+const StartPageID = "start_page"
 
 type startPage struct {
-	*pageCommon
-	load *load.Load
+	*load.Load
 
 	loading bool
 
@@ -30,45 +29,44 @@ type startPage struct {
 	restoreButton decredmaterial.Button
 }
 
-func newStartPage(common *pageCommon, l *load.Load) Page {
+func NewStartPage(l *load.Load) load.Page {
 	sp := &startPage{
-		pageCommon: common,
-		load:       l,
+		Load: l,
 
 		loading: true,
 
-		decredSymbol: common.icons.decredSymbolIcon,
-		networkType:  common.theme.Label(values.TextSize20, "testnet"),
-		loadStatus:   common.theme.Label(values.TextSize20, "Loading"),
-		welcomeText:  common.theme.Label(values.TextSize24, "Welcome to Decred Wallet, a secure & open-source mobile wallet."),
+		decredSymbol: l.Icons.DecredSymbolIcon,
+		networkType:  l.Theme.Label(values.TextSize20, "testnet"),
+		loadStatus:   l.Theme.Label(values.TextSize20, "Loading"),
+		welcomeText:  l.Theme.Label(values.TextSize24, "Welcome to Decred Wallet, a secure & open-source mobile wallet."),
 
-		createButton:  common.theme.Button(new(widget.Clickable), "Create a new wallet"),
-		restoreButton: common.theme.Button(new(widget.Clickable), "Restore an existing wallet"),
+		createButton:  l.Theme.Button(new(widget.Clickable), "Create a new wallet"),
+		restoreButton: l.Theme.Button(new(widget.Clickable), "Restore an existing wallet"),
 	}
 
 	sp.decredSymbol.Scale = 0.5
 
-	sp.networkType.Color = sp.theme.Color.DeepBlue
+	sp.networkType.Color = l.Theme.Color.DeepBlue
 	sp.networkType.Font.Weight = text.Medium
 
-	sp.loadStatus.Color = sp.theme.Color.DeepBlue
-	sp.welcomeText.Color = sp.theme.Color.DeepBlue
+	sp.loadStatus.Color = l.Theme.Color.DeepBlue
+	sp.welcomeText.Color = l.Theme.Color.DeepBlue
 
 	return sp
 }
 
 func (sp *startPage) OnResume() {
-	sp.wallet.InitMultiWallet()
-	sp.multiWallet = sp.wallet.GetMultiWallet()
-	sp.load.WL.MultiWallet = sp.wallet.GetMultiWallet()
+	sp.WL.Wallet.InitMultiWallet()
+	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
+	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
 
 	// refresh theme now that config is available
-	sp.refreshTheme()
+	sp.RefreshTheme()
 
-	if sp.multiWallet.LoadedWalletsCount() > 0 {
+	if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
 		sp.loadStatus.Text = "Opening wallets"
 
-		if sp.multiWallet.IsStartupSecuritySet() {
+		if sp.WL.MultiWallet.IsStartupSecuritySet() {
 			sp.unlock()
 		} else {
 			go sp.openWallets("")
@@ -80,18 +78,18 @@ func (sp *startPage) OnResume() {
 }
 
 func (sp *startPage) unlock() {
-	newPasswordModal(sp.pageCommon).
-		title("Unlock with passphrase").
-		negativeButton("Exit", func() {
-			sp.multiWallet.Shutdown()
+	modal.NewPasswordModal(sp.Load).
+		Title("Unlock with passphrase").
+		NegativeButton("Exit", func() {
+			sp.WL.MultiWallet.Shutdown()
 			os.Exit(0)
 		}).
-		positiveButton("Unlock", func(password string, m *passwordModal) bool {
+		PositiveButton("Unlock", func(password string, m *modal.PasswordModal) bool {
 			go func() {
 				err := sp.openWallets(password)
 				if err != nil {
-					m.setError(translateErr(err))
-					m.setLoading(false)
+					m.SetError(translateErr(err))
+					m.SetLoading(false)
 					return
 				}
 
@@ -102,7 +100,7 @@ func (sp *startPage) unlock() {
 }
 
 func (sp *startPage) openWallets(passphrase string) error {
-	err := sp.multiWallet.OpenWallets([]byte(passphrase))
+	err := sp.WL.MultiWallet.OpenWallets([]byte(passphrase))
 	if err != nil {
 		log.Info("Error opening wallet:", err)
 		// show err dialog
@@ -114,20 +112,20 @@ func (sp *startPage) openWallets(passphrase string) error {
 }
 
 func (sp *startPage) proceedToMainPage() {
-	sp.wallet.SetupListeners()
-	sp.changeWindowPage(newMainPage(sp.pageCommon, sp.load), false)
+	sp.WL.Wallet.SetupListeners()
+	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
 }
 
 func (sp *startPage) Handle() {
 	for sp.createButton.Button.Clicked() {
-		newCreatePasswordModal(sp.pageCommon).
-			title("Create new wallet").
-			passwordCreated(func(_, password string, m *createPasswordModal) bool {
+		modal.NewCreatePasswordModal(sp.Load).
+			Title("Create new wallet").
+			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
 				go func() {
-					_, err := sp.multiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
+					_, err := sp.WL.MultiWallet.CreateNewWallet("mywallet", password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {
-						m.setError(err.Error())
-						m.setLoading(false)
+						m.SetError(err.Error())
+						m.SetLoading(false)
 						return
 					}
 					m.Dismiss()
@@ -139,7 +137,7 @@ func (sp *startPage) Handle() {
 	}
 
 	for sp.restoreButton.Button.Clicked() {
-		sp.changeWindowPage(page.NewCreateRestorePage(sp.load), true)
+		sp.ChangeWindowPage(NewCreateRestorePage(sp.Load), true)
 	}
 }
 

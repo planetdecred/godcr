@@ -73,7 +73,8 @@ func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "Validate address",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangePage(*pg.ReturnPage)
+				//TODO
+				//pg.ChangePage(*pg.ReturnPage)
 			},
 			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
