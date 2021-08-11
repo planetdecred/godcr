@@ -12,7 +12,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const ValidateAddressPageID = "ValidateAddress"
@@ -28,7 +27,6 @@ type ValidateAddressPage struct {
 	*load.Load
 	addressEditor         decredmaterial.Editor
 	clearBtn, validateBtn decredmaterial.Button
-	wallet                *wallet.Wallet
 	stateValidate         int
 	walletName            string
 
@@ -37,25 +35,26 @@ type ValidateAddressPage struct {
 
 func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 	pg := &ValidateAddressPage{
-		Load:        l,
-		validateBtn: l.Theme.Button(new(widget.Clickable), "Validate"),
-		clearBtn:    l.Theme.Button(new(widget.Clickable), "Clear"),
-		wallet:      l.WL.Wallet,
+		Load: l,
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
-	pg.addressEditor.IsRequired = false
-	pg.addressEditor.Editor.SetText("")
 	pg.addressEditor.Editor.SingleLine = true
+	pg.addressEditor.Editor.Submit = true
 
-	pg.validateBtn.TextSize, pg.clearBtn.TextSize = values.TextSize14, values.TextSize14
-	pg.validateBtn.Background = pg.Theme.Color.Primary
+	buttonTextSize := values.TextSize14
+	pg.validateBtn = l.Theme.Button(new(widget.Clickable), "Validate")
+	pg.validateBtn.TextSize = buttonTextSize
+	pg.validateBtn.Background = pg.Theme.Color.Hint
 	pg.validateBtn.Font.Weight = text.Bold
-	pg.clearBtn.Color = pg.Theme.Color.Primary
+
+	pg.clearBtn = l.Theme.Button(new(widget.Clickable), "Clear")
+	pg.clearBtn.Color = pg.Theme.Color.Hint
 	pg.clearBtn.Font.Weight = text.Bold
-	pg.clearBtn.Background = color.NRGBA{0, 0, 0, 0}
+	pg.clearBtn.Background = color.NRGBA{}
+	pg.clearBtn.TextSize = buttonTextSize
 
 	pg.stateValidate = none
 
@@ -93,9 +92,7 @@ func (pg *ValidateAddressPage) addressSection() layout.Widget {
 		return pg.pageSections(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(pg.description()),
-				layout.Rigid(func(gtx C) D {
-					return pg.addressEditor.Layout(gtx)
-				}),
+				layout.Rigid(pg.addressEditor.Layout),
 				layout.Rigid(pg.actionButtons()),
 				layout.Rigid(pg.showDisplayResult()),
 			)
@@ -107,9 +104,7 @@ func (pg *ValidateAddressPage) description() layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		desc := pg.Theme.Caption("Enter an address to validate:")
 		desc.Color = pg.Theme.Color.Gray
-		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-			return desc.Layout(gtx)
-		})
+		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
 }
 
@@ -121,13 +116,9 @@ func (pg *ValidateAddressPage) actionButtons() layout.Widget {
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-									return pg.clearBtn.Layout(gtx)
-								})
+								return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pg.clearBtn.Layout)
 							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.validateBtn.Layout(gtx)
-							}),
+							layout.Rigid(pg.validateBtn.Layout),
 						)
 					})
 				})
@@ -139,9 +130,7 @@ func (pg *ValidateAddressPage) actionButtons() layout.Widget {
 
 func (pg *ValidateAddressPage) lineSeparator(gtx layout.Context) layout.Dimensions {
 	m := values.MarginPadding10
-	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Separator().Layout(gtx)
-	})
+	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.Theme.Separator().Layout)
 }
 
 func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
@@ -152,9 +141,7 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 	}
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.lineSeparator(gtx)
-			}),
+			layout.Rigid(pg.lineSeparator),
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
@@ -195,14 +182,16 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 									}),
 									layout.Rigid(func(gtx C) D {
 										if pg.stateValidate == valid {
-											if pg.walletName != "" {
+											if components.StringNotEmpty(pg.walletName) {
 												return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 													return decredmaterial.Card{
-														Color: pg.Theme.Color.Surface,
+														Color: pg.Theme.Color.LightGray,
 													}.Layout(gtx, func(gtx C) D {
-														walletText := pg.Theme.Caption(pg.walletName)
-														walletText.Color = pg.Theme.Color.Gray
-														return walletText.Layout(gtx)
+														return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
+															walletText := pg.Theme.Caption(pg.walletName)
+															walletText.Color = pg.Theme.Color.Gray
+															return walletText.Layout(gtx)
+														})
 													})
 												})
 											}
@@ -234,6 +223,15 @@ func (pg *ValidateAddressPage) pageSections(gtx layout.Context, body layout.Widg
 func (pg *ValidateAddressPage) Handle() {
 	pg.updateColors()
 
+	for _, evt := range pg.addressEditor.Editor.Events() {
+		if pg.addressEditor.Editor.Focused() {
+			switch evt.(type) {
+			case widget.ChangeEvent:
+				pg.stateValidate = none
+			}
+		}
+	}
+
 	if pg.validateBtn.Button.Clicked() {
 		pg.validateAddress()
 	}
@@ -252,35 +250,33 @@ func (pg *ValidateAddressPage) validateAddress() {
 	address := pg.addressEditor.Editor.Text()
 	pg.addressEditor.SetError("")
 
-	if address == "" {
+	if !components.StringNotEmpty(address) {
 		pg.addressEditor.SetError("Please enter a valid address")
 		return
 	}
 
-	if address != "" {
-		isValid, _ := pg.wallet.IsAddressValid(address)
-		if !isValid {
-			pg.stateValidate = invalid
-			return
-		}
-
-		exist, walletName := pg.wallet.HaveAddress(address)
-
-		if !exist {
-			pg.stateValidate = notOwned
-			return
-		}
-		pg.stateValidate = valid
-		pg.walletName = walletName
+	if !pg.WL.MultiWallet.IsAddressValid(address) {
+		pg.stateValidate = invalid
 		return
 	}
+
+	exist, walletName := pg.WL.Wallet.HaveAddress(address)
+	if !exist {
+		pg.stateValidate = notOwned
+		return
+	}
+
+	pg.stateValidate = valid
+	pg.walletName = walletName
 }
 
 func (pg *ValidateAddressPage) updateColors() {
-	if pg.addressEditor.Editor.Text() == "" {
+	if !components.StringNotEmpty(pg.addressEditor.Editor.Text()) {
 		pg.validateBtn.Background = pg.Theme.Color.Hint
+		pg.clearBtn.Color = pg.Theme.Color.Hint
 	} else {
 		pg.validateBtn.Background = pg.Theme.Color.Primary
+		pg.clearBtn.Color = pg.Theme.Color.Primary
 	}
 }
 

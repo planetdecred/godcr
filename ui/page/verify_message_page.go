@@ -3,7 +3,6 @@ package page
 import (
 	"fmt"
 	"image/color"
-	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -14,7 +13,6 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/dcrlibwallet"
 )
 
 const VerifyMessagePageID = "VerifyMessage"
@@ -196,7 +194,7 @@ func (pg *VerifyMessagePage) Handle() {
 	}
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
-	if !pg.validateAddress() || !pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
+	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
 		return false
 	}
 	return true
@@ -204,22 +202,14 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 
 func (pg *VerifyMessagePage) updateColors() {
 	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
-	if pg.stringNotEmpty(pg.addressEditor.Editor.Text()) ||
-	 pg.stringNotEmpty(pg.messageEditor.Editor.Text()) ||
-		pg.stringNotEmpty(pg.signatureEditor.Editor.Text()) {
+	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
+		components.StringNotEmpty(pg.messageEditor.Editor.Text()) ||
+		components.StringNotEmpty(pg.signatureEditor.Editor.Text()) {
 		pg.clearBtn.Color = pg.Theme.Color.Primary
 	}
-	if pg.addressIsValid && pg.stringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
+	if pg.addressIsValid && components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
 		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
 	}
-	return true
-}
-
-func (pg *VerifyMessagePage) updateColors() {
-	if pg.stringNotEmpty(pg.addressEditor.Editor.Text()) || pg.stringNotEmpty(pg.messageEditor.Editor.Text()) ||
-	 pg.stringNotEmpty(pg.signatureEditor.Editor.Text()) {
-		pg.clearBtn.Color = pg.Theme.Color.Primary
-	} 
 }
 
 func (pg *VerifyMessagePage) clearInputs() {
@@ -241,7 +231,7 @@ func (pg *VerifyMessagePage) validateAddress() bool {
 	var errorMessage string
 
 	switch {
-	case !pg.stringNotEmpty(address):
+	case !components.StringNotEmpty(address):
 		errorMessage, valid = "Please enter a valid address", false
 	case !pg.WL.MultiWallet.IsAddressValid(address):
 		errorMessage, valid = "Invalid address", false
@@ -256,16 +246,6 @@ func (pg *VerifyMessagePage) validateAddress() bool {
 
 	pg.addressIsValid = valid
 	return valid
-}
-
-func (pg *VerifyMessagePage) stringNotEmpty(texts ...string) bool {
-	for _, t := range texts {
-		if strings.Trim(t, " ") == "" {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (pg *VerifyMessagePage) OnClose() {}

@@ -307,29 +307,15 @@ func GoToURL(url string) {
 	}
 }
 
-// func ValidateEditorAddress(l *load.Load, editor decredmaterial.Editor) bool {
-// 	address := editor.Editor.Text()
-// 	editor.SetError("")
+func StringNotEmpty(texts ...string) bool {
+	for _, t := range texts {
+		if strings.Trim(t, " ") == "" {
+			return false
+		}
+	}
 
-// 	var valid bool
-
-// 	switch {
-// 	case address == "":
-// 		editor.SetError("Please enter a valid address")
-// 		valid = false
-// 	case address != "" && !l.WL.MultiWallet.IsAddressValid(address):
-// 		editor.SetError("Invalid address")
-// 		valid = false
-// 	case address != "" && !l.wallet.HaveAddress(address):
-// 		editor.SetError("Address not owned by this wallet")
-// 		valid = false
-// 	default:
-// 		valid = true
-// 	}
-
-// 	// pg.addressIsValid = valid
-// 	return valid
-// }
+	return true
+}
 
 /*
 func (page *pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
