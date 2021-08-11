@@ -354,9 +354,12 @@ func (pg *ReceivePage) Handle() {
 		pg.ShowModal(info)
 	}
 
-	if pg.backButton.Button.Clicked() {
-		pg.ChangePage(*pg.ReturnPage)
+	//TODO
+	/*if pg.backButton.Button.Clicked() {
+		//TODO
+		//pg.ChangePage(*pg.ReturnPage)
 	}
+	*/
 
 	if pg.copy.Button.Clicked() {
 

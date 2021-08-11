@@ -16,6 +16,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -40,14 +41,13 @@ type Window struct {
 	proposal             chan *wallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
-	load   *load.Load
-	common *pageCommon
+	load *load.Load
 
 	modalMutex sync.Mutex
-	modals     []Modal
+	modals     []load.Modal
 
-	currentPage   Page
-	pageBackStack []Page
+	currentPage   load.Page
+	pageBackStack []load.Page
 
 	signatureResult *wallet.Signature
 
@@ -61,12 +61,16 @@ type Window struct {
 	err string
 
 	keyEvents             chan *key.Event
-	toast                 *toast
+	toast                 *load.Toast
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
 }
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
 type WriteClipboard struct {
 	Text string
 }
@@ -109,8 +113,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.keyEvents = make(chan *key.Event)
 
 	win.internalLog = internalLog
-
-	win.common = win.newPageCommon(decredIcons)
 
 	win.load = win.NewLoad(decredIcons)
 
@@ -156,13 +158,13 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 
 func (win *Window) Start() {
 	if win.currentPage == nil {
-		sp := newStartPage(win.common, win.load)
+		sp := page.NewStartPage(win.load)
 		sp.OnResume()
 		win.currentPage = sp
 	}
 }
 
-func (win *Window) changePage(page Page, keepBackStack bool) {
+func (win *Window) changePage(page load.Page, keepBackStack bool) {
 	if win.currentPage != nil && keepBackStack {
 		win.currentPage.OnClose()
 		win.pageBackStack = append(win.pageBackStack, win.currentPage)
@@ -196,14 +198,14 @@ func (win *Window) refreshWindow() {
 	win.invalidate <- struct{}{}
 }
 
-func (win *Window) showModal(modal Modal) {
+func (win *Window) showModal(modal load.Modal) {
 	modal.OnResume() // setup display data
 	win.modalMutex.Lock()
 	win.modals = append(win.modals, modal)
 	win.modalMutex.Unlock()
 }
 
-func (win *Window) dismissModal(modal Modal) {
+func (win *Window) dismissModal(modal load.Modal) {
 	win.modalMutex.Lock()
 	defer win.modalMutex.Unlock()
 	for i, m := range win.modals {
@@ -229,7 +231,7 @@ func (win *Window) unloaded(w *app.Window) {
 	}
 }
 
-func (win *Window) layoutPage(gtx C, page Page) {
+func (win *Window) layoutPage(gtx C, page load.Page) {
 	layout.Stack{
 		Alignment: layout.N,
 	}.Layout(gtx,

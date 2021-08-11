@@ -67,7 +67,8 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "About",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangePage(MorePageID)
+				//TODO
+				//pg.ChangePage(MorePageID)
 			},
 			Body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {

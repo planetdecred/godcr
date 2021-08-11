@@ -12,7 +12,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 
@@ -90,12 +89,18 @@ func (pg *UTXOPage) Handle() {
 
 	if pg.backButton.Button.Clicked() {
 		pg.clearPageData()
-		pg.ChangePage(send.PageID)
+		//TODO
+		////TODO
+		//pg.ChangePage(send.PageID)
 	}
 
-	if pg.useUTXOButton.Button.Clicked() {
-		pg.ChangePage(send.PageID)
+	//TODO
+	/*if pg.useUTXOButton.Button.Clicked() {
+		//TODO
+		////TODO
+		//pg.ChangePage(send.PageID)
 	}
+	*/
 
 	if pg.selecAllChexBox.CheckBox.Changed() {
 		for i, utxo := range (*pg.unspentOutputs).List {
