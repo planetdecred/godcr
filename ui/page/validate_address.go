@@ -221,7 +221,7 @@ func (pg *ValidateAddressPage) pageSections(gtx layout.Context, body layout.Widg
 }
 
 func (pg *ValidateAddressPage) Handle() {
-	pg.updateColors()
+	pg.updateButtonColors()
 
 	for _, evt := range pg.addressEditor.Editor.Events() {
 		if pg.addressEditor.Editor.Focused() {
@@ -270,7 +270,7 @@ func (pg *ValidateAddressPage) validateAddress() {
 	pg.walletName = walletName
 }
 
-func (pg *ValidateAddressPage) updateColors() {
+func (pg *ValidateAddressPage) updateButtonColors() {
 	if !components.StringNotEmpty(pg.addressEditor.Editor.Text()) {
 		pg.validateBtn.Background = pg.Theme.Color.Hint
 		pg.clearBtn.Color = pg.Theme.Color.Hint

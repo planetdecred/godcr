@@ -204,7 +204,7 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *SignMessagePage) updateColors() {
+func (pg *SignMessagePage) updateButtonColors() {
 	pg.clearButton.Color, pg.signButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
 	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.messageEditor.Editor.Text()) {
@@ -217,7 +217,7 @@ func (pg *SignMessagePage) updateColors() {
 
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
-	pg.updateColors()
+	pg.updateButtonColors()
 
 	for _, evt := range pg.addressEditor.Editor.Events() {
 		if pg.addressEditor.Editor.Focused() {

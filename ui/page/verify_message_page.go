@@ -1,7 +1,6 @@
 package page
 
 import (
-	"fmt"
 	"image/color"
 
 	"gioui.org/layout"
@@ -158,7 +157,7 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 }
 
 func (pg *VerifyMessagePage) Handle() {
-	pg.updateColors()
+	pg.updateButtonColors()
 
 	for _, evt := range pg.addressEditor.Editor.Events() {
 		if pg.addressEditor.Editor.Focused() {
@@ -171,7 +170,6 @@ func (pg *VerifyMessagePage) Handle() {
 
 	if pg.verifyButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
 		if pg.validateAllInputs() {
-			fmt.Println("im here")
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
 			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
@@ -200,7 +198,7 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 	return true
 }
 
-func (pg *VerifyMessagePage) updateColors() {
+func (pg *VerifyMessagePage) updateButtonColors() {
 	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
 	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.messageEditor.Editor.Text()) ||
