@@ -3,12 +3,12 @@ package renderers
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"image/color"
+	"strings"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
 	"gioui.org/text"
+	"gioui.org/widget"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/PuerkitoBio/goquery"
@@ -17,14 +17,14 @@ import (
 )
 
 type HTMLProvider struct {
-	containers []layout.Widget
-	theme *decredmaterial.Theme
+	containers    []layout.Widget
+	theme         *decredmaterial.Theme
 	stringBuilder strings.Builder
-	styleGroups    []map[string]string
-	links          map[string]*widget.Clickable
-	table *table
-	isList bool
-	prefix string
+	styleGroups   []map[string]string
+	links         map[string]*widget.Clickable
+	table         *table
+	isList        bool
+	prefix        string
 }
 
 var (
@@ -35,8 +35,8 @@ const (
 	openStyleTag      = "{@@"
 	halfCloseStyleTag = "@}"
 	closeStyleTag     = "{/@}"
-	linkTag       = "[[link"
-	linkSpacer    = "@@@@"
+	linkTag           = "[[link"
+	linkSpacer        = "@@@@"
 )
 
 func RenderHTML(html string, theme *decredmaterial.Theme) *HTMLProvider {
@@ -67,12 +67,12 @@ func (p *HTMLProvider) prepareBlockQuote(node *ast.BlockQuote, entering bool) {}
 
 func (p *HTMLProvider) prepareList(node *ast.List, entering bool) {
 	if next := ast.GetNextNode(node); !entering && next != nil {
-			_, parentIsListItem := node.GetParent().(*ast.ListItem)
-			_, nextIsList := next.(*ast.List)
-			if !nextIsList && !parentIsListItem {
-				p.renderEmptyLine()
-			}
+		_, parentIsListItem := node.GetParent().(*ast.ListItem)
+		_, nextIsList := next.(*ast.List)
+		if !nextIsList && !parentIsListItem {
+			p.renderEmptyLine()
 		}
+	}
 }
 
 func (p *HTMLProvider) prepareListItem(node *ast.ListItem, entering bool) {
@@ -405,7 +405,7 @@ func (p *HTMLProvider) renderEmptyLine() {
 	})
 }
 
-func (r *HTMLProvider) prepare(html string) string {
+func (p *HTMLProvider) prepare(html string) string {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		panic(err)
@@ -415,28 +415,28 @@ func (r *HTMLProvider) prepare(html string) string {
 		nodeName := goquery.NodeName(node)
 		switch nodeName {
 		case "i":
-			r.prepareItalic(node)
+			p.prepareItalic(node)
 		case "em":
-			r.prepareItalic(node)
+			p.prepareItalic(node)
 		case "b", "strong":
-			r.prepareBold(node)
+			p.prepareBold(node)
 		case "font":
-			r.prepareFont(node)
+			p.prepareFont(node)
 		case "br":
-			r.prepareBreak(node)
+			p.prepareBreak(node)
 		}
 	})
 
 	doc.Find("body > *").Each(func(_ int, node *goquery.Selection) {
-		styleMap := r.getStyleMap(node)
-		newStyleMap := r.setNodeStyle(node, styleMap)
-		r.traverse(node, newStyleMap)
+		styleMap := p.getStyleMap(node)
+		newStyleMap := p.setNodeStyle(node, styleMap)
+		p.traverse(node, newStyleMap)
 	})
 
 	return doc.Text()
 }
 
-func (r *HTMLProvider) prepareItalic(node *goquery.Selection) {
+func (p *HTMLProvider) prepareItalic(node *goquery.Selection) {
 	style, ok := node.Attr("style")
 	if ok {
 		style += "; font-style: italic"
@@ -447,7 +447,7 @@ func (r *HTMLProvider) prepareItalic(node *goquery.Selection) {
 	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
 }
 
-func (r *HTMLProvider) prepareBold(node *goquery.Selection) {
+func (p *HTMLProvider) prepareBold(node *goquery.Selection) {
 	style, ok := node.Attr("style")
 	if ok {
 		style += "; font-weight: bold"
@@ -458,7 +458,7 @@ func (r *HTMLProvider) prepareBold(node *goquery.Selection) {
 	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
 }
 
-func (r *HTMLProvider) prepareFont(node *goquery.Selection) {
+func (p *HTMLProvider) prepareFont(node *goquery.Selection) {
 	style, _ := node.Attr("style")
 	if style != "" {
 		style += "; "
@@ -475,11 +475,11 @@ func (r *HTMLProvider) prepareFont(node *goquery.Selection) {
 	node.ReplaceWithHtml(fmt.Sprintf(`<span style="%s">%s</span>`, style, node.Text()))
 }
 
-func (r *HTMLProvider) prepareBreak(node *goquery.Selection) {
+func (p *HTMLProvider) prepareBreak(node *goquery.Selection) {
 	node.ReplaceWithHtml("\n\n")
 }
 
-func (r *HTMLProvider) mapToString(m map[string]string) string {
+func (p *HTMLProvider) mapToString(m map[string]string) string {
 	b := new(bytes.Buffer)
 	for key, value := range m {
 		fmt.Fprintf(b, "%s=\"%s\"\n", key, value)
@@ -487,7 +487,7 @@ func (r *HTMLProvider) mapToString(m map[string]string) string {
 	return b.String()
 }
 
-func (r *HTMLProvider) getStyleMap(node *goquery.Selection) map[string]string {
+func (p *HTMLProvider) getStyleMap(node *goquery.Selection) map[string]string {
 	if styleStr, ok := node.Attr("style"); ok {
 		spl := strings.Split(styleStr, ";")
 		styleMap := map[string]string{}
@@ -505,7 +505,7 @@ func (r *HTMLProvider) getStyleMap(node *goquery.Selection) map[string]string {
 	return map[string]string{}
 }
 
-func (r *HTMLProvider) styleMapToString(m map[string]string) string {
+func (p *HTMLProvider) styleMapToString(m map[string]string) string {
 	str := ""
 	for k, v := range m {
 		str += "##" + k + "--" + v
@@ -514,14 +514,14 @@ func (r *HTMLProvider) styleMapToString(m map[string]string) string {
 	return str
 }
 
-func (r *HTMLProvider) traverse(node *goquery.Selection, parentStyle map[string]string) {
+func (p *HTMLProvider) traverse(node *goquery.Selection, parentStyle map[string]string) {
 	node.Children().Each(func(_ int, s *goquery.Selection) {
-		newStyle := r.setNodeStyle(s, parentStyle)
-		r.traverse(s, newStyle)
+		newStyle := p.setNodeStyle(s, parentStyle)
+		p.traverse(s, newStyle)
 	})
 }
 
-func (r *HTMLProvider) isBlockElement(element string) bool {
+func (p *HTMLProvider) isBlockElement(element string) bool {
 	for i := range blockEls {
 		if element == blockEls[i] {
 			return true
@@ -531,18 +531,18 @@ func (r *HTMLProvider) isBlockElement(element string) bool {
 	return false
 }
 
-func (r *HTMLProvider) setNodeStyle(node *goquery.Selection, parentStyle map[string]string) map[string]string {
-	styleMap := r.getStyleMap(node)
+func (p *HTMLProvider) setNodeStyle(node *goquery.Selection, parentStyle map[string]string) map[string]string {
+	styleMap := p.getStyleMap(node)
 	for key, val := range parentStyle {
 		if _, ok := styleMap[key]; !ok {
 			styleMap[key] = val
 		}
 	}
 
-	styleTag := openStyleTag + r.styleMapToString(styleMap) + halfCloseStyleTag
+	styleTag := openStyleTag + p.styleMapToString(styleMap) + halfCloseStyleTag
 	endTag := closeStyleTag
 	node = node.PrependHtml(styleTag)
-	if r.isBlockElement(goquery.NodeName(node)) {
+	if p.isBlockElement(goquery.NodeName(node)) {
 		endTag += " \n "
 	}
 	node.AppendHtml(endTag)
@@ -550,8 +550,8 @@ func (r *HTMLProvider) setNodeStyle(node *goquery.Selection, parentStyle map[str
 	return styleMap
 }
 
-func (r *HTMLProvider) Layout(gtx C) D {
-	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(r.containers), func(gtx C, i int) D {
-		return r.containers[i](gtx)
+func (p *HTMLProvider) Layout(gtx C) D {
+	return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(p.containers), func(gtx C, i int) D {
+		return p.containers[i](gtx)
 	})
 }

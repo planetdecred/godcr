@@ -133,31 +133,3 @@ func renderEmptyLine(theme *decredmaterial.Theme, isList bool) layout.Widget {
 		return dims
 	}
 }
-
-func renderListItem(lbl decredmaterial.Label, theme *decredmaterial.Theme) layout.Widget {
-	words := strings.Fields(lbl.Text)
-	if len(words) == 0 {
-		return func(gtx C) D { return D{} }
-	}
-
-	return func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				lbl.Text = words[0]
-				if len(words) > 1 {
-					words = words[1:]
-				}
-				return lbl.Layout(gtx)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return decredmaterial.GridWrap{
-					Axis:      layout.Horizontal,
-					Alignment: layout.Start,
-				}.Layout(gtx, len(words), func(gtx C, i int) D {
-					lbl.Text = words[i] + " "
-					return lbl.Layout(gtx)
-				})
-			}),
-		)
-	}
-}

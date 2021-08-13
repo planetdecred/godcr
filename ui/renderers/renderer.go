@@ -2,7 +2,7 @@ package renderers
 
 import (
 	"io"
-	
+
 	md "github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/parser"
@@ -33,16 +33,16 @@ type nodeWalker struct {
 }
 
 func newNodeWalker(doc string, renderer renderer) *nodeWalker {
-	extensions := parser.NoIntraEmphasis // Ignore emphasis markers inside words
-	extensions |= parser.Tables          // Parse tables
-	extensions |= parser.FencedCode      // Parse fenced code blocks
-	extensions |= parser.Autolink        // Detect embedded URLs that are not explicitly marked
-	extensions |= parser.Strikethrough   // Strikethrough text using ~~test~~
-	extensions |= parser.SpaceHeadings   // Be strict about prefix heading rules
+	extensions := parser.NoIntraEmphasis        // Ignore emphasis markers inside words
+	extensions |= parser.Tables                 // Parse tables
+	extensions |= parser.FencedCode             // Parse fenced code blocks
+	extensions |= parser.Autolink               // Detect embedded URLs that are not explicitly marked
+	extensions |= parser.Strikethrough          // Strikethrough text using ~~test~~
+	extensions |= parser.SpaceHeadings          // Be strict about prefix heading rules
 	extensions |= parser.HeadingIDs             // specify heading IDs  with {#id}
-	extensions |= parser.BackslashLineBreak // Translate trailing backslashes into line breaks
-	extensions |= parser.DefinitionLists    // Parse definition lists
-	extensions |= parser.LaxHTMLBlocks      // more in HTMLBlock, less in HTMLSpan
+	extensions |= parser.BackslashLineBreak     // Translate trailing backslashes into line breaks
+	extensions |= parser.DefinitionLists        // Parse definition lists
+	extensions |= parser.LaxHTMLBlocks          // more in HTMLBlock, less in HTMLSpan
 	extensions |= parser.NoEmptyLineBeforeBlock // no need for new line before a list
 	extensions |= parser.Attributes
 	extensions |= parser.EmptyLinesBreakList

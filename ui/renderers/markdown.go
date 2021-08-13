@@ -1,12 +1,12 @@
 package renderers
 
 import (
-	"fmt"
+	//"fmt"
 	"strings"
 	"unicode"
 
-	"gioui.org/text"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -16,8 +16,6 @@ import (
 
 const (
 	bulletUnicode = "\u2022"
-	//linkTag       = "[[link"
-	//linkSpacer    = "@@@@"
 )
 
 type (
@@ -36,8 +34,8 @@ type MarkdownProvider struct {
 	listItemNumber int // should be negative when not rendering a list
 	links          map[string]*widget.Clickable
 	table          *table
-	label 		   *decredmaterial.Label
-	prefix          string 
+	label          *decredmaterial.Label
+	prefix         string
 
 	stringBuilder strings.Builder
 	tagStack      []string
@@ -52,7 +50,7 @@ func RenderMarkdown(gtx C, theme *decredmaterial.Theme, source string) *Markdown
 	mdProvider := &MarkdownProvider{
 		theme:          theme,
 		listItemNumber: -1,
-		label: &lbl,
+		label:          &lbl,
 	}
 	source = mdProvider.prepare(source)
 
@@ -69,22 +67,22 @@ func (*MarkdownProvider) prepare(doc string) string {
 	return d
 }
 
-func (m *MarkdownProvider) Layout() ([]layout.Widget, map[string]*widget.Clickable) {
+func (p *MarkdownProvider) Layout() ([]layout.Widget, map[string]*widget.Clickable) {
 	w := func(gtx C) D {
 		max := gtx.Constraints.Max.X
 		rows := layout.List{Axis: layout.Vertical}
-		return rows.Layout(gtx, len(m.containers), func(gtx C, i int) D {
+		return rows.Layout(gtx, len(p.containers), func(gtx C, i int) D {
 			return decredmaterial.GridWrap{
 				Axis:      layout.Horizontal,
 				Alignment: layout.Start,
-			}.Layout(gtx, len(m.containers[i].widgets), func(gtx C, j int) D {
+			}.Layout(gtx, len(p.containers[i].widgets), func(gtx C, j int) D {
 				gtx.Constraints.Max.X = max
-				return m.containers[i].widgets[j](gtx)
+				return p.containers[i].widgets[j](gtx)
 			})
 		})
 	}
 
-	return []layout.Widget{w}, m.links
+	return []layout.Widget{w}, p.links
 }
 
 func (p *MarkdownProvider) prepareBlockQuote(node *ast.BlockQuote, entering bool) {
@@ -117,7 +115,8 @@ func (p *MarkdownProvider) prepareHorizontalRule(node *ast.HorizontalRule, enter
 
 func (p *MarkdownProvider) prepareList(node *ast.List, entering bool) {
 	if entering {
-		p.listItemNumber = 0
+		p.listItemNumber = 1
+		p.prefix = bulletUnicode + " "
 	} else {
 		p.listItemNumber = -1
 	}
@@ -127,24 +126,42 @@ func (p *MarkdownProvider) prepareList(node *ast.List, entering bool) {
 		_, nextIsList := next.(*ast.List)
 		if !nextIsList && !parentIsListItem {
 			p.listItemNumber = -1
-			p.prefix = ""
 		}
 	}
 }
 
-func (p *MarkdownProvider) prepareListItem(node *ast.ListItem, entering bool) {
-	if entering {
-		p.listItemNumber++
-		if node.ListFlags&ast.ListTypeOrdered != 0 {
-			// numbered list
-			p.prefix = fmt.Sprintf("%d. ", p.listItemNumber+1)
-		} else if node.ListFlags&ast.ListTypeDefinition != 0 {
-			p.prefix = fmt.Sprintf("%s ", bulletUnicode)
-		} else {
-			p.prefix = fmt.Sprintf("%s ", bulletUnicode)
-		}
-		//p.openTag(listItemTagName)
+func (p *MarkdownProvider) renderListItem(content string) {
+	if strings.Trim(content, " ") == "" {
+		return
 	}
+
+	w := func(gtx C) D {
+		lbl := p.getLabel()
+		strongLabel := p.getLabel()
+		strongLabel.Font.Weight = text.Bold
+
+		return layout.Flex{}.Layout(gtx,
+			layout.Flexed(0.02, func(gtx C) D {
+				strongLabel.Text = ""
+				return strongLabel.Layout(gtx)
+			}),
+			layout.Flexed(0.05, func(gtx C) D {
+				strongLabel.Text = p.prefix
+				return strongLabel.Layout(gtx)
+			}),
+			layout.Flexed(1, func(gtx C) D {
+				lbl.Text = content
+				return lbl.Layout(gtx)
+			}),
+		)
+	}
+
+	p.createNewRow()
+	p.appendToLastRow(w)
+}
+
+func (p *MarkdownProvider) prepareListItem(node *ast.ListItem, entering bool) {
+
 }
 
 func (p *MarkdownProvider) prepareParagraph(node *ast.Paragraph, entering bool) {
@@ -165,7 +182,7 @@ func (p *MarkdownProvider) prepareHeading(node *ast.Heading, entering bool) {
 		if node.Level == 1 {
 			p.drawLineRow(layout.Horizontal)
 			p.addVerticalSpacing(14)
-		} 
+		}
 	}
 }
 
@@ -192,12 +209,11 @@ func (p *MarkdownProvider) prepareLink(node *ast.Link, entering bool) {
 	})
 }
 
-
 func (p *MarkdownProvider) renderBlock() {
 	content := p.stringBuilder.String()
 	p.stringBuilder.Reset()
 
-	var inBlock bool 
+	var inBlock bool
 	var isGettingTagName bool
 	var isClosingBlock bool
 	var currentTag string
@@ -274,39 +290,15 @@ func (p *MarkdownProvider) render(content *strings.Builder) {
 	content.Reset()
 
 	for index := range words {
-			lbl.Text = words[index] + " "
-			p.appendToLastRow(lbl.Layout)
-		}
-
-	/**if p.prefix == "" {
-		for index := range words {
-			lbl.Text = words[index] + " "
-			p.appendToLastRow(lbl.Layout)
-		}
-	} else {
-		p.createNewRow()
-		p.appendToLastRow(func(gtx C) D {
-			return layout.Inset{Left: unit.Dp(7)}.Layout(gtx, func(gtx C) D {
-				return layout.Flex{}.Layout(gtx, 
-					layout.Rigid(func(gtx C) D {
-						l := p.theme.H6(p.prefix)
-						l.Font.Weight = text.Bold
-						return l.Layout(gtx)
-					}),
-					layout.Flexed(0.8, func(gtx C) D {
-						lbl.Text = strings.Join(words, " ")
-						return lbl.Layout(gtx)
-					}),
-				)
-			})
-		})
-	}**/
+		lbl.Text = words[index] + " "
+		p.appendToLastRow(lbl.Layout)
+	}
 }
 
 func (p *MarkdownProvider) addVerticalSpacing(height int) {
 	p.appendToLastRow(func(gtx C) D {
 		dims := p.theme.Caption(" ").Layout(gtx)
-		dims.Size.X = gtx.Constraints.Max.X 
+		dims.Size.X = gtx.Constraints.Max.X
 		dims.Size.Y = height
 		return dims
 	})
@@ -329,7 +321,7 @@ func (p *MarkdownProvider) appendToLastRow(wdgt layout.Widget) {
 }
 
 func (p *MarkdownProvider) drawLineRow(axis layout.Axis) {
-	var l decredmaterial.Line 
+	var l decredmaterial.Line
 
 	if axis == layout.Vertical {
 		l = p.theme.SeparatorVertical(1, 10)
@@ -351,11 +343,12 @@ func (p *MarkdownProvider) prepareText(node *ast.Text, entering bool) {
 		content = removeLineBreak(content)
 	}
 
-	p.stringBuilder.WriteString(content)
 	if p.listItemNumber > -1 {
-		//p.closeTag()
-		//p.createNewRow()
+		p.renderListItem(content)
+		return
 	}
+
+	p.stringBuilder.WriteString(content)
 }
 
 func (p *MarkdownProvider) prepareTable(node *ast.Table, entering bool) {

@@ -58,7 +58,7 @@ func (t *table) addCell(content string, alignment cellAlign, isHeader bool) {
 		alignment:     alignment,
 	}
 
-	rowIndex := len(t.rows) - 1	
+	rowIndex := len(t.rows) - 1
 	t.rows[rowIndex].isHeader = isHeader
 	t.rows[rowIndex].cells = append(t.rows[rowIndex].cells, cell)
 }
