@@ -44,16 +44,15 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 	}
 	pg.toPrivacySetup.Background = l.Theme.Color.Primary
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
-	pg.allowUnspendUnmixedAcct.Disabled()
 	return pg
 }
 
 func (pg *PrivacyPage) OnResume() {
-
+	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
+	pg.allowUnspendUnmixedAcct.Disabled()
 }
 
 func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
-	pg.updateMixerOptions()
 	d := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -421,7 +420,6 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 		NegativeButton("Cancel", func() {}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-
 				err := pg.WL.MultiWallet.StartAccountMixer(pg.wallet.ID, password)
 				if err != nil {
 					pm.SetError(err.Error())
@@ -434,10 +432,6 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 
 			return false
 		}).Show()
-}
-
-func (pg *PrivacyPage) updateMixerOptions() {
-	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
 }
 
 func (pg *PrivacyPage) OnClose() {}
