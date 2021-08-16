@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gioui.org/layout"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -116,25 +117,45 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 						padding := values.MarginPadding16
-						return components.Container{Padding: layout.Inset{Bottom: padding, Left: padding}}.Layout(gtx,
-							func(gtx C) D {
-								// return "No transactions yet" text if there are no transactions
-								if len(wallTxs) == 0 {
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
-									txt.Color = pg.Theme.Color.Gray2
-									return layout.Center.Layout(gtx, txt.Layout)
-								}
-
-								return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
-									var row = components.TransactionRow{
-										Transaction: wallTxs[index],
-										Index:       index,
-										ShowBadge:   false,
-									}
-									return components.LayoutTransactionRow(gtx, pg.Load, row)
-								})
+						// return "No transactions yet" text if there are no transactions
+						if len(wallTxs) == 0 {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
+							txt.Color = pg.Theme.Color.Gray2
+							return layout.Center.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
 							})
+						}
+
+						return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+							var row = components.TransactionRow{
+								Transaction: wallTxs[index],
+								Index:       index,
+								ShowBadge:   false,
+							}
+
+							return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return components.LayoutTransactionRow(gtx, pg.Load, row)
+									}),
+									layout.Rigid(func(gtx C) D {
+										// No divider for last row
+										if row.Index == len(wallTxs)-1 {
+											return layout.Dimensions{}
+										}
+
+										gtx.Constraints.Min.X = gtx.Constraints.Max.X
+										separator := pg.Theme.Separator()
+										separator.Width = gtx.Constraints.Max.X - gtx.Px(unit.Dp(16))
+										return layout.E.Layout(gtx, func(gtx C) D {
+											// Show bottom divider for all rows except last
+											return separator.Layout(gtx)
+										})
+									}),
+								)
+							})
+						})
 					})
 				})
 			}),
