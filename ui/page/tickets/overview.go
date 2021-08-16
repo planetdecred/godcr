@@ -22,7 +22,7 @@ type (
 	D = layout.Dimensions
 )
 
-const PageID = "Tickets"
+const OverviewPageID = "Tickets"
 
 type Page struct {
 	*load.Load
@@ -33,9 +33,8 @@ type Page struct {
 
 	purchaseTicket decredmaterial.Button
 
-	tickets          **wallet.Tickets
-	ticketPrice      string
-	remainingBalance string
+	tickets     **wallet.Tickets
+	ticketPrice string
 
 	autoPurchaseEnabled *widget.Bool
 	toTickets           decredmaterial.TextAndIconButton
@@ -67,6 +66,10 @@ func NewTicketPage(l *load.Load) *Page {
 	pg.toTicketsActivity.BackgroundColor = l.Theme.Color.Surface
 
 	return pg
+}
+
+func (pg *Page) ID() string {
+	return OverviewPageID
 }
 
 func (pg *Page) OnResume() {

@@ -44,6 +44,10 @@ func NewLicensePage(l *load.Load) *LicensePage {
 	return pg
 }
 
+func (pg *LicensePage) ID() string {
+	return LicensePageID
+}
+
 func (pg *LicensePage) OnResume() {}
 
 //main page layout

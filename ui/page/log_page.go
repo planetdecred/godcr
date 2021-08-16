@@ -30,6 +30,10 @@ type LogPage struct {
 	entriesLock sync.Mutex
 }
 
+func (pg *LogPage) ID() string {
+	return LogPageID
+}
+
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
 		Load:        l,

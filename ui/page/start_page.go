@@ -55,6 +55,10 @@ func NewStartPage(l *load.Load) load.Page {
 	return sp
 }
 
+func (pg *startPage) ID() string {
+	return StartPageID
+}
+
 func (sp *startPage) OnResume() {
 	sp.WL.Wallet.InitMultiWallet()
 	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()

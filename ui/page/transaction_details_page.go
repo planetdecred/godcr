@@ -105,6 +105,10 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	return pg
 }
 
+func (pg *TransactionDetailsPage) ID() string {
+	return TransactionDetailsPageID
+}
+
 func (pg *TransactionDetailsPage) OnResume() {
 
 }

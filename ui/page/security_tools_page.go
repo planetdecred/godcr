@@ -38,6 +38,10 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 	return pg
 }
 
+func (pg *SecurityToolsPage) ID() string {
+	return SecurityToolsPageID
+}
+
 func (pg *SecurityToolsPage) OnResume() {
 
 }

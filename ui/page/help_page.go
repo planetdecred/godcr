@@ -32,6 +32,10 @@ func NewHelpPage(l *load.Load) *HelpPage {
 	return pg
 }
 
+func (pg *HelpPage) ID() string {
+	return HelpPageID
+}
+
 func (pg *HelpPage) OnResume() {
 
 }

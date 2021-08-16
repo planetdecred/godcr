@@ -21,7 +21,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageProposalDetails = "proposal_details"
+const ProposalDetailsPageID = "proposal_details"
 
 type proposalItemWidgets struct {
 	widgets    []layout.Widget
@@ -84,6 +84,10 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 	}
 
 	return pg
+}
+
+func (pg *proposalDetails) ID() string {
+	return ProposalDetailsPageID
 }
 
 func (pg *proposalDetails) OnResume() {

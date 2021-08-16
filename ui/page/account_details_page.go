@@ -59,6 +59,10 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 	return pg
 }
 
+func (pg *AcctDetailsPage) ID() string {
+	return AccountDetailsPageID
+}
+
 func (pg *AcctDetailsPage) OnResume() {
 
 	balance := pg.account.Balance

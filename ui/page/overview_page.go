@@ -114,6 +114,10 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	return pg
 }
 
+func (pg *OverviewPage) ID() string {
+	return OverviewPageID
+}
+
 func (pg *OverviewPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 

@@ -56,6 +56,10 @@ func NewDebugPage(l *load.Load) *DebugPage {
 	return pg
 }
 
+func (pg *DebugPage) ID() string {
+	return DebugPageID
+}
+
 func (pg *DebugPage) OnResume() {
 
 }

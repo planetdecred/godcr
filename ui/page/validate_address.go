@@ -62,6 +62,10 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 	return pg
 }
 
+func (pg *ValidateAddressPage) ID() string {
+	return ValidateAddressPageID
+}
+
 func (pg *ValidateAddressPage) OnResume() {
 
 }

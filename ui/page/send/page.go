@@ -118,6 +118,10 @@ func NewSendPage(l *load.Load) *Page {
 	return pg
 }
 
+func (pg *Page) ID() string {
+	return PageID
+}
+
 func (pg *Page) OnResume() {
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()

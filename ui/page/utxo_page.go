@@ -18,7 +18,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PageUTXO = "unspentTransactionOutput"
+const UTXOPageID = "unspentTransactionOutput"
 
 type UTXOPage struct {
 	*load.Load
@@ -59,6 +59,10 @@ func NewUTXOPage(l *load.Load) *UTXOPage {
 	pg.useUTXOButton = l.Theme.Button(new(widget.Clickable), "OK")
 
 	return pg
+}
+
+func (pg *UTXOPage) ID() string {
+	return UTXOPageID
 }
 
 func (pg *UTXOPage) OnResume() {

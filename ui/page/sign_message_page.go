@@ -78,6 +78,10 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	return pg
 }
 
+func (pg *SignMessagePage) ID() string {
+	return SignMessagePageID
+}
+
 func (pg *SignMessagePage) OnResume() {
 	pg.addressEditor.Editor.Focus()
 }

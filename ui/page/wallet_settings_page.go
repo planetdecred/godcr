@@ -44,6 +44,10 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	return pg
 }
 
+func (pg *WalletSettingsPage) ID() string {
+	return WalletSettingsPageID
+}
+
 func (pg *WalletSettingsPage) OnResume() {
 
 }

@@ -51,6 +51,10 @@ func NewStatPage(l *load.Load) *StatPage {
 	return pg
 }
 
+func (pg *StatPage) ID() string {
+	return StatisticsPageID
+}
+
 func (pg *StatPage) OnResume() {
 
 }

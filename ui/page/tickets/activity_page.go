@@ -57,6 +57,10 @@ func newTicketActivityPage(l *load.Load) *ActivityPage {
 	return pg
 }
 
+func (pg *ActivityPage) ID() string {
+	return ActivityPageID
+}
+
 func (pg *ActivityPage) OnResume() {
 
 }

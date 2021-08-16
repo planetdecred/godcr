@@ -147,6 +147,10 @@ func NewBackupPage(l *load.Load) *BackupPage {
 	return b
 }
 
+func (pg *BackupPage) ID() string {
+	return SeedBackupPageID
+}
+
 func (pg *BackupPage) OnResume() {
 
 }

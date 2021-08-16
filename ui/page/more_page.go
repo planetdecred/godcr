@@ -82,6 +82,10 @@ func NewMorePage(l *load.Load) *MorePage {
 	return pg
 }
 
+func (pg *MorePage) ID() string {
+	return MorePageID
+}
+
 func (pg *MorePage) OnResume() {
 
 }

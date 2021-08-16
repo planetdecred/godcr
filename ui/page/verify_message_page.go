@@ -52,6 +52,10 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	return pg
 }
 
+func (pg *VerifyMessagePage) ID() string {
+	return VerifyMessagePageID
+}
+
 func (pg *VerifyMessagePage) OnResume() {
 
 }

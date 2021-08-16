@@ -102,6 +102,10 @@ func NewMainPage(l *load.Load) *MainPage {
 	return mp
 }
 
+func (mp *MainPage) ID() string {
+	return MainPageID
+}
+
 func (mp *MainPage) initNavItems() {
 	mp.AppBarNavItems = []NavHandler{
 		{
@@ -299,7 +303,7 @@ func (mp *MainPage) Handle() {
 				id = WalletPageID
 			} else if i == TicketsNavID {
 				pg = tickets.NewTicketPage(mp.Load)
-				id = tickets.PageID
+				id = tickets.OverviewPageID
 			} else if i == ProposalsNavID {
 				pg = proposal.NewProposalsPage(mp.Load)
 				id = proposal.ProposalsPageID

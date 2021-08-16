@@ -69,6 +69,10 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	return pg
 }
 
+func (pg *TransactionsPage) ID() string {
+	return TransactionsPageID
+}
+
 func (pg *TransactionsPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 

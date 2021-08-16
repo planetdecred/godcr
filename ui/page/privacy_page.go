@@ -47,6 +47,10 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 	return pg
 }
 
+func (pg *PrivacyPage) ID() string {
+	return PrivacyPageID
+}
+
 func (pg *PrivacyPage) OnResume() {
 	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
 	pg.allowUnspendUnmixedAcct.Disabled()

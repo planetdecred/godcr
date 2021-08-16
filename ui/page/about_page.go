@@ -56,6 +56,10 @@ func NewAboutPage(l *load.Load) *AboutPage {
 	return pg
 }
 
+func (pg *AboutPage) ID() string {
+	return AboutPageID
+}
+
 func (pg *AboutPage) OnResume() {
 
 }

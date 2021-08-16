@@ -116,6 +116,10 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	return pg
 }
 
+func (pg *ReceivePage) ID() string {
+	return ReceivePageID
+}
+
 func (pg *ReceivePage) OnResume() {
 	pg.selector.SelectFirstWalletValidAccount()
 }

@@ -126,6 +126,10 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	return pg
 }
 
+func (pg *SettingsPage) ID() string {
+	return SettingsPageID
+}
+
 func (pg *SettingsPage) OnResume() {
 
 }

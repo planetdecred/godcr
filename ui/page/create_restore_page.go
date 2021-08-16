@@ -149,6 +149,10 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	return pg
 }
 
+func (pg *CreateRestore) ID() string {
+	return CreateRestorePageID
+}
+
 func (pg *CreateRestore) OnResume() {
 
 }

@@ -96,6 +96,10 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 	return pg
 }
 
+func (pg *ProposalsPage) ID() string {
+	return ProposalsPageID
+}
+
 func (pg *ProposalsPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
@@ -174,7 +178,7 @@ func (pg *ProposalsPage) Handle() {
 		pg.proposalMu.Unlock()
 
 		pg.SetReturnPage(ProposalsPageID)
-		pg.ChangeFragment(newProposalDetailsPage(pg.Load, &selectedProposal), PageProposalDetails)
+		pg.ChangeFragment(newProposalDetailsPage(pg.Load, &selectedProposal), ProposalDetailsPageID)
 	}
 
 	for pg.syncButton.Clicked() {

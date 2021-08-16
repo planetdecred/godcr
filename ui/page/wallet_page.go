@@ -123,6 +123,10 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	return pg
 }
 
+func (pg *WalletPage) ID() string {
+	return WalletPageID
+}
+
 func (pg *WalletPage) OnResume() {
 	wallets := pg.WL.SortedWalletList()
 
