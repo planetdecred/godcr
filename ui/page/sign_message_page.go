@@ -288,13 +288,13 @@ func (pg *SignMessagePage) validateAddress() bool {
 
 	switch {
 	case !components.StringNotEmpty(address):
-		errorMessage, valid = "Please enter a valid address", false
+		errorMessage = "Please enter a valid address"
 	case !pg.WL.MultiWallet.IsAddressValid(address):
-		errorMessage, valid = "Invalid address", false
+		errorMessage = "Invalid address"
 	case !pg.wallet.HaveAddress(address):
-		errorMessage, valid = "Address not owned by any wallet", false
+		errorMessage = "Address not owned by any wallet"
 	default:
-		errorMessage, valid = "", true
+		valid = true
 	}
 	if !valid {
 		pg.addressEditor.SetError(errorMessage)
