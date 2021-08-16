@@ -284,12 +284,9 @@ func (pg *Page) Handle() {
 	pg.sendDestination.handle()
 	pg.amount.handle()
 
-	//TODO
-	/*if pg.backButton.Button.Clicked() {
-		//TODO
-		//pg.ChangePage(*pg.ReturnPage)
+	if pg.backButton.Button.Clicked() {
+		pg.PopFragment()
 	}
-	*/
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).

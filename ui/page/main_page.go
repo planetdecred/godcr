@@ -84,6 +84,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	}
 	l.ToggleSync = toggleSync
 	l.ChangeFragment = mp.changeFragment
+	l.PopFragment = mp.popFragment
 
 	iconColor := l.Theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
@@ -308,6 +309,7 @@ func (mp *MainPage) Handle() {
 				continue
 			}
 
+			// clear stack
 			mp.changeFragment(pg)
 		}
 	}
@@ -332,6 +334,18 @@ func (mp *MainPage) changeFragment(page load.Page) {
 
 	page.OnResume()
 	mp.currentPage = page
+}
+
+// popFragment goes back to the previous page
+func (mp *MainPage) popFragment() {
+	if len(mp.pageBackStack) > 0 {
+		// get and remove last page
+		previousPage := mp.pageBackStack[len(mp.pageBackStack)-1]
+		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
+
+		mp.currentPage.OnClose()
+		mp.currentPage = previousPage
+	}
 }
 
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {

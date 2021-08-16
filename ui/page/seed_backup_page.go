@@ -481,8 +481,6 @@ func checkSlice(s []string) bool {
 }
 
 func (pg *BackupPage) resetPage() {
-	//TODO
-	//pg.ChangePage(WalletPageID)
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)
@@ -518,7 +516,7 @@ func (pg *BackupPage) cancel() {
 
 func (pg *BackupPage) Handle() {
 	if pg.backButton.Button.Clicked() {
-		pg.resetPage()
+		pg.PopFragment()
 	}
 
 	if pg.action.Button.Clicked() && pg.verifyCheckBoxes() {

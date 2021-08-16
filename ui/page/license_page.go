@@ -58,8 +58,7 @@ func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "License",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(AboutPageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {

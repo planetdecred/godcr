@@ -84,7 +84,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "All tickets",
 			BackButton: pg.backButton,
 			Back: func() {
-				pg.ChangeFragment(NewTicketPage(pg.Load))
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID

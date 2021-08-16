@@ -99,9 +99,7 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.clearForm()
-				//TODO
-				//pg.ChangePage(WalletPageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {

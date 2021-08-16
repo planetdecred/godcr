@@ -143,8 +143,7 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      values.String(values.StrSettings),
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(MorePageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{

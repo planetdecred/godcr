@@ -110,8 +110,7 @@ func (pg *DebugPage) Layout(gtx C) D {
 			Title:      "Debug",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(MorePageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				pg.layoutDebugItems(gtx)

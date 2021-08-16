@@ -93,15 +93,11 @@ func (pg *UTXOPage) Handle() {
 
 	if pg.backButton.Button.Clicked() {
 		pg.clearPageData()
-		//TODO
-		////TODO
-		//pg.ChangePage(send.PageID)
+		pg.PopFragment()
 	}
 
-	//TODO
 	/*if pg.useUTXOButton.Button.Clicked() {
 		//TODO
-		////TODO
 		//pg.ChangePage(send.PageID)
 	}
 	*/

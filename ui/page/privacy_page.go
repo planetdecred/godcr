@@ -65,8 +65,7 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(WalletPageID)
+				pg.PopFragment()
 			},
 			InfoTemplate: modal.PrivacyInfoTemplate,
 			Body: func(gtx layout.Context) layout.Dimensions {
@@ -394,7 +393,7 @@ func (pg *PrivacyPage) showModalSetupMixerAcct() {
 				Title("Account name is taken").
 				Body("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.").
 				PositiveButton("Go back & rename", func() {
-					// TODO
+					pg.PopFragment()
 				})
 			pg.ShowModal(info)
 			return

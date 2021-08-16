@@ -71,8 +71,7 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "About",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(MorePageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {

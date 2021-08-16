@@ -859,8 +859,8 @@ func (pg *WalletPage) Handle() {
 			}
 
 			for listItem.backupAcctClickable.Clicked() {
-				//TODO
-				//pg.ChangePage(SeedBackupPageID)
+				//TODO: wallet id should be passed
+				pg.ChangeFragment(NewBackupPage(pg.Load))
 			}
 		}
 

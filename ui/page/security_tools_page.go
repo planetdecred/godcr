@@ -55,8 +55,7 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(MorePageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {

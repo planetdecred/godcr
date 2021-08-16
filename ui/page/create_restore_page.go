@@ -648,8 +648,7 @@ func (pg *CreateRestore) Handle() {
 				pg.PopWindowPage()
 			} else {
 				pg.WL.Wallet.SetupListeners()
-				// todo: uncomment when main page has been moved to the page package
-				// pg.ChangeWindowPage(newMainPage(pg.common, nil), false)
+				pg.ChangeWindowPage(NewMainPage(pg.Load), false)
 			}
 		}()
 	}

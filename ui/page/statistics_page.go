@@ -128,8 +128,7 @@ func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "Statistics",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(DebugPageID)
+				pg.PopFragment()
 			},
 			Body: pg.layoutStats,
 		}

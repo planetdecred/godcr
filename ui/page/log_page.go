@@ -85,8 +85,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			Title:      "Wallet log",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(DebugPageID)
+				pg.PopFragment()
 			},
 			ExtraItem: pg.copyLog,
 			Extra: func(gtx C) D {
