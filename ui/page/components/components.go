@@ -309,7 +309,7 @@ func GoToURL(url string) {
 
 func StringNotEmpty(texts ...string) bool {
 	for _, t := range texts {
-		if strings.Trim(t, " ") == "" {
+		if strings.TrimSpace(t) == "" {
 			return false
 		}
 	}
