@@ -39,7 +39,8 @@ type NavHandler struct {
 	Clickable     *widget.Clickable
 	Image         *widget.Image
 	ImageInactive *widget.Image
-	Page          string
+	Title         string
+	PageID        string
 }
 
 type MainPage struct {
@@ -52,9 +53,9 @@ type MainPage struct {
 
 	autoSync bool
 
-	current, previous string
-	pages             map[string]load.Page
-	sendPage          *send.Page // reuse value to keep data persistent onresume.
+	currentPage   load.Page
+	pageBackStack []load.Page
+	sendPage      *send.Page // reuse value to keep data persistent onresume.
 
 	// page state variables
 	dcrUsdtBittrex  load.DCRUSDTBittrex
@@ -68,19 +69,12 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp := &MainPage{
 		Load:     l,
 		autoSync: true,
-		pages:    make(map[string]load.Page),
 
 		minimizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
 		maximizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowForward),
 	}
 
 	// init shared page functions
-	// todo: common methods will be removed when all pages have been moved to the page package
-	l.ChangeFragment = mp.changeFragment
-	l.SetReturnPage = mp.setReturnPage
-	l.ReturnPage = &mp.previous
-	l.Page = &mp.current
-
 	toggleSync := func() {
 		if mp.WL.MultiWallet.IsConnectedToDecredNetwork() {
 			mp.WL.MultiWallet.CancelSync()
@@ -88,9 +82,8 @@ func NewMainPage(l *load.Load) *MainPage {
 			mp.StartSyncing()
 		}
 	}
-	// todo: to be removed when all pages have been migrated
 	l.ToggleSync = toggleSync
-	l.ToggleSync = toggleSync
+	l.ChangeFragment = mp.changeFragment
 
 	iconColor := l.Theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
@@ -111,12 +104,14 @@ func (mp *MainPage) initNavItems() {
 		{
 			Clickable: new(widget.Clickable),
 			Image:     mp.Icons.SendIcon,
-			Page:      values.String(values.StrSend),
+			Title:     values.String(values.StrSend),
+			PageID:    send.PageID,
 		},
 		{
 			Clickable: new(widget.Clickable),
 			Image:     mp.Icons.ReceiveIcon,
-			Page:      values.String(values.StrReceive),
+			Title:     values.String(values.StrReceive),
+			PageID:    ReceivePageID,
 		},
 	}
 
@@ -125,37 +120,43 @@ func (mp *MainPage) initNavItems() {
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.OverviewIcon,
 			ImageInactive: mp.Icons.OverviewIconInactive,
-			Page:          values.String(values.StrOverview),
+			Title:         values.String(values.StrOverview),
+			PageID:        OverviewPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.TransactionIcon,
 			ImageInactive: mp.Icons.TransactionIconInactive,
-			Page:          values.String(values.StrTransactions),
+			Title:         values.String(values.StrTransactions),
+			PageID:        TransactionsPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.WalletIcon,
 			ImageInactive: mp.Icons.WalletIconInactive,
-			Page:          values.String(values.StrWallets),
+			Title:         values.String(values.StrWallets),
+			PageID:        WalletPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.TicketIcon,
 			ImageInactive: mp.Icons.TicketIconInactive,
-			Page:          values.String(values.StrTickets),
+			Title:         values.String(values.StrTickets),
+			PageID:        tickets.OverviewPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.ProposalIconActive,
 			ImageInactive: mp.Icons.ProposalIconInactive,
-			Page:          values.String(values.StrProposal),
+			Title:         values.String(values.StrProposal),
+			PageID:        proposal.ProposalsPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.MoreIcon,
 			ImageInactive: mp.Icons.MoreIconInactive,
-			Page:          values.String(values.StrMore),
+			Title:         values.String(values.StrMore),
+			PageID:        MorePageID,
 		},
 	}
 }
@@ -169,10 +170,10 @@ func (mp *MainPage) OnResume() {
 
 	mp.UpdateBalance()
 
-	if pg, ok := mp.pages[mp.current]; ok {
-		pg.OnResume()
+	if mp.currentPage != nil {
+		mp.currentPage.OnResume()
 	} else {
-		mp.ChangeFragment(NewOverviewPage(mp.Load), OverviewPageID)
+		mp.ChangeFragment(NewOverviewPage(mp.Load))
 	}
 
 	if mp.autoSync {
@@ -270,99 +271,74 @@ func (mp *MainPage) Handle() {
 	for i := range mp.appBarNavItems {
 		for mp.appBarNavItems[i].Clickable.Clicked() {
 			var pg load.Page
-			var id string
 			if i == 0 {
 				if mp.sendPage == nil {
 					mp.sendPage = send.NewSendPage(mp.Load)
 				}
 
 				pg = mp.sendPage
-				id = send.PageID
 			} else {
 				pg = NewReceivePage(mp.Load)
-				id = ReceivePageID
 			}
 
-			mp.SetReturnPage(mp.current)
-			mp.ChangeFragment(pg, id)
+			mp.ChangeFragment(pg)
 		}
 	}
 
 	for i := range mp.drawerNavItems {
 		for mp.drawerNavItems[i].Clickable.Clicked() {
 			var pg load.Page
-			var id string
 			if i == OverviewNavID {
 				pg = NewOverviewPage(mp.Load)
-				id = OverviewPageID
 			} else if i == TransactionsNavID {
 				pg = NewTransactionsPage(mp.Load)
-				id = TransactionsPageID
 			} else if i == WalletsNavID {
 				pg = NewWalletPage(mp.Load)
-				id = WalletPageID
 			} else if i == TicketsNavID {
 				pg = tickets.NewTicketPage(mp.Load)
-				id = tickets.OverviewPageID
 			} else if i == ProposalsNavID {
 				pg = proposal.NewProposalsPage(mp.Load)
-				id = proposal.ProposalsPageID
 			} else if i == MoreNavID {
 				pg = NewMorePage(mp.Load)
-				id = MorePageID
 			} else {
 				continue
 			}
 
-			if id == mp.current {
+			if pg.ID() == mp.currentPage.ID() {
 				continue
 			}
 
-			mp.changeFragment(pg, id)
+			mp.changeFragment(pg)
 		}
 	}
 }
 
 func (mp *MainPage) OnClose() {
-	if pg, ok := mp.pages[mp.current]; ok {
-		pg.OnClose()
+	if mp.currentPage != nil {
+		mp.currentPage.OnClose()
 	}
+
 	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
 	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
 }
 
-func (mp *MainPage) changeFragment(page load.Page, id string) {
-	mp.pages[id] = page
-	mp.changePage(id)
-}
-
-func (mp *MainPage) changePage(page string) {
-	if pg, ok := mp.pages[mp.current]; ok {
-		pg.OnClose()
+func (mp *MainPage) changeFragment(page load.Page) {
+	if mp.currentPage != nil {
+		mp.currentPage.OnClose()
+		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
 	}
 
-	if pg, ok := mp.pages[page]; ok {
-		pg.OnResume()
-		mp.current = page
-	}
-}
-
-func (mp *MainPage) setReturnPage(from string) {
-	mp.previous = from
+	page.OnResume()
+	mp.currentPage = page
 }
 
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	mp.pages[mp.current].Handle()
+	mp.currentPage.Handle()
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			// fill the entire window with a color if a user has no wallet created
-			if mp.current == CreateRestorePageID {
-				return decredmaterial.Fill(gtx, mp.Theme.Color.Surface)
-			}
-
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(mp.LayoutTopBar),
 				layout.Rigid(func(gtx C) D {
@@ -372,17 +348,10 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 							card.Radius = decredmaterial.Radius(0)
 							return card.Layout(gtx, mp.LayoutNavDrawer)
 						}),
-						layout.Rigid(mp.pages[mp.current].Layout),
+						layout.Rigid(mp.currentPage.Layout),
 					)
 				}),
 			)
-		}),
-		layout.Stacked(func(gtx C) D {
-			// stack the page content on the entire window if a user has no wallet
-			if mp.current == CreateRestorePageID {
-				return mp.pages[mp.current].Layout(gtx)
-			}
-			return layout.Dimensions{}
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global toasts. Stack toast on all pages and contents
@@ -453,7 +422,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 														Left: values.MarginPadding0,
 													}.Layout(gtx, func(gtx C) D {
 														return layout.Center.Layout(gtx, func(gtx C) D {
-															return mp.Theme.Body1(mp.appBarNavItems[i].Page).Layout(gtx)
+															return mp.Theme.Body1(mp.appBarNavItems[i].Title).Layout(gtx)
 														})
 													})
 												}),
@@ -508,10 +477,10 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			list := layout.List{Axis: layout.Vertical}
 			return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
 				background := mp.Theme.Color.Surface
-				if mp.drawerNavItems[i].Page == mp.current {
+				if mp.drawerNavItems[i].PageID == mp.currentPage.ID() {
 					background = mp.Theme.Color.ActiveGray
 				}
-				txt := mp.Theme.Label(values.TextSize16, mp.drawerNavItems[i].Page)
+				txt := mp.Theme.Label(values.TextSize16, mp.drawerNavItems[i].Title)
 				return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
 					card := mp.Theme.Card()
 					card.Color = background
@@ -539,7 +508,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									img := mp.drawerNavItems[i].ImageInactive
-									if mp.drawerNavItems[i].Page == mp.current {
+									if mp.drawerNavItems[i].PageID == mp.currentPage.ID() {
 										img = mp.drawerNavItems[i].Image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
@@ -553,7 +522,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
 										textColor := mp.Theme.Color.Gray4
-										if mp.drawerNavItems[i].Page == mp.current {
+										if mp.drawerNavItems[i].PageID == mp.currentPage.ID() {
 											textColor = mp.Theme.Color.DeepBlue
 										}
 										txt.Color = textColor
