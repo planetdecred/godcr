@@ -812,14 +812,14 @@ func (pg *WalletPage) Handle() {
 	if ok, selectedItem := pg.watchWalletsList.ItemClicked(); ok {
 		listItem := pg.listItems[selectedItem]
 		// TODO: find default account using number
-		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]), AccountDetailsPageID)
+		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
 	}
 
 	for index, listItem := range pg.listItems {
 		*pg.SelectedWallet = index
 
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
-			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]), AccountDetailsPageID)
+			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]))
 		}
 
 		if listItem.wal.IsWatchingOnlyWallet() {
@@ -868,11 +868,11 @@ func (pg *WalletPage) Handle() {
 			if menu.button.Clicked() {
 				switch menu.id {
 				case SignMessagePageID:
-					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal), SignMessagePageID)
+					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal))
 				case PrivacyPageID:
-					pg.ChangeFragment(NewPrivacyPage(pg.Load, listItem.wal), PrivacyPageID)
+					pg.ChangeFragment(NewPrivacyPage(pg.Load, listItem.wal))
 				case SettingsPageID:
-					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal), WalletSettingsPageID)
+					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal))
 				default:
 					menu.action(pg.Load)
 				}

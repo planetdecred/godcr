@@ -342,11 +342,11 @@ func (pg *Page) Handle() {
 	}
 
 	if pg.toTickets.Button.Clicked() {
-		pg.ChangeFragment(newListPage(pg.Load), listPageID)
+		pg.ChangeFragment(newListPage(pg.Load))
 	}
 
 	if pg.toTicketsActivity.Button.Clicked() {
-		pg.ChangeFragment(newTicketActivityPage(pg.Load), ActivityPageID)
+		pg.ChangeFragment(newTicketActivityPage(pg.Load))
 	}
 }
 

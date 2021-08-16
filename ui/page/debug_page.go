@@ -33,7 +33,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 			text:      "Check wallet logs",
 			page:      LogPageID,
 			action: func() {
-				l.ChangeFragment(NewLogPage(l), LogPageID)
+				l.ChangeFragment(NewLogPage(l))
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 			text:      "Check statistics",
 			page:      StatisticsPageID,
 			action: func() {
-				l.ChangeFragment(NewStatPage(l), StatisticsPageID)
+				l.ChangeFragment(NewStatPage(l))
 			},
 		},
 	}

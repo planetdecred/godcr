@@ -394,7 +394,7 @@ func (pg *PrivacyPage) showModalSetupMixerAcct() {
 				Title("Account name is taken").
 				Body("There are existing accounts named mixed or unmixed. Please change the name to something else for now. You can change them back after the setup.").
 				PositiveButton("Go back & rename", func() {
-					*pg.Page = WalletPageID
+					// TODO
 				})
 			pg.ShowModal(info)
 			return

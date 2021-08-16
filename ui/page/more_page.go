@@ -32,7 +32,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			image:     l.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
-				l.ChangeFragment(NewSettingsPage(l), SettingsPageID)
+				l.ChangeFragment(NewSettingsPage(l))
 			},
 		},
 		{
@@ -40,7 +40,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			image:     l.Icons.SecurityIcon,
 			page:      SecurityToolsPageID,
 			action: func() {
-				l.ChangeFragment(NewSecurityToolsPage(l), SecurityToolsPageID)
+				l.ChangeFragment(NewSecurityToolsPage(l))
 			},
 		},
 		{
@@ -48,7 +48,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			image:     l.Icons.HelpIcon,
 			page:      HelpPageID,
 			action: func() {
-				l.ChangeFragment(NewHelpPage(l), HelpPageID)
+				l.ChangeFragment(NewHelpPage(l))
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			image:     l.Icons.AboutIcon,
 			page:      AboutPageID,
 			action: func() {
-				l.ChangeFragment(NewAboutPage(l), AboutPageID)
+				l.ChangeFragment(NewAboutPage(l))
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			image:     l.Icons.DebugIcon,
 			page:      DebugPageID,
 			action: func() {
-				l.ChangeFragment(NewDebugPage(l), DebugPageID)
+				l.ChangeFragment(NewDebugPage(l))
 			},
 		},
 	}

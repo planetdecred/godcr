@@ -139,7 +139,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 
 func (pg *AboutPage) Handle() {
 	if pg.licenseRow.Clicked() {
-		pg.ChangeFragment(NewLicensePage(pg.Load), LicensePageID)
+		pg.ChangeFragment(NewLicensePage(pg.Load))
 	}
 }
 

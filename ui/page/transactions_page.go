@@ -183,8 +183,7 @@ func (pg *TransactionsPage) Handle() {
 	}
 
 	if clicked, selectedItem := pg.transactionList.ItemClicked(); clicked {
-		pg.SetReturnPage(TransactionsPageID)
-		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]), TransactionDetailsPageID)
+		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 }
 
