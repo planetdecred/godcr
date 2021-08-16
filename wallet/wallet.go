@@ -41,7 +41,11 @@ func NewWallet(root string, net string, send chan Response, confirms int32) (*Wa
 }
 
 func (wal *Wallet) InitMultiWallet() error {
-	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net)
+	politeiaHost := dcrlibwallet.PoliteiaMainnetHost
+	if wal.Net == dcrlibwallet.Testnet3 {
+		politeiaHost = dcrlibwallet.PoliteiaTestnetHost
+	}
+	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net, politeiaHost)
 	if err != nil {
 		return err
 	}
@@ -76,60 +80,6 @@ func (wal *Wallet) SetupListeners() {
 	wal.multi.Politeia.AddNotificationListener(l, syncID)
 
 	startupPassSet := wal.multi.IsStartupSecuritySet()
-
-	resp.Resp = LoadedWallets{
-		Count:              wal.multi.LoadedWalletsCount(),
-		StartUpSecuritySet: startupPassSet,
-	}
-	wal.Send <- resp
-}
-
-// LoadWallets loads the wallets for network in the root directory.
-// It adds a SyncProgressListener to the multiwallet and opens the wallets if no
-// startup passphrase was set.
-// It is non-blocking and sends its result or any erro to wal.Send.
-func (wal *Wallet) LoadWallets() {
-	resp := Response{
-		Resp: LoadedWallets{},
-	}
-	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net)
-	if err != nil {
-		resp.Err = err
-		log.Error("Wallet not loaded. Is another process using the data directory?")
-		wal.Send <- resp
-		return
-	}
-	wal.multi = multiWal
-	l := &listener{
-		Send: wal.Sync,
-	}
-	err = wal.multi.AddSyncProgressListener(l, syncID)
-	if err != nil {
-		resp.Err = err
-		wal.Send <- resp
-		return
-	}
-
-	err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
-	if err != nil {
-		resp.Err = err
-		wal.Send <- resp
-		return
-	}
-
-	wal.multi.AddAccountMixerNotificationListener(l, syncID)
-
-	wal.multi.Politeia.AddNotificationListener(l, syncID)
-
-	startupPassSet := wal.multi.IsStartupSecuritySet()
-	if !startupPassSet {
-		err = wal.multi.OpenWallets(nil)
-		if err != nil {
-			resp.Err = err
-			wal.Send <- resp
-			return
-		}
-	}
 
 	resp.Resp = LoadedWallets{
 		Count:              wal.multi.LoadedWalletsCount(),

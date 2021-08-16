@@ -66,6 +66,8 @@ type Theme struct {
 		Gray4        color.NRGBA
 		Gray5        color.NRGBA
 		Gray6        color.NRGBA
+		Green50      color.NRGBA
+		Green500     color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -108,6 +110,8 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Gray4 = argb(0x99FFFFFF)
 		t.Color.Gray5 = argb(0x61FFFFFF)
 		t.Color.Gray6 = argb(0xCCFFFFFF)
+		t.Color.Green50 = rgb(0xE8F7EA)
+		t.Color.Green500 = rgb(0x41BE53)
 		t.Color.LightGray = rgb(0x121212)
 		t.Color.ActiveGray = rgb(0x363636)
 		t.Color.DeepBlue = argb(0xDEFFFFFF)
@@ -136,6 +140,8 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Gray4 = rgb(0x3d5873)
 		t.Color.Gray5 = rgb(0x3d5873)
 		t.Color.Gray6 = rgb(0x091440)
+		t.Color.Green50 = rgb(0xE8F7EA)
+		t.Color.Green500 = rgb(0x41BE53)
 		t.Color.LightGray = rgb(0xf3f5f6)
 		t.Color.ActiveGray = rgb(0xf3f5f6)
 		t.Color.DeepBlue = rgb(0x091440)
@@ -237,7 +243,7 @@ func fillMax(gtx layout.Context, col color.NRGBA, radius CornerRadius) D {
 
 	clip.RRect{
 		Rect: track,
-		NE:   radius.NE, NW: radius.NW, SE: radius.SE, SW: radius.SW,
+		NE:   radius.TopRight, NW: radius.TopLeft, SE: radius.BottomRight, SW: radius.BottomLeft,
 	}.Add(gtx.Ops)
 	paint.Fill(gtx.Ops, col)
 	st.Load()

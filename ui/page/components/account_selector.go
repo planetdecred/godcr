@@ -460,7 +460,7 @@ func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dime
 	title := "Some accounts are hidden."
 	desc := "Some accounts are disabled by StakeShuffle settings to protect your privacy."
 	card := asm.Theme.Card()
-	card.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
+	card.Radius = decredmaterial.Radius(7)
 	border := widget.Border{Color: asm.Theme.Color.Background, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding280)
 	return border.Layout(gtx, func(gtx C) D {

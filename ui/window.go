@@ -243,14 +243,22 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 			return page.Layout(gtx)
 		}),
 		layout.Stacked(func(gtx C) D {
-			for _, modal := range win.modals {
-				modal.Handle()
+			modals := win.modals
+
+			if len(modals) > 0 {
+				modalLayouts := make([]layout.StackChild, 0)
+				for _, modal := range modals {
+					modal.Handle()
+					widget := modal.Layout(gtx)
+					l := layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						return widget
+					})
+					modalLayouts = append(modalLayouts, l)
+				}
+
+				return layout.Stack{Alignment: layout.Center}.Layout(gtx, modalLayouts...)
 			}
 
-			// global modal. Stack modal on all pages and contents
-			if len(win.modals) > 0 {
-				return win.modals[len(win.modals)-1].Layout(gtx)
-			}
 			return layout.Dimensions{}
 		}),
 	)

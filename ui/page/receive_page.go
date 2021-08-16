@@ -14,7 +14,6 @@ import (
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -83,6 +82,9 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.newAddr.Color = pg.Theme.Color.Text
 	pg.newAddr.Background = pg.Theme.Color.Surface
 	pg.newAddr.TextSize = values.TextSize16
+
+	pg.receiveAddress.Color = pg.Theme.Color.DeepBlue
+	pg.receiveAddress.MaxLines = 1
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = pg.Icons.ContentClear
@@ -280,45 +282,34 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 	card := decredmaterial.Card{
-		Inset: layout.Inset{
-			Top:    values.MarginPadding14,
-			Bottom: values.MarginPadding16,
-		},
 		Color: pg.Theme.Color.LightGray,
 	}
 
-	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			card.Radius = decredmaterial.CornerRadius{NE: 8, NW: 0, SE: 0, SW: 8}
-			return card.Layout(gtx, func(gtx C) D {
-				return layout.Inset{
-					Top:    values.MarginPadding30,
-					Bottom: values.MarginPadding30,
-					Left:   values.MarginPadding30,
-					Right:  values.MarginPadding30,
-				}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return layout.Dimensions{}
+	return layout.Inset{Top: values.MarginPadding14, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				card.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 8, BottomRight: 0, BottomLeft: 8}
+				return card.Layout(gtx, func(gtx C) D {
+					return layout.Inset{
+						Top:    values.MarginPadding16,
+						Bottom: values.MarginPadding16,
+						Left:   values.MarginPadding16,
+						Right:  values.MarginPadding16,
+					}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						pg.receiveAddress.Text = pg.currentAddress
+						return pg.receiveAddress.Layout(gtx)
+					})
 				})
-			})
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			pg.receiveAddress.Text = pg.currentAddress
-			pg.receiveAddress.Color = pg.Theme.Color.DeepBlue
-			pg.receiveAddress.Alignment = text.Middle
-			pg.receiveAddress.MaxLines = 1
-			return card.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.UniformInset(values.MarginPadding16).Layout(gtx, pg.receiveAddress.Layout)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
-		}),
-		layout.Rigid(func(gtx C) D {
-			card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 8, SE: 8, SW: 0}
-			return card.Layout(gtx, pg.copy.Layout)
-		}),
-	)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding1}.Layout(gtx, func(gtx C) D { return layout.Dimensions{} })
+			}),
+			layout.Rigid(func(gtx C) D {
+				card.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 8, BottomLeft: 0}
+				return card.Layout(gtx, pg.copy.Layout)
+			}),
+		)
+	})
 }
 
 func (pg *ReceivePage) Handle() {

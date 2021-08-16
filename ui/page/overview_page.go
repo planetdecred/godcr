@@ -1,6 +1,7 @@
 package page
 
 import (
+	"context"
 	"fmt"
 	"image/color"
 	"time"
@@ -30,7 +31,8 @@ type walletSyncDetails struct {
 
 type OverviewPage struct {
 	*load.Load
-	pageClosing      chan bool
+	ctx              context.Context // page context
+	ctxCancel        context.CancelFunc
 	listContainer    *layout.List
 	walletSyncList   *layout.List
 	transactionsList *decredmaterial.ClickableList
@@ -67,9 +69,8 @@ type OverviewPage struct {
 
 func NewOverviewPage(l *load.Load) *OverviewPage {
 	pg := &OverviewPage{
-		Load:        l,
-		pageClosing: make(chan bool, 1),
-		allWallets:  l.WL.SortedWalletList(),
+		Load:       l,
+		allWallets: l.WL.SortedWalletList(),
 
 		listContainer:    &layout.List{Axis: layout.Vertical},
 		walletSyncList:   &layout.List{Axis: layout.Vertical},
@@ -114,6 +115,8 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 }
 
 func (pg *OverviewPage) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
 	pg.walletSyncing = pg.WL.MultiWallet.IsSyncing()
 	pg.walletSynced = pg.WL.MultiWallet.IsSynced()
 	pg.isConnnected = pg.WL.MultiWallet.IsConnectedToDecredNetwork()
@@ -607,8 +610,10 @@ func (pg *OverviewPage) listenForSyncNotifications() {
 
 			select {
 			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.pageClosing:
-				return
+			default:
+				if components.ContextDone(pg.ctx) {
+					return
+				}
 			}
 
 			switch n := notification.(type) {
@@ -657,5 +662,5 @@ func (pg *OverviewPage) listenForSyncNotifications() {
 }
 
 func (pg *OverviewPage) OnClose() {
-	pg.pageClosing <- true
+	pg.ctxCancel()
 }
