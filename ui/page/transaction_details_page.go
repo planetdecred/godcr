@@ -306,12 +306,7 @@ func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, valu
 				layout.Rigid(func(gtx C) D {
 					if showWalletBadge {
 						card := pg.theme.Card()
-						card.Radius = decredmaterial.CornerRadius{
-							NE: 0,
-							NW: 0,
-							SE: 0,
-							SW: 0,
-						}
+						card.Radius = decredmaterial.Radius(0)
 						card.Color = pg.theme.Color.LightGray
 						return card.Layout(gtx, func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
@@ -421,12 +416,7 @@ func (pg *TransactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acc
 							}),
 							layout.Rigid(func(gtx C) D {
 								card := pg.theme.Card()
-								card.Radius = decredmaterial.CornerRadius{
-									NE: 0,
-									NW: 0,
-									SE: 0,
-									SW: 0,
-								}
+								card.Radius = decredmaterial.Radius(0)
 								card.Color = pg.theme.Color.LightGray
 								return card.Layout(gtx, func(gtx C) D {
 									return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {

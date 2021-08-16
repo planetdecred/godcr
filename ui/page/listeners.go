@@ -40,29 +40,29 @@ func (mp *MainPage) OnAccountMixerEnded(walletID int)   {}
 
 // Politeia notifications
 func (mp *MainPage) OnProposalsSynced() {
-	mp.Load.Receiver.NotificationsUpdate <- wallet.Proposal{
+	mp.UpdateNotification(wallet.Proposal{
 		ProposalStatus: wallet.Synced,
-	}
+	})
 }
 
 func (mp *MainPage) OnNewProposal(proposal *dcrlibwallet.Proposal) {
-	mp.Load.Receiver.NotificationsUpdate <- wallet.Proposal{
+	mp.UpdateNotification(wallet.Proposal{
 		ProposalStatus: wallet.NewProposalFound,
 		Proposal:       proposal,
-	}
+	})
 }
 
 func (mp *MainPage) OnProposalVoteStarted(proposal *dcrlibwallet.Proposal) {
-	mp.Load.Receiver.NotificationsUpdate <- wallet.Proposal{
+	mp.UpdateNotification(wallet.Proposal{
 		ProposalStatus: wallet.VoteStarted,
 		Proposal:       proposal,
-	}
+	})
 }
 func (mp *MainPage) OnProposalVoteFinished(proposal *dcrlibwallet.Proposal) {
-	mp.Load.Receiver.NotificationsUpdate <- wallet.Proposal{
+	mp.UpdateNotification(wallet.Proposal{
 		ProposalStatus: wallet.VoteFinished,
 		Proposal:       proposal,
-	}
+	})
 }
 
 // Sync notifications
@@ -95,6 +95,7 @@ func (mp *MainPage) OnHeadersFetchProgress(headersFetchProgress *dcrlibwallet.He
 		},
 	})
 }
+
 func (mp *MainPage) OnAddressDiscoveryProgress(addressDiscoveryProgress *dcrlibwallet.AddressDiscoveryProgressReport) {
 	mp.UpdateNotification(wallet.SyncStatusUpdate{
 		Stage: wallet.AddressDiscoveryProgress,
@@ -127,7 +128,7 @@ func (mp *MainPage) OnSyncCanceled(willRestart bool) {
 func (mp *MainPage) OnSyncEndedWithError(err error)          {}
 func (mp *MainPage) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
 
-// UpdateNotification sends notification to the notification channel
+// UpdateNotification sends notification to the notification channel depending on which channel the page uses
 func (mp *MainPage) UpdateNotification(signal interface{}) {
 	mp.Load.Receiver.NotificationsUpdate <- signal
 }

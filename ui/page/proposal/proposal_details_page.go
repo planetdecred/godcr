@@ -1,6 +1,7 @@
 package proposal
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/renderers"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const PageProposalDetails = "proposal_details"
@@ -28,9 +30,11 @@ type proposalItemWidgets struct {
 
 type proposalDetails struct {
 	*load.Load
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	loadingDescription bool
-	proposal           dcrlibwallet.Proposal
+	proposal           *dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
@@ -42,9 +46,10 @@ type proposalDetails struct {
 	successIcon        *widget.Icon
 	vote               decredmaterial.Button
 	backButton         decredmaterial.IconButton
+	viewInPoliteiaBtn  *widget.Clickable
 }
 
-func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *proposalDetails {
+func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *proposalDetails {
 	pg := &proposalDetails{
 		Load: l,
 
@@ -59,8 +64,10 @@ func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *propo
 		rejectedIcon:       l.Icons.NavigationCancel,
 		successIcon:        l.Icons.ActionCheckCircle,
 		timerIcon:          l.Icons.TimerIcon,
+		viewInPoliteiaBtn:  new(widget.Clickable),
 	}
 
+	pg.redirectIcon.Scale = 1
 	pg.downloadIcon.Scale = 1
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
@@ -80,7 +87,8 @@ func newProposalDetailsPage(l *load.Load, proposal dcrlibwallet.Proposal) *propo
 }
 
 func (pg *proposalDetails) OnResume() {
-
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.listenForSyncNotifications()
 }
 
 func (pg *proposalDetails) Handle() {
@@ -93,9 +101,50 @@ func (pg *proposalDetails) Handle() {
 	}
 
 	if pg.vote.Button.Clicked() {
-		newVoteModal(pg.Load).Show()
+		newVoteModal(pg.Load, pg.proposal).Show()
+	}
+
+	for pg.viewInPoliteiaBtn.Clicked() {
+		host := "https://proposals.decred.org/record/"
+		if pg.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
+			host = "https://test-proposals.decred.org/record/"
+		}
+
+		components.GoToURL(host + pg.proposal.Token)
 	}
 }
+
+func (pg *proposalDetails) listenForSyncNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			default:
+				if components.ContextDone(pg.ctx) {
+					return
+				}
+			}
+
+			switch n := notification.(type) {
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
+					if err == nil {
+						pg.proposal = proposal
+						pg.RefreshWindow()
+					}
+				}
+			}
+		}
+	}()
+}
+func (pg *proposalDetails) OnClose() {
+	pg.ctxCancel()
+}
+
+// - Layout
 
 func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 	proposal := pg.proposal
@@ -110,13 +159,8 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 }
 
 func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {
-	proposal := pg.proposal
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	txt := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%d eligible tickets", proposal.EligibleTickets))
-	return layout.Flex{Alignment: layout.Middle, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(pg.vote.Layout),
-		layout.Rigid(txt.Layout),
-	)
+	return pg.vote.Layout(gtx)
 }
 
 func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
@@ -131,9 +175,7 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 				if proposal.VoteStatus == val || proposal.VoteStatus < val {
 					c := pg.Theme.Card()
 					c.Color = pg.Theme.Color.Primary
-
-					r := float32(9.5)
-					c.Radius = decredmaterial.CornerRadius{NE: r, NW: r, SE: r, SW: r}
+					c.Radius = decredmaterial.Radius(9.5)
 					lbl := pg.Theme.Body1(fmt.Sprint(val))
 					lbl.Color = pg.Theme.Color.Surface
 					if proposal.VoteStatus < val {
@@ -333,6 +375,8 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 		w = append(w, loading)
 	}
 
+	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
+
 	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
@@ -348,20 +392,21 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12})),
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						txt := pg.Theme.Body1(text)
-						txt.Color = pg.Theme.Color.DeepBlue
-						return txt.Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return decredmaterial.Clickable(gtx, btn, func(gtx C) D {
+				return decredmaterial.Clickable(gtx, btn, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := pg.Theme.Body1(text)
+							txt.Color = pg.Theme.Color.DeepBlue
+							return txt.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
 							return layout.Inset{}.Layout(gtx, func(gtx C) D {
 								return layout.E.Layout(gtx, icon.Layout)
 							})
-						})
-					}),
-				)
+						}),
+					)
+				})
 			}),
 		)
 	}
@@ -384,7 +429,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 				proposalDescription = proposal.IndexFile
 			} else {
 				var err error
-				proposalDescription, err = pg.WL.MultiWallet.Politeia.FetchProposalDescription(dcrlibwallet.PoliteiaMainnetHost, proposal.Token)
+				proposalDescription, err = pg.WL.MultiWallet.Politeia.FetchProposalDescription(proposal.Token)
 				if err != nil {
 					fmt.Printf("Error loading proposal description: %v", err)
 					time.Sleep(7 * time.Second)
@@ -420,6 +465,8 @@ func (pg *proposalDetails) Layout(gtx C) D {
 					layout.Rigid(pg.layoutDescription),
 				)
 			},
+			ExtraItem: pg.viewInPoliteiaBtn,
+			ExtraText: "View on Politeia",
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					pg.redirectIcon.Scale = 1
@@ -431,5 +478,3 @@ func (pg *proposalDetails) Layout(gtx C) D {
 	}
 	return components.UniformPadding(gtx, body)
 }
-
-func (pg *proposalDetails) OnClose() {}

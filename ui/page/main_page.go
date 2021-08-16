@@ -27,6 +27,7 @@ const (
 	WalletsNavID
 	TicketsNavID
 	ProposalsNavID
+	MoreNavID
 )
 
 var (
@@ -42,7 +43,7 @@ type NavHandler struct {
 }
 
 type MainPage struct {
-	Load                    *load.Load
+	*load.Load
 	AppBarNavItems          []NavHandler
 	DrawerNavItems          []NavHandler
 	IsNavDrawerMinimized    bool
@@ -81,8 +82,8 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.Page = &mp.Current
 
 	toggleSync := func() {
-		if mp.Load.WL.MultiWallet.IsConnectedToDecredNetwork() {
-			mp.Load.WL.MultiWallet.CancelSync()
+		if mp.WL.MultiWallet.IsConnectedToDecredNetwork() {
+			mp.WL.MultiWallet.CancelSync()
 		} else {
 			mp.StartSyncing()
 		}
@@ -105,12 +106,12 @@ func (mp *MainPage) initNavItems() {
 	mp.AppBarNavItems = []NavHandler{
 		{
 			Clickable: new(widget.Clickable),
-			Image:     mp.Load.Icons.SendIcon,
+			Image:     mp.Icons.SendIcon,
 			Page:      values.String(values.StrSend),
 		},
 		{
 			Clickable: new(widget.Clickable),
-			Image:     mp.Load.Icons.ReceiveIcon,
+			Image:     mp.Icons.ReceiveIcon,
 			Page:      values.String(values.StrReceive),
 		},
 	}
@@ -118,38 +119,38 @@ func (mp *MainPage) initNavItems() {
 	mp.DrawerNavItems = []NavHandler{
 		{
 			Clickable:     new(widget.Clickable),
-			Image:         mp.Load.Icons.OverviewIcon,
-			ImageInactive: mp.Load.Icons.OverviewIconInactive,
+			Image:         mp.Icons.OverviewIcon,
+			ImageInactive: mp.Icons.OverviewIconInactive,
 			Page:          values.String(values.StrOverview),
 		},
 		{
 			Clickable:     new(widget.Clickable),
-			Image:         mp.Load.Icons.TransactionIcon,
-			ImageInactive: mp.Load.Icons.TransactionIconInactive,
+			Image:         mp.Icons.TransactionIcon,
+			ImageInactive: mp.Icons.TransactionIconInactive,
 			Page:          values.String(values.StrTransactions),
 		},
 		{
 			Clickable:     new(widget.Clickable),
-			Image:         mp.Load.Icons.WalletIcon,
-			ImageInactive: mp.Load.Icons.WalletIconInactive,
+			Image:         mp.Icons.WalletIcon,
+			ImageInactive: mp.Icons.WalletIconInactive,
 			Page:          values.String(values.StrWallets),
 		},
 		{
 			Clickable:     new(widget.Clickable),
-			Image:         mp.Load.Icons.TicketIcon,
-			ImageInactive: mp.Load.Icons.TicketIconInactive,
+			Image:         mp.Icons.TicketIcon,
+			ImageInactive: mp.Icons.TicketIconInactive,
 			Page:          values.String(values.StrTickets),
 		},
 		{
 			Clickable:     new(widget.Clickable),
-			Image:         mp.Load.Icons.ProposalIconActive,
-			ImageInactive: mp.Load.Icons.ProposalIconInactive,
+			Image:         mp.Icons.ProposalIconActive,
+			ImageInactive: mp.Icons.ProposalIconInactive,
 			Page:          values.String(values.StrProposal),
 		},
 		{
 			Clickable:     new(widget.Clickable),
-			Image:         mp.Load.Icons.MoreIcon,
-			ImageInactive: mp.Load.Icons.MoreIconInactive,
+			Image:         mp.Icons.MoreIcon,
+			ImageInactive: mp.Icons.MoreIconInactive,
 			Page:          values.String(values.StrMore),
 		},
 	}
@@ -157,27 +158,28 @@ func (mp *MainPage) initNavItems() {
 
 func (mp *MainPage) OnResume() {
 	// register for notifications
-	mp.Load.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
-	mp.Load.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
-	mp.Load.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
-	mp.Load.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
+	mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
+	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
+	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
+	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
 
 	mp.UpdateBalance()
 
 	if pg, ok := mp.Pages[mp.Current]; ok {
 		pg.OnResume()
 	} else {
-		mp.Load.ChangeFragment(NewOverviewPage(mp.Load), OverviewPageID)
+		mp.ChangeFragment(NewOverviewPage(mp.Load), OverviewPageID)
 	}
 
 	if mp.AutoSync {
 		mp.AutoSync = false
 		mp.StartSyncing()
+		go mp.WL.MultiWallet.Politeia.Sync()
 	}
 }
 
 func (mp *MainPage) UpdateBalance() {
-	currencyExchangeValue := mp.Load.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	mp.UsdExchangeSet = currencyExchangeValue == components.USDExchangeValue
 
 	totalBalance, err := mp.CalculateTotalWalletsBalance()
@@ -188,7 +190,7 @@ func (mp *MainPage) UpdateBalance() {
 			usdExchangeRate, err := strconv.ParseFloat(mp.DcrUsdtBittrex.LastTradeRate, 64)
 			if err == nil {
 				balanceInUSD := totalBalance.ToCoin() * usdExchangeRate
-				mp.TotalBalanceUSD = load.FormatUSDBalance(mp.Load.Printer, balanceInUSD)
+				mp.TotalBalanceUSD = load.FormatUSDBalance(mp.Printer, balanceInUSD)
 			}
 		}
 
@@ -197,7 +199,7 @@ func (mp *MainPage) UpdateBalance() {
 
 func (mp *MainPage) CalculateTotalWalletsBalance() (dcrutil.Amount, error) {
 	totalBalance := int64(0)
-	for _, wallet := range mp.Load.WL.SortedWalletList() {
+	for _, wallet := range mp.WL.SortedWalletList() {
 		accountsResult, err := wallet.GetAccountsRaw()
 		if err != nil {
 			return 0, err
@@ -212,14 +214,14 @@ func (mp *MainPage) CalculateTotalWalletsBalance() (dcrutil.Amount, error) {
 }
 
 func (mp *MainPage) StartSyncing() {
-	for _, wal := range mp.Load.WL.SortedWalletList() {
+	for _, wal := range mp.WL.SortedWalletList() {
 		if !wal.HasDiscoveredAccounts && wal.IsLocked() {
 			mp.UnlockWalletForSyncing(wal)
 			return
 		}
 	}
 
-	err := mp.Load.WL.MultiWallet.SpvSync()
+	err := mp.WL.MultiWallet.SpvSync()
 	if err != nil {
 		// show error dialog
 		log.Info("Error starting sync:", err)
@@ -233,7 +235,7 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				err := mp.Load.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
+				err := mp.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
 				if err != nil {
 					errText := err.Error()
 					if err.Error() == "invalid_passphrase" {
@@ -277,26 +279,42 @@ func (mp *MainPage) Handle() {
 				id = ReceivePageID
 			}
 
-			mp.Load.SetReturnPage(mp.Current)
-			mp.Load.ChangeFragment(pg, id)
+			mp.SetReturnPage(mp.Current)
+			mp.ChangeFragment(pg, id)
 		}
 	}
 
 	for i := range mp.DrawerNavItems {
 		for mp.DrawerNavItems[i].Clickable.Clicked() {
+			var pg load.Page
+			var id string
 			if i == OverviewNavID {
-				mp.Load.ChangeFragment(NewOverviewPage(mp.Load), OverviewPageID)
+				pg = NewOverviewPage(mp.Load)
+				id = OverviewPageID
 			} else if i == TransactionsNavID {
-				mp.Load.ChangeFragment(NewTransactionsPage(mp.Load), TransactionsPageID)
+				pg = NewTransactionsPage(mp.Load)
+				id = TransactionsPageID
 			} else if i == WalletsNavID {
-				mp.Load.ChangeFragment(NewWalletPage(mp.Load), WalletPageID)
+				pg = NewWalletPage(mp.Load)
+				id = WalletPageID
 			} else if i == TicketsNavID {
-				mp.Load.ChangeFragment(tickets.NewTicketPage(mp.Load), tickets.PageID)
+				pg = tickets.NewTicketPage(mp.Load)
+				id = tickets.PageID
 			} else if i == ProposalsNavID {
-				mp.Load.ChangeFragment(proposal.NewProposalsPage(mp.Load), proposal.ProposalsPageID)
+				pg = proposal.NewProposalsPage(mp.Load)
+				id = proposal.ProposalsPageID
+			} else if i == MoreNavID {
+				pg = NewMorePage(mp.Load)
+				id = MorePageID
 			} else {
-				mp.Load.ChangeFragment(NewMorePage(mp.Load), MorePageID)
+				continue
 			}
+
+			if id == mp.Current {
+				continue
+			}
+
+			mp.changeFragment(pg, id)
 		}
 	}
 }
@@ -305,10 +323,10 @@ func (mp *MainPage) OnClose() {
 	if pg, ok := mp.Pages[mp.Current]; ok {
 		pg.OnClose()
 	}
-	mp.Load.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
-	mp.Load.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
-	mp.Load.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
-	mp.Load.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
+	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
+	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
+	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
+	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
 }
 
 func (mp *MainPage) changeFragment(page load.Page, id string) {
@@ -338,7 +356,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			// fill the entire window with a color if a user has no wallet created
 			if mp.Current == CreateRestorePageID {
-				return decredmaterial.Fill(gtx, mp.Load.Theme.Color.Surface)
+				return decredmaterial.Fill(gtx, mp.Theme.Color.Surface)
 			}
 
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -346,8 +364,8 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							card := mp.Load.Theme.Card()
-							card.Radius = decredmaterial.CornerRadius{}
+							card := mp.Theme.Card()
+							card.Radius = decredmaterial.Radius(0)
 							return card.Layout(gtx, mp.LayoutNavDrawer)
 						}),
 						layout.Rigid(mp.Pages[mp.Current].Layout),
@@ -372,8 +390,8 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
-	card := mp.Load.Theme.Card()
-	card.Radius = decredmaterial.CornerRadius{}
+	card := mp.Theme.Card()
+	card.Radius = decredmaterial.Radius(0)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -387,7 +405,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 								func(gtx C) D {
 									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											img := mp.Load.Icons.Logo
+											img := mp.Icons.Logo
 											img.Scale = 1.0
 											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
 												func(gtx C) D {
@@ -431,7 +449,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 														Left: values.MarginPadding0,
 													}.Layout(gtx, func(gtx C) D {
 														return layout.Center.Layout(gtx, func(gtx C) D {
-															return mp.Load.Theme.Body1(mp.AppBarNavItems[i].Page).Layout(gtx)
+															return mp.Theme.Body1(mp.AppBarNavItems[i].Page).Layout(gtx)
 														})
 													})
 												}),
@@ -446,7 +464,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return mp.Load.Theme.Separator().Layout(gtx)
+				return mp.Theme.Separator().Layout(gtx)
 			}),
 		)
 	})
@@ -460,7 +478,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
 				}
-				border := widget.Border{Color: mp.Load.Theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				border := widget.Border{Color: mp.Theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
 				return inset.Layout(gtx, func(gtx C) D {
 					padding := layout.Inset{
 						Top:    values.MarginPadding3,
@@ -470,7 +488,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					}
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
-							return mp.Load.Theme.Body2(mp.TotalBalanceUSD).Layout(gtx)
+							return mp.Theme.Body2(mp.TotalBalanceUSD).Layout(gtx)
 						})
 					})
 				})
@@ -485,15 +503,15 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
 			return list.Layout(gtx, len(mp.DrawerNavItems), func(gtx C, i int) D {
-				background := mp.Load.Theme.Color.Surface
+				background := mp.Theme.Color.Surface
 				if mp.DrawerNavItems[i].Page == mp.Current {
-					background = mp.Load.Theme.Color.ActiveGray
+					background = mp.Theme.Color.ActiveGray
 				}
-				txt := mp.Load.Theme.Label(values.TextSize16, mp.DrawerNavItems[i].Page)
+				txt := mp.Theme.Label(values.TextSize16, mp.DrawerNavItems[i].Page)
 				return decredmaterial.Clickable(gtx, mp.DrawerNavItems[i].Clickable, func(gtx C) D {
-					card := mp.Load.Theme.Card()
+					card := mp.Theme.Card()
 					card.Color = background
-					card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+					card.Radius = decredmaterial.Radius(0)
 					return card.Layout(gtx, func(gtx C) D {
 						return components.Container{
 							Padding: layout.Inset{
@@ -530,9 +548,9 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Left: leftInset,
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										textColor := mp.Load.Theme.Color.Gray4
+										textColor := mp.Theme.Color.Gray4
 										if mp.DrawerNavItems[i].Page == mp.Current {
-											textColor = mp.Load.Theme.Color.DeepBlue
+											textColor = mp.Theme.Color.DeepBlue
 										}
 										txt.Color = textColor
 										return layout.Center.Layout(gtx, txt.Layout)

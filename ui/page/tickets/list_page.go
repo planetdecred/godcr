@@ -119,7 +119,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 			Extra: func(gtx C) D {
 				wrap := pg.Theme.Card()
 				wrap.Color = pg.Theme.Color.Gray1
-				wrap.Radius = decredmaterial.CornerRadius{NE: 8, NW: 8, SE: 8, SW: 8}
+				wrap.Radius = decredmaterial.Radius(8)
 				return wrap.Layout(gtx, func(gtx C) D {
 					insetIcon := layout.Inset{
 						Top:    values.MarginPadding4,
@@ -135,7 +135,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 					}.Layout(gtx, func(gtx C) D {
 						wrapIcon := pg.Theme.Card()
 						wrapIcon.Color = pg.Theme.Color.Surface
-						wrapIcon.Radius = decredmaterial.CornerRadius{NE: 7, NW: 7, SE: 7, SW: 7}
+						wrapIcon.Radius = decredmaterial.Radius(7)
 
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
@@ -209,7 +209,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 						layout.Stacked(func(gtx C) D {
 							wrapIcon := pg.Theme.Card()
 							wrapIcon.Color = st.background
-							wrapIcon.Radius = decredmaterial.CornerRadius{NE: 8, NW: 8, SE: 8, SW: 8}
+							wrapIcon.Radius = decredmaterial.Radius(8)
 							st.icon.Scale = 0.6
 							dims := wrapIcon.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout)
