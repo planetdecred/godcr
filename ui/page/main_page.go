@@ -305,7 +305,7 @@ func (mp *MainPage) Handle() {
 				continue
 			}
 
-			if pg.ID() == mp.currentPage.ID() {
+			if pg.ID() == mp.currentPageID() {
 				continue
 			}
 
@@ -324,6 +324,14 @@ func (mp *MainPage) OnClose() {
 	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
+}
+
+func (mp *MainPage) currentPageID() string {
+	if mp.currentPage != nil {
+		return mp.currentPage.ID()
+	}
+
+	return ""
 }
 
 func (mp *MainPage) changeFragment(page load.Page) {
@@ -348,8 +356,39 @@ func (mp *MainPage) popFragment() {
 	}
 }
 
+func (mp *MainPage) popToPage(pageID string) {
+
+	// close current page and all pages before `pageID`
+	if mp.currentPage != nil {
+		mp.currentPage.OnClose()
+	}
+
+	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
+		if mp.pageBackStack[i].ID() == pageID {
+			var closedPages []load.Page
+			mp.pageBackStack, closedPages = mp.pageBackStack[:i+1], mp.pageBackStack[i+1:]
+
+			for j := len(closedPages) - 1; j >= 0; j-- {
+				closedPages[j].OnClose()
+			}
+			break
+		}
+	}
+
+	if len(mp.pageBackStack) > 0 {
+		// set curent page to `pageID`
+		mp.currentPage = mp.pageBackStack[len(mp.pageBackStack)]
+		// remove current page from backstack history
+		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
+	} else {
+		mp.currentPage = nil
+	}
+}
+
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	mp.currentPage.Handle()
+	if mp.currentPage != nil {
+		mp.currentPage.Handle()
+	}
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
@@ -362,7 +401,13 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 							card.Radius = decredmaterial.Radius(0)
 							return card.Layout(gtx, mp.LayoutNavDrawer)
 						}),
-						layout.Rigid(mp.currentPage.Layout),
+						layout.Rigid(func(gtx C) D {
+							if mp.currentPage == nil {
+								return layout.Dimensions{}
+							}
+
+							return mp.currentPage.Layout(gtx)
+						}),
 					)
 				}),
 			)
@@ -491,7 +536,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			list := layout.List{Axis: layout.Vertical}
 			return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
 				background := mp.Theme.Color.Surface
-				if mp.drawerNavItems[i].PageID == mp.currentPage.ID() {
+				if mp.drawerNavItems[i].PageID == mp.currentPageID() {
 					background = mp.Theme.Color.ActiveGray
 				}
 				txt := mp.Theme.Label(values.TextSize16, mp.drawerNavItems[i].Title)
@@ -522,7 +567,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									img := mp.drawerNavItems[i].ImageInactive
-									if mp.drawerNavItems[i].PageID == mp.currentPage.ID() {
+									if mp.drawerNavItems[i].PageID == mp.currentPageID() {
 										img = mp.drawerNavItems[i].Image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
@@ -536,7 +581,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
 										textColor := mp.Theme.Color.Gray4
-										if mp.drawerNavItems[i].PageID == mp.currentPage.ID() {
+										if mp.drawerNavItems[i].PageID == mp.currentPageID() {
 											textColor = mp.Theme.Color.DeepBlue
 										}
 										txt.Color = textColor
