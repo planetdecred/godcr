@@ -55,13 +55,12 @@ func NewStartPage(l *load.Load) load.Page {
 	return sp
 }
 
-func (pg *startPage) ID() string {
+func (sp *startPage) ID() string {
 	return StartPageID
 }
 
 func (sp *startPage) OnResume() {
 	sp.WL.Wallet.InitMultiWallet()
-	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
 	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
 
 	// refresh theme now that config is available
