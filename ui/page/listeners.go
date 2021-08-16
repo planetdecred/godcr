@@ -147,43 +147,33 @@ func (mp *MainPage) desktopNotifier(notifier interface{}) {
 	var notification string
 	switch t := notifier.(type) {
 	case wallet.NewTransaction:
-		// remove trailing zeros from amount and convert to string
-		amount := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.Amount), 'f', -1, 64)
 
-		wallet := mp.WL.MultiWallet.WalletWithID(t.Transaction.WalletID)
-		if wallet == nil {
+		switch t.Transaction.Type {
+		case dcrlibwallet.TxTypeRegular:
+			if t.Transaction.Direction != dcrlibwallet.TxDirectionReceived {
+				return
+			}
+			// remove trailing zeros from amount and convert to string
+			amount := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.Amount), 'f', -1, 64)
+			notification = fmt.Sprintf("You have received %s DCR", amount)
+		case dcrlibwallet.TxTypeVote:
+			reward := strconv.FormatFloat(dcrlibwallet.AmountCoin(t.Transaction.VoteReward), 'f', -1, 64)
+			notification = fmt.Sprintf("A ticket just voted\nVote reward: %s DCR", reward)
+		case dcrlibwallet.TxTypeRevocation:
+			notification = "A ticket was revoked"
+		default:
 			return
 		}
 
-		getAccount := func(acct int32) string {
-			var account string
-			accountName, err := wallet.AccountName(acct)
-			if err != nil {
-				log.Error(err)
-			} else {
-				account = accountName
+		if mp.WL.MultiWallet.OpenedWalletsCount() > 1 {
+			wallet := mp.WL.MultiWallet.WalletWithID(t.Transaction.WalletID)
+			if wallet == nil {
+				return
 			}
-			return account
+
+			notification = fmt.Sprintf("[%s] %s", wallet.Name, notification)
 		}
 
-		//get destination account
-		var txDestAccount string
-		if t.Transaction.Direction == dcrlibwallet.TxDirectionReceived ||
-			(t.Transaction.Type != dcrlibwallet.TxTypeRegular &&
-				t.Transaction.Type != dcrlibwallet.TxTypeCoinBase) {
-			for _, output := range t.Transaction.Outputs {
-				if output.AccountNumber != -1 {
-					txDestAccount = getAccount(output.AccountNumber)
-				}
-			}
-		}
-
-		switch {
-		case t.Transaction.Direction == dcrlibwallet.TxDirectionReceived:
-			notification = fmt.Sprintf("You have received %s DCR to %s account in %s wallet.", amount, txDestAccount, wallet.Name)
-		case t.Transaction.Type != dcrlibwallet.TxTypeRegular && t.Transaction.Type != dcrlibwallet.TxTypeCoinBase:
-			notification = fmt.Sprintf("Transaction notification of %s DCR on %s account in %s wallet.", amount, txDestAccount, wallet.Name)
-		}
 		initializeBeepNotification(notification)
 	case wallet.Proposal:
 		switch {
