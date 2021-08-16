@@ -187,7 +187,11 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 						amount := strings.Split(dcrutil.Amount(pg.transaction.Amount).String(), " ")
 						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pg.Theme.H4(amount[0]).Layout)
+								amt := amount[0]
+								if pg.transaction.Direction == dcrlibwallet.TxDirectionSent {
+									amt = "-" + amt
+								}
+								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pg.Theme.H4(amt).Layout)
 							}),
 							layout.Rigid(pg.Theme.H6(amount[1]).Layout),
 						)
