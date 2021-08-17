@@ -2,7 +2,6 @@ package page
 
 import (
 	"image/color"
-	"strings"
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
@@ -156,7 +155,7 @@ func (pg *SignMessagePage) drawButtonsRow() layout.Widget {
 
 func (pg *SignMessagePage) drawResult() layout.Widget {
 	return func(gtx C) D {
-		if pg.signedMessageLabel.Text == "" {
+		if !components.StringNotEmpty(pg.signedMessageLabel.Text) {
 			return layout.Dimensions{}
 		}
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -206,17 +205,20 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *SignMessagePage) updateColors() {
-	if pg.isSigningMessage || !pg.messageIsValid || !pg.addressIsValid {
-		pg.signButton.Background = pg.Theme.Color.Hint
-	} else {
+func (pg *SignMessagePage) updateButtonColors() {
+	pg.clearButton.Color, pg.signButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
+	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
+		components.StringNotEmpty(pg.messageEditor.Editor.Text()) {
+		pg.clearButton.Color = pg.Theme.Color.Primary
+	}
+	if !pg.isSigningMessage && pg.messageIsValid && pg.addressIsValid {
 		pg.signButton.Background = pg.Theme.Color.Primary
 	}
 }
 
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
-	pg.updateColors()
+	pg.updateButtonColors()
 
 	for _, evt := range pg.addressEditor.Editor.Events() {
 		if pg.addressEditor.Editor.Focused() {
@@ -249,7 +251,6 @@ func (pg *SignMessagePage) Handle() {
 				Title("Confirm to sign").
 				NegativeButton("Cancel", func() {}).
 				PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
-
 					go func() {
 						sig, err := pg.wallet.SignMessage([]byte(password), address, message)
 						if err != nil {
@@ -284,19 +285,20 @@ func (pg *SignMessagePage) validateAddress() bool {
 	pg.addressEditor.SetError("")
 
 	var valid bool
+	var errorMessage string
 
 	switch {
-	case address == "":
-		pg.addressEditor.SetError("Please enter a valid address")
-		valid = false
-	case address != "" && !pg.WL.MultiWallet.IsAddressValid(address):
-		pg.addressEditor.SetError("Invalid address")
-		valid = false
-	case address != "" && !pg.wallet.HaveAddress(address):
-		pg.addressEditor.SetError("Address not owned by this wallet")
-		valid = false
+	case !components.StringNotEmpty(address):
+		errorMessage = "Please enter a valid address"
+	case !pg.WL.MultiWallet.IsAddressValid(address):
+		errorMessage = "Invalid address"
+	case !pg.wallet.HaveAddress(address):
+		errorMessage = "Address not owned by any wallet"
 	default:
 		valid = true
+	}
+	if !valid {
+		pg.addressEditor.SetError(errorMessage)
 	}
 
 	pg.addressIsValid = valid
@@ -307,7 +309,7 @@ func (pg *SignMessagePage) validateMessage() bool {
 	message := pg.messageEditor.Editor.Text()
 	pg.messageEditor.SetError("")
 
-	if message == "" || strings.TrimSpace(message) == "" {
+	if !components.StringNotEmpty(message) {
 		pg.messageEditor.SetError("Please enter a valid message to sign")
 		pg.messageIsValid = false
 		return false
