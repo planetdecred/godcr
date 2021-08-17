@@ -59,6 +59,10 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 	return pg
 }
 
+func (pg *AcctDetailsPage) ID() string {
+	return AccountDetailsPageID
+}
+
 func (pg *AcctDetailsPage) OnResume() {
 
 	balance := pg.account.Balance
@@ -104,8 +108,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(WalletPageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {

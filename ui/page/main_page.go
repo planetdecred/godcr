@@ -39,48 +39,42 @@ type NavHandler struct {
 	Clickable     *widget.Clickable
 	Image         *widget.Image
 	ImageInactive *widget.Image
-	Page          string
+	Title         string
+	PageID        string
 }
 
 type MainPage struct {
 	*load.Load
-	AppBarNavItems          []NavHandler
-	DrawerNavItems          []NavHandler
-	IsNavDrawerMinimized    bool
-	MinimizeNavDrawerButton decredmaterial.IconButton
-	MaximizeNavDrawerButton decredmaterial.IconButton
+	appBarNavItems          []NavHandler
+	drawerNavItems          []NavHandler
+	isNavDrawerMinimized    bool
+	minimizeNavDrawerButton decredmaterial.IconButton
+	maximizeNavDrawerButton decredmaterial.IconButton
 
-	AutoSync bool
+	autoSync bool
 
-	Current, Previous string
-	Pages             map[string]load.Page
-	SendPage          *send.Page // reuse value to keep data persistent onresume.
+	currentPage   load.Page
+	pageBackStack []load.Page
+	sendPage      *send.Page // reuse value to keep data persistent onresume.
 
 	// page state variables
-	DcrUsdtBittrex  load.DCRUSDTBittrex
-	UsdExchangeSet  bool
-	TotalBalance    dcrutil.Amount
-	TotalBalanceUSD string
+	dcrUsdtBittrex  load.DCRUSDTBittrex
+	usdExchangeSet  bool
+	totalBalance    dcrutil.Amount
+	totalBalanceUSD string
 }
 
 func NewMainPage(l *load.Load) *MainPage {
 
 	mp := &MainPage{
 		Load:     l,
-		AutoSync: true,
-		Pages:    make(map[string]load.Page),
+		autoSync: true,
 
-		MinimizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		MaximizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowForward),
+		minimizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
+		maximizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowForward),
 	}
 
 	// init shared page functions
-	// todo: common methods will be removed when all pages have been moved to the page package
-	l.ChangeFragment = mp.changeFragment
-	l.SetReturnPage = mp.setReturnPage
-	l.ReturnPage = &mp.Previous
-	l.Page = &mp.Current
-
 	toggleSync := func() {
 		if mp.WL.MultiWallet.IsConnectedToDecredNetwork() {
 			mp.WL.MultiWallet.CancelSync()
@@ -88,12 +82,12 @@ func NewMainPage(l *load.Load) *MainPage {
 			mp.StartSyncing()
 		}
 	}
-	// todo: to be removed when all pages have been migrated
 	l.ToggleSync = toggleSync
-	l.ToggleSync = toggleSync
+	l.ChangeFragment = mp.changeFragment
+	l.PopFragment = mp.popFragment
 
 	iconColor := l.Theme.Color.Gray3
-	mp.MinimizeNavDrawerButton.Color, mp.MaximizeNavDrawerButton.Color = iconColor, iconColor
+	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
 
 	mp.initNavItems()
 
@@ -102,56 +96,68 @@ func NewMainPage(l *load.Load) *MainPage {
 	return mp
 }
 
+func (mp *MainPage) ID() string {
+	return MainPageID
+}
+
 func (mp *MainPage) initNavItems() {
-	mp.AppBarNavItems = []NavHandler{
+	mp.appBarNavItems = []NavHandler{
 		{
 			Clickable: new(widget.Clickable),
 			Image:     mp.Icons.SendIcon,
-			Page:      values.String(values.StrSend),
+			Title:     values.String(values.StrSend),
+			PageID:    send.PageID,
 		},
 		{
 			Clickable: new(widget.Clickable),
 			Image:     mp.Icons.ReceiveIcon,
-			Page:      values.String(values.StrReceive),
+			Title:     values.String(values.StrReceive),
+			PageID:    ReceivePageID,
 		},
 	}
 
-	mp.DrawerNavItems = []NavHandler{
+	mp.drawerNavItems = []NavHandler{
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.OverviewIcon,
 			ImageInactive: mp.Icons.OverviewIconInactive,
-			Page:          values.String(values.StrOverview),
+			Title:         values.String(values.StrOverview),
+			PageID:        OverviewPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.TransactionIcon,
 			ImageInactive: mp.Icons.TransactionIconInactive,
-			Page:          values.String(values.StrTransactions),
+			Title:         values.String(values.StrTransactions),
+			PageID:        TransactionsPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.WalletIcon,
 			ImageInactive: mp.Icons.WalletIconInactive,
-			Page:          values.String(values.StrWallets),
+			Title:         values.String(values.StrWallets),
+			PageID:        WalletPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.TicketIcon,
 			ImageInactive: mp.Icons.TicketIconInactive,
-			Page:          values.String(values.StrTickets),
+			Title:         values.String(values.StrTickets),
+			PageID:        tickets.OverviewPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.ProposalIconActive,
 			ImageInactive: mp.Icons.ProposalIconInactive,
-			Page:          values.String(values.StrProposal),
+			Title:         values.String(values.StrProposal),
+			PageID:        proposal.ProposalsPageID,
 		},
 		{
 			Clickable:     new(widget.Clickable),
 			Image:         mp.Icons.MoreIcon,
 			ImageInactive: mp.Icons.MoreIconInactive,
-			Page:          values.String(values.StrMore),
+			Title:         values.String(values.StrMore),
+			PageID:        MorePageID,
 		},
 	}
 }
@@ -165,14 +171,14 @@ func (mp *MainPage) OnResume() {
 
 	mp.UpdateBalance()
 
-	if pg, ok := mp.Pages[mp.Current]; ok {
-		pg.OnResume()
+	if mp.currentPage != nil {
+		mp.currentPage.OnResume()
 	} else {
-		mp.ChangeFragment(NewOverviewPage(mp.Load), OverviewPageID)
+		mp.ChangeFragment(NewOverviewPage(mp.Load))
 	}
 
-	if mp.AutoSync {
-		mp.AutoSync = false
+	if mp.autoSync {
+		mp.autoSync = false
 		mp.StartSyncing()
 		go mp.WL.MultiWallet.Politeia.Sync()
 	}
@@ -180,17 +186,17 @@ func (mp *MainPage) OnResume() {
 
 func (mp *MainPage) UpdateBalance() {
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	mp.UsdExchangeSet = currencyExchangeValue == components.USDExchangeValue
+	mp.usdExchangeSet = currencyExchangeValue == components.USDExchangeValue
 
 	totalBalance, err := mp.CalculateTotalWalletsBalance()
 	if err == nil {
-		mp.TotalBalance = totalBalance
+		mp.totalBalance = totalBalance
 
-		if mp.UsdExchangeSet && mp.DcrUsdtBittrex.LastTradeRate != "" {
-			usdExchangeRate, err := strconv.ParseFloat(mp.DcrUsdtBittrex.LastTradeRate, 64)
+		if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
+			usdExchangeRate, err := strconv.ParseFloat(mp.dcrUsdtBittrex.LastTradeRate, 64)
 			if err == nil {
 				balanceInUSD := totalBalance.ToCoin() * usdExchangeRate
-				mp.TotalBalanceUSD = load.FormatUSDBalance(mp.Printer, balanceInUSD)
+				mp.totalBalanceUSD = load.FormatUSDBalance(mp.Printer, balanceInUSD)
 			}
 		}
 
@@ -255,110 +261,137 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 }
 
 func (mp *MainPage) Handle() {
-	for mp.MinimizeNavDrawerButton.Button.Clicked() {
-		mp.IsNavDrawerMinimized = true
+	for mp.minimizeNavDrawerButton.Button.Clicked() {
+		mp.isNavDrawerMinimized = true
 	}
 
-	for mp.MaximizeNavDrawerButton.Button.Clicked() {
-		mp.IsNavDrawerMinimized = false
+	for mp.maximizeNavDrawerButton.Button.Clicked() {
+		mp.isNavDrawerMinimized = false
 	}
 
-	for i := range mp.AppBarNavItems {
-		for mp.AppBarNavItems[i].Clickable.Clicked() {
+	for i := range mp.appBarNavItems {
+		for mp.appBarNavItems[i].Clickable.Clicked() {
 			var pg load.Page
-			var id string
 			if i == 0 {
-				if mp.SendPage == nil {
-					mp.SendPage = send.NewSendPage(mp.Load)
+				if mp.sendPage == nil {
+					mp.sendPage = send.NewSendPage(mp.Load)
 				}
 
-				pg = mp.SendPage
-				id = send.PageID
+				pg = mp.sendPage
 			} else {
 				pg = NewReceivePage(mp.Load)
-				id = ReceivePageID
 			}
 
-			mp.SetReturnPage(mp.Current)
-			mp.ChangeFragment(pg, id)
+			mp.ChangeFragment(pg)
 		}
 	}
 
-	for i := range mp.DrawerNavItems {
-		for mp.DrawerNavItems[i].Clickable.Clicked() {
+	for i := range mp.drawerNavItems {
+		for mp.drawerNavItems[i].Clickable.Clicked() {
 			var pg load.Page
-			var id string
 			if i == OverviewNavID {
 				pg = NewOverviewPage(mp.Load)
-				id = OverviewPageID
 			} else if i == TransactionsNavID {
 				pg = NewTransactionsPage(mp.Load)
-				id = TransactionsPageID
 			} else if i == WalletsNavID {
 				pg = NewWalletPage(mp.Load)
-				id = WalletPageID
 			} else if i == TicketsNavID {
 				pg = tickets.NewTicketPage(mp.Load)
-				id = tickets.PageID
 			} else if i == ProposalsNavID {
 				pg = proposal.NewProposalsPage(mp.Load)
-				id = proposal.ProposalsPageID
 			} else if i == MoreNavID {
 				pg = NewMorePage(mp.Load)
-				id = MorePageID
 			} else {
 				continue
 			}
 
-			if id == mp.Current {
+			if pg.ID() == mp.currentPageID() {
 				continue
 			}
 
-			mp.changeFragment(pg, id)
+			// clear stack
+			mp.changeFragment(pg)
 		}
 	}
 }
 
 func (mp *MainPage) OnClose() {
-	if pg, ok := mp.Pages[mp.Current]; ok {
-		pg.OnClose()
+	if mp.currentPage != nil {
+		mp.currentPage.OnClose()
 	}
+
 	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
 	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
 }
 
-func (mp *MainPage) changeFragment(page load.Page, id string) {
-	mp.Pages[id] = page
-	mp.changePage(id)
-}
-
-func (mp *MainPage) changePage(page string) {
-	if pg, ok := mp.Pages[mp.Current]; ok {
-		pg.OnClose()
+func (mp *MainPage) currentPageID() string {
+	if mp.currentPage != nil {
+		return mp.currentPage.ID()
 	}
 
-	if pg, ok := mp.Pages[page]; ok {
-		pg.OnResume()
-		mp.Current = page
+	return ""
+}
+
+func (mp *MainPage) changeFragment(page load.Page) {
+	if mp.currentPage != nil {
+		mp.currentPage.OnClose()
+		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
+	}
+
+	page.OnResume()
+	mp.currentPage = page
+}
+
+// popFragment goes back to the previous page
+func (mp *MainPage) popFragment() {
+	if len(mp.pageBackStack) > 0 {
+		// get and remove last page
+		previousPage := mp.pageBackStack[len(mp.pageBackStack)-1]
+		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
+
+		mp.currentPage.OnClose()
+		mp.currentPage = previousPage
 	}
 }
 
-func (mp *MainPage) setReturnPage(from string) {
-	mp.Previous = from
+func (mp *MainPage) popToPage(pageID string) {
+
+	// close current page and all pages before `pageID`
+	if mp.currentPage != nil {
+		mp.currentPage.OnClose()
+	}
+
+	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
+		if mp.pageBackStack[i].ID() == pageID {
+			var closedPages []load.Page
+			mp.pageBackStack, closedPages = mp.pageBackStack[:i+1], mp.pageBackStack[i+1:]
+
+			for j := len(closedPages) - 1; j >= 0; j-- {
+				closedPages[j].OnClose()
+			}
+			break
+		}
+	}
+
+	if len(mp.pageBackStack) > 0 {
+		// set curent page to `pageID`
+		mp.currentPage = mp.pageBackStack[len(mp.pageBackStack)]
+		// remove current page from backstack history
+		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
+	} else {
+		mp.currentPage = nil
+	}
 }
 
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	mp.Pages[mp.Current].Handle()
+	if mp.currentPage != nil {
+		mp.currentPage.Handle()
+	}
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			// fill the entire window with a color if a user has no wallet created
-			if mp.Current == CreateRestorePageID {
-				return decredmaterial.Fill(gtx, mp.Theme.Color.Surface)
-			}
-
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(mp.LayoutTopBar),
 				layout.Rigid(func(gtx C) D {
@@ -368,17 +401,16 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 							card.Radius = decredmaterial.Radius(0)
 							return card.Layout(gtx, mp.LayoutNavDrawer)
 						}),
-						layout.Rigid(mp.Pages[mp.Current].Layout),
+						layout.Rigid(func(gtx C) D {
+							if mp.currentPage == nil {
+								return layout.Dimensions{}
+							}
+
+							return mp.currentPage.Layout(gtx)
+						}),
 					)
 				}),
 			)
-		}),
-		layout.Stacked(func(gtx C) D {
-			// stack the page content on the entire window if a user has no wallet
-			if mp.Current == CreateRestorePageID {
-				return mp.Pages[mp.Current].Layout(gtx)
-			}
-			return layout.Dimensions{}
 		}),
 		layout.Stacked(func(gtx C) D {
 			// global toasts. Stack toast on all pages and contents
@@ -414,7 +446,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												return components.LayoutBalance(gtx, mp.Load, mp.TotalBalance.String())
+												return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
 											})
 										}),
 										layout.Rigid(func(gtx C) D {
@@ -429,18 +461,18 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								list := layout.List{Axis: layout.Horizontal}
-								return list.Layout(gtx, len(mp.AppBarNavItems), func(gtx C, i int) D {
+								return list.Layout(gtx, len(mp.appBarNavItems), func(gtx C, i int) D {
 									// header buttons container
 									return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-										return decredmaterial.Clickable(gtx, mp.AppBarNavItems[i].Clickable, func(gtx C) D {
+										return decredmaterial.Clickable(gtx, mp.appBarNavItems[i].Clickable, func(gtx C) D {
 											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 												layout.Rigid(func(gtx C) D {
 													return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 														func(gtx C) D {
 															return layout.Center.Layout(gtx, func(gtx C) D {
-																img := mp.AppBarNavItems[i].Image
+																img := mp.appBarNavItems[i].Image
 																img.Scale = 1.0
-																return mp.AppBarNavItems[i].Image.Layout(gtx)
+																return mp.appBarNavItems[i].Image.Layout(gtx)
 															})
 														})
 												}),
@@ -449,7 +481,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 														Left: values.MarginPadding0,
 													}.Layout(gtx, func(gtx C) D {
 														return layout.Center.Layout(gtx, func(gtx C) D {
-															return mp.Theme.Body1(mp.AppBarNavItems[i].Page).Layout(gtx)
+															return mp.Theme.Body1(mp.appBarNavItems[i].Title).Layout(gtx)
 														})
 													})
 												}),
@@ -473,7 +505,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			if mp.UsdExchangeSet && mp.DcrUsdtBittrex.LastTradeRate != "" {
+			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
 				inset := layout.Inset{
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
@@ -488,7 +520,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					}
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
-							return mp.Theme.Body2(mp.TotalBalanceUSD).Layout(gtx)
+							return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
 						})
 					})
 				})
@@ -502,13 +534,13 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(mp.DrawerNavItems), func(gtx C, i int) D {
+			return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
 				background := mp.Theme.Color.Surface
-				if mp.DrawerNavItems[i].Page == mp.Current {
+				if mp.drawerNavItems[i].PageID == mp.currentPageID() {
 					background = mp.Theme.Color.ActiveGray
 				}
-				txt := mp.Theme.Label(values.TextSize16, mp.DrawerNavItems[i].Page)
-				return decredmaterial.Clickable(gtx, mp.DrawerNavItems[i].Clickable, func(gtx C) D {
+				txt := mp.Theme.Label(values.TextSize16, mp.drawerNavItems[i].Title)
+				return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
 					card := mp.Theme.Card()
 					card.Color = background
 					card.Radius = decredmaterial.Radius(0)
@@ -524,7 +556,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							axis := layout.Horizontal
 							leftInset := values.MarginPadding15
 							width := NavDrawerWidth
-							if mp.IsNavDrawerMinimized {
+							if mp.isNavDrawerMinimized {
 								axis = layout.Vertical
 								txt.TextSize = values.TextSize10
 								leftInset = values.MarginPadding0
@@ -534,9 +566,9 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							gtx.Constraints.Min.X = gtx.Px(width)
 							return layout.Flex{Axis: axis}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									img := mp.DrawerNavItems[i].ImageInactive
-									if mp.DrawerNavItems[i].Page == mp.Current {
-										img = mp.DrawerNavItems[i].Image
+									img := mp.drawerNavItems[i].ImageInactive
+									if mp.drawerNavItems[i].PageID == mp.currentPageID() {
+										img = mp.drawerNavItems[i].Image
 									}
 									return layout.Center.Layout(gtx, func(gtx C) D {
 										img.Scale = 1.0
@@ -549,7 +581,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
 										textColor := mp.Theme.Color.Gray4
-										if mp.DrawerNavItems[i].Page == mp.Current {
+										if mp.drawerNavItems[i].PageID == mp.currentPageID() {
 											textColor = mp.Theme.Color.DeepBlue
 										}
 										txt.Color = textColor
@@ -565,9 +597,9 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := mp.MinimizeNavDrawerButton
-				if mp.IsNavDrawerMinimized {
-					btn = mp.MaximizeNavDrawerButton
+				btn := mp.minimizeNavDrawerButton
+				if mp.isNavDrawerMinimized {
+					btn = mp.maximizeNavDrawerButton
 				}
 				return btn.Layout(gtx)
 			})

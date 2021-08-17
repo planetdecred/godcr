@@ -56,6 +56,10 @@ func NewAboutPage(l *load.Load) *AboutPage {
 	return pg
 }
 
+func (pg *AboutPage) ID() string {
+	return AboutPageID
+}
+
 func (pg *AboutPage) OnResume() {
 
 }
@@ -67,8 +71,7 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "About",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(MorePageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
@@ -135,7 +138,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 
 func (pg *AboutPage) Handle() {
 	if pg.licenseRow.Clicked() {
-		pg.ChangeFragment(NewLicensePage(pg.Load), LicensePageID)
+		pg.ChangeFragment(NewLicensePage(pg.Load))
 	}
 }
 

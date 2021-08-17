@@ -44,6 +44,10 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	return pg
 }
 
+func (pg *WalletSettingsPage) ID() string {
+	return WalletSettingsPageID
+}
+
 func (pg *WalletSettingsPage) OnResume() {
 
 }
@@ -63,8 +67,7 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(WalletPageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -270,8 +273,7 @@ func (pg *WalletSettingsPage) Handle() {
 								return
 							}
 							pm.Dismiss()
-							//TODO
-							//pm.ChangePage(WalletPageID)
+							pg.PopFragment()
 						}()
 						return false
 					}).Show()

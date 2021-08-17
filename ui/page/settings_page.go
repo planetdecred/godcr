@@ -126,6 +126,10 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	return pg
 }
 
+func (pg *SettingsPage) ID() string {
+	return SettingsPageID
+}
+
 func (pg *SettingsPage) OnResume() {
 
 }
@@ -139,8 +143,7 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      values.String(values.StrSettings),
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(MorePageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				pageContent := []func(gtx C) D{

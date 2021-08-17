@@ -66,6 +66,10 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	return pg
 }
 
+func (pg *VerifyMessagePage) ID() string {
+	return VerifyMessagePageID
+}
+
 func (pg *VerifyMessagePage) OnResume() {
 
 }
@@ -78,11 +82,7 @@ func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.clearInputs()
-				//TODO
-				//pg.ChangePage(WalletPageID)
-				//TODO
-				//pg.ChangePage(*pg.ReturnPage)
+				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {

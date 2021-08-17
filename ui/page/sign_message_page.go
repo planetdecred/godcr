@@ -77,6 +77,10 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	return pg
 }
 
+func (pg *SignMessagePage) ID() string {
+	return SignMessagePageID
+}
+
 func (pg *SignMessagePage) OnResume() {
 	pg.addressEditor.Editor.Focus()
 }
@@ -94,9 +98,7 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				pg.clearForm()
-				//TODO
-				//pg.ChangePage(WalletPageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {

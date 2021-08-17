@@ -114,6 +114,10 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	return pg
 }
 
+func (pg *OverviewPage) ID() string {
+	return OverviewPageID
+}
+
 func (pg *OverviewPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
@@ -585,12 +589,11 @@ func (pg *OverviewPage) Handle() {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.ChangeFragment(NewTransactionsPage(pg.Load), TransactionsPageID)
+		pg.ChangeFragment(NewTransactionsPage(pg.Load))
 	}
 
 	if clicked, selectedItem := pg.transactionsList.ItemClicked(); clicked {
-		pg.SetReturnPage(OverviewPageID)
-		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]), TransactionDetailsPageID)
+		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 
 	if pg.toggleSyncDetails.Button.Clicked() {

@@ -75,9 +75,7 @@ type Load struct {
 	Printer  *message.Printer
 	Network  string
 
-	Icons      Icons
-	Page       *string
-	ReturnPage *string
+	Icons Icons
 
 	Toast *Toast
 
@@ -91,8 +89,8 @@ type Load struct {
 	DismissModal     func(Modal)
 	ChangeWindowPage func(page Page, keepBackStack bool)
 	PopWindowPage    func() bool
-	ChangeFragment   func(page Page, id string)
-	SetReturnPage    func(string)
+	ChangeFragment   func(page Page)
+	PopFragment      func()
 }
 
 func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load {

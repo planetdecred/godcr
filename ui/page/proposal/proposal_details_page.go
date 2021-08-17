@@ -21,7 +21,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const PageProposalDetails = "proposal_details"
+const ProposalDetailsPageID = "proposal_details"
 
 type proposalItemWidgets struct {
 	widgets    []layout.Widget
@@ -84,6 +84,10 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 	}
 
 	return pg
+}
+
+func (pg *proposalDetails) ID() string {
+	return ProposalDetailsPageID
 }
 
 func (pg *proposalDetails) OnResume() {
@@ -454,8 +458,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 			Title:      components.TruncateString(proposal.Name, 40),
 			BackButton: pg.backButton,
 			Back: func() {
-				//pg.ChangePage(*pg.ReturnPage)
-				pg.descriptionList.Position.First, pg.descriptionList.Position.Offset = 0, 0
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

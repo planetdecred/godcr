@@ -30,6 +30,10 @@ type LogPage struct {
 	entriesLock sync.Mutex
 }
 
+func (pg *LogPage) ID() string {
+	return LogPageID
+}
+
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
 		Load:        l,
@@ -81,8 +85,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			Title:      "Wallet log",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(DebugPageID)
+				pg.PopFragment()
 			},
 			ExtraItem: pg.copyLog,
 			Extra: func(gtx C) D {
