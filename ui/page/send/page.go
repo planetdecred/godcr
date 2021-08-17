@@ -118,6 +118,10 @@ func NewSendPage(l *load.Load) *Page {
 	return pg
 }
 
+func (pg *Page) ID() string {
+	return PageID
+}
+
 func (pg *Page) OnResume() {
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
@@ -280,12 +284,9 @@ func (pg *Page) Handle() {
 	pg.sendDestination.handle()
 	pg.amount.handle()
 
-	//TODO
-	/*if pg.backButton.Button.Clicked() {
-		//TODO
-		//pg.ChangePage(*pg.ReturnPage)
+	if pg.backButton.Button.Clicked() {
+		pg.PopFragment()
 	}
-	*/
 
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).

@@ -149,6 +149,10 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	return pg
 }
 
+func (pg *CreateRestore) ID() string {
+	return CreateRestorePageID
+}
+
 func (pg *CreateRestore) OnResume() {
 
 }
@@ -644,8 +648,7 @@ func (pg *CreateRestore) Handle() {
 				pg.PopWindowPage()
 			} else {
 				pg.WL.Wallet.SetupListeners()
-				// todo: uncomment when main page has been moved to the page package
-				// pg.ChangeWindowPage(newMainPage(pg.common, nil), false)
+				pg.ChangeWindowPage(NewMainPage(pg.Load), false)
 			}
 		}()
 	}

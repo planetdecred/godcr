@@ -105,6 +105,10 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	return pg
 }
 
+func (pg *TransactionDetailsPage) ID() string {
+	return TransactionDetailsPageID
+}
+
 func (pg *TransactionDetailsPage) OnResume() {
 
 }
@@ -121,8 +125,7 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(*pg.ReturnPage)
+				pg.PopFragment()
 			},
 			Body: func(gtx layout.Context) layout.Dimensions {
 				widgets := []func(gtx C) D{

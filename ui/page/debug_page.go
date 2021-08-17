@@ -33,7 +33,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 			text:      "Check wallet logs",
 			page:      LogPageID,
 			action: func() {
-				l.ChangeFragment(NewLogPage(l), LogPageID)
+				l.ChangeFragment(NewLogPage(l))
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func NewDebugPage(l *load.Load) *DebugPage {
 			text:      "Check statistics",
 			page:      StatisticsPageID,
 			action: func() {
-				l.ChangeFragment(NewStatPage(l), StatisticsPageID)
+				l.ChangeFragment(NewStatPage(l))
 			},
 		},
 	}
@@ -54,6 +54,10 @@ func NewDebugPage(l *load.Load) *DebugPage {
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
+}
+
+func (pg *DebugPage) ID() string {
+	return DebugPageID
 }
 
 func (pg *DebugPage) OnResume() {
@@ -106,8 +110,7 @@ func (pg *DebugPage) Layout(gtx C) D {
 			Title:      "Debug",
 			BackButton: pg.backButton,
 			Back: func() {
-				//TODO
-				//pg.ChangePage(MorePageID)
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				pg.layoutDebugItems(gtx)

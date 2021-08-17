@@ -69,6 +69,10 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	return pg
 }
 
+func (pg *TransactionsPage) ID() string {
+	return TransactionsPageID
+}
+
 func (pg *TransactionsPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
@@ -179,8 +183,7 @@ func (pg *TransactionsPage) Handle() {
 	}
 
 	if clicked, selectedItem := pg.transactionList.ItemClicked(); clicked {
-		pg.SetReturnPage(TransactionsPageID)
-		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]), TransactionDetailsPageID)
+		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 }
 

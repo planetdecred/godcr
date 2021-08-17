@@ -116,6 +116,10 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	return pg
 }
 
+func (pg *ReceivePage) ID() string {
+	return ReceivePageID
+}
+
 func (pg *ReceivePage) OnResume() {
 	pg.selector.SelectFirstWalletValidAccount()
 }
@@ -345,12 +349,9 @@ func (pg *ReceivePage) Handle() {
 		pg.ShowModal(info)
 	}
 
-	//TODO
-	/*if pg.backButton.Button.Clicked() {
-		//TODO
-		//pg.ChangePage(*pg.ReturnPage)
+	if pg.backButton.Button.Clicked() {
+		pg.PopFragment()
 	}
-	*/
 
 	if pg.copy.Button.Clicked() {
 

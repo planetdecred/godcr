@@ -57,6 +57,10 @@ func newTicketActivityPage(l *load.Load) *ActivityPage {
 	return pg
 }
 
+func (pg *ActivityPage) ID() string {
+	return ActivityPageID
+}
+
 func (pg *ActivityPage) OnResume() {
 
 }
@@ -69,6 +73,7 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 			Title:      "Ticket activity",
 			BackButton: pg.backButton,
 			Back: func() {
+				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
 				walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
