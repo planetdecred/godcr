@@ -507,10 +507,10 @@ func (pg *SettingsPage) Handle() {
 	case err := <-pg.errorReceiver:
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
 			e := "Password is incorrect"
-			pg.Toast.Notify(e, false)
+			pg.Toast.NotifyError(e)
 			return
 		}
-		pg.Toast.Notify(err.Error(), false)
+		pg.Toast.NotifyError(err.Error())
 	default:
 	}
 }

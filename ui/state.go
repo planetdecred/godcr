@@ -101,5 +101,5 @@ func (win *Window) updateStates(update interface{}) {
 }
 
 func (win *Window) notifyOnSuccess(text string) {
-	win.load.Toast.Notify(text, true)
+	win.load.Toast.Notify(text)
 }

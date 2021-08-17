@@ -184,7 +184,7 @@ func (vm *voteModal) sendVotes() {
 					return
 				}
 				pm.Dismiss()
-				vm.Toast.Notify("Vote sent successfully, refreshing proposals!", true)
+				vm.Toast.Notify("Vote sent successfully, refreshing proposals!")
 				go vm.WL.MultiWallet.Politeia.Sync()
 				vm.Dismiss()
 			}()

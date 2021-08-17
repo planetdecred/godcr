@@ -175,7 +175,7 @@ func (v *vspSelectorModal) Handle() {
 		go func() {
 			err := v.WL.AddVSP(v.inputVSP.Editor.Text())
 			if err != nil {
-				v.Toast.Notify(err.Error(), false)
+				v.Toast.NotifyError(err.Error())
 			} else {
 				v.inputVSP.Editor.SetText("")
 			}

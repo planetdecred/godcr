@@ -38,17 +38,27 @@ func NewToast(th *decredmaterial.Theme) *Toast {
 }
 
 func getDurationFromDelay(d duration) time.Duration {
-	switch d {
-	case Short:
-		return 2 * time.Second
-	case Long:
+	if d == Long {
 		return 5 * time.Second
-	default:
-		return 2 * time.Second
 	}
+	return 2 * time.Second
 }
 
-func (t *Toast) Notify(message string, success bool, d ...duration) {
+// Notify is called to display a message indicating a successful action. It updates the toast object with the toast message
+// and duration. The duration parameter is optional.
+func (t *Toast) Notify(message string, d ...duration) {
+	t.notify(message, true, d...)
+}
+
+// Notify is called to display a message indicating a failed action. It updates the toast object with the toast message
+// and duration. The duration parameter is optional.
+func (t *Toast) NotifyError(message string, d ...duration) {
+	t.notify(message, false, d...)
+}
+
+// notify updates notification parameters on the toast object. It takes the message, success and duration
+// parameters.
+func (t *Toast) notify(message string, success bool, d ...duration) {
 	var notificationDelay duration
 	if len(d) > 0 {
 		notificationDelay = d[0]

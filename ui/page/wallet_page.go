@@ -227,7 +227,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 						err := pg.multiWallet.RenameWallet(wal.ID, newName)
 						if err != nil {
-							pg.Toast.Notify(err.Error(), false)
+							pg.Toast.NotifyError(err.Error())
 							return false
 						}
 						return true
@@ -297,12 +297,12 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 			go func() {
 				_, err := pg.multiWallet.CreateWatchOnlyWallet(walletName, extPubKey)
 				if err != nil {
-					pg.Toast.Notify(err.Error(), false)
+					pg.Toast.NotifyError(err.Error())
 					m.SetError(err.Error())
 					m.SetLoading(false)
 				} else {
 					// pg.wallet.GetMultiWalletInfo() TODO
-					pg.Toast.Notify(values.String(values.StrWatchOnlyWalletImported), true)
+					pg.Toast.Notify(values.String(values.StrWatchOnlyWalletImported))
 					m.Dismiss()
 				}
 			}()

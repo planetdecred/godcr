@@ -532,13 +532,13 @@ func (pg *BackupPage) Handle() {
 			errMessage := "Failed to verify. Please go through every word and try again."
 			s := strings.Join(pg.selectedSeeds, " ")
 			if !dcrlibwallet.VerifySeed(s) {
-				pg.Toast.Notify(errMessage, false)
+				pg.Toast.NotifyError(errMessage)
 				return
 			}
 
 			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, s, pg.privpass)
 			if err != nil {
-				pg.Toast.Notify(errMessage, false)
+				pg.Toast.NotifyError(errMessage)
 				return
 			}
 			pg.info.Wallets[*pg.selectedWallet].Seed = nil
