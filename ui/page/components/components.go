@@ -307,6 +307,16 @@ func GoToURL(url string) {
 	}
 }
 
+func StringNotEmpty(texts ...string) bool {
+	for _, t := range texts {
+		if strings.TrimSpace(t) == "" {
+			return false
+		}
+	}
+
+	return true
+}
+
 /*
 func (page *pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
 	dims := layout.Stack{}.Layout(gtx,
