@@ -108,47 +108,40 @@ func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
-	return layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
-				return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
-						background := pg.Theme.Color.Surface
-						card := pg.Theme.Card()
-						card.Color = background
-						return card.Layout(gtx, func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							return layout.Stack{}.Layout(gtx,
-								layout.Stacked(func(gtx C) D {
-									return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-										gtx.Constraints.Min.X = gtx.Constraints.Max.X
-										return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												return layout.Center.Layout(gtx, pg.morePageListItems[i].image.Layout)
-											}),
-											layout.Rigid(func(gtx C) D {
-												return layout.Inset{
-													Left: values.MarginPadding15,
-													Top:  values.MarginPadding2,
-												}.Layout(gtx, func(gtx C) D {
-													return layout.Center.Layout(gtx, func(gtx C) D {
-														page := pg.morePageListItems[i].page
-														if page == SecurityToolsPageID {
-															page = "Security Tools"
-														}
-														return pg.Theme.Body1(page).Layout(gtx)
-													})
-												})
-											}),
-										)
+
+	list := layout.List{Axis: layout.Vertical}
+	return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
+		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
+				background := pg.Theme.Color.Surface
+				card := pg.Theme.Card()
+				card.Color = background
+				return card.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Center.Layout(gtx, pg.morePageListItems[i].image.Layout)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Left: values.MarginPadding15,
+									Top:  values.MarginPadding2,
+								}.Layout(gtx, func(gtx C) D {
+									return layout.Center.Layout(gtx, func(gtx C) D {
+										page := pg.morePageListItems[i].page
+										if page == SecurityToolsPageID {
+											page = "Security Tools"
+										}
+										return pg.Theme.Body1(page).Layout(gtx)
 									})
-								}),
-							)
-						})
+								})
+							}),
+						)
 					})
 				})
 			})
-		}),
-	)
+		})
+	})
 }
