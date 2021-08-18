@@ -254,7 +254,7 @@ func (pg *Page) feeEstimationError(err string) {
 		pg.amount.setError(invalidAmountErr)
 	} else {
 		pg.amount.setError(err)
-		pg.Toast.NotifyError("Error estimating transaction: "+err)
+		pg.Toast.NotifyError("Error estimating transaction: " + err)
 	}
 
 	pg.clearEstimates()
