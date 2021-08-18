@@ -174,7 +174,11 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 									return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
-												return LayoutBalance(gtx, l, dcrutil.Amount(row.Transaction.Amount).String())
+												amount := dcrutil.Amount(row.Transaction.Amount).String()
+												if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
+													amount = "-" + amount
+												}
+												return LayoutBalance(gtx, l, amount)
 											}),
 											layout.Rigid(func(gtx C) D {
 												if row.ShowBadge {
