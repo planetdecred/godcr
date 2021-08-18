@@ -126,9 +126,32 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Bottom: values.MarginPadding11,
 				}.Layout(gtx, func(gtx C) D {
-					tit := pg.Theme.Label(values.TextSize14, "Ticket Price")
-					tit.Color = pg.Theme.Color.Gray2
-					return pg.titleRow(gtx, tit.Layout, material.Switch(pg.Theme.Base, pg.autoPurchaseEnabled).Layout)
+					leftWg := func(gtx C) D {
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								tit := pg.Theme.Label(values.TextSize14, "Ticket Price")
+								tit.Color = pg.Theme.Color.Gray2
+								return tit.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Left:  values.MarginPadding8,
+									Right: values.MarginPadding4,
+								}.Layout(gtx, func(gtx C) D {
+									ic := pg.Icons.TimeIcon
+									ic.Scale = 1
+									return ic.Layout(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
+								txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
+								txt.Color = pg.Theme.Color.Gray2
+								return txt.Layout(gtx)
+							}),
+						)
+					}
+					return pg.titleRow(gtx, leftWg, material.Switch(pg.Theme.Base, pg.autoPurchaseEnabled).Layout)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
