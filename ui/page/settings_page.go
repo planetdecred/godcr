@@ -546,7 +546,7 @@ func (pg *SettingsPage) showUserAgentDialog() {
 }
 
 func (pg *SettingsPage) updateSettingOptions() {
-	isPassword := pg.wal.IsStartupSecuritySet()
+	isPassword := pg.WL.MultiWallet.IsStartupSecuritySet()
 	pg.startupPassword.SetChecked(false)
 	pg.isStartupPassword = false
 	if isPassword {

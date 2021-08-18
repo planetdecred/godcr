@@ -46,8 +46,8 @@ func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 
 func (wl *WalletLoad) TotalWalletsBalance() (dcrutil.Amount, error) {
 	totalBalance := int64(0)
-	for _, wallet := range wl.MultiWallet.AllWallets() {
-		accountsResult, err := wallet.GetAccountsRaw()
+	for _, w := range wl.MultiWallet.AllWallets() {
+		accountsResult, err := w.GetAccountsRaw()
 		if err != nil {
 			return -1, err
 		}

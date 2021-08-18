@@ -323,11 +323,6 @@ func (wal *Wallet) RescanBlocks(walletID int) error {
 	return wal.multi.RescanBlocks(walletID)
 }
 
-// CancelSync cancels the SPV sync
-func (wal *Wallet) CancelSync() {
-	go wal.multi.CancelSync()
-}
-
 func (wal *Wallet) IsSyncingProposals() bool {
 	return wal.multi.Politeia.IsSyncing()
 }

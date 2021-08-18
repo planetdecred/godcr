@@ -2,25 +2,32 @@ package load
 
 import (
 	"fmt"
+	"math"
+	"sort"
+	"time"
+
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
-	"math"
-	"time"
 )
 
 type Ticket struct {
-	Status 	   string
+	Status     string
 	Fee        string
 	Amount     string
 	DateTime   string
 	MonthDay   string
 	DaysBehind string
 	WalletName string
+
+	timestamp int64
 }
 
-const(
+const (
 	StakingLive     = "LIVE"
 	StakingImmature = "IMMATURE"
+	StakingExpired  = "EXPIRED"
+	StakingRevoked  = "REVOKED"
+	StakingVoted    = "VOTED"
 )
 
 func (wl *WalletLoad) StakingOverviewAllWallets() *dcrlibwallet.StakingOverview {
@@ -50,27 +57,34 @@ func calculateDaysBehind(lastHeaderTime int64) string {
 	}
 }
 
-func transactionToTicket(tx dcrlibwallet.Transaction, status, walletName string) Ticket {
-	return Ticket{
-		Status: status,
-		Amount: dcrutil.Amount(tx.Amount).String(),
-		DateTime: time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
-		MonthDay: time.Unix(tx.Timestamp, 0).Format("Jan 2"),
-		DaysBehind: calculateDaysBehind(tx.Timestamp),
-		Fee:       dcrutil.Amount(tx.Fee).String(),
-		WalletName: walletName,
-	}
-}
-
-func statusFromFilter(txFilter int32) string {
+func filterToStatus(txFilter int32) string {
 	switch txFilter {
 	case dcrlibwallet.TxFilterImmature:
 		return StakingImmature
 	case dcrlibwallet.TxFilterLive:
 		return StakingLive
+	case dcrlibwallet.TxFilterExpired:
+		return StakingExpired
+	case dcrlibwallet.TxFilterRevoked:
+		return StakingRevoked
+	case dcrlibwallet.TxFilterVoted:
+		return StakingVoted
 	}
 
 	return ""
+}
+
+func transactionToTicket(tx dcrlibwallet.Transaction, status, walletName string) Ticket {
+	return Ticket{
+		Status:     status,
+		Amount:     dcrutil.Amount(tx.Amount).String(),
+		DateTime:   time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
+		MonthDay:   time.Unix(tx.Timestamp, 0).Format("Jan 2"),
+		DaysBehind: calculateDaysBehind(tx.Timestamp),
+		Fee:        dcrutil.Amount(tx.Fee).String(),
+		WalletName: walletName,
+		timestamp:  tx.Timestamp,
+	}
 }
 
 func transactionsToTickets(txs []dcrlibwallet.Transaction, status, walletName string) []Ticket {
@@ -82,37 +96,73 @@ func transactionsToTickets(txs []dcrlibwallet.Transaction, status, walletName st
 	return tickets
 }
 
-func (wl *WalletLoad) GetTickets (walletID int, txFilter int32, newestFirst bool) ([]Ticket, error) {
+func (wl *WalletLoad) getAllTickets(walletID int, newestFirst bool) ([]Ticket, error) {
+	w := wl.MultiWallet.WalletWithID(walletID)
 	var tickets []Ticket
+
+	addTickets := func(txFilter int32, newestFirst bool) error {
+		txs, err := w.GetTransactionsRaw(0, 0, txFilter, newestFirst)
+		if err != nil {
+			return err
+		}
+
+		tickets = append(tickets, transactionsToTickets(txs, filterToStatus(txFilter), w.Name)...)
+		return nil
+	}
+
+	filters := []int32{
+		dcrlibwallet.TxFilterImmature,
+		dcrlibwallet.TxFilterLive,
+		dcrlibwallet.TxFilterVoted,
+		dcrlibwallet.TxFilterExpired,
+		dcrlibwallet.TxFilterRevoked,
+	}
+
+	for _, filter := range filters {
+		err := addTickets(filter, newestFirst)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	sort.SliceStable(tickets, func(i, j int) bool {
+		if newestFirst {
+			return tickets[i].timestamp > tickets[j].timestamp
+		}
+		return tickets[i].timestamp < tickets[j].timestamp
+	})
+
+	return tickets, nil
+}
+
+func (wl *WalletLoad) GetTickets(walletID int, txFilter int32, newestFirst bool) ([]Ticket, error) {
+	if txFilter == dcrlibwallet.TxFilterStaking {
+		return wl.getAllTickets(walletID, newestFirst)
+	}
 
 	w := wl.MultiWallet.WalletWithID(walletID)
 	txs, err := w.GetTransactionsRaw(0, 0, txFilter, newestFirst)
 	if err != nil {
-		return tickets, err
+		return nil, err
 	}
 
-	return transactionsToTickets(txs, statusFromFilter(txFilter), w.Name), nil
+	return transactionsToTickets(txs, filterToStatus(txFilter), w.Name), nil
 }
 
 func (wl *WalletLoad) AllLiveTickets() ([]Ticket, error) {
-	var txs []Ticket
+	var tickets []Ticket
 	wallets := wl.MultiWallet.AllWallets()
 
+	liveTicketFilters := []int32{dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
 	for _, w := range wallets {
-		immatureTx, err := w.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterImmature, true)
-		if err != nil {
-			return txs, err
+		for _, filter := range liveTicketFilters {
+			tx, err := w.GetTransactionsRaw(0, 0, filter, true)
+			if err != nil {
+				return tickets, err
+			}
+			tickets = append(tickets, transactionsToTickets(tx, filterToStatus(filter), w.Name)...)
 		}
-
-		txs = append(txs, transactionsToTickets(immatureTx, StakingImmature, w.Name)...)
-
-		liveTxs, err := w.GetTransactionsRaw(0, 0, dcrlibwallet.TxFilterLive, true)
-		if err != nil {
-			return txs, err
-		}
-
-		txs = append(txs, transactionsToTickets(liveTxs, StakingLive, w.Name)...)
 	}
 
-	return txs, nil
+	return tickets, nil
 }

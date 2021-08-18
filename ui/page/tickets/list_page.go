@@ -1,23 +1,27 @@
 package tickets
 
 import (
+	"context"
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
-	"image/color"
-	"strings"
-
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const listPageID = "TicketsList"
 
 type ListPage struct {
 	*load.Load
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
 
 	tickets      []load.Ticket
 	ticketsList  layout.List
@@ -63,6 +67,36 @@ func (pg *ListPage) ID() string {
 }
 
 func (pg *ListPage) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.wallets = pg.WL.SortedWalletList()
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+	pg.listenForTxNotifications()
+	pg.fetchTickets()
+}
+
+func (pg *ListPage) listenForTxNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			default:
+				if components.ContextDone(pg.ctx) {
+					return
+				}
+			}
+
+			switch n := notification.(type) {
+			case wallet.NewTransaction:
+				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+				if selectedWallet.ID == n.Transaction.WalletID {
+					pg.fetchTickets()
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
 }
 
 func (pg *ListPage) fetchTickets() {
@@ -84,14 +118,7 @@ func (pg *ListPage) fetchTickets() {
 		return
 	}
 
-	var newestFirst bool
-	switch pg.orderDropDown.Selected() {
-	case values.StrNewest:
-		newestFirst = true
-	case values.StrOldest:
-		newestFirst = false
-	}
-
+	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 	selectedWalletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 	tickets, err := pg.WL.GetTickets(selectedWalletID, txFilter, newestFirst)
 	if err != nil {
@@ -128,14 +155,7 @@ func (pg *ListPage) Layout(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
 							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 								gtx.Constraints.Min = gtx.Constraints.Max
-								var tickets []load.Ticket
-								if pg.ticketTypeDropDown.SelectedIndex()-1 != -1 {
-									tickets = filterTickets(tickets, func(ticketStatus string) bool {
-										return ticketStatus == strings.ToUpper(pg.ticketTypeDropDown.Selected())
-									})
-								}
-
-								if len(tickets) == 0 {
+								if len(pg.tickets) == 0 {
 									txt := pg.Theme.Body1("No tickets yet")
 									txt.Color = pg.Theme.Color.Gray2
 									txt.Alignment = text.Middle
@@ -143,9 +163,9 @@ func (pg *ListPage) Layout(gtx C) D {
 								}
 								return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 									if pg.isGridView {
-										return pg.ticketListGridLayout(gtx, tickets)
+										return pg.ticketListGridLayout(gtx, pg.tickets)
 									}
-									return pg.ticketListLayout(gtx, tickets)
+									return pg.ticketListLayout(gtx, pg.tickets)
 								})
 							})
 						})
@@ -218,9 +238,7 @@ func (pg *ListPage) Layout(gtx C) D {
 func (pg *ListPage) dropDowns(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.walletDropDown.Layout(gtx)
-		}),
+		layout.Rigid(pg.walletDropDown.Layout),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -358,6 +376,20 @@ func (pg *ListPage) Handle() {
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
 	}
+
+	for pg.orderDropDown.Changed() {
+		pg.fetchTickets()
+	}
+
+	for pg.walletDropDown.Changed() {
+		pg.fetchTickets()
+	}
+
+	for pg.ticketTypeDropDown.Changed() {
+		pg.fetchTickets()
+	}
 }
 
-func (pg *ListPage) OnClose() {}
+func (pg *ListPage) OnClose() {
+	pg.ctxCancel()
+}

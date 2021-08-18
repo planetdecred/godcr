@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/planetdecred/dcrlibwallet"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -84,11 +83,9 @@ func (pg *Page) OnResume() {
 
 	lt, err := pg.WL.AllLiveTickets()
 	if err != nil {
-		fmt.Printf("ERROR FETCHING LIVE TICKETS %v \n", err.Error())
 		pg.CreateToast(err.Error(), false)
 	}
 	pg.liveTickets = lt
-	fmt.Printf("LIVE TICKETS %+v \n", lt)
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
 	pg.autoPurchaseEnabled.Disabled()
