@@ -95,7 +95,6 @@ func NewLoad() (*Load, error) {
 		SyncStatus:     new(wallet.SyncStatus),
 		Transactions:   new(wallet.Transactions),
 		UnspentOutputs: new(wallet.UnspentOutputs),
-		Tickets:        new(*wallet.Tickets),
 		VspInfo:        new(wallet.VSP),
 		Proposals:      new(wallet.Proposals),
 

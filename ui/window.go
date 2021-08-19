@@ -30,7 +30,6 @@ type Window struct {
 	walletTransactions   *wallet.Transactions
 	walletTransaction    *wallet.Transaction
 	walletAccount        *wallet.Account
-	walletTickets        *wallet.Tickets
 	vspInfo              *wallet.VSP
 	proposals            *wallet.Proposals
 	selectedProposal     *dcrlibwallet.Proposal
@@ -91,7 +90,6 @@ func CreateWindow(wal *wallet.Wallet, internalLog chan string) (*Window, *app.Wi
 	win.walletTransactions = new(wallet.Transactions)
 	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
 	win.walletAcctMixerStatus = make(chan *wallet.AccountMixer)
-	win.walletTickets = new(wallet.Tickets)
 	win.vspInfo = new(wallet.VSP)
 	win.proposals = new(wallet.Proposals)
 	win.proposal = make(chan *wallet.Proposal)
@@ -128,7 +126,6 @@ func (win *Window) NewLoad() (*load.Load, error) {
 		SyncStatus:      win.walletSyncStatus,
 		Transactions:    win.walletTransactions,
 		UnspentOutputs:  win.walletUnspentOutputs,
-		Tickets:         &win.walletTickets,
 		VspInfo:         win.vspInfo,
 		BroadcastResult: win.broadcastResult,
 		Proposals:       win.proposals,
@@ -324,7 +321,6 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				win.updateConnectedPeers(update.ConnectedPeers)
 			case wallet.BlockAttached:
 				if win.walletInfo.Synced {
-					win.wallet.GetAllTickets()
 					win.wallet.GetMultiWalletInfo()
 					win.updateSyncProgress(update.BlockInfo)
 				}

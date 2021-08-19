@@ -23,7 +23,6 @@ type WalletLoad struct {
 	Transactions    *wallet.Transactions
 	Transaction     *wallet.Transaction
 	BroadcastResult wallet.Broadcast
-	Tickets         **wallet.Tickets
 	VspInfo         *wallet.VSP
 	UnspentOutputs  *wallet.UnspentOutputs
 	Wallet          *wallet.Wallet

@@ -14,7 +14,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 type (
@@ -33,7 +32,6 @@ type Page struct {
 
 	purchaseTicket decredmaterial.Button
 
-	tickets     **wallet.Tickets
 	ticketPrice string
 
 	autoPurchaseEnabled *decredmaterial.Switch
@@ -48,7 +46,6 @@ type Page struct {
 func NewTicketPage(l *load.Load) *Page {
 	pg := &Page{
 		Load:    l,
-		tickets: l.WL.Tickets,
 
 		ticketsLive:         &layout.List{Axis: layout.Horizontal},
 		ticketsActivity:     &layout.List{Axis: layout.Vertical},
