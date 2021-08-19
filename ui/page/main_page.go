@@ -1,6 +1,7 @@
 package page
 
 import (
+	"image/color"
 	"strconv"
 
 	"gioui.org/layout"
@@ -431,7 +432,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.W.Layout(gtx, func(gtx C) D {
 							h := values.MarginPadding24
-							v := values.MarginPadding16
+							v := values.MarginPadding14
 							// Balance container
 							return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
 								func(gtx C) D {
@@ -462,30 +463,36 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								list := layout.List{Axis: layout.Horizontal}
 								return list.Layout(gtx, len(mp.appBarNavItems), func(gtx C, i int) D {
+									background := mp.Theme.Color.Surface
+									if mp.appBarNavItems[i].PageID == mp.currentPageID() {
+										background = mp.Theme.Color.ActiveGray
+									}
 									// header buttons container
-									return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-										return decredmaterial.Clickable(gtx, mp.appBarNavItems[i].Clickable, func(gtx C) D {
-											return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-														func(gtx C) D {
+									return decredmaterial.Clickable(gtx, mp.appBarNavItems[i].Clickable, func(gtx C) D {
+										return mp.layoutCard(gtx, background, func(gtx C) D {
+											return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
+												return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+													layout.Rigid(func(gtx C) D {
+														return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
+															func(gtx C) D {
+																return layout.Center.Layout(gtx, func(gtx C) D {
+																	img := mp.appBarNavItems[i].Image
+																	img.Scale = 1.0
+																	return mp.appBarNavItems[i].Image.Layout(gtx)
+																})
+															})
+													}),
+													layout.Rigid(func(gtx C) D {
+														return layout.Inset{
+															Left: values.MarginPadding0,
+														}.Layout(gtx, func(gtx C) D {
 															return layout.Center.Layout(gtx, func(gtx C) D {
-																img := mp.appBarNavItems[i].Image
-																img.Scale = 1.0
-																return mp.appBarNavItems[i].Image.Layout(gtx)
+																return mp.Theme.Body1(mp.appBarNavItems[i].Title).Layout(gtx)
 															})
 														})
-												}),
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{
-														Left: values.MarginPadding0,
-													}.Layout(gtx, func(gtx C) D {
-														return layout.Center.Layout(gtx, func(gtx C) D {
-															return mp.Theme.Body1(mp.appBarNavItems[i].Title).Layout(gtx)
-														})
-													})
-												}),
-											)
+													}),
+												)
+											})
 										})
 									})
 								})
@@ -541,10 +548,7 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 				}
 				txt := mp.Theme.Label(values.TextSize16, mp.drawerNavItems[i].Title)
 				return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
-					card := mp.Theme.Card()
-					card.Color = background
-					card.Radius = decredmaterial.Radius(0)
-					return card.Layout(gtx, func(gtx C) D {
+					return mp.layoutCard(gtx, background, func(gtx C) D {
 						return components.Container{
 							Padding: layout.Inset{
 								Top:    values.MarginPadding16,
@@ -605,4 +609,11 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 	)
+}
+
+func (mp *MainPage) layoutCard(gtx layout.Context, background color.NRGBA, body layout.Widget) layout.Dimensions {
+	card := mp.Theme.Card()
+	card.Color = background
+	card.Radius = decredmaterial.Radius(0)
+	return card.Layout(gtx, body)
 }
