@@ -86,10 +86,10 @@ func (scm *sendConfirmModal) broadcastTransaction() {
 		_, err := scm.authoredTxData.txAuthor.Broadcast([]byte(password))
 		scm.isSending = false
 		if err != nil {
-			scm.CreateToast(err.Error(), false)
+			scm.Toast.NotifyError(err.Error())
 			return
 		}
-		scm.CreateToast("Transaction sent!", true)
+		scm.Toast.Notify("Transaction sent!")
 
 		scm.txSent()
 		scm.Dismiss()

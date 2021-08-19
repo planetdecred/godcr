@@ -431,7 +431,7 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 					return
 				}
 				pm.Dismiss()
-				// common.notify("Start Successfully", true)
+				pg.Toast.Notify("Start Successfully")
 			}()
 
 			return false

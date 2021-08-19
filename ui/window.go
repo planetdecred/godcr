@@ -61,7 +61,6 @@ type Window struct {
 	err string
 
 	keyEvents             chan *key.Event
-	toast                 *load.Toast
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
@@ -260,6 +259,9 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 			}
 
 			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+			return win.load.Toast.Layout(gtx)
 		}),
 	)
 }
