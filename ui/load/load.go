@@ -3,35 +3,27 @@
 // the code be isolated in the package you're calling it from? Is it really needed by other packages in the ui package?
 // or you're just planning for a use case that might never used.
 
-// todo: fix toast notifications
-// todo: clean up NewLoad method
-
 package load
 
 import (
 	"image"
-	"time"
 
+	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 
 	"gioui.org/io/key"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/wallet"
-	"golang.org/x/exp/shiny/materialdesign/icons"
-	"golang.org/x/text/message"
 )
 
 type DCRUSDTBittrex struct {
 	LastTradeRate string
-}
-
-type Toast struct {
-	text    string
-	success bool
-	Timer   *time.Timer
 }
 
 type Receiver struct {
@@ -77,7 +69,7 @@ type Load struct {
 
 	Icons Icons
 
-	Toast *Toast
+	Toast *notification.Toast
 
 	SelectedWallet  *int
 	SelectedAccount *int
@@ -195,7 +187,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		Icons:    ic,
 		WL:       wl,
 		Receiver: r,
-		Toast:    &Toast{},
+		Toast:    notification.NewToast(th),
 
 		Printer: message.NewPrinter(language.English),
 	}
@@ -208,15 +200,4 @@ func (l *Load) RefreshTheme() {
 	if isDarkModeOn != l.Theme.DarkMode {
 		l.Theme.SwitchDarkMode(isDarkModeOn)
 	}
-}
-
-func (l *Load) CreateToast(text string, success bool) {
-	l.Toast = &Toast{
-		text:    text,
-		success: success,
-	}
-}
-
-func (l *Load) DestroyToast() {
-	l.Toast = nil
 }

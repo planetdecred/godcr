@@ -179,7 +179,7 @@ func (tp *ticketPurchaseModal) OnResume() {
 	tp.initializeAccountSelector()
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
-		tp.CreateToast(err.Error(), false)
+		tp.Toast.NotifyError(err.Error())
 	}
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
@@ -226,23 +226,23 @@ func (tp *ticketPurchaseModal) createNewVSPD() {
 	selectedVSP := tp.vspSelector.SelectedVSP()
 	vspd, err := tp.WL.NewVSPD(selectedVSP.Host, selectedAccount.WalletID, selectedAccount.Number)
 	if err != nil {
-		tp.CreateToast(err.Error(), false)
+		tp.Toast.NotifyError(err.Error())
 	}
 	tp.vsp = vspd
 }
 
 func (tp *ticketPurchaseModal) purchaseTickets(password []byte) {
 	tp.Dismiss()
-	tp.CreateToast(fmt.Sprintf("attempting to purchase %v ticket(s)", tp.ticketCount()), true)
+	tp.Toast.Notify(fmt.Sprintf("attempting to purchase %v ticket(s)", tp.ticketCount()))
 
 	go func() {
 		account := tp.accountSelector.SelectedAccount()
 		err := tp.WL.PurchaseTicket(account.WalletID, uint32(tp.ticketCount()), password, tp.vsp)
 		if err != nil {
-			tp.CreateToast(err.Error(), false)
+			tp.Toast.NotifyError(err.Error())
 			return
 		}
-		tp.CreateToast(fmt.Sprintf("%v ticket(s) purchased successfully", tp.ticketCount()), true)
+		tp.Toast.Notify(fmt.Sprintf("%v ticket(s) purchased successfully", tp.ticketCount()))
 	}()
 }
 
