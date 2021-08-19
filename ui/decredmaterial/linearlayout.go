@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	WRAP_CONTENT = -1
-	MATCH_PARENT = -2
+	WrapContent = -1
+	MatchParent = -2
 )
 
 type LinearLayout struct {
@@ -62,16 +62,16 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 }
 
 func (ll LinearLayout) applyDimension(gtx *C) {
-	if ll.Width == MATCH_PARENT {
+	if ll.Width == MatchParent {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	} else if ll.Width != WRAP_CONTENT {
+	} else if ll.Width != WrapContent {
 		gtx.Constraints.Min.X = ll.Width
 		gtx.Constraints.Max.X = ll.Width
 	}
 
-	if ll.Height == MATCH_PARENT {
+	if ll.Height == MatchParent {
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-	} else if ll.Height != WRAP_CONTENT {
+	} else if ll.Height != WrapContent {
 		gtx.Constraints.Min.Y = ll.Height
 		gtx.Constraints.Max.Y = ll.Height
 	}
