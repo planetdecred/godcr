@@ -83,7 +83,7 @@ func (pg *Page) OnResume() {
 
 	lt, err := pg.WL.AllLiveTickets()
 	if err != nil {
-		pg.CreateToast(err.Error(), false)
+		pg.Toast.NotifyError(err.Error())
 	}
 	pg.liveTickets = lt
 	go pg.WL.GetVSPList()

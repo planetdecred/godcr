@@ -1,23 +1,22 @@
 package tickets
 
 import (
-	"sort"
-	"time"
-
 	"gioui.org/layout"
+	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/wallet"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const ActivityPageID = "TicketsActivity"
 
 type ActivityPage struct {
 	*load.Load
-	tickets      **wallet.Tickets
+	tickets      []load.Ticket
 	ticketsList  layout.List
 	filterSorter int
 
@@ -27,14 +26,12 @@ type ActivityPage struct {
 
 	wallets []*dcrlibwallet.Wallet
 
-	backButton  decredmaterial.IconButton
-	ticketsBeta []load.Ticket
+	backButton decredmaterial.IconButton
 }
 
 func newTicketActivityPage(l *load.Load) *ActivityPage {
 	pg := &ActivityPage{
 		Load:        l,
-		tickets:     l.WL.Tickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
 	}
 	pg.orderDropDown = components.CreateOrderDropDown(l)
@@ -64,84 +61,75 @@ func (pg *ActivityPage) OnResume() {
 }
 
 func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
-	return D{}
-	//components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
-	//body := func(gtx C) D {
-	//	page := components.SubPage{
-	//		Load:       pg.Load,
-	//		Title:      "Ticket activity",
-	//		BackButton: pg.backButton,
-	//		Back: func() {
-	//			pg.PopFragment()
-	//		},
-	//		Body: func(gtx C) D {
-	//			walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
-	//			tickets := (*pg.tickets).Confirmed[walletID]
-	//			return layout.Stack{Alignment: layout.N}.Layout(gtx,
-	//				layout.Expanded(func(gtx C) D {
-	//					return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
-	//						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-	//							gtx.Constraints.Min = gtx.Constraints.Max
-	//							if pg.ticketTypeDropDown.SelectedIndex()-1 != -1 {
-	//								tickets = filterTickets(pg.ticketsBeta, func(ticketStatus string) bool {
-	//									return ticketStatus == strings.ToUpper(pg.ticketTypeDropDown.Selected())
-	//								})
-	//							}
-	//
-	//							if len(tickets) == 0 {
-	//								txt := pg.Theme.Body1("No tickets yet")
-	//								txt.Color = pg.Theme.Color.Gray2
-	//								txt.Alignment = text.Middle
-	//								return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D { return txt.Layout(gtx) })
-	//							}
-	//							return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-	//								return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-	//									return ticketActivityRow(gtx, pg.Load, tickets[index], index)
-	//								})
-	//							})
-	//						})
-	//					})
-	//				}),
-	//				layout.Stacked(func(gtx C) D {
-	//					return pg.dropDowns(gtx)
-	//				}),
-	//			)
-	//		},
-	//	}
-	//	return page.Layout(gtx)
-	//}
-	//
-	//return components.UniformPadding(gtx, body)
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+	body := func(gtx C) D {
+		page := components.SubPage{
+			Load:       pg.Load,
+			Title:      "Ticket activity",
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
+			},
+			Body: func(gtx C) D {
+				return layout.Stack{Alignment: layout.N}.Layout(gtx,
+					layout.Expanded(func(gtx C) D {
+						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
+							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+								gtx.Constraints.Min = gtx.Constraints.Max
+								if len(pg.tickets) == 0 {
+									txt := pg.Theme.Body1("No tickets yet")
+									txt.Color = pg.Theme.Color.Gray2
+									txt.Alignment = text.Middle
+									return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D { return txt.Layout(gtx) })
+								}
+								return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+									return pg.ticketsList.Layout(gtx, len(pg.tickets), func(gtx C, index int) D {
+										return ticketActivityRow(gtx, pg.Load, pg.tickets[index], index)
+									})
+								})
+							})
+						})
+					}),
+					layout.Stacked(func(gtx C) D {
+						return pg.dropDowns(gtx)
+					}),
+				)
+			},
+		}
+		return page.Layout(gtx)
+	}
+
+	return components.UniformPadding(gtx, body)
 }
 
-func filterTickets(tickets []load.Ticket, f func(string) bool) []load.Ticket {
-	t := make([]load.Ticket, 0)
-	for _, v := range tickets {
-		if f(v.Status) {
-			t = append(t, v)
-		}
-	}
-	return t
+func (pg *ActivityPage) dropDowns(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return pg.walletDropDown.Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Left: values.MarginPadding5,
+					}.Layout(gtx, func(gtx C) D {
+						return pg.ticketTypeDropDown.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Left: values.MarginPadding5,
+					}.Layout(gtx, func(gtx C) D {
+						return pg.orderDropDown.Layout(gtx)
+					})
+				}),
+			)
+		}),
+	)
 }
 
 func (pg *ActivityPage) Handle() {
-
-	sortSelection := pg.orderDropDown.SelectedIndex()
-	if pg.filterSorter != sortSelection {
-		pg.filterSorter = sortSelection
-		newestFirst := pg.filterSorter == 0
-		for _, wal := range pg.wallets {
-			tickets := (*pg.tickets).Confirmed[wal.ID]
-			sort.SliceStable(tickets, func(i, j int) bool {
-				backTime := time.Unix(tickets[j].Info.Ticket.Timestamp, 0)
-				frontTime := time.Unix(tickets[i].Info.Ticket.Timestamp, 0)
-				if newestFirst {
-					return backTime.Before(frontTime)
-				}
-				return frontTime.Before(backTime)
-			})
-		}
-	}
 
 }
 

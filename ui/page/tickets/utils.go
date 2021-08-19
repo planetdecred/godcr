@@ -9,6 +9,7 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/unit"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -358,11 +359,11 @@ func ticketCard(gtx layout.Context, l *load.Load, t load.Ticket, tooltip *decred
 }
 
 // ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
-func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index int) layout.Dimensions {
+func ticketActivityRow(gtx layout.Context, l *load.Load, t load.Ticket, index int) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				st := ticketStatusProfile(l, t.Info.Status)
+				st := ticketStatusProfile(l, t.Status)
 				if st == nil {
 					return layout.Dimensions{}
 				}
@@ -389,7 +390,7 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								labelStatus := l.Theme.Label(values.TextSize18, strings.Title(strings.ToLower(t.Info.Status)))
+								labelStatus := l.Theme.Label(values.TextSize18, strings.Title(strings.ToLower(t.Status)))
 								labelStatus.Color = l.Theme.Color.DeepBlue
 
 								labelDaysBehind := l.Theme.Label(values.TextSize14, t.DaysBehind)

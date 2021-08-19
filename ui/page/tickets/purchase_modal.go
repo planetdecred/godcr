@@ -159,6 +159,10 @@ func (tp *ticketPurchaseModal) canPurchase() bool {
 		return false
 	}
 
+	if tp.ticketCount() < 1 {
+		return false
+	}
+
 	return true
 }
 

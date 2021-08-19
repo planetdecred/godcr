@@ -122,7 +122,7 @@ func (pg *ListPage) fetchTickets() {
 	selectedWalletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 	tickets, err := pg.WL.GetTickets(selectedWalletID, txFilter, newestFirst)
 	if err != nil {
-		pg.CreateToast(err.Error(), false)
+		pg.Toast.NotifyError(err.Error())
 	} else {
 		pg.tickets = tickets
 	}

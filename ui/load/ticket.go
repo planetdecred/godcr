@@ -42,6 +42,7 @@ func (wl *WalletLoad) StakingOverviewAllWallets() *dcrlibwallet.StakingOverview 
 		overview.Voted += ov.Voted
 	}
 
+	wl.MultiWallet.GetLowestBlockTimestamp()
 	return overview
 }
 
