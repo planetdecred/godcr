@@ -261,7 +261,12 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 					Hint("Wallet name").
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 						//TODO
-						pg.multiWallet.RenameWallet(wal.ID, newName)
+						err := pg.multiWallet.RenameWallet(wal.ID, newName)
+						if err != nil {
+							pg.Toast.NotifyError(err.Error())
+						} else {
+							pg.Toast.Notify("Wallet renamed")
+						}
 						return true
 					})
 
@@ -285,6 +290,7 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 					m.SetLoading(false)
 					return
 				}
+				pg.Toast.Notify("Wallet created")
 				m.Dismiss()
 			}()
 			return false

@@ -482,15 +482,18 @@ func (pg *TransactionDetailsPage) Handle() {
 
 	for _, b := range pg.copyTextBtn {
 		for b.Button.Clicked() {
+			pg.Toast.Notify("Copied")
 			clipboard.WriteOp{Text: b.Text}.Add(gtx.Ops)
 		}
 	}
 
 	for pg.hashClickable.Clicked() {
+		pg.Toast.Notify("Transaction Hash copied")
 		clipboard.WriteOp{Text: pg.transaction.Hash}.Add(gtx.Ops)
 	}
 
 	for pg.destAddressClickable.Clicked() {
+		pg.Toast.Notify("Address copied")
 		clipboard.WriteOp{Text: pg.txDestinationAddress}.Add(gtx.Ops)
 	}
 }

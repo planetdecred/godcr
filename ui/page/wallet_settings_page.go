@@ -273,6 +273,7 @@ func (pg *WalletSettingsPage) Handle() {
 								return
 							}
 							pm.Dismiss()
+							pg.Toast.Notify("Wallet removed")
 							pg.PopFragment()
 						}()
 						return false

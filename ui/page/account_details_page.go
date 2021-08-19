@@ -27,7 +27,7 @@ type AcctDetailsPage struct {
 	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
-	editAccount              *widget.Clickable
+	renameAccount            *widget.Clickable
 
 	stakingBalance   int64
 	totalBalance     string
@@ -50,8 +50,8 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		backButton:  l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		editAccount: new(widget.Clickable),
+		backButton:    l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
+		renameAccount: new(widget.Clickable),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -121,7 +121,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			ExtraItem: pg.editAccount,
+			ExtraItem: pg.renameAccount,
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					edit := pg.Icons.EditIcon
@@ -275,7 +275,7 @@ func (pg *AcctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 }
 
 func (pg *AcctDetailsPage) Handle() {
-	if pg.editAccount.Clicked() {
+	if pg.renameAccount.Clicked() {
 		textModal := modal.NewTextInputModal(pg.Load).
 			Hint("Account name").
 			PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
@@ -285,7 +285,7 @@ func (pg *AcctDetailsPage) Handle() {
 					tim.IsLoading = false
 					return false
 				}
-
+				pg.Toast.Notify("Account renamed")
 				pg.account.Name = newName
 				return true
 			})
