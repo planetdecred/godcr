@@ -81,10 +81,8 @@ func (pg *ListPage) listenForTxNotifications() {
 
 			select {
 			case notification = <-pg.Receiver.NotificationsUpdate:
-			default:
-				if components.ContextDone(pg.ctx) {
-					return
-				}
+			case <-pg.ctx.Done():
+				return
 			}
 
 			switch n := notification.(type) {
