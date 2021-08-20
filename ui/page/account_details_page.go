@@ -285,8 +285,8 @@ func (pg *AcctDetailsPage) Handle() {
 					tim.IsLoading = false
 					return false
 				}
-				pg.Toast.Notify("Account renamed")
 				pg.account.Name = newName
+				pg.Toast.Notify("Account renamed")
 				return true
 			})
 

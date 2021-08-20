@@ -3,12 +3,10 @@ package page
 import (
 	"sync"
 
-	"gioui.org/font/gofont"
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -107,14 +105,6 @@ func (pg *LogPage) Layout(gtx C) D {
 				background := pg.Theme.Color.Surface
 				card := pg.Theme.Card()
 				card.Color = background
-				if (len(pg.internalLog) == 0 && len(pg.logEntries) == 0) || len(pg.logEntries) == 0 {
-					th := material.NewTheme(gofont.Collection())
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, layout.Flexed(1, func(gtx C) D {
-						return layout.Inset{Top: unit.Dp(8), Bottom: unit.Dp(8)}.Layout(gtx, func(gtx C) D {
-							return layout.Center.Layout(gtx, material.Loader(th).Layout)
-						})
-					}))
-				}
 				return card.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y

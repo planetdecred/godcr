@@ -131,8 +131,7 @@ func (pg *SettingsPage) ID() string {
 }
 
 func (pg *SettingsPage) OnResume() {
-	// TODO darkmode is currently unstable
-	pg.isDarkModeOn.Disabled()
+
 }
 
 func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {

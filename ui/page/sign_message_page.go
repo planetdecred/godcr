@@ -271,8 +271,8 @@ func (pg *SignMessagePage) Handle() {
 	}
 
 	if pg.copySignature.Clicked() {
-		pg.Toast.Notify("Signature copied")
 		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
+		pg.Toast.Notify("Signature copied")
 	}
 }
 
