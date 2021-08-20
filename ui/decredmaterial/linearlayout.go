@@ -31,7 +31,7 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 		return layout.Stack{}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				ll.applyDimension(&gtx)
-				// // draw background and and clip the background to border radius
+				// draw background and clip the background to border radius
 				tr := float32(gtx.Px(unit.Dp(ll.Border.Radius.TopRight)))
 				tl := float32(gtx.Px(unit.Dp(ll.Border.Radius.TopLeft)))
 				br := float32(gtx.Px(unit.Dp(ll.Border.Radius.BottomRight)))
