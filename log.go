@@ -21,13 +21,11 @@ import (
 // the write-end pipe of an initialized log rotator.
 type logWriter struct{}
 
-var internalLog = make(chan string, 10)
-
 // Write writes the data in p to standard out and the log rotator.
 func (l logWriter) Write(p []byte) (n int, err error) {
 	os.Stdout.Write(p)
 	go func() {
-		internalLog <- string(p)
+		//internalLog <- string(p)
 	}()
 	return logRotator.Write(p)
 }
