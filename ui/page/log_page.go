@@ -39,8 +39,7 @@ func NewLogPage(l *load.Load) *LogPage {
 		Load:        l,
 		internalLog: l.Receiver.InternalLog,
 		entriesList: layout.List{
-			Axis:        layout.Vertical,
-			ScrollToEnd: true,
+			Axis: layout.Vertical,
 		},
 		copyLog:    new(widget.Clickable),
 		logEntries: make([]decredmaterial.Label, 0, 20),
@@ -100,6 +99,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			},
 			HandleExtra: func() {
 				pg.copyLogEntries(gtx)
+				pg.Toast.Notify("Copied")
 			},
 			Body: func(gtx C) D {
 				background := pg.Theme.Color.Surface
