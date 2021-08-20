@@ -1,6 +1,7 @@
 package tickets
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"strings"
@@ -16,8 +17,30 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-const maxInt32 = 1<<(uint32Size-1) - 1
+const (
+	uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
+	maxInt32   = 1<<(uint32Size-1) - 1
+
+	ticketAge   = "Ticket age"
+	durationMsg = "10 hrs 47 mins (118/256 blocks)"
+)
+
+type tooltips struct {
+	statusTooltip     *decredmaterial.Tooltip
+	walletNameTooltip *decredmaterial.Tooltip
+	dateTooltip       *decredmaterial.Tooltip
+	daysBehindTooltip *decredmaterial.Tooltip
+	durationTooltip   *decredmaterial.Tooltip
+}
+
+var (
+	title         = ""
+	mainMsg       = ""
+	mainMsgDesc   = ""
+	dayBehind     = ""
+	durationTitle = ""
+	durationDesc  = ""
+)
 
 func ticketStatusIcon(l *load.Load, ticketStatus string) *struct {
 	icon       *widget.Image
@@ -72,76 +95,101 @@ func ticketStatusIcon(l *load.Load, ticketStatus string) *struct {
 	return &st
 }
 
+func setText(t string) {
+	switch t {
+	case "UNMINED":
+		title = "This ticket is waiting in mempool to be included in a block."
+		mainMsg, mainMsgDesc, dayBehind, durationTitle, durationDesc = "", "", ticketAge, "Live in", durationMsg
+	case "IMMATURE":
+		title = "This ticket will enter the ticket pool and become a live ticket after 256 blocks (~20 hrs)."
+		mainMsg, mainMsgDesc, dayBehind, durationTitle, durationDesc = "", "", ticketAge, "Live in", durationMsg
+	case "LIVE":
+		title = "Waiting to be chosen to vote."
+		mainMsg = "The average vote time is 28 days, but can take up to 142 days."
+		mainMsgDesc = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original ticket price without a reward)."
+		dayBehind, durationTitle, durationDesc = ticketAge, "Live in", durationMsg
+	case "VOTED":
+		title = "Congratulations! This ticket has voted."
+		mainMsg = "The ticket price + reward will become spendable after 256 blocks (~20 hrs)."
+		dayBehind, durationTitle, durationDesc = "Days to vote", "Spendable in", durationMsg
+	case "MISSED":
+		title = "This ticket was chosen to vote, but missed the voting window."
+		mainMsg = "Missed tickets will be revoked to return the original ticket price to you."
+		mainMsgDesc = "If a ticket is not revoked automatically, use the revoke button."
+		dayBehind, durationTitle, durationDesc = "Days to miss", "Miss in", durationMsg
+	case "EXPIRED":
+		title = "This ticket has not been chosen to vote within 40960 blocks, and thus expired. "
+		mainMsg = "Expired tickets will be revoked to return the original ticket price to you."
+		mainMsgDesc = "If a ticket is not revoked automatically, use the revoke button."
+		dayBehind, durationTitle, durationDesc = "Days to expire", "Expired in", durationMsg
+	case "REVOKED":
+		title = "This ticket has been revoked."
+		dayBehind, durationTitle, durationDesc = ticketAge, "Spendable in", durationMsg
+	}
+}
+
+func ticketStatusTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimensions {
+	setText(t.Info.Status)
+	st := ticketStatusIcon(l, t.Info.Status)
+	status := l.Theme.Body2(t.Info.Status)
+	status.Color = st.color
+	st.icon.Scale = .5
+
+	titleLabel, mainMsgLabel, mainMsgLabel2 := l.Theme.Body2(title), l.Theme.Body2(mainMsg), l.Theme.Body2(mainMsgDesc)
+	mainMsgLabel.Color, mainMsgLabel2.Color = l.Theme.Color.Gray, l.Theme.Color.Gray
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(st.icon.Layout),
+				layout.Rigid(toolTipContent(layout.Inset{Left: values.MarginPadding4}, status.Layout)),
+			)
+		}),
+		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, titleLabel.Layout)),
+		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, mainMsgLabel.Layout)),
+		layout.Rigid(func(gtx C) D {
+			if mainMsgDesc != "" {
+				toolTipContent(layout.Inset{Top: values.MarginPadding8}, mainMsgLabel2.Layout)
+			}
+			return layout.Dimensions{}
+		}),
+	)
+}
+
+func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmaterial.Tooltip, body layout.Widget) {
+	inset := layout.Inset{
+		Top:   values.MarginPadding15,
+		Right: unit.Dp(-150),
+		Left:  values.MarginPadding15,
+	}
+
+	rect := image.Rectangle{
+		Max: image.Point{
+			X: rectLayout.Size.X,
+			Y: rectLayout.Size.Y,
+		},
+	}
+
+	tooltip.Layout(gtx, rect, inset, body)
+}
+
+func walletNameDateTimeTooltip(gtx C, l *load.Load, title string, body layout.Widget) layout.Dimensions {
+	walletNameLabel := l.Theme.Body2(title)
+	walletNameLabel.Color = l.Theme.Color.Gray
+
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(walletNameLabel.Layout),
+		layout.Rigid(body),
+	)
+}
+
 func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	return func(gtx C) D {
 		return inset.Layout(gtx, body)
 	}
 }
 
-func ticketStatusTooltip(gtx C, l *load.Load, rect image.Rectangle, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
-	inset := layout.Inset{
-		Top:   values.MarginPadding15,
-		Right: unit.Dp(-150),
-		Left:  values.MarginPadding15,
-	}
-	return tooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		st := ticketStatusIcon(l, t.Info.Status)
-		var title, message, message2 string
-		switch t.Info.Status {
-		case "UNMINED":
-			title = "This ticket is waiting in mempool to be included in a block."
-			message, message2 = "", ""
-		case "IMMATURE":
-			title = "This ticket will enter the ticket pool and become a live ticket after 256 blocks (~20 hrs)."
-			message, message2 = "", ""
-		case "LIVE":
-			title = "Waiting to be chosen to vote."
-			message = "The average vote time is 28 days, but can take up to 142 days."
-			message2 = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original ticket price without a reward)."
-		case "VOTED":
-			title = "Congratulations! This ticket has voted."
-			message = "The ticket price + reward will become spendable after 256 blocks (~20 hrs)."
-			message2 = ""
-		case "MISSED":
-			title = "This ticket was chosen to vote, but missed the voting window."
-			message = "Missed tickets will be revoked to return the original ticket price to you."
-			message2 = "If a ticket is not revoked automatically, use the revoke button."
-		case "EXPIRED":
-			title = "This ticket has not been chosen to vote within 40960 blocks, and thus expired. "
-			message = "Expired tickets will be revoked to return the original ticket price to you."
-			message2 = "If a ticket is not revoked automatically, use the revoke button."
-		case "REVOKED":
-			title = "This ticket has been revoked."
-			message = "The ticket price will become spendable after 256 blocks (~20 hrs)."
-			message2 = ""
-		}
-		titleLabel, messageLabel, messageLabel2 := l.Theme.Body2(title), l.Theme.Body2(message), l.Theme.Body2(message2)
-		messageLabel.Color, messageLabel2.Color = l.Theme.Color.Gray, l.Theme.Color.Gray
-
-		status := l.Theme.Body2(t.Info.Status)
-		status.Color = st.color
-		st.icon.Scale = .5
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(st.icon.Layout),
-					layout.Rigid(toolTipContent(layout.Inset{Left: values.MarginPadding4}, status.Layout)),
-				)
-			}),
-			layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, titleLabel.Layout)),
-			layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, messageLabel.Layout)),
-			layout.Rigid(func(gtx C) D {
-				if message2 != "" {
-					toolTipContent(layout.Inset{Top: values.MarginPadding8}, messageLabel2.Layout)
-				}
-				return layout.Dimensions{}
-			}),
-		)
-	})
-}
-
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tooltips) layout.Dimensions {
 	var itemWidth int
 	st := ticketStatusIcon(l, t.Info.Status)
 	if st == nil {
@@ -156,7 +204,6 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 				wrap.Color = st.background
 				return wrap.Layout(gtx, func(gtx C) D {
 					return layout.Stack{Alignment: layout.S}.Layout(gtx,
-
 						layout.Expanded(func(gtx C) D {
 							return layout.NE.Layout(gtx, func(gtx C) D {
 								wTimeLabel := l.Theme.Card()
@@ -168,7 +215,14 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 										Right:  values.MarginPadding8,
 										Left:   values.MarginPadding8,
 									}.Layout(gtx, func(gtx C) D {
-										return l.Theme.Label(values.TextSize14, "10h 47m").Layout(gtx)
+										txt := l.Theme.Label(values.TextSize14, "10h 47m")
+										txtLayout := txt.Layout(gtx)
+										ticketCardTooltip(gtx, txtLayout, tooltip.durationTooltip, func(gtx C) D {
+											setText(t.Info.Status)
+											return walletNameDateTimeTooltip(gtx, l, durationTitle,
+												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
+										})
+										return txtLayout
 									})
 								})
 							})
@@ -225,13 +279,10 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 										txt := l.Theme.Label(values.MarginPadding14, t.Info.Status)
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
-										rect := image.Rectangle{
-											Max: image.Point{
-												X: txtLayout.Size.X,
-												Y: txtLayout.Size.Y,
-											},
-										}
-										ticketStatusTooltip(gtx, l, rect, t, tooltip)
+										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {
+											setText(t.Info.Status)
+											return ticketStatusTooltip(gtx, l, t)
+										})
 										return txtLayout
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -245,7 +296,14 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
-										return l.Theme.Label(values.MarginPadding14, t.WalletName).Layout(gtx)
+										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
+										txt.Color = l.Theme.Color.Gray
+										txtLayout := txt.Layout(gtx)
+										ticketCardTooltip(gtx, txtLayout, tooltip.walletNameTooltip, func(gtx C) D {
+											return walletNameDateTimeTooltip(gtx, l, "Wallet name",
+												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout))
+										})
+										return txtLayout
 									}),
 								)
 							}),
@@ -258,7 +316,18 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 									txt.Color = l.Theme.Color.Gray2
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return txt.Layout(gtx)
+											txtLayout := txt.Layout(gtx)
+											ticketCardTooltip(gtx, txtLayout, tooltip.dateTooltip, func(gtx C) D {
+												dt := strings.Split(t.DateTime, " ")
+												s1 := []string{dt[0], dt[1], dt[2]}
+												date := strings.Join(s1, " ")
+												s2 := []string{dt[3], dt[4]}
+												time := strings.Join(s2, " ")
+												dateTime := fmt.Sprintf("%s at %s", date, time)
+												return walletNameDateTimeTooltip(gtx, l, "Purchased",
+													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(dateTime).Layout))
+											})
+											return txtLayout
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{
@@ -272,7 +341,13 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip *dec
 										}),
 										layout.Rigid(func(gtx C) D {
 											txt.Text = t.DaysBehind
-											return txt.Layout(gtx)
+											txtLayout := txt.Layout(gtx)
+											ticketCardTooltip(gtx, txtLayout, tooltip.daysBehindTooltip, func(gtx C) D {
+												setText(t.Info.Status)
+												return walletNameDateTimeTooltip(gtx, l, dayBehind,
+													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.DaysBehind).Layout))
+											})
+											return txtLayout
 										}),
 									)
 								})
