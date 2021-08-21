@@ -66,6 +66,8 @@ func (pg *LogPage) copyLogEntries(gtx C) {
 }
 
 func (pg *LogPage) watchLogs() {
+	//TODO
+	//add function to get log directory
 	logPath := "/home/devchoplife/.godcr/logs/godcr.log"
 	t, _ := tail.TailFile(logPath, tail.Config{Follow: true})
 	for line := range t.Lines {
@@ -73,7 +75,7 @@ func (pg *LogPage) watchLogs() {
 		entry := logRow[:len(logRow)-1]
 		pg.entriesLock.Lock()
 		pg.fullLog += entry
-		pg.logEntries = append(pg.logEntries, pg.Theme.Body1(entry))
+		pg.logEntries = append(pg.logEntries, pg.Theme.Body1(logRow))
 		pg.entriesLock.Unlock()
 	}
 }
