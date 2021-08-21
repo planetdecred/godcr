@@ -7,6 +7,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
+	"github.com/nxadm/tail"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -35,8 +36,7 @@ func (pg *LogPage) ID() string {
 
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
-		Load:        l,
-		internalLog: l.Receiver.InternalLog,
+		Load: l,
 		entriesList: layout.List{
 			Axis: layout.Vertical,
 		},
@@ -48,7 +48,7 @@ func NewLogPage(l *load.Load) *LogPage {
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	go pg.watchLogs(pg.internalLog)
+	go pg.watchLogs()
 
 	return pg
 }
@@ -65,11 +65,14 @@ func (pg *LogPage) copyLogEntries(gtx C) {
 	}()
 }
 
-func (pg *LogPage) watchLogs(internalLog chan string) {
-	for l := range internalLog {
-		entry := l[:len(l)-1]
+func (pg *LogPage) watchLogs() {
+	logPath := "/home/devchoplife/.godcr/logs/godcr.log"
+	t, _ := tail.TailFile(logPath, tail.Config{Follow: true})
+	for line := range t.Lines {
+		logRow := line.Text
+		entry := logRow[:len(logRow)-1]
 		pg.entriesLock.Lock()
-		pg.fullLog += l
+		pg.fullLog += entry
 		pg.logEntries = append(pg.logEntries, pg.Theme.Body1(entry))
 		pg.entriesLock.Unlock()
 	}
