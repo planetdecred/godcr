@@ -65,6 +65,10 @@ func (p *HTMLProvider) renderHardBreak() {
 
 func (p *HTMLProvider) prepareBlockQuote(node *ast.BlockQuote, entering bool) {}
 
+func (p *HTMLProvider) prepareCode(node *ast.Code, entering bool) {}
+
+func (p *HTMLProvider) prepareCodeBlock(node *ast.CodeBlock, entering bool) {}
+
 func (p *HTMLProvider) prepareList(node *ast.List, entering bool) {
 	if next := ast.GetNextNode(node); !entering && next != nil {
 		_, parentIsListItem := node.GetParent().(*ast.ListItem)

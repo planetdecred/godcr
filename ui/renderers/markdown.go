@@ -2,16 +2,17 @@ package renderers
 
 import (
 	//"fmt"
+
 	"strings"
 	"unicode"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const (
@@ -87,6 +88,32 @@ func (p *MarkdownProvider) Layout() ([]layout.Widget, map[string]*widget.Clickab
 
 func (p *MarkdownProvider) prepareBlockQuote(node *ast.BlockQuote, entering bool) {
 	p.openOrCloseTag(blockQuoteTagName, entering)
+}
+
+func (p *MarkdownProvider) prepareCode(node *ast.Code, entering bool) {
+	content := string(node.Literal)
+	p.stringBuilder.WriteString(content)
+}
+
+func (p *MarkdownProvider) prepareCodeBlock(node *ast.CodeBlock, entering bool) {
+	content := string(node.Literal)
+	p.createNewRow()
+	wdg := func(gtx C) D {
+		return decredmaterial.LinearLayout{
+			Orientation: layout.Vertical,
+			Width:       decredmaterial.WrapContent,
+			Height:      decredmaterial.WrapContent,
+			Background:  p.theme.Color.Background,
+			Padding:     layout.UniformInset(values.MarginPadding16),
+		}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return p.theme.Body1(content).Layout(gtx)
+			}),
+		)
+	}
+
+	p.appendToLastRow(wdg)
+	p.addVerticalSpacing(15)
 }
 
 func (p *MarkdownProvider) renderSoftBreak() {
@@ -187,26 +214,7 @@ func (p *MarkdownProvider) prepareHeading(node *ast.Heading, entering bool) {
 }
 
 func (p *MarkdownProvider) prepareLink(node *ast.Link, entering bool) {
-	dest := string(node.Destination)
-	txt := string(ast.GetFirstChild(node).AsLeaf().Literal)
-
-	if p.links == nil {
-		p.links = map[string]*widget.Clickable{}
-	}
-
-	if _, ok := p.links[dest]; !ok {
-		p.links[dest] = new(widget.Clickable)
-	}
-
-	p.stringBuilder.Reset()
-	p.appendToLastRow(func(gtx C) D {
-		return material.Clickable(gtx, p.links[dest], func(gtx C) D {
-			lbl := p.theme.Body2(txt)
-			lbl.Color = p.theme.Color.Primary
-			lbl.Font.Weight = text.Bold
-			return lbl.Layout(gtx)
-		})
-	})
+	p.renderBlock()
 }
 
 func (p *MarkdownProvider) renderBlock() {
@@ -218,7 +226,6 @@ func (p *MarkdownProvider) renderBlock() {
 	var isClosingBlock bool
 	var currentTag string
 	currText := new(strings.Builder)
-
 	for i := range content {
 		curr := content[i]
 

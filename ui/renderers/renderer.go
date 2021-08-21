@@ -11,6 +11,8 @@ import (
 type renderer interface {
 	prepareText(node *ast.Text, entering bool)
 	prepareBlockQuote(node *ast.BlockQuote, entering bool)
+	prepareCode(node *ast.Code, entering bool)
+	prepareCodeBlock(node *ast.CodeBlock, entering bool)
 	prepareList(node *ast.List, entering bool)
 	prepareListItem(node *ast.ListItem, entering bool)
 	prepareParagraph(node *ast.Paragraph, entering bool)
@@ -71,6 +73,10 @@ func (nw *nodeWalker) RenderNode(w io.Writer, node ast.Node, entering bool) ast.
 		//fmt.Println(string(node.Literal))
 	case *ast.BlockQuote:
 		nw.renderer.prepareBlockQuote(node, entering)
+	case *ast.Code:
+		nw.renderer.prepareCode(node, entering)
+	case *ast.CodeBlock:
+		nw.renderer.prepareCodeBlock(node, entering)
 	case *ast.List:
 		nw.renderer.prepareList(node, entering)
 	case *ast.ListItem:
