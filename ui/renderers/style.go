@@ -7,6 +7,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/unit"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 func getLabel(lbl decredmaterial.Label) decredmaterial.Label {
@@ -57,6 +58,9 @@ func getHeading(txt string, level int, theme *decredmaterial.Theme) decredmateri
 
 	lbl := lblWdgt(txt)
 	lbl.Font.Weight = text.Bold
+	if level == 4 {
+		lbl.TextSize = values.TextSize32
+	}
 
 	return lbl
 }

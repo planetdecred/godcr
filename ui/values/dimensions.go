@@ -68,6 +68,7 @@ var (
 	TextSize24 = unit.Sp(24)
 	TextSize28 = unit.Sp(28)
 	TextSize34 = unit.Sp(34)
+	TextSize32 = unit.Sp(32)
 
 	AppWidth  = unit.Sp(800)
 	AppHeight = unit.Sp(600)
