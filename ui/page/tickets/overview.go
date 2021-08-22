@@ -7,7 +7,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -36,7 +35,7 @@ type Page struct {
 	tickets     **wallet.Tickets
 	ticketPrice string
 
-	autoPurchaseEnabled *widget.Bool
+	autoPurchaseEnabled *decredmaterial.Switch
 	toTickets           decredmaterial.TextAndIconButton
 	toTicketsActivity   decredmaterial.TextAndIconButton
 	ticketTooltips      []tooltips
@@ -52,7 +51,7 @@ func NewTicketPage(l *load.Load) *Page {
 		ticketPageContainer: &layout.List{Axis: layout.Vertical},
 		purchaseTicket:      l.Theme.Button(new(widget.Clickable), "Purchase"),
 
-		autoPurchaseEnabled: new(widget.Bool),
+		autoPurchaseEnabled: l.Theme.Switch(),
 		toTickets:           l.Theme.TextAndIconButton(new(widget.Clickable), "See All", l.Icons.NavigationArrowForward),
 		toTicketsActivity:   l.Theme.TextAndIconButton(new(widget.Clickable), "See All", l.Icons.NavigationArrowForward),
 	}
@@ -129,16 +128,16 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 					leftWg := func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								tit := pg.Theme.Label(values.TextSize14, "Ticket Price")
-								tit.Color = pg.Theme.Color.Gray2
-								return tit.Layout(gtx)
+								title := pg.Theme.Label(values.TextSize14, "Ticket Price")
+								title.Color = pg.Theme.Color.Gray2
+								return title.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{
 									Left:  values.MarginPadding8,
 									Right: values.MarginPadding4,
 								}.Layout(gtx, func(gtx C) D {
-									ic := pg.Icons.TimeIcon
+									ic := pg.Icons.TimerIcon
 									ic.Scale = 1
 									return ic.Layout(gtx)
 								})
@@ -151,7 +150,7 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 							}),
 						)
 					}
-					return pg.titleRow(gtx, leftWg, material.Switch(pg.Theme.Base, pg.autoPurchaseEnabled).Layout)
+					return pg.titleRow(gtx, leftWg, pg.autoPurchaseEnabled.Layout)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
