@@ -119,68 +119,77 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 
 	wal := l.WL.MultiWallet.WalletWithID(row.Transaction.WalletID)
 
-	return layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				icon := l.Icons.ReceiveIcon
-				if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
-					icon = l.Icons.SendIcon
-				}
-				icon.Scale = 1.0
+	return decredmaterial.LinearLayout{
+		Orientation: layout.Horizontal,
+		Width:       decredmaterial.MatchParent,
+		Height:      gtx.Px(values.MarginPadding56),
+		Direction:   layout.W,
+		Padding:     layout.Inset{Left: values.MarginPadding16, Right: values.MarginPadding16},
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+			icon := l.Icons.ReceiveIcon
+			if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
+				icon = l.Icons.SendIcon
+			}
+			icon.Scale = 1.0
 
-				return icon.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							amount := dcrutil.Amount(row.Transaction.Amount).String()
-							if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
-								amount = "-" + amount
-							}
-							return LayoutBalance(gtx, l, amount)
-						}),
-						layout.Rigid(func(gtx C) D {
-							if row.ShowBadge {
-								return WalletLabel(gtx, l, wal.Name)
-							}
-							return layout.Dimensions{}
-						}),
-					)
-				})
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Flex{
-					Axis:      layout.Horizontal,
-					Spacing:   layout.SpaceStart,
-					Alignment: layout.Middle,
-				}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-							func(gtx C) D {
-								status := l.Theme.Body1("pending")
-								if TxConfirmations(l, row.Transaction) <= 1 {
-									status.Color = l.Theme.Color.Gray5
-								} else {
-									status.Color = l.Theme.Color.Gray4
-									status.Text = FormatDateOrTime(row.Transaction.Timestamp)
-								}
-								return status.Layout(gtx)
-							})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							statusIcon := l.Icons.ConfirmIcon
+			return layout.W.Layout(gtx, icon.Layout)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.WrapContent,
+				Height:      decredmaterial.MatchParent,
+				Orientation: layout.Vertical,
+				Padding:     layout.Inset{Left: values.MarginPadding16},
+				Direction:   layout.W,
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					amount := dcrutil.Amount(row.Transaction.Amount).String()
+					if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
+						amount = "-" + amount
+					}
+					return LayoutBalance(gtx, l, amount)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if row.ShowBadge {
+						return WalletLabel(gtx, l, wal.Name)
+					}
+					return layout.Dimensions{}
+				}),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Flex{
+				Axis:      layout.Horizontal,
+				Spacing:   layout.SpaceStart,
+				Alignment: layout.Middle,
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
+						func(gtx C) D {
+							gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+							status := l.Theme.Body1("pending")
 							if TxConfirmations(l, row.Transaction) <= 1 {
-								statusIcon = l.Icons.PendingIcon
+								status.Color = l.Theme.Color.Gray5
+							} else {
+								status.Color = l.Theme.Color.Gray4
+								status.Text = FormatDateOrTime(row.Transaction.Timestamp)
 							}
-							statusIcon.Scale = 1.0
-							return statusIcon.Layout(gtx)
+							return layout.E.Layout(gtx, status.Layout)
 						})
-					}))
-			}),
-		)
-	})
+				}),
+				layout.Rigid(func(gtx C) D {
+					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+					statusIcon := l.Icons.ConfirmIcon
+					if TxConfirmations(l, row.Transaction) <= 1 {
+						statusIcon = l.Icons.PendingIcon
+					}
+					statusIcon.Scale = 1.0
+					return layout.E.Layout(gtx, statusIcon.Layout)
+				}))
+		}),
+	)
 }
 
 func TxConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {

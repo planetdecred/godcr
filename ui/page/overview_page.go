@@ -8,7 +8,6 @@ import (
 
 	"gioui.org/io/event"
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -211,27 +210,24 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 							ShowBadge:   len(pg.allWallets) > 1,
 						}
 
-						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return components.LayoutTransactionRow(gtx, pg.Load, row)
-								}),
-								layout.Rigid(func(gtx C) D {
-									// No divider for last row
-									if row.Index == len(pg.transactions)-1 {
-										return layout.Dimensions{}
-									}
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return components.LayoutTransactionRow(gtx, pg.Load, row)
+							}),
+							layout.Rigid(func(gtx C) D {
+								// No divider for last row
+								if row.Index == len(pg.transactions)-1 {
+									return layout.Dimensions{}
+								}
 
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									separator := pg.Theme.Separator()
-									separator.Width = gtx.Constraints.Max.X - gtx.Px(unit.Dp(16))
-									return layout.E.Layout(gtx, func(gtx C) D {
-										// Show bottom divider for all rows except last
-										return separator.Layout(gtx)
-									})
-								}),
-							)
-						})
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								separator := pg.Theme.Separator()
+								return layout.E.Layout(gtx, func(gtx C) D {
+									// Show bottom divider for all rows except last
+									return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
+								})
+							}),
+						)
 					})
 				}),
 			)
