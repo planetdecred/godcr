@@ -23,11 +23,7 @@ type logWriter struct{}
 
 // Write writes the data in p to standard out and the log rotator.
 func (l logWriter) Write(p []byte) (n int, err error) {
-	os.Stdout.Write(p)
-	go func() {
-		//internalLog <- string(p)
-	}()
-	return logRotator.Write(p)
+	return os.Stdout.Write(p)
 }
 
 // Loggers per subsystem.  A single backend logger is created and all subsytem
