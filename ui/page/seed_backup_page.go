@@ -20,7 +20,6 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -47,12 +46,11 @@ type (
 
 type BackupPage struct {
 	*load.Load
-	wal  *wallet.Wallet
-	info *wallet.MultiWalletInfo
+	wallet *dcrlibwallet.Wallet
 
-	backButton decredmaterial.IconButton
-	title      string
-	// steps          string
+	backButton     decredmaterial.IconButton
+	title          decredmaterial.Label
+	steps          decredmaterial.Label
 	instruction    decredmaterial.Label
 	successMessage decredmaterial.Label
 	successInfo    decredmaterial.Label
@@ -66,9 +64,7 @@ type BackupPage struct {
 	seedPhraseListRight *layout.List
 	verifyList          *layout.List
 
-	suggestions    []seedGroup
-	passwordModal  *decredmaterial.Password
-	selectedWallet int
+	suggestions []seedGroup
 
 	seedPhrase     []string
 	selectedSeeds  []string
@@ -77,36 +73,30 @@ type BackupPage struct {
 	privpass       string
 }
 
-func NewBackupPage(l *load.Load, walID int) *BackupPage {
+func NewBackupPage(l *load.Load, wallet *dcrlibwallet.Wallet) *BackupPage {
 	b := &BackupPage{
-		Load: l,
-		wal:  l.WL.Wallet,
-		info: l.WL.Info,
+		Load:   l,
+		wallet: wallet,
 
-		action:     l.Theme.Button(new(widget.Clickable), "View seed phrase"),
-		backButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		title:      "Keep in mind",
-		// steps:          "",
+		action:         l.Theme.Button(new(widget.Clickable), "View seed phrase"),
+		title:          l.Theme.H6("Keep in mind"),
+		steps:          l.Theme.Body1("Step 1/2"),
 		instruction:    l.Theme.H6("Write down all 33 words in the correct order"),
 		successMessage: l.Theme.H4("Your seed phrase backup is verified"),
 		successInfo:    l.Theme.Body2("Be sure to store your seed phrase backup in a secure location."),
 		checkIcon:      l.Icons.ActionCheckCircle,
 
-		active:         infoView,
-		selectedSeeds:  make([]string, 0, 33),
-		selectedWallet: walID,
-		passwordModal:  l.Theme.Password(),
+		active:        infoView,
+		selectedSeeds: make([]string, 0, 33),
 	}
 
+	b.backButton, _ = components.SubpageHeaderButtons(l)
+
 	b.checkIcon.Color = l.Theme.Color.Success
-	// b.steps.Color = l.Theme.Color.Hint
+	b.steps.Color = l.Theme.Color.Hint
 	b.successMessage.Alignment = text.Middle
 	b.successInfo.Alignment = text.Middle
 	b.successInfo.Color = l.Theme.Color.Hint
-
-	b.backButton.Color = l.Theme.Color.Hint
-	b.backButton.Size = values.MarginPadding30
-	b.backButton.Inset = layout.UniformInset(values.MarginPadding0)
 
 	b.action.Background = l.Theme.Color.Hint
 
@@ -167,7 +157,8 @@ func (pg *BackupPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      pg.title,
+			Title:      "Wallet seed backup",
+			WalletName: pg.wallet.Name,
 			BackButton: pg.backButton,
 			Back: func() {
 				pg.PopFragment()
@@ -179,16 +170,6 @@ func (pg *BackupPage) Layout(gtx layout.Context) layout.Dimensions {
 					Background: pg.Theme.Color.Surface,
 					Border:     decredmaterial.Border{Radius: decredmaterial.Radius(14)},
 					Padding:    layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						if pg.active != infoView {
-							return layout.Inset{
-								Right:  values.MarginPadding30,
-								Bottom: values.MarginPadding20,
-							}.Layout(gtx, pg.instruction.Layout)
-						}
-						return layout.Dimensions{}
-					}),
 					layout.Rigid(func(gtx C) D {
 						pg.action.Background = pg.Theme.Color.Hint
 						pg.action.Color = pg.Theme.Color.InvText
@@ -232,12 +213,12 @@ func (pg *BackupPage) viewTemplate(gtx layout.Context, content layout.Widget) la
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Flexed(1, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							// layout.Rigid(func(gtx C) D {
-							// 	if pg.active != successView {
-							// 		return pg.pageTitle(gtx)
-							// 	}
-							// 	return layout.Dimensions{}
-							// }),
+							layout.Rigid(func(gtx C) D {
+								if pg.active != successView {
+									return pg.contentHeader(gtx)
+								}
+								return layout.Dimensions{}
+							}),
 							layout.Rigid(content),
 						)
 					}),
@@ -251,6 +232,31 @@ func (pg *BackupPage) viewTemplate(gtx layout.Context, content layout.Widget) la
 	})
 }
 
+func (pg *BackupPage) contentHeader(gtx layout.Context) layout.Dimensions {
+	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.title.Layout)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if pg.active != infoView {
+					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.steps.Layout)
+				}
+				return layout.Dimensions{}
+			}),
+			layout.Rigid(func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				if pg.active != infoView {
+					return layout.Inset{
+						Right: values.MarginPadding30,
+						Top:   values.MarginPadding20,
+					}.Layout(gtx, pg.instruction.Layout)
+				}
+				return layout.Dimensions{}
+			}),
+		)
+	})
+}
 func (pg *BackupPage) infoView(gtx layout.Context) layout.Dimensions {
 	return pg.viewTemplate(gtx, func(gtx C) D {
 		gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
@@ -422,7 +428,6 @@ func (pg *BackupPage) populateSuggestionSeeds() {
 }
 
 func viewTexts(active int) viewText {
-	fmt.Println(active)
 	switch active {
 	case infoView:
 		return viewText{
@@ -453,9 +458,9 @@ func viewTexts(active int) viewText {
 
 func (pg *BackupPage) updateViewTexts() {
 	t := viewTexts(pg.active)
-	pg.title = t.title
+	pg.title.Text = t.title
 	pg.action.Text = t.action
-	// pg.steps = t.steps
+	pg.steps.Text = t.steps
 	pg.instruction.Text = t.instruction
 }
 
@@ -501,8 +506,7 @@ func (pg *BackupPage) Handle() {
 				NegativeButton("Cancel", func() {}).
 				PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 					go func() {
-						fmt.Println(pg.selectedWallet)
-						s, err := pg.WL.MultiWallet.WalletWithID(pg.selectedWallet).DecryptSeed([]byte(password))
+						s, err := pg.WL.MultiWallet.WalletWithID(pg.wallet.ID).DecryptSeed([]byte(password))
 						if err != nil {
 							pm.SetError(err.Error())
 							pm.SetLoading(false)
@@ -521,27 +525,31 @@ func (pg *BackupPage) Handle() {
 		} else {
 			switch pg.active {
 			case verifyView:
-				fmt.Println(!checkSlice(pg.selectedSeeds))
 				if !checkSlice(pg.selectedSeeds) {
 					return
 				}
 				errMessage := "Failed to verify. Please go through every word and try again."
 				s := strings.Join(pg.selectedSeeds, " ")
 				if !dcrlibwallet.VerifySeed(s) {
-					fmt.Println("im here 0")
 					pg.Toast.NotifyError(errMessage)
 					return
 				}
 
-				err := pg.wal.VerifyWalletSeedPhrase(pg.selectedWallet, s, []byte(pg.privpass))
+				_, err := pg.WL.MultiWallet.VerifySeedForWallet(pg.wallet.ID, s, []byte(pg.privpass))
 				if err != nil {
-					fmt.Println("im here 1")
 					pg.Toast.NotifyError(err.Error())
 					return
 				}
-				pg.info.Wallets[pg.selectedWallet].Seed = nil
+
+				for _, wal := range pg.WL.Info.Wallets {
+					if wal.ID == pg.wallet.ID {
+						wal.Seed = nil
+					}
+				}
+
 				pg.active++
 			case successView:
+				pg.PopFragment()
 				pg.resetPage()
 			default:
 				pg.active++
