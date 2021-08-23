@@ -1,5 +1,5 @@
-// The load package contains data structures that are shared by components.go in the ui package. It is not a dumping ground
-// for code you feel might be shared with other components.go in the future. Before adding code here, ask yourself, can
+// The load package contains data structures that are shared by components in the ui package. It is not a dumping ground
+// for code you feel might be shared with other components in the future. Before adding code here, ask yourself, can
 // the code be isolated in the package you're calling it from? Is it really needed by other packages in the ui package?
 // or you're just planning for a use case that might never used.
 

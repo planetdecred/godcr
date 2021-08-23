@@ -1,4 +1,4 @@
-// components.go contain layout code that are shared by multiple pages but aren't widely used enough to be defined as
+// components contain layout code that are shared by multiple pages but aren't widely used enough to be defined as
 // widgets
 
 package components
@@ -571,7 +571,7 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	})
 }*/
 
-// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page.go and tickets_activity_page
+// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
 /*func ticketActivityRow(gtx layout.Context, c *pageCommon, t wallet.Ticket, index int) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {

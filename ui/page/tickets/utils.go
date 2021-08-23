@@ -215,9 +215,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 									totalTime := getTimeToDone(l, blockHeight)
 
 									if totalTime == 0 {
-										return layout.Inset{}.Layout(gtx, func(gtx C) D {
-											return layout.Dimensions{}
-										})
+										return layout.Dimensions{}
 									}
 
 									hours := totalTime / 60
@@ -320,7 +318,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 									layout.Rigid(func(gtx C) D {
 
 										txt := l.Theme.Label(values.MarginPadding14, t.Info.Status)
-										txt.TextSize = unit.Sp(12)
+										txt.TextSize = values.TextSize12
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {
@@ -342,7 +340,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 									layout.Rigid(func(gtx C) D {
 										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
 										txt.Color = l.Theme.Color.Gray
-										txt.TextSize = unit.Sp(14)
+										txt.TextSize = values.TextSize14
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.walletNameTooltip, func(gtx C) D {
 											return walletNameDateTimeTooltip(gtx, l, "Wallet name",
@@ -410,7 +408,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 	})
 }
 
-// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page.go and tickets_activity_page
+// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
 func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index int) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -513,7 +511,6 @@ func createClickGestures(count int) []*gesture.Click {
 }
 
 func getPercentConfirmation(l *load.Load, blockHeight int32) int {
-
 	totalConfirmBlock, _ := l.WL.Wallet.GetTicketConfig()
 	currBlockHeight := l.WL.Info.BestBlockHeight
 	confirmations := currBlockHeight - blockHeight
@@ -532,7 +529,6 @@ func getTimeBehind(datetime string) (int, string) {
 	if hours >= 24 {
 		return hours / 24, "d"
 	}
-
 	return hours, "h"
 }
 
