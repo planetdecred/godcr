@@ -17,6 +17,8 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -44,15 +46,13 @@ type (
 )
 
 type BackupPage struct {
-	theme *decredmaterial.Theme
-
 	*load.Load
 	wal  *wallet.Wallet
 	info *wallet.MultiWalletInfo
 
-	backButton     decredmaterial.IconButton
-	title          decredmaterial.Label
-	steps          decredmaterial.Label
+	backButton decredmaterial.IconButton
+	title      string
+	// steps          string
 	instruction    decredmaterial.Label
 	successMessage decredmaterial.Label
 	successInfo    decredmaterial.Label
@@ -66,29 +66,27 @@ type BackupPage struct {
 	seedPhraseListRight *layout.List
 	verifyList          *layout.List
 
-	suggestions         []seedGroup
-	passwordModal       *decredmaterial.Password
-	isPasswordModalOpen bool
-	selectedWallet      *int
+	suggestions    []seedGroup
+	passwordModal  *decredmaterial.Password
+	selectedWallet int
 
 	seedPhrase     []string
 	selectedSeeds  []string
 	allSuggestions []string
 	active         int
-	privpass       []byte
+	privpass       string
 }
 
-func NewBackupPage(l *load.Load) *BackupPage {
+func NewBackupPage(l *load.Load, walID int) *BackupPage {
 	b := &BackupPage{
-		Load:  l,
-		theme: l.Theme,
-		wal:   l.WL.Wallet,
-		info:  l.WL.Info,
+		Load: l,
+		wal:  l.WL.Wallet,
+		info: l.WL.Info,
 
-		action:         l.Theme.Button(new(widget.Clickable), "View seed phrase"),
-		backButton:     l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		title:          l.Theme.H5("Keep in mind"),
-		steps:          l.Theme.Body1("Step 1/2"),
+		action:     l.Theme.Button(new(widget.Clickable), "View seed phrase"),
+		backButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
+		title:      "Keep in mind",
+		// steps:          "",
 		instruction:    l.Theme.H6("Write down all 33 words in the correct order"),
 		successMessage: l.Theme.H4("Your seed phrase backup is verified"),
 		successInfo:    l.Theme.Body2("Be sure to store your seed phrase backup in a secure location."),
@@ -96,15 +94,15 @@ func NewBackupPage(l *load.Load) *BackupPage {
 
 		active:         infoView,
 		selectedSeeds:  make([]string, 0, 33),
-		selectedWallet: l.SelectedWallet,
+		selectedWallet: walID,
 		passwordModal:  l.Theme.Password(),
 	}
 
 	b.checkIcon.Color = l.Theme.Color.Success
-	b.steps.Color = l.Theme.Color.Hint
+	// b.steps.Color = l.Theme.Color.Hint
 	b.successMessage.Alignment = text.Middle
 	b.successInfo.Alignment = text.Middle
-	b.successInfo.Color = b.theme.Color.Hint
+	b.successInfo.Color = l.Theme.Color.Hint
 
 	b.backButton.Color = l.Theme.Color.Hint
 	b.backButton.Size = values.MarginPadding30
@@ -156,85 +154,74 @@ func (pg *BackupPage) OnResume() {
 }
 
 func (pg *BackupPage) activeButton() {
-	pg.action.Background = pg.theme.Color.Primary
-	pg.action.Color = pg.theme.Color.InvText
+	pg.action.Background = pg.Theme.Color.Primary
+	pg.action.Color = pg.Theme.Color.InvText
 }
 
 func (pg *BackupPage) clearButton() {
 	pg.action.Background = color.NRGBA{}
-	pg.action.Color = pg.theme.Color.Primary
+	pg.action.Color = pg.Theme.Color.Primary
 }
 
 func (pg *BackupPage) Layout(gtx layout.Context) layout.Dimensions {
-	dims := pg.theme.Surface(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Start}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				pg.action.Background = pg.theme.Color.Hint
-				pg.action.Color = pg.theme.Color.InvText
-				switch pg.active {
-				case infoView:
-					if pg.verifyCheckBoxes() {
-						pg.activeButton()
-					}
-					return pg.infoView(gtx)
-				case seedView:
-					pg.activeButton()
-					return pg.seedView(gtx)
-				case verifyView:
-					if checkSlice(pg.selectedSeeds) {
-						pg.activeButton()
-					}
-					return pg.verifyView(gtx)
-				case successView:
-					pg.activeButton()
-					return pg.successView(gtx)
-				default:
-					if pg.verifyCheckBoxes() {
-						pg.activeButton()
-					}
-					return pg.infoView(gtx)
-				}
-			}),
-		)
-	})
-
-	if pg.isPasswordModalOpen {
-		return _modal(gtx, dims, pg.passwordModal.Layout(gtx, pg.confirm, pg.cancel))
-	}
-	return dims
-}
-
-func (pg *BackupPage) pageTitle(gtx layout.Context) layout.Dimensions {
-	return layout.Inset{Bottom: values.MarginPadding5, Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Start}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.backButton.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.title.Layout)
-					}),
-					layout.Rigid(func(gtx C) D {
-						if pg.active != infoView {
-							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.steps.Layout)
-						}
-						return layout.Dimensions{}
-					}),
+	body := func(gtx C) D {
+		sp := components.SubPage{
+			Load:       pg.Load,
+			Title:      pg.title,
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
+			},
+			Body: func(gtx layout.Context) layout.Dimensions {
+				return decredmaterial.LinearLayout{Orientation: layout.Vertical,
+					Width:      decredmaterial.MatchParent,
+					Height:     decredmaterial.WrapContent,
+					Background: pg.Theme.Color.Surface,
+					Border:     decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+					Padding:    layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						if pg.active != infoView {
 							return layout.Inset{
-								Right: values.MarginPadding30,
-								Top:   values.MarginPadding20,
+								Right:  values.MarginPadding30,
+								Bottom: values.MarginPadding20,
 							}.Layout(gtx, pg.instruction.Layout)
 						}
 						return layout.Dimensions{}
 					}),
+					layout.Rigid(func(gtx C) D {
+						pg.action.Background = pg.Theme.Color.Hint
+						pg.action.Color = pg.Theme.Color.InvText
+						switch pg.active {
+						case infoView:
+							if pg.verifyCheckBoxes() {
+								pg.activeButton()
+							}
+							return pg.infoView(gtx)
+						case seedView:
+							pg.activeButton()
+							return pg.seedView(gtx)
+						case verifyView:
+							if checkSlice(pg.selectedSeeds) {
+								pg.activeButton()
+							}
+							return pg.verifyView(gtx)
+						case successView:
+							pg.activeButton()
+							return pg.successView(gtx)
+						default:
+							if pg.verifyCheckBoxes() {
+								pg.activeButton()
+							}
+							return pg.infoView(gtx)
+						}
+					}),
 				)
-			}),
-		)
-	})
+			}}
+		return sp.Layout(gtx)
+	}
+
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *BackupPage) viewTemplate(gtx layout.Context, content layout.Widget) layout.Dimensions {
@@ -245,12 +232,12 @@ func (pg *BackupPage) viewTemplate(gtx layout.Context, content layout.Widget) la
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Flexed(1, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								if pg.active != successView {
-									return pg.pageTitle(gtx)
-								}
-								return layout.Dimensions{}
-							}),
+							// layout.Rigid(func(gtx C) D {
+							// 	if pg.active != successView {
+							// 		return pg.pageTitle(gtx)
+							// 	}
+							// 	return layout.Dimensions{}
+							// }),
 							layout.Rigid(content),
 						)
 					}),
@@ -316,7 +303,7 @@ func (pg *BackupPage) verifyView(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{
 								Left:   values.MarginPadding15,
 								Bottom: values.MarginPadding15,
-							}.Layout(gtx, pg.theme.H6(fmt.Sprintf("%d. %s", i+1, pg.selectedSeeds[i])).Layout)
+							}.Layout(gtx, pg.Theme.H6(fmt.Sprintf("%d. %s", i+1, pg.selectedSeeds[i])).Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
@@ -353,7 +340,7 @@ func (pg *BackupPage) successView(gtx layout.Context) layout.Dimensions {
 							}.Layout(gtx, func(gtx C) D {
 								return layout.Center.Layout(gtx, func(gtx C) D {
 									return layout.UniformInset(values.MarginPadding20).Layout(gtx, func(gtx C) D {
-										pg.checkIcon.Color = pg.theme.Color.Success
+										pg.checkIcon.Color = pg.Theme.Color.Success
 										return pg.checkIcon.Layout(gtx, unit.Px(float32(150)))
 									})
 								})
@@ -377,7 +364,7 @@ func (pg *BackupPage) successView(gtx layout.Context) layout.Dimensions {
 func (pg *BackupPage) seedText(gtx layout.Context, index int) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10, Left: values.MarginPadding20}.Layout(gtx,
 		func(gtx C) D {
-			seedLabel := pg.theme.H6(fmt.Sprintf("%d.  %s", index+1, pg.seedPhrase[index]))
+			seedLabel := pg.Theme.H6(fmt.Sprintf("%d.  %s", index+1, pg.seedPhrase[index]))
 			seedLabel.Alignment = text.Middle
 			return seedLabel.Layout(gtx)
 		},
@@ -394,10 +381,10 @@ func (pg *BackupPage) centralize(gtx layout.Context, content layout.Widget) layo
 
 func (pg *BackupPage) suggestionButtonGroup(gtx layout.Context, sg seedGroup, buttonIndex int) layout.Dimensions {
 	button := sg.buttons[buttonIndex]
-	button.Background = pg.theme.Color.Hint
+	button.Background = pg.Theme.Color.Hint
 	button.TextSize = values.TextSize18
 	if sg.selected == buttonIndex {
-		button.Background = pg.theme.Color.Primary
+		button.Background = pg.Theme.Color.Primary
 	}
 	return layout.Inset{Right: values.MarginPadding15, Left: values.MarginPadding15}.Layout(gtx, button.Layout)
 }
@@ -435,6 +422,7 @@ func (pg *BackupPage) populateSuggestionSeeds() {
 }
 
 func viewTexts(active int) viewText {
+	fmt.Println(active)
 	switch active {
 	case infoView:
 		return viewText{
@@ -465,9 +453,9 @@ func viewTexts(active int) viewText {
 
 func (pg *BackupPage) updateViewTexts() {
 	t := viewTexts(pg.active)
-	pg.title.Text = t.title
+	pg.title = t.title
 	pg.action.Text = t.action
-	pg.steps.Text = t.steps
+	// pg.steps = t.steps
 	pg.instruction.Text = t.instruction
 }
 
@@ -484,7 +472,7 @@ func (pg *BackupPage) resetPage() {
 	pg.active = infoView
 	pg.seedPhrase = []string{}
 	pg.selectedSeeds = make([]string, 33)
-	pg.privpass = nil
+	pg.privpass = ""
 	for _, cb := range pg.checkBoxes {
 		cb.CheckBox.Value = false
 	}
@@ -497,58 +485,69 @@ func (pg *BackupPage) resetPage() {
 	pg.updateViewTexts()
 }
 
-func (pg *BackupPage) confirm(password []byte) {
-	pg.privpass = password
-	s, err := pg.wal.GetWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, password)
-	if err != nil {
-		pg.passwordModal.WithError(err.Error())
-		return
-	}
-	pg.isPasswordModalOpen = false
-	pg.seedPhrase = strings.Split(s, " ")
-	pg.populateSuggestionSeeds()
-	pg.active++
-}
-
-func (pg *BackupPage) cancel() {
-	pg.isPasswordModalOpen = false
-}
-
 func (pg *BackupPage) Handle() {
 	if pg.backButton.Button.Clicked() {
-		pg.PopFragment()
+		if pg.active == infoView {
+			pg.PopFragment()
+		} else {
+			pg.active--
+		}
 	}
 
 	if pg.action.Button.Clicked() && pg.verifyCheckBoxes() {
 		if len(pg.seedPhrase) == 0 {
-			pg.isPasswordModalOpen = true
-			return
-		}
-		switch pg.active {
-		case verifyView:
-			if !checkSlice(pg.selectedSeeds) {
-				return
-			}
-			errMessage := "Failed to verify. Please go through every word and try again."
-			s := strings.Join(pg.selectedSeeds, " ")
-			if !dcrlibwallet.VerifySeed(s) {
-				pg.Toast.NotifyError(errMessage)
-				return
-			}
+			modal.NewPasswordModal(pg.Load).
+				Title("Confirm to sign").
+				NegativeButton("Cancel", func() {}).
+				PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+					go func() {
+						fmt.Println(pg.selectedWallet)
+						s, err := pg.WL.MultiWallet.WalletWithID(pg.selectedWallet).DecryptSeed([]byte(password))
+						if err != nil {
+							pm.SetError(err.Error())
+							pm.SetLoading(false)
+							return
+						}
+						pg.privpass = password
+						pg.seedPhrase = strings.Split(s, " ")
+						pg.populateSuggestionSeeds()
+						pg.active++
+						pg.updateViewTexts()
 
-			err := pg.wal.VerifyWalletSeedPhrase(pg.info.Wallets[*pg.selectedWallet].ID, s, pg.privpass)
-			if err != nil {
-				pg.Toast.NotifyError(errMessage)
-				return
+						pm.Dismiss()
+					}()
+					return false
+				}).Show()
+		} else {
+			switch pg.active {
+			case verifyView:
+				fmt.Println(!checkSlice(pg.selectedSeeds))
+				if !checkSlice(pg.selectedSeeds) {
+					return
+				}
+				errMessage := "Failed to verify. Please go through every word and try again."
+				s := strings.Join(pg.selectedSeeds, " ")
+				if !dcrlibwallet.VerifySeed(s) {
+					fmt.Println("im here 0")
+					pg.Toast.NotifyError(errMessage)
+					return
+				}
+
+				err := pg.wal.VerifyWalletSeedPhrase(pg.selectedWallet, s, []byte(pg.privpass))
+				if err != nil {
+					fmt.Println("im here 1")
+					pg.Toast.NotifyError(err.Error())
+					return
+				}
+				pg.info.Wallets[pg.selectedWallet].Seed = nil
+				pg.active++
+			case successView:
+				pg.resetPage()
+			default:
+				pg.active++
 			}
-			pg.info.Wallets[*pg.selectedWallet].Seed = nil
-			pg.active++
-		case successView:
-			pg.resetPage()
-		default:
-			pg.active++
+			pg.updateViewTexts()
 		}
-		pg.updateViewTexts()
 	}
 
 	for i := range pg.suggestions {
