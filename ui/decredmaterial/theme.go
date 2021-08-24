@@ -62,6 +62,11 @@ type Theme struct {
 		Gray1        color.NRGBA
 		Gray2        color.NRGBA
 		Gray3        color.NRGBA
+
+		ChartSellLine color.NRGBA // '#99302b',
+		ChartBuyLine  color.NRGBA // '#207a46',
+		ChartSellFill color.NRGBA // '#bd5959',
+		ChartBuyFill  color.NRGBA // '#4cad75',
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -110,6 +115,10 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.Color.Black = rgb(0x000000)
 	t.Color.Background = argb(0x22444444)
 	t.Color.LightBlue = rgb(0xe4f6ff)
+	t.Color.ChartSellLine = rgb(0xf6465d)
+	t.Color.ChartBuyLine = rgb(0x00c582)
+	t.Color.ChartSellFill = rgb(0xf9e8ea)
+	t.Color.ChartBuyFill = rgb(0xe3f5ee)
 	t.TextSize = unit.Sp(16)
 
 	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))

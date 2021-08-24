@@ -1,9 +1,11 @@
 package uidex
 
 import (
+	"encoding/json"
 	"fmt"
 	"image"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -100,6 +102,7 @@ type marketsPage struct {
 	submit      decredmaterial.Button
 
 	maxOrderEstimate **dexc.MaxOrderEstimate
+	depthChart       DepthChart
 }
 
 func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
@@ -179,6 +182,45 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 	pg.reviewOrder.Background = d.theme.Color.Success
 	pg.submit = d.theme.Button(new(widget.Clickable), "")
 	pg.submit.Background = d.theme.Color.Success
+
+	depthChartStyle := depthChartStyle{
+		strokeBuyColor:  d.theme.Color.ChartBuyLine,
+		fillBuyColor:    d.theme.Color.ChartBuyFill,
+		strokeSellColor: d.theme.Color.ChartSellLine,
+		fillSellColor:   d.theme.Color.ChartSellFill,
+	}
+	var buys []*core.MiniOrder
+	var sells []*core.MiniOrder
+
+	{
+		jsonFile, err := os.Open("./ui/uidex/orderbuys.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &buys)
+
+		for _, v := range buys {
+			log.Info(v.Qty, v.Rate)
+		}
+	}
+
+	{
+		jsonFile, err := os.Open("./ui/uidex/ordersells.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &sells)
+
+		for _, v := range sells {
+			log.Info(v.Qty, v.Rate)
+		}
+	}
+
+	pg.depthChart = NewDepthChart(buys, sells, depthChartStyle)
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -343,7 +385,7 @@ func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Di
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			gtx.Constraints.Min.Y = 220
 			return layout.Center.Layout(gtx, func(gtx C) D {
-				return pg.theme.H5("1.00").Layout(gtx)
+				return pg.depthChart.Layout(gtx)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
