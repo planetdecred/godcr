@@ -4,7 +4,10 @@ import (
 	"image/color"
 	"strconv"
 
+	"gioui.org/f32"
 	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -32,8 +35,8 @@ const (
 )
 
 var (
-	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
-	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 180}
+	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 100}
 )
 
 type NavHandler struct {
@@ -46,11 +49,19 @@ type NavHandler struct {
 
 type MainPage struct {
 	*load.Load
-	appBarNavItems          []NavHandler
-	drawerNavItems          []NavHandler
-	isNavDrawerMinimized    bool
+	appBarNavItems []NavHandler
+	drawerNavItems []NavHandler
+
+	axis      layout.Axis
+	textSize  unit.Value
+	leftInset unit.Value
+	width     unit.Value
+	alignment layout.Alignment
+	direction layout.Direction
+
 	minimizeNavDrawerButton decredmaterial.IconButton
 	maximizeNavDrawerButton decredmaterial.IconButton
+	activeDrawerBtn         decredmaterial.IconButton
 
 	autoSync bool
 
@@ -89,6 +100,8 @@ func NewMainPage(l *load.Load) *MainPage {
 
 	iconColor := l.Theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
+
+	mp.defaultNavDims()
 
 	mp.initNavItems()
 
@@ -263,11 +276,17 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 
 func (mp *MainPage) Handle() {
 	for mp.minimizeNavDrawerButton.Button.Clicked() {
-		mp.isNavDrawerMinimized = true
+		mp.axis = layout.Vertical
+		mp.textSize = values.TextSize12
+		mp.leftInset = values.MarginPadding0
+		mp.width = NavDrawerMinimizedWidth
+		mp.activeDrawerBtn = mp.maximizeNavDrawerButton
+		mp.alignment = layout.Middle
+		mp.direction = layout.Center
 	}
 
 	for mp.maximizeNavDrawerButton.Button.Clicked() {
-		mp.isNavDrawerMinimized = false
+		mp.defaultNavDims()
 	}
 
 	for i := range mp.appBarNavItems {
@@ -314,6 +333,16 @@ func (mp *MainPage) Handle() {
 			mp.changeFragment(pg)
 		}
 	}
+}
+
+func (mp *MainPage) defaultNavDims() {
+	mp.axis = layout.Horizontal
+	mp.textSize = values.TextSize16
+	mp.leftInset = values.MarginPadding15
+	mp.width = NavDrawerWidth
+	mp.activeDrawerBtn = mp.minimizeNavDrawerButton
+	mp.alignment = layout.Start
+	mp.direction = layout.W
 }
 
 func (mp *MainPage) OnClose() {
@@ -393,15 +422,19 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.MatchParent,
+				Orientation: layout.Vertical,
+			}.Layout(gtx,
 				layout.Rigid(mp.LayoutTopBar),
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							card := mp.Theme.Card()
-							card.Radius = decredmaterial.Radius(0)
-							return card.Layout(gtx, mp.LayoutNavDrawer)
-						}),
+					return decredmaterial.LinearLayout{
+						Width:       decredmaterial.MatchParent,
+						Height:      decredmaterial.MatchParent,
+						Orientation: layout.Horizontal,
+					}.Layout(gtx,
+						layout.Rigid(mp.LayoutNavDrawer),
 						layout.Rigid(func(gtx C) D {
 							if mp.currentPage == nil {
 								return layout.Dimensions{}
@@ -418,6 +451,34 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 			//TODO: show toasts here
 			return layout.Dimensions{}
 
+		}),
+	)
+}
+
+func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
+				inset := layout.Inset{
+					Top:  values.MarginPadding3,
+					Left: values.MarginPadding8,
+				}
+				border := widget.Border{Color: mp.Theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				return inset.Layout(gtx, func(gtx C) D {
+					padding := layout.Inset{
+						Top:    values.MarginPadding3,
+						Bottom: values.MarginPadding3,
+						Left:   values.MarginPadding6,
+						Right:  values.MarginPadding6,
+					}
+					return border.Layout(gtx, func(gtx C) D {
+						return padding.Layout(gtx, func(gtx C) D {
+							return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
+						})
+					})
+				})
+			}
+			return D{}
 		}),
 	)
 }
@@ -509,103 +570,87 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
-				inset := layout.Inset{
-					Top:  values.MarginPadding3,
-					Left: values.MarginPadding8,
-				}
-				border := widget.Border{Color: mp.Theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
-				return inset.Layout(gtx, func(gtx C) D {
-					padding := layout.Inset{
-						Top:    values.MarginPadding3,
-						Bottom: values.MarginPadding3,
-						Left:   values.MarginPadding6,
-						Right:  values.MarginPadding6,
-					}
-					return border.Layout(gtx, func(gtx C) D {
-						return padding.Layout(gtx, func(gtx C) D {
-							return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
-						})
-					})
-				})
-			}
-			return D{}
-		}),
-	)
-}
-
 func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
-			list := layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
-				background := mp.Theme.Color.Surface
-				if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-					background = mp.Theme.Color.ActiveGray
-				}
-				txt := mp.Theme.Label(values.TextSize16, mp.drawerNavItems[i].Title)
-				return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
-					return mp.layoutCard(gtx, background, func(gtx C) D {
-						return components.Container{
-							Padding: layout.Inset{
-								Top:    values.MarginPadding16,
-								Right:  values.MarginPadding24,
-								Bottom: values.MarginPadding16,
-								Left:   values.MarginPadding24,
-							},
-						}.Layout(gtx, func(gtx C) D {
-							axis := layout.Horizontal
-							leftInset := values.MarginPadding15
-							width := NavDrawerWidth
-							if mp.isNavDrawerMinimized {
-								axis = layout.Vertical
-								txt.TextSize = values.TextSize10
-								leftInset = values.MarginPadding0
-								width = NavDrawerMinimizedWidth
-							}
+			return decredmaterial.LinearLayout{
+				Width:       gtx.Px(mp.width),
+				Height:      decredmaterial.MatchParent,
+				Background:  mp.Theme.Color.Surface,
+				Orientation: mp.axis,
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					list := layout.List{Axis: layout.Vertical}
+					return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
+						background := mp.Theme.Color.Surface
+						if mp.drawerNavItems[i].PageID == mp.currentPageID() {
+							background = mp.Theme.Color.ActiveGray
+						}
 
-							gtx.Constraints.Min.X = gtx.Px(width)
-							return layout.Flex{Axis: axis}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									img := mp.drawerNavItems[i].ImageInactive
-									if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-										img = mp.drawerNavItems[i].Image
-									}
-									return layout.Center.Layout(gtx, func(gtx C) D {
-										img.Scale = 1.0
-										return img.Layout(gtx)
-									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: leftInset,
-										Top:  values.MarginPadding4,
-									}.Layout(gtx, func(gtx C) D {
-										textColor := mp.Theme.Color.Gray4
-										if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-											textColor = mp.Theme.Color.DeepBlue
-										}
-										txt.Color = textColor
-										return layout.Center.Layout(gtx, txt.Layout)
-									})
-								}),
-							)
-						})
+						return layout.Stack{Alignment: layout.Center}.Layout(gtx,
+							layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+								rr := float32(gtx.Px(values.MarginPadding0))
+								clip.UniformRRect(f32.Rectangle{Max: f32.Point{
+									X: float32(gtx.Constraints.Min.X),
+									Y: float32(gtx.Constraints.Min.Y),
+								}}, rr).Add(gtx.Ops)
+								switch {
+								case gtx.Queue == nil:
+									background = decredmaterial.Disabled(background)
+								case mp.drawerNavItems[i].Clickable.Hovered():
+									background = decredmaterial.Hovered(mp.Theme.Color.ActiveGray)
+								}
+								paint.Fill(gtx.Ops, background)
+								return layout.Dimensions{Size: gtx.Constraints.Min}
+							}),
+							layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+								txt := mp.Theme.Label(mp.textSize, mp.drawerNavItems[i].Title)
+
+								gtx.Constraints.Min.X = gtx.Px(mp.width)
+								return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
+									return decredmaterial.LinearLayout{
+										Orientation: mp.axis,
+										Width:       gtx.Px(mp.width),
+										Height:      decredmaterial.WrapContent,
+										Padding:     layout.UniformInset(values.MarginPadding15),
+										Alignment:   mp.alignment,
+										Direction:   mp.direction,
+									}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											img := mp.drawerNavItems[i].ImageInactive
+
+											if mp.drawerNavItems[i].PageID == mp.currentPageID() {
+												img = mp.drawerNavItems[i].Image
+											}
+
+											img.Scale = 1.0
+											return img.Layout(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{
+												Left: mp.leftInset,
+												Top:  values.MarginPadding4,
+											}.Layout(gtx, func(gtx C) D {
+												textColor := mp.Theme.Color.Gray4
+												if mp.drawerNavItems[i].PageID == mp.currentPageID() {
+													textColor = mp.Theme.Color.DeepBlue
+												}
+												txt.Color = textColor
+												return txt.Layout(gtx)
+											})
+										}),
+									)
+								})
+							}),
+						)
 					})
-				})
-			})
+				}),
+			)
 		}),
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := mp.minimizeNavDrawerButton
-				if mp.isNavDrawerMinimized {
-					btn = mp.maximizeNavDrawerButton
-				}
-				return btn.Layout(gtx)
+				return mp.activeDrawerBtn.Layout(gtx)
 			})
 		}),
 	)
