@@ -7,12 +7,33 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
-	"github.com/planetdecred/godcr/ui/values"
 )
 
 const AboutPageID = "About"
 
+type unclickableRow struct {
+	leftWidget  decredmaterial.Label
+	rightWidget decredmaterial.Label
+}
+
+type clickableLicense struct {
+	clickable   *widget.Clickable
+	leftWidget  decredmaterial.Label
+	rightWidget *widget.Icon
+}
+
 type AboutPage struct {
+	*load.Load
+	container    *layout.List
+	card         decredmaterial.Card
+	versionRow   unclickableRow
+	buildDateRow unclickableRow
+	networkRow   unclickableRow
+	licenseRow   clickableLicense
+	backButton   decredmaterial.IconButton
+}
+
+/*type AboutPage struct {
 	*load.Load
 	card      decredmaterial.Card
 	container *layout.List
@@ -30,28 +51,44 @@ type AboutPage struct {
 
 	backButton decredmaterial.IconButton
 }
+*/
 
-func NewAboutPage(l *load.Load) *AboutPage {
+func NewAboutPage2(l *load.Load) *AboutPage {
+	versionRow := unclickableRow{
+		leftWidget:  l.Theme.Body1("Version"),
+		rightWidget: l.Theme.Body1("v1.5.2"),
+	}
+
+	buildDateRow := unclickableRow{
+		leftWidget:  l.Theme.Body1("Build date"),
+		rightWidget: l.Theme.Body1("2020-09-10"),
+	}
+
+	networkRow := unclickableRow{
+		leftWidget:  l.Theme.Body1("Network"),
+		rightWidget: l.Theme.Body1(l.WL.Wallet.Net),
+	}
+
+	licenseRow := clickableLicense{
+		clickable:   new(widget.Clickable),
+		leftWidget:  l.Theme.Body1("License"),
+		rightWidget: l.Icons.ChevronRight,
+	}
 	pg := &AboutPage{
-		Load:             l,
-		card:             l.Theme.Card(),
-		container:        &layout.List{Axis: layout.Vertical},
-		version:          l.Theme.Body1("Version"),
-		versionValue:     l.Theme.Body1("v1.5.2"),
-		buildDate:        l.Theme.Body1("Build date"),
-		buildDateValue:   l.Theme.Body1("2020-09-10"),
-		network:          l.Theme.Body1("Network"),
-		networkValue:     l.Theme.Body1(l.WL.Wallet.Net),
-		license:          l.Theme.Body1("License"),
-		licenseRow:       new(widget.Clickable),
-		chevronRightIcon: l.Icons.ChevronRight,
+		Load:         l,
+		card:         l.Theme.Card(),
+		container:    &layout.List{Axis: layout.Vertical},
+		versionRow:   versionRow,
+		buildDateRow: buildDateRow,
+		networkRow:   networkRow,
+		licenseRow:   licenseRow,
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.versionValue.Color = pg.Theme.Color.Gray
-	pg.buildDateValue.Color = pg.Theme.Color.Gray
-	pg.networkValue.Color = pg.Theme.Color.Gray
-	pg.chevronRightIcon.Color = pg.Theme.Color.Gray
+	pg.versionRow.rightWidget.Color = pg.Theme.Color.Gray
+	pg.buildDateRow.rightWidget.Color = pg.Theme.Color.Gray
+	pg.networkRow.rightWidget.Color = pg.Theme.Color.Gray
+	pg.licenseRow.rightWidget.Color = pg.Theme.Color.Gray
 
 	return pg
 }
@@ -64,7 +101,7 @@ func (pg *AboutPage) OnResume() {
 
 }
 
-func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
+/*func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := components.SubPage{
 			Load:       pg.Load,
@@ -84,8 +121,9 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	return components.UniformPadding(gtx, body)
 }
+*/
 
-func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
+/*func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	w := []func(gtx C) D{
 		func(gtx C) D {
 			return components.EndToEndRow(gtx, pg.version.Layout, pg.versionValue.Layout)
@@ -135,11 +173,12 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 		})
 	})
 }
+*/
 
 func (pg *AboutPage) Handle() {
-	if pg.licenseRow.Clicked() {
+	/*if pg.licenseRow.Clicked() {
 		pg.ChangeFragment(NewLicensePage(pg.Load))
-	}
+	}*/
 }
 
 func (pg *AboutPage) OnClose() {}
