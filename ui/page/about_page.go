@@ -101,7 +101,7 @@ func (pg *AboutPage) OnResume() {
 
 }
 
-/*func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		page := components.SubPage{
 			Load:       pg.Load,
@@ -112,7 +112,7 @@ func (pg *AboutPage) OnResume() {
 			},
 			Body: func(gtx C) D {
 				return pg.card.Layout(gtx, func(gtx C) D {
-					return pg.layoutRows(gtx)
+					return pg.Layout(gtx)
 				})
 			},
 		}
@@ -121,7 +121,6 @@ func (pg *AboutPage) OnResume() {
 
 	return components.UniformPadding(gtx, body)
 }
-*/
 
 /*func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	w := []func(gtx C) D{
