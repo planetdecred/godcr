@@ -63,10 +63,10 @@ type Theme struct {
 		Gray2        color.NRGBA
 		Gray3        color.NRGBA
 
-		ChartSellLine color.NRGBA // '#99302b',
-		ChartBuyLine  color.NRGBA // '#207a46',
-		ChartSellFill color.NRGBA // '#bd5959',
-		ChartBuyFill  color.NRGBA // '#4cad75',
+		ChartSellLine color.NRGBA
+		ChartBuyLine  color.NRGBA
+		ChartSellFill color.NRGBA
+		ChartBuyFill  color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon

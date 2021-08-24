@@ -6,7 +6,6 @@ import (
 	"image"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
 
 	"decred.org/dcrdex/client/core"
@@ -19,6 +18,7 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/uidex/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/sqweek/dialog"
 )
@@ -62,6 +62,8 @@ type marketsPage struct {
 	certName       string
 
 	drawerNavItems []*drawerNav
+	depthChart     components.DepthChart
+	tradeForm      *components.TradeFormWidget
 
 	appPassword      decredmaterial.Editor
 	appPasswordAgain decredmaterial.Editor
@@ -95,14 +97,10 @@ type marketsPage struct {
 	walletActionWidgets map[string]*walletActionWidget
 	walletActionInfo    *walletActionInfo
 
-	rateField   decredmaterial.Editor
-	lotField    decredmaterial.Editor
-	qtyField    decredmaterial.Editor
-	reviewOrder decredmaterial.Button
 	submit      decredmaterial.Button
+	cancelOrder decredmaterial.Button
 
 	maxOrderEstimate **dexc.MaxOrderEstimate
-	depthChart       DepthChart
 }
 
 func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
@@ -171,24 +169,11 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 		}
 	}
 
-	pg.rateField = common.theme.Editor(new(widget.Editor), "Price")
-	pg.rateField.Editor.SingleLine = true
-	pg.rateField.Editor.SetText("0")
-	pg.lotField = common.theme.Editor(new(widget.Editor), "Lots")
-	pg.lotField.Editor.SingleLine = true
-	pg.qtyField = common.theme.Editor(new(widget.Editor), "DCR")
-	pg.qtyField.Editor.SingleLine = true
-	pg.reviewOrder = d.theme.Button(new(widget.Clickable), "")
-	pg.reviewOrder.Background = d.theme.Color.Success
 	pg.submit = d.theme.Button(new(widget.Clickable), "")
 	pg.submit.Background = d.theme.Color.Success
+	pg.cancelOrder = d.theme.Button(new(widget.Clickable), "Cancel")
+	pg.cancelOrder.Background = d.theme.Color.Gray1
 
-	depthChartStyle := depthChartStyle{
-		strokeBuyColor:  d.theme.Color.ChartBuyLine,
-		fillBuyColor:    d.theme.Color.ChartBuyFill,
-		strokeSellColor: d.theme.Color.ChartSellLine,
-		fillSellColor:   d.theme.Color.ChartSellFill,
-	}
 	var buys []*core.MiniOrder
 	var sells []*core.MiniOrder
 
@@ -200,10 +185,6 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 		defer jsonFile.Close()
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal(byteValue, &buys)
-
-		for _, v := range buys {
-			log.Info(v.Qty, v.Rate)
-		}
 	}
 
 	{
@@ -214,13 +195,10 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 		defer jsonFile.Close()
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal(byteValue, &sells)
-
-		for _, v := range sells {
-			log.Info(v.Qty, v.Rate)
-		}
 	}
 
-	pg.depthChart = NewDepthChart(buys, sells, depthChartStyle)
+	pg.depthChart = components.NewDepthChart(buys, sells, pg.theme)
+	pg.tradeForm = components.NewTradeFormWidget(pg.theme)
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -395,7 +373,7 @@ func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Di
 			return c.UniformPadding(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return pg.orderFormLayout(gtx, &c)
+						return pg.tradeForm.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return pg.marketBalancesLayout(gtx, &c)
@@ -404,56 +382,6 @@ func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Di
 			})
 		}),
 	)
-}
-
-func (pg *marketsPage) orderFormLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
-	inset := layout.Inset{Bottom: values.MarginPadding10}
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return inset.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return inset.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(.2, func(gtx C) D {
-							return pg.theme.Label(values.TextSize14, "Price").Layout(gtx)
-						}),
-						layout.Flexed(.8, func(gtx C) D {
-							txt := fmt.Sprintf("%s/%s", strings.ToUpper((*pg.selectedMaket).marketQuote), strings.ToUpper((*pg.selectedMaket).marketBase))
-							pg.rateField.Hint = txt
-							return pg.rateField.Layout(gtx)
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return inset.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(.2, func(gtx C) D {
-							return pg.theme.Label(values.TextSize14, "Quantity").Layout(gtx)
-						}),
-						layout.Flexed(.8, func(gtx C) D {
-							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-								layout.Flexed(0.4, func(gtx C) D {
-									return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-										return pg.lotField.Layout(gtx)
-									})
-								}),
-								layout.Flexed(0.6, func(gtx C) D {
-									return pg.qtyField.Layout(gtx)
-								}),
-							)
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				pg.reviewOrder.Text = "Place order to buy  DCR"
-				return layout.E.Layout(gtx, func(gtx C) D {
-					return pg.reviewOrder.Layout(gtx)
-				})
-			}),
-		)
-	})
 }
 
 func (pg *marketsPage) marketBalancesLayout(gtx layout.Context, c *pageCommon) layout.Dimensions {
@@ -856,6 +784,9 @@ func (pg *marketsPage) verifyOrderModal(gtx layout.Context, c pageCommon) layout
 		func(gtx C) D {
 			return pg.theme.Label(values.TextSize12, "IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours.").Layout(gtx)
 		},
+		func(gtx C) D {
+			return pg.cancelOrder.Layout(gtx)
+		},
 	}, 900)
 }
 
@@ -921,14 +852,14 @@ func (pg *marketsPage) navItemHandler(gtx layout.Context, navItem *navItem) {
 	}
 }
 
-func (pg *marketsPage) calculateMaxBuy(c *pageCommon) {
-	var rate uint64
-	if s, err := strconv.ParseFloat(pg.rateField.Editor.Text(), 64); err == nil {
-		rate = uint64(s * 1e8)
-	}
+// func (pg *marketsPage) calculateMaxBuy(c *pageCommon) {
+// 	var rate uint64
+// 	if s, err := strconv.ParseFloat(pg.rateField.Editor.Text(), 64); err == nil {
+// 		rate = uint64(s * 1e8)
+// 	}
 
-	c.dexc.MaxBuy((*pg.selectedMaket).host, (*pg.selectedMaket).marketBaseID, (*pg.selectedMaket).marketQuoteID, rate)
-}
+// 	c.dexc.MaxBuy((*pg.selectedMaket).host, (*pg.selectedMaket).marketBaseID, (*pg.selectedMaket).marketQuoteID, rate)
+// }
 
 func (pg *marketsPage) calculateMaxSell(c *pageCommon) {
 	// c.dexc.MaxBuy(form *dexc.NewWalletForm, errChan chan error)
@@ -936,6 +867,12 @@ func (pg *marketsPage) calculateMaxSell(c *pageCommon) {
 
 func (pg *marketsPage) handle(common pageCommon) {
 	pg.initDrawerNavItems(&common)
+
+	pg.tradeForm.SetMarketBase((*pg.selectedMaket).marketBase).
+		SetMarketBaseID((*pg.selectedMaket).marketBaseID).
+		SetMarketQuote((*pg.selectedMaket).marketQuote).
+		SetMarketQuoteID((*pg.selectedMaket).marketQuoteID).
+		SetHost((*pg.selectedMaket).host)
 
 	if pg.createPassword.Button.Clicked() {
 		if pg.appPasswordAgain.Editor.Text() != pg.appPassword.Editor.Text() {
@@ -1019,35 +956,36 @@ func (pg *marketsPage) handle(common pageCommon) {
 		*common.switchView = values.WalletView
 	}
 
-	if pg.reviewOrder.Button.Clicked() {
+	if pg.tradeForm.ShowVerifyOrder() {
 		pg.showVerifyOrder = true
 	}
 
 	if pg.submit.Button.Clicked() {
-		form := dexc.TradeForm{
-			Pass: []byte(pg.appPassword.Editor.Text()),
-			Order: &core.TradeForm{
-				Host:    (*pg.selectedMaket).host,
-				Base:    (*pg.selectedMaket).marketBaseID,
-				Quote:   (*pg.selectedMaket).marketQuoteID,
-				Qty:     1 * 1e8,
-				Rate:    1 * 1e8,
-				IsLimit: true,
-				Sell:    false,
-				TifNow:  false,
-			},
+		err, tradeform := pg.tradeForm.TradeForm()
+		if err != nil {
+			log.Error(err)
 		}
+
+		form := dexc.TradeForm{
+			Pass:  []byte(pg.appPassword.Editor.Text()),
+			Order: tradeform,
+		}
+
 		common.dexc.Trade(&form, pg.errSubmitTradeChan)
 	}
 
-	for _, evt := range pg.rateField.Editor.Events() {
-		if pg.rateField.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				pg.calculateMaxBuy(&common)
-			}
-		}
+	if pg.cancelOrder.Button.Clicked() {
+		pg.showVerifyOrder = false
 	}
+
+	// for _, evt := range pg.rateField.Editor.Events() {
+	// 	if pg.rateField.Editor.Focused() {
+	// 		switch evt.(type) {
+	// 		case widget.ChangeEvent:
+	// 			pg.calculateMaxBuy(&common)
+	// 		}
+	// 	}
+	// }
 
 	select {
 	case err := <-pg.errInitappChan:

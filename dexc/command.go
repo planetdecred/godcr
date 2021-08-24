@@ -198,8 +198,7 @@ func (d *Dexc) MaxBuy(host string, base, quote uint32, rate uint64) {
 
 func (d *Dexc) Trade(form *TradeForm, errChan chan error) {
 	go func() {
-		var resp Response
-		_, err := d.core.Trade(form.Pass, form.Order)
+		order, err := d.core.Trade(form.Pass, form.Order)
 		if err != nil {
 			go func() {
 				errChan <- err
@@ -207,7 +206,7 @@ func (d *Dexc) Trade(form *TradeForm, errChan chan error) {
 
 			return
 		}
-
-		d.Send <- resp
+		log.Info("Place order success", order.BaseID, order.Qty)
+		errChan <- nil
 	}()
 }
