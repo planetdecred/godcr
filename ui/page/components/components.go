@@ -208,7 +208,20 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								status.Color = l.Theme.Color.Gray4
 								status.Text = FormatDateOrTime(row.Transaction.Timestamp)
 							}
-							return layout.E.Layout(gtx, status.Layout)
+							return layout.E.Layout(gtx, func(gtx C) D {
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(status.Layout),
+									layout.Rigid(func(gtx C) D {
+										if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
+											daysToVoteOrRevoke := l.Theme.Label(values.TextSize14, fmt.Sprintf("%d days", row.Transaction.DaysToVoteOrRevoke))
+											daysToVoteOrRevoke.Color = l.Theme.Color.Gray
+											return daysToVoteOrRevoke.Layout(gtx)
+										}
+
+										return D{}
+									}),
+								)
+							})
 						})
 				}),
 				layout.Rigid(func(gtx C) D {
