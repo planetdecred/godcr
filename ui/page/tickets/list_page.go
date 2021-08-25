@@ -2,6 +2,7 @@ package tickets
 
 import (
 	"context"
+	"fmt"
 	"image/color"
 
 	"gioui.org/layout"
@@ -23,7 +24,7 @@ type ListPage struct {
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	tickets      []load.Ticket
+	tickets      []Ticket
 	ticketsList  layout.List
 	filterSorter int
 	isGridView   bool
@@ -55,7 +56,6 @@ func newListPage(l *load.Load) *ListPage {
 		{Text: "Immature"},
 		{Text: "Live"},
 		{Text: "Voted"},
-		{Text: "Expired"},
 		{Text: "Revoked"},
 	}, 1)
 
@@ -99,18 +99,18 @@ func (pg *ListPage) listenForTxNotifications() {
 
 func (pg *ListPage) fetchTickets() {
 	var txFilter int32
-	switch pg.ticketTypeDropDown.Selected() {
-	case "All":
+	switch pg.ticketTypeDropDown.SelectedIndex() {
+	case 0:
 		txFilter = dcrlibwallet.TxFilterStaking
-	case "Immature":
+	case 1:
+		txFilter = dcrlibwallet.TxFilterUnmined
+	case 2:
 		txFilter = dcrlibwallet.TxFilterImmature
-	case "Live":
+	case 3:
 		txFilter = dcrlibwallet.TxFilterLive
-	case "Voted":
+	case 4:
 		txFilter = dcrlibwallet.TxFilterVoted
-	case "Expired":
-		txFilter = dcrlibwallet.TxFilterExpired
-	case "Revoked":
+	case 5:
 		txFilter = dcrlibwallet.TxFilterRevoked
 	default:
 		return
@@ -118,10 +118,11 @@ func (pg *ListPage) fetchTickets() {
 
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 	selectedWalletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
-	tickets, err := pg.WL.GetTickets(selectedWalletID, txFilter, newestFirst)
+	tickets, err := getTickets(pg.WL.MultiWallet, selectedWalletID, txFilter, newestFirst)
 	if err != nil {
 		pg.Toast.NotifyError(err.Error())
 	} else {
+		fmt.Printf("ticket length %v  filter %v\n", len(tickets), txFilter)
 		pg.tickets = tickets
 	}
 }

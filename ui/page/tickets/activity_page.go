@@ -16,7 +16,7 @@ const ActivityPageID = "TicketsActivity"
 
 type ActivityPage struct {
 	*load.Load
-	tickets      []load.Ticket
+	tickets      []Ticket
 	ticketsList  layout.List
 	filterSorter int
 

@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"math"
 	"strings"
+	"time"
 
 	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/unit"
 
+	"github.com/decred/dcrd/dcrutil"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -42,6 +46,111 @@ var (
 	durationDesc  = ""
 )
 
+type Ticket struct {
+	Status     string
+	Fee        string
+	Amount     string
+	DateTime   string
+	MonthDay   string
+	DaysBehind string
+	WalletName string
+
+	timestamp int64
+}
+
+const (
+	StakingLive     = "LIVE"
+	StakingUnmined  = "UNMINED"
+	StakingImmature = "IMMATURE"
+	StakingRevoked  = "REVOKED"
+	StakingVoted    = "VOTED"
+)
+
+func calculateDaysBehind(lastHeaderTime int64) string {
+	diff := time.Since(time.Unix(lastHeaderTime, 0))
+	daysBehind := int(math.Round(diff.Hours() / 24))
+	if daysBehind < 1 {
+		return "<1 day"
+	} else if daysBehind == 1 {
+		return "1 day"
+	} else {
+		return fmt.Sprintf("%d days", daysBehind)
+	}
+}
+
+func transactionToTicket(tx dcrlibwallet.Transaction, walletName string, maturity, bestBlock int32) Ticket {
+	return Ticket{
+		Status:     getTicketStatus(tx, maturity, bestBlock),
+		Amount:     dcrutil.Amount(tx.Amount).String(),
+		DateTime:   time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
+		MonthDay:   time.Unix(tx.Timestamp, 0).Format("Jan 2"),
+		DaysBehind: calculateDaysBehind(tx.Timestamp),
+		Fee:        dcrutil.Amount(tx.Fee).String(),
+		WalletName: walletName,
+		timestamp:  tx.Timestamp,
+	}
+}
+
+func transactionsToTickets(txs []dcrlibwallet.Transaction, walletName string, maturity, bestBlock int32) []Ticket {
+	var tickets []Ticket
+	for _, tx := range txs {
+		tickets = append(tickets, transactionToTicket(tx, walletName, maturity, bestBlock))
+	}
+
+	return tickets
+}
+
+func getTicketStatus(txn dcrlibwallet.Transaction, ticketMaturity, bestBlock int32) string {
+	s := txn.TicketStatus(ticketMaturity, bestBlock)
+	if s == "" {
+		fmt.Printf("ticket status %v  type %v\n \n", s == "", txn.Type)
+	}
+
+	switch s {
+	case dcrlibwallet.TicketStatusUnmined:
+		return StakingUnmined
+	case dcrlibwallet.TicketStatusImmature:
+		return StakingImmature
+	case dcrlibwallet.TicketStatusLive:
+		return StakingLive
+	case dcrlibwallet.TicketStatusVotedOrRevoked:
+		if txn.Type == dcrlibwallet.TxTypeVote {
+			return StakingVoted
+		} else if txn.Type == dcrlibwallet.TxTypeRevocation {
+			return StakingRevoked
+		}
+	}
+
+	return ""
+}
+
+func getTickets(mw *dcrlibwallet.MultiWallet, walletID int, txFilter int32, newestFirst bool) ([]Ticket, error) {
+	w := mw.WalletWithID(walletID)
+	txs, err := w.GetTransactionsRaw(0, 0, txFilter, newestFirst)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("best block %v \n", mw.GetBestBlock().Height)
+	return transactionsToTickets(txs, w.Name, mw.TicketMaturity(), mw.GetBestBlock().Height), nil
+}
+
+func allLiveTickets(wallets []*dcrlibwallet.Wallet, ticketMaturity, bestBlock int32) []Ticket {
+	var tickets []Ticket
+	liveTicketFilters := []int32{dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
+	for _, w := range wallets {
+		for _, filter := range liveTicketFilters {
+			tx, err := w.GetTransactionsRaw(0, 0, filter, true)
+			if err != nil {
+				return tickets
+			}
+			tickets = append(tickets, transactionsToTickets(tx, w.Name, ticketMaturity, bestBlock)...)
+		}
+	}
+
+	return tickets
+}
+
 func ticketStatusProfile(l *load.Load, ticketStatus string) *struct {
 	icon       *decredmaterial.Image
 	color      color.NRGBA
@@ -52,22 +161,22 @@ func ticketStatusProfile(l *load.Load, ticketStatus string) *struct {
 		color      color.NRGBA
 		background color.NRGBA
 	}{
-		"UNMINED": {
+		StakingUnmined: {
 			l.Icons.TicketUnminedIcon,
 			l.Theme.Color.DeepBlue,
 			l.Theme.Color.LightBlue,
 		},
-		"IMMATURE": {
+		StakingImmature: {
 			l.Icons.TicketImmatureIcon,
 			l.Theme.Color.DeepBlue,
 			l.Theme.Color.LightBlue,
 		},
-		"LIVE": {
+		StakingLive: {
 			l.Icons.TicketLiveIcon,
 			l.Theme.Color.Primary,
 			l.Theme.Color.LightBlue,
 		},
-		"VOTED": {
+		StakingVoted: {
 			l.Icons.TicketVotedIcon,
 			l.Theme.Color.Success,
 			l.Theme.Color.Success2,
@@ -82,7 +191,7 @@ func ticketStatusProfile(l *load.Load, ticketStatus string) *struct {
 			l.Theme.Color.Gray,
 			l.Theme.Color.LightGray,
 		},
-		"REVOKED": {
+		StakingRevoked: {
 			l.Icons.TicketRevokedIcon,
 			l.Theme.Color.Orange,
 			l.Theme.Color.Orange2,
@@ -188,12 +297,13 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, t load.Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+func ticketCard(gtx layout.Context, l *load.Load, t Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
 	var itemWidth int
 	st := ticketStatusProfile(l, t.Status)
 	if st == nil {
 		return layout.Dimensions{}
 	}
+
 	return l.Theme.Shadow().Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -359,7 +469,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t load.Ticket, tooltip *decred
 }
 
 // ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
-func ticketActivityRow(gtx layout.Context, l *load.Load, t load.Ticket, index int) layout.Dimensions {
+func ticketActivityRow(gtx layout.Context, l *load.Load, t Ticket, index int) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {

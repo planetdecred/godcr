@@ -2,13 +2,13 @@ package tickets
 
 import (
 	"fmt"
+	"github.com/decred/dcrd/dcrutil"
 	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -40,7 +40,7 @@ type Page struct {
 	ticketTooltips      []tooltips
 
 	stakingOverview *dcrlibwallet.StakingOverview
-	liveTickets     []load.Ticket
+	liveTickets     []Ticket
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -76,13 +76,17 @@ func (pg *Page) ID() string {
 
 func (pg *Page) OnResume() {
 	pg.ticketPrice = dcrutil.Amount(pg.WL.TicketPrice()).String()
-	pg.stakingOverview = pg.WL.StakingOverviewAllWallets()
-
-	lt, err := pg.WL.AllLiveTickets()
-	if err != nil {
-		pg.Toast.NotifyError(err.Error())
-	}
-	pg.liveTickets = lt
+	go func() {
+		overview, err := pg.WL.MultiWallet.StakingOverview()
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+		}
+		pg.stakingOverview = overview
+	}()
+	go func() {
+		mw := pg.WL.MultiWallet
+		pg.liveTickets = allLiveTickets(mw.AllWallets(), mw.TicketMaturity(), mw.GetBestBlock().Height)
+	}()
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
 	pg.autoPurchaseEnabled.Disabled()
@@ -196,7 +200,6 @@ func (pg *Page) stakingCounts() []struct {
 		{"IMMATURE", pg.stakingOverview.Immature},
 		{"LIVE", pg.stakingOverview.Live},
 		{"VOTED", pg.stakingOverview.Voted},
-		{"EXPIRED", pg.stakingOverview.Expired},
 		{"REVOKED", pg.stakingOverview.Revoked},
 	}
 }
@@ -212,7 +215,7 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 						var elements []layout.FlexChild
 						for i := 0; i < len(pg.stakingCounts()); i++ {
 							item := pg.stakingCounts()[i]
-							if item.Status == load.StakingLive || item.Status == load.StakingImmature {
+							if item.Status == StakingLive || item.Status == StakingImmature {
 								elements = append(elements, layout.Rigid(func(gtx C) D {
 									return layout.Inset{Right: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
