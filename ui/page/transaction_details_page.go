@@ -186,19 +186,16 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						amount := strings.Split(dcrutil.Amount(pg.transaction.Amount).String(), " ")
+						amount := dcrutil.Amount(pg.transaction.Amount).String()
 						if pg.transaction.Type == dcrlibwallet.TxTypeMixed {
-							amount = strings.Split(dcrutil.Amount(pg.transaction.MixDenomination).String(), " ")
+							amount = dcrutil.Amount(pg.transaction.MixDenomination).String()
+						} else if pg.transaction.Type == dcrlibwallet.TxTypeRegular && pg.transaction.Direction == dcrlibwallet.TxDirectionSent {
+							amount = "-" + amount
 						}
 						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								amt := amount[0]
-								if pg.transaction.Direction == dcrlibwallet.TxDirectionSent {
-									amt = "-" + amt
-								}
-								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pg.Theme.H4(amt).Layout)
+								return components.LayoutBalanceSize(gtx, pg.Load, amount, values.TextSize34)
 							}),
-							layout.Rigid(pg.Theme.H6(amount[1]).Layout),
 							layout.Rigid(func(gtx C) D {
 								if pg.transaction.Type == dcrlibwallet.TxTypeMixed && pg.transaction.MixCount > 1 {
 

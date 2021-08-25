@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -21,7 +20,6 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
-	"golang.org/x/text/message"
 )
 
 const (
@@ -68,49 +66,6 @@ func UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 		Bottom: values.MarginPadding24,
 		Left:   padding,
 	}.Layout(gtx, body)
-}
-
-// breakBalance takes the balance string and returns it in two slices
-func BreakBalance(p *message.Printer, balance string) (b1, b2 string) {
-	var isDecimal = true
-	balanceParts := strings.Split(balance, ".")
-	if len(balanceParts) == 1 {
-		isDecimal = false
-		balanceParts = strings.Split(balance, " ")
-	}
-
-	b1 = balanceParts[0]
-	if bal, err := strconv.Atoi(b1); err == nil {
-		b1 = p.Sprint(bal)
-	}
-
-	b2 = balanceParts[1]
-	if isDecimal {
-		b1 = b1 + "." + b2[:2]
-		b2 = b2[2:]
-		return
-	}
-	b2 = " " + b2
-	return
-}
-
-// LayoutBalance aligns the main and sub DCR balances horizontally, putting the sub
-// balance at the baseline of the row.
-func LayoutBalance(gtx layout.Context, l *load.Load, amount string) layout.Dimensions {
-	// todo: make "DCR" symbols small when there are no decimals in the balance
-	mainText, subText := BreakBalance(l.Printer, amount)
-	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			label := l.Theme.Label(values.TextSize20, mainText)
-			label.Color = l.Theme.Color.DeepBlue
-			return label.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			label := l.Theme.Label(values.TextSize14, subText)
-			label.Color = l.Theme.Color.DeepBlue
-			return label.Layout(gtx)
-		}),
-	)
 }
 
 func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction) (string, *widget.Image) {
