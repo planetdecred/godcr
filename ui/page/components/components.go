@@ -158,25 +158,36 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								return label.Layout(gtx)
 							}
 						}),
-						layout.Rigid(func(gtx C) D {
-							if row.Transaction.Type == dcrlibwallet.TxTypeMixed && row.Transaction.MixCount > 1 {
-
-								label := l.Theme.Label(values.TextSize16, fmt.Sprintf("x%d", row.Transaction.MixCount))
-								label.Color = l.Theme.Color.Gray
-								return layout.Inset{
-									Left: values.MarginPadding4,
-								}.Layout(gtx, label.Layout)
-							}
-							return D{}
-						}),
 					)
 
 				}),
 				layout.Rigid(func(gtx C) D {
-					if row.ShowBadge {
-						return WalletLabel(gtx, l, wal.Name)
-					}
-					return layout.Dimensions{}
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							if row.ShowBadge {
+								return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+									return WalletLabel(gtx, l, wal.Name)
+								})
+							}
+
+							return layout.Dimensions{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
+								mixedDenom := dcrutil.Amount(row.Transaction.MixDenomination).String()
+								return LayoutBalanceSize(gtx, l, mixedDenom, values.TextSize14)
+							}
+							return layout.Dimensions{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							if row.Transaction.Type == dcrlibwallet.TxTypeMixed && row.Transaction.MixCount > 1 {
+								label := l.Theme.Label(values.TextSize14, fmt.Sprintf("x%d", row.Transaction.MixCount))
+								label.Color = l.Theme.Color.Gray
+								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, label.Layout)
+							}
+							return layout.Dimensions{}
+						}),
+					)
 				}),
 			)
 		}),
