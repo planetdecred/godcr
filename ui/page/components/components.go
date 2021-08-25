@@ -13,6 +13,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/unit"
+	"gioui.org/widget"
 
 	"github.com/ararog/timeago"
 	"github.com/decred/dcrd/dcrutil"
@@ -119,6 +120,42 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 
 	wal := l.WL.MultiWallet.WalletWithID(row.Transaction.WalletID)
 
+	var title string
+	var icon *widget.Image
+
+	if row.Transaction.Type == dcrlibwallet.TxTypeRegular {
+		if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
+			icon = l.Icons.SendIcon
+		} else if row.Transaction.Direction == dcrlibwallet.TxDirectionReceived {
+			icon = l.Icons.ReceiveIcon
+		} else if row.Transaction.Direction == dcrlibwallet.TxDirectionTransferred {
+			icon = l.Icons.Transferred
+		}
+	} else if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
+		title = "Mixed"
+		icon = l.Icons.MixedTx
+	} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
+
+		if row.Transaction.Type == dcrlibwallet.TxTypeTicketPurchase {
+			if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterImmature) {
+				title = "Immatute"
+				icon = l.Icons.TicketImmatureIcon
+			} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterLive) {
+				title = "Live"
+				icon = l.Icons.TicketLiveIcon
+			} else {
+				title = "Purchased"
+				icon = l.Icons.TicketPurchasedIcon
+			}
+		} else if row.Transaction.Type == dcrlibwallet.TxTypeVote {
+			title = "Vote"
+			icon = l.Icons.TicketVotedIcon
+		} else if row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
+			title = "Revocation"
+			icon = l.Icons.TicketRevokedIcon
+		}
+	}
+
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Horizontal,
 		Width:       decredmaterial.MatchParent,
@@ -128,11 +165,9 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			icon := l.Icons.ReceiveIcon
-			if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
-				icon = l.Icons.SendIcon
-			}
-			icon.Scale = 1.0
+			width := float32(icon.Src.Size().X)
+			scale := 24.0 / width
+			icon.Scale = scale
 
 			return layout.W.Layout(gtx, icon.Layout)
 		}),
@@ -145,11 +180,17 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 				Direction:   layout.W,
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					amount := dcrutil.Amount(row.Transaction.Amount).String()
-					if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
-						amount = "-" + amount
+					if row.Transaction.Type == dcrlibwallet.TxTypeRegular {
+						amount := dcrutil.Amount(row.Transaction.Amount).String()
+						if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
+							amount = "-" + amount
+						}
+						return LayoutBalance(gtx, l, amount)
+					} else {
+						label := l.Theme.Label(values.TextSize18, title)
+						label.Color = l.Theme.Color.DeepBlue
+						return label.Layout(gtx)
 					}
-					return LayoutBalance(gtx, l, amount)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if row.ShowBadge {
