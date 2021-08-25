@@ -182,7 +182,7 @@ func (pg *OverviewPage) syncDetail(name, status, headersFetched, progress string
 func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		padding := values.MarginPadding15
-		return components.Container{Padding: layout.Inset{Top: padding, Bottom: padding}}.Layout(gtx, func(gtx C) D {
+		return components.Container{Padding: layout.Inset{Top: padding}}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					title := pg.Theme.Body2(values.String(values.StrRecentTransactions))
@@ -197,8 +197,8 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 						message := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
 						message.Color = pg.Theme.Color.Gray2
 						return components.Container{Padding: layout.Inset{
-							Left:   values.MarginPadding16,
-							Bottom: values.MarginPadding3,
+							Left:   values.MarginPadding18,
+							Bottom: values.MarginPadding16,
 							Top:    values.MarginPadding18,
 						}}.Layout(gtx, message.Layout)
 					}
@@ -209,9 +209,25 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 							Index:       i,
 							ShowBadge:   len(pg.allWallets) > 1,
 						}
-						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-							return components.LayoutTransactionRow(gtx, pg.Load, row)
-						})
+
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return components.LayoutTransactionRow(gtx, pg.Load, row)
+							}),
+							layout.Rigid(func(gtx C) D {
+								// No divider for last row
+								if row.Index == len(pg.transactions)-1 {
+									return layout.Dimensions{}
+								}
+
+								gtx.Constraints.Min.X = gtx.Constraints.Max.X
+								separator := pg.Theme.Separator()
+								return layout.E.Layout(gtx, func(gtx C) D {
+									// Show bottom divider for all rows except last
+									return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
+								})
+							}),
+						)
 					})
 				}),
 			)

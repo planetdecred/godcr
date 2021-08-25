@@ -25,6 +25,11 @@ type LinearLayout struct {
 	Direction   layout.Direction
 }
 
+// Layout2 displays a linear layout with a single child.
+func (ll LinearLayout) Layout2(gtx C, wdg layout.Widget) D {
+	return ll.Layout(gtx, layout.Rigid(wdg))
+}
+
 func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 	// draw margin
 	return ll.Margin.Layout(gtx, func(gtx C) D {
