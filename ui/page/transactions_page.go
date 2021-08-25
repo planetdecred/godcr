@@ -62,6 +62,9 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 			Text: values.String(values.StrYourself),
 		},
 		{
+			Text: "Mixed",
+		},
+		{
 			Text: values.String(values.StrStaking),
 		},
 	}, 1)
@@ -95,6 +98,8 @@ func (pg *TransactionsPage) loadTransactions() {
 	case 3:
 		txFilter = dcrlibwallet.TxFilterTransferred
 	case 4:
+		txFilter = dcrlibwallet.TxFilterMixed
+	case 5:
 		txFilter = dcrlibwallet.TxFilterStaking
 	}
 
