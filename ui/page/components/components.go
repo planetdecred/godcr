@@ -16,7 +16,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/ararog/timeago"
-	"github.com/decred/dcrd/dcrutil"
+	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -113,6 +113,49 @@ func LayoutBalance(gtx layout.Context, l *load.Load, amount string) layout.Dimen
 	)
 }
 
+func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction) (string, *widget.Image) {
+	var title string
+	var icon *widget.Image
+
+	if tx.Type == dcrlibwallet.TxTypeRegular {
+		if tx.Direction == dcrlibwallet.TxDirectionSent {
+			title = "Sent"
+			icon = l.Icons.SendIcon
+		} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
+			title = "Received"
+			icon = l.Icons.ReceiveIcon
+		} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
+			title = "Yourself"
+			icon = l.Icons.Transferred
+		}
+	} else if tx.Type == dcrlibwallet.TxTypeMixed {
+		title = "Mixed"
+		icon = l.Icons.MixedTx
+	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
+
+		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
+			if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
+				title = "Immature"
+				icon = l.Icons.TicketImmatureIcon
+			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
+				title = "Live"
+				icon = l.Icons.TicketLiveIcon
+			} else {
+				title = "Purchased"
+				icon = l.Icons.TicketPurchasedIcon
+			}
+		} else if tx.Type == dcrlibwallet.TxTypeVote {
+			title = "Vote"
+			icon = l.Icons.TicketVotedIcon
+		} else if tx.Type == dcrlibwallet.TxTypeRevocation {
+			title = "Revocation"
+			icon = l.Icons.TicketRevokedIcon
+		}
+	}
+
+	return title, icon
+}
+
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
 func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {
@@ -120,41 +163,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 
 	wal := l.WL.MultiWallet.WalletWithID(row.Transaction.WalletID)
 
-	var title string
-	var icon *widget.Image
-
-	if row.Transaction.Type == dcrlibwallet.TxTypeRegular {
-		if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
-			icon = l.Icons.SendIcon
-		} else if row.Transaction.Direction == dcrlibwallet.TxDirectionReceived {
-			icon = l.Icons.ReceiveIcon
-		} else if row.Transaction.Direction == dcrlibwallet.TxDirectionTransferred {
-			icon = l.Icons.Transferred
-		}
-	} else if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
-		title = "Mixed"
-		icon = l.Icons.MixedTx
-	} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
-
-		if row.Transaction.Type == dcrlibwallet.TxTypeTicketPurchase {
-			if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterImmature) {
-				title = "Immatute"
-				icon = l.Icons.TicketImmatureIcon
-			} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterLive) {
-				title = "Live"
-				icon = l.Icons.TicketLiveIcon
-			} else {
-				title = "Purchased"
-				icon = l.Icons.TicketPurchasedIcon
-			}
-		} else if row.Transaction.Type == dcrlibwallet.TxTypeVote {
-			title = "Vote"
-			icon = l.Icons.TicketVotedIcon
-		} else if row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
-			title = "Revocation"
-			icon = l.Icons.TicketRevokedIcon
-		}
-	}
+	title, icon := TransactionTitleIcon(l, wal, &row.Transaction)
 
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Horizontal,
@@ -180,17 +189,33 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 				Direction:   layout.W,
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if row.Transaction.Type == dcrlibwallet.TxTypeRegular {
-						amount := dcrutil.Amount(row.Transaction.Amount).String()
-						if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
-							amount = "-" + amount
-						}
-						return LayoutBalance(gtx, l, amount)
-					} else {
-						label := l.Theme.Label(values.TextSize18, title)
-						label.Color = l.Theme.Color.DeepBlue
-						return label.Layout(gtx)
-					}
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							if row.Transaction.Type == dcrlibwallet.TxTypeRegular {
+								amount := dcrutil.Amount(row.Transaction.Amount).String()
+								if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
+									amount = "-" + amount
+								}
+								return LayoutBalance(gtx, l, amount)
+							} else {
+								label := l.Theme.Label(values.TextSize18, title)
+								label.Color = l.Theme.Color.DeepBlue
+								return label.Layout(gtx)
+							}
+						}),
+						layout.Rigid(func(gtx C) D {
+							if row.Transaction.Type == dcrlibwallet.TxTypeMixed && row.Transaction.MixCount > 1 {
+
+								label := l.Theme.Label(values.TextSize16, fmt.Sprintf("x%d", row.Transaction.MixCount))
+								label.Color = l.Theme.Color.Gray
+								return layout.Inset{
+									Left: values.MarginPadding4,
+								}.Layout(gtx, label.Layout)
+							}
+							return D{}
+						}),
+					)
+
 				}),
 				layout.Rigid(func(gtx C) D {
 					if row.ShowBadge {

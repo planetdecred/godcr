@@ -38,6 +38,7 @@ type TransactionDetailsPage struct {
 	infoButton                      decredmaterial.IconButton
 	gtx                             *layout.Context
 
+	txnWidgets  transactionWdg
 	transaction *dcrlibwallet.Transaction
 	wallet      *dcrlibwallet.Wallet
 
@@ -102,6 +103,8 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		}
 	}
 
+	pg.txnWidgets = initTxnWidgets(pg.Load, pg.transaction)
+
 	return pg
 }
 
@@ -121,7 +124,7 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
-			Title:      dcrlibwallet.TransactionDirectionName(pg.transaction.Direction),
+			Title:      pg.txnWidgets.title,
 			BackButton: pg.backButton,
 			InfoButton: pg.infoButton,
 			Back: func() {
@@ -172,19 +175,21 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {
-	txnWidgets := initTxnWidgets(pg.Load, pg.transaction)
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
 					Right: values.MarginPadding15,
 					Top:   values.MarginPadding10,
-				}.Layout(gtx, txnWidgets.direction.Layout)
+				}.Layout(gtx, pg.txnWidgets.icon.Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						amount := strings.Split(dcrutil.Amount(pg.transaction.Amount).String(), " ")
+						if pg.transaction.Type == dcrlibwallet.TxTypeMixed {
+							amount = strings.Split(dcrutil.Amount(pg.transaction.MixDenomination).String(), " ")
+						}
 						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								amt := amount[0]
@@ -194,6 +199,17 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 								return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pg.Theme.H4(amt).Layout)
 							}),
 							layout.Rigid(pg.Theme.H6(amount[1]).Layout),
+							layout.Rigid(func(gtx C) D {
+								if pg.transaction.Type == dcrlibwallet.TxTypeMixed && pg.transaction.MixCount > 1 {
+
+									label := pg.Theme.H5(fmt.Sprintf("x%d", pg.transaction.MixCount))
+									label.Color = pg.theme.Color.Gray
+									return layout.Inset{
+										Left: values.MarginPadding8,
+									}.Layout(gtx, label.Layout)
+								}
+								return D{}
+							}),
 						)
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -202,8 +218,8 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 							Top:    m,
 							Bottom: m,
 						}.Layout(gtx, func(gtx C) D {
-							txnWidgets.time.Color = pg.Theme.Color.Gray
-							return txnWidgets.time.Layout(gtx)
+							pg.txnWidgets.time.Color = pg.Theme.Color.Gray
+							return pg.txnWidgets.time.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
@@ -212,7 +228,7 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 								return layout.Inset{
 									Right: values.MarginPadding4,
 									Top:   values.MarginPadding4,
-								}.Layout(gtx, txnWidgets.statusIcon.Layout)
+								}.Layout(gtx, pg.txnWidgets.confirmationIcons.Layout)
 							}),
 							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 								txt := pg.Theme.Body1("")

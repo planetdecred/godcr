@@ -18,8 +18,9 @@ import (
 const TransactionsPageID = "Transactions"
 
 type transactionWdg struct {
-	statusIcon           *widget.Image
-	direction            *widget.Image
+	confirmationIcons    *widget.Image
+	icon                 *widget.Image
+	title                string
 	time, status, wallet decredmaterial.Label
 }
 
@@ -240,25 +241,23 @@ func (pg *TransactionsPage) OnClose() {
 func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {
 
 	var txn transactionWdg
+	wal := l.WL.MultiWallet.WalletWithID(transaction.WalletID)
+
 	t := time.Unix(transaction.Timestamp, 0).UTC()
 	txn.time = l.Theme.Body1(t.Format(time.UnixDate))
 	txn.status = l.Theme.Body1("")
-	txn.wallet = l.Theme.Body2(l.WL.MultiWallet.WalletWithID(transaction.WalletID).Name)
+	txn.wallet = l.Theme.Body2(wal.Name)
 
 	if components.TxConfirmations(l, *transaction) > 1 {
 		txn.status.Text = components.FormatDateOrTime(transaction.Timestamp)
-		txn.statusIcon = l.Icons.ConfirmIcon
+		txn.confirmationIcons = l.Icons.ConfirmIcon
 	} else {
 		txn.status.Text = "pending"
 		txn.status.Color = l.Theme.Color.Gray
-		txn.statusIcon = l.Icons.PendingIcon
+		txn.confirmationIcons = l.Icons.PendingIcon
 	}
 
-	if transaction.Direction == dcrlibwallet.TxDirectionSent {
-		txn.direction = l.Icons.SendIcon
-	} else {
-		txn.direction = l.Icons.ReceiveIcon
-	}
+	txn.title, txn.icon = components.TransactionTitleIcon(l, wal, transaction)
 
 	return txn
 }
