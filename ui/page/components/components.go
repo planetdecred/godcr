@@ -152,20 +152,27 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 									amount = "-" + amount
 								}
 								return LayoutBalance(gtx, l, amount)
-							} else {
-								label := l.Theme.Label(values.TextSize18, title)
-								label.Color = l.Theme.Color.DeepBlue
-								return label.Layout(gtx)
 							}
+
+							label := l.Theme.Label(values.TextSize18, title)
+							label.Color = l.Theme.Color.DeepBlue
+							return label.Layout(gtx)
 						}),
 					)
 
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					return decredmaterial.LinearLayout{
+						Width:       decredmaterial.WrapContent,
+						Height:      decredmaterial.WrapContent,
+						Orientation: layout.Horizontal,
+						Direction:   layout.W,
+						Alignment:   layout.Middle,
+						Margin:      layout.Inset{Top: values.MarginPadding4},
+					}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							if row.ShowBadge {
-								return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 									return WalletLabel(gtx, l, wal.Name)
 								})
 							}
@@ -173,19 +180,70 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							return layout.Dimensions{}
 						}),
 						layout.Rigid(func(gtx C) D {
+							if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
+								ic := l.Icons.TicketIconInactive
+								width := float32(ic.Src.Size().X)
+								scale := 16.0 / width
+								ic.Scale = scale
+								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout)
+							}
+							return D{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							// mix denomination or ticket price
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
 								mixedDenom := dcrutil.Amount(row.Transaction.MixDenomination).String()
-								return LayoutBalanceSize(gtx, l, mixedDenom, values.TextSize14)
+								return l.Theme.Label(values.TextSize14, mixedDenom).Layout(gtx)
+							} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
+								ticketPrice := dcrutil.Amount(row.Transaction.Amount).String()
+								return l.Theme.Label(values.TextSize14, ticketPrice).Layout(gtx)
 							}
 							return layout.Dimensions{}
 						}),
 						layout.Rigid(func(gtx C) D {
+							// Mixed outputs count
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed && row.Transaction.MixCount > 1 {
 								label := l.Theme.Label(values.TextSize14, fmt.Sprintf("x%d", row.Transaction.MixCount))
 								label.Color = l.Theme.Color.Gray
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, label.Layout)
 							}
 							return layout.Dimensions{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							// vote reward
+							if row.Transaction.Type != dcrlibwallet.TxTypeVote {
+								return D{}
+							}
+
+							return decredmaterial.LinearLayout{
+								Width:       decredmaterial.WrapContent,
+								Height:      decredmaterial.WrapContent,
+								Orientation: layout.Horizontal,
+								Margin:      layout.Inset{Left: values.MarginPadding4},
+								Alignment:   layout.Middle,
+							}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									label := l.Theme.Label(values.TextSize14, "+")
+									label.Color = l.Theme.Color.Turquoise800
+									return label.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									ic := l.Icons.DecredSymbol2
+									width := float32(ic.Src.Size().Y)
+									scale := 16.0 / width
+									ic.Scale = scale
+
+									return layout.Inset{
+										Left:  values.MarginPadding4,
+										Right: values.MarginPadding4,
+									}.Layout(gtx, ic.Layout)
+								}),
+								layout.Rigid(func(gtx C) D {
+									label := l.Theme.Label(values.TextSize14, dcrutil.Amount(row.Transaction.VoteReward).String())
+									label.Color = l.Theme.Color.Turquoise800
+									return label.Layout(gtx)
+								}),
+							)
 						}),
 					)
 				}),

@@ -47,7 +47,7 @@ type Icons struct {
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, ArrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
-	List, ListGridIcon, DecredSymbolIcon *widget.Image
+	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2 *widget.Image
 
 	TicketPurchasedIcon,
 	TicketImmatureIcon,
@@ -163,6 +163,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		List:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
 		ListGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 		DecredSymbolIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},
+		DecredSymbol2:              &widget.Image{Src: paint.NewImageOp(decredIcons["ic_decred02"])},
 	}
 
 	wl := &WalletLoad{
