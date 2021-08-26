@@ -151,6 +151,9 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 						return pg.separator(gtx)
 					},
 					func(gtx C) D {
+						return pg.ticketDetails(gtx)
+					},
+					func(gtx C) D {
 						return pg.associatedTicket(gtx)
 					},
 					func(gtx C) D {
@@ -190,90 +193,119 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {
-	return pg.pageSections(gtx, func(gtx C) D {
-		return layout.Flex{}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{
-					Right: values.MarginPadding15,
-					Top:   values.MarginPadding10,
-				}.Layout(gtx, pg.txnWidgets.icon.Layout)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						amount := dcrutil.Amount(pg.transaction.Amount).String()
-						if pg.transaction.Type == dcrlibwallet.TxTypeMixed {
-							amount = dcrutil.Amount(pg.transaction.MixDenomination).String()
-						} else if pg.transaction.Type == dcrlibwallet.TxTypeRegular && pg.transaction.Direction == dcrlibwallet.TxDirectionSent {
-							amount = "-" + amount
-						}
-						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return components.LayoutBalanceSize(gtx, pg.Load, amount, values.TextSize34)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if pg.transaction.Type == dcrlibwallet.TxTypeMixed && pg.transaction.MixCount > 1 {
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.MatchParent,
+		Height:      decredmaterial.WrapContent,
+		Orientation: layout.Horizontal,
+		Padding:     layout.UniformInset(values.MarginPadding16),
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{
+				Right: values.MarginPadding16,
+				Top:   values.MarginPadding12,
+			}.Layout(gtx, pg.txnWidgets.icon.Layout)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					amount := dcrutil.Amount(pg.transaction.Amount).String()
+					if pg.transaction.Type == dcrlibwallet.TxTypeMixed {
+						amount = dcrutil.Amount(pg.transaction.MixDenomination).String()
+					} else if pg.transaction.Type == dcrlibwallet.TxTypeRegular && pg.transaction.Direction == dcrlibwallet.TxDirectionSent {
+						amount = "-" + amount
+					}
+					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return components.LayoutBalanceSize(gtx, pg.Load, amount, values.TextSize34)
+						}),
+						layout.Rigid(func(gtx C) D {
+							if pg.transaction.Type == dcrlibwallet.TxTypeMixed && pg.transaction.MixCount > 1 {
 
-									label := pg.Theme.H5(fmt.Sprintf("x%d", pg.transaction.MixCount))
-									label.Color = pg.theme.Color.Gray
-									return layout.Inset{
-										Left: values.MarginPadding8,
-									}.Layout(gtx, label.Layout)
-								}
-								return D{}
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						m := values.MarginPadding10
-						return layout.Inset{
-							Top:    m,
-							Bottom: m,
-						}.Layout(gtx, func(gtx C) D {
-							pg.txnWidgets.time.Color = pg.Theme.Color.Gray
-							return pg.txnWidgets.time.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
+								label := pg.Theme.H5(fmt.Sprintf("x%d", pg.transaction.MixCount))
+								label.Color = pg.theme.Color.Gray
 								return layout.Inset{
-									Right: values.MarginPadding4,
-									Top:   values.MarginPadding4,
-								}.Layout(gtx, pg.txnWidgets.confirmationIcons.Layout)
-							}),
-							layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-								txt := pg.Theme.Body1("")
-								if pg.txConfirmations() > 1 {
-									txt.Text = strings.Title("confirmed")
-									txt.Color = pg.Theme.Color.Success
-								} else {
-									txt.Text = strings.Title("pending")
-									txt.Color = pg.Theme.Color.Gray
-								}
-								return txt.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								m := values.MarginPadding10
-								return layout.Inset{
-									Left:  m,
-									Right: m,
-									Top:   m,
-								}.Layout(gtx, func(gtx C) D {
-									return pg.dot.Layout(gtx, values.MarginPadding2)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								txt := pg.Theme.Body1(values.StringF(values.StrNConfirmations, pg.txConfirmations()))
+									Left: values.MarginPadding8,
+								}.Layout(gtx, label.Layout)
+							}
+							return D{}
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					m := values.MarginPadding10
+					return layout.Inset{
+						Top:    m,
+						Bottom: m,
+					}.Layout(gtx, func(gtx C) D {
+						pg.txnWidgets.time.Color = pg.Theme.Color.Gray
+						return pg.txnWidgets.time.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{
+								Right: values.MarginPadding4,
+								Top:   values.MarginPadding4,
+							}.Layout(gtx, pg.txnWidgets.confirmationIcons.Layout)
+						}),
+						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+							txt := pg.Theme.Body1("")
+							if pg.txConfirmations() > 1 {
+								txt.Text = strings.Title("confirmed")
+								txt.Color = pg.Theme.Color.Success
+							} else {
+								txt.Text = strings.Title("pending")
 								txt.Color = pg.Theme.Color.Gray
-								return txt.Layout(gtx)
-							}),
-						)
-					}),
-				)
-			}),
-		)
-	})
+							}
+							return txt.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							m := values.MarginPadding10
+							return layout.Inset{
+								Left:  m,
+								Right: m,
+								Top:   m,
+							}.Layout(gtx, func(gtx C) D {
+								return pg.dot.Layout(gtx, values.MarginPadding2)
+							})
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := pg.Theme.Body1(values.StringF(values.StrNConfirmations, pg.txConfirmations()))
+							txt.Color = pg.Theme.Color.Gray
+							return txt.Layout(gtx)
+						}),
+					)
+				}),
+			)
+		}),
+	)
+}
+
+func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
+	if pg.transaction.Type != dcrlibwallet.TxTypeVote && pg.transaction.Type != dcrlibwallet.TxTypeRevocation {
+		return D{}
+	}
+
+	return layout.Flex{
+		Axis: layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.WrapContent,
+				Orientation: layout.Vertical,
+				Padding:     layout.Inset{Left: values.MarginPadding16, Top: values.MarginPadding12, Right: values.MarginPadding16, Bottom: values.MarginPadding12},
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.txnInfoSection(gtx, "Status", "Unmined", false, nil)
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx C) D {
+			return pg.separator(gtx)
+		}),
+	)
 }
 
 func (pg *TransactionDetailsPage) associatedTicket(gtx C) D {
@@ -325,44 +357,49 @@ func (pg *TransactionDetailsPage) txConfirmations() int32 {
 
 func (pg *TransactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
-	return pg.pageSections(gtx, func(gtx C) D {
-		m := values.MarginPadding10
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return pg.txnInfoSection(gtx, values.String(values.StrFrom), pg.txSourceAccount, true, nil)
-			}),
-			layout.Rigid(func(gtx C) D {
-				if transaction.Direction == dcrlibwallet.TxDirectionSent {
-					return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
-						return pg.txnInfoSection(gtx, values.String(values.StrTo), pg.txDestinationAddress, false, pg.destAddressClickable)
-					})
-				}
-				return layout.Dimensions{}
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, values.String(values.StrFee), dcrutil.Amount(transaction.Fee).String(), false, nil)
+	m := values.MarginPadding16
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.MatchParent,
+		Height:      decredmaterial.WrapContent,
+		Orientation: layout.Vertical,
+		Padding:     layout.UniformInset(values.MarginPadding16),
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return pg.txnInfoSection(gtx, values.String(values.StrFrom), pg.txSourceAccount, true, nil)
+		}),
+		layout.Rigid(func(gtx C) D {
+			if transaction.Direction == dcrlibwallet.TxDirectionSent {
+				return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
+					return pg.txnInfoSection(gtx, values.String(values.StrTo), pg.txDestinationAddress, false, pg.destAddressClickable)
 				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				if transaction.BlockHeight != -1 {
+			}
+			return layout.Dimensions{}
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
+				return pg.txnInfoSection(gtx, values.String(values.StrFee), dcrutil.Amount(transaction.Fee).String(), false, nil)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			if transaction.BlockHeight != -1 {
+				return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
 					return pg.txnInfoSection(gtx, values.String(values.StrIncludedInBlock), fmt.Sprintf("%d", transaction.BlockHeight), false, nil)
-				}
-				return layout.Dimensions{}
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Bottom: m, Top: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, values.String(values.StrType), transaction.Type, false, nil)
 				})
-			}),
-			layout.Rigid(func(gtx C) D {
+			}
+			return layout.Dimensions{}
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
+				return pg.txnInfoSection(gtx, values.String(values.StrType), transaction.Type, false, nil)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
 				trimmedHash := transaction.Hash[:24] + "..." + transaction.Hash[len(transaction.Hash)-24:]
-				return layout.Inset{Bottom: m}.Layout(gtx, func(gtx C) D {
-					return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), trimmedHash, false, pg.hashClickable)
-				})
-			}),
-		)
-	})
+				return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), trimmedHash, false, pg.hashClickable)
+			})
+		}),
+	)
 }
 
 func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, value string, showWalletBadge bool, clickable *widget.Clickable) layout.Dimensions {
@@ -469,7 +506,7 @@ func (pg *TransactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acc
 	accountName = fmt.Sprintf("(%s)", accountName)
 	amt := dcrutil.Amount(amount).String()
 
-	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+	return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 		card := pg.theme.Card()
 		card.Color = pg.theme.Color.LightGray
 		return card.Layout(gtx, func(gtx C) D {
@@ -529,14 +566,11 @@ func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions 
 }
 
 func (pg *TransactionDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	m := values.MarginPadding16
-	mtb := values.MarginPadding5
-	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
+	return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
 }
 
 func (pg *TransactionDetailsPage) separator(gtx layout.Context) layout.Dimensions {
-	m := values.MarginPadding5
-	return layout.Inset{Top: m, Bottom: m}.Layout(gtx, pg.theme.Separator().Layout)
+	return pg.theme.Separator().Layout(gtx)
 }
 
 func (pg *TransactionDetailsPage) Handle() {

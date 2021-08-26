@@ -108,6 +108,11 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 		}
 	}
 
+	// Scale icon to 24 by 24
+	width := float32(icon.Src.Size().X)
+	scale := 24.0 / width
+	icon.Scale = scale
+
 	return title, icon
 }
 
@@ -129,10 +134,6 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			width := float32(icon.Src.Size().X)
-			scale := 24.0 / width
-			icon.Scale = scale
-
 			return layout.W.Layout(gtx, icon.Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
