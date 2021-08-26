@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -66,7 +67,22 @@ func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(pg.infoButton.Layout),
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Left: m}.Layout(gtx, pg.moreOption.Layout)
+						return layout.Inset{Left: m}.Layout(gtx, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									if pg.moreOptionIsOpen {
+										macro := op.Record(gtx.Ops)
+										layout.Inset{Top: values.MarginPadding25, Left: values.MarginPaddingMinus90}.Layout(gtx, func(gtx C) D {
+											border := widget.Border{Color: pg.Theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
+											return border.Layout(gtx, pg.clearAllBtn.Layout)
+										})
+										op.Defer(gtx.Ops, macro.Stop())
+									}
+									return layout.Dimensions{}
+								}),
+								layout.Rigid(pg.moreOption.Layout),
+							)
+						})
 					}),
 				)
 			})
@@ -109,19 +125,6 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 							}),
 						)
 					})
-				}),
-				layout.Stacked(func(gtx C) D {
-					if pg.moreOptionIsOpen {
-						inset := layout.Inset{
-							Top:   values.MarginPadding40,
-							Right: values.MarginPadding20,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							border := widget.Border{Color: pg.Theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
-							return border.Layout(gtx, pg.clearAllBtn.Layout)
-						})
-					}
-					return layout.Dimensions{}
 				}),
 			)
 		}),
