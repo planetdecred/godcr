@@ -13,6 +13,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
+	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -27,6 +28,7 @@ type TransactionDetailsPage struct {
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
+	associatedTicketClickable       *widget.Clickable
 	hashClickable                   *widget.Clickable
 	destAddressClickable            *widget.Clickable
 	copyTextBtn                     []decredmaterial.Button
@@ -38,9 +40,11 @@ type TransactionDetailsPage struct {
 	infoButton                      decredmaterial.IconButton
 	gtx                             *layout.Context
 
-	txnWidgets  transactionWdg
-	transaction *dcrlibwallet.Transaction
-	wallet      *dcrlibwallet.Wallet
+	txnWidgets    transactionWdg
+	transaction   *dcrlibwallet.Transaction
+	ticketSpender *dcrlibwallet.Transaction // vote or revoke ticket
+	ticketSpent   *dcrlibwallet.Transaction // ticket spent in a vote or revoke
+	wallet        *dcrlibwallet.Wallet
 
 	txSourceAccount      string
 	txDestinationAddress string
@@ -64,9 +68,10 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		outputsCollapsible: l.Theme.Collapsible(),
 		inputsCollapsible:  l.Theme.Collapsible(),
 
-		hashClickable:        new(widget.Clickable),
-		destAddressClickable: new(widget.Clickable),
-		toDcrdata:            new(widget.Clickable),
+		associatedTicketClickable: new(widget.Clickable),
+		hashClickable:             new(widget.Clickable),
+		destAddressClickable:      new(widget.Clickable),
+		toDcrdata:                 new(widget.Clickable),
 
 		transaction: transaction,
 		wallet:      l.WL.MultiWallet.WalletWithID(transaction.WalletID),
@@ -113,7 +118,14 @@ func (pg *TransactionDetailsPage) ID() string {
 }
 
 func (pg *TransactionDetailsPage) OnResume() {
+	if pg.transaction.TicketSpentHash != "" {
+		txHash, _ := chainhash.NewHashFromStr(pg.transaction.TicketSpentHash)
+		pg.ticketSpent, _ = pg.wallet.GetTransactionRaw(txHash[:])
+	}
 
+	if ok, _ := pg.wallet.TicketHasVotedOrRevoked(pg.transaction.Hash); ok {
+		pg.ticketSpender, _ = pg.wallet.TicketSpender(pg.transaction.Hash)
+	}
 }
 
 func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -137,6 +149,9 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 					},
 					func(gtx C) D {
 						return pg.separator(gtx)
+					},
+					func(gtx C) D {
+						return pg.associatedTicket(gtx)
 					},
 					func(gtx C) D {
 						return pg.txnTypeAndID(gtx)
@@ -259,6 +274,43 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 			}),
 		)
 	})
+}
+
+func (pg *TransactionDetailsPage) associatedTicket(gtx C) D {
+	if pg.transaction.Type != dcrlibwallet.TxTypeVote && pg.transaction.Type != dcrlibwallet.TxTypeRevocation {
+		return D{}
+	}
+
+	return layout.Flex{
+		Axis: layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return decredmaterial.Clickable(gtx, pg.associatedTicketClickable, func(gtx C) D {
+				return decredmaterial.LinearLayout{
+					Width:       decredmaterial.MatchParent,
+					Height:      decredmaterial.WrapContent,
+					Orientation: layout.Horizontal,
+					Padding:     layout.Inset{Left: values.MarginPadding16, Top: values.MarginPadding12, Right: values.MarginPadding16, Bottom: values.MarginPadding12},
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						label := pg.theme.Label(values.TextSize16, "View associated ticket")
+						label.Color = pg.theme.Color.DeepBlue
+						return label.Layout(gtx)
+					}),
+					layout.Flexed(1, func(gtx C) D {
+						icon := pg.Icons.Next
+						width := float32(icon.Src.Size().X)
+						scale := 24.0 / width
+						icon.Scale = scale
+						return layout.E.Layout(gtx, icon.Layout)
+					}),
+				)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return pg.separator(gtx)
+		}),
+	)
 }
 
 //TODO: do this at startup
@@ -477,7 +529,7 @@ func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions 
 }
 
 func (pg *TransactionDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	m := values.MarginPadding20
+	m := values.MarginPadding16
 	mtb := values.MarginPadding5
 	return layout.Inset{Left: m, Right: m, Top: mtb, Bottom: mtb}.Layout(gtx, body)
 }
@@ -508,6 +560,13 @@ func (pg *TransactionDetailsPage) Handle() {
 	for pg.destAddressClickable.Clicked() {
 		clipboard.WriteOp{Text: pg.txDestinationAddress}.Add(gtx.Ops)
 		pg.Toast.Notify("Address copied")
+	}
+
+	for pg.associatedTicketClickable.Clicked() {
+		if pg.ticketSpent != nil {
+			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, pg.ticketSpent))
+		}
+
 	}
 }
 
