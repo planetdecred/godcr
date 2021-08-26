@@ -280,13 +280,53 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 	)
 }
 
+func (pg *TransactionDetailsPage) maturityProgressBar(gtx C) D {
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.MatchParent,
+		Height:      decredmaterial.WrapContent,
+		Orientation: layout.Horizontal,
+		Margin:      layout.Inset{Top: values.MarginPadding12},
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			t := pg.theme.Label(values.TextSize14, "Maturity")
+			t.Color = pg.theme.Color.Gray
+			return t.Layout(gtx)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+
+			percentageLabel := pg.theme.Label(values.TextSize14, "25%")
+			percentageLabel.Color = pg.theme.Color.Gray
+
+			progress := pg.theme.ProgressBar(40)
+			progress.Color = pg.theme.Color.LightBlue
+			progress.TrackColor = pg.theme.Color.BlueProgressTint
+			progress.Height = values.MarginPadding8
+			progress.Width = values.MarginPadding80
+			progress.Radius = values.MarginPadding8
+
+			timeLeft := pg.theme.Label(values.TextSize16, "18 hours")
+			timeLeft.Color = pg.Theme.Color.DeepBlue
+
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Flex{
+					Alignment: layout.Middle,
+				}.Layout(gtx,
+					layout.Rigid(percentageLabel.Layout),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Left: values.MarginPadding6, Right: values.MarginPadding6}.Layout(gtx, progress.Layout)
+					}),
+					layout.Rigid(timeLeft.Layout),
+				)
+			})
+		}),
+	)
+}
+
 func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 	if !pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterStaking) ||
 		pg.transaction.Type == dcrlibwallet.TxTypeRevocation {
 		return D{}
 	}
-
-	// TODO spendable progress bar
 
 	return layout.Flex{
 		Axis: layout.Vertical,
@@ -301,8 +341,8 @@ func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 				layout.Rigid(func(gtx C) D {
 					if pg.transaction.Type == dcrlibwallet.TxTypeTicketPurchase {
 						var status string
-						if pg.ticketSpent != nil {
-							if pg.ticketSpent.Type == dcrlibwallet.TxTypeVote {
+						if pg.ticketSpender != nil {
+							if pg.ticketSpender.Type == dcrlibwallet.TxTypeVote {
 								status = "Vote"
 							} else {
 								status = "Revoked"
@@ -313,12 +353,22 @@ func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 							status = "Immature"
 						} else if pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterUnmined) {
 							status = "Unmined"
+						} else {
+							status = "Unknown"
 						}
 
 						return layout.Inset{Top: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
 							return pg.txnInfoSection(gtx, "Status", status, false, nil)
 						})
+					}
 
+					return D{}
+				}),
+				layout.Rigid(func(gtx C) D {
+					// TODO spendable progress bar
+
+					if false {
+						return pg.maturityProgressBar(gtx)
 					}
 
 					return D{}
@@ -446,7 +496,7 @@ func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, valu
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			t := pg.theme.Body1(label)
+			t := pg.theme.Label(values.TextSize14, label)
 			t.Color = pg.theme.Color.Gray
 			return t.Layout(gtx)
 		}),
