@@ -13,7 +13,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -119,8 +118,7 @@ func (pg *TransactionDetailsPage) ID() string {
 
 func (pg *TransactionDetailsPage) OnResume() {
 	if pg.transaction.TicketSpentHash != "" {
-		txHash, _ := chainhash.NewHashFromStr(pg.transaction.TicketSpentHash)
-		pg.ticketSpent, _ = pg.wallet.GetTransactionRaw(txHash[:])
+		pg.ticketSpent, _ = pg.wallet.GetTransactionRaw(pg.transaction.TicketSpentHash)
 	}
 
 	if ok, _ := pg.wallet.TicketHasVotedOrRevoked(pg.transaction.Hash); ok {
@@ -283,9 +281,12 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 }
 
 func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
-	if pg.transaction.Type != dcrlibwallet.TxTypeVote && pg.transaction.Type != dcrlibwallet.TxTypeRevocation {
+	if !pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterStaking) ||
+		pg.transaction.Type == dcrlibwallet.TxTypeRevocation {
 		return D{}
 	}
+
+	// TODO spendable progress bar
 
 	return layout.Flex{
 		Axis: layout.Vertical,
@@ -295,10 +296,49 @@ func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 				Width:       decredmaterial.MatchParent,
 				Height:      decredmaterial.WrapContent,
 				Orientation: layout.Vertical,
-				Padding:     layout.Inset{Left: values.MarginPadding16, Top: values.MarginPadding12, Right: values.MarginPadding16, Bottom: values.MarginPadding12},
+				Padding:     layout.Inset{Left: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding12},
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.txnInfoSection(gtx, "Status", "Unmined", false, nil)
+					if pg.transaction.Type == dcrlibwallet.TxTypeTicketPurchase {
+						var status string
+						if pg.ticketSpent != nil {
+							if pg.ticketSpent.Type == dcrlibwallet.TxTypeVote {
+								status = "Vote"
+							} else {
+								status = "Revoked"
+							}
+						} else if pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterLive) {
+							status = "Live"
+						} else if pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterImmature) {
+							status = "Immature"
+						} else if pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterUnmined) {
+							status = "Unmined"
+						}
+
+						return layout.Inset{Top: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
+							return pg.txnInfoSection(gtx, "Status", status, false, nil)
+						})
+
+					}
+
+					return D{}
+				}),
+				layout.Rigid(func(gtx C) D {
+					if pg.transaction.Type == dcrlibwallet.TxTypeVote {
+						return layout.Inset{Top: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
+							return pg.txnInfoSection(gtx, "Days to vote", fmt.Sprintf("%d days", pg.transaction.DaysToVoteOrRevoke), false, nil)
+						})
+					}
+
+					return D{}
+				}),
+				layout.Rigid(func(gtx C) D {
+					if pg.transaction.Type == dcrlibwallet.TxTypeVote {
+						return layout.Inset{Top: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
+							return pg.txnInfoSection(gtx, "Reward", dcrutil.Amount(pg.transaction.VoteReward).String(), false, nil)
+						})
+					}
+					return D{}
 				}),
 			)
 		}),
@@ -357,7 +397,7 @@ func (pg *TransactionDetailsPage) txConfirmations() int32 {
 
 func (pg *TransactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
-	m := values.MarginPadding16
+	m := values.MarginPadding12
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,

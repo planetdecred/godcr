@@ -19,7 +19,7 @@ require (
 	github.com/jrick/logrotate v1.0.0
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
-	github.com/planetdecred/dcrlibwallet v1.6.1-0.20210806104554-ee2986c7f314
+	github.com/planetdecred/dcrlibwallet v1.6.1-0.20210816165030-bb3af17a746a
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
