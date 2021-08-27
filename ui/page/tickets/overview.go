@@ -2,13 +2,13 @@ package tickets
 
 import (
 	"fmt"
-	"github.com/decred/dcrd/dcrutil"
 	"strings"
 
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -45,7 +45,7 @@ type Page struct {
 
 func NewTicketPage(l *load.Load) *Page {
 	pg := &Page{
-		Load:    l,
+		Load: l,
 
 		ticketsLive:         &layout.List{Axis: layout.Horizontal},
 		ticketsActivity:     &layout.List{Axis: layout.Vertical},

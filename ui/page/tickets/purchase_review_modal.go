@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"image/color"
 
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/components"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
+
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
