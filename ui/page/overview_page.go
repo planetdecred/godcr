@@ -180,10 +180,12 @@ func (pg *OverviewPage) syncDetail(name, status, headersFetched, progress string
 
 // recentTransactionsSection lays out the list of recent transactions.
 func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dimensions {
-	return pg.Theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		padding := values.MarginPadding15
-		return components.Container{Padding: layout.Inset{Top: padding}}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return decredmaterial.LinearLayout{Orientation: layout.Vertical,
+					Width:      decredmaterial.MatchParent,
+					Height:     decredmaterial.WrapContent,
+					Background: pg.Theme.Color.Surface,
+					Border:     decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+					Padding:    layout.Inset{Top: values.MarginPadding15}}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					title := pg.Theme.Body2(values.String(values.StrRecentTransactions))
 					title.Color = pg.Theme.Color.Gray3
@@ -231,8 +233,6 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 					})
 				}),
 			)
-		})
-	})
 }
 
 // syncStatusSection lays out content for displaying sync status.
