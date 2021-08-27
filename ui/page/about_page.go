@@ -85,40 +85,37 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func unclickablePadding() components.Container {
+var inset = layout.Inset{
+	Top:    values.MarginPadding20,
+	Bottom: values.MarginPadding20,
+	Left:   values.MarginPadding16,
+	Right:  values.MarginPadding16,
+}
+
+func containerPadding() components.Container {
 	return components.Container{
-		Padding: layout.Inset{
-			Top:    values.MarginPadding20,
-			Bottom: values.MarginPadding20,
-			Left:   values.MarginPadding16,
-			Right:  values.MarginPadding16,
-		},
+		Padding: inset,
 	}
 }
 
-func clickablePadding() layout.Inset {
-	return layout.Inset{
-		Top:    values.MarginPadding20,
-		Bottom: values.MarginPadding20,
-		Left:   values.MarginPadding16,
-		Right:  values.MarginPadding16,
-	}
+func padding() layout.Inset {
+	return inset
 }
 
 func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	w := []func(gtx C) D{
 		func(gtx C) D {
-			return unclickablePadding().Layout(gtx, func(gtx C) D {
+			return containerPadding().Layout(gtx, func(gtx C) D {
 				return components.EndToEndRow(gtx, pg.version.Layout, pg.versionValue.Layout)
 			})
 		},
 		func(gtx C) D {
-			return unclickablePadding().Layout(gtx, func(gtx C) D {
+			return containerPadding().Layout(gtx, func(gtx C) D {
 				return components.EndToEndRow(gtx, pg.buildDate.Layout, pg.buildDateValue.Layout)
 			})
 		},
 		func(gtx C) D {
-			return unclickablePadding().Layout(gtx, func(gtx C) D {
+			return containerPadding().Layout(gtx, func(gtx C) D {
 				return components.EndToEndRow(gtx, pg.network.Layout, pg.networkValue.Layout)
 			})
 		},
@@ -126,11 +123,11 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 			return decredmaterial.Clickable(gtx, pg.licenseRow, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return clickablePadding().Layout(gtx, pg.license.Layout)
+						return padding().Layout(gtx, pg.license.Layout)
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							return clickablePadding().Layout(gtx, func(gtx C) D {
+							return padding().Layout(gtx, func(gtx C) D {
 								return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 							})
 						})
