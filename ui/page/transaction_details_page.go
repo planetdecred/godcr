@@ -146,7 +146,7 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 						return pg.txnBalanceAndStatus(gtx)
 					},
 					func(gtx C) D {
-						return pg.separator(gtx)
+						return pg.theme.Separator().Layout(gtx)
 					},
 					func(gtx C) D {
 						return pg.ticketDetails(gtx)
@@ -158,19 +158,19 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 						return pg.txnTypeAndID(gtx)
 					},
 					func(gtx C) D {
-						return pg.separator(gtx)
+						return pg.theme.Separator().Layout(gtx)
 					},
 					func(gtx C) D {
 						return pg.txnInputs(gtx)
 					},
 					func(gtx C) D {
-						return pg.separator(gtx)
+						return pg.theme.Separator().Layout(gtx)
 					},
 					func(gtx C) D {
 						return pg.txnOutputs(gtx)
 					},
 					func(gtx C) D {
-						return pg.separator(gtx)
+						return pg.theme.Separator().Layout(gtx)
 					},
 					func(gtx C) D {
 						return pg.viewTxn(gtx)
@@ -393,7 +393,7 @@ func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return pg.separator(gtx)
+			return pg.theme.Separator().Layout(gtx)
 		}),
 	)
 }
@@ -430,7 +430,7 @@ func (pg *TransactionDetailsPage) associatedTicket(gtx C) D {
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return pg.separator(gtx)
+			return pg.theme.Separator().Layout(gtx)
 		}),
 	)
 }
@@ -657,10 +657,6 @@ func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions 
 
 func (pg *TransactionDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
-}
-
-func (pg *TransactionDetailsPage) separator(gtx layout.Context) layout.Dimensions {
-	return pg.theme.Separator().Layout(gtx)
 }
 
 func (pg *TransactionDetailsPage) Handle() {
