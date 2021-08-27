@@ -98,7 +98,21 @@ func (pg *DebugPage) layoutDebugItems(gtx C) {
 	card.Layout(gtx, func(gtx C) D {
 		list := layout.List{Axis: layout.Vertical}
 		return list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
-			return pg.debugItem(gtx, i)
+			return layout.Inset{}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.debugItem(gtx, i)
+					}),
+					layout.Rigid(func(gtx C) D {
+						if i == len(pg.debugItems)-1 {
+							return layout.Dimensions{}
+						}
+						return layout.Inset{
+							Left: values.MarginPadding16,
+						}.Layout(gtx, pg.Theme.Separator().Layout)
+					}),
+				)
+			})
 		})
 	})
 }
