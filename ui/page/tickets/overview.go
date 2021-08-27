@@ -40,7 +40,7 @@ type Page struct {
 	ticketTooltips      []tooltips
 
 	stakingOverview *dcrlibwallet.StakingOverview
-	liveTickets     []Ticket
+	liveTickets     []dcrlibwallet.Transaction
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -85,7 +85,7 @@ func (pg *Page) OnResume() {
 	}()
 	go func() {
 		mw := pg.WL.MultiWallet
-		pg.liveTickets = allLiveTickets(mw.AllWallets(), mw.TicketMaturity(), mw.GetBestBlock().Height)
+		pg.liveTickets = allLiveTickets(mw.AllWallets())
 	}()
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
@@ -257,7 +257,8 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 
 				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, pg.Load, pg.liveTickets[index], pg.ticketTooltips[index])
+						w := pg.WL.MultiWallet.WalletWithID(pg.liveTickets[index].WalletID)
+						return ticketCard(gtx, pg.Load, w, pg.liveTickets[index], pg.ticketTooltips[index])
 					})
 				})
 			}),

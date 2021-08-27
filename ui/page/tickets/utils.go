@@ -54,8 +54,6 @@ type Ticket struct {
 	MonthDay   string
 	DaysBehind string
 	WalletName string
-
-	timestamp int64
 }
 
 const (
@@ -64,6 +62,7 @@ const (
 	StakingImmature = "IMMATURE"
 	StakingRevoked  = "REVOKED"
 	StakingVoted    = "VOTED"
+	StakingExpired  = "EXPIRED"
 )
 
 func calculateDaysBehind(lastHeaderTime int64) string {
@@ -78,34 +77,28 @@ func calculateDaysBehind(lastHeaderTime int64) string {
 	}
 }
 
-func transactionToTicket(tx dcrlibwallet.Transaction, walletName string, maturity, bestBlock int32) Ticket {
+func transactionToTicket(tx dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, maturity, bestBlock int32) Ticket {
 	return Ticket{
-		Status:     getTicketStatus(tx, maturity, bestBlock),
+		Status:     getTicketStatus(tx, w, maturity, bestBlock),
 		Amount:     dcrutil.Amount(tx.Amount).String(),
 		DateTime:   time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
 		MonthDay:   time.Unix(tx.Timestamp, 0).Format("Jan 2"),
 		DaysBehind: calculateDaysBehind(tx.Timestamp),
 		Fee:        dcrutil.Amount(tx.Fee).String(),
-		WalletName: walletName,
-		timestamp:  tx.Timestamp,
+		WalletName: w.Name,
 	}
 }
 
-func transactionsToTickets(txs []dcrlibwallet.Transaction, walletName string, maturity, bestBlock int32) []Ticket {
-	var tickets []Ticket
-	for _, tx := range txs {
-		tickets = append(tickets, transactionToTicket(tx, walletName, maturity, bestBlock))
+func getTicketStatus(txn dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, ticketMaturity, bestBlock int32) string {
+	if txn.Type == dcrlibwallet.TxTypeVote {
+		return StakingVoted
 	}
 
-	return tickets
-}
+	if txn.Type == dcrlibwallet.TxTypeRevocation {
+		return StakingRevoked
+	}
 
-func getTicketStatus(txn dcrlibwallet.Transaction, ticketMaturity, bestBlock int32) string {
 	s := txn.TicketStatus(ticketMaturity, bestBlock)
-	if s == "" {
-		fmt.Printf("ticket status %v  type %v\n \n", s == "", txn.Type)
-	}
-
 	switch s {
 	case dcrlibwallet.TicketStatusUnmined:
 		return StakingUnmined
@@ -114,9 +107,13 @@ func getTicketStatus(txn dcrlibwallet.Transaction, ticketMaturity, bestBlock int
 	case dcrlibwallet.TicketStatusLive:
 		return StakingLive
 	case dcrlibwallet.TicketStatusVotedOrRevoked:
-		if txn.Type == dcrlibwallet.TxTypeVote {
+		// handle revocation and voted tickets that have the type "TicketPurchase"
+		tx, _ := w.TicketSpender(txn.Hash)
+		if tx.Type == dcrlibwallet.TxTypeVote {
 			return StakingVoted
-		} else if txn.Type == dcrlibwallet.TxTypeRevocation {
+		}
+
+		if tx.Type == dcrlibwallet.TxTypeRevocation {
 			return StakingRevoked
 		}
 	}
@@ -124,19 +121,8 @@ func getTicketStatus(txn dcrlibwallet.Transaction, ticketMaturity, bestBlock int
 	return ""
 }
 
-func getTickets(mw *dcrlibwallet.MultiWallet, walletID int, txFilter int32, newestFirst bool) ([]Ticket, error) {
-	w := mw.WalletWithID(walletID)
-	txs, err := w.GetTransactionsRaw(0, 0, txFilter, newestFirst)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("best block %v \n", mw.GetBestBlock().Height)
-	return transactionsToTickets(txs, w.Name, mw.TicketMaturity(), mw.GetBestBlock().Height), nil
-}
-
-func allLiveTickets(wallets []*dcrlibwallet.Wallet, ticketMaturity, bestBlock int32) []Ticket {
-	var tickets []Ticket
+func allLiveTickets(wallets []*dcrlibwallet.Wallet) []dcrlibwallet.Transaction {
+	var tickets []dcrlibwallet.Transaction
 	liveTicketFilters := []int32{dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
 	for _, w := range wallets {
 		for _, filter := range liveTicketFilters {
@@ -144,7 +130,8 @@ func allLiveTickets(wallets []*dcrlibwallet.Wallet, ticketMaturity, bestBlock in
 			if err != nil {
 				return tickets
 			}
-			tickets = append(tickets, transactionsToTickets(tx, w.Name, ticketMaturity, bestBlock)...)
+
+			tickets = append(tickets, tx...)
 		}
 	}
 
@@ -186,7 +173,7 @@ func ticketStatusProfile(l *load.Load, ticketStatus string) *struct {
 			l.Theme.Color.Gray,
 			l.Theme.Color.LightGray,
 		},
-		"EXPIRED": {
+		StakingExpired: {
 			l.Icons.TicketExpiredIcon,
 			l.Theme.Color.Gray,
 			l.Theme.Color.LightGray,
@@ -297,7 +284,8 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, t Ticket, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.Wallet, tx dcrlibwallet.Transaction, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+	t := transactionToTicket(tx, selectedWallet, l.WL.MultiWallet.TicketMaturity(), l.WL.MultiWallet.GetBestBlock().Height)
 	var itemWidth int
 	st := ticketStatusProfile(l, t.Status)
 	if st == nil {
