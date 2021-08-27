@@ -128,7 +128,7 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 		addCertFile:     d.theme.Button(new(widget.Clickable), "Add a file"),
 		addDexServer:    d.theme.Button(new(widget.Clickable), "Submit"),
 		register:        d.theme.Button(new(widget.Clickable), "Register"),
-		toWallet:        d.theme.PlainIconButton(new(widget.Clickable), common.icons.cached),
+		toWallet:        d.theme.PlainIconButton(new(widget.Clickable), common.icons.walletIcon),
 
 		appPassword:      d.theme.EditorPassword(new(widget.Editor), "Password"),
 		appPasswordAgain: d.theme.EditorPassword(new(widget.Editor), "Password Again"),
@@ -145,8 +145,7 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 		},
 	}
 
-	iconColor := common.theme.Color.Gray3
-	pg.toWallet.Color = iconColor
+	pg.toWallet.Color = common.theme.Color.Gray
 
 	pg.dexServerAddress.Editor.SetText("http://127.0.0.1:7232")
 
@@ -360,11 +359,7 @@ func (pg *marketsPage) navDrawerLayout(gtx layout.Context, c pageCommon) layout.
 func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			gtx.Constraints.Min.Y = 220
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return pg.depthChart.Layout(gtx)
-			})
+			return pg.depthChart.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return pg.theme.Separator().Layout(gtx)

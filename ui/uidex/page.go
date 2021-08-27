@@ -3,9 +3,6 @@ package uidex
 import (
 	"image"
 
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
-
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op/paint"
@@ -19,9 +16,11 @@ import (
 )
 
 type pageIcons struct {
-	contentAdd, navigationCheck, navigationMore, actionCheckCircle, actionInfo, navigationArrowBack,
-	navigationArrowForward, actionCheck, chevronRight, navigationCancel, navMoreIcon,
-	imageBrightness1, contentClear, dropDownIcon, cached, lock, lockOpen *widget.Icon
+	contentAdd, navigationCheck, navigationMore, actionCheckCircle,
+	actionInfo, navigationArrowBack, navigationArrowForward, actionCheck,
+	chevronRight, navigationCancel, navMoreIcon, imageBrightness1,
+	contentClear, dropDownIcon, cached, lock,
+	lockOpen, removeIcon, walletIcon *widget.Icon
 
 	logo, btc, dcr, ltc, bch *widget.Image
 }
@@ -34,7 +33,6 @@ type navHandler struct {
 }
 type pageCommon struct {
 	dexc           *dexc.Dexc
-	printer        *message.Printer
 	theme          *decredmaterial.Theme
 	icons          pageIcons
 	page           *string
@@ -72,8 +70,10 @@ func (d *DexUI) addPages(decredIcons map[string]image.Image) {
 		navMoreIcon:            utils.MustIcon(widget.NewIcon(icons.NavigationMoreHoriz)),
 		dropDownIcon:           utils.MustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		cached:                 utils.MustIcon(widget.NewIcon(icons.ActionCached)),
+		walletIcon:             utils.MustIcon(widget.NewIcon(icons.ActionAccountBalanceWallet)),
 		lock:                   utils.MustIcon(widget.NewIcon(icons.ActionLock)),
 		lockOpen:               utils.MustIcon(widget.NewIcon(icons.ActionLockOpen)),
+		removeIcon:             utils.MustIcon(widget.NewIcon(icons.ContentRemove)),
 
 		logo: &widget.Image{Src: paint.NewImageOp(decredIcons["favicon"])},
 		btc:  &widget.Image{Src: paint.NewImageOp(decredIcons["btc"])},
@@ -84,7 +84,6 @@ func (d *DexUI) addPages(decredIcons map[string]image.Image) {
 
 	common := pageCommon{
 		dexc:          d.dexc,
-		printer:       message.NewPrinter(language.English),
 		theme:         d.theme,
 		icons:         ic,
 		returnPage:    &d.previous,
