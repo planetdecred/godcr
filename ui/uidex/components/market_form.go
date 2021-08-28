@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"image/color"
 	"strconv"
 	"strings"
 
@@ -12,10 +13,23 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+const (
+	StrPrice          = "Price"
+	StrQuantity       = "Quantity"
+	StrLots           = "Lots"
+	StrDCR            = "DCR"
+	StrPlaceBuyOrder  = "Place orde to buy DCR"
+	StrPlaceSellOrder = "Place orde to sell DCR"
+	StrTifNow         = "Immediate or cancel"
+	StrSell           = "Sell"
+	StrBuy            = "Buy"
+)
+
 type TradeFormWidget struct {
 	isLimit                     bool
-	sell                        bool
+	isSell                      bool
 	tifNow                      decredmaterial.CheckBoxStyle
+	buy, sell                   decredmaterial.Button
 	reviewOrder                 decredmaterial.Button
 	host                        string
 	price                       decredmaterial.Label
@@ -25,39 +39,72 @@ type TradeFormWidget struct {
 	qtyField                    decredmaterial.Editor
 	marketBaseID, marketQuoteID uint32
 	marketQuote, marketBase     string
+	buyColor                    color.NRGBA
+	sellColor                   color.NRGBA
+	inactiveColor               color.NRGBA
 }
 
 func NewTradeFormWidget(theme *decredmaterial.Theme) *TradeFormWidget {
 	form := &TradeFormWidget{
-		price:       theme.Label(values.TextSize14, "Price"),
-		quantity:    theme.Label(values.TextSize14, "Quantity"),
-		rateField:   theme.Editor(new(widget.Editor), "Price"),
-		lotField:    theme.Editor(new(widget.Editor), "Lots"),
-		qtyField:    theme.Editor(new(widget.Editor), "DCR"),
-		reviewOrder: theme.Button(new(widget.Clickable), "Review order"),
-		tifNow:      theme.CheckBox(new(widget.Bool), "Immediate or cancel"),
+		price:       theme.Label(values.TextSize14, StrPrice),
+		quantity:    theme.Label(values.TextSize14, StrQuantity),
+		rateField:   theme.Editor(new(widget.Editor), StrPrice),
+		lotField:    theme.Editor(new(widget.Editor), StrLots),
+		qtyField:    theme.Editor(new(widget.Editor), StrDCR),
+		reviewOrder: theme.Button(new(widget.Clickable), StrPlaceBuyOrder),
+		tifNow:      theme.CheckBox(new(widget.Bool), StrTifNow),
+		sell:        theme.Button(new(widget.Clickable), StrSell),
+		buy:         theme.Button(new(widget.Clickable), StrBuy),
+		isSell:      false,
 	}
 	form.rateField.Editor.SingleLine = true
 	form.rateField.Editor.SetText("0")
 	form.lotField.Editor.SingleLine = true
 	form.qtyField.Editor.SingleLine = true
-	form.reviewOrder.Background = theme.Color.Success
+	form.reviewOrder.Background = theme.Color.Buy
+
+	inset := layout.Inset{
+		Left:   values.MarginPadding8,
+		Right:  values.MarginPadding8,
+		Top:    values.MarginPadding5,
+		Bottom: values.MarginPadding5,
+	}
+	form.reviewOrder.Inset = inset
+	form.reviewOrder.TextSize = values.TextSize14
+
+	inset.Left = values.MarginPadding40
+	inset.Right = values.MarginPadding40
+	form.sell.Background = theme.Color.InactiveGray
+	form.sell.Inset = inset
+	form.sell.TextSize = values.TextSize14
+
+	form.buy.Background = theme.Color.Buy
+	form.buy.Inset = inset
+	form.buy.TextSize = values.TextSize14
+
+	form.buyColor = theme.Color.Buy
+	form.sellColor = theme.Color.Sell
+	form.inactiveColor = theme.Color.InactiveGray
 
 	return form
 }
 
-func (mktForm *TradeFormWidget) Layout(gtx layout.Context) layout.Dimensions {
+func (mktForm *TradeFormWidget) Layout(gtx C) D {
+	mktForm.handler()
+
 	inset := layout.Inset{Bottom: values.MarginPadding10}
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+
+	return inset.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			layout.Rigid(mktForm.sellOrBuyButtonsLayout),
+			layout.Rigid(func(gtx C) D {
+				return inset.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(.2, func(gtx layout.Context) layout.Dimensions {
+						layout.Flexed(.2, func(gtx C) D {
 							return mktForm.price.Layout(gtx)
 						}),
-						layout.Flexed(.8, func(gtx layout.Context) layout.Dimensions {
+						layout.Flexed(.8, func(gtx C) D {
 							txt := fmt.Sprintf("%s/%s", strings.ToUpper(mktForm.marketQuote), strings.ToUpper(mktForm.marketBase))
 							mktForm.rateField.Hint = txt
 							return mktForm.rateField.Layout(gtx)
@@ -65,35 +112,41 @@ func (mktForm *TradeFormWidget) Layout(gtx layout.Context) layout.Dimensions {
 					)
 				})
 			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			layout.Rigid(func(gtx C) D {
+				return inset.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Flexed(.2, func(gtx layout.Context) layout.Dimensions {
-							return mktForm.quantity.Layout(gtx)
-						}),
-						layout.Flexed(.8, func(gtx layout.Context) layout.Dimensions {
+						layout.Flexed(.2, mktForm.quantity.Layout),
+						layout.Flexed(.8, func(gtx C) D {
 							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-								layout.Flexed(0.4, func(gtx layout.Context) layout.Dimensions {
-									return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-										return mktForm.lotField.Layout(gtx)
-									})
+								layout.Flexed(0.4, func(gtx C) D {
+									return layout.Inset{
+										Right: values.MarginPadding20,
+									}.Layout(gtx, mktForm.lotField.Layout)
 								}),
-								layout.Flexed(0.6, func(gtx layout.Context) layout.Dimensions {
-									return mktForm.qtyField.Layout(gtx)
-								}),
+								layout.Flexed(0.6, mktForm.qtyField.Layout),
 							)
 						}),
 					)
 				})
 			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return mktForm.tifNow.Layout(gtx)
+			layout.Rigid(mktForm.tifNow.Layout),
+			layout.Rigid(func(gtx C) D {
+				return layout.E.Layout(gtx, mktForm.reviewOrder.Layout)
 			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				mktForm.reviewOrder.Text = "Place order to buy  DCR"
-				return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					return mktForm.reviewOrder.Layout(gtx)
+		)
+	})
+}
+
+func (mktForm *TradeFormWidget) sellOrBuyButtonsLayout(gtx C) D {
+	return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return mktForm.buy.Layout(gtx)
 				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return mktForm.sell.Layout(gtx)
 			}),
 		)
 	})
@@ -128,6 +181,25 @@ func (mktForm *TradeFormWidget) ShowVerifyOrder() bool {
 	return mktForm.reviewOrder.Button.Clicked()
 }
 
+func (mktForm *TradeFormWidget) handler() {
+	if mktForm.buy.Button.Clicked() {
+		mktForm.isSell = false
+		mktForm.sell.Background = mktForm.inactiveColor
+		mktForm.buy.Background = mktForm.buyColor
+		mktForm.reviewOrder.Text = StrPlaceBuyOrder
+		mktForm.reviewOrder.Background = mktForm.buyColor
+	}
+
+	if mktForm.sell.Button.Clicked() {
+		mktForm.isSell = true
+		mktForm.sell.Background = mktForm.sellColor
+		mktForm.buy.Background = mktForm.inactiveColor
+		mktForm.reviewOrder.Text = StrPlaceSellOrder
+		mktForm.reviewOrder.Background = mktForm.sellColor
+	}
+}
+
+// TradeForm get trade form values to buy or sell an order
 func (mktForm *TradeFormWidget) TradeForm() (error, *core.TradeForm) {
 	qtyField, err := strconv.ParseUint(mktForm.qtyField.Editor.Text(), 10, 64)
 	if err != nil {
@@ -146,7 +218,7 @@ func (mktForm *TradeFormWidget) TradeForm() (error, *core.TradeForm) {
 		Qty:     qtyField * 1e8,
 		Rate:    uint64(rateField * 1e8),
 		IsLimit: mktForm.isLimit,
-		Sell:    mktForm.sell,
+		Sell:    mktForm.isSell,
 		TifNow:  mktForm.tifNow.CheckBox.Value,
 	}
 }

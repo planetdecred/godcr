@@ -17,11 +17,15 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-var (
-	scaleHeight        float32 = 0.025
-	scaleWidth         float32 = 8
-	strokeWidth        float32 = 2
-	minimumChartHeight int     = 220
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
+const (
+	scaleHeight float32 = 0.025
+	scaleWidth  float32 = 8
+	strokeWidth float32 = 2
 )
 
 // DepthChart implements depth chart sell or buy logic.
@@ -44,13 +48,13 @@ type zoomWdg struct {
 	value    int
 }
 
-func NewDepthChart(buys, sells []*core.MiniOrder, theme *decredmaterial.Theme) DepthChart {
+func NewDepthChart(buys, sells []*core.MiniOrder, theme *decredmaterial.Theme) *DepthChart {
 	increase := theme.IconButton(new(widget.Clickable), utils.MustIcon(widget.NewIcon(icons.ContentAdd)))
 	decrease := theme.IconButton(new(widget.Clickable), utils.MustIcon(widget.NewIcon(icons.ContentRemove)))
 	increase.Background, decrease.Background = color.NRGBA{}, color.NRGBA{}
 	increase.Color, decrease.Color = theme.Color.Text, theme.Color.Text
 
-	return DepthChart{
+	return &DepthChart{
 		buys:            buys,
 		sells:           sells,
 		strokeBuyColor:  theme.Color.ChartBuyLine,
@@ -67,65 +71,65 @@ func NewDepthChart(buys, sells []*core.MiniOrder, theme *decredmaterial.Theme) D
 }
 
 // Layout draws the Board and accepts input for adding alive cells.
-func (chart DepthChart) Layout(gtx layout.Context) layout.Dimensions {
+func (chart DepthChart) Layout(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	gtx.Constraints.Min.Y = minimumChartHeight
+	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y / 3
 
 	// cut layout if go outside
 	clip.Rect{Max: gtx.Constraints.Max}.Add(gtx.Ops)
 	chart.handler()
 
 	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+		layout.Expanded(func(gtx C) D {
 			return chart.depthChartLayout(gtx)
 		}),
-		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+		layout.Stacked(func(gtx C) D {
 			return chart.zoomButtonLayout(gtx)
 		}),
 	)
 }
 
-func (chart DepthChart) zoomButtonLayout(gtx layout.Context) layout.Dimensions {
+func (chart DepthChart) zoomButtonLayout(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-	return layout.Center.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			layout.Rigid(func(gtx C) D {
 				return chart.zoom.decrease.Layout(gtx)
 			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
 					Left:  values.MarginPadding8,
 					Right: values.MarginPadding8,
-				}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				}.Layout(gtx, func(gtx C) D {
 					return chart.zoom.text.Layout(gtx)
 				})
 			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			layout.Rigid(func(gtx C) D {
 				return chart.zoom.increase.Layout(gtx)
 			}),
 		)
 	})
 }
 
-func (chart DepthChart) depthChartLayout(gtx layout.Context) layout.Dimensions {
+func (chart DepthChart) depthChartLayout(gtx C) D {
 	return layout.Flex{Spacing: layout.SpaceAround}.Layout(gtx,
-		layout.Flexed(.5, func(gtx layout.Context) layout.Dimensions {
+		layout.Flexed(.5, func(gtx C) D {
 			return layout.Stack{}.Layout(gtx,
-				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				layout.Stacked(func(gtx C) D {
 					return chart.filledLayout(gtx, chart.buys, false)
 				}),
-				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				layout.Stacked(func(gtx C) D {
 					return chart.strokeLayout(gtx, chart.buys, false)
 				}),
 			)
 		}),
-		layout.Flexed(.5, func(gtx layout.Context) layout.Dimensions {
+		layout.Flexed(.5, func(gtx C) D {
 			return layout.Stack{}.Layout(gtx,
-				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				layout.Stacked(func(gtx C) D {
 					return chart.filledLayout(gtx, chart.sells, true)
 				}),
-				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				layout.Stacked(func(gtx C) D {
 					return chart.strokeLayout(gtx, chart.sells, true)
 				}),
 			)
@@ -133,7 +137,7 @@ func (chart DepthChart) depthChartLayout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (chart DepthChart) strokeLayout(gtx layout.Context, orderBooks []*core.MiniOrder, isSell bool) layout.Dimensions {
+func (chart DepthChart) strokeLayout(gtx C, orderBooks []*core.MiniOrder, isSell bool) D {
 	sizeX := gtx.Constraints.Max.X
 	var color color.NRGBA
 	if isSell {
@@ -192,10 +196,10 @@ func (chart DepthChart) strokeLayout(gtx layout.Context, orderBooks []*core.Mini
 
 	paint.Fill(gtx.Ops, color)
 
-	return layout.Dimensions{Size: size}
+	return D{Size: size}
 }
 
-func (chart DepthChart) filledLayout(gtx layout.Context, orderBooks []*core.MiniOrder, isSell bool) layout.Dimensions {
+func (chart DepthChart) filledLayout(gtx C, orderBooks []*core.MiniOrder, isSell bool) D {
 	var sizeX int
 	var color color.NRGBA
 	var filled clip.Path
@@ -262,7 +266,7 @@ func (chart DepthChart) filledLayout(gtx layout.Context, orderBooks []*core.Mini
 	paint.ColorOp{Color: color}.Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
 
-	return layout.Dimensions{Size: size}
+	return D{Size: size}
 }
 
 func (chart *DepthChart) handler() {

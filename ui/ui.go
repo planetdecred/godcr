@@ -24,6 +24,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
+// UI represents the wallet UI and DEX UI of the app
 type UI struct {
 	view     int
 	uiwallet *uiwallet.Wallet

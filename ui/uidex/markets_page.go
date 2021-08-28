@@ -62,7 +62,7 @@ type marketsPage struct {
 	certName       string
 
 	drawerNavItems []*drawerNav
-	depthChart     components.DepthChart
+	depthChart     *components.DepthChart
 	tradeForm      *components.TradeFormWidget
 
 	appPassword      decredmaterial.Editor
@@ -101,6 +101,46 @@ type marketsPage struct {
 	cancelOrder decredmaterial.Button
 
 	maxOrderEstimate **dexc.MaxOrderEstimate
+	ordersWidget     *components.OrderBooksWidget
+	userOrdersWidget *components.UserOrderBooksWidget
+}
+
+var buys []*core.MiniOrder
+var sells []*core.MiniOrder
+var myOrders []*core.Order
+
+// TODO: this is for testing purposes only,
+// will remove when have real data available
+func init() {
+	{
+		jsonFile, err := os.Open("./ui/uidex/orderbuys.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &buys)
+	}
+
+	{
+		jsonFile, err := os.Open("./ui/uidex/ordersells.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &sells)
+	}
+
+	{
+		jsonFile, err := os.Open("./ui/uidex/orders.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &myOrders)
+	}
 }
 
 func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
@@ -173,31 +213,10 @@ func (d *DexUI) MarketsPage(common pageCommon) layout.Widget {
 	pg.cancelOrder = d.theme.Button(new(widget.Clickable), "Cancel")
 	pg.cancelOrder.Background = d.theme.Color.Gray1
 
-	var buys []*core.MiniOrder
-	var sells []*core.MiniOrder
-
-	{
-		jsonFile, err := os.Open("./ui/uidex/orderbuys.json")
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer jsonFile.Close()
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-		json.Unmarshal(byteValue, &buys)
-	}
-
-	{
-		jsonFile, err := os.Open("./ui/uidex/ordersells.json")
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer jsonFile.Close()
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-		json.Unmarshal(byteValue, &sells)
-	}
-
 	pg.depthChart = components.NewDepthChart(buys, sells, pg.theme)
 	pg.tradeForm = components.NewTradeFormWidget(pg.theme)
+	pg.ordersWidget = components.NewOrderBooksWidget(pg.theme)
+	pg.userOrdersWidget = components.NewUserOrderBooksWidget(pg.theme)
 
 	return func(gtx C) D {
 		pg.handle(common)
@@ -365,16 +384,26 @@ func (pg *marketsPage) marketsLayout(gtx layout.Context, c pageCommon) layout.Di
 			return pg.theme.Separator().Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return c.UniformPadding(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return pg.tradeForm.Layout(gtx)
+			return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
+					layout.Flexed(1, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return pg.tradeForm.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.marketBalancesLayout(gtx, &c)
+							}),
+						)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return pg.marketBalancesLayout(gtx, &c)
+						return pg.ordersWidget.Layout(gtx, sells, buys)
 					}),
 				)
 			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return pg.userOrdersWidget.Layout(gtx, myOrders)
 		}),
 	)
 }
