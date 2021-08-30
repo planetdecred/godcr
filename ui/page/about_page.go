@@ -85,14 +85,14 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-var in = layout.Inset{
-	Top:    values.MarginPadding20,
-	Bottom: values.MarginPadding20,
-	Left:   values.MarginPadding16,
-	Right:  values.MarginPadding16,
-}
-
 func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
+	var in = layout.Inset{
+		Top:    values.MarginPadding20,
+		Bottom: values.MarginPadding20,
+		Left:   values.MarginPadding16,
+		Right:  values.MarginPadding16,
+	}
+	
 	w := []func(gtx C) D{
 		func(gtx C) D {
 			return components.Container{Padding: in}.Layout(gtx, func(gtx C) D {
