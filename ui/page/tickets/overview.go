@@ -145,19 +145,7 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 					Bottom: values.MarginPadding16,
 				}.Layout(gtx, func(gtx C) D {
 					return layout.Center.Layout(gtx, func(gtx C) D {
-						mainText, subText := components.BreakBalance(pg.Printer, pg.ticketPrice)
-						return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								label := pg.Theme.Label(values.TextSize28, mainText)
-								label.Color = pg.Theme.Color.DeepBlue
-								return label.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								label := pg.Theme.Label(values.TextSize16, subText)
-								label.Color = pg.Theme.Color.DeepBlue
-								return label.Layout(gtx)
-							}),
-						)
+						return components.LayoutBalanceSize(gtx, pg.Load, pg.ticketPrice, values.TextSize28)
 					})
 				})
 			}),

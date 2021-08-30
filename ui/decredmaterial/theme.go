@@ -40,34 +40,37 @@ type Theme struct {
 	Shaper text.Shaper
 	Base   *material.Theme
 	Color  struct {
-		Primary      color.NRGBA
-		Secondary    color.NRGBA
-		Text         color.NRGBA
-		Hint         color.NRGBA
-		Overlay      color.NRGBA
-		InvText      color.NRGBA
-		Success      color.NRGBA
-		Success2     color.NRGBA
-		Danger       color.NRGBA
-		Background   color.NRGBA
-		Surface      color.NRGBA
-		Gray         color.NRGBA
-		Black        color.NRGBA
-		DeepBlue     color.NRGBA
-		LightBlue    color.NRGBA
-		LightGray    color.NRGBA
-		InactiveGray color.NRGBA
-		ActiveGray   color.NRGBA
-		Gray1        color.NRGBA
-		Gray2        color.NRGBA
-		Gray3        color.NRGBA
-		Orange       color.NRGBA
-		Orange2      color.NRGBA
-		Gray4        color.NRGBA
-		Gray5        color.NRGBA
-		Gray6        color.NRGBA
-		Green50      color.NRGBA
-		Green500     color.NRGBA
+		Primary          color.NRGBA
+		Secondary        color.NRGBA
+		Text             color.NRGBA
+		Hint             color.NRGBA
+		Overlay          color.NRGBA
+		InvText          color.NRGBA
+		Success          color.NRGBA
+		Success2         color.NRGBA
+		Danger           color.NRGBA
+		Background       color.NRGBA
+		Surface          color.NRGBA
+		Gray             color.NRGBA
+		Black            color.NRGBA
+		DeepBlue         color.NRGBA
+		LightBlue        color.NRGBA
+		LightBlue2       color.NRGBA
+		BlueProgressTint color.NRGBA
+		LightGray        color.NRGBA
+		InactiveGray     color.NRGBA
+		ActiveGray       color.NRGBA
+		Gray1            color.NRGBA
+		Gray2            color.NRGBA
+		Gray3            color.NRGBA
+		Orange           color.NRGBA
+		Orange2          color.NRGBA
+		Gray4            color.NRGBA
+		Gray5            color.NRGBA
+		Gray6            color.NRGBA
+		Green50          color.NRGBA
+		Green500         color.NRGBA
+		Turquoise800     color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -119,8 +122,11 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Black = rgb(0x000000)
 		t.Color.Background = argb(0x22444444)
 		t.Color.LightBlue = rgb(0xe4f6ff)
+		t.Color.LightBlue2 = rgb(0x75D8FF)
+		t.Color.BlueProgressTint = rgb(0x73d7ff)
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.Color.Turquoise800 = rgb(0x008F52)
 		t.TextSize = unit.Sp(16)
 	} else {
 		t.DarkMode = false
@@ -149,8 +155,11 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Black = rgb(0x000000)
 		t.Color.Background = argb(0x22444444)
 		t.Color.LightBlue = rgb(0xe4f6ff)
+		t.Color.LightBlue2 = rgb(0x75D8FF)
+		t.Color.BlueProgressTint = rgb(0x73d7ff)
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.Color.Turquoise800 = rgb(0x008F52)
 		t.TextSize = unit.Sp(16)
 	}
 }

@@ -40,14 +40,14 @@ type Icons struct {
 	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
-	ReceiveIcon, TransactionIcon, TransactionIconInactive, SendIcon, MoreIcon, MoreIconInactive,
+	ReceiveIcon, Transferred, TransactionIcon, TransactionIconInactive, SendIcon, MoreIcon, MoreIconInactive,
 	PendingIcon, Logo, RedirectIcon, ConfirmIcon, NewWalletIcon, WalletAlertIcon,
-	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, mixer, MixerSmall,
-	ArrowForwardIcon, TransactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
+	ImportedAccountIcon, AccountIcon, EditIcon, expandIcon, CopyIcon, MixedTx, mixer, MixerSmall,
+	ArrowForwardIcon, Next, TransactionFingerPrintIcon, SettingsIcon, SecurityIcon, HelpIcon,
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, ArrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
-	List, ListGridIcon, DecredSymbolIcon *widget.Image
+	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2 *widget.Image
 
 	TicketPurchasedIcon,
 	TicketImmatureIcon,
@@ -108,6 +108,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		OverviewIconInactive:       &widget.Image{Src: paint.NewImageOp(decredIcons["overview_inactive"])},
 		WalletIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["wallet_inactive"])},
 		ReceiveIcon:                &widget.Image{Src: paint.NewImageOp(decredIcons["receive"])},
+		Transferred:                &widget.Image{Src: paint.NewImageOp(decredIcons["transferred"])},
 		TransactionIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["transaction"])},
 		TransactionIconInactive:    &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_inactive"])},
 		SendIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["send"])},
@@ -124,10 +125,12 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		EditIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["editIcon"])},
 		expandIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])},
 		CopyIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["copy_icon"])},
+		MixedTx:                    &widget.Image{Src: paint.NewImageOp(decredIcons["mixed_tx"])},
 		mixer:                      &widget.Image{Src: paint.NewImageOp(decredIcons["mixer"])},
 		MixerSmall:                 &widget.Image{Src: paint.NewImageOp(decredIcons["mixer_small"])},
 		TransactionFingerPrintIcon: &widget.Image{Src: paint.NewImageOp(decredIcons["transaction_fingerprint"])},
 		ArrowForwardIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["arrow_forward"])},
+		Next:                       &widget.Image{Src: paint.NewImageOp(decredIcons["ic_next"])},
 		SettingsIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["settings"])},
 		SecurityIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["security"])},
 		HelpIcon:                   &widget.Image{Src: paint.NewImageOp(decredIcons["help_icon"])},
@@ -161,6 +164,7 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		List:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
 		ListGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 		DecredSymbolIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},
+		DecredSymbol2:              &widget.Image{Src: paint.NewImageOp(decredIcons["ic_decred02"])},
 	}
 
 	wl := &WalletLoad{

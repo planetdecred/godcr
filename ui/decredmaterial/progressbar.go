@@ -17,6 +17,7 @@ import (
 type ProgressBarStyle struct {
 	Radius unit.Value
 	Height unit.Value
+	Width  unit.Value
 	material.ProgressBarStyle
 }
 
@@ -46,7 +47,11 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{Size: d}
 	}
 
-	progressBarWidth := float32(gtx.Constraints.Max.X)
+	if p.Width.V <= 0 {
+		p.Width = unit.Px(float32(gtx.Constraints.Max.X))
+	}
+
+	progressBarWidth := p.Width.V
 	return layout.Stack{Alignment: layout.W}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return shader(progressBarWidth, p.TrackColor)
