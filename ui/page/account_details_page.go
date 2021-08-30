@@ -188,17 +188,10 @@ func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimen
 
 func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, balance string, isTotalBalance bool) layout.Dimensions {
 
-	mainBalance, subBalance := components.BreakBalance(pg.Printer, balance)
-
-	mainLabel := pg.theme.Body1(mainBalance)
-	subLabel := pg.theme.Caption(subBalance)
-	subLabel.Color = pg.theme.Color.DeepBlue
 	marginTop := values.MarginPadding16
 	marginLeft := values.MarginPadding35
 
 	if isTotalBalance {
-		mainLabel = pg.theme.H4(mainBalance)
-		subLabel = pg.theme.Body1(subBalance)
 		marginTop = values.MarginPadding0
 		marginLeft = values.MarginPadding0
 	}
@@ -209,10 +202,11 @@ func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, bal
 	}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
-					layout.Rigid(mainLabel.Layout),
-					layout.Rigid(subLabel.Layout),
-				)
+				if isTotalBalance {
+					return components.LayoutBalanceSize(gtx, pg.Load, balance, values.TextSize34)
+				}
+
+				return components.LayoutBalance(gtx, pg.Load, balance)
 			}),
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(balType)

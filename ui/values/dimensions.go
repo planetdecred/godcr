@@ -42,6 +42,7 @@ var (
 	MarginPadding65       = unit.Dp(65)
 	MarginPadding70       = unit.Dp(70)
 	MarginPadding75       = unit.Dp(75)
+	MarginPadding80       = unit.Dp(80)
 	MarginPaddingMinus75  = unit.Dp(-75)
 	MarginPaddingMinus90  = unit.Dp(-90)
 	MarginPadding100      = unit.Dp(100)
@@ -66,6 +67,7 @@ var (
 	TextSize22 = unit.Sp(22)
 	TextSize24 = unit.Sp(24)
 	TextSize28 = unit.Sp(28)
+	TextSize34 = unit.Sp(34)
 
 	AppWidth  = unit.Sp(800)
 	AppHeight = unit.Sp(600)

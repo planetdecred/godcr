@@ -278,14 +278,7 @@ func (wal *Wallet) GetTransaction(walletID int, txnHash string) {
 		var resp Response
 		wall := wal.multi.WalletWithID(walletID)
 
-		hash, err := chainhash.NewHashFromStr(txnHash)
-		if err != nil {
-			resp.Err = err
-			wal.Send <- resp
-			return
-		}
-
-		txn, err := wall.GetTransactionRaw(hash[:])
+		txn, err := wall.GetTransactionRaw(txnHash)
 		if err != nil {
 			resp.Err = err
 			wal.Send <- resp

@@ -23,6 +23,8 @@ type LinearLayout struct {
 	Margin      layout.Inset
 	Padding     layout.Inset
 	Direction   layout.Direction
+	Spacing     layout.Spacing
+	Alignment   layout.Alignment
 }
 
 // Layout2 displays a linear layout with a single child.
@@ -57,7 +59,7 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 					return ll.Padding.Layout(gtx, func(gtx C) D {
 						// draw layout direction
 						return ll.Direction.Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: ll.Orientation}.Layout(gtx, children...)
+							return layout.Flex{Axis: ll.Orientation, Alignment: ll.Alignment, Spacing: ll.Spacing}.Layout(gtx, children...)
 						})
 					})
 				})
