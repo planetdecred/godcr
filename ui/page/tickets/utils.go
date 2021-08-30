@@ -18,7 +18,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
 const (
@@ -224,10 +223,10 @@ func setText(t string) {
 	}
 }
 
-func ticketStatusTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimensions {
-	setText(t.Info.Status)
-	st := ticketStatusIcon(l, t.Info.Status)
-	status := l.Theme.Body2(t.Info.Status)
+func ticketStatusTooltip(gtx C, l *load.Load, t Ticket) layout.Dimensions {
+	setText(t.Status)
+	st := ticketStatusProfile(l, t.Status)
+	status := l.Theme.Body2(t.Status)
 	status.Color = st.color
 
 	titleLabel, mainMsgLabel, mainMsgLabel2 := l.Theme.Body2(title), l.Theme.Body2(mainMsg), l.Theme.Body2(mainMsgDesc)
@@ -284,14 +283,13 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.Wallet, tx dcrlibwallet.Transaction, tooltip *decredmaterial.Tooltip) layout.Dimensions {
+func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.Wallet, tx dcrlibwallet.Transaction, tooltip tooltips) layout.Dimensions {
 	t := transactionToTicket(tx, selectedWallet, l.WL.MultiWallet.TicketMaturity(), l.WL.MultiWallet.GetBestBlock().Height)
 	var itemWidth int
 	st := ticketStatusProfile(l, t.Status)
 	if st == nil {
 		return layout.Dimensions{}
 	}
-
 	return l.Theme.Shadow().Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -314,7 +312,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 										txt := l.Theme.Label(values.TextSize14, "10h 47m")
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.durationTooltip, func(gtx C) D {
-											setText(t.Info.Status)
+											setText(t.Status)
 											return walletNameDateTimeTooltip(gtx, l, durationTitle,
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
 										})
@@ -376,7 +374,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
 										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {
-											setText(t.Info.Status)
+											setText(t.Status)
 											return ticketStatusTooltip(gtx, l, t)
 										})
 										return txtLayout
@@ -439,7 +437,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 											txt.Text = t.DaysBehind
 											txtLayout := txt.Layout(gtx)
 											ticketCardTooltip(gtx, txtLayout, tooltip.daysBehindTooltip, func(gtx C) D {
-												setText(t.Info.Status)
+												setText(t.Status)
 												return walletNameDateTimeTooltip(gtx, l, dayBehind,
 													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.DaysBehind).Layout))
 											})

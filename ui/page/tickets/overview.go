@@ -41,6 +41,7 @@ type Page struct {
 
 	stakingOverview *dcrlibwallet.StakingOverview
 	liveTickets     []dcrlibwallet.Transaction
+	tickets			[]dcrlibwallet.Transaction
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -86,6 +87,16 @@ func (pg *Page) OnResume() {
 	go func() {
 		mw := pg.WL.MultiWallet
 		pg.liveTickets = allLiveTickets(mw.AllWallets())
+
+		for range pg.liveTickets {
+			pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
+				statusTooltip:     pg.Load.Theme.Tooltip(),
+				walletNameTooltip: pg.Load.Theme.Tooltip(),
+				dateTooltip:       pg.Load.Theme.Tooltip(),
+				daysBehindTooltip: pg.Load.Theme.Tooltip(),
+				durationTooltip:   pg.Load.Theme.Tooltip(),
+			})
+		}
 	}()
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
@@ -244,17 +255,6 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				tickets := (*pg.tickets).LiveRecent
-				for range tickets {
-					pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
-						statusTooltip:     pg.Load.Theme.Tooltip(),
-						walletNameTooltip: pg.Load.Theme.Tooltip(),
-						dateTooltip:       pg.Load.Theme.Tooltip(),
-						daysBehindTooltip: pg.Load.Theme.Tooltip(),
-						durationTooltip:   pg.Load.Theme.Tooltip(),
-					})
-				}
-
 				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 						w := pg.WL.MultiWallet.WalletWithID(pg.liveTickets[index].WalletID)

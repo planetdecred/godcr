@@ -128,11 +128,19 @@ func (pg *ListPage) fetchTickets() {
 	} else {
 		pg.tickets = txs
 	}
+
+	for range pg.tickets {
+		pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
+			statusTooltip:     pg.Load.Theme.Tooltip(),
+			walletNameTooltip: pg.Load.Theme.Tooltip(),
+			dateTooltip:       pg.Load.Theme.Tooltip(),
+			daysBehindTooltip: pg.Load.Theme.Tooltip(),
+			durationTooltip:   pg.Load.Theme.Tooltip(),
+		})
+	}
 }
 
 func (pg *ListPage) Layout(gtx C) D {
-	tickets := pg.tickets
-
 	body := func(gtx C) D {
 		page := components.SubPage{
 			Load:       pg.Load,
@@ -142,15 +150,6 @@ func (pg *ListPage) Layout(gtx C) D {
 				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
-				for range tickets {
-					pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
-						statusTooltip:     pg.Load.Theme.Tooltip(),
-						walletNameTooltip: pg.Load.Theme.Tooltip(),
-						dateTooltip:       pg.Load.Theme.Tooltip(),
-						daysBehindTooltip: pg.Load.Theme.Tooltip(),
-						durationTooltip:   pg.Load.Theme.Tooltip(),
-					})
-				}
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
@@ -234,27 +233,6 @@ func (pg *ListPage) Layout(gtx C) D {
 	}
 
 	return components.UniformPadding(gtx, body)
-}
-
-func (pg *ListPage) dropDowns(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(pg.walletDropDown.Layout),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, pg.ticketTypeDropDown.Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, pg.orderDropDown.Layout)
-				}),
-			)
-		}),
-	)
 }
 
 func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []dcrlibwallet.Transaction) layout.Dimensions {
@@ -367,9 +345,9 @@ func (pg *ListPage) ticketListGridLayout(gtx C, tickets []dcrlibwallet.Transacti
 						Right:  values.MarginPadding4,
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
-						//selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+						selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 						//	return ticketCard(gtx, pg.Load, selectedWallet, tickets[index], pg.statusTooltips[index])
-						return ticketCard(gtx, pg.Load, &tickets[index], pg.ticketTooltips[index])
+						return ticketCard(gtx, pg.Load, selectedWallet, tickets[index], pg.ticketTooltips[index])
 					})
 				})
 			})
