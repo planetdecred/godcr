@@ -92,7 +92,6 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 		Left:   values.MarginPadding16,
 		Right:  values.MarginPadding16,
 	}
-	
 	w := []func(gtx C) D{
 		func(gtx C) D {
 			return components.Container{Padding: in}.Layout(gtx, func(gtx C) D {
