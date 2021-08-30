@@ -75,6 +75,8 @@ func (pg *Page) ID() string {
 func (pg *Page) OnResume() {
 	pg.ticketPrice = dcrutil.Amount(pg.WL.TicketPrice()).String()
 	go pg.WL.GetVSPList()
+	// TODO: automatic ticket purchase functionality
+	pg.autoPurchaseEnabled.Disabled()
 }
 
 func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
