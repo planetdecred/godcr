@@ -86,23 +86,39 @@ func (pg *AboutPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
+	var in = layout.Inset{
+		Top:    values.MarginPadding20,
+		Bottom: values.MarginPadding20,
+		Left:   values.MarginPadding16,
+		Right:  values.MarginPadding16,
+	}
 	w := []func(gtx C) D{
 		func(gtx C) D {
-			return components.EndToEndRow(gtx, pg.version.Layout, pg.versionValue.Layout)
+			return components.Container{Padding: in}.Layout(gtx, func(gtx C) D {
+				return components.EndToEndRow(gtx, pg.version.Layout, pg.versionValue.Layout)
+			})
 		},
 		func(gtx C) D {
-			return components.EndToEndRow(gtx, pg.buildDate.Layout, pg.buildDateValue.Layout)
+			return components.Container{Padding: in}.Layout(gtx, func(gtx C) D {
+				return components.EndToEndRow(gtx, pg.buildDate.Layout, pg.buildDateValue.Layout)
+			})
 		},
 		func(gtx C) D {
-			return components.EndToEndRow(gtx, pg.network.Layout, pg.networkValue.Layout)
+			return components.Container{Padding: in}.Layout(gtx, func(gtx C) D {
+				return components.EndToEndRow(gtx, pg.network.Layout, pg.networkValue.Layout)
+			})
 		},
 		func(gtx C) D {
 			return decredmaterial.Clickable(gtx, pg.licenseRow, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(pg.license.Layout),
+					layout.Rigid(func(gtx C) D {
+						return in.Layout(gtx, pg.license.Layout)
+					}),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+							return in.Layout(gtx, func(gtx C) D {
+								return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+							})
 						})
 					}),
 				)
@@ -113,16 +129,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 	return pg.container.Layout(gtx, len(w), func(gtx C, i int) D {
 		return layout.Inset{}.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return components.Container{
-						Padding: layout.Inset{
-							Top:    values.MarginPadding20,
-							Bottom: values.MarginPadding20,
-							Left:   values.MarginPadding16,
-							Right:  values.MarginPadding16,
-						},
-					}.Layout(gtx, w[i])
-				}),
+				layout.Rigid(w[i]),
 				layout.Rigid(func(gtx C) D {
 					if i == len(w)-1 {
 						return layout.Dimensions{}
