@@ -461,3 +461,34 @@ func createClickGestures(count int) []*gesture.Click {
 	}
 	return gestures
 }
+
+func nextTicketRemaining(allsecs int) string {
+	if allsecs == 0 {
+		return "imminent"
+	}
+	str := ""
+	if allsecs > 604799 {
+		weeks := allsecs / 604800
+		allsecs %= 604800
+		str += fmt.Sprintf("%dw ", weeks)
+	}
+	if allsecs > 86399 {
+		days := allsecs / 86400
+		allsecs %= 86400
+		str += fmt.Sprintf("%dd ", days)
+	}
+	if allsecs > 3599 {
+		hours := allsecs / 3600
+		allsecs %= 3600
+		str += fmt.Sprintf("%dh ", hours)
+	}
+	if allsecs > 59 {
+		mins := allsecs / 60
+		allsecs %= 60
+		str += fmt.Sprintf("%dm ", mins)
+	}
+	if allsecs > 0 {
+		str += fmt.Sprintf("%ds ", allsecs)
+	}
+	return str
+}
