@@ -16,6 +16,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -865,7 +866,7 @@ func (pg *WalletPage) Handle() {
 			}
 
 			for listItem.backupAcctClickable.Clicked() {
-				pg.ChangeFragment(NewBackupPage(pg.Load, listItem.wal))
+				pg.ChangeFragment(seedbackup.NewBackupPage(pg.Load, listItem.wal))
 			}
 		}
 

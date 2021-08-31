@@ -1,4 +1,4 @@
-package page
+package seedbackup
 
 import (
 	"fmt"
@@ -31,6 +31,8 @@ const (
 )
 
 type (
+	C         = layout.Context
+	D         = layout.Dimensions
 	seedGroup struct {
 		selected int
 		buttons  []decredmaterial.Button
