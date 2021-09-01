@@ -78,34 +78,43 @@ func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 			pg.PopFragment()
 		},
 		Body: func(gtx C) D {
-			return decredmaterial.LinearLayout{
-				Width:       decredmaterial.MatchParent,
-				Height:      decredmaterial.MatchParent,
-				Orientation: layout.Vertical,
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {
-						return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, pg.checkBoxes[i].Layout)
-					})
-				}),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.SW.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						if pg.verifyCheckBoxes() {
-							pg.viewSeedBtn.Background = pg.Theme.Color.Primary
-							pg.viewSeedBtn.Color = pg.Theme.Color.InvText
-						} else {
-							pg.viewSeedBtn.Background = pg.Theme.Color.Hint
-							pg.viewSeedBtn.Color = pg.Theme.Color.Text
-						}
-						return pg.viewSeedBtn.Layout(gtx)
-					})
-				}),
-			)
+			return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {
+				return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, pg.checkBoxes[i].Layout)
+			})
 		},
 	}
 
-	return components.UniformPadding(gtx, sp.Layout)
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.MatchParent,
+		Height:      decredmaterial.MatchParent,
+		Orientation: layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return components.UniformPadding(gtx, sp.Layout)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			if pg.verifyCheckBoxes() {
+				pg.viewSeedBtn.Background = pg.Theme.Color.Primary
+				pg.viewSeedBtn.Color = pg.Theme.Color.InvText
+			} else {
+				pg.viewSeedBtn.Background = pg.Theme.Color.Hint
+				pg.viewSeedBtn.Color = pg.Theme.Color.Text
+			}
+
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.WrapContent,
+				Orientation: layout.Vertical,
+				Direction:   layout.S,
+				Background:  sp.Theme.Color.Surface,
+				Padding:     layout.UniformInset(values.MarginPadding24),
+			}.Layout2(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return pg.viewSeedBtn.Layout(gtx)
+			})
+
+		}),
+	)
 }
 
 func (pg *BackupInstructionsPage) verifyCheckBoxes() bool {
