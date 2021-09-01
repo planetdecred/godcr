@@ -56,14 +56,13 @@ func (pg *VerifySeedPage) ID() string {
 }
 
 func (pg *VerifySeedPage) OnResume() {
-	// allSeeds := dcrlibwallet.PGPWordList()
+	allSeeds := dcrlibwallet.PGPWordList()
 
-	// TODO: string slice not reusable
 	multiSeedList := make([]shuffledSeedWords, 0)
 	seedWords := strings.Split(pg.seed, " ")
 	for _, word := range seedWords {
-		index := seedPosition(word, dcrlibwallet.PGPWordList())
-		shuffledSeed := pg.getMultiSeed(index, dcrlibwallet.PGPWordList())
+		index := seedPosition(word, allSeeds)
+		shuffledSeed := pg.getMultiSeed(index, dcrlibwallet.PGPWordList()) // using allSeeds here modifies the slice
 		multiSeedList = append(multiSeedList, shuffledSeed)
 	}
 
@@ -71,7 +70,6 @@ func (pg *VerifySeedPage) OnResume() {
 }
 
 func (pg *VerifySeedPage) getMultiSeed(realSeedIndex int, allSeeds []string) shuffledSeedWords {
-
 	shuffledSeed := shuffledSeedWords{
 		selectedIndex: -1,
 		words:         make([]string, 0),
