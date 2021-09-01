@@ -60,6 +60,7 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 					return ll.Border.Layout(gtx, func(gtx C) D {
 						// draw padding
 						return ll.Padding.Layout(gtx, func(gtx C) D {
+							// draw layout direction
 							return ll.Direction.Layout(gtx, func(gtx C) D {
 								return layout.Flex{Axis: ll.Orientation, Alignment: ll.Alignment, Spacing: ll.Spacing}.Layout(gtx, children...)
 							})

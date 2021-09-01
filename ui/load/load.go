@@ -83,6 +83,7 @@ type Load struct {
 	PopWindowPage    func() bool
 	ChangeFragment   func(page Page)
 	PopFragment      func()
+	PopToFragment    func(pageID string)
 }
 
 func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load {

@@ -17,7 +17,7 @@ import (
 
 const SaveSeedPageID = "save_seed"
 
-type seedRow struct {
+type saveSeedRow struct {
 	rowIndex int
 	word1    string
 	word2    string
@@ -28,7 +28,7 @@ type SaveSeedPage struct {
 	*load.Load
 	wallet *dcrlibwallet.Wallet
 	seed   string
-	rows   []seedRow
+	rows   []saveSeedRow
 
 	backButton   decredmaterial.IconButton
 	actionButton decredmaterial.Button
@@ -70,21 +70,21 @@ func (pg *SaveSeedPage) OnResume() {
 
 				m.Dismiss()
 
+				pg.seed = seed
+
 				wordList := strings.Split(seed, " ")
 				row1 := wordList[:11]
 				row2 := wordList[11:22]
 				row3 := wordList[22:]
 
-				rows := make([]seedRow, 0)
-				rowIndex := 1
+				rows := make([]saveSeedRow, 0)
 				for i := range row1 {
-					rows = append(rows, seedRow{
-						rowIndex: rowIndex,
+					rows = append(rows, saveSeedRow{
+						rowIndex: i + 1,
 						word1:    row1[i],
 						word2:    row2[i],
 						word3:    row3[i],
 					})
-					rowIndex += 3
 				}
 				pg.rows = rows
 			}()
@@ -95,13 +95,17 @@ func (pg *SaveSeedPage) OnResume() {
 
 }
 
-func (pg *SaveSeedPage) Handle() {}
+func (pg *SaveSeedPage) Handle() {
+	for pg.actionButton.Clicked() {
+		pg.ChangeFragment(NewVerifySeedPage(pg.Load, pg.wallet, pg.seed))
+	}
+}
 
 func (pg *SaveSeedPage) OnClose() {}
 
 // - Layout
 
-func (pg *SaveSeedPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *SaveSeedPage) Layout(gtx C) D {
 	sp := components.SubPage{
 		Load:       pg.Load,
 		Title:      "Write down seed phrase",
@@ -109,7 +113,8 @@ func (pg *SaveSeedPage) Layout(gtx layout.Context) layout.Dimensions {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			pg.PopFragment()
+			//TODO
+			pg.PopToFragment("Wallets")
 		},
 		Body: func(gtx C) D {
 
@@ -180,7 +185,7 @@ func (pg *SaveSeedPage) Layout(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (pg *SaveSeedPage) seedRow(gtx C, row seedRow) D {
+func (pg *SaveSeedPage) seedRow(gtx C, row saveSeedRow) D {
 	itemWidth := gtx.Constraints.Max.X / 3
 	topMargin := values.MarginPadding8
 	if row.rowIndex == 1 {
@@ -192,37 +197,37 @@ func (pg *SaveSeedPage) seedRow(gtx C, row seedRow) D {
 		Margin: layout.Inset{Top: topMargin},
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return pg.seedItem(gtx, itemWidth, row.rowIndex, row.word1)
+			return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex, row.word1)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return pg.seedItem(gtx, itemWidth, row.rowIndex+1, row.word2)
+			return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex+11, row.word2)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return pg.seedItem(gtx, itemWidth, row.rowIndex+2, row.word3)
+			return seedItem(pg.Theme, gtx, itemWidth, row.rowIndex+22, row.word3)
 		}),
 	)
 }
 
-func (pg *SaveSeedPage) seedItem(gtx C, width, index int, word string) D {
+func seedItem(theme *decredmaterial.Theme, gtx C, width, index int, word string) D {
 	return decredmaterial.LinearLayout{
 		Width:  width,
 		Height: decredmaterial.WrapContent,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			indexLabel := pg.Theme.Label(values.TextSize16, fmt.Sprint(index))
-			indexLabel.Color = pg.Theme.Color.Gray3
+			indexLabel := theme.Label(values.TextSize16, fmt.Sprint(index))
+			indexLabel.Color = theme.Color.Gray3
 			indexLabel.Font.Weight = text.Medium
 			return decredmaterial.LinearLayout{
 				Width:     gtx.Px(values.MarginPadding30),
 				Height:    gtx.Px(values.MarginPadding22),
 				Direction: layout.Center,
 				Margin:    layout.Inset{Right: values.MarginPadding8},
-				Border:    decredmaterial.Border{Radius: decredmaterial.Radius(9), Color: pg.Theme.Color.Gray3, Width: values.MarginPadding1},
+				Border:    decredmaterial.Border{Radius: decredmaterial.Radius(9), Color: theme.Color.Gray3, Width: values.MarginPadding1},
 			}.Layout2(gtx, indexLabel.Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
-			seedWord := pg.Theme.Label(values.TextSize16, word)
-			seedWord.Color = pg.Theme.Color.Gray3
+			seedWord := theme.Label(values.TextSize16, word)
+			seedWord.Color = theme.Color.Gray3
 			seedWord.Font.Weight = text.Medium
 			return seedWord.Layout(gtx)
 		}),
