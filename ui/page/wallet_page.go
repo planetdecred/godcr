@@ -866,7 +866,7 @@ func (pg *WalletPage) Handle() {
 			}
 
 			for listItem.backupAcctClickable.Clicked() {
-				pg.ChangeFragment(seedbackup.NewBackupPage(pg.Load, listItem.wal))
+				pg.ChangeFragment(seedbackup.NewBackupInstructionsPage(pg.Load, listItem.wal))
 			}
 		}
 

@@ -210,25 +210,21 @@ func (pg *BackupPage) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *BackupPage) viewTemplate(gtx layout.Context, content layout.Widget) layout.Dimensions {
 	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 	return layout.Inset{Left: values.MarginPadding10, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return layout.Stack{}.Layout(gtx,
-			layout.Stacked(func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Flexed(1, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								if pg.active != successView {
-									return pg.contentHeader(gtx)
-								}
-								return layout.Dimensions{}
-							}),
-							layout.Rigid(content),
-						)
-					}),
 					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.action.Layout)
+						if pg.active != successView {
+							return pg.contentHeader(gtx)
+						}
+						return layout.Dimensions{}
 					}),
+					layout.Rigid(content),
 				)
+			}),
+			layout.Rigid(func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, pg.action.Layout)
 			}),
 		)
 	})
