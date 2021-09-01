@@ -20,7 +20,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const WalletPageID = "Wallets"
+const WalletPageID = components.WalletsPageID
 
 type walletListItem struct {
 	wal      *dcrlibwallet.Wallet

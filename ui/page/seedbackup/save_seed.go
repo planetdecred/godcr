@@ -91,7 +91,9 @@ func (pg *SaveSeedPage) OnResume() {
 
 			return false
 		}).
-		NegativeButton("Cancel", func() {}).Show()
+		NegativeButton("Cancel", func() {
+			pg.PopToFragment(components.WalletsPageID)
+		}).Show()
 
 }
 
@@ -113,8 +115,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			//TODO
-			pg.PopToFragment("Wallets")
+			pg.PopToFragment(components.WalletsPageID)
 		},
 		Body: func(gtx C) D {
 

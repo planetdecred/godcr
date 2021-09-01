@@ -1,7 +1,6 @@
 package seedbackup
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -140,7 +139,6 @@ func (pg *VerifySeedPage) verifySeed() {
 		PositiveButton("Confirm", func(password string, m *modal.PasswordModal) bool {
 			go func() {
 				seed := pg.selectedSeedPhrase()
-				fmt.Println("Verifying:", seed)
 				_, err := pg.WL.MultiWallet.VerifySeedForWallet(pg.wallet.ID, seed, []byte(password))
 				if err != nil {
 					if err.Error() == dcrlibwallet.ErrInvalid {
@@ -148,13 +146,14 @@ func (pg *VerifySeedPage) verifySeed() {
 						m.Dismiss()
 						return
 					}
+
 					m.SetLoading(false)
 					m.SetError(err.Error())
 					return
 				}
 				m.Dismiss()
 
-				// pg.ChangeFragment(NewVerifySeedPage(pg.Load, pg.wallet, pg.seed))
+				pg.ChangeFragment(NewBackupSuccessPage(pg.Load))
 			}()
 
 			return false
@@ -191,7 +190,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			pg.PopFragment()
+			pg.PopToFragment(components.WalletsPageID)
 		},
 		Body: func(gtx C) D {
 			wdg := []layout.Widget{
