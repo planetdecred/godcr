@@ -12,6 +12,11 @@ import (
 
 const BackupInstructionsPageID = "backup_instructions"
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
 type BackupInstructionsPage struct {
 	*load.Load
 	wallet *dcrlibwallet.Wallet
