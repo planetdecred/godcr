@@ -30,6 +30,8 @@ type SaveSeedPage struct {
 	seed   string
 	rows   []saveSeedRow
 
+	infoText string
+
 	backButton   decredmaterial.IconButton
 	actionButton decredmaterial.Button
 	container    *layout.List
@@ -41,12 +43,17 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 		Load:   l,
 		wallet: wallet,
 
+		infoText: "You will be asked to enter the seed phrase on the next screen.",
+
 		actionButton: l.Theme.Button(new(widget.Clickable), "I have written down all 33 words"),
 		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
+
+	pg.actionButton.Background = pg.Theme.Color.Primary
+	pg.actionButton.Color = pg.Theme.Color.InvText
 
 	return pg
 }
@@ -154,40 +161,11 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		},
 	}
 
-	gtx.Constraints.Min = gtx.Constraints.Max
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return components.UniformPadding(gtx, sp.Layout)
-		}),
-		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min = gtx.Constraints.Max
-			return decredmaterial.LinearLayout{
-				Width:       decredmaterial.MatchParent,
-				Height:      decredmaterial.WrapContent,
-				Orientation: layout.Vertical,
-				Direction:   layout.S,
-				Alignment:   layout.Baseline,
-				Background:  sp.Theme.Color.Surface,
-				Padding:     layout.UniformInset(values.MarginPadding16),
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					label := pg.Theme.Label(values.TextSize14, "You will be asked to enter the seed phrase on the next screen.")
-					label.Color = pg.Theme.Color.Gray3
-					return label.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					pg.actionButton.Background = pg.Theme.Color.Primary
-					pg.actionButton.Color = pg.Theme.Color.InvText
-
-					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, pg.actionButton.Layout)
-				}))
-		}),
-	)
+	return container(gtx, *pg.Theme, sp.Layout, pg.infoText, pg.actionButton)
 }
 
 func (pg *SaveSeedPage) seedRow(gtx C, row saveSeedRow) D {
-	itemWidth := gtx.Constraints.Max.X / 3
+	itemWidth := gtx.Constraints.Max.X / 3 // Divide total width into 3 rows
 	topMargin := values.MarginPadding8
 	if row.rowIndex == 1 {
 		topMargin = values.MarginPadding16

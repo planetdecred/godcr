@@ -214,34 +214,15 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 		},
 	}
 
-	gtx.Constraints.Min = gtx.Constraints.Max
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return components.UniformPadding(gtx, sp.Layout)
-		}),
-		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min = gtx.Constraints.Max
-			return decredmaterial.LinearLayout{
-				Width:       decredmaterial.MatchParent,
-				Height:      decredmaterial.WrapContent,
-				Orientation: layout.Vertical,
-				Direction:   layout.S,
-				Alignment:   layout.Baseline,
-				Background:  pg.Theme.Color.Surface,
-				Padding:     layout.UniformInset(values.MarginPadding16),
-			}.Layout2(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				if pg.allSeedsSelected() {
-					pg.actionButton.Background = pg.Theme.Color.Primary
-					pg.actionButton.Color = pg.Theme.Color.InvText
-				} else {
-					pg.actionButton.Background = pg.Theme.Color.Hint
-					pg.actionButton.Color = pg.Theme.Color.Text
-				}
-				return pg.actionButton.Layout(gtx)
-			})
-		},
-		))
+	if pg.allSeedsSelected() {
+		pg.actionButton.Background = pg.Theme.Color.Primary
+		pg.actionButton.Color = pg.Theme.Color.InvText
+	} else {
+		pg.actionButton.Background = pg.Theme.Color.Hint
+		pg.actionButton.Color = pg.Theme.Color.Text
+	}
+
+	return container(gtx, *pg.Theme, sp.Layout, "", pg.actionButton)
 }
 
 func (pg *VerifySeedPage) seedListRow(gtx C, index int, multiSeed shuffledSeedWords) D {
