@@ -45,23 +45,26 @@ func setWeight(lbl *decredmaterial.Label, weight string) {
 }
 
 func getHeading(txt string, level int, theme *decredmaterial.Theme) decredmaterial.Label {
-	var lblWdgt func(string) decredmaterial.Label
+	textSize := values.TextSize16
 
 	switch level {
+	case 1:
+		textSize = values.TextSize28
+	case 2:
+		textSize = values.TextSize24
+	case 3:
+		textSize = values.TextSize20
+	case 4:
+		textSize = values.TextSize16
 	case 5:
-		lblWdgt = theme.H5
+		textSize = values.TextSize14
 	case 6:
-		lblWdgt = theme.H6
-	default:
-		lblWdgt = theme.H4
+		textSize = values.TextSize13_6
 	}
 
-	lbl := lblWdgt(txt)
+	lbl := theme.H1(txt)
 	lbl.Font.Weight = text.Bold
-	if level == 4 {
-		lbl.TextSize = values.TextSize32
-	}
-
+	lbl.TextSize = textSize
 	return lbl
 }
 
