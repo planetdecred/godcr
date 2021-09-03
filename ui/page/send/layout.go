@@ -243,12 +243,10 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 							return pg.amount.dcrAmountEditor.Layout(gtx)
 						}),
 						layout.Flexed(0.1, func(gtx C) D {
+							// TODO: needs to be centered vertically
 							return layout.Center.Layout(gtx, func(gtx C) D {
-								return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									icon := pg.Icons.CurrencySwapIcon
-									icon.Scale = 0.45
-									return icon.Layout(gtx)
-								})
+								icon := pg.Icons.CurrencySwapIcon
+								return icon.Layout24dp(gtx)
 							})
 						}),
 						layout.Flexed(0.45, func(gtx C) D {

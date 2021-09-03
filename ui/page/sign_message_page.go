@@ -179,8 +179,7 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 										layout.Flexed(0.1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
 												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-													pg.copyIcon.Scale = 1.0
-													return decredmaterial.Clickable(gtx, pg.copySignature, pg.copyIcon.Layout)
+													return decredmaterial.Clickable(gtx, pg.copySignature, pg.copyIcon.Layout24dp)
 												})
 											})
 										}),

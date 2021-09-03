@@ -120,7 +120,7 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 					Border:     decredmaterial.Border{Radius: decredmaterial.Radius(14)},
 					Padding:    layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Center.Layout(gtx, pg.morePageListItems[i].image.Layout)
+						return layout.Center.Layout(gtx, pg.morePageListItems[i].image.Layout24dp)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{

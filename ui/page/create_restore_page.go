@@ -116,7 +116,6 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	pg.resetSeedFields.Background = color.NRGBA{}
 
 	pg.alertIcon = pg.Icons.AlertGray
-	pg.alertIcon.Scale = 1.0
 
 	pg.restoreWalletBtn.Inset = layout.Inset{
 		Top:    values.MarginPadding12,
@@ -296,7 +295,7 @@ func (pg *CreateRestore) createPasswordPhase(gtx layout.Context) layout.Dimensio
 								Right: values.MarginPadding10,
 								Top:   values.MarginPadding3,
 							}
-							return inset.Layout(gtx, pg.alertIcon.Layout)
+							return inset.Layout(gtx, pg.alertIcon.Layout16dp)
 						}),
 						layout.Rigid(pg.Theme.Body1(msg).Layout),
 					)

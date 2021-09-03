@@ -127,8 +127,8 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     new(widget.Clickable),
-				Image:         mp.Icons.TransactionIcon,
-				ImageInactive: mp.Icons.TransactionIconInactive,
+				Image:         mp.Icons.TransactionsIcon,
+				ImageInactive: mp.Icons.TransactionsIconInactive,
 				Title:         values.String(values.StrTransactions),
 				PageID:        TransactionsPageID,
 			},

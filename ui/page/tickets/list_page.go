@@ -153,8 +153,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return wrapIcon.Layout(gtx, func(gtx C) D {
 									ic := pg.Icons.ListGridIcon
-									ic.Scale = 1
-									return insetIcon.Layout(gtx, ic.Layout)
+									return insetIcon.Layout(gtx, ic.Layout16dp)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -165,8 +164,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return wrapIcon.Layout(gtx, func(gtx C) D {
 									ic := pg.Icons.List
-									ic.Scale = 1
-									return insetIcon.Layout(gtx, ic.Layout)
+									return insetIcon.Layout(gtx, ic.Layout16dp)
 								})
 							}),
 						)

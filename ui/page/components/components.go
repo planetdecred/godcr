@@ -178,10 +178,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						layout.Rigid(func(gtx C) D {
 							if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
 								ic := l.Icons.TicketIconInactive
-								width := float32(ic.Src.Size().X)
-								scale := 16.0 / width
-								ic.Scale = scale
-								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout)
+								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout12dp)
 							}
 							return D{}
 						}),
@@ -284,8 +281,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 					if TxConfirmations(l, row.Transaction) <= 1 {
 						statusIcon = l.Icons.PendingIcon
 					}
-					statusIcon.Scale = 1.0
-					return layout.E.Layout(gtx, statusIcon.Layout)
+					return layout.E.Layout(gtx, statusIcon.Layout12dp)
 				}))
 		}),
 	)

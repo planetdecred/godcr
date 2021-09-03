@@ -21,6 +21,14 @@ func NewImage(src image.Image) *Image {
 	}
 }
 
+func (img *Image) Layout(gtx C) D {
+	return img.Image.Layout(gtx)
+}
+
+func (img *Image) Layout12dp(gtx C) D {
+	return img.LayoutSize(gtx, values.MarginPadding12)
+}
+
 func (img *Image) Layout16dp(gtx C) D {
 	return img.LayoutSize(gtx, values.MarginPadding16)
 }

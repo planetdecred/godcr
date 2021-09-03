@@ -5,7 +5,6 @@ import (
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
-	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -46,7 +45,6 @@ func NewLogPage(l *load.Load) *LogPage {
 	}
 
 	pg.copyIcon = pg.Icons.CopyIcon
-	pg.copyIcon.Scale = 0.25
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
@@ -90,9 +88,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			Extra: func(gtx C) D {
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return decredmaterial.Clickable(gtx, pg.copyLog, func(gtx C) D {
-						sz := gtx.Constraints.Max.X
-						pg.copyIcon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-						return pg.copyIcon.Layout(gtx)
+						return pg.copyIcon.Layout24dp(gtx)
 					})
 
 				})

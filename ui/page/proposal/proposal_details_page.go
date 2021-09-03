@@ -274,11 +274,10 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								if proposal.Category == dcrlibwallet.ProposalCategoryActive {
-									pg.timerIcon.Scale = 1
 									return layout.Inset{
 										Right: values.MarginPadding4,
 										Top:   values.MarginPadding3,
-									}.Layout(gtx, pg.timerIcon.Layout)
+									}.Layout(gtx, pg.timerIcon.Layout12dp)
 								}
 								return D{}
 							}),
@@ -404,7 +403,7 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Imag
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{}.Layout(gtx, func(gtx C) D {
-								return layout.E.Layout(gtx, icon.Layout)
+								return layout.E.Layout(gtx, icon.Layout24dp)
 							})
 						}),
 					)
@@ -470,8 +469,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 			ExtraText: "View on Politeia",
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
-					pg.redirectIcon.Scale = 1
-					return layout.E.Layout(gtx, pg.redirectIcon.Layout)
+					return layout.E.Layout(gtx, pg.redirectIcon.Layout24dp)
 				})
 			},
 		}

@@ -103,33 +103,11 @@ func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions 
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-										pg.Icons.TransactionFingerPrintIcon.Scale = 1.0
-										return pg.Icons.TransactionFingerPrintIcon.Layout(gtx)
-									})
-								}),
-								layout.Rigid(func(gtx C) D {
-									pg.Icons.ArrowForwardIcon.Scale = 0.5
-									return pg.Icons.ArrowForwardIcon.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									pg.Icons.MixerSmall.Scale = 1.0
-									return layout.Inset{
-										Left:  values.MarginPadding5,
-										Right: values.MarginPadding5,
-									}.Layout(gtx, pg.Icons.MixerSmall.Layout)
-								}),
-								layout.Rigid(func(gtx C) D {
-									pg.Icons.ArrowForwardIcon.Scale = 0.5
-									return pg.Icons.ArrowForwardIcon.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									pg.Icons.TransactionIcon.Scale = 1.5
-									return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, pg.Icons.TransactionIcon.Layout)
-								}),
-							)
+							return layout.Inset{
+								Bottom: values.MarginPadding24,
+							}.Layout(gtx, func(gtx C) D {
+								return pg.Icons.PrivacySetup.LayoutSize(gtx, values.MarginPadding280)
+							})
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := pg.Theme.H6("How does CoinShuffle++ mixer enhance your privacy?")
@@ -177,11 +155,11 @@ func (pg *PrivacyPage) mixerInfoStatusTextLayout(gtx layout.Context) layout.Dime
 					if !iconVisibility {
 						return layout.Dimensions{}
 					}
-					pg.Icons.AlertGray.Scale = 1.0
-					return pg.Icons.AlertGray.Layout(gtx)
+
+					return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, pg.Icons.AlertGray.Layout16dp)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, subtxt.Layout)
+					return subtxt.Layout(gtx)
 				}),
 			)
 		}),
@@ -209,9 +187,8 @@ func (pg *PrivacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							ic := pg.Icons.MixerSmall
-							ic.Scale = 1.0
-							return ic.Layout(gtx)
+							ic := pg.Icons.Mixer
+							return ic.Layout24dp(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
@@ -253,8 +230,7 @@ func (pg *PrivacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 									)
 								}),
 								layout.Rigid(func(gtx C) D {
-									pg.Icons.ArrowDownIcon.Scale = 1.0
-									return layout.Center.Layout(gtx, pg.Icons.ArrowDownIcon.Layout)
+									return layout.Center.Layout(gtx, pg.Icons.ArrowDownIcon.Layout24dp)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,

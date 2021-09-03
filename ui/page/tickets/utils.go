@@ -423,8 +423,7 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 											Right: values.MarginPadding4,
 										}.Layout(gtx, func(gtx C) D {
 											ic := l.Icons.TicketIconInactive
-											ic.Scale = 0.5
-											return ic.Layout(gtx)
+											return ic.Layout12dp(gtx)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {

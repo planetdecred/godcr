@@ -24,8 +24,8 @@ type CollapsibleWithOption struct {
 	button          *widget.Clickable
 	BackgroundColor color.NRGBA
 	card            Card
-	expandedIcon    *widget.Image
-	collapsedIcon   *widget.Image
+	expandedIcon    *Image
+	collapsedIcon   *Image
 	moreIconButton  IconButton
 }
 
@@ -123,8 +123,8 @@ func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) 
 								layout.Stacked(func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											icon.Scale = 1
-											return icon.Layout(gtx)
+											// TODO needs to be centered vertically
+											return icon.Layout24dp(gtx)
 										}),
 										layout.Rigid(header),
 									)

@@ -95,9 +95,7 @@ func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmateri
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							icon := icon
-							icon.Scale = 1
-							return icon.Layout(gtx)
+							return icon.Layout24dp(gtx)
 						}),
 						layout.Rigid(body),
 						layout.Rigid(func(gtx C) D {

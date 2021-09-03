@@ -54,7 +54,6 @@ type WalletPage struct {
 	listItems   []*walletListItem
 
 	walletIcon               *decredmaterial.Image
-	accountIcon              *decredmaterial.Image
 	walletAlertIcon          *decredmaterial.Image
 	container, walletsList   layout.List
 	watchWalletsList         *decredmaterial.ClickableList
@@ -111,10 +110,8 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
 
 	pg.walletIcon = pg.Icons.WalletIcon
-	pg.walletIcon.Scale = 1
 
 	pg.walletAlertIcon = pg.Icons.WalletAlertIcon
-	pg.walletAlertIcon.Scale = 1
 
 	pg.initializeFloatingMenu()
 	pg.watchOnlyWalletIcon = pg.Icons.WatchOnlyWalletIcon
@@ -585,7 +582,7 @@ func (pg *WalletPage) layoutCollapsibleHeader(gtx layout.Context, listItem *wall
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{
 				Right: values.MarginPadding10,
-			}.Layout(gtx, pg.walletIcon.Layout)
+			}.Layout(gtx, pg.walletIcon.Layout24dp)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -635,14 +632,13 @@ func (pg *WalletPage) tableLayout(gtx layout.Context, leftLabel, rightLabel decr
 }
 
 func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwallet.Account) layout.Dimensions {
-	pg.accountIcon = pg.Icons.AccountIcon
+	accountIcon := pg.Icons.AccountIcon
 	if account.Number == load.MaxInt32 {
-		pg.accountIcon = pg.Icons.ImportedAccountIcon
+		accountIcon = pg.Icons.ImportedAccountIcon
 		if account.TotalBalance == 0 {
 			return D{}
 		}
 	}
-	pg.accountIcon.Scale = 1.0
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -658,7 +654,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 							Right: values.MarginPadding10,
 							Top:   values.MarginPadding13,
 						}
-						return inset.Layout(gtx, pg.accountIcon.Layout)
+						return inset.Layout(gtx, accountIcon.Layout24dp)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -715,7 +711,7 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return pg.walletAlertIcon.Layout(gtx)
+					return pg.walletAlertIcon.Layout24dp(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					inset := layout.Inset{
@@ -786,9 +782,8 @@ func (pg *WalletPage) layoutAddWalletSection(gtx layout.Context) layout.Dimensio
 			}),
 			layout.Rigid(func(gtx C) D {
 				icon := pg.Icons.NewWalletIcon
-				sz := gtx.Constraints.Max.X
-				icon.Scale = float32(sz) / float32(gtx.Px(unit.Dp(float32(sz))))
-				return decredmaterial.Clickable(gtx, pg.openAddWalletPopupButton, icon.Layout)
+				// TODO: wrap in circular bg
+				return decredmaterial.Clickable(gtx, pg.openAddWalletPopupButton, icon.Layout24dp)
 			}),
 		)
 	})
