@@ -91,7 +91,7 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		backupAcctIcon:           l.Icons.NavigationArrowForward,
 	}
 
-	pg.separator.Color = l.Theme.Color.Background
+	pg.separator.Color = l.Theme.Color.Gray1
 	pg.addAcctIcon.Color = l.Theme.Color.Text
 
 	pg.watchOnlyWalletLabel = pg.Theme.Body1(values.String(values.StrWatchOnlyWallets))
