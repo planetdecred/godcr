@@ -66,8 +66,8 @@ type ProposalsPage struct {
 	infoIcon      *widget.Icon
 	updatedIcon   *widget.Icon
 	syncButton    *widget.Clickable
-	startSyncIcon *widget.Image
-	timerIcon     *widget.Image
+	startSyncIcon *decredmaterial.Image
+	timerIcon     *decredmaterial.Image
 
 	showSyncedCompleted bool
 	isSyncing           bool

@@ -21,7 +21,7 @@ type LogPage struct {
 
 	internalLog chan string
 	copyLog     *widget.Clickable
-	copyIcon    *widget.Image
+	copyIcon    *decredmaterial.Image
 	backButton  decredmaterial.IconButton
 
 	entriesList layout.List

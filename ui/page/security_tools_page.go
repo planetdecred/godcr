@@ -88,7 +88,7 @@ func (pg *SecurityToolsPage) address() layout.Widget {
 	}
 }
 
-func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *widget.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
+func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			return decredmaterial.Clickable(gtx, action, func(gtx C) D {

@@ -14,7 +14,7 @@ const MorePageID = "More"
 
 type morePageHandler struct {
 	clickable *widget.Clickable
-	image     *widget.Image
+	image     *decredmaterial.Image
 	page      string
 	action    func()
 }

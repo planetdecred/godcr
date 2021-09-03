@@ -75,17 +75,17 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 	if tx.Type == dcrlibwallet.TxTypeRegular {
 		if tx.Direction == dcrlibwallet.TxDirectionSent {
 			title = "Sent"
-			// icon = l.Icons.SendIcon
+			icon = l.Icons.SendIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
 			title = "Received"
-			// icon = l.Icons.ReceiveIcon
+			icon = l.Icons.ReceiveIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
 			title = "Yourself"
-			// icon = l.Icons.Transferred
+			icon = l.Icons.Transferred
 		}
 	} else if tx.Type == dcrlibwallet.TxTypeMixed {
 		title = "Mixed"
-		// icon = l.Icons.MixedTx
+		icon = l.Icons.MixedTx
 	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
 
 		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {

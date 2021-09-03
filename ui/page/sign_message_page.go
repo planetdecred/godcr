@@ -30,7 +30,7 @@ type SignMessagePage struct {
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
 	copySignature                              *widget.Clickable
-	copyIcon                                   *widget.Image
+	copyIcon                                   *decredmaterial.Image
 	gtx                                        *layout.Context
 
 	backButton decredmaterial.IconButton

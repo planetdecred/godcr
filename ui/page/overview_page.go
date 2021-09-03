@@ -45,7 +45,7 @@ type OverviewPage struct {
 	toggleSyncDetails decredmaterial.Button
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon, cachedIcon *widget.Icon
-	syncingIcon *widget.Image
+	syncingIcon *decredmaterial.Image
 
 	walletSyncing bool
 	walletSynced  bool

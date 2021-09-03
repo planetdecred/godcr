@@ -38,11 +38,11 @@ type proposalDetails struct {
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
-	redirectIcon       *widget.Image
+	redirectIcon       *decredmaterial.Image
 	voteBar            decredmaterial.VoteBar
 	rejectedIcon       *widget.Icon
-	downloadIcon       *widget.Image
-	timerIcon          *widget.Image
+	downloadIcon       *decredmaterial.Image
+	timerIcon          *decredmaterial.Image
 	successIcon        *widget.Icon
 	vote               decredmaterial.Button
 	backButton         decredmaterial.IconButton
@@ -389,7 +389,7 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 	})
 }
 
-func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *widget.Clickable) layout.Widget {
+func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Image, btn *widget.Clickable) layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12})),

@@ -21,7 +21,7 @@ type startPage struct {
 
 	loading bool
 
-	decredSymbol  *widget.Image
+	decredSymbol  *decredmaterial.Image
 	networkType   decredmaterial.Label
 	loadStatus    decredmaterial.Label
 	welcomeText   decredmaterial.Label

@@ -30,6 +30,19 @@ const (
 	MoreNavID
 )
 
+var (
+	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
+	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+)
+
+type NavHandler struct {
+	Clickable     *widget.Clickable
+	Image         *decredmaterial.Image
+	ImageInactive *decredmaterial.Image
+	Title         string
+	PageID        string
+}
+
 type MainPage struct {
 	*load.Load
 	appBarNav components.NavDrawer

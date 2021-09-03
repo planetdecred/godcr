@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -18,7 +17,7 @@ import (
 const TransactionsPageID = "Transactions"
 
 type transactionWdg struct {
-	confirmationIcons    *widget.Image
+	confirmationIcons    *decredmaterial.Image
 	icon                 *decredmaterial.Image
 	title                string
 	time, status, wallet decredmaterial.Label

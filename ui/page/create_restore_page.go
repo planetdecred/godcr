@@ -73,7 +73,7 @@ type CreateRestore struct {
 	warningModal    *decredmaterial.Modal
 	modalTitleLabel decredmaterial.Label
 
-	alertIcon *widget.Image
+	alertIcon *decredmaterial.Image
 }
 
 // Loading lays out the loading widget with a faded background

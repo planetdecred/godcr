@@ -53,9 +53,9 @@ type WalletPage struct {
 	multiWallet *dcrlibwallet.MultiWallet
 	listItems   []*walletListItem
 
-	walletIcon               *widget.Image
-	accountIcon              *widget.Image
-	walletAlertIcon          *widget.Image
+	walletIcon               *decredmaterial.Image
+	accountIcon              *decredmaterial.Image
+	walletAlertIcon          *decredmaterial.Image
 	container, walletsList   layout.List
 	watchWalletsList         *decredmaterial.ClickableList
 	toAcctDetails            []*gesture.Click
@@ -68,7 +68,7 @@ type WalletPage struct {
 	openAddWalletPopupButton *widget.Clickable
 	isAddWalletMenuOpen      bool
 	watchOnlyWalletLabel     decredmaterial.Label
-	watchOnlyWalletIcon      *widget.Image
+	watchOnlyWalletIcon      *decredmaterial.Image
 	shadowBox                *decredmaterial.Shadow
 	separator                decredmaterial.Line
 	addAcctIcon              *widget.Icon
