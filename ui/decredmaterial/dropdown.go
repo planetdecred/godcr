@@ -123,11 +123,8 @@ func (c *DropDown) layoutIcon(itemIndex int) layout.FlexChild {
 			return layout.Dimensions{}
 		}
 
-		// TODO
 		img := c.items[itemIndex].Icon
-		img.Scale = 0.045
-
-		return img.Layout(gtx)
+		return img.Layout24dp(gtx)
 	})
 }
 

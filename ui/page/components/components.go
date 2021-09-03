@@ -222,14 +222,11 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								}),
 								layout.Rigid(func(gtx C) D {
 									ic := l.Icons.DecredSymbol2
-									width := float32(ic.Src.Size().Y)
-									scale := 16.0 / width
-									ic.Scale = scale
 
 									return layout.Inset{
 										Left:  values.MarginPadding4,
 										Right: values.MarginPadding4,
-									}.Layout(gtx, ic.Layout)
+									}.Layout(gtx, ic.Layout16dp)
 								}),
 								layout.Rigid(func(gtx C) D {
 									label := l.Theme.Label(values.TextSize14, dcrutil.Amount(row.Transaction.VoteReward).String())

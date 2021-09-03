@@ -245,7 +245,9 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 							return layout.Inset{
 								Right: values.MarginPadding4,
 								Top:   values.MarginPadding4,
-							}.Layout(gtx, pg.txnWidgets.confirmationIcons.Layout)
+							}.Layout(gtx, func(gtx C) D {
+								return pg.txnWidgets.confirmationIcons.Layout12dp(gtx)
+							})
 						}),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							txt := pg.Theme.Body1("")

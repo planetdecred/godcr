@@ -69,10 +69,6 @@ func NewMorePage(l *load.Load) *MorePage {
 		},
 	}
 
-	for i := range morePageListItems {
-		morePageListItems[i].image.Scale = 1
-	}
-
 	pg := &MorePage{
 		container:         layout.Flex{Axis: layout.Vertical},
 		morePageListItems: morePageListItems,

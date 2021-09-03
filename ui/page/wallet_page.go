@@ -545,8 +545,7 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 							inset := layout.Inset{
 								Right: values.MarginPadding10,
 							}
-							pg.watchOnlyWalletIcon.Scale = 1.0
-							return inset.Layout(gtx, pg.watchOnlyWalletIcon.Layout)
+							return inset.Layout(gtx, pg.watchOnlyWalletIcon.Layout24dp)
 						}),
 						layout.Rigid(pg.Theme.Body2(listItem.wal.Name).Layout),
 						layout.Flexed(1, func(gtx C) D {

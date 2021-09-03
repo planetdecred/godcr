@@ -67,8 +67,6 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		viewInPoliteiaBtn:  new(widget.Clickable),
 	}
 
-	pg.redirectIcon.Scale = 1
-	pg.downloadIcon.Scale = 1
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	pg.vote = l.Theme.Button(new(widget.Clickable), "Vote")

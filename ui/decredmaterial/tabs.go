@@ -86,9 +86,10 @@ func (t *TabItem) layoutIcon(gtx layout.Context) layout.Dimensions {
 		return D{}
 	}
 
-	img := widget.Image{Src: *t.iconOp}
-	img.Scale = 0.05
-	return img.Layout(gtx)
+	img := Image{
+		Image: &widget.Image{Src: *t.iconOp},
+	}
+	return img.Layout24dp(gtx)
 }
 
 // iconText lays out the text of a tab item and its icon if it has one. It aligns the text and the icon
