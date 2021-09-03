@@ -12,7 +12,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"gioui.org/widget"
 
 	"github.com/ararog/timeago"
 	"github.com/decred/dcrd/dcrutil/v3"
@@ -69,24 +68,24 @@ func UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	}.Layout(gtx, body)
 }
 
-func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction) (string, *widget.Image) {
+func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction) (string, *decredmaterial.Image) {
 	var title string
-	var icon *widget.Image
-
+	var icon *decredmaterial.Image
+	icon = l.Icons.TicketLiveIcon
 	if tx.Type == dcrlibwallet.TxTypeRegular {
 		if tx.Direction == dcrlibwallet.TxDirectionSent {
 			title = "Sent"
-			icon = l.Icons.SendIcon
+			// icon = l.Icons.SendIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
 			title = "Received"
-			icon = l.Icons.ReceiveIcon
+			// icon = l.Icons.ReceiveIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
 			title = "Yourself"
-			icon = l.Icons.Transferred
+			// icon = l.Icons.Transferred
 		}
 	} else if tx.Type == dcrlibwallet.TxTypeMixed {
 		title = "Mixed"
-		icon = l.Icons.MixedTx
+		// icon = l.Icons.MixedTx
 	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
 
 		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
@@ -109,11 +108,6 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 		}
 	}
 
-	// Scale icon to 24 by 24
-	width := float32(icon.Src.Size().X)
-	scale := 24.0 / width
-	icon.Scale = scale
-
 	return title, icon
 }
 
@@ -135,7 +129,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.W.Layout(gtx, icon.Layout)
+			return layout.W.Layout(gtx, icon.Layout24dp)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return decredmaterial.LinearLayout{

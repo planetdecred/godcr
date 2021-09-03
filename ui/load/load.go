@@ -57,7 +57,7 @@ type Icons struct {
 	TicketMissedIcon,
 	TicketExpiredIcon,
 	TicketRevokedIcon,
-	TicketUnminedIcon *widget.Image
+	TicketUnminedIcon *decredmaterial.Image
 }
 
 type Load struct {
@@ -203,14 +203,14 @@ func loadIcons() Icons {
 		TicketIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["ticket"])},
 		TicketIconInactive:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_inactive"])},
 		StakeyIcon:                 &widget.Image{Src: paint.NewImageOp(decredIcons["stakey"])},
-		TicketPurchasedIcon:        &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_purchased"])},
-		TicketImmatureIcon:         &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_immature"])},
-		TicketUnminedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_unmined"])},
-		TicketLiveIcon:             &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_live"])},
-		TicketVotedIcon:            &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_voted"])},
-		TicketMissedIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_missed"])},
-		TicketExpiredIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_expired"])},
-		TicketRevokedIcon:          &widget.Image{Src: paint.NewImageOp(decredIcons["ticket_revoked"])},
+		TicketPurchasedIcon:        decredmaterial.NewImage(decredIcons["ticket_purchased"]),
+		TicketImmatureIcon:         decredmaterial.NewImage(decredIcons["ticket_immature"]),
+		TicketUnminedIcon:          decredmaterial.NewImage(decredIcons["ticket_unmined"]),
+		TicketLiveIcon:             decredmaterial.NewImage(decredIcons["ticket_live"]),
+		TicketVotedIcon:            decredmaterial.NewImage(decredIcons["ticket_voted"]),
+		TicketMissedIcon:           decredmaterial.NewImage(decredIcons["ticket_missed"]),
+		TicketExpiredIcon:          decredmaterial.NewImage(decredIcons["ticket_expired"]),
+		TicketRevokedIcon:          decredmaterial.NewImage(decredIcons["ticket_revoked"]),
 		List:                       &widget.Image{Src: paint.NewImageOp(decredIcons["list"])},
 		ListGridIcon:               &widget.Image{Src: paint.NewImageOp(decredIcons["list_grid"])},
 		DecredSymbolIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},

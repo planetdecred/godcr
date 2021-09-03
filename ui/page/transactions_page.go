@@ -19,7 +19,7 @@ const TransactionsPageID = "Transactions"
 
 type transactionWdg struct {
 	confirmationIcons    *widget.Image
-	icon                 *widget.Image
+	icon                 *decredmaterial.Image
 	title                string
 	time, status, wallet decredmaterial.Label
 }

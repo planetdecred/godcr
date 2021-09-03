@@ -219,9 +219,8 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 							wrapIcon := pg.Theme.Card()
 							wrapIcon.Color = st.background
 							wrapIcon.Radius = decredmaterial.Radius(8)
-							st.icon.Scale = 0.6
 							dims := wrapIcon.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout)
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout24dp)
 							})
 							progressBarWidth = dims.Size.X
 							return dims

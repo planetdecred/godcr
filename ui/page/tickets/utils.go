@@ -9,7 +9,6 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -43,12 +42,12 @@ var (
 )
 
 func ticketStatusIcon(l *load.Load, ticketStatus string) *struct {
-	icon       *widget.Image
+	icon       *decredmaterial.Image
 	color      color.NRGBA
 	background color.NRGBA
 } {
 	m := map[string]struct {
-		icon       *widget.Image
+		icon       *decredmaterial.Image
 		color      color.NRGBA
 		background color.NRGBA
 	}{
@@ -133,14 +132,13 @@ func ticketStatusTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimension
 	st := ticketStatusIcon(l, t.Info.Status)
 	status := l.Theme.Body2(t.Info.Status)
 	status.Color = st.color
-	st.icon.Scale = .5
 
 	titleLabel, mainMsgLabel, mainMsgLabel2 := l.Theme.Body2(title), l.Theme.Body2(mainMsg), l.Theme.Body2(mainMsgDesc)
 	mainMsgLabel.Color, mainMsgLabel2.Color = l.Theme.Color.Gray, l.Theme.Color.Gray
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(st.icon.Layout),
+				layout.Rigid(st.icon.Layout24dp),
 				layout.Rigid(toolTipContent(layout.Inset{Left: values.MarginPadding4}, status.Layout)),
 			)
 		}),
@@ -195,7 +193,6 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 	if st == nil {
 		return layout.Dimensions{}
 	}
-	st.icon.Scale = 1.0
 	return l.Theme.Shadow().Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -235,7 +232,7 @@ func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tool
 								Left:   values.MarginPadding62,
 								Bottom: values.MarginPadding24,
 							}.Layout(gtx, func(gtx C) D {
-								return st.icon.Layout(gtx)
+								return st.icon.Layout36dp(gtx)
 							})
 							itemWidth = content.Size.X
 							return content
@@ -369,8 +366,7 @@ func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index 
 				if st == nil {
 					return layout.Dimensions{}
 				}
-				st.icon.Scale = 0.6
-				return st.icon.Layout(gtx)
+				return st.icon.Layout24dp(gtx)
 			})
 		}),
 		layout.Flexed(1, func(gtx C) D {

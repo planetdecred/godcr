@@ -201,7 +201,7 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 			return layout.Inset{
 				Right: values.MarginPadding16,
 				Top:   values.MarginPadding12,
-			}.Layout(gtx, pg.txnWidgets.icon.Layout)
+			}.Layout(gtx, pg.txnWidgets.icon.Layout24dp)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
