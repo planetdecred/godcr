@@ -83,7 +83,7 @@ func NewUI(w *app.Window, wal *wallet.Wallet, dexc *dexc.Dexc, internalLog chan 
 	}
 
 	// Create Dex ui
-	uid, err := uidex.NewDexUI(dexc, dexIcons, collection, internalLog, &ui.view, w.Invalidate)
+	uid, err := uidex.NewDexUI(dexc, dexIcons, collection, &ui.view, w.Invalidate)
 	if err != nil {
 		return nil, fmt.Errorf("Could not initialize dex UI: %s\ns", err)
 	}

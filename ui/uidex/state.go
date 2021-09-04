@@ -43,5 +43,8 @@ func (d *DexUI) updateStates(update interface{}) {
 
 	case dexc.MaxOrderEstimate:
 		d.maxOrderEstimate = &e
+	case dexc.BookUpdate:
+		log.Infof(".....Book update", (*e.Payload).Sell)
+		// d.maxOrderEstimate = &e
 	}
 }

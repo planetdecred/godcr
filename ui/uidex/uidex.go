@@ -28,8 +28,7 @@ type DexUI struct {
 
 	err string
 
-	pages       map[string]layout.Widget
-	internalLog chan string
+	pages map[string]layout.Widget
 
 	// Toggle between wallet and dex view mode
 	switchView *int
@@ -46,8 +45,7 @@ type selectedMaket struct {
 }
 
 // NewDexUI creates and initializes a new walletUI with start
-func NewDexUI(dc *dexc.Dexc, decredIcons map[string]image.Image, collection []text.FontFace,
-	internalLog chan string, v *int, invalidate func()) (*DexUI, error) {
+func NewDexUI(dc *dexc.Dexc, decredIcons map[string]image.Image, collection []text.FontFace, v *int, invalidate func()) (*DexUI, error) {
 	d := new(DexUI)
 	d.dexc = dc
 	theme := decredmaterial.NewTheme(collection, decredIcons)
@@ -56,7 +54,6 @@ func NewDexUI(dc *dexc.Dexc, decredIcons map[string]image.Image, collection []te
 	}
 	d.ops = op.Ops{}
 	d.theme = theme
-	d.internalLog = internalLog
 
 	d.userInfo = new(dexc.User)
 	d.market = new(selectedMaket)

@@ -32,3 +32,11 @@ type TradeForm struct {
 type MaxOrderEstimate struct {
 	MaxOrderEstimate *core.MaxOrderEstimate
 }
+
+// BookUpdate is an order book update.
+type BookUpdate struct {
+	Action   string          `json:"action"`
+	Host     string          `json:"host"`
+	MarketID string          `json:"marketID"`
+	Payload  *core.MiniOrder `json:"payload"`
+}
