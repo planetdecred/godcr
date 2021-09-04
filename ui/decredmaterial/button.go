@@ -20,6 +20,10 @@ type Button struct {
 	surfaceColor       color.NRGBA
 }
 
+type ButtonLayout struct {
+	material.ButtonLayoutStyle
+}
+
 type IconButton struct {
 	material.IconButtonStyle
 }
@@ -31,6 +35,10 @@ func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 		surfaceColor:       t.Color.Surface,
 		isEnabled:          true,
 	}
+}
+
+func (t *Theme) ButtonLayout(button *widget.Clickable) ButtonLayout {
+	return ButtonLayout{material.ButtonLayout(t.Base, button)}
 }
 
 func (t *Theme) IconButton(button *widget.Clickable, icon *widget.Icon) IconButton {
@@ -68,8 +76,12 @@ func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 	return b.ButtonStyle.Layout(gtx)
 }
 
-func (b IconButton) Layout(gtx layout.Context) layout.Dimensions {
-	return b.IconButtonStyle.Layout(gtx)
+func (bl ButtonLayout) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
+	return bl.ButtonLayoutStyle.Layout(gtx, w)
+}
+
+func (ib IconButton) Layout(gtx layout.Context) layout.Dimensions {
+	return ib.IconButtonStyle.Layout(gtx)
 }
 
 type TextAndIconButton struct {

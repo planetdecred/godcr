@@ -4,10 +4,7 @@ import (
 	"image/color"
 	"strconv"
 
-	"gioui.org/f32"
 	"gioui.org/layout"
-	"gioui.org/op/clip"
-	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 
@@ -530,7 +527,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									}
 									// header buttons container
 									return decredmaterial.Clickable(gtx, mp.appBarNavItems[i].Clickable, func(gtx C) D {
-										return mp.layoutCard(gtx, background, func(gtx C) D {
+										return mp.layoutCard(gtx, background, mp.appBarNavItems[i].Clickable, func(gtx C) D {
 											return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
 												return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 													layout.Rigid(func(gtx C) D {
@@ -578,74 +575,55 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 				Height:      decredmaterial.MatchParent,
 				Background:  mp.Theme.Color.Surface,
 				Orientation: mp.axis,
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					list := layout.List{Axis: layout.Vertical}
-					return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
-						background := mp.Theme.Color.Surface
-						if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-							background = mp.Theme.Color.ActiveGray
-						}
+			}.Layout2(gtx, func(gtx C) D {
+				list := layout.List{Axis: layout.Vertical}
+				return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
+					background := mp.Theme.Color.Surface
+					if mp.drawerNavItems[i].PageID == mp.currentPageID() {
+						background = mp.Theme.Color.ActiveGray
+					}
 
-						return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-							layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-								rr := float32(gtx.Px(values.MarginPadding0))
-								clip.UniformRRect(f32.Rectangle{Max: f32.Point{
-									X: float32(gtx.Constraints.Min.X),
-									Y: float32(gtx.Constraints.Min.Y),
-								}}, rr).Add(gtx.Ops)
-								switch {
-								case gtx.Queue == nil:
-									background = decredmaterial.Disabled(background)
-								case mp.drawerNavItems[i].Clickable.Hovered():
-									background = decredmaterial.Hovered(mp.Theme.Color.ActiveGray)
-								}
-								paint.Fill(gtx.Ops, background)
-								return layout.Dimensions{Size: gtx.Constraints.Min}
-							}),
-							layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-								txt := mp.Theme.Label(mp.textSize, mp.drawerNavItems[i].Title)
+					return mp.layoutCard(gtx, background, mp.drawerNavItems[i].Clickable, func(gtx C) D {
+						txt := mp.Theme.Label(mp.textSize, mp.drawerNavItems[i].Title)
 
-								gtx.Constraints.Min.X = gtx.Px(mp.width)
-								return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
-									return decredmaterial.LinearLayout{
-										Orientation: mp.axis,
-										Width:       gtx.Px(mp.width),
-										Height:      decredmaterial.WrapContent,
-										Padding:     layout.UniformInset(values.MarginPadding15),
-										Alignment:   mp.alignment,
-										Direction:   mp.direction,
-									}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											img := mp.drawerNavItems[i].ImageInactive
+						gtx.Constraints.Min.X = gtx.Px(mp.width)
+						return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
+							return decredmaterial.LinearLayout{
+								Orientation: mp.axis,
+								Width:       decredmaterial.MatchParent,
+								Height:      decredmaterial.WrapContent,
+								Padding:     layout.UniformInset(values.MarginPadding15),
+								Alignment:   mp.alignment,
+								Direction:   mp.direction,
+							}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									img := mp.drawerNavItems[i].ImageInactive
 
-											if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-												img = mp.drawerNavItems[i].Image
-											}
+									if mp.drawerNavItems[i].PageID == mp.currentPageID() {
+										img = mp.drawerNavItems[i].Image
+									}
 
-											img.Scale = 1.0
-											return img.Layout(gtx)
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{
-												Left: mp.leftInset,
-												Top:  values.MarginPadding4,
-											}.Layout(gtx, func(gtx C) D {
-												textColor := mp.Theme.Color.Gray4
-												if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-													textColor = mp.Theme.Color.DeepBlue
-												}
-												txt.Color = textColor
-												return txt.Layout(gtx)
-											})
-										}),
-									)
-								})
-							}),
-						)
+									img.Scale = 1.0
+									return img.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Left: mp.leftInset,
+										Top:  values.MarginPadding4,
+									}.Layout(gtx, func(gtx C) D {
+										textColor := mp.Theme.Color.Gray4
+										if mp.drawerNavItems[i].PageID == mp.currentPageID() {
+											textColor = mp.Theme.Color.DeepBlue
+										}
+										txt.Color = textColor
+										return txt.Layout(gtx)
+									})
+								}),
+							)
+						})
 					})
-				}),
-			)
+				})
+			})
 		}),
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
@@ -656,9 +634,9 @@ func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (mp *MainPage) layoutCard(gtx layout.Context, background color.NRGBA, body layout.Widget) layout.Dimensions {
+func (mp *MainPage) layoutCard(gtx layout.Context, background color.NRGBA, Clickable *widget.Clickable, body layout.Widget) layout.Dimensions {
 	card := mp.Theme.Card()
 	card.Color = background
 	card.Radius = decredmaterial.Radius(0)
-	return card.Layout(gtx, body)
+	return card.HovarableLayout(gtx, Clickable, body)
 }
