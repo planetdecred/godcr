@@ -77,7 +77,6 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 						}
 						return layout.Dimensions{}
 					}),
-					layout.Rigid(pg.notificationSection()),
 					layout.Rigid(pg.debug()),
 					layout.Rigid(pg.dangerZone()),
 				)
@@ -96,21 +95,6 @@ func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-					})
-				}),
-			)
-		})
-	}
-}
-
-func (pg *WalletSettingsPage) notificationSection() layout.Widget {
-	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrNotifications), nil, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrBeepForNewBlocks))),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.notification.Layout(gtx)
 					})
 				}),
 			)
