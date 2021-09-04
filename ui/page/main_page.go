@@ -481,90 +481,105 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
-	card := mp.Theme.Card()
-	card.Radius = decredmaterial.Radius(0)
-	return card.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.W.Layout(gtx, func(gtx C) D {
-							h := values.MarginPadding24
-							v := values.MarginPadding14
-							// Balance container
-							return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
-								func(gtx C) D {
-									return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											img := mp.Icons.Logo
-											img.Scale = 1.0
-											return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
-												func(gtx C) D {
-													return img.Layout(gtx)
-												})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
+	return decredmaterial.LinearLayout{
+		Width:       decredmaterial.MatchParent,
+		Height:      decredmaterial.WrapContent,
+		Background:  mp.Theme.Color.Surface,
+		Orientation: layout.Vertical,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.WrapContent,
+				Background:  mp.Theme.Color.Surface,
+				Orientation: layout.Horizontal,
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.W.Layout(gtx, func(gtx C) D {
+						h := values.MarginPadding24
+						v := values.MarginPadding14
+						// Balance container
+						return components.Container{Padding: layout.Inset{Right: h, Left: h, Top: v, Bottom: v}}.Layout(gtx,
+							func(gtx C) D {
+								return decredmaterial.LinearLayout{
+									Width:       decredmaterial.WrapContent,
+									Height:      decredmaterial.WrapContent,
+									Background:  mp.Theme.Color.Surface,
+									Orientation: layout.Horizontal,
+								}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										img := mp.Icons.Logo
+										img.Scale = 1.0
+										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
+											func(gtx C) D {
+												return img.Layout(gtx)
 											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											return mp.LayoutUSDBalance(gtx)
-										}),
-									)
-								})
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-								list := layout.List{Axis: layout.Horizontal}
-								return list.Layout(gtx, len(mp.appBarNavItems), func(gtx C, i int) D {
-									background := mp.Theme.Color.Surface
-									if mp.appBarNavItems[i].PageID == mp.currentPageID() {
-										background = mp.Theme.Color.ActiveGray
-									}
-									// header buttons container
+									}),
+									layout.Rigid(func(gtx C) D {
+										return layout.Center.Layout(gtx, func(gtx C) D {
+											return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										return mp.LayoutUSDBalance(gtx)
+									}),
+								)
+							})
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+							list := layout.List{Axis: layout.Horizontal}
+							return list.Layout(gtx, len(mp.appBarNavItems), func(gtx C, i int) D {
+								background := mp.Theme.Color.Surface
+								if mp.appBarNavItems[i].PageID == mp.currentPageID() {
+									background = mp.Theme.Color.ActiveGray
+								}
+								// header buttons container
+								return mp.layoutCard(gtx, background, mp.appBarNavItems[i].Clickable, func(gtx C) D {
 									return decredmaterial.Clickable(gtx, mp.appBarNavItems[i].Clickable, func(gtx C) D {
-										return mp.layoutCard(gtx, background, mp.appBarNavItems[i].Clickable, func(gtx C) D {
-											return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-												return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-													layout.Rigid(func(gtx C) D {
-														return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-															func(gtx C) D {
-																return layout.Center.Layout(gtx, func(gtx C) D {
-																	img := mp.appBarNavItems[i].Image
-																	img.Scale = 1.0
-																	return mp.appBarNavItems[i].Image.Layout(gtx)
-																})
-															})
-													}),
-													layout.Rigid(func(gtx C) D {
-														return layout.Inset{
-															Left: values.MarginPadding0,
-														}.Layout(gtx, func(gtx C) D {
+										return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
+											return decredmaterial.LinearLayout{
+												Width:       decredmaterial.WrapContent,
+												Height:      decredmaterial.WrapContent,
+												Orientation: layout.Horizontal,
+											}.Layout(gtx,
+												layout.Rigid(func(gtx C) D {
+													return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
+														func(gtx C) D {
 															return layout.Center.Layout(gtx, func(gtx C) D {
-																return mp.Theme.Body1(mp.appBarNavItems[i].Title).Layout(gtx)
+																img := mp.appBarNavItems[i].Image
+																img.Scale = 1.0
+																return mp.appBarNavItems[i].Image.Layout(gtx)
 															})
 														})
-													}),
-												)
-											})
+												}),
+												layout.Rigid(func(gtx C) D {
+													return layout.Inset{
+														Left: values.MarginPadding0,
+													}.Layout(gtx, func(gtx C) D {
+														return layout.Center.Layout(gtx, func(gtx C) D {
+															return mp.Theme.Body1(mp.appBarNavItems[i].Title).Layout(gtx)
+														})
+													})
+												}),
+											)
 										})
 									})
 								})
 							})
 						})
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return mp.Theme.Separator().Layout(gtx)
-			}),
-		)
-	})
+					})
+				}),
+			)
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return mp.Theme.Separator().Layout(gtx)
+		}),
+	)
 }
 
 func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
