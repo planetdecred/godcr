@@ -121,6 +121,9 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					}),
+					layout.Expanded(pg.orderDropDown.BackDrop),
+					layout.Expanded(pg.ticketTypeDropDown.BackDrop),
+					layout.Expanded(pg.walletDropDown.BackDrop),
 					layout.Stacked(pg.dropDowns),
 				)
 			},

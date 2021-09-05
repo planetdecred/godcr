@@ -95,7 +95,7 @@ func (c *DropDown) handleEvents() {
 	}
 
 	for c.backdrop.Clicked() {
-
+		c.closeAllDropdown(c.group)
 	}
 }
 
@@ -181,6 +181,14 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 		}),
 		layout.Expanded(btn.Button.Layout),
 	)
+}
+
+func (c *DropDown) BackDrop(gtx layout.Context) layout.Dimensions {
+	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+	if c.isOpen {
+		return c.backdrop.Layout(gtx)
+	}
+	return layout.Dimensions{}
 }
 
 func (c *DropDown) Layout(gtx layout.Context) layout.Dimensions {

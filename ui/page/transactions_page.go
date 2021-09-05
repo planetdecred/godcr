@@ -162,6 +162,9 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			}),
+			layout.Expanded(pg.txTypeDropDown.BackDrop),
+			layout.Expanded(pg.orderDropDown.BackDrop),
+			layout.Expanded(pg.walletDropDown.BackDrop),
 			layout.Stacked(pg.dropDowns),
 		)
 	}
@@ -194,6 +197,7 @@ func (pg *TransactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *TransactionsPage) Handle() {
+
 	for pg.txTypeDropDown.Changed() {
 		pg.loadTransactions()
 	}
