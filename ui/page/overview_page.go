@@ -331,7 +331,10 @@ func (pg OverviewPage) titleRow(gtx layout.Context, leftWidget, rightWidget func
 				return leftWidget(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return rightWidget(gtx)
+				if len(pg.transactions) > 0 {
+					return rightWidget(gtx)
+				}
+				return D{}
 			}),
 		)
 	})
