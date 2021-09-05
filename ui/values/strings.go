@@ -223,4 +223,6 @@ const (
 	StrUsdBittrex                  = "usdBittrex"
 	StrNone                        = "none"
 	StrProposal                    = "proposals"
+	StrAdvancedMode                = "advancedMode"
+	StrClearFeilds                 = "clearAllFields"
 )

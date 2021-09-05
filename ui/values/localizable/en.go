@@ -117,4 +117,6 @@ const EN = `
 "usdBittrex" = "USD (Bittrex)";
 "none" = "None";
 "proposals" = "Proposals";
+"advancedMode" = "Advanced mode"
+"clearAllFields" = "Clear all fields"
 `

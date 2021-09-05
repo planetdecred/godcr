@@ -53,7 +53,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		info:           l.Theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.ActionInfo))),
+		info:           l.Theme.IconButton(new(widget.Clickable), components.MustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           l.Theme.Button(new(widget.Clickable), "Copy"),
 		more:           l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavMoreIcon),
 		newAddr:        l.Theme.Button(new(widget.Clickable), "Generate new address"),

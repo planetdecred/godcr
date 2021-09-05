@@ -107,7 +107,7 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 
 	pg.restoreWalletBtn = l.Theme.Button(new(widget.Clickable), "Restore")
 
-	pg.closePageBtn = l.Theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationClose)))
+	pg.closePageBtn = l.Theme.IconButton(new(widget.Clickable), components.MustIcon(widget.NewIcon(icons.NavigationClose)))
 	pg.closePageBtn.Background = color.NRGBA{}
 	pg.closePageBtn.Color = l.Theme.Color.Hint
 

@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gioui.org/widget"
+
 	"gioui.org/layout"
 
 	"github.com/decred/dcrd/dcrutil/v3"
@@ -19,6 +21,14 @@ const (
 	PageID = "Send"
 )
 
+type moreItem struct {
+	text     string
+	id       string
+	button   *widget.Clickable
+	action   func()
+	separate bool
+}
+
 type Page struct {
 	*load.Load
 	pageContainer layout.List
@@ -32,7 +42,6 @@ type Page struct {
 	moreOption    decredmaterial.IconButton
 	retryExchange decredmaterial.Button
 	nextButton    decredmaterial.Button
-	clearAllBtn   decredmaterial.Button
 
 	txFeeCollapsible *decredmaterial.Collapsible
 
@@ -42,6 +51,10 @@ type Page struct {
 	exchangeError string
 
 	*authoredTxData
+	shadowBox       *decredmaterial.Shadow
+	optionsMenuCard decredmaterial.Card
+	moreItems       []moreItem
+	backdrop        *widget.Clickable
 }
 
 type authoredTxData struct {
@@ -69,6 +82,8 @@ func NewSendPage(l *load.Load) *Page {
 		exchangeRate: -1,
 
 		authoredTxData: &authoredTxData{},
+		shadowBox:      l.Theme.Shadow(),
+		backdrop:       new(widget.Clickable),
 	}
 
 	// Source account picker
@@ -114,6 +129,11 @@ func NewSendPage(l *load.Load) *Page {
 	}
 
 	pg.initLayoutWidgets()
+
+	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
+	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
+
+	pg.moreItems = pg.getMoreItem()
 
 	return pg
 }
@@ -318,14 +338,28 @@ func (pg *Page) Handle() {
 		}
 	}
 
-	for pg.clearAllBtn.Clicked() {
-		pg.moreOptionIsOpen = false
-
-		pg.sendDestination.clearAddressInput()
-
-		pg.amount.clearAmount()
+	for _, menu := range pg.moreItems {
+		if menu.button.Clicked() {
+			switch menu.id {
+			case UTXOPageID:
+				pg.ChangeFragment(NewUTXOPage(pg.Load))
+			default:
+				menu.action()
+			}
+		}
 	}
 
+	for pg.backdrop.Clicked() {
+		pg.moreOptionIsOpen = false
+	}
+
+}
+
+func (pg *Page) mustIcon(ic *widget.Icon, err error) *widget.Icon {
+	if err != nil {
+		panic(err)
+	}
+	return ic
 }
 
 func (pg *Page) OnClose() {
