@@ -175,7 +175,8 @@ func (v *VoteBar) Layout(gtx C) D {
 }
 
 func (v *VoteBar) votesIndicatorTooltip(gtx C, r image.Rectangle, tipPos float32) {
-	inset := layout.Inset{Left: unit.Dp(tipPos / 3), Top: unit.Dp(20)}
+	insetLeft := tipPos - float32(voteBarThumbWidth/2) - 205
+	inset := layout.Inset{Left: unit.Dp(insetLeft), Top: unit.Dp(25)}
 	v.passTooltip.Layout(gtx, r, inset, func(gtx C) D {
 		return v.passTooltipLabel.Layout(gtx)
 	})
