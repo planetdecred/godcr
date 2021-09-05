@@ -30,6 +30,7 @@ type TransactionsPage struct {
 	ctxCancel context.CancelFunc
 	container layout.Flex
 	separator decredmaterial.Line
+	backdrop  *widget.Clickable
 
 	orderDropDown   *decredmaterial.DropDown
 	txTypeDropDown  *decredmaterial.DropDown
@@ -46,6 +47,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 		container:       layout.Flex{Axis: layout.Vertical},
 		separator:       l.Theme.Separator(),
 		transactionList: l.Theme.NewClickableList(layout.Vertical),
+		backdrop:        new(widget.Clickable),
 	}
 
 	pg.orderDropDown = components.CreateOrderDropDown(l)
@@ -162,9 +164,14 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			}),
-			layout.Expanded(pg.txTypeDropDown.BackDrop),
-			layout.Expanded(pg.orderDropDown.BackDrop),
-			layout.Expanded(pg.walletDropDown.BackDrop),
+			layout.Expanded(func(gtx C) D {
+				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+
+				if pg.txTypeDropDown.IsOpen() || pg.walletDropDown.IsOpen() || pg.orderDropDown.IsOpen() {
+					return pg.backdrop.Layout(gtx)
+				}
+				return D{}
+			}),
 			layout.Stacked(pg.dropDowns),
 		)
 	}
@@ -197,6 +204,9 @@ func (pg *TransactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *TransactionsPage) Handle() {
+	for pg.backdrop.Clicked() {
+		pg.orderDropDown.CloseDropdown()
+	}
 
 	for pg.txTypeDropDown.Changed() {
 		pg.loadTransactions()

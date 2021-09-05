@@ -754,7 +754,7 @@ func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, w
 		}
 		walletDropDownItems = append(walletDropDownItems, item)
 	}
-	*dwn = l.Theme.DropDown(walletDropDownItems, 2)
+	*dwn = l.Theme.DropDown(walletDropDownItems, 1)
 }
 
 func CreateOrderDropDown(l *load.Load) *decredmaterial.DropDown {

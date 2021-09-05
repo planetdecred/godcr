@@ -28,7 +28,9 @@ type ListPage struct {
 	filterSorter int
 	isGridView   bool
 
-	toggleViewType     *widget.Clickable
+	toggleViewType *widget.Clickable
+	backdrop       *widget.Clickable
+
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
@@ -44,6 +46,7 @@ func newListPage(l *load.Load) *ListPage {
 		tickets:        l.WL.Tickets,
 		ticketsList:    layout.List{Axis: layout.Vertical},
 		toggleViewType: new(widget.Clickable),
+		backdrop:       new(widget.Clickable),
 		isGridView:     true,
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
@@ -121,9 +124,12 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					}),
-					layout.Expanded(pg.orderDropDown.BackDrop),
-					layout.Expanded(pg.ticketTypeDropDown.BackDrop),
-					layout.Expanded(pg.walletDropDown.BackDrop),
+					layout.Expanded(func(gtx C) D {
+						if pg.orderDropDown.IsOpen() || pg.ticketTypeDropDown.IsOpen() || pg.walletDropDown.IsOpen() {
+							return pg.backdrop.Layout(gtx)
+						}
+						return D{}
+					}),
 					layout.Stacked(pg.dropDowns),
 				)
 			},
@@ -327,6 +333,10 @@ func (pg *ListPage) Handle() {
 
 	if pg.toggleViewType.Clicked() {
 		pg.isGridView = !pg.isGridView
+	}
+
+	for pg.backdrop.Clicked() {
+		pg.orderDropDown.CloseDropdown()
 	}
 
 	sortSelection := pg.orderDropDown.SelectedIndex()

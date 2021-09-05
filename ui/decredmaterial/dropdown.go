@@ -16,7 +16,6 @@ type DropDown struct {
 	background     color.NRGBA
 	dropdownIcon   *widget.Icon
 	navigationIcon *widget.Icon
-	backdrop       *widget.Clickable
 
 	group            uint
 	closeAllDropdown func(group uint)
@@ -38,7 +37,6 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		background:     t.Color.Surface,
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
-		backdrop:       new(widget.Clickable),
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
@@ -93,10 +91,10 @@ func (c *DropDown) handleEvents() {
 			}
 		}
 	}
+}
 
-	for c.backdrop.Clicked() {
-		c.closeAllDropdown(c.group)
-	}
+func (c *DropDown) CloseDropdown() {
+	c.closeAllDropdown(c.group)
 }
 
 func (c *DropDown) Changed() bool {
@@ -183,12 +181,8 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 	)
 }
 
-func (c *DropDown) BackDrop(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-	if c.isOpen {
-		return c.backdrop.Layout(gtx)
-	}
-	return layout.Dimensions{}
+func (c *DropDown) IsOpen() bool {
+	return c.isOpen
 }
 
 func (c *DropDown) Layout(gtx layout.Context) layout.Dimensions {
