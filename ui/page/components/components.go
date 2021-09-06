@@ -747,10 +747,12 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 // also update the list when create, update, delete a wallet.
 func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) {
 	var walletDropDownItems []decredmaterial.DropDownItem
+	walletIcon := l.Icons.WalletIcon
+	walletIcon.Scale = 1
 	for _, wal := range wallets {
 		item := decredmaterial.DropDownItem{
 			Text: wal.Name,
-			Icon: l.Icons.WalletIcon,
+			Icon: walletIcon,
 		}
 		walletDropDownItems = append(walletDropDownItems, item)
 	}

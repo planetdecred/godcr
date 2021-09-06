@@ -53,7 +53,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		c.items[0] = DropDownItem{
 			Text:   items[0].Text,
 			Icon:   items[0].Icon,
-			label:  t.Body1(items[0].Text),
+			label:  t.Label(unit.Sp(16), items[0].Text),
 			button: t.Button(new(widget.Clickable), items[0].Text),
 		}
 		c.selectedIndex = 1
@@ -122,8 +122,6 @@ func (c *DropDown) layoutIcon(itemIndex int) layout.FlexChild {
 		}
 
 		img := c.items[itemIndex].Icon
-		img.Scale = 0.045
-
 		return img.Layout(gtx)
 	})
 }
@@ -174,7 +172,10 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 				textLayout := c.layoutText(itemIndex)
 				activeIconLayout := c.layoutActiveIcon(itemIndex, isFirstOption)
 
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, iconLayout, textLayout, activeIconLayout)
+				return layout.Flex{
+					Axis:      layout.Horizontal,
+					Alignment: layout.Middle,
+				}.Layout(gtx, iconLayout, textLayout, activeIconLayout)
 			})
 		}),
 		layout.Expanded(btn.Button.Layout),

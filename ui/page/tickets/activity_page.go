@@ -7,6 +7,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -23,6 +24,7 @@ type ActivityPage struct {
 	tickets      **wallet.Tickets
 	ticketsList  layout.List
 	filterSorter int
+	backdrop     *widget.Clickable
 
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
@@ -38,7 +40,7 @@ func newTicketActivityPage(l *load.Load) *ActivityPage {
 		Load:        l,
 		tickets:     l.WL.Tickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
-		wallets:     l.WL.MultiWallet.AllWallets(),
+		backdrop:    new(widget.Clickable),
 	}
 	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.ticketTypeDropDown = pg.Theme.DropDown([]decredmaterial.DropDownItem{
@@ -62,11 +64,11 @@ func (pg *ActivityPage) ID() string {
 }
 
 func (pg *ActivityPage) OnResume() {
-
+	pg.wallets = pg.WL.SortedWalletList()
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 }
 
 func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	body := func(gtx C) D {
 		page := components.SubPage{
 			Load:       pg.Load,
@@ -103,6 +105,13 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					}),
+					layout.Expanded(func(gtx C) D {
+						if pg.orderDropDown.IsOpen() || pg.ticketTypeDropDown.IsOpen() || pg.walletDropDown.IsOpen() {
+							return pg.backdrop.Layout(gtx)
+						}
+						return D{}
+					}),
+					layout.Stacked(pg.dropDowns),
 					layout.Stacked(func(gtx C) D {
 						return pg.dropDowns(gtx)
 					}),
@@ -153,6 +162,10 @@ func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket
 }
 
 func (pg *ActivityPage) Handle() {
+
+	for pg.backdrop.Clicked() {
+		pg.orderDropDown.CloseDropdown()
+	}
 
 	sortSelection := pg.orderDropDown.SelectedIndex()
 	if pg.filterSorter != sortSelection {
