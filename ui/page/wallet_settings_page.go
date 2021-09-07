@@ -20,8 +20,6 @@ type WalletSettingsPage struct {
 
 	changePass, rescan, deleteWallet *widget.Clickable
 
-	notification *decredmaterial.Switch
-
 	chevronRightIcon *widget.Icon
 	backButton       decredmaterial.IconButton
 }
@@ -30,7 +28,6 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	pg := &WalletSettingsPage{
 		Load:         l,
 		wallet:       wal,
-		notification: l.Theme.Switch(),
 		changePass:   new(widget.Clickable),
 		rescan:       new(widget.Clickable),
 		deleteWallet: new(widget.Clickable),
@@ -54,12 +51,6 @@ func (pg *WalletSettingsPage) OnResume() {
 
 func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 
-	beep := pg.wallet.ReadBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, false)
-	pg.notification.SetChecked(beep)
-	if beep {
-		pg.notification.SetChecked(true)
-	}
-
 	body := func(gtx C) D {
 		sp := components.SubPage{
 			Load:       pg.Load,
@@ -77,7 +68,6 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 						}
 						return layout.Dimensions{}
 					}),
-					layout.Rigid(pg.notificationSection()),
 					layout.Rigid(pg.debug()),
 					layout.Rigid(pg.dangerZone()),
 				)
@@ -96,21 +86,6 @@ func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
 						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-					})
-				}),
-			)
-		})
-	}
-}
-
-func (pg *WalletSettingsPage) notificationSection() layout.Widget {
-	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrNotifications), nil, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrBeepForNewBlocks))),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.notification.Layout(gtx)
 					})
 				}),
 			)
@@ -248,10 +223,6 @@ func (pg *WalletSettingsPage) Handle() {
 			pg.ShowModal(info)
 		}()
 		break
-	}
-
-	if pg.notification.Changed() {
-		pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.notification.IsChecked())
 	}
 
 	for pg.deleteWallet.Clicked() {
