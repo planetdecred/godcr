@@ -142,8 +142,9 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 						Orientation: layout.Vertical,
 						Background:  pg.Theme.Color.Surface,
 						Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
-						Margin:      layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding96}, // bottom margin accounts for action button's height + 16dp
-						Padding:     layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding8, Left: values.MarginPadding16},
+						// bottom margin accounts for action button's height + components.UniformPadding bottom margin 24dp + 16dp
+						Margin:  layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding120},
+						Padding: layout.Inset{Top: values.MarginPadding16, Right: values.MarginPadding16, Bottom: values.MarginPadding8, Left: values.MarginPadding16},
 					}.Layout(gtx,
 						layout.Rigid(label.Layout),
 						layout.Rigid(func(gtx C) D {

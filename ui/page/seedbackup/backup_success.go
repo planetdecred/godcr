@@ -35,9 +35,7 @@ func (pg *BackupSuccessPage) ID() string {
 	return BackupSuccessPageID
 }
 
-func (pg *BackupSuccessPage) OnResume() {
-
-}
+func (pg *BackupSuccessPage) OnResume() {}
 
 func (pg *BackupSuccessPage) Handle() {
 	for pg.actionButton.Clicked() {

@@ -94,7 +94,6 @@ func (pg *VerifySeedPage) getMultiSeed(realSeedIndex int, allSeeds []string) shu
 	})
 
 	return shuffledSeed
-
 }
 
 func seedPosition(seed string, allSeeds []string) int {
@@ -173,7 +172,6 @@ func (pg *VerifySeedPage) Handle() {
 			pg.verifySeed()
 		}
 	}
-
 }
 
 func (pg *VerifySeedPage) OnClose() {}

@@ -110,36 +110,37 @@ func (pg *BackupInstructionsPage) verifyCheckBoxes() bool {
 }
 
 func container(gtx C, theme decredmaterial.Theme, body layout.Widget, infoText string, actionBtn decredmaterial.Button) D {
-	gtx.Constraints.Min = gtx.Constraints.Max
-	return layout.Stack{}.Layout(gtx,
-		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-			return components.UniformPadding(gtx, body)
-		}),
-		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min = gtx.Constraints.Max
-			return decredmaterial.LinearLayout{
-				Width:       decredmaterial.MatchParent,
-				Height:      decredmaterial.WrapContent,
-				Orientation: layout.Vertical,
-				Direction:   layout.S,
-				Alignment:   layout.Baseline,
-				Background:  theme.Color.Surface,
-				Padding:     layout.UniformInset(values.MarginPadding16),
-				Margin:      layout.Inset{Left: values.Size0_5},
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					if infoText == "" {
-						return D{}
-					}
-					label := theme.Label(values.TextSize14, infoText)
-					label.Color = theme.Color.Gray3
-					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, label.Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-
-					return actionBtn.Layout(gtx)
-				}))
-		}),
-	)
+	return components.UniformPadding(gtx, func(gtx C) D {
+		return layout.Stack{}.Layout(gtx,
+			layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+				return body(gtx)
+			}),
+			layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min = gtx.Constraints.Max
+				return decredmaterial.LinearLayout{
+					Width:       decredmaterial.MatchParent,
+					Height:      decredmaterial.WrapContent,
+					Orientation: layout.Vertical,
+					Direction:   layout.S,
+					Alignment:   layout.Baseline,
+					Background:  theme.Color.Surface,
+					Padding:     layout.UniformInset(values.MarginPadding16),
+					Margin:      layout.Inset{Left: values.Size0_5},
+					Border:      decredmaterial.Border{Radius: decredmaterial.Radius(4)},
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						if !components.StringNotEmpty(infoText) {
+							return D{}
+						}
+						label := theme.Label(values.TextSize14, infoText)
+						label.Color = theme.Color.Gray3
+						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, label.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return actionBtn.Layout(gtx)
+					}))
+			}),
+		)
+	})
 }

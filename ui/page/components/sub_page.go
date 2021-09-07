@@ -67,7 +67,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(title.Layout),
 				layout.Rigid(func(gtx C) D {
-					if sp.SubTitle == "" {
+					if !StringNotEmpty(sp.SubTitle) {
 						return D{}
 					}
 
