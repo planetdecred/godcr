@@ -216,7 +216,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 		pg.actionButton.Background = pg.Theme.Color.Primary
 		pg.actionButton.Color = pg.Theme.Color.InvText
 	} else {
-		pg.actionButton.Background = pg.Theme.Color.Hint
+		pg.actionButton.Background = pg.Theme.Color.InactiveGray
 		pg.actionButton.Color = pg.Theme.Color.Text
 	}
 
