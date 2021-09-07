@@ -32,12 +32,13 @@ func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmateri
 	backButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack)
 	infoButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ActionInfo)
 
-	zeroInset := layout.UniformInset(values.MarginPadding0)
 	backButton.Color, infoButton.Color = l.Theme.Color.Gray3, l.Theme.Color.Gray3
 
-	m25 := values.MarginPadding25
-	backButton.Size, infoButton.Size = m25, m25
-	backButton.Inset, infoButton.Inset = zeroInset, zeroInset
+	m24 := values.MarginPadding24
+	backButton.Size, infoButton.Size = m24, m24
+
+	buttonInset := layout.UniformInset(values.MarginPadding4)
+	backButton.Inset, infoButton.Inset = buttonInset, buttonInset
 
 	return backButton, infoButton
 }
@@ -45,7 +46,7 @@ func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmateri
 func (sp *SubPage) Layout(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Bottom: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 				return sp.Header(gtx)
 			})
 		}),
@@ -58,15 +59,23 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding20}.Layout(gtx, sp.BackButton.Layout)
+			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, sp.BackButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			if sp.SubTitle == "" {
-				return sp.Theme.H6(sp.Title).Layout(gtx)
-			}
+			title := sp.Load.Theme.Label(values.TextSize20, sp.Title)
+			title.Color = sp.Load.Theme.Color.DeepBlue
+
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(sp.Theme.H6(sp.Title).Layout),
-				layout.Rigid(sp.Theme.Body1(sp.SubTitle).Layout),
+				layout.Rigid(title.Layout),
+				layout.Rigid(func(gtx C) D {
+					if !StringNotEmpty(sp.SubTitle) {
+						return D{}
+					}
+
+					sub := sp.Load.Theme.Label(values.TextSize14, sp.SubTitle)
+					sub.Color = sp.Load.Theme.Color.Gray
+					return sub.Layout(gtx)
+				}),
 			)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {

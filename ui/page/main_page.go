@@ -86,6 +86,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.ToggleSync = toggleSync
 	l.ChangeFragment = mp.changeFragment
 	l.PopFragment = mp.popFragment
+	l.PopToFragment = mp.popToFragment
 
 	iconColor := l.Theme.Color.Gray3
 	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
@@ -357,7 +358,7 @@ func (mp *MainPage) popFragment() {
 	}
 }
 
-func (mp *MainPage) popToPage(pageID string) {
+func (mp *MainPage) popToFragment(pageID string) {
 
 	// close current page and all pages before `pageID`
 	if mp.currentPage != nil {
@@ -378,7 +379,7 @@ func (mp *MainPage) popToPage(pageID string) {
 
 	if len(mp.pageBackStack) > 0 {
 		// set curent page to `pageID`
-		mp.currentPage = mp.pageBackStack[len(mp.pageBackStack)]
+		mp.currentPage = mp.pageBackStack[len(mp.pageBackStack)-1]
 		// remove current page from backstack history
 		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
 	} else {

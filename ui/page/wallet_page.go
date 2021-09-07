@@ -16,10 +16,11 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/seedbackup"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const WalletPageID = "Wallets"
+const WalletPageID = components.WalletsPageID
 
 type walletListItem struct {
 	wal      *dcrlibwallet.Wallet
@@ -865,7 +866,7 @@ func (pg *WalletPage) Handle() {
 			}
 
 			for listItem.backupAcctClickable.Clicked() {
-				pg.ChangeFragment(NewBackupPage(pg.Load, listItem.wal))
+				pg.ChangeFragment(seedbackup.NewBackupInstructionsPage(pg.Load, listItem.wal))
 			}
 		}
 
