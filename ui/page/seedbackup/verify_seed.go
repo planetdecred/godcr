@@ -47,6 +47,7 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton.Icon = l.Icons.ContentClear
 
 	return pg
 }
@@ -60,6 +61,7 @@ func (pg *VerifySeedPage) OnResume() {
 
 	multiSeedList := make([]shuffledSeedWords, 0)
 	seedWords := strings.Split(pg.seed, " ")
+	rand.Seed(time.Now().UnixNano())
 	for _, word := range seedWords {
 		index := seedPosition(word, allSeeds)
 		shuffledSeed := pg.getMultiSeed(index, dcrlibwallet.PGPWordList()) // using allSeeds here modifies the slice
@@ -80,7 +82,6 @@ func (pg *VerifySeedPage) getMultiSeed(realSeedIndex int, allSeeds []string) shu
 	shuffledSeed.clickables = append(shuffledSeed.clickables, &widget.Clickable{})
 	allSeeds = removeSeed(allSeeds, realSeedIndex)
 
-	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < 3; i++ {
 		randomSeed := rand.Intn(len(allSeeds))
 
@@ -186,7 +187,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			pg.PopToFragment(components.WalletsPageID)
+			promptToExit(pg.Load)
 		},
 		Body: func(gtx C) D {
 			wdg := []layout.Widget{

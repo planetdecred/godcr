@@ -51,6 +51,7 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton.Icon = l.Icons.ContentClear
 
 	pg.actionButton.Background = pg.Theme.Color.Primary
 	pg.actionButton.Color = pg.Theme.Color.InvText
@@ -122,7 +123,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			pg.PopToFragment(components.WalletsPageID)
+			promptToExit(pg.Load)
 		},
 		Body: func(gtx C) D {
 

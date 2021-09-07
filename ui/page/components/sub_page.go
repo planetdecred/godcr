@@ -32,12 +32,13 @@ func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmateri
 	backButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack)
 	infoButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ActionInfo)
 
-	zeroInset := layout.UniformInset(values.MarginPadding4)
 	backButton.Color, infoButton.Color = l.Theme.Color.Gray3, l.Theme.Color.Gray3
 
 	m24 := values.MarginPadding24
 	backButton.Size, infoButton.Size = m24, m24
-	backButton.Inset, infoButton.Inset = zeroInset, zeroInset
+
+	buttonInset := layout.UniformInset(values.MarginPadding4)
+	backButton.Inset, infoButton.Inset = buttonInset, buttonInset
 
 	return backButton, infoButton
 }

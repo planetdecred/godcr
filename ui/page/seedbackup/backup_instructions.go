@@ -6,6 +6,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -36,6 +37,8 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 	}
 
 	bi.backButton, _ = components.SubpageHeaderButtons(l)
+	bi.backButton.Icon = l.Icons.ContentClear
+
 	bi.checkBoxes = []decredmaterial.CheckBoxStyle{
 		l.Theme.CheckBox(new(widget.Bool), "The 33-word seed phrase is EXTREMELY IMPORTANT."),
 		l.Theme.CheckBox(new(widget.Bool), "Seed phrase is the only way to restore your wallet."),
@@ -67,8 +70,18 @@ func (pg *BackupInstructionsPage) Handle() {
 			pg.ChangeFragment(NewSaveSeedPage(pg.Load, pg.wallet))
 		}
 	}
-}
 
+}
+func promptToExit(load *load.Load) {
+	modal.NewInfoModal(load).
+		Title("Exit?").
+		Body("Are you sure you want to exit the seed backup process?").
+		NegativeButton("No", func() {}).
+		PositiveButton("Yes", func() {
+			load.PopToFragment(components.WalletsPageID)
+		}).
+		Show()
+}
 func (pg *BackupInstructionsPage) OnClose() {}
 
 // - Layout
@@ -80,7 +93,7 @@ func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
 		Back: func() {
-			pg.PopFragment()
+			promptToExit(pg.Load)
 		},
 		Body: func(gtx C) D {
 			return pg.infoList.Layout(gtx, len(pg.checkBoxes), func(gtx C, i int) D {
