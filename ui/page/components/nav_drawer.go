@@ -137,9 +137,7 @@ func (nd *NavDrawer) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 										func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												img := nd.AppBarNavItems[i].Image
-												img.Scale = 1.0
-												return nd.AppBarNavItems[i].Image.Layout(gtx)
+												return nd.AppBarNavItems[i].Image.Layout24dp(gtx)
 											})
 										})
 								}),
