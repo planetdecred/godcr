@@ -7,7 +7,6 @@ import (
 	"gioui.org/op"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -44,6 +43,9 @@ func (pg *Page) initLayoutWidgets() {
 		Right:  values.MarginPadding8,
 		Bottom: values.MarginPadding5,
 		Left:   values.MarginPadding8}
+	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
+	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
+	pg.moreItems = pg.getMoreItem()
 }
 
 func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
@@ -85,17 +87,19 @@ func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
 func (pg *Page) getMoreItem() []moreItem {
 	return []moreItem{
 		{
-			text:   values.String(values.StrAdvancedMode),
+			text:   "Advanced mode",
 			button: new(widget.Clickable),
 			id:     UTXOPageID,
+			action: func() {
+				pg.ChangeFragment(NewUTXOPage(pg.Load))
+			},
 		},
 		{
-			text:   values.String(values.StrClearFeilds),
+			text:   "Clear all fields",
 			button: new(widget.Clickable),
 			action: func() {
+				pg.resetFields()
 				pg.moreOptionIsOpen = false
-				pg.sendDestination.clearAddressInput()
-				pg.amount.clearAmount()
 			},
 		},
 	}
@@ -116,9 +120,8 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.moreItems), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Clickable(gtx, pg.moreItems[i].button, func(gtx C) D {
-								m10 := values.MarginPadding10
-								return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
+							return decredmaterial.Clickable(gtx, pg.moreItems[i].button, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									return pg.Theme.Body1(pg.moreItems[i].text).Layout(gtx)
 								})

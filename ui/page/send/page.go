@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"gioui.org/widget"
-
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
@@ -44,6 +43,10 @@ type Page struct {
 	nextButton    decredmaterial.Button
 
 	txFeeCollapsible *decredmaterial.Collapsible
+	shadowBox        *decredmaterial.Shadow
+	optionsMenuCard  decredmaterial.Card
+	moreItems        []moreItem
+	backdrop         *widget.Clickable
 
 	moreOptionIsOpen bool
 
@@ -51,10 +54,6 @@ type Page struct {
 	exchangeError string
 
 	*authoredTxData
-	shadowBox       *decredmaterial.Shadow
-	optionsMenuCard decredmaterial.Card
-	moreItems       []moreItem
-	backdrop        *widget.Clickable
 }
 
 type authoredTxData struct {
@@ -129,11 +128,6 @@ func NewSendPage(l *load.Load) *Page {
 	}
 
 	pg.initLayoutWidgets()
-
-	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
-	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
-
-	pg.moreItems = pg.getMoreItem()
 
 	return pg
 }
@@ -338,28 +332,16 @@ func (pg *Page) Handle() {
 		}
 	}
 
-	for _, menu := range pg.moreItems {
-		if menu.button.Clicked() {
-			switch menu.id {
-			case UTXOPageID:
-				pg.ChangeFragment(NewUTXOPage(pg.Load))
-			default:
-				menu.action()
-			}
-		}
-	}
-
 	for pg.backdrop.Clicked() {
 		pg.moreOptionIsOpen = false
 	}
 
-}
-
-func (pg *Page) mustIcon(ic *widget.Icon, err error) *widget.Icon {
-	if err != nil {
-		panic(err)
+	for _, menu := range pg.moreItems {
+		if menu.button.Clicked() {
+			menu.action()
+		}
 	}
-	return ic
+
 }
 
 func (pg *Page) OnClose() {

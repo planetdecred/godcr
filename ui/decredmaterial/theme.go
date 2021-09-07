@@ -173,15 +173,15 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 
 	t.setColorMode(isDarkModeOn)
 
-	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
-	t.checkBoxUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
-	t.radioCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))
-	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
-	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
-	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
-	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
-	t.navigationCheckIcon = mustIcon(widget.NewIcon(icons.NavigationCheck))
-	t.dropDownIcon = mustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
+	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
+	t.checkBoxUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
+	t.radioCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))
+	t.radioUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
+	t.chevronUpIcon = MustIcon(widget.NewIcon(icons.NavigationExpandLess))
+	t.chevronDownIcon = MustIcon(widget.NewIcon(icons.NavigationExpandMore))
+	t.navMoreIcon = MustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+	t.navigationCheckIcon = MustIcon(widget.NewIcon(icons.NavigationCheck))
+	t.dropDownIcon = MustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
 
 	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
 	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
@@ -223,7 +223,7 @@ func (t *Theme) ImageIcon(gtx layout.Context, icon image.Image, size int) layout
 	return i.Layout(gtx)
 }
 
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
+func MustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}

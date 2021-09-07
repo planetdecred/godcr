@@ -31,7 +31,6 @@ func translateErr(err error) string {
 	return err.Error()
 }
 
-
 func EditorsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {

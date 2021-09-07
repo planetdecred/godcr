@@ -385,7 +385,7 @@ func (pg *PrivacyPage) showModalSetupMixerAcct() {
 	accounts, _ := pg.wallet.GetAccountsRaw()
 	for _, acct := range accounts.Acc {
 		if acct.Name == "mixed" || acct.Name == "unmixed" {
-			alert := components.MustIcon(widget.NewIcon(icons.AlertError))
+			alert := decredmaterial.MustIcon(widget.NewIcon(icons.AlertError))
 			alert.Color = pg.Theme.Color.DeepBlue
 
 			info := modal.NewInfoModal(pg.Load).

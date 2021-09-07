@@ -202,10 +202,10 @@ func NewTabs(th *Theme) *Tabs {
 // scrollButton lays out the right and left scroll buttons of the tab when Position is Horizontal.
 func (t *Tabs) scrollButton(right bool, button *widget.Clickable) layout.FlexChild {
 	show := false
-	icon := mustIcon(widget.NewIcon(icons.NavigationChevronLeft))
+	icon := MustIcon(widget.NewIcon(icons.NavigationChevronLeft))
 	if right && t.list.Position.BeforeEnd {
 		show = true
-		icon = mustIcon(widget.NewIcon(icons.NavigationChevronRight))
+		icon = MustIcon(widget.NewIcon(icons.NavigationChevronRight))
 	}
 
 	if !right && t.list.Position.Offset > 0 {
