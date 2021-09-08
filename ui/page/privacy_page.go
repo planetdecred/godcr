@@ -110,7 +110,7 @@ func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions 
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.H6("How does CoinShuffle++ mixer enhance your privacy?")
+							txt := pg.Theme.H6("How does StakeShuffle++ mixer enhance your privacy?")
 							txt2 := pg.Theme.Body1("CoinShuffle++ mixer can mix your DCRs through CoinJoin transactions.")
 							txt3 := pg.Theme.Body1("Using mixed DCRs protects you from exposing your financial activities to the public (e.g. how much you own, who pays you).")
 							txt.Alignment, txt2.Alignment, txt3.Alignment = text.Middle, text.Middle, text.Middle
