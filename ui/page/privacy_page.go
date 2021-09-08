@@ -124,9 +124,7 @@ func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions 
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, txt3.Layout)
 								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, txt4.Layout)
-								}),
+								layout.Rigid(txt4.Layout),
 							)
 						}),
 					)
