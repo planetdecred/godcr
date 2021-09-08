@@ -1,6 +1,6 @@
 module github.com/planetdecred/godcr
 
-go 1.13
+go 1.16
 
 require (
 	gioui.org v0.0.0-20210418151603-3b69b5ed0512
