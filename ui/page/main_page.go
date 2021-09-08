@@ -1,7 +1,6 @@
 package page
 
 import (
-	"image/color"
 	"strconv"
 
 	"gioui.org/layout"
@@ -31,34 +30,10 @@ const (
 	MoreNavID
 )
 
-var (
-	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 180}
-	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 100}
-)
-
-type NavHandler struct {
-	Clickable     *widget.Clickable
-	Image         *widget.Image
-	ImageInactive *widget.Image
-	Title         string
-	PageID        string
-}
-
 type MainPage struct {
 	*load.Load
-	appBarNavItems []NavHandler
-	drawerNavItems []NavHandler
-
-	axis      layout.Axis
-	textSize  unit.Value
-	leftInset unit.Value
-	width     unit.Value
-	alignment layout.Alignment
-	direction layout.Direction
-
-	minimizeNavDrawerButton decredmaterial.IconButton
-	maximizeNavDrawerButton decredmaterial.IconButton
-	activeDrawerBtn         decredmaterial.IconButton
+	appBarNav components.NavDrawer
+	drawerNav components.NavDrawer
 
 	autoSync bool
 
@@ -78,9 +53,6 @@ func NewMainPage(l *load.Load) *MainPage {
 	mp := &MainPage{
 		Load:     l,
 		autoSync: true,
-
-		minimizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		maximizeNavDrawerButton: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowForward),
 	}
 
 	// init shared page functions
@@ -95,12 +67,9 @@ func NewMainPage(l *load.Load) *MainPage {
 	l.ChangeFragment = mp.changeFragment
 	l.PopFragment = mp.popFragment
 
-	iconColor := l.Theme.Color.Gray3
-	mp.minimizeNavDrawerButton.Color, mp.maximizeNavDrawerButton.Color = iconColor, iconColor
+	mp.initNavItems()
 
 	mp.defaultNavDims()
-
-	mp.initNavItems()
 
 	mp.OnResume()
 
@@ -112,64 +81,74 @@ func (mp *MainPage) ID() string {
 }
 
 func (mp *MainPage) initNavItems() {
-	mp.appBarNavItems = []NavHandler{
-		{
-			Clickable: new(widget.Clickable),
-			Image:     mp.Icons.SendIcon,
-			Title:     values.String(values.StrSend),
-			PageID:    send.PageID,
-		},
-		{
-			Clickable: new(widget.Clickable),
-			Image:     mp.Icons.ReceiveIcon,
-			Title:     values.String(values.StrReceive),
-			PageID:    ReceivePageID,
+	mp.appBarNav = components.NavDrawer{
+		Load:        mp.Load,
+		CurrentPage: mp.currentPageID(),
+		AppBarNavItems: []components.NavHandler{
+			{
+				Clickable: new(widget.Clickable),
+				Image:     mp.Icons.SendIcon,
+				Title:     values.String(values.StrSend),
+				PageID:    send.PageID,
+			},
+			{
+				Clickable: new(widget.Clickable),
+				Image:     mp.Icons.ReceiveIcon,
+				Title:     values.String(values.StrReceive),
+				PageID:    ReceivePageID,
+			},
 		},
 	}
 
-	mp.drawerNavItems = []NavHandler{
-		{
-			Clickable:     new(widget.Clickable),
-			Image:         mp.Icons.OverviewIcon,
-			ImageInactive: mp.Icons.OverviewIconInactive,
-			Title:         values.String(values.StrOverview),
-			PageID:        OverviewPageID,
+	mp.drawerNav = components.NavDrawer{
+		Load:        mp.Load,
+		CurrentPage: mp.currentPageID(),
+		DrawerNavItems: []components.NavHandler{
+			{
+				Clickable:     new(widget.Clickable),
+				Image:         mp.Icons.OverviewIcon,
+				ImageInactive: mp.Icons.OverviewIconInactive,
+				Title:         values.String(values.StrOverview),
+				PageID:        OverviewPageID,
+			},
+			{
+				Clickable:     new(widget.Clickable),
+				Image:         mp.Icons.TransactionIcon,
+				ImageInactive: mp.Icons.TransactionIconInactive,
+				Title:         values.String(values.StrTransactions),
+				PageID:        TransactionsPageID,
+			},
+			{
+				Clickable:     new(widget.Clickable),
+				Image:         mp.Icons.WalletIcon,
+				ImageInactive: mp.Icons.WalletIconInactive,
+				Title:         values.String(values.StrWallets),
+				PageID:        WalletPageID,
+			},
+			{
+				Clickable:     new(widget.Clickable),
+				Image:         mp.Icons.TicketIcon,
+				ImageInactive: mp.Icons.TicketIconInactive,
+				Title:         values.String(values.StrTickets),
+				PageID:        tickets.OverviewPageID,
+			},
+			{
+				Clickable:     new(widget.Clickable),
+				Image:         mp.Icons.ProposalIconActive,
+				ImageInactive: mp.Icons.ProposalIconInactive,
+				Title:         values.String(values.StrProposal),
+				PageID:        proposal.ProposalsPageID,
+			},
+			{
+				Clickable:     new(widget.Clickable),
+				Image:         mp.Icons.MoreIcon,
+				ImageInactive: mp.Icons.MoreIconInactive,
+				Title:         values.String(values.StrMore),
+				PageID:        MorePageID,
+			},
 		},
-		{
-			Clickable:     new(widget.Clickable),
-			Image:         mp.Icons.TransactionIcon,
-			ImageInactive: mp.Icons.TransactionIconInactive,
-			Title:         values.String(values.StrTransactions),
-			PageID:        TransactionsPageID,
-		},
-		{
-			Clickable:     new(widget.Clickable),
-			Image:         mp.Icons.WalletIcon,
-			ImageInactive: mp.Icons.WalletIconInactive,
-			Title:         values.String(values.StrWallets),
-			PageID:        WalletPageID,
-		},
-		{
-			Clickable:     new(widget.Clickable),
-			Image:         mp.Icons.TicketIcon,
-			ImageInactive: mp.Icons.TicketIconInactive,
-			Title:         values.String(values.StrTickets),
-			PageID:        tickets.OverviewPageID,
-		},
-		{
-			Clickable:     new(widget.Clickable),
-			Image:         mp.Icons.ProposalIconActive,
-			ImageInactive: mp.Icons.ProposalIconInactive,
-			Title:         values.String(values.StrProposal),
-			PageID:        proposal.ProposalsPageID,
-		},
-		{
-			Clickable:     new(widget.Clickable),
-			Image:         mp.Icons.MoreIcon,
-			ImageInactive: mp.Icons.MoreIconInactive,
-			Title:         values.String(values.StrMore),
-			PageID:        MorePageID,
-		},
+		MinimizeNavDrawerButton: mp.Theme.PlainIconButton(new(widget.Clickable), mp.Icons.NavigationArrowBack),
+		MaximizeNavDrawerButton: mp.Theme.PlainIconButton(new(widget.Clickable), mp.Icons.NavigationArrowForward),
 	}
 }
 
@@ -268,26 +247,28 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 
 			return false
 		}).Show()
-
 }
 
 func (mp *MainPage) Handle() {
-	for mp.minimizeNavDrawerButton.Button.Clicked() {
-		mp.axis = layout.Vertical
-		mp.textSize = values.TextSize12
-		mp.leftInset = values.MarginPadding0
-		mp.width = NavDrawerMinimizedWidth
-		mp.activeDrawerBtn = mp.maximizeNavDrawerButton
-		mp.alignment = layout.Middle
-		mp.direction = layout.Center
+	mp.drawerNav.CurrentPage = mp.currentPageID()
+	mp.appBarNav.CurrentPage = mp.currentPageID()
+
+	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
+		mp.drawerNav.Axis = layout.Vertical
+		mp.drawerNav.TextSize = values.TextSize12
+		mp.drawerNav.LeftInset = values.MarginPadding0
+		mp.drawerNav.Width = components.NavDrawerMinimizedWidth
+		mp.drawerNav.ActiveDrawerBtn = mp.drawerNav.MaximizeNavDrawerButton
+		mp.drawerNav.Alignment = layout.Middle
+		mp.drawerNav.Direction = layout.Center
 	}
 
-	for mp.maximizeNavDrawerButton.Button.Clicked() {
+	for mp.drawerNav.MaximizeNavDrawerButton.Button.Clicked() {
 		mp.defaultNavDims()
 	}
 
-	for i := range mp.appBarNavItems {
-		for mp.appBarNavItems[i].Clickable.Clicked() {
+	for i, item := range mp.appBarNav.AppBarNavItems {
+		for item.Clickable.Clicked() {
 			var pg load.Page
 			if i == 0 {
 				if mp.sendPage == nil {
@@ -303,8 +284,8 @@ func (mp *MainPage) Handle() {
 		}
 	}
 
-	for i := range mp.drawerNavItems {
-		for mp.drawerNavItems[i].Clickable.Clicked() {
+	for i, item := range mp.drawerNav.DrawerNavItems {
+		for item.Clickable.Clicked() {
 			var pg load.Page
 			if i == OverviewNavID {
 				pg = NewOverviewPage(mp.Load)
@@ -333,13 +314,13 @@ func (mp *MainPage) Handle() {
 }
 
 func (mp *MainPage) defaultNavDims() {
-	mp.axis = layout.Horizontal
-	mp.textSize = values.TextSize16
-	mp.leftInset = values.MarginPadding15
-	mp.width = NavDrawerWidth
-	mp.activeDrawerBtn = mp.minimizeNavDrawerButton
-	mp.alignment = layout.Start
-	mp.direction = layout.W
+	mp.drawerNav.Axis = layout.Horizontal
+	mp.drawerNav.TextSize = values.TextSize16
+	mp.drawerNav.LeftInset = values.MarginPadding15
+	mp.drawerNav.Width = components.NavDrawerWidth
+	mp.drawerNav.ActiveDrawerBtn = mp.drawerNav.MinimizeNavDrawerButton
+	mp.drawerNav.Alignment = layout.Start
+	mp.drawerNav.Direction = layout.W
 }
 
 func (mp *MainPage) OnClose() {
@@ -431,7 +412,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 						Height:      decredmaterial.MatchParent,
 						Orientation: layout.Horizontal,
 					}.Layout(gtx,
-						layout.Rigid(mp.LayoutNavDrawer),
+						layout.Rigid(mp.drawerNav.LayoutNavDrawer),
 						layout.Rigid(func(gtx C) D {
 							if mp.currentPage == nil {
 								return layout.Dimensions{}
@@ -529,49 +510,7 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 				}),
 				layout.Rigid(func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-							list := layout.List{Axis: layout.Horizontal}
-							return list.Layout(gtx, len(mp.appBarNavItems), func(gtx C, i int) D {
-								background := mp.Theme.Color.Surface
-								if mp.appBarNavItems[i].PageID == mp.currentPageID() {
-									background = mp.Theme.Color.ActiveGray
-								}
-								// header buttons container
-								return mp.layoutCard(gtx, background, mp.appBarNavItems[i].Clickable, func(gtx C) D {
-									return decredmaterial.Clickable(gtx, mp.appBarNavItems[i].Clickable, func(gtx C) D {
-										return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-											return decredmaterial.LinearLayout{
-												Width:       decredmaterial.WrapContent,
-												Height:      decredmaterial.WrapContent,
-												Orientation: layout.Horizontal,
-											}.Layout(gtx,
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-														func(gtx C) D {
-															return layout.Center.Layout(gtx, func(gtx C) D {
-																img := mp.appBarNavItems[i].Image
-																img.Scale = 1.0
-																return mp.appBarNavItems[i].Image.Layout(gtx)
-															})
-														})
-												}),
-												layout.Rigid(func(gtx C) D {
-													return layout.Inset{
-														Left: values.MarginPadding0,
-													}.Layout(gtx, func(gtx C) D {
-														return layout.Center.Layout(gtx, func(gtx C) D {
-															return mp.Theme.Body1(mp.appBarNavItems[i].Title).Layout(gtx)
-														})
-													})
-												}),
-											)
-										})
-									})
-								})
-							})
-						})
-					})
+					return mp.appBarNav.LayoutTopBar(gtx)
 				}),
 			)
 		}),
@@ -580,78 +519,4 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 			return mp.Theme.Separator().Layout(gtx)
 		}),
 	)
-}
-
-func (mp *MainPage) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
-	return layout.Stack{}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return decredmaterial.LinearLayout{
-				Width:       gtx.Px(mp.width),
-				Height:      decredmaterial.MatchParent,
-				Background:  mp.Theme.Color.Surface,
-				Orientation: mp.axis,
-			}.Layout2(gtx, func(gtx C) D {
-				list := layout.List{Axis: layout.Vertical}
-				return list.Layout(gtx, len(mp.drawerNavItems), func(gtx C, i int) D {
-					background := mp.Theme.Color.Surface
-					if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-						background = mp.Theme.Color.ActiveGray
-					}
-
-					return mp.layoutCard(gtx, background, mp.drawerNavItems[i].Clickable, func(gtx C) D {
-						txt := mp.Theme.Label(mp.textSize, mp.drawerNavItems[i].Title)
-
-						gtx.Constraints.Min.X = gtx.Px(mp.width)
-						return decredmaterial.Clickable(gtx, mp.drawerNavItems[i].Clickable, func(gtx C) D {
-							return decredmaterial.LinearLayout{
-								Orientation: mp.axis,
-								Width:       decredmaterial.MatchParent,
-								Height:      decredmaterial.WrapContent,
-								Padding:     layout.UniformInset(values.MarginPadding15),
-								Alignment:   mp.alignment,
-								Direction:   mp.direction,
-							}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									img := mp.drawerNavItems[i].ImageInactive
-
-									if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-										img = mp.drawerNavItems[i].Image
-									}
-
-									img.Scale = 1.0
-									return img.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: mp.leftInset,
-										Top:  values.MarginPadding4,
-									}.Layout(gtx, func(gtx C) D {
-										textColor := mp.Theme.Color.Gray4
-										if mp.drawerNavItems[i].PageID == mp.currentPageID() {
-											textColor = mp.Theme.Color.DeepBlue
-										}
-										txt.Color = textColor
-										return txt.Layout(gtx)
-									})
-								}),
-							)
-						})
-					})
-				})
-			})
-		}),
-		layout.Expanded(func(gtx C) D {
-			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.SE.Layout(gtx, func(gtx C) D {
-				return mp.activeDrawerBtn.Layout(gtx)
-			})
-		}),
-	)
-}
-
-func (mp *MainPage) layoutCard(gtx layout.Context, background color.NRGBA, Clickable *widget.Clickable, body layout.Widget) layout.Dimensions {
-	card := mp.Theme.Card()
-	card.Color = background
-	card.Radius = decredmaterial.Radius(0)
-	return card.HovarableLayout(gtx, Clickable, body)
 }
