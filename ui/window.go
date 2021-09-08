@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"errors"
-	"image"
 	"sync"
 	"time"
 
@@ -11,7 +9,6 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -24,7 +21,6 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
-	theme      *decredmaterial.Theme
 	ops        *op.Ops
 	invalidate chan struct{}
 
@@ -79,7 +75,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace, internalLog chan string) (*Window, *app.Window, error) {
+func CreateWindow(wal *wallet.Wallet, internalLog chan string) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == "testnet3" {
@@ -88,11 +84,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 		netType = wal.Net
 	}
 	appWindow := app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
-	theme := decredmaterial.NewTheme(collection, decredIcons, false)
-	if theme == nil {
-		return nil, nil, errors.New("Unexpected error while loading theme")
-	}
-	win.theme = theme
 	win.ops = &op.Ops{}
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
@@ -113,13 +104,22 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.internalLog = internalLog
 
-	win.load = win.NewLoad(decredIcons)
+	l, err := win.NewLoad()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	win.load = l
 
 	return win, appWindow, nil
 }
 
-func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
-	l := load.NewLoad(win.theme, decredIcons)
+func (win *Window) NewLoad() (*load.Load, error) {
+	l, err := load.NewLoad()
+	if err != nil {
+		return nil, err
+	}
+
 	l.WL = &load.WalletLoad{
 		MultiWallet:     win.wallet.GetMultiWallet(),
 		Wallet:          win.wallet,
@@ -152,7 +152,7 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
 
-	return l
+	return l, nil
 }
 
 func (win *Window) Start() {
@@ -216,7 +216,7 @@ func (win *Window) dismissModal(modal load.Modal) {
 }
 
 func (win *Window) unloaded(w *app.Window) {
-	lbl := win.theme.H3("Multiwallet not loaded\nIs another instance open?")
+	lbl := win.load.Theme.H3("Multiwallet not loaded\nIs another instance open?")
 	for {
 		e := <-w.Events()
 		switch evt := e.(type) {
@@ -235,7 +235,7 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 		Alignment: layout.N,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return decredmaterial.Fill(gtx, win.theme.Color.LightGray)
+			return decredmaterial.Fill(gtx, win.load.Theme.Color.LightGray)
 		}),
 		layout.Stacked(func(gtx C) D {
 			page.Handle()

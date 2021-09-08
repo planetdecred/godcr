@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"image"
 	"image/color"
-	"path/filepath"
 	"time"
 
+	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -125,12 +125,7 @@ func (pg *ReceivePage) OnResume() {
 }
 
 func (pg *ReceivePage) generateQRForAddress() {
-	absoluteWdPath, err := GetAbsolutePath()
-	if err != nil {
-		log.Error(err.Error())
-	}
-
-	opt := qrcode.WithLogoImageFilePNG(filepath.Join(absoluteWdPath, "ui/assets/decredicons/qrcodeSymbol.png"))
+	opt := qrcode.WithLogoImage(assets.DecredIcons["qrcodeSymbol"])
 	qrCode, err := qrcode.New(pg.currentAddress, opt)
 	if err != nil {
 		log.Error("Error generating address qrCode: " + err.Error())

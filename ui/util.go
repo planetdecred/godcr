@@ -6,10 +6,7 @@ package ui
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"os/exec"
-	"path"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -154,18 +151,4 @@ func handleSubmitEvent(editors ...*widget.Editor) bool {
 		}
 	}
 	return submit
-}
-
-func GetAbsolutePath() (string, error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return "", fmt.Errorf("error getting executable path: %s", err.Error())
-	}
-
-	exSym, err := filepath.EvalSymlinks(ex)
-	if err != nil {
-		return "", fmt.Errorf("error getting filepath after evaluating sym links")
-	}
-
-	return path.Dir(exSym), nil
 }
