@@ -495,13 +495,13 @@ func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(stateLabel.Layout),
 							layout.Rigid(func(gtx C) D {
-								rect := image.Rectangle{
-									Min: gtx.Constraints.Min,
-									Max: gtx.Constraints.Max,
-								}
-								rect.Max.Y = 20
-								pg.layoutInfoTooltip(gtx, rect, item)
 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+									rect := image.Rectangle{
+										Min: gtx.Constraints.Min,
+										Max: gtx.Constraints.Max,
+									}
+									rect.Max.Y = 20
+									pg.layoutInfoTooltip(gtx, rect, item)
 									return pg.infoIcon.Layout(gtx, unit.Dp(20))
 								})
 							}),
@@ -527,8 +527,10 @@ func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 }
 
 func (pg *ProposalsPage) layoutInfoTooltip(gtx C, rect image.Rectangle, item proposalItem) {
-	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus230}
+	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus195}
 	item.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding195)
+		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding195)
 		return item.tooltipLabel.Layout(gtx)
 	})
 }
