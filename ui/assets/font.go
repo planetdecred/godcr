@@ -1,9 +1,7 @@
-package main
+package assets
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
 
 	"gioui.org/font/opentype"
@@ -15,8 +13,6 @@ import (
 	"golang.org/x/image/font/gofont/gomedium"
 	"golang.org/x/image/font/gofont/gomediumitalic"
 	"golang.org/x/image/font/gofont/goregular"
-
-	"github.com/planetdecred/godcr/ui"
 )
 
 var (
@@ -25,33 +21,33 @@ var (
 )
 
 // FontCollection registers the fonts to used in the app
-func fontCollection() []text.FontFace {
-	regularItalic, err := getFontByte("ui/assets/fonts/source_sans_pro_It.otf")
+func FontCollection() []text.FontFace {
+	regularItalic, err := getFontByte("fonts/source_sans_pro_It.otf")
 	if err != nil {
 		regularItalic = goitalic.TTF
 	}
 
-	regular, err := getFontByte("ui/assets/fonts/source_sans_pro_regular.otf")
+	regular, err := getFontByte("fonts/source_sans_pro_regular.otf")
 	if err != nil {
 		regular = goregular.TTF
 	}
 
-	semibold, err := getFontByte("ui/assets/fonts/source_sans_pro_semibold.otf")
+	semibold, err := getFontByte("fonts/source_sans_pro_semibold.otf")
 	if err != nil {
 		semibold = gomedium.TTF
 	}
 
-	semiboldItalic, err := getFontByte("ui/assets/fonts/source_sans_pro_semiboldIt.otf")
+	semiboldItalic, err := getFontByte("fonts/source_sans_pro_semiboldIt.otf")
 	if err != nil {
 		semiboldItalic = gomediumitalic.TTF
 	}
 
-	bold, err := getFontByte("ui/assets/fonts/source_sans_pro_bold.otf")
+	bold, err := getFontByte("fonts/source_sans_pro_bold.otf")
 	if err != nil {
 		bold = gobold.TTF
 	}
 
-	boldItalic, err := getFontByte("ui/assets/fonts/source_sans_pro_boldIt.otf")
+	boldItalic, err := getFontByte("fonts/source_sans_pro_boldIt.otf")
 	if err != nil {
 		boldItalic = gobolditalic.TTF
 	}
@@ -80,22 +76,5 @@ func register(fnt text.Font, fontByte []byte) {
 }
 
 func getFontByte(path string) ([]byte, error) {
-	absoluteWdPath, err := ui.GetAbsolutePath()
-	if err != nil {
-		log.Errorf("failed to get absoluteWdPath: %s", err.Error())
-		return nil, err
-	}
-
-	source, err := os.Open(filepath.Join(absoluteWdPath, path))
-	if err != nil {
-		return nil, err
-	}
-
-	stat, err := source.Stat()
-	if err != nil {
-		return nil, err
-	}
-	bytes := make([]byte, stat.Size())
-	source.Read(bytes)
-	return bytes, nil
+	return content.ReadFile(path)
 }

@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"image"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"gioui.org/app"
 
@@ -14,6 +11,7 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui"
+	_ "github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/wallet"
 )
 
@@ -32,33 +30,6 @@ func main() {
 	}
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
-
-	absoluteWdPath, err := ui.GetAbsolutePath()
-	if err != nil {
-		panic(err)
-	}
-
-	decredIcons := make(map[string]image.Image)
-	err = filepath.Walk(filepath.Join(absoluteWdPath, "ui/assets/decredicons"), func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			panic(err)
-		}
-		if info.IsDir() || !strings.HasSuffix(path, ".png") {
-			return nil
-		}
-
-		f, _ := os.Open(path)
-		img, _, err := image.Decode(f)
-		if err != nil {
-			return err
-		}
-		split := strings.Split(info.Name(), ".")
-		decredIcons[split[0]] = img
-		return nil
-	})
-	if err != nil {
-		log.Warn(err)
-	}
 
 	var confirms int32 = dcrlibwallet.DefaultRequiredConfirmations
 
@@ -79,9 +50,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	collection := fontCollection()
-
-	win, appWindow, err := ui.CreateWindow(wal, decredIcons, collection, internalLog)
+	win, appWindow, err := ui.CreateWindow(wal, internalLog)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
