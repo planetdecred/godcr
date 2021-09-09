@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -22,7 +23,6 @@ func (pg *Page) initLayoutWidgets() {
 		Alignment: layout.Middle,
 	}
 
-	pg.clearAllBtn = pg.Theme.Button(new(widget.Clickable), "Clear all fields")
 	pg.txFeeCollapsible = pg.Theme.Collapsible()
 
 	pg.nextButton = pg.Theme.Button(new(widget.Clickable), "Next")
@@ -43,10 +43,9 @@ func (pg *Page) initLayoutWidgets() {
 		Right:  values.MarginPadding8,
 		Bottom: values.MarginPadding5,
 		Left:   values.MarginPadding8}
-
-	pg.clearAllBtn.Background = pg.Theme.Color.Surface
-	pg.clearAllBtn.Color = pg.Theme.Color.Text
-	pg.clearAllBtn.Inset = layout.UniformInset(values.MarginPadding15)
+	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
+	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
+	pg.moreItems = pg.getMoreItem()
 }
 
 func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
@@ -71,12 +70,7 @@ func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									if pg.moreOptionIsOpen {
-										macro := op.Record(gtx.Ops)
-										layout.Inset{Top: values.MarginPadding25, Left: values.MarginPaddingMinus90}.Layout(gtx, func(gtx C) D {
-											border := widget.Border{Color: pg.Theme.Color.Background, CornerRadius: values.MarginPadding5, Width: values.MarginPadding1}
-											return border.Layout(gtx, pg.clearAllBtn.Layout)
-										})
-										op.Defer(gtx.Ops, macro.Stop())
+										pg.layoutOptionsMenu(gtx)
 									}
 									return layout.Dimensions{}
 								}),
@@ -88,6 +82,56 @@ func (pg *Page) topNav(gtx layout.Context) layout.Dimensions {
 			})
 		}),
 	)
+}
+
+func (pg *Page) getMoreItem() []moreItem {
+	return []moreItem{
+		{
+			text:   "Advanced mode",
+			button: new(widget.Clickable),
+			id:     UTXOPageID,
+			action: func() {
+				pg.ChangeFragment(NewUTXOPage(pg.Load, pg.sourceAccountSelector.SelectedAccount()))
+			},
+		},
+		{
+			text:   "Clear all fields",
+			button: new(widget.Clickable),
+			action: func() {
+				pg.resetFields()
+				pg.moreOptionIsOpen = false
+			},
+		},
+	}
+}
+
+func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
+	inset := layout.Inset{
+		Top:  values.MarginPadding30,
+		Left: values.MarginPaddingMinus100,
+	}
+
+	m := op.Record(gtx.Ops)
+	inset.Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding130)
+		return pg.shadowBox.Layout(gtx, func(gtx C) D {
+			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.moreItems), func(gtx C, i int) D {
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return decredmaterial.Clickable(gtx, pg.moreItems[i].button, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									return pg.Theme.Body1(pg.moreItems[i].text).Layout(gtx)
+								})
+							})
+						}),
+					)
+				})
+			})
+		})
+	})
+	op.Defer(gtx.Ops, m.Stop())
 }
 
 func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
@@ -135,6 +179,12 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 					return pg.balanceSection(gtx)
 				})
 			})
+		}),
+		layout.Expanded(func(gtx C) D {
+			if pg.moreOptionIsOpen {
+				return pg.backdrop.Layout(gtx)
+			}
+			return D{}
 		}),
 	)
 

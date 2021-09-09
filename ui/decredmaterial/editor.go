@@ -101,7 +101,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 
 		showHidePassword: IconButton{
 			material.IconButtonStyle{
-				Icon:       mustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
+				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
 				Color:      t.Color.Gray,
@@ -218,9 +218,9 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					Left: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					icon := mustIcon(widget.NewIcon(icons.ActionVisibilityOff))
+					icon := MustIcon(widget.NewIcon(icons.ActionVisibilityOff))
 					if e.Editor.Mask == '*' {
-						icon = mustIcon(widget.NewIcon(icons.ActionVisibility))
+						icon = MustIcon(widget.NewIcon(icons.ActionVisibility))
 					}
 					e.showHidePassword.Icon = icon
 					return e.showHidePassword.Layout(gtx)
