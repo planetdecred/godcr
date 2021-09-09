@@ -47,10 +47,3 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 	pb.Progress = float32(strength * 100)
 	pb.Color = th.Color.Success
 }
-
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
-	if err != nil {
-		panic(err)
-	}
-	return ic
-}

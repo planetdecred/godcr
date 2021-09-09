@@ -51,7 +51,7 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := mustIcon(widget.NewIcon(icons.ImageLens))
+					ic := decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens))
 					ic.Color = th.Color.Gray
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
@@ -70,7 +70,7 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 		func(gtx C) D {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := mustIcon(widget.NewIcon(icons.ImageLens))
+					ic := decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens))
 					ic.Color = th.Color.Gray
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),

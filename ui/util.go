@@ -32,13 +32,6 @@ func translateErr(err error) string {
 	return err.Error()
 }
 
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
-	if err != nil {
-		panic(err)
-	}
-	return ic
-}
-
 func editorsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
@@ -18,6 +19,14 @@ import (
 const (
 	PageID = "Send"
 )
+
+type moreItem struct {
+	text     string
+	id       string
+	button   *widget.Clickable
+	action   func()
+	separate bool
+}
 
 type Page struct {
 	*load.Load
@@ -32,9 +41,12 @@ type Page struct {
 	moreOption    decredmaterial.IconButton
 	retryExchange decredmaterial.Button
 	nextButton    decredmaterial.Button
-	clearAllBtn   decredmaterial.Button
 
 	txFeeCollapsible *decredmaterial.Collapsible
+	shadowBox        *decredmaterial.Shadow
+	optionsMenuCard  decredmaterial.Card
+	moreItems        []moreItem
+	backdrop         *widget.Clickable
 
 	moreOptionIsOpen bool
 
@@ -69,6 +81,8 @@ func NewSendPage(l *load.Load) *Page {
 		exchangeRate: -1,
 
 		authoredTxData: &authoredTxData{},
+		shadowBox:      l.Theme.Shadow(),
+		backdrop:       new(widget.Clickable),
 	}
 
 	// Source account picker
@@ -318,12 +332,14 @@ func (pg *Page) Handle() {
 		}
 	}
 
-	for pg.clearAllBtn.Clicked() {
+	for pg.backdrop.Clicked() {
 		pg.moreOptionIsOpen = false
+	}
 
-		pg.sendDestination.clearAddressInput()
-
-		pg.amount.clearAmount()
+	for _, menu := range pg.moreItems {
+		if menu.button.Clicked() {
+			menu.action()
+		}
 	}
 
 }
