@@ -69,7 +69,7 @@ func NewMainPage(l *load.Load) *MainPage {
 
 	mp.initNavItems()
 
-	mp.defaultNavDims()
+	mp.drawerNav.DrawerToggled(false)
 
 	mp.OnResume()
 
@@ -254,17 +254,11 @@ func (mp *MainPage) Handle() {
 	mp.appBarNav.CurrentPage = mp.currentPageID()
 
 	for mp.drawerNav.MinimizeNavDrawerButton.Button.Clicked() {
-		mp.drawerNav.Axis = layout.Vertical
-		mp.drawerNav.TextSize = values.TextSize12
-		mp.drawerNav.LeftInset = values.MarginPadding0
-		mp.drawerNav.Width = components.NavDrawerMinimizedWidth
-		mp.drawerNav.ActiveDrawerBtn = mp.drawerNav.MaximizeNavDrawerButton
-		mp.drawerNav.Alignment = layout.Middle
-		mp.drawerNav.Direction = layout.Center
+		mp.drawerNav.DrawerToggled(true)
 	}
 
 	for mp.drawerNav.MaximizeNavDrawerButton.Button.Clicked() {
-		mp.defaultNavDims()
+		mp.drawerNav.DrawerToggled(false)
 	}
 
 	for i, item := range mp.appBarNav.AppBarNavItems {
@@ -311,16 +305,6 @@ func (mp *MainPage) Handle() {
 			mp.changeFragment(pg)
 		}
 	}
-}
-
-func (mp *MainPage) defaultNavDims() {
-	mp.drawerNav.Axis = layout.Horizontal
-	mp.drawerNav.TextSize = values.TextSize16
-	mp.drawerNav.LeftInset = values.MarginPadding15
-	mp.drawerNav.Width = components.NavDrawerWidth
-	mp.drawerNav.ActiveDrawerBtn = mp.drawerNav.MinimizeNavDrawerButton
-	mp.drawerNav.Alignment = layout.Start
-	mp.drawerNav.Direction = layout.W
 }
 
 func (mp *MainPage) OnClose() {

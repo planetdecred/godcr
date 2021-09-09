@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 180}
-	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 100}
+	navDrawerMaximizedWidth = unit.Value{U: unit.UnitDp, V: 180}
+	navDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 100}
 )
 
 type NavHandler struct {
@@ -32,26 +32,26 @@ type NavDrawer struct {
 	DrawerNavItems []NavHandler
 	CurrentPage    string
 
-	Axis      layout.Axis
-	TextSize  unit.Value
-	LeftInset unit.Value
-	Width     unit.Value
-	Alignment layout.Alignment
-	Direction layout.Direction
+	axis      layout.Axis
+	textSize  unit.Value
+	leftInset unit.Value
+	width     unit.Value
+	alignment layout.Alignment
+	direction layout.Direction
 
 	MinimizeNavDrawerButton decredmaterial.IconButton
 	MaximizeNavDrawerButton decredmaterial.IconButton
-	ActiveDrawerBtn         decredmaterial.IconButton
+	activeDrawerBtn         decredmaterial.IconButton
 }
 
 func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			return decredmaterial.LinearLayout{
-				Width:       gtx.Px(nd.Width),
+				Width:       gtx.Px(nd.width),
 				Height:      decredmaterial.MatchParent,
 				Background:  nd.Theme.Color.Surface,
-				Orientation: nd.Axis,
+				Orientation: nd.axis,
 			}.Layout2(gtx, func(gtx C) D {
 				list := layout.List{Axis: layout.Vertical}
 				return list.Layout(gtx, len(nd.DrawerNavItems), func(gtx C, i int) D {
@@ -61,17 +61,17 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 					}
 
 					return nd.layoutNavRow(gtx, background, nd.DrawerNavItems[i].Clickable, func(gtx C) D {
-						txt := nd.Theme.Label(nd.TextSize, nd.DrawerNavItems[i].Title)
+						txt := nd.Theme.Label(nd.textSize, nd.DrawerNavItems[i].Title)
 
-						gtx.Constraints.Min.X = gtx.Px(nd.Width)
+						gtx.Constraints.Min.X = gtx.Px(nd.width)
 						return decredmaterial.Clickable(gtx, nd.DrawerNavItems[i].Clickable, func(gtx C) D {
 							return decredmaterial.LinearLayout{
-								Orientation: nd.Axis,
+								Orientation: nd.axis,
 								Width:       decredmaterial.MatchParent,
 								Height:      decredmaterial.WrapContent,
 								Padding:     layout.UniformInset(values.MarginPadding15),
-								Alignment:   nd.Alignment,
-								Direction:   nd.Direction,
+								Alignment:   nd.alignment,
+								Direction:   nd.direction,
 							}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
 									img := nd.DrawerNavItems[i].ImageInactive
@@ -85,7 +85,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{
-										Left: nd.LeftInset,
+										Left: nd.leftInset,
 										Top:  values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
 										textColor := nd.Theme.Color.Gray4
@@ -105,7 +105,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := nd.ActiveDrawerBtn
+				btn := nd.activeDrawerBtn
 				btn.Color = nd.Theme.Color.Gray3
 
 				return btn.Layout(gtx)
@@ -167,4 +167,24 @@ func (nd *NavDrawer) layoutNavRow(gtx layout.Context, background color.NRGBA, Cl
 	card.Color = background
 	card.Radius = decredmaterial.Radius(0)
 	return card.HovarableLayout(gtx, Clickable, body)
+}
+
+func (nd *NavDrawer) DrawerToggled(min bool) {
+	if min {
+		nd.axis = layout.Vertical
+		nd.textSize = values.TextSize12
+		nd.leftInset = values.MarginPadding0
+		nd.width = navDrawerMinimizedWidth
+		nd.activeDrawerBtn = nd.MaximizeNavDrawerButton
+		nd.alignment = layout.Middle
+		nd.direction = layout.Center
+	} else {
+		nd.axis = layout.Horizontal
+		nd.textSize = values.TextSize16
+		nd.leftInset = values.MarginPadding15
+		nd.width = navDrawerMaximizedWidth
+		nd.activeDrawerBtn = nd.MinimizeNavDrawerButton
+		nd.alignment = layout.Start
+		nd.direction = layout.W
+	}
 }
