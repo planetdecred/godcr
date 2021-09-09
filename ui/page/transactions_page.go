@@ -30,7 +30,6 @@ type TransactionsPage struct {
 	ctxCancel context.CancelFunc
 	container layout.Flex
 	separator decredmaterial.Line
-	backdrop  *widget.Clickable
 
 	orderDropDown   *decredmaterial.DropDown
 	txTypeDropDown  *decredmaterial.DropDown
@@ -47,7 +46,6 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 		container:       layout.Flex{Axis: layout.Vertical},
 		separator:       l.Theme.Separator(),
 		transactionList: l.Theme.NewClickableList(layout.Vertical),
-		backdrop:        new(widget.Clickable),
 	}
 
 	pg.orderDropDown = components.CreateOrderDropDown(l)
@@ -165,48 +163,22 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Expanded(func(gtx C) D {
-				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-
-				if pg.txTypeDropDown.IsOpen() || pg.walletDropDown.IsOpen() || pg.orderDropDown.IsOpen() {
-					return pg.backdrop.Layout(gtx)
-				}
-				return D{}
+				return pg.walletDropDown.Layout(gtx, 0)
 			}),
-			layout.Stacked(pg.dropDowns),
+			layout.Expanded(func(gtx C) D {
+				post := float32(gtx.Constraints.Max.X - 315)
+				return pg.txTypeDropDown.Layout(gtx, post)
+			}),
+			layout.Expanded(func(gtx C) D {
+				post := float32(gtx.Constraints.Max.X - 150)
+				return pg.orderDropDown.Layout(gtx, post)
+			}),
 		)
 	}
 	return components.UniformPadding(gtx, container)
 }
 
-func (pg *TransactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
-	return layout.Inset{
-		Bottom: values.MarginPadding10,
-	}.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(pg.walletDropDown.Layout),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Left: values.MarginPadding5,
-						}.Layout(gtx, pg.txTypeDropDown.Layout)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Left: values.MarginPadding5,
-						}.Layout(gtx, pg.orderDropDown.Layout)
-					}),
-				)
-			}),
-		)
-	})
-}
-
 func (pg *TransactionsPage) Handle() {
-	for pg.backdrop.Clicked() {
-		pg.orderDropDown.CloseDropdown()
-	}
 
 	for pg.txTypeDropDown.Changed() {
 		pg.loadTransactions()

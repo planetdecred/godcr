@@ -7,8 +7,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
-
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -24,7 +22,6 @@ type ActivityPage struct {
 	tickets      **wallet.Tickets
 	ticketsList  layout.List
 	filterSorter int
-	backdrop     *widget.Clickable
 
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
@@ -40,7 +37,6 @@ func newTicketActivityPage(l *load.Load) *ActivityPage {
 		Load:        l,
 		tickets:     l.WL.Tickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
-		backdrop:    new(widget.Clickable),
 	}
 	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.ticketTypeDropDown = pg.Theme.DropDown([]decredmaterial.DropDownItem{
@@ -106,14 +102,15 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 						})
 					}),
 					layout.Expanded(func(gtx C) D {
-						if pg.orderDropDown.IsOpen() || pg.ticketTypeDropDown.IsOpen() || pg.walletDropDown.IsOpen() {
-							return pg.backdrop.Layout(gtx)
-						}
-						return D{}
+						return pg.walletDropDown.Layout(gtx, 0)
 					}),
-					layout.Stacked(pg.dropDowns),
-					layout.Stacked(func(gtx C) D {
-						return pg.dropDowns(gtx)
+					layout.Expanded(func(gtx C) D {
+						post := float32(gtx.Constraints.Max.X - 150)
+						return pg.orderDropDown.Layout(gtx, post)
+					}),
+					layout.Expanded(func(gtx C) D {
+						post := float32(gtx.Constraints.Max.X - 315)
+						return pg.ticketTypeDropDown.Layout(gtx, post)
 					}),
 				)
 			},
@@ -122,33 +119,6 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	return components.UniformPadding(gtx, body)
-}
-
-func (pg *ActivityPage) dropDowns(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.walletDropDown.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.ticketTypeDropDown.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.orderDropDown.Layout(gtx)
-					})
-				}),
-			)
-		}),
-	)
 }
 
 func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket {
@@ -162,10 +132,6 @@ func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket
 }
 
 func (pg *ActivityPage) Handle() {
-
-	for pg.backdrop.Clicked() {
-		pg.orderDropDown.CloseDropdown()
-	}
 
 	sortSelection := pg.orderDropDown.SelectedIndex()
 	if pg.filterSorter != sortSelection {

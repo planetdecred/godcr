@@ -16,6 +16,7 @@ type DropDown struct {
 	background     color.NRGBA
 	dropdownIcon   *widget.Icon
 	navigationIcon *widget.Icon
+	backdrop       *widget.Clickable
 
 	group            uint
 	closeAllDropdown func(group uint)
@@ -37,6 +38,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		background:     t.Color.Surface,
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
+		backdrop:       new(widget.Clickable),
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
@@ -53,7 +55,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		c.items[0] = DropDownItem{
 			Text:   items[0].Text,
 			Icon:   items[0].Icon,
-			label:  t.Label(unit.Sp(16), items[0].Text),
+			label:  t.Body1(items[0].Text),
 			button: t.Button(new(widget.Clickable), items[0].Text),
 		}
 		c.selectedIndex = 1
@@ -91,10 +93,10 @@ func (c *DropDown) handleEvents() {
 			}
 		}
 	}
-}
 
-func (c *DropDown) CloseDropdown() {
-	c.closeAllDropdown(c.group)
+	for c.backdrop.Clicked() {
+		c.closeAllDropdown(c.group)
+	}
 }
 
 func (c *DropDown) Changed() bool {
@@ -118,10 +120,12 @@ func (c *DropDown) Changed() bool {
 func (c *DropDown) layoutIcon(itemIndex int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		if c.items[itemIndex].Icon == nil {
-			return layout.Dimensions{}
+			return D{}
 		}
 
 		img := c.items[itemIndex].Icon
+		img.Scale = 0.045
+
 		return img.Layout(gtx)
 	})
 }
@@ -152,19 +156,19 @@ func (c *DropDown) layoutActiveIcon(index int, isFirstOption bool) layout.FlexCh
 				if icon != nil {
 					return icon.Layout(gtx, unit.Dp(20))
 				}
-				return layout.Dimensions{}
+				return D{}
 			})
 		})
 	})
 }
 
-func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bool) layout.Dimensions {
+func (c *DropDown) layoutOption(gtx C, itemIndex int, isFirstOption bool) D {
 	btn := c.items[itemIndex].button
 	min := gtx.Constraints.Min
 	min.X = 100
 
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+		layout.Stacked(func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.UniformInset(unit.Dp(8)).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min = min
@@ -172,21 +176,14 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 				textLayout := c.layoutText(itemIndex)
 				activeIconLayout := c.layoutActiveIcon(itemIndex, isFirstOption)
 
-				return layout.Flex{
-					Axis:      layout.Horizontal,
-					Alignment: layout.Middle,
-				}.Layout(gtx, iconLayout, textLayout, activeIconLayout)
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, iconLayout, textLayout, activeIconLayout)
 			})
 		}),
 		layout.Expanded(btn.Button.Layout),
 	)
 }
 
-func (c *DropDown) IsOpen() bool {
-	return c.isOpen
-}
-
-func (c *DropDown) Layout(gtx layout.Context) layout.Dimensions {
+func (c *DropDown) Layout(gtx C, dropPos float32) D {
 	c.handleEvents()
 
 	children := []layout.FlexChild{
@@ -196,14 +193,30 @@ func (c *DropDown) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	if c.isOpen {
-		return c.dropDownItemMenu(gtx)
+		return layout.Stack{}.Layout(gtx,
+			layout.Expanded(func(gtx C) D {
+				gtx.Constraints.Min = gtx.Constraints.Max
+				return c.backdrop.Layout(gtx)
+			}),
+			layout.Stacked(func(gtx C) D {
+				return layout.Inset{
+					Left: unit.Dp(dropPos),
+				}.Layout(gtx, func(gtx C) D {
+					return c.dropDownItemMenu(gtx)
+				})
+			}),
+		)
 	}
-	return c.drawLayout(gtx, false, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+	return layout.Inset{
+		Left: unit.Dp(dropPos),
+	}.Layout(gtx, func(gtx C) D {
+		return c.drawLayout(gtx, false, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+		})
 	})
 }
 
-func (c *DropDown) dropDownItemMenu(gtx layout.Context) layout.Dimensions {
+func (c *DropDown) dropDownItemMenu(gtx C) D {
 	items := c.items[1:]
 	var dropDownItemRows []layout.Widget
 	for i := range items {
@@ -225,7 +238,7 @@ func (c *DropDown) dropDownItemMenu(gtx layout.Context) layout.Dimensions {
 }
 
 // drawLayout wraps the page tx and sync section in a card layout
-func (c *DropDown) drawLayout(gtx layout.Context, isPopUp bool, body layout.Widget) layout.Dimensions {
+func (c *DropDown) drawLayout(gtx C, isPopUp bool, body layout.Widget) D {
 	color := c.color
 	m := unit.Dp(5)
 	if isPopUp {
