@@ -6,7 +6,7 @@
 package load
 
 import (
-	"image"
+	"errors"
 
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/language"
@@ -17,6 +17,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/wallet"
@@ -86,7 +87,55 @@ type Load struct {
 	PopToFragment    func(pageID string)
 }
 
-func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load {
+func NewLoad() (*Load, error) {
+
+	wl := &WalletLoad{
+		Wallet:         new(wallet.Wallet),
+		Account:        new(wallet.Account),
+		Info:           new(wallet.MultiWalletInfo),
+		SyncStatus:     new(wallet.SyncStatus),
+		Transactions:   new(wallet.Transactions),
+		UnspentOutputs: new(wallet.UnspentOutputs),
+		Tickets:        new(*wallet.Tickets),
+		VspInfo:        new(wallet.VSP),
+		Proposals:      new(wallet.Proposals),
+
+		SelectedProposal: new(dcrlibwallet.Proposal),
+	}
+
+	r := &Receiver{
+		AcctMixerStatus: make(chan *wallet.AccountMixer),
+		SyncedProposal:  make(chan *wallet.Proposal),
+	}
+
+	icons := loadIcons()
+	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
+	if th == nil {
+		return nil, errors.New("unexpected error while loading theme")
+	}
+	l := &Load{
+		Theme:    th,
+		Icons:    icons,
+		WL:       wl,
+		Receiver: r,
+		Toast:    notification.NewToast(th),
+
+		Printer: message.NewPrinter(language.English),
+	}
+
+	return l, nil
+}
+
+func (l *Load) RefreshTheme() {
+	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey("isDarkModeOn", false)
+	if isDarkModeOn != l.Theme.DarkMode {
+		l.Theme.SwitchDarkMode(isDarkModeOn)
+	}
+}
+
+func loadIcons() Icons {
+	decredIcons := assets.DecredIcons
+
 	ic := Icons{
 		ContentAdd:             decredmaterial.MustIcon(widget.NewIcon(icons.ContentAdd)),
 		NavigationCheck:        decredmaterial.MustIcon(widget.NewIcon(icons.NavigationCheck)),
@@ -167,42 +216,5 @@ func NewLoad(th *decredmaterial.Theme, decredIcons map[string]image.Image) *Load
 		DecredSymbolIcon:           &widget.Image{Src: paint.NewImageOp(decredIcons["decred_symbol"])},
 		DecredSymbol2:              &widget.Image{Src: paint.NewImageOp(decredIcons["ic_decred02"])},
 	}
-
-	wl := &WalletLoad{
-		Wallet:         new(wallet.Wallet),
-		Account:        new(wallet.Account),
-		Info:           new(wallet.MultiWalletInfo),
-		SyncStatus:     new(wallet.SyncStatus),
-		Transactions:   new(wallet.Transactions),
-		UnspentOutputs: new(wallet.UnspentOutputs),
-		Tickets:        new(*wallet.Tickets),
-		VspInfo:        new(wallet.VSP),
-		Proposals:      new(wallet.Proposals),
-
-		SelectedProposal: new(dcrlibwallet.Proposal),
-	}
-
-	r := &Receiver{
-		AcctMixerStatus: make(chan *wallet.AccountMixer),
-		SyncedProposal:  make(chan *wallet.Proposal),
-	}
-
-	l := &Load{
-		Theme:    th,
-		Icons:    ic,
-		WL:       wl,
-		Receiver: r,
-		Toast:    notification.NewToast(th),
-
-		Printer: message.NewPrinter(language.English),
-	}
-
-	return l
-}
-
-func (l *Load) RefreshTheme() {
-	isDarkModeOn := l.WL.Wallet.ReadBoolConfigValueForKey("isDarkModeOn")
-	if isDarkModeOn != l.Theme.DarkMode {
-		l.Theme.SwitchDarkMode(isDarkModeOn)
-	}
+	return ic
 }
