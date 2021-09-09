@@ -1,8 +1,6 @@
 package components
 
-import (
-	"context"
-)
+import "context"
 
 // done returns whether the context's Done channel was closed due to
 // cancellation or exceeded deadline.

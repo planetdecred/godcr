@@ -5,8 +5,8 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/unit"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -91,7 +91,7 @@ func (pg *Page) getMoreItem() []moreItem {
 			button: new(widget.Clickable),
 			id:     UTXOPageID,
 			action: func() {
-				pg.ChangeFragment(NewUTXOPage(pg.Load))
+				pg.ChangeFragment(NewUTXOPage(pg.Load, pg.sourceAccountSelector.SelectedAccount()))
 			},
 		},
 		{
@@ -107,14 +107,13 @@ func (pg *Page) getMoreItem() []moreItem {
 
 func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 	inset := layout.Inset{
-		Top:  unit.Dp(30),
-		Left: unit.Dp(-120),
+		Top:  values.MarginPadding30,
+		Left: values.MarginPaddingMinus100,
 	}
 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
-		width := unit.Value{U: unit.UnitDp, V: 150}
-		gtx.Constraints.Max.X = gtx.Px(width)
+		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding130)
 		return pg.shadowBox.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.moreItems), func(gtx C, i int) D {
