@@ -129,6 +129,10 @@ func (pg *WalletPage) ID() string {
 }
 
 func (pg *WalletPage) OnResume() {
+	pg.loadWalletAndAccounts()
+}
+
+func (pg *WalletPage) loadWalletAndAccounts() {
 	wallets := pg.WL.SortedWalletList()
 
 	pg.listItems = make([]*walletListItem, 0)
@@ -840,28 +844,24 @@ func (pg *WalletPage) Handle() {
 
 			for listItem.addAcctClickable.Clicked() {
 				walletID := listItem.wal.ID
-				textModal := modal.NewTextInputModal(pg.Load).
-					Hint("Account name").
-					PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
-						if accountName != "" {
-							modal.NewPasswordModal(pg.Load).
-								Title(values.String(values.StrCreateNewAccount)).
-								Hint("Spending password").
-								NegativeButton(values.String(values.StrCancel), func() {}).
-								PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
-									go func() {
-										wal := pg.multiWallet.WalletWithID(walletID)
-										wal.CreateNewAccount(accountName, []byte(password)) // TODO
-										pm.Dismiss()
-									}()
-									return false
-								}).Show()
-						}
-						return true
-					})
-				textModal.Title(values.String(values.StrCreateNewAccount)).
-					NegativeButton(values.String(values.StrCancel), func() {})
-				textModal.Show()
+				modal.NewCreateAccountModal(pg.Load).
+					Title("Create new account").
+					PasswordCreated(func(accountName, password string, m *modal.CreateAccountModal) bool {
+						go func() {
+							wal := pg.multiWallet.WalletWithID(walletID)
+							_, err := wal.CreateNewAccount(accountName, []byte(password)) // TODO
+							if err != nil {
+								pg.Toast.NotifyError(err.Error())
+								m.SetError(err.Error())
+							} else {
+								pg.Toast.Notify("Account created")
+								m.Dismiss()
+							}
+							pg.loadWalletAndAccounts()
+							m.Dismiss()
+						}()
+						return false
+					}).Show()
 				break
 			}
 
