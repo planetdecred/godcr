@@ -295,6 +295,7 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 					m.SetLoading(false)
 					return
 				}
+				pg.loadWalletAndAccounts()
 				pg.Toast.Notify("Wallet created")
 				m.Dismiss()
 			}()

@@ -48,8 +48,11 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		btnNegative:      l.Theme.Button(new(widget.Clickable), "Cancel"),
 	}
 
-	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
-	cm.btnPositve.Font.Weight, cm.btnNegative.Font.Weight = text.Bold, text.Bold
+	cm.btnNegative.TextSize = values.TextSize16
+	cm.btnNegative.Font.Weight = text.Bold
+
+	cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+	cm.btnPositve.Font.Weight = text.Bold
 
 	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
@@ -119,6 +122,13 @@ func (cm *CreatePasswordModal) SetError(err string) {
 }
 
 func (cm *CreatePasswordModal) Handle() {
+	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
+		editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
+		cm.btnPositve.Background = cm.Theme.Color.Primary
+	} else {
+		cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+	}
+
 	if cm.passwordEditor.Editor.Text() == cm.confirmPasswordEditor.Editor.Text() {
 		// reset error label when password and matching password fields match
 		cm.confirmPasswordEditor.SetError("")
@@ -184,7 +194,15 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			return layout.Dimensions{}
 		},
 		func(gtx C) D {
-			return cm.passwordEditor.Layout(gtx)
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(cm.passwordEditor.Layout),
+				layout.Rigid(func(gtx C) D {
+					txt := cm.Theme.Label(values.MarginPadding14, "This spending password is for the new wallet only")
+					txt.Color = cm.Theme.Color.Gray4
+					return layout.Center.Layout(gtx, txt.Layout)
+					// return txt.Layout(gtx)
+				}),
+			)
 		},
 		func(gtx C) D {
 			return cm.passwordStrength.Layout(gtx)
@@ -206,7 +224,6 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 							return cm.materialLoader.Layout(gtx)
 						}
 
-						cm.btnPositve.Background, cm.btnPositve.Color = cm.Theme.Color.Surface, cm.Theme.Color.Primary
 						return cm.btnPositve.Layout(gtx)
 					}),
 				)
