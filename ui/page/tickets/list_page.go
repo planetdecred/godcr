@@ -339,21 +339,20 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionI
 func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []*transactionItem) layout.Dimensions {
 	// TODO: GridWrap's items not able to scroll vertically, will update when it fixed
 	return layout.Center.Layout(gtx, func(gtx C) D {
-		return pg.ticketsList.Layout(gtx, 1, func(gtx C, index int) D {
-			return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min = gtx.Constraints.Max
-				return decredmaterial.GridWrap{
-					Axis:      layout.Horizontal,
-					Alignment: layout.End,
-				}.Layout(gtx, len(tickets), func(gtx C, index int) D {
-					return layout.Inset{
-						Left:   values.MarginPadding4,
-						Right:  values.MarginPadding4,
-						Bottom: values.MarginPadding8,
-					}.Layout(gtx, func(gtx C) D {
-						selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-						return ticketCard(gtx, pg.Load, selectedWallet, tickets[index])
-					})
+		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min = gtx.Constraints.Max
+			return decredmaterial.GridLayout{
+				List:      &pg.ticketsList,
+				Direction: layout.Center,
+				RowCount:  3,
+			}.Layout(gtx, len(tickets), func(gtx C, index int) D {
+				return layout.Inset{
+					Left:   values.MarginPadding4,
+					Right:  values.MarginPadding4,
+					Bottom: values.MarginPadding8,
+				}.Layout(gtx, func(gtx C) D {
+					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+					return ticketCard(gtx, pg.Load, selectedWallet, tickets[index])
 				})
 			})
 		})
