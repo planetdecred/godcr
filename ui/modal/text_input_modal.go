@@ -82,6 +82,11 @@ func (tm *TextInputModal) Handle() {
 			tm.negativeButtonClicked()
 		}
 	}
+
+	if tm.modal.BackdropClicked() {
+		tm.Dismiss()
+	}
+
 }
 
 func (tm *TextInputModal) Layout(gtx layout.Context) D {

@@ -126,6 +126,11 @@ func (cm *CreateAccountModal) Handle() {
 			cm.Dismiss()
 		}
 	}
+
+	if cm.modal.BackdropClicked() {
+		cm.Dismiss()
+		cm.RefreshWindow()
+	}
 }
 
 func (cm *CreateAccountModal) Layout(gtx layout.Context) D {

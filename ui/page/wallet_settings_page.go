@@ -230,11 +230,11 @@ func (pg *WalletSettingsPage) Handle() {
 			Title(values.String(values.StrRemoveWallet)).
 			Body("Make sure to have the seed phrase backed up before removing the wallet").
 			NegativeButton(values.String(values.StrCancel), func() {}).
+			PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
 			PositiveButton(values.String(values.StrRemove), func() {
 				modal.NewPasswordModal(pg.Load).
 					Title(values.String(values.StrConfirmToRemove)).
 					NegativeButton(values.String(values.StrCancel), func() {}).
-					PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
 					PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 						go func() {
 							err := pg.WL.MultiWallet.DeleteWallet(pg.wallet.ID, []byte(password))
@@ -245,7 +245,7 @@ func (pg *WalletSettingsPage) Handle() {
 							}
 							pm.Dismiss()
 							pg.Toast.Notify("Wallet removed")
-							pg.PopFragment()
+							pg.ChangeFragment(NewWalletPage(pg.Load))
 						}()
 						return false
 					}).Show()

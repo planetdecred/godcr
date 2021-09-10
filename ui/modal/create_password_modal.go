@@ -2,6 +2,7 @@ package modal
 
 import (
 	"fmt"
+	"strconv"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -158,6 +159,11 @@ func (cm *CreatePasswordModal) Handle() {
 		}
 	}
 
+	if cm.modal.BackdropClicked() {
+		cm.Dismiss()
+		cm.RefreshWindow()
+	}
+
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
 
 }
@@ -197,10 +203,20 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(cm.passwordEditor.Layout),
 				layout.Rigid(func(gtx C) D {
-					txt := cm.Theme.Label(values.MarginPadding14, "This spending password is for the new wallet only")
-					txt.Color = cm.Theme.Color.Gray4
-					return layout.Center.Layout(gtx, txt.Layout)
-					// return txt.Layout(gtx)
+					return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								txt := cm.Theme.Label(values.MarginPadding14, "This spending password is for the new wallet only")
+								txt.Color = cm.Theme.Color.Gray4
+								return txt.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := cm.Theme.Label(values.MarginPadding14, strconv.Itoa(cm.passwordEditor.Editor.Len()))
+								txt.Color = cm.Theme.Color.Gray4
+								return txt.Layout(gtx)
+							}),
+						)
+					})
 				}),
 			)
 		},

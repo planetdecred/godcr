@@ -110,6 +110,11 @@ func (cm *CreateWatchOnlyModal) Handle() {
 			cm.Dismiss()
 		}
 	}
+
+	if cm.modal.BackdropClicked() {
+		cm.Dismiss()
+		cm.RefreshWindow()
+	}
 }
 
 func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {

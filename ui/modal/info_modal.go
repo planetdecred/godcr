@@ -2,6 +2,7 @@ package modal
 
 import (
 	"fmt"
+	"image/color"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -91,6 +92,11 @@ func (in *InfoModal) PositiveButton(text string, clicked func()) *InfoModal {
 	return in
 }
 
+func (in *InfoModal) PositiveButtonStyle(background, text color.NRGBA) *InfoModal {
+	in.btnPositve.Background, in.btnPositve.Color = background, text
+	return in
+}
+
 func (in *InfoModal) NegativeButton(text string, clicked func()) *InfoModal {
 	in.negativeButtonText = text
 	in.negativeButtonClicked = clicked
@@ -135,6 +141,11 @@ func (in *InfoModal) Handle() {
 	for in.btnNegative.Button.Clicked() {
 		in.DismissModal(in)
 		in.negativeButtonClicked()
+	}
+
+	if in.modal.BackdropClicked() {
+		in.Dismiss()
+		in.RefreshWindow()
 	}
 }
 
@@ -212,8 +223,6 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnPositve.Text = in.positiveButtonText
-					in.btnPositve.Background, in.btnPositve.Color = in.Theme.Color.Surface, in.Theme.Color.Primary
-
 					return in.btnPositve.Layout(gtx)
 				}),
 			)

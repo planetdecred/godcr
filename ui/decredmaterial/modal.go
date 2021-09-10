@@ -90,3 +90,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) 
 
 	return dims
 }
+
+func (m *Modal) BackdropClicked() bool {
+	return m.button.Clicked()
+}

@@ -71,6 +71,7 @@ type Theme struct {
 		Green50          color.NRGBA
 		Green500         color.NRGBA
 		Turquoise800     color.NRGBA
+		Yellow           color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -127,6 +128,7 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
 		t.Color.Turquoise800 = rgb(0x008F52)
+		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)
 	} else {
 		t.DarkMode = false
@@ -160,6 +162,7 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
 		t.Color.Turquoise800 = rgb(0x008F52)
+		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)
 	}
 }
