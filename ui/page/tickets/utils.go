@@ -28,7 +28,9 @@ const (
 	durationMsg = "10 hrs 47 mins (118/256 blocks)"
 )
 
-type tooltips struct {
+type transactionItem struct {
+	transaction *dcrlibwallet.Transaction
+
 	statusTooltip     *decredmaterial.Tooltip
 	walletNameTooltip *decredmaterial.Tooltip
 	dateTooltip       *decredmaterial.Tooltip
@@ -76,9 +78,9 @@ func calculateDaysBehind(lastHeaderTime int64) string {
 	}
 }
 
-func transactionToTicket(tx dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, maturity, bestBlock int32) Ticket {
+func transactionToTicket(tx dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, maturity, expiry, bestBlock int32) Ticket {
 	return Ticket{
-		Status:     getTicketStatus(tx, w, maturity, bestBlock),
+		Status:     getTicketStatus(tx, w, maturity, expiry, bestBlock),
 		Amount:     dcrutil.Amount(tx.Amount).String(),
 		DateTime:   time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
 		MonthDay:   time.Unix(tx.Timestamp, 0).Format("Jan 2"),
@@ -88,7 +90,7 @@ func transactionToTicket(tx dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, ma
 	}
 }
 
-func getTicketStatus(txn dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, ticketMaturity, bestBlock int32) string {
+func getTicketStatus(txn dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, ticketMaturity, ticketExpiry, bestBlock int32) string {
 	if txn.Type == dcrlibwallet.TxTypeVote {
 		return StakingVoted
 	}
@@ -97,7 +99,7 @@ func getTicketStatus(txn dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, ticke
 		return StakingRevoked
 	}
 
-	s := txn.TicketStatus(ticketMaturity, bestBlock)
+	s := txn.TicketStatus(ticketMaturity, ticketExpiry, bestBlock)
 	switch s {
 	case dcrlibwallet.TicketStatusUnmined:
 		return StakingUnmined
@@ -283,8 +285,8 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.Wallet, tx dcrlibwallet.Transaction, tooltip tooltips) layout.Dimensions {
-	t := transactionToTicket(tx, selectedWallet, l.WL.MultiWallet.TicketMaturity(), l.WL.MultiWallet.GetBestBlock().Height)
+func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.Wallet, tx *transactionItem) layout.Dimensions {
+	t := transactionToTicket(*tx.transaction, selectedWallet, l.WL.MultiWallet.TicketMaturity(), l.WL.MultiWallet.TicketExpiry(), l.WL.MultiWallet.GetBestBlock().Height)
 	var itemWidth int
 	st := ticketStatusProfile(l, t.Status)
 	if st == nil {
@@ -311,7 +313,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 									}.Layout(gtx, func(gtx C) D {
 										txt := l.Theme.Label(values.TextSize14, "10h 47m")
 										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tooltip.durationTooltip, func(gtx C) D {
+										ticketCardTooltip(gtx, txtLayout, tx.durationTooltip, func(gtx C) D {
 											setText(t.Status)
 											return walletNameDateTimeTooltip(gtx, l, durationTitle,
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
@@ -373,7 +375,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 										txt := l.Theme.Label(values.MarginPadding14, t.Status)
 										txt.Color = st.color
 										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {
+										ticketCardTooltip(gtx, txtLayout, tx.statusTooltip, func(gtx C) D {
 											setText(t.Status)
 											return ticketStatusTooltip(gtx, l, t)
 										})
@@ -393,7 +395,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
 										txt.Color = l.Theme.Color.Gray
 										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tooltip.walletNameTooltip, func(gtx C) D {
+										ticketCardTooltip(gtx, txtLayout, tx.walletNameTooltip, func(gtx C) D {
 											return walletNameDateTimeTooltip(gtx, l, "Wallet name",
 												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout))
 										})
@@ -411,7 +413,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											txtLayout := txt.Layout(gtx)
-											ticketCardTooltip(gtx, txtLayout, tooltip.dateTooltip, func(gtx C) D {
+											ticketCardTooltip(gtx, txtLayout, tx.dateTooltip, func(gtx C) D {
 												dt := strings.Split(t.DateTime, " ")
 												s1 := []string{dt[0], dt[1], dt[2]}
 												date := strings.Join(s1, " ")
@@ -436,7 +438,7 @@ func ticketCard(gtx layout.Context, l *load.Load, selectedWallet *dcrlibwallet.W
 										layout.Rigid(func(gtx C) D {
 											txt.Text = t.DaysBehind
 											txtLayout := txt.Layout(gtx)
-											ticketCardTooltip(gtx, txtLayout, tooltip.daysBehindTooltip, func(gtx C) D {
+											ticketCardTooltip(gtx, txtLayout, tx.daysBehindTooltip, func(gtx C) D {
 												setText(t.Status)
 												return walletNameDateTimeTooltip(gtx, l, dayBehind,
 													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.DaysBehind).Layout))

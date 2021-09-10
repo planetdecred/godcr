@@ -26,7 +26,6 @@ type Page struct {
 
 	ticketPageContainer *layout.List
 	ticketsLive         *layout.List
-	ticketsActivity     *layout.List
 
 	purchaseTicket decredmaterial.Button
 
@@ -35,10 +34,9 @@ type Page struct {
 
 	autoPurchaseEnabled *decredmaterial.Switch
 	toTickets           decredmaterial.TextAndIconButton
-	ticketTooltips      []tooltips
 
 	stakingOverview *dcrlibwallet.StakingOverview
-	liveTickets     []dcrlibwallet.Transaction
+	liveTickets     []*transactionItem
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -46,7 +44,6 @@ func NewTicketPage(l *load.Load) *Page {
 		Load: l,
 
 		ticketsLive:         &layout.List{Axis: layout.Horizontal},
-		ticketsActivity:     &layout.List{Axis: layout.Vertical},
 		ticketPageContainer: &layout.List{Axis: layout.Vertical},
 		purchaseTicket:      l.Theme.Button(new(widget.Clickable), "Purchase"),
 
@@ -99,17 +96,22 @@ func (pg *Page) OnResume() {
 
 	go func() {
 		mw := pg.WL.MultiWallet
-		pg.liveTickets = allLiveTickets(mw.AllWallets())
+		tickets := allLiveTickets(mw.AllWallets())
 
-		for range pg.liveTickets {
-			pg.ticketTooltips = append(pg.ticketTooltips, tooltips{
+		txItems := make([]*transactionItem, len(tickets))
+		for i := range tickets {
+			txItems[i] = &transactionItem{
+				transaction: &tickets[i],
+
 				statusTooltip:     pg.Load.Theme.Tooltip(),
 				walletNameTooltip: pg.Load.Theme.Tooltip(),
 				dateTooltip:       pg.Load.Theme.Tooltip(),
 				daysBehindTooltip: pg.Load.Theme.Tooltip(),
 				durationTooltip:   pg.Load.Theme.Tooltip(),
-			})
+			}
 		}
+
+		pg.liveTickets = txItems
 	}()
 
 	go pg.WL.GetVSPList()
@@ -219,8 +221,9 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 					title.Color = pg.Theme.Color.Gray
 					return pg.titleRow(gtx, title.Layout, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							pg.stakingCountIcon(gtx, pg.Icons.TicketImmatureIcon, pg.stakingOverview.Immature),
-							pg.stakingCountIcon(gtx, pg.Icons.TicketLiveIcon, pg.stakingOverview.Live),
+							pg.stakingCountIcon(pg.Icons.TicketUnminedIcon, pg.stakingOverview.Unmined),
+							pg.stakingCountIcon(pg.Icons.TicketImmatureIcon, pg.stakingOverview.Immature),
+							pg.stakingCountIcon(pg.Icons.TicketLiveIcon, pg.stakingOverview.Live),
 							layout.Rigid(pg.toTickets.Layout),
 						)
 					})
@@ -229,8 +232,8 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						w := pg.WL.MultiWallet.WalletWithID(pg.liveTickets[index].WalletID)
-						return ticketCard(gtx, pg.Load, w, pg.liveTickets[index], pg.ticketTooltips[index])
+						w := pg.WL.MultiWallet.WalletWithID(pg.liveTickets[index].transaction.WalletID)
+						return ticketCard(gtx, pg.Load, w, pg.liveTickets[index])
 					})
 				})
 			}),
@@ -238,7 +241,7 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *Page) stakingCountIcon(gtx C, icon *decredmaterial.Image, count int) layout.FlexChild {
+func (pg *Page) stakingCountIcon(icon *decredmaterial.Image, count int) layout.FlexChild {
 	return layout.Rigid(func(gtx C) D {
 		if count == 0 {
 			return D{}
@@ -274,6 +277,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 			}),
 			layout.Rigid(func(gtx C) D {
 				wdgs := []layout.Widget{
+					pg.stakingRecordIconCount(pg.Icons.TicketUnminedIcon, pg.stakingOverview.Unmined, "Unmined"),
 					pg.stakingRecordIconCount(pg.Icons.TicketImmatureIcon, pg.stakingOverview.Immature, "Immature"),
 					pg.stakingRecordIconCount(pg.Icons.TicketLiveIcon, pg.stakingOverview.Live, "Live"),
 					pg.stakingRecordIconCount(pg.Icons.TicketVotedIcon, pg.stakingOverview.Voted, "Voted"),
