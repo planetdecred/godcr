@@ -153,8 +153,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return wrapIcon.Layout(gtx, func(gtx C) D {
 									ic := pg.Icons.ListGridIcon
-									ic.Scale = 1
-									return insetIcon.Layout(gtx, ic.Layout)
+									return insetIcon.Layout(gtx, ic.Layout16dp)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -165,8 +164,7 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return wrapIcon.Layout(gtx, func(gtx C) D {
 									ic := pg.Icons.List
-									ic.Scale = 1
-									return insetIcon.Layout(gtx, ic.Layout)
+									return insetIcon.Layout(gtx, ic.Layout16dp)
 								})
 							}),
 						)
@@ -219,9 +217,8 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 							wrapIcon := pg.Theme.Card()
 							wrapIcon.Color = st.background
 							wrapIcon.Radius = decredmaterial.Radius(8)
-							st.icon.Scale = 0.6
 							dims := wrapIcon.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout)
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout24dp)
 							})
 							progressBarWidth = dims.Size.X
 							return dims

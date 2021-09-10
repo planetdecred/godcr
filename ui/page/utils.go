@@ -5,14 +5,11 @@ package page
 
 import (
 	"fmt"
-	"image/color"
 	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
-
-	"github.com/planetdecred/godcr/ui/load"
 
 	"gioui.org/gesture"
 	"gioui.org/widget"
@@ -83,59 +80,6 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
 	pb.Progress = float32(strength * 100)
 	pb.Color = th.Color.Success
-}
-
-func ticketStatusIcon(th *decredmaterial.Theme, ic load.Icons, ticketStatus string) *struct {
-	icon       *widget.Image
-	color      color.NRGBA
-	background color.NRGBA
-} {
-	m := map[string]struct {
-		icon       *widget.Image
-		color      color.NRGBA
-		background color.NRGBA
-	}{
-		"UNMINED": {
-			ic.TicketUnminedIcon,
-			th.Color.DeepBlue,
-			th.Color.LightBlue,
-		},
-		"IMMATURE": {
-			ic.TicketImmatureIcon,
-			th.Color.DeepBlue,
-			th.Color.LightBlue,
-		},
-		"LIVE": {
-			ic.TicketLiveIcon,
-			th.Color.Primary,
-			th.Color.LightBlue,
-		},
-		"VOTED": {
-			ic.TicketVotedIcon,
-			th.Color.Success,
-			th.Color.Success2,
-		},
-		"MISSED": {
-			ic.TicketMissedIcon,
-			th.Color.Gray,
-			th.Color.LightGray,
-		},
-		"EXPIRED": {
-			ic.TicketExpiredIcon,
-			th.Color.Gray,
-			th.Color.LightGray,
-		},
-		"REVOKED": {
-			ic.TicketRevokedIcon,
-			th.Color.Orange,
-			th.Color.Orange2,
-		},
-	}
-	st, ok := m[ticketStatus]
-	if !ok {
-		return nil
-	}
-	return &st
 }
 
 func HandleSubmitEvent(editors ...*widget.Editor) bool {

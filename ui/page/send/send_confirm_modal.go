@@ -133,10 +133,9 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					icon := scm.Icons.SendIcon
-					icon.Scale = 0.7
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding2, Right: values.MarginPadding16}.Layout(gtx, icon.Layout)
+							return layout.Inset{Top: values.MarginPadding2, Right: values.MarginPadding16}.Layout(gtx, icon.Layout24dp)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,

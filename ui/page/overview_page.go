@@ -45,7 +45,7 @@ type OverviewPage struct {
 	toggleSyncDetails decredmaterial.Button
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon, cachedIcon *widget.Icon
-	syncingIcon *widget.Image
+	syncingIcon *decredmaterial.Image
 
 	walletSyncing bool
 	walletSynced  bool
@@ -103,7 +103,6 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	pg.syncedIcon.Color = l.Theme.Color.Success
 
 	pg.syncingIcon = l.Icons.SyncingIcon
-	pg.syncingIcon.Scale = 1
 
 	pg.notSyncedIcon = l.Icons.NavigationCancel
 	pg.notSyncedIcon.Color = l.Theme.Color.Danger
@@ -485,7 +484,7 @@ func (pg *OverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions {
 	}
 	i := layout.Inset{Right: values.MarginPadding16, Top: values.MarginPadding9}
 	if pg.walletSyncing {
-		return i.Layout(gtx, pg.syncingIcon.Layout)
+		return i.Layout(gtx, pg.syncingIcon.Layout24dp)
 	}
 	return i.Layout(gtx, func(gtx C) D {
 		return syncStatusIcon.Layout(gtx, values.MarginPadding24)

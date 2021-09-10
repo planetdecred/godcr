@@ -86,8 +86,8 @@ type Theme struct {
 	chevronDownIcon       *widget.Icon
 	navigationCheckIcon   *widget.Icon
 	navMoreIcon           *widget.Icon
-	expandIcon            *widget.Image
-	collapseIcon          *widget.Image
+	expandIcon            *Image
+	collapseIcon          *Image
 
 	dropDownMenus []*DropDown
 
@@ -183,8 +183,8 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.navigationCheckIcon = MustIcon(widget.NewIcon(icons.NavigationCheck))
 	t.dropDownIcon = MustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
 
-	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
-	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
+	t.expandIcon = NewImage(decredIcons["expand_icon"])
+	t.collapseIcon = NewImage(decredIcons["collapse_icon"])
 	return t
 }
 

@@ -140,8 +140,7 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 									Right: values.MarginPadding4,
 								}.Layout(gtx, func(gtx C) D {
 									ic := pg.Icons.TimerIcon
-									ic.Scale = 1
-									return ic.Layout(gtx)
+									return ic.Layout12dp(gtx)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
@@ -160,8 +159,7 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 					Bottom: values.MarginPadding8,
 				}.Layout(gtx, func(gtx C) D {
 					ic := pg.Icons.TicketPurchasedIcon
-					ic.Scale = 1.2
-					return layout.Center.Layout(gtx, ic.Layout)
+					return layout.Center.Layout(gtx, ic.Layout48dp)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -198,8 +196,7 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 											if st == nil {
 												return layout.Dimensions{}
 											}
-											st.icon.Scale = .5
-											return st.icon.Layout(gtx)
+											return st.icon.Layout16dp(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
 											return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
@@ -294,8 +291,7 @@ func (pg *Page) stackingRecordSection(gtx layout.Context) layout.Dimensions {
 								if st == nil {
 									return layout.Dimensions{}
 								}
-								st.icon.Scale = 0.6
-								return st.icon.Layout(gtx)
+								return st.icon.Layout24dp(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
@@ -341,8 +337,7 @@ func (pg *Page) stackingRecordSection(gtx layout.Context) layout.Dimensions {
 									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											ic := pg.Icons.StakeyIcon
-											ic.Scale = 1.0
-											return ic.Layout(gtx)
+											return ic.Layout24dp(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
 											return components.LayoutBalance(gtx, pg.Load, "16.5112316")
