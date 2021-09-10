@@ -21,7 +21,7 @@ type startPage struct {
 
 	loading bool
 
-	decredSymbol  *widget.Image
+	decredSymbol  *decredmaterial.Image
 	networkType   decredmaterial.Label
 	loadStatus    decredmaterial.Label
 	welcomeText   decredmaterial.Label
@@ -43,8 +43,6 @@ func NewStartPage(l *load.Load) load.Page {
 		createButton:  l.Theme.Button(new(widget.Clickable), "Create a new wallet"),
 		restoreButton: l.Theme.Button(new(widget.Clickable), "Restore an existing wallet"),
 	}
-
-	sp.decredSymbol.Scale = 0.5
 
 	sp.networkType.Color = l.Theme.Color.DeepBlue
 	sp.networkType.Font.Weight = text.Medium
@@ -178,7 +176,9 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return layout.Center.Layout(gtx, sp.decredSymbol.Layout)
+					return layout.Center.Layout(gtx, func(gtx C) D {
+						return sp.decredSymbol.LayoutSize(gtx, values.MarginPadding150)
+					})
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return sp.networkType.Layout(gtx)

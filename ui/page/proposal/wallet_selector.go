@@ -119,12 +119,11 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						accountIcon := as.Icons.AccountIcon
-						accountIcon.Scale = 1
 						inset := layout.Inset{
 							Right: values.MarginPadding8,
 						}
 						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
+							return accountIcon.Layout24dp(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -274,9 +273,6 @@ func (asm *WalletSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 
 func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *dcrlibwallet.Wallet) layout.Dimensions {
 
-	accountIcon := asm.Icons.AccountIcon
-	accountIcon.Scale = 1
-
 	walletTotalBalance, _ := asm.WL.TotalWalletBalance(wallet.ID)
 	walletSpendableBalance, _ := asm.WL.SpendableWalletBalance(wallet.ID)
 
@@ -290,7 +286,8 @@ func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *
 						return layout.Inset{
 							Right: values.MarginPadding18,
 						}.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
+							accountIcon := asm.Icons.AccountIcon
+							return accountIcon.Layout24dp(gtx)
 						})
 					}),
 					layout.Flexed(0.8, func(gtx C) D {

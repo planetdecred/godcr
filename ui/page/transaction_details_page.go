@@ -201,7 +201,7 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 			return layout.Inset{
 				Right: values.MarginPadding16,
 				Top:   values.MarginPadding12,
-			}.Layout(gtx, pg.txnWidgets.icon.Layout)
+			}.Layout(gtx, pg.txnWidgets.icon.Layout24dp)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -245,7 +245,9 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 							return layout.Inset{
 								Right: values.MarginPadding4,
 								Top:   values.MarginPadding4,
-							}.Layout(gtx, pg.txnWidgets.confirmationIcons.Layout)
+							}.Layout(gtx, func(gtx C) D {
+								return pg.txnWidgets.confirmationIcons.Layout12dp(gtx)
+							})
 						}),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							txt := pg.Theme.Body1("")
@@ -421,10 +423,7 @@ func (pg *TransactionDetailsPage) associatedTicket(gtx C) D {
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						icon := pg.Icons.Next
-						width := float32(icon.Src.Size().X)
-						scale := 24.0 / width
-						icon.Scale = scale
-						return layout.E.Layout(gtx, icon.Layout)
+						return layout.E.Layout(gtx, icon.Layout24dp)
 					}),
 				)
 			})
@@ -648,8 +647,7 @@ func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions 
 			layout.Rigid(pg.theme.Body1(values.String(values.StrViewOnDcrdata)).Layout),
 			layout.Rigid(func(gtx C) D {
 				redirect := pg.Icons.RedirectIcon
-				redirect.Scale = 1.0
-				return decredmaterial.Clickable(gtx, pg.toDcrdata, redirect.Layout)
+				return decredmaterial.Clickable(gtx, pg.toDcrdata, redirect.Layout24dp)
 			}),
 		)
 	})

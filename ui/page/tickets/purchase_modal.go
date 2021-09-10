@@ -69,8 +69,7 @@ func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								ic := tp.Icons.TicketPurchasedIcon
-								ic.Scale = 1.2
-								return ic.Layout(gtx)
+								return ic.Layout48dp(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {

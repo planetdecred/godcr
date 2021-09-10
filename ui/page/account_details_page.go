@@ -125,8 +125,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					edit := pg.Icons.EditIcon
-					edit.Scale = 1
-					return layout.E.Layout(gtx, edit.Layout)
+					return layout.E.Layout(gtx, edit.Layout24dp)
 				})
 			},
 		}
@@ -138,21 +137,22 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimensions {
 
 	return pg.pageSections(gtx, func(gtx C) D {
-		accountIcon := pg.Icons.AccountIcon
-		if pg.account.Number == load.MaxInt32 {
-			accountIcon = pg.Icons.ImportedAccountIcon
-		}
-		accountIcon.Scale = 1
 
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+
+						accountIcon := pg.Icons.AccountIcon
+						if pg.account.Number == load.MaxInt32 {
+							accountIcon = pg.Icons.ImportedAccountIcon
+						}
+
 						m := values.MarginPadding10
 						return layout.Inset{
 							Right: m,
 							Top:   m,
-						}.Layout(gtx, accountIcon.Layout)
+						}.Layout(gtx, accountIcon.Layout24dp)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return pg.acctBalLayout(gtx, "Total Balance", pg.totalBalance, true)

@@ -38,11 +38,11 @@ type proposalDetails struct {
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
-	redirectIcon       *widget.Image
+	redirectIcon       *decredmaterial.Image
 	voteBar            decredmaterial.VoteBar
 	rejectedIcon       *widget.Icon
-	downloadIcon       *widget.Image
-	timerIcon          *widget.Image
+	downloadIcon       *decredmaterial.Image
+	timerIcon          *decredmaterial.Image
 	successIcon        *widget.Icon
 	vote               decredmaterial.Button
 	backButton         decredmaterial.IconButton
@@ -67,8 +67,6 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		viewInPoliteiaBtn:  new(widget.Clickable),
 	}
 
-	pg.redirectIcon.Scale = 1
-	pg.downloadIcon.Scale = 1
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	pg.vote = l.Theme.Button(new(widget.Clickable), "Vote")
@@ -274,11 +272,10 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								if proposal.Category == dcrlibwallet.ProposalCategoryActive {
-									pg.timerIcon.Scale = 1
 									return layout.Inset{
 										Right: values.MarginPadding4,
 										Top:   values.MarginPadding3,
-									}.Layout(gtx, pg.timerIcon.Layout)
+									}.Layout(gtx, pg.timerIcon.Layout12dp)
 								}
 								return D{}
 							}),
@@ -389,7 +386,7 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 	})
 }
 
-func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *widget.Clickable) layout.Widget {
+func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Image, btn *widget.Clickable) layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12})),
@@ -404,7 +401,7 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *widget.Image, btn *
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{}.Layout(gtx, func(gtx C) D {
-								return layout.E.Layout(gtx, icon.Layout)
+								return layout.E.Layout(gtx, icon.Layout24dp)
 							})
 						}),
 					)
@@ -470,8 +467,7 @@ func (pg *proposalDetails) Layout(gtx C) D {
 			ExtraText: "View on Politeia",
 			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
-					pg.redirectIcon.Scale = 1
-					return layout.E.Layout(gtx, pg.redirectIcon.Layout)
+					return layout.E.Layout(gtx, pg.redirectIcon.Layout24dp)
 				})
 			},
 		}

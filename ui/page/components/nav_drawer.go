@@ -19,8 +19,8 @@ var (
 
 type NavHandler struct {
 	Clickable     *widget.Clickable
-	Image         *widget.Image
-	ImageInactive *widget.Image
+	Image         *decredmaterial.Image
+	ImageInactive *decredmaterial.Image
 	Title         string
 	PageID        string
 }
@@ -80,8 +80,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 										img = nd.DrawerNavItems[i].Image
 									}
 
-									img.Scale = 1.0
-									return img.Layout(gtx)
+									return img.Layout24dp(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{
@@ -138,9 +137,7 @@ func (nd *NavDrawer) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
 										func(gtx C) D {
 											return layout.Center.Layout(gtx, func(gtx C) D {
-												img := nd.AppBarNavItems[i].Image
-												img.Scale = 1.0
-												return nd.AppBarNavItems[i].Image.Layout(gtx)
+												return nd.AppBarNavItems[i].Image.Layout24dp(gtx)
 											})
 										})
 								}),

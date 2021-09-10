@@ -30,6 +30,19 @@ const (
 	MoreNavID
 )
 
+var (
+	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
+	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
+)
+
+type NavHandler struct {
+	Clickable     *widget.Clickable
+	Image         *decredmaterial.Image
+	ImageInactive *decredmaterial.Image
+	Title         string
+	PageID        string
+}
+
 type MainPage struct {
 	*load.Load
 	appBarNav components.NavDrawer
@@ -114,8 +127,8 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     new(widget.Clickable),
-				Image:         mp.Icons.TransactionIcon,
-				ImageInactive: mp.Icons.TransactionIconInactive,
+				Image:         mp.Icons.TransactionsIcon,
+				ImageInactive: mp.Icons.TransactionsIconInactive,
 				Title:         values.String(values.StrTransactions),
 				PageID:        TransactionsPageID,
 			},
@@ -475,10 +488,9 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 								}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										img := mp.Icons.Logo
-										img.Scale = 1.0
 										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
 											func(gtx C) D {
-												return img.Layout(gtx)
+												return img.Layout24dp(gtx)
 											})
 									}),
 									layout.Rigid(func(gtx C) D {

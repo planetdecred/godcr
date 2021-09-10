@@ -12,7 +12,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"gioui.org/widget"
 
 	"github.com/ararog/timeago"
 	"github.com/decred/dcrd/dcrutil/v3"
@@ -69,10 +68,10 @@ func UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	}.Layout(gtx, body)
 }
 
-func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction) (string, *widget.Image) {
+func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction) (string, *decredmaterial.Image) {
 	var title string
-	var icon *widget.Image
-
+	var icon *decredmaterial.Image
+	icon = l.Icons.TicketLiveIcon
 	if tx.Type == dcrlibwallet.TxTypeRegular {
 		if tx.Direction == dcrlibwallet.TxDirectionSent {
 			title = "Sent"
@@ -109,11 +108,6 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 		}
 	}
 
-	// Scale icon to 24 by 24
-	width := float32(icon.Src.Size().X)
-	scale := 24.0 / width
-	icon.Scale = scale
-
 	return title, icon
 }
 
@@ -135,7 +129,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.W.Layout(gtx, icon.Layout)
+			return layout.W.Layout(gtx, icon.Layout24dp)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -184,10 +178,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						layout.Rigid(func(gtx C) D {
 							if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
 								ic := l.Icons.TicketIconInactive
-								width := float32(ic.Src.Size().X)
-								scale := 16.0 / width
-								ic.Scale = scale
-								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout)
+								return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, ic.Layout12dp)
 							}
 							return D{}
 						}),
@@ -231,14 +222,11 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								}),
 								layout.Rigid(func(gtx C) D {
 									ic := l.Icons.DecredSymbol2
-									width := float32(ic.Src.Size().Y)
-									scale := 16.0 / width
-									ic.Scale = scale
 
 									return layout.Inset{
 										Left:  values.MarginPadding4,
 										Right: values.MarginPadding4,
-									}.Layout(gtx, ic.Layout)
+									}.Layout(gtx, ic.Layout16dp)
 								}),
 								layout.Rigid(func(gtx C) D {
 									label := l.Theme.Label(values.TextSize14, dcrutil.Amount(row.Transaction.VoteReward).String())
@@ -290,8 +278,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 					if TxConfirmations(l, row.Transaction) <= 1 {
 						statusIcon = l.Icons.PendingIcon
 					}
-					statusIcon.Scale = 1.0
-					return layout.E.Layout(gtx, statusIcon.Layout)
+					return layout.E.Layout(gtx, statusIcon.Layout12dp)
 				}))
 		}),
 	)

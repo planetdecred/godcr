@@ -127,12 +127,11 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						accountIcon := as.Icons.AccountIcon
-						accountIcon.Scale = 1
 						inset := layout.Inset{
 							Right: values.MarginPadding8,
 						}
 						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
+							return accountIcon.Layout24dp(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -397,7 +396,6 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 	account.clickEvent.Add(gtx.Ops)
 
 	accountIcon := asm.Icons.AccountIcon
-	accountIcon.Scale = 1
 
 	return layout.Inset{
 		Bottom: values.MarginPadding20,
@@ -409,7 +407,7 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 						return layout.Inset{
 							Right: values.MarginPadding18,
 						}.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout(gtx)
+							return accountIcon.Layout24dp(gtx)
 						})
 					}),
 					layout.Flexed(0.8, func(gtx C) D {

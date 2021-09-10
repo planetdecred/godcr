@@ -25,7 +25,7 @@ type DropDown struct {
 
 type DropDownItem struct {
 	Text   string
-	Icon   *widget.Image
+	Icon   *Image
 	button Button
 	label  Label
 }
@@ -124,9 +124,7 @@ func (c *DropDown) layoutIcon(itemIndex int) layout.FlexChild {
 		}
 
 		img := c.items[itemIndex].Icon
-		img.Scale = 0.045
-
-		return img.Layout(gtx)
+		return img.Layout24dp(gtx)
 	})
 }
 

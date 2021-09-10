@@ -66,8 +66,8 @@ type ProposalsPage struct {
 	infoIcon      *widget.Icon
 	updatedIcon   *widget.Icon
 	syncButton    *widget.Clickable
-	startSyncIcon *widget.Image
-	timerIcon     *widget.Image
+	startSyncIcon *decredmaterial.Image
+	timerIcon     *decredmaterial.Image
 
 	showSyncedCompleted bool
 	isSyncing           bool
@@ -256,10 +256,8 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.proposalsList.DividerHeight = values.MarginPadding8
 
 	pg.timerIcon = pg.Icons.TimerIcon
-	pg.timerIcon.Scale = 1
 
 	pg.startSyncIcon = pg.Icons.Restore
-	pg.startSyncIcon.Scale = 0.68
 }
 
 func (pg *ProposalsPage) Layout(gtx C) D {
@@ -514,7 +512,7 @@ func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 								return layout.Inset{
 									Right: values.MarginPadding4,
 									Top:   values.MarginPadding3,
-								}.Layout(gtx, pg.timerIcon.Layout)
+								}.Layout(gtx, pg.timerIcon.Layout12dp)
 							}
 							return D{}
 						}),
@@ -573,6 +571,6 @@ func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 
 func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
-		return pg.startSyncIcon.Layout(gtx)
+		return pg.startSyncIcon.Layout24dp(gtx)
 	})
 }
