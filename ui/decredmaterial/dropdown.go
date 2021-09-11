@@ -8,6 +8,8 @@ import (
 	"gioui.org/widget"
 )
 
+var MaxWidth = unit.Dp(800)
+
 type DropDown struct {
 	items          []DropDownItem
 	isOpen         bool
@@ -183,13 +185,19 @@ func (c *DropDown) layoutOption(gtx C, itemIndex int, isFirstOption bool) D {
 	)
 }
 
-func (c *DropDown) Layout(gtx C, dropPos float32) D {
+func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 	c.handleEvents()
 
 	children := []layout.FlexChild{
 		layout.Rigid(func(gtx C) D {
 			return c.layoutOption(gtx, 0, true)
 		}),
+	}
+	position := dropPos
+	if reversePos {
+		width := gtx.Constraints.Max.X
+		nw := (width * 800) / gtx.Px(MaxWidth)
+		position = nw - dropPos
 	}
 
 	if c.isOpen {
@@ -200,7 +208,7 @@ func (c *DropDown) Layout(gtx C, dropPos float32) D {
 			}),
 			layout.Stacked(func(gtx C) D {
 				return layout.Inset{
-					Left: unit.Dp(dropPos),
+					Left: unit.Dp(float32(position)),
 				}.Layout(gtx, func(gtx C) D {
 					return c.dropDownItemMenu(gtx)
 				})
@@ -208,7 +216,7 @@ func (c *DropDown) Layout(gtx C, dropPos float32) D {
 		)
 	}
 	return layout.Inset{
-		Left: unit.Dp(dropPos),
+		Left: unit.Dp(float32(position)),
 	}.Layout(gtx, func(gtx C) D {
 		return c.drawLayout(gtx, false, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)

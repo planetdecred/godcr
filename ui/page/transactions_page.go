@@ -163,15 +163,13 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Expanded(func(gtx C) D {
-				return pg.walletDropDown.Layout(gtx, 0)
+				return pg.walletDropDown.Layout(gtx, 0, false)
 			}),
 			layout.Expanded(func(gtx C) D {
-				post := float32(gtx.Constraints.Max.X - 315)
-				return pg.txTypeDropDown.Layout(gtx, post)
+				return pg.txTypeDropDown.Layout(gtx, 290, true)
 			}),
 			layout.Expanded(func(gtx C) D {
-				post := float32(gtx.Constraints.Max.X - 150)
-				return pg.orderDropDown.Layout(gtx, post)
+				return pg.orderDropDown.Layout(gtx, 120, true)
 			}),
 		)
 	}

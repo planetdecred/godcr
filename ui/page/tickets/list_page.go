@@ -123,15 +123,13 @@ func (pg *ListPage) Layout(gtx C) D {
 						})
 					}),
 					layout.Expanded(func(gtx C) D {
-						return pg.walletDropDown.Layout(gtx, 0)
+						return pg.walletDropDown.Layout(gtx, 0, false)
 					}),
 					layout.Expanded(func(gtx C) D {
-						post := float32(gtx.Constraints.Max.X - 145)
-						return pg.orderDropDown.Layout(gtx, post)
+						return pg.orderDropDown.Layout(gtx, 120, true)
 					}),
 					layout.Expanded(func(gtx C) D {
-						post := float32(gtx.Constraints.Max.X - 315)
-						return pg.ticketTypeDropDown.Layout(gtx, post)
+						return pg.ticketTypeDropDown.Layout(gtx, 290, true)
 					}),
 				)
 			},
