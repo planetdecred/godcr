@@ -132,7 +132,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						}
 
-						return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+						return pg.transactionList.HoverableLayout(gtx, len(wallTxs), func(gtx C, index int) D {
 							var row = components.TransactionRow{
 								Transaction: wallTxs[index],
 								Index:       index,

@@ -1,6 +1,8 @@
 package decredmaterial
 
 import (
+	"image/color"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -48,23 +50,40 @@ func (cl *ClickableList) handleClickables(count int) {
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
 	return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
-		row := Clickable(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
-			return w(gtx, i)
-		})
-
-		// add divider to all rows except last
-		if i < (count-1) && cl.DividerHeight.V > 0 {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return row
-				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					gtx.Constraints.Min.Y += gtx.Px(cl.DividerHeight)
-
-					return layout.Dimensions{Size: gtx.Constraints.Min}
-				}),
-			)
-		}
-		return row
+		return cl.clickableLayout(gtx, count, i, w)
 	})
+}
+
+func (cl *ClickableList) HoverableLayout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
+	cl.handleClickables(count)
+
+	card := cl.theme.Card()
+	card.Color = color.NRGBA{}
+	card.Radius = Radius(0)
+	return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
+		return card.HovarableLayout(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
+			return cl.clickableLayout(gtx, count, i, w)
+		})
+	})
+}
+
+func (cl *ClickableList) clickableLayout(gtx layout.Context, count, i int, w layout.ListElement) layout.Dimensions {
+	row := Clickable(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
+		return w(gtx, i)
+	})
+
+	// add divider to all rows except last
+	if i < (count-1) && cl.DividerHeight.V > 0 {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return row
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.Y += gtx.Px(cl.DividerHeight)
+
+				return layout.Dimensions{Size: gtx.Constraints.Min}
+			}),
+		)
+	}
+	return row
 }
