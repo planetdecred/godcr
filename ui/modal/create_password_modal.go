@@ -33,6 +33,7 @@ type CreatePasswordModal struct {
 
 	dialogTitle string
 	randomID    string
+	serverError string
 
 	materialLoader material.LoaderStyle
 
@@ -71,6 +72,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	th := material.NewTheme(gofont.Collection())
 	cm.materialLoader = material.Loader(th)
 
+	cm.serverError = ""
 	return cm
 }
 
@@ -133,7 +135,7 @@ func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
 }
 
 func (cm *CreatePasswordModal) SetError(err string) {
-
+	cm.serverError = err
 }
 
 func (cm *CreatePasswordModal) Handle() {
@@ -155,9 +157,11 @@ func (cm *CreatePasswordModal) Handle() {
 		if cm.walletNameEnabled {
 			nameValid = editorsNotEmpty(cm.walletName.Editor)
 		}
+		hasMatchingPassword := editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
+			cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+		noPassword := !editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 
-		if nameValid && editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
-			cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
+		if nameValid && (hasMatchingPassword || noPassword) {
 
 			cm.SetLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
@@ -208,6 +212,15 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
+		func(gtx C) D {
+			if cm.serverError != "" {
+				t := cm.Theme.Body2(cm.serverError)
+				t.Color = cm.Theme.Color.Danger
+				return t.Layout(gtx)
+			}
+			return layout.Dimensions{}
+		},
+
 		func(gtx C) D {
 			if cm.walletNameEnabled {
 				return cm.walletName.Layout(gtx)
