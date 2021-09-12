@@ -3,6 +3,7 @@ package tickets
 import (
 	"context"
 	"image/color"
+	"sort"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -17,6 +18,18 @@ import (
 )
 
 const listPageID = "TicketsList"
+
+type txType int
+
+const (
+	All txType = iota
+	Unmined
+	Immature
+	Live
+	Voted
+	Expired
+	Revoked
+)
 
 type ListPage struct {
 	*load.Load
@@ -98,21 +111,22 @@ func (pg *ListPage) listenForTxNotifications() {
 
 func (pg *ListPage) fetchTickets() {
 	var txFilter int32
-	switch pg.ticketTypeDropDown.SelectedIndex() {
-	case 1:
+	var ticketTypeDropdown = txType(pg.ticketTypeDropDown.SelectedIndex())
+	switch ticketTypeDropdown {
+	case Unmined:
 		txFilter = dcrlibwallet.TxFilterUnmined
-	case 2:
+	case Immature:
 		txFilter = dcrlibwallet.TxFilterImmature
-	case 3:
+	case Live:
 		txFilter = dcrlibwallet.TxFilterLive
-	case 4:
-		txFilter = dcrlibwallet.TxFilterVoted
-	case 5:
+	case Voted:
+		txFilter = dcrlibwallet.TxFilterTickets
+	case Expired:
 		txFilter = dcrlibwallet.TxFilterExpired
-	case 6:
-		txFilter = dcrlibwallet.TxFilterRevoked
+	case Revoked:
+		txFilter = dcrlibwallet.TxFilterTickets
 	default:
-		txFilter = dcrlibwallet.TxFilterStaking
+		txFilter = dcrlibwallet.TxFilterTickets
 	}
 
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
@@ -124,18 +138,64 @@ func (pg *ListPage) fetchTickets() {
 		return
 	}
 
-	tickets := make([]*transactionItem, len(txs))
-	for i := range txs {
-		tickets[i] = &transactionItem{
-			transaction: &txs[i],
+	tickets := make([]*transactionItem, 0)
+	for _, tx := range txs {
+		ticketSpender, err := w.TicketSpender(tx.Hash)
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+			return
+		}
+
+		// Apply voted and revoked tx filter
+		if (ticketTypeDropdown == Voted || ticketTypeDropdown == Revoked) && ticketSpender == nil {
+			continue
+		}
+
+		if ticketTypeDropdown == Voted && ticketSpender.Type != dcrlibwallet.TxTypeVote {
+			continue
+		}
+
+		if ticketTypeDropdown == Revoked && ticketSpender.Type != dcrlibwallet.TxTypeRevocation {
+			continue
+		}
+
+		// This fixes a dcrlibwallet bug where live tickets transactions
+		// do not have updated data of ticket spender.
+		if txFilter == dcrlibwallet.TxFilterLive && ticketSpender != nil {
+			continue
+		}
+
+		ticketCopy := tx
+
+		tickets = append(tickets, &transactionItem{
+			transaction:   &ticketCopy,
+			ticketSpender: ticketSpender,
 
 			statusTooltip:     pg.Load.Theme.Tooltip(),
-			walletNameTooltip: pg.Load.Theme.Tooltip(),
 			dateTooltip:       pg.Load.Theme.Tooltip(),
 			daysBehindTooltip: pg.Load.Theme.Tooltip(),
 			durationTooltip:   pg.Load.Theme.Tooltip(),
-		}
+		})
 	}
+
+	// bring vote and revoke tx forward
+	sort.Slice(tickets[:], func(i, j int) bool {
+		var timeStampI = tickets[i].transaction.Timestamp
+		var timeStampJ = tickets[j].transaction.Timestamp
+
+		if tickets[i].ticketSpender != nil {
+			timeStampI = tickets[i].ticketSpender.Timestamp
+		}
+
+		if tickets[j].ticketSpender != nil {
+			timeStampJ = tickets[j].ticketSpender.Timestamp
+		}
+
+		if newestFirst {
+			return timeStampI > timeStampJ
+		}
+		return timeStampI < timeStampJ
+	})
 
 	pg.tickets = tickets
 }
@@ -342,17 +402,17 @@ func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []*transact
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 			gtx.Constraints.Min = gtx.Constraints.Max
 			return decredmaterial.GridLayout{
-				List:      &pg.ticketsList,
-				Direction: layout.Center,
-				RowCount:  3,
+				List:              &pg.ticketsList,
+				HorizontalSpacing: layout.SpaceBetween,
+				Direction:         layout.Center,
+				RowCount:          3,
 			}.Layout(gtx, len(tickets), func(gtx C, index int) D {
 				return layout.Inset{
 					Left:   values.MarginPadding4,
 					Right:  values.MarginPadding4,
 					Bottom: values.MarginPadding8,
 				}.Layout(gtx, func(gtx C) D {
-					selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
-					return ticketCard(gtx, pg.Load, selectedWallet, tickets[index])
+					return ticketCard(gtx, pg.Load, tickets[index], false)
 				})
 			})
 		})

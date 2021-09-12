@@ -56,6 +56,9 @@ type Theme struct {
 		DeepBlue         color.NRGBA
 		LightBlue        color.NRGBA
 		LightBlue2       color.NRGBA
+		LightBlue3       color.NRGBA
+		LightBlue4       color.NRGBA
+		LightBlue5       color.NRGBA
 		BlueProgressTint color.NRGBA
 		LightGray        color.NRGBA
 		InactiveGray     color.NRGBA
@@ -65,11 +68,14 @@ type Theme struct {
 		Gray3            color.NRGBA
 		Orange           color.NRGBA
 		Orange2          color.NRGBA
+		Orange3          color.NRGBA
 		Gray4            color.NRGBA
 		Gray5            color.NRGBA
 		Gray6            color.NRGBA
 		Green50          color.NRGBA
 		Green500         color.NRGBA
+		Turquoise100     color.NRGBA
+		Turquoise300     color.NRGBA
 		Turquoise800     color.NRGBA
 		Yellow           color.NRGBA
 	}
@@ -124,9 +130,15 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Background = argb(0x22444444)
 		t.Color.LightBlue = rgb(0xe4f6ff)
 		t.Color.LightBlue2 = rgb(0x75D8FF)
+		t.Color.LightBlue3 = rgb(0xBCE8FF)
+		t.Color.LightBlue4 = rgb(0xBBDEFF)
+		t.Color.LightBlue5 = rgb(0x70CBFF)
 		t.Color.BlueProgressTint = rgb(0x73d7ff)
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.Color.Orange3 = rgb(0xF8CABC)
+		t.Color.Turquoise100 = rgb(0xB6EED7)
+		t.Color.Turquoise300 = rgb(0x2DD8A3)
 		t.Color.Turquoise800 = rgb(0x008F52)
 		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)
@@ -158,9 +170,15 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Background = argb(0x22444444)
 		t.Color.LightBlue = rgb(0xe4f6ff)
 		t.Color.LightBlue2 = rgb(0x75D8FF)
+		t.Color.LightBlue3 = rgb(0xBCE8FF)
+		t.Color.LightBlue4 = rgb(0xBBDEFF)
+		t.Color.LightBlue5 = rgb(0x70CBFF)
 		t.Color.BlueProgressTint = rgb(0x73d7ff)
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.Color.Orange3 = rgb(0xF8CABC)
+		t.Color.Turquoise100 = rgb(0xB6EED7)
+		t.Color.Turquoise300 = rgb(0x2DD8A3)
 		t.Color.Turquoise800 = rgb(0x008F52)
 		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)

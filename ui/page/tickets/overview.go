@@ -96,15 +96,26 @@ func (pg *Page) OnResume() {
 
 	go func() {
 		mw := pg.WL.MultiWallet
-		tickets := allLiveTickets(mw.AllWallets())
+		tickets, err := allLiveTickets(mw)
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+			return
+		}
 
 		txItems := make([]*transactionItem, len(tickets))
-		for i := range tickets {
+		for i, ticket := range tickets {
+
+			ticketSpender, err := mw.WalletWithID(ticket.WalletID).TicketSpender(ticket.Hash)
+			if err != nil {
+				pg.Toast.NotifyError(err.Error())
+				return
+			}
+
 			txItems[i] = &transactionItem{
-				transaction: &tickets[i],
+				transaction:   &ticket,
+				ticketSpender: ticketSpender,
 
 				statusTooltip:     pg.Load.Theme.Tooltip(),
-				walletNameTooltip: pg.Load.Theme.Tooltip(),
 				dateTooltip:       pg.Load.Theme.Tooltip(),
 				daysBehindTooltip: pg.Load.Theme.Tooltip(),
 				durationTooltip:   pg.Load.Theme.Tooltip(),
@@ -232,8 +243,7 @@ func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						w := pg.WL.MultiWallet.WalletWithID(pg.liveTickets[index].transaction.WalletID)
-						return ticketCard(gtx, pg.Load, w, pg.liveTickets[index])
+						return ticketCard(gtx, pg.Load, pg.liveTickets[index], true)
 					})
 				})
 			}),

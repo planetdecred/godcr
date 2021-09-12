@@ -5,6 +5,7 @@ package components
 
 import (
 	"fmt"
+	"image/color"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -38,6 +39,18 @@ type (
 		Index       int
 		ShowBadge   bool
 	}
+
+	TxStatus struct {
+		Title string
+		Icon  *decredmaterial.Image
+
+		// tx purchase only
+		TicketStatus       string
+		Color              color.NRGBA
+		ProgressBarColor   color.NRGBA
+		ProgressTrackColor color.NRGBA
+		Background         color.NRGBA
+	}
 )
 
 // Container is simply a wrapper for the Inset type. Its purpose is to differentiate the use of an inset as a padding or
@@ -68,47 +81,88 @@ func UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	}.Layout(gtx, body)
 }
 
-func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction) (string, *decredmaterial.Image) {
-	var title string
-	var icon *decredmaterial.Image
-	icon = l.Icons.TicketLiveIcon
+func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
+	var txStatus TxStatus
+
 	if tx.Type == dcrlibwallet.TxTypeRegular {
 		if tx.Direction == dcrlibwallet.TxDirectionSent {
-			title = "Sent"
-			icon = l.Icons.SendIcon
+			txStatus.Title = "Sent"
+			txStatus.Icon = l.Icons.SendIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionReceived {
-			title = "Received"
-			icon = l.Icons.ReceiveIcon
+			txStatus.Title = "Received"
+			txStatus.Icon = l.Icons.ReceiveIcon
 		} else if tx.Direction == dcrlibwallet.TxDirectionTransferred {
-			title = "Yourself"
-			icon = l.Icons.Transferred
+			txStatus.Title = "Yourself"
+			txStatus.Icon = l.Icons.Transferred
 		}
 	} else if tx.Type == dcrlibwallet.TxTypeMixed {
-		title = "Mixed"
-		icon = l.Icons.MixedTx
+		txStatus.Title = "Mixed"
+		txStatus.Icon = l.Icons.MixedTx
 	} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterStaking) {
 
 		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
-			if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
-				title = "Immature"
-				icon = l.Icons.TicketImmatureIcon
+			if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
+				txStatus.Title = "Unmined"
+				txStatus.Icon = l.Icons.TicketUnminedIcon
+				txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
+				txStatus.Color = l.Theme.Color.DeepBlue
+				txStatus.Background = l.Theme.Color.LightBlue
+			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
+				txStatus.Title = "Immature"
+				txStatus.Icon = l.Icons.TicketImmatureIcon
+				txStatus.Color = l.Theme.Color.DeepBlue
+				txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
+				txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
+				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue3
+				txStatus.Background = l.Theme.Color.LightBlue
+			} else if ticketSpender != nil {
+				if ticketSpender.Type == dcrlibwallet.TxTypeVote {
+					txStatus.Title = "Voted"
+					txStatus.Icon = l.Icons.TicketVotedIcon
+					txStatus.Color = l.Theme.Color.Success
+					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
+					txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
+					txStatus.ProgressTrackColor = l.Theme.Color.Turquoise100
+					txStatus.Background = l.Theme.Color.Success2
+				} else {
+					txStatus.Title = "Revoked"
+					txStatus.Icon = l.Icons.TicketRevokedIcon
+					txStatus.Color = l.Theme.Color.Orange
+					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
+					txStatus.ProgressBarColor = l.Theme.Color.Danger
+					txStatus.ProgressTrackColor = l.Theme.Color.Orange3
+					txStatus.Background = l.Theme.Color.Orange2
+				}
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
-				title = "Live"
-				icon = l.Icons.TicketLiveIcon
+				txStatus.Title = "Live"
+				txStatus.Icon = l.Icons.TicketLiveIcon
+				txStatus.Color = l.Theme.Color.Primary
+				txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
+				txStatus.ProgressBarColor = l.Theme.Color.Primary
+				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
+				txStatus.Background = l.Theme.Color.LightBlue
+			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
+				txStatus.Title = "Expired"
+				txStatus.Icon = l.Icons.TicketExpiredIcon
+				txStatus.Color = l.Theme.Color.Gray
+				txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
+				txStatus.Background = l.Theme.Color.LightGray
 			} else {
-				title = "Purchased"
-				icon = l.Icons.TicketPurchasedIcon
+				txStatus.Title = "Purchased"
+				txStatus.Icon = l.Icons.TicketPurchasedIcon
+				txStatus.Color = l.Theme.Color.DeepBlue
+				txStatus.Background = l.Theme.Color.LightBlue
 			}
 		} else if tx.Type == dcrlibwallet.TxTypeVote {
-			title = "Vote"
-			icon = l.Icons.TicketVotedIcon
+			txStatus.Title = "Vote"
+			txStatus.Icon = l.Icons.TicketVotedIcon
 		} else if tx.Type == dcrlibwallet.TxTypeRevocation {
-			title = "Revocation"
-			icon = l.Icons.TicketRevokedIcon
+			txStatus.Title = "Revocation"
+			txStatus.Icon = l.Icons.TicketRevokedIcon
 		}
 	}
 
-	return title, icon
+	return &txStatus
 }
 
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
@@ -117,8 +171,11 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
 	wal := l.WL.MultiWallet.WalletWithID(row.Transaction.WalletID)
-
-	title, icon := TransactionTitleIcon(l, wal, &row.Transaction)
+	var ticketSpender *dcrlibwallet.Transaction
+	if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
+		ticketSpender, _ = wal.TicketSpender(row.Transaction.Hash)
+	}
+	txStatus := TransactionTitleIcon(l, wal, &row.Transaction, ticketSpender)
 
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Horizontal,
@@ -129,7 +186,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.W.Layout(gtx, icon.Layout24dp)
+			return layout.W.Layout(gtx, txStatus.Icon.Layout24dp)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -150,7 +207,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								return LayoutBalance(gtx, l, amount)
 							}
 
-							label := l.Theme.Label(values.TextSize18, title)
+							label := l.Theme.Label(values.TextSize18, txStatus.Title)
 							label.Color = l.Theme.Color.DeepBlue
 							return label.Layout(gtx)
 						}),

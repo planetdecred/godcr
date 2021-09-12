@@ -240,7 +240,13 @@ func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transac
 		txn.confirmationIcons = l.Icons.PendingIcon
 	}
 
-	txn.title, txn.icon = components.TransactionTitleIcon(l, wal, transaction)
+	var ticketSpender *dcrlibwallet.Transaction
+	if wal.TxMatchesFilter(transaction, dcrlibwallet.TxFilterStaking) {
+		ticketSpender, _ = wal.TicketSpender(transaction.Hash)
+	}
+	txStatus := components.TransactionTitleIcon(l, wal, transaction, ticketSpender)
 
+	txn.title = txStatus.Title
+	txn.icon = txStatus.Icon
 	return txn
 }

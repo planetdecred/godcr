@@ -345,7 +345,7 @@ func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 						var status string
 						if pg.ticketSpender != nil {
 							if pg.ticketSpender.Type == dcrlibwallet.TxTypeVote {
-								status = "Vote"
+								status = "Voted"
 							} else {
 								status = "Revoked"
 							}
@@ -355,6 +355,8 @@ func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 							status = "Immature"
 						} else if pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterUnmined) {
 							status = "Unmined"
+						} else if pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterExpired) {
+							status = "Expired"
 						} else {
 							status = "Unknown"
 						}
