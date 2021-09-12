@@ -105,15 +105,22 @@ func (pg *Page) OnResume() {
 		txItems := make([]*transactionItem, len(tickets))
 		for i, ticket := range tickets {
 
-			ticketSpender, err := mw.WalletWithID(ticket.WalletID).TicketSpender(ticket.Hash)
+			wal := mw.WalletWithID(ticket.WalletID)
+
+			ticketSpender, err := wal.TicketSpender(ticket.Hash)
 			if err != nil {
 				pg.Toast.NotifyError(err.Error())
 				return
 			}
 
+			ticketCopy := ticket
+			txStatus := components.TransactionTitleIcon(pg.Load, wal, &ticket, ticketSpender)
+
 			txItems[i] = &transactionItem{
-				transaction:   &ticket,
+				transaction:   &ticketCopy,
 				ticketSpender: ticketSpender,
+				status:        txStatus,
+				confirmations: ticket.Confirmations(wal.GetBestBlock()),
 
 				statusTooltip:     pg.Load.Theme.Tooltip(),
 				dateTooltip:       pg.Load.Theme.Tooltip(),

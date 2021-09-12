@@ -166,10 +166,13 @@ func (pg *ListPage) fetchTickets() {
 		}
 
 		ticketCopy := tx
+		txStatus := components.TransactionTitleIcon(pg.Load, w, &tx, ticketSpender)
 
 		tickets = append(tickets, &transactionItem{
 			transaction:   &ticketCopy,
 			ticketSpender: ticketSpender,
+			status:        txStatus,
+			confirmations: tx.Confirmations(w.GetBestBlock()),
 
 			statusTooltip:     pg.Load.Theme.Tooltip(),
 			dateTooltip:       pg.Load.Theme.Tooltip(),

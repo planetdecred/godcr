@@ -105,12 +105,12 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				txStatus.Title = "Unmined"
 				txStatus.Icon = l.Icons.TicketUnminedIcon
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
-				txStatus.Color = l.Theme.Color.DeepBlue
+				txStatus.Color = l.Theme.Color.LightBlue6
 				txStatus.Background = l.Theme.Color.LightBlue
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
 				txStatus.Title = "Immature"
 				txStatus.Icon = l.Icons.TicketImmatureIcon
-				txStatus.Color = l.Theme.Color.DeepBlue
+				txStatus.Color = l.Theme.Color.LightBlue6
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
 				txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
 				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue3
@@ -140,7 +140,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
 				txStatus.ProgressBarColor = l.Theme.Color.Primary
 				txStatus.ProgressTrackColor = l.Theme.Color.LightBlue4
-				txStatus.Background = l.Theme.Color.LightBlue
+				txStatus.Background = l.Theme.Color.Primary50
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
 				txStatus.Title = "Expired"
 				txStatus.Icon = l.Icons.TicketExpiredIcon
