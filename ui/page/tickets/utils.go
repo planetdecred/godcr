@@ -24,9 +24,6 @@ import (
 const (
 	uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
 	maxInt32   = 1<<(uint32Size-1) - 1
-
-	// ticketAge   = "Ticket age"
-	durationMsg = "10 hrs 47 mins (118/256 blocks)"
 )
 
 type transactionItem struct {
@@ -191,6 +188,8 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 
 	var title, mainDesc, subDesc string
 	switch tx.status.TicketStatus {
+	case dcrlibwallet.TicketStatusUnmined:
+		title = "This ticket is waiting in mempool to be included in a block."
 	case dcrlibwallet.TicketStatusImmature:
 		title = "This ticket will enter the ticket pool and become a live ticket after 256 blocks (~20 hrs)."
 	case dcrlibwallet.TicketStatusLive:
@@ -269,13 +268,16 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 	tooltip.Layout(gtx, rect, inset, body)
 }
 
-func walletNameDateTimeTooltip(gtx C, l *load.Load, title string, body layout.Widget) layout.Dimensions {
-	walletNameLabel := l.Theme.Body2(title)
-	walletNameLabel.Color = l.Theme.Color.Gray
+func titleDescTooltip(gtx C, l *load.Load, title string, desc string) layout.Dimensions {
+	titleLabel := l.Theme.Label(values.MarginPadding14, title)
+	titleLabel.Color = l.Theme.Color.Gray
+
+	descLabel := l.Theme.Label(values.MarginPadding14, desc)
+	descLabel.Color = l.Theme.Color.DeepBlue
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(walletNameLabel.Layout),
-		layout.Rigid(body),
+		layout.Rigid(titleLabel.Layout),
+		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding4}, descLabel.Layout)),
 	)
 }
 
@@ -345,7 +347,8 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 								}.Layout(gtx, func(gtx C) D {
 
 									timeRemaining := time.Duration(float64(maturity-confirmations)*l.WL.MultiWallet.TargetTimePerBlockMinutes()) * time.Minute
-									txt := l.Theme.Label(values.TextSize14, timeRemaining.Truncate(time.Minute).String())
+									maturityDuration := timeRemaining.Truncate(time.Minute).String()
+									txt := l.Theme.Label(values.TextSize14, maturityDuration)
 
 									durationLayout := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
@@ -354,9 +357,14 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 										layout.Rigid(txt.Layout),
 									)
 
+									var durationTitle = "Live in" // immature
+									if txStatus.TicketStatus != dcrlibwallet.TicketStatusImmature {
+										// voted or revoked
+										durationTitle = "Spendable in"
+									}
+
 									ticketCardTooltip(gtx, durationLayout, tx.durationTooltip, func(gtx C) D {
-										return walletNameDateTimeTooltip(gtx, l, "durationTitle",
-											toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
+										return titleDescTooltip(gtx, l, durationTitle, fmt.Sprintf("%s (%d/%d blocks)", maturityDuration, confirmations, maturity))
 									})
 
 									return durationLayout
@@ -448,22 +456,28 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 							txtLayout := txt.Layout(gtx)
 							ticketCardTooltip(gtx, txtLayout, tx.dateTooltip, func(gtx C) D {
 								dateTime := time.Unix(tx.transaction.Timestamp, 0).Format("Jan 2, 2006 at 03:04:05 PM")
-								return walletNameDateTimeTooltip(gtx, l, "Purchased",
-									toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(dateTime).Layout))
+								return titleDescTooltip(gtx, l, "Purchased", dateTime)
 							})
 							return txtLayout
 						}),
 						layout.Rigid(func(gtx C) D {
 
 							var age string
+							var tooltipTitle string
 							if tx.ticketSpender != nil { // voted or revoked
 								age = fmt.Sprintf("%d days", tx.ticketSpender.DaysToVoteOrRevoke)
+								if tx.ticketSpender.Type == dcrlibwallet.TxTypeVote {
+									tooltipTitle = "Days to vote"
+								} else {
+									tooltipTitle = "Days to miss"
+								}
 							} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
 								txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
 
 								ticketAgeDuration := time.Since(time.Unix(tx.transaction.Timestamp, 0)).Seconds()
 
 								age = ticketAge(int(ticketAgeDuration))
+								tooltipTitle = "Ticket age"
 							} else {
 								return D{}
 							}
@@ -484,8 +498,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 									txt.Text = age
 									txtLayout := txt.Layout(gtx)
 									ticketCardTooltip(gtx, txtLayout, tx.daysBehindTooltip, func(gtx C) D {
-										return walletNameDateTimeTooltip(gtx, l, "Ticket age",
-											toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(age).Layout))
+										return titleDescTooltip(gtx, l, tooltipTitle, age)
 									})
 									return txtLayout
 								}),
