@@ -2,13 +2,16 @@ package tickets
 
 import (
 	"context"
+	"fmt"
 	"image/color"
 	"sort"
+	"time"
 
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -98,6 +101,12 @@ func (pg *ListPage) listenForTxNotifications() {
 			}
 
 			switch n := notification.(type) {
+			case wallet.NewBlock:
+				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
+				if selectedWallet.ID == n.WalletID {
+					pg.fetchTickets()
+					pg.RefreshWindow()
+				}
 			case wallet.NewTransaction:
 				selectedWallet := pg.wallets[pg.walletDropDown.SelectedIndex()]
 				if selectedWallet.ID == n.Transaction.WalletID {
@@ -131,7 +140,8 @@ func (pg *ListPage) fetchTickets() {
 
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 	selectedWalletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
-	w := pg.WL.MultiWallet.WalletWithID(selectedWalletID)
+	multiWallet := pg.WL.MultiWallet
+	w := multiWallet.WalletWithID(selectedWalletID)
 	txs, err := w.GetTransactionsRaw(0, 0, txFilter, newestFirst)
 	if err != nil {
 		pg.Toast.NotifyError(err.Error())
@@ -167,12 +177,48 @@ func (pg *ListPage) fetchTickets() {
 
 		ticketCopy := tx
 		txStatus := components.TransactionTitleIcon(pg.Load, w, &tx, ticketSpender)
+		confirmations := tx.Confirmations(w.GetBestBlock())
+		var ticketAge string
+
+		showProgress := txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature || txStatus.TicketStatus == dcrlibwallet.TicketStatusLive
+		if ticketSpender != nil { /// voted or revoked
+			showProgress = ticketSpender.Confirmations(w.GetBestBlock()) <= multiWallet.TicketMaturity()
+			ticketAge = fmt.Sprintf("%d days", ticketSpender.DaysToVoteOrRevoke)
+		} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
+			txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
+
+			ticketAgeDuration := time.Since(time.Unix(tx.Timestamp, 0)).Seconds()
+			ticketAge = ticketAgeTimeFormat(int(ticketAgeDuration))
+
+		}
+
+		showTime := showProgress && txStatus.TicketStatus != dcrlibwallet.TicketStatusLive
+
+		var progress float32
+		if showProgress {
+			progressMax := multiWallet.TicketMaturity()
+			if txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
+				progressMax = multiWallet.TicketExpiry()
+			}
+
+			confs := confirmations
+			if ticketSpender != nil {
+				confs = ticketSpender.Confirmations(w.GetBestBlock())
+			}
+
+			progress = (float32(confs) / float32(progressMax)) * 100
+		}
 
 		tickets = append(tickets, &transactionItem{
 			transaction:   &ticketCopy,
 			ticketSpender: ticketSpender,
 			status:        txStatus,
 			confirmations: tx.Confirmations(w.GetBestBlock()),
+			progress:      progress,
+			showProgress:  showProgress,
+			showTime:      showTime,
+			purchaseTime:  time.Unix(tx.Timestamp, 0).Format("Jan 2"),
+			ticketAge:     ticketAge,
 
 			statusTooltip:     pg.Load.Theme.Tooltip(),
 			dateTooltip:       pg.Load.Theme.Tooltip(),
@@ -306,34 +352,33 @@ func (pg *ListPage) Layout(gtx C) D {
 func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionItem) layout.Dimensions {
 	gtx.Constraints.Min = gtx.Constraints.Max
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
-		w := pg.WL.MultiWallet.WalletWithID(tickets[index].transaction.WalletID)
-		t := transactionToTicket(*tickets[index].transaction, w, pg.WL.MultiWallet.TicketMaturity(), pg.WL.MultiWallet.TicketExpiry(), pg.WL.MultiWallet.GetBestBlock().Height)
-		st := ticketStatusProfile(pg.Load, t.Status)
-		if st == nil {
-			return D{}
-		}
+		var ticket = tickets[index]
 
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-					var progressBarWidth int
 					return layout.Stack{Alignment: layout.S}.Layout(gtx,
 						layout.Stacked(func(gtx C) D {
 							wrapIcon := pg.Theme.Card()
-							wrapIcon.Color = st.background
+							wrapIcon.Color = ticket.status.Background
 							wrapIcon.Radius = decredmaterial.Radius(8)
 							dims := wrapIcon.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding10).Layout(gtx, st.icon.Layout24dp)
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, ticket.status.Icon.Layout24dp)
 							})
-							progressBarWidth = dims.Size.X
 							return dims
 						}),
-						layout.Stacked(func(gtx C) D {
-							gtx.Constraints.Max.X = progressBarWidth - 4
-							p := pg.Theme.ProgressBar(20)
-							p.Height, p.Radius = values.MarginPadding4, values.MarginPadding2
-							p.Color = st.color
-							return p.Layout(gtx)
+						layout.Expanded(func(gtx C) D {
+							if !ticket.showProgress {
+								return D{}
+							}
+							p := pg.Theme.ProgressBar(int(ticket.progress))
+							p.Width = values.MarginPadding44
+							p.Height = values.MarginPadding4
+							p.Direction = layout.SW
+							p.Radius = decredmaterial.BottomRadius(8)
+							p.Color = ticket.status.ProgressBarColor
+							p.TrackColor = ticket.status.ProgressTrackColor
+							return p.Layout2(gtx)
 						}),
 					)
 				})
@@ -356,35 +401,26 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionI
 						}.Layout(gtx, func(gtx C) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									dtime := pg.Theme.Label(values.TextSize14, t.DateTime)
+
+									dtime := pg.Theme.Label(values.TextSize14, ticket.purchaseTime)
 									dtime.Color = pg.Theme.Color.Gray2
 									return components.EndToEndRow(gtx, func(gtx C) D {
-										return components.LayoutBalance(gtx, pg.Load, t.Amount)
+										return components.LayoutBalance(gtx, pg.Load, dcrutil.Amount(ticket.transaction.Amount).String())
 									}, dtime.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
-									l := func(gtx C) D {
-										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-											layout.Rigid(func(gtx C) D {
-												txt := pg.Theme.Label(values.MarginPadding14, t.Status)
-												txt.Color = st.color
-												return txt.Layout(gtx)
-											}),
-											layout.Rigid(func(gtx C) D {
-												return layout.Inset{
-													Left:  values.MarginPadding4,
-													Right: values.MarginPadding4,
-												}.Layout(gtx, func(gtx C) D {
-													ic := pg.Icons.ImageBrightness1
-													ic.Color = pg.Theme.Color.Gray2
-													return pg.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
-												})
-											}),
-											layout.Rigid(pg.Theme.Label(values.MarginPadding14, t.WalletName).Layout),
-										)
+									l := func(gtx C) layout.Dimensions {
+										txt := pg.Theme.Label(values.MarginPadding14, ticket.status.Title)
+										txt.Color = ticket.status.Color
+										return txt.Layout(gtx)
 									}
 									r := func(gtx C) layout.Dimensions {
-										txt := pg.Theme.Label(values.TextSize14, t.DaysBehind)
+
+										if ticket.ticketAge == "" {
+											return D{}
+										}
+
+										txt := pg.Theme.Label(values.TextSize14, ticket.ticketAge)
 										txt.Color = pg.Theme.Color.Gray2
 										return txt.Layout(gtx)
 									}

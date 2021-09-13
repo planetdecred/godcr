@@ -304,7 +304,7 @@ func (pg *TransactionDetailsPage) maturityProgressBar(gtx C) D {
 			progress.TrackColor = pg.theme.Color.BlueProgressTint
 			progress.Height = values.MarginPadding8
 			progress.Width = values.MarginPadding80
-			progress.Radius = values.MarginPadding8
+			progress.Radius = decredmaterial.Radius(values.MarginPadding8.V)
 
 			timeLeft := pg.theme.Label(values.TextSize16, "18 hours")
 			timeLeft.Color = pg.Theme.Color.DeepBlue

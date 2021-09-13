@@ -514,7 +514,7 @@ func (pg *OverviewPage) progressBarRow(gtx layout.Context, inset layout.Inset) l
 		}
 		p := pg.Theme.ProgressBar(progress)
 		p.Height = values.MarginPadding8
-		p.Radius = values.MarginPadding4
+		p.Radius = decredmaterial.Radius(values.MarginPadding4.V)
 		p.Color = pg.Theme.Color.Success
 		p.TrackColor = pg.Theme.Color.Gray1
 		return p.Layout(gtx)

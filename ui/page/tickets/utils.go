@@ -31,6 +31,11 @@ type transactionItem struct {
 	ticketSpender *dcrlibwallet.Transaction
 	status        *components.TxStatus
 	confirmations int32
+	progress      float32
+	showProgress  bool
+	showTime      bool
+	purchaseTime  string
+	ticketAge     string
 
 	statusTooltip     *decredmaterial.Tooltip
 	dateTooltip       *decredmaterial.Tooltip
@@ -186,12 +191,16 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 	status.Font.Weight = text.Medium
 	status.Color = tx.status.Color
 
+	maturity := l.WL.MultiWallet.TicketMaturity()
+	blockTime := l.WL.MultiWallet.TargetTimePerBlockMinutes()
+	maturityDuration := time.Duration(maturity*int32(blockTime)) * time.Minute
+	maturityTime := ticketAgeTimeFormat(int(maturityDuration.Seconds()))
 	var title, mainDesc, subDesc string
 	switch tx.status.TicketStatus {
 	case dcrlibwallet.TicketStatusUnmined:
 		title = "This ticket is waiting in mempool to be included in a block."
 	case dcrlibwallet.TicketStatusImmature:
-		title = "This ticket will enter the ticket pool and become a live ticket after 256 blocks (~20 hrs)."
+		title = fmt.Sprintf("This ticket will enter the ticket pool and become a live ticket after %d blocks (~%s).", maturity, maturityTime)
 	case dcrlibwallet.TicketStatusLive:
 		title = "Waiting to be chosen to vote."
 		mainDesc = "The average vote time is 28 days, but can take up to 142 days."
@@ -205,14 +214,11 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 			mainDesc = "The ticket price will become spendable after %d blocks (~%s)."
 		}
 
-		maturity := l.WL.MultiWallet.TicketMaturity()
-
-		if tx.confirmations > maturity {
+		if tx.ticketSpender.Confirmations(l.WL.MultiWallet.GetBestBlock().Height) > maturity {
 			mainDesc = ""
 		} else {
-			blockTime := l.WL.MultiWallet.TargetTimePerBlockMinutes()
-			maturityDuration := time.Duration(maturity*int32(blockTime)) * time.Minute
-			mainDesc = fmt.Sprintf(mainDesc, maturity, ticketAge(int(maturityDuration.Seconds())))
+
+			mainDesc = fmt.Sprintf(mainDesc, maturity, maturityTime)
 		}
 	case dcrlibwallet.TicketStatusExpired:
 		title = fmt.Sprintf("This ticket has not been chosen to vote within %d blocks, and thus expired.", l.WL.MultiWallet.TicketMaturity())
@@ -291,15 +297,9 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalletName bool) layout.Dimensions {
 	wal := l.WL.MultiWallet.WalletWithID(tx.transaction.WalletID)
 	txStatus := tx.status
+
+	// add this data to transactionItem so it can be shared with list
 	maturity := l.WL.MultiWallet.TicketMaturity()
-	expiry := l.WL.MultiWallet.TicketExpiry()
-
-	showProgress := txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature || txStatus.TicketStatus == dcrlibwallet.TicketStatusLive
-	if tx.ticketSpender != nil { /// voted or revoked
-		showProgress = tx.ticketSpender.Confirmations(wal.GetBestBlock()) <= maturity
-	}
-
-	showTime := showProgress && txStatus.TicketStatus != dcrlibwallet.TicketStatusLive
 
 	return decredmaterial.LinearLayout{
 		Width:       gtx.Px(values.MarginPadding168),
@@ -315,11 +315,6 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 				Border:     decredmaterial.Border{Radius: decredmaterial.TopRadius(8)},
 			}.Layout2(gtx, func(gtx C) D {
 
-				confirmations := tx.confirmations
-				if tx.ticketSpender != nil {
-					confirmations = tx.ticketSpender.Confirmations(wal.GetBestBlock())
-				}
-
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -331,7 +326,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 						})
 					}),
 					layout.Expanded(func(gtx C) D {
-						if !showTime {
+						if !tx.showTime {
 							return D{}
 						}
 
@@ -346,9 +341,14 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 									Left:   values.MarginPadding8,
 								}.Layout(gtx, func(gtx C) D {
 
+									confirmations := tx.confirmations
+									if tx.ticketSpender != nil {
+										confirmations = tx.ticketSpender.Confirmations(wal.GetBestBlock())
+									}
+
 									timeRemaining := time.Duration(float64(maturity-confirmations)*l.WL.MultiWallet.TargetTimePerBlockMinutes()) * time.Minute
-									maturityDuration := timeRemaining.Truncate(time.Minute).String()
-									txt := l.Theme.Label(values.TextSize14, maturityDuration)
+									maturityDuration := ticketAgeTimeFormat(int(timeRemaining.Seconds()))
+									txt := l.Theme.Label(values.TextSize14, maturityTimeFormat(int(timeRemaining.Minutes())))
 
 									durationLayout := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
@@ -375,21 +375,15 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 					layout.Expanded(func(gtx C) D {
 						return layout.S.Layout(gtx, func(gtx C) D {
 
-							if !showProgress {
+							if !tx.showProgress {
 								return D{}
 							}
 
-							progressMax := maturity
-							if txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
-								progressMax = expiry
-							}
-
-							progress := (float32(confirmations) / float32(progressMax)) * 100
-							p := l.Theme.ProgressBar(int(progress))
-							p.Height, p.Radius = values.MarginPadding4, values.MarginPadding1
+							p := l.Theme.ProgressBar(int(tx.progress))
+							p.Height = values.MarginPadding4
 							p.Color = txStatus.ProgressBarColor
 							p.TrackColor = txStatus.ProgressTrackColor
-							return p.Layout(gtx)
+							return p.Layout2(gtx)
 						})
 					}),
 				)
@@ -408,7 +402,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Top:    values.MarginPadding4,
-						Bottom: values.MarginPadding16,
+						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
@@ -462,10 +456,8 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 						}),
 						layout.Rigid(func(gtx C) D {
 
-							var age string
 							var tooltipTitle string
 							if tx.ticketSpender != nil { // voted or revoked
-								age = fmt.Sprintf("%d days", tx.ticketSpender.DaysToVoteOrRevoke)
 								if tx.ticketSpender.Type == dcrlibwallet.TxTypeVote {
 									tooltipTitle = "Days to vote"
 								} else {
@@ -473,10 +465,6 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 								}
 							} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
 								txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
-
-								ticketAgeDuration := time.Since(time.Unix(tx.transaction.Timestamp, 0)).Seconds()
-
-								age = ticketAge(int(ticketAgeDuration))
 								tooltipTitle = "Ticket age"
 							} else {
 								return D{}
@@ -495,10 +483,10 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 								}),
 								layout.Rigid(func(gtx C) D {
 
-									txt.Text = age
+									txt.Text = tx.ticketAge
 									txtLayout := txt.Layout(gtx)
 									ticketCardTooltip(gtx, txtLayout, tx.daysBehindTooltip, func(gtx C) D {
-										return titleDescTooltip(gtx, l, tooltipTitle, age)
+										return titleDescTooltip(gtx, l, tooltipTitle, tx.ticketAge)
 									})
 									return txtLayout
 								}),
@@ -611,7 +599,7 @@ func createClickGestures(count int) []*gesture.Click {
 	return gestures
 }
 
-func ticketAge(secs int) string {
+func ticketAgeTimeFormat(secs int) string {
 	if secs > 86399 {
 		days := secs / 86400
 		return fmt.Sprintf("%dd", days)
@@ -625,6 +613,10 @@ func ticketAge(secs int) string {
 
 	return fmt.Sprintf("%ds", secs)
 
+}
+
+func maturityTimeFormat(maturityTimeMinutes int) string {
+	return fmt.Sprintf("%02d:%02d", maturityTimeMinutes/60, maturityTimeMinutes%60)
 }
 
 func nextTicketRemaining(allsecs int) string {

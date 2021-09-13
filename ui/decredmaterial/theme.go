@@ -78,6 +78,7 @@ type Theme struct {
 		Green500         color.NRGBA
 		Turquoise100     color.NRGBA
 		Turquoise300     color.NRGBA
+		Turquoise700     color.NRGBA
 		Turquoise800     color.NRGBA
 		Yellow           color.NRGBA
 	}
@@ -143,6 +144,7 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Orange3 = rgb(0xF8CABC)
 		t.Color.Turquoise100 = rgb(0xB6EED7)
 		t.Color.Turquoise300 = rgb(0x2DD8A3)
+		t.Color.Turquoise700 = rgb(0x00A05F)
 		t.Color.Turquoise800 = rgb(0x008F52)
 		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)
@@ -185,6 +187,7 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Orange3 = rgb(0xF8CABC)
 		t.Color.Turquoise100 = rgb(0xB6EED7)
 		t.Color.Turquoise300 = rgb(0x2DD8A3)
+		t.Color.Turquoise700 = rgb(0x00A05F)
 		t.Color.Turquoise800 = rgb(0x008F52)
 		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)

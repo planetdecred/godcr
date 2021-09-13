@@ -73,6 +73,7 @@ func (pg *Page) OnResume() {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.ticketPrice = dcrutil.Amount(ticketPrice.TicketPrice).String()
+			pg.RefreshWindow()
 		}
 	}()
 
@@ -82,6 +83,7 @@ func (pg *Page) OnResume() {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.totalRewards = dcrutil.Amount(totalRewards).String()
+			pg.RefreshWindow()
 		}
 	}()
 
@@ -91,6 +93,7 @@ func (pg *Page) OnResume() {
 			pg.Toast.NotifyError(err.Error())
 		} else {
 			pg.stakingOverview = overview
+			pg.RefreshWindow()
 		}
 	}()
 
@@ -130,6 +133,7 @@ func (pg *Page) OnResume() {
 		}
 
 		pg.liveTickets = txItems
+		pg.RefreshWindow()
 	}()
 
 	go pg.WL.GetVSPList()
