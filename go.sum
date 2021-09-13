@@ -48,6 +48,8 @@ github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210825093648-ec344982588e h1:x6A
 github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210825093648-ec344982588e/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
 github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210910121332-e44a98c834c2 h1:EHZLz82ivykxAkm6BI15FBrPL/PdUsUD2gtrb6pnFpY=
 github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210910121332-e44a98c834c2/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
+github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210912175524-041481a23c8b h1:JvcNx/P2fSfgXpySx/HVbnRyYo6ZPgnpyVmnar6SuE4=
+github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210912175524-041481a23c8b/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
 github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DataDog/zstd v1.4.8 h1:Rpmta4xZ/MgZnriKNd24iZMhGpP5dvUcs/uqfBapKZY=
 github.com/DataDog/zstd v1.4.8/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=

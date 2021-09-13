@@ -289,7 +289,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				break
 			}
 
-			win.updateStates(e.Resp)
+			// win.updateStates(e.Resp)
 
 		case update := <-win.wallet.Sync:
 			switch update.Stage {

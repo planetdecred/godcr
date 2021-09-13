@@ -146,13 +146,6 @@ func (pg *OverviewPage) loadTransactions() {
 // Layout lays out the entire content for overview pg.
 func (pg *OverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pg.queue = gtx
-	if pg.WL.Info.LoadedWallets == 0 {
-		return components.UniformPadding(gtx, func(gtx C) D {
-			return layout.Center.Layout(gtx, func(gtx C) D {
-				return pg.Theme.H3(values.String(values.StrNoWalletLoaded)).Layout(gtx)
-			})
-		})
-	}
 
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {

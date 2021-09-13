@@ -205,7 +205,7 @@ type VSPInfo struct {
 
 // VSP is sent when the Wallet is done getting all VSP info
 type VSP struct {
-	List []VSPInfo
+	List []*VSPInfo
 }
 
 // Proposals is sent when all proposals has been fetched

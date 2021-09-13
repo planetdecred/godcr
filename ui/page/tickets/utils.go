@@ -341,7 +341,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 
 									durationLayout := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, l.Icons.TimerIcon.Layout)
+											return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, l.Icons.TimerIcon.Layout12dp)
 										}),
 										layout.Rigid(txt.Layout),
 									)

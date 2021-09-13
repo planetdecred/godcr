@@ -51,7 +51,7 @@ func (win *Window) updateStates(update interface{}) {
 		win.walletUnspentOutputs = e
 	case *wallet.VSPInfo:
 		win.states.loading = false
-		win.vspInfo.List = append(win.vspInfo.List, *e)
+		// win.vspInfo.List = append(win.vspInfo.List, *e)
 		return
 	case *wallet.VSP:
 		win.vspInfo = e

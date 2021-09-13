@@ -5,11 +5,10 @@ import (
 	"image/color"
 	"strconv"
 
-	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil"
+	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -22,23 +21,19 @@ const purchaseModalID = "ticket_purchase_modal"
 type ticketPurchaseModal struct {
 	*load.Load
 
-	ticketPrice       string
-	totalCost         int64
-	balanceLessCost   int64
-	vspIsFetched      bool
-	isPurchaseLoading bool
+	ticketPrice     dcrutil.Amount
+	totalCost       int64
+	balanceLessCost int64
+	vspIsFetched    bool
 
 	modal          decredmaterial.Modal
 	tickets        decredmaterial.Editor
 	rememberVSP    decredmaterial.CheckBoxStyle
-	selectVSP      []*gesture.Click
 	cancelPurchase decredmaterial.Button
 	reviewPurchase decredmaterial.Button
 
 	accountSelector *components.AccountSelector
 	vspSelector     *vspSelector
-
-	vsp *dcrlibwallet.VSP
 }
 
 func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
@@ -60,6 +55,22 @@ func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
 	return tp
 }
 
+func (tp *ticketPurchaseModal) OnResume() {
+	tp.initializeAccountSelector()
+	err := tp.accountSelector.SelectFirstWalletValidAccount()
+	if err != nil {
+		tp.Toast.NotifyError(err.Error())
+	}
+
+	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
+	tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
+
+	if tp.vspIsFetched && tp.WL.GetRememberVSP() != "" {
+		tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
+		tp.rememberVSP.CheckBox.Value = true
+	}
+}
+
 func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
@@ -73,28 +84,30 @@ func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, tp.Load, tp.ticketPrice)
+									return components.LayoutBalanceSize(gtx, tp.Load, tp.ticketPrice.String(), values.Size28)
 								})
 							}),
 						)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Flexed(.5, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									tit := tp.Theme.Label(values.TextSize14, "Total")
-									tit.Color = tp.Theme.Color.Gray2
-									return tit.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return tp.Theme.Label(values.TextSize16, tp.ticketPrice).Layout(gtx)
-								}),
-							)
-						}),
-						layout.Flexed(.5, tp.tickets.Layout),
-					)
+					return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Flexed(.5, func(gtx C) D {
+								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										tit := tp.Theme.Label(values.TextSize14, "Total")
+										tit.Color = tp.Theme.Color.Gray3
+										return tit.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return tp.Theme.Label(values.TextSize16, dcrutil.Amount(int64(tp.ticketPrice)*tp.ticketCount()).String()).Layout(gtx)
+									}),
+								)
+							}),
+							layout.Flexed(.5, tp.tickets.Layout),
+						)
+					})
 				}),
 			)
 		},
@@ -145,17 +158,13 @@ func (tp *ticketPurchaseModal) ticketCount() int64 {
 }
 
 func (tp *ticketPurchaseModal) canPurchase() bool {
-	if tp.vspSelector.selectedVSP.Info == nil {
+	if tp.vspSelector.selectedVSP == nil {
 		return false
 	}
 
 	tp.calculateTotals()
 	accountBalance := tp.accountSelector.SelectedAccount().Balance.Spendable
 	if accountBalance < tp.totalCost || tp.balanceLessCost < 0 {
-		return false
-	}
-
-	if tp.vspSelector.selectedVSP.Host == "" {
 		return false
 	}
 
@@ -176,22 +185,6 @@ func (tp *ticketPurchaseModal) Show() {
 
 func (tp *ticketPurchaseModal) Dismiss() {
 	tp.DismissModal(tp)
-}
-
-func (tp *ticketPurchaseModal) OnResume() {
-	tp.initializeAccountSelector()
-	err := tp.accountSelector.SelectFirstWalletValidAccount()
-	if err != nil {
-		tp.Toast.NotifyError(err.Error())
-	}
-
-	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
-	tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice()).String()
-
-	if tp.vspIsFetched && tp.WL.GetRememberVSP() != "" {
-		tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
-		tp.rememberVSP.CheckBox.Value = true
-	}
 }
 
 func (tp *ticketPurchaseModal) initializeAccountSelector() {
@@ -216,35 +209,44 @@ func (tp *ticketPurchaseModal) initializeAccountSelector() {
 func (tp *ticketPurchaseModal) OnDismiss() {}
 
 func (tp *ticketPurchaseModal) calculateTotals() {
-	accountBalance := tp.accountSelector.SelectedAccount().Balance.Spendable
-	feePercentage := tp.vspSelector.selectedVSP.Info.FeePercentage
-	total := tp.WL.TicketPrice() * tp.ticketCount()
-	fee := int64((float64(total) / 100) * feePercentage)
-	tp.totalCost = total + fee
-	tp.balanceLessCost = accountBalance - tp.totalCost
-}
+	account := tp.accountSelector.SelectedAccount()
+	wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
 
-func (tp *ticketPurchaseModal) createNewVSPD() {
-	selectedAccount := tp.accountSelector.SelectedAccount()
-	selectedVSP := tp.vspSelector.SelectedVSP()
-	vspd, err := tp.WL.NewVSPD(selectedVSP.Host, selectedAccount.WalletID, selectedAccount.Number)
+	ticketPrice, err := wal.TicketPrice()
 	if err != nil {
 		tp.Toast.NotifyError(err.Error())
+		return
 	}
-	tp.vsp = vspd
+
+	feePercentage := tp.vspSelector.selectedVSP.Info.FeePercentage
+	total := ticketPrice.TicketPrice * tp.ticketCount()
+	fee := int64((float64(total) / 100) * feePercentage)
+
+	tp.totalCost = total + fee
+	tp.balanceLessCost = account.Balance.Spendable - tp.totalCost
 }
 
 func (tp *ticketPurchaseModal) purchaseTickets(password []byte) {
 	tp.Dismiss()
-	tp.Toast.Notify(fmt.Sprintf("attempting to purchase %v ticket(s)", tp.ticketCount()))
+	tp.Toast.Notify(fmt.Sprintf("Attempting to purchase %v ticket(s)", tp.ticketCount()))
 
 	go func() {
+		selectedVSP := tp.vspSelector.SelectedVSP()
 		account := tp.accountSelector.SelectedAccount()
-		err := tp.WL.PurchaseTicket(account.WalletID, uint32(tp.ticketCount()), password, tp.vsp)
+		wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
+
+		vsp, err := tp.WL.MultiWallet.NewVSPClient(selectedVSP.Host, account.WalletID, uint32(account.Number))
 		if err != nil {
 			tp.Toast.NotifyError(err.Error())
 			return
 		}
+
+		err = vsp.PurchaseTickets(int32(tp.ticketCount()), wal.GetBestBlock()+256, password)
+		if err != nil {
+			tp.Toast.NotifyError(err.Error())
+			return
+		}
+
 		tp.Toast.Notify(fmt.Sprintf("%v ticket(s) purchased successfully", tp.ticketCount()))
 	}()
 }
@@ -263,7 +265,6 @@ func (tp *ticketPurchaseModal) Handle() {
 	}
 
 	if tp.reviewPurchase.Button.Clicked() && tp.canPurchase() {
-		go tp.createNewVSPD()
 
 		if tp.vspSelector.Changed() && tp.rememberVSP.CheckBox.Value {
 			tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)
