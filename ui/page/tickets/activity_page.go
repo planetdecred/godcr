@@ -105,10 +105,10 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 						return pg.walletDropDown.Layout(gtx, 0, false)
 					}),
 					layout.Expanded(func(gtx C) D {
-						return pg.orderDropDown.Layout(gtx, 120, true)
+						return pg.orderDropDown.Layout(gtx, 0, true)
 					}),
 					layout.Expanded(func(gtx C) D {
-						return pg.ticketTypeDropDown.Layout(gtx, 290, true)
+						return pg.ticketTypeDropDown.Layout(gtx, pg.orderDropDown.Width+30, true)
 					}),
 				)
 			},
