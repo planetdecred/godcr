@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"sort"
 	"strings"
 	"time"
 
@@ -61,6 +62,110 @@ const (
 	StakingVoted    = "VOTED"
 	StakingExpired  = "EXPIRED"
 )
+
+func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*transactionItem, error) {
+	tickets := make([]*transactionItem, 0)
+	multiWallet := l.WL.MultiWallet
+	for _, tx := range txs {
+		w := multiWallet.WalletWithID(tx.WalletID)
+
+		ticketSpender, err := w.TicketSpender(tx.Hash)
+		if err != nil {
+			return nil, err
+		}
+
+		// Apply voted and revoked tx filter
+		if (hasFilter(dcrlibwallet.TxFilterVoted) || hasFilter(dcrlibwallet.TxFilterRevoked)) && ticketSpender == nil {
+			continue
+		}
+
+		if hasFilter(dcrlibwallet.TxFilterVoted) && ticketSpender.Type != dcrlibwallet.TxTypeVote {
+			continue
+		}
+
+		if hasFilter(dcrlibwallet.TxFilterRevoked) && ticketSpender.Type != dcrlibwallet.TxTypeRevocation {
+			continue
+		}
+
+		// This fixes a dcrlibwallet bug where live tickets transactions
+		// do not have updated data of ticket spender.
+		if hasFilter(dcrlibwallet.TxFilterLive) && ticketSpender != nil {
+			continue
+		}
+
+		ticketCopy := tx
+		txStatus := components.TransactionTitleIcon(l, w, &tx, ticketSpender)
+		confirmations := tx.Confirmations(w.GetBestBlock())
+		var ticketAge string
+
+		showProgress := txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature || txStatus.TicketStatus == dcrlibwallet.TicketStatusLive
+		if ticketSpender != nil { /// voted or revoked
+			showProgress = ticketSpender.Confirmations(w.GetBestBlock()) <= multiWallet.TicketMaturity()
+			ticketAge = fmt.Sprintf("%d days", ticketSpender.DaysToVoteOrRevoke)
+		} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
+			txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
+
+			ticketAgeDuration := time.Since(time.Unix(tx.Timestamp, 0)).Seconds()
+			ticketAge = ticketAgeTimeFormat(int(ticketAgeDuration))
+
+		}
+
+		showTime := showProgress && txStatus.TicketStatus != dcrlibwallet.TicketStatusLive
+
+		var progress float32
+		if showProgress {
+			progressMax := multiWallet.TicketMaturity()
+			if txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
+				progressMax = multiWallet.TicketExpiry()
+			}
+
+			confs := confirmations
+			if ticketSpender != nil {
+				confs = ticketSpender.Confirmations(w.GetBestBlock())
+			}
+
+			progress = (float32(confs) / float32(progressMax)) * 100
+		}
+
+		tickets = append(tickets, &transactionItem{
+			transaction:   &ticketCopy,
+			ticketSpender: ticketSpender,
+			status:        txStatus,
+			confirmations: tx.Confirmations(w.GetBestBlock()),
+			progress:      progress,
+			showProgress:  showProgress,
+			showTime:      showTime,
+			purchaseTime:  time.Unix(tx.Timestamp, 0).Format("Jan 2"),
+			ticketAge:     ticketAge,
+
+			statusTooltip:     l.Theme.Tooltip(),
+			dateTooltip:       l.Theme.Tooltip(),
+			daysBehindTooltip: l.Theme.Tooltip(),
+			durationTooltip:   l.Theme.Tooltip(),
+		})
+	}
+
+	// bring vote and revoke tx forward
+	sort.Slice(tickets[:], func(i, j int) bool {
+		var timeStampI = tickets[i].transaction.Timestamp
+		var timeStampJ = tickets[j].transaction.Timestamp
+
+		if tickets[i].ticketSpender != nil {
+			timeStampI = tickets[i].ticketSpender.Timestamp
+		}
+
+		if tickets[j].ticketSpender != nil {
+			timeStampJ = tickets[j].ticketSpender.Timestamp
+		}
+
+		if newestFirst {
+			return timeStampI > timeStampJ
+		}
+		return timeStampI < timeStampJ
+	})
+
+	return tickets, nil
+}
 
 func calculateDaysBehind(lastHeaderTime int64) string {
 	diff := time.Since(time.Unix(lastHeaderTime, 0))

@@ -105,31 +105,21 @@ func (pg *Page) OnResume() {
 			return
 		}
 
-		txItems := make([]*transactionItem, len(tickets))
-		for i, ticket := range tickets {
-
-			wal := mw.WalletWithID(ticket.WalletID)
-
-			ticketSpender, err := wal.TicketSpender(ticket.Hash)
-			if err != nil {
-				pg.Toast.NotifyError(err.Error())
-				return
+		txItems, err := ticketsToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
+			switch filter {
+			case dcrlibwallet.TxFilterUnmined:
+				fallthrough
+			case dcrlibwallet.TxFilterImmature:
+				fallthrough
+			case dcrlibwallet.TxFilterLive:
+				return true
 			}
 
-			ticketCopy := ticket
-			txStatus := components.TransactionTitleIcon(pg.Load, wal, &ticket, ticketSpender)
-
-			txItems[i] = &transactionItem{
-				transaction:   &ticketCopy,
-				ticketSpender: ticketSpender,
-				status:        txStatus,
-				confirmations: ticket.Confirmations(wal.GetBestBlock()),
-
-				statusTooltip:     pg.Load.Theme.Tooltip(),
-				dateTooltip:       pg.Load.Theme.Tooltip(),
-				daysBehindTooltip: pg.Load.Theme.Tooltip(),
-				durationTooltip:   pg.Load.Theme.Tooltip(),
-			}
+			return false
+		})
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+			return
 		}
 
 		pg.liveTickets = txItems
