@@ -3,8 +3,6 @@ package tickets
 import (
 	"fmt"
 	"image"
-	"image/color"
-	"math"
 	"sort"
 	"strings"
 	"time"
@@ -20,11 +18,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-)
-
-const (
-	uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-	maxInt32   = 1<<(uint32Size-1) - 1
 )
 
 type transactionItem struct {
@@ -167,62 +160,6 @@ func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, new
 	return tickets, nil
 }
 
-func calculateDaysBehind(lastHeaderTime int64) string {
-	diff := time.Since(time.Unix(lastHeaderTime, 0))
-	daysBehind := int(math.Round(diff.Hours() / 24))
-	if daysBehind < 1 {
-		return "<1 day"
-	} else if daysBehind == 1 {
-		return "1 day"
-	} else {
-		return fmt.Sprintf("%d days", daysBehind)
-	}
-}
-
-func transactionToTicket(tx dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, maturity, expiry, bestBlock int32) Ticket {
-	return Ticket{
-		Status:     getTicketStatus(tx, w, maturity, expiry, bestBlock),
-		Amount:     dcrutil.Amount(tx.Amount).String(),
-		DateTime:   time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 03:04:05 PM"),
-		MonthDay:   time.Unix(tx.Timestamp, 0).Format("Jan 2"),
-		DaysBehind: calculateDaysBehind(tx.Timestamp),
-		Fee:        dcrutil.Amount(tx.Fee).String(),
-		WalletName: w.Name,
-	}
-}
-
-func getTicketStatus(txn dcrlibwallet.Transaction, w *dcrlibwallet.Wallet, ticketMaturity, ticketExpiry, bestBlock int32) string {
-	if txn.Type == dcrlibwallet.TxTypeVote {
-		return StakingVoted
-	}
-
-	if txn.Type == dcrlibwallet.TxTypeRevocation {
-		return StakingRevoked
-	}
-
-	s := txn.TicketStatus(ticketMaturity, ticketExpiry, bestBlock)
-	switch s {
-	case dcrlibwallet.TicketStatusUnmined:
-		return StakingUnmined
-	case dcrlibwallet.TicketStatusImmature:
-		return StakingImmature
-	case dcrlibwallet.TicketStatusLive:
-		return StakingLive
-	case dcrlibwallet.TicketStatusVotedOrRevoked:
-		// handle revocation and voted tickets that have the type "TicketPurchase"
-		tx, _ := w.TicketSpender(txn.Hash)
-		if tx.Type == dcrlibwallet.TxTypeVote {
-			return StakingVoted
-		}
-
-		if tx.Type == dcrlibwallet.TxTypeRevocation {
-			return StakingRevoked
-		}
-	}
-
-	return ""
-}
-
 func allLiveTickets(mw *dcrlibwallet.MultiWallet) ([]dcrlibwallet.Transaction, error) {
 	var tickets []dcrlibwallet.Transaction
 	liveTicketFilters := []int32{dcrlibwallet.TxFilterUnmined, dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
@@ -236,59 +173,6 @@ func allLiveTickets(mw *dcrlibwallet.MultiWallet) ([]dcrlibwallet.Transaction, e
 	}
 
 	return tickets, nil
-}
-
-func ticketStatusProfile(l *load.Load, ticketStatus string) *struct {
-	icon       *decredmaterial.Image
-	color      color.NRGBA
-	background color.NRGBA
-} {
-	m := map[string]struct {
-		icon       *decredmaterial.Image
-		color      color.NRGBA
-		background color.NRGBA
-	}{
-		StakingUnmined: {
-			l.Icons.TicketUnminedIcon,
-			l.Theme.Color.DeepBlue,
-			l.Theme.Color.LightBlue,
-		},
-		StakingImmature: {
-			l.Icons.TicketImmatureIcon,
-			l.Theme.Color.DeepBlue,
-			l.Theme.Color.LightBlue,
-		},
-		StakingLive: {
-			l.Icons.TicketLiveIcon,
-			l.Theme.Color.Primary,
-			l.Theme.Color.LightBlue,
-		},
-		StakingVoted: {
-			l.Icons.TicketVotedIcon,
-			l.Theme.Color.Success,
-			l.Theme.Color.Success2,
-		},
-		"MISSED": {
-			l.Icons.TicketMissedIcon,
-			l.Theme.Color.Gray,
-			l.Theme.Color.LightGray,
-		},
-		StakingExpired: {
-			l.Icons.TicketExpiredIcon,
-			l.Theme.Color.Gray,
-			l.Theme.Color.LightGray,
-		},
-		StakingRevoked: {
-			l.Icons.TicketRevokedIcon,
-			l.Theme.Color.Orange,
-			l.Theme.Color.Orange2,
-		},
-	}
-	st, ok := m[ticketStatus]
-	if !ok {
-		return nil
-	}
-	return &st
 }
 
 func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimensions {
@@ -598,90 +482,6 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 							)
 						}),
 					)
-				}),
-			)
-		}),
-	)
-}
-
-// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
-func ticketActivityRow(gtx layout.Context, l *load.Load, t Ticket, index int) layout.Dimensions {
-	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				st := ticketStatusProfile(l, t.Status)
-				if st == nil {
-					return layout.Dimensions{}
-				}
-				return st.icon.Layout24dp(gtx)
-			})
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					if index == 0 {
-						return layout.Dimensions{}
-					}
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					separator := l.Theme.Separator()
-					separator.Width = gtx.Constraints.Max.X
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return separator.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Top:    values.MarginPadding8,
-						Bottom: values.MarginPadding8,
-					}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								labelStatus := l.Theme.Label(values.TextSize18, strings.Title(strings.ToLower(t.Status)))
-								labelStatus.Color = l.Theme.Color.DeepBlue
-
-								labelDaysBehind := l.Theme.Label(values.TextSize14, t.DaysBehind)
-								labelDaysBehind.Color = l.Theme.Color.DeepBlue
-
-								return components.EndToEndRow(gtx,
-									labelStatus.Layout,
-									labelDaysBehind.Layout)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{
-									Alignment: layout.Middle,
-								}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.Label(values.TextSize14, t.WalletName)
-										txt.Color = l.Theme.Color.Gray2
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left:  values.MarginPadding4,
-											Right: values.MarginPadding4,
-										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.ImageBrightness1
-											ic.Color = l.Theme.Color.Gray2
-											return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Right: values.MarginPadding4,
-										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.TicketIconInactive
-											return ic.Layout12dp(gtx)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.Label(values.TextSize14, t.Amount)
-										txt.Color = l.Theme.Color.Gray2
-										return txt.Layout(gtx)
-									}),
-								)
-							}),
-						)
-					})
 				}),
 			)
 		}),

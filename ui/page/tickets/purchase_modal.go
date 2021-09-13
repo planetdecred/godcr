@@ -202,7 +202,7 @@ func (tp *ticketPurchaseModal) initializeAccountSelector() {
 			wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
 
 			// Imported and watch only wallet accounts are invalid for sending
-			accountIsValid := account.Number != maxInt32 && !wal.IsWatchingOnlyWallet()
+			accountIsValid := account.Number != dcrlibwallet.ImportedAccountNumber && !wal.IsWatchingOnlyWallet()
 
 			if wal.ReadBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false) {
 				// privacy is enabled for selected wallet
