@@ -10,7 +10,7 @@ import (
 
 type Modal struct {
 	overlayColor color.NRGBA
-	co           color.NRGBA
+	background   color.NRGBA
 	list         *layout.List
 	button       *widget.Clickable
 	card         Card
@@ -26,11 +26,11 @@ func (t *Theme) ModalFloatTitle() *Modal {
 func (t *Theme) Modal() *Modal {
 	overlayColor := t.Color.Black
 	overlayColor.A = 200
-	co := t.Color.Surface
+	background := t.Color.Surface
 
 	return &Modal{
 		overlayColor: overlayColor,
-		co:           co,
+		background:   background,
 		list:         &layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
 		button:       new(widget.Clickable),
 		card:         t.Card(),
@@ -59,32 +59,38 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) 
 			}
 
 			gtx.Constraints.Max.X = gtx.Px(unit.Dp(450))
-			return LinearLayout{
-				Orientation: layout.Vertical,
-				Width:       WrapContent,
-				Height:      WrapContent,
-				Padding:     layout.UniformInset(unit.Dp(15)),
-				Alignment:   layout.Middle,
-				Border: Border{
-					Radius: Radius(10),
-				},
-				Direction:  layout.Center,
-				Background: m.co,
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					if m.isFloatTitle && len(widgets) > 0 {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, title)
-					}
-					return D{}
-				}),
-				layout.Rigid(func(gtx C) D {
-					return m.list.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, widgetFuncs[i])
-					})
-				}),
-			)
+			inset := layout.Inset{
+				Top:    unit.Dp(50),
+				Bottom: unit.Dp(50),
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return LinearLayout{
+					Orientation: layout.Vertical,
+					Width:       WrapContent,
+					Height:      WrapContent,
+					Padding:     layout.UniformInset(unit.Dp(15)),
+					Alignment:   layout.Middle,
+					Border: Border{
+						Radius: Radius(14),
+					},
+					Direction:  layout.Center,
+					Background: m.background,
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						if m.isFloatTitle && len(widgets) > 0 {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.UniformInset(unit.Dp(10)).Layout(gtx, title)
+						}
+						return D{}
+					}),
+					layout.Rigid(func(gtx C) D {
+						return m.list.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							return layout.UniformInset(unit.Dp(10)).Layout(gtx, widgetFuncs[i])
+						})
+					}),
+				)
+			})
 		}),
 	)
 

@@ -71,7 +71,6 @@ func (as *AccountSelector) Handle() {
 				as.setupSelectedAccount(account)
 				as.callback(account)
 			}).Show()
-
 	}
 }
 
@@ -291,6 +290,11 @@ func (asm *AccountSelectorModal) Handle() {
 				}
 			}
 		}
+	}
+
+	if asm.modal.BackdropClicked() {
+		asm.Dismiss()
+		asm.RefreshWindow()
 	}
 }
 
