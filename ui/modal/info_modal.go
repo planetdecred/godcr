@@ -159,6 +159,7 @@ func (in *InfoModal) Handle() {
 	if in.btnPositve.Button.Clicked() || in.enterKeyPressed {
 		in.DismissModal(in)
 		in.positiveButtonClicked()
+		in.enterKeyPressed = false
 	}
 
 	for in.btnNegative.Button.Clicked() {
@@ -166,9 +167,13 @@ func (in *InfoModal) Handle() {
 		in.negativeButtonClicked()
 	}
 
+<<<<<<< HEAD
 	if in.modal.BackdropClicked(in.isCancelable) {
 		in.Dismiss()
 	}
+=======
+	in.RefreshWindow()
+>>>>>>> c7c5be5 (Modify Enter key evnet handler to respond to key press effectively)
 }
 
 func (in *InfoModal) Layout(gtx layout.Context) D {
