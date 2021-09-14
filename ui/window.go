@@ -211,6 +211,7 @@ func (win *Window) dismissModal(modal load.Modal) {
 		if m.ModalID() == modal.ModalID() {
 			modal.OnDismiss() // do garbage collection in modal
 			win.modals = append(win.modals[:i], win.modals[i+1:]...)
+			win.refreshWindow()
 		}
 	}
 }

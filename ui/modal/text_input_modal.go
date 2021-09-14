@@ -2,12 +2,15 @@ package modal
 
 import (
 	"fmt"
+	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const TextInput = "text_input_modal"
@@ -15,7 +18,9 @@ const TextInput = "text_input_modal"
 type TextInputModal struct {
 	*InfoModal
 
-	IsLoading bool
+	IsLoading     bool
+	ShowWarnInfo  bool
+	isMinimizable bool
 
 	textInput decredmaterial.Editor
 	callback  func(string, *TextInputModal) bool
@@ -23,7 +28,8 @@ type TextInputModal struct {
 
 func NewTextInputModal(l *load.Load) *TextInputModal {
 	tm := &TextInputModal{
-		InfoModal: NewInfoModal(l),
+		InfoModal:     NewInfoModal(l),
+		isMinimizable: true,
 	}
 
 	tm.randomID = fmt.Sprintf("%s-%d", TextInput, generateRandomNumber())
@@ -47,9 +53,19 @@ func (tm *TextInputModal) Hint(hint string) *TextInputModal {
 	return tm
 }
 
+func (tm *TextInputModal) ShowAccountInfoTip(show bool) *TextInputModal {
+	tm.ShowWarnInfo = show
+	return tm
+}
+
 func (tm *TextInputModal) PositiveButton(text string, callback func(string, *TextInputModal) bool) *TextInputModal {
 	tm.positiveButtonText = text
 	tm.callback = callback
+	return tm
+}
+
+func (tm *TextInputModal) PositiveButtonStyle(background, text color.NRGBA) *TextInputModal {
+	tm.btnPositve.Background, tm.btnPositve.Color = background, text
 	return tm
 }
 
@@ -61,8 +77,16 @@ func (tm *TextInputModal) SetError(err string) {
 	}
 }
 
+func (tm *TextInputModal) MinimizableBackground(min bool) {
+	tm.isMinimizable = min
+}
+
 func (tm *TextInputModal) Handle() {
-	tm.btnPositve.SetEnabled(tm.textInput.Editor.Len() != 0)
+	if editorsNotEmpty(tm.textInput.Editor) {
+		tm.btnPositve.Background = tm.Theme.Color.Primary
+	} else {
+		tm.btnPositve.Background = tm.Theme.Color.InactiveGray
+	}
 
 	for tm.btnPositve.Button.Clicked() {
 		if tm.IsLoading {
@@ -83,10 +107,11 @@ func (tm *TextInputModal) Handle() {
 		}
 	}
 
-	if tm.modal.BackdropClicked() {
-		tm.Dismiss()
+	if tm.modal.BackdropClicked(tm.isMinimizable) {
+		if !tm.IsLoading {
+			tm.Dismiss()
+		}
 	}
-
 }
 
 func (tm *TextInputModal) Layout(gtx layout.Context) D {
@@ -97,7 +122,45 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 		w = append(w, tm.titleLayout())
 	}
 
+	if tm.ShowWarnInfo {
+		l := func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					img := tm.Icons.ActionInfo
+					img.Color = tm.Theme.Color.Gray3
+					inset := layout.Inset{Right: values.MarginPadding4}
+					return inset.Layout(gtx, func(gtx C) D {
+						return img.Layout(gtx, values.MarginPadding20)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := tm.Theme.Label(values.MarginPadding16, "Accounts")
+							txt.Color = tm.Theme.Color.Gray4
+							return txt.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := tm.Theme.Label(values.MarginPadding16, "cannot")
+							txt.Font.Weight = text.Bold
+							txt.Color = tm.Theme.Color.Gray4
+							inset := layout.Inset{Right: values.MarginPadding2, Left: values.MarginPadding2}
+							return inset.Layout(gtx, txt.Layout)
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := tm.Theme.Label(values.MarginPadding16, "be deleted once created")
+							txt.Color = tm.Theme.Color.Gray4
+							return txt.Layout(gtx)
+						}),
+					)
+				}),
+			)
+		}
+		w = append(w, l)
+	}
+
 	w = append(w, tm.textInput.Layout)
+
 	if tm.negativeButtonText != "" || tm.positiveButtonText != "" {
 		w = append(w, tm.actionButtonsLayout())
 	}

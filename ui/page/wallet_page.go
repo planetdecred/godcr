@@ -2,6 +2,7 @@ package page
 
 import (
 	"image/color"
+	"sync"
 
 	"gioui.org/gesture"
 	"gioui.org/layout"
@@ -73,6 +74,8 @@ type WalletPage struct {
 	separator                decredmaterial.Line
 	addAcctIcon              *widget.Icon
 	backupAcctIcon           *widget.Icon
+
+	listLock sync.Mutex
 }
 
 func NewWalletPage(l *load.Load) *WalletPage {
@@ -135,7 +138,10 @@ func (pg *WalletPage) OnResume() {
 func (pg *WalletPage) loadWalletAndAccounts() {
 	wallets := pg.WL.SortedWalletList()
 
+	pg.listLock.Lock()
 	pg.listItems = make([]*walletListItem, 0)
+	pg.listLock.Unlock()
+
 	for _, wal := range wallets {
 		accountsResult, err := wal.GetAccountsRaw()
 		if err != nil {
@@ -173,8 +179,9 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 			listItem.backupAcctClickable = new(widget.Clickable)
 			listItem.collapsible = pg.Theme.CollapsibleWithOption()
 		}
-
+		pg.listLock.Lock()
 		pg.listItems = append(pg.listItems, listItem)
+		pg.listLock.Unlock()
 	}
 }
 
@@ -229,6 +236,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 			action: func(l *load.Load) {
 				textModal := modal.NewTextInputModal(l).
 					Hint("Wallet name").
+					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 						err := pg.multiWallet.RenameWallet(wal.ID, newName)
 						if err != nil {
@@ -264,6 +272,7 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 			action: func(l *load.Load) {
 				textModal := modal.NewTextInputModal(l).
 					Hint("Wallet name").
+					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 					PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 						//TODO
 						err := pg.multiWallet.RenameWallet(wal.ID, newName)
@@ -415,6 +424,8 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 
 func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 	return pg.walletsList.Layout(gtx, len(pg.listItems), func(gtx C, i int) D {
+		pg.listLock.Lock()
+		defer pg.listLock.Unlock()
 		listItem := pg.listItems[i]
 		if listItem.wal.IsWatchingOnlyWallet() {
 			return D{}
@@ -539,6 +550,8 @@ func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensio
 
 func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 	return pg.watchWalletsList.Layout(gtx, len(pg.listItems), func(gtx C, i int) D {
+		pg.listLock.Lock()
+		defer pg.listLock.Unlock()
 		listItem := pg.listItems[i]
 		if !listItem.wal.IsWatchingOnlyWallet() {
 			return D{}
@@ -822,7 +835,10 @@ func (pg *WalletPage) Handle() {
 	}
 
 	if ok, selectedItem := pg.watchWalletsList.ItemClicked(); ok {
+		pg.listLock.Lock()
 		listItem := pg.listItems[selectedItem]
+		pg.listLock.Unlock()
+
 		// TODO: find default account using number
 		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
 	}
@@ -845,24 +861,38 @@ func (pg *WalletPage) Handle() {
 
 			for listItem.addAcctClickable.Clicked() {
 				walletID := listItem.wal.ID
-				modal.NewCreateAccountModal(pg.Load).
-					Title("Create new account").
-					PasswordCreated(func(accountName, password string, m *modal.CreateAccountModal) bool {
-						go func() {
-							wal := pg.multiWallet.WalletWithID(walletID)
-							_, err := wal.CreateNewAccount(accountName, []byte(password)) // TODO
-							if err != nil {
-								pg.Toast.NotifyError(err.Error())
-								m.SetError(err.Error())
-							} else {
-								pg.Toast.Notify("Account created")
-								m.Dismiss()
-							}
-							pg.loadWalletAndAccounts()
-							m.Dismiss()
-						}()
-						return false
-					}).Show()
+				textModal := modal.NewTextInputModal(pg.Load).
+					Hint("Account name").
+					ShowAccountInfoTip(true).
+					PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+					PositiveButton(values.String(values.StrCreate), func(accountName string, tim *modal.TextInputModal) bool {
+						if accountName != "" {
+							modal.NewPasswordModal(pg.Load).
+								Title(values.String(values.StrCreateNewAccount)).
+								Hint("Spending password").
+								NegativeButton(values.String(values.StrCancel), func() {}).
+								PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
+									go func() {
+										wal := pg.multiWallet.WalletWithID(walletID)
+										_, err := wal.CreateNewAccount(accountName, []byte(password)) // TODO
+										if err != nil {
+											pg.Toast.NotifyError(err.Error())
+											tim.SetError(err.Error())
+										} else {
+											pg.Toast.Notify("Account created")
+											tim.Dismiss()
+										}
+										pg.loadWalletAndAccounts()
+										pm.Dismiss()
+									}()
+									return false
+								}).Show()
+						}
+						return true
+					})
+				textModal.Title(values.String(values.StrCreateNewAccount)).
+					NegativeButton(values.String(values.StrCancel), func() {})
+				textModal.Show()
 				break
 			}
 

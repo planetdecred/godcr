@@ -24,7 +24,9 @@ type PasswordModal struct {
 
 	dialogTitle string
 
-	isLoading      bool
+	isLoading     bool
+	isMinimizable bool
+
 	materialLoader material.LoaderStyle
 
 	positiveButtonText    string
@@ -38,11 +40,12 @@ type PasswordModal struct {
 
 func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm := &PasswordModal{
-		Load:        l,
-		randomID:    fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
-		modal:       *l.Theme.ModalFloatTitle(),
-		btnPositve:  l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
+		Load:          l,
+		randomID:      fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
+		modal:         *l.Theme.ModalFloatTitle(),
+		btnPositve:    l.Theme.Button(new(widget.Clickable), "Confirm"),
+		btnNegative:   l.Theme.Button(new(widget.Clickable), "Cancel"),
+		isMinimizable: true,
 	}
 
 	pm.btnNegative.TextSize = values.TextSize16
@@ -104,6 +107,10 @@ func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
 }
 
+func (pm *PasswordModal) MinimizableBackground(min bool) {
+	pm.isMinimizable = min
+}
+
 func (pm *PasswordModal) SetError(err string) {
 	if err == "" {
 		pm.password.ClearError()
@@ -138,9 +145,8 @@ func (pm *PasswordModal) Handle() {
 		}
 	}
 
-	if pm.modal.BackdropClicked() {
+	if pm.modal.BackdropClicked(pm.isMinimizable) {
 		pm.Dismiss()
-		pm.RefreshWindow()
 	}
 }
 

@@ -292,7 +292,7 @@ func (pg *Page) Handle() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("Send DCR").
 			Body("Input or scan the destination wallet address and input the amount to send funds.").
-			PositiveButton("Got it", func() {})
+			NegativeButton("Got it", func() {})
 		pg.ShowModal(info)
 	}
 

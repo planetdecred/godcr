@@ -34,21 +34,25 @@ type InfoModal struct {
 	negativeButtonClicked func()
 	btnNegative           decredmaterial.Button
 
+	isMinimizable bool
+
 	//TODO: neutral button
 }
 
 func NewInfoModal(l *load.Load) *InfoModal {
 	in := &InfoModal{
-		Load:        l,
-		randomID:    fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
-		modal:       *l.Theme.ModalFloatTitle(),
-		btnPositve:  l.Theme.Button(new(widget.Clickable), "Yes"),
-		btnNegative: l.Theme.Button(new(widget.Clickable), "No"),
+		Load:          l,
+		randomID:      fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
+		modal:         *l.Theme.ModalFloatTitle(),
+		btnPositve:    l.Theme.Button(new(widget.Clickable), "Yes"),
+		btnNegative:   l.Theme.Button(new(widget.Clickable), "No"),
+		isMinimizable: true,
 	}
 
 	in.btnPositve.TextSize, in.btnNegative.TextSize = values.TextSize16, values.TextSize16
 	in.btnPositve.Font.Weight, in.btnNegative.Font.Weight = text.Bold, text.Bold
 
+	in.btnPositve.Background, in.btnPositve.Color = l.Theme.Color.Surface, l.Theme.Color.Primary
 	return in
 }
 
@@ -69,6 +73,10 @@ func (in *InfoModal) OnResume() {
 
 func (in *InfoModal) OnDismiss() {
 
+}
+
+func (in *InfoModal) MinimizableBackground(min bool) {
+	in.isMinimizable = min
 }
 
 func (in *InfoModal) Icon(icon *widget.Icon) *InfoModal {
@@ -143,9 +151,8 @@ func (in *InfoModal) Handle() {
 		in.negativeButtonClicked()
 	}
 
-	if in.modal.BackdropClicked() {
+	if in.modal.BackdropClicked(in.isMinimizable) {
 		in.Dismiss()
-		in.RefreshWindow()
 	}
 }
 

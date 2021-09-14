@@ -193,6 +193,8 @@ type AccountSelectorModal struct {
 	*load.Load
 	dialogTitle string
 
+	isMinimizable bool
+
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
 
@@ -222,6 +224,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 
 		currentSelectedAccount: currentSelectedAccount,
 		wallets:                wallets,
+		isMinimizable:          true,
 	}
 
 	asm.walletInfoButton = l.Theme.PlainIconButton(new(widget.Clickable), asm.Icons.ActionInfo)
@@ -278,6 +281,10 @@ func (asm *AccountSelectorModal) Dismiss() {
 	asm.DismissModal(asm)
 }
 
+func (asm *AccountSelectorModal) MinimizableBackground(min bool) {
+	asm.isMinimizable = min
+}
+
 func (asm *AccountSelectorModal) Handle() {
 	if asm.eventQueue != nil {
 		for _, accounts := range asm.accounts {
@@ -292,9 +299,8 @@ func (asm *AccountSelectorModal) Handle() {
 		}
 	}
 
-	if asm.modal.BackdropClicked() {
+	if asm.modal.BackdropClicked(asm.isMinimizable) {
 		asm.Dismiss()
-		asm.RefreshWindow()
 	}
 }
 

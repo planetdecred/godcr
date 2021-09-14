@@ -245,7 +245,7 @@ func (pg *WalletSettingsPage) Handle() {
 							}
 							pm.Dismiss()
 							pg.Toast.Notify("Wallet removed")
-							pg.ChangeFragment(NewWalletPage(pg.Load))
+							pg.PopFragment()
 						}()
 						return false
 					}).Show()

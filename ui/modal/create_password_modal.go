@@ -19,24 +19,26 @@ const CreateWallet = "create_wallet_modal"
 
 type CreatePasswordModal struct {
 	*load.Load
-	randomID string
-	modal    decredmaterial.Modal
 
-	dialogTitle string
-
-	walletNameEnabled     bool
+	modal                 decredmaterial.Modal
 	walletName            decredmaterial.Editor
 	passwordEditor        decredmaterial.Editor
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
 
-	isLoading      bool
+	isLoading         bool
+	isMinimizable     bool
+	walletNameEnabled bool
+
+	dialogTitle string
+	randomID    string
+
 	materialLoader material.LoaderStyle
 
-	callback   func(walletName, password string, m *CreatePasswordModal) bool // return true to dismiss dialog
-	btnPositve decredmaterial.Button
-
+	btnPositve  decredmaterial.Button
 	btnNegative decredmaterial.Button
+
+	callback func(walletName, password string, m *CreatePasswordModal) bool // return true to dismiss dialog
 }
 
 func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
@@ -47,6 +49,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button(new(widget.Clickable), "Confirm"),
 		btnNegative:      l.Theme.Button(new(widget.Clickable), "Cancel"),
+		isMinimizable:    true,
 	}
 
 	cm.btnNegative.TextSize = values.TextSize16
@@ -118,6 +121,10 @@ func (cm *CreatePasswordModal) SetLoading(loading bool) {
 	cm.isLoading = loading
 }
 
+func (cm *CreatePasswordModal) MinimizableBackground(min bool) {
+	cm.isMinimizable = min
+}
+
 func (cm *CreatePasswordModal) SetError(err string) {
 
 }
@@ -159,9 +166,10 @@ func (cm *CreatePasswordModal) Handle() {
 		}
 	}
 
-	if cm.modal.BackdropClicked() {
-		cm.Dismiss()
-		cm.RefreshWindow()
+	if cm.modal.BackdropClicked(cm.isMinimizable) {
+		if !cm.isLoading {
+			cm.Dismiss()
+		}
 	}
 
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
