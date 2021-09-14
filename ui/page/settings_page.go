@@ -40,8 +40,6 @@ type SettingsPage struct {
 	updateUserAgent     *widget.Clickable
 	changeStartupPass   *widget.Clickable
 	chevronRightIcon    *widget.Icon
-	confirm             decredmaterial.Button
-	cancel              decredmaterial.Button
 	backButton          decredmaterial.IconButton
 	infoButton          decredmaterial.IconButton
 
@@ -87,9 +85,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		updateConnectToPeer: new(widget.Clickable),
 		updateUserAgent:     new(widget.Clickable),
 		changeStartupPass:   new(widget.Clickable),
-
-		confirm: l.Theme.Button(new(widget.Clickable), "Ok"),
-		cancel:  l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)

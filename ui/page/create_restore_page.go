@@ -111,18 +111,10 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	pg.closePageBtn.Background = color.NRGBA{}
 	pg.closePageBtn.Color = l.Theme.Color.Hint
 
-	pg.resetSeedFields = l.Theme.Button(new(widget.Clickable), "Clear all")
-	pg.resetSeedFields.Color = l.Theme.Color.Hint
-	pg.resetSeedFields.Background = color.NRGBA{}
+	pg.resetSeedFields = l.Theme.OutlineButton(new(widget.Clickable), "Clear all")
 
 	pg.alertIcon = pg.Icons.AlertGray
 
-	pg.restoreWalletBtn.Inset = layout.Inset{
-		Top:    values.MarginPadding12,
-		Bottom: values.MarginPadding12,
-		Right:  values.MarginPadding50,
-		Left:   values.MarginPadding50,
-	}
 	pg.restoreWalletBtn.Background = l.Theme.Color.InactiveGray
 	pg.restoreWalletBtn.TextSize = values.TextSize16
 	pg.errLabel.Color = pg.Theme.Color.Danger

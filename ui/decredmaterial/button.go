@@ -25,7 +25,10 @@ type Button struct {
 	isEnabled          bool
 	disabledBackground color.NRGBA
 	disabledTextColor  color.NRGBA
-	highlightColor     color.NRGBA
+	HighlightColor     color.NRGBA
+
+	// Padding layout.Inset
+	Margin layout.Inset
 }
 
 type ButtonLayout struct {
@@ -38,23 +41,34 @@ type IconButton struct {
 
 func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	buttonStyle := material.Button(t.Base, button, txt)
-	buttonStyle.TextSize = values.MarginPadding16
+	buttonStyle.TextSize = values.TextSize16
+	// buttonStyle.Font.Weight = text.Medium
+	buttonStyle.Background = t.Color.Primary
+	buttonStyle.CornerRadius = values.MarginPadding8
+	buttonStyle.Inset = layout.Inset{
+		Top:    values.MarginPadding12,
+		Right:  values.MarginPadding16,
+		Bottom: values.MarginPadding12,
+		Left:   values.MarginPadding16,
+	}
 	return Button{
 		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),
 		clickable:          button,
 		disabledBackground: t.Color.Gray,
 		disabledTextColor:  t.Color.Surface,
-		highlightColor:     t.Color.PrimaryHighlight,
+		HighlightColor:     t.Color.PrimaryHighlight,
 		isEnabled:          true,
 	}
 }
 
 func (t *Theme) OutlineButton(button *widget.Clickable, txt string) Button {
 	btn := t.Button(button, txt)
-	btn.Background = t.Color.Surface
-	btn.highlightColor = t.Color.SurfaceHighlight
+	btn.Background = color.NRGBA{}
+	btn.HighlightColor = t.Color.SurfaceHighlight
 	btn.Color = t.Color.Primary
+	btn.disabledBackground = color.NRGBA{}
+	btn.disabledTextColor = t.Color.InactiveGray
 
 	return btn
 }
@@ -114,7 +128,9 @@ func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 		})
 	}
 
-	return b.buttonStyleLayout(gtx, wdg)
+	return b.Margin.Layout(gtx, func(gtx C) D {
+		return b.buttonStyleLayout(gtx, wdg)
+	})
 }
 
 func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Dimensions {
@@ -134,7 +150,7 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 
 			paint.Fill(gtx.Ops, background)
 			for _, c := range b.clickable.History() {
-				drawInk(gtx, c, b.highlightColor)
+				drawInk(gtx, c, b.HighlightColor)
 			}
 
 			return layout.Dimensions{Size: gtx.Constraints.Min}

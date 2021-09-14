@@ -42,12 +42,14 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
-		btnNegative:  l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+		btnNegative:  l.Theme.OutlineButton(new(widget.Clickable), values.String(values.StrCancel)),
 		isCancelable: true,
 	}
 
-	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
-	cm.btnPositve.Font.Weight, cm.btnNegative.Font.Weight = text.Bold, text.Bold
+	cm.btnPositve.Font.Weight = text.Medium
+
+	cm.btnNegative.Font.Weight = text.Medium
+	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
 
 	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
@@ -148,15 +150,12 @@ func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
 							return D{}
 						}
 
-						cm.btnNegative.Background = cm.Theme.Color.Surface
-						cm.btnNegative.Color = cm.Theme.Color.Primary
 						return cm.btnNegative.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if cm.isLoading {
 							return cm.materialLoader.Layout(gtx)
 						}
-						cm.btnPositve.Background, cm.btnPositve.Color = cm.Theme.Color.Surface, cm.Theme.Color.Primary
 						return cm.btnPositve.Layout(gtx)
 					}),
 				)

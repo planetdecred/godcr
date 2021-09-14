@@ -73,7 +73,6 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 	pg.vote.TextSize = values.TextSize14
 	pg.vote.Background = l.Theme.Color.Primary
 	pg.vote.Color = l.Theme.Color.Surface
-	pg.vote.CornerRadius = values.MarginPadding8
 	pg.vote.Inset = layout.Inset{
 		Top:    values.MarginPadding8,
 		Bottom: values.MarginPadding8,

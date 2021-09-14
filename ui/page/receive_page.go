@@ -64,6 +64,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 
 	pg.info.Inset, pg.info.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 	pg.copy.Background = color.NRGBA{}
+	pg.copy.HighlightColor = pg.Theme.Color.SurfaceHighlight
 	pg.copy.Color = pg.Theme.Color.Primary
 	pg.copy.Inset = layout.Inset{
 		Top:    values.MarginPadding19p5,
@@ -81,7 +82,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	}
 	pg.newAddr.Color = pg.Theme.Color.Text
 	pg.newAddr.Background = pg.Theme.Color.Surface
-	pg.newAddr.TextSize = values.TextSize16
+	pg.newAddr.HighlightColor = pg.Theme.Color.SurfaceHighlight
 
 	pg.receiveAddress.Color = pg.Theme.Color.DeepBlue
 	pg.receiveAddress.MaxLines = 1

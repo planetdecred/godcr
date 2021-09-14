@@ -53,8 +53,10 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		isCancelable:     true,
 	}
 
-	cm.btnNegative.Font.Weight = text.Medium
 	cm.btnPositve.Font.Weight = text.Medium
+
+	cm.btnNegative.Font.Weight = text.Medium
+	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
 
 	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
@@ -189,12 +191,12 @@ func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 
 	if password.Text() != matching.Text() {
 		cm.confirmPasswordEditor.SetError("passwords do not match")
-		cm.btnPositve.Background = cm.Theme.Color.Hint
+		cm.btnPositve.SetEnabled(false)
 		return false
 	}
 
 	cm.confirmPasswordEditor.SetError("")
-	cm.btnPositve.Background = cm.Theme.Color.Primary
+	cm.btnPositve.SetEnabled(true)
 	return true
 }
 

@@ -8,6 +8,7 @@ import (
 
 	"gioui.org/io/event"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -91,10 +92,17 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	pg.toTransactions.Color = l.Theme.Color.Primary
 	pg.toTransactions.BackgroundColor = l.Theme.Color.Surface
 
-	pg.sync = l.Theme.Button(new(widget.Clickable), values.String(values.StrReconnect))
-	pg.sync.TextSize = values.TextSize10
-	pg.sync.Background = color.NRGBA{}
+	pg.sync = l.Theme.OutlineButton(new(widget.Clickable), values.String(values.StrReconnect))
+	pg.sync.Font.Weight = text.Normal
+	pg.sync.TextSize = values.TextSize14
 	pg.sync.Color = l.Theme.Color.Text
+	pg.sync.CornerRadius = values.MarginPadding12
+	pg.sync.Inset = layout.Inset{
+		Top:    values.MarginPadding3,
+		Left:   values.MarginPadding8,
+		Bottom: values.MarginPadding3,
+		Right:  values.MarginPadding8,
+	}
 
 	pg.toggleSyncDetails = l.Theme.Button(new(widget.Clickable), values.String(values.StrShowDetails))
 	pg.toggleSyncDetails.TextSize = values.TextSize16
@@ -460,7 +468,7 @@ func (pg *OverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 							pg.sync.Text = values.String(values.StrDisconnect)
 						} else {
 							pg.sync.Text = values.String(values.StrReconnect)
-							pg.sync.Inset.Left = values.MarginPadding25
+							//TODO: use flex layout to display icon and button
 							layout.Inset{Top: values.MarginPadding4, Left: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 								pg.cachedIcon.Color = pg.Theme.Color.Gray
 								return pg.cachedIcon.Layout(gtx, values.TextSize14)

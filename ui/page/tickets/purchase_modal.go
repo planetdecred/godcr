@@ -1,7 +1,6 @@
 package tickets
 
 import (
-	"image/color"
 	"strconv"
 
 	"gioui.org/layout"
@@ -42,13 +41,11 @@ func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
 
 		tickets:        l.Theme.Editor(new(widget.Editor), ""),
 		rememberVSP:    l.Theme.CheckBox(new(widget.Bool), "Remember VSP"),
-		cancelPurchase: l.Theme.Button(new(widget.Clickable), "Cancel"),
+		cancelPurchase: l.Theme.OutlineButton(new(widget.Clickable), "Cancel"),
 		reviewPurchase: l.Theme.Button(new(widget.Clickable), "Review purchase"),
 		modal:          *l.Theme.ModalFloatTitle(),
 	}
 
-	tp.cancelPurchase.Background = color.NRGBA{}
-	tp.cancelPurchase.Color = l.Theme.Color.Primary
 	tp.vspIsFetched = len((*l.WL.VspInfo).List) > 0
 
 	tp.tickets.Editor.SetText("1")

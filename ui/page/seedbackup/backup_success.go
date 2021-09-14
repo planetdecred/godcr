@@ -1,8 +1,6 @@
 package seedbackup
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -22,11 +20,8 @@ func NewBackupSuccessPage(l *load.Load) *BackupSuccessPage {
 	pg := &BackupSuccessPage{
 		Load: l,
 
-		actionButton: l.Theme.Button(new(widget.Clickable), "Back to Wallets"),
+		actionButton: l.Theme.OutlineButton(new(widget.Clickable), "Back to Wallets"),
 	}
-
-	pg.actionButton.Color = pg.Theme.Color.Primary
-	pg.actionButton.Background = color.NRGBA{}
 
 	return pg
 }

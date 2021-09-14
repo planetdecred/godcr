@@ -1,8 +1,6 @@
 package page
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -49,17 +47,11 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg.signatureEditor = l.Theme.Editor(new(widget.Editor), "Signature")
 	pg.signatureEditor.Editor.Submit = true
 
-	buttonTextSize := values.TextSize14
 	pg.verifyButton = l.Theme.Button(new(widget.Clickable), "Verify message")
-	pg.verifyButton.TextSize = buttonTextSize
-	pg.verifyButton.Font.Weight = text.Bold
-	pg.verifyButton.Background = l.Theme.Color.Hint
+	pg.verifyButton.Font.Weight = text.Medium
 
-	pg.clearBtn = l.Theme.Button(new(widget.Clickable), "Clear all")
-	pg.clearBtn.TextSize = buttonTextSize
-	pg.clearBtn.Background = color.NRGBA{}
-	pg.clearBtn.Color = l.Theme.Color.Hint
-	pg.clearBtn.Font.Weight = text.Bold
+	pg.clearBtn = l.Theme.OutlineButton(new(widget.Clickable), "Clear all")
+	pg.clearBtn.Font.Weight = text.Medium
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 

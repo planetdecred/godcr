@@ -1,8 +1,6 @@
 package page
 
 import (
-	"image/color"
-
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -42,10 +40,10 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := l.Theme.Editor(new(widget.Editor), "Message")
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
-	clearButton := l.Theme.Button(new(widget.Clickable), "Clear all")
+
+	clearButton := l.Theme.OutlineButton(new(widget.Clickable), "Clear all")
 	signButton := l.Theme.Button(new(widget.Clickable), "Sign message")
-	clearButton.Background, signButton.Background = color.NRGBA{}, l.Theme.Color.Hint
-	clearButton.Color = l.Theme.Color.Gray
+	signButton.Background = l.Theme.Color.Hint
 	clearButton.Font.Weight, signButton.Font.Weight = text.Bold, text.Bold
 
 	errorLabel := l.Theme.Caption("")

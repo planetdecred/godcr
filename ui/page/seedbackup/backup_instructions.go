@@ -2,6 +2,7 @@ package seedbackup
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -35,6 +36,8 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 
 		viewSeedBtn: l.Theme.Button(new(widget.Clickable), "View seed phrase"),
 	}
+
+	bi.viewSeedBtn.Font.Weight = text.Medium
 
 	bi.backButton, _ = components.SubpageHeaderButtons(l)
 	bi.backButton.Icon = l.Icons.ContentClear

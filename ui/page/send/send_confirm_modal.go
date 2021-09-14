@@ -2,7 +2,6 @@ package send
 
 import (
 	"fmt"
-	"image/color"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -40,9 +39,7 @@ func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 		authoredTxData: data,
 	}
 
-	scm.closeConfirmationModalButton = l.Theme.Button(new(widget.Clickable), "Cancel")
-	scm.closeConfirmationModalButton.Background = color.NRGBA{}
-	scm.closeConfirmationModalButton.Color = l.Theme.Color.Primary
+	scm.closeConfirmationModalButton = l.Theme.OutlineButton(new(widget.Clickable), "Cancel")
 
 	scm.confirmButton = l.Theme.Button(new(widget.Clickable), "")
 	scm.confirmButton.Background = scm.Theme.Color.InactiveGray

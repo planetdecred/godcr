@@ -51,9 +51,6 @@ func NewTicketPage(l *load.Load) *Page {
 		toTickets:           l.Theme.TextAndIconButton(new(widget.Clickable), "See All", l.Icons.NavigationArrowForward),
 	}
 
-	pg.purchaseTicket.TextSize = values.TextSize12
-	pg.purchaseTicket.Background = l.Theme.Color.Primary
-
 	pg.toTickets.Color = l.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = l.Theme.Color.Surface
 

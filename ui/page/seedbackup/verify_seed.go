@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -45,6 +46,8 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
 	}
+
+	pg.actionButton.Font.Weight = text.Medium
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = l.Icons.ContentClear

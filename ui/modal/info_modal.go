@@ -44,18 +44,16 @@ type InfoModal struct {
 
 func NewInfoModal(l *load.Load) *InfoModal {
 	in := &InfoModal{
-		Load:        l,
-		randomID:    fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
-		modal:       *l.Theme.ModalFloatTitle(),
-		btnPositve:  l.Theme.Button(new(widget.Clickable), "Yes"),
-		btnNegative: l.Theme.Button(new(widget.Clickable), "No"),
-		keyEvent:    l.Receiver.KeyEvents,
+		Load:         l,
+		randomID:     fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
+		modal:        *l.Theme.ModalFloatTitle(),
+		btnPositve:   l.Theme.OutlineButton(new(widget.Clickable), "Yes"),
+		btnNegative:  l.Theme.OutlineButton(new(widget.Clickable), "No"),
+		keyEvent:     l.Receiver.KeyEvents,
+		isCancelable: true,
 	}
 
-	in.btnPositve.TextSize, in.btnNegative.TextSize = values.TextSize16, values.TextSize16
-	in.btnPositve.Font.Weight, in.btnNegative.Font.Weight = text.Bold, text.Bold
-
-	in.btnPositve.Background, in.btnPositve.Color = l.Theme.Color.Surface, l.Theme.Color.Primary
+	in.btnPositve.Font.Weight, in.btnNegative.Font.Weight = text.Medium, text.Medium
 	return in
 }
 
@@ -234,8 +232,6 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnNegative.Text = in.negativeButtonText
-					in.btnNegative.Background = in.Theme.Color.Surface
-					in.btnNegative.Color = in.Theme.Color.Primary
 					return in.btnNegative.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
