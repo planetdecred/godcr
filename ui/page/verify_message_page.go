@@ -192,6 +192,12 @@ func (pg *VerifyMessagePage) Handle() {
 	if pg.clearBtn.Button.Clicked() {
 		pg.clearInputs()
 	}
+
+	if pg.infoButton.Button.Clicked() {
+		info := modal.NewInfoModal(pg.Load)
+		info.SetupWithTemplate(modal.VerifyMessageInfoTemplate).PositiveButton("Got it", func() {})
+		pg.ShowModal(info)
+	}
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
