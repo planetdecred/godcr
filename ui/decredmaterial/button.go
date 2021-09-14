@@ -37,7 +37,7 @@ type IconButton struct {
 
 func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	return Button{
-		ButtonStyle:        material.Button(t.Base, nil, txt),
+		ButtonStyle:        material.Button(t.Base, button, txt),
 		label:              t.Label(values.TextSize16, txt),
 		clickable:          button,
 		disabledBackground: t.Color.Gray,
@@ -86,7 +86,6 @@ func (b Button) Click() {
 
 func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 	if !b.Enabled() {
-		gtx.Queue = nil
 		b.Background, b.Color = b.disabledBackground, b.surfaceColor
 	}
 
@@ -102,10 +101,10 @@ func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 		})
 	}
 
-	return b.Layout2(gtx, wdg)
+	return b.buttonStyleLayout(gtx, wdg)
 }
 
-func (b Button) Layout2(gtx layout.Context, w layout.Widget) layout.Dimensions {
+func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	min := gtx.Constraints.Min
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
@@ -114,13 +113,12 @@ func (b Button) Layout2(gtx layout.Context, w layout.Widget) layout.Dimensions {
 				X: float32(gtx.Constraints.Min.X),
 				Y: float32(gtx.Constraints.Min.Y),
 			}}, rr).Add(gtx.Ops)
+
 			background := b.Background
-			switch {
-			case gtx.Queue == nil:
-				background = Disabled(b.Background)
-			case b.clickable.Hovered():
+			if b.clickable.Hovered() {
 				background = Hovered(b.Background)
 			}
+
 			paint.Fill(gtx.Ops, background)
 			for _, c := range b.clickable.History() {
 				drawInk(gtx, c)
@@ -132,7 +130,13 @@ func (b Button) Layout2(gtx layout.Context, w layout.Widget) layout.Dimensions {
 			gtx.Constraints.Min = min
 			return layout.Center.Layout(gtx, w)
 		}),
-		layout.Expanded(b.clickable.Layout),
+		layout.Expanded(func(gtx C) D {
+			if !b.isEnabled {
+				return D{}
+			}
+
+			return b.clickable.Layout(gtx)
+		}),
 	)
 }
 
