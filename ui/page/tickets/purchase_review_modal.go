@@ -155,15 +155,14 @@ func (t *ticketReviewModal) Dismiss() {
 func (t *ticketReviewModal) OnResume() {}
 
 func (t *ticketReviewModal) Handle() {
-	for t.cancelPurchase.Button.Clicked() {
+	for t.cancelPurchase.Clicked() {
 		if !t.isLoading {
 			t.Dismiss()
 		}
 	}
 
-	for t.purchase.Button.Clicked() {
+	for t.purchase.Clicked() {
 		t.purchaseTickets()
-
 	}
 }
 

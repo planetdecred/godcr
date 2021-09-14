@@ -652,7 +652,8 @@ func (pg *OverviewPage) rescanDetailsLayout(gtx layout.Context, inset layout.Ins
 }
 
 func (pg *OverviewPage) Handle() {
-	if pg.sync.Button.Clicked() {
+
+	if pg.sync.Clicked() {
 		if pg.rescanningBlocks {
 			pg.WL.MultiWallet.CancelRescan()
 		} else {
@@ -668,7 +669,7 @@ func (pg *OverviewPage) Handle() {
 		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 
-	if pg.toggleSyncDetails.Button.Clicked() {
+	if pg.toggleSyncDetails.Clicked() {
 		pg.syncDetailsVisibility = !pg.syncDetailsVisibility
 		if pg.syncDetailsVisibility {
 			pg.toggleSyncDetails.Text = values.String(values.StrHideDetails)

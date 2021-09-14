@@ -252,11 +252,11 @@ func (tp *ticketPurchaseModal) Handle() {
 		}
 	}
 
-	if tp.cancelPurchase.Button.Clicked() {
+	if tp.cancelPurchase.Clicked() {
 		tp.Dismiss()
 	}
 
-	if tp.canPurchase() && tp.reviewPurchase.Button.Clicked() {
+	if tp.canPurchase() && tp.reviewPurchase.Clicked() {
 
 		if tp.vspSelector.Changed() && tp.rememberVSP.CheckBox.Value {
 			tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)

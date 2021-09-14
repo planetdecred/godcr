@@ -106,7 +106,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 
 	if editorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor) ||
 		handleSubmitEvent(cm.walletName.Editor, cm.extendedPubKey.Editor) {
-		for cm.btnPositve.Button.Clicked() {
+		for cm.btnPositve.Clicked() {
 			cm.SetLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.extendedPubKey.Editor.Text(), cm) {
 				cm.Dismiss()
@@ -114,7 +114,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		}
 	}
 
-	if cm.btnNegative.Button.Clicked() {
+	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}

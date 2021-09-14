@@ -82,7 +82,7 @@ func (vm *voteModal) handleVoteCountButtons(i *inputVoteOptionsWidgets) {
 		i.input.Editor.SetText(fmt.Sprintf("%d", value))
 	}
 
-	if i.max.Button.Clicked() {
+	if i.max.Clicked() {
 		max := vm.remainingVotes() + i.voteCount()
 		i.input.Editor.SetText(fmt.Sprint(max))
 	}

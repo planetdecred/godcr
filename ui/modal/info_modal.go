@@ -155,12 +155,12 @@ func (in *InfoModal) handleEnterKeypress() {
 }
 
 func (in *InfoModal) Handle() {
-	if in.btnPositve.Button.Clicked() {
+	for in.btnPositve.Clicked() {
 		in.DismissModal(in)
 		in.positiveButtonClicked()
 	}
 
-	for in.btnNegative.Button.Clicked() {
+	for in.btnNegative.Clicked() {
 		in.DismissModal(in)
 		in.negativeButtonClicked()
 	}

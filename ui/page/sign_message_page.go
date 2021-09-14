@@ -237,11 +237,11 @@ func (pg *SignMessagePage) Handle() {
 		}
 	}
 
-	for pg.clearButton.Button.Clicked() {
+	for pg.clearButton.Clicked() {
 		pg.clearForm()
 	}
 
-	for pg.signButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor) {
+	for pg.signButton.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor) {
 		if !pg.isSigningMessage && pg.validate() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()

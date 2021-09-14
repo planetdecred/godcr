@@ -118,7 +118,7 @@ func (sp *startPage) proceedToMainPage() {
 }
 
 func (sp *startPage) Handle() {
-	for sp.createButton.Button.Clicked() {
+	for sp.createButton.Clicked() {
 		modal.NewCreatePasswordModal(sp.Load).
 			Title("Create new wallet").
 			PasswordCreated(func(_, password string, m *modal.CreatePasswordModal) bool {
@@ -137,7 +137,7 @@ func (sp *startPage) Handle() {
 			}).Show()
 	}
 
-	for sp.restoreButton.Button.Clicked() {
+	for sp.restoreButton.Clicked() {
 		sp.ChangeWindowPage(NewCreateRestorePage(sp.Load), true)
 	}
 }

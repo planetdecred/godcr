@@ -666,7 +666,7 @@ func (pg *TransactionDetailsPage) Handle() {
 	}
 
 	for _, b := range pg.copyTextBtn {
-		for b.Button.Clicked() {
+		for b.Clicked() {
 			clipboard.WriteOp{Text: b.Text}.Add(gtx.Ops)
 			pg.Toast.Notify("Copied")
 		}

@@ -370,7 +370,7 @@ func (pg *Page) stakingRecordIconCount(icon *decredmaterial.Image, count int, st
 }
 
 func (pg *Page) Handle() {
-	if pg.purchaseTicket.Button.Clicked() {
+	if pg.purchaseTicket.Clicked() {
 		newTicketPurchaseModal(pg.Load).
 			TicketPurchased(func() {
 				fmt.Println("Overview ticket pruchsased")

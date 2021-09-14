@@ -120,13 +120,9 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
-	if editorsNotEmpty(pm.password.Editor) {
-		pm.btnPositve.Background = pm.Theme.Color.Primary
-	} else {
-		pm.btnPositve.Background = pm.Theme.Color.InactiveGray
-	}
+	pm.btnPositve.SetEnabled(editorsNotEmpty(pm.password.Editor))
 
-	for pm.btnPositve.Button.Clicked() || handleSubmitEvent(pm.password.Editor) {
+	for pm.btnPositve.Clicked() || handleSubmitEvent(pm.password.Editor) {
 
 		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
 			continue
@@ -139,7 +135,7 @@ func (pm *PasswordModal) Handle() {
 		}
 	}
 
-	for pm.btnNegative.Button.Clicked() {
+	for pm.btnNegative.Clicked() {
 		if !pm.isLoading {
 			pm.DismissModal(pm)
 			pm.negativeButtonClicked()

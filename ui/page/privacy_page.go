@@ -336,7 +336,7 @@ func (pg *PrivacyPage) gutter(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *PrivacyPage) Handle() {
-	if pg.toPrivacySetup.Button.Clicked() {
+	if pg.toPrivacySetup.Clicked() {
 		go pg.showModalSetupMixerInfo()
 	}
 

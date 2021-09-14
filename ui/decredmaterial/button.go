@@ -6,15 +6,22 @@ import (
 	"image"
 	"image/color"
 
+	"gioui.org/f32"
 	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
+	"gioui.org/text"
 	"gioui.org/unit"
+	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-	"gioui.org/widget"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type Button struct {
 	material.ButtonStyle
+	label              Label
+	clickable          *widget.Clickable
 	isEnabled          bool
 	disabledBackground color.NRGBA
 	surfaceColor       color.NRGBA
@@ -30,7 +37,9 @@ type IconButton struct {
 
 func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	return Button{
-		ButtonStyle:        material.Button(t.Base, button, txt),
+		ButtonStyle:        material.Button(t.Base, nil, txt),
+		label:              t.Label(values.TextSize16, txt),
+		clickable:          button,
 		disabledBackground: t.Color.Gray,
 		surfaceColor:       t.Color.Surface,
 		isEnabled:          true,
@@ -64,7 +73,15 @@ func (b *Button) Enabled() bool {
 }
 
 func (b Button) Clicked() bool {
-	return b.Button.Clicked()
+	return b.clickable.Clicked()
+}
+
+func (b Button) Hovered() bool {
+	return b.clickable.Hovered()
+}
+
+func (b Button) Click() {
+	b.clickable.Click()
 }
 
 func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
@@ -73,7 +90,50 @@ func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 		b.Background, b.Color = b.disabledBackground, b.surfaceColor
 	}
 
-	return b.ButtonStyle.Layout(gtx)
+	wdg := func(gtx layout.Context) layout.Dimensions {
+		return b.Inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			paint.ColorOp{Color: b.Color}.Add(gtx.Ops)
+			b.label.Text = b.Text
+			b.label.Font = b.Font
+			b.label.Alignment = text.Middle
+			b.label.TextSize = b.TextSize
+			b.label.Color = b.Color
+			return b.label.Layout(gtx)
+		})
+	}
+
+	return b.Layout2(gtx, wdg)
+}
+
+func (b Button) Layout2(gtx layout.Context, w layout.Widget) layout.Dimensions {
+	min := gtx.Constraints.Min
+	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
+		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+			rr := float32(gtx.Px(b.CornerRadius))
+			clip.UniformRRect(f32.Rectangle{Max: f32.Point{
+				X: float32(gtx.Constraints.Min.X),
+				Y: float32(gtx.Constraints.Min.Y),
+			}}, rr).Add(gtx.Ops)
+			background := b.Background
+			switch {
+			case gtx.Queue == nil:
+				background = Disabled(b.Background)
+			case b.clickable.Hovered():
+				background = Hovered(b.Background)
+			}
+			paint.Fill(gtx.Ops, background)
+			for _, c := range b.clickable.History() {
+				drawInk(gtx, c)
+			}
+
+			return layout.Dimensions{Size: gtx.Constraints.Min}
+		}),
+		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+			gtx.Constraints.Min = min
+			return layout.Center.Layout(gtx, w)
+		}),
+		layout.Expanded(b.clickable.Layout),
+	)
 }
 
 func (bl ButtonLayout) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {

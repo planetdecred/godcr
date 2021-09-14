@@ -236,11 +236,11 @@ func (pg *ValidateAddressPage) Handle() {
 		}
 	}
 
-	if pg.validateBtn.Button.Clicked() {
+	if pg.validateBtn.Clicked() {
 		pg.validateAddress()
 	}
 
-	if pg.clearBtn.Button.Clicked() {
+	if pg.clearBtn.Clicked() {
 		pg.clearPage()
 	}
 }

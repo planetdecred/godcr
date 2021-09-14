@@ -102,7 +102,7 @@ func (pg *proposalDetails) Handle() {
 		}
 	}
 
-	if pg.vote.Button.Clicked() {
+	if pg.vote.Clicked() {
 		newVoteModal(pg.Load, pg.proposal).Show()
 	}
 

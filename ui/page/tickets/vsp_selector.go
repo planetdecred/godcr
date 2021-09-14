@@ -167,7 +167,7 @@ func (v *vspSelectorModal) Dismiss() {
 }
 
 func (v *vspSelectorModal) Handle() {
-	if v.editorsNotEmpty(&v.addVSP, v.inputVSP.Editor) && v.addVSP.Button.Clicked() {
+	if v.editorsNotEmpty(&v.addVSP, v.inputVSP.Editor) && v.addVSP.Clicked() {
 		go func() {
 			err := v.WL.AddVSP(v.inputVSP.Editor.Text())
 			if err != nil {

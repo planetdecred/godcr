@@ -194,7 +194,7 @@ func (vm *voteModal) sendVotes() {
 }
 
 func (vm *voteModal) Handle() {
-	for vm.cancelBtn.Button.Clicked() {
+	for vm.cancelBtn.Clicked() {
 		if vm.isVoting {
 			continue
 		}

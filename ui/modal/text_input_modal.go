@@ -89,7 +89,7 @@ func (tm *TextInputModal) Handle() {
 		tm.btnPositve.Background = tm.Theme.Color.InactiveGray
 	}
 
-	for tm.btnPositve.Button.Clicked() || handleSubmitEvent(tm.textInput.Editor) {
+	for tm.btnPositve.Clicked() || handleSubmitEvent(tm.textInput.Editor) {
 		if tm.IsLoading {
 			continue
 		}
@@ -101,7 +101,7 @@ func (tm *TextInputModal) Handle() {
 		}
 	}
 
-	for tm.btnNegative.Button.Clicked() {
+	for tm.btnNegative.Clicked() {
 		if !tm.IsLoading {
 			tm.Dismiss()
 			tm.negativeButtonClicked()

@@ -98,14 +98,14 @@ func (p *Password) updateColors() {
 }
 
 func (p *Password) handleEvents(confirm func([]byte), cancel func()) {
-	for p.confirmButton.Button.Clicked() {
+	for p.confirmButton.Clicked() {
 		if p.passwordEditor.Editor.Len() > 0 {
 			confirm([]byte(p.passwordEditor.Editor.Text()))
 			p.reset()
 		}
 	}
 
-	for p.cancelButton.Button.Clicked() {
+	for p.cancelButton.Clicked() {
 		p.reset()
 		p.passwordEditor.IsRequired = false
 		p.passwordEditor.SetError("")

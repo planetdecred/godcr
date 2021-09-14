@@ -170,7 +170,7 @@ func (pg *VerifyMessagePage) Handle() {
 		}
 	}
 
-	if pg.verifyButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
+	if pg.verifyButton.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
 		if pg.validateAllInputs() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
@@ -189,7 +189,7 @@ func (pg *VerifyMessagePage) Handle() {
 		}
 	}
 
-	if pg.clearBtn.Button.Clicked() {
+	if pg.clearBtn.Clicked() {
 		pg.clearInputs()
 	}
 }

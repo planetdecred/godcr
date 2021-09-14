@@ -112,11 +112,11 @@ func (scm *sendConfirmModal) Handle() {
 		}
 	}
 
-	for scm.confirmButton.Button.Clicked() {
+	for scm.confirmButton.Clicked() {
 		scm.broadcastTransaction()
 	}
 
-	for scm.closeConfirmationModalButton.Button.Clicked() {
+	for scm.closeConfirmationModalButton.Clicked() {
 		if !scm.isSending {
 			scm.Dismiss()
 		}

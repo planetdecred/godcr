@@ -324,7 +324,7 @@ func (pg *ReceivePage) Handle() {
 		}
 	}
 
-	if pg.newAddr.Button.Clicked() {
+	if pg.newAddr.Clicked() {
 		newAddr, err := pg.generateNewAddress()
 		if err != nil {
 			log.Debug("Error generating new address" + err.Error())
@@ -348,7 +348,7 @@ func (pg *ReceivePage) Handle() {
 		pg.PopFragment()
 	}
 
-	if pg.copy.Button.Clicked() {
+	if pg.copy.Clicked() {
 
 		clipboard.WriteOp{Text: pg.currentAddress}.Add(gtx.Ops)
 

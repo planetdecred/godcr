@@ -149,7 +149,7 @@ func (cm *CreatePasswordModal) Handle() {
 		cm.confirmPasswordEditor.SetError("")
 	}
 
-	if cm.btnPositve.Button.Clicked() || handleSubmitEvent(cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
+	if cm.btnPositve.Clicked() || handleSubmitEvent(cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
 
 		nameValid := true
 		if cm.walletNameEnabled {
@@ -167,7 +167,7 @@ func (cm *CreatePasswordModal) Handle() {
 
 	}
 
-	if cm.btnNegative.Button.Clicked() {
+	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}
