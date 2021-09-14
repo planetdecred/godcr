@@ -65,7 +65,7 @@ func (tp *ticketPurchaseModal) OnResume() {
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
 	tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
 
-	if tp.vspIsFetched && tp.WL.GetRememberVSP() != "" {
+	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.GetRememberVSP()) {
 		tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
 		tp.rememberVSP.CheckBox.Value = true
 	}

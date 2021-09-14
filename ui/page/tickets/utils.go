@@ -100,7 +100,6 @@ func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, new
 
 			ticketAgeDuration := time.Since(time.Unix(tx.Timestamp, 0)).Seconds()
 			ticketAge = ticketAgeTimeFormat(int(ticketAgeDuration))
-
 		}
 
 		showTime := showProgress && txStatus.TicketStatus != dcrlibwallet.TicketStatusLive
@@ -517,7 +516,6 @@ func ticketAgeTimeFormat(secs int) string {
 	}
 
 	return fmt.Sprintf("%ds", secs)
-
 }
 
 func maturityTimeFormat(maturityTimeMinutes int) string {
