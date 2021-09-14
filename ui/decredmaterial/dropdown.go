@@ -214,7 +214,10 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 					Left:  unit.Dp(float32(iLeft)),
 					Right: unit.Dp(float32(iRight)),
 				}.Layout(gtx, func(gtx C) D {
-					return c.dropDownItemMenu(gtx)
+					lay := c.dropDownItemMenu(gtx)
+					w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
+					c.Width = w
+					return lay
 				})
 			}),
 		)

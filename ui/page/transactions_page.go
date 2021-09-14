@@ -169,7 +169,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				return pg.orderDropDown.Layout(gtx, 0, true)
 			}),
 			layout.Expanded(func(gtx C) D {
-				return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width+30, true)
+				return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width+10, true)
 			}),
 		)
 	}
