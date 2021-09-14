@@ -12,7 +12,7 @@ import (
 	"gioui.org/widget"
 )
 
-func drawInk(gtx layout.Context, c widget.Press) {
+func drawInk(gtx layout.Context, c widget.Press, highlightColor color.NRGBA) {
 	// duration is the number of seconds for the
 	// completed animation: expand while fading in, then
 	// out.
@@ -97,11 +97,11 @@ func drawInk(gtx layout.Context, c widget.Press) {
 	size *= 2 * float32(math.Sqrt(2))
 	// Apply curve values to size and color.
 	size *= sizeBezier
-	alpha := 0.7 * alphaBezier
+	alpha := 1 * alphaBezier
 	const col = 0.8
-	ba, bc := byte(alpha*0xff), byte(col*0xff)
+	ba, _ := byte(alpha*0xff), byte(col*0xff)
 	defer op.Save(gtx.Ops).Load()
-	rgba := mulAlpha(color.NRGBA{A: 0xff, R: bc, G: bc, B: bc}, ba)
+	rgba := mulAlpha(highlightColor, ba)
 	ink := paint.ColorOp{Color: rgba}
 	ink.Add(gtx.Ops)
 	rr := size * .5

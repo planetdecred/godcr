@@ -42,6 +42,7 @@ type Theme struct {
 	Color  struct {
 		Primary          color.NRGBA
 		Primary50        color.NRGBA
+		PrimaryHighlight color.NRGBA
 		Secondary        color.NRGBA
 		Text             color.NRGBA
 		Hint             color.NRGBA
@@ -52,6 +53,7 @@ type Theme struct {
 		Danger           color.NRGBA
 		Background       color.NRGBA
 		Surface          color.NRGBA
+		SurfaceHighlight color.NRGBA
 		Gray             color.NRGBA
 		Black            color.NRGBA
 		DeepBlue         color.NRGBA
@@ -109,11 +111,13 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.DarkMode = true
 		t.Color.Primary = rgb(0x57B6FF)
 		t.Color.Primary50 = rgb(0xE3F2FF)
+		t.Color.PrimaryHighlight = rgb(0x1B41B3)
 		t.Color.Text = argb(0x99FFFFFF)
 		t.Color.Hint = rgb(0x8997A5)
 		t.Color.InvText = rgb(0xffffff)
 		t.Color.Overlay = rgb(0x000000)
 		t.Color.Surface = rgb(0x252525)
+		t.Color.SurfaceHighlight = rgb(0x3D3D3D)
 		t.Color.Success = green
 		t.Color.Success2 = rgb(0xE1F8EF)
 		t.Color.Danger = rgb(0xed6d47)
@@ -152,11 +156,13 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.DarkMode = false
 		t.Color.Primary = keyblue
 		t.Color.Primary50 = rgb(0xE3F2FF)
+		t.Color.PrimaryHighlight = rgb(0x1B41B3)
 		t.Color.Text = darkblue
 		t.Color.Hint = rgb(0x8997A5)
 		t.Color.InvText = rgb(0xffffff)
 		t.Color.Overlay = rgb(0x000000)
 		t.Color.Surface = rgb(0xffffff)
+		t.Color.SurfaceHighlight = rgb(0xE6EAED)
 		t.Color.Success = green
 		t.Color.Success2 = rgb(0xE1F8EF)
 		t.Color.Danger = rgb(0xed6d47)

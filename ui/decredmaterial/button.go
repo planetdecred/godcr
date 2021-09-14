@@ -24,7 +24,8 @@ type Button struct {
 	clickable          *widget.Clickable
 	isEnabled          bool
 	disabledBackground color.NRGBA
-	surfaceColor       color.NRGBA
+	disabledTextColor  color.NRGBA
+	highlightColor     color.NRGBA
 }
 
 type ButtonLayout struct {
@@ -36,14 +37,26 @@ type IconButton struct {
 }
 
 func (t *Theme) Button(button *widget.Clickable, txt string) Button {
+	buttonStyle := material.Button(t.Base, button, txt)
+	buttonStyle.TextSize = values.MarginPadding16
 	return Button{
-		ButtonStyle:        material.Button(t.Base, button, txt),
+		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),
 		clickable:          button,
 		disabledBackground: t.Color.Gray,
-		surfaceColor:       t.Color.Surface,
+		disabledTextColor:  t.Color.Surface,
+		highlightColor:     t.Color.PrimaryHighlight,
 		isEnabled:          true,
 	}
+}
+
+func (t *Theme) OutlineButton(button *widget.Clickable, txt string) Button {
+	btn := t.Button(button, txt)
+	btn.Background = t.Color.Surface
+	btn.highlightColor = t.Color.SurfaceHighlight
+	btn.Color = t.Color.Primary
+
+	return btn
 }
 
 func (t *Theme) ButtonLayout(button *widget.Clickable) ButtonLayout {
@@ -86,7 +99,7 @@ func (b Button) Click() {
 
 func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
 	if !b.Enabled() {
-		b.Background, b.Color = b.disabledBackground, b.surfaceColor
+		b.Background, b.Color = b.disabledBackground, b.disabledTextColor
 	}
 
 	wdg := func(gtx layout.Context) layout.Dimensions {
@@ -121,7 +134,7 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 
 			paint.Fill(gtx.Ops, background)
 			for _, c := range b.clickable.History() {
-				drawInk(gtx, c)
+				drawInk(gtx, c, b.highlightColor)
 			}
 
 			return layout.Dimensions{Size: gtx.Constraints.Min}

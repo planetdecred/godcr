@@ -49,15 +49,12 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		modal:            *l.Theme.ModalFloatTitle(),
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative:      l.Theme.Button(new(widget.Clickable), "Cancel"),
+		btnNegative:      l.Theme.OutlineButton(new(widget.Clickable), "Cancel"),
 		isCancelable:     true,
 	}
 
-	cm.btnNegative.TextSize = values.TextSize16
 	cm.btnNegative.Font.Weight = text.Medium
-
-	cm.btnPositve.Background = cm.Theme.Color.InactiveGray
-	cm.btnPositve.Font.Weight = text.Bold
+	cm.btnPositve.Font.Weight = text.Medium
 
 	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
@@ -251,8 +248,7 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 						if cm.isLoading {
 							return D{}
 						}
-						cm.btnNegative.Background = cm.Theme.Color.Surface
-						cm.btnNegative.Color = cm.Theme.Color.Primary
+
 						return cm.btnNegative.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
