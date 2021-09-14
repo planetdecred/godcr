@@ -20,10 +20,11 @@ type ListPreference struct {
 
 	theme *decredmaterial.Theme
 
-	IsShowing   bool
-	titleStrKey string
-	items       map[string]string //[key]str-key
-	itemKeys    []string
+	IsShowing    bool
+	titleStrKey  string
+	items        map[string]string //[key]str-key
+	itemKeys     []string
+	isAutoUpdate bool
 
 	clickable         *widget.Clickable
 	optionsRadioGroup *widget.Enum
@@ -35,6 +36,8 @@ type ListPreference struct {
 	negativeButtonClicked func()
 	negativeButtonStrKey  string
 	negativeButton        decredmaterial.Button
+
+	autoUpdateButtonClicked func()
 }
 
 func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, preferenceKey, defaultValue string, items map[string]string) *ListPreference {
@@ -85,6 +88,12 @@ func (lp *ListPreference) NegativeButton(strkey string, clicked func()) *ListPre
 	return lp
 }
 
+func (lp *ListPreference) AutoUpdate(clicked func()) *ListPreference {
+	lp.isAutoUpdate = true
+	lp.autoUpdateButtonClicked = clicked
+	return lp
+}
+
 func (lp *ListPreference) Clickable() *widget.Clickable {
 	return lp.clickable
 }
@@ -118,6 +127,11 @@ func (lp *ListPreference) Handle() {
 
 	for lp.optionsRadioGroup.Changed() {
 		lp.currentValue = lp.optionsRadioGroup.Value
+		if lp.isAutoUpdate {
+			lp.setValue(lp.optionsRadioGroup.Value) // set value
+			lp.IsShowing = false
+			lp.autoUpdateButtonClicked()
+		}
 	}
 }
 
@@ -186,14 +200,14 @@ func (lp *ListPreference) layoutButtons() []layout.FlexChild {
 
 	buttons := make([]layout.FlexChild, 0)
 
-	if lp.positiveButtonStrKey != "" {
+	if lp.positiveButtonStrKey != "" && !lp.isAutoUpdate {
 		positiveButtonLayout := buttonLayout(lp.positiveButton)
 		lp.positiveButton.Text = values.String(lp.positiveButtonStrKey)
 
 		buttons = append(buttons, positiveButtonLayout)
 	}
 
-	if lp.negativeButtonStrKey != "" {
+	if lp.negativeButtonStrKey != "" && !lp.isAutoUpdate {
 		negativeButtonLayout := buttonLayout(lp.negativeButton)
 		lp.negativeButton.Text = values.String(lp.negativeButtonStrKey)
 
