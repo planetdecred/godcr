@@ -28,7 +28,8 @@ type ListPage struct {
 	filterSorter int
 	isGridView   bool
 
-	toggleViewType     *widget.Clickable
+	toggleViewType *widget.Clickable
+
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
 	walletDropDown     *decredmaterial.DropDown
@@ -72,7 +73,7 @@ func (pg *ListPage) OnResume() {
 	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 }
 
-func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *ListPage) Layout(gtx C) D {
 	walletID := pg.wallets[pg.walletDropDown.SelectedIndex()].ID
 	tickets := (*pg.tickets).Confirmed[walletID]
 
@@ -121,7 +122,15 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					}),
-					layout.Stacked(pg.dropDowns),
+					layout.Expanded(func(gtx C) D {
+						return pg.walletDropDown.Layout(gtx, 0, false)
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.orderDropDown.Layout(gtx, 0, true)
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.ticketTypeDropDown.Layout(gtx, pg.orderDropDown.Width+10, true)
+					}),
 				)
 			},
 			ExtraItem: pg.toggleViewType,
@@ -178,34 +187,11 @@ func (pg *ListPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *ListPage) dropDowns(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.walletDropDown.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, pg.ticketTypeDropDown.Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, pg.orderDropDown.Layout)
-				}),
-			)
-		}),
-	)
-}
-
-func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket) layout.Dimensions {
+func (pg *ListPage) ticketListLayout(gtx C, tickets []wallet.Ticket) D {
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
 		st := ticketStatusIcon(pg.Load, tickets[index].Info.Status)
 		if st == nil {
-			return layout.Dimensions{}
+			return D{}
 		}
 
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
@@ -235,9 +221,9 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					layout.Rigid(func(gtx C) D {
 						if index == 0 {
-							return layout.Dimensions{}
+							return D{}
 						}
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						separator := pg.Theme.Separator()
@@ -258,7 +244,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 									}, dtime.Layout)
 								}),
 								layout.Rigid(func(gtx C) D {
-									l := func(gtx C) layout.Dimensions {
+									l := func(gtx C) D {
 										return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 											layout.Rigid(func(gtx C) D {
 												txt := pg.Theme.Label(values.MarginPadding14, tickets[index].Info.Status)
@@ -278,7 +264,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 											layout.Rigid(pg.Theme.Label(values.MarginPadding14, tickets[index].WalletName).Layout),
 										)
 									}
-									r := func(gtx C) layout.Dimensions {
+									r := func(gtx C) D {
 										txt := pg.Theme.Label(values.TextSize14, tickets[index].DaysBehind)
 										txt.Color = pg.Theme.Color.Gray2
 										return txt.Layout(gtx)
@@ -294,7 +280,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []wallet.Ticket
 	})
 }
 
-func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []wallet.Ticket) layout.Dimensions {
+func (pg *ListPage) ticketListGridLayout(gtx C, tickets []wallet.Ticket) D {
 	// TODO: GridWrap's items not able to scroll vertically, will update when it fixed
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return pg.ticketsList.Layout(gtx, 1, func(gtx C, index int) D {
