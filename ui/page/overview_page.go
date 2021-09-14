@@ -8,7 +8,6 @@ import (
 
 	"gioui.org/io/event"
 	"gioui.org/layout"
-	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
@@ -93,7 +92,6 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	pg.toTransactions.BackgroundColor = l.Theme.Color.Surface
 
 	pg.sync = l.Theme.OutlineButton(new(widget.Clickable), values.String(values.StrReconnect))
-	pg.sync.Font.Weight = text.Normal
 	pg.sync.TextSize = values.TextSize14
 	pg.sync.Color = l.Theme.Color.Text
 	pg.sync.CornerRadius = values.MarginPadding12

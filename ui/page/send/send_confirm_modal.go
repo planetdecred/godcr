@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -40,8 +41,10 @@ func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 	}
 
 	scm.closeConfirmationModalButton = l.Theme.OutlineButton(new(widget.Clickable), "Cancel")
+	scm.closeConfirmationModalButton.Font.Weight = text.Medium
 
 	scm.confirmButton = l.Theme.Button(new(widget.Clickable), "")
+	scm.confirmButton.Font.Weight = text.Medium
 	scm.confirmButton.Background = scm.Theme.Color.InactiveGray
 
 	scm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")

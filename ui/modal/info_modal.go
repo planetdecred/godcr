@@ -53,7 +53,9 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		isCancelable: true,
 	}
 
-	in.btnPositve.Font.Weight, in.btnNegative.Font.Weight = text.Medium, text.Medium
+	in.btnPositve.Font.Weight = text.Medium
+	in.btnNegative.Font.Weight = text.Medium
+
 	return in
 }
 

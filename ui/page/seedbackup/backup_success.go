@@ -2,6 +2,7 @@ package seedbackup
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -22,6 +23,7 @@ func NewBackupSuccessPage(l *load.Load) *BackupSuccessPage {
 
 		actionButton: l.Theme.OutlineButton(new(widget.Clickable), "Back to Wallets"),
 	}
+	pg.actionButton.Font.Weight = text.Medium
 
 	return pg
 }

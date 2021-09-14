@@ -46,9 +46,9 @@ func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	buttonStyle.Background = t.Color.Primary
 	buttonStyle.CornerRadius = values.MarginPadding8
 	buttonStyle.Inset = layout.Inset{
-		Top:    values.MarginPadding12,
+		Top:    values.MarginPadding10,
 		Right:  values.MarginPadding16,
-		Bottom: values.MarginPadding12,
+		Bottom: values.MarginPadding10,
 		Left:   values.MarginPadding16,
 	}
 	return Button{
