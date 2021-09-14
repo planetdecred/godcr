@@ -47,6 +47,8 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 		transactionList: l.Theme.NewClickableList(layout.Vertical),
 	}
 
+	pg.transactionList.Radius = decredmaterial.Radius(values.MarginPadding14.V)
+
 	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
@@ -132,7 +134,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						}
 
-						return pg.transactionList.HoverableLayout(gtx, len(wallTxs), func(gtx C, index int) D {
+						return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
 							var row = components.TransactionRow{
 								Transaction: wallTxs[index],
 								Index:       index,

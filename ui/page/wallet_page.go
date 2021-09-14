@@ -458,7 +458,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx, pg.Theme.Separator().Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return listItem.accountsList.HoverableLayout(gtx, len(listItem.accounts), func(gtx C, x int) D {
+						return listItem.accountsList.Layout(gtx, len(listItem.accounts), func(gtx C, x int) D {
 							return pg.walletAccountsLayout(gtx, listItem.accounts[x])
 						})
 					}),

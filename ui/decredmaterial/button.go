@@ -87,10 +87,6 @@ func (t *Theme) PlainIconButton(button *widget.Clickable, icon *widget.Icon) Ico
 	return btn
 }
 
-func Clickable(gtx layout.Context, button *widget.Clickable, w layout.Widget) layout.Dimensions {
-	return material.Clickable(gtx, button, w)
-}
-
 func (b *Button) SetEnabled(enabled bool) {
 	b.isEnabled = enabled
 }

@@ -87,6 +87,11 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 		txnRowHeight:     56,
 	}
 
+	pg.transactionsList.Radius = decredmaterial.CornerRadius{
+		BottomRight: values.MarginPadding14.V,
+		BottomLeft:  values.MarginPadding14.V,
+	}
+
 	pg.toTransactions = l.Theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), l.Icons.NavigationArrowForward)
 	pg.toTransactions.Color = l.Theme.Color.Primary
 	pg.toTransactions.BackgroundColor = l.Theme.Color.Surface
@@ -204,7 +209,7 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 						}}.Layout(gtx, message.Layout)
 					}
 
-					return pg.transactionsList.HoverableLayout(gtx, len(pg.transactions), func(gtx C, i int) D {
+					return pg.transactionsList.Layout(gtx, len(pg.transactions), func(gtx C, i int) D {
 						var row = components.TransactionRow{
 							Transaction: pg.transactions[i],
 							Index:       i,
