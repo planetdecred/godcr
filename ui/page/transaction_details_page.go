@@ -688,6 +688,12 @@ func (pg *TransactionDetailsPage) Handle() {
 		}
 
 	}
+
+	if pg.infoButton.Button.Clicked() {
+		info := modal.NewInfoModal(pg.Load)
+		info.SetupWithTemplate(modal.TransactionDetailsInfoTemplate).PositiveButton("Got it", func() {})
+		pg.ShowModal(info)
+	}
 }
 
 func (pg *TransactionDetailsPage) OnClose() {}
