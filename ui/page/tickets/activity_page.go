@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
-
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -38,7 +37,6 @@ func newTicketActivityPage(l *load.Load) *ActivityPage {
 		Load:        l,
 		tickets:     l.WL.Tickets,
 		ticketsList: layout.List{Axis: layout.Vertical},
-		wallets:     l.WL.MultiWallet.AllWallets(),
 	}
 	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.ticketTypeDropDown = pg.Theme.DropDown([]decredmaterial.DropDownItem{
@@ -62,11 +60,11 @@ func (pg *ActivityPage) ID() string {
 }
 
 func (pg *ActivityPage) OnResume() {
-
+	pg.wallets = pg.WL.SortedWalletList()
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 }
 
 func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	body := func(gtx C) D {
 		page := components.SubPage{
 			Load:       pg.Load,
@@ -103,8 +101,14 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						})
 					}),
-					layout.Stacked(func(gtx C) D {
-						return pg.dropDowns(gtx)
+					layout.Expanded(func(gtx C) D {
+						return pg.walletDropDown.Layout(gtx, 0, false)
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.orderDropDown.Layout(gtx, 0, true)
+					}),
+					layout.Expanded(func(gtx C) D {
+						return pg.ticketTypeDropDown.Layout(gtx, pg.orderDropDown.Width+10, true)
 					}),
 				)
 			},
@@ -113,33 +117,6 @@ func (pg *ActivityPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	return components.UniformPadding(gtx, body)
-}
-
-func (pg *ActivityPage) dropDowns(gtx layout.Context) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return pg.walletDropDown.Layout(gtx)
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.ticketTypeDropDown.Layout(gtx)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Left: values.MarginPadding5,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.orderDropDown.Layout(gtx)
-					})
-				}),
-			)
-		}),
-	)
 }
 
 func filterTickets(tickets []wallet.Ticket, f func(string) bool) []wallet.Ticket {

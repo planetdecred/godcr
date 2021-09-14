@@ -161,38 +161,22 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			}),
-			layout.Stacked(pg.dropDowns),
+			layout.Expanded(func(gtx C) D {
+				return pg.walletDropDown.Layout(gtx, 0, false)
+			}),
+			layout.Expanded(func(gtx C) D {
+				return pg.orderDropDown.Layout(gtx, 0, true)
+			}),
+			layout.Expanded(func(gtx C) D {
+				return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width+10, true)
+			}),
 		)
 	}
 	return components.UniformPadding(gtx, container)
 }
 
-func (pg *TransactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
-	return layout.Inset{
-		Bottom: values.MarginPadding10,
-	}.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(pg.walletDropDown.Layout),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Left: values.MarginPadding5,
-						}.Layout(gtx, pg.txTypeDropDown.Layout)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Left: values.MarginPadding5,
-						}.Layout(gtx, pg.orderDropDown.Layout)
-					}),
-				)
-			}),
-		)
-	})
-}
-
 func (pg *TransactionsPage) Handle() {
+
 	for pg.txTypeDropDown.Changed() {
 		pg.loadTransactions()
 	}
