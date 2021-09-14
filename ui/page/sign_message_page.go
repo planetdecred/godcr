@@ -273,6 +273,12 @@ func (pg *SignMessagePage) Handle() {
 		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
 		pg.Toast.Notify("Signature copied")
 	}
+
+	if pg.infoButton.Button.Clicked() {
+		info := modal.NewInfoModal(pg.Load)
+		info.SetupWithTemplate(modal.SignMessageInfoTemplate).PositiveButton("Got it", func() {})
+		pg.ShowModal(info)
+	}
 }
 
 func (pg *SignMessagePage) validate() bool {
