@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"gioui.org/font/gofont"
-	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -19,11 +18,9 @@ const Password = "password_modal"
 
 type PasswordModal struct {
 	*load.Load
-	randomID        string
-	modal           decredmaterial.Modal
-	password        decredmaterial.Editor
-	keyEvent        chan *key.Event
-	enterKeyPressed bool
+	randomID string
+	modal    decredmaterial.Modal
+	password decredmaterial.Editor
 
 	dialogTitle string
 
@@ -48,7 +45,6 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 		modal:       *l.Theme.ModalFloatTitle(),
 		btnPositve:  l.Theme.Button(new(widget.Clickable), "Confirm"),
 		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
-		keyEvent:    l.Receiver.KeyEvents,
 	}
 
 	pm.btnNegative.TextSize = values.TextSize16
@@ -122,17 +118,6 @@ func (pm *PasswordModal) SetError(err string) {
 	}
 }
 
-func (pm *PasswordModal) handleEnterKeypress() {
-	select {
-	case event := <-pm.keyEvent:
-		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
-			pm.enterKeyPressed = true
-			return
-		}
-	default:
-	}
-}
-
 func (pm *PasswordModal) Handle() {
 	if editorsNotEmpty(pm.password.Editor) {
 		pm.btnPositve.Background = pm.Theme.Color.Primary
@@ -140,7 +125,8 @@ func (pm *PasswordModal) Handle() {
 		pm.btnPositve.Background = pm.Theme.Color.InactiveGray
 	}
 
-	for pm.btnPositve.Button.Clicked() {
+	for pm.btnPositve.Button.Clicked() || handleSubmitEvent(pm.password.Editor) {
+
 		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
 			continue
 		}
@@ -150,7 +136,6 @@ func (pm *PasswordModal) Handle() {
 		if pm.positiveButtonClicked(pm.password.Editor.Text(), pm) {
 			pm.DismissModal(pm)
 		}
-		pm.enterKeyPressed = false
 	}
 
 	for pm.btnNegative.Button.Clicked() {
