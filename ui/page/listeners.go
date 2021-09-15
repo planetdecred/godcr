@@ -138,6 +138,30 @@ func (mp *MainPage) OnSyncCanceled(willRestart bool) {
 func (mp *MainPage) OnSyncEndedWithError(err error)          {}
 func (mp *MainPage) Debug(debugInfo *dcrlibwallet.DebugInfo) {}
 
+// Block Rescan
+
+func (mp *MainPage) OnBlocksRescanStarted(walletID int) {
+	mp.UpdateNotification(wallet.RescanUpdate{
+		Stage:    wallet.RescanStarted,
+		WalletID: walletID,
+	})
+}
+
+func (mp *MainPage) OnBlocksRescanProgress(progress *dcrlibwallet.HeadersRescanProgressReport) {
+	mp.UpdateNotification(wallet.RescanUpdate{
+		Stage:          wallet.RescanProgress,
+		WalletID:       progress.WalletID,
+		ProgressReport: progress,
+	})
+}
+
+func (mp *MainPage) OnBlocksRescanEnded(walletID int, err error) {
+	mp.UpdateNotification(wallet.RescanUpdate{
+		Stage:    wallet.RescanEnded,
+		WalletID: walletID,
+	})
+}
+
 // UpdateNotification sends notification to the notification channel depending on which channel the page uses
 func (mp *MainPage) UpdateNotification(signal interface{}) {
 	mp.Load.Receiver.NotificationsUpdate <- signal
