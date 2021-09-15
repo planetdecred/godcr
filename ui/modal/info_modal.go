@@ -158,8 +158,8 @@ func (in *InfoModal) Handle() {
 
 	if in.btnPositve.Button.Clicked() || in.enterKeyPressed {
 		in.DismissModal(in)
-		in.positiveButtonClicked()
 		in.enterKeyPressed = false
+		in.positiveButtonClicked()
 	}
 
 	for in.btnNegative.Button.Clicked() {
