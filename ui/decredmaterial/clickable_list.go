@@ -38,7 +38,7 @@ func (cl *ClickableList) handleClickables(count int) {
 
 		cl.clickables = make([]*Cllickable, count)
 		for i := 0; i < count; i++ {
-			clickable := cl.theme.NewClickable()
+			clickable := cl.theme.NewClickable(true)
 			clickable.color = cl.ClickHighlight
 			cl.clickables[i] = clickable
 		}
@@ -55,12 +55,12 @@ func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElem
 	cl.handleClickables(count)
 	return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
 		if i == 0 { // first item
-			cl.clickables[i].radius.TopLeft = cl.Radius.TopLeft
-			cl.clickables[i].radius.TopRight = cl.Radius.TopRight
+			cl.clickables[i].Radius.TopLeft = cl.Radius.TopLeft
+			cl.clickables[i].Radius.TopRight = cl.Radius.TopRight
 		}
 		if i == count-1 { // last item
-			cl.clickables[i].radius.BottomLeft = cl.Radius.BottomLeft
-			cl.clickables[i].radius.BottomRight = cl.Radius.BottomRight
+			cl.clickables[i].Radius.BottomLeft = cl.Radius.BottomLeft
+			cl.clickables[i].Radius.BottomRight = cl.Radius.BottomRight
 		}
 		row := cl.clickables[i].Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return w(gtx, i)
