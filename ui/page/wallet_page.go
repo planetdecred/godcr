@@ -430,7 +430,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 
 	return pg.walletsList.Layout(gtx, len(listItems), func(gtx C, i int) D {
 
-		listItem := pg.listItems[i]
+		listItem := listItems[i]
 
 		if listItem.wal.IsWatchingOnlyWallet() {
 			return D{}
@@ -462,7 +462,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return decredmaterial.Clickable(gtx, pg.listItems[i].addAcctClickable, func(gtx C) D {
+						return decredmaterial.Clickable(gtx, listItem.addAcctClickable, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -521,7 +521,12 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 
 func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensions {
 	hasWatchOnly := false
-	for _, listItem := range pg.listItems {
+
+	pg.listLock.Lock()
+	listItems := pg.listItems
+	pg.listLock.Unlock()
+
+	for _, listItem := range listItems {
 		if listItem.wal.IsWatchingOnlyWallet() {
 			hasWatchOnly = true
 			break
@@ -560,7 +565,7 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 
 	return pg.watchWalletsList.Layout(gtx, len(listItems), func(gtx C, i int) D {
 
-		listItem := pg.listItems[i]
+		listItem := listItems[i]
 
 		if !listItem.wal.IsWatchingOnlyWallet() {
 			return D{}
@@ -596,7 +601,7 @@ func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding10, Left: values.MarginPadding38, Right: values.MarginPaddingMinus10}.Layout(gtx, func(gtx C) D {
-						if i == len(pg.listItems)-1 {
+						if i == len(listItems)-1 {
 							return D{}
 						}
 						return pg.Theme.Separator().Layout(gtx)
@@ -852,7 +857,11 @@ func (pg *WalletPage) Handle() {
 		pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[0]))
 	}
 
-	for index, listItem := range pg.listItems {
+	pg.listLock.Lock()
+	listItems := pg.listItems
+	pg.listLock.Unlock()
+
+	for index, listItem := range listItems {
 		*pg.SelectedWallet = index
 
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
