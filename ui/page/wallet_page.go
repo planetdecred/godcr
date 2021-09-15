@@ -94,6 +94,8 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		backupAcctIcon:           l.Icons.NavigationArrowForward,
 	}
 
+	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
+
 	pg.separator.Color = l.Theme.Color.Gray1
 	pg.addAcctIcon.Color = l.Theme.Color.Text
 
@@ -821,7 +823,16 @@ func (pg *WalletPage) layoutAddWalletSection(gtx layout.Context) layout.Dimensio
 			layout.Rigid(func(gtx C) D {
 				icon := pg.Icons.NewWalletIcon
 				// TODO: wrap in circular bg
-				return pg.openAddWalletPopupButton.Layout(gtx, icon.Layout24dp)
+
+				return pg.openAddWalletPopupButton.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return decredmaterial.LinearLayout{
+						Width:      decredmaterial.WrapContent,
+						Height:     decredmaterial.WrapContent,
+						Padding:    layout.UniformInset(values.MarginPadding12),
+						Background: pg.Theme.Color.Surface,
+						Border:     decredmaterial.Border{Radius: pg.openAddWalletPopupButton.Radius},
+					}.Layout2(gtx, icon.Layout24dp)
+				})
 			}),
 		)
 	})
