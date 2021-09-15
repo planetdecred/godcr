@@ -172,6 +172,7 @@ func (mp *MainPage) OnResume() {
 	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
+	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
 
 	mp.UpdateBalance()
 
