@@ -191,14 +191,14 @@ func (mp *MainPage) OnResume() {
 
 func (mp *MainPage) getSetting() {
 	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(languagePreferenceKey)
-	if langPre == "" {
+	if components.StringNotEmpty(langPre) {
 		langPre = values.DefaultLangauge
 		mp.WL.Wallet.SaveConfigValueForKey(languagePreferenceKey, langPre)
 	}
 	values.SetUserLanguage(langPre)
 
 	currencyPre := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if currencyPre == "" {
+	if components.StringNotEmpty(currencyPre) {
 		mp.WL.Wallet.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue)
 	}
 }

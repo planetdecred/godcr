@@ -1,7 +1,6 @@
 package preference
 
 import (
-	"image/color"
 	"sort"
 
 	"gioui.org/layout"
@@ -20,24 +19,15 @@ type ListPreference struct {
 
 	theme *decredmaterial.Theme
 
-	IsShowing    bool
-	titleStrKey  string
-	items        map[string]string //[key]str-key
-	itemKeys     []string
-	isAutoUpdate bool
+	IsShowing   bool
+	titleStrKey string
+	items       map[string]string //[key]str-key
+	itemKeys    []string
 
 	clickable         *widget.Clickable
 	optionsRadioGroup *widget.Enum
 
-	positiveButtonClicked func()
-	positiveButtonStrKey  string
-	positiveButton        decredmaterial.Button
-
-	negativeButtonClicked func()
-	negativeButtonStrKey  string
-	negativeButton        decredmaterial.Button
-
-	autoUpdateButtonClicked func()
+	updateButtonClicked func()
 }
 
 func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, preferenceKey, defaultValue string, items map[string]string) *ListPreference {
@@ -63,9 +53,6 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 
 		clickable:         new(widget.Clickable),
 		optionsRadioGroup: new(widget.Enum),
-
-		positiveButton: theme.Button(new(widget.Clickable), ""),
-		negativeButton: theme.Button(new(widget.Clickable), ""),
 	}
 }
 
@@ -74,23 +61,8 @@ func (lp *ListPreference) Title(titleStrKey string) *ListPreference {
 	return lp
 }
 
-func (lp *ListPreference) PostiveButton(strkey string, clicked func()) *ListPreference {
-	lp.positiveButtonStrKey = strkey
-	lp.positiveButtonClicked = clicked
-
-	return lp
-}
-
-func (lp *ListPreference) NegativeButton(strkey string, clicked func()) *ListPreference {
-	lp.negativeButtonStrKey = strkey
-	lp.negativeButtonClicked = clicked
-
-	return lp
-}
-
-func (lp *ListPreference) AutoUpdate(clicked func()) *ListPreference {
-	lp.isAutoUpdate = true
-	lp.autoUpdateButtonClicked = clicked
+func (lp *ListPreference) UpdateValues(clicked func()) *ListPreference {
+	lp.updateButtonClicked = clicked
 	return lp
 }
 
@@ -111,27 +83,11 @@ func (lp *ListPreference) Handle() {
 		lp.IsShowing = true
 	}
 
-	for lp.negativeButton.Button.Clicked() {
-		lp.setValue(lp.initialValue) // reset value
-		lp.IsShowing = false
-
-		lp.negativeButtonClicked()
-	}
-
-	for lp.positiveButton.Button.Clicked() {
-		lp.setValue(lp.optionsRadioGroup.Value) // set value
-		lp.IsShowing = false
-
-		lp.positiveButtonClicked()
-	}
-
 	for lp.optionsRadioGroup.Changed() {
 		lp.currentValue = lp.optionsRadioGroup.Value
-		if lp.isAutoUpdate {
-			lp.setValue(lp.optionsRadioGroup.Value) // set value
-			lp.IsShowing = false
-			lp.autoUpdateButtonClicked()
-		}
+		lp.setValue(lp.optionsRadioGroup.Value)
+		lp.IsShowing = false
+		lp.updateButtonClicked()
 	}
 }
 
@@ -160,11 +116,6 @@ func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, lp.layoutItems()...)
 		},
-		func(gtx layout.Context) layout.Dimensions {
-			return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, lp.layoutButtons()...)
-			})
-		},
 	}
 
 	lp.optionsRadioGroup.Value = lp.currentValue
@@ -182,37 +133,4 @@ func (lp *ListPreference) layoutItems() []layout.FlexChild {
 	}
 
 	return items
-}
-
-func (lp *ListPreference) layoutButtons() []layout.FlexChild {
-
-	buttonLayout := func(button decredmaterial.Button) layout.FlexChild {
-
-		l := layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-				button.Background, button.Color = color.NRGBA{}, lp.theme.Color.Primary
-				return button.Layout(gtx)
-			})
-		})
-
-		return l
-	}
-
-	buttons := make([]layout.FlexChild, 0)
-
-	if lp.positiveButtonStrKey != "" && !lp.isAutoUpdate {
-		positiveButtonLayout := buttonLayout(lp.positiveButton)
-		lp.positiveButton.Text = values.String(lp.positiveButtonStrKey)
-
-		buttons = append(buttons, positiveButtonLayout)
-	}
-
-	if lp.negativeButtonStrKey != "" && !lp.isAutoUpdate {
-		negativeButtonLayout := buttonLayout(lp.negativeButton)
-		lp.negativeButton.Text = values.String(lp.negativeButtonStrKey)
-
-		buttons = append(buttons, negativeButtonLayout)
-	}
-
-	return buttons
 }
