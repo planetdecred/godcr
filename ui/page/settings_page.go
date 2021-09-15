@@ -24,7 +24,7 @@ const (
 
 type row struct {
 	title     string
-	clickable *widget.Clickable
+	clickable *decredmaterial.Clickable
 	icon      *widget.Icon
 	label     decredmaterial.Label
 }
@@ -36,9 +36,9 @@ type SettingsPage struct {
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
-	updateConnectToPeer *widget.Clickable
-	updateUserAgent     *widget.Clickable
-	changeStartupPass   *widget.Clickable
+	updateConnectToPeer *decredmaterial.Clickable
+	updateUserAgent     *decredmaterial.Clickable
+	changeStartupPass   *decredmaterial.Clickable
 	chevronRightIcon    *widget.Icon
 	backButton          decredmaterial.IconButton
 	infoButton          decredmaterial.IconButton
@@ -82,9 +82,9 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 		errorReceiver: make(chan error),
 
-		updateConnectToPeer: new(widget.Clickable),
-		updateUserAgent:     new(widget.Clickable),
-		changeStartupPass:   new(widget.Clickable),
+		updateConnectToPeer: l.Theme.NewClickable(false),
+		updateUserAgent:     l.Theme.NewClickable(false),
+		changeStartupPass:   l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
@@ -344,7 +344,7 @@ func (pg *SettingsPage) subSectionSwitch(gtx layout.Context, title string, optio
 }
 
 func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensions {
-	return decredmaterial.Clickable(gtx, row.clickable, func(gtx C) D {
+	return row.clickable.Layout(gtx, func(gtx C) D {
 		return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
 			return pg.subSection(gtx, row.title, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,

@@ -24,7 +24,7 @@ type ListPreference struct {
 	items       map[string]string //[key]str-key
 	itemKeys    []string
 
-	clickable         *widget.Clickable
+	clickable         *decredmaterial.Clickable
 	optionsRadioGroup *widget.Enum
 
 	updateButtonClicked func()
@@ -51,7 +51,7 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 
 		IsShowing: false,
 
-		clickable:         new(widget.Clickable),
+		clickable:         theme.NewClickable(false),
 		optionsRadioGroup: new(widget.Enum),
 	}
 }
@@ -66,7 +66,7 @@ func (lp *ListPreference) UpdateValues(clicked func()) *ListPreference {
 	return lp
 }
 
-func (lp *ListPreference) Clickable() *widget.Clickable {
+func (lp *ListPreference) Clickable() *decredmaterial.Clickable {
 	return lp.clickable
 }
 

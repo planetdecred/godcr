@@ -18,7 +18,7 @@ var (
 )
 
 type NavHandler struct {
-	Clickable     *widget.Clickable
+	Clickable     *decredmaterial.Clickable
 	Image         *decredmaterial.Image
 	ImageInactive *decredmaterial.Image
 	Title         string
@@ -55,49 +55,49 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			}.Layout2(gtx, func(gtx C) D {
 				list := layout.List{Axis: layout.Vertical}
 				return list.Layout(gtx, len(nd.DrawerNavItems), func(gtx C, i int) D {
-					background := nd.Theme.Color.Surface
-					if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
-						background = nd.Theme.Color.ActiveGray
-					}
+					// background := nd.Theme.Color.Surface
+					// if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
+					// 	background = nd.Theme.Color.ActiveGray
+					// }
 
-					return nd.layoutNavRow(gtx, background, nd.DrawerNavItems[i].Clickable, func(gtx C) D {
-						txt := nd.Theme.Label(nd.textSize, nd.DrawerNavItems[i].Title)
+					// return nd.layoutNavRow(gtx, background, nd.DrawerNavItems[i].Clickable, func(gtx C) D {
+					txt := nd.Theme.Label(nd.textSize, nd.DrawerNavItems[i].Title)
 
-						gtx.Constraints.Min.X = gtx.Px(nd.width)
-						return decredmaterial.Clickable(gtx, nd.DrawerNavItems[i].Clickable, func(gtx C) D {
-							return decredmaterial.LinearLayout{
-								Orientation: nd.axis,
-								Width:       decredmaterial.MatchParent,
-								Height:      decredmaterial.WrapContent,
-								Padding:     layout.UniformInset(values.MarginPadding15),
-								Alignment:   nd.alignment,
-								Direction:   nd.direction,
-							}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									img := nd.DrawerNavItems[i].ImageInactive
+					gtx.Constraints.Min.X = gtx.Px(nd.width)
+					return nd.DrawerNavItems[i].Clickable.Layout(gtx, func(gtx C) D {
+						return decredmaterial.LinearLayout{
+							Orientation: nd.axis,
+							Width:       decredmaterial.MatchParent,
+							Height:      decredmaterial.WrapContent,
+							Padding:     layout.UniformInset(values.MarginPadding15),
+							Alignment:   nd.alignment,
+							Direction:   nd.direction,
+						}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								img := nd.DrawerNavItems[i].ImageInactive
 
+								if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
+									img = nd.DrawerNavItems[i].Image
+								}
+
+								return img.Layout24dp(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Left: nd.leftInset,
+									Top:  values.MarginPadding4,
+								}.Layout(gtx, func(gtx C) D {
+									textColor := nd.Theme.Color.Gray4
 									if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
-										img = nd.DrawerNavItems[i].Image
+										textColor = nd.Theme.Color.DeepBlue
 									}
-
-									return img.Layout24dp(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: nd.leftInset,
-										Top:  values.MarginPadding4,
-									}.Layout(gtx, func(gtx C) D {
-										textColor := nd.Theme.Color.Gray4
-										if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
-											textColor = nd.Theme.Color.DeepBlue
-										}
-										txt.Color = textColor
-										return txt.Layout(gtx)
-									})
-								}),
-							)
-						})
+									txt.Color = textColor
+									return txt.Layout(gtx)
+								})
+							}),
+						)
 					})
+					// })
 				})
 			})
 		}),
@@ -119,41 +119,41 @@ func (nd *NavDrawer) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 			list := layout.List{Axis: layout.Horizontal}
 			return list.Layout(gtx, len(nd.AppBarNavItems), func(gtx C, i int) D {
-				background := nd.Theme.Color.Surface
-				if nd.AppBarNavItems[i].PageID == nd.CurrentPage {
-					background = nd.Theme.Color.ActiveGray
-				}
+				// background := nd.Theme.Color.Surface
+				// if nd.AppBarNavItems[i].PageID == nd.CurrentPage {
+				// 	background = nd.Theme.Color.ActiveGray
+				// }
 
 				// header buttons container
-				return nd.layoutNavRow(gtx, background, nd.AppBarNavItems[i].Clickable, func(gtx C) D {
-					return decredmaterial.Clickable(gtx, nd.AppBarNavItems[i].Clickable, func(gtx C) D {
-						return Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-							return decredmaterial.LinearLayout{
-								Width:       decredmaterial.WrapContent,
-								Height:      decredmaterial.WrapContent,
-								Orientation: layout.Horizontal,
-							}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-										func(gtx C) D {
-											return layout.Center.Layout(gtx, func(gtx C) D {
-												return nd.AppBarNavItems[i].Image.Layout24dp(gtx)
-											})
-										})
-								}),
-								layout.Rigid(func(gtx C) D {
-									return layout.Inset{
-										Left: values.MarginPadding0,
-									}.Layout(gtx, func(gtx C) D {
+				// return nd.layoutNavRow(gtx, background, nd.AppBarNavItems[i].Clickable, func(gtx C) D {
+				return nd.AppBarNavItems[i].Clickable.Layout(gtx, func(gtx C) D {
+					return Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
+						return decredmaterial.LinearLayout{
+							Width:       decredmaterial.WrapContent,
+							Height:      decredmaterial.WrapContent,
+							Orientation: layout.Horizontal,
+						}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
+									func(gtx C) D {
 										return layout.Center.Layout(gtx, func(gtx C) D {
-											return nd.Theme.Body1(nd.AppBarNavItems[i].Title).Layout(gtx)
+											return nd.AppBarNavItems[i].Image.Layout24dp(gtx)
 										})
 									})
-								}),
-							)
-						})
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Left: values.MarginPadding0,
+								}.Layout(gtx, func(gtx C) D {
+									return layout.Center.Layout(gtx, func(gtx C) D {
+										return nd.Theme.Body1(nd.AppBarNavItems[i].Title).Layout(gtx)
+									})
+								})
+							}),
+						)
 					})
 				})
+				// })
 			})
 		})
 	})

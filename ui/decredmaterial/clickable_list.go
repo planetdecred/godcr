@@ -10,7 +10,7 @@ import (
 type ClickableList struct {
 	layout.List
 	theme          *Theme
-	clickables     []*Cllickable
+	clickables     []*Clickable
 	ClickHighlight color.NRGBA
 	Radius         CornerRadius // this radius is used by the clickable
 	selectedItem   int
@@ -36,10 +36,10 @@ func (cl *ClickableList) ItemClicked() (bool, int) {
 func (cl *ClickableList) handleClickables(count int) {
 	if len(cl.clickables) != count {
 
-		cl.clickables = make([]*Cllickable, count)
+		cl.clickables = make([]*Clickable, count)
 		for i := 0; i < count; i++ {
 			clickable := cl.theme.NewClickable(true)
-			clickable.color = cl.ClickHighlight
+			clickable.Color = cl.ClickHighlight
 			cl.clickables[i] = clickable
 		}
 	}

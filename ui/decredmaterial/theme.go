@@ -73,6 +73,7 @@ type Theme struct {
 		Orange           color.NRGBA
 		Orange2          color.NRGBA
 		Orange3          color.NRGBA
+		OrangeRipple     color.NRGBA
 		Gray4            color.NRGBA
 		Gray5            color.NRGBA
 		Gray6            color.NRGBA
@@ -146,6 +147,7 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
 		t.Color.Orange3 = rgb(0xF8CABC)
+		t.Color.OrangeRipple = rgb(0xD32F2F)
 		t.Color.Turquoise100 = rgb(0xB6EED7)
 		t.Color.Turquoise300 = rgb(0x2DD8A3)
 		t.Color.Turquoise700 = rgb(0x00A05F)
@@ -191,6 +193,7 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
 		t.Color.Orange3 = rgb(0xF8CABC)
+		t.Color.OrangeRipple = rgb(0xD32F2F)
 		t.Color.Turquoise100 = rgb(0xB6EED7)
 		t.Color.Turquoise300 = rgb(0x2DD8A3)
 		t.Color.Turquoise700 = rgb(0x00A05F)

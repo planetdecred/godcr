@@ -27,12 +27,12 @@ type TransactionDetailsPage struct {
 	transactionDetailsPageContainer layout.List
 	transactionInputsContainer      layout.List
 	transactionOutputsContainer     layout.List
-	associatedTicketClickable       *widget.Clickable
+	associatedTicketClickable       *decredmaterial.Clickable
 	hashClickable                   *widget.Clickable
 	destAddressClickable            *widget.Clickable
 	copyTextBtn                     []decredmaterial.Button
 	dot                             *widget.Icon
-	toDcrdata                       *widget.Clickable
+	toDcrdata                       *decredmaterial.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
 	backButton                      decredmaterial.IconButton
@@ -67,10 +67,10 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 		outputsCollapsible: l.Theme.Collapsible(),
 		inputsCollapsible:  l.Theme.Collapsible(),
 
-		associatedTicketClickable: new(widget.Clickable),
+		associatedTicketClickable: l.Theme.NewClickable(true),
 		hashClickable:             new(widget.Clickable),
 		destAddressClickable:      new(widget.Clickable),
-		toDcrdata:                 new(widget.Clickable),
+		toDcrdata:                 l.Theme.NewClickable(true),
 
 		transaction: transaction,
 		wallet:      l.WL.MultiWallet.WalletWithID(transaction.WalletID),
@@ -411,7 +411,7 @@ func (pg *TransactionDetailsPage) associatedTicket(gtx C) D {
 		Axis: layout.Vertical,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return decredmaterial.Clickable(gtx, pg.associatedTicketClickable, func(gtx C) D {
+			return pg.associatedTicketClickable.Layout(gtx, func(gtx C) D {
 				return decredmaterial.LinearLayout{
 					Width:       decredmaterial.MatchParent,
 					Height:      decredmaterial.WrapContent,
@@ -647,7 +647,7 @@ func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions 
 			layout.Rigid(pg.theme.Body1(values.String(values.StrViewOnDcrdata)).Layout),
 			layout.Rigid(func(gtx C) D {
 				redirect := pg.Icons.RedirectIcon
-				return decredmaterial.Clickable(gtx, pg.toDcrdata, redirect.Layout24dp)
+				return pg.toDcrdata.Layout(gtx, redirect.Layout24dp)
 			}),
 		)
 	})

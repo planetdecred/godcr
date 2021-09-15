@@ -88,7 +88,7 @@ func (pg *Page) getMoreItem() []moreItem {
 	return []moreItem{
 		{
 			text:   "Advanced mode",
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			id:     UTXOPageID,
 			action: func() {
 				pg.ChangeFragment(NewUTXOPage(pg.Load, pg.sourceAccountSelector.SelectedAccount()))
@@ -96,7 +96,7 @@ func (pg *Page) getMoreItem() []moreItem {
 		},
 		{
 			text:   "Clear all fields",
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			action: func() {
 				pg.resetFields()
 				pg.moreOptionIsOpen = false
@@ -119,7 +119,7 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.moreItems), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return decredmaterial.Clickable(gtx, pg.moreItems[i].button, func(gtx C) D {
+							return pg.moreItems[i].button.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									return pg.Theme.Body1(pg.moreItems[i].text).Layout(gtx)

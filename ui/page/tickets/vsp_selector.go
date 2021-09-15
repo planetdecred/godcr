@@ -22,14 +22,14 @@ type vspSelector struct {
 	dialogTitle string
 
 	changed      bool
-	showVSPModal *widget.Clickable
+	showVSPModal *decredmaterial.Clickable
 	selectedVSP  *wallet.VSPInfo
 }
 
 func newVSPSelector(l *load.Load) *vspSelector {
 	v := &vspSelector{
 		Load:         l,
-		showVSPModal: new(widget.Clickable),
+		showVSPModal: l.Theme.NewClickable(true),
 	}
 	return v
 }
@@ -81,7 +81,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, v.showVSPModal, func(gtx C) D {
+			return v.showVSPModal.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						if v.selectedVSP == nil {

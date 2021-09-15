@@ -18,7 +18,7 @@ type WalletSettingsPage struct {
 	*load.Load
 	wallet *dcrlibwallet.Wallet
 
-	changePass, rescan, deleteWallet *widget.Clickable
+	changePass, rescan, deleteWallet *decredmaterial.Clickable
 
 	chevronRightIcon *widget.Icon
 	backButton       decredmaterial.IconButton
@@ -28,12 +28,16 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	pg := &WalletSettingsPage{
 		Load:         l,
 		wallet:       wal,
-		changePass:   new(widget.Clickable),
-		rescan:       new(widget.Clickable),
-		deleteWallet: new(widget.Clickable),
+		changePass:   l.Theme.NewClickable(false),
+		rescan:       l.Theme.NewClickable(false),
+		deleteWallet: l.Theme.NewClickable(false),
 
 		chevronRightIcon: l.Icons.ChevronRight,
 	}
+
+	pg.changePass.Radius = decredmaterial.Radius(14)
+	pg.rescan.Radius = decredmaterial.Radius(14)
+	pg.deleteWallet.Radius = decredmaterial.Radius(14)
 
 	pg.chevronRightIcon.Color = l.Theme.Color.LightGray
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -123,7 +127,7 @@ func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 	}
 }
 
-func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, clickable *widget.Clickable, body layout.Widget) layout.Dimensions {
+func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, clickable *decredmaterial.Clickable, body layout.Widget) layout.Dimensions {
 	dims := func(gtx layout.Context, title string, body layout.Widget) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -142,7 +146,7 @@ func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, cli
 			if clickable == nil {
 				return dims(gtx, title, body)
 			}
-			return decredmaterial.Clickable(gtx, clickable, func(gtx C) D {
+			return clickable.Layout(gtx, func(gtx C) D {
 				return dims(gtx, title, body)
 			})
 		})

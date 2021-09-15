@@ -21,7 +21,7 @@ const VerifySeedPageID = "verify_seed"
 type shuffledSeedWords struct {
 	selectedIndex int
 	words         []string
-	clickables    []*widget.Clickable
+	clickables    []*decredmaterial.Clickable
 }
 
 type VerifySeedPage struct {
@@ -78,18 +78,24 @@ func (pg *VerifySeedPage) getMultiSeed(realSeedIndex int, allSeeds []string) shu
 	shuffledSeed := shuffledSeedWords{
 		selectedIndex: -1,
 		words:         make([]string, 0),
-		clickables:    make([]*widget.Clickable, 0),
+		clickables:    make([]*decredmaterial.Clickable, 0),
+	}
+
+	clickable := func() *decredmaterial.Clickable {
+		cl := pg.Theme.NewClickable(true)
+		cl.Radius = decredmaterial.Radius(8)
+		return cl
 	}
 
 	shuffledSeed.words = append(shuffledSeed.words, allSeeds[realSeedIndex])
-	shuffledSeed.clickables = append(shuffledSeed.clickables, &widget.Clickable{})
+	shuffledSeed.clickables = append(shuffledSeed.clickables, clickable())
 	allSeeds = removeSeed(allSeeds, realSeedIndex)
 
 	for i := 0; i < 3; i++ {
 		randomSeed := rand.Intn(len(allSeeds))
 
 		shuffledSeed.words = append(shuffledSeed.words, allSeeds[randomSeed])
-		shuffledSeed.clickables = append(shuffledSeed.clickables, &widget.Clickable{})
+		shuffledSeed.clickables = append(shuffledSeed.clickables, clickable())
 		allSeeds = removeSeed(allSeeds, randomSeed)
 	}
 
@@ -267,7 +273,7 @@ func (pg *VerifySeedPage) seedButton(gtx C, index int, multiSeed shuffledSeedWor
 		textColor = pg.Theme.Color.Primary
 	}
 
-	return decredmaterial.Clickable(gtx, multiSeed.clickables[index], func(gtx C) D {
+	return multiSeed.clickables[index].Layout(gtx, func(gtx C) D {
 
 		return decredmaterial.LinearLayout{
 			Width:      gtx.Px(values.MarginPadding100),

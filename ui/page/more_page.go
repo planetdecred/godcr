@@ -2,7 +2,6 @@ package page
 
 import (
 	"gioui.org/layout"
-	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 
@@ -13,7 +12,7 @@ import (
 const MorePageID = "More"
 
 type morePageHandler struct {
-	clickable *widget.Clickable
+	clickable *decredmaterial.Clickable
 	image     *decredmaterial.Image
 	page      string
 	action    func()
@@ -28,7 +27,7 @@ type MorePage struct {
 func NewMorePage(l *load.Load) *MorePage {
 	morePageListItems := []morePageHandler{
 		{
-			clickable: new(widget.Clickable),
+			clickable: l.Theme.NewClickable(true),
 			image:     l.Icons.SettingsIcon,
 			page:      SettingsPageID,
 			action: func() {
@@ -36,7 +35,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			},
 		},
 		{
-			clickable: new(widget.Clickable),
+			clickable: l.Theme.NewClickable(true),
 			image:     l.Icons.SecurityIcon,
 			page:      SecurityToolsPageID,
 			action: func() {
@@ -44,7 +43,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			},
 		},
 		{
-			clickable: new(widget.Clickable),
+			clickable: l.Theme.NewClickable(true),
 			image:     l.Icons.HelpIcon,
 			page:      HelpPageID,
 			action: func() {
@@ -52,7 +51,7 @@ func NewMorePage(l *load.Load) *MorePage {
 			},
 		},
 		{
-			clickable: new(widget.Clickable),
+			clickable: l.Theme.NewClickable(true),
 			image:     l.Icons.AboutIcon,
 			page:      AboutPageID,
 			action: func() {
@@ -60,13 +59,17 @@ func NewMorePage(l *load.Load) *MorePage {
 			},
 		},
 		{
-			clickable: new(widget.Clickable),
+			clickable: l.Theme.NewClickable(true),
 			image:     l.Icons.DebugIcon,
 			page:      DebugPageID,
 			action: func() {
 				l.ChangeFragment(NewDebugPage(l))
 			},
 		},
+	}
+
+	for i := range morePageListItems {
+		morePageListItems[i].clickable.Radius = decredmaterial.Radius(14)
 	}
 
 	pg := &MorePage{
@@ -108,18 +111,14 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 	list := layout.List{Axis: layout.Vertical}
 	return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
 		return layout.Inset{Bottom: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
+			return pg.morePageListItems[i].clickable.Layout(gtx, func(gtx C) D {
 				return decredmaterial.LinearLayout{Orientation: layout.Horizontal,
 					Width:      decredmaterial.MatchParent,
 					Height:     decredmaterial.WrapContent,
 					Background: pg.Theme.Color.Surface,
 					Shadow:     pg.Theme.Shadow(),
-					HoverEffect: decredmaterial.Hover{
-						HoverButton: pg.morePageListItems[i].clickable,
-						HoverColor:  pg.Theme.Color.ActiveGray,
-					},
-					Border:  decredmaterial.Border{Radius: decredmaterial.Radius(14)},
-					Padding: layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
+					Border:     decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+					Padding:    layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Center.Layout(gtx, pg.morePageListItems[i].image.Layout24dp)
 					}),

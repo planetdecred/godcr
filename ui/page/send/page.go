@@ -23,7 +23,7 @@ const (
 type moreItem struct {
 	text     string
 	id       string
-	button   *widget.Clickable
+	button   *decredmaterial.Clickable
 	action   func()
 	separate bool
 }

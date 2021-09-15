@@ -27,7 +27,7 @@ type AcctDetailsPage struct {
 	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
-	renameAccount            *widget.Clickable
+	renameAccount            *decredmaterial.Clickable
 
 	stakingBalance   int64
 	totalBalance     string
@@ -51,7 +51,7 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 			Axis: layout.Vertical,
 		},
 		backButton:    l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		renameAccount: new(widget.Clickable),
+		renameAccount: l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)

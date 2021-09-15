@@ -9,35 +9,30 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 )
 
-func Clickable(gtx layout.Context, button *widget.Clickable, w layout.Widget) layout.Dimensions {
-	return material.Clickable(gtx, button, w)
-}
-
-type Cllickable struct {
+type Clickable struct {
 	button     *widget.Clickable
-	color      color.NRGBA
+	Color      color.NRGBA
 	HoverColor color.NRGBA
 	Hoverable  bool
 	Radius     CornerRadius
 }
 
-func (t *Theme) NewClickable(hoverable bool) *Cllickable {
-	return &Cllickable{
+func (t *Theme) NewClickable(hoverable bool) *Clickable {
+	return &Clickable{
 		button:     &widget.Clickable{},
-		color:      t.Color.SurfaceHighlight,
+		Color:      t.Color.SurfaceHighlight,
 		HoverColor: t.Color.ActiveGray,
 		Hoverable:  hoverable,
 	}
 }
 
-func (cl *Cllickable) Clicked() bool {
+func (cl *Clickable) Clicked() bool {
 	return cl.button.Clicked()
 }
 
-func (cl *Cllickable) Layout(gtx C, w layout.Widget) D {
+func (cl *Clickable) Layout(gtx C, w layout.Widget) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(cl.button.Layout),
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
@@ -59,7 +54,7 @@ func (cl *Cllickable) Layout(gtx C, w layout.Widget) D {
 			}
 
 			for _, c := range cl.button.History() {
-				drawInk(gtx, c, cl.color)
+				drawInk(gtx, c, cl.Color)
 			}
 			return layout.Dimensions{Size: gtx.Constraints.Min}
 		}),

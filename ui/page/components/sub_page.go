@@ -19,7 +19,7 @@ type SubPage struct {
 	Back         func()
 	Body         layout.Widget
 	InfoTemplate string
-	ExtraItem    *widget.Clickable
+	ExtraItem    *decredmaterial.Clickable
 	Extra        layout.Widget
 	ExtraText    string
 	HandleExtra  func()
@@ -111,7 +111,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 							return layout.Dimensions{}
 						}),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							return decredmaterial.Clickable(gtx, sp.ExtraItem, sp.Extra)
+							return sp.ExtraItem.Layout(gtx, sp.Extra)
 						}),
 					)
 				}
