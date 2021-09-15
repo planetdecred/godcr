@@ -108,18 +108,18 @@ func (b Button) Click() {
 }
 
 func (b *Button) Layout(gtx layout.Context) layout.Dimensions {
-	if !b.Enabled() {
-		b.Background, b.Color = b.disabledBackground, b.disabledTextColor
-	}
-
 	wdg := func(gtx layout.Context) layout.Dimensions {
 		return b.Inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			paint.ColorOp{Color: b.Color}.Add(gtx.Ops)
+			textColor := b.Color
+			if !b.Enabled() {
+				textColor = b.disabledTextColor
+			}
+
 			b.label.Text = b.Text
 			b.label.Font = b.Font
 			b.label.Alignment = text.Middle
 			b.label.TextSize = b.TextSize
-			b.label.Color = b.Color
+			b.label.Color = textColor
 			return b.label.Layout(gtx)
 		})
 	}
@@ -140,7 +140,9 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 			}}, rr).Add(gtx.Ops)
 
 			background := b.Background
-			if b.clickable.Hovered() {
+			if !b.Enabled() {
+				background = b.disabledBackground
+			} else if b.clickable.Hovered() {
 				background = Hovered(b.Background)
 			}
 
@@ -156,7 +158,7 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 			return layout.Center.Layout(gtx, w)
 		}),
 		layout.Expanded(func(gtx C) D {
-			if !b.isEnabled {
+			if !b.Enabled() {
 				return D{}
 			}
 

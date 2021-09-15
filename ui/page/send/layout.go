@@ -26,7 +26,9 @@ func (pg *Page) initLayoutWidgets() {
 	pg.txFeeCollapsible = pg.Theme.Collapsible()
 
 	pg.nextButton = pg.Theme.Button(new(widget.Clickable), "Next")
-	pg.nextButton.Background = pg.Theme.Color.InactiveGray
+	pg.nextButton.TextSize = values.TextSize18
+	pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
+	pg.nextButton.SetEnabled(false)
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
@@ -368,7 +370,6 @@ func (pg *Page) balanceSection(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 				layout.Flexed(0.3, func(gtx C) D {
-					pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
 					return pg.nextButton.Layout(gtx)
 				}),
 			)

@@ -47,6 +47,7 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
+	cm.btnPositve.SetEnabled(false)
 
 	cm.btnNegative.Font.Weight = text.Medium
 	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
@@ -106,6 +107,7 @@ func (cm *CreateWatchOnlyModal) WatchOnlyCreated(callback func(walletName, extPu
 
 func (cm *CreateWatchOnlyModal) Handle() {
 
+	cm.btnPositve.SetEnabled(editorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor))
 	if editorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor) ||
 		handleSubmitEvent(cm.walletName.Editor, cm.extendedPubKey.Editor) {
 		for cm.btnPositve.Clicked() {
@@ -116,6 +118,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		}
 	}
 
+	cm.btnNegative.SetEnabled(!cm.isLoading)
 	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
 			cm.Dismiss()

@@ -135,6 +135,16 @@ func (cm *CreatePasswordModal) SetError(err string) {
 
 }
 
+func (cm *CreatePasswordModal) validToCreate() bool {
+	nameValid := true
+	if cm.walletNameEnabled {
+		nameValid = editorsNotEmpty(cm.walletName.Editor)
+	}
+
+	return nameValid && editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
+		cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+}
+
 func (cm *CreatePasswordModal) Handle() {
 	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
 		editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
@@ -148,15 +158,10 @@ func (cm *CreatePasswordModal) Handle() {
 		cm.confirmPasswordEditor.SetError("")
 	}
 
+	cm.btnPositve.SetEnabled(cm.validToCreate())
 	if cm.btnPositve.Clicked() || handleSubmitEvent(cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
 
-		nameValid := true
-		if cm.walletNameEnabled {
-			nameValid = editorsNotEmpty(cm.walletName.Editor)
-		}
-
-		if nameValid && editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
-			cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
+		if cm.validToCreate() {
 
 			cm.SetLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
@@ -166,6 +171,7 @@ func (cm *CreatePasswordModal) Handle() {
 
 	}
 
+	cm.btnNegative.SetEnabled(!cm.isLoading)
 	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
 			cm.Dismiss()

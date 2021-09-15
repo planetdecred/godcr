@@ -222,14 +222,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 		},
 	}
 
-	if pg.allSeedsSelected() {
-		pg.actionButton.Background = pg.Theme.Color.Primary
-		pg.actionButton.Color = pg.Theme.Color.InvText
-	} else {
-		pg.actionButton.Background = pg.Theme.Color.InactiveGray
-		pg.actionButton.Color = pg.Theme.Color.Text
-	}
-
+	pg.actionButton.SetEnabled(pg.allSeedsSelected())
 	return container(gtx, *pg.Theme, sp.Layout, "", pg.actionButton)
 }
 

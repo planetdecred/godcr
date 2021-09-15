@@ -147,6 +147,8 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 		modal:    *l.Theme.ModalFloatTitle(),
 	}
 
+	v.addVSP.SetEnabled(false)
+
 	return v
 }
 
@@ -167,7 +169,8 @@ func (v *vspSelectorModal) Dismiss() {
 }
 
 func (v *vspSelectorModal) Handle() {
-	if v.editorsNotEmpty(&v.addVSP, v.inputVSP.Editor) && v.addVSP.Clicked() {
+	v.addVSP.SetEnabled(v.editorsNotEmpty(v.inputVSP.Editor))
+	if v.addVSP.Clicked() {
 		go func() {
 			err := v.WL.AddVSP(v.inputVSP.Editor.Text())
 			if err != nil {
@@ -263,15 +266,12 @@ func (v *vspSelectorModal) handlerSelectVSP(events []gesture.ClickEvent, info *w
 	}
 }
 
-func (v *vspSelectorModal) editorsNotEmpty(btn *decredmaterial.Button, editors ...*widget.Editor) bool {
-	btn.Color = v.Theme.Color.Surface
+func (v *vspSelectorModal) editorsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {
-			btn.Background = v.Theme.Color.Hint
 			return false
 		}
 	}
 
-	btn.Background = v.Theme.Color.Primary
 	return true
 }

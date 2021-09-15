@@ -122,9 +122,7 @@ func (pm *PasswordModal) SetError(err string) {
 
 func (pm *PasswordModal) Handle() {
 	pm.btnPositve.SetEnabled(editorsNotEmpty(pm.password.Editor))
-
 	for pm.btnPositve.Clicked() || handleSubmitEvent(pm.password.Editor) {
-
 		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
 			continue
 		}
@@ -136,6 +134,7 @@ func (pm *PasswordModal) Handle() {
 		}
 	}
 
+	pm.btnNegative.SetEnabled(!pm.isLoading)
 	for pm.btnNegative.Clicked() {
 		if !pm.isLoading {
 			pm.DismissModal(pm)

@@ -45,7 +45,7 @@ func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 
 	scm.confirmButton = l.Theme.Button(new(widget.Clickable), "")
 	scm.confirmButton.Font.Weight = text.Medium
-	scm.confirmButton.Background = scm.Theme.Color.InactiveGray
+	scm.confirmButton.SetEnabled(false)
 
 	scm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	scm.passwordEditor.Editor.SetText("")
@@ -101,11 +101,7 @@ func (scm *sendConfirmModal) Handle() {
 		if scm.passwordEditor.Editor.Focused() {
 			switch evt.(type) {
 			case widget.ChangeEvent:
-				if scm.passwordEditor.Editor.Text() == "" {
-					scm.confirmButton.Background = scm.Theme.Color.InactiveGray
-				} else {
-					scm.confirmButton.Background = scm.Theme.Color.Primary
-				}
+				scm.confirmButton.SetEnabled(scm.passwordEditor.Editor.Text() != "")
 			case widget.SubmitEvent:
 				scm.broadcastTransaction()
 			}

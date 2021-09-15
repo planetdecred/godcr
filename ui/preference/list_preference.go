@@ -40,7 +40,7 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 
 	sort.Slice(sortedKeys, func(i int, j int) bool { return sortedKeys[i] < sortedKeys[j] })
 
-	return &ListPreference{
+	lp := ListPreference{
 		wallet:        wallet,
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
@@ -54,6 +54,8 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 		clickable:         theme.NewClickable(false),
 		optionsRadioGroup: new(widget.Enum),
 	}
+
+	return &lp
 }
 
 func (lp *ListPreference) Title(titleStrKey string) *ListPreference {

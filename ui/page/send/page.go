@@ -183,11 +183,7 @@ func (pg *Page) validate() bool {
 	addressIsValid := pg.sendDestination.validate()
 
 	validForSending := amountIsValid && addressIsValid
-	if validForSending {
-		pg.nextButton.Background = pg.Theme.Color.Primary
-	} else {
-		pg.nextButton.Background = pg.Theme.Color.Hint
-	}
+	pg.nextButton.SetEnabled(validForSending)
 
 	return validForSending
 }

@@ -105,13 +105,7 @@ func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	if pg.verifyCheckBoxes() {
-		pg.viewSeedBtn.Background = pg.Theme.Color.Primary
-		pg.viewSeedBtn.Color = pg.Theme.Color.InvText
-	} else {
-		pg.viewSeedBtn.Background = pg.Theme.Color.InactiveGray
-		pg.viewSeedBtn.Color = pg.Theme.Color.Text
-	}
+	pg.viewSeedBtn.SetEnabled(pg.verifyCheckBoxes())
 
 	return container(gtx, *pg.Theme, sp.Layout, "", pg.viewSeedBtn)
 }

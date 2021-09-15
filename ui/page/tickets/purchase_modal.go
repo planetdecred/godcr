@@ -46,6 +46,8 @@ func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
 		modal:          *l.Theme.ModalFloatTitle(),
 	}
 
+	tp.reviewPurchase.SetEnabled(false)
+
 	tp.vspIsFetched = len((*l.WL.VspInfo).List) > 0
 
 	tp.tickets.Editor.SetText("1")
@@ -144,11 +146,6 @@ func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, tp.cancelPurchase.Layout)
 					}),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if tp.canPurchase() {
-							tp.reviewPurchase.Background = tp.Theme.Color.Primary
-						} else {
-							tp.reviewPurchase.Background = tp.Theme.Color.Hint
-						}
 						return tp.reviewPurchase.Layout(gtx)
 					}),
 				)
@@ -241,6 +238,8 @@ func (tp *ticketPurchaseModal) calculateTotals() {
 }
 
 func (tp *ticketPurchaseModal) Handle() {
+	tp.reviewPurchase.SetEnabled(tp.canPurchase())
+
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
 		if tp.WL.GetRememberVSP() != "" {

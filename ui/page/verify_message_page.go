@@ -49,9 +49,11 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 
 	pg.verifyButton = l.Theme.Button(new(widget.Clickable), "Verify message")
 	pg.verifyButton.Font.Weight = text.Medium
+	pg.verifyButton.SetEnabled(false)
 
 	pg.clearBtn = l.Theme.OutlineButton(new(widget.Clickable), "Clear all")
 	pg.clearBtn.Font.Weight = text.Medium
+	pg.clearBtn.SetEnabled(false)
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -193,20 +195,23 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 }
 
 func (pg *VerifyMessagePage) updateButtonColors() {
-	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
 	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.messageEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.signatureEditor.Editor.Text()) {
-		pg.clearBtn.Color = pg.Theme.Color.Primary
+		pg.clearBtn.SetEnabled(true)
+	} else {
+		pg.clearBtn.SetEnabled(false)
 	}
+
 	if pg.addressIsValid && components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
-		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
+		pg.verifyButton.SetEnabled(true)
+	} else {
+		pg.verifyButton.SetEnabled(false)
 	}
 }
 
 func (pg *VerifyMessagePage) clearInputs() {
 	pg.verifyMessageStatus = nil
-	pg.verifyButton.Background = pg.Theme.Color.Hint
 	pg.addressEditor.Editor.SetText("")
 	pg.signatureEditor.Editor.SetText("")
 	pg.messageEditor.Editor.SetText("")

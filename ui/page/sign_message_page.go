@@ -43,8 +43,9 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 
 	clearButton := l.Theme.OutlineButton(new(widget.Clickable), "Clear all")
 	signButton := l.Theme.Button(new(widget.Clickable), "Sign message")
-	signButton.Background = l.Theme.Color.Hint
 	clearButton.Font.Weight, signButton.Font.Weight = text.Medium, text.Medium
+	signButton.SetEnabled(false)
+	clearButton.SetEnabled(false)
 
 	errorLabel := l.Theme.Caption("")
 	errorLabel.Color = l.Theme.Color.Danger
@@ -204,20 +205,24 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *SignMessagePage) updateButtonColors() {
-	pg.clearButton.Color, pg.signButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
+func (pg *SignMessagePage) updateButtonState() {
 	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.messageEditor.Editor.Text()) {
-		pg.clearButton.Color = pg.Theme.Color.Primary
+		pg.clearButton.SetEnabled(true)
+	} else {
+		pg.clearButton.SetEnabled(false)
 	}
+
 	if !pg.isSigningMessage && pg.messageIsValid && pg.addressIsValid {
-		pg.signButton.Background = pg.Theme.Color.Primary
+		pg.signButton.SetEnabled(true)
+	} else {
+		pg.signButton.SetEnabled(false)
 	}
 }
 
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
-	pg.updateButtonColors()
+	pg.updateButtonState()
 
 	for _, evt := range pg.addressEditor.Editor.Events() {
 		if pg.addressEditor.Editor.Focused() {
