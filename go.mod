@@ -13,8 +13,10 @@ require (
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
 	github.com/decred/dcrd/dcrutil/v3 v3.0.0
 	github.com/decred/slog v1.1.0
-	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
+	github.com/gen2brain/beeep v0.0.0-20210529141713-5586760f0cc1
+	github.com/godbus/dbus/v5 v5.0.5 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20210208175418-bda154fe17d8
+	github.com/gopherjs/gopherjs v0.0.0-20210901121439-eee08aaf2717 // indirect
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
 	github.com/onsi/ginkgo v1.14.0
@@ -23,7 +25,8 @@ require (
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0 // indirect
 	golang.org/x/text v0.3.3
 )
 
