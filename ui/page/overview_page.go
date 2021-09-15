@@ -508,8 +508,9 @@ func (pg *OverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions {
 func (pg *OverviewPage) progressBarRow(gtx layout.Context, inset layout.Inset) layout.Dimensions {
 	return inset.Layout(gtx, func(gtx C) D {
 		progress := pg.syncProgress
-		if pg.rescanUpdate != nil {
-			progress = int(pg.rescanUpdate.ProgressReport.RescanProgress)
+		rescanUpdate := pg.rescanUpdate
+		if rescanUpdate != nil && rescanUpdate.ProgressReport != nil {
+			progress = int(rescanUpdate.ProgressReport.RescanProgress)
 		}
 		p := pg.Theme.ProgressBar(progress)
 		p.Height = values.MarginPadding8
