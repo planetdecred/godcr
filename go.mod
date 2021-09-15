@@ -20,16 +20,12 @@ require (
 	github.com/jrick/logrotate v1.0.0
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
-	github.com/planetdecred/dcrlibwallet v1.6.1-0.20210816165030-bb3af17a746a
+	github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5
 	golang.org/x/image v0.0.0-20210220032944-ac19c3e999fb
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0 // indirect
 	golang.org/x/text v0.3.3
 )
 
-replace (
-	github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
-	github.com/planetdecred/dcrlibwallet => github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210912175524-041481a23c8b
-)
+replace github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212

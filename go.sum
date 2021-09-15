@@ -44,12 +44,6 @@ github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 h1:cTp8I5+VIo
 github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210825093648-ec344982588e h1:x6AYXRKp/C56x6lsUEUQ6+QhBM9xO07KXt2kBnePaDs=
-github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210825093648-ec344982588e/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
-github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210910121332-e44a98c834c2 h1:EHZLz82ivykxAkm6BI15FBrPL/PdUsUD2gtrb6pnFpY=
-github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210910121332-e44a98c834c2/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
-github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210912175524-041481a23c8b h1:JvcNx/P2fSfgXpySx/HVbnRyYo6ZPgnpyVmnar6SuE4=
-github.com/C-ollins/mobilewallet v1.0.0-rc1.0.20210912175524-041481a23c8b/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
 github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/DataDog/zstd v1.4.8 h1:Rpmta4xZ/MgZnriKNd24iZMhGpP5dvUcs/uqfBapKZY=
 github.com/DataDog/zstd v1.4.8/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
@@ -687,6 +681,8 @@ github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
+github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002 h1:W5ZELmwSjtNub4ugEujJtP4XrJ7gnmAacEDnIKNJckE=
+github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
