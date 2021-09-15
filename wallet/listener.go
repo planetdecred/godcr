@@ -4,6 +4,20 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 )
 
+type RescanNotificationType int
+
+const (
+
+	// RescanStarted indicates a block rescan start signal
+	RescanStarted RescanNotificationType = iota
+
+	// RescanProgress indicates a block rescan progress signal
+	RescanProgress
+
+	// RescanEnded indicates a block rescan end signal
+	RescanEnded
+)
+
 // SyncNotificationType represents the spv sync stage at which the multiwallet is currently
 type SyncNotificationType int
 
@@ -29,7 +43,7 @@ const (
 	// HeadersRescanProgress indicates an address rescan signal
 	HeadersRescanProgress
 
-	// HeadersFetchProgress indicates a peer connected signal
+	// PeersConnected indicates a peer connected signal
 	PeersConnected
 
 	// BlockAttached indicates a block attached signal
@@ -85,6 +99,12 @@ type (
 		ConfirmedTxn   TxConfirmed
 		AcctMixerInfo  AccountMixer
 		Proposal       Proposal
+	}
+
+	RescanUpdate struct {
+		Stage          RescanNotificationType
+		WalletID       int
+		ProgressReport *dcrlibwallet.HeadersRescanProgressReport
 	}
 )
 
