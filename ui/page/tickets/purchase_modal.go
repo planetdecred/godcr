@@ -244,6 +244,7 @@ func (tp *ticketPurchaseModal) purchaseTickets(password []byte) {
 
 	go func() {
 		selectedVSP := tp.vspSelector.SelectedVSP()
+
 		account := tp.accountSelector.SelectedAccount()
 		wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
 
@@ -284,13 +285,16 @@ func (tp *ticketPurchaseModal) Handle() {
 			tp.WL.RememberVSP("")
 		}
 
-		newTicketReviewModal(tp.Load).
-			Account(tp.accountSelector.SelectedAccount()).
-			VSPHost(tp.vspSelector.selectedVSP.Host).
+		selectedVSP := tp.vspSelector.SelectedVSP()
+		account := tp.accountSelector.SelectedAccount()
+
+		newTicketReviewModal(tp.Load, account, selectedVSP).
 			TicketCount(tp.ticketCount()).
 			TotalCost(tp.totalCost).
 			BalanceLessCost(tp.balanceLessCost).
-			TicketPurchase(tp.purchaseTickets).
+			TicketPurchased(func() {
+				tp.Dismiss()
+			}).
 			Show()
 	}
 }

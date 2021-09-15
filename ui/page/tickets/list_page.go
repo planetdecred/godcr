@@ -357,7 +357,6 @@ func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []*transact
 			return decredmaterial.GridLayout{
 				List:              &pg.ticketsList,
 				HorizontalSpacing: layout.SpaceBetween,
-				Direction:         layout.Center,
 				RowCount:          3,
 			}.Layout(gtx, len(tickets), func(gtx C, index int) D {
 				return layout.Inset{
