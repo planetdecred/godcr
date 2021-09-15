@@ -62,7 +62,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	win, appWindow, err := ui.CreateWindow(wal, internalLog)
+	win, appWindow, err := ui.CreateWindow(wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return

@@ -68,7 +68,7 @@ func (pg *LogPage) copyLogEntries(gtx C) {
 func (pg *LogPage) watchLogs() {
 	//TODO
 	//add function to get log directory
-	logPath := "/home/devchoplife/.godcr/logs/godcr.log"
+	logPath := pg.Load.WL.MultiWallet.LogDir()
 	t, _ := tail.TailFile(logPath, tail.Config{Follow: true})
 	for line := range t.Lines {
 		logRow := line.Text
