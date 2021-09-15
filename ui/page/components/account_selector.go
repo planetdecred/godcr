@@ -71,7 +71,6 @@ func (as *AccountSelector) Handle() {
 				as.setupSelectedAccount(account)
 				as.callback(account)
 			}).Show()
-
 	}
 }
 
@@ -193,6 +192,8 @@ type AccountSelectorModal struct {
 	*load.Load
 	dialogTitle string
 
+	isCancelable bool
+
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
 
@@ -222,6 +223,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 
 		currentSelectedAccount: currentSelectedAccount,
 		wallets:                wallets,
+		isCancelable:           true,
 	}
 
 	asm.walletInfoButton = l.Theme.PlainIconButton(new(widget.Clickable), asm.Icons.ActionInfo)
@@ -278,6 +280,10 @@ func (asm *AccountSelectorModal) Dismiss() {
 	asm.DismissModal(asm)
 }
 
+func (asm *AccountSelectorModal) SetCancelable(min bool) {
+	asm.isCancelable = min
+}
+
 func (asm *AccountSelectorModal) Handle() {
 	if asm.eventQueue != nil {
 		for _, accounts := range asm.accounts {
@@ -290,6 +296,10 @@ func (asm *AccountSelectorModal) Handle() {
 				}
 			}
 		}
+	}
+
+	if asm.modal.BackdropClicked(asm.isCancelable) {
+		asm.Dismiss()
 	}
 }
 

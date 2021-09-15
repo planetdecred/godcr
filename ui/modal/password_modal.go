@@ -2,7 +2,6 @@ package modal
 
 import (
 	"fmt"
-	"image/color"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -25,7 +24,9 @@ type PasswordModal struct {
 
 	dialogTitle string
 
-	isLoading      bool
+	isLoading    bool
+	isCancelable bool
+
 	materialLoader material.LoaderStyle
 
 	positiveButtonText    string
@@ -39,17 +40,18 @@ type PasswordModal struct {
 
 func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm := &PasswordModal{
-		Load:        l,
-		randomID:    fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
-		modal:       *l.Theme.ModalFloatTitle(),
-		btnPositve:  l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
+		Load:         l,
+		randomID:     fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
+		modal:        *l.Theme.ModalFloatTitle(),
+		btnPositve:   l.Theme.Button(new(widget.Clickable), "Confirm"),
+		btnNegative:  l.Theme.Button(new(widget.Clickable), "Cancel"),
+		isCancelable: true,
 	}
 
-	pm.btnPositve.TextSize, pm.btnNegative.TextSize = values.TextSize16, values.TextSize16
+	pm.btnNegative.TextSize = values.TextSize16
 	pm.btnNegative.Background, pm.btnNegative.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
 	pm.btnPositve.Font.Weight, pm.btnNegative.Font.Weight = text.Bold, text.Bold
-	pm.btnPositve.Background, pm.btnPositve.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
+	pm.btnPositve.Background = pm.Theme.Color.InactiveGray
 
 	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
@@ -89,11 +91,6 @@ func (pm *PasswordModal) Hint(hint string) *PasswordModal {
 	return pm
 }
 
-func (pm *PasswordModal) PositiveButtonStyle(background, text color.NRGBA) *PasswordModal {
-	pm.btnPositve.Background, pm.btnPositve.Color = background, text
-	return pm
-}
-
 func (pm *PasswordModal) PositiveButton(text string, clicked func(password string, m *PasswordModal) bool) *PasswordModal {
 	pm.positiveButtonText = text
 	pm.positiveButtonClicked = clicked
@@ -110,6 +107,10 @@ func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
 }
 
+func (pm *PasswordModal) SetCancelable(min bool) {
+	pm.isCancelable = min
+}
+
 func (pm *PasswordModal) SetError(err string) {
 	if err == "" {
 		pm.password.ClearError()
@@ -119,9 +120,13 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
+	if editorsNotEmpty(pm.password.Editor) {
+		pm.btnPositve.Background = pm.Theme.Color.Primary
+	} else {
+		pm.btnPositve.Background = pm.Theme.Color.InactiveGray
+	}
 
 	for pm.btnPositve.Button.Clicked() {
-
 		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
 			continue
 		}
@@ -138,6 +143,10 @@ func (pm *PasswordModal) Handle() {
 			pm.DismissModal(pm)
 			pm.negativeButtonClicked()
 		}
+	}
+
+	if pm.modal.BackdropClicked(pm.isCancelable) {
+		pm.Dismiss()
 	}
 }
 
