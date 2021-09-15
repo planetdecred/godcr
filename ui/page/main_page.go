@@ -173,6 +173,7 @@ func (mp *MainPage) OnResume() {
 	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
 
+	mp.getSetting()
 	mp.UpdateBalance()
 
 	if mp.currentPage != nil {
@@ -185,6 +186,20 @@ func (mp *MainPage) OnResume() {
 		mp.autoSync = false
 		mp.StartSyncing()
 		go mp.WL.MultiWallet.Politeia.Sync()
+	}
+}
+
+func (mp *MainPage) getSetting() {
+	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(languagePreferenceKey)
+	if components.StringNotEmpty(langPre) {
+		langPre = values.DefaultLangauge
+		mp.WL.Wallet.SaveConfigValueForKey(languagePreferenceKey, langPre)
+	}
+	values.SetUserLanguage(langPre)
+
+	currencyPre := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if components.StringNotEmpty(currencyPre) {
+		mp.WL.Wallet.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue)
 	}
 }
 
