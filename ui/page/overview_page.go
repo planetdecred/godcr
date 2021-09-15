@@ -525,9 +525,10 @@ func (pg *OverviewPage) progressBarRow(gtx layout.Context, inset layout.Inset) l
 func (pg *OverviewPage) progressStatusRow(gtx layout.Context, inset layout.Inset) layout.Dimensions {
 	timeLeft := pg.remainingSyncTime
 	progress := pg.syncProgress
-	if pg.rescanUpdate != nil {
-		progress = int(pg.rescanUpdate.ProgressReport.RescanProgress)
-		timeLeft = wallet.SecondsToDays(pg.rescanUpdate.ProgressReport.RescanTimeRemaining)
+	rescanUpdate := pg.rescanUpdate
+	if rescanUpdate != nil && rescanUpdate.ProgressReport != nil {
+		progress = int(rescanUpdate.ProgressReport.RescanProgress)
+		timeLeft = wallet.SecondsToDays(rescanUpdate.ProgressReport.RescanTimeRemaining)
 	}
 	if timeLeft == "" {
 		timeLeft = "0s"
