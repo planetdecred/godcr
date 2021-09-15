@@ -67,6 +67,14 @@ func (pg *Page) ID() string {
 
 func (pg *Page) OnResume() {
 
+	pg.loadPageData()
+
+	go pg.WL.GetVSPList()
+	// TODO: automatic ticket purchase functionality
+	pg.autoPurchaseEnabled.Disabled()
+}
+
+func (pg *Page) loadPageData() {
 	go func() {
 		ticketPrice, err := pg.WL.MultiWallet.TicketPrice()
 		if err != nil {
@@ -125,10 +133,6 @@ func (pg *Page) OnResume() {
 		pg.liveTickets = txItems
 		pg.RefreshWindow()
 	}()
-
-	go pg.WL.GetVSPList()
-	// TODO: automatic ticket purchase functionality
-	pg.autoPurchaseEnabled.Disabled()
 }
 
 func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
@@ -368,7 +372,10 @@ func (pg *Page) stakingRecordIconCount(icon *decredmaterial.Image, count int, st
 func (pg *Page) Handle() {
 	if pg.purchaseTicket.Button.Clicked() {
 		newTicketPurchaseModal(pg.Load).
-			Show()
+			TicketPurchased(func() {
+				fmt.Println("Overview ticket pruchsased")
+				pg.loadPageData()
+			}).Show()
 	}
 
 	if pg.toTickets.Button.Clicked() {

@@ -1,7 +1,6 @@
 package tickets
 
 import (
-	"fmt"
 	"image/color"
 	"strconv"
 
@@ -21,11 +20,12 @@ const purchaseModalID = "ticket_purchase_modal"
 type ticketPurchaseModal struct {
 	*load.Load
 
-	balanceError    string
-	ticketPrice     dcrutil.Amount
-	totalCost       int64
-	balanceLessCost int64
-	vspIsFetched    bool
+	balanceError     string
+	ticketPrice      dcrutil.Amount
+	totalCost        int64
+	balanceLessCost  int64
+	vspIsFetched     bool
+	ticketsPurchased func()
 
 	modal           decredmaterial.Modal
 	tickets         decredmaterial.Editor
@@ -52,6 +52,11 @@ func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
 	tp.vspIsFetched = len((*l.WL.VspInfo).List) > 0
 
 	tp.tickets.Editor.SetText("1")
+	return tp
+}
+
+func (tp *ticketPurchaseModal) TicketPurchased(ticketsPurchased func()) *ticketPurchaseModal {
+	tp.ticketsPurchased = ticketsPurchased
 	return tp
 }
 
@@ -238,32 +243,6 @@ func (tp *ticketPurchaseModal) calculateTotals() {
 	tp.balanceLessCost = account.Balance.Spendable - tp.totalCost
 }
 
-func (tp *ticketPurchaseModal) purchaseTickets(password []byte) {
-	tp.Dismiss()
-	tp.Toast.Notify(fmt.Sprintf("Attempting to purchase %v ticket(s)", tp.ticketCount()))
-
-	go func() {
-		selectedVSP := tp.vspSelector.SelectedVSP()
-
-		account := tp.accountSelector.SelectedAccount()
-		wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
-
-		vsp, err := tp.WL.MultiWallet.NewVSPClient(selectedVSP.Host, account.WalletID, uint32(account.Number))
-		if err != nil {
-			tp.Toast.NotifyError(err.Error())
-			return
-		}
-
-		err = vsp.PurchaseTickets(int32(tp.ticketCount()), wal.GetBestBlock()+256, password)
-		if err != nil {
-			tp.Toast.NotifyError(err.Error())
-			return
-		}
-
-		tp.Toast.Notify(fmt.Sprintf("%v ticket(s) purchased successfully", tp.ticketCount()))
-	}()
-}
-
 func (tp *ticketPurchaseModal) Handle() {
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
@@ -294,6 +273,7 @@ func (tp *ticketPurchaseModal) Handle() {
 			BalanceLessCost(tp.balanceLessCost).
 			TicketPurchased(func() {
 				tp.Dismiss()
+				tp.ticketsPurchased()
 			}).
 			Show()
 	}
