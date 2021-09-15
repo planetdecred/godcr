@@ -138,9 +138,7 @@ func (pg *WalletPage) OnResume() {
 func (pg *WalletPage) loadWalletAndAccounts() {
 	wallets := pg.WL.SortedWalletList()
 
-	pg.listLock.Lock()
-	pg.listItems = make([]*walletListItem, 0)
-	pg.listLock.Unlock()
+	listItems := make([]*walletListItem, 0)
 
 	for _, wal := range wallets {
 		accountsResult, err := wal.GetAccountsRaw()
@@ -179,10 +177,12 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 			listItem.backupAcctClickable = new(widget.Clickable)
 			listItem.collapsible = pg.Theme.CollapsibleWithOption()
 		}
-		pg.listLock.Lock()
-		pg.listItems = append(pg.listItems, listItem)
-		pg.listLock.Unlock()
+		listItems = append(listItems, listItem)
 	}
+
+	pg.listLock.Lock()
+	pg.listItems = listItems
+	pg.listLock.Unlock()
 }
 
 func (pg *WalletPage) initializeFloatingMenu() {
@@ -424,10 +424,14 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 }
 
 func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
-	return pg.walletsList.Layout(gtx, len(pg.listItems), func(gtx C, i int) D {
-		pg.listLock.Lock()
-		defer pg.listLock.Unlock()
+	pg.listLock.Lock()
+	listItems := pg.listItems
+	pg.listLock.Unlock()
+
+	return pg.walletsList.Layout(gtx, len(listItems), func(gtx C, i int) D {
+
 		listItem := pg.listItems[i]
+
 		if listItem.wal.IsWatchingOnlyWallet() {
 			return D{}
 		}
@@ -550,10 +554,14 @@ func (pg *WalletPage) watchOnlyWalletSection(gtx layout.Context) layout.Dimensio
 }
 
 func (pg *WalletPage) layoutWatchOnlyWallets(gtx layout.Context) D {
-	return pg.watchWalletsList.Layout(gtx, len(pg.listItems), func(gtx C, i int) D {
-		pg.listLock.Lock()
-		defer pg.listLock.Unlock()
+	pg.listLock.Lock()
+	listItems := pg.listItems
+	pg.listLock.Unlock()
+
+	return pg.watchWalletsList.Layout(gtx, len(listItems), func(gtx C, i int) D {
+
 		listItem := pg.listItems[i]
+
 		if !listItem.wal.IsWatchingOnlyWallet() {
 			return D{}
 		}
