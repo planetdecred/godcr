@@ -1,7 +1,6 @@
 package load
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -61,6 +60,33 @@ func getVSPInfo(url string) (*dcrlibwallet.VspInfoResponse, error) {
 	return &vspInfoResponse, nil
 }
 
+// getInitVSPInfo returns the list information of the VSP
+func getInitVSPInfo(url string) (map[string]*dcrlibwallet.VspInfoResponse, error) {
+	rq := new(http.Client)
+	resp, err := rq.Get((url))
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("non 200 response from server: %v", string(b))
+	}
+
+	var vspInfoResponse map[string]*dcrlibwallet.VspInfoResponse
+	err = json.Unmarshal(b, &vspInfoResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return vspInfoResponse, nil
+}
+
 func (wl *WalletLoad) GetVSPList() {
 	var valueOut struct {
 		Remember string
@@ -68,29 +94,29 @@ func (wl *WalletLoad) GetVSPList() {
 	}
 
 	wl.MultiWallet.ReadUserConfigValue(dcrlibwallet.VSPHostConfigKey, &valueOut)
-	var loadedVSP []wallet.VSPInfo
+	var loadedVSP []*wallet.VSPInfo
 
 	for _, host := range valueOut.List {
 		v, err := getVSPInfo(host)
 		if err == nil {
-			loadedVSP = append(loadedVSP, wallet.VSPInfo{
+			loadedVSP = append(loadedVSP, &wallet.VSPInfo{
 				Host: host,
 				Info: v,
 			})
 		}
 	}
 
-	l, _ := wallet.GetInitVSPInfo("https://api.decred.org/?c=vsp")
+	l, _ := getInitVSPInfo("https://api.decred.org/?c=vsp")
 	for h, v := range l {
 		if strings.Contains(wl.Wallet.Net, v.Network) {
-			loadedVSP = append(loadedVSP, wallet.VSPInfo{
+			loadedVSP = append(loadedVSP, &wallet.VSPInfo{
 				Host: fmt.Sprintf("https://%s", h),
 				Info: v,
 			})
 		}
 	}
 
-	(*wl.VspInfo).List = loadedVSP
+	wl.VspInfo.List = loadedVSP
 }
 
 // TicketPrice get ticket price
@@ -101,40 +127,6 @@ func (wl *WalletLoad) TicketPrice() int64 {
 		return 0
 	}
 	return pr.TicketPrice
-}
-
-func (wl *WalletLoad) NewVSPD(host string, walletID int, accountID int32) (*dcrlibwallet.VSP, error) {
-	if host == "" {
-		return nil, fmt.Errorf("Host is required")
-	}
-	wall := wl.MultiWallet.WalletWithID(walletID)
-	if wall == nil {
-		return nil, ErrIDNotExist
-	}
-	vspd, err := wl.MultiWallet.NewVSPClient(host, walletID, uint32(accountID))
-	if err != nil {
-		return nil, fmt.Errorf("Something wrong when creating new VSPD: %v", err)
-	}
-	return vspd, nil
-}
-
-func (wl *WalletLoad) PurchaseTicket(walletID int, tickets uint32, passphrase []byte, vspd *dcrlibwallet.VSP) (err error) {
-	wall := wl.MultiWallet.WalletWithID(walletID)
-	if wall == nil {
-		return fmt.Errorf("wallet ID does not exist")
-	}
-
-	_, err = vspd.GetInfo(context.Background())
-	if err != nil {
-		return err
-	}
-
-	err = vspd.PurchaseTickets(int32(tickets), wl.MultiWallet.GetBestBlock().Height+256, passphrase)
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 func (wl *WalletLoad) AddVSP(host string) (err error) {
@@ -163,7 +155,7 @@ func (wl *WalletLoad) AddVSP(host string) (err error) {
 
 	valueOut.List = append(valueOut.List, host)
 	wl.MultiWallet.SaveUserConfigValue(dcrlibwallet.VSPHostConfigKey, valueOut)
-	(*wl.VspInfo).List = append((*wl.VspInfo).List, wallet.VSPInfo{
+	(*wl.VspInfo).List = append((*wl.VspInfo).List, &wallet.VSPInfo{
 		Host: host,
 		Info: info,
 	})

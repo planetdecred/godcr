@@ -2,6 +2,7 @@ package load
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -22,7 +23,6 @@ type WalletLoad struct {
 	Transactions    *wallet.Transactions
 	Transaction     *wallet.Transaction
 	BroadcastResult wallet.Broadcast
-	Tickets         **wallet.Tickets
 	VspInfo         *wallet.VSP
 	UnspentOutputs  *wallet.UnspentOutputs
 	Wallet          *wallet.Wallet
@@ -45,8 +45,8 @@ func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 
 func (wl *WalletLoad) TotalWalletsBalance() (dcrutil.Amount, error) {
 	totalBalance := int64(0)
-	for _, wallet := range wl.MultiWallet.AllWallets() {
-		accountsResult, err := wallet.GetAccountsRaw()
+	for _, w := range wl.MultiWallet.AllWallets() {
+		accountsResult, err := w.GetAccountsRaw()
 		if err != nil {
 			return -1, err
 		}
@@ -106,4 +106,16 @@ func (wl *WalletLoad) HDPrefix() string {
 	default:
 		return ""
 	}
+}
+
+func (wl *WalletLoad) WalletDirectory() string {
+	return fmt.Sprintf("%s/%s", wl.Wallet.Root, wl.Wallet.Net)
+}
+
+func (wl *WalletLoad) DataSize() string {
+	v, err := wl.MultiWallet.RootDirFileSizeInBytes()
+	if err != nil {
+		return "Unknown"
+	}
+	return fmt.Sprintf("%f GB", float64(v)*1e-9)
 }

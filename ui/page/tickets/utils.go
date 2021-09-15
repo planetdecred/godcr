@@ -3,28 +3,34 @@ package tickets
 import (
 	"fmt"
 	"image"
-	"image/color"
+	"sort"
 	"strings"
+	"time"
 
 	"gioui.org/gesture"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
+
+	"github.com/decred/dcrd/dcrutil"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/planetdecred/godcr/wallet"
 )
 
-const (
-	uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-	maxInt32   = 1<<(uint32Size-1) - 1
+type transactionItem struct {
+	transaction   *dcrlibwallet.Transaction
+	ticketSpender *dcrlibwallet.Transaction
+	status        *components.TxStatus
+	confirmations int32
+	progress      float32
+	showProgress  bool
+	showTime      bool
+	purchaseTime  string
+	ticketAge     string
 
-	ticketAge   = "Ticket age"
-	durationMsg = "10 hrs 47 mins (118/256 blocks)"
-)
-
-type tooltips struct {
 	statusTooltip     *decredmaterial.Tooltip
 	walletNameTooltip *decredmaterial.Tooltip
 	dateTooltip       *decredmaterial.Tooltip
@@ -32,121 +38,209 @@ type tooltips struct {
 	durationTooltip   *decredmaterial.Tooltip
 }
 
-var (
-	title         = ""
-	mainMsg       = ""
-	mainMsgDesc   = ""
-	dayBehind     = ""
-	durationTitle = ""
-	durationDesc  = ""
+type Ticket struct {
+	Status     string
+	Fee        string
+	Amount     string
+	DateTime   string
+	MonthDay   string
+	DaysBehind string
+	WalletName string
+}
+
+const (
+	StakingLive     = "LIVE"
+	StakingUnmined  = "UNMINED"
+	StakingImmature = "IMMATURE"
+	StakingRevoked  = "REVOKED"
+	StakingVoted    = "VOTED"
+	StakingExpired  = "EXPIRED"
 )
 
-func ticketStatusIcon(l *load.Load, ticketStatus string) *struct {
-	icon       *decredmaterial.Image
-	color      color.NRGBA
-	background color.NRGBA
-} {
-	m := map[string]struct {
-		icon       *decredmaterial.Image
-		color      color.NRGBA
-		background color.NRGBA
-	}{
-		"UNMINED": {
-			l.Icons.TicketUnminedIcon,
-			l.Theme.Color.DeepBlue,
-			l.Theme.Color.LightBlue,
-		},
-		"IMMATURE": {
-			l.Icons.TicketImmatureIcon,
-			l.Theme.Color.DeepBlue,
-			l.Theme.Color.LightBlue,
-		},
-		"LIVE": {
-			l.Icons.TicketLiveIcon,
-			l.Theme.Color.Primary,
-			l.Theme.Color.LightBlue,
-		},
-		"VOTED": {
-			l.Icons.TicketVotedIcon,
-			l.Theme.Color.Success,
-			l.Theme.Color.Success2,
-		},
-		"MISSED": {
-			l.Icons.TicketMissedIcon,
-			l.Theme.Color.Gray,
-			l.Theme.Color.LightGray,
-		},
-		"EXPIRED": {
-			l.Icons.TicketExpiredIcon,
-			l.Theme.Color.Gray,
-			l.Theme.Color.LightGray,
-		},
-		"REVOKED": {
-			l.Icons.TicketRevokedIcon,
-			l.Theme.Color.Orange,
-			l.Theme.Color.Orange2,
-		},
+func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*transactionItem, error) {
+	tickets := make([]*transactionItem, 0)
+	multiWallet := l.WL.MultiWallet
+	for _, tx := range txs {
+		w := multiWallet.WalletWithID(tx.WalletID)
+
+		ticketSpender, err := w.TicketSpender(tx.Hash)
+		if err != nil {
+			return nil, err
+		}
+
+		// Apply voted and revoked tx filter
+		if (hasFilter(dcrlibwallet.TxFilterVoted) || hasFilter(dcrlibwallet.TxFilterRevoked)) && ticketSpender == nil {
+			continue
+		}
+
+		if hasFilter(dcrlibwallet.TxFilterVoted) && ticketSpender.Type != dcrlibwallet.TxTypeVote {
+			continue
+		}
+
+		if hasFilter(dcrlibwallet.TxFilterRevoked) && ticketSpender.Type != dcrlibwallet.TxTypeRevocation {
+			continue
+		}
+
+		// This fixes a dcrlibwallet bug where live tickets transactions
+		// do not have updated data of ticket spender.
+		if hasFilter(dcrlibwallet.TxFilterLive) && ticketSpender != nil {
+			continue
+		}
+
+		ticketCopy := tx
+		txStatus := components.TransactionTitleIcon(l, w, &tx, ticketSpender)
+		confirmations := tx.Confirmations(w.GetBestBlock())
+		var ticketAge string
+
+		showProgress := txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature || txStatus.TicketStatus == dcrlibwallet.TicketStatusLive
+		if ticketSpender != nil { /// voted or revoked
+			showProgress = ticketSpender.Confirmations(w.GetBestBlock()) <= multiWallet.TicketMaturity()
+			ticketAge = fmt.Sprintf("%d days", ticketSpender.DaysToVoteOrRevoke)
+		} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
+			txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
+
+			ticketAgeDuration := time.Since(time.Unix(tx.Timestamp, 0)).Seconds()
+			ticketAge = ticketAgeTimeFormat(int(ticketAgeDuration))
+		}
+
+		showTime := showProgress && txStatus.TicketStatus != dcrlibwallet.TicketStatusLive
+
+		var progress float32
+		if showProgress {
+			progressMax := multiWallet.TicketMaturity()
+			if txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
+				progressMax = multiWallet.TicketExpiry()
+			}
+
+			confs := confirmations
+			if ticketSpender != nil {
+				confs = ticketSpender.Confirmations(w.GetBestBlock())
+			}
+
+			progress = (float32(confs) / float32(progressMax)) * 100
+		}
+
+		tickets = append(tickets, &transactionItem{
+			transaction:   &ticketCopy,
+			ticketSpender: ticketSpender,
+			status:        txStatus,
+			confirmations: tx.Confirmations(w.GetBestBlock()),
+			progress:      progress,
+			showProgress:  showProgress,
+			showTime:      showTime,
+			purchaseTime:  time.Unix(tx.Timestamp, 0).Format("Jan 2"),
+			ticketAge:     ticketAge,
+
+			statusTooltip:     l.Theme.Tooltip(),
+			walletNameTooltip: l.Theme.Tooltip(),
+			dateTooltip:       l.Theme.Tooltip(),
+			daysBehindTooltip: l.Theme.Tooltip(),
+			durationTooltip:   l.Theme.Tooltip(),
+		})
 	}
-	st, ok := m[ticketStatus]
-	if !ok {
-		return nil
-	}
-	return &st
+
+	// bring vote and revoke tx forward
+	sort.Slice(tickets[:], func(i, j int) bool {
+		var timeStampI = tickets[i].transaction.Timestamp
+		var timeStampJ = tickets[j].transaction.Timestamp
+
+		if tickets[i].ticketSpender != nil {
+			timeStampI = tickets[i].ticketSpender.Timestamp
+		}
+
+		if tickets[j].ticketSpender != nil {
+			timeStampJ = tickets[j].ticketSpender.Timestamp
+		}
+
+		if newestFirst {
+			return timeStampI > timeStampJ
+		}
+		return timeStampI < timeStampJ
+	})
+
+	return tickets, nil
 }
 
-func setText(t string) {
-	switch t {
-	case "UNMINED":
+func allLiveTickets(mw *dcrlibwallet.MultiWallet) ([]dcrlibwallet.Transaction, error) {
+	var tickets []dcrlibwallet.Transaction
+	liveTicketFilters := []int32{dcrlibwallet.TxFilterUnmined, dcrlibwallet.TxFilterImmature, dcrlibwallet.TxFilterLive}
+	for _, filter := range liveTicketFilters {
+		tx, err := mw.GetTransactionsRaw(0, 0, filter, true)
+		if err != nil {
+			return nil, err
+		}
+
+		tickets = append(tickets, tx...)
+	}
+
+	return tickets, nil
+}
+
+func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimensions {
+	status := l.Theme.Label(values.MarginPadding14, strings.ToUpper(tx.status.Title))
+	status.Font.Weight = text.Medium
+	status.Color = tx.status.Color
+
+	maturity := l.WL.MultiWallet.TicketMaturity()
+	blockTime := l.WL.MultiWallet.TargetTimePerBlockMinutes()
+	maturityDuration := time.Duration(maturity*int32(blockTime)) * time.Minute
+	maturityTime := ticketAgeTimeFormat(int(maturityDuration.Seconds()))
+	var title, mainDesc, subDesc string
+	switch tx.status.TicketStatus {
+	case dcrlibwallet.TicketStatusUnmined:
 		title = "This ticket is waiting in mempool to be included in a block."
-		mainMsg, mainMsgDesc, dayBehind, durationTitle, durationDesc = "", "", ticketAge, "Live in", durationMsg
-	case "IMMATURE":
-		title = "This ticket will enter the ticket pool and become a live ticket after 256 blocks (~20 hrs)."
-		mainMsg, mainMsgDesc, dayBehind, durationTitle, durationDesc = "", "", ticketAge, "Live in", durationMsg
-	case "LIVE":
+	case dcrlibwallet.TicketStatusImmature:
+		title = fmt.Sprintf("This ticket will enter the ticket pool and become a live ticket after %d blocks (~%s).", maturity, maturityTime)
+	case dcrlibwallet.TicketStatusLive:
 		title = "Waiting to be chosen to vote."
-		mainMsg = "The average vote time is 28 days, but can take up to 142 days."
-		mainMsgDesc = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original ticket price without a reward)."
-		dayBehind, durationTitle, durationDesc = ticketAge, "Live in", durationMsg
-	case "VOTED":
-		title = "Congratulations! This ticket has voted."
-		mainMsg = "The ticket price + reward will become spendable after 256 blocks (~20 hrs)."
-		dayBehind, durationTitle, durationDesc = "Days to vote", "Spendable in", durationMsg
-	case "MISSED":
-		title = "This ticket was chosen to vote, but missed the voting window."
-		mainMsg = "Missed tickets will be revoked to return the original ticket price to you."
-		mainMsgDesc = "If a ticket is not revoked automatically, use the revoke button."
-		dayBehind, durationTitle, durationDesc = "Days to miss", "Miss in", durationMsg
-	case "EXPIRED":
-		title = "This ticket has not been chosen to vote within 40960 blocks, and thus expired. "
-		mainMsg = "Expired tickets will be revoked to return the original ticket price to you."
-		mainMsgDesc = "If a ticket is not revoked automatically, use the revoke button."
-		dayBehind, durationTitle, durationDesc = "Days to expire", "Expired in", durationMsg
-	case "REVOKED":
-		title = "This ticket has been revoked."
-		dayBehind, durationTitle, durationDesc = ticketAge, "Spendable in", durationMsg
+		mainDesc = "The average vote time is 28 days, but can take up to 142 days."
+		subDesc = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original ticket price without a reward)."
+	case dcrlibwallet.TicketStatusVotedOrRevoked:
+		if tx.ticketSpender.Type == dcrlibwallet.TxTypeVote {
+			title = "Congratulations! This ticket has voted."
+			mainDesc = "The ticket price + reward will become spendable after %d blocks (~%s)."
+		} else {
+			title = "This ticket has been revoked."
+			mainDesc = "The ticket price will become spendable after %d blocks (~%s)."
+		}
+
+		if tx.ticketSpender.Confirmations(l.WL.MultiWallet.GetBestBlock().Height) > maturity {
+			mainDesc = ""
+		} else {
+
+			mainDesc = fmt.Sprintf(mainDesc, maturity, maturityTime)
+		}
+	case dcrlibwallet.TicketStatusExpired:
+		title = fmt.Sprintf("This ticket has not been chosen to vote within %d blocks, and thus expired.", l.WL.MultiWallet.TicketMaturity())
+		mainDesc = "Expired tickets will be revoked to return the original ticket price to you."
+		subDesc = "If a ticket is not revoked automatically, use the revoke button."
 	}
-}
 
-func ticketStatusTooltip(gtx C, l *load.Load, t *wallet.Ticket) layout.Dimensions {
-	setText(t.Info.Status)
-	st := ticketStatusIcon(l, t.Info.Status)
-	status := l.Theme.Body2(t.Info.Status)
-	status.Color = st.color
+	titleLabel := l.Theme.Label(values.MarginPadding14, title)
+	titleLabel.Color = l.Theme.Color.DeepBlue
 
-	titleLabel, mainMsgLabel, mainMsgLabel2 := l.Theme.Body2(title), l.Theme.Body2(mainMsg), l.Theme.Body2(mainMsgDesc)
-	mainMsgLabel.Color, mainMsgLabel2.Color = l.Theme.Color.Gray, l.Theme.Color.Gray
+	mainDescLabel := l.Theme.Label(values.MarginPadding14, mainDesc)
+	mainDescLabel.Color = l.Theme.Color.Gray
+	subDescLabel := l.Theme.Label(values.MarginPadding14, subDesc)
+	subDescLabel.Color = l.Theme.Color.Gray
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(st.icon.Layout24dp),
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				layout.Rigid(tx.status.Icon.Layout16dp),
 				layout.Rigid(toolTipContent(layout.Inset{Left: values.MarginPadding4}, status.Layout)),
 			)
 		}),
 		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, titleLabel.Layout)),
-		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding8}, mainMsgLabel.Layout)),
 		layout.Rigid(func(gtx C) D {
-			if mainMsgDesc != "" {
-				toolTipContent(layout.Inset{Top: values.MarginPadding8}, mainMsgLabel2.Layout)
+			if mainDesc != "" {
+				return toolTipContent(layout.Inset{Top: values.MarginPadding8}, mainDescLabel.Layout)(gtx)
+			}
+
+			return D{}
+		}),
+		layout.Rigid(func(gtx C) D {
+			if subDesc != "" {
+				return toolTipContent(layout.Inset{Top: values.MarginPadding8}, subDescLabel.Layout)(gtx)
 			}
 			return layout.Dimensions{}
 		}),
@@ -170,13 +264,16 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 	tooltip.Layout(gtx, rect, inset, body)
 }
 
-func walletNameDateTimeTooltip(gtx C, l *load.Load, title string, body layout.Widget) layout.Dimensions {
-	walletNameLabel := l.Theme.Body2(title)
-	walletNameLabel.Color = l.Theme.Color.Gray
+func titleDescTooltip(gtx C, l *load.Load, title string, desc string) layout.Dimensions {
+	titleLabel := l.Theme.Label(values.MarginPadding14, title)
+	titleLabel.Color = l.Theme.Color.Gray
+
+	descLabel := l.Theme.Label(values.MarginPadding14, desc)
+	descLabel.Color = l.Theme.Color.DeepBlue
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(walletNameLabel.Layout),
-		layout.Rigid(body),
+		layout.Rigid(titleLabel.Layout),
+		layout.Rigid(toolTipContent(layout.Inset{Top: values.MarginPadding4}, descLabel.Layout)),
 	)
 }
 
@@ -187,254 +284,209 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 }
 
 // ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
-func ticketCard(gtx layout.Context, l *load.Load, t *wallet.Ticket, tooltip tooltips) layout.Dimensions {
-	var itemWidth int
-	st := ticketStatusIcon(l, t.Info.Status)
-	if st == nil {
-		return layout.Dimensions{}
-	}
-	return l.Theme.Shadow().Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				wrap := l.Theme.Card()
-				wrap.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 8, BottomRight: 0, BottomLeft: 0}
-				wrap.Color = st.background
-				return wrap.Layout(gtx, func(gtx C) D {
-					return layout.Stack{Alignment: layout.S}.Layout(gtx,
-						layout.Expanded(func(gtx C) D {
-							return layout.NE.Layout(gtx, func(gtx C) D {
-								wTimeLabel := l.Theme.Card()
-								wTimeLabel.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 0, BottomLeft: 8}
-								return wTimeLabel.Layout(gtx, func(gtx C) D {
-									return layout.Inset{
-										Top:    values.MarginPadding4,
-										Bottom: values.MarginPadding4,
-										Right:  values.MarginPadding8,
-										Left:   values.MarginPadding8,
-									}.Layout(gtx, func(gtx C) D {
-										txt := l.Theme.Label(values.TextSize14, "10h 47m")
-										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tooltip.durationTooltip, func(gtx C) D {
-											setText(t.Info.Status)
-											return walletNameDateTimeTooltip(gtx, l, durationTitle,
-												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(durationMsg).Layout))
-										})
-										return txtLayout
-									})
-								})
-							})
-						}),
+func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalletName bool) layout.Dimensions {
+	wal := l.WL.MultiWallet.WalletWithID(tx.transaction.WalletID)
+	txStatus := tx.status
 
-						layout.Stacked(func(gtx C) D {
-							content := layout.Inset{
-								Top:    values.MarginPadding24,
-								Right:  values.MarginPadding62,
-								Left:   values.MarginPadding62,
-								Bottom: values.MarginPadding24,
-							}.Layout(gtx, func(gtx C) D {
-								return st.icon.Layout36dp(gtx)
-							})
-							itemWidth = content.Size.X
-							return content
-						}),
+	// add this data to transactionItem so it can be shared with list
+	maturity := l.WL.MultiWallet.TicketMaturity()
 
-						layout.Stacked(func(gtx C) D {
-							return layout.Center.Layout(gtx, func(gtx C) D {
-								return layout.Inset{Top: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-									gtx.Constraints.Max.X = itemWidth
-									p := l.Theme.ProgressBar(20)
-									p.Height, p.Radius = values.MarginPadding4, values.MarginPadding1
-									p.Color = st.color
-									return p.Layout(gtx)
-								})
-							})
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				wrap := l.Theme.Card()
-				wrap.Radius = decredmaterial.CornerRadius{TopRight: 0, TopLeft: 0, BottomRight: 8, BottomLeft: 8}
-				return wrap.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X, gtx.Constraints.Max.X = itemWidth, itemWidth
-					return layout.Inset{
-						Left:   values.MarginPadding12,
-						Right:  values.MarginPadding12,
-						Bottom: values.MarginPadding8,
-					}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Top: values.MarginPadding16,
-								}.Layout(gtx, func(gtx C) D {
-									return components.LayoutBalance(gtx, l, t.Amount)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.Label(values.MarginPadding14, t.Info.Status)
-										txt.Color = st.color
-										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tooltip.statusTooltip, func(gtx C) D {
-											setText(t.Info.Status)
-											return ticketStatusTooltip(gtx, l, t)
-										})
-										return txtLayout
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left:  values.MarginPadding4,
-											Right: values.MarginPadding4,
-										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.ImageBrightness1
-											ic.Color = l.Theme.Color.Gray2
-											return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.Label(values.MarginPadding14, t.WalletName)
-										txt.Color = l.Theme.Color.Gray
-										txtLayout := txt.Layout(gtx)
-										ticketCardTooltip(gtx, txtLayout, tooltip.walletNameTooltip, func(gtx C) D {
-											return walletNameDateTimeTooltip(gtx, l, "Wallet name",
-												toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.WalletName).Layout))
-										})
-										return txtLayout
-									}),
-								)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Top:    values.MarginPadding16,
-									Bottom: values.MarginPadding16,
-								}.Layout(gtx, func(gtx C) D {
-									txt := l.Theme.Label(values.TextSize14, t.MonthDay)
-									txt.Color = l.Theme.Color.Gray2
-									return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											txtLayout := txt.Layout(gtx)
-											ticketCardTooltip(gtx, txtLayout, tooltip.dateTooltip, func(gtx C) D {
-												dt := strings.Split(t.DateTime, " ")
-												s1 := []string{dt[0], dt[1], dt[2]}
-												date := strings.Join(s1, " ")
-												s2 := []string{dt[3], dt[4]}
-												time := strings.Join(s2, " ")
-												dateTime := fmt.Sprintf("%s at %s", date, time)
-												return walletNameDateTimeTooltip(gtx, l, "Purchased",
-													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(dateTime).Layout))
-											})
-											return txtLayout
-										}),
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{
-												Left:  values.MarginPadding4,
-												Right: values.MarginPadding4,
-											}.Layout(gtx, func(gtx C) D {
-												ic := l.Icons.ImageBrightness1
-												ic.Color = l.Theme.Color.Gray2
-												return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											txt.Text = t.DaysBehind
-											txtLayout := txt.Layout(gtx)
-											ticketCardTooltip(gtx, txtLayout, tooltip.daysBehindTooltip, func(gtx C) D {
-												setText(t.Info.Status)
-												return walletNameDateTimeTooltip(gtx, l, dayBehind,
-													toolTipContent(layout.Inset{Top: values.MarginPadding8}, l.Theme.Body2(t.DaysBehind).Layout))
-											})
-											return txtLayout
-										}),
-									)
-								})
-							}),
-						)
-					})
-				})
-			}),
-		)
-	})
-}
-
-// ticketActivityRow layouts out ticket info, display ticket activities on the tickets_page and tickets_activity_page
-func ticketActivityRow(gtx layout.Context, l *load.Load, t wallet.Ticket, index int) layout.Dimensions {
-	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+	return decredmaterial.LinearLayout{
+		Width:       gtx.Px(values.MarginPadding168),
+		Height:      decredmaterial.WrapContent,
+		Orientation: layout.Vertical,
+		Shadow:      l.Theme.Shadow(),
+	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				st := ticketStatusIcon(l, t.Info.Status)
-				if st == nil {
-					return layout.Dimensions{}
-				}
-				return st.icon.Layout24dp(gtx)
+			return decredmaterial.LinearLayout{
+				Width:      decredmaterial.MatchParent,
+				Height:     decredmaterial.WrapContent,
+				Background: txStatus.Background,
+				Border:     decredmaterial.Border{Radius: decredmaterial.TopRadius(8)},
+			}.Layout2(gtx, func(gtx C) D {
+
+				return layout.Stack{}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return layout.Center.Layout(gtx, func(gtx C) D {
+							return layout.Inset{
+								Top:    values.MarginPadding24,
+								Bottom: values.MarginPadding24,
+							}.Layout(gtx, txStatus.Icon.Layout36dp)
+						})
+					}),
+					layout.Expanded(func(gtx C) D {
+						if !tx.showTime {
+							return D{}
+						}
+
+						return layout.NE.Layout(gtx, func(gtx C) D {
+							timeWrapper := l.Theme.Card()
+							timeWrapper.Radius = decredmaterial.CornerRadius{TopRight: 8, TopLeft: 0, BottomRight: 0, BottomLeft: 8}
+							return timeWrapper.Layout(gtx, func(gtx C) D {
+								return layout.Inset{
+									Top:    values.MarginPadding4,
+									Bottom: values.MarginPadding4,
+									Right:  values.MarginPadding8,
+									Left:   values.MarginPadding8,
+								}.Layout(gtx, func(gtx C) D {
+
+									confirmations := tx.confirmations
+									if tx.ticketSpender != nil {
+										confirmations = tx.ticketSpender.Confirmations(wal.GetBestBlock())
+									}
+
+									timeRemaining := time.Duration(float64(maturity-confirmations)*l.WL.MultiWallet.TargetTimePerBlockMinutes()) * time.Minute
+									maturityDuration := ticketAgeTimeFormat(int(timeRemaining.Seconds()))
+									txt := l.Theme.Label(values.TextSize14, maturityTimeFormat(int(timeRemaining.Minutes())))
+
+									durationLayout := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, l.Icons.TimerIcon.Layout12dp)
+										}),
+										layout.Rigid(txt.Layout),
+									)
+
+									var durationTitle = "Live in" // immature
+									if txStatus.TicketStatus != dcrlibwallet.TicketStatusImmature {
+										// voted or revoked
+										durationTitle = "Spendable in"
+									}
+
+									ticketCardTooltip(gtx, durationLayout, tx.durationTooltip, func(gtx C) D {
+										return titleDescTooltip(gtx, l, durationTitle, fmt.Sprintf("%s (%d/%d blocks)", maturityDuration, confirmations, maturity))
+									})
+
+									return durationLayout
+								})
+							})
+						})
+					}),
+					layout.Expanded(func(gtx C) D {
+						return layout.S.Layout(gtx, func(gtx C) D {
+
+							if !tx.showProgress {
+								return D{}
+							}
+
+							p := l.Theme.ProgressBar(int(tx.progress))
+							p.Height = values.MarginPadding4
+							p.Color = txStatus.ProgressBarColor
+							p.TrackColor = txStatus.ProgressTrackColor
+							return p.Layout2(gtx)
+						})
+					}),
+				)
 			})
 		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					if index == 0 {
-						return layout.Dimensions{}
-					}
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					separator := l.Theme.Separator()
-					separator.Width = gtx.Constraints.Max.X
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return separator.Layout(gtx)
-					})
+		layout.Rigid(func(gtx C) D {
+			return decredmaterial.LinearLayout{
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.WrapContent,
+				Orientation: layout.Vertical,
+				Padding:     layout.UniformInset(values.MarginPadding16),
+			}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return components.LayoutBalance(gtx, l, dcrutil.Amount(tx.transaction.Amount).String())
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
-						Top:    values.MarginPadding8,
+						Top:    values.MarginPadding4,
 						Bottom: values.MarginPadding8,
 					}.Layout(gtx, func(gtx C) D {
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								labelStatus := l.Theme.Label(values.TextSize18, strings.Title(strings.ToLower(t.Info.Status)))
-								labelStatus.Color = l.Theme.Color.DeepBlue
-
-								labelDaysBehind := l.Theme.Label(values.TextSize14, t.DaysBehind)
-								labelDaysBehind.Color = l.Theme.Color.DeepBlue
-
-								return components.EndToEndRow(gtx,
-									labelStatus.Layout,
-									labelDaysBehind.Layout)
+								txt := l.Theme.Label(values.MarginPadding14, txStatus.Title)
+								txt.Color = txStatus.Color
+								txt.Font.Weight = text.Medium
+								txtLayout := txt.Layout(gtx)
+								ticketCardTooltip(gtx, txtLayout, tx.statusTooltip, func(gtx C) D {
+									return ticketStatusTooltip(gtx, l, tx)
+								})
+								return txtLayout
 							}),
 							layout.Rigid(func(gtx C) D {
-								return layout.Flex{
-									Alignment: layout.Middle,
-								}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.Label(values.TextSize14, t.WalletName)
-										txt.Color = l.Theme.Color.Gray2
-										return txt.Layout(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Left:  values.MarginPadding4,
-											Right: values.MarginPadding4,
-										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.ImageBrightness1
-											ic.Color = l.Theme.Color.Gray2
-											return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{
-											Right: values.MarginPadding4,
-										}.Layout(gtx, func(gtx C) D {
-											ic := l.Icons.TicketIconInactive
-											return ic.Layout12dp(gtx)
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										txt := l.Theme.Label(values.TextSize14, t.Amount)
-										txt.Color = l.Theme.Color.Gray2
-										return txt.Layout(gtx)
-									}),
-								)
+								if !showWalletName {
+									return D{}
+								}
+
+								return layout.Inset{
+									Left:  values.MarginPadding4,
+									Right: values.MarginPadding4,
+								}.Layout(gtx, func(gtx C) D {
+									txt := l.Theme.Label(values.MarginPadding14, "•")
+									txt.Color = l.Theme.Color.Gray
+
+									return txt.Layout(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								if !showWalletName {
+									return D{}
+								}
+
+								txt := l.Theme.Label(values.TextSize14, wal.Name)
+								txt.Color = l.Theme.Color.Gray
+								txtLayout := txt.Layout(gtx)
+								ticketCardTooltip(gtx, txtLayout, tx.walletNameTooltip, func(gtx C) D {
+									return titleDescTooltip(gtx, l, "Wallet name", txt.Text)
+								})
+								return txtLayout
 							}),
 						)
 					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := l.Theme.Label(values.TextSize14, time.Unix(tx.transaction.Timestamp, 0).Format("Jan 2"))
+					txt.Color = l.Theme.Color.Gray2
+					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txtLayout := txt.Layout(gtx)
+							ticketCardTooltip(gtx, txtLayout, tx.dateTooltip, func(gtx C) D {
+								dateTime := time.Unix(tx.transaction.Timestamp, 0).Format("Jan 2, 2006 at 03:04:05 PM")
+								return titleDescTooltip(gtx, l, "Purchased", dateTime)
+							})
+							return txtLayout
+						}),
+						layout.Rigid(func(gtx C) D {
+
+							var tooltipTitle string
+							if tx.ticketSpender != nil { // voted or revoked
+								if tx.ticketSpender.Type == dcrlibwallet.TxTypeVote {
+									tooltipTitle = "Days to vote"
+								} else {
+									tooltipTitle = "Days to miss"
+								}
+							} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
+								txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
+								tooltipTitle = "Ticket age"
+							} else {
+								return D{}
+							}
+
+							return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return layout.Inset{
+										Left:  values.MarginPadding4,
+										Right: values.MarginPadding4,
+									}.Layout(gtx, func(gtx C) D {
+										ic := l.Icons.ImageBrightness1
+										ic.Color = l.Theme.Color.Gray2
+										return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
+									})
+								}),
+								layout.Rigid(func(gtx C) D {
+
+									txt.Text = tx.ticketAge
+									txtLayout := txt.Layout(gtx)
+									ticketCardTooltip(gtx, txtLayout, tx.daysBehindTooltip, func(gtx C) D {
+										return titleDescTooltip(gtx, l, tooltipTitle, tx.ticketAge)
+									})
+									return txtLayout
+								}),
+							)
+						}),
+					)
 				}),
 			)
 		}),
@@ -455,6 +507,25 @@ func createClickGestures(count int) []*gesture.Click {
 		gestures[i] = &gesture.Click{}
 	}
 	return gestures
+}
+
+func ticketAgeTimeFormat(secs int) string {
+	if secs > 86399 {
+		days := secs / 86400
+		return fmt.Sprintf("%dd", days)
+	} else if secs > 3599 {
+		hours := secs / 3600
+		return fmt.Sprintf("%dh", hours)
+	} else if secs > 59 {
+		mins := secs / 60
+		return fmt.Sprintf("%dm", mins)
+	}
+
+	return fmt.Sprintf("%ds", secs)
+}
+
+func maturityTimeFormat(maturityTimeMinutes int) string {
+	return fmt.Sprintf("%02d:%02d", maturityTimeMinutes/60, maturityTimeMinutes%60)
 }
 
 func nextTicketRemaining(allsecs int) string {

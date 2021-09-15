@@ -33,6 +33,20 @@ func Radius(radius float32) CornerRadius {
 	}
 }
 
+func TopRadius(radius float32) CornerRadius {
+	return CornerRadius{
+		TopLeft:  radius,
+		TopRight: radius,
+	}
+}
+
+func BottomRadius(radius float32) CornerRadius {
+	return CornerRadius{
+		BottomRight: radius,
+		BottomLeft:  radius,
+	}
+}
+
 const (
 	defaultRadius = 14
 )

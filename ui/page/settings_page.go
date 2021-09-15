@@ -479,7 +479,7 @@ func (pg *SettingsPage) Handle() {
 			pg.showSPVPeerDialog()
 			return
 		}
-		pg.wal.RemoveUserConfigValueForKey(specificPeerKey)
+		pg.WL.MultiWallet.DeleteUserConfigValueForKey(specificPeerKey)
 	}
 
 	for pg.updateConnectToPeer.Clicked() {
@@ -498,7 +498,7 @@ func (pg *SettingsPage) Handle() {
 			pg.showUserAgentDialog()
 			return
 		}
-		pg.wal.RemoveUserConfigValueForKey(userAgentKey)
+		pg.WL.MultiWallet.DeleteUserConfigValueForKey(userAgentKey)
 	}
 
 	select {
@@ -546,7 +546,7 @@ func (pg *SettingsPage) showUserAgentDialog() {
 }
 
 func (pg *SettingsPage) updateSettingOptions() {
-	isPassword := pg.wal.IsStartupSecuritySet()
+	isPassword := pg.WL.MultiWallet.IsStartupSecuritySet()
 	pg.startupPassword.SetChecked(false)
 	pg.isStartupPassword = false
 	if isPassword {

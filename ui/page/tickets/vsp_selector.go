@@ -23,14 +23,12 @@ type vspSelector struct {
 
 	changed      bool
 	showVSPModal *widget.Clickable
-	vspInfo      *wallet.VSP
-	selectedVSP  wallet.VSPInfo
+	selectedVSP  *wallet.VSPInfo
 }
 
 func newVSPSelector(l *load.Load) *vspSelector {
 	v := &vspSelector{
 		Load:         l,
-		vspInfo:      l.WL.VspInfo,
 		showVSPModal: new(widget.Clickable),
 	}
 	return v
@@ -48,7 +46,7 @@ func (v *vspSelector) Changed() bool {
 }
 
 func (v *vspSelector) selectVSP(vspHost string) {
-	for _, vsp := range (*v.vspInfo).List {
+	for _, vsp := range v.WL.VspInfo.List {
 		if vsp.Host == vspHost {
 			v.changed = true
 			v.selectedVSP = vsp
@@ -57,7 +55,7 @@ func (v *vspSelector) selectVSP(vspHost string) {
 	}
 }
 
-func (v *vspSelector) SelectedVSP() wallet.VSPInfo {
+func (v *vspSelector) SelectedVSP() *wallet.VSPInfo {
 	return v.selectedVSP
 }
 
@@ -65,7 +63,7 @@ func (v *vspSelector) handle() {
 	if v.showVSPModal.Clicked() {
 		newVSPSelectorModal(v.Load).
 			title("Voting service provider").
-			vspSelected(func(info wallet.VSPInfo) {
+			vspSelected(func(info *wallet.VSPInfo) {
 				v.selectVSP(info.Host)
 			}).
 			Show()
@@ -86,7 +84,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 			return decredmaterial.Clickable(gtx, v.showVSPModal, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						if v.selectedVSP.Host == "" {
+						if v.selectedVSP == nil {
 							txt := v.Theme.Label(values.TextSize16, "Select VSP...")
 							txt.Color = v.Theme.Color.Gray2
 							return txt.Layout(gtx)
@@ -97,7 +95,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return layout.Flex{}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									if v.selectedVSP.Info == nil {
+									if v.selectedVSP == nil {
 										return layout.Dimensions{}
 									}
 									txt := v.Theme.Label(values.TextSize16, fmt.Sprintf("%v%%", v.selectedVSP.Info.FeePercentage))
@@ -132,19 +130,17 @@ type vspSelectorModal struct {
 	inputVSP decredmaterial.Editor
 	addVSP   decredmaterial.Button
 
-	vspInfo     *wallet.VSP
 	vspHosts    *layout.List
 	selectVSP   []*gesture.Click
-	selectedVSP wallet.VSPInfo
+	selectedVSP *wallet.VSPInfo
 
-	vspSelectedCallback func(wallet.VSPInfo)
+	vspSelectedCallback func(*wallet.VSPInfo)
 }
 
 func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 	v := &vspSelectorModal{
 		Load: l,
 
-		vspInfo:  l.WL.VspInfo,
 		inputVSP: l.Theme.Editor(new(widget.Editor), "Add a new VSP..."),
 		addVSP:   l.Theme.Button(new(widget.Clickable), "Save"),
 		vspHosts: &layout.List{Axis: layout.Vertical},
@@ -182,7 +178,7 @@ func (v *vspSelectorModal) Handle() {
 		}()
 	}
 
-	vspList := (*v.vspInfo).List
+	vspList := v.WL.VspInfo.List
 	if len(vspList) != len(v.selectVSP) {
 		v.selectVSP = createClickGestures(len(vspList))
 	}
@@ -193,7 +189,7 @@ func (v *vspSelectorModal) title(title string) *vspSelectorModal {
 	return v
 }
 
-func (v *vspSelectorModal) vspSelected(callback func(wallet.VSPInfo)) *vspSelectorModal {
+func (v *vspSelectorModal) vspSelected(callback func(*wallet.VSPInfo)) *vspSelectorModal {
 	v.vspSelectedCallback = callback
 	v.Dismiss()
 	return v
@@ -218,8 +214,8 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					listVSP := (*v.vspInfo).List
-					return v.vspHosts.Layout(gtx, len(v.selectVSP), func(gtx C, i int) D {
+					listVSP := v.WL.VspInfo.List
+					return v.vspHosts.Layout(gtx, len(listVSP), func(gtx C, i int) D {
 						click := v.selectVSP[i]
 						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
 						click.Add(gtx.Ops)
@@ -234,7 +230,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								if v.selectedVSP.Host != listVSP[i].Host {
+								if v.selectedVSP != nil || v.selectedVSP != listVSP[i] {
 									return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
 										return layout.Dimensions{}
 									})
@@ -257,7 +253,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	}, 900)
 }
 
-func (v *vspSelectorModal) handlerSelectVSP(events []gesture.ClickEvent, info wallet.VSPInfo) {
+func (v *vspSelectorModal) handlerSelectVSP(events []gesture.ClickEvent, info *wallet.VSPInfo) {
 	for _, e := range events {
 		if e.Type == gesture.TypeClick {
 			v.selectedVSP = info

@@ -137,6 +137,7 @@ func container(gtx C, theme decredmaterial.Theme, body layout.Widget, infoText s
 					Direction:   layout.S,
 					Alignment:   layout.Baseline,
 					Background:  theme.Color.Surface,
+					Shadow:      theme.Shadow(),
 					Padding:     layout.UniformInset(values.MarginPadding16),
 					Margin:      layout.Inset{Left: values.Size0_5},
 					Border:      decredmaterial.Border{Radius: decredmaterial.Radius(4)},
