@@ -21,17 +21,17 @@ const purchaseModalID = "ticket_purchase_modal"
 type ticketPurchaseModal struct {
 	*load.Load
 
+	balanceError    string
 	ticketPrice     dcrutil.Amount
 	totalCost       int64
 	balanceLessCost int64
 	vspIsFetched    bool
 
-	modal          decredmaterial.Modal
-	tickets        decredmaterial.Editor
-	rememberVSP    decredmaterial.CheckBoxStyle
-	cancelPurchase decredmaterial.Button
-	reviewPurchase decredmaterial.Button
-
+	modal           decredmaterial.Modal
+	tickets         decredmaterial.Editor
+	rememberVSP     decredmaterial.CheckBoxStyle
+	cancelPurchase  decredmaterial.Button
+	reviewPurchase  decredmaterial.Button
 	accountSelector *components.AccountSelector
 	vspSelector     *vspSelector
 }
@@ -117,6 +117,15 @@ func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 					return tp.accountSelector.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
+					if tp.balanceError == "" {
+						return D{}
+					}
+
+					label := tp.Theme.Body1(tp.balanceError)
+					label.Color = tp.Theme.Color.Orange
+					return label.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 						return tp.vspSelector.Layout(gtx)
 					})
@@ -158,17 +167,20 @@ func (tp *ticketPurchaseModal) ticketCount() int64 {
 }
 
 func (tp *ticketPurchaseModal) canPurchase() bool {
+	tp.balanceError = ""
+	if tp.ticketCount() < 1 {
+		return false
+	}
+
 	if tp.vspSelector.selectedVSP == nil {
 		return false
 	}
 
 	tp.calculateTotals()
+
 	accountBalance := tp.accountSelector.SelectedAccount().Balance.Spendable
 	if accountBalance < tp.totalCost || tp.balanceLessCost < 0 {
-		return false
-	}
-
-	if tp.ticketCount() < 1 {
+		tp.balanceError = "Insufficient funds"
 		return false
 	}
 
@@ -264,7 +276,7 @@ func (tp *ticketPurchaseModal) Handle() {
 		tp.Dismiss()
 	}
 
-	if tp.reviewPurchase.Button.Clicked() && tp.canPurchase() {
+	if tp.canPurchase() && tp.reviewPurchase.Button.Clicked() {
 
 		if tp.vspSelector.Changed() && tp.rememberVSP.CheckBox.Value {
 			tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)
@@ -281,17 +293,4 @@ func (tp *ticketPurchaseModal) Handle() {
 			TicketPurchase(tp.purchaseTickets).
 			Show()
 	}
-}
-
-func (tp *ticketPurchaseModal) editorsNotEmpty(btn *decredmaterial.Button, editors ...*widget.Editor) bool {
-	btn.Color = tp.Theme.Color.Surface
-	for _, e := range editors {
-		if e.Text() == "" {
-			btn.Background = tp.Theme.Color.Hint
-			return false
-		}
-	}
-
-	btn.Background = tp.Theme.Color.Primary
-	return true
 }
