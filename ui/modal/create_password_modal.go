@@ -26,9 +26,10 @@ type CreatePasswordModal struct {
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
 
-	isLoading         bool
-	isMinimizable     bool
-	walletNameEnabled bool
+	isLoading          bool
+	isCancelable       bool
+	walletNameEnabled  bool
+	showWalletWarnInfo bool
 
 	dialogTitle string
 	randomID    string
@@ -49,11 +50,11 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button(new(widget.Clickable), "Confirm"),
 		btnNegative:      l.Theme.Button(new(widget.Clickable), "Cancel"),
-		isMinimizable:    true,
+		isCancelable:     true,
 	}
 
 	cm.btnNegative.TextSize = values.TextSize16
-	cm.btnNegative.Font.Weight = text.Bold
+	cm.btnNegative.Font.Weight = text.Medium
 
 	cm.btnPositve.Background = cm.Theme.Color.InactiveGray
 	cm.btnPositve.Font.Weight = text.Bold
@@ -112,6 +113,11 @@ func (cm *CreatePasswordModal) ConfirmPasswordHint(hint string) *CreatePasswordM
 	return cm
 }
 
+func (cm *CreatePasswordModal) ShowWalletInfoTip(show bool) *CreatePasswordModal {
+	cm.showWalletWarnInfo = show
+	return cm
+}
+
 func (cm *CreatePasswordModal) PasswordCreated(callback func(walletName, password string, m *CreatePasswordModal) bool) *CreatePasswordModal {
 	cm.callback = callback
 	return cm
@@ -121,8 +127,8 @@ func (cm *CreatePasswordModal) SetLoading(loading bool) {
 	cm.isLoading = loading
 }
 
-func (cm *CreatePasswordModal) MinimizableBackground(min bool) {
-	cm.isMinimizable = min
+func (cm *CreatePasswordModal) SetCancelable(min bool) {
+	cm.isCancelable = min
 }
 
 func (cm *CreatePasswordModal) SetError(err string) {
@@ -166,7 +172,7 @@ func (cm *CreatePasswordModal) Handle() {
 		}
 	}
 
-	if cm.modal.BackdropClicked(cm.isMinimizable) {
+	if cm.modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}
@@ -214,14 +220,18 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 					return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								txt := cm.Theme.Label(values.MarginPadding14, "This spending password is for the new wallet only")
-								txt.Color = cm.Theme.Color.Gray4
-								return txt.Layout(gtx)
+								if cm.showWalletWarnInfo {
+									txt := cm.Theme.Label(values.MarginPadding14, "This spending password is for the new wallet only")
+									txt.Color = cm.Theme.Color.Gray4
+									return txt.Layout(gtx)
+								}
+								return layout.Dimensions{}
 							}),
 							layout.Rigid(func(gtx C) D {
 								txt := cm.Theme.Label(values.MarginPadding14, strconv.Itoa(cm.passwordEditor.Editor.Len()))
 								txt.Color = cm.Theme.Color.Gray4
-								return txt.Layout(gtx)
+								return layout.E.Layout(gtx, txt.Layout)
+								// return txt.Layout(gtx)
 							}),
 						)
 					})

@@ -30,20 +30,20 @@ type CreateWatchOnlyModal struct {
 
 	randomID string
 
-	isLoading     bool
-	isMinimizable bool
+	isLoading    bool
+	isCancelable bool
 
 	callback func(walletName, extPubKey string, m *CreateWatchOnlyModal) bool // return true to dismiss dialog
 }
 
 func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	cm := &CreateWatchOnlyModal{
-		Load:          l,
-		randomID:      fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
-		modal:         *l.Theme.ModalFloatTitle(),
-		btnPositve:    l.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
-		btnNegative:   l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
-		isMinimizable: true,
+		Load:         l,
+		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
+		modal:        *l.Theme.ModalFloatTitle(),
+		btnPositve:   l.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
+		btnNegative:  l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+		isCancelable: true,
 	}
 
 	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
@@ -84,8 +84,8 @@ func (cm *CreateWatchOnlyModal) SetLoading(loading bool) {
 	cm.isLoading = loading
 }
 
-func (cm *CreateWatchOnlyModal) MinimizableBackground(min bool) {
-	cm.isMinimizable = min
+func (cm *CreateWatchOnlyModal) SetCancelable(min bool) {
+	cm.isCancelable = min
 }
 
 func (cm *CreateWatchOnlyModal) SetError(err string) {
@@ -119,7 +119,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		}
 	}
 
-	if cm.modal.BackdropClicked(cm.isMinimizable) {
+	if cm.modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}

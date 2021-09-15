@@ -296,6 +296,7 @@ func (pg *WalletPage) showAddWalletModal(l *load.Load) {
 	modal.NewCreatePasswordModal(l).
 		Title("Create new wallet").
 		EnableName(true).
+		ShowWalletInfoTip(true).
 		PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
 			go func() {
 				_, err := pg.multiWallet.CreateNewWallet(walletName, password, dcrlibwallet.PassphraseTypePass)

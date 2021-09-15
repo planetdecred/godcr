@@ -18,9 +18,9 @@ const TextInput = "text_input_modal"
 type TextInputModal struct {
 	*InfoModal
 
-	IsLoading     bool
-	ShowWarnInfo  bool
-	isMinimizable bool
+	IsLoading           bool
+	showAccountWarnInfo bool
+	isCancelable        bool
 
 	textInput decredmaterial.Editor
 	callback  func(string, *TextInputModal) bool
@@ -28,8 +28,8 @@ type TextInputModal struct {
 
 func NewTextInputModal(l *load.Load) *TextInputModal {
 	tm := &TextInputModal{
-		InfoModal:     NewInfoModal(l),
-		isMinimizable: true,
+		InfoModal:    NewInfoModal(l),
+		isCancelable: true,
 	}
 
 	tm.randomID = fmt.Sprintf("%s-%d", TextInput, generateRandomNumber())
@@ -54,7 +54,7 @@ func (tm *TextInputModal) Hint(hint string) *TextInputModal {
 }
 
 func (tm *TextInputModal) ShowAccountInfoTip(show bool) *TextInputModal {
-	tm.ShowWarnInfo = show
+	tm.showAccountWarnInfo = show
 	return tm
 }
 
@@ -77,8 +77,8 @@ func (tm *TextInputModal) SetError(err string) {
 	}
 }
 
-func (tm *TextInputModal) MinimizableBackground(min bool) {
-	tm.isMinimizable = min
+func (tm *TextInputModal) SetCancelable(min bool) {
+	tm.isCancelable = min
 }
 
 func (tm *TextInputModal) Handle() {
@@ -107,7 +107,7 @@ func (tm *TextInputModal) Handle() {
 		}
 	}
 
-	if tm.modal.BackdropClicked(tm.isMinimizable) {
+	if tm.modal.BackdropClicked(tm.isCancelable) {
 		if !tm.IsLoading {
 			tm.Dismiss()
 		}
@@ -122,7 +122,7 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 		w = append(w, tm.titleLayout())
 	}
 
-	if tm.ShowWarnInfo {
+	if tm.showAccountWarnInfo {
 		l := func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
