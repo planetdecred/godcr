@@ -32,6 +32,7 @@ type transactionItem struct {
 	ticketAge     string
 
 	statusTooltip     *decredmaterial.Tooltip
+	walletNameTooltip *decredmaterial.Tooltip
 	dateTooltip       *decredmaterial.Tooltip
 	daysBehindTooltip *decredmaterial.Tooltip
 	durationTooltip   *decredmaterial.Tooltip
@@ -131,6 +132,7 @@ func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, new
 			ticketAge:     ticketAge,
 
 			statusTooltip:     l.Theme.Tooltip(),
+			walletNameTooltip: l.Theme.Tooltip(),
 			dateTooltip:       l.Theme.Tooltip(),
 			daysBehindTooltip: l.Theme.Tooltip(),
 			durationTooltip:   l.Theme.Tooltip(),
@@ -423,9 +425,13 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 									return D{}
 								}
 
-								txt := l.Theme.Label(values.MarginPadding14, wal.Name)
+								txt := l.Theme.Label(values.TextSize14, wal.Name)
 								txt.Color = l.Theme.Color.Gray
-								return txt.Layout(gtx)
+								txtLayout := txt.Layout(gtx)
+								ticketCardTooltip(gtx, txtLayout, tx.walletNameTooltip, func(gtx C) D {
+									return titleDescTooltip(gtx, l, "Wallet name", txt.Text)
+								})
+								return txtLayout
 							}),
 						)
 					})
