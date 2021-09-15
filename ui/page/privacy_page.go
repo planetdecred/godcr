@@ -131,15 +131,8 @@ func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions 
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.S.Layout(gtx, func(gtx C) D {
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							gtx.Constraints.Min.X = 500
-							gtx.Constraints.Max.X = gtx.Constraints.Min.X
-							return layout.UniformInset(values.MarginPadding15).Layout(gtx, pg.toPrivacySetup.Layout)
-						}),
-					)
-				})
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, pg.toPrivacySetup.Layout)
 			}),
 		)
 	})

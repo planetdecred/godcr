@@ -147,7 +147,6 @@ func (in *InfoModal) handleEnterKeypress() {
 	case event := <-in.keyEvent:
 		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
 			in.enterKeyPressed = true
-			return
 		}
 	default:
 	}
@@ -167,13 +166,10 @@ func (in *InfoModal) Handle() {
 		in.negativeButtonClicked()
 	}
 
-<<<<<<< HEAD
 	if in.modal.BackdropClicked(in.isCancelable) {
 		in.Dismiss()
 	}
-=======
 	in.RefreshWindow()
->>>>>>> c7c5be5 (Modify Enter key evnet handler to respond to key press effectively)
 }
 
 func (in *InfoModal) Layout(gtx layout.Context) D {
