@@ -516,6 +516,7 @@ func (pg *SettingsPage) Handle() {
 func (pg *SettingsPage) showSPVPeerDialog() {
 	textModal := modal.NewTextInputModal(pg.Load).
 		Hint("IP address").
+		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(ipAddress string, tim *modal.TextInputModal) bool {
 			if ipAddress != "" {
 				pg.wal.SaveConfigValueForKey(dcrlibwallet.SpvPersistentPeerAddressesConfigKey, ipAddress)
@@ -531,6 +532,7 @@ func (pg *SettingsPage) showSPVPeerDialog() {
 func (pg *SettingsPage) showUserAgentDialog() {
 	textModal := modal.NewTextInputModal(pg.Load).
 		Hint("User agent").
+		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton(values.String(values.StrConfirm), func(userAgent string, tim *modal.TextInputModal) bool {
 			if userAgent != "" {
 				pg.wal.SaveConfigValueForKey(dcrlibwallet.UserAgentConfigKey, userAgent)

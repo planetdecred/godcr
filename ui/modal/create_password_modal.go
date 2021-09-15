@@ -2,6 +2,7 @@ package modal
 
 import (
 	"fmt"
+	"strconv"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -18,24 +19,27 @@ const CreateWallet = "create_wallet_modal"
 
 type CreatePasswordModal struct {
 	*load.Load
-	randomID string
-	modal    decredmaterial.Modal
 
-	dialogTitle string
-
-	walletNameEnabled     bool
+	modal                 decredmaterial.Modal
 	walletName            decredmaterial.Editor
 	passwordEditor        decredmaterial.Editor
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
 
-	isLoading      bool
+	isLoading          bool
+	isCancelable       bool
+	walletNameEnabled  bool
+	showWalletWarnInfo bool
+
+	dialogTitle string
+	randomID    string
+
 	materialLoader material.LoaderStyle
 
-	callback   func(walletName, password string, m *CreatePasswordModal) bool // return true to dismiss dialog
-	btnPositve decredmaterial.Button
-
+	btnPositve  decredmaterial.Button
 	btnNegative decredmaterial.Button
+
+	callback func(walletName, password string, m *CreatePasswordModal) bool // return true to dismiss dialog
 }
 
 func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
@@ -46,10 +50,14 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button(new(widget.Clickable), "Confirm"),
 		btnNegative:      l.Theme.Button(new(widget.Clickable), "Cancel"),
+		isCancelable:     true,
 	}
 
-	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
-	cm.btnPositve.Font.Weight, cm.btnNegative.Font.Weight = text.Bold, text.Bold
+	cm.btnNegative.TextSize = values.TextSize16
+	cm.btnNegative.Font.Weight = text.Medium
+
+	cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+	cm.btnPositve.Font.Weight = text.Bold
 
 	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
@@ -105,6 +113,11 @@ func (cm *CreatePasswordModal) ConfirmPasswordHint(hint string) *CreatePasswordM
 	return cm
 }
 
+func (cm *CreatePasswordModal) ShowWalletInfoTip(show bool) *CreatePasswordModal {
+	cm.showWalletWarnInfo = show
+	return cm
+}
+
 func (cm *CreatePasswordModal) PasswordCreated(callback func(walletName, password string, m *CreatePasswordModal) bool) *CreatePasswordModal {
 	cm.callback = callback
 	return cm
@@ -114,11 +127,22 @@ func (cm *CreatePasswordModal) SetLoading(loading bool) {
 	cm.isLoading = loading
 }
 
+func (cm *CreatePasswordModal) SetCancelable(min bool) {
+	cm.isCancelable = min
+}
+
 func (cm *CreatePasswordModal) SetError(err string) {
 
 }
 
 func (cm *CreatePasswordModal) Handle() {
+	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
+		editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
+		cm.btnPositve.Background = cm.Theme.Color.Primary
+	} else {
+		cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+	}
+
 	if cm.passwordEditor.Editor.Text() == cm.confirmPasswordEditor.Editor.Text() {
 		// reset error label when password and matching password fields match
 		cm.confirmPasswordEditor.SetError("")
@@ -143,6 +167,12 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	if cm.btnNegative.Button.Clicked() {
+		if !cm.isLoading {
+			cm.Dismiss()
+		}
+	}
+
+	if cm.modal.BackdropClicked(cm.isCancelable) {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}
@@ -184,7 +214,29 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			return layout.Dimensions{}
 		},
 		func(gtx C) D {
-			return cm.passwordEditor.Layout(gtx)
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(cm.passwordEditor.Layout),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding20, Right: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								if cm.showWalletWarnInfo {
+									txt := cm.Theme.Label(values.MarginPadding14, "This spending password is for the new wallet only")
+									txt.Color = cm.Theme.Color.Gray4
+									return txt.Layout(gtx)
+								}
+								return layout.Dimensions{}
+							}),
+							layout.Rigid(func(gtx C) D {
+								txt := cm.Theme.Label(values.MarginPadding14, strconv.Itoa(cm.passwordEditor.Editor.Len()))
+								txt.Color = cm.Theme.Color.Gray4
+								return layout.E.Layout(gtx, txt.Layout)
+								// return txt.Layout(gtx)
+							}),
+						)
+					})
+				}),
+			)
 		},
 		func(gtx C) D {
 			return cm.passwordStrength.Layout(gtx)
@@ -206,7 +258,6 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 							return cm.materialLoader.Layout(gtx)
 						}
 
-						cm.btnPositve.Background, cm.btnPositve.Color = cm.Theme.Color.Surface, cm.Theme.Color.Primary
 						return cm.btnPositve.Layout(gtx)
 					}),
 				)

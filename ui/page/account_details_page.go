@@ -272,6 +272,7 @@ func (pg *AcctDetailsPage) Handle() {
 	if pg.renameAccount.Clicked() {
 		textModal := modal.NewTextInputModal(pg.Load).
 			Hint("Account name").
+			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 			PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 				err := pg.wallet.RenameAccount(pg.account.Number, newName)
 				if err != nil {

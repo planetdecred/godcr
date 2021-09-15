@@ -373,6 +373,7 @@ func (mp *MainPage) popFragment() {
 		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
 
 		mp.currentPage.OnClose()
+		previousPage.OnResume()
 		mp.currentPage = previousPage
 	}
 }
