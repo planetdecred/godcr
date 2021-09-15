@@ -681,8 +681,8 @@ github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
-github.com/planetdecred/dcrlibwallet v1.6.1-0.20210816165030-bb3af17a746a h1:loa8rSQsMWs4mGL4wW0Vzvw9kmH7aoO7A/SL4cE+KOM=
-github.com/planetdecred/dcrlibwallet v1.6.1-0.20210816165030-bb3af17a746a/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
+github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002 h1:W5ZELmwSjtNub4ugEujJtP4XrJ7gnmAacEDnIKNJckE=
+github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002/go.mod h1:sRwfsPrOEnpGBNL54KS83Dpxx2kp2AzZ0Je5vKRRE4o=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

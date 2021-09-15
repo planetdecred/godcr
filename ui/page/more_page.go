@@ -107,12 +107,13 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 
 	list := layout.List{Axis: layout.Vertical}
 	return list.Layout(gtx, len(pg.morePageListItems), func(gtx C, i int) D {
-		return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Bottom: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 			return decredmaterial.Clickable(gtx, pg.morePageListItems[i].clickable, func(gtx C) D {
 				return decredmaterial.LinearLayout{Orientation: layout.Horizontal,
 					Width:      decredmaterial.MatchParent,
 					Height:     decredmaterial.WrapContent,
 					Background: pg.Theme.Color.Surface,
+					Shadow:     pg.Theme.Shadow(),
 					Border:     decredmaterial.Border{Radius: decredmaterial.Radius(14)},
 					Padding:    layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {

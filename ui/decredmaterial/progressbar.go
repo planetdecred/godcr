@@ -15,14 +15,39 @@ import (
 )
 
 type ProgressBarStyle struct {
-	Radius unit.Value
-	Height unit.Value
-	Width  unit.Value
+	Radius    CornerRadius
+	Height    unit.Value
+	Width     unit.Value
+	Direction layout.Direction
 	material.ProgressBarStyle
 }
 
 func (t *Theme) ProgressBar(progress int) ProgressBarStyle {
 	return ProgressBarStyle{ProgressBarStyle: material.ProgressBar(t.Base, float32(progress)/100)}
+}
+
+// This achieves a progress bar using linear layouts.
+func (p ProgressBarStyle) Layout2(gtx C) D {
+	if p.Width.V <= 0 {
+		p.Width = unit.Px(float32(gtx.Constraints.Max.X))
+	}
+
+	return p.Direction.Layout(gtx, func(gtx C) D {
+		return LinearLayout{
+			Width:      gtx.Px(p.Width),
+			Height:     gtx.Px(p.Height),
+			Background: p.TrackColor,
+			Border:     Border{Radius: p.Radius},
+		}.Layout2(gtx, func(gtx C) D {
+
+			return LinearLayout{
+				Width:      int(p.Width.V * clamp1(p.Progress)),
+				Height:     gtx.Px(p.Height),
+				Background: p.Color,
+				Border:     Border{Radius: p.Radius},
+			}.Layout(gtx)
+		})
+	})
 }
 
 func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
@@ -32,15 +57,19 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 			maxHeight = unit.Dp(4)
 		}
 
-		rr := float32(gtx.Px(p.Radius))
-		if p.Radius.V <= 0 {
-			rr = float32(gtx.Px(unit.Dp(2)))
-		}
-
 		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
-
 		height := float32(gtx.Px(maxHeight))
-		clip.UniformRRect(f32.Rectangle{Max: f32.Pt(width, height)}, rr).Add(gtx.Ops)
+
+		tr := float32(gtx.Px(unit.Dp(p.Radius.TopRight)))
+		tl := float32(gtx.Px(unit.Dp(p.Radius.TopLeft)))
+		br := float32(gtx.Px(unit.Dp(p.Radius.BottomRight)))
+		bl := float32(gtx.Px(unit.Dp(p.Radius.BottomLeft)))
+
+		clip.RRect{
+			Rect: f32.Rectangle{Max: f32.Pt(width, height)},
+			NW:   tl, NE: tr, SE: br, SW: bl,
+		}.Add(gtx.Ops)
+
 		paint.ColorOp{Color: color}.Add(gtx.Ops)
 		paint.PaintOp{}.Add(gtx.Ops)
 

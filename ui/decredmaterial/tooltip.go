@@ -6,39 +6,39 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/unit"
-	"gioui.org/widget"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type Tooltip struct {
-	hoverable   *Hoverable
-	card        Card
-	borderColor color.NRGBA
+	hoverable  *Hoverable
+	background color.NRGBA
+	shadow     *Shadow
 }
 
 func (t *Theme) Tooltip() *Tooltip {
 	return &Tooltip{
-		hoverable:   t.Hoverable(),
-		card:        t.Card(),
-		borderColor: t.Color.Gray1,
+		hoverable:  t.Hoverable(),
+		background: t.Color.Surface,
+		shadow:     t.Shadow(),
 	}
 }
 
 func (t *Tooltip) layout(gtx C, pos layout.Inset, wdgt layout.Widget) D {
-	border := widget.Border{
-		Color:        t.borderColor,
-		CornerRadius: unit.Dp(5),
-		Width:        unit.Dp(1),
+	border := Border{
+		Radius: Radius(7),
 	}
 
 	return pos.Layout(gtx, func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
 			layout.Stacked(func(gtx C) D {
-				return border.Layout(gtx, func(gtx C) D {
-					return t.card.Layout(gtx, func(gtx C) D {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, wdgt)
-					})
-				})
+				return LinearLayout{
+					Width:      WrapContent,
+					Height:     WrapContent,
+					Padding:    layout.UniformInset(values.MarginPadding12),
+					Background: t.background,
+					Border:     border,
+					Shadow:     t.shadow,
+				}.Layout2(gtx, wdgt)
 			}),
 		)
 	})

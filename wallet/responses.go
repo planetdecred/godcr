@@ -187,41 +187,6 @@ type UnspentOutputs struct {
 // SetupAccountMixer is sent when finished setup the wallet account mixer
 type SetupAccountMixer struct{}
 
-type Ticket struct {
-	Info       dcrlibwallet.TicketInfo
-	Fee        string
-	Amount     string
-	DateTime   string
-	MonthDay   string
-	DaysBehind string
-	WalletName string
-}
-
-type UnconfirmedPurchase struct {
-	Hash        string
-	Status      string
-	DateTime    string
-	BlockHeight int32
-	Amount      string
-}
-
-type Tickets struct {
-	Confirmed   map[int][]Ticket
-	Unconfirmed map[int][]UnconfirmedPurchase
-	LiveRecent  []Ticket
-	LiveCounter []struct {
-		Status string
-		Count  int
-	}
-	RecentActivity        []Ticket
-	StackingRecordCounter []struct {
-		Status string
-		Count  int
-	}
-}
-
-type TicketPurchase struct{}
-
 type Balance struct {
 	Total                   int64
 	Spendable               int64
@@ -240,7 +205,7 @@ type VSPInfo struct {
 
 // VSP is sent when the Wallet is done getting all VSP info
 type VSP struct {
-	List []VSPInfo
+	List []*VSPInfo
 }
 
 // Proposals is sent when all proposals has been fetched
