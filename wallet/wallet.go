@@ -24,6 +24,7 @@ type Wallet struct {
 	Root, Net          string
 	buildDate          time.Time
 	version            string
+	logFile            string
 	Send               chan Response
 	Sync               chan SyncStatusUpdate
 	OverallBlockHeight int32
@@ -31,7 +32,7 @@ type Wallet struct {
 
 // NewWallet initializies an new Wallet instance.
 // The Wallet is not loaded until LoadWallets is called.
-func NewWallet(root, net, version string, buildDate time.Time, send chan Response) (*Wallet, error) {
+func NewWallet(root, net, version, logFile string, buildDate time.Time, send chan Response) (*Wallet, error) {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
 		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
@@ -41,6 +42,7 @@ func NewWallet(root, net, version string, buildDate time.Time, send chan Respons
 		Net:       net,
 		buildDate: buildDate,
 		version:   version,
+		logFile:   logFile,
 		Sync:      make(chan SyncStatusUpdate, 2),
 		Send:      send,
 	}
@@ -54,6 +56,10 @@ func (wal *Wallet) BuildDate() time.Time {
 
 func (wal *Wallet) Version() string {
 	return wal.version
+}
+
+func (wal *Wallet) LogFile() string {
+	return wal.logFile
 }
 
 func (wal *Wallet) InitMultiWallet() error {

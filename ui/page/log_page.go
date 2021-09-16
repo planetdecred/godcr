@@ -1,8 +1,6 @@
 package page
 
 import (
-	"sync"
-
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -19,15 +17,12 @@ const LogPageID = "Log"
 type LogPage struct {
 	*load.Load
 
-	internalLog chan string
-	copyLog     *widget.Clickable
-	copyIcon    *decredmaterial.Image
-	backButton  decredmaterial.IconButton
+	copyLog    *widget.Clickable
+	copyIcon   *decredmaterial.Image
+	backButton decredmaterial.IconButton
 
-	entriesList layout.List
-	fullLog     string
-	logEntries  []decredmaterial.Label
-	entriesLock sync.Mutex
+	logList layout.List
+	fullLog string
 }
 
 func (pg *LogPage) ID() string {
@@ -36,12 +31,9 @@ func (pg *LogPage) ID() string {
 
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
-		Load: l,
-		entriesList: layout.List{
-			Axis: layout.Vertical,
-		},
-		copyLog:    new(widget.Clickable),
-		logEntries: make([]decredmaterial.Label, 0, 20),
+		Load:    l,
+		copyLog: new(widget.Clickable),
+		logList: layout.List{Axis: layout.Vertical},
 	}
 
 	pg.copyIcon = pg.Icons.CopyIcon
@@ -59,24 +51,16 @@ func (pg *LogPage) OnResume() {
 
 func (pg *LogPage) copyLogEntries(gtx C) {
 	go func() {
-		pg.entriesLock.Lock()
-		defer pg.entriesLock.Unlock()
 		clipboard.WriteOp{Text: pg.fullLog}.Add(gtx.Ops)
 	}()
 }
 
 func (pg *LogPage) watchLogs() {
-	//TODO
-	//add function to get log directory
-	logPath := pg.Load.WL.MultiWallet.LogDir()
+	logPath := pg.Load.WL.Wallet.LogFile()
 	t, _ := tail.TailFile(logPath, tail.Config{Follow: true})
 	for line := range t.Lines {
-		logRow := line.Text
-		entry := logRow[:len(logRow)-1]
-		pg.entriesLock.Lock()
-		pg.fullLog += entry
-		pg.logEntries = append(pg.logEntries, pg.Theme.Body1(logRow))
-		pg.entriesLock.Unlock()
+		pg.fullLog += line.Text + "\n"
+		pg.RefreshWindow()
 	}
 }
 
@@ -106,17 +90,15 @@ func (pg *LogPage) Layout(gtx C) D {
 				background := pg.Theme.Color.Surface
 				card := pg.Theme.Card()
 				card.Color = background
+
 				return card.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return pg.entriesList.Layout(gtx, len(pg.logEntries), func(gtx C, i int) D {
-							pg.entriesLock.Lock()
-							defer pg.entriesLock.Unlock()
-							return pg.logEntries[i].Layout(gtx)
+						return pg.logList.Layout(gtx, 1, func(gtx C, index int) D {
+							return pg.Theme.Body1(pg.fullLog).Layout(gtx)
 						})
 					})
-
 				})
 			},
 		}
