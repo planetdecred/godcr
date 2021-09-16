@@ -7,37 +7,53 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/planetdecred/dcrlibwallet"
 )
 
-const syncID = "godcr"
+const (
+	syncID    = "godcr"
+	DevBuild  = "dev"
+	ProdBuild = "prod"
+)
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi              *dcrlibwallet.MultiWallet
 	Root, Net          string
+	buildDate          time.Time
+	version            string
 	Send               chan Response
 	Sync               chan SyncStatusUpdate
-	confirms           int32
 	OverallBlockHeight int32
 }
 
 // NewWallet initializies an new Wallet instance.
 // The Wallet is not loaded until LoadWallets is called.
-func NewWallet(root string, net string, send chan Response, confirms int32) (*Wallet, error) {
+func NewWallet(root, net, version string, buildDate time.Time, send chan Response) (*Wallet, error) {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
 		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
+
 	wal := &Wallet{
-		Root:     root,
-		Net:      net,
-		Sync:     make(chan SyncStatusUpdate, 2),
-		Send:     send,
-		confirms: confirms,
+		Root:      root,
+		Net:       net,
+		buildDate: buildDate,
+		version:   version,
+		Sync:      make(chan SyncStatusUpdate, 2),
+		Send:      send,
 	}
 
 	return wal, nil
+}
+
+func (wal *Wallet) BuildDate() time.Time {
+	return wal.buildDate
+}
+
+func (wal *Wallet) Version() string {
+	return wal.version
 }
 
 func (wal *Wallet) InitMultiWallet() error {
