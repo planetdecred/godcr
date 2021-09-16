@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"gioui.org/app"
 
@@ -13,6 +14,12 @@ import (
 	"github.com/planetdecred/godcr/ui"
 	_ "github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/wallet"
+)
+
+var (
+	Version   string = "0.0.0"
+	BuildDate string
+	BuildEnv  = wallet.DevBuild
 )
 
 func main() {
@@ -31,13 +38,18 @@ func main() {
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
 
-	var confirms int32 = dcrlibwallet.DefaultRequiredConfirmations
-
-	if cfg.SpendUnconfirmed {
-		confirms = 0
+	var buildDate time.Time
+	if BuildEnv == wallet.ProdBuild {
+		buildDate, err = time.Parse(time.RFC3339, BuildDate)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err.Error())
+			return
+		}
+	} else {
+		buildDate = time.Now()
 	}
 
-	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3), confirms)
+	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, Version, buildDate, make(chan wallet.Response, 3))
 	if err != nil {
 		log.Error(err)
 		return
