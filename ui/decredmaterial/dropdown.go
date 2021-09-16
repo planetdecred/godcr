@@ -29,10 +29,10 @@ type DropDown struct {
 }
 
 type DropDownItem struct {
-	Text      string
-	Icon      *Image
-	clickable *widget.Clickable
-	label     Label
+	Text   string
+	Icon   *Image
+	button *widget.Clickable
+	label  Label
 }
 
 func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
@@ -52,7 +52,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 	}
 
 	for i := range items {
-		items[i].clickable = new(widget.Clickable)
+		items[i].button = new(widget.Clickable)
 		items[i].label = t.Body1(items[i].Text)
 		c.items[i+1] = items[i]
 	}
@@ -64,10 +64,10 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		}
 
 		c.items[0] = DropDownItem{
-			Text:      items[0].Text,
-			Icon:      items[0].Icon,
-			label:     t.Body1(txt),
-			clickable: new(widget.Clickable),
+			Text:   items[0].Text,
+			Icon:   items[0].Icon,
+			label:  t.Body1(txt),
+			button: new(widget.Clickable),
 		}
 		c.selectedIndex = 1
 	}
@@ -89,7 +89,7 @@ func (c *DropDown) Len() int {
 }
 
 func (c *DropDown) handleEvents() {
-	for c.items[0].clickable.Clicked() {
+	for c.items[0].button.Clicked() {
 		c.closeAllDropdown(c.group)
 		c.isOpen = !c.isOpen
 	}
@@ -97,7 +97,7 @@ func (c *DropDown) handleEvents() {
 	for i := range c.items {
 		index := i
 		if index != 0 {
-			for c.items[index].clickable.Clicked() {
+			for c.items[index].button.Clicked() {
 				c.selectedIndex = index
 				txt := c.items[index].Text
 				if len(c.items[index].Text) > 12 {
@@ -118,7 +118,7 @@ func (c *DropDown) Changed() bool {
 	for i := range c.items {
 		index := i
 		if index != 0 {
-			for c.items[index].clickable.Clicked() {
+			for c.items[index].button.Clicked() {
 				if c.items[0].label.Text != c.items[index].Text {
 					c.selectedIndex = index
 					txt := c.items[index].Text
@@ -153,7 +153,7 @@ func (c *DropDown) layoutActiveIcon(gtx layout.Context, index int, isFirstOption
 }
 
 func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bool) D {
-	btn := c.items[itemIndex].clickable
+	btn := c.items[itemIndex].button
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 		return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 			layout.Stacked(func(gtx C) D {
@@ -270,7 +270,7 @@ func (c *DropDown) dropDownItemMenu(gtx C) D {
 					BottomLeft:  radius,
 				}
 			}
-			return card.HoverableLayout(gtx, c.items[i].clickable, func(gtx C) D {
+			return card.HoverableLayout(gtx, c.items[i].button, func(gtx C) D {
 				return c.layoutOption(gtx, i, false)
 			})
 		})
@@ -287,5 +287,5 @@ func (c *DropDown) drawLayout(gtx C, isPopUp bool, body layout.Widget) D {
 	}
 
 	card.Color = c.color
-	return card.HoverableLayout(gtx, c.items[0].clickable, body)
+	return card.HoverableLayout(gtx, c.items[0].button, body)
 }
