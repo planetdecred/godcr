@@ -8,6 +8,7 @@ package load
 import (
 	"errors"
 
+	"decred.org/dcrdex/client/core"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -16,6 +17,7 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/notification"
@@ -37,7 +39,7 @@ type Receiver struct {
 type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
-	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove *widget.Icon
+	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ActionSwapHoriz *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -57,6 +59,8 @@ type Icons struct {
 	TicketExpiredIcon,
 	TicketRevokedIcon,
 	TicketUnminedIcon *decredmaterial.Image
+
+	dexLogo, BTC, DCR, LTC, BCH *decredmaterial.Image
 }
 
 type Load struct {
@@ -84,6 +88,8 @@ type Load struct {
 	ChangeFragment   func(page Page)
 	PopFragment      func()
 	PopToFragment    func(pageID string)
+
+	DL *DexcLoad
 }
 
 func NewLoad() (*Load, error) {
@@ -111,10 +117,16 @@ func NewLoad() (*Load, error) {
 	if th == nil {
 		return nil, errors.New("unexpected error while loading theme")
 	}
+	dl := &DexcLoad{
+		Dexc: new(dexc.Dexc),
+		Core: new(core.Core),
+	}
+
 	l := &Load{
 		Theme:    th,
 		Icons:    icons,
 		WL:       wl,
+		DL:       dl,
 		Receiver: r,
 		Toast:    notification.NewToast(th),
 
@@ -211,6 +223,11 @@ func loadIcons() Icons {
 		ListGridIcon:             decredmaterial.NewImage(decredIcons["list_grid"]),
 		DecredSymbolIcon:         decredmaterial.NewImage(decredIcons["decred_symbol"]),
 		DecredSymbol2:            decredmaterial.NewImage(decredIcons["ic_decred02"]),
+
+		BTC: decredmaterial.NewImage(decredIcons["dex_btc"]),
+		DCR: decredmaterial.NewImage(decredIcons["dex_dcr"]),
+		BCH: decredmaterial.NewImage(decredIcons["dex_bch"]),
+		LTC: decredmaterial.NewImage(decredIcons["dex_ltc"]),
 	}
 	return ic
 }

@@ -11,6 +11,7 @@ import (
 	"gioui.org/op"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
@@ -59,6 +60,8 @@ type Window struct {
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
+
+	dexc *dexc.Dexc
 }
 
 type (
@@ -74,7 +77,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
+func CreateWindow(wal *wallet.Wallet, dc *dexc.Dexc) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == "testnet3" {
@@ -96,6 +99,9 @@ func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win.invalidate = make(chan struct{}, 2)
 
 	win.wallet = wal
+
+	win.dexc = dc
+
 	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)
@@ -147,6 +153,10 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
 
+	l.DL = &load.DexcLoad{
+		Core: win.dexc.Core,
+		Dexc: win.dexc,
+	}
 	return l, nil
 }
 
@@ -287,8 +297,12 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				break
 			}
 
-			// win.updateStates(e.Resp)
-
+			win.updateStates(e.Resp)
+		case e := <-win.dexc.Send:
+			if e.Err != nil {
+				log.Error("Dex Error: " + e.Err.Error())
+			}
+			win.updateDexStates(e.Resp)
 		case update := <-win.wallet.Sync:
 			switch update.Stage {
 			case wallet.SyncCompleted:

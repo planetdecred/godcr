@@ -22,6 +22,7 @@ require (
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002
+	github.com/sqweek/dialog v0.0.0-20210702151303-c326b49d3f01
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d

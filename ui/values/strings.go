@@ -228,4 +228,5 @@ const (
 	StrUsdBittrex                  = "usdBittrex"
 	StrNone                        = "none"
 	StrProposal                    = "proposals"
+	StrDex                         = "dex"
 )

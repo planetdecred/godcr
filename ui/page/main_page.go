@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/dexclient"
 	"github.com/planetdecred/godcr/ui/page/proposal"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/tickets"
@@ -28,6 +29,7 @@ const (
 	TicketsNavID
 	ProposalsNavID
 	MoreNavID
+	DexNavID
 )
 
 var (
@@ -159,6 +161,13 @@ func (mp *MainPage) initNavItems() {
 				ImageInactive: mp.Icons.MoreIconInactive,
 				Title:         values.String(values.StrMore),
 				PageID:        MorePageID,
+			},
+			{
+				Clickable:     new(widget.Clickable),
+				Image:         mp.Icons.MoreIcon,
+				ImageInactive: mp.Icons.MoreIconInactive,
+				Title:         values.String(values.StrDex),
+				PageID:        dexclient.MarketPageID,
 			},
 		},
 		MinimizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowBack),
@@ -317,6 +326,8 @@ func (mp *MainPage) Handle() {
 				pg = proposal.NewProposalsPage(mp.Load)
 			} else if i == MoreNavID {
 				pg = NewMorePage(mp.Load)
+			} else if i == DexNavID {
+				pg = dexclient.NewMarketPage(mp.Load)
 			} else {
 				continue
 			}
