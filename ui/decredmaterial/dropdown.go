@@ -156,7 +156,7 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 	btn := c.items[itemIndex].button
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 		return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-			layout.Stacked(func(gtx C) D {
+			layout.Stacked(func(gtx C) D { 
 				gtx.Constraints.Max.X = gtx.Px(unit.Dp(155))
 				if c.revs {
 					gtx.Constraints.Max.X = gtx.Px(unit.Dp(120))
