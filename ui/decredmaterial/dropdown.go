@@ -175,14 +175,6 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 	c.handleEvents()
 
-	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			return c.drawLayout(gtx, false, func(gtx C) D {
-				return c.layoutOption(gtx, 0, true)
-			})
-		}),
-	}
-
 	iLeft := dropPos
 	iRight := 0
 	alig := layout.NW
@@ -192,40 +184,52 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 		iRight = dropPos
 	}
 
-	if c.isOpen {
-		return layout.Stack{Alignment: alig}.Layout(gtx,
-			layout.Expanded(func(gtx C) D {
-				gtx.Constraints.Min = gtx.Constraints.Max
-				return c.backdrop.Layout(gtx)
-			}),
-			layout.Stacked(func(gtx C) D {
-				return layout.Inset{
-					Left:  unit.Dp(float32(iLeft)),
-					Right: unit.Dp(float32(iRight)),
-				}.Layout(gtx, func(gtx C) D {
-					lay := c.dropDownItemMenu(gtx)
-					w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
-					c.Width = w
-					return lay
-				})
-			}),
-		)
-	}
 	return layout.Stack{Alignment: alig}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return layout.Inset{
-				Left:  unit.Dp(float32(iLeft)),
-				Right: unit.Dp(float32(iRight)),
-			}.Layout(gtx, func(gtx C) D {
-				return c.drawLayout(gtx, false, func(gtx C) D {
-					lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
-					w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
-					c.Width = w + 10
-					return lay
-				})
+		layout.Expanded(func(gtx C) D {
+			return c.drawLayout(gtx, false, func(gtx C) D {
+				return c.layoutOption(gtx, 0, true)
 			})
 		}),
+		layout.Stacked(func(gtx C) D {
+			if c.isOpen {
+				return layout.Stack{Alignment: alig}.Layout(gtx,
+					layout.Expanded(func(gtx C) D {
+						gtx.Constraints.Min = gtx.Constraints.Max
+						return c.backdrop.Layout(gtx)
+					}),
+					layout.Stacked(func(gtx C) D {
+						return layout.Inset{
+							Left:  unit.Dp(float32(iLeft)),
+							Right: unit.Dp(float32(iRight)),
+						}.Layout(gtx, func(gtx C) D {
+							lay := c.dropDownItemMenu(gtx)
+							w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
+							c.Width = w
+							return lay
+						})
+					}),
+				)
+			}
+			return D{}
+		}),
 	)
+
+	
+	// return layout.Stack{Alignment: alig}.Layout(gtx,
+	// 	layout.Stacked(func(gtx C) D {
+	// 		return layout.Inset{
+	// 			Left:  unit.Dp(float32(iLeft)),
+	// 			Right: unit.Dp(float32(iRight)),
+	// 		}.Layout(gtx, func(gtx C) D {
+	// 			return c.drawLayout(gtx, false, func(gtx C) D {
+	// 				lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+	// 				w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
+	// 				c.Width = w + 10
+	// 				return lay
+	// 			})
+	// 		})
+	// 	}),
+	// )
 }
 
 func (c *DropDown) dropDownItemMenu(gtx C) D {
