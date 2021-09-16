@@ -143,9 +143,10 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 }
 
 func (in *InfoModal) handleEnterKeypress() {
+	// Todo enter button for info modals.
 	select {
 	case event := <-in.keyEvent:
-		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
+		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press && in.customTemplate != nil {
 			in.enterKeyPressed = true
 		}
 	default:
@@ -153,11 +154,8 @@ func (in *InfoModal) handleEnterKeypress() {
 }
 
 func (in *InfoModal) Handle() {
-	in.handleEnterKeypress()
-
-	if in.btnPositve.Button.Clicked() || in.enterKeyPressed {
+	if in.btnPositve.Button.Clicked() {
 		in.DismissModal(in)
-		in.enterKeyPressed = false
 		in.positiveButtonClicked()
 	}
 
