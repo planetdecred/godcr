@@ -1,112 +1,142 @@
 package renderers
 
 import (
-	"image/color"
 	"strings"
 
+	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/unit"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
-func (r *Renderer) getLabelWeight(weight string) text.Weight {
+func getLabel(lbl decredmaterial.Label) decredmaterial.Label {
+	return lbl
+}
+
+func setStyle(lbl *decredmaterial.Label, style string) {
+	var s text.Style
+
+	switch style {
+	case "italic":
+		s = text.Italic
+	case "regular":
+		s = text.Regular
+	}
+
+	lbl.Font.Style = s
+}
+
+func setWeight(lbl *decredmaterial.Label, weight string) {
+	var w text.Weight
+
 	switch weight {
 	case "normal":
-		return text.Normal
+		w = text.Normal
 	case "medium":
-		return text.Medium
-	case "bold":
-		return text.Bold
+		w = text.Medium
+	case "bold", "strong":
+		w = text.Bold
+	default:
+		w = lbl.Font.Weight
 	}
 
-	return text.Normal
+	lbl.Font.Weight = w
 }
 
-func (r *Renderer) getColorFromMap(col string) color.NRGBA {
-	colorMap := map[string]color.NRGBA{
-		"primary":       r.theme.Color.Primary,
-		"secondary":     r.theme.Color.Secondary,
-		"text":          r.theme.Color.Text,
-		"hint":          r.theme.Color.Hint,
-		"overlay":       r.theme.Color.Overlay,
-		"inv-text":      r.theme.Color.InvText,
-		"success":       r.theme.Color.Success,
-		"success2":      r.theme.Color.Success2,
-		"danger":        r.theme.Color.Danger,
-		"background":    r.theme.Color.Background,
-		"surface":       r.theme.Color.Surface,
-		"gray":          r.theme.Color.Gray,
-		"black":         r.theme.Color.Black,
-		"deep-blue":     r.theme.Color.DeepBlue,
-		"light-blue":    r.theme.Color.LightBlue,
-		"light-gray":    r.theme.Color.LightGray,
-		"inactive-gray": r.theme.Color.InactiveGray,
-		"active-gray":   r.theme.Color.ActiveGray,
-		"gray1":         r.theme.Color.Gray1,
-		"gray2":         r.theme.Color.Gray2,
-		"gray3":         r.theme.Color.Gray3,
-		"gray4":         r.theme.Color.Gray4,
-		"gray5":         r.theme.Color.Gray5,
-		"gray6":         r.theme.Color.Gray6,
-		"orange":        r.theme.Color.Orange,
-		"orange2":       r.theme.Color.Orange2,
+func getHeading(txt string, level int, theme *decredmaterial.Theme) decredmaterial.Label {
+	textSize := values.TextSize16
+
+	switch level {
+	case 1:
+		textSize = values.TextSize28
+	case 2:
+		textSize = values.TextSize24
+	case 3:
+		textSize = values.TextSize20
+	case 4:
+		textSize = values.TextSize16
+	case 5:
+		textSize = values.TextSize14
+	case 6:
+		textSize = values.TextSize13_6
 	}
 
-	if color, ok := colorMap[col]; ok {
-		return color
-	}
-
-	return colorMap["text"]
+	lbl := theme.H1(txt)
+	lbl.Font.Weight = text.Bold
+	lbl.TextSize = textSize
+	return lbl
 }
 
-func (r *Renderer) styleLabel(label decredmaterial.Label) decredmaterial.Label {
-	if len(r.styleGroups) == 0 {
-		return label
-	}
-
-	style := r.styleGroups[len(r.styleGroups)-1]
-	label.Font.Weight = r.getLabelWeight(style["font-weight"])
-
-	colStr := style["text-color"]
-	if colStr == "" {
-		colStr = style["color"]
-	}
-
-	if col, ok := parseColorCode(colStr); ok {
-		label.Color = col
-	} else {
-		label.Color = r.getColorFromMap(colStr)
-	}
-
-	if fontStyle, ok := style["font-style"]; ok {
-		if fontStyle == "italic" {
-			label.Font.Style = text.Italic
-		}
-	}
-
-	return label
-}
-
-func (r *Renderer) addStyleGroup(str string) {
-	parts := strings.Split(str, "##")
-	styleMap := map[string]string{}
-
-	for i := range parts {
-		if parts[i] != " " && parts[i] != "{" {
-			styleParts := strings.Split(parts[i], "--")
-
-			if len(styleParts) == 2 {
-				styleMap[styleParts[0]] = styleParts[1]
-			}
-		}
-	}
-
-	if len(styleMap) > 0 {
-		r.styleGroups = append(r.styleGroups, styleMap)
+func renderStrike(lbl decredmaterial.Label, theme *decredmaterial.Theme) layout.Widget {
+	return func(gtx C) D {
+		var dims D
+		return layout.Stack{}.Layout(gtx,
+			layout.Stacked(func(gtx C) D {
+				dims = lbl.Layout(gtx)
+				return dims
+			}),
+			layout.Expanded(func(gtx C) D {
+				return layout.Inset{
+					Top: unit.Dp((float32(dims.Size.Y) / float32(2))),
+				}.Layout(gtx, func(gtx C) D {
+					l := theme.Separator()
+					l.Color = lbl.Color
+					l.Width = dims.Size.X
+					return l.Layout(gtx)
+				})
+			}),
+		)
 	}
 }
 
-func (r *Renderer) removeLastStyleGroup() {
-	if len(r.styleGroups) > 0 {
-		r.styleGroups = r.styleGroups[:len(r.styleGroups)-1]
+func renderBlockQuote(lbl decredmaterial.Label, theme *decredmaterial.Theme) layout.Widget {
+	words := strings.Fields(lbl.Text)
+
+	return func(gtx C) D {
+		var dims D
+
+		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				l := theme.SeparatorVertical(dims.Size.Y, 10)
+				l.Color = theme.Color.Gray
+				return l.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				dims = layout.Inset{
+					Left: unit.Dp(4),
+				}.Layout(gtx, func(gtx C) D {
+					return decredmaterial.GridWrap{
+						Axis:      layout.Horizontal,
+						Alignment: layout.Start,
+					}.Layout(gtx, len(words), func(gtx C, i int) D {
+						lbl.Text = words[i] + " "
+						return lbl.Layout(gtx)
+					})
+				})
+
+				return dims
+			}),
+		)
+	}
+}
+
+func renderHorizontalLine(theme *decredmaterial.Theme) layout.Widget {
+	l := theme.Separator()
+	l.Width = 1
+	return l.Layout
+}
+
+func renderEmptyLine(theme *decredmaterial.Theme, isList bool) layout.Widget {
+	var padding = -5
+
+	if isList {
+		padding = -10
+	}
+
+	return func(gtx C) D {
+		dims := theme.Body2("").Layout(gtx)
+		dims.Size.Y = dims.Size.Y + padding
+		return dims
 	}
 }
