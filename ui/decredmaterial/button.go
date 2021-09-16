@@ -27,7 +27,6 @@ type Button struct {
 	disabledTextColor  color.NRGBA
 	HighlightColor     color.NRGBA
 
-	// Padding layout.Inset
 	Margin layout.Inset
 }
 
@@ -42,7 +41,6 @@ type IconButton struct {
 func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	buttonStyle := material.Button(t.Base, button, txt)
 	buttonStyle.TextSize = values.TextSize16
-	// buttonStyle.Font.Weight = text.Medium
 	buttonStyle.Background = t.Color.Primary
 	buttonStyle.CornerRadius = values.MarginPadding8
 	buttonStyle.Inset = layout.Inset{

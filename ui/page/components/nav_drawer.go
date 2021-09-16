@@ -1,11 +1,8 @@
 package components
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -55,15 +52,14 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 			}.Layout2(gtx, func(gtx C) D {
 				list := layout.List{Axis: layout.Vertical}
 				return list.Layout(gtx, len(nd.DrawerNavItems), func(gtx C, i int) D {
-					// background := nd.Theme.Color.Surface
-					// if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
-					// 	background = nd.Theme.Color.ActiveGray
-					// }
 
-					// return nd.layoutNavRow(gtx, background, nd.DrawerNavItems[i].Clickable, func(gtx C) D {
 					txt := nd.Theme.Label(nd.textSize, nd.DrawerNavItems[i].Title)
 
 					gtx.Constraints.Min.X = gtx.Px(nd.width)
+					background := nd.Theme.Color.Surface
+					if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
+						background = nd.Theme.Color.ActiveGray
+					}
 					return nd.DrawerNavItems[i].Clickable.Layout(gtx, func(gtx C) D {
 						return decredmaterial.LinearLayout{
 							Orientation: nd.axis,
@@ -72,6 +68,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							Padding:     layout.UniformInset(values.MarginPadding15),
 							Alignment:   nd.alignment,
 							Direction:   nd.direction,
+							Background:  background,
 						}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								img := nd.DrawerNavItems[i].ImageInactive
@@ -97,7 +94,6 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 							}),
 						)
 					})
-					// })
 				})
 			})
 		}),
@@ -119,51 +115,41 @@ func (nd *NavDrawer) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 			list := layout.List{Axis: layout.Horizontal}
 			return list.Layout(gtx, len(nd.AppBarNavItems), func(gtx C, i int) D {
-				// background := nd.Theme.Color.Surface
-				// if nd.AppBarNavItems[i].PageID == nd.CurrentPage {
-				// 	background = nd.Theme.Color.ActiveGray
-				// }
-
 				// header buttons container
-				// return nd.layoutNavRow(gtx, background, nd.AppBarNavItems[i].Clickable, func(gtx C) D {
 				return nd.AppBarNavItems[i].Clickable.Layout(gtx, func(gtx C) D {
-					return Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx C) D {
-						return decredmaterial.LinearLayout{
-							Width:       decredmaterial.WrapContent,
-							Height:      decredmaterial.WrapContent,
-							Orientation: layout.Horizontal,
-						}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-									func(gtx C) D {
-										return layout.Center.Layout(gtx, func(gtx C) D {
-											return nd.AppBarNavItems[i].Image.Layout24dp(gtx)
-										})
-									})
-							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{
-									Left: values.MarginPadding0,
-								}.Layout(gtx, func(gtx C) D {
+					background := nd.Theme.Color.Surface
+					if nd.AppBarNavItems[i].PageID == nd.CurrentPage {
+						background = nd.Theme.Color.ActiveGray
+					}
+					return decredmaterial.LinearLayout{
+						Width:       decredmaterial.WrapContent,
+						Height:      decredmaterial.WrapContent,
+						Orientation: layout.Horizontal,
+						Background:  background,
+						Padding:     layout.UniformInset(values.MarginPadding16),
+					}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
+								func(gtx C) D {
 									return layout.Center.Layout(gtx, func(gtx C) D {
-										return nd.Theme.Body1(nd.AppBarNavItems[i].Title).Layout(gtx)
+										return nd.AppBarNavItems[i].Image.Layout24dp(gtx)
 									})
 								})
-							}),
-						)
-					})
+						}),
+						layout.Rigid(func(gtx C) D {
+							return layout.Inset{
+								Left: values.MarginPadding0,
+							}.Layout(gtx, func(gtx C) D {
+								return layout.Center.Layout(gtx, func(gtx C) D {
+									return nd.Theme.Body1(nd.AppBarNavItems[i].Title).Layout(gtx)
+								})
+							})
+						}),
+					)
 				})
-				// })
 			})
 		})
 	})
-}
-
-func (nd *NavDrawer) layoutNavRow(gtx layout.Context, background color.NRGBA, Clickable *widget.Clickable, body layout.Widget) layout.Dimensions {
-	card := nd.Theme.Card()
-	card.Color = background
-	card.Radius = decredmaterial.Radius(0)
-	return card.HoverableLayout(gtx, Clickable, body)
 }
 
 func (nd *NavDrawer) DrawerToggled(min bool) {
