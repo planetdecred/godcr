@@ -77,8 +77,9 @@ func (tm *TextInputModal) SetError(err string) {
 	}
 }
 
-func (tm *TextInputModal) SetCancelable(min bool) {
+func (tm *TextInputModal) SetCancelable(min bool) *TextInputModal {
 	tm.isCancelable = min
+	return tm
 }
 
 func (tm *TextInputModal) Handle() {
@@ -88,7 +89,7 @@ func (tm *TextInputModal) Handle() {
 		tm.btnPositve.Background = tm.Theme.Color.InactiveGray
 	}
 
-	for tm.btnPositve.Button.Clicked() {
+	for tm.btnPositve.Button.Clicked() || handleSubmitEvent(tm.textInput.Editor) {
 		if tm.IsLoading {
 			continue
 		}

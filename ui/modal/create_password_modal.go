@@ -127,8 +127,9 @@ func (cm *CreatePasswordModal) SetLoading(loading bool) {
 	cm.isLoading = loading
 }
 
-func (cm *CreatePasswordModal) SetCancelable(min bool) {
+func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
 	cm.isCancelable = min
+	return cm
 }
 
 func (cm *CreatePasswordModal) SetError(err string) {

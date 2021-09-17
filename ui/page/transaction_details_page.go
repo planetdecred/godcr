@@ -686,7 +686,6 @@ func (pg *TransactionDetailsPage) Handle() {
 		if pg.ticketSpent != nil {
 			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, pg.ticketSpent))
 		}
-
 	}
 }
 

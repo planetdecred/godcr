@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -17,8 +18,10 @@ const Info = "info_modal"
 
 type InfoModal struct {
 	*load.Load
-	randomID string
-	modal    decredmaterial.Modal
+	randomID        string
+	modal           decredmaterial.Modal
+	keyEvent        chan *key.Event
+	enterKeyPressed bool
 
 	dialogIcon *widget.Icon
 
@@ -41,12 +44,12 @@ type InfoModal struct {
 
 func NewInfoModal(l *load.Load) *InfoModal {
 	in := &InfoModal{
-		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.Button(new(widget.Clickable), "Yes"),
-		btnNegative:  l.Theme.Button(new(widget.Clickable), "No"),
-		isCancelable: true,
+		Load:        l,
+		randomID:    fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
+		modal:       *l.Theme.ModalFloatTitle(),
+		btnPositve:  l.Theme.Button(new(widget.Clickable), "Yes"),
+		btnNegative: l.Theme.Button(new(widget.Clickable), "No"),
+		keyEvent:    l.Receiver.KeyEvents,
 	}
 
 	in.btnPositve.TextSize, in.btnNegative.TextSize = values.TextSize16, values.TextSize16
@@ -75,8 +78,9 @@ func (in *InfoModal) OnDismiss() {
 
 }
 
-func (in *InfoModal) SetCancelable(min bool) {
+func (in *InfoModal) SetCancelable(min bool) *InfoModal {
 	in.isCancelable = min
+	return in
 }
 
 func (in *InfoModal) Icon(icon *widget.Icon) *InfoModal {
@@ -139,9 +143,19 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) Handle() {
+func (in *InfoModal) handleEnterKeypress() {
+	// Todo enter button for info modals.
+	select {
+	case event := <-in.keyEvent:
+		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press && in.customTemplate != nil {
+			in.enterKeyPressed = true
+		}
+	default:
+	}
+}
 
-	for in.btnPositve.Button.Clicked() {
+func (in *InfoModal) Handle() {
+	if in.btnPositve.Button.Clicked() {
 		in.DismissModal(in)
 		in.positiveButtonClicked()
 	}

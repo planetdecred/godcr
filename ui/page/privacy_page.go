@@ -98,7 +98,7 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions {
 	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
 				return layout.Center.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
@@ -110,10 +110,11 @@ func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions 
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.H6("How does CoinShuffle++ mixer enhance your privacy?")
-							txt2 := pg.Theme.Body1("CoinShuffle++ mixer can mix your DCRs through CoinJoin transactions.")
-							txt3 := pg.Theme.Body1("Using mixed DCRs protects you from exposing your financial activities to the public (e.g. how much you own, who pays you).")
-							txt.Alignment, txt2.Alignment, txt3.Alignment = text.Middle, text.Middle, text.Middle
+							txt := pg.Theme.H6("How does StakeShuffle++ mixer enhance your privacy?")
+							txt2 := pg.Theme.Body1("Shuffle++ mixer can mix your DCRs through CoinJoin transactions.")
+							txt3 := pg.Theme.Body1("Using mixed DCRs protects you from exposing your financial activities to")
+							txt4 := pg.Theme.Body1("the public (e.g. how much you own, who pays you).")
+							txt.Alignment, txt2.Alignment, txt3.Alignment, txt4.Alignment = text.Middle, text.Middle, text.Middle, text.Middle
 
 							return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 								layout.Rigid(txt.Layout),
@@ -123,12 +124,14 @@ func (pg *PrivacyPage) privacyIntroLayout(gtx layout.Context) layout.Dimensions 
 								layout.Rigid(func(gtx C) D {
 									return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, txt3.Layout)
 								}),
+								layout.Rigid(txt4.Layout),
 							)
 						}),
 					)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, pg.toPrivacySetup.Layout)
 			}),
 		)

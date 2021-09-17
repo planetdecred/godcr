@@ -138,6 +138,7 @@ func (sp *SubPage) EventHandler() {
 			modal.NewInfoModal(sp.Load).
 				Title(sp.Title).
 				SetupWithTemplate(sp.InfoTemplate).
+				SetCancelable(true).
 				NegativeButton("Got it", func() {}).Show()
 		}
 	}
