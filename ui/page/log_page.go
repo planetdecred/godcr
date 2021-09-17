@@ -1,6 +1,9 @@
 package page
 
 import (
+	"fmt"
+	"os"
+
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -12,7 +15,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const LogPageID = "Log"
+const (
+	LogPageID = "Log"
+	LogOffset = 24000
+)
 
 type LogPage struct {
 	*load.Load
@@ -33,7 +39,7 @@ func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
 		Load:    l,
 		copyLog: new(widget.Clickable),
-		logList: layout.List{Axis: layout.Vertical},
+		logList: layout.List{Axis: layout.Vertical, ScrollToEnd: true},
 	}
 
 	pg.copyIcon = pg.Icons.CopyIcon
@@ -57,7 +63,25 @@ func (pg *LogPage) copyLogEntries(gtx C) {
 
 func (pg *LogPage) watchLogs() {
 	logPath := pg.Load.WL.Wallet.LogFile()
-	t, _ := tail.TailFile(logPath, tail.Config{Follow: true})
+
+	fi, err := os.Stat(logPath)
+	if err != nil {
+		fmt.Println("Unable to open file:", err)
+		return
+	}
+	// get the size
+	size := fi.Size()
+
+	var offset int64 = 0
+	if size > LogOffset*2 {
+		offset = size - LogOffset
+	}
+
+	t, _ := tail.TailFile(logPath, tail.Config{Follow: true, Location: &tail.SeekInfo{Offset: offset}})
+	if offset > 0 {
+		// skip the first line because it might be truncated.
+		<-t.Lines
+	}
 	for line := range t.Lines {
 		pg.fullLog += line.Text + "\n"
 		pg.RefreshWindow()
