@@ -40,12 +40,11 @@ type PasswordModal struct {
 
 func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm := &PasswordModal{
-		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
-		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative:  l.Theme.Button(new(widget.Clickable), "Cancel"),
-		isCancelable: true,
+		Load:        l,
+		randomID:    fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
+		modal:       *l.Theme.ModalFloatTitle(),
+		btnPositve:  l.Theme.Button(new(widget.Clickable), "Confirm"),
+		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
 	}
 
 	pm.btnNegative.TextSize = values.TextSize16
@@ -107,8 +106,9 @@ func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
 }
 
-func (pm *PasswordModal) SetCancelable(min bool) {
+func (pm *PasswordModal) SetCancelable(min bool) *PasswordModal {
 	pm.isCancelable = min
+	return pm
 }
 
 func (pm *PasswordModal) SetError(err string) {
@@ -126,7 +126,8 @@ func (pm *PasswordModal) Handle() {
 		pm.btnPositve.Background = pm.Theme.Color.InactiveGray
 	}
 
-	for pm.btnPositve.Button.Clicked() {
+	for pm.btnPositve.Button.Clicked() || handleSubmitEvent(pm.password.Editor) {
+
 		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
 			continue
 		}
@@ -146,7 +147,9 @@ func (pm *PasswordModal) Handle() {
 	}
 
 	if pm.modal.BackdropClicked(pm.isCancelable) {
-		pm.Dismiss()
+		if !pm.isLoading {
+			pm.Dismiss()
+		}
 	}
 }
 
