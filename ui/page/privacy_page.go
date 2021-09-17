@@ -347,14 +347,6 @@ func (pg *PrivacyPage) Handle() {
 			go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
 		}
 	}
-
-	// if pg.infoButton.Button.Clicked() {
-	// 	info := modal.NewInfoModal(pg.Load)
-	// 	info.SetupWithTemplate(modal.PrivacyInfoTemplate).
-	// 		SetCancelable(true).
-	// 		PositiveButton("Got it", func() {})
-	// 	pg.ShowModal(info)
-	// }
 }
 
 func (pg *PrivacyPage) showModalSetupMixerInfo() {
