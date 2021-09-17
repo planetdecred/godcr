@@ -106,8 +106,9 @@ func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
 }
 
-func (pm *PasswordModal) SetCancelable(min bool) {
+func (pm *PasswordModal) SetCancelable(min bool) *PasswordModal {
 	pm.isCancelable = min
+	return pm
 }
 
 func (pm *PasswordModal) SetError(err string) {
@@ -146,7 +147,9 @@ func (pm *PasswordModal) Handle() {
 	}
 
 	if pm.modal.BackdropClicked(pm.isCancelable) {
-		pm.Dismiss()
+		if !pm.isLoading {
+			pm.Dismiss()
+		}
 	}
 }
 

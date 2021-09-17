@@ -280,8 +280,9 @@ func (asm *AccountSelectorModal) Dismiss() {
 	asm.DismissModal(asm)
 }
 
-func (asm *AccountSelectorModal) SetCancelable(min bool) {
+func (asm *AccountSelectorModal) SetCancelable(min bool) *AccountSelectorModal {
 	asm.isCancelable = min
+	return asm
 }
 
 func (asm *AccountSelectorModal) Handle() {

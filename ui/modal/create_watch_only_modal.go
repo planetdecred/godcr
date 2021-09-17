@@ -84,8 +84,9 @@ func (cm *CreateWatchOnlyModal) SetLoading(loading bool) {
 	cm.isLoading = loading
 }
 
-func (cm *CreateWatchOnlyModal) SetCancelable(min bool) {
+func (cm *CreateWatchOnlyModal) SetCancelable(min bool) *CreateWatchOnlyModal {
 	cm.isCancelable = min
+	return cm
 }
 
 func (cm *CreateWatchOnlyModal) SetError(err string) {

@@ -77,8 +77,9 @@ func (tm *TextInputModal) SetError(err string) {
 	}
 }
 
-func (tm *TextInputModal) SetCancelable(min bool) {
+func (tm *TextInputModal) SetCancelable(min bool) *TextInputModal {
 	tm.isCancelable = min
+	return tm
 }
 
 func (tm *TextInputModal) Handle() {

@@ -78,8 +78,9 @@ func (in *InfoModal) OnDismiss() {
 
 }
 
-func (in *InfoModal) SetCancelable(min bool) {
+func (in *InfoModal) SetCancelable(min bool) *InfoModal {
 	in.isCancelable = min
+	return in
 }
 
 func (in *InfoModal) Icon(icon *widget.Icon) *InfoModal {
@@ -167,7 +168,6 @@ func (in *InfoModal) Handle() {
 	if in.modal.BackdropClicked(in.isCancelable) {
 		in.Dismiss()
 	}
-	in.RefreshWindow()
 }
 
 func (in *InfoModal) Layout(gtx layout.Context) D {
