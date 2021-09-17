@@ -74,7 +74,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet, internalLog chan string) (*Window, *app.Window, error) {
+func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == "testnet3" {
@@ -99,8 +99,6 @@ func CreateWindow(wal *wallet.Wallet, internalLog chan string) (*Window, *app.Wi
 	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)
-
-	win.internalLog = internalLog
 
 	l, err := win.NewLoad()
 	if err != nil {
