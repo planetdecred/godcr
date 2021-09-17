@@ -686,13 +686,6 @@ func (pg *TransactionDetailsPage) Handle() {
 		if pg.ticketSpent != nil {
 			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, pg.ticketSpent))
 		}
-
-	}
-
-	if pg.infoButton.Button.Clicked() {
-		info := modal.NewInfoModal(pg.Load)
-		info.SetupWithTemplate(modal.TransactionDetailsInfoTemplate).PositiveButton("Got it", func() {})
-		pg.ShowModal(info)
 	}
 }
 

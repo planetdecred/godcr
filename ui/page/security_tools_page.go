@@ -117,12 +117,6 @@ func (pg *SecurityToolsPage) Handle() {
 	if pg.validateAddress.Clicked() {
 		pg.ChangeFragment(NewValidateAddressPage(pg.Load))
 	}
-
-	if pg.infoButton.Button.Clicked() {
-		info := modal.NewInfoModal(pg.Load)
-		info.SetupWithTemplate(modal.SecurityToolsInfoTemplate).PositiveButton("Got it", func() {})
-		pg.ShowModal(info)
-	}
 }
 
 func (pg *SecurityToolsPage) OnClose() {}

@@ -348,13 +348,13 @@ func (pg *PrivacyPage) Handle() {
 		}
 	}
 
-	if pg.infoButton.Button.Clicked() {
-		info := modal.NewInfoModal(pg.Load)
-		info.SetupWithTemplate(modal.PrivacyInfoTemplate).
-			SetCancelable(true).
-			PositiveButton("Got it", func() {})
-		pg.ShowModal(info)
-	}
+	// if pg.infoButton.Button.Clicked() {
+	// 	info := modal.NewInfoModal(pg.Load)
+	// 	info.SetupWithTemplate(modal.PrivacyInfoTemplate).
+	// 		SetCancelable(true).
+	// 		PositiveButton("Got it", func() {})
+	// 	pg.ShowModal(info)
+	// }
 }
 
 func (pg *PrivacyPage) showModalSetupMixerInfo() {
