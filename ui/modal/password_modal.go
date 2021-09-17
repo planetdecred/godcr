@@ -165,7 +165,7 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 		return layout.E.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if pm.negativeButtonText == "" {
+					if pm.negativeButtonText == "" || pm.isLoading {
 						return layout.Dimensions{}
 					}
 

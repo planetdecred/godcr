@@ -231,7 +231,6 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 								txt := cm.Theme.Label(values.MarginPadding14, strconv.Itoa(cm.passwordEditor.Editor.Len()))
 								txt.Color = cm.Theme.Color.Gray4
 								return layout.E.Layout(gtx, txt.Layout)
-								// return txt.Layout(gtx)
 							}),
 						)
 					})
@@ -248,7 +247,9 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-
+						if cm.isLoading {
+							return D{}
+						}
 						cm.btnNegative.Background = cm.Theme.Color.Surface
 						cm.btnNegative.Color = cm.Theme.Color.Primary
 						return cm.btnNegative.Layout(gtx)
