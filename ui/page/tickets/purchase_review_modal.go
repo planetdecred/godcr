@@ -118,6 +118,10 @@ func (t *ticketReviewModal) Layout(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+						if t.isLoading {
+							return D{}
+						}
+
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, t.cancelPurchase.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
