@@ -436,6 +436,38 @@ func StringNotEmpty(texts ...string) bool {
 	return true
 }
 
+func TimeFormat(secs int, long bool) string {
+	var val string
+	if secs > 86399 {
+		val = "d"
+		if long {
+			val = " day(s)"
+		}
+		days := secs / 86400
+		return fmt.Sprintf("%d%s", days, val)
+	} else if secs > 3599 {
+		val = "h"
+		if long {
+			val = " hour(s)"
+		}
+		hours := secs / 3600
+		return fmt.Sprintf("%d%s", hours, val)
+	} else if secs > 59 {
+		val = "s"
+		if long {
+			val = " min(s)"
+		}
+		mins := secs / 60
+		return fmt.Sprintf("%d%s", mins, val)
+	}
+
+	val = "s"
+	if long {
+		val = " sec(s)"
+	}
+	return fmt.Sprintf("%d %s", secs, val)
+}
+
 /*
 func (page *pageCommon) Modal(gtx layout.Context, body layout.Dimensions, modal layout.Dimensions) layout.Dimensions {
 	dims := layout.Stack{}.Layout(gtx,

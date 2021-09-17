@@ -375,19 +375,11 @@ func (pg *OverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Rigid(func(gtx C) D {
 			pg.walletStatusIcon.Color = pg.Theme.Color.Gray
-			return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 				return pg.walletStatusIcon.Layout(gtx, values.MarginPadding5)
 			})
 		}),
-		layout.Rigid(func(gtx C) D {
-			currentSeconds := time.Now().UnixNano() / int64(time.Second)
-			return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, pg.Theme.Body1(wallet.SecondsToDays(currentSeconds-pg.bestBlock.Timestamp)).Layout)
-		}),
-		layout.Rigid(func(gtx C) D {
-			lastSyncedLabel := pg.Theme.Body1(values.String(values.StrAgo))
-			lastSyncedLabel.Color = pg.Theme.Color.Gray
-			return lastSyncedLabel.Layout(gtx)
-		}),
+		layout.Rigid(pg.Theme.Body1(components.TimeAgo(pg.bestBlock.Timestamp)).Layout),
 	)
 }
 
@@ -521,14 +513,11 @@ func (pg *OverviewPage) progressStatusRow(gtx layout.Context, inset layout.Inset
 	rescanUpdate := pg.rescanUpdate
 	if rescanUpdate != nil && rescanUpdate.ProgressReport != nil {
 		progress = int(rescanUpdate.ProgressReport.RescanProgress)
-		timeLeft = wallet.SecondsToDays(rescanUpdate.ProgressReport.RescanTimeRemaining)
-	}
-	if timeLeft == "" {
-		timeLeft = "0s"
+		timeLeft = components.TimeFormat(int(rescanUpdate.ProgressReport.RescanTimeRemaining), true)
 	}
 
 	percentageLabel := pg.Theme.Body1(fmt.Sprintf("%v%%", progress))
-	timeLeftLabel := pg.Theme.Body1(fmt.Sprintf("%v Left", timeLeft))
+	timeLeftLabel := pg.Theme.Body1(fmt.Sprintf("%v left", timeLeft))
 	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return components.EndToEndRow(gtx, percentageLabel.Layout, timeLeftLabel.Layout)
 	})
@@ -568,7 +557,7 @@ func (pg *OverviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset) la
 					}
 
 					blockHeightProgress := values.StringF(values.StrBlockHeaderFetchedCount, w.GetBestBlock(), pg.headersToFetchOrScan)
-					daysBehind := wallet.SecondsToDays(currentSeconds - w.GetBestBlockTimeStamp())
+					daysBehind := components.TimeFormat(int(currentSeconds-w.GetBestBlockTimeStamp()), true)
 					details := pg.syncDetail(w.Name, status, blockHeightProgress, daysBehind)
 					uniform := layout.UniformInset(values.MarginPadding5)
 					walletSyncBoxes = append(walletSyncBoxes,
@@ -712,16 +701,16 @@ func (pg *OverviewPage) listenForSyncNotifications() {
 					pg.headerFetchProgress = t.Progress.HeadersFetchProgress
 					pg.headersToFetchOrScan = t.Progress.TotalHeadersToFetch
 					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
+					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.FetchHeadersSteps
 				case wallet.SyncAddressDiscoveryProgress:
 					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
+					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.AddressDiscoveryStep
 				case wallet.SyncHeadersRescanProgress:
 					pg.headersToFetchOrScan = t.Progress.TotalHeadersToScan
 					pg.syncProgress = int(t.Progress.TotalSyncProgress)
-					pg.remainingSyncTime = wallet.SecondsToDays(t.Progress.TotalTimeRemainingSeconds)
+					pg.remainingSyncTime = components.TimeFormat(int(t.Progress.TotalTimeRemainingSeconds), true)
 					pg.syncStep = wallet.RescanHeadersStep
 				}
 
