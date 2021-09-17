@@ -3,6 +3,7 @@ package page
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
@@ -77,7 +78,8 @@ func (pg *LogPage) watchLogs() {
 			offset = size - LogOffset
 		}
 
-		t, err := tail.TailFile(logPath, tail.Config{Follow: true, Location: &tail.SeekInfo{Offset: offset}})
+		pollLogs := runtime.GOOS == "windows"
+		t, err := tail.TailFile(logPath, tail.Config{Follow: true, Poll: pollLogs, Location: &tail.SeekInfo{Offset: offset}})
 		if err != nil {
 			pg.fullLog = fmt.Sprintf("unable to tail log file: %v", err)
 			return
