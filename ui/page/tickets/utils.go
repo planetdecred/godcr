@@ -100,7 +100,7 @@ func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, new
 			txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
 
 			ticketAgeDuration := time.Since(time.Unix(tx.Timestamp, 0)).Seconds()
-			ticketAge = ticketAgeTimeFormat(int(ticketAgeDuration))
+			ticketAge = components.TimeFormat(int(ticketAgeDuration), false)
 		}
 
 		showTime := showProgress && txStatus.TicketStatus != dcrlibwallet.TicketStatusLive
@@ -184,7 +184,7 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 	maturity := l.WL.MultiWallet.TicketMaturity()
 	blockTime := l.WL.MultiWallet.TargetTimePerBlockMinutes()
 	maturityDuration := time.Duration(maturity*int32(blockTime)) * time.Minute
-	maturityTime := ticketAgeTimeFormat(int(maturityDuration.Seconds()))
+	maturityTime := components.TimeFormat(int(maturityDuration.Seconds()), false)
 	var title, mainDesc, subDesc string
 	switch tx.status.TicketStatus {
 	case dcrlibwallet.TicketStatusUnmined:
@@ -337,7 +337,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 									}
 
 									timeRemaining := time.Duration(float64(maturity-confirmations)*l.WL.MultiWallet.TargetTimePerBlockMinutes()) * time.Minute
-									maturityDuration := ticketAgeTimeFormat(int(timeRemaining.Seconds()))
+									maturityDuration := components.TimeFormat(int(timeRemaining.Seconds()), false)
 									txt := l.Theme.Label(values.TextSize14, maturityTimeFormat(int(timeRemaining.Minutes())))
 
 									durationLayout := layout.Flex{Alignment: layout.Middle}.Layout(gtx,
@@ -507,21 +507,6 @@ func createClickGestures(count int) []*gesture.Click {
 		gestures[i] = &gesture.Click{}
 	}
 	return gestures
-}
-
-func ticketAgeTimeFormat(secs int) string {
-	if secs > 86399 {
-		days := secs / 86400
-		return fmt.Sprintf("%dd", days)
-	} else if secs > 3599 {
-		hours := secs / 3600
-		return fmt.Sprintf("%dh", hours)
-	} else if secs > 59 {
-		mins := secs / 60
-		return fmt.Sprintf("%dm", mins)
-	}
-
-	return fmt.Sprintf("%ds", secs)
 }
 
 func maturityTimeFormat(maturityTimeMinutes int) string {
