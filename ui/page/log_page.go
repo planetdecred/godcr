@@ -22,6 +22,7 @@ const (
 
 type LogPage struct {
 	*load.Load
+	tail *tail.Tail
 
 	copyLog    *widget.Clickable
 	copyIcon   *decredmaterial.Image
@@ -46,13 +47,11 @@ func NewLogPage(l *load.Load) *LogPage {
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	go pg.watchLogs()
-
 	return pg
 }
 
 func (pg *LogPage) OnResume() {
-
+	pg.watchLogs()
 }
 
 func (pg *LogPage) copyLogEntries(gtx C) {
@@ -62,30 +61,38 @@ func (pg *LogPage) copyLogEntries(gtx C) {
 }
 
 func (pg *LogPage) watchLogs() {
-	logPath := pg.Load.WL.Wallet.LogFile()
+	go func() {
+		logPath := pg.Load.WL.Wallet.LogFile()
 
-	fi, err := os.Stat(logPath)
-	if err != nil {
-		fmt.Println("Unable to open file:", err)
-		return
-	}
-	// get the size
-	size := fi.Size()
+		fi, err := os.Stat(logPath)
+		if err != nil {
+			pg.fullLog = fmt.Sprintf("unable to open log file: %v", err)
+			return
+		}
 
-	var offset int64 = 0
-	if size > LogOffset*2 {
-		offset = size - LogOffset
-	}
+		size := fi.Size()
 
-	t, _ := tail.TailFile(logPath, tail.Config{Follow: true, Location: &tail.SeekInfo{Offset: offset}})
-	if offset > 0 {
-		// skip the first line because it might be truncated.
-		<-t.Lines
-	}
-	for line := range t.Lines {
-		pg.fullLog += line.Text + "\n"
-		pg.RefreshWindow()
-	}
+		var offset int64 = 0
+		if size > LogOffset*2 {
+			offset = size - LogOffset
+		}
+
+		t, err := tail.TailFile(logPath, tail.Config{Follow: true, Location: &tail.SeekInfo{Offset: offset}})
+		if err != nil {
+			pg.fullLog = fmt.Sprintf("unable to tail log file: %v", err)
+			return
+		}
+		pg.tail = t
+
+		if offset > 0 {
+			// skip the first line because it might be truncated.
+			<-t.Lines
+		}
+		for line := range t.Lines {
+			pg.fullLog += line.Text + "\n"
+			pg.RefreshWindow()
+		}
+	}()
 }
 
 func (pg *LogPage) Layout(gtx C) D {
@@ -131,5 +138,10 @@ func (pg *LogPage) Layout(gtx C) D {
 	return components.UniformPadding(gtx, container)
 }
 
-func (pg *LogPage) Handle()  {}
-func (pg *LogPage) OnClose() {}
+func (pg *LogPage) Handle() {}
+
+func (pg *LogPage) OnClose() {
+	if pg.tail != nil {
+		pg.tail.Stop()
+	}
+}
