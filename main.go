@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
+	"path/filepath"
 	"time"
 
 	"gioui.org/app"
-
-	_ "net/http/pprof"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui"
@@ -49,7 +49,8 @@ func main() {
 		buildDate = time.Now()
 	}
 
-	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, Version, buildDate, make(chan wallet.Response, 3))
+	logFile := filepath.Join(cfg.LogDir, defaultLogFilename)
+	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, Version, logFile, buildDate, make(chan wallet.Response, 3))
 	if err != nil {
 		log.Error(err)
 		return
@@ -62,7 +63,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	win, appWindow, err := ui.CreateWindow(wal, internalLog)
+	win, appWindow, err := ui.CreateWindow(wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return

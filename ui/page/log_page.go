@@ -1,32 +1,36 @@
 package page
 
 import (
-	"sync"
+	"fmt"
+	"os"
+	"runtime"
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
+	"github.com/nxadm/tail"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const LogPageID = "Log"
+const (
+	LogPageID = "Log"
+	LogOffset = 24000
+)
 
 type LogPage struct {
 	*load.Load
+	tail *tail.Tail
 
-	internalLog chan string
-	copyLog     *widget.Clickable
-	copyIcon    *decredmaterial.Image
-	backButton  decredmaterial.IconButton
+	copyLog    *widget.Clickable
+	copyIcon   *decredmaterial.Image
+	backButton decredmaterial.IconButton
 
-	entriesList layout.List
-	fullLog     string
-	logEntries  []decredmaterial.Label
-	entriesLock sync.Mutex
+	logList layout.List
+	fullLog string
 }
 
 func (pg *LogPage) ID() string {
@@ -35,44 +39,62 @@ func (pg *LogPage) ID() string {
 
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
-		Load:        l,
-		internalLog: l.Receiver.InternalLog,
-		entriesList: layout.List{
-			Axis: layout.Vertical,
-		},
-		copyLog:    new(widget.Clickable),
-		logEntries: make([]decredmaterial.Label, 0, 20),
+		Load:    l,
+		copyLog: new(widget.Clickable),
+		logList: layout.List{Axis: layout.Vertical, ScrollToEnd: true},
 	}
 
 	pg.copyIcon = pg.Icons.CopyIcon
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	go pg.watchLogs(pg.internalLog)
-
 	return pg
 }
 
 func (pg *LogPage) OnResume() {
-
+	pg.watchLogs()
 }
 
 func (pg *LogPage) copyLogEntries(gtx C) {
 	go func() {
-		pg.entriesLock.Lock()
-		defer pg.entriesLock.Unlock()
 		clipboard.WriteOp{Text: pg.fullLog}.Add(gtx.Ops)
 	}()
 }
 
-func (pg *LogPage) watchLogs(internalLog chan string) {
-	for l := range internalLog {
-		entry := l[:len(l)-1]
-		pg.entriesLock.Lock()
-		pg.fullLog += l
-		pg.logEntries = append(pg.logEntries, pg.Theme.Body1(entry))
-		pg.entriesLock.Unlock()
-	}
+func (pg *LogPage) watchLogs() {
+	go func() {
+		logPath := pg.Load.WL.Wallet.LogFile()
+
+		fi, err := os.Stat(logPath)
+		if err != nil {
+			pg.fullLog = fmt.Sprintf("unable to open log file: %v", err)
+			return
+		}
+
+		size := fi.Size()
+
+		var offset int64 = 0
+		if size > LogOffset*2 {
+			offset = size - LogOffset
+		}
+
+		pollLogs := runtime.GOOS == "windows"
+		t, err := tail.TailFile(logPath, tail.Config{Follow: true, Poll: pollLogs, Location: &tail.SeekInfo{Offset: offset}})
+		if err != nil {
+			pg.fullLog = fmt.Sprintf("unable to tail log file: %v", err)
+			return
+		}
+		pg.tail = t
+
+		if offset > 0 {
+			// skip the first line because it might be truncated.
+			<-t.Lines
+		}
+		for line := range t.Lines {
+			pg.fullLog += line.Text + "\n"
+			pg.RefreshWindow()
+		}
+	}()
 }
 
 func (pg *LogPage) Layout(gtx C) D {
@@ -101,17 +123,15 @@ func (pg *LogPage) Layout(gtx C) D {
 				background := pg.Theme.Color.Surface
 				card := pg.Theme.Card()
 				card.Color = background
+
 				return card.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return pg.entriesList.Layout(gtx, len(pg.logEntries), func(gtx C, i int) D {
-							pg.entriesLock.Lock()
-							defer pg.entriesLock.Unlock()
-							return pg.logEntries[i].Layout(gtx)
+						return pg.logList.Layout(gtx, 1, func(gtx C, index int) D {
+							return pg.Theme.Body1(pg.fullLog).Layout(gtx)
 						})
 					})
-
 				})
 			},
 		}
@@ -120,5 +140,10 @@ func (pg *LogPage) Layout(gtx C) D {
 	return components.UniformPadding(gtx, container)
 }
 
-func (pg *LogPage) Handle()  {}
-func (pg *LogPage) OnClose() {}
+func (pg *LogPage) Handle() {}
+
+func (pg *LogPage) OnClose() {
+	if pg.tail != nil {
+		pg.tail.Stop()
+	}
+}

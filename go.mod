@@ -18,6 +18,7 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20210901121439-eee08aaf2717 // indirect
 	github.com/jessevdk/go-flags v1.4.1-0.20200711081900-c17162fe8fd7
 	github.com/jrick/logrotate v1.0.0
+	github.com/nxadm/tail v1.4.4
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002
