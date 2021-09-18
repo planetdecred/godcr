@@ -18,6 +18,16 @@ type (
 )
 
 const MarketPageID = "Markets"
+const testDexHost = "127.0.0.1:7232"
+
+type selectedMaket struct {
+	host          string
+	name          string
+	marketBase    string
+	marketQuote   string
+	marketBaseID  uint32
+	marketQuoteID uint32
+}
 
 type Page struct {
 	*load.Load
@@ -25,8 +35,18 @@ type Page struct {
 	miniTradeFormWdg *miniTradeFormWidget
 	initializeModal  bool
 	orderBook        *core.OrderBook
+	addBTCWallet     decredmaterial.Button
+	selectedMaket    *selectedMaket
+}
 
-	addBTCWallet decredmaterial.Button
+// TODO: Aadd collapsible button to select a market.
+var mkt = &selectedMaket{
+	host:          testDexHost,
+	name:          "DCR-BTC",
+	marketBase:    "dcr",
+	marketBaseID:  42,
+	marketQuote:   "btc",
+	marketQuoteID: 0,
 }
 
 func NewMarketPage(l *load.Load) *Page {
@@ -37,7 +57,8 @@ func NewMarketPage(l *load.Load) *Page {
 		initializeModal:  false,
 		orderBook:        new(core.OrderBook),
 
-		addBTCWallet: l.Theme.Button(new(widget.Clickable), "Add BTC wallet"),
+		addBTCWallet:  l.Theme.Button(new(widget.Clickable), "Add BTC wallet"),
+		selectedMaket: mkt,
 	}
 
 	return pg
@@ -161,7 +182,7 @@ func (pg *Page) handleModals() {
 		md := newUnlockWalletModal(pg.Load)
 		md.unlocked = func(password []byte) {
 			pg.refreshUser()
-			pg.connectDex(testDexHost, password)
+			pg.connectDex(pg.selectedMaket.host, password)
 		}
 		md.Show()
 		return
@@ -188,6 +209,6 @@ func (pg *Page) refreshUser() {
 	pg.initializeModal = false
 
 	if pg.user.Initialized && pg.DL.IsLoggedIn {
-		pg.connectDex(testDexHost, []byte("123"))
+		pg.updateOrderBook()
 	}
 }

@@ -163,6 +163,7 @@ func loadIcons() Icons {
 		DropDownIcon:           decredmaterial.MustIcon(widget.NewIcon(icons.NavigationArrowDropDown)),
 		Cached:                 decredmaterial.MustIcon(widget.NewIcon(icons.ActionCached)),
 		ContentRemove:          decredmaterial.MustIcon(widget.NewIcon(icons.ContentRemove)),
+		ActionSwapHoriz:        decredmaterial.MustIcon(widget.NewIcon(icons.ActionSwapHoriz)),
 
 		OverviewIcon:             decredmaterial.NewImage(decredIcons["overview"]),
 		OverviewIconInactive:     decredmaterial.NewImage(decredIcons["overview_inactive"]),

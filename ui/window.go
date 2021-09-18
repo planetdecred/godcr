@@ -298,11 +298,6 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 			}
 
 			win.updateStates(e.Resp)
-		case e := <-win.dexc.Send:
-			if e.Err != nil {
-				log.Error("Dex Error: " + e.Err.Error())
-			}
-			win.updateDexStates(e.Resp)
 		case update := <-win.wallet.Sync:
 			switch update.Stage {
 			case wallet.SyncCompleted:

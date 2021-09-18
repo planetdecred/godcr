@@ -23,13 +23,11 @@ import (
 // Dexc represents of the Decred exchange client.
 type Dexc struct {
 	*core.Core
-	Send chan Response
+	wg  sync.WaitGroup
+	ctx context.Context
 
 	connMtx sync.RWMutex
 	conns   map[string]*dexConnection
-
-	wg  sync.WaitGroup
-	ctx context.Context
 }
 
 const (
@@ -38,20 +36,22 @@ const (
 	ConversionFactor        = 1e8
 )
 
-func NewDex(debugLevel string, dbPath, net string, send chan Response, w io.Writer) (*Dexc, error) {
+func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
 	logMaker := initLogging(debugLevel, true, w)
 	log = logMaker.Logger("DEXC")
-
-	_, err := dex.NetFromString(net)
+	if net == "testnet3" {
+		net = "testnet"
+	}
+	n, err := dex.NetFromString(net)
 	if err != nil {
 		log.Error(err)
-		// return nil, err
+		return nil, err
 	}
 
 	// Prepare the Core.
 	clientCore, err := core.New(&core.Config{
 		DBPath: dbPath, // global set in config.go
-		Net:    dex.Network(1),
+		Net:    n,
 		Logger: logMaker.Logger("CORE"),
 		// TorProxy:     TorProxy,
 		// TorIsolation: TorIsolation,
@@ -64,7 +64,6 @@ func NewDex(debugLevel string, dbPath, net string, send chan Response, w io.Writ
 
 	return &Dexc{
 		Core:  clientCore,
-		Send:  send,
 		conns: make(map[string]*dexConnection),
 	}, nil
 }
@@ -87,8 +86,22 @@ type dexConnection struct {
 }
 
 func (d *Dexc) ConnectDexes(host string, password []byte) {
-	// TODO: loop all the support exchange and connect
+	exchanges := d.Exchanges()
+	exchange, ok := exchanges[host]
+	if !ok {
+		log.Errorf("Host %s not found", host)
+		return
+	}
+
 	dc, _ := d.connectDex(host, password)
+	for _, mkt := range exchange.Markets {
+		_, err := dc.subscribe(mkt.BaseID, mkt.QuoteID)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+	}
+
 	d.connMtx.Lock()
 	d.conns[host] = dc
 	d.connMtx.Unlock()
@@ -131,16 +144,10 @@ func (d *Dexc) connectDex(host string, password []byte) (*dexConnection, error) 
 
 	err = cmaster.Connect(ctx)
 	if err != nil {
-		log.Errorf(">>> Connect to websocket failer %v", err)
+		log.Errorf(">>> Connect to websocket failure %v", err)
 	}
 
 	return dc, nil
-}
-
-func (d *Dexc) MessageSource(host string) <-chan *msgjson.Message {
-	dc, _ := d.conns[host]
-	dc.subscribe(DefaultAssetID, 0)
-	return dc.MessageSource()
 }
 
 func (dc *dexConnection) subscribe(b, q uint32) (*msgjson.OrderBook, error) {
@@ -167,4 +174,13 @@ func (dc *dexConnection) subscribe(b, q uint32) (*msgjson.OrderBook, error) {
 		return nil, fmt.Errorf("error subscribing to %s orderbook: %w", mkt, err)
 	}
 	return result, nil
+}
+
+func (d *Dexc) MessageSource(host string) <-chan *msgjson.Message {
+	dc, ok := d.conns[host]
+	if !ok || dc == nil {
+		log.Errorf("Connection: %s not exist ", host)
+		return nil
+	}
+	return dc.MessageSource()
 }

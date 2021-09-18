@@ -1,7 +1,6 @@
 package dexclient
 
 import (
-	"fmt"
 	"io/ioutil"
 
 	"decred.org/dcrdex/client/core"
@@ -14,8 +13,6 @@ import (
 )
 
 const addDexModalID = "add_dex_modal"
-
-const testDexHost = "127.0.0.1:7232"
 
 type addDexModal struct {
 	*load.Load
@@ -39,7 +36,6 @@ func newAddDexModal(l *load.Load) *addDexModal {
 	md.addDexServer.TextSize = values.TextSize12
 	md.addDexServer.Background = l.Theme.Color.Primary
 	md.dexServerAddress.Editor.SingleLine = true
-	md.dexServerAddress.Editor.SetText(fmt.Sprintf("http://%s", testDexHost))
 
 	return md
 }

@@ -95,11 +95,3 @@ func (win *Window) updateStates(update interface{}) {
 func (win *Window) notifyOnSuccess(text string) {
 	win.load.Toast.Notify(text)
 }
-
-// updateDexStates changes the dex client state based on the received update
-func (win *Window) updateDexStates(update interface{}) {
-	// TODO: implement when received messages from websocket server
-	switch update.(type) {
-
-	}
-}
