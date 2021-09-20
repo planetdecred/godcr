@@ -15,6 +15,11 @@ const (
 	MatchParent = -2
 )
 
+type Hover struct {
+	HoverColor  color.NRGBA
+	HoverButton *widget.Clickable
+}
+
 type LinearLayout struct {
 	Width       int
 	Height      int
@@ -27,9 +32,7 @@ type LinearLayout struct {
 	Direction   layout.Direction
 	Spacing     layout.Spacing
 	Alignment   layout.Alignment
-	Hoverable   bool
-	HoverColor  color.NRGBA
-	HoverButton *widget.Clickable
+	HoverEffect Hover
 }
 
 // Layout2 displays a linear layout with a single child.
@@ -60,12 +63,12 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 							}},
 							NW: tl, NE: tr, SE: br, SW: bl,
 						}.Add(gtx.Ops)
-						if ll.Hoverable && ll.HoverButton != nil {
+						if ll.HoverEffect.HoverButton != nil {
 							switch {
 							case gtx.Queue == nil:
 								background = Disabled(ll.Background)
-							case ll.HoverButton.Hovered():
-								background = Hovered(ll.HoverColor)
+							case ll.HoverEffect.HoverButton.Hovered():
+								background = Hovered(ll.HoverEffect.HoverColor)
 							}
 						}
 						return fill(gtx, background)

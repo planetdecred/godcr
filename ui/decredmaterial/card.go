@@ -12,9 +12,11 @@ import (
 
 type Card struct {
 	layout.Inset
-	Color      color.NRGBA
-	HoverColor color.NRGBA
-	Radius     CornerRadius
+	Border      bool
+	BorderParam widget.Border
+	Color       color.NRGBA
+	HoverColor  color.NRGBA
+	Radius      CornerRadius
 }
 
 type CornerRadius struct {
@@ -56,6 +58,11 @@ func (t *Theme) Card() Card {
 		Color:      t.Color.Surface,
 		HoverColor: t.Color.ActiveGray,
 		Radius:     Radius(defaultRadius),
+		BorderParam: widget.Border{
+			Color:        t.Color.Gray1,
+			Width:        unit.Dp(1),
+			CornerRadius: unit.Dp(defaultRadius),
+		},
 	}
 }
 
@@ -79,6 +86,12 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 			layout.Stacked(w),
 		)
 	})
+	if c.Border {
+		border := widget.Border{Color: c.BorderParam.Color, CornerRadius: c.BorderParam.CornerRadius, Width: c.BorderParam.Width}
+		return border.Layout(gtx, func(gtx C) D {
+			return dims
+		})
+	}
 	return dims
 }
 
@@ -109,5 +122,11 @@ func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layou
 			layout.Stacked(w),
 		)
 	})
+	if c.Border {
+		border := widget.Border{Color: c.BorderParam.Color, CornerRadius: c.BorderParam.CornerRadius, Width: c.BorderParam.Width}
+		return border.Layout(gtx, func(gtx C) D {
+			return dims
+		})
+	}
 	return dims
 }

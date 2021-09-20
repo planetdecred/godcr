@@ -469,34 +469,33 @@ func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dime
 	desc := "Some accounts are disabled by StakeShuffle settings to protect your privacy."
 	card := asm.Theme.Card()
 	card.Radius = decredmaterial.Radius(7)
-	border := widget.Border{Color: asm.Theme.Color.Background, CornerRadius: values.MarginPadding7, Width: values.MarginPadding1}
+	card.Border = true
+	card.BorderParam.CornerRadius = values.MarginPadding7
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding280)
-	return border.Layout(gtx, func(gtx C) D {
-		return card.Layout(gtx, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								txt := asm.Theme.Body2(title)
-								txt.Color = asm.Theme.Color.DeepBlue
-								txt.Font.Weight = text.Bold
-								return txt.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								txt := asm.Theme.Body2("Tx direction")
-								txt.Color = asm.Theme.Color.Gray
-								return txt.Layout(gtx)
-							}),
-						)
-					}),
-					layout.Rigid(func(gtx C) D {
-						txt := asm.Theme.Body2(desc)
-						txt.Color = asm.Theme.Color.Gray
-						return txt.Layout(gtx)
-					}),
-				)
-			})
+	return card.Layout(gtx, func(gtx C) D {
+		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := asm.Theme.Body2(title)
+							txt.Color = asm.Theme.Color.DeepBlue
+							txt.Font.Weight = text.Bold
+							return txt.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							txt := asm.Theme.Body2("Tx direction")
+							txt.Color = asm.Theme.Color.Gray
+							return txt.Layout(gtx)
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					txt := asm.Theme.Body2(desc)
+					txt.Color = asm.Theme.Color.Gray
+					return txt.Layout(gtx)
+				}),
+			)
 		})
 	})
 }

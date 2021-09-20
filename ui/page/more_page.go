@@ -114,8 +114,12 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 					Height:     decredmaterial.WrapContent,
 					Background: pg.Theme.Color.Surface,
 					Shadow:     pg.Theme.Shadow(),
-					Border:     decredmaterial.Border{Radius: decredmaterial.Radius(14)},
-					Padding:    layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
+					HoverEffect: decredmaterial.Hover{
+						HoverButton: pg.morePageListItems[i].clickable,
+						HoverColor:  pg.Theme.Color.ActiveGray,
+					},
+					Border:  decredmaterial.Border{Radius: decredmaterial.Radius(14)},
+					Padding: layout.UniformInset(values.MarginPadding15)}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Center.Layout(gtx, pg.morePageListItems[i].image.Layout24dp)
 					}),

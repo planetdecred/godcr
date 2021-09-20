@@ -58,10 +58,15 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 	}
 
 	if len(c.items) > 0 {
+		txt := items[0].Text
+		if len(items[0].Text) > 12 {
+			txt = items[0].Text[:12] + "..."
+		}
+
 		c.items[0] = DropDownItem{
 			Text:   items[0].Text,
 			Icon:   items[0].Icon,
-			label:  t.Body1(items[0].Text),
+			label:  t.Body1(txt),
 			button: new(widget.Clickable),
 		}
 		c.selectedIndex = 1
@@ -94,7 +99,11 @@ func (c *DropDown) handleEvents() {
 		if index != 0 {
 			for c.items[index].button.Clicked() {
 				c.selectedIndex = index
-				c.items[0].label.Text = c.items[index].Text
+				txt := c.items[index].Text
+				if len(c.items[index].Text) > 12 {
+					txt = c.items[index].Text[:12] + "..."
+				}
+				c.items[0].label.Text = txt
 				c.isOpen = false
 			}
 		}
@@ -112,7 +121,11 @@ func (c *DropDown) Changed() bool {
 			for c.items[index].button.Clicked() {
 				if c.items[0].label.Text != c.items[index].Text {
 					c.selectedIndex = index
-					c.items[0].label.Text = c.items[index].Text
+					txt := c.items[index].Text
+					if len(c.items[index].Text) > 12 {
+						txt = c.items[index].Text[:12] + "..."
+					}
+					c.items[0].label.Text = txt
 					c.isOpen = false
 					return true
 				}
@@ -144,10 +157,11 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 		return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 			layout.Stacked(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(unit.Dp(150))
+				gtx.Constraints.Max.X = gtx.Px(unit.Dp(155))
 				if c.revs {
-					gtx.Constraints.Min.X = gtx.Px(unit.Dp(120))
+					gtx.Constraints.Max.X = gtx.Px(unit.Dp(120))
 				}
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						if c.items[itemIndex].Icon == nil {
@@ -158,12 +172,13 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 						return img.Layout24dp(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
+						gtx.Constraints.Max.X = gtx.Px(unit.Dp(110))
 						if c.revs {
-							gtx.Constraints.Min.X = gtx.Px(unit.Dp(75))
+							gtx.Constraints.Max.X = gtx.Px(unit.Dp(100))
 						}
-						gtx.Constraints.Min.X = gtx.Px(unit.Dp(85))
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.Inset{
-							Right: unit.Dp(15),
+							Right: unit.Dp(5),
 							Left:  unit.Dp(5),
 						}.Layout(gtx, func(gtx C) D {
 							return c.items[itemIndex].label.Layout(gtx)
@@ -209,7 +224,7 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 					Left:  unit.Dp(float32(iLeft)),
 					Right: unit.Dp(float32(iRight)),
 				}.Layout(gtx, func(gtx C) D {
-					return c.dropDownItemMenu(gtx, reversePos)
+					return c.dropDownItemMenu(gtx)
 				})
 			}),
 		)
@@ -231,14 +246,30 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 	)
 }
 
-func (c *DropDown) dropDownItemMenu(gtx C, r bool) D {
+func (c *DropDown) dropDownItemMenu(gtx C) D {
 	return c.drawLayout(gtx, true, func(gtx C) D {
 		list := &layout.List{Axis: layout.Vertical}
 		return list.Layout(gtx, len(c.items[1:]), func(gtx C, index int) D {
 			i := index + 1
 			card := c.theme.Card()
-			card.Color = color.NRGBA{}
+			zero := float32(0)
+			radius := float32(14)
 			card.Radius = Radius(0)
+			if i == 1 {
+				card.Radius = CornerRadius{
+					TopLeft:     radius,
+					TopRight:    radius,
+					BottomRight: zero,
+					BottomLeft:  zero,
+				}
+			} else if i == len(c.items[1:]) {
+				card.Radius = CornerRadius{
+					TopLeft:     zero,
+					TopRight:    zero,
+					BottomRight: radius,
+					BottomLeft:  radius,
+				}
+			}
 			return card.HoverableLayout(gtx, c.items[i].button, func(gtx C) D {
 				return c.layoutOption(gtx, i, false)
 			})
@@ -248,17 +279,13 @@ func (c *DropDown) dropDownItemMenu(gtx C, r bool) D {
 
 // drawLayout wraps the page tx and sync section in a card layout
 func (c *DropDown) drawLayout(gtx C, isPopUp bool, body layout.Widget) D {
-	border := widget.Border{Color: c.color, CornerRadius: unit.Dp(10), Width: unit.Dp(1)}
-
+	card := c.card
+	card.Border = true
 	if isPopUp {
-		c.card.Color = c.background
-		return border.Layout(gtx, func(gtx C) D {
-			return c.card.Layout(gtx, body)
-		})
+		card.Color = c.background
+		return card.Layout(gtx, body)
 	}
 
-	c.card.Color = c.color
-	return border.Layout(gtx, func(gtx C) D {
-		return c.card.HoverableLayout(gtx, c.items[0].button, body)
-	})
+	card.Color = c.color
+	return card.HoverableLayout(gtx, c.items[0].button, body)
 }
