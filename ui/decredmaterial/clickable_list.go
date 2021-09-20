@@ -61,7 +61,7 @@ func (cl *ClickableList) HoverableLayout(gtx layout.Context, count int, w layout
 	card.Color = color.NRGBA{}
 	card.Radius = Radius(0)
 	return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
-		return card.HovarableLayout(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
+		return card.HoverableLayout(gtx, cl.clickables[i], func(gtx layout.Context) layout.Dimensions {
 			return cl.clickableLayout(gtx, count, i, w)
 		})
 	})

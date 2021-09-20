@@ -14,6 +14,7 @@ type DropDown struct {
 	theme          *Theme
 	items          []DropDownItem
 	isOpen         bool
+	revs           bool
 	selectedIndex  int
 	color          color.NRGBA
 	background     color.NRGBA
@@ -143,7 +144,10 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
 		return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 			layout.Stacked(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(unit.Dp(120))
+				gtx.Constraints.Min.X = gtx.Px(unit.Dp(150))
+				if c.revs {
+					gtx.Constraints.Min.X = gtx.Px(unit.Dp(120))
+				}
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						if c.items[itemIndex].Icon == nil {
@@ -154,7 +158,10 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 						return img.Layout24dp(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(unit.Dp(75))
+						if c.revs {
+							gtx.Constraints.Min.X = gtx.Px(unit.Dp(75))
+						}
+						gtx.Constraints.Min.X = gtx.Px(unit.Dp(85))
 						return layout.Inset{
 							Right: unit.Dp(15),
 							Left:  unit.Dp(5),
@@ -178,73 +185,62 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 	iLeft := dropPos
 	iRight := 0
 	alig := layout.NW
+	c.revs = reversePos
 	if reversePos {
 		alig = layout.NE
-		iLeft = 0
+		iLeft = 10
 		iRight = dropPos
 	}
 
+	children := []layout.FlexChild{
+		layout.Rigid(func(gtx C) D {
+			return c.layoutOption(gtx, 0, true)
+		}),
+	}
+
+	if c.isOpen {
+		return layout.Stack{Alignment: alig}.Layout(gtx,
+			layout.Expanded(func(gtx C) D {
+				gtx.Constraints.Min = gtx.Constraints.Max
+				return c.backdrop.Layout(gtx)
+			}),
+			layout.Stacked(func(gtx C) D {
+				return layout.Inset{
+					Left:  unit.Dp(float32(iLeft)),
+					Right: unit.Dp(float32(iRight)),
+				}.Layout(gtx, func(gtx C) D {
+					return c.dropDownItemMenu(gtx, reversePos)
+				})
+			}),
+		)
+	}
 	return layout.Stack{Alignment: alig}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			return c.drawLayout(gtx, false, func(gtx C) D {
-				return c.layoutOption(gtx, 0, true)
+		layout.Stacked(func(gtx C) D {
+			return layout.Inset{
+				Left:  unit.Dp(float32(iLeft)),
+				Right: unit.Dp(float32(iRight)),
+			}.Layout(gtx, func(gtx C) D {
+				return c.drawLayout(gtx, false, func(gtx C) D {
+					lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+					w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
+					c.Width = w + 10
+					return lay
+				})
 			})
 		}),
-		layout.Stacked(func(gtx C) D {
-			if c.isOpen {
-				return layout.Stack{Alignment: alig}.Layout(gtx,
-					layout.Expanded(func(gtx C) D {
-						gtx.Constraints.Min = gtx.Constraints.Max
-						return c.backdrop.Layout(gtx)
-					}),
-					layout.Stacked(func(gtx C) D {
-						return layout.Inset{
-							Left:  unit.Dp(float32(iLeft)),
-							Right: unit.Dp(float32(iRight)),
-						}.Layout(gtx, func(gtx C) D {
-							lay := c.dropDownItemMenu(gtx)
-							w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
-							c.Width = w
-							return lay
-						})
-					}),
-				)
-			}
-			return D{}
-		}),
 	)
-
-	
-	// return layout.Stack{Alignment: alig}.Layout(gtx,
-	// 	layout.Stacked(func(gtx C) D {
-	// 		return layout.Inset{
-	// 			Left:  unit.Dp(float32(iLeft)),
-	// 			Right: unit.Dp(float32(iRight)),
-	// 		}.Layout(gtx, func(gtx C) D {
-	// 			return c.drawLayout(gtx, false, func(gtx C) D {
-	// 				lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
-	// 				w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
-	// 				c.Width = w + 10
-	// 				return lay
-	// 			})
-	// 		})
-	// 	}),
-	// )
 }
 
-func (c *DropDown) dropDownItemMenu(gtx C) D {
-	border := widget.Border{Color: c.color, CornerRadius: unit.Dp(10), Width: unit.Dp(2)}
-	return border.Layout(gtx, func(gtx C) D {
-		return c.drawLayout(gtx, true, func(gtx C) D {
-			list := &layout.List{Axis: layout.Vertical}
-			return list.Layout(gtx, len(c.items[1:]), func(gtx C, index int) D {
-				i := index + 1
-				card := c.theme.Card()
-				card.Color = color.NRGBA{}
-				card.Radius = Radius(0)
-				return card.HovarableLayout(gtx, c.items[i].button, func(gtx C) D {
-					return c.layoutOption(gtx, i, false)
-				})
+func (c *DropDown) dropDownItemMenu(gtx C, r bool) D {
+	return c.drawLayout(gtx, true, func(gtx C) D {
+		list := &layout.List{Axis: layout.Vertical}
+		return list.Layout(gtx, len(c.items[1:]), func(gtx C, index int) D {
+			i := index + 1
+			card := c.theme.Card()
+			card.Color = color.NRGBA{}
+			card.Radius = Radius(0)
+			return card.HoverableLayout(gtx, c.items[i].button, func(gtx C) D {
+				return c.layoutOption(gtx, i, false)
 			})
 		})
 	})
@@ -252,10 +248,17 @@ func (c *DropDown) dropDownItemMenu(gtx C) D {
 
 // drawLayout wraps the page tx and sync section in a card layout
 func (c *DropDown) drawLayout(gtx C, isPopUp bool, body layout.Widget) D {
-	color := c.color
+	border := widget.Border{Color: c.color, CornerRadius: unit.Dp(10), Width: unit.Dp(1)}
+
 	if isPopUp {
-		color = c.background
+		c.card.Color = c.background
+		return border.Layout(gtx, func(gtx C) D {
+			return c.card.Layout(gtx, body)
+		})
 	}
-	c.card.Color = color
-	return c.card.Layout(gtx, body)
+
+	c.card.Color = c.color
+	return border.Layout(gtx, func(gtx C) D {
+		return c.card.HoverableLayout(gtx, c.items[0].button, body)
+	})
 }

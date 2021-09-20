@@ -375,7 +375,7 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 							card.Color = color.NRGBA{}
 							card.Radius = decredmaterial.Radius(0)
 							return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
-								return card.HovarableLayout(gtx, accounts[aindex].button, func(gtx C) D {
+								return card.HoverableLayout(gtx, accounts[aindex].button, func(gtx C) D {
 									return asm.walletAccountLayout(gtx, accounts[aindex])
 								})
 							})

@@ -82,7 +82,7 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 	return dims
 }
 
-func (c Card) HovarableLayout(gtx layout.Context, btn *widget.Clickable, w layout.Widget) layout.Dimensions {
+func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layout.Widget) layout.Dimensions {
 	background := c.Color
 	dims := c.Inset.Layout(gtx, func(gtx C) D {
 		return layout.Stack{}.Layout(gtx,
