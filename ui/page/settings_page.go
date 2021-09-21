@@ -386,6 +386,18 @@ func (pg *SettingsPage) lineSeparator() layout.Widget {
 	}
 }
 
+func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
+	info := modal.NewInfoModal(pg.Load).
+		Title(title).
+		Body(msg).
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
+		PositiveButton("remove", func() {
+			pg.WL.MultiWallet.DeleteUserConfigValueForKey(key)
+		})
+	pg.ShowModal(info)
+}
+
 func (pg *SettingsPage) Handle() {
 	pg.languagePreference.Handle()
 	pg.currencyPreference.Handle()
@@ -498,7 +510,10 @@ func (pg *SettingsPage) Handle() {
 			pg.showSPVPeerDialog()
 			return
 		}
-		pg.WL.MultiWallet.DeleteUserConfigValueForKey(specificPeerKey)
+
+		title := "Remove specific peer"
+		msg := "Are you want to proceed with removing the specific peer?"
+		pg.showWarningModalDialog(title, msg, specificPeerKey)
 	}
 
 	for pg.updateConnectToPeer.Clicked() {
@@ -517,7 +532,10 @@ func (pg *SettingsPage) Handle() {
 			pg.showUserAgentDialog()
 			return
 		}
-		pg.WL.MultiWallet.DeleteUserConfigValueForKey(userAgentKey)
+
+		title := "Remove user agent"
+		msg := "Are you want to proceed with removing the user agent?"
+		pg.showWarningModalDialog(title, msg, userAgentKey)
 	}
 
 	select {
