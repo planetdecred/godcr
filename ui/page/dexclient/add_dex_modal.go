@@ -1,27 +1,24 @@
 package dexclient
 
 import (
-	"io/ioutil"
-
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
-	"github.com/sqweek/dialog"
 )
 
 const addDexModalID = "add_dex_modal"
 
 type addDexModal struct {
 	*load.Load
-	modal                     *decredmaterial.Modal
-	addDexServer, addCertFile decredmaterial.Button
-	dexServerAddress          decredmaterial.Editor
-	isSending                 bool
-	cert                      []byte
-	created                   func([]byte, *core.Exchange)
+	modal            *decredmaterial.Modal
+	addDexServer     decredmaterial.Button
+	dexServerAddress decredmaterial.Editor
+	isSending        bool
+	cert             decredmaterial.Editor
+	created          func([]byte, *core.Exchange)
 }
 
 func newAddDexModal(l *load.Load) *addDexModal {
@@ -30,7 +27,7 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		modal:            l.Theme.ModalFloatTitle(),
 		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
 		addDexServer:     l.Theme.Button(new(widget.Clickable), "Submit"),
-		addCertFile:      l.Theme.Button(new(widget.Clickable), "Add a file"),
+		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
 	}
 
 	md.addDexServer.TextSize = values.TextSize12
@@ -68,35 +65,19 @@ func (md *addDexModal) Handle() {
 
 		md.isSending = true
 		go func() {
-			ce, err := md.DL.GetDEXConfig(md.dexServerAddress.Editor.Text(), md.cert)
+			c := []byte(md.cert.Editor.Text())
+			ce, err := md.DL.GetDEXConfig(md.dexServerAddress.Editor.Text(), c)
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
 			}
 
-			md.created(md.cert, ce)
+			md.created(c, ce)
 			md.Dismiss()
 		}()
 	}
 
-	if md.addCertFile.Button.Clicked() {
-		go func() {
-			filename, err := dialog.File().Filter("Select TLS Certificate", "cert").Load()
-
-			if err != nil {
-				md.Toast.NotifyError(err.Error())
-				return
-			}
-
-			content, err := ioutil.ReadFile(filename)
-			if err != nil {
-				md.Toast.NotifyError(err.Error())
-				return
-			}
-			md.cert = content
-		}()
-	}
 }
 
 func (md *addDexModal) Layout(gtx layout.Context) D {
@@ -113,7 +94,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						return md.addCertFile.Layout(gtx)
+						return md.cert.Layout(gtx)
 					})
 				}),
 			)

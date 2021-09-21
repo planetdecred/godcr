@@ -60,7 +60,7 @@ type Icons struct {
 	TicketRevokedIcon,
 	TicketUnminedIcon *decredmaterial.Image
 
-	dexLogo, BTC, DCR, LTC, BCH *decredmaterial.Image
+	DexLogo, BTC, DCR, LTC, BCH *decredmaterial.Image
 }
 
 type Load struct {
@@ -225,10 +225,11 @@ func loadIcons() Icons {
 		DecredSymbolIcon:         decredmaterial.NewImage(decredIcons["decred_symbol"]),
 		DecredSymbol2:            decredmaterial.NewImage(decredIcons["ic_decred02"]),
 
-		BTC: decredmaterial.NewImage(decredIcons["dex_btc"]),
-		DCR: decredmaterial.NewImage(decredIcons["dex_dcr"]),
-		BCH: decredmaterial.NewImage(decredIcons["dex_bch"]),
-		LTC: decredmaterial.NewImage(decredIcons["dex_ltc"]),
+		DexLogo: decredmaterial.NewImage(decredIcons["dex_logo"]),
+		BTC:     decredmaterial.NewImage(decredIcons["dex_btc"]),
+		DCR:     decredmaterial.NewImage(decredIcons["dex_dcr"]),
+		BCH:     decredmaterial.NewImage(decredIcons["dex_bch"]),
+		LTC:     decredmaterial.NewImage(decredIcons["dex_ltc"]),
 	}
 	return ic
 }

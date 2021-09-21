@@ -28,23 +28,21 @@ func (pg *Page) listenerMessages() {
 		select {
 		case msg, ok := <-msgs:
 			if !ok {
-				fmt.Errorf("listen(wc): Connection terminated for %wsc.", "test")
+				fmt.Println("[ERROR] Listen(wc): Connection terminated for.", "test")
 				return
 			}
 			switch msg.Type {
 			case msgjson.Request:
-				fmt.Sprintf(">>>>>>>>>>>>>>>>>>>>> Message source Request: %s ", msg)
 			case msgjson.Notification:
 				pg.noteHandlers(msg)
 			case msgjson.Response:
 				// client/comms.wsConn handles responses to requests we sent.
-				fmt.Sprintf("A response was received in the message queue: %s", msg)
 				continue
 			default:
-				fmt.Sprintf("Invalid message type %d from MessageSource", msg.Type)
 				continue
 			}
-
+		case <-pg.ctx.Done():
+			return
 		}
 	}
 }
@@ -56,6 +54,8 @@ func (pg *Page) readNotifications() {
 		select {
 		case n := <-ch:
 			fmt.Println("Recv notification", n)
+		case <-pg.ctx.Done():
+			return
 		}
 	}
 }

@@ -109,7 +109,7 @@ func (d *Dexc) ConnectDexes(host string, password []byte) {
 
 func (d *Dexc) connectDex(host string, password []byte) (*dexConnection, error) {
 	ctx := d.ctx
-	acct, err := d.Core.AccountExport([]byte(password), host)
+	acct, err := d.Core.AccountExport(password, host)
 	if err != nil {
 		return nil, err
 	}

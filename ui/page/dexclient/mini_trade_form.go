@@ -102,8 +102,10 @@ func (miniTradeFormWdg *miniTradeFormWidget) handle() {
 
 	ord := miniTradeFormWdg.orderBook
 	if ord != nil {
-		var rate float64 = 0
+		var rate float64
+
 		bitSize := 64
+
 		if miniTradeFormWdg.isSell {
 			_, rate = minMaxRateOrderBook(ord.Buys)
 		} else {

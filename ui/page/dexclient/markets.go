@@ -1,6 +1,8 @@
 package dexclient
 
 import (
+	"context"
+
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -31,6 +33,8 @@ type selectedMaket struct {
 
 type Page struct {
 	*load.Load
+	ctx              context.Context // page context
+	ctxCancel        context.CancelFunc
 	user             *core.User
 	miniTradeFormWdg *miniTradeFormWidget
 	initializeModal  bool
@@ -69,12 +73,34 @@ func (pg *Page) ID() string {
 }
 
 func (pg *Page) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.refreshUser()
+
+	if pg.user.Initialized && pg.DL.IsLoggedIn {
+		go pg.listenerMessages()
+		go pg.readNotifications()
+		pg.updateOrderBook()
+	}
 }
 
 func (pg *Page) Layout(gtx C) D {
 	dims := components.UniformPadding(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						t := "In order to trade at 127.0.0.1:7232, the registration fee payment needs 4 confirmations."
+						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						t := "1/4"
+						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
+					}),
+				)
+			}),
 			layout.Rigid(func(gtx C) D {
 				return pg.pageSections(gtx, func(gtx C) D {
 					return layout.Inset{
@@ -134,6 +160,7 @@ func (pg *Page) Handle() {
 
 func (pg *Page) OnClose() {
 	pg.initializeModal = false
+	pg.ctxCancel()
 }
 
 func (pg *Page) handleModals() {
@@ -207,8 +234,4 @@ func (pg *Page) handleModals() {
 func (pg *Page) refreshUser() {
 	pg.user = pg.DL.Core.User()
 	pg.initializeModal = false
-
-	if pg.user.Initialized && pg.DL.IsLoggedIn {
-		pg.updateOrderBook()
-	}
 }
