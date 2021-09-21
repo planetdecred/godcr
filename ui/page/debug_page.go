@@ -91,17 +91,37 @@ func (pg *DebugPage) debugItem(gtx C, i int) D {
 	})
 }
 
-func (pg *DebugPage) layoutDebugItems(gtx C) {
-	background := pg.Theme.Color.Surface
+func (pg *DebugPage) layoutDebugItems(gtx C) D {
 	card := pg.Theme.Card()
-	card.Color = background
-	card.Layout(gtx, func(gtx C) D {
+	card.Border = true
+	return card.Layout(gtx, func(gtx C) D {
 		list := layout.List{Axis: layout.Vertical}
 		return list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
 			return layout.Inset{}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return pg.debugItem(gtx, i)
+						zero := float32(0)
+						ten := float32(10)
+						card := pg.Theme.Card()
+						if i == len(pg.debugItems)-1 {
+							card.Radius = decredmaterial.CornerRadius{
+								TopLeft:     zero,
+								TopRight:    zero,
+								BottomRight: ten,
+								BottomLeft:  ten,
+							}
+						} else {
+							card.Radius = decredmaterial.CornerRadius{
+								TopLeft:     ten,
+								TopRight:    ten,
+								BottomRight: zero,
+								BottomLeft:  zero,
+							}
+						}
+
+						return card.HoverableLayout(gtx, pg.debugItems[i].clickable, func(gtx C) D {
+							return pg.debugItem(gtx, i)
+						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						if i == len(pg.debugItems)-1 {
