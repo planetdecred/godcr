@@ -132,7 +132,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						}
 
-						return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+						return pg.transactionList.HoverableLayout(gtx, len(wallTxs), func(gtx C, index int) D {
 							var row = components.TransactionRow{
 								Transaction: wallTxs[index],
 								Index:       index,
@@ -168,7 +168,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				return pg.orderDropDown.Layout(gtx, 0, true)
 			}),
 			layout.Expanded(func(gtx C) D {
-				return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width+10, true)
+				return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width, true)
 			}),
 		)
 	}

@@ -198,7 +198,7 @@ func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dim
 						}}.Layout(gtx, message.Layout)
 					}
 
-					return pg.transactionsList.Layout(gtx, len(pg.transactions), func(gtx C, i int) D {
+					return pg.transactionsList.HoverableLayout(gtx, len(pg.transactions), func(gtx C, i int) D {
 						var row = components.TransactionRow{
 							Transaction: pg.transactions[i],
 							Index:       i,

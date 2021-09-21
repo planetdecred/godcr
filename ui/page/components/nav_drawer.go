@@ -163,7 +163,7 @@ func (nd *NavDrawer) layoutNavRow(gtx layout.Context, background color.NRGBA, Cl
 	card := nd.Theme.Card()
 	card.Color = background
 	card.Radius = decredmaterial.Radius(0)
-	return card.HovarableLayout(gtx, Clickable, body)
+	return card.HoverableLayout(gtx, Clickable, body)
 }
 
 func (nd *NavDrawer) DrawerToggled(min bool) {

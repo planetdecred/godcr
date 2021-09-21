@@ -397,11 +397,15 @@ func (pg *WalletPage) layoutOptionsMenu(gtx layout.Context, optionsMenuIndex int
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(menu), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return material.Clickable(gtx, menu[i].button, func(gtx C) D {
-								m10 := values.MarginPadding10
-								return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									return pg.Theme.Body1(menu[i].text).Layout(gtx)
+							card := pg.Theme.Card()
+							card.Radius = decredmaterial.Radius(0)
+							return card.HoverableLayout(gtx, menu[i].button, func(gtx C) D {
+								return material.Clickable(gtx, menu[i].button, func(gtx C) D {
+									m10 := values.MarginPadding10
+									return layout.Inset{Top: m10, Bottom: m10, Left: m10, Right: m10}.Layout(gtx, func(gtx C) D {
+										gtx.Constraints.Min.X = gtx.Constraints.Max.X
+										return pg.Theme.Body1(menu[i].text).Layout(gtx)
+									})
 								})
 							})
 						}),
@@ -454,7 +458,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx, pg.Theme.Separator().Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return listItem.accountsList.Layout(gtx, len(listItem.accounts), func(gtx C, x int) D {
+						return listItem.accountsList.HoverableLayout(gtx, len(listItem.accounts), func(gtx C, x int) D {
 							return pg.walletAccountsLayout(gtx, listItem.accounts[x])
 						})
 					}),
@@ -786,13 +790,11 @@ func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 	}
 
 	return inset.Layout(gtx, func(gtx C) D {
-		border := widget.Border{Color: pg.Theme.Color.LightGray, CornerRadius: unit.Dp(5), Width: unit.Dp(2)}
-		return border.Layout(gtx, func(gtx C) D {
-			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
-					return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
-						return layout.UniformInset(unit.Dp(10)).Layout(gtx, pg.Theme.Body2(pg.addWalletMenu[i].text).Layout)
-					})
+		pg.optionsMenuCard.Border = true
+		return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+			return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
+				return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
+					return layout.UniformInset(unit.Dp(10)).Layout(gtx, pg.Theme.Body2(pg.addWalletMenu[i].text).Layout)
 				})
 			})
 		})

@@ -7,12 +7,18 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op/clip"
 	"gioui.org/unit"
+	"gioui.org/widget"
 )
 
 const (
 	WrapContent = -1
 	MatchParent = -2
 )
+
+type Hover struct {
+	HoverColor  color.NRGBA
+	HoverButton *widget.Clickable
+}
 
 type LinearLayout struct {
 	Width       int
@@ -26,6 +32,7 @@ type LinearLayout struct {
 	Direction   layout.Direction
 	Spacing     layout.Spacing
 	Alignment   layout.Alignment
+	HoverEffect Hover
 }
 
 // Layout2 displays a linear layout with a single child.
@@ -34,7 +41,7 @@ func (ll LinearLayout) Layout2(gtx C, wdg layout.Widget) D {
 }
 
 func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
-
+	background := ll.Background
 	// draw layout direction
 	return ll.Direction.Layout(gtx, func(gtx C) D {
 		// draw margin
@@ -56,7 +63,15 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 							}},
 							NW: tl, NE: tr, SE: br, SW: bl,
 						}.Add(gtx.Ops)
-						return fill(gtx, ll.Background)
+						if ll.HoverEffect.HoverButton != nil {
+							switch {
+							case gtx.Queue == nil:
+								background = Disabled(ll.Background)
+							case ll.HoverEffect.HoverButton.Hovered():
+								background = Hovered(ll.HoverEffect.HoverColor)
+							}
+						}
+						return fill(gtx, background)
 					}),
 					layout.Stacked(func(gtx C) D {
 						ll.applyDimension(&gtx)
