@@ -202,16 +202,16 @@ func (sp *startPage) buttonSection(gtx layout.Context) layout.Dimensions {
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Alignment: layout.Middle, Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Max.X = gtx.Px(values.AppWidth) // set button with to app width
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{Top: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Constraints.Max.X
 								return sp.createButton.Layout(gtx)
 							})
 						}),
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{Top: values.MarginPadding24, Bottom: values.MarginPadding24, Left: values.MarginPadding24, Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Constraints.Max.X
 								return sp.restoreButton.Layout(gtx)
 							})
 						}),
