@@ -40,7 +40,6 @@ type proposalDetails struct {
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
 	redirectIcon       *decredmaterial.Image
-	voteBar            decredmaterial.VoteBar
 	rejectedIcon       *widget.Icon
 	downloadIcon       *decredmaterial.Image
 	timerIcon          *decredmaterial.Image
@@ -60,7 +59,6 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		descriptionList:    &layout.List{Axis: layout.Vertical},
 		redirectIcon:       l.Icons.RedirectIcon,
 		downloadIcon:       l.Icons.DownloadIcon,
-		voteBar:            l.Theme.VoteBar(l.Icons.ActionInfo, l.Icons.ImageBrightness1),
 		proposalItems:      make(map[string]proposalItemWidgets),
 		rejectedIcon:       l.Icons.NavigationCancel,
 		successIcon:        l.Icons.ActionCheckCircle,
@@ -155,7 +153,10 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 	passPercentage := float32(proposal.PassPercentage)
 	eligibleTickets := float32(proposal.EligibleTickets)
 
-	return pg.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
+	return NewVoteBar(pg.Load).
+		SetYesNoVoteParams(yes, no).
+		SetVoteValidityParams(eligibleTickets, quorumPercent, passPercentage).
+		LayoutWithLegend(gtx)
 }
 
 func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {

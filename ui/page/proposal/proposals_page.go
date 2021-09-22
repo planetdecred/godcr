@@ -36,9 +36,9 @@ const ProposalsPageID = "Proposals"
 
 type proposalItem struct {
 	proposal     dcrlibwallet.Proposal
-	voteBar      decredmaterial.VoteBar
 	tooltip      *decredmaterial.Tooltip
 	tooltipLabel decredmaterial.Label
+	voteBar      *VoteBar
 }
 
 type ProposalsPage struct {
@@ -62,12 +62,11 @@ type ProposalsPage struct {
 	proposalCount         []int
 	selectedCategoryIndex int
 
-	legendIcon    *widget.Icon
-	infoIcon      *widget.Icon
 	updatedIcon   *widget.Icon
 	syncButton    *widget.Clickable
 	startSyncIcon *decredmaterial.Image
 	timerIcon     *decredmaterial.Image
+	infoIcon      *widget.Icon
 
 	showSyncedCompleted bool
 	isSyncing           bool
@@ -142,7 +141,7 @@ func (pg *ProposalsPage) loadProposals(category int) {
 			proposal := proposals[i]
 			item := proposalItem{
 				proposal: proposals[i],
-				voteBar:  pg.Theme.VoteBar(pg.infoIcon, pg.legendIcon),
+				voteBar:  NewVoteBar(pg.Load),
 			}
 
 			if proposal.Category == dcrlibwallet.ProposalCategoryPre {
@@ -233,11 +232,10 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.itemCard = pg.Theme.Card()
 	pg.syncButton = new(widget.Clickable)
 
-	pg.infoIcon = pg.Icons.ActionInfo
-
-	pg.legendIcon = pg.Icons.ImageBrightness1
-
 	pg.updatedIcon = pg.Icons.NavigationCheck
+
+	pg.infoIcon = pg.Icons.ActionInfo
+	pg.infoIcon.Color = pg.Theme.Color.Gray
 
 	pg.updatedLabel = pg.Theme.Body2("Updated")
 	pg.updatedLabel.Color = pg.Theme.Color.Success
@@ -545,7 +543,10 @@ func (pg *ProposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 	passPercentage := float32(proposal.PassPercentage)
 	eligibleTickets := float32(proposal.EligibleTickets)
 
-	return item.voteBar.SetParams(yes, no, eligibleTickets, quorumPercent, passPercentage).LayoutWithLegend(gtx)
+	return item.voteBar.
+		SetYesNoVoteParams(yes, no).
+		SetVoteValidityParams(eligibleTickets, quorumPercent, passPercentage).
+		LayoutWithLegend(gtx)
 }
 
 func (pg *ProposalsPage) layoutIsSyncedSection(gtx C) D {
