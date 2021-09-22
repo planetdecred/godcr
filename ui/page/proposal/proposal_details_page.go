@@ -31,9 +31,9 @@ type proposalItemWidgets struct {
 
 type proposalDetails struct {
 	*load.Load
-	ctx       context.Context // page context
-	ctxCancel context.CancelFunc
-
+	ctx                context.Context // page context
+	ctxCancel          context.CancelFunc
+	voteBar            *VoteBar
 	loadingDescription bool
 	proposal           *dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
@@ -63,7 +63,8 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		rejectedIcon:       l.Icons.NavigationCancel,
 		successIcon:        l.Icons.ActionCheckCircle,
 		timerIcon:          l.Icons.TimerIcon,
-		viewInPoliteiaBtn:  l.Theme.NewClickable(true),
+		viewInPoliteiaBtn:  l.Theme.NewClickable(true),,
+		voteBar:            NewVoteBar(l),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -153,9 +154,10 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 	passPercentage := float32(proposal.PassPercentage)
 	eligibleTickets := float32(proposal.EligibleTickets)
 
-	return NewVoteBar(pg.Load).
+	return pg.voteBar.
 		SetYesNoVoteParams(yes, no).
 		SetVoteValidityParams(eligibleTickets, quorumPercent, passPercentage).
+		SetProposalDetails(proposal.NumComments, proposal.PublishedAt, proposal.Token).
 		LayoutWithLegend(gtx)
 }
 

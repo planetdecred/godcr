@@ -14,8 +14,10 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -30,6 +32,10 @@ type VoteBar struct {
 	totalVotes         float32
 	requiredPercentage float32
 	passPercentage     float32
+
+	token       string
+	publishedAt int64
+	numComment  int32
 
 	yesColor color.NRGBA
 	noColor  color.NRGBA
@@ -75,6 +81,14 @@ func (v *VoteBar) SetVoteValidityParams(eligibleVotes, requiredPercentage, passP
 	v.eligibleVotes = eligibleVotes
 	v.passPercentage = passPercentage
 	v.requiredPercentage = requiredPercentage
+
+	return v
+}
+
+func (v *VoteBar) SetProposalDetails(numComment int32, publishedAt int64, token string) *VoteBar {
+	v.numComment = numComment
+	v.publishedAt = publishedAt
+	v.token = token
 
 	return v
 }
@@ -273,40 +287,47 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
 	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
-
-	col := v.Theme.Color.Gray4
-	totalVotesTooltipLabel := v.Theme.Caption("Total votes")
-	totalVotesTooltipLabel.Color = col
-
-	totalVotesCountLabel := v.Theme.Caption(strconv.FormatFloat(float64(v.totalVotes), 'f', 0, 64))
-	totalVotesCountLabel.Color = col
-
-	quorumRequirementTooltip := v.Theme.Caption("Quorum requirement")
-	quorumRequirementTooltip.Color = col
-
-	txt := strconv.FormatFloat(float64((v.requiredPercentage/100)*v.eligibleVotes), 'f', 0, 64)
-	quorumRequirementCount := v.Theme.Caption(txt)
-	quorumRequirementCount.Color = col
+	col := v.Theme.Color.Gray
+	col2 := v.Theme.Color.DeepBlue
 
 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Px(unit.Dp(180))
 		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(totalVotesTooltipLabel.Layout),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, totalVotesCountLabel.Layout)
-					}),
-				)
+				totalVotesTooltipLabel := v.Theme.Caption("Total votes")
+				totalVotesTooltipLabel.Color = col
+
+				totalVotesCountLabel := v.Theme.Caption(fmt.Sprintf("%6.0f", v.totalVotes))
+				return components.EndToEndRow(gtx, totalVotesTooltipLabel.Layout, totalVotesCountLabel.Layout)
 			}),
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Rigid(quorumRequirementTooltip.Layout),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, quorumRequirementCount.Layout)
-					}),
-				)
+				quorumRequirementTooltip := v.Theme.Caption("Quorum requirement")
+				quorumRequirementTooltip.Color = col
+
+				quorumRequirementCount := v.Theme.Caption(fmt.Sprintf("%6.0f", (v.requiredPercentage/100)*v.eligibleVotes))
+				return components.EndToEndRow(gtx, quorumRequirementTooltip.Layout, quorumRequirementCount.Layout)
+			}),
+			layout.Rigid(func(gtx C) D {
+				commentInfo := v.Theme.Caption("Discussions")
+				commentInfo.Color = col
+
+				commentCount := v.Theme.Caption(fmt.Sprintf("%d comments", v.numComment))
+				return components.EndToEndRow(gtx, commentInfo.Layout, commentCount.Layout)
+			}),
+			layout.Rigid(func(gtx C) D {
+				pub := v.Theme.Caption("Published")
+				pub.Color = col
+
+				pubDate := v.Theme.Caption(dcrlibwallet.FormatUTCTime(v.publishedAt))
+				return components.EndToEndRow(gtx, pub.Layout, pubDate.Layout)
+			}),
+			layout.Rigid(func(gtx C) D {
+				token := v.Theme.Caption("Token")
+				token.Color = col
+
+				tokenVal := v.Theme.Caption(v.token)
+				return components.EndToEndRow(gtx, token.Layout, tokenVal.Layout)
 			}),
 		)
 	})
