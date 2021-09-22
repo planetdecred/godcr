@@ -418,7 +418,7 @@ func (pg *SettingsPage) Handle() {
 	if pg.infoButton.Button.Clicked() {
 		info := modal.NewInfoModal(pg.Load).
 			Title("Set up startup password").
-			Body("Startup password help protect your wallet from unauthorized access.").
+			Body("Startup password helps protect your wallet from unauthorized access.").
 			PositiveButton("Got it", func() {})
 		pg.ShowModal(info)
 	}
@@ -512,7 +512,7 @@ func (pg *SettingsPage) Handle() {
 		}
 
 		title := "Remove specific peer"
-		msg := "Are you want to proceed with removing the specific peer?"
+		msg := "Are you sure you want to proceed with removing the specific peer?"
 		pg.showWarningModalDialog(title, msg, specificPeerKey)
 	}
 
@@ -534,7 +534,7 @@ func (pg *SettingsPage) Handle() {
 		}
 
 		title := "Remove user agent"
-		msg := "Are you want to proceed with removing the user agent?"
+		msg := "Are you sure you want to proceed with removing the user agent?"
 		pg.showWarningModalDialog(title, msg, userAgentKey)
 	}
 
