@@ -1,6 +1,7 @@
 package page
 
 import (
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -22,6 +23,8 @@ type VerifyMessagePage struct {
 	signatureEditor        decredmaterial.Editor
 	clearBtn, verifyButton decredmaterial.Button
 	verifyMessage          decredmaterial.Label
+	keyEvent               chan *key.Event
+	isTabPressed           bool
 
 	verifyMessageStatus *widget.Icon
 
@@ -35,6 +38,7 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
 		Load:          l,
 		verifyMessage: l.Theme.Body1(""),
+		keyEvent:      l.Receiver.KeyEvents,
 	}
 
 	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
@@ -151,6 +155,35 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 	}
 }
 
+//Tab key event handler
+func (pg *VerifyMessagePage) handleTabEvent() {
+	select {
+	case event := <-pg.keyEvent:
+		if event.Name == key.NameTab && event.State == key.Press {
+			pg.isTabPressed = true
+			return
+		}
+	default:
+	}
+}
+
+//Switch between editors when tab key is pressed
+func SwitchEditors(pg *VerifyMessagePage, editors ...*widget.Editor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Focused() {
+			pg.handleTabEvent()
+			if pg.isTabPressed {
+				if i == len(editors)-1 {
+					pg.isTabPressed = false
+					break
+				}
+				editors[i+1].Focus()
+			}
+		}
+		pg.isTabPressed = false
+	}
+}
+
 func (pg *VerifyMessagePage) Handle() {
 	pg.updateButtonColors()
 
@@ -183,6 +216,9 @@ func (pg *VerifyMessagePage) Handle() {
 	if pg.clearBtn.Clicked() {
 		pg.clearInputs()
 	}
+
+	//Switch editors on tab press
+	SwitchEditors(pg, pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor)
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
