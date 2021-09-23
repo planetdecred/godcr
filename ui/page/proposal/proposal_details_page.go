@@ -158,7 +158,7 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 		SetYesNoVoteParams(yes, no).
 		SetVoteValidityParams(eligibleTickets, quorumPercent, passPercentage).
 		SetProposalDetails(proposal.NumComments, proposal.PublishedAt, proposal.Token).
-		LayoutWithLegend(gtx)
+		Layout(gtx)
 }
 
 func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {

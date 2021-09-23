@@ -547,7 +547,7 @@ func (pg *ProposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 		SetYesNoVoteParams(yes, no).
 		SetVoteValidityParams(eligibleTickets, quorumPercent, passPercentage).
 		SetProposalDetails(proposal.NumComments, proposal.PublishedAt, proposal.Token).
-		LayoutWithLegend(gtx)
+		Layout(gtx)
 }
 
 func (pg *ProposalsPage) layoutIsSyncedSection(gtx C) D {

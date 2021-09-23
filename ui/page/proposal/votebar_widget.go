@@ -93,7 +93,7 @@ func (v *VoteBar) SetProposalDetails(numComment int32, publishedAt int64, token 
 	return v
 }
 
-func (v *VoteBar) Layout(gtx C) D {
+func (v *VoteBar) votebarLayout(gtx C) D {
 	var rW, rE float32
 	r := float32(gtx.Px(unit.Dp(4)))
 	progressBarWidth := float32(gtx.Constraints.Max.X)
@@ -171,8 +171,8 @@ func (v *VoteBar) Layout(gtx C) D {
 }
 
 func (v *VoteBar) votesIndicatorTooltip(gtx C, r image.Rectangle, tipPos float32) {
-	insetLeft := tipPos - float32(voteBarThumbWidth/2) - 205
-	inset := layout.Inset{Left: unit.Dp(insetLeft), Top: unit.Dp(25)}
+	insetLeft := gtx.Px(unit.Dp(tipPos /2))
+	inset := layout.Inset{Left: unit.Dp(float32(insetLeft)), Top: unit.Dp(25)}
 	v.passTooltip.Layout(gtx, r, inset, func(gtx C) D {
 		txt := fmt.Sprintf("%d %% Yes votes required for approval", int(v.passPercentage))
 		return v.Theme.Caption(txt).Layout(gtx)
@@ -194,12 +194,13 @@ func (v *VoteBar) requiredYesVotesIndicator(gtx C) D {
 	clip.Rect(rect).Add(gtx.Ops)
 	paint.Fill(gtx.Ops, v.Theme.Color.InactiveGray)
 	v.votesIndicatorTooltip(gtx, rect, thumbLeftPos)
+
 	return D{
 		Size: rect.Max,
 	}
 }
 
-func (v *VoteBar) LayoutWithLegend(gtx C) D {
+func (v *VoteBar) Layout(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding5, Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -224,7 +225,7 @@ func (v *VoteBar) LayoutWithLegend(gtx C) D {
 						)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, v.Layout)
+						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, v.votebarLayout)
 					}),
 				)
 			})
@@ -288,7 +289,6 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
 	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
 	col := v.Theme.Color.Gray
-	col2 := v.Theme.Color.DeepBlue
 
 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))
