@@ -155,23 +155,11 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 	}
 }
 
-//Tab key event handler
-func (pg *VerifyMessagePage) handleTabEvent() {
-	select {
-	case event := <-pg.keyEvent:
-		if event.Name == key.NameTab && event.State == key.Press {
-			pg.isTabPressed = true
-			return
-		}
-	default:
-	}
-}
-
 //Switch between editors when tab key is pressed
 func SwitchEditors(pg *VerifyMessagePage, editors ...*widget.Editor) {
 	for i := 0; i < len(editors); i++ {
 		if editors[i].Focused() {
-			pg.handleTabEvent()
+			pg.isTabPressed = handleTabEvent(pg.keyEvent)
 			if pg.isTabPressed {
 				if i == len(editors)-1 {
 					pg.isTabPressed = false

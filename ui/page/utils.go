@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"gioui.org/gesture"
+	"gioui.org/io/key"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -118,4 +119,17 @@ func handleSubmitEvent(editors ...*widget.Editor) bool {
 		}
 	}
 	return submit
+}
+
+//Tab key event handler for pages withe ditors
+func handleTabEvent(event chan *key.Event) bool {
+	var isTabPressed bool
+	select {
+	case event := <-event:
+		if event.Name == key.NameTab && event.State == key.Press {
+			isTabPressed = true
+		}
+	default:
+	}
+	return isTabPressed
 }
