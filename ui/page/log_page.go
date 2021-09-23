@@ -23,10 +23,10 @@ const (
 type LogPage struct {
 	*load.Load
 	tail *tail.Tail
- 
-	copyLog     *decredmaterial.Clickable
-	copyIcon    *decredmaterial.Image
-	backButton  decredmaterial.IconButton
+
+	copyLog    *decredmaterial.Clickable
+	copyIcon   *decredmaterial.Image
+	backButton decredmaterial.IconButton
 
 	logList layout.List
 	fullLog string
@@ -40,7 +40,7 @@ func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
 		Load:    l,
 		logList: layout.List{Axis: layout.Vertical, ScrollToEnd: true},
-		copyLog:    l.Theme.NewClickable(true),
+		copyLog: l.Theme.NewClickable(true),
 	}
 
 	pg.copyIcon = pg.Icons.CopyIcon

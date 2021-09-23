@@ -23,7 +23,7 @@ func (t *Theme) NewClickable(hoverable bool) *Clickable {
 	return &Clickable{
 		button:     &widget.Clickable{},
 		Color:      t.Color.SurfaceHighlight,
-		HoverColor: t.Color.ActiveGray,
+		HoverColor: Hovered(t.Color.ActiveGray),
 		Hoverable:  hoverable,
 	}
 }

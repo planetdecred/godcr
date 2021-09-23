@@ -22,11 +22,13 @@ type DropDown struct {
 	dropdownIcon   *widget.Icon
 	navigationIcon *widget.Icon
 	backdrop       *widget.Clickable
+	clickable      *Clickable
 
 	group            uint
 	closeAllDropdown func(group uint)
 	Width            int
 	linearLayout     *LinearLayout
+	padding          layout.Inset
 	shadow           *Shadow
 }
 
@@ -38,15 +40,17 @@ type DropDownItem struct {
 }
 
 func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
-	c := &DropDown{
+	d := &DropDown{
 		theme:          t,
 		isOpen:         false,
-		items:          make([]DropDownItem, len(items)+1),
+		selectedIndex:  0,
+		items:          make([]DropDownItem, 0),
 		color:          t.Color.Gray1,
 		background:     t.Color.Surface,
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
 		backdrop:       new(widget.Clickable),
+		clickable:      t.NewClickable(true),
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
@@ -55,87 +59,66 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 			Height: WrapContent,
 			Border: Border{Radius: Radius(8)},
 		},
-		shadow: t.Shadow(),
+		padding: layout.Inset{Top: values.MarginPadding8, Bottom: values.MarginPadding8},
+		shadow:  t.Shadow(),
 	}
+
+	d.clickable.Radius = Radius(8)
 
 	for i := range items {
 		items[i].clickable = t.NewClickable(true)
 		items[i].label = t.Body1(items[i].Text)
-		c.items[i+1] = items[i]
+		d.items = append(d.items, items[i])
 	}
 
-	if len(c.items) > 0 {
-		txt := items[0].Text
-		if len(items[0].Text) > 12 {
-			txt = items[0].Text[:12] + "..."
-		}
-
-		c.items[0] = DropDownItem{
-			Text:      items[0].Text,
-			Icon:      items[0].Icon,
-			label:     t.Body1(txt),
-			clickable: t.NewClickable(true),
-		}
-		c.selectedIndex = 1
-	}
-
-	t.dropDownMenus = append(t.dropDownMenus, c)
-	return c
+	t.dropDownMenus = append(t.dropDownMenus, d)
+	return d
 }
 
-func (c *DropDown) Selected() string {
-	return c.items[c.SelectedIndex()+1].Text
+func (d *DropDown) Selected() string {
+	return d.items[d.SelectedIndex()].Text
 }
 
-func (c *DropDown) SelectedIndex() int {
-	return c.selectedIndex - 1
+func (d *DropDown) SelectedIndex() int {
+	return d.selectedIndex
 }
 
-func (c *DropDown) Len() int {
-	return len(c.items) - 1
+func (d *DropDown) Len() int {
+	return len(d.items)
 }
 
-func (c *DropDown) handleEvents() {
-	for c.items[0].clickable.Clicked() {
-		c.closeAllDropdown(c.group)
-		c.isOpen = !c.isOpen
-	}
-
-	for i := range c.items {
-		index := i
-		if index != 0 {
-			for c.items[index].clickable.Clicked() {
-				c.selectedIndex = index
-				txt := c.items[index].Text
-				if len(c.items[index].Text) > 12 {
-					txt = c.items[index].Text[:12] + "..."
-				}
-				c.items[0].label.Text = txt
-				c.isOpen = false
+func (d *DropDown) handleEvents() {
+	if d.isOpen {
+		for i := range d.items {
+			index := i
+			for d.items[index].clickable.Clicked() {
+				d.selectedIndex = index
+				d.isOpen = false
+				break
+				// if len(d.items[index].Text) > 12 {
+				// 	txt = d.items[index].Text[:12] + "..."
+				// }
 			}
 		}
+	} else {
+		for d.clickable.Clicked() {
+			d.isOpen = true
+		}
 	}
 
-	for c.backdrop.Clicked() {
-		c.closeAllDropdown(c.group)
+	for d.backdrop.Clicked() {
+		d.closeAllDropdown(d.group)
 	}
 }
 
-func (c *DropDown) Changed() bool {
-	for i := range c.items {
-		index := i
-		if index != 0 {
-			for c.items[index].clickable.Clicked() {
-				if c.items[0].label.Text != c.items[index].Text {
-					c.selectedIndex = index
-					txt := c.items[index].Text
-					if len(c.items[index].Text) > 12 {
-						txt = c.items[index].Text[:12] + "..."
-					}
-					c.items[0].label.Text = txt
-					c.isOpen = false
-					return true
-				}
+func (d *DropDown) Changed() bool {
+	if d.isOpen {
+		for i := range d.items {
+			index := i
+			for d.items[index].clickable.Clicked() {
+				d.selectedIndex = index
+				d.isOpen = false
+				return true
 			}
 		}
 	}
@@ -143,12 +126,12 @@ func (c *DropDown) Changed() bool {
 	return false
 }
 
-func (c *DropDown) layoutActiveIcon(gtx layout.Context, index int, isFirstOption bool) D {
+func (d *DropDown) layoutActiveIcon(gtx layout.Context, index int) D {
 	var icon *widget.Icon
-	if isFirstOption {
-		icon = c.dropdownIcon
-	} else if index == c.selectedIndex {
-		icon = c.navigationIcon
+	if !d.isOpen {
+		icon = d.dropdownIcon
+	} else if index == d.selectedIndex {
+		icon = d.navigationIcon
 	}
 
 	return layout.E.Layout(gtx, func(gtx C) D {
@@ -159,22 +142,19 @@ func (c *DropDown) layoutActiveIcon(gtx layout.Context, index int, isFirstOption
 	})
 }
 
-func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bool) D {
-	clickable := c.items[itemIndex].clickable
+func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
+	item := d.items[itemIndex]
+
 	width := gtx.Px(values.MarginPadding174)
-	if c.revs {
+	if d.revs {
 		width = gtx.Px(values.MarginPadding140)
 	}
 
-	radius := Radius(8)
-	if itemIndex == 1 {
-		radius.BottomRight = 0
-		radius.BottomLeft = 0
-	} else if itemIndex == len(c.items[1:]) {
-		radius.TopLeft = 0
-		radius.TopRight = 0
-	} else {
-		radius = Radius(0)
+	radius := Radius(0)
+	clickable := item.clickable
+	if !d.isOpen {
+		radius = Radius(8)
+		clickable = d.clickable
 	}
 
 	return LinearLayout{
@@ -185,16 +165,15 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 		Border:    Border{Radius: radius},
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			if c.items[itemIndex].Icon == nil {
+			if item.Icon == nil {
 				return layout.Dimensions{}
 			}
 
-			img := c.items[itemIndex].Icon
-			return img.Layout24dp(gtx)
+			return item.Icon.Layout24dp(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			gtx.Constraints.Max.X = gtx.Px(unit.Dp(110))
-			if c.revs {
+			if d.revs {
 				gtx.Constraints.Max.X = gtx.Px(unit.Dp(100))
 			}
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -202,40 +181,40 @@ func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption
 				Right: unit.Dp(5),
 				Left:  unit.Dp(5),
 			}.Layout(gtx, func(gtx C) D {
-				return c.items[itemIndex].label.Layout(gtx)
+				return item.label.Layout(gtx)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
-			return c.layoutActiveIcon(gtx, itemIndex, isFirstOption)
+			return d.layoutActiveIcon(gtx, itemIndex)
 		}),
 	)
 }
 
-func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
-	c.handleEvents()
+func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
+	d.handleEvents()
 
 	iLeft := dropPos
 	iRight := 0
 	alig := layout.NW
-	c.revs = reversePos
+	d.revs = reversePos
 	if reversePos {
 		alig = layout.NE
 		iLeft = 10
 		iRight = dropPos
 	}
 
-	if c.isOpen {
+	if d.isOpen {
 		return layout.Stack{Alignment: alig}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				gtx.Constraints.Min = gtx.Constraints.Max
-				return c.backdrop.Layout(gtx)
+				return d.backdrop.Layout(gtx)
 			}),
 			layout.Stacked(func(gtx C) D {
 				return layout.Inset{
 					Left:  unit.Dp(float32(iLeft)),
 					Right: unit.Dp(float32(iRight)),
 				}.Layout(gtx, func(gtx C) D {
-					return c.dropDownItemMenu(gtx)
+					return d.dropDownItemMenu(gtx)
 				})
 			}),
 		)
@@ -247,13 +226,13 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 				Left:  unit.Dp(float32(iLeft)),
 				Right: unit.Dp(float32(iRight)),
 			}.Layout(gtx, func(gtx C) D {
-				return c.drawLayout(gtx, false, func(gtx C) D {
+				return d.drawLayout(gtx, func(gtx C) D {
 					lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return c.layoutOption(gtx, 0, true)
+							return d.layoutOption(gtx, d.selectedIndex)
 						}))
 					w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
-					c.Width = w + 10
+					d.Width = w + 10
 					return lay
 				})
 			})
@@ -261,23 +240,24 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 	)
 }
 
-func (c *DropDown) dropDownItemMenu(gtx C) D {
-	return c.drawLayout(gtx, true, func(gtx C) D {
+func (d *DropDown) dropDownItemMenu(gtx C) D {
+	return d.drawLayout(gtx, func(gtx C) D {
 		list := &layout.List{Axis: layout.Vertical}
-		return list.Layout(gtx, len(c.items[1:]), func(gtx C, index int) D {
-			i := index + 1
-			return c.layoutOption(gtx, i, false)
+		return list.Layout(gtx, len(d.items), func(gtx C, index int) D {
+			return d.layoutOption(gtx, index)
 		})
 	})
 }
 
 // drawLayout wraps the page tx and sync section in a card layout
-func (d *DropDown) drawLayout(gtx C, isPopUp bool, body layout.Widget) D {
-	if isPopUp {
+func (d *DropDown) drawLayout(gtx C, body layout.Widget) D {
+	if d.isOpen {
 		d.linearLayout.Background = d.background
-		d.linearLayout.Shadow = nil
+		d.linearLayout.Padding = d.padding
+		d.linearLayout.Shadow = d.shadow
 	} else {
 		d.linearLayout.Background = d.color
+		d.linearLayout.Padding = layout.Inset{}
 		d.linearLayout.Shadow = nil
 	}
 
