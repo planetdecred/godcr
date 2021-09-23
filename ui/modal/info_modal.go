@@ -47,8 +47,8 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		Load:         l,
 		randomID:     fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.OutlineButton(new(widget.Clickable), "Yes"),
-		btnNegative:  l.Theme.OutlineButton(new(widget.Clickable), "No"),
+		btnPositve:   l.Theme.OutlineButton("Yes"),
+		btnNegative:  l.Theme.OutlineButton("No"),
 		keyEvent:     l.Receiver.KeyEvents,
 		isCancelable: true,
 	}

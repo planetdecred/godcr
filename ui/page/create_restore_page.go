@@ -111,7 +111,7 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	pg.closePageBtn.Background = color.NRGBA{}
 	pg.closePageBtn.Color = l.Theme.Color.Hint
 
-	pg.resetSeedFields = l.Theme.OutlineButton(new(widget.Clickable), "Clear all")
+	pg.resetSeedFields = l.Theme.OutlineButton("Clear all")
 
 	pg.alertIcon = pg.Icons.AlertGray
 

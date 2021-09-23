@@ -41,7 +41,7 @@ func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
 
 		tickets:        l.Theme.Editor(new(widget.Editor), ""),
 		rememberVSP:    l.Theme.CheckBox(new(widget.Bool), "Remember VSP"),
-		cancelPurchase: l.Theme.OutlineButton(new(widget.Clickable), "Cancel"),
+		cancelPurchase: l.Theme.OutlineButton("Cancel"),
 		reviewPurchase: l.Theme.Button(new(widget.Clickable), "Review purchase"),
 		modal:          *l.Theme.ModalFloatTitle(),
 	}

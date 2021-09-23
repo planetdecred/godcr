@@ -49,7 +49,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		modal:            *l.Theme.ModalFloatTitle(),
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative:      l.Theme.OutlineButton(new(widget.Clickable), "Cancel"),
+		btnNegative:      l.Theme.OutlineButton("Cancel"),
 		isCancelable:     true,
 	}
 

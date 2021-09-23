@@ -51,7 +51,7 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg.verifyButton.Font.Weight = text.Medium
 	pg.verifyButton.SetEnabled(false)
 
-	pg.clearBtn = l.Theme.OutlineButton(new(widget.Clickable), "Clear all")
+	pg.clearBtn = l.Theme.OutlineButton("Clear all")
 	pg.clearBtn.Font.Weight = text.Medium
 	pg.clearBtn.SetEnabled(false)
 

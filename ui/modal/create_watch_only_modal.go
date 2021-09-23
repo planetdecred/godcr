@@ -42,7 +42,7 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
-		btnNegative:  l.Theme.OutlineButton(new(widget.Clickable), values.String(values.StrCancel)),
+		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
 	}
 

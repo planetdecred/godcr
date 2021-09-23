@@ -525,7 +525,8 @@ func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, valu
 							return txt.Layout(gtx)
 						}
 
-						btn := pg.theme.OutlineButton(clickable, value)
+						btn := pg.theme.OutlineButton(value)
+						btn.SetClickable(clickable)
 						btn.Inset = layout.UniformInset(values.MarginPadding0)
 						return btn.Layout(gtx)
 					})
@@ -539,7 +540,7 @@ func (pg *TransactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 	transaction := pg.transaction
 	x := len(transaction.Inputs) + len(transaction.Outputs)
 	for i := 0; i < x; i++ {
-		pg.copyTextBtn = append(pg.copyTextBtn, pg.theme.OutlineButton(new(widget.Clickable), ""))
+		pg.copyTextBtn = append(pg.copyTextBtn, pg.theme.OutlineButton(""))
 	}
 
 	collapsibleHeader := func(gtx C) D {

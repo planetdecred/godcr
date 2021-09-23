@@ -60,8 +60,8 @@ func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	}
 }
 
-func (t *Theme) OutlineButton(button *widget.Clickable, txt string) Button {
-	btn := t.Button(button, txt)
+func (t *Theme) OutlineButton(txt string) Button {
+	btn := t.Button(new(widget.Clickable), txt)
 	btn.Background = color.NRGBA{}
 	btn.HighlightColor = t.Color.SurfaceHighlight
 	btn.Color = t.Color.Primary
@@ -83,6 +83,10 @@ func (t *Theme) PlainIconButton(button *widget.Clickable, icon *widget.Icon) Ico
 	btn := IconButton{material.IconButton(t.Base, button, icon)}
 	btn.Background = color.NRGBA{}
 	return btn
+}
+
+func (b *Button) SetClickable(clickable *widget.Clickable) {
+	b.clickable = clickable
 }
 
 func (b *Button) SetEnabled(enabled bool) {

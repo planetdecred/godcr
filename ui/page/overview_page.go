@@ -96,7 +96,7 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	pg.toTransactions.Color = l.Theme.Color.Primary
 	pg.toTransactions.BackgroundColor = l.Theme.Color.Surface
 
-	pg.sync = l.Theme.OutlineButton(new(widget.Clickable), values.String(values.StrReconnect))
+	pg.sync = l.Theme.OutlineButton(values.String(values.StrReconnect))
 	pg.sync.TextSize = values.TextSize14
 	pg.sync.Color = l.Theme.Color.Text
 	pg.sync.CornerRadius = values.MarginPadding12

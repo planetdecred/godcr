@@ -45,7 +45,7 @@ func newTicketReviewModal(l *load.Load, account *dcrlibwallet.Account, selectedV
 		modal:            *l.Theme.ModalFloatTitle(),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		purchase:         l.Theme.Button(new(widget.Clickable), "Purchase ticket"),
-		cancelPurchase:   l.Theme.OutlineButton(new(widget.Clickable), "Cancel"),
+		cancelPurchase:   l.Theme.OutlineButton("Cancel"),
 	}
 
 	th := material.NewTheme(gofont.Collection())

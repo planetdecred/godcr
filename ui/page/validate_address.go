@@ -46,7 +46,7 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 	pg.validateBtn.Font.Weight = text.Medium
 	pg.validateBtn.SetEnabled(false)
 
-	pg.clearBtn = l.Theme.OutlineButton(new(widget.Clickable), "Clear")
+	pg.clearBtn = l.Theme.OutlineButton("Clear")
 	pg.clearBtn.Font.Weight = text.Medium
 	pg.clearBtn.SetEnabled(false)
 

@@ -40,7 +40,7 @@ func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 		authoredTxData: data,
 	}
 
-	scm.closeConfirmationModalButton = l.Theme.OutlineButton(new(widget.Clickable), "Cancel")
+	scm.closeConfirmationModalButton = l.Theme.OutlineButton("Cancel")
 	scm.closeConfirmationModalButton.Font.Weight = text.Medium
 
 	scm.confirmButton = l.Theme.Button(new(widget.Clickable), "")
