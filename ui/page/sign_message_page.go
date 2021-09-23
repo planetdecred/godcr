@@ -233,10 +233,10 @@ func (pg *SignMessagePage) SwitchEditors(editors ...*widget.Editor) {
 			pg.isTabPressed = handleTabEvent(pg.keyEvent)
 			if pg.isTabPressed {
 				if i == len(editors)-1 {
-					pg.isTabPressed = false
-					break
+					editors[0].Focus()
+				} else {
+					editors[i+1].Focus()
 				}
-				editors[i+1].Focus()
 			}
 		}
 		pg.isTabPressed = false

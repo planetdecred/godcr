@@ -162,10 +162,10 @@ func (pg *VerifyMessagePage) SwitchEditors(editors ...*widget.Editor) {
 			pg.isTabPressed = handleTabEvent(pg.keyEvent)
 			if pg.isTabPressed {
 				if i == len(editors)-1 {
-					pg.isTabPressed = false
-					break
+					editors[0].Focus()
+				} else {
+					editors[i+1].Focus()
 				}
-				editors[i+1].Focus()
 			}
 		}
 		pg.isTabPressed = false
@@ -186,7 +186,7 @@ func (pg *VerifyMessagePage) Handle() {
 		if pg.validateAllInputs() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
-			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
+			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.signatureEditor.Editor.Text(), pg.messageEditor.Editor.Text())
 			if err != nil || !valid {
 				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = pg.Theme.Color.Danger
@@ -206,7 +206,7 @@ func (pg *VerifyMessagePage) Handle() {
 	}
 
 	//Switch editors on tab press
-	pg.SwitchEditors(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor)
+	pg.SwitchEditors(pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
