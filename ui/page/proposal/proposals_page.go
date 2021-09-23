@@ -53,12 +53,12 @@ type ProposalsPage struct {
 	categoryList  *decredmaterial.ClickableList
 	proposalsList *decredmaterial.ClickableList
 
-	tabCard      decredmaterial.Card
-	itemCard     decredmaterial.Card
-	syncCard     decredmaterial.Card
-	updatedLabel decredmaterial.Label
+	tabCard         decredmaterial.Card
+	itemCard        decredmaterial.Card
+	syncCard        decredmaterial.Card
+	updatedLabel    decredmaterial.Label
 	lastUpdatedInfo decredmaterial.Label
-	lastSyncedTime float64
+	lastSyncedTime  string
 
 	proposalItems         []proposalItem
 	proposalCount         []int
@@ -240,9 +240,6 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.updatedLabel = pg.Theme.Body2("Updated")
 	pg.updatedLabel.Color = pg.Theme.Color.Success
 
-	pg.lastSyncedTime = pg.multiWallet.Politeia.GetLastSyncedTimeStamp()
-
-	pg.lastUpdatedInfo = pg.Theme.Body2(fmt.Sprintf("Updated %f ago", pg.lastSyncedTime))
 	pg.lastUpdatedInfo.Color = pg.Theme.Color.Text
 
 	radius := decredmaterial.Radius(0)
@@ -290,11 +287,15 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 										if pg.showSyncedCompleted || pg.isSyncing {
 											return D{}
 										} else {
-											return pg.lastUpdatedInfo.Layout(gtx)
+											pg.lastUpdatedInfo = pg.Theme.Body2(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
+											return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+												return pg.lastUpdatedInfo.Layout(gtx)
+											})
+
 										}
 									}),
 								)
-								
+
 							})
 						})
 					})
