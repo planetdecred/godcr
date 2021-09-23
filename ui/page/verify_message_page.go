@@ -156,7 +156,7 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 }
 
 //Switch between editors when tab key is pressed
-func SwitchEditors(pg *VerifyMessagePage, editors ...*widget.Editor) {
+func (pg *VerifyMessagePage) SwitchEditors(editors ...*widget.Editor) {
 	for i := 0; i < len(editors); i++ {
 		if editors[i].Focused() {
 			pg.isTabPressed = handleTabEvent(pg.keyEvent)
@@ -206,7 +206,7 @@ func (pg *VerifyMessagePage) Handle() {
 	}
 
 	//Switch editors on tab press
-	SwitchEditors(pg, pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor)
+	pg.SwitchEditors(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor)
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {

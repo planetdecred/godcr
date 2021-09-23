@@ -2,6 +2,7 @@ package page
 
 import (
 	"gioui.org/io/clipboard"
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -18,8 +19,10 @@ const SignMessagePageID = "SignMessage"
 
 type SignMessagePage struct {
 	*load.Load
-	container layout.List
-	wallet    *dcrlibwallet.Wallet
+	container    layout.List
+	wallet       *dcrlibwallet.Wallet
+	keyEvent     chan *key.Event
+	isTabPressed bool
 
 	isSigningMessage bool
 	addressIsValid   bool
@@ -70,6 +73,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		copyButton:         l.Theme.Button("Copy"),
 		copySignature:      l.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
+		keyEvent:           l.Receiver.KeyEvents,
 	}
 
 	pg.signedMessageLabel.Color = l.Theme.Color.Gray
@@ -223,6 +227,22 @@ func (pg *SignMessagePage) updateButtonColors() {
 	pg.signButton.SetEnabled(pg.isEnabled)
 }
 
+func (pg *SignMessagePage) SwitchEditors(editors ...*widget.Editor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Focused() {
+			pg.isTabPressed = handleTabEvent(pg.keyEvent)
+			if pg.isTabPressed {
+				if i == len(editors)-1 {
+					pg.isTabPressed = false
+					break
+				}
+				editors[i+1].Focus()
+			}
+		}
+		pg.isTabPressed = false
+	}
+}
+
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
 	pg.updateButtonColors()
@@ -272,6 +292,9 @@ func (pg *SignMessagePage) Handle() {
 		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
 		pg.Toast.Notify("Signature copied")
 	}
+
+	//Switch editors when tab key is pressed
+	pg.SwitchEditors(pg.addressEditor.Editor, pg.messageEditor.Editor)
 }
 
 func (pg *SignMessagePage) validate() bool {
