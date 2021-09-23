@@ -57,7 +57,7 @@ func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
 	sw.activeTextColor, sw.inactiveTextColor = sw.t.Color.DeepBlue, sw.t.Color.Gray3
 
 	for index := range i {
-		i[index].button = t.Button(new(widget.Clickable), i[index].Text)
+		i[index].button = t.Button(i[index].Text)
 		i[index].button.HighlightColor = t.Color.SurfaceHighlight
 		i[index].button.Background, i[index].button.Color = sw.inactive, sw.inactiveTextColor
 		i[index].button.TextSize = unit.Sp(14)

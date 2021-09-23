@@ -92,7 +92,7 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 		BottomLeft:  values.MarginPadding14.V,
 	}
 
-	pg.toTransactions = l.Theme.TextAndIconButton(new(widget.Clickable), values.String(values.StrSeeAll), l.Icons.NavigationArrowForward)
+	pg.toTransactions = l.Theme.TextAndIconButton(values.String(values.StrSeeAll), l.Icons.NavigationArrowForward)
 	pg.toTransactions.Color = l.Theme.Color.Primary
 	pg.toTransactions.BackgroundColor = l.Theme.Color.Surface
 
@@ -107,7 +107,7 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 		Right:  values.MarginPadding8,
 	}
 
-	pg.toggleSyncDetails = l.Theme.Button(new(widget.Clickable), values.String(values.StrShowDetails))
+	pg.toggleSyncDetails = l.Theme.Button(values.String(values.StrShowDetails))
 	pg.toggleSyncDetails.TextSize = values.TextSize16
 	pg.toggleSyncDetails.Background = color.NRGBA{}
 	pg.toggleSyncDetails.Color = l.Theme.Color.Primary

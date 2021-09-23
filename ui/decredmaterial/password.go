@@ -17,10 +17,10 @@ type Password struct {
 
 // Password initializes and returns an instance of Password
 func (t *Theme) Password() *Password {
-	cancelButton := t.Button(new(widget.Clickable), "Cancel")
+	cancelButton := t.Button("Cancel")
 	cancelButton.Background = t.Color.Surface
 	cancelButton.Color = t.Color.Primary
-	confirmButton := t.Button(new(widget.Clickable), "Confirm")
+	confirmButton := t.Button("Confirm")
 
 	editorWidget := &widget.Editor{
 		SingleLine: true,

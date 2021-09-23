@@ -48,7 +48,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		randomID:         fmt.Sprintf("%s-%d", CreateWallet, generateRandomNumber()),
 		modal:            *l.Theme.ModalFloatTitle(),
 		passwordStrength: l.Theme.ProgressBar(0),
-		btnPositve:       l.Theme.Button(new(widget.Clickable), "Confirm"),
+		btnPositve:       l.Theme.Button("Confirm"),
 		btnNegative:      l.Theme.OutlineButton("Cancel"),
 		isCancelable:     true,
 	}

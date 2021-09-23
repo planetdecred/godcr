@@ -105,9 +105,9 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(8)
 
-	pg.restoreWalletBtn = l.Theme.Button(new(widget.Clickable), "Restore")
+	pg.restoreWalletBtn = l.Theme.Button("Restore")
 
-	pg.closePageBtn = l.Theme.IconButton(new(widget.Clickable), decredmaterial.MustIcon(widget.NewIcon(icons.NavigationClose)))
+	pg.closePageBtn = l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.NavigationClose)))
 	pg.closePageBtn.Background = color.NRGBA{}
 	pg.closePageBtn.Color = l.Theme.Color.Hint
 
@@ -471,7 +471,7 @@ func (pg *CreateRestore) editorSeedsEventsHandler() {
 
 func (pg *CreateRestore) initSeedMenu() {
 	for i := 0; i < pg.suggestionLimit; i++ {
-		btn := pg.Theme.Button(new(widget.Clickable), "")
+		btn := pg.Theme.Button("")
 		btn.Background, btn.Color = color.NRGBA{}, pg.Theme.Color.DeepBlue
 		pg.seedMenu = append(pg.seedMenu, seedItemMenu{
 			text:   "",

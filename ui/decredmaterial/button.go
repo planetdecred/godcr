@@ -38,8 +38,9 @@ type IconButton struct {
 	material.IconButtonStyle
 }
 
-func (t *Theme) Button(button *widget.Clickable, txt string) Button {
-	buttonStyle := material.Button(t.Base, button, txt)
+func (t *Theme) Button(txt string) Button {
+	clickable := new(widget.Clickable)
+	buttonStyle := material.Button(t.Base, clickable, txt)
 	buttonStyle.TextSize = values.TextSize16
 	buttonStyle.Background = t.Color.Primary
 	buttonStyle.CornerRadius = values.MarginPadding8
@@ -52,7 +53,7 @@ func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 	return Button{
 		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),
-		clickable:          button,
+		clickable:          clickable,
 		disabledBackground: t.Color.Gray,
 		disabledTextColor:  t.Color.Surface,
 		HighlightColor:     t.Color.PrimaryHighlight,
@@ -61,7 +62,7 @@ func (t *Theme) Button(button *widget.Clickable, txt string) Button {
 }
 
 func (t *Theme) OutlineButton(txt string) Button {
-	btn := t.Button(new(widget.Clickable), txt)
+	btn := t.Button(txt)
 	btn.Background = color.NRGBA{}
 	btn.HighlightColor = t.Color.SurfaceHighlight
 	btn.Color = t.Color.Primary
@@ -71,16 +72,23 @@ func (t *Theme) OutlineButton(txt string) Button {
 	return btn
 }
 
-func (t *Theme) ButtonLayout(button *widget.Clickable) ButtonLayout {
-	return ButtonLayout{material.ButtonLayout(t.Base, button)}
+// DangerButton a button with the background set to theme.Danger
+func (t *Theme) DangerButton(text string) Button {
+	btn := t.Button(text)
+	btn.Background = t.Color.Danger
+	return btn
 }
 
-func (t *Theme) IconButton(button *widget.Clickable, icon *widget.Icon) IconButton {
-	return IconButton{material.IconButton(t.Base, button, icon)}
+func (t *Theme) ButtonLayout() ButtonLayout {
+	return ButtonLayout{material.ButtonLayout(t.Base, new(widget.Clickable))}
 }
 
-func (t *Theme) PlainIconButton(button *widget.Clickable, icon *widget.Icon) IconButton {
-	btn := IconButton{material.IconButton(t.Base, button, icon)}
+func (t *Theme) IconButton(icon *widget.Icon) IconButton {
+	return IconButton{material.IconButton(t.Base, new(widget.Clickable), icon)}
+}
+
+func (t *Theme) PlainIconButton(icon *widget.Icon) IconButton {
+	btn := IconButton{material.IconButton(t.Base, new(widget.Clickable), icon)}
 	btn.Background = color.NRGBA{}
 	return btn
 }
@@ -186,10 +194,10 @@ type TextAndIconButton struct {
 	BackgroundColor color.NRGBA
 }
 
-func (t *Theme) TextAndIconButton(btn *widget.Clickable, text string, icon *widget.Icon) TextAndIconButton {
+func (t *Theme) TextAndIconButton(text string, icon *widget.Icon) TextAndIconButton {
 	return TextAndIconButton{
 		theme:           t,
-		Button:          btn,
+		Button:          new(widget.Clickable),
 		icon:            icon,
 		text:            text,
 		Color:           t.Color.Surface,

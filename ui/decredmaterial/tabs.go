@@ -195,7 +195,7 @@ func NewTabs(th *Theme) *Tabs {
 		Position:    Left,
 		scrollLeft:  new(widget.Clickable),
 		scrollRight: new(widget.Clickable),
-		iconButton:  th.IconButton(new(widget.Clickable), new(widget.Icon)),
+		iconButton:  th.IconButton(new(widget.Icon)),
 		flex:        layout.Flex{},
 	}
 }

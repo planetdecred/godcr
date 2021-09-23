@@ -69,7 +69,7 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	pg.vote = l.Theme.Button(new(widget.Clickable), "Vote")
+	pg.vote = l.Theme.Button("Vote")
 	pg.vote.TextSize = values.TextSize14
 	pg.vote.Background = l.Theme.Color.Primary
 	pg.vote.Color = l.Theme.Color.Surface

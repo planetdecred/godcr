@@ -28,9 +28,9 @@ func newInputVoteOptions(l *load.Load, label string) *inputVoteOptionsWidgets {
 		activeBg:  l.Theme.Color.Green50,
 		dotColor:  l.Theme.Color.Green500,
 		input:     l.Theme.Editor(new(widget.Editor), ""),
-		increment: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ContentAdd),
-		decrement: l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ContentRemove),
-		max:       l.Theme.Button(new(widget.Clickable), "MAX"),
+		increment: l.Theme.PlainIconButton(l.Icons.ContentAdd),
+		decrement: l.Theme.PlainIconButton(l.Icons.ContentRemove),
+		max:       l.Theme.Button("MAX"),
 	}
 	i.max.Background = l.Theme.Color.Surface
 	i.max.Color = l.Theme.Color.Gray2

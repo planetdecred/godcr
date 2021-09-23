@@ -5,7 +5,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -25,7 +24,7 @@ func (pg *Page) initLayoutWidgets() {
 
 	pg.txFeeCollapsible = pg.Theme.Collapsible()
 
-	pg.nextButton = pg.Theme.Button(new(widget.Clickable), "Next")
+	pg.nextButton = pg.Theme.Button("Next")
 	pg.nextButton.TextSize = values.TextSize18
 	pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
 	pg.nextButton.SetEnabled(false)
@@ -33,11 +32,11 @@ func (pg *Page) initLayoutWidgets() {
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.moreOption = pg.Theme.PlainIconButton(new(widget.Clickable), pg.Icons.NavMoreIcon)
+	pg.moreOption = pg.Theme.PlainIconButton(pg.Icons.NavMoreIcon)
 	pg.moreOption.Color = pg.Theme.Color.Gray3
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.retryExchange = pg.Theme.Button(new(widget.Clickable), "Retry")
+	pg.retryExchange = pg.Theme.Button("Retry")
 	pg.retryExchange.Background = pg.Theme.Color.Gray1
 	pg.retryExchange.Color = pg.Theme.Color.Primary
 	pg.retryExchange.Inset = layout.Inset{

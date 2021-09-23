@@ -142,7 +142,7 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 		Load: l,
 
 		inputVSP: l.Theme.Editor(new(widget.Editor), "Add a new VSP..."),
-		addVSP:   l.Theme.Button(new(widget.Clickable), "Save"),
+		addVSP:   l.Theme.Button("Save"),
 		vspHosts: &layout.List{Axis: layout.Vertical},
 		modal:    *l.Theme.ModalFloatTitle(),
 	}

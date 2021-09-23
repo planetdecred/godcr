@@ -161,8 +161,8 @@ func (mp *MainPage) initNavItems() {
 				PageID:        MorePageID,
 			},
 		},
-		MinimizeNavDrawerButton: mp.Theme.PlainIconButton(new(widget.Clickable), mp.Icons.NavigationArrowBack),
-		MaximizeNavDrawerButton: mp.Theme.PlainIconButton(new(widget.Clickable), mp.Icons.NavigationArrowForward),
+		MinimizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowBack),
+		MaximizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowForward),
 	}
 }
 

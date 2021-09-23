@@ -42,7 +42,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
 
 	clearButton := l.Theme.OutlineButton("Clear all")
-	signButton := l.Theme.Button(new(widget.Clickable), "Sign message")
+	signButton := l.Theme.Button("Sign message")
 	clearButton.Font.Weight, signButton.Font.Weight = text.Medium, text.Medium
 	signButton.SetEnabled(false)
 	clearButton.SetEnabled(false)
@@ -65,7 +65,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		messageEditor:      messageEditor,
 		clearButton:        clearButton,
 		signButton:         signButton,
-		copyButton:         l.Theme.Button(new(widget.Clickable), "Copy"),
+		copyButton:         l.Theme.Button("Copy"),
 		copySignature:      l.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
 	}

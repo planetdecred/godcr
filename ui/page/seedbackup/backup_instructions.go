@@ -34,7 +34,7 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 		Load:   l,
 		wallet: wallet,
 
-		viewSeedBtn: l.Theme.Button(new(widget.Clickable), "View seed phrase"),
+		viewSeedBtn: l.Theme.Button("View seed phrase"),
 	}
 
 	bi.viewSeedBtn.Font.Weight = text.Medium

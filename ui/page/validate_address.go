@@ -42,7 +42,7 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 	pg.addressEditor.Editor.SingleLine = true
 	pg.addressEditor.Editor.Submit = true
 
-	pg.validateBtn = l.Theme.Button(new(widget.Clickable), "Validate")
+	pg.validateBtn = l.Theme.Button("Validate")
 	pg.validateBtn.Font.Weight = text.Medium
 	pg.validateBtn.SetEnabled(false)
 

@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -42,7 +41,7 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 		wallet: wallet,
 		seed:   seed,
 
-		actionButton: l.Theme.Button(new(widget.Clickable), "Verify"),
+		actionButton: l.Theme.Button("Verify"),
 		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
 	}

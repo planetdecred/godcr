@@ -5,7 +5,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -40,8 +39,8 @@ func NewStartPage(l *load.Load) load.Page {
 		loadStatus:   l.Theme.Label(values.TextSize20, "Loading"),
 		welcomeText:  l.Theme.Label(values.TextSize24, "Welcome to Decred Wallet, a secure & open-source mobile wallet."),
 
-		createButton:  l.Theme.Button(new(widget.Clickable), "Create a new wallet"),
-		restoreButton: l.Theme.Button(new(widget.Clickable), "Restore an existing wallet"),
+		createButton:  l.Theme.Button("Create a new wallet"),
+		restoreButton: l.Theme.Button("Restore an existing wallet"),
 	}
 
 	sp.networkType.Color = l.Theme.Color.DeepBlue

@@ -4,7 +4,6 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -29,8 +28,8 @@ type SubPage struct {
 }
 
 func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmaterial.IconButton) {
-	backButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack)
-	infoButton := l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.ActionInfo)
+	backButton := l.Theme.PlainIconButton(l.Icons.NavigationArrowBack)
+	infoButton := l.Theme.PlainIconButton(l.Icons.ActionInfo)
 
 	backButton.Color, infoButton.Color = l.Theme.Color.Gray3, l.Theme.Color.Gray3
 

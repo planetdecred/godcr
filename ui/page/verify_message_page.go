@@ -47,7 +47,7 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg.signatureEditor = l.Theme.Editor(new(widget.Editor), "Signature")
 	pg.signatureEditor.Editor.Submit = true
 
-	pg.verifyButton = l.Theme.Button(new(widget.Clickable), "Verify message")
+	pg.verifyButton = l.Theme.Button("Verify message")
 	pg.verifyButton.Font.Weight = text.Medium
 	pg.verifyButton.SetEnabled(false)
 

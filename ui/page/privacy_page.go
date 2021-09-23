@@ -39,7 +39,7 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 		pageContainer:           layout.List{Axis: layout.Vertical},
 		toggleMixer:             l.Theme.Switch(),
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
-		toPrivacySetup:          l.Theme.Button(new(widget.Clickable), "Set up mixer for this wallet"),
+		toPrivacySetup:          l.Theme.Button("Set up mixer for this wallet"),
 		dangerZoneCollapsible:   l.Theme.Collapsible(),
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)

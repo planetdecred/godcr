@@ -46,7 +46,7 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 		modal:          *l.Theme.ModalFloatTitle(),
 		proposal:       proposal,
 		materialLoader: material.Loader(material.NewTheme(gofont.Collection())),
-		voteBtn:        l.Theme.Button(new(widget.Clickable), "Vote"),
+		voteBtn:        l.Theme.Button("Vote"),
 		cancelBtn:      l.Theme.OutlineButton("Cancel"),
 	}
 
