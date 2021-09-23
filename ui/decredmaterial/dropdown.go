@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 var MaxWidth = unit.Dp(800)
@@ -24,15 +25,16 @@ type DropDown struct {
 
 	group            uint
 	closeAllDropdown func(group uint)
-	card             Card
 	Width            int
+	linearLayout     *LinearLayout
+	shadow           *Shadow
 }
 
 type DropDownItem struct {
-	Text   string
-	Icon   *Image
-	button *widget.Clickable
-	label  Label
+	Text      string
+	Icon      *Image
+	clickable *Clickable
+	label     Label
 }
 
 func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
@@ -48,11 +50,16 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
-		card:             t.Card(),
+		linearLayout: &LinearLayout{
+			Width:  WrapContent,
+			Height: WrapContent,
+			Border: Border{Radius: Radius(8)},
+		},
+		shadow: t.Shadow(),
 	}
 
 	for i := range items {
-		items[i].button = new(widget.Clickable)
+		items[i].clickable = t.NewClickable(true)
 		items[i].label = t.Body1(items[i].Text)
 		c.items[i+1] = items[i]
 	}
@@ -64,10 +71,10 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		}
 
 		c.items[0] = DropDownItem{
-			Text:   items[0].Text,
-			Icon:   items[0].Icon,
-			label:  t.Body1(txt),
-			button: new(widget.Clickable),
+			Text:      items[0].Text,
+			Icon:      items[0].Icon,
+			label:     t.Body1(txt),
+			clickable: t.NewClickable(true),
 		}
 		c.selectedIndex = 1
 	}
@@ -89,7 +96,7 @@ func (c *DropDown) Len() int {
 }
 
 func (c *DropDown) handleEvents() {
-	for c.items[0].button.Clicked() {
+	for c.items[0].clickable.Clicked() {
 		c.closeAllDropdown(c.group)
 		c.isOpen = !c.isOpen
 	}
@@ -97,7 +104,7 @@ func (c *DropDown) handleEvents() {
 	for i := range c.items {
 		index := i
 		if index != 0 {
-			for c.items[index].button.Clicked() {
+			for c.items[index].clickable.Clicked() {
 				c.selectedIndex = index
 				txt := c.items[index].Text
 				if len(c.items[index].Text) > 12 {
@@ -118,7 +125,7 @@ func (c *DropDown) Changed() bool {
 	for i := range c.items {
 		index := i
 		if index != 0 {
-			for c.items[index].button.Clicked() {
+			for c.items[index].clickable.Clicked() {
 				if c.items[0].label.Text != c.items[index].Text {
 					c.selectedIndex = index
 					txt := c.items[index].Text
@@ -153,45 +160,55 @@ func (c *DropDown) layoutActiveIcon(gtx layout.Context, index int, isFirstOption
 }
 
 func (c *DropDown) layoutOption(gtx layout.Context, itemIndex int, isFirstOption bool) D {
-	btn := c.items[itemIndex].button
-	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx C) D {
-		return layout.Stack{Alignment: layout.Center}.Layout(gtx,
-			layout.Stacked(func(gtx C) D { 
-				gtx.Constraints.Max.X = gtx.Px(unit.Dp(155))
-				if c.revs {
-					gtx.Constraints.Max.X = gtx.Px(unit.Dp(120))
-				}
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						if c.items[itemIndex].Icon == nil {
-							return layout.Dimensions{}
-						}
+	clickable := c.items[itemIndex].clickable
+	width := gtx.Px(values.MarginPadding174)
+	if c.revs {
+		width = gtx.Px(values.MarginPadding140)
+	}
 
-						img := c.items[itemIndex].Icon
-						return img.Layout24dp(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Max.X = gtx.Px(unit.Dp(110))
-						if c.revs {
-							gtx.Constraints.Max.X = gtx.Px(unit.Dp(100))
-						}
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return layout.Inset{
-							Right: unit.Dp(5),
-							Left:  unit.Dp(5),
-						}.Layout(gtx, func(gtx C) D {
-							return c.items[itemIndex].label.Layout(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return c.layoutActiveIcon(gtx, itemIndex, isFirstOption)
-					}),
-				)
-			}),
-			layout.Expanded(btn.Layout),
-		)
-	})
+	radius := Radius(8)
+	if itemIndex == 1 {
+		radius.BottomRight = 0
+		radius.BottomLeft = 0
+	} else if itemIndex == len(c.items[1:]) {
+		radius.TopLeft = 0
+		radius.TopRight = 0
+	} else {
+		radius = Radius(0)
+	}
+
+	return LinearLayout{
+		Width:     width,
+		Height:    WrapContent,
+		Clickable: clickable,
+		Padding:   layout.UniformInset(values.MarginPadding10),
+		Border:    Border{Radius: radius},
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			if c.items[itemIndex].Icon == nil {
+				return layout.Dimensions{}
+			}
+
+			img := c.items[itemIndex].Icon
+			return img.Layout24dp(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Max.X = gtx.Px(unit.Dp(110))
+			if c.revs {
+				gtx.Constraints.Max.X = gtx.Px(unit.Dp(100))
+			}
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Inset{
+				Right: unit.Dp(5),
+				Left:  unit.Dp(5),
+			}.Layout(gtx, func(gtx C) D {
+				return c.items[itemIndex].label.Layout(gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return c.layoutActiveIcon(gtx, itemIndex, isFirstOption)
+		}),
+	)
 }
 
 func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
@@ -205,12 +222,6 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 		alig = layout.NE
 		iLeft = 10
 		iRight = dropPos
-	}
-
-	children := []layout.FlexChild{
-		layout.Rigid(func(gtx C) D {
-			return c.layoutOption(gtx, 0, true)
-		}),
 	}
 
 	if c.isOpen {
@@ -229,6 +240,7 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 			}),
 		)
 	}
+
 	return layout.Stack{Alignment: alig}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
 			return layout.Inset{
@@ -236,7 +248,10 @@ func (c *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 				Right: unit.Dp(float32(iRight)),
 			}.Layout(gtx, func(gtx C) D {
 				return c.drawLayout(gtx, false, func(gtx C) D {
-					lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+					lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return c.layoutOption(gtx, 0, true)
+						}))
 					w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
 					c.Width = w + 10
 					return lay
@@ -251,41 +266,20 @@ func (c *DropDown) dropDownItemMenu(gtx C) D {
 		list := &layout.List{Axis: layout.Vertical}
 		return list.Layout(gtx, len(c.items[1:]), func(gtx C, index int) D {
 			i := index + 1
-			card := c.theme.Card()
-			zero := float32(0)
-			radius := float32(14)
-			card.Radius = Radius(0)
-			if i == 1 {
-				card.Radius = CornerRadius{
-					TopLeft:     radius,
-					TopRight:    radius,
-					BottomRight: zero,
-					BottomLeft:  zero,
-				}
-			} else if i == len(c.items[1:]) {
-				card.Radius = CornerRadius{
-					TopLeft:     zero,
-					TopRight:    zero,
-					BottomRight: radius,
-					BottomLeft:  radius,
-				}
-			}
-			return card.HoverableLayout(gtx, c.items[i].button, func(gtx C) D {
-				return c.layoutOption(gtx, i, false)
-			})
+			return c.layoutOption(gtx, i, false)
 		})
 	})
 }
 
 // drawLayout wraps the page tx and sync section in a card layout
-func (c *DropDown) drawLayout(gtx C, isPopUp bool, body layout.Widget) D {
-	card := c.card
-	card.Border = true
+func (d *DropDown) drawLayout(gtx C, isPopUp bool, body layout.Widget) D {
 	if isPopUp {
-		card.Color = c.background
-		return card.Layout(gtx, body)
+		d.linearLayout.Background = d.background
+		d.linearLayout.Shadow = nil
+	} else {
+		d.linearLayout.Background = d.color
+		d.linearLayout.Shadow = nil
 	}
 
-	card.Color = c.color
-	return card.HoverableLayout(gtx, c.items[0].button, body)
+	return d.linearLayout.Layout2(gtx, body)
 }
