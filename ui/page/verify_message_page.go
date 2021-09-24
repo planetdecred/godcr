@@ -155,23 +155,6 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 	}
 }
 
-//Switch between editors when tab key is pressed
-func (pg *VerifyMessagePage) SwitchEditors(editors ...*widget.Editor) {
-	for i := 0; i < len(editors); i++ {
-		if editors[i].Focused() {
-			pg.isTabPressed = handleTabEvent(pg.keyEvent)
-			if pg.isTabPressed {
-				if i == len(editors)-1 {
-					editors[0].Focus()
-				} else {
-					editors[i+1].Focus()
-				}
-			}
-		}
-		pg.isTabPressed = false
-	}
-}
-
 func (pg *VerifyMessagePage) Handle() {
 	pg.updateButtonColors()
 
@@ -206,7 +189,7 @@ func (pg *VerifyMessagePage) Handle() {
 	}
 
 	//Switch editors on tab press
-	pg.SwitchEditors(pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
+	SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {

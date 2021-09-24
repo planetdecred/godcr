@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -44,4 +45,18 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 		pb.Color = th.Color.Success
 	}
 
+}
+
+func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Focused() {
+			if handleTabEvent(keyEvent) {
+				if i == len(editors)-1 {
+					editors[0].Focus()
+				} else {
+					editors[i+1].Focus()
+				}
+			}
+		}
+	}
 }

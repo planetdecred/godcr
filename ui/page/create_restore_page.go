@@ -51,7 +51,6 @@ type CreateRestore struct {
 	seedMenu        []seedItemMenu
 	openPopupIndex  int
 	selected        int
-	isTabPressed    bool
 
 	closePageBtn     decredmaterial.IconButton
 	restoreWalletBtn decredmaterial.Button
@@ -610,21 +609,6 @@ func (pg *CreateRestore) resetSeeds() {
 	}
 }
 
-func (pg *CreateRestore) SwitchEditors(editors ...*widget.Editor) {
-	for i := 0; i < len(editors); i++ {
-		if editors[i].Focused() {
-			if pg.isTabPressed {
-				if i == len(editors)-1 {
-					editors[0].Focus()
-				} else {
-					editors[i+1].Focus()
-				}
-			}
-		}
-		pg.isTabPressed = false
-	}
-}
-
 func (pg *CreateRestore) Handle() {
 	for pg.closePageBtn.Button.Clicked() {
 		pg.PopWindowPage()
@@ -673,14 +657,13 @@ func (pg *CreateRestore) Handle() {
 	select {
 	case evt := <-pg.keyEvent:
 		if evt.Name == key.NameTab && evt.State == key.Press {
-			pg.isTabPressed = true
 			if len(pg.suggestions) == 1 {
 				focus := pg.seedEditors.focusIndex
 				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
 				pg.seedClicked = true
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
-			pg.SwitchEditors(pg.spendingPassword.Editor, pg.matchSpendingPassword.Editor)
+			SwitchRestoreEditors(pg.spendingPassword.Editor, pg.matchSpendingPassword.Editor, pg.walletName.Editor)
 		}
 		if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
 			pg.selected--

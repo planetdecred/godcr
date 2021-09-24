@@ -27,7 +27,6 @@ type CreatePasswordModal struct {
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
 	keyEvent              chan *key.Event
-	isTabPressed          bool
 
 	isLoading          bool
 	isCancelable       bool

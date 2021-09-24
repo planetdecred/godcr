@@ -227,22 +227,6 @@ func (pg *SignMessagePage) updateButtonColors() {
 	pg.signButton.SetEnabled(pg.isEnabled)
 }
 
-func (pg *SignMessagePage) SwitchEditors(editors ...*widget.Editor) {
-	for i := 0; i < len(editors); i++ {
-		if editors[i].Focused() {
-			pg.isTabPressed = handleTabEvent(pg.keyEvent)
-			if pg.isTabPressed {
-				if i == len(editors)-1 {
-					editors[0].Focus()
-				} else {
-					editors[i+1].Focus()
-				}
-			}
-		}
-		pg.isTabPressed = false
-	}
-}
-
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
 	pg.updateButtonColors()
@@ -294,7 +278,7 @@ func (pg *SignMessagePage) Handle() {
 	}
 
 	//Switch editors when tab key is pressed
-	pg.SwitchEditors(pg.addressEditor.Editor, pg.messageEditor.Editor)
+	SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.messageEditor.Editor)
 }
 
 func (pg *SignMessagePage) validate() bool {
