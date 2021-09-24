@@ -15,7 +15,7 @@ const (
 )
 
 var rex = regexp.MustCompile(`(?m)("(?:\\.|[^"\\])*")\s*=\s*("(?:\\.|[^"\\])*")`) // "key"="value"
-var Languages = []string{localizable.ENGLISH, localizable.CHINESE, localizable.FRENCH}
+var Languages = []string{localizable.ENGLISH, localizable.CHINESE, localizable.FRENCH, localizable.SPANISH}
 var UserLanguages = []string{DefaultLangauge} // order of preference
 
 var languageStrings map[string]map[string]string
@@ -57,6 +57,9 @@ func init() {
 
 	readIntoMap(fr, localizable.FR)
 	languageStrings[localizable.FRENCH] = fr
+
+	readIntoMap(es, localizable.ES)
+	languageStrings[localizable.SPANISH] = es
 }
 
 func hasLanguage(language string) bool {
