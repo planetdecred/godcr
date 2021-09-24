@@ -2,19 +2,24 @@ package main
 
 import (
 	"fmt"
-	"image"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"path/filepath"
-	"strings"
+	"time"
 
 	"gioui.org/app"
 
-	_ "net/http/pprof"
-
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui"
+	_ "github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/wallet"
+)
+
+var (
+	Version   string = "0.0.0"
+	BuildDate string
+	BuildEnv  = wallet.DevBuild
 )
 
 func main() {
@@ -33,40 +38,19 @@ func main() {
 
 	dcrlibwallet.SetLogLevels(cfg.DebugLevel)
 
-	absoluteWdPath, err := ui.GetAbsolutePath()
-	if err != nil {
-		panic(err)
-	}
-
-	decredIcons := make(map[string]image.Image)
-	err = filepath.Walk(filepath.Join(absoluteWdPath, "ui/assets/decredicons"), func(path string, info os.FileInfo, err error) error {
+	var buildDate time.Time
+	if BuildEnv == wallet.ProdBuild {
+		buildDate, err = time.Parse(time.RFC3339, BuildDate)
 		if err != nil {
-			panic(err)
+			fmt.Printf("Error: %s\n", err.Error())
+			return
 		}
-		if info.IsDir() || !strings.HasSuffix(path, ".png") {
-			return nil
-		}
-
-		f, _ := os.Open(path)
-		img, _, err := image.Decode(f)
-		if err != nil {
-			return err
-		}
-		split := strings.Split(info.Name(), ".")
-		decredIcons[split[0]] = img
-		return nil
-	})
-	if err != nil {
-		log.Warn(err)
+	} else {
+		buildDate = time.Now()
 	}
 
-	var confirms int32 = dcrlibwallet.DefaultRequiredConfirmations
-
-	if cfg.SpendUnconfirmed {
-		confirms = 0
-	}
-
-	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, make(chan wallet.Response, 3), confirms)
+	logFile := filepath.Join(cfg.LogDir, defaultLogFilename)
+	wal, err := wallet.NewWallet(cfg.HomeDir, cfg.Network, Version, logFile, buildDate, make(chan wallet.Response, 3))
 	if err != nil {
 		log.Error(err)
 		return
@@ -79,9 +63,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	collection := fontCollection()
-
-	win, appWindow, err := ui.CreateWindow(wal, decredIcons, collection, internalLog)
+	win, appWindow, err := ui.CreateWindow(wal)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return

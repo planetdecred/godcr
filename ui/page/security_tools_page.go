@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 
 	"github.com/planetdecred/godcr/ui/load"
 
@@ -32,9 +33,13 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 		validateAddress: new(widget.Clickable),
 	}
 
-	pg.backButton, pg.infoButton = subpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
+}
+
+func (pg *SecurityToolsPage) ID() string {
+	return SecurityToolsPageID
 }
 
 func (pg *SecurityToolsPage) OnResume() {
@@ -44,15 +49,15 @@ func (pg *SecurityToolsPage) OnResume() {
 // main settings layout
 func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Security Tools",
-			backButton: pg.backButton,
-			infoButton: pg.infoButton,
-			back: func() {
-				pg.ChangePage(MorePageID)
+			Title:      "Security Tools",
+			BackButton: pg.backButton,
+			InfoButton: pg.infoButton,
+			Back: func() {
+				pg.PopFragment()
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Flexed(.5, pg.message()),
@@ -64,11 +69,11 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 					)
 				})
 			},
-			infoTemplate: modal.SecurityToolsInfoTemplate,
+			InfoTemplate: modal.SecurityToolsInfoTemplate,
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *SecurityToolsPage) message() layout.Widget {
@@ -83,24 +88,22 @@ func (pg *SecurityToolsPage) address() layout.Widget {
 	}
 }
 
-func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *widget.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
-	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, action, func(gtx C) D {
-				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							icon := icon
-							icon.Scale = 1
-							return icon.Layout(gtx)
-						}),
-						layout.Rigid(body),
-						layout.Rigid(func(gtx C) D {
-							size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-							return layout.Dimensions{Size: size}
-						}),
-					)
-				})
+func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
+	card := pg.Theme.Card()
+	card.Border = true
+	return card.HoverableLayout(gtx, action, func(gtx C) D {
+		return decredmaterial.Clickable(gtx, action, func(gtx C) D {
+			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return icon.Layout24dp(gtx)
+					}),
+					layout.Rigid(body),
+					layout.Rigid(func(gtx C) D {
+						size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
+						return layout.Dimensions{Size: size}
+					}),
+				)
 			})
 		})
 	})
@@ -108,13 +111,11 @@ func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *widget.Image
 
 func (pg *SecurityToolsPage) Handle() {
 	if pg.verifyMessage.Clicked() {
-		pg.SetReturnPage(SecurityToolsPageID)
-		pg.ChangePage(VerifyMessagePageID)
+		pg.ChangeFragment(NewVerifyMessagePage(pg.Load))
 	}
 
 	if pg.validateAddress.Clicked() {
-		pg.SetReturnPage(SecurityToolsPageID)
-		pg.ChangePage(ValidateAddressPageID)
+		pg.ChangeFragment(NewValidateAddressPage(pg.Load))
 	}
 }
 

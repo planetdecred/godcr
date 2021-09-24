@@ -1,41 +1,39 @@
 package page
 
 import (
-	"image"
+	"context"
 	"time"
 
-	"gioui.org/gesture"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const Transactions = "Transactions"
+const TransactionsPageID = "Transactions"
 
 type transactionWdg struct {
-	statusIcon           *widget.Image
-	direction            *widget.Image
+	confirmationIcons    *decredmaterial.Image
+	icon                 *decredmaterial.Image
+	title                string
 	time, status, wallet decredmaterial.Label
 }
 
 type TransactionsPage struct {
 	*load.Load
-	pageClosing  chan bool
-	container    layout.Flex
-	txsList      layout.List
-	toTxnDetails []*gesture.Click
-	separator    decredmaterial.Line
-	theme        *decredmaterial.Theme
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+	container layout.Flex
+	separator decredmaterial.Line
 
-	orderDropDown  *decredmaterial.DropDown
-	txTypeDropDown *decredmaterial.DropDown
-	walletDropDown *decredmaterial.DropDown
+	orderDropDown   *decredmaterial.DropDown
+	txTypeDropDown  *decredmaterial.DropDown
+	walletDropDown  *decredmaterial.DropDown
+	transactionList *decredmaterial.ClickableList
 
 	transactions []dcrlibwallet.Transaction
 	wallets      []*dcrlibwallet.Wallet
@@ -43,15 +41,13 @@ type TransactionsPage struct {
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
-		Load:        l,
-		pageClosing: make(chan bool, 1),
-		container:   layout.Flex{Axis: layout.Vertical},
-		txsList:     layout.List{Axis: layout.Vertical},
-		separator:   l.Theme.Separator(),
-		theme:       l.Theme,
+		Load:            l,
+		container:       layout.Flex{Axis: layout.Vertical},
+		separator:       l.Theme.Separator(),
+		transactionList: l.Theme.NewClickableList(layout.Vertical),
 	}
 
-	pg.orderDropDown = createOrderDropDown(l)
+	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
@@ -66,6 +62,9 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 			Text: values.String(values.StrYourself),
 		},
 		{
+			Text: "Mixed",
+		},
+		{
 			Text: values.String(values.StrStaking),
 		},
 	}, 1)
@@ -73,9 +72,15 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	return pg
 }
 
+func (pg *TransactionsPage) ID() string {
+	return TransactionsPageID
+}
+
 func (pg *TransactionsPage) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
 	pg.wallets = pg.WL.SortedWalletList()
-	createOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.listenForTxNotifications()
 	pg.loadTransactions()
 }
@@ -93,6 +98,8 @@ func (pg *TransactionsPage) loadTransactions() {
 	case 3:
 		txFilter = dcrlibwallet.TxFilterTransferred
 	case 4:
+		txFilter = dcrlibwallet.TxFilterMixed
+	case 5:
 		txFilter = dcrlibwallet.TxFilterStaking
 	}
 
@@ -113,71 +120,63 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 					Top: values.MarginPadding60,
 				}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-						padding := values.MarginPadding16
-						return Container{layout.Inset{Bottom: padding, Left: padding}}.Layout(gtx,
-							func(gtx C) D {
-								// return "No transactions yet" text if there are no transactions
-								if len(wallTxs) == 0 {
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
-									txt.Color = pg.Theme.Color.Gray2
-									return txt.Layout(gtx)
-								}
 
-								// update transaction row click gesture when the length of the click gesture slice and
-								// transactions list are different.
-								if len(wallTxs) != len(pg.toTxnDetails) {
-									pg.toTxnDetails = createClickGestures(len(wallTxs))
-								}
-
-								return pg.txsList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
-									click := pg.toTxnDetails[index]
-									pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
-									click.Add(gtx.Ops)
-									pg.goToTxnDetails(click.Events(gtx), &wallTxs[index])
-									var row = TransactionRow{
-										transaction: wallTxs[index],
-										index:       index,
-										showBadge:   false,
-									}
-									return transactionRow(gtx, pg.Load, row)
-								})
+						// return "No transactions yet" text if there are no transactions
+						if len(wallTxs) == 0 {
+							padding := values.MarginPadding16
+							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
+							txt.Color = pg.Theme.Color.Gray2
+							return layout.Center.Layout(gtx, func(gtx C) D {
+								return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
 							})
+						}
+
+						return pg.transactionList.HoverableLayout(gtx, len(wallTxs), func(gtx C, index int) D {
+							var row = components.TransactionRow{
+								Transaction: wallTxs[index],
+								Index:       index,
+								ShowBadge:   false,
+							}
+
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return components.LayoutTransactionRow(gtx, pg.Load, row)
+								}),
+								layout.Rigid(func(gtx C) D {
+									// No divider for last row
+									if row.Index == len(wallTxs)-1 {
+										return layout.Dimensions{}
+									}
+
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									separator := pg.Theme.Separator()
+									return layout.E.Layout(gtx, func(gtx C) D {
+										// Show bottom divider for all rows except last
+										return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
+									})
+								}),
+							)
+						})
 					})
 				})
 			}),
-			layout.Stacked(pg.dropDowns),
-		)
-	}
-	return uniformPadding(gtx, container)
-}
-
-func (pg *TransactionsPage) dropDowns(gtx layout.Context) layout.Dimensions {
-	return layout.Inset{
-		Bottom: values.MarginPadding10,
-	}.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(pg.walletDropDown.Layout),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Left: values.MarginPadding5,
-						}.Layout(gtx, pg.txTypeDropDown.Layout)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Left: values.MarginPadding5,
-						}.Layout(gtx, pg.orderDropDown.Layout)
-					}),
-				)
+			layout.Expanded(func(gtx C) D {
+				return pg.walletDropDown.Layout(gtx, 0, false)
+			}),
+			layout.Expanded(func(gtx C) D {
+				return pg.orderDropDown.Layout(gtx, 0, true)
+			}),
+			layout.Expanded(func(gtx C) D {
+				return pg.txTypeDropDown.Layout(gtx, pg.orderDropDown.Width, true)
 			}),
 		)
-	})
+	}
+	return components.UniformPadding(gtx, container)
 }
 
 func (pg *TransactionsPage) Handle() {
+
 	for pg.txTypeDropDown.Changed() {
 		pg.loadTransactions()
 	}
@@ -189,14 +188,9 @@ func (pg *TransactionsPage) Handle() {
 	for pg.walletDropDown.Changed() {
 		pg.loadTransactions()
 	}
-}
 
-func (pg *TransactionsPage) goToTxnDetails(events []gesture.ClickEvent, txn *dcrlibwallet.Transaction) {
-	for _, e := range events {
-		if e.Type == gesture.TypeClick {
-			pg.SetReturnPage(Transactions)
-			pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, txn), TransactionDetailsPageID)
-		}
+	if clicked, selectedItem := pg.transactionList.ItemClicked(); clicked {
+		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 }
 
@@ -207,7 +201,7 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 
 			select {
 			case notification = <-pg.Receiver.NotificationsUpdate:
-			case <-pg.pageClosing:
+			case <-pg.ctx.Done():
 				return
 			}
 
@@ -224,31 +218,35 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 }
 
 func (pg *TransactionsPage) OnClose() {
-	pg.pageClosing <- true
+	pg.ctxCancel()
 }
 
 func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {
 
 	var txn transactionWdg
+	wal := l.WL.MultiWallet.WalletWithID(transaction.WalletID)
+
 	t := time.Unix(transaction.Timestamp, 0).UTC()
 	txn.time = l.Theme.Body1(t.Format(time.UnixDate))
 	txn.status = l.Theme.Body1("")
-	txn.wallet = l.Theme.Body2(l.WL.MultiWallet.WalletWithID(transaction.WalletID).Name)
+	txn.wallet = l.Theme.Body2(wal.Name)
 
-	if txConfirmations(l, *transaction) > 1 {
-		txn.status.Text = formatDateOrTime(transaction.Timestamp)
-		txn.statusIcon = l.Icons.ConfirmIcon
+	if components.TxConfirmations(l, *transaction) > 1 {
+		txn.status.Text = components.FormatDateOrTime(transaction.Timestamp)
+		txn.confirmationIcons = l.Icons.ConfirmIcon
 	} else {
 		txn.status.Text = "pending"
 		txn.status.Color = l.Theme.Color.Gray
-		txn.statusIcon = l.Icons.PendingIcon
+		txn.confirmationIcons = l.Icons.PendingIcon
 	}
 
-	if transaction.Direction == dcrlibwallet.TxDirectionSent {
-		txn.direction = l.Icons.SendIcon
-	} else {
-		txn.direction = l.Icons.ReceiveIcon
+	var ticketSpender *dcrlibwallet.Transaction
+	if wal.TxMatchesFilter(transaction, dcrlibwallet.TxFilterStaking) {
+		ticketSpender, _ = wal.TicketSpender(transaction.Hash)
 	}
+	txStatus := components.TransactionTitleIcon(l, wal, transaction, ticketSpender)
 
+	txn.title = txStatus.Title
+	txn.icon = txStatus.Icon
 	return txn
 }

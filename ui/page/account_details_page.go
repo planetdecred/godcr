@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -26,7 +27,7 @@ type AcctDetailsPage struct {
 	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
-	editAccount              *widget.Clickable
+	renameAccount            *widget.Clickable
 
 	stakingBalance   int64
 	totalBalance     string
@@ -49,13 +50,17 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		backButton:  l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		editAccount: new(widget.Clickable),
+		backButton:    l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
+		renameAccount: new(widget.Clickable),
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
+}
+
+func (pg *AcctDetailsPage) ID() string {
+	return AccountDetailsPageID
 }
 
 func (pg *AcctDetailsPage) OnResume() {
@@ -97,15 +102,15 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	body := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      pg.account.Name,
-			walletName: pg.wallet.Name,
-			backButton: pg.backButton,
-			back: func() {
-				pg.ChangePage(WalletPageID)
+			Title:      pg.account.Name,
+			WalletName: pg.wallet.Name,
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
 					return pg.theme.Card().Layout(gtx, func(gtx C) D {
 						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -116,38 +121,38 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			},
-			extraItem: pg.editAccount,
-			extra: func(gtx C) D {
+			ExtraItem: pg.renameAccount,
+			Extra: func(gtx C) D {
 				return layout.Inset{}.Layout(gtx, func(gtx C) D {
 					edit := pg.Icons.EditIcon
-					edit.Scale = 1
-					return layout.E.Layout(gtx, edit.Layout)
+					return layout.E.Layout(gtx, edit.Layout24dp)
 				})
 			},
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, body)
+	return components.UniformPadding(gtx, body)
 }
 
 func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimensions {
 
 	return pg.pageSections(gtx, func(gtx C) D {
-		accountIcon := pg.Icons.AccountIcon
-		if pg.account.Number == MaxInt32 {
-			accountIcon = pg.Icons.ImportedAccountIcon
-		}
-		accountIcon.Scale = 1
 
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+
+						accountIcon := pg.Icons.AccountIcon
+						if pg.account.Number == load.MaxInt32 {
+							accountIcon = pg.Icons.ImportedAccountIcon
+						}
+
 						m := values.MarginPadding10
 						return layout.Inset{
 							Right: m,
 							Top:   m,
-						}.Layout(gtx, accountIcon.Layout)
+						}.Layout(gtx, accountIcon.Layout24dp)
 					}),
 					layout.Rigid(func(gtx C) D {
 						return pg.acctBalLayout(gtx, "Total Balance", pg.totalBalance, true)
@@ -183,17 +188,10 @@ func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimen
 
 func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, balance string, isTotalBalance bool) layout.Dimensions {
 
-	mainBalance, subBalance := breakBalance(pg.Printer, balance)
-
-	mainLabel := pg.theme.Body1(mainBalance)
-	subLabel := pg.theme.Caption(subBalance)
-	subLabel.Color = pg.theme.Color.DeepBlue
 	marginTop := values.MarginPadding16
 	marginLeft := values.MarginPadding35
 
 	if isTotalBalance {
-		mainLabel = pg.theme.H4(mainBalance)
-		subLabel = pg.theme.Body1(subBalance)
 		marginTop = values.MarginPadding0
 		marginLeft = values.MarginPadding0
 	}
@@ -204,10 +202,11 @@ func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, bal
 	}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
-					layout.Rigid(mainLabel.Layout),
-					layout.Rigid(subLabel.Layout),
-				)
+				if isTotalBalance {
+					return components.LayoutBalanceSize(gtx, pg.Load, balance, values.TextSize34)
+				}
+
+				return components.LayoutBalance(gtx, pg.Load, balance)
 			}),
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(balType)
@@ -270,9 +269,10 @@ func (pg *AcctDetailsPage) pageSections(gtx layout.Context, body layout.Widget) 
 }
 
 func (pg *AcctDetailsPage) Handle() {
-	if pg.editAccount.Clicked() {
+	if pg.renameAccount.Clicked() {
 		textModal := modal.NewTextInputModal(pg.Load).
 			Hint("Account name").
+			PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 			PositiveButton(values.String(values.StrRename), func(newName string, tim *modal.TextInputModal) bool {
 				err := pg.wallet.RenameAccount(pg.account.Number, newName)
 				if err != nil {
@@ -280,8 +280,8 @@ func (pg *AcctDetailsPage) Handle() {
 					tim.IsLoading = false
 					return false
 				}
-
 				pg.account.Name = newName
+				pg.Toast.Notify("Account renamed")
 				return true
 			})
 

@@ -15,13 +15,39 @@ import (
 )
 
 type ProgressBarStyle struct {
-	Radius unit.Value
-	Height unit.Value
+	Radius    CornerRadius
+	Height    unit.Value
+	Width     unit.Value
+	Direction layout.Direction
 	material.ProgressBarStyle
 }
 
 func (t *Theme) ProgressBar(progress int) ProgressBarStyle {
 	return ProgressBarStyle{ProgressBarStyle: material.ProgressBar(t.Base, float32(progress)/100)}
+}
+
+// This achieves a progress bar using linear layouts.
+func (p ProgressBarStyle) Layout2(gtx C) D {
+	if p.Width.V <= 0 {
+		p.Width = unit.Px(float32(gtx.Constraints.Max.X))
+	}
+
+	return p.Direction.Layout(gtx, func(gtx C) D {
+		return LinearLayout{
+			Width:      gtx.Px(p.Width),
+			Height:     gtx.Px(p.Height),
+			Background: p.TrackColor,
+			Border:     Border{Radius: p.Radius},
+		}.Layout2(gtx, func(gtx C) D {
+
+			return LinearLayout{
+				Width:      int(p.Width.V * clamp1(p.Progress)),
+				Height:     gtx.Px(p.Height),
+				Background: p.Color,
+				Border:     Border{Radius: p.Radius},
+			}.Layout(gtx)
+		})
+	})
 }
 
 func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
@@ -31,22 +57,30 @@ func (p ProgressBarStyle) Layout(gtx layout.Context) layout.Dimensions {
 			maxHeight = unit.Dp(4)
 		}
 
-		rr := float32(gtx.Px(p.Radius))
-		if p.Radius.V <= 0 {
-			rr = float32(gtx.Px(unit.Dp(2)))
-		}
-
 		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
-
 		height := float32(gtx.Px(maxHeight))
-		clip.UniformRRect(f32.Rectangle{Max: f32.Pt(width, height)}, rr).Add(gtx.Ops)
+
+		tr := float32(gtx.Px(unit.Dp(p.Radius.TopRight)))
+		tl := float32(gtx.Px(unit.Dp(p.Radius.TopLeft)))
+		br := float32(gtx.Px(unit.Dp(p.Radius.BottomRight)))
+		bl := float32(gtx.Px(unit.Dp(p.Radius.BottomLeft)))
+
+		clip.RRect{
+			Rect: f32.Rectangle{Max: f32.Pt(width, height)},
+			NW:   tl, NE: tr, SE: br, SW: bl,
+		}.Add(gtx.Ops)
+
 		paint.ColorOp{Color: color}.Add(gtx.Ops)
 		paint.PaintOp{}.Add(gtx.Ops)
 
 		return layout.Dimensions{Size: d}
 	}
 
-	progressBarWidth := float32(gtx.Constraints.Max.X)
+	if p.Width.V <= 0 {
+		p.Width = unit.Px(float32(gtx.Constraints.Max.X))
+	}
+
+	progressBarWidth := p.Width.V
 	return layout.Stack{Alignment: layout.W}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return shader(progressBarWidth, p.TrackColor)
@@ -71,29 +105,4 @@ func clamp1(v float32) float32 {
 	} else {
 		return v
 	}
-}
-
-// Disabled blends color towards the luminance and multiplies alpha.
-// Blending towards luminance will desaturate the color.
-// Multiplying alpha blends the color together more with the background.
-func Disabled(c color.NRGBA) (d color.NRGBA) {
-	const r = 80 // blend ratio
-	lum := approxLuminance(c)
-	return color.NRGBA{
-		R: byte((int(c.R)*r + int(lum)*(256-r)) / 256),
-		G: byte((int(c.G)*r + int(lum)*(256-r)) / 256),
-		B: byte((int(c.B)*r + int(lum)*(256-r)) / 256),
-		A: byte(int(c.A) * (128 + 32) / 256),
-	}
-}
-
-// approxLuminance is a fast approximate version of RGBA.Luminance.
-func approxLuminance(c color.NRGBA) byte {
-	const (
-		r = 13933 // 0.2126 * 256 * 256
-		g = 46871 // 0.7152 * 256 * 256
-		b = 4732  // 0.0722 * 256 * 256
-		t = r + g + b
-	)
-	return byte((r*int(c.R) + g*int(c.G) + b*int(c.B)) / t)
 }

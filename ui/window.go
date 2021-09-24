@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"errors"
-	"image"
 	"sync"
 	"time"
 
@@ -11,11 +9,11 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/text"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -23,7 +21,6 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
-	theme      *decredmaterial.Theme
 	ops        *op.Ops
 	invalidate chan struct{}
 
@@ -33,21 +30,19 @@ type Window struct {
 	walletTransactions   *wallet.Transactions
 	walletTransaction    *wallet.Transaction
 	walletAccount        *wallet.Account
-	walletTickets        *wallet.Tickets
 	vspInfo              *wallet.VSP
 	proposals            *wallet.Proposals
 	selectedProposal     *dcrlibwallet.Proposal
 	proposal             chan *wallet.Proposal
 	walletUnspentOutputs *wallet.UnspentOutputs
 
-	load   *load.Load
-	common *pageCommon
+	load *load.Load
 
 	modalMutex sync.Mutex
-	modals     []Modal
+	modals     []load.Modal
 
-	currentPage   Page
-	pageBackStack []Page
+	currentPage   load.Page
+	pageBackStack []load.Page
 
 	signatureResult *wallet.Signature
 
@@ -61,12 +56,15 @@ type Window struct {
 	err string
 
 	keyEvents             chan *key.Event
-	toast                 *toast
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
 }
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
 type WriteClipboard struct {
 	Text string
 }
@@ -76,7 +74,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collection []text.FontFace, internalLog chan string) (*Window, *app.Window, error) {
+func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == "testnet3" {
@@ -85,11 +83,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 		netType = wal.Net
 	}
 	appWindow := app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
-	theme := decredmaterial.NewTheme(collection, decredIcons, false)
-	if theme == nil {
-		return nil, nil, errors.New("Unexpected error while loading theme")
-	}
-	win.theme = theme
 	win.ops = &op.Ops{}
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
@@ -97,7 +90,6 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 	win.walletTransactions = new(wallet.Transactions)
 	win.walletUnspentOutputs = new(wallet.UnspentOutputs)
 	win.walletAcctMixerStatus = make(chan *wallet.AccountMixer)
-	win.walletTickets = new(wallet.Tickets)
 	win.vspInfo = new(wallet.VSP)
 	win.proposals = new(wallet.Proposals)
 	win.proposal = make(chan *wallet.Proposal)
@@ -108,17 +100,22 @@ func CreateWindow(wal *wallet.Wallet, decredIcons map[string]image.Image, collec
 
 	win.keyEvents = make(chan *key.Event)
 
-	win.internalLog = internalLog
+	l, err := win.NewLoad()
+	if err != nil {
+		return nil, nil, err
+	}
 
-	win.common = win.newPageCommon(decredIcons)
-
-	win.load = win.NewLoad(decredIcons)
+	win.load = l
 
 	return win, appWindow, nil
 }
 
-func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
-	l := load.NewLoad(win.theme, decredIcons)
+func (win *Window) NewLoad() (*load.Load, error) {
+	l, err := load.NewLoad()
+	if err != nil {
+		return nil, err
+	}
+
 	l.WL = &load.WalletLoad{
 		MultiWallet:     win.wallet.GetMultiWallet(),
 		Wallet:          win.wallet,
@@ -127,7 +124,6 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 		SyncStatus:      win.walletSyncStatus,
 		Transactions:    win.walletTransactions,
 		UnspentOutputs:  win.walletUnspentOutputs,
-		Tickets:         win.walletTickets,
 		VspInfo:         win.vspInfo,
 		BroadcastResult: win.broadcastResult,
 		Proposals:       win.proposals,
@@ -151,18 +147,18 @@ func (win *Window) NewLoad(decredIcons map[string]image.Image) *load.Load {
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
 
-	return l
+	return l, nil
 }
 
 func (win *Window) Start() {
 	if win.currentPage == nil {
-		sp := newStartPage(win.common, win.load)
+		sp := page.NewStartPage(win.load)
 		sp.OnResume()
 		win.currentPage = sp
 	}
 }
 
-func (win *Window) changePage(page Page, keepBackStack bool) {
+func (win *Window) changePage(page load.Page, keepBackStack bool) {
 	if win.currentPage != nil && keepBackStack {
 		win.currentPage.OnClose()
 		win.pageBackStack = append(win.pageBackStack, win.currentPage)
@@ -196,26 +192,27 @@ func (win *Window) refreshWindow() {
 	win.invalidate <- struct{}{}
 }
 
-func (win *Window) showModal(modal Modal) {
+func (win *Window) showModal(modal load.Modal) {
 	modal.OnResume() // setup display data
 	win.modalMutex.Lock()
 	win.modals = append(win.modals, modal)
 	win.modalMutex.Unlock()
 }
 
-func (win *Window) dismissModal(modal Modal) {
+func (win *Window) dismissModal(modal load.Modal) {
 	win.modalMutex.Lock()
 	defer win.modalMutex.Unlock()
 	for i, m := range win.modals {
 		if m.ModalID() == modal.ModalID() {
 			modal.OnDismiss() // do garbage collection in modal
 			win.modals = append(win.modals[:i], win.modals[i+1:]...)
+			win.refreshWindow()
 		}
 	}
 }
 
 func (win *Window) unloaded(w *app.Window) {
-	lbl := win.theme.H3("Multiwallet not loaded\nIs another instance open?")
+	lbl := win.load.Theme.H3("Multiwallet not loaded\nIs another instance open?")
 	for {
 		e := <-w.Events()
 		switch evt := e.(type) {
@@ -229,27 +226,38 @@ func (win *Window) unloaded(w *app.Window) {
 	}
 }
 
-func (win *Window) layoutPage(gtx C, page Page) {
+func (win *Window) layoutPage(gtx C, page load.Page) {
 	layout.Stack{
 		Alignment: layout.N,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return decredmaterial.Fill(gtx, win.theme.Color.LightGray)
+			return decredmaterial.Fill(gtx, win.load.Theme.Color.LightGray)
 		}),
 		layout.Stacked(func(gtx C) D {
 			page.Handle()
 			return page.Layout(gtx)
 		}),
 		layout.Stacked(func(gtx C) D {
-			for _, modal := range win.modals {
-				modal.Handle()
+			modals := win.modals
+
+			if len(modals) > 0 {
+				modalLayouts := make([]layout.StackChild, 0)
+				for _, modal := range modals {
+					modal.Handle()
+					widget := modal.Layout(gtx)
+					l := layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+						return widget
+					})
+					modalLayouts = append(modalLayouts, l)
+				}
+
+				return layout.Stack{Alignment: layout.Center}.Layout(gtx, modalLayouts...)
 			}
 
-			// global modal. Stack modal on all pages and contents
-			if len(win.modals) > 0 {
-				return win.modals[len(win.modals)-1].Layout(gtx)
-			}
 			return layout.Dimensions{}
+		}),
+		layout.Stacked(func(gtx C) D {
+			return win.load.Toast.Layout(gtx)
 		}),
 	)
 }
@@ -279,7 +287,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				break
 			}
 
-			win.updateStates(e.Resp)
+			// win.updateStates(e.Resp)
 
 		case update := <-win.wallet.Sync:
 			switch update.Stage {
@@ -311,7 +319,6 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				win.updateConnectedPeers(update.ConnectedPeers)
 			case wallet.BlockAttached:
 				if win.walletInfo.Synced {
-					win.wallet.GetAllTickets()
 					win.wallet.GetMultiWalletInfo()
 					win.updateSyncProgress(update.BlockInfo)
 				}

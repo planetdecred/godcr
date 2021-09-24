@@ -2,7 +2,6 @@ package modal
 
 import (
 	"fmt"
-	"image/color"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -25,7 +24,9 @@ type PasswordModal struct {
 
 	dialogTitle string
 
-	isLoading      bool
+	isLoading    bool
+	isCancelable bool
+
 	materialLoader material.LoaderStyle
 
 	positiveButtonText    string
@@ -46,10 +47,10 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
 	}
 
-	pm.btnPositve.TextSize, pm.btnNegative.TextSize = values.TextSize16, values.TextSize16
+	pm.btnNegative.TextSize = values.TextSize16
 	pm.btnNegative.Background, pm.btnNegative.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
 	pm.btnPositve.Font.Weight, pm.btnNegative.Font.Weight = text.Bold, text.Bold
-	pm.btnPositve.Background, pm.btnPositve.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
+	pm.btnPositve.Background = pm.Theme.Color.InactiveGray
 
 	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
@@ -89,11 +90,6 @@ func (pm *PasswordModal) Hint(hint string) *PasswordModal {
 	return pm
 }
 
-func (pm *PasswordModal) PositiveButtonStyle(background, text color.NRGBA) *PasswordModal {
-	pm.btnPositve.Background, pm.btnPositve.Color = background, text
-	return pm
-}
-
 func (pm *PasswordModal) PositiveButton(text string, clicked func(password string, m *PasswordModal) bool) *PasswordModal {
 	pm.positiveButtonText = text
 	pm.positiveButtonClicked = clicked
@@ -110,6 +106,11 @@ func (pm *PasswordModal) SetLoading(loading bool) {
 	pm.isLoading = loading
 }
 
+func (pm *PasswordModal) SetCancelable(min bool) *PasswordModal {
+	pm.isCancelable = min
+	return pm
+}
+
 func (pm *PasswordModal) SetError(err string) {
 	if err == "" {
 		pm.password.ClearError()
@@ -119,8 +120,13 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
+	if editorsNotEmpty(pm.password.Editor) {
+		pm.btnPositve.Background = pm.Theme.Color.Primary
+	} else {
+		pm.btnPositve.Background = pm.Theme.Color.InactiveGray
+	}
 
-	for pm.btnPositve.Button.Clicked() {
+	for pm.btnPositve.Button.Clicked() || handleSubmitEvent(pm.password.Editor) {
 
 		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
 			continue
@@ -137,6 +143,12 @@ func (pm *PasswordModal) Handle() {
 		if !pm.isLoading {
 			pm.DismissModal(pm)
 			pm.negativeButtonClicked()
+		}
+	}
+
+	if pm.modal.BackdropClicked(pm.isCancelable) {
+		if !pm.isLoading {
+			pm.Dismiss()
 		}
 	}
 }
@@ -156,7 +168,7 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 		return layout.E.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if pm.negativeButtonText == "" {
+					if pm.negativeButtonText == "" || pm.isLoading {
 						return layout.Dimensions{}
 					}
 

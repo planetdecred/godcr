@@ -16,6 +16,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
@@ -72,7 +73,7 @@ type CreateRestore struct {
 	warningModal    *decredmaterial.Modal
 	modalTitleLabel decredmaterial.Label
 
-	alertIcon *widget.Image
+	alertIcon *decredmaterial.Image
 }
 
 // Loading lays out the loading widget with a faded background
@@ -102,11 +103,11 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	}
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
-	pg.optionsMenuCard.Radius = decredmaterial.CornerRadius{NE: 5, NW: 5, SE: 5, SW: 5}
+	pg.optionsMenuCard.Radius = decredmaterial.Radius(8)
 
 	pg.restoreWalletBtn = l.Theme.Button(new(widget.Clickable), "Restore")
 
-	pg.closePageBtn = l.Theme.IconButton(new(widget.Clickable), mustIcon(widget.NewIcon(icons.NavigationClose)))
+	pg.closePageBtn = l.Theme.IconButton(new(widget.Clickable), decredmaterial.MustIcon(widget.NewIcon(icons.NavigationClose)))
 	pg.closePageBtn.Background = color.NRGBA{}
 	pg.closePageBtn.Color = l.Theme.Color.Hint
 
@@ -115,7 +116,6 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	pg.resetSeedFields.Background = color.NRGBA{}
 
 	pg.alertIcon = pg.Icons.AlertGray
-	pg.alertIcon.Scale = 1.0
 
 	pg.restoreWalletBtn.Inset = layout.Inset{
 		Top:    values.MarginPadding12,
@@ -146,6 +146,10 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	pg.allSuggestions = dcrlibwallet.PGPWordList()
 
 	return pg
+}
+
+func (pg *CreateRestore) ID() string {
+	return CreateRestorePageID
 }
 
 func (pg *CreateRestore) OnResume() {
@@ -189,7 +193,7 @@ func (pg *CreateRestore) restore(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(func(gtx C) D {
 					m := values.MarginPadding24
 					v := values.MarginPadding6
-					return Container{padding: layout.Inset{Right: m, Left: m, Top: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
+					return components.Container{Padding: layout.Inset{Right: m, Left: m, Top: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
 						pageContent := []func(gtx C) D{
 							func(gtx C) D {
 								return pg.restorePageSections(gtx, "Enter your seed phase", "1/3", pg.enterSeedPhase)
@@ -222,7 +226,7 @@ func (pg *CreateRestore) restore(gtx layout.Context) layout.Dimensions {
 
 func (pg *CreateRestore) restoreButtonSection(gtx layout.Context) layout.Dimensions {
 	card := pg.Theme.Card()
-	card.Radius = decredmaterial.CornerRadius{NE: 0, NW: 0, SE: 0, SW: 0}
+	card.Radius = decredmaterial.Radius(0)
 	return card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
@@ -291,7 +295,7 @@ func (pg *CreateRestore) createPasswordPhase(gtx layout.Context) layout.Dimensio
 								Right: values.MarginPadding10,
 								Top:   values.MarginPadding3,
 							}
-							return inset.Layout(gtx, pg.alertIcon.Layout)
+							return inset.Layout(gtx, pg.alertIcon.Layout16dp)
 						}),
 						layout.Rigid(pg.Theme.Body1(msg).Layout),
 					)
@@ -326,7 +330,7 @@ func (pg *CreateRestore) restorePageSections(gtx layout.Context, title string, p
 					layout.Rigid(func(gtx C) D {
 						m := values.MarginPadding10
 						v := values.MarginPadding5
-						return Container{padding: layout.Inset{Right: v, Left: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
+						return components.Container{Padding: layout.Inset{Right: v, Left: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							txt := pg.Theme.Body1(title)
 							return layout.Flex{
@@ -344,7 +348,7 @@ func (pg *CreateRestore) restorePageSections(gtx layout.Context, title string, p
 									return border.Layout(gtx, func(gtx C) D {
 										m := values.MarginPadding8
 										v := values.MarginPadding5
-										return Container{padding: layout.Inset{
+										return components.Container{Padding: layout.Inset{
 											Right:  m,
 											Left:   m,
 											Top:    v,
@@ -643,8 +647,7 @@ func (pg *CreateRestore) Handle() {
 				pg.PopWindowPage()
 			} else {
 				pg.WL.Wallet.SetupListeners()
-				// todo: uncomment when main page has been moved to the page package
-				// pg.ChangeWindowPage(newMainPage(pg.common, nil), false)
+				pg.ChangeWindowPage(NewMainPage(pg.Load), false)
 			}
 		}()
 	}

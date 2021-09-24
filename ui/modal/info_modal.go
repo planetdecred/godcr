@@ -2,7 +2,9 @@ package modal
 
 import (
 	"fmt"
+	"image/color"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -16,8 +18,10 @@ const Info = "info_modal"
 
 type InfoModal struct {
 	*load.Load
-	randomID string
-	modal    decredmaterial.Modal
+	randomID        string
+	modal           decredmaterial.Modal
+	keyEvent        chan *key.Event
+	enterKeyPressed bool
 
 	dialogIcon *widget.Icon
 
@@ -33,6 +37,8 @@ type InfoModal struct {
 	negativeButtonClicked func()
 	btnNegative           decredmaterial.Button
 
+	isCancelable bool
+
 	//TODO: neutral button
 }
 
@@ -43,11 +49,13 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		modal:       *l.Theme.ModalFloatTitle(),
 		btnPositve:  l.Theme.Button(new(widget.Clickable), "Yes"),
 		btnNegative: l.Theme.Button(new(widget.Clickable), "No"),
+		keyEvent:    l.Receiver.KeyEvents,
 	}
 
 	in.btnPositve.TextSize, in.btnNegative.TextSize = values.TextSize16, values.TextSize16
 	in.btnPositve.Font.Weight, in.btnNegative.Font.Weight = text.Bold, text.Bold
 
+	in.btnPositve.Background, in.btnPositve.Color = l.Theme.Color.Surface, l.Theme.Color.Primary
 	return in
 }
 
@@ -70,7 +78,12 @@ func (in *InfoModal) OnDismiss() {
 
 }
 
-func (in *InfoModal) icon(icon *widget.Icon) *InfoModal {
+func (in *InfoModal) SetCancelable(min bool) *InfoModal {
+	in.isCancelable = min
+	return in
+}
+
+func (in *InfoModal) Icon(icon *widget.Icon) *InfoModal {
 	in.dialogIcon = icon
 	return in
 }
@@ -88,6 +101,11 @@ func (in *InfoModal) Body(subtitle string) *InfoModal {
 func (in *InfoModal) PositiveButton(text string, clicked func()) *InfoModal {
 	in.positiveButtonText = text
 	in.positiveButtonClicked = clicked
+	return in
+}
+
+func (in *InfoModal) PositiveButtonStyle(background, text color.NRGBA) *InfoModal {
+	in.btnPositve.Background, in.btnPositve.Color = background, text
 	return in
 }
 
@@ -125,9 +143,19 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) Handle() {
+func (in *InfoModal) handleEnterKeypress() {
+	// Todo enter button for info modals.
+	select {
+	case event := <-in.keyEvent:
+		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press && in.customTemplate != nil {
+			in.enterKeyPressed = true
+		}
+	default:
+	}
+}
 
-	for in.btnPositve.Button.Clicked() {
+func (in *InfoModal) Handle() {
+	if in.btnPositve.Button.Clicked() {
 		in.DismissModal(in)
 		in.positiveButtonClicked()
 	}
@@ -135,6 +163,10 @@ func (in *InfoModal) Handle() {
 	for in.btnNegative.Button.Clicked() {
 		in.DismissModal(in)
 		in.negativeButtonClicked()
+	}
+
+	if in.modal.BackdropClicked(in.isCancelable) {
+		in.Dismiss()
 	}
 }
 
@@ -212,7 +244,6 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnPositve.Text = in.positiveButtonText
-					in.btnPositve.Background, in.btnPositve.Color = in.Theme.Color.Surface, in.Theme.Color.Primary
 					return in.btnPositve.Layout(gtx)
 				}),
 			)

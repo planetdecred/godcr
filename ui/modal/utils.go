@@ -44,13 +44,16 @@ func generateRandomNumber() int {
 func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
-	pb.Progress = float32(strength * 100)
-	pb.Color = th.Color.Success
-}
+	pb.Progress = float32(strength)
 
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
-	if err != nil {
-		panic(err)
+	//set progress bar color
+	switch {
+	case pb.Progress <= 0.30:
+		pb.Color = th.Color.Danger
+	case pb.Progress > 0.30 && pb.Progress <= 0.60:
+		pb.Color = th.Color.Yellow
+	case pb.Progress > 0.50:
+		pb.Color = th.Color.Success
 	}
-	return ic
+
 }

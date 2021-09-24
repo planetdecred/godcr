@@ -7,41 +7,67 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/planetdecred/dcrlibwallet"
 )
 
-const syncID = "godcr"
+const (
+	syncID    = "godcr"
+	DevBuild  = "dev"
+	ProdBuild = "prod"
+)
 
 // Wallet represents the wallet back end of the app
 type Wallet struct {
 	multi              *dcrlibwallet.MultiWallet
-	root, Net          string
+	Root, Net          string
+	buildDate          time.Time
+	version            string
+	logFile            string
 	Send               chan Response
 	Sync               chan SyncStatusUpdate
-	confirms           int32
 	OverallBlockHeight int32
 }
 
 // NewWallet initializies an new Wallet instance.
 // The Wallet is not loaded until LoadWallets is called.
-func NewWallet(root string, net string, send chan Response, confirms int32) (*Wallet, error) {
+func NewWallet(root, net, version, logFile string, buildDate time.Time, send chan Response) (*Wallet, error) {
 	if root == "" || net == "" { // This should really be handled by dcrlibwallet
 		return nil, fmt.Errorf(`root directory or network cannot be ""`)
 	}
+
 	wal := &Wallet{
-		root:     root,
-		Net:      net,
-		Sync:     make(chan SyncStatusUpdate, 2),
-		Send:     send,
-		confirms: confirms,
+		Root:      root,
+		Net:       net,
+		buildDate: buildDate,
+		version:   version,
+		logFile:   logFile,
+		Sync:      make(chan SyncStatusUpdate, 2),
+		Send:      send,
 	}
 
 	return wal, nil
 }
 
+func (wal *Wallet) BuildDate() time.Time {
+	return wal.buildDate
+}
+
+func (wal *Wallet) Version() string {
+	return wal.version
+}
+
+func (wal *Wallet) LogFile() string {
+	return wal.logFile
+}
+
 func (wal *Wallet) InitMultiWallet() error {
-	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net)
+	politeiaHost := dcrlibwallet.PoliteiaMainnetHost
+	if wal.Net == dcrlibwallet.Testnet3 {
+		politeiaHost = dcrlibwallet.PoliteiaTestnetHost
+	}
+	multiWal, err := dcrlibwallet.NewMultiWallet(wal.Root, "bdb", wal.Net, politeiaHost)
 	if err != nil {
 		return err
 	}
@@ -76,60 +102,6 @@ func (wal *Wallet) SetupListeners() {
 	wal.multi.Politeia.AddNotificationListener(l, syncID)
 
 	startupPassSet := wal.multi.IsStartupSecuritySet()
-
-	resp.Resp = LoadedWallets{
-		Count:              wal.multi.LoadedWalletsCount(),
-		StartUpSecuritySet: startupPassSet,
-	}
-	wal.Send <- resp
-}
-
-// LoadWallets loads the wallets for network in the root directory.
-// It adds a SyncProgressListener to the multiwallet and opens the wallets if no
-// startup passphrase was set.
-// It is non-blocking and sends its result or any erro to wal.Send.
-func (wal *Wallet) LoadWallets() {
-	resp := Response{
-		Resp: LoadedWallets{},
-	}
-	multiWal, err := dcrlibwallet.NewMultiWallet(wal.root, "bdb", wal.Net)
-	if err != nil {
-		resp.Err = err
-		log.Error("Wallet not loaded. Is another process using the data directory?")
-		wal.Send <- resp
-		return
-	}
-	wal.multi = multiWal
-	l := &listener{
-		Send: wal.Sync,
-	}
-	err = wal.multi.AddSyncProgressListener(l, syncID)
-	if err != nil {
-		resp.Err = err
-		wal.Send <- resp
-		return
-	}
-
-	err = wal.multi.AddTxAndBlockNotificationListener(l, syncID)
-	if err != nil {
-		resp.Err = err
-		wal.Send <- resp
-		return
-	}
-
-	wal.multi.AddAccountMixerNotificationListener(l, syncID)
-
-	wal.multi.Politeia.AddNotificationListener(l, syncID)
-
-	startupPassSet := wal.multi.IsStartupSecuritySet()
-	if !startupPassSet {
-		err = wal.multi.OpenWallets(nil)
-		if err != nil {
-			resp.Err = err
-			wal.Send <- resp
-			return
-		}
-	}
 
 	resp.Resp = LoadedWallets{
 		Count:              wal.multi.LoadedWalletsCount(),

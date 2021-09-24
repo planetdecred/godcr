@@ -40,32 +40,47 @@ type Theme struct {
 	Shaper text.Shaper
 	Base   *material.Theme
 	Color  struct {
-		Primary      color.NRGBA
-		Secondary    color.NRGBA
-		Text         color.NRGBA
-		Hint         color.NRGBA
-		Overlay      color.NRGBA
-		InvText      color.NRGBA
-		Success      color.NRGBA
-		Success2     color.NRGBA
-		Danger       color.NRGBA
-		Background   color.NRGBA
-		Surface      color.NRGBA
-		Gray         color.NRGBA
-		Black        color.NRGBA
-		DeepBlue     color.NRGBA
-		LightBlue    color.NRGBA
-		LightGray    color.NRGBA
-		InactiveGray color.NRGBA
-		ActiveGray   color.NRGBA
-		Gray1        color.NRGBA
-		Gray2        color.NRGBA
-		Gray3        color.NRGBA
-		Orange       color.NRGBA
-		Orange2      color.NRGBA
-		Gray4        color.NRGBA
-		Gray5        color.NRGBA
-		Gray6        color.NRGBA
+		Primary          color.NRGBA
+		Primary50        color.NRGBA
+		Secondary        color.NRGBA
+		Text             color.NRGBA
+		Hint             color.NRGBA
+		Overlay          color.NRGBA
+		InvText          color.NRGBA
+		Success          color.NRGBA
+		Success2         color.NRGBA
+		Danger           color.NRGBA
+		Background       color.NRGBA
+		Surface          color.NRGBA
+		Gray             color.NRGBA
+		Black            color.NRGBA
+		DeepBlue         color.NRGBA
+		LightBlue        color.NRGBA
+		LightBlue2       color.NRGBA
+		LightBlue3       color.NRGBA
+		LightBlue4       color.NRGBA
+		LightBlue5       color.NRGBA
+		LightBlue6       color.NRGBA
+		BlueProgressTint color.NRGBA
+		LightGray        color.NRGBA
+		InactiveGray     color.NRGBA
+		ActiveGray       color.NRGBA
+		Gray1            color.NRGBA
+		Gray2            color.NRGBA
+		Gray3            color.NRGBA
+		Orange           color.NRGBA
+		Orange2          color.NRGBA
+		Orange3          color.NRGBA
+		Gray4            color.NRGBA
+		Gray5            color.NRGBA
+		Gray6            color.NRGBA
+		Green50          color.NRGBA
+		Green500         color.NRGBA
+		Turquoise100     color.NRGBA
+		Turquoise300     color.NRGBA
+		Turquoise700     color.NRGBA
+		Turquoise800     color.NRGBA
+		Yellow           color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -81,8 +96,8 @@ type Theme struct {
 	chevronDownIcon       *widget.Icon
 	navigationCheckIcon   *widget.Icon
 	navMoreIcon           *widget.Icon
-	expandIcon            *widget.Image
-	collapseIcon          *widget.Image
+	expandIcon            *Image
+	collapseIcon          *Image
 
 	dropDownMenus []*DropDown
 
@@ -93,6 +108,7 @@ func (t *Theme) setColorMode(darkMode bool) {
 	if darkMode {
 		t.DarkMode = true
 		t.Color.Primary = rgb(0x57B6FF)
+		t.Color.Primary50 = rgb(0xE3F2FF)
 		t.Color.Text = argb(0x99FFFFFF)
 		t.Color.Hint = rgb(0x8997A5)
 		t.Color.InvText = rgb(0xffffff)
@@ -108,6 +124,8 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Gray4 = argb(0x99FFFFFF)
 		t.Color.Gray5 = argb(0x61FFFFFF)
 		t.Color.Gray6 = argb(0xCCFFFFFF)
+		t.Color.Green50 = rgb(0xE8F7EA)
+		t.Color.Green500 = rgb(0x41BE53)
 		t.Color.LightGray = rgb(0x121212)
 		t.Color.ActiveGray = rgb(0x363636)
 		t.Color.DeepBlue = argb(0xDEFFFFFF)
@@ -115,12 +133,25 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Black = rgb(0x000000)
 		t.Color.Background = argb(0x22444444)
 		t.Color.LightBlue = rgb(0xe4f6ff)
+		t.Color.LightBlue2 = rgb(0x75D8FF)
+		t.Color.LightBlue3 = rgb(0xBCE8FF)
+		t.Color.LightBlue4 = rgb(0xBBDEFF)
+		t.Color.LightBlue5 = rgb(0x70CBFF)
+		t.Color.LightBlue6 = rgb(0x4B91D8)
+		t.Color.BlueProgressTint = rgb(0x73d7ff)
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.Color.Orange3 = rgb(0xF8CABC)
+		t.Color.Turquoise100 = rgb(0xB6EED7)
+		t.Color.Turquoise300 = rgb(0x2DD8A3)
+		t.Color.Turquoise700 = rgb(0x00A05F)
+		t.Color.Turquoise800 = rgb(0x008F52)
+		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)
 	} else {
 		t.DarkMode = false
 		t.Color.Primary = keyblue
+		t.Color.Primary50 = rgb(0xE3F2FF)
 		t.Color.Text = darkblue
 		t.Color.Hint = rgb(0x8997A5)
 		t.Color.InvText = rgb(0xffffff)
@@ -136,6 +167,8 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Gray4 = rgb(0x3d5873)
 		t.Color.Gray5 = rgb(0x3d5873)
 		t.Color.Gray6 = rgb(0x091440)
+		t.Color.Green50 = rgb(0xE8F7EA)
+		t.Color.Green500 = rgb(0x41BE53)
 		t.Color.LightGray = rgb(0xf3f5f6)
 		t.Color.ActiveGray = rgb(0xf3f5f6)
 		t.Color.DeepBlue = rgb(0x091440)
@@ -143,8 +176,20 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Black = rgb(0x000000)
 		t.Color.Background = argb(0x22444444)
 		t.Color.LightBlue = rgb(0xe4f6ff)
+		t.Color.LightBlue2 = rgb(0x75D8FF)
+		t.Color.LightBlue3 = rgb(0xBCE8FF)
+		t.Color.LightBlue4 = rgb(0xBBDEFF)
+		t.Color.LightBlue5 = rgb(0x70CBFF)
+		t.Color.LightBlue6 = rgb(0x4B91D8)
+		t.Color.BlueProgressTint = rgb(0x73d7ff)
 		t.Color.Orange = rgb(0xD34A21)
 		t.Color.Orange2 = rgb(0xF8E8E7)
+		t.Color.Orange3 = rgb(0xF8CABC)
+		t.Color.Turquoise100 = rgb(0xB6EED7)
+		t.Color.Turquoise300 = rgb(0x2DD8A3)
+		t.Color.Turquoise700 = rgb(0x00A05F)
+		t.Color.Turquoise800 = rgb(0x008F52)
+		t.Color.Yellow = rgb(0xffc84e)
 		t.TextSize = unit.Sp(16)
 	}
 }
@@ -158,18 +203,18 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 
 	t.setColorMode(isDarkModeOn)
 
-	t.checkBoxCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBox))
-	t.checkBoxUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
-	t.radioCheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))
-	t.radioUncheckedIcon = mustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
-	t.chevronUpIcon = mustIcon(widget.NewIcon(icons.NavigationExpandLess))
-	t.chevronDownIcon = mustIcon(widget.NewIcon(icons.NavigationExpandMore))
-	t.navMoreIcon = mustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
-	t.navigationCheckIcon = mustIcon(widget.NewIcon(icons.NavigationCheck))
-	t.dropDownIcon = mustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
+	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
+	t.checkBoxUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
+	t.radioCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))
+	t.radioUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleRadioButtonUnchecked))
+	t.chevronUpIcon = MustIcon(widget.NewIcon(icons.NavigationExpandLess))
+	t.chevronDownIcon = MustIcon(widget.NewIcon(icons.NavigationExpandMore))
+	t.navMoreIcon = MustIcon(widget.NewIcon(icons.NavigationMoreHoriz))
+	t.navigationCheckIcon = MustIcon(widget.NewIcon(icons.NavigationCheck))
+	t.dropDownIcon = MustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
 
-	t.expandIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["expand_icon"])}
-	t.collapseIcon = &widget.Image{Src: paint.NewImageOp(decredIcons["collapse_icon"])}
+	t.expandIcon = NewImage(decredIcons["expand_icon"])
+	t.collapseIcon = NewImage(decredIcons["collapse_icon"])
 	return t
 }
 
@@ -208,7 +253,7 @@ func (t *Theme) ImageIcon(gtx layout.Context, icon image.Image, size int) layout
 	return i.Layout(gtx)
 }
 
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
+func MustIcon(ic *widget.Icon, err error) *widget.Icon {
 	if err != nil {
 		panic(err)
 	}
@@ -237,7 +282,7 @@ func fillMax(gtx layout.Context, col color.NRGBA, radius CornerRadius) D {
 
 	clip.RRect{
 		Rect: track,
-		NE:   radius.NE, NW: radius.NW, SE: radius.SE, SW: radius.SW,
+		NE:   radius.TopRight, NW: radius.TopLeft, SE: radius.BottomRight, SW: radius.BottomLeft,
 	}.Add(gtx.Ops)
 	paint.Fill(gtx.Ops, col)
 	st.Load()
@@ -280,4 +325,40 @@ func (t *Theme) closeAllDropdownMenus(group uint) {
 			dropDown.isOpen = false
 		}
 	}
+}
+
+// Disabled blends color towards the luminance and multiplies alpha.
+// Blending towards luminance will desaturate the color.
+// Multiplying alpha blends the color together more with the background.
+func Disabled(c color.NRGBA) (d color.NRGBA) {
+	const r = 80 // blend ratio
+	lum := approxLuminance(c)
+	return color.NRGBA{
+		R: byte((int(c.R)*r + int(lum)*(256-r)) / 256),
+		G: byte((int(c.G)*r + int(lum)*(256-r)) / 256),
+		B: byte((int(c.B)*r + int(lum)*(256-r)) / 256),
+		A: byte(int(c.A) * (128 + 32) / 256),
+	}
+}
+
+// Hovered blends color towards a brighter color.
+func Hovered(c color.NRGBA) (d color.NRGBA) {
+	const r = 0x20 // lighten ratio
+	return color.NRGBA{
+		R: byte(255 - int(255-c.R)*(255-r)/256),
+		G: byte(255 - int(255-c.G)*(255-r)/256),
+		B: byte(255 - int(255-c.B)*(255-r)/256),
+		A: c.A,
+	}
+}
+
+// approxLuminance is a fast approximate version of RGBA.Luminance.
+func approxLuminance(c color.NRGBA) byte {
+	const (
+		r = 13933 // 0.2126 * 256 * 256
+		g = 46871 // 0.7152 * 256 * 256
+		b = 4732  // 0.0722 * 256 * 256
+		t = r + g + b
+	)
+	return byte((r*int(c.R) + g*int(c.G) + b*int(c.B)) / t)
 }

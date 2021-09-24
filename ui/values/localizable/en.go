@@ -117,4 +117,5 @@ const EN = `
 "spanish" = "Spanish";
 "usdBittrex" = "USD (Bittrex)";
 "none" = "None";
+"proposals" = "Proposals";
 `

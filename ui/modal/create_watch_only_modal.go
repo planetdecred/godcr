@@ -18,28 +18,32 @@ const CreateWatchOnly = "create_watch_only_modal"
 
 type CreateWatchOnlyModal struct {
 	*load.Load
-	randomID string
-	modal    decredmaterial.Modal
+
+	modal          decredmaterial.Modal
+	materialLoader material.LoaderStyle
 
 	walletName     decredmaterial.Editor
 	extendedPubKey decredmaterial.Editor
 
-	isLoading      bool
-	materialLoader material.LoaderStyle
-
-	callback   func(walletName, extPubKey string, m *CreateWatchOnlyModal) bool // return true to dismiss dialog
-	btnPositve decredmaterial.Button
-
+	btnPositve  decredmaterial.Button
 	btnNegative decredmaterial.Button
+
+	randomID string
+
+	isLoading    bool
+	isCancelable bool
+
+	callback func(walletName, extPubKey string, m *CreateWatchOnlyModal) bool // return true to dismiss dialog
 }
 
 func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	cm := &CreateWatchOnlyModal{
-		Load:        l,
-		randomID:    fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
-		modal:       *l.Theme.ModalFloatTitle(),
-		btnPositve:  l.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
-		btnNegative: l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+		Load:         l,
+		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
+		modal:        *l.Theme.ModalFloatTitle(),
+		btnPositve:   l.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
+		btnNegative:  l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+		isCancelable: true,
 	}
 
 	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
@@ -80,6 +84,11 @@ func (cm *CreateWatchOnlyModal) SetLoading(loading bool) {
 	cm.isLoading = loading
 }
 
+func (cm *CreateWatchOnlyModal) SetCancelable(min bool) *CreateWatchOnlyModal {
+	cm.isCancelable = min
+	return cm
+}
+
 func (cm *CreateWatchOnlyModal) SetError(err string) {
 	if err == "" {
 		cm.extendedPubKey.ClearError()
@@ -110,6 +119,12 @@ func (cm *CreateWatchOnlyModal) Handle() {
 			cm.Dismiss()
 		}
 	}
+
+	if cm.modal.BackdropClicked(cm.isCancelable) {
+		if !cm.isLoading {
+			cm.Dismiss()
+		}
+	}
 }
 
 func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
@@ -129,6 +144,9 @@ func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+						if cm.isLoading {
+							return D{}
+						}
 
 						cm.btnNegative.Background = cm.Theme.Color.Surface
 						cm.btnNegative.Color = cm.Theme.Color.Primary

@@ -5,18 +5,13 @@ package ui
 
 import (
 	"fmt"
-	"image/color"
 	"math/rand"
-	"os"
 	"os/exec"
-	"path"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
-	"gioui.org/gesture"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -25,9 +20,6 @@ import (
 	"golang.org/x/text/message"
 )
 
-const Uint32Size = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-const MaxInt32 = 1<<(Uint32Size-1) - 1
-
 func translateErr(err error) string {
 	switch err.Error() {
 	case dcrlibwallet.ErrInvalidPassphrase:
@@ -35,13 +27,6 @@ func translateErr(err error) string {
 	}
 
 	return err.Error()
-}
-
-func mustIcon(ic *widget.Icon, err error) *widget.Icon {
-	if err != nil {
-		panic(err)
-	}
-	return ic
 }
 
 func editorsNotEmpty(editors ...*widget.Editor) bool {
@@ -81,15 +66,6 @@ func formatDateOrTime(timestamp int64) string {
 		t2 = t[3]
 	}
 	return fmt.Sprintf("%s %s", t[1], t2)
-}
-
-// createClickGestures returns a slice of click gestures
-func createClickGestures(count int) []*gesture.Click {
-	var gestures = make([]*gesture.Click, count)
-	for i := 0; i < count; i++ {
-		gestures[i] = &gesture.Click{}
-	}
-	return gestures
 }
 
 // showBadge loops through a slice of recent transactions and checks if there are transaction from different wallets.
@@ -158,59 +134,6 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 	pb.Color = th.Color.Success
 }
 
-func ticketStatusIcon(c *pageCommon, ticketStatus string) *struct {
-	icon       *widget.Image
-	color      color.NRGBA
-	background color.NRGBA
-} {
-	m := map[string]struct {
-		icon       *widget.Image
-		color      color.NRGBA
-		background color.NRGBA
-	}{
-		"UNMINED": {
-			c.icons.ticketUnminedIcon,
-			c.theme.Color.DeepBlue,
-			c.theme.Color.LightBlue,
-		},
-		"IMMATURE": {
-			c.icons.ticketImmatureIcon,
-			c.theme.Color.DeepBlue,
-			c.theme.Color.LightBlue,
-		},
-		"LIVE": {
-			c.icons.ticketLiveIcon,
-			c.theme.Color.Primary,
-			c.theme.Color.LightBlue,
-		},
-		"VOTED": {
-			c.icons.ticketVotedIcon,
-			c.theme.Color.Success,
-			c.theme.Color.Success2,
-		},
-		"MISSED": {
-			c.icons.ticketMissedIcon,
-			c.theme.Color.Gray,
-			c.theme.Color.LightGray,
-		},
-		"EXPIRED": {
-			c.icons.ticketExpiredIcon,
-			c.theme.Color.Gray,
-			c.theme.Color.LightGray,
-		},
-		"REVOKED": {
-			c.icons.ticketRevokedIcon,
-			c.theme.Color.Orange,
-			c.theme.Color.Orange2,
-		},
-	}
-	st, ok := m[ticketStatus]
-	if !ok {
-		return nil
-	}
-	return &st
-}
-
 func handleSubmitEvent(editors ...*widget.Editor) bool {
 	var submit bool
 	for _, editor := range editors {
@@ -221,18 +144,4 @@ func handleSubmitEvent(editors ...*widget.Editor) bool {
 		}
 	}
 	return submit
-}
-
-func GetAbsolutePath() (string, error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return "", fmt.Errorf("error getting executable path: %s", err.Error())
-	}
-
-	exSym, err := filepath.EvalSymlinks(ex)
-	if err != nil {
-		return "", fmt.Errorf("error getting filepath after evaluating sym links")
-	}
-
-	return path.Dir(exSym), nil
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -38,9 +39,13 @@ func NewLicensePage(l *load.Load) *LicensePage {
 		Load:          l,
 		pageContainer: layout.List{Axis: layout.Vertical},
 	}
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
+}
+
+func (pg *LicensePage) ID() string {
+	return LicensePageID
 }
 
 func (pg *LicensePage) OnResume() {}
@@ -48,14 +53,14 @@ func (pg *LicensePage) OnResume() {}
 //main page layout
 func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "License",
-			backButton: pg.backButton,
-			back: func() {
-				pg.ChangePage(AboutPageID)
+			Title:      "License",
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
 						licenseText := pg.Theme.Body1(license)
@@ -67,7 +72,7 @@ func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		return sp.Layout(gtx)
 	}
-	return uniformPadding(gtx, d)
+	return components.UniformPadding(gtx, d)
 }
 
 func (pg *LicensePage) Handle() {}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -15,6 +16,7 @@ type debugItem struct {
 	clickable *widget.Clickable
 	text      string
 	page      string
+	action    func()
 }
 
 type DebugPage struct {
@@ -30,11 +32,17 @@ func NewDebugPage(l *load.Load) *DebugPage {
 			clickable: new(widget.Clickable),
 			text:      "Check wallet logs",
 			page:      LogPageID,
+			action: func() {
+				l.ChangeFragment(NewLogPage(l))
+			},
 		},
 		{
 			clickable: new(widget.Clickable),
 			text:      "Check statistics",
 			page:      StatisticsPageID,
+			action: func() {
+				l.ChangeFragment(NewStatPage(l))
+			},
 		},
 	}
 
@@ -43,9 +51,13 @@ func NewDebugPage(l *load.Load) *DebugPage {
 		debugItems: debugItems,
 	}
 
-	pg.backButton, _ = subpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
+}
+
+func (pg *DebugPage) ID() string {
+	return DebugPageID
 }
 
 func (pg *DebugPage) OnResume() {
@@ -53,9 +65,9 @@ func (pg *DebugPage) OnResume() {
 }
 
 func (pg *DebugPage) Handle() {
-	for i := range pg.debugItems {
-		for pg.debugItems[i].clickable.Clicked() {
-			pg.ChangePage(pg.debugItems[i].page)
+	for _, item := range pg.debugItems {
+		for item.clickable.Clicked() {
+			item.action()
 		}
 	}
 }
@@ -79,28 +91,62 @@ func (pg *DebugPage) debugItem(gtx C, i int) D {
 	})
 }
 
-func (pg *DebugPage) layoutDebugItems(gtx C) {
-	background := pg.Theme.Color.Surface
+func (pg *DebugPage) layoutDebugItems(gtx C) D {
 	card := pg.Theme.Card()
-	card.Color = background
-	card.Layout(gtx, func(gtx C) D {
+	card.Border = true
+	return card.Layout(gtx, func(gtx C) D {
 		list := layout.List{Axis: layout.Vertical}
 		return list.Layout(gtx, len(pg.debugItems), func(gtx C, i int) D {
-			return pg.debugItem(gtx, i)
+			return layout.Inset{}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						zero := float32(0)
+						ten := float32(10)
+						card := pg.Theme.Card()
+						if i == len(pg.debugItems)-1 {
+							card.Radius = decredmaterial.CornerRadius{
+								TopLeft:     zero,
+								TopRight:    zero,
+								BottomRight: ten,
+								BottomLeft:  ten,
+							}
+						} else {
+							card.Radius = decredmaterial.CornerRadius{
+								TopLeft:     ten,
+								TopRight:    ten,
+								BottomRight: zero,
+								BottomLeft:  zero,
+							}
+						}
+
+						return card.HoverableLayout(gtx, pg.debugItems[i].clickable, func(gtx C) D {
+							return pg.debugItem(gtx, i)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						if i == len(pg.debugItems)-1 {
+							return layout.Dimensions{}
+						}
+						return layout.Inset{
+							Left: values.MarginPadding16,
+						}.Layout(gtx, pg.Theme.Separator().Layout)
+					}),
+				)
+			})
 		})
 	})
 }
 
 func (pg *DebugPage) Layout(gtx C) D {
 	container := func(gtx C) D {
-		sp := SubPage{
+		sp := components.SubPage{
 			Load:       pg.Load,
-			title:      "Debug",
-			backButton: pg.backButton,
-			back: func() {
-				pg.ChangePage(MorePageID)
+			Title:      "Debug",
+			BackButton: pg.backButton,
+			Back: func() {
+				pg.PopFragment()
 			},
-			body: func(gtx C) D {
+			Body: func(gtx C) D {
 				pg.layoutDebugItems(gtx)
 				return layout.Dimensions{Size: gtx.Constraints.Max}
 			},
@@ -108,5 +154,5 @@ func (pg *DebugPage) Layout(gtx C) D {
 		return sp.Layout(gtx)
 
 	}
-	return uniformPadding(gtx, container)
+	return components.UniformPadding(gtx, container)
 }
