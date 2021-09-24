@@ -36,7 +36,6 @@ type DropDownItem struct {
 	Text      string
 	Icon      *Image
 	clickable *Clickable
-	label     Label
 }
 
 func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
@@ -68,7 +67,6 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 
 	for i := range items {
 		items[i].clickable = t.NewClickable(true)
-		items[i].label = t.Body1(items[i].Text)
 		d.items = append(d.items, items[i])
 	}
 
@@ -179,7 +177,11 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 				Right: unit.Dp(5),
 				Left:  unit.Dp(5),
 			}.Layout(gtx, func(gtx C) D {
-				return item.label.Layout(gtx)
+				lbl := d.theme.Body1(item.Text)
+				if !d.isOpen && len(item.Text) > 9 {
+					lbl.Text = item.Text[:9] + "..."
+				}
+				return lbl.Layout(gtx)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
