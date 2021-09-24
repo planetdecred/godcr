@@ -147,3 +147,15 @@ func SwitchRestoreEditors(editors ...*widget.Editor) {
 		}
 	}
 }
+
+func SwitchSeedEditors(editors []decredmaterial.RestoreEditor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Edit.Editor.Focused() {
+			if i == len(editors)-1 {
+				editors[0].Edit.Editor.Focus()
+			} else {
+				editors[i+1].Edit.Editor.Focus()
+			}
+		}
+	}
+}

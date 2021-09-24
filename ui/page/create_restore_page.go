@@ -663,6 +663,7 @@ func (pg *CreateRestore) Handle() {
 				pg.seedClicked = true
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
+			SwitchSeedEditors(pg.seedEditors.editors)
 			SwitchRestoreEditors(pg.spendingPassword.Editor, pg.matchSpendingPassword.Editor, pg.walletName.Editor)
 		}
 		if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
