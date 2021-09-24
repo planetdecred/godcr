@@ -20,10 +20,16 @@ type Clickable struct {
 }
 
 func (t *Theme) NewClickable(hoverable bool) *Clickable {
+	// TODO: Temp fix until dark mode colors are sorted out.
+	color := t.Color.ActiveGray
+	if !t.DarkMode {
+		color = Hovered(color)
+	}
+
 	return &Clickable{
 		button:     &widget.Clickable{},
 		Color:      t.Color.SurfaceHighlight,
-		HoverColor: Hovered(t.Color.ActiveGray),
+		HoverColor: color,
 		Hoverable:  hoverable,
 	}
 }

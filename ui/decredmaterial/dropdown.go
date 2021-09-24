@@ -63,6 +63,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		shadow:  t.Shadow(),
 	}
 
+	d.clickable.HoverColor = Hovered(t.Color.InactiveGray)
 	d.clickable.Radius = Radius(8)
 
 	for i := range items {
@@ -95,9 +96,6 @@ func (d *DropDown) handleEvents() {
 				d.selectedIndex = index
 				d.isOpen = false
 				break
-				// if len(d.items[index].Text) > 12 {
-				// 	txt = d.items[index].Text[:12] + "..."
-				// }
 			}
 		}
 	} else {
