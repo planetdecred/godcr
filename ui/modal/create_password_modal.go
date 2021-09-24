@@ -215,6 +215,8 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
+	SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+
 }
 
 func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
