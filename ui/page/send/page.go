@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -35,6 +36,7 @@ type Page struct {
 	sourceAccountSelector *components.AccountSelector
 	sendDestination       *destination
 	amount                *sendAmount
+	keyEvent              chan *key.Event
 
 	backButton    decredmaterial.IconButton
 	infoButton    decredmaterial.IconButton
@@ -83,6 +85,7 @@ func NewSendPage(l *load.Load) *Page {
 		authoredTxData: &authoredTxData{},
 		shadowBox:      l.Theme.Shadow(),
 		backdrop:       new(widget.Clickable),
+		keyEvent:       l.Receiver.KeyEvents,
 	}
 
 	// Source account picker
@@ -289,6 +292,20 @@ func (pg *Page) resetFields() {
 	pg.amount.resetFields()
 }
 
+func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Focused() {
+			if components.HandleTabEvent(keyEvent) {
+				if i == len(editors)-1 {
+					editors[0].Focus()
+				} else {
+					editors[i+1].Focus()
+				}
+			}
+		}
+	}
+}
+
 func (pg *Page) Handle() {
 
 	pg.sendDestination.handle()
@@ -337,6 +354,7 @@ func (pg *Page) Handle() {
 			menu.action()
 		}
 	}
+	SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 
 }
 
