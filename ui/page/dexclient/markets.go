@@ -2,6 +2,7 @@ package dexclient
 
 import (
 	"context"
+	"fmt"
 
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
@@ -20,6 +21,8 @@ type (
 )
 
 const MarketPageID = "Markets"
+
+// const testDexHost = "dex-test.ssgen.io:7232"
 const testDexHost = "127.0.0.1:7232"
 
 type selectedMaket struct {
@@ -87,16 +90,24 @@ func (pg *Page) Layout(gtx C) D {
 	dims := components.UniformPadding(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
+				dex := pg.user.Exchanges[pg.selectedMaket.host]
+				if dex == nil || !dex.Connected {
+					return D{}
+				}
+				regConfirms, confsrequired := dex.RegConfirms, dex.ConfsRequired
+				if regConfirms == nil {
+					return D{}
+				}
 				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
-						t := "In order to trade at 127.0.0.1:7232, the registration fee payment needs 4 confirmations."
+						t := fmt.Sprintf("In order to trade at %s, the registration fee payment needs %d confirmations.", pg.selectedMaket.host, confsrequired)
 						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
-						t := "1/4"
+						t := fmt.Sprintf("%d/%d", *regConfirms, confsrequired)
 						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
 					}),
 				)
@@ -177,9 +188,14 @@ func (pg *Page) handleModals() {
 
 	if !pg.DL.IsLoggedIn && u.Initialized {
 		md := newloginModal(pg.Load)
-		md.loggedIn = func() {
+		md.loggedIn = func(password []byte) {
 			pg.refreshUser()
 			pg.DL.IsLoggedIn = true
+			if u.Assets[dexc.DefaultAssetID] != nil &&
+				u.Assets[dexc.DefaultAssetID].Wallet != nil &&
+				u.Assets[dexc.DefaultAssetID].Wallet.Open {
+				pg.connectDex(pg.selectedMaket.host, password)
+			}
 		}
 		md.Show()
 		return

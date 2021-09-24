@@ -3,6 +3,7 @@ package dexclient
 import (
 	"fmt"
 
+	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/dex/msgjson"
 )
 
@@ -54,6 +55,17 @@ func (pg *Page) readNotifications() {
 		select {
 		case n := <-ch:
 			fmt.Println("Recv notification", n)
+			fmt.Println("<INFO>", n.ID())
+			fmt.Println("<INFO>", n.Severity())
+			fmt.Println("<INFO>", n.Type())
+			fmt.Println("<INFO>", n.DBNote())
+			fmt.Println("<INFO>", n.String())
+			fmt.Println("<INFO>", n.Subject())
+
+			if n.Type() == core.NoteTypeFeePayment {
+				pg.RefreshWindow()
+			}
+			pg.refreshUser()
 		case <-pg.ctx.Done():
 			return
 		}
