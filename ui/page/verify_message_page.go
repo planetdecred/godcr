@@ -24,7 +24,6 @@ type VerifyMessagePage struct {
 	clearBtn, verifyButton decredmaterial.Button
 	verifyMessage          decredmaterial.Label
 	keyEvent               chan *key.Event
-	isTabPressed           bool
 
 	verifyMessageStatus *widget.Icon
 

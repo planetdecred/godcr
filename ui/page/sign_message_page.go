@@ -19,10 +19,9 @@ const SignMessagePageID = "SignMessage"
 
 type SignMessagePage struct {
 	*load.Load
-	container    layout.List
-	wallet       *dcrlibwallet.Wallet
-	keyEvent     chan *key.Event
-	isTabPressed bool
+	container layout.List
+	wallet    *dcrlibwallet.Wallet
+	keyEvent  chan *key.Event
 
 	isSigningMessage bool
 	addressIsValid   bool

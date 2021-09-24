@@ -47,6 +47,18 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 
 }
 
+func handleTabEvent(event chan *key.Event) bool {
+	var isTabPressed bool
+	select {
+	case event := <-event:
+		if event.Name == key.NameTab && event.State == key.Press {
+			isTabPressed = true
+		}
+	default:
+	}
+	return isTabPressed
+}
+
 func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
 	for i := 0; i < len(editors); i++ {
 		if editors[i].Focused() {
