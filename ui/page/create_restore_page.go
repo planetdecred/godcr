@@ -609,6 +609,30 @@ func (pg *CreateRestore) resetSeeds() {
 	}
 }
 
+func switchSeedEditors(editors []decredmaterial.RestoreEditor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Edit.Editor.Focused() {
+			if i == len(editors)-1 {
+				editors[0].Edit.Editor.Focus()
+			} else {
+				editors[i+1].Edit.Editor.Focus()
+			}
+		}
+	}
+}
+
+func switchRestoreEditors(editors ...*widget.Editor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Focused() {
+			if i == len(editors)-1 {
+				editors[0].Focus()
+			} else {
+				editors[i+1].Focus()
+			}
+		}
+	}
+}
+
 func (pg *CreateRestore) Handle() {
 	for pg.closePageBtn.Button.Clicked() {
 		pg.PopWindowPage()
@@ -663,8 +687,8 @@ func (pg *CreateRestore) Handle() {
 				pg.seedClicked = true
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
-			SwitchSeedEditors(pg.seedEditors.editors)
-			SwitchRestoreEditors(pg.spendingPassword.Editor, pg.matchSpendingPassword.Editor, pg.walletName.Editor)
+			switchSeedEditors(pg.seedEditors.editors)
+			switchRestoreEditors(pg.spendingPassword.Editor, pg.matchSpendingPassword.Editor, pg.walletName.Editor)
 		}
 		if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
 			pg.selected--

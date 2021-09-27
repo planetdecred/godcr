@@ -7,6 +7,7 @@ import (
 	"image/color"
 
 	"gioui.org/f32"
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -372,6 +373,7 @@ func approxLuminance(c color.NRGBA) byte {
 	return byte((r*int(c.R) + g*int(c.G) + b*int(c.B)) / t)
 }
 
+<<<<<<< HEAD
 func HandleEditorEvents(editors ...*widget.Editor) (bool, bool) {
 	var submit, changed bool
 	for _, editor := range editors {
@@ -385,4 +387,32 @@ func HandleEditorEvents(editors ...*widget.Editor) (bool, bool) {
 		}
 	}
 	return submit, changed
+=======
+//Tab key event handler for pages withe ditors
+func HandleTabEvent(event chan *key.Event) bool {
+	var isTabPressed bool
+	select {
+	case event := <-event:
+		if event.Name == key.NameTab && event.State == key.Press {
+			isTabPressed = true
+		}
+	default:
+	}
+	return isTabPressed
+}
+
+//Switch editors when tab key is pressed
+func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Focused() {
+			if HandleTabEvent(keyEvent) {
+				if i == len(editors)-1 {
+					editors[0].Focus()
+				} else {
+					editors[i+1].Focus()
+				}
+			}
+		}
+	}
+>>>>>>> 90e826c (Move tab key event functions to decredmaterial)
 }

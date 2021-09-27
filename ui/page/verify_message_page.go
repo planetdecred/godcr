@@ -188,7 +188,7 @@ func (pg *VerifyMessagePage) Handle() {
 	}
 
 	//Switch editors on tab press
-	SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
+	decredmaterial.SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {

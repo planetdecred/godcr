@@ -12,11 +12,9 @@ import (
 	"time"
 
 	"gioui.org/gesture"
-	"gioui.org/io/key"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
-	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -120,42 +118,4 @@ func handleSubmitEvent(editors ...*widget.Editor) bool {
 		}
 	}
 	return submit
-}
-
-func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
-	for i := 0; i < len(editors); i++ {
-		if editors[i].Focused() {
-			if components.HandleTabEvent(keyEvent) {
-				if i == len(editors)-1 {
-					editors[0].Focus()
-				} else {
-					editors[i+1].Focus()
-				}
-			}
-		}
-	}
-}
-
-func SwitchRestoreEditors(editors ...*widget.Editor) {
-	for i := 0; i < len(editors); i++ {
-		if editors[i].Focused() {
-			if i == len(editors)-1 {
-				editors[0].Focus()
-			} else {
-				editors[i+1].Focus()
-			}
-		}
-	}
-}
-
-func SwitchSeedEditors(editors []decredmaterial.RestoreEditor) {
-	for i := 0; i < len(editors); i++ {
-		if editors[i].Edit.Editor.Focused() {
-			if i == len(editors)-1 {
-				editors[0].Edit.Editor.Focus()
-			} else {
-				editors[i+1].Edit.Editor.Focus()
-			}
-		}
-	}
 }

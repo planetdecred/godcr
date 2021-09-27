@@ -277,7 +277,7 @@ func (pg *SignMessagePage) Handle() {
 	}
 
 	//Switch editors when tab key is pressed
-	SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.messageEditor.Editor)
+	decredmaterial.SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.messageEditor.Editor)
 }
 
 func (pg *SignMessagePage) validate() bool {

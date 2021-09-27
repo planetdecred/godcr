@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"
 
@@ -840,29 +839,4 @@ func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, w
 func CreateOrderDropDown(l *load.Load) *decredmaterial.DropDown {
 	return l.Theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
 		{Text: values.String(values.StrOldest)}}, 1)
-}
-
-//Tab key event handler for pages withe ditors
-func handleTabEvent(event chan *key.Event) bool {
-	var isTabPressed bool
-	select {
-	case event := <-event:
-		if event.Name == key.NameTab && event.State == key.Press {
-			isTabPressed = true
-		}
-	default:
-	}
-	return isTabPressed
-}
-
-func HandleTabEvent(event chan *key.Event) bool {
-	var isTabPressed bool
-	select {
-	case event := <-event:
-		if event.Name == key.NameTab && event.State == key.Press {
-			isTabPressed = true
-		}
-	default:
-	}
-	return isTabPressed
 }

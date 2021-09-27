@@ -292,20 +292,6 @@ func (pg *Page) resetFields() {
 	pg.amount.resetFields()
 }
 
-func SwitchEditors(keyEvent chan *key.Event, editors ...*widget.Editor) {
-	for i := 0; i < len(editors); i++ {
-		if editors[i].Focused() {
-			if components.HandleTabEvent(keyEvent) {
-				if i == len(editors)-1 {
-					editors[0].Focus()
-				} else {
-					editors[i+1].Focus()
-				}
-			}
-		}
-	}
-}
-
 func (pg *Page) Handle() {
 
 	pg.sendDestination.handle()
@@ -354,7 +340,7 @@ func (pg *Page) Handle() {
 			menu.action()
 		}
 	}
-	SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+	decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 
 }
 
