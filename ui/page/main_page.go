@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -59,13 +60,18 @@ type MainPage struct {
 	usdExchangeSet  bool
 	totalBalance    dcrutil.Amount
 	totalBalanceUSD string
+
+	hideBalance *widget.Bool
+	text        string
+	hide        bool
 }
 
 func NewMainPage(l *load.Load) *MainPage {
 
 	mp := &MainPage{
-		Load:     l,
-		autoSync: true,
+		Load:        l,
+		autoSync:    true,
+		hideBalance: new(widget.Bool),
 	}
 
 	// init shared page functions
@@ -470,6 +476,13 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	)
 }
 
+func (mp *MainPage) titleRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
+	return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+		layout.Rigid(leftWidget),
+		layout.Rigid(rightWidget),
+	)
+}
+
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
@@ -505,10 +518,39 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 											})
 									}),
 									layout.Rigid(func(gtx C) D {
+										if mp.hideBalance.Changed() {
+											mp.hide = !mp.hide
+										}
 										return layout.Center.Layout(gtx, func(gtx C) D {
-											return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
+											if mp.hide {
+												hidenText := mp.Theme.Label(values.TextSize24, "********")
+												return hidenText.Layout(gtx)
+											} else {
+												return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
+											}
 										})
 									}),
+									layout.Rigid(
+										func(gtx C) D {
+											margins := layout.Inset{
+												Top:    unit.Dp(8),
+												Left:   unit.Dp(18),
+												Bottom: unit.Dp(4),
+											}
+											return margins.Layout(gtx,
+												func(gtx C) D {
+													if mp.hide {
+														mp.text = "Show Balance   "
+													} else {
+														mp.text = "Hide Balance   "
+													}
+													// hidebal:= material.Button(mp.theme.Base, mp.hideBalance, mp.text)
+													hidebal := material.Switch(mp.Theme.Base, mp.hideBalance)
+													balTitle := mp.Theme.Label(values.TextSize12, mp.text)
+													balTitle.Color = mp.Theme.Color.Gray2
+													return mp.titleRow(gtx, balTitle.Layout, hidebal.Layout)
+												})
+										}),
 									layout.Rigid(func(gtx C) D {
 										return mp.LayoutUSDBalance(gtx)
 									}),
