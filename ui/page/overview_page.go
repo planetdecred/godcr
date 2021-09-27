@@ -6,7 +6,6 @@ import (
 	"image/color"
 	"time"
 
-	"gioui.org/io/event"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -41,7 +40,8 @@ type OverviewPage struct {
 	transactions []dcrlibwallet.Transaction
 
 	toTransactions    decredmaterial.TextAndIconButton
-	sync              decredmaterial.Button
+	sync              decredmaterial.Label
+	syncClickable     *decredmaterial.Clickable
 	toggleSyncDetails decredmaterial.Button
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon, cachedIcon *widget.Icon
@@ -62,12 +62,7 @@ type OverviewPage struct {
 	syncProgress         int
 	syncStep             int
 
-	syncButtonHeight      int
-	moreButtonWidth       int
-	moreButtonHeight      int
 	syncDetailsVisibility bool
-	txnRowHeight          int
-	queue                 event.Queue
 }
 
 func NewOverviewPage(l *load.Load) *OverviewPage {
@@ -78,13 +73,9 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 		listContainer:    &layout.List{Axis: layout.Vertical},
 		walletSyncList:   &layout.List{Axis: layout.Vertical},
 		transactionsList: l.Theme.NewClickableList(layout.Vertical),
+		syncClickable:    l.Theme.NewClickable(true),
 
 		bestBlock: l.WL.MultiWallet.GetBestBlock(),
-
-		syncButtonHeight: 50,
-		moreButtonWidth:  115,
-		moreButtonHeight: 70,
-		txnRowHeight:     56,
 	}
 
 	pg.transactionsList.Radius = decredmaterial.CornerRadius{
@@ -96,16 +87,9 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	pg.toTransactions.Color = l.Theme.Color.Primary
 	pg.toTransactions.BackgroundColor = l.Theme.Color.Surface
 
-	pg.sync = l.Theme.OutlineButton(values.String(values.StrReconnect))
+	pg.sync = l.Theme.Label(values.MarginPadding14, values.String(values.StrReconnect))
 	pg.sync.TextSize = values.TextSize14
 	pg.sync.Color = l.Theme.Color.Text
-	pg.sync.CornerRadius = values.MarginPadding12
-	pg.sync.Inset = layout.Inset{
-		Top:    values.MarginPadding3,
-		Left:   values.MarginPadding8,
-		Bottom: values.MarginPadding3,
-		Right:  values.MarginPadding8,
-	}
 
 	pg.toggleSyncDetails = l.Theme.Button(values.String(values.StrShowDetails))
 	pg.toggleSyncDetails.TextSize = values.TextSize16
@@ -156,8 +140,6 @@ func (pg *OverviewPage) loadTransactions() {
 
 // Layout lays out the entire content for overview pg.
 func (pg *OverviewPage) Layout(gtx layout.Context) layout.Dimensions {
-	pg.queue = gtx
-
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {
 			return pg.recentTransactionsSection(gtx)
@@ -453,34 +435,37 @@ func (pg *OverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 			layout.Flexed(1, syncStatusLabel.Layout),
 			layout.Rigid(func(gtx C) D {
-				// stack a button on a card widget to produce a transparent button.
-				return layout.E.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Max.Y = pg.syncButtonHeight
-					border := widget.Border{Color: pg.Theme.Color.Hint, CornerRadius: values.MarginPadding10, Width: values.MarginPadding1}
-					return border.Layout(gtx, func(gtx C) D {
-						pg.sync.Inset = layout.Inset{
-							Top:    values.MarginPadding5,
-							Bottom: values.MarginPadding5,
-							Left:   values.MarginPadding10,
-							Right:  values.MarginPadding10,
+				return decredmaterial.LinearLayout{
+					Width:     decredmaterial.WrapContent,
+					Height:    decredmaterial.WrapContent,
+					Clickable: pg.syncClickable,
+					Direction: layout.Center,
+					Alignment: layout.Middle,
+					Border:    decredmaterial.Border{Color: pg.Theme.Color.Hint, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+					Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						if pg.isConnnected {
+							return D{}
 						}
-						pg.sync.CornerRadius = values.MarginPadding10
+
+						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+							pg.cachedIcon.Color = pg.Theme.Color.Gray
+							return pg.cachedIcon.Layout(gtx, values.TextSize16)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
 						if pg.rescanningBlocks {
 							pg.sync.Text = values.String(values.StrCancel)
 						} else if pg.isConnnected {
 							pg.sync.Text = values.String(values.StrDisconnect)
 						} else {
 							pg.sync.Text = values.String(values.StrReconnect)
-							//TODO: use flex layout to display icon and button
-							layout.Inset{Top: values.MarginPadding4, Left: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-								pg.cachedIcon.Color = pg.Theme.Color.Gray
-								return pg.cachedIcon.Layout(gtx, values.TextSize14)
-							})
 						}
 
 						return pg.sync.Layout(gtx)
-					})
-				})
+					}),
+				)
 			}),
 		)
 	})
@@ -664,7 +649,7 @@ func (pg *OverviewPage) rescanDetailsLayout(gtx layout.Context, inset layout.Ins
 
 func (pg *OverviewPage) Handle() {
 
-	if pg.sync.Clicked() {
+	if pg.syncClickable.Clicked() {
 		if pg.rescanningBlocks {
 			pg.WL.MultiWallet.CancelRescan()
 		} else {

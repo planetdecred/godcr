@@ -2,8 +2,8 @@ package page
 
 import (
 	"fmt"
-	"image/color"
 	"strings"
+	"time"
 
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -21,6 +21,15 @@ import (
 
 const TransactionDetailsPageID = "TransactionDetails"
 
+type transactionWdg struct {
+	confirmationIcons    *decredmaterial.Image
+	icon                 *decredmaterial.Image
+	title                string
+	time, status, wallet decredmaterial.Label
+
+	copyTextButtons []decredmaterial.Button
+}
+
 type TransactionDetailsPage struct {
 	*load.Load
 	theme                           *decredmaterial.Theme
@@ -30,7 +39,6 @@ type TransactionDetailsPage struct {
 	associatedTicketClickable       *decredmaterial.Clickable
 	hashClickable                   *widget.Clickable
 	destAddressClickable            *widget.Clickable
-	copyTextBtn                     []decredmaterial.Button
 	dot                             *widget.Icon
 	toDcrdata                       *decredmaterial.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
@@ -77,8 +85,6 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
-
-	pg.copyTextBtn = make([]decredmaterial.Button, 0)
 
 	pg.dot = l.Icons.ImageBrightness1
 	pg.dot.Color = l.Theme.Color.Gray
@@ -526,6 +532,7 @@ func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, valu
 						}
 
 						btn := pg.theme.OutlineButton(value)
+						btn.TextSize = values.MarginPadding14
 						btn.SetClickable(clickable)
 						btn.Inset = layout.UniformInset(values.MarginPadding0)
 						return btn.Layout(gtx)
@@ -538,10 +545,6 @@ func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, valu
 
 func (pg *TransactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
-	x := len(transaction.Inputs) + len(transaction.Outputs)
-	for i := 0; i < x; i++ {
-		pg.copyTextBtn = append(pg.copyTextBtn, pg.theme.OutlineButton(""))
-	}
 
 	collapsibleHeader := func(gtx C) D {
 		t := pg.theme.Body1(values.StringF(values.StrXInputsConsumed, len(transaction.Inputs)))
@@ -570,9 +573,9 @@ func (pg *TransactionDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensio
 	}
 
 	collapsibleBody := func(gtx C) D {
+		x := len(transaction.Inputs)
 		return pg.transactionOutputsContainer.Layout(gtx, len(transaction.Outputs), func(gtx C, i int) D {
 			output := transaction.Outputs[i]
-			x := len(transaction.Inputs)
 			return pg.txnIORow(gtx, output.Amount, output.AccountNumber, output.Address, i+x)
 		})
 	}
@@ -628,12 +631,9 @@ func (pg *TransactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acc
 						)
 					}),
 					layout.Rigid(func(gtx C) D {
-						pg.copyTextBtn[i].Color = pg.theme.Color.Primary
-						pg.copyTextBtn[i].Background = color.NRGBA{}
-						pg.copyTextBtn[i].Text = address
-						pg.copyTextBtn[i].Inset = layout.UniformInset(values.MarginPadding0)
+						pg.txnWidgets.copyTextButtons[i].Text = address
 
-						return layout.W.Layout(gtx, pg.copyTextBtn[i].Layout)
+						return layout.W.Layout(gtx, pg.txnWidgets.copyTextButtons[i].Layout)
 					}),
 				)
 			})
@@ -664,7 +664,7 @@ func (pg *TransactionDetailsPage) Handle() {
 		components.GoToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
 	}
 
-	for _, b := range pg.copyTextBtn {
+	for _, b := range pg.txnWidgets.copyTextButtons {
 		for b.Clicked() {
 			clipboard.WriteOp{Text: b.Text}.Add(gtx.Ops)
 			pg.Toast.Notify("Copied")
@@ -689,3 +689,43 @@ func (pg *TransactionDetailsPage) Handle() {
 }
 
 func (pg *TransactionDetailsPage) OnClose() {}
+
+func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {
+
+	var txn transactionWdg
+	wal := l.WL.MultiWallet.WalletWithID(transaction.WalletID)
+
+	t := time.Unix(transaction.Timestamp, 0).UTC()
+	txn.time = l.Theme.Body1(t.Format(time.UnixDate))
+	txn.status = l.Theme.Body1("")
+	txn.wallet = l.Theme.Body2(wal.Name)
+
+	if components.TxConfirmations(l, *transaction) > 1 {
+		txn.status.Text = components.FormatDateOrTime(transaction.Timestamp)
+		txn.confirmationIcons = l.Icons.ConfirmIcon
+	} else {
+		txn.status.Text = "pending"
+		txn.status.Color = l.Theme.Color.Gray
+		txn.confirmationIcons = l.Icons.PendingIcon
+	}
+
+	var ticketSpender *dcrlibwallet.Transaction
+	if wal.TxMatchesFilter(transaction, dcrlibwallet.TxFilterStaking) {
+		ticketSpender, _ = wal.TicketSpender(transaction.Hash)
+	}
+	txStatus := components.TransactionTitleIcon(l, wal, transaction, ticketSpender)
+
+	txn.title = txStatus.Title
+	txn.icon = txStatus.Icon
+
+	x := len(transaction.Inputs) + len(transaction.Outputs)
+	txn.copyTextButtons = make([]decredmaterial.Button, x)
+	for i := 0; i < x; i++ {
+		btn := l.Theme.OutlineButton("")
+		btn.TextSize = values.MarginPadding14
+		btn.Inset = layout.UniformInset(values.MarginPadding0)
+		txn.copyTextButtons[i] = btn
+	}
+
+	return txn
+}

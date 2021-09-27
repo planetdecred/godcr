@@ -54,7 +54,7 @@ func (t *Theme) Button(txt string) Button {
 		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),
 		clickable:          clickable,
-		disabledBackground: t.Color.Gray,
+		disabledBackground: t.Color.InactiveGray,
 		disabledTextColor:  t.Color.Surface,
 		HighlightColor:     t.Color.PrimaryHighlight,
 		isEnabled:          true,

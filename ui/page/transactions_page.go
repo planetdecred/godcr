@@ -2,7 +2,6 @@ package page
 
 import (
 	"context"
-	"time"
 
 	"gioui.org/layout"
 
@@ -15,13 +14,6 @@ import (
 )
 
 const TransactionsPageID = "Transactions"
-
-type transactionWdg struct {
-	confirmationIcons    *decredmaterial.Image
-	icon                 *decredmaterial.Image
-	title                string
-	time, status, wallet decredmaterial.Label
-}
 
 type TransactionsPage struct {
 	*load.Load
@@ -221,34 +213,4 @@ func (pg *TransactionsPage) listenForTxNotifications() {
 
 func (pg *TransactionsPage) OnClose() {
 	pg.ctxCancel()
-}
-
-func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {
-
-	var txn transactionWdg
-	wal := l.WL.MultiWallet.WalletWithID(transaction.WalletID)
-
-	t := time.Unix(transaction.Timestamp, 0).UTC()
-	txn.time = l.Theme.Body1(t.Format(time.UnixDate))
-	txn.status = l.Theme.Body1("")
-	txn.wallet = l.Theme.Body2(wal.Name)
-
-	if components.TxConfirmations(l, *transaction) > 1 {
-		txn.status.Text = components.FormatDateOrTime(transaction.Timestamp)
-		txn.confirmationIcons = l.Icons.ConfirmIcon
-	} else {
-		txn.status.Text = "pending"
-		txn.status.Color = l.Theme.Color.Gray
-		txn.confirmationIcons = l.Icons.PendingIcon
-	}
-
-	var ticketSpender *dcrlibwallet.Transaction
-	if wal.TxMatchesFilter(transaction, dcrlibwallet.TxFilterStaking) {
-		ticketSpender, _ = wal.TicketSpender(transaction.Hash)
-	}
-	txStatus := components.TransactionTitleIcon(l, wal, transaction, ticketSpender)
-
-	txn.title = txStatus.Title
-	txn.icon = txStatus.Icon
-	return txn
 }
