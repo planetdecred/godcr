@@ -168,7 +168,7 @@ func (pg *VerifyMessagePage) Handle() {
 		if pg.validateAllInputs() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
-			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.signatureEditor.Editor.Text(), pg.messageEditor.Editor.Text())
+			valid, err := pg.WL.MultiWallet.VerifyMessage(pg.addressEditor.Editor.Text(), pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text())
 			if err != nil || !valid {
 				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = pg.Theme.Color.Danger
