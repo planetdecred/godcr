@@ -492,8 +492,7 @@ func (pg *TransactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
-				trimmedHash := transaction.Hash[:24] + "..." + transaction.Hash[len(transaction.Hash)-24:]
-				return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), trimmedHash, false, pg.hashClickable)
+				return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), transaction.Hash, false, pg.hashClickable)
 			})
 		}),
 	)
