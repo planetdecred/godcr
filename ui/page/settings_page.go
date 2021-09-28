@@ -267,7 +267,7 @@ func (pg *SettingsPage) agent() layout.Widget {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
 								layout.Rigid(func(gtx C) D {
-									txt := pg.Theme.Body2(values.String("For HTTP request"))
+									txt := pg.Theme.Body2("For HTTP request")
 									txt.Color = pg.Theme.Color.Gray
 									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 										return txt.Layout(gtx)
@@ -428,8 +428,8 @@ func (pg *SettingsPage) Handle() {
 					var error string
 					err := pg.wal.GetMultiWallet().VerifyStartupPassphrase([]byte(password))
 					if err != nil {
-						if err.Error() == "invalid_passphrase" {
-							error = "invalid password"
+						if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+							error = "Invalid password"
 						} else {
 							error = err.Error()
 						}
@@ -481,7 +481,7 @@ func (pg *SettingsPage) Handle() {
 							m.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify("Startup password activated")
+						pg.Toast.Notify("Startup password enabled")
 						m.Dismiss()
 					}()
 					return false
@@ -496,8 +496,8 @@ func (pg *SettingsPage) Handle() {
 						var error string
 						err := pg.wal.GetMultiWallet().RemoveStartupPassphrase([]byte(password))
 						if err != nil {
-							if err.Error() == "invalid_passphrase" {
-								error = "invalid password"
+							if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+								error = "Invalid password"
 							} else {
 								error = err.Error()
 							}
@@ -505,7 +505,7 @@ func (pg *SettingsPage) Handle() {
 							pm.SetLoading(false)
 							return
 						}
-						pg.Toast.Notify("Startup password deactivated")
+						pg.Toast.Notify("Startup password disabled")
 						pm.Dismiss()
 					}()
 

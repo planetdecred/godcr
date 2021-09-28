@@ -42,7 +42,7 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 		Load:   l,
 		wallet: wallet,
 
-		infoText: "You will be asked to enter the seed phrase on the next screen.",
+		infoText: "You will be asked to enter the seed word on the next screen.",
 
 		actionButton: l.Theme.Button("I have written down all 33 words"),
 		container:    &layout.List{Axis: layout.Vertical},
@@ -116,7 +116,7 @@ func (pg *SaveSeedPage) OnClose() {}
 func (pg *SaveSeedPage) Layout(gtx C) D {
 	sp := components.SubPage{
 		Load:       pg.Load,
-		Title:      "Write down seed phrase",
+		Title:      "Write down seed word",
 		SubTitle:   "Step 1/2",
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
@@ -132,7 +132,7 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 					return label.Layout(gtx)
 				},
 				func(gtx C) D {
-					label := pg.Theme.Label(values.TextSize14, "Your 33-word seed phrase")
+					label := pg.Theme.Label(values.TextSize14, "Your 33-word seed word")
 					label.Color = pg.Theme.Color.Gray3
 
 					return decredmaterial.LinearLayout{

@@ -596,7 +596,7 @@ func (pg *CreateRestore) validateSeeds() bool {
 	}
 
 	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
-		pg.errLabel.Text = "invalid seed phrase"
+		pg.errLabel.Text = "invalid seed word"
 		return false
 	}
 

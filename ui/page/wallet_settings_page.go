@@ -232,7 +232,7 @@ func (pg *WalletSettingsPage) Handle() {
 	for pg.deleteWallet.Clicked() {
 		modal.NewInfoModal(pg.Load).
 			Title(values.String(values.StrRemoveWallet)).
-			Body("Make sure to have the seed phrase backed up before removing the wallet").
+			Body("Make sure to have the seed word backed up before removing the wallet").
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButtonStyle(pg.Load.Theme.Color.Surface, pg.Load.Theme.Color.Danger).
 			PositiveButton(values.String(values.StrRemove), func() {
