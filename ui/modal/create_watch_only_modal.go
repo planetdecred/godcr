@@ -72,6 +72,7 @@ func (cm *CreateWatchOnlyModal) ModalID() string {
 }
 
 func (cm *CreateWatchOnlyModal) OnResume() {
+	cm.walletName.Editor.Focus()
 }
 
 func (cm *CreateWatchOnlyModal) OnDismiss() {

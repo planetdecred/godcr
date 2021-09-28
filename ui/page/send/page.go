@@ -142,6 +142,7 @@ func (pg *Page) ID() string {
 func (pg *Page) OnResume() {
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
+	pg.sendDestination.destinationAddressEditor.Editor.Focus()
 
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == components.USDExchangeValue {
