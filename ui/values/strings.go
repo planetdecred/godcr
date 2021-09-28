@@ -47,6 +47,7 @@ func init() {
 	en := make(map[string]string)
 	zh := make(map[string]string)
 	fr := make(map[string]string)
+	es := make(map[string]string)
 	languageStrings = make(map[string]map[string]string)
 
 	readIntoMap(en, localizable.EN)
@@ -223,6 +224,7 @@ const (
 	StrOverview                    = "overview"
 	StrEnglish                     = "english"
 	StrFrench                      = "french"
+	StrSpanish                     = "spanish"
 	StrUsdBittrex                  = "usdBittrex"
 	StrNone                        = "none"
 	StrProposal                    = "proposals"
