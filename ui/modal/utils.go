@@ -25,16 +25,19 @@ func editorsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func handleSubmitEvent(editors ...*widget.Editor) bool {
-	var submit bool
+func handleEditorEvents(editors ...*widget.Editor) (bool, bool) {
+	var submit, changed bool
 	for _, editor := range editors {
-		for _, e := range editor.Events() {
-			if _, ok := e.(widget.SubmitEvent); ok {
+		for _, evt := range editor.Events() {
+			switch evt.(type) {
+			case widget.ChangeEvent:
+				changed = true
+			case widget.SubmitEvent:
 				submit = true
 			}
 		}
 	}
-	return submit
+	return submit, changed
 }
 
 func generateRandomNumber() int {

@@ -21,6 +21,7 @@ type TextInputModal struct {
 	IsLoading           bool
 	showAccountWarnInfo bool
 	isCancelable        bool
+	isEnabled           bool
 
 	textInput decredmaterial.Editor
 	callback  func(string, *TextInputModal) bool
@@ -42,6 +43,10 @@ func NewTextInputModal(l *load.Load) *TextInputModal {
 
 func (tm *TextInputModal) Show() {
 	tm.ShowModal(tm)
+}
+
+func (tm *TextInputModal) OnResume() {
+	tm.textInput.Editor.Focus()
 }
 
 func (tm *TextInputModal) Dismiss() {
@@ -85,13 +90,20 @@ func (tm *TextInputModal) SetCancelable(min bool) *TextInputModal {
 func (tm *TextInputModal) Handle() {
 	if editorsNotEmpty(tm.textInput.Editor) {
 		tm.btnPositve.Background = tm.Theme.Color.Primary
+		tm.isEnabled = true
 	} else {
 		tm.btnPositve.Background = tm.Theme.Color.InactiveGray
+		tm.isEnabled = false
 	}
 
-	for tm.btnPositve.Button.Clicked() || handleSubmitEvent(tm.textInput.Editor) {
+	isSubmit, isChanged := handleEditorEvents(tm.textInput.Editor)
+	if isChanged {
+		tm.textInput.SetError("")
+	}
+
+	if (tm.btnPositve.Button.Clicked() || isSubmit) && tm.isEnabled {
 		if tm.IsLoading {
-			continue
+			return
 		}
 
 		tm.IsLoading = true
