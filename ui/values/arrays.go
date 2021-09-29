@@ -11,4 +11,5 @@ func init() {
 	ArrLanguages = make(map[string]string)
 	ArrLanguages[localizable.ENGLISH] = StrEnglish
 	ArrLanguages[localizable.FRENCH] = StrFrench
+	ArrLanguages[localizable.SPANISH] = StrSpanish
 }
