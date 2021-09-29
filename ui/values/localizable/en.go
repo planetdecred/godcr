@@ -114,6 +114,7 @@ const EN = `
 "more" = "More";
 "english" = "English";
 "french" = "French";
+"spanish" = "Spanish";
 "usdBittrex" = "USD (Bittrex)";
 "none" = "None";
 "proposals" = "Proposals";
