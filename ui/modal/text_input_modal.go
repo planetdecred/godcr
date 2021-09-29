@@ -96,7 +96,7 @@ func (tm *TextInputModal) Handle() {
 		tm.isEnabled = false
 	}
 
-	isSubmit, isChanged := handleEditorEvents(tm.textInput.Editor)
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(tm.textInput.Editor)
 	if isChanged {
 		tm.textInput.SetError("")
 	}

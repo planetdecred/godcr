@@ -109,7 +109,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		cm.isEnabled = false
 	}
 
-	isSubmit, isChanged := handleEditorEvents(cm.walletName.Editor, cm.extendedPubKey.Editor)
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(cm.walletName.Editor, cm.extendedPubKey.Editor)
 	if isChanged {
 		// reset editor errors
 		cm.walletName.SetError("")

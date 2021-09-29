@@ -121,7 +121,7 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
-	isSubmit, isChanged := handleEditorEvents(pm.password.Editor)
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pm.password.Editor)
 	if isChanged {
 		pm.password.SetError("")
 	}

@@ -30,7 +30,6 @@ type CreatePasswordModal struct {
 	isCancelable       bool
 	walletNameEnabled  bool
 	showWalletWarnInfo bool
-	isSubmit           bool
 	isEnabled          bool
 
 	dialogTitle string
@@ -153,7 +152,7 @@ func (cm *CreatePasswordModal) Handle() {
 		cm.isEnabled = false
 	}
 
-	isSubmit, isChanged := handleEditorEvents(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor, cm.walletName.Editor)
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor, cm.walletName.Editor)
 
 	if isChanged {
 		// reset editor errors
