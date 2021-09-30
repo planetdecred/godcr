@@ -215,15 +215,12 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
-<<<<<<< HEAD
-	SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
-=======
+	decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	if cm.walletNameEnabled {
 		decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	} else {
 		decredmaterial.SwitchEditors(cm.keyEvent, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
 	}
->>>>>>> 90e826c (Move tab key event functions to decredmaterial)
 
 }
 
