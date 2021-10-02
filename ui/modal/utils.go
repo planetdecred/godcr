@@ -25,18 +25,6 @@ func editorsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func handleSubmitEvent(editors ...*widget.Editor) bool {
-	var submit bool
-	for _, editor := range editors {
-		for _, e := range editor.Events() {
-			if _, ok := e.(widget.SubmitEvent); ok {
-				submit = true
-			}
-		}
-	}
-	return submit
-}
-
 func generateRandomNumber() int {
 	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 }
