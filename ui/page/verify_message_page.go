@@ -30,6 +30,7 @@ type VerifyMessagePage struct {
 	backButton     decredmaterial.IconButton
 	infoButton     decredmaterial.IconButton
 	addressIsValid bool
+	isEnabled      bool
 }
 
 func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
@@ -71,7 +72,7 @@ func (pg *VerifyMessagePage) ID() string {
 }
 
 func (pg *VerifyMessagePage) OnResume() {
-
+	pg.addressEditor.Editor.Focus()
 }
 
 func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -161,16 +162,14 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 func (pg *VerifyMessagePage) Handle() {
 	pg.updateButtonColors()
 
-	for _, evt := range pg.addressEditor.Editor.Events() {
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor)
+	if isChanged {
 		if pg.addressEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				pg.validateAddress()
-			}
+			pg.validateAddress()
 		}
 	}
 
-	if pg.verifyButton.Button.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
+	if (pg.verifyButton.Button.Clicked() || isSubmit) && pg.isEnabled {
 		if pg.validateAllInputs() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
@@ -202,6 +201,7 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 
 func (pg *VerifyMessagePage) updateButtonColors() {
 	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
+	pg.isEnabled = false
 	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.messageEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.signatureEditor.Editor.Text()) {
@@ -209,6 +209,7 @@ func (pg *VerifyMessagePage) updateButtonColors() {
 	}
 	if pg.addressIsValid && components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
 		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
+		pg.isEnabled = true
 	}
 }
 

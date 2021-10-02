@@ -50,7 +50,7 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm.btnNegative.TextSize = values.TextSize16
 	pm.btnNegative.Background, pm.btnNegative.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
 	pm.btnPositve.Font.Weight, pm.btnNegative.Font.Weight = text.Bold, text.Bold
-	pm.btnPositve.Background = pm.Theme.Color.InactiveGray
+	pm.btnPositve.Background = pm.Theme.Color.Primary
 
 	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
@@ -66,6 +66,7 @@ func (pm *PasswordModal) ModalID() string {
 }
 
 func (pm *PasswordModal) OnResume() {
+	pm.password.Editor.Focus()
 }
 
 func (pm *PasswordModal) OnDismiss() {
@@ -120,16 +121,20 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
-	if editorsNotEmpty(pm.password.Editor) {
-		pm.btnPositve.Background = pm.Theme.Color.Primary
-	} else {
-		pm.btnPositve.Background = pm.Theme.Color.InactiveGray
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pm.password.Editor)
+	if isChanged {
+		pm.password.SetError("")
 	}
 
-	for pm.btnPositve.Button.Clicked() || handleSubmitEvent(pm.password.Editor) {
+	if pm.btnPositve.Button.Clicked() || isSubmit {
 
-		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
-			continue
+		if !editorsNotEmpty(pm.password.Editor) {
+			pm.password.SetError("enter spending password")
+			return
+		}
+
+		if pm.isLoading {
+			return
 		}
 
 		pm.SetLoading(true)
