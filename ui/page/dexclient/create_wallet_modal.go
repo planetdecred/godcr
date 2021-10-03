@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"decred.org/dcrdex/client/core"
+	"decred.org/dcrdex/client/asset/btc"
+	"decred.org/dcrdex/client/asset/dcr"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/dexc"
@@ -74,63 +75,56 @@ func (md *createWalletModal) Handle() {
 
 		md.isSending = true
 		go func() {
-			coinID := md.walletInfoWidget.coinID
-			config, err := md.DL.AutoWalletConfig(coinID)
-
-			if err != nil {
+			defer func() {
 				md.isSending = false
-				md.Toast.NotifyError(err.Error())
+			}()
+
+			coinID := md.walletInfoWidget.coinID
+			coinName := md.walletInfoWidget.coinName
+			has := md.DL.WalletState(coinID) != nil
+			if has {
+				md.Toast.NotifyError(fmt.Sprintf("already connected a %s wallet", coinName))
 				return
 			}
 
-			for assetID, supportedAsset := range md.DL.User().Assets {
-				if assetID == coinID {
-					for _, cfgOpt := range supportedAsset.Info.ConfigOpts {
-						if key := cfgOpt.Key; key == "fallbackfee" ||
-							key == "feeratelimit" ||
-							key == "redeemconftarget" ||
-							key == "rpcbind" ||
-							key == "rpcport" ||
-							key == "txsplit" {
-							config[key] = fmt.Sprintf("%v", cfgOpt.DefaultValue)
-						}
-					}
-
-					break
+			// Function to perform some last actions after the wallet
+			// creation completes successfully. For decred wallets, this
+			// function saves the connected wallet id to database so
+			// user won't need to reselect the wallet on restart.
+			var onWalletCreated func()
+			if coinID == dcr.BipID {
+				selectedDcrWallet := md.WL.MultiWallet.WalletsIterator().Next() // TODO: Allow user select which wallet to use from the CreateWalletModal!
+				err := md.DL.Dexc.RegisterDcrAssetDriver(selectedDcrWallet)
+				if err != nil {
+					md.Toast.NotifyError(err.Error())
+					return
+				}
+				onWalletCreated = func() {
+					md.WL.MultiWallet.SetIntConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey, selectedDcrWallet.ID)
 				}
 			}
 
-			// Bitcoin
-			config["walletname"] = md.accountName.Editor.Text()
-			config["rpcport"] = "18332"
-
-			// Decred
-			config["account"] = md.accountName.Editor.Text()
-			config["password"] = md.walletPassword.Editor.Text()
-
-			form := &dexc.NewWalletForm{
-				AssetID: coinID,
-				Config:  config,
-				Pass:    []byte(md.walletPassword.Editor.Text()),
-				AppPW:   []byte(md.appPassword.Editor.Text()),
+			settings := make(map[string]string)
+			switch coinID {
+			case dcr.BipID:
+				settings["account"] = md.accountName.Editor.Text()
+				settings["password"] = md.walletPassword.Editor.Text()
+			case btc.BipID:
+				settings["walletname"] = md.accountName.Editor.Text()
+				settings["rpcport"] = "18332" // TODO: Request this from user in the CreateWalletModal form.
 			}
 
-			has := md.DL.WalletState(form.AssetID) != nil
-			if has {
-				md.Toast.NotifyError(fmt.Sprintf("already have a wallet for %d", form.AssetID))
-				return
-			}
-
-			// Wallet does not exist yet. Try to create it.
-			err = md.DL.CreateWallet(form.AppPW, form.Pass, &core.WalletForm{
-				AssetID: form.AssetID,
-				Config:  form.Config,
-			})
+			appPass := []byte(md.appPassword.Editor.Text())
+			walletPass := []byte(md.walletPassword.Editor.Text())
+			err := md.DL.Dexc.AddWallet(coinID, settings, appPass, walletPass)
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
 			}
 
+			if onWalletCreated != nil {
+				onWalletCreated()
+			}
 			md.walletCreated()
 			md.Dismiss()
 		}()

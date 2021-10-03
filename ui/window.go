@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
+	appCtx     context.Context
 	ops        *op.Ops
 	invalidate chan struct{}
 
@@ -77,7 +79,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet, dc *dexc.Dexc) (*Window, *app.Window, error) {
+func CreateWindow(wal *wallet.Wallet, dc *dexc.Dexc, appCtx context.Context) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == "testnet3" {
@@ -106,7 +108,7 @@ func CreateWindow(wal *wallet.Wallet, dc *dexc.Dexc) (*Window, *app.Window, erro
 
 	win.keyEvents = make(chan *key.Event)
 
-	l, err := win.NewLoad()
+	l, err := win.NewLoad(appCtx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -116,12 +118,13 @@ func CreateWindow(wal *wallet.Wallet, dc *dexc.Dexc) (*Window, *app.Window, erro
 	return win, appWindow, nil
 }
 
-func (win *Window) NewLoad() (*load.Load, error) {
+func (win *Window) NewLoad(appCtx context.Context) (*load.Load, error) {
 	l, err := load.NewLoad()
 	if err != nil {
 		return nil, err
 	}
 
+	l.AppCtx = appCtx
 	l.WL = &load.WalletLoad{
 		MultiWallet:     win.wallet.GetMultiWallet(),
 		Wallet:          win.wallet,

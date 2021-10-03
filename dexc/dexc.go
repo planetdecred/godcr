@@ -6,25 +6,45 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
-	_ "decred.org/dcrdex/client/asset/bch" // register bch asset
-	_ "decred.org/dcrdex/client/asset/btc" // register btc asset
-	_ "decred.org/dcrdex/client/asset/dcr" // register dcr asset
-	_ "decred.org/dcrdex/client/asset/ltc" // register ltc asset
+	"decred.org/dcrdex/client/asset"
+	"decred.org/dcrdex/client/asset/bch"
+	"decred.org/dcrdex/client/asset/btc"
+	"decred.org/dcrdex/client/asset/dcr"
+	"decred.org/dcrdex/client/asset/ltc"
 	"decred.org/dcrdex/client/comms"
 	"decred.org/dcrdex/dex/msgjson"
+	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet/dexdcr"
 
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/dex"
 )
+
+// Register the supported asset drivers here since importing
+// the packages alone no longer auto-registers them. The dcr
+// asset driver isn't registered here, because it requires the
+// user to select a wallet from the multiwallet instance. The
+// dcr asset driver can be registered by calling
+// *Dexc.RegisterDcrAssetDriver after the wallet to connect is
+// gotten, either from saved data (on restarts) or from user
+// selection when connecting the dcr wallet for the first time.
+func init() {
+	bch.RegisterDriver()
+	btc.RegisterDriver()
+	ltc.RegisterDriver()
+}
 
 // Dexc represents of the Decred exchange client.
 type Dexc struct {
 	*core.Core
 	wg  sync.WaitGroup
 	ctx context.Context
+
+	connectedDcrWallet *dcrlibwallet.Wallet
 
 	connMtx sync.RWMutex
 	conns   map[string]*dexConnection
@@ -34,6 +54,11 @@ const (
 	DefaultAsset            = "dcr"
 	DefaultAssetID   uint32 = 42
 	ConversionFactor        = 1e8
+
+	// ConnectedDcrWalletIDConfigKey is used as the key in a simple key-value
+	// database to store the ID of the dcr wallet that is connected to the DEX
+	// client, to facilitate reconnecting the wallet when godcr is restarted.
+	ConnectedDcrWalletIDConfigKey = "dex_dcr_wallet_id"
 )
 
 func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
@@ -56,7 +81,6 @@ func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
 		// TorProxy:     TorProxy,
 		// TorIsolation: TorIsolation,
 	})
-
 	if err != nil {
 		log.Errorf("error creating client core: %v", err)
 		return nil, err
@@ -68,8 +92,14 @@ func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
 	}, nil
 }
 
-func (d *Dexc) Run(appCtx context.Context, cancel context.CancelFunc) {
-	d.ctx = appCtx
+// Start calls the Run method of the DEX client. Provide the app-wide context
+// to ensure that the DEX client is shut down when the app-wide context is
+// canceled.
+func (d *Dexc) Start(appCtx context.Context) {
+	// Create a new cancelFunc so that the app-wide ctx isn't canceled
+	// when Core stops.
+	ctx, cancel := context.WithCancel(appCtx)
+	d.ctx = ctx
 	d.wg.Add(1)
 	go func() {
 		defer d.wg.Done()
@@ -77,6 +107,67 @@ func (d *Dexc) Run(appCtx context.Context, cancel context.CancelFunc) {
 		cancel()
 	}()
 	<-d.Core.Ready()
+}
+
+// RegisterDcrAssetDriver uses the provided *dcrlibwallet.Wallet to register
+// a dcr asset driver that performs wallet operations using the provided
+// wallet.
+func (d *Dexc) RegisterDcrAssetDriver(wallet *dcrlibwallet.Wallet) error {
+	if d.connectedDcrWallet != nil {
+		// This prevents attempting to register the driver multiple times
+		// as that would lead to a panic.
+		return fmt.Errorf("cannot change dcr wallet after initial setting")
+	}
+
+	walletDesc := fmt.Sprintf("%d (%s)", wallet.ID, wallet.Name)
+	dexdcr.RegisterDriver(wallet.Internal(), walletDesc)
+	d.connectedDcrWallet = wallet
+	log.Infof("Registered decred wallet driver for DEX using wallet %s", walletDesc)
+	return nil
+}
+
+// AddWallet attempts to connect the wallet with the provided details to the
+// DEX client.
+// NOTE: Before connecting a decred wallet, first register the decred asset
+// driver by calling *Dexc.RegisterDcrAssetDriver.
+func (d *Dexc) AddWallet(assetID uint32, settings map[string]string, appPW, walletPW []byte) error {
+	assetInfo, err := asset.Info(assetID)
+	if err != nil {
+		// Only possible error is unknown asset. Should never happen because
+		// we register most supported assets when this package is init'ed.
+		// If connecting a decred wallet, caller should first register the
+		// dcr asset driver by calling (*Dexc).RegisterDcrAssetDriver.
+		return fmt.Errorf("asset driver not registered for asset with BIP ID %d", assetID)
+	}
+
+	// Start building the wallet config with default values.
+	config := map[string]string{}
+	for _, option := range assetInfo.ConfigOpts {
+		config[strings.ToLower(option.Key)] = fmt.Sprintf("%v", option.DefaultValue)
+	}
+
+	// Attempt to load additional config values from the asset's default
+	// config file path. Not necessary for dcr wallets.
+	if assetID != dcr.BipID {
+		autoConfig, err := d.AutoWalletConfig(assetID)
+		if err != nil {
+			return err
+		}
+		for k, v := range autoConfig {
+			config[k] = v
+		}
+	}
+
+	// User-provided settings should override any previously
+	// set config value.
+	for k, v := range settings {
+		config[k] = v
+	}
+
+	return d.CreateWallet(appPW, walletPW, &core.WalletForm{
+		AssetID: dcr.BipID,
+		Config:  config,
+	})
 }
 
 // DexConnection represents a connection to websocket server.

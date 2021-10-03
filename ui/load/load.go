@@ -6,6 +6,7 @@
 package load
 
 import (
+	"context"
 	"errors"
 
 	"decred.org/dcrdex/client/core"
@@ -66,6 +67,7 @@ type Icons struct {
 type Load struct {
 	Theme *decredmaterial.Theme
 
+	AppCtx   context.Context
 	WL       *WalletLoad
 	Receiver *Receiver
 	Printer  *message.Printer

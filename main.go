@@ -58,9 +58,13 @@ func main() {
 		return
 	}
 
+	appCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	shutdown := make(chan int)
 	go func() {
 		<-shutdown
+		cancel()
 		wal.Shutdown()
 		os.Exit(0)
 	}()
@@ -71,11 +75,8 @@ func main() {
 		fmt.Printf("error creating Dex: %s", err)
 		return
 	}
-	appCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	dc.Run(appCtx, cancel)
 
-	win, appWindow, err := ui.CreateWindow(wal, dc)
+	win, appWindow, err := ui.CreateWindow(wal, dc, appCtx)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return

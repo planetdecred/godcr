@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"decred.org/dcrdex/client/asset/dcr"
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -94,20 +95,20 @@ func (pg *Page) Layout(gtx C) D {
 				if dex == nil || !dex.Connected {
 					return D{}
 				}
-				regConfirms, confsrequired := dex.RegConfirms, dex.ConfsRequired
-				if regConfirms == nil {
+				if dex.PendingFee == nil {
 					return D{}
 				}
+				reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
 				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
-						t := fmt.Sprintf("In order to trade at %s, the registration fee payment needs %d confirmations.", pg.selectedMaket.host, confsrequired)
+						t := fmt.Sprintf("In order to trade at %s, the registration fee payment needs %d confirmations.", pg.selectedMaket.host, reqConfirms)
 						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
-						t := fmt.Sprintf("%d/%d", *regConfirms, confsrequired)
+						t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
 						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
 					}),
 				)
@@ -176,6 +177,8 @@ func (pg *Page) OnClose() {
 
 func (pg *Page) handleModals() {
 	u := pg.user
+
+	// Must initialize to proceed.
 	if !u.Initialized {
 		md := newPasswordModal(pg.Load)
 		md.appInitiated = func() {
@@ -186,7 +189,8 @@ func (pg *Page) handleModals() {
 		return
 	}
 
-	if !pg.DL.IsLoggedIn && u.Initialized {
+	// Initialized client must be logged in.
+	if !pg.DL.IsLoggedIn {
 		md := newloginModal(pg.Load)
 		md.loggedIn = func(password []byte) {
 			pg.refreshUser()
@@ -201,10 +205,13 @@ func (pg *Page) handleModals() {
 		return
 	}
 
-	// Show add wallet from initialize
-	if len(u.Exchanges) == 0 &&
-		u.Initialized &&
-		u.Assets[dexc.DefaultAssetID].Wallet == nil {
+	// The dcr wallet must be connected before registering with
+	// a DEX.
+	// TODO: Since other assets can now be used to pay the fee,
+	// this shouldn't be a pre-requirement. Instead, attempt to
+	// connect a DEX first and determine what wallet is required
+	// for fee payment.
+	if dcrWallet := u.Assets[dcr.BipID]; dcrWallet == nil || dcrWallet.Wallet == nil {
 		wallInfo := &walletInfoWidget{
 			image:    coinImageBySymbol(&pg.Load.Icons, dexc.DefaultAsset),
 			coin:     dexc.DefaultAsset,

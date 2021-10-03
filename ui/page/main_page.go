@@ -9,6 +9,7 @@ import (
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -50,7 +51,8 @@ type MainPage struct {
 	appBarNav components.NavDrawer
 	drawerNav components.NavDrawer
 
-	autoSync bool
+	autoSync       bool
+	dexClientReady bool
 
 	currentPage   load.Page
 	pageBackStack []load.Page
@@ -173,6 +175,51 @@ func (mp *MainPage) initNavItems() {
 		MinimizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowBack),
 		MaximizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowForward),
 	}
+}
+
+// startDexClientIfNotStarted gets the DEX client reaady for use if not already
+// started. The DEX client will try to load previously connected wallets, so
+// this method should only be called after the main page is loaded and sync is
+// started to ensure that at least 1 decred wallet is loaded and ready for use.
+func (mp *MainPage) startDexClientIfNotStarted() bool {
+	if mp.dexClientReady {
+		return true
+	}
+
+	// Register the dcr asset driver here if we've previously connected
+	// a dcr wallet, to ensure that the DEX client can reconnect the dcr
+	// wallet once we start it below.
+	// If a dcr wallet wasn't previously connected, the user will be
+	// prompted to select a dcr wallet when the DEX tab is opened and the
+	// selected wallet will be used to register the dcr asset driver.
+	var dexDcrWallet *dcrlibwallet.Wallet
+	dexDcrWalletID := mp.WL.MultiWallet.ReadIntConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey, -1)
+	if dexDcrWalletID != -1 {
+		dexDcrWallet = mp.WL.MultiWallet.WalletWithID(dexDcrWalletID)
+	}
+	if dexDcrWallet != nil {
+		// Found previously connected decred wallet. Do not try to start
+		// the DEX client if the wallet is not connected to the Decred
+		// network because the DEX client will be unable to reconnect to
+		// the wallet if the wallet is not connected to the Decred backend.
+		if _, err := dexDcrWallet.Internal().NetworkBackend(); err != nil {
+			mp.Toast.NotifyError("The Decred wallet connected to the DEX isn't ready for use. Start synchronization and try again.")
+			return false
+		}
+		err := mp.Load.DL.Dexc.RegisterDcrAssetDriver(dexDcrWallet)
+		if err != nil {
+			log.Errorf("Unable to register the DEX asset driver for the decred wallet %d (%s): %v",
+				dexDcrWalletID, dexDcrWallet.Name, err)
+			// The user will need to reconnect their decred wallet to
+			// use the DEX client.
+		}
+	}
+
+	// Pass app-wide context that is canceled when the godcr app is shutdown,
+	// so that the DEX client will be shut down when godcr is shut down.
+	mp.Load.DL.Dexc.Start(mp.AppCtx)
+	mp.dexClientReady = true
+	return true
 }
 
 func (mp *MainPage) OnResume() {
@@ -327,6 +374,12 @@ func (mp *MainPage) Handle() {
 			} else if i == MoreNavID {
 				pg = NewMorePage(mp.Load)
 			} else if i == DexNavID {
+				if !mp.startDexClientIfNotStarted() {
+					// DEX isn't ready for use, an error message
+					// should have been displayed to the user by
+					// the above method.
+					return
+				}
 				pg = dexclient.NewMarketPage(mp.Load)
 			} else {
 				continue

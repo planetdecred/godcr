@@ -11,7 +11,7 @@ require (
 	github.com/decred/dcrd/dcrutil v1.4.0
 	github.com/decred/dcrd/dcrutil/v2 v2.0.1
 	github.com/decred/dcrd/dcrutil/v3 v3.0.0
-	github.com/decred/slog v1.1.0
+	github.com/decred/slog v1.2.0
 	github.com/gen2brain/beeep v0.0.0-20210529141713-5586760f0cc1
 	github.com/godbus/dbus/v5 v5.0.5 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20210208175418-bda154fe17d8
@@ -22,6 +22,7 @@ require (
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/planetdecred/dcrlibwallet v1.6.1-rc1.0.20210915175038-31878a61e002
+	github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-00010101000000-000000000000
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
@@ -29,4 +30,8 @@ require (
 	golang.org/x/text v0.3.6
 )
 
-replace github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
+replace (
+	decred.org/dcrdex => github.com/itswisdomagain/dcrdex v0.0.0-20211004141752-92a02cc7352a
+	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211004143133-f2d643fe4c9b
+	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211004143133-f2d643fe4c9b
+)
