@@ -40,17 +40,18 @@ type PasswordModal struct {
 
 func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm := &PasswordModal{
-		Load:        l,
-		randomID:    fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
-		modal:       *l.Theme.ModalFloatTitle(),
-		btnPositve:  l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative: l.Theme.Button(new(widget.Clickable), "Cancel"),
+		Load:         l,
+		randomID:     fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
+		modal:        *l.Theme.ModalFloatTitle(),
+		btnPositve:   l.Theme.Button("Confirm"),
+		btnNegative:  l.Theme.OutlineButton("Cancel"),
+		isCancelable: true,
 	}
 
-	pm.btnNegative.TextSize = values.TextSize16
-	pm.btnNegative.Background, pm.btnNegative.Color = pm.Theme.Color.Surface, pm.Theme.Color.Primary
-	pm.btnPositve.Font.Weight, pm.btnNegative.Font.Weight = text.Bold, text.Bold
-	pm.btnPositve.Background = pm.Theme.Color.Primary
+	pm.btnPositve.Font.Weight = text.Medium
+
+	pm.btnNegative.Font.Weight = text.Medium
+	pm.btnNegative.Margin.Right = values.MarginPadding8
 
 	pm.password = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	pm.password.Editor.SingleLine, pm.password.Editor.Submit = true, true
@@ -144,7 +145,8 @@ func (pm *PasswordModal) Handle() {
 		}
 	}
 
-	for pm.btnNegative.Button.Clicked() {
+	pm.btnNegative.SetEnabled(!pm.isLoading)
+	for pm.btnNegative.Clicked() {
 		if !pm.isLoading {
 			pm.DismissModal(pm)
 			pm.negativeButtonClicked()

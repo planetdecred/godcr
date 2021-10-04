@@ -11,11 +11,10 @@ import (
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-
-	"github.com/planetdecred/godcr/ui/values"
 )
 
 type Shadow struct {
+	radius  float32
 	surface color.NRGBA
 
 	ambientColor  color.NRGBA
@@ -29,6 +28,7 @@ const (
 
 func (t *Theme) Shadow() *Shadow {
 	return &Shadow{
+		radius:        4,
 		surface:       t.Color.Surface,
 		ambientColor:  color.NRGBA{A: 0x1},
 		penumbraColor: color.NRGBA{A: 0x5},
@@ -36,11 +36,18 @@ func (t *Theme) Shadow() *Shadow {
 	}
 }
 
+func (t *Theme) TransparentShadow(radius float32) *Shadow {
+	s := t.Shadow()
+	s.surface = color.NRGBA{}
+	s.radius = radius
+	return s
+}
+
 func (s *Shadow) Layout(gtx C, w layout.Widget) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			s.layout(gtx)
-			surface := clip.UniformRRect(f32.Rectangle{Max: layout.FPt(gtx.Constraints.Min)}, float32(gtx.Px(values.MarginPadding4)))
+			surface := clip.UniformRRect(f32.Rectangle{Max: layout.FPt(gtx.Constraints.Min)}, s.radius)
 			paint.FillShape(gtx.Ops, s.surface, surface.Op(gtx.Ops))
 			return D{Size: gtx.Constraints.Min}
 		}),

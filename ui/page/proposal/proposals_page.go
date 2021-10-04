@@ -373,7 +373,7 @@ func (pg *ProposalsPage) layoutTabs(gtx C) D {
 			Left:  values.MarginPadding12,
 			Right: values.MarginPadding12,
 		}.Layout(gtx, func(gtx C) D {
-			return pg.categoryList.HoverableLayout(gtx, len(proposalCategoryTitles), func(gtx C, i int) D {
+			return pg.categoryList.Layout(gtx, len(proposalCategoryTitles), func(gtx C, i int) D {
 				gtx.Constraints.Min.X = int(width)
 				return layout.Stack{Alignment: layout.S}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {

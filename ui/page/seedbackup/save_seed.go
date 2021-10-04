@@ -6,7 +6,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -45,7 +44,7 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 
 		infoText: "You will be asked to enter the seed phrase on the next screen.",
 
-		actionButton: l.Theme.Button(new(widget.Clickable), "I have written down all 33 words"),
+		actionButton: l.Theme.Button("I have written down all 33 words"),
 		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
 	}
@@ -53,8 +52,7 @@ func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = l.Icons.ContentClear
 
-	pg.actionButton.Background = pg.Theme.Color.Primary
-	pg.actionButton.Color = pg.Theme.Color.InvText
+	pg.actionButton.Font.Weight = text.Medium
 
 	return pg
 }

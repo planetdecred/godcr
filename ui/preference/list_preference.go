@@ -24,7 +24,7 @@ type ListPreference struct {
 	items       map[string]string //[key]str-key
 	itemKeys    []string
 
-	clickable         *widget.Clickable
+	clickable         *decredmaterial.Clickable
 	optionsRadioGroup *widget.Enum
 
 	updateButtonClicked func()
@@ -40,7 +40,7 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 
 	sort.Slice(sortedKeys, func(i int, j int) bool { return sortedKeys[i] < sortedKeys[j] })
 
-	return &ListPreference{
+	lp := ListPreference{
 		wallet:        wallet,
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
@@ -51,9 +51,11 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 
 		IsShowing: false,
 
-		clickable:         new(widget.Clickable),
+		clickable:         theme.NewClickable(false),
 		optionsRadioGroup: new(widget.Enum),
 	}
+
+	return &lp
 }
 
 func (lp *ListPreference) Title(titleStrKey string) *ListPreference {
@@ -66,7 +68,7 @@ func (lp *ListPreference) UpdateValues(clicked func()) *ListPreference {
 	return lp
 }
 
-func (lp *ListPreference) Clickable() *widget.Clickable {
+func (lp *ListPreference) Clickable() *decredmaterial.Clickable {
 	return lp.clickable
 }
 

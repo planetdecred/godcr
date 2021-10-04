@@ -5,7 +5,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -25,17 +24,19 @@ func (pg *Page) initLayoutWidgets() {
 
 	pg.txFeeCollapsible = pg.Theme.Collapsible()
 
-	pg.nextButton = pg.Theme.Button(new(widget.Clickable), "Next")
-	pg.nextButton.Background = pg.Theme.Color.InactiveGray
+	pg.nextButton = pg.Theme.Button("Next")
+	pg.nextButton.TextSize = values.TextSize18
+	pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
+	pg.nextButton.SetEnabled(false)
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.moreOption = pg.Theme.PlainIconButton(new(widget.Clickable), pg.Icons.NavMoreIcon)
+	pg.moreOption = pg.Theme.PlainIconButton(pg.Icons.NavMoreIcon)
 	pg.moreOption.Color = pg.Theme.Color.Gray3
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
-	pg.retryExchange = pg.Theme.Button(new(widget.Clickable), "Retry")
+	pg.retryExchange = pg.Theme.Button("Retry")
 	pg.retryExchange.Background = pg.Theme.Color.Gray1
 	pg.retryExchange.Color = pg.Theme.Color.Primary
 	pg.retryExchange.Inset = layout.Inset{
@@ -88,7 +89,7 @@ func (pg *Page) getMoreItem() []moreItem {
 	return []moreItem{
 		{
 			text:   "Advanced mode",
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			id:     UTXOPageID,
 			action: func() {
 				pg.ChangeFragment(NewUTXOPage(pg.Load, pg.sourceAccountSelector.SelectedAccount()))
@@ -96,7 +97,7 @@ func (pg *Page) getMoreItem() []moreItem {
 		},
 		{
 			text:   "Clear all fields",
-			button: new(widget.Clickable),
+			button: pg.Theme.NewClickable(true),
 			action: func() {
 				pg.resetFields()
 				pg.moreOptionIsOpen = false
@@ -119,7 +120,7 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.moreItems), func(gtx C, i int) D {
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							return decredmaterial.Clickable(gtx, pg.moreItems[i].button, func(gtx C) D {
+							return pg.moreItems[i].button.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									return pg.Theme.Body1(pg.moreItems[i].text).Layout(gtx)
@@ -368,7 +369,6 @@ func (pg *Page) balanceSection(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 				layout.Flexed(0.3, func(gtx C) D {
-					pg.nextButton.Inset = layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding15}
 					return pg.nextButton.Layout(gtx)
 				}),
 			)

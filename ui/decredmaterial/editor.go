@@ -109,7 +109,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 				Button:     new(widget.Clickable),
 			},
 		},
-		CustomButton: t.Button(new(widget.Clickable), ""),
+		CustomButton: t.Button(""),
 	}
 }
 

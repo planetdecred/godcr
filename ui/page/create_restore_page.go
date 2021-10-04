@@ -105,24 +105,16 @@ func NewCreateRestorePage(l *load.Load) *CreateRestore {
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(8)
 
-	pg.restoreWalletBtn = l.Theme.Button(new(widget.Clickable), "Restore")
+	pg.restoreWalletBtn = l.Theme.Button("Restore")
 
-	pg.closePageBtn = l.Theme.IconButton(new(widget.Clickable), decredmaterial.MustIcon(widget.NewIcon(icons.NavigationClose)))
+	pg.closePageBtn = l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.NavigationClose)))
 	pg.closePageBtn.Background = color.NRGBA{}
 	pg.closePageBtn.Color = l.Theme.Color.Hint
 
-	pg.resetSeedFields = l.Theme.Button(new(widget.Clickable), "Clear all")
-	pg.resetSeedFields.Color = l.Theme.Color.Hint
-	pg.resetSeedFields.Background = color.NRGBA{}
+	pg.resetSeedFields = l.Theme.OutlineButton("Clear all")
 
 	pg.alertIcon = pg.Icons.AlertGray
 
-	pg.restoreWalletBtn.Inset = layout.Inset{
-		Top:    values.MarginPadding12,
-		Bottom: values.MarginPadding12,
-		Right:  values.MarginPadding50,
-		Left:   values.MarginPadding50,
-	}
 	pg.restoreWalletBtn.Background = l.Theme.Color.InactiveGray
 	pg.restoreWalletBtn.TextSize = values.TextSize16
 	pg.errLabel.Color = pg.Theme.Color.Danger
@@ -396,7 +388,7 @@ func (pg *CreateRestore) inputsGroup(gtx layout.Context, l *layout.List, len, st
 func (pg *CreateRestore) onSuggestionSeedsClicked() {
 	index := pg.seedEditors.focusIndex
 	for i, b := range pg.seedMenu {
-		for pg.seedMenu[i].button.Button.Clicked() {
+		for pg.seedMenu[i].button.Clicked() {
 			pg.seedEditors.editors[index].Edit.Editor.SetText(b.text)
 			pg.seedEditors.editors[index].Edit.Editor.MoveCaret(len(b.text), 0)
 			pg.seedClicked = true
@@ -479,7 +471,7 @@ func (pg *CreateRestore) editorSeedsEventsHandler() {
 
 func (pg *CreateRestore) initSeedMenu() {
 	for i := 0; i < pg.suggestionLimit; i++ {
-		btn := pg.Theme.Button(new(widget.Clickable), "")
+		btn := pg.Theme.Button("")
 		btn.Background, btn.Color = color.NRGBA{}, pg.Theme.Color.DeepBlue
 		pg.seedMenu = append(pg.seedMenu, seedItemMenu{
 			text:   "",
@@ -490,7 +482,7 @@ func (pg *CreateRestore) initSeedMenu() {
 
 func (pg *CreateRestore) suggestionSeedEffect() {
 	for k := range pg.suggestions {
-		if pg.selected == k || pg.seedMenu[k].button.Button.Hovered() {
+		if pg.selected == k || pg.seedMenu[k].button.Hovered() {
 			pg.seedMenu[k].button.Background = pg.Theme.Color.LightGray
 		} else {
 			pg.seedMenu[k].button.Background = color.NRGBA{}
@@ -622,7 +614,7 @@ func (pg *CreateRestore) Handle() {
 		pg.PopWindowPage()
 	}
 
-	if pg.restoreWalletBtn.Button.Clicked() {
+	if pg.restoreWalletBtn.Clicked() {
 		pass := pg.validatePasswords()
 		walletName := pg.validateWalletName()
 		if !pg.validateSeeds() || pass == "" || walletName == "" {
@@ -656,7 +648,7 @@ func (pg *CreateRestore) Handle() {
 		pg.restoreWalletBtn.Background = pg.Theme.Color.Primary
 	}
 
-	for pg.resetSeedFields.Button.Clicked() {
+	for pg.resetSeedFields.Clicked() {
 		pg.resetSeeds()
 		pg.seedEditors.focusIndex = -1
 	}
@@ -688,7 +680,7 @@ func (pg *CreateRestore) Handle() {
 			if pg.seedEditors.focusIndex == -1 && len(pg.suggestions) == 1 {
 				return
 			}
-			pg.seedMenu[pg.selected].button.Button.Click()
+			pg.seedMenu[pg.selected].button.Click()
 		}
 	default:
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -45,14 +44,11 @@ func NewTicketPage(l *load.Load) *Page {
 
 		ticketsLive:         &layout.List{Axis: layout.Horizontal},
 		ticketPageContainer: &layout.List{Axis: layout.Vertical},
-		purchaseTicket:      l.Theme.Button(new(widget.Clickable), "Purchase"),
+		purchaseTicket:      l.Theme.Button("Purchase"),
 
 		autoPurchaseEnabled: l.Theme.Switch(),
-		toTickets:           l.Theme.TextAndIconButton(new(widget.Clickable), "See All", l.Icons.NavigationArrowForward),
+		toTickets:           l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
 	}
-
-	pg.purchaseTicket.TextSize = values.TextSize12
-	pg.purchaseTicket.Background = l.Theme.Color.Primary
 
 	pg.toTickets.Color = l.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = l.Theme.Color.Surface
@@ -370,7 +366,7 @@ func (pg *Page) stakingRecordIconCount(icon *decredmaterial.Image, count int, st
 }
 
 func (pg *Page) Handle() {
-	if pg.purchaseTicket.Button.Clicked() {
+	if pg.purchaseTicket.Clicked() {
 		newTicketPurchaseModal(pg.Load).
 			TicketPurchased(func() {
 				fmt.Println("Overview ticket pruchsased")

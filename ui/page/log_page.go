@@ -7,7 +7,6 @@ import (
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/nxadm/tail"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -25,7 +24,7 @@ type LogPage struct {
 	*load.Load
 	tail *tail.Tail
 
-	copyLog    *widget.Clickable
+	copyLog    *decredmaterial.Clickable
 	copyIcon   *decredmaterial.Image
 	backButton decredmaterial.IconButton
 
@@ -40,8 +39,8 @@ func (pg *LogPage) ID() string {
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
 		Load:    l,
-		copyLog: new(widget.Clickable),
 		logList: layout.List{Axis: layout.Vertical, ScrollToEnd: true},
+		copyLog: l.Theme.NewClickable(true),
 	}
 
 	pg.copyIcon = pg.Icons.CopyIcon
@@ -109,7 +108,7 @@ func (pg *LogPage) Layout(gtx C) D {
 			ExtraItem: pg.copyLog,
 			Extra: func(gtx C) D {
 				return layout.Center.Layout(gtx, func(gtx C) D {
-					return decredmaterial.Clickable(gtx, pg.copyLog, func(gtx C) D {
+					return pg.copyLog.Layout(gtx, func(gtx C) D {
 						return pg.copyIcon.Layout24dp(gtx)
 					})
 

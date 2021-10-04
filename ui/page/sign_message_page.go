@@ -1,8 +1,6 @@
 package page
 
 import (
-	"image/color"
-
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -31,7 +29,7 @@ type SignMessagePage struct {
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
-	copySignature                              *widget.Clickable
+	copySignature                              *decredmaterial.Clickable
 	copyIcon                                   *decredmaterial.Image
 	gtx                                        *layout.Context
 
@@ -44,11 +42,12 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 	addressEditor.Editor.SingleLine, addressEditor.Editor.Submit = true, true
 	messageEditor := l.Theme.Editor(new(widget.Editor), "Message")
 	messageEditor.Editor.SingleLine, messageEditor.Editor.Submit = true, true
-	clearButton := l.Theme.Button(new(widget.Clickable), "Clear all")
-	signButton := l.Theme.Button(new(widget.Clickable), "Sign message")
-	clearButton.Background, signButton.Background = color.NRGBA{}, l.Theme.Color.Hint
-	clearButton.Color = l.Theme.Color.Gray
-	clearButton.Font.Weight, signButton.Font.Weight = text.Bold, text.Bold
+
+	clearButton := l.Theme.OutlineButton("Clear all")
+	signButton := l.Theme.Button("Sign message")
+	clearButton.Font.Weight, signButton.Font.Weight = text.Medium, text.Medium
+	signButton.SetEnabled(false)
+	clearButton.SetEnabled(false)
 
 	errorLabel := l.Theme.Caption("")
 	errorLabel.Color = l.Theme.Color.Danger
@@ -68,8 +67,8 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		messageEditor:      messageEditor,
 		clearButton:        clearButton,
 		signButton:         signButton,
-		copyButton:         l.Theme.Button(new(widget.Clickable), "Copy"),
-		copySignature:      new(widget.Clickable),
+		copyButton:         l.Theme.Button("Copy"),
+		copySignature:      l.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
 	}
 
@@ -170,21 +169,23 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
+						border := widget.Border{Color: pg.Theme.Color.LightGray, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
 						wrapper := pg.Theme.Card()
 						wrapper.Color = pg.Theme.Color.LightGray
-						wrapper.Border = true
-						return wrapper.Layout(gtx, func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
-								return layout.Flex{}.Layout(gtx,
-									layout.Flexed(0.9, pg.signedMessageLabel.Layout),
-									layout.Flexed(0.1, func(gtx C) D {
-										return layout.E.Layout(gtx, func(gtx C) D {
-											return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-												return decredmaterial.Clickable(gtx, pg.copySignature, pg.copyIcon.Layout24dp)
+						return border.Layout(gtx, func(gtx C) D {
+							return wrapper.Layout(gtx, func(gtx C) D {
+								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
+									return layout.Flex{}.Layout(gtx,
+										layout.Flexed(0.9, pg.signedMessageLabel.Layout),
+										layout.Flexed(0.1, func(gtx C) D {
+											return layout.E.Layout(gtx, func(gtx C) D {
+												return layout.Inset{Top: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+													return pg.copySignature.Layout(gtx, pg.copyIcon.Layout24dp)
+												})
 											})
-										})
-									}),
-								)
+										}),
+									)
+								})
 							})
 						})
 					}),
@@ -207,16 +208,19 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 }
 
 func (pg *SignMessagePage) updateButtonColors() {
-	pg.clearButton.Color, pg.signButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
 	pg.isEnabled = false
 	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.messageEditor.Editor.Text()) {
-		pg.clearButton.Color = pg.Theme.Color.Primary
+		pg.clearButton.SetEnabled(true)
+	} else {
+		pg.clearButton.SetEnabled(false)
 	}
+
 	if !pg.isSigningMessage && pg.messageIsValid && pg.addressIsValid {
-		pg.signButton.Background = pg.Theme.Color.Primary
 		pg.isEnabled = true
 	}
+
+	pg.signButton.SetEnabled(pg.isEnabled)
 }
 
 func (pg *SignMessagePage) Handle() {
@@ -234,11 +238,11 @@ func (pg *SignMessagePage) Handle() {
 		}
 	}
 
-	for pg.clearButton.Button.Clicked() {
+	for pg.clearButton.Clicked() {
 		pg.clearForm()
 	}
 
-	if (pg.signButton.Button.Clicked() || isSubmit) && pg.isEnabled {
+	if (pg.signButton.Clicked() || isSubmit) && pg.isEnabled {
 		if !pg.isSigningMessage && pg.validate() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()

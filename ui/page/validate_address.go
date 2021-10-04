@@ -1,8 +1,6 @@
 package page
 
 import (
-	"image/color"
-
 	"gioui.org/text"
 
 	"gioui.org/layout"
@@ -44,17 +42,11 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 	pg.addressEditor.Editor.SingleLine = true
 	pg.addressEditor.Editor.Submit = true
 
-	buttonTextSize := values.TextSize14
-	pg.validateBtn = l.Theme.Button(new(widget.Clickable), "Validate")
-	pg.validateBtn.TextSize = buttonTextSize
-	pg.validateBtn.Background = pg.Theme.Color.Hint
-	pg.validateBtn.Font.Weight = text.Bold
+	pg.validateBtn = l.Theme.Button("Validate")
+	pg.validateBtn.Font.Weight = text.Medium
 
-	pg.clearBtn = l.Theme.Button(new(widget.Clickable), "Clear")
-	pg.clearBtn.Color = pg.Theme.Color.Hint
-	pg.clearBtn.Font.Weight = text.Bold
-	pg.clearBtn.Background = color.NRGBA{}
-	pg.clearBtn.TextSize = buttonTextSize
+	pg.clearBtn = l.Theme.OutlineButton("Clear")
+	pg.clearBtn.Font.Weight = text.Medium
 
 	pg.stateValidate = none
 
@@ -232,11 +224,11 @@ func (pg *ValidateAddressPage) Handle() {
 		pg.stateValidate = none
 	}
 
-	if (pg.validateBtn.Button.Clicked() || isSubmit) && pg.isEnabled {
+	if (pg.validateBtn.Clicked() || isSubmit) && pg.isEnabled {
 		pg.validateAddress()
 	}
 
-	if pg.clearBtn.Button.Clicked() {
+	if pg.clearBtn.Clicked() {
 		pg.clearPage()
 	}
 }

@@ -46,15 +46,10 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 		modal:          *l.Theme.ModalFloatTitle(),
 		proposal:       proposal,
 		materialLoader: material.Loader(material.NewTheme(gofont.Collection())),
-		voteBtn:        l.Theme.Button(new(widget.Clickable), "Vote"),
-		cancelBtn:      l.Theme.Button(new(widget.Clickable), "Cancel"),
+		voteBtn:        l.Theme.Button("Vote"),
+		cancelBtn:      l.Theme.OutlineButton("Cancel"),
 	}
 
-	vm.cancelBtn.Background = vm.Theme.Color.Surface
-	vm.cancelBtn.Color = vm.Theme.Color.Primary
-
-	vm.voteBtn.TextSize, vm.cancelBtn.TextSize = values.TextSize16, values.TextSize16
-	vm.voteBtn.Font.Weight, vm.cancelBtn.Font.Weight = text.Bold, text.Bold
 	vm.voteBtn.Background = l.Theme.Color.Gray1
 	vm.voteBtn.Color = l.Theme.Color.Surface
 
@@ -194,7 +189,7 @@ func (vm *voteModal) sendVotes() {
 }
 
 func (vm *voteModal) Handle() {
-	for vm.cancelBtn.Button.Clicked() {
+	for vm.cancelBtn.Clicked() {
 		if vm.isVoting {
 			continue
 		}

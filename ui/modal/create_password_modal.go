@@ -50,16 +50,15 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		randomID:         fmt.Sprintf("%s-%d", CreateWallet, generateRandomNumber()),
 		modal:            *l.Theme.ModalFloatTitle(),
 		passwordStrength: l.Theme.ProgressBar(0),
-		btnPositve:       l.Theme.Button(new(widget.Clickable), "Confirm"),
-		btnNegative:      l.Theme.Button(new(widget.Clickable), "Cancel"),
+		btnPositve:       l.Theme.Button("Confirm"),
+		btnNegative:      l.Theme.OutlineButton("Cancel"),
 		isCancelable:     true,
 	}
 
-	cm.btnNegative.TextSize = values.TextSize16
-	cm.btnNegative.Font.Weight = text.Medium
+	cm.btnPositve.Font.Weight = text.Medium
 
-	cm.btnPositve.Background = cm.Theme.Color.InactiveGray
-	cm.btnPositve.Font.Weight = text.Bold
+	cm.btnNegative.Font.Weight = text.Medium
+	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
 
 	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
@@ -141,6 +140,16 @@ func (cm *CreatePasswordModal) SetError(err string) {
 	cm.serverError = err
 }
 
+func (cm *CreatePasswordModal) validToCreate() bool {
+	nameValid := true
+	if cm.walletNameEnabled {
+		nameValid = editorsNotEmpty(cm.walletName.Editor)
+	}
+
+	return nameValid && editorsNotEmpty(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) &&
+		cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+}
+
 func (cm *CreatePasswordModal) Handle() {
 
 	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
@@ -161,7 +170,7 @@ func (cm *CreatePasswordModal) Handle() {
 		cm.confirmPasswordEditor.SetError("")
 	}
 
-	if (cm.btnPositve.Button.Clicked() || isSubmit) && cm.isEnabled {
+	if (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
 
 		if cm.walletNameEnabled {
 			if !editorsNotEmpty(cm.walletName.Editor) {
@@ -189,7 +198,8 @@ func (cm *CreatePasswordModal) Handle() {
 		}
 	}
 
-	if cm.btnNegative.Button.Clicked() {
+	cm.btnNegative.SetEnabled(!cm.isLoading)
+	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}
@@ -280,8 +290,7 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 						if cm.isLoading {
 							return D{}
 						}
-						cm.btnNegative.Background = cm.Theme.Color.Surface
-						cm.btnNegative.Color = cm.Theme.Color.Primary
+
 						return cm.btnNegative.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {

@@ -17,10 +17,10 @@ type Password struct {
 
 // Password initializes and returns an instance of Password
 func (t *Theme) Password() *Password {
-	cancelButton := t.Button(new(widget.Clickable), "Cancel")
+	cancelButton := t.Button("Cancel")
 	cancelButton.Background = t.Color.Surface
 	cancelButton.Color = t.Color.Primary
-	confirmButton := t.Button(new(widget.Clickable), "Confirm")
+	confirmButton := t.Button("Confirm")
 
 	editorWidget := &widget.Editor{
 		SingleLine: true,
@@ -98,14 +98,14 @@ func (p *Password) updateColors() {
 }
 
 func (p *Password) handleEvents(confirm func([]byte), cancel func()) {
-	for p.confirmButton.Button.Clicked() {
+	for p.confirmButton.Clicked() {
 		if p.passwordEditor.Editor.Len() > 0 {
 			confirm([]byte(p.passwordEditor.Editor.Text()))
 			p.reset()
 		}
 	}
 
-	for p.cancelButton.Button.Clicked() {
+	for p.cancelButton.Clicked() {
 		p.reset()
 		p.passwordEditor.IsRequired = false
 		p.passwordEditor.SetError("")

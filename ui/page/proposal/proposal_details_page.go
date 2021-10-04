@@ -46,7 +46,7 @@ type proposalDetails struct {
 	successIcon        *widget.Icon
 	vote               decredmaterial.Button
 	backButton         decredmaterial.IconButton
-	viewInPoliteiaBtn  *widget.Clickable
+	viewInPoliteiaBtn  *decredmaterial.Clickable
 }
 
 func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *proposalDetails {
@@ -64,16 +64,15 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		rejectedIcon:       l.Icons.NavigationCancel,
 		successIcon:        l.Icons.ActionCheckCircle,
 		timerIcon:          l.Icons.TimerIcon,
-		viewInPoliteiaBtn:  new(widget.Clickable),
+		viewInPoliteiaBtn:  l.Theme.NewClickable(true),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
-	pg.vote = l.Theme.Button(new(widget.Clickable), "Vote")
+	pg.vote = l.Theme.Button("Vote")
 	pg.vote.TextSize = values.TextSize14
 	pg.vote.Background = l.Theme.Color.Primary
 	pg.vote.Color = l.Theme.Color.Surface
-	pg.vote.CornerRadius = values.MarginPadding8
 	pg.vote.Inset = layout.Inset{
 		Top:    values.MarginPadding8,
 		Bottom: values.MarginPadding8,
@@ -102,7 +101,7 @@ func (pg *proposalDetails) Handle() {
 		}
 	}
 
-	if pg.vote.Button.Clicked() {
+	if pg.vote.Clicked() {
 		newVoteModal(pg.Load, pg.proposal).Show()
 	}
 
@@ -386,12 +385,12 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 	})
 }
 
-func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Image, btn *widget.Clickable) layout.Widget {
+func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Image, btn *decredmaterial.Clickable) layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12})),
 			layout.Rigid(func(gtx C) D {
-				return decredmaterial.Clickable(gtx, btn, func(gtx C) D {
+				return btn.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {

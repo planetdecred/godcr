@@ -6,7 +6,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -41,7 +40,7 @@ type ListPage struct {
 	ticketsList layout.List
 	isGridView  bool
 
-	toggleViewType *widget.Clickable
+	toggleViewType *decredmaterial.Clickable
 
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
@@ -55,7 +54,7 @@ func newListPage(l *load.Load) *ListPage {
 	pg := &ListPage{
 		Load:           l,
 		ticketsList:    layout.List{Axis: layout.Vertical},
-		toggleViewType: new(widget.Clickable),
+		toggleViewType: l.Theme.NewClickable(false),
 		isGridView:     true,
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
