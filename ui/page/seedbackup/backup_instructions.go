@@ -2,6 +2,7 @@ package seedbackup
 
 import (
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -33,8 +34,10 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 		Load:   l,
 		wallet: wallet,
 
-		viewSeedBtn: l.Theme.Button(new(widget.Clickable), "View seed phrase"),
+		viewSeedBtn: l.Theme.Button("View seed phrase"),
 	}
+
+	bi.viewSeedBtn.Font.Weight = text.Medium
 
 	bi.backButton, _ = components.SubpageHeaderButtons(l)
 	bi.backButton.Icon = l.Icons.ContentClear
@@ -102,13 +105,7 @@ func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	if pg.verifyCheckBoxes() {
-		pg.viewSeedBtn.Background = pg.Theme.Color.Primary
-		pg.viewSeedBtn.Color = pg.Theme.Color.InvText
-	} else {
-		pg.viewSeedBtn.Background = pg.Theme.Color.InactiveGray
-		pg.viewSeedBtn.Color = pg.Theme.Color.Text
-	}
+	pg.viewSeedBtn.SetEnabled(pg.verifyCheckBoxes())
 
 	return container(gtx, *pg.Theme, sp.Layout, "", pg.viewSeedBtn)
 }

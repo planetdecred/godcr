@@ -1,7 +1,6 @@
 package tickets
 
 import (
-	"image/color"
 	"strconv"
 
 	"gioui.org/layout"
@@ -42,13 +41,13 @@ func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
 
 		tickets:        l.Theme.Editor(new(widget.Editor), ""),
 		rememberVSP:    l.Theme.CheckBox(new(widget.Bool), "Remember VSP"),
-		cancelPurchase: l.Theme.Button(new(widget.Clickable), "Cancel"),
-		reviewPurchase: l.Theme.Button(new(widget.Clickable), "Review purchase"),
+		cancelPurchase: l.Theme.OutlineButton("Cancel"),
+		reviewPurchase: l.Theme.Button("Review purchase"),
 		modal:          *l.Theme.ModalFloatTitle(),
 	}
 
-	tp.cancelPurchase.Background = color.NRGBA{}
-	tp.cancelPurchase.Color = l.Theme.Color.Primary
+	tp.reviewPurchase.SetEnabled(false)
+
 	tp.vspIsFetched = len((*l.WL.VspInfo).List) > 0
 
 	tp.tickets.Editor.SetText("1")
@@ -147,11 +146,6 @@ func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, tp.cancelPurchase.Layout)
 					}),
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						if tp.canPurchase() {
-							tp.reviewPurchase.Background = tp.Theme.Color.Primary
-						} else {
-							tp.reviewPurchase.Background = tp.Theme.Color.Hint
-						}
 						return tp.reviewPurchase.Layout(gtx)
 					}),
 				)
@@ -244,6 +238,8 @@ func (tp *ticketPurchaseModal) calculateTotals() {
 }
 
 func (tp *ticketPurchaseModal) Handle() {
+	tp.reviewPurchase.SetEnabled(tp.canPurchase())
+
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
 		if tp.WL.GetRememberVSP() != "" {
@@ -252,11 +248,11 @@ func (tp *ticketPurchaseModal) Handle() {
 		}
 	}
 
-	if tp.cancelPurchase.Button.Clicked() {
+	if tp.cancelPurchase.Clicked() {
 		tp.Dismiss()
 	}
 
-	if tp.canPurchase() && tp.reviewPurchase.Button.Clicked() {
+	if tp.canPurchase() && tp.reviewPurchase.Clicked() {
 
 		if tp.vspSelector.Changed() && tp.rememberVSP.CheckBox.Value {
 			tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)

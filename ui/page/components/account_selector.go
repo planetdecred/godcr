@@ -3,12 +3,10 @@ package components
 import (
 	"errors"
 	"fmt"
-	"image/color"
 
 	"gioui.org/io/event"
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
@@ -25,7 +23,7 @@ type AccountSelector struct {
 	accountIsValid func(*dcrlibwallet.Account) bool
 	callback       func(*dcrlibwallet.Account)
 
-	openSelectorDialog *widget.Clickable
+	openSelectorDialog *decredmaterial.Clickable
 
 	wallets            []*dcrlibwallet.Wallet
 	selectedAccount    *dcrlibwallet.Account
@@ -39,7 +37,7 @@ func NewAccountSelector(l *load.Load) *AccountSelector {
 		Load:               l,
 		multiWallet:        l.WL.MultiWallet,
 		accountIsValid:     func(*dcrlibwallet.Account) bool { return true },
-		openSelectorDialog: new(widget.Clickable),
+		openSelectorDialog: l.Theme.NewClickable(true),
 
 		wallets: l.WL.SortedWalletList(),
 	}
@@ -112,76 +110,70 @@ func (as *AccountSelector) SelectedAccount() *dcrlibwallet.Account {
 func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 	as.Handle()
 
-	border := widget.Border{
-		Color:        as.Theme.Color.Gray1,
-		CornerRadius: values.MarginPadding8,
-		Width:        values.MarginPadding2,
-	}
-
-	return border.Layout(gtx, func(gtx C) D {
-		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, as.openSelectorDialog, func(gtx C) D {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+	return decredmaterial.LinearLayout{
+		Width:     decredmaterial.MatchParent,
+		Height:    decredmaterial.WrapContent,
+		Padding:   layout.UniformInset(values.MarginPadding12),
+		Border:    decredmaterial.Border{Width: values.MarginPadding2, Color: as.Theme.Color.Gray1, Radius: decredmaterial.Radius(8)},
+		Clickable: as.openSelectorDialog,
+	}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			accountIcon := as.Icons.AccountIcon
+			inset := layout.Inset{
+				Right: values.MarginPadding8,
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return accountIcon.Layout24dp(gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return as.Theme.Body1(as.selectedAccount.Name).Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			inset := layout.Inset{
+				Left: values.MarginPadding4,
+				Top:  values.MarginPadding2,
+			}
+			return inset.Layout(gtx, func(gtx C) D {
+				return decredmaterial.Card{
+					Color: as.Theme.Color.LightGray,
+				}.Layout(gtx, func(gtx C) D {
+					m2 := values.MarginPadding2
+					m4 := values.MarginPadding4
+					inset := layout.Inset{
+						Left:   m4,
+						Top:    m2,
+						Bottom: m2,
+						Right:  m4,
+					}
+					return inset.Layout(gtx, func(gtx C) D {
+						text := as.Theme.Caption(as.selectedWalletName)
+						text.Color = as.Theme.Color.Gray
+						return text.Layout(gtx)
+					})
+				})
+			})
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						accountIcon := as.Icons.AccountIcon
+						txt := as.Theme.Body1(as.totalBalance)
+						txt.Color = as.Theme.Color.DeepBlue
+						return txt.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
 						inset := layout.Inset{
-							Right: values.MarginPadding8,
+							Left: values.MarginPadding15,
 						}
 						return inset.Layout(gtx, func(gtx C) D {
-							return accountIcon.Layout24dp(gtx)
-						})
-					}),
-					layout.Rigid(func(gtx C) D {
-						return as.Theme.Body1(as.selectedAccount.Name).Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						inset := layout.Inset{
-							Left: values.MarginPadding4,
-							Top:  values.MarginPadding2,
-						}
-						return inset.Layout(gtx, func(gtx C) D {
-							return decredmaterial.Card{
-								Color: as.Theme.Color.LightGray,
-							}.Layout(gtx, func(gtx C) D {
-								m2 := values.MarginPadding2
-								m4 := values.MarginPadding4
-								inset := layout.Inset{
-									Left:   m4,
-									Top:    m2,
-									Bottom: m2,
-									Right:  m4,
-								}
-								return inset.Layout(gtx, func(gtx C) D {
-									text := as.Theme.Caption(as.selectedWalletName)
-									text.Color = as.Theme.Color.Gray
-									return text.Layout(gtx)
-								})
-							})
-						})
-					}),
-					layout.Flexed(1, func(gtx C) D {
-						return layout.E.Layout(gtx, func(gtx C) D {
-							return layout.Flex{}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									txt := as.Theme.Body1(as.totalBalance)
-									txt.Color = as.Theme.Color.DeepBlue
-									return txt.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									inset := layout.Inset{
-										Left: values.MarginPadding15,
-									}
-									return inset.Layout(gtx, func(gtx C) D {
-										return as.Icons.DropDownIcon.Layout(gtx, values.MarginPadding20)
-									})
-								}),
-							)
+							return as.Icons.DropDownIcon.Layout(gtx, values.MarginPadding20)
 						})
 					}),
 				)
 			})
-		})
-	})
+		}),
+	)
 }
 
 const ModalAccountSelector = "AccountSelectorModal"
@@ -209,7 +201,7 @@ type AccountSelectorModal struct {
 
 type selectorAccount struct {
 	*dcrlibwallet.Account
-	button *widget.Clickable
+	clickable *decredmaterial.Clickable
 }
 
 func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.Account, wallets []*dcrlibwallet.Wallet) *AccountSelectorModal {
@@ -224,7 +216,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 		isCancelable:           true,
 	}
 
-	asm.walletInfoButton = l.Theme.PlainIconButton(new(widget.Clickable), asm.Icons.ActionInfo)
+	asm.walletInfoButton = l.Theme.PlainIconButton(asm.Icons.ActionInfo)
 	asm.walletInfoButton.Color = asm.Theme.Color.Gray3
 	asm.walletInfoButton.Size = values.MarginPadding15
 	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
@@ -250,8 +242,8 @@ func (asm *AccountSelectorModal) OnResume() {
 		for _, account := range accounts {
 			if asm.accountIsValid(account) {
 				walletAccounts[wal.ID] = append(walletAccounts[wal.ID], &selectorAccount{
-					Account: account,
-					button:  new(widget.Clickable),
+					Account:   account,
+					clickable: asm.Theme.NewClickable(true),
 				})
 			}
 		}
@@ -287,7 +279,7 @@ func (asm *AccountSelectorModal) Handle() {
 	if asm.eventQueue != nil {
 		for _, accounts := range asm.accounts {
 			for _, account := range accounts {
-				if account.button.Clicked() {
+				for account.clickable.Clicked() {
 					asm.callback(account.Account)
 					asm.Dismiss()
 				}
@@ -370,14 +362,8 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 						wal := asm.filteredWallets[windex]
 						return wallAcctGroup(gtx, wal.Name, func(gtx C) D {
 							accounts := asm.accounts[wal.ID]
-
-							card := asm.Theme.Card()
-							card.Color = color.NRGBA{}
-							card.Radius = decredmaterial.Radius(0)
 							return asm.accountsList.Layout(gtx, len(accounts), func(gtx C, aindex int) D {
-								return card.HoverableLayout(gtx, accounts[aindex].button, func(gtx C) D {
-									return asm.walletAccountLayout(gtx, accounts[aindex])
-								})
+								return asm.walletAccountLayout(gtx, accounts[aindex])
 							})
 						})
 					})
@@ -404,64 +390,61 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 
 func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account *selectorAccount) layout.Dimensions {
 	accountIcon := asm.Icons.AccountIcon
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-	return Container{Padding: layout.UniformInset(values.MarginPadding8)}.Layout(gtx, func(gtx C) D {
-		return layout.Stack{}.Layout(gtx,
-			layout.Stacked(func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Flexed(0.1, func(gtx C) D {
-								return layout.Inset{
-									Right: values.MarginPadding18,
-								}.Layout(gtx, func(gtx C) D {
-									return accountIcon.Layout24dp(gtx)
-								})
-							}),
-							layout.Flexed(0.7, func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										acct := asm.Theme.Label(values.TextSize18, account.Name)
-										acct.Color = asm.Theme.Color.Text
-										return EndToEndRow(gtx, acct.Layout, func(gtx C) D {
-											return LayoutBalance(gtx, asm.Load, dcrutil.Amount(account.TotalBalance).String())
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										spendable := asm.Theme.Label(values.TextSize14, values.String(values.StrLabelSpendable))
-										spendable.Color = asm.Theme.Color.Gray
-										spendableBal := asm.Theme.Label(values.TextSize14, dcrutil.Amount(account.Balance.Spendable).String())
-										spendableBal.Color = asm.Theme.Color.Gray
-										return EndToEndRow(gtx, spendable.Layout, spendableBal.Layout)
-									}),
-								)
-							}),
-							layout.Flexed(0.1, func(gtx C) D {
-								inset := layout.Inset{
-									Top: values.MarginPadding10,
-								}
-								sections := func(gtx layout.Context) layout.Dimensions {
-									return layout.E.Layout(gtx, func(gtx C) D {
-										return inset.Layout(gtx, func(gtx C) D {
-											return asm.Icons.NavigationCheck.Layout(gtx, values.MarginPadding20)
-										})
-									})
-								}
+	return decredmaterial.LinearLayout{
+		Width:     decredmaterial.MatchParent,
+		Height:    decredmaterial.WrapContent,
+		Margin:    layout.Inset{Bottom: values.MarginPadding4},
+		Padding:   layout.Inset{Top: values.MarginPadding8, Bottom: values.MarginPadding8},
+		Clickable: account.clickable,
+		Alignment: layout.Middle,
+	}.Layout(gtx,
+		layout.Flexed(0.1, func(gtx C) D {
+			return layout.Inset{
+				Right: values.MarginPadding18,
+			}.Layout(gtx, func(gtx C) D {
+				return accountIcon.Layout24dp(gtx)
+			})
+		}),
+		layout.Flexed(0.8, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					acct := asm.Theme.Label(values.TextSize18, account.Name)
+					acct.Color = asm.Theme.Color.Text
+					return EndToEndRow(gtx, acct.Layout, func(gtx C) D {
+						return LayoutBalance(gtx, asm.Load, dcrutil.Amount(account.TotalBalance).String())
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					spendable := asm.Theme.Label(values.TextSize14, values.String(values.StrLabelSpendable))
+					spendable.Color = asm.Theme.Color.Gray
+					spendableBal := asm.Theme.Label(values.TextSize14, dcrutil.Amount(account.Balance.Spendable).String())
+					spendableBal.Color = asm.Theme.Color.Gray
+					return EndToEndRow(gtx, spendable.Layout, spendableBal.Layout)
+				}),
+			)
+		}),
 
-								if account.Number == asm.currentSelectedAccount.Number &&
-									account.WalletID == asm.currentSelectedAccount.WalletID {
-									return sections(gtx)
-								}
-								return layout.Dimensions{}
-							}),
-						)
-					}),
-				)
-			}),
-			layout.Expanded(account.button.Layout),
-		)
-	})
+		layout.Flexed(0.1, func(gtx C) D {
+			inset := layout.Inset{
+				Right: values.MarginPadding10,
+				Top:   values.MarginPadding10,
+			}
+			sections := func(gtx layout.Context) layout.Dimensions {
+				return layout.E.Layout(gtx, func(gtx C) D {
+					return inset.Layout(gtx, func(gtx C) D {
+						return asm.Icons.NavigationCheck.Layout(gtx, values.MarginPadding20)
+					})
+				})
+			}
+
+			if account.Number == asm.currentSelectedAccount.Number &&
+				account.WalletID == asm.currentSelectedAccount.WalletID {
+				return sections(gtx)
+			}
+			return layout.Dimensions{}
+		}),
+	)
 }
 
 func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dimensions {

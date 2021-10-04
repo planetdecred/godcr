@@ -8,7 +8,6 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
@@ -27,7 +26,7 @@ type AcctDetailsPage struct {
 	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
 	backButton               decredmaterial.IconButton
-	renameAccount            *widget.Clickable
+	renameAccount            *decredmaterial.Clickable
 
 	stakingBalance   int64
 	totalBalance     string
@@ -50,8 +49,8 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		acctDetailsPageContainer: layout.List{
 			Axis: layout.Vertical,
 		},
-		backButton:    l.Theme.PlainIconButton(new(widget.Clickable), l.Icons.NavigationArrowBack),
-		renameAccount: new(widget.Clickable),
+		backButton:    l.Theme.PlainIconButton(l.Icons.NavigationArrowBack),
+		renameAccount: l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)

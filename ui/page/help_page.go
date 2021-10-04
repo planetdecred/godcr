@@ -4,7 +4,6 @@ import (
 	"image"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -16,7 +15,7 @@ const HelpPageID = "Help"
 
 type HelpPage struct {
 	*load.Load
-	documentation *widget.Clickable
+	documentation *decredmaterial.Clickable
 
 	backButton decredmaterial.IconButton
 }
@@ -24,9 +23,10 @@ type HelpPage struct {
 func NewHelpPage(l *load.Load) *HelpPage {
 	pg := &HelpPage{
 		Load:          l,
-		documentation: new(widget.Clickable),
+		documentation: l.Theme.NewClickable(false),
 	}
 
+	pg.documentation.Radius = decredmaterial.Radius(14)
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
@@ -74,22 +74,22 @@ func (pg *HelpPage) document() layout.Widget {
 	}
 }
 
-func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
-	card := pg.Theme.Card()
-	card.Border = true
-	return card.HoverableLayout(gtx, action, func(gtx C) D {
-		return decredmaterial.Clickable(gtx, action, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return icon.Layout24dp(gtx)
-					}),
-					layout.Rigid(body),
-					layout.Rigid(func(gtx C) D {
-						size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-						return layout.Dimensions{Size: size}
-					}),
-				)
+func (pg *HelpPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, body layout.Widget) layout.Dimensions {
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+			return action.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return icon.Layout24dp(gtx)
+						}),
+						layout.Rigid(body),
+						layout.Rigid(func(gtx C) D {
+							size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
+							return layout.Dimensions{Size: size}
+						}),
+					)
+				})
 			})
 		})
 	})

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
+	"gioui.org/text"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -20,7 +20,7 @@ const VerifySeedPageID = "verify_seed"
 type shuffledSeedWords struct {
 	selectedIndex int
 	words         []string
-	clickables    []*widget.Clickable
+	clickables    []*decredmaterial.Clickable
 }
 
 type VerifySeedPage struct {
@@ -41,10 +41,12 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 		wallet: wallet,
 		seed:   seed,
 
-		actionButton: l.Theme.Button(new(widget.Clickable), "Verify"),
+		actionButton: l.Theme.Button("Verify"),
 		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
 	}
+
+	pg.actionButton.Font.Weight = text.Medium
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 	pg.backButton.Icon = l.Icons.ContentClear
@@ -75,18 +77,24 @@ func (pg *VerifySeedPage) getMultiSeed(realSeedIndex int, allSeeds []string) shu
 	shuffledSeed := shuffledSeedWords{
 		selectedIndex: -1,
 		words:         make([]string, 0),
-		clickables:    make([]*widget.Clickable, 0),
+		clickables:    make([]*decredmaterial.Clickable, 0),
+	}
+
+	clickable := func() *decredmaterial.Clickable {
+		cl := pg.Theme.NewClickable(true)
+		cl.Radius = decredmaterial.Radius(8)
+		return cl
 	}
 
 	shuffledSeed.words = append(shuffledSeed.words, allSeeds[realSeedIndex])
-	shuffledSeed.clickables = append(shuffledSeed.clickables, &widget.Clickable{})
+	shuffledSeed.clickables = append(shuffledSeed.clickables, clickable())
 	allSeeds = removeSeed(allSeeds, realSeedIndex)
 
 	for i := 0; i < 3; i++ {
 		randomSeed := rand.Intn(len(allSeeds))
 
 		shuffledSeed.words = append(shuffledSeed.words, allSeeds[randomSeed])
-		shuffledSeed.clickables = append(shuffledSeed.clickables, &widget.Clickable{})
+		shuffledSeed.clickables = append(shuffledSeed.clickables, clickable())
 		allSeeds = removeSeed(allSeeds, randomSeed)
 	}
 
@@ -213,14 +221,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 		},
 	}
 
-	if pg.allSeedsSelected() {
-		pg.actionButton.Background = pg.Theme.Color.Primary
-		pg.actionButton.Color = pg.Theme.Color.InvText
-	} else {
-		pg.actionButton.Background = pg.Theme.Color.InactiveGray
-		pg.actionButton.Color = pg.Theme.Color.Text
-	}
-
+	pg.actionButton.SetEnabled(pg.allSeedsSelected())
 	return container(gtx, *pg.Theme, sp.Layout, "", pg.actionButton)
 }
 
@@ -264,7 +265,7 @@ func (pg *VerifySeedPage) seedButton(gtx C, index int, multiSeed shuffledSeedWor
 		textColor = pg.Theme.Color.Primary
 	}
 
-	return decredmaterial.Clickable(gtx, multiSeed.clickables[index], func(gtx C) D {
+	return multiSeed.clickables[index].Layout(gtx, func(gtx C) D {
 
 		return decredmaterial.LinearLayout{
 			Width:      gtx.Px(values.MarginPadding100),

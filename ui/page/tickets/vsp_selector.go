@@ -22,14 +22,14 @@ type vspSelector struct {
 	dialogTitle string
 
 	changed      bool
-	showVSPModal *widget.Clickable
+	showVSPModal *decredmaterial.Clickable
 	selectedVSP  *wallet.VSPInfo
 }
 
 func newVSPSelector(l *load.Load) *vspSelector {
 	v := &vspSelector{
 		Load:         l,
-		showVSPModal: new(widget.Clickable),
+		showVSPModal: l.Theme.NewClickable(true),
 	}
 	return v
 }
@@ -81,7 +81,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, v.showVSPModal, func(gtx C) D {
+			return v.showVSPModal.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						if v.selectedVSP == nil {
@@ -142,10 +142,12 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 		Load: l,
 
 		inputVSP: l.Theme.Editor(new(widget.Editor), "Add a new VSP..."),
-		addVSP:   l.Theme.Button(new(widget.Clickable), "Save"),
+		addVSP:   l.Theme.Button("Save"),
 		vspHosts: &layout.List{Axis: layout.Vertical},
 		modal:    *l.Theme.ModalFloatTitle(),
 	}
+
+	v.addVSP.SetEnabled(false)
 
 	return v
 }
@@ -167,7 +169,8 @@ func (v *vspSelectorModal) Dismiss() {
 }
 
 func (v *vspSelectorModal) Handle() {
-	if v.editorsNotEmpty(&v.addVSP, v.inputVSP.Editor) && v.addVSP.Button.Clicked() {
+	v.addVSP.SetEnabled(v.editorsNotEmpty(v.inputVSP.Editor))
+	if v.addVSP.Clicked() {
 		go func() {
 			err := v.WL.AddVSP(v.inputVSP.Editor.Text())
 			if err != nil {
@@ -263,15 +266,12 @@ func (v *vspSelectorModal) handlerSelectVSP(events []gesture.ClickEvent, info *w
 	}
 }
 
-func (v *vspSelectorModal) editorsNotEmpty(btn *decredmaterial.Button, editors ...*widget.Editor) bool {
-	btn.Color = v.Theme.Color.Surface
+func (v *vspSelectorModal) editorsNotEmpty(editors ...*widget.Editor) bool {
 	for _, e := range editors {
 		if e.Text() == "" {
-			btn.Background = v.Theme.Color.Hint
 			return false
 		}
 	}
 
-	btn.Background = v.Theme.Color.Primary
 	return true
 }

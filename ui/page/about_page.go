@@ -24,7 +24,7 @@ type AboutPage struct {
 	network        decredmaterial.Label
 	networkValue   decredmaterial.Label
 	license        decredmaterial.Label
-	licenseRow     *widget.Clickable
+	licenseRow     *decredmaterial.Clickable
 
 	chevronRightIcon *widget.Icon
 
@@ -43,8 +43,13 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		network:          l.Theme.Body1("Network"),
 		networkValue:     l.Theme.Body1(l.WL.Wallet.Net),
 		license:          l.Theme.Body1("License"),
-		licenseRow:       new(widget.Clickable),
+		licenseRow:       l.Theme.NewClickable(true),
 		chevronRightIcon: l.Icons.ChevronRight,
+	}
+
+	pg.licenseRow.Radius = decredmaterial.CornerRadius{
+		BottomRight: values.MarginPadding14.V,
+		BottomLeft:  values.MarginPadding14.V,
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -109,7 +114,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 			})
 		},
 		func(gtx C) D {
-			return decredmaterial.Clickable(gtx, pg.licenseRow, func(gtx C) D {
+			return pg.licenseRow.Layout(gtx, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return in.Layout(gtx, pg.license.Layout)

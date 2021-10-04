@@ -195,7 +195,7 @@ func NewTabs(th *Theme) *Tabs {
 		Position:    Left,
 		scrollLeft:  new(widget.Clickable),
 		scrollRight: new(widget.Clickable),
-		iconButton:  th.IconButton(new(widget.Clickable), new(widget.Icon)),
+		iconButton:  th.IconButton(new(widget.Icon)),
 		flex:        layout.Flex{},
 	}
 }
@@ -328,7 +328,7 @@ func (t *Tabs) ChangeEvent() bool {
 
 func (t *Tabs) processChangeEvent() {
 	for i := range t.items {
-		if t.items[i].button.Button.Clicked() {
+		if t.items[i].button.Clicked() {
 			t.ChangeTab(i)
 			return
 		}

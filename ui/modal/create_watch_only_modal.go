@@ -42,13 +42,15 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 		Load:         l,
 		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
-		btnPositve:   l.Theme.Button(new(widget.Clickable), values.String(values.StrImport)),
-		btnNegative:  l.Theme.Button(new(widget.Clickable), values.String(values.StrCancel)),
+		btnPositve:   l.Theme.Button(values.String(values.StrImport)),
+		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
 	}
 
-	cm.btnPositve.TextSize, cm.btnNegative.TextSize = values.TextSize16, values.TextSize16
-	cm.btnPositve.Font.Weight, cm.btnNegative.Font.Weight = text.Bold, text.Bold
+	cm.btnPositve.Font.Weight = text.Medium
+
+	cm.btnNegative.Font.Weight = text.Medium
+	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
 
 	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
@@ -116,7 +118,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		cm.extendedPubKey.SetError("")
 	}
 
-	for (cm.btnPositve.Button.Clicked() || isSubmit) && cm.isEnabled {
+	for (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
 		if !editorsNotEmpty(cm.walletName.Editor) {
 			cm.walletName.SetError("enter wallet name")
 			return
@@ -133,7 +135,8 @@ func (cm *CreateWatchOnlyModal) Handle() {
 		}
 	}
 
-	if cm.btnNegative.Button.Clicked() {
+	cm.btnNegative.SetEnabled(!cm.isLoading)
+	if cm.btnNegative.Clicked() {
 		if !cm.isLoading {
 			cm.Dismiss()
 		}
@@ -167,15 +170,12 @@ func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
 							return D{}
 						}
 
-						cm.btnNegative.Background = cm.Theme.Color.Surface
-						cm.btnNegative.Color = cm.Theme.Color.Primary
 						return cm.btnNegative.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						if cm.isLoading {
 							return cm.materialLoader.Layout(gtx)
 						}
-
 						return cm.btnPositve.Layout(gtx)
 					}),
 				)

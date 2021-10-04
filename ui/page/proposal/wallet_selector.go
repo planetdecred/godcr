@@ -23,7 +23,7 @@ type WalletSelector struct {
 	walletIsValid func(*dcrlibwallet.Wallet) bool
 	callback      func(*dcrlibwallet.Wallet)
 
-	openSelectorDialog *widget.Clickable
+	openSelectorDialog *decredmaterial.Clickable
 
 	wallets        []*dcrlibwallet.Wallet
 	selectedWallet *dcrlibwallet.Wallet
@@ -36,7 +36,7 @@ func NewWalletSelector(l *load.Load) *WalletSelector {
 		Load:               l,
 		multiWallet:        l.WL.MultiWallet,
 		walletIsValid:      func(*dcrlibwallet.Wallet) bool { return true },
-		openSelectorDialog: new(widget.Clickable),
+		openSelectorDialog: l.Theme.NewClickable(true),
 
 		wallets: l.WL.SortedWalletList(),
 	}
@@ -115,7 +115,7 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 
 	return border.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding12).Layout(gtx, func(gtx C) D {
-			return decredmaterial.Clickable(gtx, as.openSelectorDialog, func(gtx C) D {
+			return as.openSelectorDialog.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						accountIcon := as.Icons.AccountIcon

@@ -5,6 +5,7 @@ import "gioui.org/unit"
 var (
 	Size0_5 = unit.Dp(0.5)
 	Size28  = unit.Dp(28)
+	Size180 = unit.Dp(180)
 
 	MarginPadding0        = unit.Dp(0)
 	MarginPadding1        = unit.Dp(1)
@@ -59,6 +60,7 @@ var (
 	MarginPadding140      = unit.Dp(140)
 	MarginPadding150      = unit.Dp(150)
 	MarginPadding168      = unit.Dp(168)
+	MarginPadding174      = unit.Dp(174)
 	MarginPadding195      = unit.Dp(195)
 	MarginPaddingMinus195 = unit.Dp(-195)
 	MarginPadding200      = unit.Dp(200)

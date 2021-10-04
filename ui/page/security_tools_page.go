@@ -9,7 +9,6 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 
 	"gioui.org/layout"
-	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/values"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -19,8 +18,8 @@ const SecurityToolsPageID = "SecurityTools"
 
 type SecurityToolsPage struct {
 	*load.Load
-	verifyMessage   *widget.Clickable
-	validateAddress *widget.Clickable
+	verifyMessage   *decredmaterial.Clickable
+	validateAddress *decredmaterial.Clickable
 
 	backButton decredmaterial.IconButton
 	infoButton decredmaterial.IconButton
@@ -29,9 +28,12 @@ type SecurityToolsPage struct {
 func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 	pg := &SecurityToolsPage{
 		Load:            l,
-		verifyMessage:   new(widget.Clickable),
-		validateAddress: new(widget.Clickable),
+		verifyMessage:   l.Theme.NewClickable(false),
+		validateAddress: l.Theme.NewClickable(false),
 	}
+
+	pg.verifyMessage.Radius = decredmaterial.Radius(14)
+	pg.validateAddress.Radius = decredmaterial.Radius(14)
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -88,22 +90,22 @@ func (pg *SecurityToolsPage) address() layout.Widget {
 	}
 }
 
-func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *widget.Clickable, body layout.Widget) layout.Dimensions {
-	card := pg.Theme.Card()
-	card.Border = true
-	return card.HoverableLayout(gtx, action, func(gtx C) D {
-		return decredmaterial.Clickable(gtx, action, func(gtx C) D {
-			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return icon.Layout24dp(gtx)
-					}),
-					layout.Rigid(body),
-					layout.Rigid(func(gtx C) D {
-						size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
-						return layout.Dimensions{Size: size}
-					}),
-				)
+func (pg *SecurityToolsPage) pageSections(gtx layout.Context, icon *decredmaterial.Image, action *decredmaterial.Clickable, body layout.Widget) layout.Dimensions {
+	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+			return action.Layout(gtx, func(gtx C) D {
+				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
+					return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle, Spacing: layout.SpaceAround}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return icon.Layout24dp(gtx)
+						}),
+						layout.Rigid(body),
+						layout.Rigid(func(gtx C) D {
+							size := image.Point{X: gtx.Constraints.Max.X, Y: gtx.Constraints.Min.Y}
+							return layout.Dimensions{Size: size}
+						}),
+					)
+				})
 			})
 		})
 	})

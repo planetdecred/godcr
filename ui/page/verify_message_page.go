@@ -1,8 +1,6 @@
 package page
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -50,17 +48,11 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg.signatureEditor = l.Theme.Editor(new(widget.Editor), "Signature")
 	pg.signatureEditor.Editor.Submit = true
 
-	buttonTextSize := values.TextSize14
-	pg.verifyButton = l.Theme.Button(new(widget.Clickable), "Verify message")
-	pg.verifyButton.TextSize = buttonTextSize
-	pg.verifyButton.Font.Weight = text.Bold
-	pg.verifyButton.Background = l.Theme.Color.Hint
+	pg.verifyButton = l.Theme.Button("Verify message")
+	pg.verifyButton.Font.Weight = text.Medium
 
-	pg.clearBtn = l.Theme.Button(new(widget.Clickable), "Clear all")
-	pg.clearBtn.TextSize = buttonTextSize
-	pg.clearBtn.Background = color.NRGBA{}
-	pg.clearBtn.Color = l.Theme.Color.Hint
-	pg.clearBtn.Font.Weight = text.Bold
+	pg.clearBtn = l.Theme.OutlineButton("Clear all")
+	pg.clearBtn.Font.Weight = text.Medium
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -169,7 +161,7 @@ func (pg *VerifyMessagePage) Handle() {
 		}
 	}
 
-	if (pg.verifyButton.Button.Clicked() || isSubmit) && pg.isEnabled {
+	if (pg.verifyButton.Clicked() || isSubmit) && pg.isEnabled {
 		if pg.validateAllInputs() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
@@ -188,7 +180,7 @@ func (pg *VerifyMessagePage) Handle() {
 		}
 	}
 
-	if pg.clearBtn.Button.Clicked() {
+	if pg.clearBtn.Clicked() {
 		pg.clearInputs()
 	}
 }
@@ -202,11 +194,7 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 func (pg *VerifyMessagePage) updateButtonColors() {
 	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
 	pg.isEnabled = false
-	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
-		components.StringNotEmpty(pg.messageEditor.Editor.Text()) ||
-		components.StringNotEmpty(pg.signatureEditor.Editor.Text()) {
-		pg.clearBtn.Color = pg.Theme.Color.Primary
-	}
+
 	if pg.addressIsValid && components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
 		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
 		pg.isEnabled = true
@@ -215,7 +203,6 @@ func (pg *VerifyMessagePage) updateButtonColors() {
 
 func (pg *VerifyMessagePage) clearInputs() {
 	pg.verifyMessageStatus = nil
-	pg.verifyButton.Background = pg.Theme.Color.Hint
 	pg.addressEditor.Editor.SetText("")
 	pg.signatureEditor.Editor.SetText("")
 	pg.messageEditor.Editor.SetText("")

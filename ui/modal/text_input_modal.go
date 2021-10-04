@@ -101,7 +101,7 @@ func (tm *TextInputModal) Handle() {
 		tm.textInput.SetError("")
 	}
 
-	if (tm.btnPositve.Button.Clicked() || isSubmit) && tm.isEnabled {
+	if (tm.btnPositve.Clicked() || isSubmit) && tm.isEnabled {
 		if tm.IsLoading {
 			return
 		}
@@ -113,7 +113,7 @@ func (tm *TextInputModal) Handle() {
 		}
 	}
 
-	for tm.btnNegative.Button.Clicked() {
+	for tm.btnNegative.Clicked() {
 		if !tm.IsLoading {
 			tm.Dismiss()
 			tm.negativeButtonClicked()

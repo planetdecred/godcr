@@ -2,10 +2,10 @@ package send
 
 import (
 	"fmt"
-	"image/color"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -40,12 +40,12 @@ func newSendConfirmModal(l *load.Load, data *authoredTxData) *sendConfirmModal {
 		authoredTxData: data,
 	}
 
-	scm.closeConfirmationModalButton = l.Theme.Button(new(widget.Clickable), "Cancel")
-	scm.closeConfirmationModalButton.Background = color.NRGBA{}
-	scm.closeConfirmationModalButton.Color = l.Theme.Color.Primary
+	scm.closeConfirmationModalButton = l.Theme.OutlineButton("Cancel")
+	scm.closeConfirmationModalButton.Font.Weight = text.Medium
 
-	scm.confirmButton = l.Theme.Button(new(widget.Clickable), "")
-	scm.confirmButton.Background = scm.Theme.Color.InactiveGray
+	scm.confirmButton = l.Theme.Button("")
+	scm.confirmButton.Font.Weight = text.Medium
+	scm.confirmButton.SetEnabled(false)
 
 	scm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	scm.passwordEditor.Editor.SetText("")
@@ -101,22 +101,18 @@ func (scm *sendConfirmModal) Handle() {
 		if scm.passwordEditor.Editor.Focused() {
 			switch evt.(type) {
 			case widget.ChangeEvent:
-				if scm.passwordEditor.Editor.Text() == "" {
-					scm.confirmButton.Background = scm.Theme.Color.InactiveGray
-				} else {
-					scm.confirmButton.Background = scm.Theme.Color.Primary
-				}
+				scm.confirmButton.SetEnabled(scm.passwordEditor.Editor.Text() != "")
 			case widget.SubmitEvent:
 				scm.broadcastTransaction()
 			}
 		}
 	}
 
-	for scm.confirmButton.Button.Clicked() {
+	for scm.confirmButton.Clicked() {
 		scm.broadcastTransaction()
 	}
 
-	for scm.closeConfirmationModalButton.Button.Clicked() {
+	for scm.closeConfirmationModalButton.Clicked() {
 		if !scm.isSending {
 			scm.Dismiss()
 		}

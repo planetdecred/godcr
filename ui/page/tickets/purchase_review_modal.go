@@ -2,7 +2,6 @@ package tickets
 
 import (
 	"fmt"
-	"image/color"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -45,15 +44,12 @@ func newTicketReviewModal(l *load.Load, account *dcrlibwallet.Account, selectedV
 		selectedVSP:      selectedVSP,
 		modal:            *l.Theme.ModalFloatTitle(),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
-		purchase:         l.Theme.Button(new(widget.Clickable), "Purchase ticket"),
-		cancelPurchase:   l.Theme.Button(new(widget.Clickable), "Cancel"),
+		purchase:         l.Theme.Button("Purchase ticket"),
+		cancelPurchase:   l.Theme.OutlineButton("Cancel"),
 	}
 
 	th := material.NewTheme(gofont.Collection())
 	m.materialLoader = material.Loader(th)
-
-	m.purchase.Background = m.Theme.Color.Primary
-	m.cancelPurchase.Background, m.cancelPurchase.Color = color.NRGBA{}, l.Theme.Color.Primary
 	return m
 }
 
@@ -155,15 +151,14 @@ func (t *ticketReviewModal) Dismiss() {
 func (t *ticketReviewModal) OnResume() {}
 
 func (t *ticketReviewModal) Handle() {
-	for t.cancelPurchase.Button.Clicked() {
+	for t.cancelPurchase.Clicked() {
 		if !t.isLoading {
 			t.Dismiss()
 		}
 	}
 
-	for t.purchase.Button.Clicked() {
+	for t.purchase.Clicked() {
 		t.purchaseTickets()
-
 	}
 }
 

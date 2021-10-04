@@ -147,10 +147,10 @@ func (t *TestStruct) initWidgets() {
 
 	t.customEditorOutput.testOutput = t.theme.H6("no button clicked yet.")
 
-	t.customEditorOutput.test1btn = theme.Button(new(widget.Clickable), "Text1")
-	t.customEditorOutput.test2btn = theme.Button(new(widget.Clickable), "Text2")
-	t.customEditorOutput.test3btn = theme.Button(new(widget.Clickable), "Text3")
-	t.customEditorOutput.test4btn = theme.Button(new(widget.Clickable), "Text4")
+	t.customEditorOutput.test1btn = theme.Button("Text1")
+	t.customEditorOutput.test2btn = theme.Button("Text2")
+	t.customEditorOutput.test3btn = theme.Button("Text3")
+	t.customEditorOutput.test4btn = theme.Button("Text4")
 	t.customEditorOutput.radiobtn = theme.RadioButton(new(widget.Enum), "btn1", "test radio button", theme.Color.DeepBlue)
 	t.customEditorOutput.checkbox = theme.CheckBox(new(widget.Bool), "test checkbox")
 	t.customEditorOutput.progressBar = theme.ProgressBar(60)

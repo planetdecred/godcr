@@ -58,7 +58,7 @@ func NewUTXOPage(l *load.Load, account *dcrlibwallet.Account) *UTXOPage {
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
-	pg.useUTXOButton = l.Theme.Button(new(widget.Clickable), "OK")
+	pg.useUTXOButton = l.Theme.Button("OK")
 
 	return pg
 }
@@ -82,7 +82,7 @@ func (pg *UTXOPage) Handle() {
 			if (*pg.unspentOutputsSelected)[pg.selectedWalletID][pg.selectedAccountID][utxo.UTXO.OutputKey] != nil {
 				pg.checkboxes[i].CheckBox.Value = true
 			}
-			icoBtn := pg.Theme.IconButton(new(widget.Clickable), decredmaterial.MustIcon(widget.NewIcon(icons.ContentContentCopy)))
+			icoBtn := pg.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ContentContentCopy)))
 			icoBtn.Inset, icoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
 			icoBtn.Background = pg.Theme.Color.LightGray
 			pg.copyButtons[i] = icoBtn

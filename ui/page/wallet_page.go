@@ -33,8 +33,8 @@ type walletListItem struct {
 
 	// normal wallets
 	collapsible         *decredmaterial.CollapsibleWithOption
-	addAcctClickable    *widget.Clickable
-	backupAcctClickable *widget.Clickable
+	addAcctClickable    *decredmaterial.Clickable
+	backupAcctClickable *decredmaterial.Clickable
 
 	// watch only
 	moreButton decredmaterial.IconButton
@@ -65,7 +65,7 @@ type WalletPage struct {
 	optionsMenuCard          decredmaterial.Card
 	addWalletMenu            []menuItem
 	openPopupIndex           int
-	openAddWalletPopupButton *widget.Clickable
+	openAddWalletPopupButton *decredmaterial.Clickable
 	isAddWalletMenuOpen      bool
 	watchOnlyWalletLabel     decredmaterial.Label
 	watchOnlyWalletIcon      *decredmaterial.Image
@@ -86,13 +86,15 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		watchWalletsList:         l.Theme.NewClickableList(layout.Vertical),
 		card:                     l.Theme.Card(),
 		backdrop:                 new(widget.Clickable),
-		openAddWalletPopupButton: new(widget.Clickable),
+		openAddWalletPopupButton: l.Theme.NewClickable(false),
 		openPopupIndex:           -1,
 		shadowBox:                l.Theme.Shadow(),
 		separator:                l.Theme.Separator(),
 		addAcctIcon:              l.Icons.ContentAdd,
 		backupAcctIcon:           l.Icons.NavigationArrowForward,
 	}
+
+	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
 
 	pg.separator.Color = l.Theme.Color.Gray1
 	pg.addAcctIcon.Color = l.Theme.Color.Text
@@ -170,8 +172,13 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 			}
 			listItem.moreButton = moreBtn
 		} else {
-			listItem.addAcctClickable = new(widget.Clickable)
-			listItem.backupAcctClickable = new(widget.Clickable)
+			listItem.addAcctClickable = pg.Theme.NewClickable(true)
+
+			backupClickable := pg.Theme.NewClickable(false)
+			backupClickable.Color = pg.Theme.Color.OrangeRipple
+			backupClickable.Radius = decredmaterial.CornerRadius{BottomRight: 14, BottomLeft: 14}
+			listItem.backupAcctClickable = backupClickable
+
 			listItem.collapsible = pg.Theme.CollapsibleWithOption()
 		}
 		listItems = append(listItems, listItem)
@@ -458,12 +465,12 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 						}.Layout(gtx, pg.Theme.Separator().Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						return listItem.accountsList.HoverableLayout(gtx, len(listItem.accounts), func(gtx C, x int) D {
+						return listItem.accountsList.Layout(gtx, len(listItem.accounts), func(gtx C, x int) D {
 							return pg.walletAccountsLayout(gtx, listItem.accounts[x])
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return decredmaterial.Clickable(gtx, listItem.addAcctClickable, func(gtx C) D {
+						return listItem.addAcctClickable.Layout(gtx, func(gtx C) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 								return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -742,7 +749,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	textColour := pg.Theme.Color.InvText
-	return decredmaterial.Clickable(gtx, listItem.backupAcctClickable, func(gtx C) D {
+	return listItem.backupAcctClickable.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
@@ -815,8 +822,15 @@ func (pg *WalletPage) layoutAddWalletSection(gtx layout.Context) layout.Dimensio
 			}),
 			layout.Rigid(func(gtx C) D {
 				icon := pg.Icons.NewWalletIcon
-				// TODO: wrap in circular bg
-				return decredmaterial.Clickable(gtx, pg.openAddWalletPopupButton, icon.Layout24dp)
+
+				return decredmaterial.LinearLayout{
+					Width:      decredmaterial.WrapContent,
+					Height:     decredmaterial.WrapContent,
+					Padding:    layout.UniformInset(values.MarginPadding12),
+					Background: pg.Theme.Color.Surface,
+					Clickable:  pg.openAddWalletPopupButton,
+					Border:     decredmaterial.Border{Radius: pg.openAddWalletPopupButton.Radius},
+				}.Layout2(gtx, icon.Layout24dp)
 			}),
 		)
 	})
