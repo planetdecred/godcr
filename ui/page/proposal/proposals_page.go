@@ -291,11 +291,9 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 											return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 												return pg.lastUpdatedInfo.Layout(gtx)
 											})
-
 										}
 									}),
 								)
-
 							})
 						})
 					})
