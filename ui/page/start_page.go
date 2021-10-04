@@ -80,6 +80,7 @@ func (sp *startPage) OnResume() {
 func (sp *startPage) unlock() {
 	modal.NewPasswordModal(sp.Load).
 		Title("Unlock with password").
+		Hint("Startup password").
 		NegativeButton("Exit", func() {
 			sp.WL.MultiWallet.Shutdown()
 			os.Exit(0)

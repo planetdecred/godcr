@@ -130,7 +130,7 @@ func (pm *PasswordModal) Handle() {
 	if pm.btnPositve.Button.Clicked() || isSubmit {
 
 		if !editorsNotEmpty(pm.password.Editor) {
-			pm.password.SetError("enter spending password")
+			pm.password.SetError("Enter password")
 			return
 		}
 
