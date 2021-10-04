@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
@@ -224,7 +225,9 @@ func (pg *Page) pageSections(gtx layout.Context, title string, showAccountSwitch
 }
 
 func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
-
+	usdExchangeSet := components.USDExchangeValue ==
+		pg.WL.Wallet.
+			ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	return pg.pageSections(gtx, "To", true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -238,7 +241,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				if pg.exchangeRate != -1 {
+				if pg.exchangeRate != -1 && usdExchangeSet {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Flexed(0.45, func(gtx C) D {
 							return pg.amount.dcrAmountEditor.Layout(gtx)
