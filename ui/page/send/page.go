@@ -50,8 +50,9 @@ type Page struct {
 
 	moreOptionIsOpen bool
 
-	exchangeRate  float64
-	exchangeError string
+	exchangeRate   float64
+	usdExchangeSet bool
+	exchangeError  string
 
 	*authoredTxData
 }
@@ -142,7 +143,10 @@ func (pg *Page) OnResume() {
 
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == components.USDExchangeValue {
+		pg.usdExchangeSet = true
 		pg.fetchExchangeValue()
+	} else {
+		pg.usdExchangeSet = false
 	}
 }
 
