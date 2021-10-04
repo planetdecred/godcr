@@ -21,9 +21,11 @@ type SignMessagePage struct {
 	container layout.List
 	wallet    *dcrlibwallet.Wallet
 
-	isSigningMessage                           bool
-	addressIsValid                             bool
-	messageIsValid                             bool
+	isSigningMessage bool
+	addressIsValid   bool
+	messageIsValid   bool
+	isEnabled        bool
+
 	titleLabel, errorLabel, signedMessageLabel decredmaterial.Label
 	addressEditor, messageEditor               decredmaterial.Editor
 	clearButton, signButton, copyButton        decredmaterial.Button
@@ -205,7 +207,8 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 	}
 }
 
-func (pg *SignMessagePage) updateButtonState() {
+func (pg *SignMessagePage) updateButtonColors() {
+	pg.isEnabled = false
 	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
 		components.StringNotEmpty(pg.messageEditor.Editor.Text()) {
 		pg.clearButton.SetEnabled(true)
@@ -214,31 +217,24 @@ func (pg *SignMessagePage) updateButtonState() {
 	}
 
 	if !pg.isSigningMessage && pg.messageIsValid && pg.addressIsValid {
-		pg.signButton.SetEnabled(true)
-	} else {
-		pg.signButton.SetEnabled(false)
+		pg.isEnabled = true
 	}
+
+	pg.signButton.SetEnabled(pg.isEnabled)
 }
 
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
-	pg.updateButtonState()
+	pg.updateButtonColors()
 
-	for _, evt := range pg.addressEditor.Editor.Events() {
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.addressEditor.Editor, pg.messageEditor.Editor)
+	if isChanged {
 		if pg.addressEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				pg.validateAddress()
-			}
+			pg.validateAddress()
 		}
-	}
 
-	for _, evt := range pg.messageEditor.Editor.Events() {
 		if pg.messageEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				pg.validateMessage()
-			}
+			pg.validateMessage()
 		}
 	}
 
@@ -246,7 +242,7 @@ func (pg *SignMessagePage) Handle() {
 		pg.clearForm()
 	}
 
-	for pg.signButton.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor) {
+	if (pg.signButton.Clicked() || isSubmit) && pg.isEnabled {
 		if !pg.isSigningMessage && pg.validate() {
 			address := pg.addressEditor.Editor.Text()
 			message := pg.messageEditor.Editor.Text()

@@ -28,6 +28,7 @@ type VerifyMessagePage struct {
 	backButton     decredmaterial.IconButton
 	infoButton     decredmaterial.IconButton
 	addressIsValid bool
+	isEnabled      bool
 }
 
 func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
@@ -49,11 +50,9 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 
 	pg.verifyButton = l.Theme.Button("Verify message")
 	pg.verifyButton.Font.Weight = text.Medium
-	pg.verifyButton.SetEnabled(false)
 
 	pg.clearBtn = l.Theme.OutlineButton("Clear all")
 	pg.clearBtn.Font.Weight = text.Medium
-	pg.clearBtn.SetEnabled(false)
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -65,7 +64,7 @@ func (pg *VerifyMessagePage) ID() string {
 }
 
 func (pg *VerifyMessagePage) OnResume() {
-
+	pg.addressEditor.Editor.Focus()
 }
 
 func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -155,16 +154,14 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 func (pg *VerifyMessagePage) Handle() {
 	pg.updateButtonColors()
 
-	for _, evt := range pg.addressEditor.Editor.Events() {
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor)
+	if isChanged {
 		if pg.addressEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				pg.validateAddress()
-			}
+			pg.validateAddress()
 		}
 	}
 
-	if pg.verifyButton.Clicked() || handleSubmitEvent(pg.addressEditor.Editor, pg.messageEditor.Editor, pg.signatureEditor.Editor) {
+	if (pg.verifyButton.Clicked() || isSubmit) && pg.isEnabled {
 		if pg.validateAllInputs() {
 			pg.verifyMessage.Text = ""
 			pg.verifyMessageStatus = nil
@@ -195,18 +192,12 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 }
 
 func (pg *VerifyMessagePage) updateButtonColors() {
-	if components.StringNotEmpty(pg.addressEditor.Editor.Text()) ||
-		components.StringNotEmpty(pg.messageEditor.Editor.Text()) ||
-		components.StringNotEmpty(pg.signatureEditor.Editor.Text()) {
-		pg.clearBtn.SetEnabled(true)
-	} else {
-		pg.clearBtn.SetEnabled(false)
-	}
+	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
+	pg.isEnabled = false
 
 	if pg.addressIsValid && components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
-		pg.verifyButton.SetEnabled(true)
-	} else {
-		pg.verifyButton.SetEnabled(false)
+		pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Primary, pg.Theme.Color.Primary
+		pg.isEnabled = true
 	}
 }
 

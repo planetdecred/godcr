@@ -86,4 +86,5 @@ const FR = `
 "connectToSpecificPeer" = "Se connecter à un pair spécifique";
 "english" = "Anglais";
 "french" = "Français";
+"spanish" = "Espanol";
 `

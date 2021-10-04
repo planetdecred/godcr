@@ -371,3 +371,18 @@ func approxLuminance(c color.NRGBA) byte {
 	)
 	return byte((r*int(c.R) + g*int(c.G) + b*int(c.B)) / t)
 }
+
+func HandleEditorEvents(editors ...*widget.Editor) (bool, bool) {
+	var submit, changed bool
+	for _, editor := range editors {
+		for _, evt := range editor.Events() {
+			switch evt.(type) {
+			case widget.ChangeEvent:
+				changed = true
+			case widget.SubmitEvent:
+				submit = true
+			}
+		}
+	}
+	return submit, changed
+}

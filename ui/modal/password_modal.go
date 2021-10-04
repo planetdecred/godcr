@@ -67,6 +67,7 @@ func (pm *PasswordModal) ModalID() string {
 }
 
 func (pm *PasswordModal) OnResume() {
+	pm.password.Editor.Focus()
 }
 
 func (pm *PasswordModal) OnDismiss() {
@@ -121,10 +122,20 @@ func (pm *PasswordModal) SetError(err string) {
 }
 
 func (pm *PasswordModal) Handle() {
-	pm.btnPositve.SetEnabled(editorsNotEmpty(pm.password.Editor))
-	for pm.btnPositve.Clicked() || handleSubmitEvent(pm.password.Editor) {
-		if pm.isLoading || !editorsNotEmpty(pm.password.Editor) {
-			continue
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pm.password.Editor)
+	if isChanged {
+		pm.password.SetError("")
+	}
+
+	if pm.btnPositve.Button.Clicked() || isSubmit {
+
+		if !editorsNotEmpty(pm.password.Editor) {
+			pm.password.SetError("enter spending password")
+			return
+		}
+
+		if pm.isLoading {
+			return
 		}
 
 		pm.SetLoading(true)

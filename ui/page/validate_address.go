@@ -27,8 +27,8 @@ type ValidateAddressPage struct {
 	clearBtn, validateBtn decredmaterial.Button
 	stateValidate         int
 	walletName            string
-
-	backButton decredmaterial.IconButton
+	isEnabled             bool
+	backButton            decredmaterial.IconButton
 }
 
 func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
@@ -44,11 +44,9 @@ func NewValidateAddressPage(l *load.Load) *ValidateAddressPage {
 
 	pg.validateBtn = l.Theme.Button("Validate")
 	pg.validateBtn.Font.Weight = text.Medium
-	pg.validateBtn.SetEnabled(false)
 
 	pg.clearBtn = l.Theme.OutlineButton("Clear")
 	pg.clearBtn.Font.Weight = text.Medium
-	pg.clearBtn.SetEnabled(false)
 
 	pg.stateValidate = none
 
@@ -60,7 +58,7 @@ func (pg *ValidateAddressPage) ID() string {
 }
 
 func (pg *ValidateAddressPage) OnResume() {
-
+	pg.addressEditor.Editor.Focus()
 }
 
 func (pg *ValidateAddressPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -219,18 +217,14 @@ func (pg *ValidateAddressPage) pageSections(gtx layout.Context, body layout.Widg
 }
 
 func (pg *ValidateAddressPage) Handle() {
-	pg.updateButtonState()
+	pg.updateButtonColors()
 
-	for _, evt := range pg.addressEditor.Editor.Events() {
-		if pg.addressEditor.Editor.Focused() {
-			switch evt.(type) {
-			case widget.ChangeEvent:
-				pg.stateValidate = none
-			}
-		}
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.addressEditor.Editor)
+	if isChanged {
+		pg.stateValidate = none
 	}
 
-	if pg.validateBtn.Clicked() {
+	if (pg.validateBtn.Clicked() || isSubmit) && pg.isEnabled {
 		pg.validateAddress()
 	}
 
@@ -268,10 +262,21 @@ func (pg *ValidateAddressPage) validateAddress() {
 	pg.walletName = walletName
 }
 
-func (pg *ValidateAddressPage) updateButtonState() {
-	enabled := components.StringNotEmpty(pg.addressEditor.Editor.Text())
-	pg.validateBtn.SetEnabled(enabled)
-	pg.clearBtn.SetEnabled(enabled)
+func (pg *ValidateAddressPage) updateButtonColors() {
+	if !components.StringNotEmpty(pg.addressEditor.Editor.Text()) {
+		pg.validateBtn.Background = pg.Theme.Color.Hint
+		pg.clearBtn.Color = pg.Theme.Color.Hint
+		pg.isEnabled = false
+	} else {
+		pg.validateBtn.Background = pg.Theme.Color.Primary
+		pg.clearBtn.Color = pg.Theme.Color.Primary
+		pg.isEnabled = true
+	}
+}
+
+func (pg *ValidateAddressPage) clearInputs() {
+	pg.validateBtn.Background = pg.Theme.Color.Hint
+	pg.addressEditor.Editor.SetText("")
 }
 
 func (pg *ValidateAddressPage) OnClose() {}

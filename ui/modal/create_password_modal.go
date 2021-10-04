@@ -30,9 +30,11 @@ type CreatePasswordModal struct {
 	isCancelable       bool
 	walletNameEnabled  bool
 	showWalletWarnInfo bool
+	isEnabled          bool
 
 	dialogTitle string
 	randomID    string
+	serverError string
 
 	materialLoader material.LoaderStyle
 
@@ -78,11 +80,14 @@ func (cm *CreatePasswordModal) ModalID() string {
 }
 
 func (cm *CreatePasswordModal) OnResume() {
+	if cm.walletNameEnabled {
+		cm.walletName.Editor.Focus()
+	} else {
+		cm.passwordEditor.Editor.Focus()
+	}
 }
 
-func (cm *CreatePasswordModal) OnDismiss() {
-
-}
+func (cm *CreatePasswordModal) OnDismiss() {}
 
 func (cm *CreatePasswordModal) Show() {
 	cm.ShowModal(cm)
@@ -132,7 +137,7 @@ func (cm *CreatePasswordModal) SetCancelable(min bool) *CreatePasswordModal {
 }
 
 func (cm *CreatePasswordModal) SetError(err string) {
-
+	cm.serverError = err
 }
 
 func (cm *CreatePasswordModal) validToCreate() bool {
@@ -146,29 +151,51 @@ func (cm *CreatePasswordModal) validToCreate() bool {
 }
 
 func (cm *CreatePasswordModal) Handle() {
+
 	if editorsNotEmpty(cm.passwordEditor.Editor) || editorsNotEmpty(cm.walletName.Editor) ||
 		editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
 		cm.btnPositve.Background = cm.Theme.Color.Primary
+		cm.isEnabled = true
 	} else {
 		cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+		cm.isEnabled = false
 	}
 
-	if cm.passwordEditor.Editor.Text() == cm.confirmPasswordEditor.Editor.Text() {
-		// reset error label when password and matching password fields match
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor, cm.walletName.Editor)
+
+	if isChanged {
+		// reset editor errors
+		cm.walletName.SetError("")
+		cm.passwordEditor.SetError("")
 		cm.confirmPasswordEditor.SetError("")
 	}
 
-	cm.btnPositve.SetEnabled(cm.validToCreate())
-	if cm.btnPositve.Clicked() || handleSubmitEvent(cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
+	if (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
 
-		if cm.validToCreate() {
+		if cm.walletNameEnabled {
+			if !editorsNotEmpty(cm.walletName.Editor) {
+				cm.walletName.SetError("enter wallet name")
+				return
+			}
+		}
+
+		if !editorsNotEmpty(cm.passwordEditor.Editor) {
+			cm.passwordEditor.SetError("enter spending password")
+			return
+		}
+
+		if !editorsNotEmpty(cm.confirmPasswordEditor.Editor) {
+			cm.confirmPasswordEditor.SetError("confirm spending password")
+			return
+		}
+
+		if cm.passwordsMatch(cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor) {
 
 			cm.SetLoading(true)
 			if cm.callback(cm.walletName.Editor.Text(), cm.passwordEditor.Editor.Text(), cm) {
 				cm.Dismiss()
 			}
 		}
-
 	}
 
 	cm.btnNegative.SetEnabled(!cm.isLoading)
@@ -185,8 +212,8 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
-
 }
+
 func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 	if len(editors) < 2 {
 		return false
@@ -197,12 +224,10 @@ func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
 
 	if password.Text() != matching.Text() {
 		cm.confirmPasswordEditor.SetError("passwords do not match")
-		cm.btnPositve.SetEnabled(false)
 		return false
 	}
 
 	cm.confirmPasswordEditor.SetError("")
-	cm.btnPositve.SetEnabled(true)
 	return true
 }
 
@@ -213,6 +238,15 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 			t.Font.Weight = text.Bold
 			return t.Layout(gtx)
 		},
+		func(gtx C) D {
+			if cm.serverError != "" {
+				t := cm.Theme.Body2(cm.serverError)
+				t.Color = cm.Theme.Color.Danger
+				return t.Layout(gtx)
+			}
+			return layout.Dimensions{}
+		},
+
 		func(gtx C) D {
 			if cm.walletNameEnabled {
 				return cm.walletName.Layout(gtx)

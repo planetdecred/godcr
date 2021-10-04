@@ -32,6 +32,7 @@ type CreateWatchOnlyModal struct {
 
 	isLoading    bool
 	isCancelable bool
+	isEnabled    bool
 
 	callback func(walletName, extPubKey string, m *CreateWatchOnlyModal) bool // return true to dismiss dialog
 }
@@ -47,7 +48,6 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
-	cm.btnPositve.SetEnabled(false)
 
 	cm.btnNegative.Font.Weight = text.Medium
 	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
@@ -93,11 +93,7 @@ func (cm *CreateWatchOnlyModal) SetCancelable(min bool) *CreateWatchOnlyModal {
 }
 
 func (cm *CreateWatchOnlyModal) SetError(err string) {
-	if err == "" {
-		cm.extendedPubKey.ClearError()
-	} else {
-		cm.extendedPubKey.SetError(err)
-	}
+	cm.extendedPubKey.SetError(err)
 }
 
 func (cm *CreateWatchOnlyModal) WatchOnlyCreated(callback func(walletName, extPubKey string, m *CreateWatchOnlyModal) bool) *CreateWatchOnlyModal {
@@ -106,15 +102,36 @@ func (cm *CreateWatchOnlyModal) WatchOnlyCreated(callback func(walletName, extPu
 }
 
 func (cm *CreateWatchOnlyModal) Handle() {
+	if editorsNotEmpty(cm.walletName.Editor) ||
+		editorsNotEmpty(cm.extendedPubKey.Editor) {
+		cm.btnPositve.Background = cm.Theme.Color.Primary
+		cm.isEnabled = true
+	} else {
+		cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+		cm.isEnabled = false
+	}
 
-	cm.btnPositve.SetEnabled(editorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor))
-	if editorsNotEmpty(cm.walletName.Editor, cm.extendedPubKey.Editor) ||
-		handleSubmitEvent(cm.walletName.Editor, cm.extendedPubKey.Editor) {
-		for cm.btnPositve.Clicked() {
-			cm.SetLoading(true)
-			if cm.callback(cm.walletName.Editor.Text(), cm.extendedPubKey.Editor.Text(), cm) {
-				cm.Dismiss()
-			}
+	isSubmit, isChanged := decredmaterial.HandleEditorEvents(cm.walletName.Editor, cm.extendedPubKey.Editor)
+	if isChanged {
+		// reset editor errors
+		cm.walletName.SetError("")
+		cm.extendedPubKey.SetError("")
+	}
+
+	for (cm.btnPositve.Clicked() || isSubmit) && cm.isEnabled {
+		if !editorsNotEmpty(cm.walletName.Editor) {
+			cm.walletName.SetError("enter wallet name")
+			return
+		}
+
+		if !editorsNotEmpty(cm.extendedPubKey.Editor) {
+			cm.extendedPubKey.SetError("enter a valid extendedPubKey")
+			return
+		}
+
+		cm.SetLoading(true)
+		if cm.callback(cm.walletName.Editor.Text(), cm.extendedPubKey.Editor.Text(), cm) {
+			cm.Dismiss()
 		}
 	}
 
