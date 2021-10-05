@@ -188,6 +188,8 @@ func (mp *MainPage) OnResume() {
 		mp.StartSyncing()
 		go mp.WL.MultiWallet.Politeia.Sync()
 	}
+
+	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 }
 
 func (mp *MainPage) getSetting() {
@@ -197,11 +199,6 @@ func (mp *MainPage) getSetting() {
 		mp.WL.Wallet.SaveConfigValueForKey(languagePreferenceKey, langPre)
 	}
 	values.SetUserLanguage(langPre)
-
-	currencyPre := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if components.StringNotEmpty(currencyPre) {
-		mp.WL.Wallet.SaveConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue)
-	}
 }
 
 func (mp *MainPage) UpdateBalance() {
@@ -451,6 +448,7 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
+			mp.UpdateBalance()
 			if mp.usdExchangeSet && mp.dcrUsdtBittrex.LastTradeRate != "" {
 				inset := layout.Inset{
 					Top:  values.MarginPadding3,
