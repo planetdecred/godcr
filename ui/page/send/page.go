@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -35,6 +36,7 @@ type Page struct {
 	sourceAccountSelector *components.AccountSelector
 	sendDestination       *destination
 	amount                *sendAmount
+	keyEvent              chan *key.Event
 
 	backButton    decredmaterial.IconButton
 	infoButton    decredmaterial.IconButton
@@ -84,6 +86,7 @@ func NewSendPage(l *load.Load) *Page {
 		authoredTxData: &authoredTxData{},
 		shadowBox:      l.Theme.Shadow(),
 		backdrop:       new(widget.Clickable),
+		keyEvent:       l.Receiver.KeyEvents,
 	}
 
 	// Source account picker
@@ -140,6 +143,7 @@ func (pg *Page) ID() string {
 func (pg *Page) OnResume() {
 	pg.sendDestination.destinationAccountSelector.SelectFirstWalletValidAccount()
 	pg.sourceAccountSelector.SelectFirstWalletValidAccount()
+	pg.sendDestination.destinationAddressEditor.Editor.Focus()
 
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
 	if currencyExchangeValue == components.USDExchangeValue {
@@ -340,6 +344,13 @@ func (pg *Page) Handle() {
 		if menu.button.Clicked() {
 			menu.action()
 		}
+	}
+
+	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if currencyValue == components.USDExchangeValue {
+		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
+	} else {
+		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 	}
 
 }

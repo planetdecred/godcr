@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"gioui.org/font/gofont"
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -27,6 +28,7 @@ type CreateWatchOnlyModal struct {
 
 	btnPositve  decredmaterial.Button
 	btnNegative decredmaterial.Button
+	keyEvent    chan *key.Event
 
 	randomID string
 
@@ -45,6 +47,7 @@ func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 		btnPositve:   l.Theme.Button(values.String(values.StrImport)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),
 		isCancelable: true,
+		keyEvent:     l.Receiver.KeyEvents,
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
@@ -69,6 +72,7 @@ func (cm *CreateWatchOnlyModal) ModalID() string {
 }
 
 func (cm *CreateWatchOnlyModal) OnResume() {
+	cm.walletName.Editor.Focus()
 }
 
 func (cm *CreateWatchOnlyModal) OnDismiss() {
@@ -147,6 +151,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 			cm.Dismiss()
 		}
 	}
+	decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.extendedPubKey.Editor)
 }
 
 func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {

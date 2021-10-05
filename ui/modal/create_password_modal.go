@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"gioui.org/font/gofont"
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -25,6 +26,7 @@ type CreatePasswordModal struct {
 	passwordEditor        decredmaterial.Editor
 	confirmPasswordEditor decredmaterial.Editor
 	passwordStrength      decredmaterial.ProgressBarStyle
+	keyEvent              chan *key.Event
 
 	isLoading          bool
 	isCancelable       bool
@@ -53,6 +55,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		btnPositve:       l.Theme.Button("Confirm"),
 		btnNegative:      l.Theme.OutlineButton("Cancel"),
 		isCancelable:     true,
+		keyEvent:         l.Receiver.KeyEvents,
 	}
 
 	cm.btnPositve.Font.Weight = text.Medium
@@ -212,6 +215,13 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
+	decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+	if cm.walletNameEnabled {
+		decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+	} else {
+		decredmaterial.SwitchEditors(cm.keyEvent, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+	}
+
 }
 
 func (cm *CreatePasswordModal) passwordsMatch(editors ...*widget.Editor) bool {
