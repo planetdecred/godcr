@@ -2,6 +2,7 @@ package page
 
 import (
 	"gioui.org/io/clipboard"
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -20,6 +21,7 @@ type SignMessagePage struct {
 	*load.Load
 	container layout.List
 	wallet    *dcrlibwallet.Wallet
+	keyEvent  chan *key.Event
 
 	isSigningMessage bool
 	addressIsValid   bool
@@ -70,6 +72,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		copyButton:         l.Theme.Button("Copy"),
 		copySignature:      l.Theme.NewClickable(false),
 		copyIcon:           copyIcon,
+		keyEvent:           l.Receiver.KeyEvents,
 	}
 
 	pg.signedMessageLabel.Color = l.Theme.Color.Gray
@@ -272,6 +275,9 @@ func (pg *SignMessagePage) Handle() {
 		clipboard.WriteOp{Text: pg.signedMessageLabel.Text}.Add(gtx.Ops)
 		pg.Toast.Notify("Signature copied")
 	}
+
+	//Switch editors when tab key is pressed
+	decredmaterial.SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.messageEditor.Editor)
 }
 
 func (pg *SignMessagePage) validate() bool {

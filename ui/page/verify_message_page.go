@@ -1,6 +1,7 @@
 package page
 
 import (
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -22,6 +23,7 @@ type VerifyMessagePage struct {
 	signatureEditor        decredmaterial.Editor
 	clearBtn, verifyButton decredmaterial.Button
 	verifyMessage          decredmaterial.Label
+	keyEvent               chan *key.Event
 
 	verifyMessageStatus *widget.Icon
 
@@ -35,6 +37,7 @@ func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
 		Load:          l,
 		verifyMessage: l.Theme.Body1(""),
+		keyEvent:      l.Receiver.KeyEvents,
 	}
 
 	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
@@ -183,6 +186,9 @@ func (pg *VerifyMessagePage) Handle() {
 	if pg.clearBtn.Clicked() {
 		pg.clearInputs()
 	}
+
+	//Switch editors on tab press
+	decredmaterial.SwitchEditors(pg.keyEvent, pg.addressEditor.Editor, pg.signatureEditor.Editor, pg.messageEditor.Editor)
 }
 func (pg *VerifyMessagePage) validateAllInputs() bool {
 	if !pg.validateAddress() || !components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {
