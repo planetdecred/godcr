@@ -41,9 +41,11 @@ func init() {
 // Dexc represents of the Decred exchange client.
 type Dexc struct {
 	*core.Core
-	wg  sync.WaitGroup
-	ctx context.Context
+	ctx    context.Context
+	cancel context.CancelFunc
 
+	DbPath             string
+	IsRunning          bool
 	connectedDcrWallet *dcrlibwallet.Wallet
 
 	connMtx sync.RWMutex
@@ -87,8 +89,9 @@ func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
 	}
 
 	return &Dexc{
-		Core:  clientCore,
-		conns: make(map[string]*dexConnection),
+		Core:   clientCore,
+		DbPath: dbPath,
+		conns:  make(map[string]*dexConnection),
 	}, nil
 }
 
@@ -98,15 +101,50 @@ func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
 func (d *Dexc) Start(appCtx context.Context) {
 	// Create a new cancelFunc so that the app-wide ctx isn't canceled
 	// when Core stops.
-	ctx, cancel := context.WithCancel(appCtx)
-	d.ctx = ctx
-	d.wg.Add(1)
+	d.ctx, d.cancel = context.WithCancel(appCtx)
 	go func() {
-		defer d.wg.Done()
+		d.IsRunning = true
 		d.Core.Run(d.ctx)
-		cancel()
+		d.cancel()
+		d.IsRunning = false
 	}()
 	<-d.Core.Ready()
+}
+
+// Shutdown causes the dex client to shutdown. The shutdown attempt will be
+// prevented if there are active orders or if some other error occurs. The
+// bool return indicates if shutdown was successful. If successful, dexc will
+// need to be restarted before it can be used again.
+func (d *Dexc) Shutdown() bool {
+	return d.shutdown(false)
+}
+
+// Shutdown causes the dex client to shutdown regardless of whether or not there
+// are active orders. Dexc will need to be restarted before it can be used again.
+func (d *Dexc) ForceShutdown() {
+	d.shutdown(true)
+}
+
+// shutdown causes the dex client to shutdown. If there are active orders,
+// this shutdown attempt will fail unless `forceShutdown` is true. If shutdown
+// succeeds, dexc will need to be restarted before it can be used.
+func (d *Dexc) shutdown(forceShutdown bool) bool {
+	err := d.Logout()
+	if err != nil {
+		log.Errorf("Unable to logout of the dex client: %v", err)
+		if !forceShutdown { // abort shutdown because of the error since forceShutdown != true
+			return false
+		}
+	}
+
+	// Cancel the ctx used to run Core.
+	if d.cancel != nil { // in case dexc was never actually started
+		// TODO: This doesn't really trigger Core's context cancellation.
+		// Investigate.
+		d.cancel()
+	}
+	d.IsRunning = false
+	return true
 }
 
 // RegisterDcrAssetDriver uses the provided *dcrlibwallet.Wallet to register
@@ -116,7 +154,7 @@ func (d *Dexc) RegisterDcrAssetDriver(wallet *dcrlibwallet.Wallet) error {
 	if d.connectedDcrWallet != nil {
 		// This prevents attempting to register the driver multiple times
 		// as that would lead to a panic.
-		return fmt.Errorf("cannot change dcr wallet after initial setting")
+		return fmt.Errorf("cannot change dcr wallet after initial setting, try restarting godcr")
 	}
 
 	walletDesc := fmt.Sprintf("%d (%s)", wallet.ID, wallet.Name)

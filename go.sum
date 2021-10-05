@@ -711,10 +711,10 @@ github.com/influxdata/tdigest v0.0.0-20181121200506-bf2b5ad3c0a9/go.mod h1:Js0mq
 github.com/influxdata/usage-client v0.0.0-20160829180054-6d3895376368/go.mod h1:Wbbw6tYNvwa5dlB6304Sd+82Z3f7PmVZHVKU637d4po=
 github.com/itswisdomagain/dcrdex v0.0.0-20211004141752-92a02cc7352a h1:9MVD7NweLV1aqPOvhjiiwMe9beWlBQvdc8AA8BAwTd0=
 github.com/itswisdomagain/dcrdex v0.0.0-20211004141752-92a02cc7352a/go.mod h1:HXsjQbwnB3fu631BJGYHTdcTXDXsvwe+4VNwmylkDew=
-github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211004143133-f2d643fe4c9b h1:wR5BGQ23qvB1TkXZFj8hu0jbzXArUSzPOhmgYUhZoWo=
-github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211004143133-f2d643fe4c9b/go.mod h1:bLX/rEGlGDEqZtcqArbAmUsDwJ3WMboUQpJ5gLwDqEU=
-github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211004143133-f2d643fe4c9b h1:+fJbdTXGrJrAMB4VKwtlII1wOdg25FyZ0/IQtnUPq7o=
-github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211004143133-f2d643fe4c9b/go.mod h1:AGwg+l/WimTgcs6sYP/37uFKteMI42sXkhseHNmyNQY=
+github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211005050035-ac1cc2b0a32f h1:JwbSh5HLIgxwnI0Y+lX6mHBmudtEfK0btDjRmg5fhfI=
+github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211005050035-ac1cc2b0a32f/go.mod h1:bLX/rEGlGDEqZtcqArbAmUsDwJ3WMboUQpJ5gLwDqEU=
+github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211005050035-ac1cc2b0a32f h1:MaoLpey3pnYvZM0LHnW4mdG+0GCo+iNGL1wP6I6qRAg=
+github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211005050035-ac1cc2b0a32f/go.mod h1:AGwg+l/WimTgcs6sYP/37uFKteMI42sXkhseHNmyNQY=
 github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458/go.mod h1:QPH045xvCAeXUZOxsnwmrtiCoxIr9eob+4orBN1SBKc=
 github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e/go.mod h1:G1CVv03EnqU1wYL2dFwXxW2An0az9JTl/ZsqXQeBlkU=
 github.com/jessevdk/go-flags v0.0.0-20141203071132-1679536dcc89/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=

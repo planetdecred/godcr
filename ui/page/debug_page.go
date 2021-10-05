@@ -1,10 +1,14 @@
 package page
 
 import (
+	"os"
+
 	"gioui.org/layout"
 
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -49,6 +53,14 @@ func NewDebugPage(l *load.Load) *DebugPage {
 		list:       l.Theme.NewClickableList(layout.Vertical),
 	}
 	pg.list.Radius = decredmaterial.Radius(14)
+
+	// Add a "Reset DEX Client" option.
+	pg.debugItems = append(pg.debugItems, debugItem{
+		text: "Reset DEX Client",
+		action: func() {
+			pg.resetDexData()
+		},
+	})
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
@@ -128,4 +140,32 @@ func (pg *DebugPage) Layout(gtx C) D {
 
 	}
 	return components.UniformPadding(gtx, container)
+}
+
+func (pg *DebugPage) resetDexData() {
+	// Show confirm modal and delete dexc db and dex-related settings in the
+	// multiwallet db.
+	confirmModal := modal.NewInfoModal(pg.Load).
+		Title("Confirm DEX Client Reset").
+		Body("You'll need to restart godcr before you can use the DEX again. Proceed?").
+		NegativeButton(values.String(values.StrCancel), func() {}).
+		PositiveButton("Reset DEX Client", func() {
+			// Attempt to first shutdown the dex client. This will fail if there
+			// are active orders.
+			// TODO: Since this is a debug feature, consider allowing dex shutdown
+			// even if there are active orders.
+			if pg.DL.Dexc.Shutdown() {
+				// Dexc shutdown was successful, perform other cleanup here
+				// including deleting the dexc db.
+				pg.WL.MultiWallet.DeleteUserConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey)
+				err := os.RemoveAll(pg.DL.Dexc.DbPath)
+				if err != nil {
+					log.Warnf("DEX client data reset but failed to delete DEX db: %v", err)
+				}
+				pg.Toast.Notify("DEX client data reset complete.")
+			} else {
+				pg.Toast.NotifyError("Cannot reset DEX client data because the DEX client could not be shut down. Check the logs.")
+			}
+		})
+	pg.ShowModal(confirmModal)
 }

@@ -51,8 +51,7 @@ type MainPage struct {
 	appBarNav components.NavDrawer
 	drawerNav components.NavDrawer
 
-	autoSync       bool
-	dexClientReady bool
+	autoSync bool
 
 	currentPage   load.Page
 	pageBackStack []load.Page
@@ -182,7 +181,7 @@ func (mp *MainPage) initNavItems() {
 // this method should only be called after the main page is loaded and sync is
 // started to ensure that at least 1 decred wallet is loaded and ready for use.
 func (mp *MainPage) startDexClientIfNotStarted() bool {
-	if mp.dexClientReady {
+	if mp.DL.Dexc.IsRunning {
 		return true
 	}
 
@@ -218,7 +217,6 @@ func (mp *MainPage) startDexClientIfNotStarted() bool {
 	// Pass app-wide context that is canceled when the godcr app is shutdown,
 	// so that the DEX client will be shut down when godcr is shut down.
 	mp.Load.DL.Dexc.Start(mp.AppCtx)
-	mp.dexClientReady = true
 	return true
 }
 
