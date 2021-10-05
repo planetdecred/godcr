@@ -224,7 +224,6 @@ func (pg *Page) pageSections(gtx layout.Context, title string, showAccountSwitch
 }
 
 func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
-
 	return pg.pageSections(gtx, "To", true, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -238,7 +237,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				if pg.exchangeRate != -1 {
+				if pg.exchangeRate != -1 && pg.usdExchangeSet {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Flexed(0.45, func(gtx C) D {
 							return pg.amount.dcrAmountEditor.Layout(gtx)
@@ -291,7 +290,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
 		feeText := pg.txFee
-		if pg.exchangeRate != -1 {
+		if pg.exchangeRate != -1 && pg.usdExchangeSet {
 			feeText = fmt.Sprintf("%s (%s)", pg.txFee, pg.txFeeUSD)
 		}
 		return pg.Theme.Body1(feeText).Layout(gtx)
@@ -356,7 +355,7 @@ func (pg *Page) balanceSection(gtx layout.Context) layout.Dimensions {
 								}
 								return inset.Layout(gtx, func(gtx C) D {
 									totalCostText := pg.totalCost
-									if pg.exchangeRate != -1 {
+									if pg.exchangeRate != -1 && pg.usdExchangeSet {
 										totalCostText = fmt.Sprintf("%s (%s)", pg.totalCost, pg.totalCostUSD)
 									}
 									return pg.contentRow(gtx, "Total cost", totalCostText)
