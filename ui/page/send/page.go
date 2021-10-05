@@ -249,7 +249,7 @@ func (pg *Page) constructTx() {
 		pg.amount.setAmount(amountAtom)
 	}
 
-	if pg.exchangeRate != -1 {
+	if pg.exchangeRate != -1 && pg.usdExchangeSet {
 		pg.txFeeUSD = fmt.Sprintf("$%.4f", load.DCRToUSD(pg.exchangeRate, feeAndSize.Fee.DcrValue))
 		pg.totalCostUSD = load.FormatUSDBalance(pg.Printer, load.DCRToUSD(pg.exchangeRate, totalSendingAmount.ToCoin()))
 		pg.balanceAfterSendUSD = load.FormatUSDBalance(pg.Printer, load.DCRToUSD(pg.exchangeRate, balanceAfterSend.ToCoin()))
@@ -321,7 +321,7 @@ func (pg *Page) Handle() {
 	for pg.nextButton.Clicked() {
 		if pg.txAuthor != nil {
 			confirmTxModal := newSendConfirmModal(pg.Load, pg.authoredTxData)
-			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1
+			confirmTxModal.exchangeRateSet = pg.exchangeRate != -1 && pg.usdExchangeSet
 
 			confirmTxModal.txSent = func() {
 				pg.resetFields()

@@ -290,7 +290,7 @@ func (pg *Page) toSection(gtx layout.Context) layout.Dimensions {
 func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 	collapsibleHeader := func(gtx C) D {
 		feeText := pg.txFee
-		if pg.exchangeRate != -1 {
+		if pg.exchangeRate != -1 && pg.usdExchangeSet {
 			feeText = fmt.Sprintf("%s (%s)", pg.txFee, pg.txFeeUSD)
 		}
 		return pg.Theme.Body1(feeText).Layout(gtx)
@@ -355,7 +355,7 @@ func (pg *Page) balanceSection(gtx layout.Context) layout.Dimensions {
 								}
 								return inset.Layout(gtx, func(gtx C) D {
 									totalCostText := pg.totalCost
-									if pg.exchangeRate != -1 {
+									if pg.exchangeRate != -1 && pg.usdExchangeSet {
 										totalCostText = fmt.Sprintf("%s (%s)", pg.totalCost, pg.totalCostUSD)
 									}
 									return pg.contentRow(gtx, "Total cost", totalCostText)
