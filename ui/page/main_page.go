@@ -250,7 +250,7 @@ func (mp *MainPage) StartSyncing() {
 func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 	modal.NewPasswordModal(mp.Load).
 		Title(values.String(values.StrResumeAccountDiscoveryTitle)).
-		Hint(wal.Name+" Spending password").
+		Hint("Spending password").
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton(values.String(values.StrUnlock), func(password string, pm *modal.PasswordModal) bool {
 			go func() {
