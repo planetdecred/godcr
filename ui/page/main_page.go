@@ -174,7 +174,7 @@ func (mp *MainPage) OnResume() {
 	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
 
-	mp.getSetting()
+	mp.setLanguageSetting()
 	mp.UpdateBalance()
 
 	if mp.currentPage != nil {
@@ -192,12 +192,8 @@ func (mp *MainPage) OnResume() {
 	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 }
 
-func (mp *MainPage) getSetting() {
+func (mp *MainPage) setLanguageSetting() {
 	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(languagePreferenceKey)
-	if components.StringNotEmpty(langPre) {
-		langPre = values.DefaultLangauge
-		mp.WL.Wallet.SaveConfigValueForKey(languagePreferenceKey, langPre)
-	}
 	values.SetUserLanguage(langPre)
 }
 
