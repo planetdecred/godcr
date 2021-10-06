@@ -369,10 +369,7 @@ func (pg Restore) suggestionSeeds(text string) []string {
 
 func (pg *Restore) updateSeedResetBtn() bool {
 	for _, editor := range pg.seedEditors.editors {
-		if editor.Edit.Editor.Text() != "" {
-			return true
-		}
-		return false
+		return editor.Edit.Editor.Text() != ""
 	}
 	return false
 }
