@@ -58,7 +58,10 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, sp.BackButton.Layout)
+			return layout.Inset{
+				Right: values.MarginPadding16,
+				Top:   values.MarginPaddingMinus2,
+			}.Layout(gtx, sp.BackButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			title := sp.Load.Theme.Label(values.TextSize20, sp.Title)
