@@ -131,8 +131,6 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	case PrivacyInfoTemplate:
 		title = "How to use the mixer?"
 		customTemplate = privacyInfo(in.Theme)
-	case SecurityToolsInfoTemplate:
-		subtitle = "Various tools that help in different aspects of crypto currency security will be located here."
 	case SetupMixerInfoTemplate:
 		customTemplate = setupMixerInfo(in.Theme)
 	}

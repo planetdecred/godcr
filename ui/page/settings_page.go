@@ -267,7 +267,7 @@ func (pg *SettingsPage) agent() layout.Widget {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
 								layout.Rigid(func(gtx C) D {
-									txt := pg.Theme.Body2(values.String(values.StrUserAgentSummary))
+									txt := pg.Theme.Body2("For HTTP request")
 									txt.Color = pg.Theme.Color.Gray
 									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 										return txt.Layout(gtx)
@@ -420,14 +420,20 @@ func (pg *SettingsPage) Handle() {
 
 	for pg.changeStartupPass.Clicked() {
 		modal.NewPasswordModal(pg.Load).
-			Title(values.String(values.StrConfirmRemoveStartupPass)).
+			Title("Confirm current startup password").
 			Hint("Current startup password").
 			NegativeButton(values.String(values.StrCancel), func() {}).
 			PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 				go func() {
+					var error string
 					err := pg.wal.GetMultiWallet().VerifyStartupPassphrase([]byte(password))
 					if err != nil {
-						pm.SetError(err.Error())
+						if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+							error = "Invalid password"
+						} else {
+							error = err.Error()
+						}
+						pm.SetError(error)
 						pm.SetLoading(false)
 						return
 					}
@@ -447,6 +453,7 @@ func (pg *SettingsPage) Handle() {
 									m.SetLoading(false)
 									return
 								}
+								pg.Toast.Notify("Startup password changed")
 								m.Dismiss()
 							}()
 							return false
@@ -474,6 +481,7 @@ func (pg *SettingsPage) Handle() {
 							m.SetLoading(false)
 							return
 						}
+						pg.Toast.Notify("Startup password enabled")
 						m.Dismiss()
 					}()
 					return false
@@ -485,12 +493,19 @@ func (pg *SettingsPage) Handle() {
 				NegativeButton(values.String(values.StrCancel), func() {}).
 				PositiveButton(values.String(values.StrConfirm), func(password string, pm *modal.PasswordModal) bool {
 					go func() {
+						var error string
 						err := pg.wal.GetMultiWallet().RemoveStartupPassphrase([]byte(password))
 						if err != nil {
-							pm.SetError(err.Error())
+							if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+								error = "Invalid password"
+							} else {
+								error = err.Error()
+							}
+							pm.SetError(error)
 							pm.SetLoading(false)
 							return
 						}
+						pg.Toast.Notify("Startup password disabled")
 						pm.Dismiss()
 					}()
 

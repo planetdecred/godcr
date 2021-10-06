@@ -257,8 +257,8 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 				err := mp.WL.MultiWallet.UnlockWallet(wal.ID, []byte(password))
 				if err != nil {
 					errText := err.Error()
-					if err.Error() == "invalid_passphrase" {
-						errText = "Invalid passphrase"
+					if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+						errText = "Invalid password"
 					}
 					pm.SetError(errText)
 					pm.SetLoading(false)

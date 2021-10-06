@@ -43,11 +43,11 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 	bi.backButton.Icon = l.Icons.ContentClear
 
 	bi.checkBoxes = []decredmaterial.CheckBoxStyle{
-		l.Theme.CheckBox(new(widget.Bool), "The 33-word seed phrase is EXTREMELY IMPORTANT."),
-		l.Theme.CheckBox(new(widget.Bool), "Seed phrase is the only way to restore your wallet."),
-		l.Theme.CheckBox(new(widget.Bool), "It is recommended to store your seed phrase in a physical format (e.g. write down on a paper)."),
-		l.Theme.CheckBox(new(widget.Bool), "It is highly discouraged to store your seed phrase in any digital format (e.g. screenshot)."),
-		l.Theme.CheckBox(new(widget.Bool), "Anyone with your seed phrase can steal your funds. DO NOT show it to anyone."),
+		l.Theme.CheckBox(new(widget.Bool), "The 33-word seed word is EXTREMELY IMPORTANT."),
+		l.Theme.CheckBox(new(widget.Bool), "seed word is the only way to restore your wallet."),
+		l.Theme.CheckBox(new(widget.Bool), "It is recommended to store your seed word in a physical format (e.g. write down on a paper)."),
+		l.Theme.CheckBox(new(widget.Bool), "It is highly discouraged to store your seed word in any digital format (e.g. screenshot)."),
+		l.Theme.CheckBox(new(widget.Bool), "Anyone with your seed word can steal your funds. DO NOT show it to anyone."),
 	}
 
 	for i := range bi.checkBoxes {

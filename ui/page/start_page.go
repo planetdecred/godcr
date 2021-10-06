@@ -79,7 +79,8 @@ func (sp *startPage) OnResume() {
 
 func (sp *startPage) unlock() {
 	modal.NewPasswordModal(sp.Load).
-		Title("Unlock with passphrase").
+		Title("Unlock with password").
+		Hint("Startup password").
 		NegativeButton("Exit", func() {
 			sp.WL.MultiWallet.Shutdown()
 			os.Exit(0)
@@ -99,8 +100,8 @@ func (sp *startPage) unlock() {
 		}).Show()
 }
 
-func (sp *startPage) openWallets(passphrase string) error {
-	err := sp.WL.MultiWallet.OpenWallets([]byte(passphrase))
+func (sp *startPage) openWallets(password string) error {
+	err := sp.WL.MultiWallet.OpenWallets([]byte(password))
 	if err != nil {
 		log.Info("Error opening wallet:", err)
 		// show err dialog
