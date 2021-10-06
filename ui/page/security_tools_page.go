@@ -3,15 +3,12 @@ package page
 import (
 	"image"
 
-	"github.com/planetdecred/godcr/ui/modal"
-	"github.com/planetdecred/godcr/ui/page/components"
-
-	"github.com/planetdecred/godcr/ui/load"
-
 	"gioui.org/layout"
-	"github.com/planetdecred/godcr/ui/values"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const SecurityToolsPageID = "SecurityTools"
@@ -22,7 +19,6 @@ type SecurityToolsPage struct {
 	validateAddress *decredmaterial.Clickable
 
 	backButton decredmaterial.IconButton
-	infoButton decredmaterial.IconButton
 }
 
 func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
@@ -35,7 +31,7 @@ func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 	pg.verifyMessage.Radius = decredmaterial.Radius(14)
 	pg.validateAddress.Radius = decredmaterial.Radius(14)
 
-	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -55,7 +51,6 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 			Load:       pg.Load,
 			Title:      "Security Tools",
 			BackButton: pg.backButton,
-			InfoButton: pg.infoButton,
 			Back: func() {
 				pg.PopFragment()
 			},
@@ -71,7 +66,6 @@ func (pg *SecurityToolsPage) Layout(gtx layout.Context) layout.Dimensions {
 					)
 				})
 			},
-			InfoTemplate: modal.SecurityToolsInfoTemplate,
 		}
 		return sp.Layout(gtx)
 	}

@@ -269,8 +269,8 @@ func (wal *Wallet) GetAllProposals() {
 	}()
 }
 
-func (wal *Wallet) UnlockWallet(walletID int, passphrase []byte) error {
-	return wal.multi.UnlockWallet(walletID, passphrase)
+func (wal *Wallet) UnlockWallet(walletID int, password []byte) error {
+	return wal.multi.UnlockWallet(walletID, password)
 }
 
 // CurrentAddress returns the next address for the specified wallet account.

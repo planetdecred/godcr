@@ -16,7 +16,6 @@ const (
 	SignMessageInfoTemplate        = "SignMessageInfo"
 	PrivacyInfoTemplate            = "PrivacyInfo"
 	SetupMixerInfoTemplate         = "ConfirmSetupMixer"
-	SecurityToolsInfoTemplate      = "SecurityToolsInfo"
 	TransactionDetailsInfoTemplate = "TransactionDetailsInfoInfo"
 )
 

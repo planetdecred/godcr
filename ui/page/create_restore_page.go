@@ -188,13 +188,13 @@ func (pg *CreateRestore) restore(gtx layout.Context) layout.Dimensions {
 					return components.Container{Padding: layout.Inset{Right: m, Left: m, Top: v, Bottom: m}}.Layout(gtx, func(gtx C) D {
 						pageContent := []func(gtx C) D{
 							func(gtx C) D {
-								return pg.restorePageSections(gtx, "Enter your seed phase", "1/3", pg.enterSeedPhase)
+								return pg.restorePageSections(gtx, "Enter your seed word", "1/3", pg.enterSeedPhase)
 							},
 							func(gtx C) D {
 								return pg.restorePageSections(gtx, "Create spending password", "2/3", pg.createPasswordPhase)
 							},
 							func(gtx C) D {
-								return pg.restorePageSections(gtx, "Chose a wallet name", "3/3", pg.renameWalletPhase)
+								return pg.restorePageSections(gtx, "Choose a wallet name", "3/3", pg.renameWalletPhase)
 							},
 						}
 						return layout.Inset{Bottom: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
@@ -596,7 +596,7 @@ func (pg *CreateRestore) validateSeeds() bool {
 	}
 
 	if !dcrlibwallet.VerifySeed(pg.seedPhrase) {
-		pg.errLabel.Text = "invalid seed phrase"
+		pg.errLabel.Text = "invalid seed word"
 		return false
 	}
 

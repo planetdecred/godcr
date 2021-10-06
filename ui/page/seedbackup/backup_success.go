@@ -64,13 +64,13 @@ func (pg *BackupSuccessPage) Layout(gtx C) D {
 						return successIcon.Layout(gtx, values.MarginPadding64)
 					}),
 					layout.Rigid(func(gtx C) D {
-						label := pg.Theme.Label(values.TextSize24, "Your seed phrase backup is verified")
+						label := pg.Theme.Label(values.TextSize24, "Your seed word backup is verified")
 						label.Color = pg.Theme.Color.DeepBlue
 
 						return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, label.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {
-						label := pg.Theme.Label(values.TextSize16, "Be sure to store your seed phrase backup in a secure location.")
+						label := pg.Theme.Label(values.TextSize16, "Be sure to store your seed word backup in a secure location.")
 						label.Color = pg.Theme.Color.Gray3
 
 						return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, label.Layout)

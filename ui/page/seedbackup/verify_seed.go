@@ -190,7 +190,7 @@ func (pg *VerifySeedPage) OnClose() {}
 func (pg *VerifySeedPage) Layout(gtx C) D {
 	sp := components.SubPage{
 		Load:       pg.Load,
-		Title:      "Verify seed phrase",
+		Title:      "Verify seed word",
 		SubTitle:   "Step 2/2",
 		WalletName: pg.wallet.Name,
 		BackButton: pg.backButton,
