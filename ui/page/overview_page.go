@@ -12,6 +12,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
@@ -46,6 +47,7 @@ type OverviewPage struct {
 	syncedIcon, notSyncedIcon,
 	walletStatusIcon, cachedIcon *widget.Icon
 	syncingIcon *decredmaterial.Image
+	checkBox    decredmaterial.CheckBoxStyle
 
 	walletSyncing bool
 	walletSynced  bool
@@ -74,6 +76,7 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 		walletSyncList:   &layout.List{Axis: layout.Vertical},
 		transactionsList: l.Theme.NewClickableList(layout.Vertical),
 		syncClickable:    l.Theme.NewClickable(true),
+		checkBox:         l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 
 		bestBlock: l.WL.MultiWallet.GetBestBlock(),
 	}
@@ -124,6 +127,12 @@ func (pg *OverviewPage) OnResume() {
 
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
+
+	for _, wal := range pg.allWallets {
+		if len(wal.EncryptedSeed) > 0 {
+			pg.showBackupInfo()
+		}
+	}
 }
 
 func (pg *OverviewPage) loadTransactions() {
@@ -152,6 +161,19 @@ func (pg *OverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
 		})
 	})
+}
+
+func (pg *OverviewPage) showBackupInfo() {
+	modal.NewInfoModal(pg.Load).
+		SetupWithTemplate(modal.WalletBackupInfoTemplate).
+		SetCancelable(false).
+		CheckBox(pg.checkBox).
+		NegativeButton("Backup later", func() {}).
+		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+		NegativeButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
+		PositiveButton("Backup now", func() {
+			pg.ChangeFragment(NewWalletPage(pg.Load))
+		}).Show()
 }
 
 // syncDetail returns a walletSyncDetails object containing data of a single wallet sync box
