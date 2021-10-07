@@ -38,7 +38,7 @@ func NewStatPage(l *load.Load) *StatPage {
 		},
 		netType: l.WL.Wallet.Net,
 	}
-	pg.startupTime = time.Now()
+	pg.startupTime = l.WL.Wallet.StartupTime()
 	pg.syncStatus = l.WL.SyncStatus
 	if pg.netType == "testnet3" {
 		pg.netType = "Testnet"
