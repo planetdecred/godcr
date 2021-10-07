@@ -124,11 +124,10 @@ func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
 		func(gtx layout.Context) layout.Dimensions {
 			txt := lp.theme.H6(values.String(lp.titleStrKey))
 			txt.Color = lp.theme.Color.Text
-			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.
+			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.
 				Layout(gtx, layout.Rigid(txt.Layout), layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return layout.Inset{
-						Right: values.MarginPadding16,
-						Top:   values.MarginPaddingMinus2,
+						Top: values.MarginPaddingMinus2,
 					}.Layout(gtx, lp.cancelButton.Layout)
 				}))
 		},
