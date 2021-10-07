@@ -27,10 +27,12 @@ type ListPreference struct {
 	clickable         *decredmaterial.Clickable
 	optionsRadioGroup *widget.Enum
 
+	cancelButton decredmaterial.IconButton
+
 	updateButtonClicked func()
 }
 
-func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, preferenceKey, defaultValue string, items map[string]string) *ListPreference {
+func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, preferenceKey, defaultValue string, items map[string]string, cancelIcon *widget.Icon) *ListPreference {
 
 	// sort keys to keep order when refreshed
 	sortedKeys := make([]string, 0)
@@ -54,6 +56,11 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 		clickable:         theme.NewClickable(false),
 		optionsRadioGroup: new(widget.Enum),
 	}
+
+	lp.cancelButton = theme.PlainIconButton(cancelIcon)
+	lp.cancelButton.Color = theme.Color.Gray3
+	lp.cancelButton.Size = values.MarginPadding24
+	lp.cancelButton.Inset = layout.UniformInset(values.MarginPadding4)
 
 	return &lp
 }
@@ -91,6 +98,10 @@ func (lp *ListPreference) Handle() {
 		lp.IsShowing = false
 		lp.updateButtonClicked()
 	}
+
+	for lp.cancelButton.Button.Clicked() {
+		lp.IsShowing = false
+	}
 }
 
 func (lp *ListPreference) setValue(value string) {
@@ -113,7 +124,13 @@ func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
 		func(gtx layout.Context) layout.Dimensions {
 			txt := lp.theme.H6(values.String(lp.titleStrKey))
 			txt.Color = lp.theme.Color.Text
-			return txt.Layout(gtx)
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.
+				Layout(gtx, layout.Rigid(txt.Layout), layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Inset{
+						Right: values.MarginPadding16,
+						Top:   values.MarginPaddingMinus2,
+					}.Layout(gtx, lp.cancelButton.Layout)
+				}))
 		},
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, lp.layoutItems()...)
