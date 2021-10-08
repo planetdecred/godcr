@@ -2,7 +2,6 @@ package tickets
 
 import (
 	"fmt"
-
 	"gioui.org/layout"
 
 	"github.com/decred/dcrd/dcrutil"
@@ -36,6 +35,7 @@ type Page struct {
 
 	stakingOverview *dcrlibwallet.StakingOverview
 	liveTickets     []*transactionItem
+	list            *decredmaterial.ListWithScroll
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -50,6 +50,11 @@ func NewTicketPage(l *load.Load) *Page {
 		toTickets:           l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
 	}
 
+	pg.list = &decredmaterial.ListWithScroll{
+		LayoutList: decredmaterial.LayoutList{
+			Axis: layout.Vertical,
+		},
+	}
 	pg.toTickets.Color = l.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = l.Theme.Color.Surface
 
@@ -132,21 +137,27 @@ func (pg *Page) loadPageData() {
 }
 
 func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
-	return components.UniformPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-		sections := []func(gtx C) D{
-			func(ctx layout.Context) layout.Dimensions {
+
+	widgets := []layout.Widget{
+		func(ctx layout.Context) layout.Dimensions {
+			return components.UniformHorizontalPadding(gtx, func(gtx layout.Context) layout.Dimensions {
 				return pg.ticketPriceSection(gtx)
-			},
-			func(ctx layout.Context) layout.Dimensions {
+			})
+		},
+		func(ctx layout.Context) layout.Dimensions {
+			return components.UniformHorizontalPadding(gtx, func(gtx layout.Context) layout.Dimensions {
 				return pg.ticketsLiveSection(gtx)
-			},
-			func(ctx layout.Context) layout.Dimensions {
+			})
+		},
+		func(ctx layout.Context) layout.Dimensions {
+			return components.UniformHorizontalPadding(gtx, func(gtx layout.Context) layout.Dimensions {
 				return pg.stakingRecordSection(gtx)
-			},
-		}
-		return pg.ticketPageContainer.Layout(gtx, len(sections), func(gtx C, i int) D {
-			return sections[i](gtx)
-		})
+			})
+		},
+	}
+
+	return decredmaterial.List(pg.Theme, pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
+		return widgets[i](gtx)
 	})
 }
 

@@ -81,6 +81,22 @@ func UniformPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	}.Layout(gtx, body)
 }
 
+func UniformHorizontalPadding(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	width := gtx.Constraints.Max.X
+
+	padding := values.MarginPadding24
+
+	if (width - 2*gtx.Px(padding)) > gtx.Px(MaxWidth) {
+		paddingValue := float32(width-gtx.Px(MaxWidth)) / 2
+		padding = unit.Px(paddingValue)
+	}
+
+	return layout.Inset{
+		Right: padding,
+		Left:  padding,
+	}.Layout(gtx, body)
+}
+
 func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwallet.Transaction, ticketSpender *dcrlibwallet.Transaction) *TxStatus {
 	var txStatus TxStatus
 
