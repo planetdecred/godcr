@@ -1,7 +1,6 @@
 package preference
 
 import (
-	"fmt"
 	"sort"
 
 	"gioui.org/layout"
@@ -57,6 +56,7 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 
 		clickable:         theme.NewClickable(false),
 		optionsRadioGroup: new(widget.Enum),
+		modal:             theme.Modal(),
 	}
 
 	lp.cancelButton = theme.PlainIconButton(cancelIcon)
@@ -105,9 +105,7 @@ func (lp *ListPreference) Handle() {
 		lp.IsShowing = false
 	}
 
-	backdropClicked := lp.modal != nil && lp.modal.BackdropClicked(true)
-	fmt.Printf("grrrrr: %v \n\n\n", backdropClicked)
-	if backdropClicked {
+	if lp.modal.BackdropClicked(true) {
 		lp.IsShowing = false
 	}
 }
@@ -146,7 +144,6 @@ func (lp *ListPreference) printModal(gtx layout.Context) layout.Dimensions {
 
 	lp.optionsRadioGroup.Value = lp.currentValue
 
-	lp.modal = lp.theme.Modal()
 	return lp.modal.Layout(gtx, w, 1050)
 }
 
