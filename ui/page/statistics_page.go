@@ -22,7 +22,7 @@ type StatPage struct {
 	*load.Load
 	txs         *wallet.Transactions
 	l           layout.List
-	startupTime time.Time
+	startupTime string
 	syncStatus  *wallet.SyncStatus
 	netType     string
 
@@ -38,7 +38,6 @@ func NewStatPage(l *load.Load) *StatPage {
 		},
 		netType: l.WL.Wallet.Net,
 	}
-	pg.startupTime = l.WL.Wallet.StartupTime()
 	pg.syncStatus = l.WL.SyncStatus
 	if pg.netType == "testnet3" {
 		pg.netType = "Testnet"
@@ -56,7 +55,7 @@ func (pg *StatPage) ID() string {
 }
 
 func (pg *StatPage) OnResume() {
-
+	pg.appStartTime()
 }
 
 func (pg *StatPage) layoutStats(gtx C) D {
@@ -80,20 +79,13 @@ func (pg *StatPage) layoutStats(gtx C) D {
 			})
 		}
 	}
-	uptime := func(t time.Time) string {
-		v := int(time.Since(t).Seconds())
-		h := v / 3600
-		m := (v - h*3600) / 60
-		s := v - h*3600 - m*60
-		return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
-	}(pg.startupTime)
 
 	items := []layout.Widget{
 		item("Build", pg.netType+", "+time.Now().Format("2006-01-02")),
 		pg.Theme.Separator().Layout,
 		item("Peers connected", strconv.Itoa(int(pg.syncStatus.ConnectedPeers))),
 		pg.Theme.Separator().Layout,
-		item("Uptime", uptime),
+		item("Uptime", pg.startupTime),
 		pg.Theme.Separator().Layout,
 		item("Network", pg.netType),
 		pg.Theme.Separator().Layout,
@@ -140,5 +132,17 @@ func (pg *StatPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, container)
 }
 
-func (pg *StatPage) Handle()  {}
+func (pg *StatPage) appStartTime() {
+	pg.startupTime = func(t time.Time) string {
+		v := int(time.Since(t).Seconds())
+		h := v / 3600
+		m := (v - h*3600) / 60
+		s := v - h*3600 - m*60
+		return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
+	}(pg.WL.Wallet.StartupTime())
+}
+
+func (pg *StatPage) Handle() {
+	pg.appStartTime()
+}
 func (pg *StatPage) OnClose() {}
