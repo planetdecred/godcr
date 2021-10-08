@@ -1,6 +1,7 @@
 package preference
 
 import (
+	"fmt"
 	"sort"
 
 	"gioui.org/layout"
@@ -18,6 +19,7 @@ type ListPreference struct {
 	currentValue  string
 
 	theme *decredmaterial.Theme
+	modal *decredmaterial.Modal
 
 	IsShowing   bool
 	titleStrKey string
@@ -102,6 +104,12 @@ func (lp *ListPreference) Handle() {
 	for lp.cancelButton.Button.Clicked() {
 		lp.IsShowing = false
 	}
+
+	backdropClicked := lp.modal != nil && lp.modal.BackdropClicked(true)
+	fmt.Printf("grrrrr: %v \n\n\n", backdropClicked)
+	if backdropClicked {
+		lp.IsShowing = false
+	}
 }
 
 func (lp *ListPreference) setValue(value string) {
@@ -114,12 +122,12 @@ func (lp *ListPreference) Layout(gtx layout.Context, body layout.Dimensions) lay
 			return body
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			return lp.modal(gtx)
+			return lp.printModal(gtx)
 		}),
 	)
 }
 
-func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
+func (lp *ListPreference) printModal(gtx layout.Context) layout.Dimensions {
 	w := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			txt := lp.theme.H6(values.String(lp.titleStrKey))
@@ -138,7 +146,8 @@ func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
 
 	lp.optionsRadioGroup.Value = lp.currentValue
 
-	return lp.theme.Modal().Layout(gtx, w, 1050)
+	lp.modal = lp.theme.Modal()
+	return lp.modal.Layout(gtx, w, 1050)
 }
 
 func (lp *ListPreference) layoutItems() []layout.FlexChild {
