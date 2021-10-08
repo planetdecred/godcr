@@ -27,7 +27,7 @@ func newConfirmRegisterModal(l *load.Load) *confirmRegisterModal {
 		Load:        l,
 		modal:       l.Theme.ModalFloatTitle(),
 		appPassword: l.Theme.EditorPassword(new(widget.Editor), "App password"),
-		register:    l.Theme.Button(new(widget.Clickable), "Register"),
+		register:    l.Theme.Button("Register"),
 	}
 
 	md.register.TextSize = values.TextSize12

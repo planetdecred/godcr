@@ -27,10 +27,10 @@ type miniTradeFormWidget struct {
 func newMiniTradeFormWidget(l *load.Load) *miniTradeFormWidget {
 	miniTradeFormWdg := &miniTradeFormWidget{
 		Load:           l,
-		submit:         l.Theme.Button(new(widget.Clickable), "OK"),
+		submit:         l.Theme.Button("OK"),
 		invoicedAmount: l.Theme.Editor(new(widget.Editor), "I have"),
 		orderedAmount:  l.Theme.Editor(new(widget.Editor), "I get"),
-		direction:      l.Theme.IconButton(new(widget.Clickable), l.Icons.ActionSwapHoriz),
+		direction:      l.Theme.IconButton(l.Icons.ActionSwapHoriz),
 		orderBook:      new(core.OrderBook),
 		isSell:         true,
 

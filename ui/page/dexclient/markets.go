@@ -7,7 +7,6 @@ import (
 	"decred.org/dcrdex/client/asset/dcr"
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -41,10 +40,13 @@ type Page struct {
 	ctxCancel        context.CancelFunc
 	user             *core.User
 	miniTradeFormWdg *miniTradeFormWidget
+	tradeForm        *TradeFormWidget
 	initializeModal  bool
 	orderBook        *core.OrderBook
 	addBTCWallet     decredmaterial.Button
+	advancedTrade    decredmaterial.Button
 	selectedMaket    *selectedMaket
+	isAdvancedTrade  bool
 }
 
 // TODO: Aadd collapsible button to select a market.
@@ -62,11 +64,14 @@ func NewMarketPage(l *load.Load) *Page {
 		Load:             l,
 		user:             new(core.User),
 		miniTradeFormWdg: newMiniTradeFormWidget(l),
+		tradeForm:        NewTradeFormWidget(l),
 		initializeModal:  false,
 		orderBook:        new(core.OrderBook),
 
-		addBTCWallet:  l.Theme.Button(new(widget.Clickable), "Add BTC wallet"),
-		selectedMaket: mkt,
+		addBTCWallet:    l.Theme.Button("Add BTC wallet"),
+		advancedTrade:   l.Theme.Button("Details"),
+		selectedMaket:   mkt,
+		isAdvancedTrade: false,
 	}
 
 	return pg
@@ -89,50 +94,69 @@ func (pg *Page) OnResume() {
 
 func (pg *Page) Layout(gtx C) D {
 	dims := components.UniformPadding(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				dex := pg.user.Exchanges[pg.selectedMaket.host]
-				if dex == nil || !dex.Connected {
-					return D{}
-				}
-				if dex.PendingFee == nil {
-					return D{}
-				}
-				reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
-				return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						t := fmt.Sprintf("In order to trade at %s, the registration fee payment needs %d confirmations.", pg.selectedMaket.host, reqConfirms)
-						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-					}),
-					layout.Rigid(func(gtx C) D {
-						t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
-						return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
-					}),
-				)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return pg.pageSections(gtx, func(gtx C) D {
-					return layout.Inset{
-						Top:    values.MarginPadding20,
-						Bottom: values.MarginPadding20,
-					}.Layout(gtx, func(gtx C) D {
-						return pg.miniTradeFormWdg.layout(gtx)
-					})
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-				return layout.E.Layout(gtx, func(gtx C) D {
-					return pg.addBTCWallet.Layout(gtx)
-				})
-			}),
-		)
+		if pg.isAdvancedTrade {
+			return pg.pageSections(gtx, func(gtx C) D {
+				return pg.tradeForm.Layout(gtx)
+			})
+		}
+		return pg.miniTradeLayout(gtx)
 	})
 
 	return dims
+}
+
+func (pg *Page) miniTradeLayout(gtx C) D {
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(pg.registrationStatusLayout),
+		layout.Rigid(func(gtx C) D {
+			return pg.pageSections(gtx, func(gtx C) D {
+				return layout.Inset{
+					Top:    values.MarginPadding20,
+					Bottom: values.MarginPadding20,
+				}.Layout(gtx, func(gtx C) D {
+					return pg.miniTradeFormWdg.layout(gtx)
+				})
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return pg.addBTCWallet.Layout(gtx)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+				return layout.E.Layout(gtx, func(gtx C) D {
+					return pg.advancedTrade.Layout(gtx)
+				})
+			})
+		}),
+	)
+}
+
+func (pg *Page) registrationStatusLayout(gtx C) D {
+	dex := pg.user.Exchanges[pg.selectedMaket.host]
+	if dex == nil || !dex.Connected {
+		return D{}
+	}
+	if dex.PendingFee == nil {
+		return D{}
+	}
+	reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
+	return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			t := fmt.Sprintf("In order to trade at %s, the registration fee payment needs %d confirmations.", pg.selectedMaket.host, reqConfirms)
+			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
+		}),
+		layout.Rigid(func(gtx C) D {
+			t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
+			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
+		}),
+	)
 }
 
 func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -167,6 +191,10 @@ func (pg *Page) Handle() {
 			pg.refreshUser()
 		}
 		md.Show()
+	}
+
+	if pg.advancedTrade.Button.Clicked() {
+		pg.isAdvancedTrade = !pg.isAdvancedTrade
 	}
 }
 

@@ -84,6 +84,12 @@ type Theme struct {
 		Turquoise700     color.NRGBA
 		Turquoise800     color.NRGBA
 		Yellow           color.NRGBA
+		Sell             color.NRGBA
+		Buy              color.NRGBA
+		ChartSellLine    color.NRGBA
+		ChartBuyLine     color.NRGBA
+		ChartSellFill    color.NRGBA
+		ChartBuyFill     color.NRGBA
 	}
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -153,6 +159,12 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Turquoise700 = rgb(0x00A05F)
 		t.Color.Turquoise800 = rgb(0x008F52)
 		t.Color.Yellow = rgb(0xffc84e)
+		t.Color.ChartSellLine = rgb(0xf6465d)
+		t.Color.ChartBuyLine = rgb(0x00c582)
+		t.Color.ChartSellFill = rgb(0xf9e8ea)
+		t.Color.ChartBuyFill = rgb(0xe3f5ee)
+		t.Color.Sell = rgb(0xba7a79)
+		t.Color.Buy = rgb(0x50af77)
 		t.TextSize = unit.Sp(16)
 	} else {
 		t.DarkMode = false
@@ -199,6 +211,13 @@ func (t *Theme) setColorMode(darkMode bool) {
 		t.Color.Turquoise700 = rgb(0x00A05F)
 		t.Color.Turquoise800 = rgb(0x008F52)
 		t.Color.Yellow = rgb(0xffc84e)
+		t.Color.ChartSellLine = rgb(0xf6465d)
+		t.Color.ChartBuyLine = rgb(0x00c582)
+		t.Color.ChartSellFill = rgb(0xf9e8ea)
+		t.Color.ChartBuyFill = rgb(0xe3f5ee)
+		t.Color.Sell = rgb(0xba7a79)
+		t.Color.Buy = rgb(0x50af77)
+		t.TextSize = unit.Sp(16)
 		t.TextSize = unit.Sp(16)
 	}
 }

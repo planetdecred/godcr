@@ -37,7 +37,7 @@ func newUnlockWalletModal(l *load.Load) *unlockWalletModal {
 		Load:         l,
 		modal:        l.Theme.ModalFloatTitle(),
 		appPassword:  l.Theme.EditorPassword(new(widget.Editor), "Password"),
-		unlockWallet: l.Theme.Button(new(widget.Clickable), "Unlock"),
+		unlockWallet: l.Theme.Button("Unlock"),
 		walletInfoWidget: &walletInfoWidget{
 			image:    coinImageBySymbol(&l.Icons, dexc.DefaultAsset),
 			coin:     dexc.DefaultAsset,

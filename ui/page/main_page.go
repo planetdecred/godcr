@@ -164,7 +164,7 @@ func (mp *MainPage) initNavItems() {
 				PageID:        MorePageID,
 			},
 			{
-				Clickable:     new(widget.Clickable),
+				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Icons.DexLogo,
 				ImageInactive: mp.Icons.DexLogo,
 				Title:         values.String(values.StrDex),

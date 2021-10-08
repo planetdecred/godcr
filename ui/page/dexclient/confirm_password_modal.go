@@ -25,7 +25,7 @@ func newconfirmPasswordModal(l *load.Load) *confirmPasswordModal {
 		Load:        l,
 		modal:       l.Theme.ModalFloatTitle(),
 		appPassword: l.Theme.EditorPassword(new(widget.Editor), "Password"),
-		submit:      l.Theme.Button(new(widget.Clickable), "OK"),
+		submit:      l.Theme.Button("OK"),
 	}
 
 	md.submit.TextSize = values.TextSize12

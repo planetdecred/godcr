@@ -35,7 +35,7 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget) *createWalle
 		accountName:      l.Theme.Editor(new(widget.Editor), "Account Name"),
 		walletPassword:   l.Theme.EditorPassword(new(widget.Editor), "Wallet Password"),
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
-		createNewWallet:  l.Theme.Button(new(widget.Clickable), "Add"),
+		createNewWallet:  l.Theme.Button("Add"),
 		walletInfoWidget: wallInfo,
 	}
 

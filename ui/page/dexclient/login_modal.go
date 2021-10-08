@@ -24,7 +24,7 @@ func newloginModal(l *load.Load) *loginModal {
 	md := &loginModal{
 		Load:        l,
 		modal:       l.Theme.ModalFloatTitle(),
-		submit:      l.Theme.Button(new(widget.Clickable), "Login"),
+		submit:      l.Theme.Button("Login"),
 		appPassword: l.Theme.EditorPassword(new(widget.Editor), "App password"),
 	}
 

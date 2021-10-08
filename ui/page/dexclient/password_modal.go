@@ -28,7 +28,7 @@ func newPasswordModal(l *load.Load) *passwordModal {
 		modal:            l.Theme.ModalFloatTitle(),
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "Password"),
 		appPasswordAgain: l.Theme.EditorPassword(new(widget.Editor), "Password again"),
-		createPassword:   l.Theme.Button(new(widget.Clickable), "Create password"),
+		createPassword:   l.Theme.Button("Create password"),
 	}
 
 	md.createPassword.TextSize = values.TextSize12

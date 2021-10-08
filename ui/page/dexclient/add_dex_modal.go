@@ -26,7 +26,7 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		Load:             l,
 		modal:            l.Theme.ModalFloatTitle(),
 		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
-		addDexServer:     l.Theme.Button(new(widget.Clickable), "Submit"),
+		addDexServer:     l.Theme.Button("Submit"),
 		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
 	}
 
