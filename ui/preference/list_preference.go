@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -33,7 +34,7 @@ type ListPreference struct {
 	updateButtonClicked func()
 }
 
-func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, preferenceKey, defaultValue string, items map[string]string, cancelIcon *widget.Icon) *ListPreference {
+func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defaultValue string, items map[string]string, cancelIcon *widget.Icon) *ListPreference {
 
 	// sort keys to keep order when refreshed
 	sortedKeys := make([]string, 0)
@@ -47,20 +48,20 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 		wallet:        wallet,
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
-		theme:         theme,
+		theme:         l.Theme,
 
 		items:    items,
 		itemKeys: sortedKeys,
 
 		IsShowing: false,
 
-		clickable:         theme.NewClickable(false),
+		clickable:         l.Theme.NewClickable(false),
 		optionsRadioGroup: new(widget.Enum),
-		modal:             theme.Modal(),
+		modal:             l.Theme.Modal(),
 	}
 
-	lp.cancelButton = theme.PlainIconButton(cancelIcon)
-	lp.cancelButton.Color = theme.Color.Gray3
+	lp.cancelButton = l.Theme.PlainIconButton(cancelIcon)
+	lp.cancelButton.Color = l.Theme.Color.Gray3
 	lp.cancelButton.Size = values.MarginPadding24
 	lp.cancelButton.Inset = layout.UniformInset(values.MarginPadding4)
 
