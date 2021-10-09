@@ -28,6 +28,7 @@ type Wallet struct {
 	Send               chan Response
 	Sync               chan SyncStatusUpdate
 	OverallBlockHeight int32
+	startUpTime        time.Time
 }
 
 // NewWallet initializies an new Wallet instance.
@@ -38,13 +39,14 @@ func NewWallet(root, net, version, logFile string, buildDate time.Time, send cha
 	}
 
 	wal := &Wallet{
-		Root:      root,
-		Net:       net,
-		buildDate: buildDate,
-		version:   version,
-		logFile:   logFile,
-		Sync:      make(chan SyncStatusUpdate, 2),
-		Send:      send,
+		Root:        root,
+		Net:         net,
+		buildDate:   buildDate,
+		version:     version,
+		logFile:     logFile,
+		Sync:        make(chan SyncStatusUpdate, 2),
+		Send:        send,
+		startUpTime: time.Now(),
 	}
 
 	return wal, nil
@@ -60,6 +62,10 @@ func (wal *Wallet) Version() string {
 
 func (wal *Wallet) LogFile() string {
 	return wal.logFile
+}
+
+func (wal *Wallet) StartupTime() time.Time {
+	return wal.startUpTime
 }
 
 func (wal *Wallet) InitMultiWallet() error {
