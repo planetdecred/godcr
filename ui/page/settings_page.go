@@ -90,8 +90,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	languagePreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
-		languagePreferenceKey, values.DefaultLangauge, values.ArrLanguages,
-		pg.Icons.ContentClear).
+		languagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
 		Title(values.StrLanguage).
 		UpdateValues(func() {
 			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey))
@@ -104,7 +103,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 	currencyPreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
 		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue,
-		currencyMap, pg.Icons.ContentClear).
+		currencyMap).
 		Title(values.StrCurrencyConversion).
 		UpdateValues(func() {})
 	pg.currencyPreference = currencyPreference

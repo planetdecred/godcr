@@ -34,7 +34,7 @@ type ListPreference struct {
 	updateButtonClicked func()
 }
 
-func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defaultValue string, items map[string]string, cancelIcon *widget.Icon) *ListPreference {
+func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defaultValue string, items map[string]string) *ListPreference {
 
 	// sort keys to keep order when refreshed
 	sortedKeys := make([]string, 0)
@@ -60,7 +60,7 @@ func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defau
 		modal:             l.Theme.Modal(),
 	}
 
-	lp.cancelButton = l.Theme.PlainIconButton(cancelIcon)
+	lp.cancelButton = l.Theme.PlainIconButton(l.Icons.ContentClear)
 	lp.cancelButton.Color = l.Theme.Color.Gray3
 	lp.cancelButton.Size = values.MarginPadding24
 	lp.cancelButton.Inset = layout.UniformInset(values.MarginPadding4)
