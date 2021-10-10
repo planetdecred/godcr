@@ -208,7 +208,6 @@ func (t *Theme) TextAndIconButton(text string, icon *widget.Icon) TextAndIconBut
 func (b TextAndIconButton) Layout(gtx layout.Context) layout.Dimensions {
 	btnLayout := material.ButtonLayout(b.theme.Base, b.Button)
 	btnLayout.Background = b.BackgroundColor
-	b.icon.Color = b.Color
 
 	return btnLayout.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(unit.Dp(0)).Layout(gtx, func(gtx C) D {
@@ -219,7 +218,9 @@ func (b TextAndIconButton) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{Left: textIconSpacer}.Layout(gtx, func(gtx C) D {
 					var d D
 					size := gtx.Px(unit.Dp(46)) - 2*gtx.Px(unit.Dp(16))
-					b.icon.Layout(gtx, unit.Px(float32(size)))
+					gtx.Constraints.Max.X = size
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					b.icon.Layout(gtx, b.Color)
 					d = layout.Dimensions{
 						Size: image.Point{X: size, Y: size},
 					}

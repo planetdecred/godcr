@@ -364,8 +364,6 @@ func (pg *PrivacyPage) showModalSetupMixerAcct() {
 	for _, acct := range accounts.Acc {
 		if acct.Name == "mixed" || acct.Name == "unmixed" {
 			alert := decredmaterial.MustIcon(widget.NewIcon(icons.AlertError))
-			alert.Color = pg.Theme.Color.DeepBlue
-
 			info := modal.NewInfoModal(pg.Load).
 				Icon(alert).
 				Title("Account name is taken").

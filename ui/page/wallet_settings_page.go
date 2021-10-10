@@ -39,7 +39,6 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	pg.rescan.Radius = decredmaterial.Radius(14)
 	pg.deleteWallet.Radius = decredmaterial.Radius(14)
 
-	pg.chevronRightIcon.Color = l.Theme.Color.LightGray
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
 	return pg
@@ -89,7 +88,8 @@ func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrChangeSpendingPass))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+						return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.LightGray)
 					})
 				}),
 			)
@@ -104,7 +104,8 @@ func (pg *WalletSettingsPage) debug() layout.Widget {
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRescanBlockchain))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+						return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.LightGray)
 					})
 				}),
 			)
@@ -119,7 +120,8 @@ func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRemoveWallet))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+						return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.LightGray)
 					})
 				}),
 			)

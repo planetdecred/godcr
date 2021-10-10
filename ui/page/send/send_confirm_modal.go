@@ -156,9 +156,9 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							icon := scm.Icons.NavigationArrowForward
-							icon.Color = scm.Theme.Color.Gray3
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-								return icon.Layout(gtx, values.MarginPadding15)
+								// todo:iconsize values.MarginPadding8
+								return icon.Layout(gtx, scm.Theme.Color.Gray3)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -231,9 +231,9 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					icon := scm.Icons.ActionInfo
-					icon.Color = scm.Theme.Color.Gray
+					// todo: icon size
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						return icon.Layout(gtx, values.MarginPadding20)
+						return icon.Layout(gtx, scm.Theme.Color.Gray)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {

@@ -61,7 +61,9 @@ func (pg *BackupSuccessPage) Layout(gtx C) D {
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						successIcon := pg.Icons.ActionCheckCircle
-						return successIcon.Layout(gtx, values.MarginPadding64)
+						// values.MarginPadding24
+						// todo: icon size
+						return successIcon.Layout(gtx, pg.Theme.Color.Success)
 					}),
 					layout.Rigid(func(gtx C) D {
 						label := pg.Theme.Label(values.TextSize24, "Your seed word backup is verified")

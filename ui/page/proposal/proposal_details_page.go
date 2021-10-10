@@ -3,6 +3,7 @@ package proposal
 import (
 	"context"
 	"fmt"
+	"image/color"
 	"time"
 
 	"gioui.org/font/gofont"
@@ -187,13 +188,14 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 					})
 				}
 				icon := pg.successIcon
-				icon.Color = pg.Theme.Color.Primary
+				// todo icon size = values.MarginPadding20
 				return layout.Inset{
 					Left:   values.MarginPaddingMinus2,
 					Right:  values.MarginPaddingMinus2,
 					Bottom: values.MarginPaddingMinus2,
 				}.Layout(gtx, func(gtx C) D {
-					return icon.Layout(gtx, values.MarginPadding24)
+					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+					return icon.Layout(gtx, pg.Theme.Color.Primary)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -237,16 +239,18 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 	var label decredmaterial.Label
 	var icon *widget.Icon
+	var iconColor color.NRGBA
+
 	proposal := pg.proposal
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
 		label = pg.Theme.Body2("Approved")
 		icon = pg.successIcon
-		icon.Color = pg.Theme.Color.Success
+		iconColor = pg.Theme.Color.Success
 	case dcrlibwallet.ProposalCategoryRejected:
 		label = pg.Theme.Body2("Rejected")
 		icon = pg.rejectedIcon
-		icon.Color = pg.Theme.Color.Danger
+		iconColor = pg.Theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
 		label = pg.Theme.Body2("Abandoned")
 	case dcrlibwallet.ProposalCategoryActive:
@@ -261,7 +265,8 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 					if icon == nil {
 						return D{}
 					}
-					return icon.Layout(gtx, unit.Dp(20))
+					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+					return icon.Layout(gtx, iconColor)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, label.Layout)

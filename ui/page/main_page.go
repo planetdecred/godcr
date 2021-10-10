@@ -83,7 +83,7 @@ func NewMainPage(l *load.Load) *MainPage {
 
 	mp.initNavItems()
 
-	mp.drawerNav.DrawerToggled(false)
+	mp.drawerNav.DrawerToggled(true)
 
 	mp.OnResume()
 

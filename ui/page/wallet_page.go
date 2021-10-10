@@ -97,7 +97,6 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
 
 	pg.separator.Color = l.Theme.Color.Gray1
-	pg.addAcctIcon.Color = l.Theme.Color.Text
 
 	pg.watchOnlyWalletLabel = pg.Theme.Body1(values.String(values.StrWatchOnlyWallets))
 	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.Gray
@@ -479,7 +478,8 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 											Right: values.MarginPadding10,
 											Left:  values.MarginPadding38,
 										}.Layout(gtx, func(gtx C) D {
-											return pg.addAcctIcon.Layout(gtx, values.MarginPadding25)
+											gtx.Constraints.Min.X = gtx.Px(values.MarginPadding25)
+											return pg.addAcctIcon.Layout(gtx, pg.Theme.Color.Text)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -748,7 +748,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 
 func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walletListItem) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	textColour := pg.Theme.Color.InvText
+	textColor := pg.Theme.Color.InvText
 	return listItem.backupAcctClickable.Layout(gtx, func(gtx C) D {
 		return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -763,12 +763,12 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								txt := pg.Theme.Body2(values.String(values.StrBackupSeedPhrase))
-								txt.Color = textColour
+								txt.Color = textColor
 								return txt.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								txt := pg.Theme.Caption(values.String(values.StrVerifySeedInfo))
-								txt.Color = textColour
+								txt.Color = textColor
 								return txt.Layout(gtx)
 							}),
 						)
@@ -778,10 +778,10 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 					inset := layout.Inset{
 						Top: values.MarginPadding5,
 					}
-					pg.backupAcctIcon.Color = textColour
 					return inset.Layout(gtx, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							return pg.backupAcctIcon.Layout(gtx, values.MarginPadding20)
+							gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+							return pg.backupAcctIcon.Layout(gtx, textColor)
 						})
 					})
 				}),

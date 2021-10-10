@@ -107,15 +107,11 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		UpdateValues(func() {})
 	pg.currencyPreference = currencyPreference
 
-	color := l.Theme.Color.LightGray
-
 	pg.peerLabel = l.Theme.Body1("")
 	pg.peerLabel.Color = l.Theme.Color.Gray
 
 	pg.agentLabel = l.Theme.Body1("")
 	pg.agentLabel.Color = l.Theme.Color.Gray
-
-	pg.chevronRightIcon.Color = color
 	return pg
 }
 
@@ -350,7 +346,8 @@ func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
-						return row.icon.Layout(gtx, values.MarginPadding22)
+						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding22)
+						return row.icon.Layout(gtx, pg.Theme.Color.LightGray)
 					}),
 				)
 			})

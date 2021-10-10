@@ -142,7 +142,8 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 										Left: values.MarginPadding15,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
-										return as.Icons.DropDownIcon.Layout(gtx, values.MarginPadding20)
+										gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+										return as.Icons.DropDownIcon.Layout(gtx, as.Theme.Color.Gray3)
 									})
 								}),
 							)
@@ -318,7 +319,8 @@ func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *
 						sections := func(gtx layout.Context) layout.Dimensions {
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return inset.Layout(gtx, func(gtx C) D {
-									return asm.Icons.NavigationCheck.Layout(gtx, values.MarginPadding20)
+									gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+									return asm.Icons.NavigationCheck.Layout(gtx, asm.Theme.Color.Gray3)
 								})
 							})
 						}

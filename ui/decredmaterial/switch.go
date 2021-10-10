@@ -130,7 +130,7 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	}
 	op.Offset(clickOff).Add(gtx.Ops)
 	sz := image.Pt(clickSize, clickSize)
-	pointer.Ellipse(image.Rectangle{Max: sz}).Add(gtx.Ops)
+	pointer.Ellipse(image.Rectangle{Max: sz}).Push(gtx.Ops).Pop()
 	gtx.Constraints.Min = sz
 	s.clk.Layout(gtx)
 	stack.Load()

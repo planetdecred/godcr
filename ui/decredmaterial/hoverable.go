@@ -49,8 +49,12 @@ func (h *Hoverable) Layout(gtx C, rect image.Rectangle) D {
 
 	defer op.Save(gtx.Ops).Load()
 
-	pointer.PassOp{Pass: true}.Add(gtx.Ops)
-	pointer.Rect(rect).Add(gtx.Ops)
+	area := pointer.Rect(rect)
+	area.PassThrough = true
+	defer area.Push(gtx.Ops).Pop()
+
+	pointer.AreaOp{PassThrough: true}.Push(gtx.Ops).Pop()
+	pointer.Rect(rect).Push(gtx.Ops).Pop()
 	pointer.InputOp{
 		Tag:   h,
 		Types: pointer.Enter | pointer.Leave,
