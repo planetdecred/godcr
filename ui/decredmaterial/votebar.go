@@ -127,10 +127,10 @@ func (v *VoteBar) Layout(gtx C) D {
 		}
 		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
 
-		clip.RRect{
+		defer clip.RRect{
 			Rect: f32.Rectangle{Max: f32.Point{X: width, Y: float32(gtx.Px(maxHeight))}},
 			NE:   rE, NW: rW, SE: rE, SW: rW,
-		}.Add(gtx.Ops)
+		}.Push(gtx.Ops).Pop()
 
 		paint.ColorOp{Color: color}.Add(gtx.Ops)
 		paint.PaintOp{}.Add(gtx.Ops)

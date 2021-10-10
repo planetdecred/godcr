@@ -290,10 +290,10 @@ func fillMax(gtx layout.Context, col color.NRGBA, radius CornerRadius) D {
 		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 	}
 
-	clip.RRect{
+	defer clip.RRect{
 		Rect: track,
 		NE:   radius.TopRight, NW: radius.TopLeft, SE: radius.BottomRight, SW: radius.BottomLeft,
-	}.Add(gtx.Ops)
+	}.Push(gtx.Ops).Pop()
 	paint.Fill(gtx.Ops, col)
 	st.Load()
 

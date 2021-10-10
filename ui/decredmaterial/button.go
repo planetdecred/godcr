@@ -144,10 +144,10 @@ func (b Button) buttonStyleLayout(gtx layout.Context, w layout.Widget) layout.Di
 	return layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx layout.Context) layout.Dimensions {
 			rr := float32(gtx.Px(b.CornerRadius))
-			clip.UniformRRect(f32.Rectangle{Max: f32.Point{
+			defer clip.UniformRRect(f32.Rectangle{Max: f32.Point{
 				X: float32(gtx.Constraints.Min.X),
 				Y: float32(gtx.Constraints.Min.Y),
-			}}, rr).Add(gtx.Ops)
+			}}, rr).Push(gtx.Ops).Pop()
 
 			background := b.Background
 			if !b.Enabled() {
