@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -18,6 +19,7 @@ type ListPreference struct {
 	currentValue  string
 
 	theme *decredmaterial.Theme
+	modal *decredmaterial.Modal
 
 	IsShowing   bool
 	titleStrKey string
@@ -27,10 +29,12 @@ type ListPreference struct {
 	clickable         *decredmaterial.Clickable
 	optionsRadioGroup *widget.Enum
 
+	cancelButton decredmaterial.IconButton
+
 	updateButtonClicked func()
 }
 
-func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, preferenceKey, defaultValue string, items map[string]string) *ListPreference {
+func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defaultValue string, items map[string]string) *ListPreference {
 
 	// sort keys to keep order when refreshed
 	sortedKeys := make([]string, 0)
@@ -44,16 +48,22 @@ func NewListPreference(wallet *wallet.Wallet, theme *decredmaterial.Theme, prefe
 		wallet:        wallet,
 		preferenceKey: preferenceKey,
 		defaultValue:  defaultValue,
-		theme:         theme,
+		theme:         l.Theme,
 
 		items:    items,
 		itemKeys: sortedKeys,
 
 		IsShowing: false,
 
-		clickable:         theme.NewClickable(false),
+		clickable:         l.Theme.NewClickable(false),
 		optionsRadioGroup: new(widget.Enum),
+		modal:             l.Theme.Modal(),
 	}
+
+	lp.cancelButton = l.Theme.PlainIconButton(l.Icons.ContentClear)
+	lp.cancelButton.Color = l.Theme.Color.Gray3
+	lp.cancelButton.Size = values.MarginPadding24
+	lp.cancelButton.Inset = layout.UniformInset(values.MarginPadding4)
 
 	return &lp
 }
@@ -91,6 +101,14 @@ func (lp *ListPreference) Handle() {
 		lp.IsShowing = false
 		lp.updateButtonClicked()
 	}
+
+	for lp.cancelButton.Button.Clicked() {
+		lp.IsShowing = false
+	}
+
+	if lp.modal.BackdropClicked(true) {
+		lp.IsShowing = false
+	}
 }
 
 func (lp *ListPreference) setValue(value string) {
@@ -103,17 +121,22 @@ func (lp *ListPreference) Layout(gtx layout.Context, body layout.Dimensions) lay
 			return body
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			return lp.modal(gtx)
+			return lp.printModal(gtx)
 		}),
 	)
 }
 
-func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
+func (lp *ListPreference) printModal(gtx layout.Context) layout.Dimensions {
 	w := []layout.Widget{
 		func(gtx layout.Context) layout.Dimensions {
 			txt := lp.theme.H6(values.String(lp.titleStrKey))
 			txt.Color = lp.theme.Color.Text
-			return txt.Layout(gtx)
+			return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.
+				Layout(gtx, layout.Rigid(txt.Layout), layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					return layout.Inset{
+						Top: values.MarginPaddingMinus2,
+					}.Layout(gtx, lp.cancelButton.Layout)
+				}))
 		},
 		func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx, lp.layoutItems()...)
@@ -122,7 +145,7 @@ func (lp *ListPreference) modal(gtx layout.Context) layout.Dimensions {
 
 	lp.optionsRadioGroup.Value = lp.currentValue
 
-	return lp.theme.Modal().Layout(gtx, w, 1050)
+	return lp.modal.Layout(gtx, w, 1050)
 }
 
 func (lp *ListPreference) layoutItems() []layout.FlexChild {
