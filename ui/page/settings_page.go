@@ -89,8 +89,8 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	languagePreference := preference.NewListPreference(pg.WL.Wallet, pg.Theme, languagePreferenceKey,
-		values.DefaultLangauge, values.ArrLanguages).
+	languagePreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
+		languagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
 		Title(values.StrLanguage).
 		UpdateValues(func() {
 			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey))
@@ -101,8 +101,9 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	currencyMap[DefaultExchangeValue] = values.StrNone
 	currencyMap[components.USDExchangeValue] = values.StrUsdBittrex
 
-	currencyPreference := preference.NewListPreference(pg.WL.Wallet, pg.Theme,
-		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue, currencyMap).
+	currencyPreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
+		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue,
+		currencyMap).
 		Title(values.StrCurrencyConversion).
 		UpdateValues(func() {})
 	pg.currencyPreference = currencyPreference
