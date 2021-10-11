@@ -32,6 +32,6 @@ require (
 
 replace (
 	decred.org/dcrdex => github.com/itswisdomagain/dcrdex v0.0.0-20211004141752-92a02cc7352a
-	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211005050035-ac1cc2b0a32f
-	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211005050035-ac1cc2b0a32f
+	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211006143429-29f490167518
+	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211006143429-29f490167518
 )
