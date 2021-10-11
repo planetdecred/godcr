@@ -39,7 +39,7 @@ type TransactionDetailsPage struct {
 	associatedTicketClickable       *decredmaterial.Clickable
 	hashClickable                   *widget.Clickable
 	destAddressClickable            *widget.Clickable
-	dot                             *widget.Icon
+	dot                             *decredmaterial.Icon
 	toDcrdata                       *decredmaterial.Clickable
 	outputsCollapsible              *decredmaterial.Collapsible
 	inputsCollapsible               *decredmaterial.Collapsible
@@ -86,7 +86,8 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 
-	pg.dot = l.Icons.ImageBrightness1
+	pg.dot = decredmaterial.NewIcon(l.Icons.ImageBrightness1)
+	pg.dot.Color = l.Theme.Color.Gray
 
 	// find source account
 	if transaction.Direction == dcrlibwallet.TxDirectionSent ||
@@ -272,8 +273,8 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 								Right: m,
 								Top:   m,
 							}.Layout(gtx, func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Px(values.MarginPadding2)
-								return pg.dot.Layout(gtx, pg.Theme.Color.Gray)
+								pg.dot.Size = 2
+								return pg.dot.Layout(gtx)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {

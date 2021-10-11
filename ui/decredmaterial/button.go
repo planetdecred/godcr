@@ -188,7 +188,7 @@ func (ib IconButton) Layout(gtx layout.Context) layout.Dimensions {
 type TextAndIconButton struct {
 	theme           *Theme
 	Button          *widget.Clickable
-	icon            *widget.Icon
+	icon            *Icon
 	text            string
 	Color           color.NRGBA
 	BackgroundColor color.NRGBA
@@ -198,7 +198,7 @@ func (t *Theme) TextAndIconButton(text string, icon *widget.Icon) TextAndIconBut
 	return TextAndIconButton{
 		theme:           t,
 		Button:          new(widget.Clickable),
-		icon:            icon,
+		icon:            NewIcon(icon),
 		text:            text,
 		Color:           t.Color.Surface,
 		BackgroundColor: t.Color.Primary,
@@ -218,9 +218,8 @@ func (b TextAndIconButton) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{Left: textIconSpacer}.Layout(gtx, func(gtx C) D {
 					var d D
 					size := gtx.Px(unit.Dp(46)) - 2*gtx.Px(unit.Dp(16))
-					gtx.Constraints.Max.X = size
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					b.icon.Layout(gtx, b.Color)
+					b.icon.Size = size
+					b.icon.Layout(gtx)
 					d = layout.Dimensions{
 						Size: image.Point{X: size, Y: size},
 					}

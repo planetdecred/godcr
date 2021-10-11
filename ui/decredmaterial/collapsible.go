@@ -15,8 +15,8 @@ type Collapsible struct {
 	button          *widget.Clickable
 	BackgroundColor color.NRGBA
 	card            Card
-	expandedIcon    *widget.Icon
-	collapsedIcon   *widget.Icon
+	expandedIcon    *Icon
+	collapsedIcon   *Icon
 }
 
 type CollapsibleWithOption struct {
@@ -34,8 +34,8 @@ func (t *Theme) Collapsible() *Collapsible {
 		BackgroundColor: t.Color.Surface,
 		button:          new(widget.Clickable),
 		card:            t.Card(),
-		expandedIcon:    t.chevronUpIcon,
-		collapsedIcon:   t.chevronDownIcon,
+		expandedIcon:    NewIcon(t.chevronUpIcon),
+		collapsedIcon:   NewIcon(t.chevronDownIcon),
 		iconColor:       t.Color.Gray3,
 	}
 	c.card.Color = c.BackgroundColor
@@ -85,8 +85,8 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 								return header(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Px(unit.Dp(20))
-								return icon.Layout(gtx, c.iconColor)
+								icon.Size = 20
+								return icon.Layout(gtx)
 							}),
 						)
 					}),

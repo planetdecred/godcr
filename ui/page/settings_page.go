@@ -2,7 +2,6 @@ package page
 
 import (
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -25,7 +24,7 @@ const (
 type row struct {
 	title     string
 	clickable *decredmaterial.Clickable
-	icon      *widget.Icon
+	icon      *decredmaterial.Icon
 	label     decredmaterial.Label
 }
 
@@ -39,7 +38,7 @@ type SettingsPage struct {
 	updateConnectToPeer *decredmaterial.Clickable
 	updateUserAgent     *decredmaterial.Clickable
 	changeStartupPass   *decredmaterial.Clickable
-	chevronRightIcon    *widget.Icon
+	chevronRightIcon    *decredmaterial.Icon
 	backButton          decredmaterial.IconButton
 	infoButton          decredmaterial.IconButton
 
@@ -78,7 +77,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		beepNewBlocks:    l.Theme.Switch(),
 		connectToPeer:    l.Theme.Switch(),
 		userAgent:        l.Theme.Switch(),
-		chevronRightIcon: chevronRightIcon,
+		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
 
 		errorReceiver: make(chan error),
 
@@ -347,8 +346,8 @@ func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding22)
-						return row.icon.Layout(gtx, pg.Theme.Color.LightGray)
+						row.icon.Size = 22
+						return row.icon.Layout(gtx)
 					}),
 				)
 			})

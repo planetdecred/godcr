@@ -167,8 +167,9 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 							Left: values.MarginPadding15,
 						}
 						return inset.Layout(gtx, func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-							return as.Icons.DropDownIcon.Layout(gtx, as.Theme.Color.Gray3)
+							ic := decredmaterial.NewIcon(as.Icons.DropDownIcon)
+							ic.Size = 20
+							return ic.Layout(gtx)
 						})
 					}),
 				)
@@ -434,8 +435,9 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 			sections := func(gtx layout.Context) layout.Dimensions {
 				return layout.E.Layout(gtx, func(gtx C) D {
 					return inset.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-						return asm.Icons.NavigationCheck.Layout(gtx, asm.Theme.Color.Gray3)
+						ic := decredmaterial.NewIcon(asm.Icons.NavigationCheck)
+						ic.Size = 20
+						return ic.Layout(gtx)
 					})
 				})
 			}

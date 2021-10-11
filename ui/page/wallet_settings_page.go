@@ -2,7 +2,6 @@ package page
 
 import (
 	"gioui.org/layout"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -20,7 +19,7 @@ type WalletSettingsPage struct {
 
 	changePass, rescan, deleteWallet *decredmaterial.Clickable
 
-	chevronRightIcon *widget.Icon
+	chevronRightIcon *decredmaterial.Icon
 	backButton       decredmaterial.IconButton
 }
 
@@ -32,7 +31,7 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 		rescan:       l.Theme.NewClickable(false),
 		deleteWallet: l.Theme.NewClickable(false),
 
-		chevronRightIcon: l.Icons.ChevronRight,
+		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
 	}
 
 	pg.changePass.Radius = decredmaterial.Radius(14)
@@ -88,8 +87,8 @@ func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrChangeSpendingPass))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-						return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.LightGray)
+						pg.chevronRightIcon.Size = 20
+						return pg.chevronRightIcon.Layout(gtx)
 					})
 				}),
 			)
@@ -104,8 +103,8 @@ func (pg *WalletSettingsPage) debug() layout.Widget {
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRescanBlockchain))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-						return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.LightGray)
+						pg.chevronRightIcon.Size = 20
+						return pg.chevronRightIcon.Layout(gtx)
 					})
 				}),
 			)
@@ -120,8 +119,8 @@ func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRemoveWallet))),
 				layout.Flexed(1, func(gtx C) D {
 					return layout.E.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-						return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.LightGray)
+						pg.chevronRightIcon.Size = 20
+						return pg.chevronRightIcon.Layout(gtx)
 					})
 				}),
 			)

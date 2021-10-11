@@ -1,9 +1,8 @@
 package page
 
 import (
-	"gioui.org/text"
-
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -142,14 +141,14 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-							icon := pg.Icons.ActionCheckCircle
-							clr := pg.Theme.Color.Success
 							if pg.stateValidate == invalid {
-								icon = pg.Icons.NavigationCancel
-								clr = pg.Theme.Color.Danger
+								ic := decredmaterial.NewIcon(pg.Icons.NavigationCancel)
+								ic.Size = 25
+								return ic.Layout(gtx)
 							}
-							gtx.Constraints.Min.X = gtx.Px(values.MarginPadding25)
-							return icon.Layout(gtx, clr)
+							ic := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+							ic.Size = 25
+							return ic.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {

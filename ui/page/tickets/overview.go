@@ -2,7 +2,10 @@ package tickets
 
 import (
 	"fmt"
+
 	"gioui.org/layout"
+	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -35,7 +38,7 @@ type Page struct {
 
 	stakingOverview *dcrlibwallet.StakingOverview
 	liveTickets     []*transactionItem
-	list            *decredmaterial.ListWithScroll
+	list            *widget.List
 }
 
 func NewTicketPage(l *load.Load) *Page {
@@ -50,8 +53,8 @@ func NewTicketPage(l *load.Load) *Page {
 		toTickets:           l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
 	}
 
-	pg.list = &decredmaterial.ListWithScroll{
-		LayoutList: decredmaterial.LayoutList{
+	pg.list = &widget.List{
+		List: layout.List{
 			Axis: layout.Vertical,
 		},
 	}
@@ -141,7 +144,7 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 	widgets := []layout.Widget{
 		func(ctx layout.Context) layout.Dimensions {
 			return components.UniformHorizontalPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-				return pg.ticketPriceSection(gtx)
+				return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, pg.ticketPriceSection)
 			})
 		},
 		func(ctx layout.Context) layout.Dimensions {
@@ -155,8 +158,8 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 			})
 		},
 	}
-
-	return decredmaterial.List(pg.Theme, pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return material.List(pg.Theme.Base, pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
 		return widgets[i](gtx)
 	})
 }

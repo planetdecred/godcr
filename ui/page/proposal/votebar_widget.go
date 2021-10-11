@@ -12,7 +12,6 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -43,8 +42,8 @@ type VoteBar struct {
 	passTooltip   *decredmaterial.Tooltip
 	quorumTooltip *decredmaterial.Tooltip
 
-	infoIcon   *widget.Icon
-	legendIcon *widget.Icon
+	infoIcon   *decredmaterial.Icon
+	legendIcon *decredmaterial.Icon
 }
 
 var voteBarThumbWidth = 2
@@ -57,8 +56,8 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		noColor:       l.Theme.Color.Danger,
 		passTooltip:   l.Theme.Tooltip(),
 		quorumTooltip: l.Theme.Tooltip(),
-		infoIcon:      l.Icons.ActionInfo,
-		legendIcon:    l.Icons.ImageBrightness1,
+		infoIcon:      decredmaterial.NewIcon(l.Icons.ActionInfo),
+		legendIcon:    decredmaterial.NewIcon(l.Icons.ImageBrightness1),
 	}
 
 	return vb
@@ -232,8 +231,8 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding10)
-					return v.legendIcon.Layout(gtx, clr)
+					v.legendIcon.Size = 10
+					return v.legendIcon.Layout(gtx)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -271,8 +270,8 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 			rect.Max.Y = 20
 			v.layoutInfoTooltip(gtx, rect)
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-				return v.infoIcon.Layout(gtx, v.Theme.Color.Gray)
+				v.infoIcon.Size = 20
+				return v.infoIcon.Layout(gtx)
 			})
 		}),
 	)

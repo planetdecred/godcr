@@ -2,7 +2,6 @@ package page
 
 import (
 	"gioui.org/layout"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -79,8 +78,9 @@ func (pg *DebugPage) debugItem(gtx C, i int) D {
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding22)
-					return pg.Icons.ChevronRight.Layout(gtx, pg.Theme.Color.Gray)
+					ic := decredmaterial.NewIcon(pg.Icons.ChevronRight)
+					ic.Size = 22
+					return ic.Layout(gtx)
 				})
 			})
 		}),

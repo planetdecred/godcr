@@ -63,11 +63,12 @@ type ProposalsPage struct {
 	proposalCount         []int
 	selectedCategoryIndex int
 
-	updatedIcon   *widget.Icon
+	legendIcon    *decredmaterial.Icon
+	infoIcon      *decredmaterial.Icon
+	updatedIcon   *decredmaterial.Icon
 	syncButton    *widget.Clickable
 	startSyncIcon *decredmaterial.Image
 	timerIcon     *decredmaterial.Image
-	infoIcon      *widget.Icon
 
 	showSyncedCompleted bool
 	isSyncing           bool
@@ -230,11 +231,18 @@ func (pg *ProposalsPage) OnClose() {
 
 func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.categoryList = pg.Theme.NewClickableList(layout.Horizontal)
+	pg.categoryList.HideScroll = true
 	pg.itemCard = pg.Theme.Card()
 	pg.syncButton = new(widget.Clickable)
 
-	pg.updatedIcon = pg.Icons.NavigationCheck
-	pg.infoIcon = pg.Icons.ActionInfo
+	pg.infoIcon = decredmaterial.NewIcon(pg.Icons.ActionInfo)
+	pg.infoIcon.Color = pg.Theme.Color.Gray
+
+	pg.legendIcon = decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
+	pg.legendIcon.Color = pg.Theme.Color.InactiveGray
+
+	pg.updatedIcon = decredmaterial.NewIcon(pg.Icons.NavigationCheck)
+	pg.updatedIcon.Color = pg.Theme.Color.Success
 
 	pg.updatedLabel = pg.Theme.Body2("Updated")
 	pg.updatedLabel.Color = pg.Theme.Color.Success
@@ -508,8 +516,8 @@ func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 									}
 									rect.Max.Y = 20
 									pg.layoutInfoTooltip(gtx, rect, item)
-									gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-									return pg.infoIcon.Layout(gtx, pg.Theme.Color.Gray)
+									pg.infoIcon.Size = 20
+									return pg.infoIcon.Layout(gtx)
 								})
 							}),
 						)
@@ -566,8 +574,8 @@ func (pg *ProposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 func (pg *ProposalsPage) layoutIsSyncedSection(gtx C) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-			return pg.updatedIcon.Layout(gtx, pg.Theme.Color.Success)
+			pg.updatedIcon.Size = 20
+			return pg.updatedIcon.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, pg.updatedLabel.Layout)

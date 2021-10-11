@@ -155,10 +155,11 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							icon := scm.Icons.NavigationArrowForward
+							icon := decredmaterial.NewIcon(scm.Icons.NavigationArrowForward)
+							icon.Color = scm.Theme.Color.Gray3
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-								return icon.Layout(gtx, scm.Theme.Color.Gray3)
+								icon.Size = 15
+								return icon.Layout(gtx)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -230,10 +231,11 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					icon := scm.Icons.ActionInfo
+					icon := decredmaterial.NewIcon(scm.Icons.ActionInfo)
+					icon.Color = scm.Theme.Color.Gray
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-						return icon.Layout(gtx, scm.Theme.Color.Gray)
+						icon.Size = 20
+						return icon.Layout(gtx)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {

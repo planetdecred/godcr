@@ -3,6 +3,9 @@ package decredmaterial
 import (
 	"image/color"
 
+	"gioui.org/widget"
+	"gioui.org/widget/material"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 )
@@ -15,15 +18,25 @@ type ClickableList struct {
 	Radius         CornerRadius // this radius is used by the clickable
 	selectedItem   int
 	DividerHeight  unit.Value
+	list           *widget.List
+	HideScroll     bool
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
-	return &ClickableList{
+	click := &ClickableList{
 		theme:          t,
 		List:           layout.List{Axis: axis},
 		ClickHighlight: t.Color.SurfaceHighlight,
 		selectedItem:   -1,
+		HideScroll:     false,
 	}
+
+	click.list = &widget.List{
+		List: layout.List{
+			Axis: axis,
+		},
+	}
+	return click
 }
 
 func (cl *ClickableList) ItemClicked() (bool, int) {
@@ -53,31 +66,41 @@ func (cl *ClickableList) handleClickables(count int) {
 
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
-	return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
-		if i == 0 { // first item
-			cl.clickables[i].Radius.TopLeft = cl.Radius.TopLeft
-			cl.clickables[i].Radius.TopRight = cl.Radius.TopRight
-		}
-		if i == count-1 { // last item
-			cl.clickables[i].Radius.BottomLeft = cl.Radius.BottomLeft
-			cl.clickables[i].Radius.BottomRight = cl.Radius.BottomRight
-		}
-		row := cl.clickables[i].Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return w(gtx, i)
+	if cl.HideScroll {
+		return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
+			return cl.row(gtx, count, i, w)
 		})
-
-		// add divider to all rows except last
-		if i < (count-1) && cl.DividerHeight.V > 0 {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return row
-				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					gtx.Constraints.Min.Y += gtx.Px(cl.DividerHeight)
-					return layout.Dimensions{Size: gtx.Constraints.Min}
-				}),
-			)
-		}
-		return row
+	}
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return material.List(cl.theme.Base, cl.list).Layout(gtx, count, func(gtx C, i int) D {
+		return cl.row(gtx, count, i, w)
 	})
+}
+
+func (cl *ClickableList) row(gtx layout.Context, count int, i int, w layout.ListElement) layout.Dimensions {
+	if i == 0 { // first item
+		cl.clickables[i].Radius.TopLeft = cl.Radius.TopLeft
+		cl.clickables[i].Radius.TopRight = cl.Radius.TopRight
+	}
+	if i == count-1 { // last item
+		cl.clickables[i].Radius.BottomLeft = cl.Radius.BottomLeft
+		cl.clickables[i].Radius.BottomRight = cl.Radius.BottomRight
+	}
+	row := cl.clickables[i].Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return w(gtx, i)
+	})
+
+	// add divider to all rows except last
+	if i < (count-1) && cl.DividerHeight.V > 0 {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return row
+			}),
+			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				gtx.Constraints.Min.Y += gtx.Px(cl.DividerHeight)
+				return layout.Dimensions{Size: gtx.Constraints.Min}
+			}),
+		)
+	}
+	return row
 }

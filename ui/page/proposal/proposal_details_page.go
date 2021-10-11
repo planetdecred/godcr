@@ -3,7 +3,6 @@ package proposal
 import (
 	"context"
 	"fmt"
-	"image/color"
 	"time"
 
 	"gioui.org/font/gofont"
@@ -59,6 +58,7 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		descriptionList:    &layout.List{Axis: layout.Vertical},
 		redirectIcon:       l.Icons.RedirectIcon,
 		downloadIcon:       l.Icons.DownloadIcon,
+		//voteBar:            l.Theme.VoteBar(decredmaterial.NewIcon(l.Icons.ActionInfo), decredmaterial.NewIcon(l.Icons.ImageBrightness1)),
 		proposalItems:      make(map[string]proposalItemWidgets),
 		rejectedIcon:       l.Icons.NavigationCancel,
 		successIcon:        l.Icons.ActionCheckCircle,
@@ -190,14 +190,15 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 						return layout.Inset{Left: m, Right: m}.Layout(gtx, lbl.Layout)
 					})
 				}
-				icon := pg.successIcon
+				icon := decredmaterial.NewIcon(pg.successIcon)
+				icon.Color = pg.Theme.Color.Primary
 				return layout.Inset{
 					Left:   values.MarginPaddingMinus2,
 					Right:  values.MarginPaddingMinus2,
 					Bottom: values.MarginPaddingMinus2,
 				}.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-					return icon.Layout(gtx, pg.Theme.Color.Primary)
+					icon.Size = 24
+					return icon.Layout(gtx)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -240,19 +241,17 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 
 func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 	var label decredmaterial.Label
-	var icon *widget.Icon
-	var iconColor color.NRGBA
-
+	var icon *decredmaterial.Icon
 	proposal := pg.proposal
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
 		label = pg.Theme.Body2("Approved")
-		icon = pg.successIcon
-		iconColor = pg.Theme.Color.Success
+		icon = decredmaterial.NewIcon(pg.successIcon)
+		icon.Color = pg.Theme.Color.Success
 	case dcrlibwallet.ProposalCategoryRejected:
 		label = pg.Theme.Body2("Rejected")
-		icon = pg.rejectedIcon
-		iconColor = pg.Theme.Color.Danger
+		icon = decredmaterial.NewIcon(pg.rejectedIcon)
+		icon.Color = pg.Theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
 		label = pg.Theme.Body2("Abandoned")
 	case dcrlibwallet.ProposalCategoryActive:
@@ -267,8 +266,8 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 					if icon == nil {
 						return D{}
 					}
-					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-					return icon.Layout(gtx, iconColor)
+					icon.Size = 20
+					return icon.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, label.Layout)

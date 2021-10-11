@@ -470,8 +470,9 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 										Left:  values.MarginPadding4,
 										Right: values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										gtx.Constraints.Min.X = gtx.Px(values.MarginPadding5)
-										return l.Icons.ImageBrightness1.Layout(gtx, l.Theme.Color.Gray2)
+										ic := decredmaterial.NewIcon(l.Icons.ImageBrightness1)
+										ic.Size = 5
+										return ic.Layout(gtx)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {

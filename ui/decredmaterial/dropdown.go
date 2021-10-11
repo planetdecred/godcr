@@ -123,17 +123,17 @@ func (d *DropDown) Changed() bool {
 }
 
 func (d *DropDown) layoutActiveIcon(gtx layout.Context, index int) D {
-	var icon *widget.Icon
+	var icon *Icon
 	if !d.isOpen {
-		icon = d.dropdownIcon
+		icon = NewIcon(d.dropdownIcon)
 	} else if index == d.selectedIndex {
-		icon = d.navigationIcon
+		icon = NewIcon(d.navigationIcon)
 	}
 
 	return layout.E.Layout(gtx, func(gtx C) D {
 		if icon != nil {
-			gtx.Constraints.Min.X = gtx.Px(unit.Dp(20))
-			return icon.Layout(gtx, d.theme.Color.Gray3)
+			icon.Size = 20
+			return icon.Layout(gtx)
 		}
 		return layout.Dimensions{}
 	})
