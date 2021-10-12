@@ -212,7 +212,6 @@ func (win *Window) dismissModal(modal load.Modal) {
 }
 
 func (win *Window) unloaded(w *app.Window) {
-	lbl := win.load.Theme.H3("Multiwallet not loaded\nIs another instance open?")
 	for {
 		e := <-w.Events()
 		switch evt := e.(type) {
@@ -220,6 +219,7 @@ func (win *Window) unloaded(w *app.Window) {
 			return
 		case system.FrameEvent:
 			gtx := layout.NewContext(win.ops, evt)
+			lbl := win.load.Theme.H3("Multiwallet not loaded\nIs another instance open?")
 			lbl.Layout(gtx)
 			evt.Frame(win.ops)
 		}

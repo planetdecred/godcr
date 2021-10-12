@@ -3,7 +3,7 @@ module github.com/planetdecred/godcr
 go 1.16
 
 require (
-	gioui.org v0.0.0-20211008161047-bd1ef92dc4e7
+	gioui.org v0.0.0-20211011183043-05f0f5c20f45
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ararog/timeago v0.0.0-20160328174124-e9969cf18b8d

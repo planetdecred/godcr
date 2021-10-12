@@ -6,7 +6,6 @@ import (
 	"gioui.org/f32"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
-	"gioui.org/op"
 )
 
 type Hoverable struct {
@@ -47,13 +46,7 @@ func (h *Hoverable) update(gtx C) {
 func (h *Hoverable) Layout(gtx C, rect image.Rectangle) D {
 	h.update(gtx)
 
-	defer op.Save(gtx.Ops).Load()
-
-	area := pointer.Rect(rect)
-	area.PassThrough = true
-	defer area.Push(gtx.Ops).Pop()
-
-	pointer.AreaOp{PassThrough: true}.Push(gtx.Ops).Pop()
+	pointer.PassOp{}.Push(gtx.Ops).Pop()
 	pointer.Rect(rect).Push(gtx.Ops).Pop()
 	pointer.InputOp{
 		Tag:   h,

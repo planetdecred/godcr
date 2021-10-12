@@ -73,7 +73,6 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 	if c.isExpanded {
 		icon = c.expandedIcon
 	}
-	// icon.Color = c.iconColor
 
 	return c.card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,

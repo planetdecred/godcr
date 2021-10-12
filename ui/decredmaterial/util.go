@@ -100,15 +100,14 @@ func drawInk(gtx layout.Context, c widget.Press, highlightColor color.NRGBA) {
 	alpha := 0.7 * alphaBezier
 	const col = 0.8
 	ba, _ := byte(alpha*0xff), byte(col*0xff)
-	defer op.Save(gtx.Ops).Load()
 	rgba := mulAlpha(highlightColor, ba)
 	ink := paint.ColorOp{Color: rgba}
 	ink.Add(gtx.Ops)
 	rr := size * .5
-	op.Offset(c.Position.Add(f32.Point{
+	defer op.Offset(c.Position.Add(f32.Point{
 		X: -rr,
 		Y: -rr,
-	})).Add(gtx.Ops)
-	clip.UniformRRect(f32.Rectangle{Max: f32.Pt(size, size)}, rr).Add(gtx.Ops)
+	})).Push(gtx.Ops).Pop()
+	defer clip.UniformRRect(f32.Rectangle{Max: f32.Pt(size, size)}, rr).Push(gtx.Ops).Pop()
 	paint.PaintOp{}.Add(gtx.Ops)
 }

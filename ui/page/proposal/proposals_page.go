@@ -236,7 +236,6 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.infoIcon = pg.Icons.ActionInfo
 
 	pg.legendIcon = pg.Icons.ImageBrightness1
-	// pg.legendIcon.Color = pg.Theme.Color.InactiveGray
 
 	pg.updatedIcon = pg.Icons.NavigationCheck
 

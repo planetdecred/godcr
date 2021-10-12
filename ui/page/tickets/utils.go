@@ -470,9 +470,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 										Left:  values.MarginPadding4,
 										Right: values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										size := gtx.Px(unit.Dp(46)) - 2*gtx.Px(unit.Dp(20))
-										gtx.Constraints.Max.X = size
-										gtx.Constraints.Min.X = gtx.Constraints.Max.X
+										gtx.Constraints.Min.X = gtx.Px(values.MarginPadding5)
 										return l.Icons.ImageBrightness1.Layout(gtx, l.Theme.Color.Gray2)
 									})
 								}),

@@ -188,7 +188,6 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 					})
 				}
 				icon := pg.successIcon
-				// todo icon size = values.MarginPadding20
 				return layout.Inset{
 					Left:   values.MarginPaddingMinus2,
 					Right:  values.MarginPaddingMinus2,

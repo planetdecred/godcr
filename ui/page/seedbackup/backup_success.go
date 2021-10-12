@@ -61,8 +61,7 @@ func (pg *BackupSuccessPage) Layout(gtx C) D {
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						successIcon := pg.Icons.ActionCheckCircle
-						// values.MarginPadding24
-						// todo: icon size
+						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
 						return successIcon.Layout(gtx, pg.Theme.Color.Success)
 					}),
 					layout.Rigid(func(gtx C) D {
