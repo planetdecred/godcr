@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -358,10 +359,11 @@ func FormatDateOrTime(timestamp int64) string {
 
 	t := strings.Split(utcTime.Format(time.UnixDate), " ")
 	t2 := t[2]
+	year := strconv.Itoa(utcTime.Year())
 	if t[2] == "" {
 		t2 = t[3]
 	}
-	return fmt.Sprintf("%s %s", t[1], t2)
+	return fmt.Sprintf("%s %s, %s", t[1], t2, year)
 }
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
