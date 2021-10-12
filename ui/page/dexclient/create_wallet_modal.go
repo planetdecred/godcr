@@ -8,9 +8,11 @@ import (
 	"decred.org/dcrdex/client/asset/dcr"
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -18,26 +20,25 @@ const dexCreateWalletModalID = "dex_create_wallet_modal"
 
 type createWalletModal struct {
 	*load.Load
-	modal            *decredmaterial.Modal
-	createNewWallet  decredmaterial.Button
-	walletPassword   decredmaterial.Editor
-	appPassword      decredmaterial.Editor
-	accountName      decredmaterial.Editor
-	walletName       decredmaterial.Editor
-	RPCAddress       decredmaterial.Editor
-	RPCPort          decredmaterial.Editor
-	RPCUsername      decredmaterial.Editor
-	RPCPassword      decredmaterial.Editor
-	walletInfoWidget *walletInfoWidget
-	isSending        bool
-	walletCreated    func()
+	sourceAccountSelector *components.AccountSelector
+	modal                 *decredmaterial.Modal
+	createNewWallet       decredmaterial.Button
+	walletPassword        decredmaterial.Editor
+	appPassword           decredmaterial.Editor
+	walletName            decredmaterial.Editor
+	RPCAddress            decredmaterial.Editor
+	RPCPort               decredmaterial.Editor
+	RPCUsername           decredmaterial.Editor
+	RPCPassword           decredmaterial.Editor
+	walletInfoWidget      *walletInfoWidget
+	isSending             bool
+	walletCreated         func()
 }
 
 func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget) *createWalletModal {
 	md := &createWalletModal{
 		Load:             l,
 		modal:            l.Theme.ModalFloatTitle(),
-		accountName:      l.Theme.Editor(new(widget.Editor), "Account Name"),
 		walletPassword:   l.Theme.EditorPassword(new(widget.Editor), "Wallet Password"),
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
 		createNewWallet:  l.Theme.Button("Add"),
@@ -53,6 +54,25 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget) *createWalle
 	md.createNewWallet.Background = l.Theme.Color.Primary
 	md.appPassword.Editor.SingleLine = true
 	md.appPassword.Editor.SetText("")
+
+	md.sourceAccountSelector = components.NewAccountSelector(md.Load).
+		Title("Sellect DCR account to pay fee").
+		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
+
+		}).
+		AccountValidator(func(account *dcrlibwallet.Account) bool {
+			// Filter out imported account and mixed.
+			wal := md.WL.MultiWallet.WalletWithID(account.WalletID)
+			if account.Number == load.MaxInt32 ||
+				account.Number == wal.MixedAccountNumber() {
+				return false
+			}
+			return true
+		})
+	err := md.sourceAccountSelector.SelectFirstWalletValidAccount()
+	if err != nil {
+		md.Toast.NotifyError(err.Error())
+	}
 
 	return md
 }
@@ -70,11 +90,9 @@ func (md *createWalletModal) Dismiss() {
 }
 
 func (md *createWalletModal) OnDismiss() {
-	md.accountName.Editor.SetText("")
 }
 
 func (md *createWalletModal) OnResume() {
-	md.accountName.Editor.Focus()
 }
 
 func (md *createWalletModal) Handle() {
@@ -103,7 +121,7 @@ func (md *createWalletModal) Handle() {
 			// user won't need to reselect the wallet on restart.
 			var onWalletCreated func()
 			if coinID == dcr.BipID {
-				selectedDcrWallet := md.WL.MultiWallet.WalletsIterator().Next() // TODO: Allow user select which wallet to use from the CreateWalletModal!
+				selectedDcrWallet := md.Load.WL.MultiWallet.WalletWithID(md.sourceAccountSelector.SelectedAccount().WalletID)
 				err := md.DL.Dexc.RegisterDcrAssetDriver(selectedDcrWallet)
 				if err != nil {
 					md.Toast.NotifyError(err.Error())
@@ -117,7 +135,7 @@ func (md *createWalletModal) Handle() {
 			settings := make(map[string]string)
 			switch coinID {
 			case dcr.BipID:
-				settings["account"] = md.accountName.Editor.Text()
+				settings["account"] = md.sourceAccountSelector.SelectedAccount().Name
 				settings["password"] = md.walletPassword.Editor.Text()
 			case btc.BipID:
 				settings["walletname"] = md.walletName.Editor.Text()
@@ -174,7 +192,7 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-									return md.accountName.Layout(gtx)
+									return md.sourceAccountSelector.Layout(gtx)
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
