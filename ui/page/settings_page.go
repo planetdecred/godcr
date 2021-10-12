@@ -49,7 +49,6 @@ type SettingsPage struct {
 	beepNewBlocks    *decredmaterial.Switch
 	connectToPeer    *decredmaterial.Switch
 	userAgent        *decredmaterial.Switch
-	HideBalance      *decredmaterial.Switch
 
 	peerLabel, agentLabel decredmaterial.Label
 
@@ -79,7 +78,6 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		beepNewBlocks:    l.Theme.Switch(),
 		connectToPeer:    l.Theme.Switch(),
 		userAgent:        l.Theme.Switch(),
-		HideBalance:      l.Theme.Switch(),
 		chevronRightIcon: chevronRightIcon,
 
 		errorReceiver: make(chan error),
@@ -174,9 +172,6 @@ func (pg *SettingsPage) general() layout.Widget {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, "Dark mode", pg.isDarkModeOn)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return pg.subSectionSwitch(gtx, "Hide balance", pg.HideBalance)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
@@ -408,9 +403,6 @@ func (pg *SettingsPage) Handle() {
 		pg.RefreshTheme()
 	}
 
-	if pg.HideBalance.Changed() {
-		pg.wal.SaveConfigValueForKey("HideBalance", pg.HideBalance.IsChecked())
-	}
 	if pg.spendUnconfirmed.Changed() {
 		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.IsChecked())
 	}
@@ -614,12 +606,6 @@ func (pg *SettingsPage) updateSettingOptions() {
 	pg.isDarkModeOn.SetChecked(false)
 	if isDarkModeOn {
 		pg.isDarkModeOn.SetChecked(isDarkModeOn)
-	}
-
-	HideBalance := pg.wal.ReadBoolConfigValueForKey("HideBalance")
-	pg.HideBalance.SetChecked(false)
-	if HideBalance {
-		pg.HideBalance.SetChecked(HideBalance)
 	}
 
 	isSpendUnconfirmed := pg.wal.ReadBoolConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey)
