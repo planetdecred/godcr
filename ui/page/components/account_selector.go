@@ -331,7 +331,7 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 							return inset.Layout(gtx, txt.Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
-							var showInfoBtn bool = false
+							showInfoBtn := false
 							if showInfoBtn {
 								inset := layout.Inset{
 									Top: values.MarginPadding2,
