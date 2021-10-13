@@ -104,21 +104,20 @@ func transactionDetailsInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func backupInfo(th *decredmaterial.Theme) []layout.Widget {
-	textGray := "Please backup your seed words and keep them in a safe place in order to recover your funds " +
-		"if your device gets lost or broken."
-
+	textGray := "Please backup your seed words and keep them in a safe place in order to recover your funds if your device gets lost or broken."
 	textDanger := "Anyone who has your seed words can spend your funds! Do not share them."
+
 	return []layout.Widget{
 		func(gtx C) D {
-			txt := th.Body1(textGray)
+			txt := th.Label(values.TextSize16, textGray)
 			txt.Color = th.Color.Gray3
 			return txt.Layout(gtx)
 		},
 		func(gtx C) D {
-			txt := th.Body1(textDanger)
+			txt := th.Label(values.TextSize16, textDanger)
 			txt.Color = th.Color.Danger
 			txt.Font.Weight = text.Medium
-			return layout.Inset{Top: values.MarginPaddingMinus10}.Layout(gtx, txt.Layout)
+			return layout.Inset{Top: values.MarginPaddingMinus15}.Layout(gtx, txt.Layout)
 		},
 	}
 }

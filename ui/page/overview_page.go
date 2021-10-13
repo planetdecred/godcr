@@ -49,9 +49,10 @@ type OverviewPage struct {
 	syncingIcon *decredmaterial.Image
 	checkBox    decredmaterial.CheckBoxStyle
 
-	walletSyncing bool
-	walletSynced  bool
-	isConnnected  bool
+	walletSyncing       bool
+	walletSynced        bool
+	isConnnected        bool
+	isBackupModalOpened bool
 
 	rescanningBlocks bool
 	rescanUpdate     *wallet.RescanUpdate
@@ -127,12 +128,6 @@ func (pg *OverviewPage) OnResume() {
 
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
-
-	for _, wal := range pg.allWallets {
-		if len(wal.EncryptedSeed) > 0 {
-			pg.showBackupInfo()
-		}
-	}
 }
 
 func (pg *OverviewPage) loadTransactions() {
@@ -168,10 +163,12 @@ func (pg *OverviewPage) showBackupInfo() {
 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
 		SetCancelable(false).
 		CheckBox(pg.checkBox).
-		NegativeButton("Backup later", func() {}).
+		NegativeButton("Backup later", func() {
+			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)
+		}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
-		NegativeButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton("Backup now", func() {
+			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)
 			pg.ChangeFragment(NewWalletPage(pg.Load))
 		}).Show()
 }
@@ -672,6 +669,17 @@ func (pg *OverviewPage) rescanDetailsLayout(gtx layout.Context, inset layout.Ins
 }
 
 func (pg *OverviewPage) Handle() {
+
+	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey("seedBackupNotification")
+	for _, wal := range pg.allWallets {
+		if len(wal.EncryptedSeed) > 0 {
+			if !backupLater && !pg.isBackupModalOpened {
+				pg.showBackupInfo()
+				pg.isBackupModalOpened = true
+			}
+		}
+		break
+	}
 
 	if pg.syncClickable.Clicked() {
 		if pg.rescanningBlocks {

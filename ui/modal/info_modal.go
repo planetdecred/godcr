@@ -116,11 +116,6 @@ func (in *InfoModal) PositiveButtonStyle(background, text color.NRGBA) *InfoModa
 	return in
 }
 
-func (in *InfoModal) NegativeButtonStyle(background, text color.NRGBA) *InfoModal {
-	in.btnNegative.Background, in.btnNegative.Color = background, text
-	return in
-}
-
 func (in *InfoModal) NegativeButton(text string, clicked func()) *InfoModal {
 	in.negativeButtonText = text
 	in.negativeButtonClicked = clicked
