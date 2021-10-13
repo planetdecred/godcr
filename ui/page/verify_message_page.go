@@ -142,7 +142,8 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return pg.verifyMessageStatus.Layout(gtx, values.MarginPadding20)
+								gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+								return pg.verifyMessageStatus.Layout(gtx, pg.verifyMessage.Color)
 							})
 						}),
 						layout.Rigid(pg.verifyMessage.Layout),
@@ -177,7 +178,6 @@ func (pg *VerifyMessagePage) Handle() {
 			}
 
 			pg.verifyMessageStatus = pg.Icons.ActionCheck
-			pg.verifyMessageStatus.Color = pg.Theme.Color.Success
 			pg.verifyMessage.Text = "Valid signature"
 			pg.verifyMessage.Color = pg.Theme.Color.Success
 		}

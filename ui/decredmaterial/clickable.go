@@ -46,13 +46,13 @@ func (cl *Clickable) Layout(gtx C, w layout.Widget) D {
 			tl := float32(gtx.Px(unit.Dp(cl.Radius.TopLeft)))
 			br := float32(gtx.Px(unit.Dp(cl.Radius.BottomRight)))
 			bl := float32(gtx.Px(unit.Dp(cl.Radius.BottomLeft)))
-			clip.RRect{
+			defer clip.RRect{
 				Rect: f32.Rectangle{Max: f32.Point{
 					X: float32(gtx.Constraints.Min.X),
 					Y: float32(gtx.Constraints.Min.Y),
 				}},
 				NW: tl, NE: tr, SE: br, SW: bl,
-			}.Add(gtx.Ops)
+			}.Push(gtx.Ops).Pop()
 			clip.Rect{Max: gtx.Constraints.Min}.Add(gtx.Ops)
 
 			if cl.Hoverable && cl.button.Hovered() {

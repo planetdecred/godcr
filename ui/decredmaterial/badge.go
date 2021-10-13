@@ -29,10 +29,10 @@ func (b *Badge) Layout(gtx C, label Label) D {
 		layout.Expanded(func(gtx C) D {
 			radius := 0.5 * float32(min.X)
 
-			clip.UniformRRect(f32.Rectangle{Max: f32.Point{
+			defer clip.UniformRRect(f32.Rectangle{Max: f32.Point{
 				X: float32(min.X),
 				Y: float32(min.Y),
-			}}, radius).Add(gtx.Ops)
+			}}, radius).Push(gtx.Ops).Pop()
 			paint.Fill(gtx.Ops, b.Background)
 			return layout.Dimensions{Size: min}
 		}),

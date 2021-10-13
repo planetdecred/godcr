@@ -127,10 +127,10 @@ func (v *VoteBar) Layout(gtx C) D {
 		}
 		d := image.Point{X: int(width), Y: gtx.Px(maxHeight)}
 
-		clip.RRect{
+		defer clip.RRect{
 			Rect: f32.Rectangle{Max: f32.Point{X: width, Y: float32(gtx.Px(maxHeight))}},
 			NE:   rE, NW: rW, SE: rE, SW: rW,
-		}.Add(gtx.Ops)
+		}.Push(gtx.Ops).Pop()
 
 		paint.ColorOp{Color: color}.Add(gtx.Ops)
 		paint.PaintOp{}.Add(gtx.Ops)
@@ -210,12 +210,10 @@ func (v *VoteBar) LayoutWithLegend(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								v.legendIcon.Color = v.yesColor
-								return v.layoutIconAndText(gtx, v.yesLabel, v.yesVotes)
+								return v.layoutIconAndText(gtx, v.yesLabel, v.yesVotes, v.yesColor)
 							}),
 							layout.Rigid(func(gtx C) D {
-								v.legendIcon.Color = v.noColor
-								return v.layoutIconAndText(gtx, v.noLabel, v.noVotes)
+								return v.layoutIconAndText(gtx, v.noLabel, v.noVotes, v.noColor)
 							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
@@ -233,12 +231,13 @@ func (v *VoteBar) LayoutWithLegend(gtx C) D {
 	)
 }
 
-func (v *VoteBar) layoutIconAndText(gtx C, lbl Label, count float32) D {
+func (v *VoteBar) layoutIconAndText(gtx C, lbl Label, count float32, clr color.NRGBA) D {
 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					return v.legendIcon.Layout(gtx, values.MarginPadding10)
+					gtx.Constraints.Min.X = gtx.Px(unit.Dp(10))
+					return v.legendIcon.Layout(gtx, clr)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -276,7 +275,8 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 			rect.Max.Y = 20
 			v.layoutInfoTooltip(gtx, rect)
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				return v.infoIcon.Layout(gtx, unit.Dp(20))
+				gtx.Constraints.Min.X = gtx.Px(unit.Dp(20))
+				return v.infoIcon.Layout(gtx, v.requirementLabel.Color)
 			})
 		}),
 	)

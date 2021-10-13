@@ -107,7 +107,8 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 										Left: values.MarginPadding15,
 									}
 									return inset.Layout(gtx, func(gtx C) D {
-										return v.Icons.DropDownIcon.Layout(gtx, values.MarginPadding20)
+										gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+										return v.Icons.DropDownIcon.Layout(gtx, v.Theme.Color.Gray3)
 									})
 								}),
 							)
@@ -220,7 +221,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 					listVSP := v.WL.VspInfo.List
 					return v.vspHosts.Layout(gtx, len(listVSP), func(gtx C, i int) D {
 						click := v.selectVSP[i]
-						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Add(gtx.Ops)
+						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops).Pop()
 						click.Add(gtx.Ops)
 						v.handlerSelectVSP(click.Events(gtx), listVSP[i])
 
@@ -239,7 +240,8 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 									})
 								}
 								return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-									return v.Icons.NavigationCheck.Layout(gtx, values.MarginPadding20)
+									gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+									return v.Icons.NavigationCheck.Layout(gtx, v.Theme.Color.Gray3)
 								})
 							}),
 						)

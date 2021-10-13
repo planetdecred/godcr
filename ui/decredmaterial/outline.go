@@ -27,13 +27,13 @@ func (o Outline) Layout(gtx layout.Context, w layout.Widget) D {
 	dims := layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			borderRadius := float32(gtx.Px(unit.Dp(4)))
-			clip.RRect{
+			defer clip.RRect{
 				Rect: f32.Rectangle{Max: f32.Point{
 					X: float32(gtx.Constraints.Min.X),
 					Y: float32(gtx.Constraints.Min.Y),
 				}},
 				NE: borderRadius, NW: borderRadius, SE: borderRadius, SW: borderRadius,
-			}.Add(gtx.Ops)
+			}.Push(gtx.Ops).Pop()
 			fill(gtx, o.BorderColor)
 			minHeight = gtx.Constraints.Min.Y
 
@@ -41,13 +41,13 @@ func (o Outline) Layout(gtx layout.Context, w layout.Widget) D {
 				return layout.UniformInset(unit.Dp(1)).Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.Y = minHeight - o.Weight
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					clip.RRect{
+					defer clip.RRect{
 						Rect: f32.Rectangle{Max: f32.Point{
 							X: float32(gtx.Constraints.Min.X),
 							Y: float32(gtx.Constraints.Min.Y),
 						}},
 						NE: borderRadius, NW: borderRadius, SE: borderRadius, SW: borderRadius,
-					}.Add(gtx.Ops)
+					}.Push(gtx.Ops).Pop()
 					return fill(gtx, rgb(0xffffff))
 				})
 			})

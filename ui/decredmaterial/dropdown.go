@@ -132,7 +132,8 @@ func (d *DropDown) layoutActiveIcon(gtx layout.Context, index int) D {
 
 	return layout.E.Layout(gtx, func(gtx C) D {
 		if icon != nil {
-			return icon.Layout(gtx, unit.Dp(20))
+			gtx.Constraints.Min.X = gtx.Px(unit.Dp(20))
+			return icon.Layout(gtx, d.theme.Color.Gray3)
 		}
 		return layout.Dimensions{}
 	})

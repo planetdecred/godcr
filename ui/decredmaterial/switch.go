@@ -77,7 +77,6 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	trackOff := float32(thumbSize-trackHeight) * .5
 
 	// Draw track.
-	stack := op.Save(gtx.Ops)
 	trackCorner := float32(trackHeight) / 2
 	trackRect := f32.Rectangle{Max: f32.Point{
 		X: float32(trackWidth),
@@ -90,17 +89,17 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 	}
 
 	trackColor := col
-	op.Offset(f32.Point{Y: trackOff}).Add(gtx.Ops)
-	clip.UniformRRect(trackRect, trackCorner).Add(gtx.Ops)
+	t := op.Offset(f32.Point{Y: trackOff}).Push(gtx.Ops)
+	cl := clip.UniformRRect(trackRect, trackCorner).Push(gtx.Ops)
 	paint.ColorOp{Color: trackColor}.Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
-	stack.Load()
+	cl.Pop()
+	t.Pop()
 
 	// Compute thumb offset and color.
-	stack = op.Save(gtx.Ops)
 	if s.IsChecked() {
-		off := trackWidth - thumbSize
-		op.Offset(f32.Point{X: float32(off)}).Add(gtx.Ops)
+		xoff := float32(trackWidth - thumbSize)
+		defer op.Offset(f32.Point{X: xoff}).Push(gtx.Ops).Pop()
 	}
 
 	thumbRadius := float32(thumbSize) / 2
@@ -122,18 +121,16 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 		}.Op(gtx.Ops))
 
 	// Set up click area.
-	stack = op.Save(gtx.Ops)
 	clickSize := gtx.Px(unit.Dp(40))
 	clickOff := f32.Point{
 		X: (float32(trackWidth) - float32(clickSize)) * .5,
 		Y: (float32(trackHeight)-float32(clickSize))*.5 + trackOff,
 	}
-	op.Offset(clickOff).Add(gtx.Ops)
+	defer op.Offset(clickOff).Push(gtx.Ops).Pop()
 	sz := image.Pt(clickSize, clickSize)
-	pointer.Ellipse(image.Rectangle{Max: sz}).Add(gtx.Ops)
+	defer pointer.Ellipse(image.Rectangle{Max: sz}).Push(gtx.Ops).Pop()
 	gtx.Constraints.Min = sz
 	s.clk.Layout(gtx)
-	stack.Load()
 
 	dims := image.Point{X: trackWidth, Y: thumbSize}
 	return layout.Dimensions{Size: dims}

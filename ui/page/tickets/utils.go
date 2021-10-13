@@ -470,13 +470,11 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 										Left:  values.MarginPadding4,
 										Right: values.MarginPadding4,
 									}.Layout(gtx, func(gtx C) D {
-										ic := l.Icons.ImageBrightness1
-										ic.Color = l.Theme.Color.Gray2
-										return l.Icons.ImageBrightness1.Layout(gtx, values.MarginPadding5)
+										gtx.Constraints.Min.X = gtx.Px(values.MarginPadding5)
+										return l.Icons.ImageBrightness1.Layout(gtx, l.Theme.Color.Gray2)
 									})
 								}),
 								layout.Rigid(func(gtx C) D {
-
 									txt.Text = tx.ticketAge
 									txtLayout := txt.Layout(gtx)
 									ticketCardTooltip(gtx, txtLayout, tx.daysBehindTooltip, func(gtx C) D {
