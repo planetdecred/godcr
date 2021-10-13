@@ -74,13 +74,13 @@ func (c Card) Layout(gtx layout.Context, w layout.Widget) layout.Dimensions {
 				tl := float32(gtx.Px(unit.Dp(c.Radius.TopLeft)))
 				br := float32(gtx.Px(unit.Dp(c.Radius.BottomRight)))
 				bl := float32(gtx.Px(unit.Dp(c.Radius.BottomLeft)))
-				clip.RRect{
+				defer clip.RRect{
 					Rect: f32.Rectangle{Max: f32.Point{
 						X: float32(gtx.Constraints.Min.X),
 						Y: float32(gtx.Constraints.Min.Y),
 					}},
 					NW: tl, NE: tr, SE: br, SW: bl,
-				}.Add(gtx.Ops)
+				}.Push(gtx.Ops).Pop()
 				return fill(gtx, c.Color)
 			}),
 			layout.Stacked(w),
@@ -104,13 +104,13 @@ func (c Card) HoverableLayout(gtx layout.Context, btn *widget.Clickable, w layou
 				tl := float32(gtx.Px(unit.Dp(c.Radius.TopLeft)))
 				br := float32(gtx.Px(unit.Dp(c.Radius.BottomRight)))
 				bl := float32(gtx.Px(unit.Dp(c.Radius.BottomLeft)))
-				clip.RRect{
+				defer clip.RRect{
 					Rect: f32.Rectangle{Max: f32.Point{
 						X: float32(gtx.Constraints.Min.X),
 						Y: float32(gtx.Constraints.Min.Y),
 					}},
 					NW: tl, NE: tr, SE: br, SW: bl,
-				}.Add(gtx.Ops)
+				}.Push(gtx.Ops).Pop()
 				switch {
 				case gtx.Queue == nil:
 					background = Disabled(c.Color)

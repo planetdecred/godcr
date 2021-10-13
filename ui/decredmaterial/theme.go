@@ -9,7 +9,6 @@ import (
 	"gioui.org/f32"
 	"gioui.org/io/key"
 	"gioui.org/layout"
-	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
@@ -285,17 +284,15 @@ func toPointF(p image.Point) f32.Point {
 func fillMax(gtx layout.Context, col color.NRGBA, radius CornerRadius) D {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Max.X, Y: cs.Max.Y}
-	st := op.Save(gtx.Ops)
 	track := f32.Rectangle{
 		Max: f32.Point{X: float32(d.X), Y: float32(d.Y)},
 	}
 
-	clip.RRect{
+	defer clip.RRect{
 		Rect: track,
 		NE:   radius.TopRight, NW: radius.TopLeft, SE: radius.BottomRight, SW: radius.BottomLeft,
-	}.Add(gtx.Ops)
+	}.Push(gtx.Ops).Pop()
 	paint.Fill(gtx.Ops, col)
-	st.Load()
 
 	return layout.Dimensions{Size: d}
 }
@@ -303,13 +300,11 @@ func fillMax(gtx layout.Context, col color.NRGBA, radius CornerRadius) D {
 func fill(gtx layout.Context, col color.NRGBA) layout.Dimensions {
 	cs := gtx.Constraints
 	d := image.Point{X: cs.Min.X, Y: cs.Min.Y}
-	st := op.Save(gtx.Ops)
 	track := image.Rectangle{
 		Max: d,
 	}
-	clip.Rect(track).Add(gtx.Ops)
+	defer clip.Rect(track).Push(gtx.Ops).Pop()
 	paint.Fill(gtx.Ops, col)
-	st.Load()
 
 	return layout.Dimensions{Size: d}
 }

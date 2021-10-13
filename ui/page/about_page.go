@@ -56,7 +56,6 @@ func NewAboutPage(l *load.Load) *AboutPage {
 	pg.versionValue.Color = pg.Theme.Color.Gray
 	pg.buildDateValue.Color = pg.Theme.Color.Gray
 	pg.networkValue.Color = pg.Theme.Color.Gray
-	pg.chevronRightIcon.Color = pg.Theme.Color.Gray
 
 	return pg
 }
@@ -122,7 +121,8 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return in.Layout(gtx, func(gtx C) D {
-								return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+								gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+								return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.Gray)
 							})
 						})
 					}),

@@ -5,7 +5,6 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
-	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 )
@@ -50,7 +49,6 @@ func (t *Theme) Separator() Line {
 
 // Layout renders the line widget
 func (l Line) Layout(gtx C) D {
-	st := op.Save(gtx.Ops)
 	if l.Width == 0 {
 		l.Width = gtx.Constraints.Max.X
 	}
@@ -65,8 +63,8 @@ func (l Line) Layout(gtx C) D {
 			Y: l.Height,
 		},
 	}
-	clip.Rect(line).Add(gtx.Ops)
+	defer clip.Rect(line).Push(gtx.Ops).Pop()
 	paint.Fill(gtx.Ops, l.Color)
-	st.Load()
+
 	return layout.Dimensions{Size: line.Max}
 }

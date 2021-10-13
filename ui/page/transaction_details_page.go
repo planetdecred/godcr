@@ -87,7 +87,6 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 
 	pg.dot = l.Icons.ImageBrightness1
-	pg.dot.Color = l.Theme.Color.Gray
 
 	// find source account
 	if transaction.Direction == dcrlibwallet.TxDirectionSent ||
@@ -273,7 +272,8 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 								Right: m,
 								Top:   m,
 							}.Layout(gtx, func(gtx C) D {
-								return pg.dot.Layout(gtx, values.MarginPadding2)
+								gtx.Constraints.Min.X = gtx.Px(values.MarginPadding2)
+								return pg.dot.Layout(gtx, pg.Theme.Color.Gray)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {

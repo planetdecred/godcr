@@ -98,12 +98,10 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 	pg.toggleSyncDetails.Inset = layout.Inset{}
 
 	pg.syncedIcon = l.Icons.ActionCheckCircle
-	pg.syncedIcon.Color = l.Theme.Color.Success
 
 	pg.syncingIcon = l.Icons.SyncingIcon
 
 	pg.notSyncedIcon = l.Icons.NavigationCancel
-	pg.notSyncedIcon.Color = l.Theme.Color.Danger
 
 	pg.walletStatusIcon = l.Icons.ImageBrightness1
 	pg.cachedIcon = l.Icons.Cached
@@ -367,9 +365,9 @@ func (pg *OverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 			}.Layout(gtx, pg.Theme.Body1(fmt.Sprintf("%d", pg.bestBlock.Height)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
-			pg.walletStatusIcon.Color = pg.Theme.Color.Gray
 			return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-				return pg.walletStatusIcon.Layout(gtx, values.MarginPadding5)
+				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding5)
+				return pg.walletStatusIcon.Layout(gtx, pg.Theme.Color.Gray)
 			})
 		}),
 		layout.Rigid(pg.Theme.Body1(components.TimeAgo(pg.bestBlock.Timestamp)).Layout),
@@ -399,17 +397,18 @@ func (pg *OverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 	title := pg.Theme.Body2(values.String(values.StrWalletStatus))
 	title.Color = pg.Theme.Color.Gray3
 	statusLabel := pg.Theme.Body1(values.String(values.StrOffline))
-	pg.walletStatusIcon.Color = pg.Theme.Color.Danger
+	clr := pg.Theme.Color.Danger
 	if pg.isConnnected {
 		statusLabel.Text = values.String(values.StrOnline)
-		pg.walletStatusIcon.Color = pg.Theme.Color.Success
+		clr = pg.Theme.Color.Success
 	}
 
 	syncStatus := func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding4, Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-					return pg.walletStatusIcon.Layout(gtx, values.MarginPadding14)
+					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding14)
+					return pg.walletStatusIcon.Layout(gtx, clr)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -450,8 +449,8 @@ func (pg *OverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 						}
 
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							pg.cachedIcon.Color = pg.Theme.Color.Gray
-							return pg.cachedIcon.Layout(gtx, values.TextSize16)
+							gtx.Constraints.Min.X = gtx.Px(values.MarginPadding16)
+							return pg.cachedIcon.Layout(gtx, pg.Theme.Color.Gray)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -473,15 +472,18 @@ func (pg *OverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 
 func (pg *OverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions {
 	syncStatusIcon := pg.notSyncedIcon
+	col := pg.Theme.Color.Danger
 	if pg.walletSynced {
 		syncStatusIcon = pg.syncedIcon
+		col = pg.Theme.Color.Success
 	}
 	i := layout.Inset{Right: values.MarginPadding16, Top: values.MarginPadding9}
 	if pg.walletSyncing {
 		return i.Layout(gtx, pg.syncingIcon.Layout24dp)
 	}
 	return i.Layout(gtx, func(gtx C) D {
-		return syncStatusIcon.Layout(gtx, values.MarginPadding24)
+		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding24)
+		return syncStatusIcon.Layout(gtx, col)
 	})
 }
 

@@ -234,13 +234,10 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.syncButton = new(widget.Clickable)
 
 	pg.infoIcon = pg.Icons.ActionInfo
-	pg.infoIcon.Color = pg.Theme.Color.Gray
 
 	pg.legendIcon = pg.Icons.ImageBrightness1
-	pg.legendIcon.Color = pg.Theme.Color.InactiveGray
 
 	pg.updatedIcon = pg.Icons.NavigationCheck
-	pg.updatedIcon.Color = pg.Theme.Color.Success
 
 	pg.updatedLabel = pg.Theme.Body2("Updated")
 	pg.updatedLabel.Color = pg.Theme.Color.Success
@@ -500,7 +497,8 @@ func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 									}
 									rect.Max.Y = 20
 									pg.layoutInfoTooltip(gtx, rect, item)
-									return pg.infoIcon.Layout(gtx, unit.Dp(20))
+									gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+									return pg.infoIcon.Layout(gtx, pg.Theme.Color.Gray)
 								})
 							}),
 						)
@@ -553,7 +551,8 @@ func (pg *ProposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 func (pg *ProposalsPage) layoutIsSyncedSection(gtx C) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return pg.updatedIcon.Layout(gtx, values.MarginPadding20)
+			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
+			return pg.updatedIcon.Layout(gtx, pg.Theme.Color.Success)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, pg.updatedLabel.Layout)

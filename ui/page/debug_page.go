@@ -79,7 +79,8 @@ func (pg *DebugPage) debugItem(gtx C, i int) D {
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-					return pg.Icons.ChevronRight.Layout(gtx, values.MarginPadding22)
+					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding22)
+					return pg.Icons.ChevronRight.Layout(gtx, pg.Theme.Color.Gray)
 				})
 			})
 		}),
