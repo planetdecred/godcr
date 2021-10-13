@@ -354,22 +354,21 @@ func TxConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {
 func FormatDateOrTime(timestamp int64) string {
 	utcTime := time.Unix(timestamp, 0).UTC()
 	currentTime := time.Now().UTC()
-	utcTimeSplit := strings.Split(utcTime.String(), " ")
-	currentTimeSplit := strings.Split(currentTime.String(), " ")
 
-	if currentTimeSplit[0] == utcTimeSplit[0] {
+	if strconv.Itoa(currentTime.Year()) == strconv.Itoa(utcTime.Year()) && currentTime.Month().String() == utcTime.Month().String() {
 		timestampNow := currentTime.Unix()
 
-		if strconv.Itoa(currentTime.Hour()) == strconv.Itoa(utcTime.Hour()) {
-			minDiff := (timestampNow - timestamp) / 60
-			return fmt.Sprintf("%sm ago", strconv.FormatInt(minDiff, 10))
-		}
+		if strconv.Itoa(currentTime.Day()) == strconv.Itoa(utcTime.Day()) {
+			if strconv.Itoa(currentTime.Hour()) == strconv.Itoa(utcTime.Hour()) {
+				minDiff := (timestampNow - timestamp) / 60
+				return fmt.Sprintf("%sm ago", strconv.FormatInt(minDiff, 10))
+			}
 
-		hourDiff := ((timestampNow - timestamp) / 60) / 60
-		return fmt.Sprintf("%sh ago", strconv.FormatInt(hourDiff, 10))
-	}
-	if currentTime.Sub(utcTime) > 86400000000000 && currentTime.Sub(utcTime) < 172800000000000 {
-		return fmt.Sprintf("Yesterday")
+			hourDiff := ((timestampNow - timestamp) / 60) / 60
+			return fmt.Sprintf("%sh ago", strconv.FormatInt(hourDiff, 10))
+		} else if currentTime.Day()-1 == utcTime.Day() {
+			return fmt.Sprintf("Yesterday")
+		}
 	}
 
 	t := strings.Split(utcTime.Format(time.UnixDate), " ")
