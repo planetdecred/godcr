@@ -364,10 +364,10 @@ func FormatDateOrTime(timestamp int64) string {
 				return fmt.Sprintf("%sm ago", strconv.FormatInt(minDiff, 10))
 			}
 
-			hourDiff := ((timestampNow - timestamp) / 60) / 60
-			return fmt.Sprintf("%sh ago", strconv.FormatInt(hourDiff, 10))
+			return TimeAgo(timestamp)
 		} else if currentTime.Day()-1 == utcTime.Day() {
-			return fmt.Sprintf("Yesterday")
+			ans := "Yesterday"
+			return ans
 		}
 	}
 
