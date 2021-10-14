@@ -62,7 +62,8 @@ type MainPage struct {
 	totalBalanceUSD string
 
 	hideBalance decredmaterial.IconButton
-	hideValue bool
+	hideValue   bool
+	hiddenValue bool
 }
 
 func NewMainPage(l *load.Load) *MainPage {
@@ -333,6 +334,12 @@ func (mp *MainPage) Handle() {
 			mp.changeFragment(pg)
 		}
 	}
+
+	mp.hiddenValue = mp.WL.MultiWallet.ReadBoolConfigValueForKey("hide Balance", false)
+	if mp.hideBalance.Button.Clicked() {
+		mp.hideValue = !mp.hideValue
+		mp.WL.MultiWallet.SetBoolConfigValueForKey("hide Balance", mp.hideValue)
+	}
 }
 
 func (mp *MainPage) OnClose() {
@@ -475,21 +482,16 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (mp *MainPage) HideMyBalance(gtx layout.Context) layout.Dimensions {
-	if mp.hideBalance.Button.Clicked() {
-		mp.hideValue = !mp.hideValue
-	}
-
-	if mp.hideValue {
-		hidenText := mp.Theme.Label(values.TextSize34.Scale(0.652), "************")
-		return hidenText.Layout(gtx)
+func (mp *MainPage) hideMyBalance(gtx layout.Context) layout.Dimensions {
+	if mp.hiddenValue {
+		hiddenText := mp.Theme.Label(values.TextSize34.Scale(0.652), "************")
+		return hiddenText.Layout(gtx)
 	}
 	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
-
 }
 
-func (mp *MainPage) hideBalanceIcon() decredmaterial.IconButton {
-	hideButton := mp.Theme.PlainIconButton(new(widget.Clickable), mp.Icons.ConcealIcon)
+func (mp *MainPage) hideBalanceIcon() (decredmaterial.IconButton)  {
+	hideButton := mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
 	hideButton.Color = mp.Theme.Color.Gray3
 	hideButton.Size = unit.Dp(20)
 	buttonInset := layout.UniformInset(values.MarginPadding4)
@@ -499,8 +501,6 @@ func (mp *MainPage) hideBalanceIcon() decredmaterial.IconButton {
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
-	//hideValue := mp.WL.MultiWallet.ReadBoolConfigValueForKey("HideBalance", false)
-	
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,
@@ -535,18 +535,18 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 											})
 									}),
 									layout.Rigid(func(gtx C) D {
-										return mp.HideMyBalance(gtx)
+										return mp.hideMyBalance(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-										icon:= decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibility))
-										if mp.hideValue {
+										icon := decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibility))
+										if mp.hiddenValue {
 											icon = decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibilityOff))
 										}
 										mp.hideBalance.Icon = icon
 										return layout.Inset{Top: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
 											return layout.E.Layout(gtx, mp.hideBalance.Layout)
 										})
-										
+
 									}),
 									layout.Rigid(func(gtx C) D {
 										return mp.LayoutUSDBalance(gtx)
