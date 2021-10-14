@@ -24,8 +24,8 @@ type SecurityToolsPage struct {
 func NewSecurityToolsPage(l *load.Load) *SecurityToolsPage {
 	pg := &SecurityToolsPage{
 		Load:            l,
-		verifyMessage:   l.Theme.NewClickable(false),
-		validateAddress: l.Theme.NewClickable(false),
+		verifyMessage:   l.Theme.NewClickable(true),
+		validateAddress: l.Theme.NewClickable(true),
 	}
 
 	pg.verifyMessage.Radius = decredmaterial.Radius(14)
