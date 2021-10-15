@@ -53,7 +53,7 @@ func (cl *Clickable) Layout(gtx C, w layout.Widget) D {
 				}},
 				NW: tl, NE: tr, SE: br, SW: bl,
 			}.Push(gtx.Ops).Pop()
-			clip.Rect{Max: gtx.Constraints.Min}.Add(gtx.Ops)
+			clip.Rect{Max: gtx.Constraints.Min}.Push(gtx.Ops).Pop()
 
 			if cl.Hoverable && cl.button.Hovered() {
 				paint.Fill(gtx.Ops, cl.HoverColor)

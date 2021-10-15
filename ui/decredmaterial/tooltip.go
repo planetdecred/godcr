@@ -10,6 +10,7 @@ import (
 )
 
 type Tooltip struct {
+	theme      *Theme
 	hoverable  *Hoverable
 	background color.NRGBA
 	shadow     *Shadow
@@ -17,15 +18,18 @@ type Tooltip struct {
 
 func (t *Theme) Tooltip() *Tooltip {
 	return &Tooltip{
-		hoverable:  t.Hoverable(),
-		background: t.Color.Surface,
-		shadow:     t.Shadow(),
+		theme:     t,
+		hoverable: t.Hoverable(),
+		shadow:    t.Shadow(),
 	}
 }
 
 func (t *Tooltip) layout(gtx C, pos layout.Inset, wdgt layout.Widget) D {
+
 	border := Border{
-		Radius: Radius(7),
+		Color:  t.theme.Color.Gray1,
+		Width:  values.MarginPadding1,
+		Radius: Radius(8),
 	}
 
 	return pos.Layout(gtx, func(gtx C) D {
@@ -35,7 +39,7 @@ func (t *Tooltip) layout(gtx C, pos layout.Inset, wdgt layout.Widget) D {
 					Width:      WrapContent,
 					Height:     WrapContent,
 					Padding:    layout.UniformInset(values.MarginPadding12),
-					Background: t.background,
+					Background: t.theme.Color.Surface,
 					Border:     border,
 					Shadow:     t.shadow,
 				}.Layout2(gtx, wdgt)
