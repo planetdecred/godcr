@@ -73,7 +73,7 @@ func line(gtx layout.Context, width, height int, col color.NRGBA) layout.Dimensi
 			X: width,
 			Y: height,
 		},
-	}.Add(gtx.Ops)
+	}.Push(gtx.Ops).Pop()
 	paint.PaintOp{}.Add(gtx.Ops)
 	return layout.Dimensions{
 		Size: image.Point{X: width, Y: height},

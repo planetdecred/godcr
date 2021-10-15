@@ -46,8 +46,7 @@ func (h *Hoverable) update(gtx C) {
 func (h *Hoverable) Layout(gtx C, rect image.Rectangle) D {
 	h.update(gtx)
 
-	pointer.PassOp{}.Push(gtx.Ops).Pop()
-	pointer.Rect(rect).Push(gtx.Ops).Pop()
+	defer pointer.Rect(rect).Push(gtx.Ops).Pop()
 	pointer.InputOp{
 		Tag:   h,
 		Types: pointer.Enter | pointer.Leave,
