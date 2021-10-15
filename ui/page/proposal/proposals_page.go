@@ -233,9 +233,7 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.syncButton = new(widget.Clickable)
 
 	pg.updatedIcon = pg.Icons.NavigationCheck
-
 	pg.infoIcon = pg.Icons.ActionInfo
-	pg.infoIcon.Color = pg.Theme.Color.Gray
 
 	pg.updatedLabel = pg.Theme.Body2("Updated")
 	pg.updatedLabel.Color = pg.Theme.Color.Success

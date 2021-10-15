@@ -63,7 +63,7 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		rejectedIcon:       l.Icons.NavigationCancel,
 		successIcon:        l.Icons.ActionCheckCircle,
 		timerIcon:          l.Icons.TimerIcon,
-		viewInPoliteiaBtn:  l.Theme.NewClickable(true),,
+		viewInPoliteiaBtn:  l.Theme.NewClickable(true),
 		voteBar:            NewVoteBar(l),
 	}
 

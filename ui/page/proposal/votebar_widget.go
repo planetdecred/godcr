@@ -57,13 +57,9 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		noColor:       l.Theme.Color.Danger,
 		passTooltip:   l.Theme.Tooltip(),
 		quorumTooltip: l.Theme.Tooltip(),
+		infoIcon:      l.Icons.ActionInfo,
+		legendIcon:    l.Icons.ImageBrightness1,
 	}
-
-	vb.infoIcon = l.Icons.ActionInfo
-	vb.infoIcon.Color = l.Theme.Color.Gray
-
-	vb.legendIcon = l.Icons.ImageBrightness1
-	vb.legendIcon.Color = l.Theme.Color.InactiveGray
 
 	return vb
 }
@@ -171,7 +167,7 @@ func (v *VoteBar) votebarLayout(gtx C) D {
 }
 
 func (v *VoteBar) votesIndicatorTooltip(gtx C, r image.Rectangle, tipPos float32) {
-	insetLeft := gtx.Px(unit.Dp(tipPos /2))
+	insetLeft := gtx.Px(unit.Dp(tipPos / 2))
 	inset := layout.Inset{Left: unit.Dp(float32(insetLeft)), Top: unit.Dp(25)}
 	v.passTooltip.Layout(gtx, r, inset, func(gtx C) D {
 		txt := fmt.Sprintf("%d %% Yes votes required for approval", int(v.passPercentage))
@@ -208,14 +204,12 @@ func (v *VoteBar) Layout(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								v.legendIcon.Color = v.yesColor
 								yesLabel := v.Theme.Body1("Yes: ")
-								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes)
+								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes, v.yesColor)
 							}),
 							layout.Rigid(func(gtx C) D {
-								v.legendIcon.Color = v.noColor
 								noLabel := v.Theme.Body1("No: ")
-								return v.layoutIconAndText(gtx, noLabel, v.noVotes)
+								return v.layoutIconAndText(gtx, noLabel, v.noVotes, v.noColor)
 							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
@@ -233,7 +227,7 @@ func (v *VoteBar) Layout(gtx C) D {
 	)
 }
 
-func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32) D {
+func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32, clr color.NRGBA) D {
 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -278,7 +272,7 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 			v.layoutInfoTooltip(gtx, rect)
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Px(unit.Dp(20))
-				return v.infoIcon.Layout(gtx, v.requirementLabel.Color)
+				return v.infoIcon.Layout(gtx, v.Theme.Color.Gray)
 			})
 		}),
 	)
