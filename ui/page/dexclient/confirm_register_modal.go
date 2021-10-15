@@ -71,7 +71,7 @@ func (md *confirmRegisterModal) Handle() {
 				Fee:     md.ce.Fee.Amt,
 				Cert:    md.cert,
 			}
-			_, err := md.DL.Register(form)
+			_, err := md.Dexc.Register(form)
 
 			md.isSending = false
 			if err != nil {

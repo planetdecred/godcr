@@ -6,15 +6,16 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"decred.org/dcrdex/client/asset"
-	"decred.org/dcrdex/client/asset/bch"
-	"decred.org/dcrdex/client/asset/btc"
-	"decred.org/dcrdex/client/asset/dcr"
-	"decred.org/dcrdex/client/asset/ltc"
+	_ "decred.org/dcrdex/client/asset/bch" // register bch asset
+	_ "decred.org/dcrdex/client/asset/btc" // register btc asset
+	"decred.org/dcrdex/client/asset/dcr"   // register dcr asset
+	_ "decred.org/dcrdex/client/asset/ltc" // register ltc asset
 	"decred.org/dcrdex/client/comms"
 	"decred.org/dcrdex/dex/msgjson"
 	"github.com/planetdecred/dcrlibwallet"
@@ -24,29 +25,15 @@ import (
 	"decred.org/dcrdex/dex"
 )
 
-// Register the supported asset drivers here since importing
-// the packages alone no longer auto-registers them. The dcr
-// asset driver isn't registered here, because it requires the
-// user to select a wallet from the multiwallet instance. The
-// dcr asset driver can be registered by calling
-// *Dexc.RegisterDcrAssetDriver after the wallet to connect is
-// gotten, either from saved data (on restarts) or from user
-// selection when connecting the dcr wallet for the first time.
-func init() {
-	bch.RegisterDriver()
-	btc.RegisterDriver()
-	ltc.RegisterDriver()
-}
-
 // Dexc represents of the Decred exchange client.
 type Dexc struct {
 	*core.Core
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	DbPath             string
-	IsRunning          bool
-	connectedDcrWallet *dcrlibwallet.Wallet
+	coreConfig *core.Config
+	IsRunning  bool
+	IsLoggedIn bool // Keep user logged in state
 
 	connMtx sync.RWMutex
 	conns   map[string]*dexConnection
@@ -76,29 +63,40 @@ func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
 	}
 
 	// Prepare the Core.
-	clientCore, err := core.New(&core.Config{
+	coreConfig := &core.Config{
 		DBPath: dbPath, // global set in config.go
 		Net:    n,
 		Logger: logMaker.Logger("CORE"),
 		// TorProxy:     TorProxy,
 		// TorIsolation: TorIsolation,
-	})
+	}
+	clientCore, err := core.New(coreConfig)
 	if err != nil {
 		log.Errorf("error creating client core: %v", err)
 		return nil, err
 	}
 
 	return &Dexc{
-		Core:   clientCore,
-		DbPath: dbPath,
-		conns:  make(map[string]*dexConnection),
+		Core:       clientCore,
+		coreConfig: coreConfig,
+		conns:      make(map[string]*dexConnection),
 	}, nil
 }
 
 // Start calls the Run method of the DEX client. Provide the app-wide context
 // to ensure that the DEX client is shut down when the app-wide context is
 // canceled.
-func (d *Dexc) Start(appCtx context.Context) {
+func (d *Dexc) Start(appCtx context.Context) error {
+	// Re-setup Core if it was previously shutdown.
+	if d.Core == nil {
+		var err error
+		d.Core, err = core.New(d.coreConfig)
+		if err != nil {
+			log.Errorf("error re-creating client core: %v", err)
+			return err
+		}
+	}
+
 	// Create a new cancelFunc so that the app-wide ctx isn't canceled
 	// when Core stops.
 	d.ctx, d.cancel = context.WithCancel(appCtx)
@@ -109,6 +107,22 @@ func (d *Dexc) Start(appCtx context.Context) {
 		d.IsRunning = false
 	}()
 	<-d.Core.Ready()
+
+	return nil
+}
+
+// Reset attempts to shutdown Core if it is running and if successful, deletes
+// the DEX client database.
+func (d *Dexc) Reset() bool {
+	shutdownOk := d.shutdown(false)
+	if shutdownOk {
+		err := os.RemoveAll(d.coreConfig.DBPath)
+		if err != nil {
+			log.Warnf("DEX client reset failed: erroring deleting DEX db: %v", err)
+			return false
+		}
+	}
+	return shutdownOk
 }
 
 // Shutdown causes the dex client to shutdown. The shutdown attempt will be
@@ -139,42 +153,33 @@ func (d *Dexc) shutdown(forceShutdown bool) bool {
 
 	// Cancel the ctx used to run Core.
 	if d.cancel != nil { // in case dexc was never actually started
-		// TODO: This doesn't really trigger Core's context cancellation.
-		// Investigate.
 		d.cancel()
 	}
 	d.IsRunning = false
+	d.IsLoggedIn = false
+	d.Core = nil // Clear this to prevent panic in d.Core.Run if (*Dexc).Start() is re-called.
 	return true
 }
 
-// RegisterDcrAssetDriver uses the provided *dcrlibwallet.Wallet to register
-// a dcr asset driver that performs wallet operations using the provided
-// wallet.
-func (d *Dexc) RegisterDcrAssetDriver(wallet *dcrlibwallet.Wallet) error {
-	if d.connectedDcrWallet != nil {
-		// This prevents attempting to register the driver multiple times
-		// as that would lead to a panic.
-		return fmt.Errorf("cannot change dcr wallet after initial setting, try restarting godcr")
-	}
-
+// SetWalletForDcrAsset configures the DEX client to use the provided wallet
+// for dcr wallet operations. This method should be called before attempting
+// to connect a dcr wallet to the DEX client for the first time. After this
+// initial dcr wallet connection, this method should always be called with the
+// same *dcrlibwallet.Wallet before starting the DEX client to ensure that Core
+// is able to load the previously connected dcr wallet on startup.
+func (d *Dexc) SetWalletForDcrAsset(wallet *dcrlibwallet.Wallet) {
 	walletDesc := fmt.Sprintf("%d (%s)", wallet.ID, wallet.Name)
-	dexdcr.RegisterDriver(wallet.Internal(), walletDesc)
-	d.connectedDcrWallet = wallet
-	log.Infof("Registered decred wallet driver for DEX using wallet %s", walletDesc)
-	return nil
+	dexdcr.UseSpvWalletForDexClient(wallet.Internal(), walletDesc)
 }
 
 // AddWallet attempts to connect the wallet with the provided details to the
 // DEX client.
-// NOTE: Before connecting a decred wallet, first register the decred asset
-// driver by calling *Dexc.RegisterDcrAssetDriver.
+// NOTE: Before connecting a dcr wallet, first call *Dexc.SetWalletForDcrAsset
+// to configure the dcr ExchangeWallet to use a custom wallet instead of the
+// default rpc wallet.
 func (d *Dexc) AddWallet(assetID uint32, settings map[string]string, appPW, walletPW []byte) error {
 	assetInfo, err := asset.Info(assetID)
 	if err != nil {
-		// Only possible error is unknown asset. Should never happen because
-		// we register most supported assets when this package is init'ed.
-		// If connecting a decred wallet, caller should first register the
-		// dcr asset driver by calling (*Dexc).RegisterDcrAssetDriver.
 		return fmt.Errorf("asset driver not registered for asset with BIP ID %d", assetID)
 	}
 

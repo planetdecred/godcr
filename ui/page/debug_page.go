@@ -1,8 +1,6 @@
 package page
 
 import (
-	"os"
-
 	"gioui.org/layout"
 
 	"github.com/planetdecred/godcr/dexc"
@@ -147,24 +145,17 @@ func (pg *DebugPage) resetDexData() {
 	// multiwallet db.
 	confirmModal := modal.NewInfoModal(pg.Load).
 		Title("Confirm DEX Client Reset").
-		Body("You'll need to restart godcr before you can use the DEX again. Proceed?").
+		Body("You might need to restart godcr before you can use the DEX again. Proceed?").
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton("Reset DEX Client", func() {
-			// Attempt to first shutdown the dex client. This will fail if there
-			// are active orders.
-			// TODO: Since this is a debug feature, consider allowing dex shutdown
-			// even if there are active orders.
-			if pg.DL.Dexc.Shutdown() {
-				// Dexc shutdown was successful, perform other cleanup here
-				// including deleting the dexc db.
+			// TODO: Dexc.Reset will fail if there are active orders. Since this is a
+			// debug feature, consider allowing dex shutdown even if there are active orders.
+			if pg.Dexc.Reset() {
+				// Dexc reset complete, perform other cleanup here.
 				pg.WL.MultiWallet.DeleteUserConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey)
-				err := os.RemoveAll(pg.DL.Dexc.DbPath)
-				if err != nil {
-					log.Warnf("DEX client data reset but failed to delete DEX db: %v", err)
-				}
 				pg.Toast.Notify("DEX client data reset complete.")
 			} else {
-				pg.Toast.NotifyError("Cannot reset DEX client data because the DEX client could not be shut down. Check the logs.")
+				pg.Toast.NotifyError("DEX client data reset failed. Check the logs.")
 			}
 		})
 	pg.ShowModal(confirmModal)

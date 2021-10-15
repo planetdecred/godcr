@@ -71,7 +71,7 @@ func (md *passwordModal) Handle() {
 			// to enable dex restores if the dex db becomes corrupted. Alternatively,
 			// passing nil will cause dex to generate a random seed which can be saved
 			// for later dex restoration efforts.
-			err := md.DL.InitializeClient([]byte(md.appPassword.Editor.Text()), nil)
+			err := md.Dexc.InitializeClient([]byte(md.appPassword.Editor.Text()), nil)
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())

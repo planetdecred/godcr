@@ -156,10 +156,8 @@ func (win *Window) NewLoad(appCtx context.Context) (*load.Load, error) {
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
 
-	l.DL = &load.DexcLoad{
-		Core: win.dexc.Core,
-		Dexc: win.dexc,
-	}
+	l.Dexc = win.dexc
+
 	return l, nil
 }
 

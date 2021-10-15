@@ -57,7 +57,7 @@ func (md *loginModal) OnResume() {
 
 func (md *loginModal) Handle() {
 	if md.submit.Button.Clicked() {
-		_, err := md.DL.Login([]byte(md.appPassword.Editor.Text()))
+		_, err := md.Dexc.Login([]byte(md.appPassword.Editor.Text()))
 		if err != nil {
 			md.Toast.NotifyError(err.Error())
 			return

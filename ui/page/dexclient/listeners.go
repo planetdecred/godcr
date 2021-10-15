@@ -8,14 +8,14 @@ import (
 )
 
 func (pg *Page) connectDex(h string, password []byte) {
-	pg.DL.Dexc.ConnectDexes(h, password)
+	pg.Dexc.ConnectDexes(h, password)
 	go pg.listenerMessages()
 	go pg.readNotifications()
 	pg.updateOrderBook()
 }
 
 func (pg *Page) updateOrderBook() {
-	orderBoook, err := pg.DL.Dexc.Book(pg.selectedMaket.host, pg.selectedMaket.marketBaseID, pg.selectedMaket.marketQuoteID)
+	orderBoook, err := pg.Dexc.Book(pg.selectedMaket.host, pg.selectedMaket.marketBaseID, pg.selectedMaket.marketQuoteID)
 	if err != nil {
 		return
 	}
@@ -24,7 +24,7 @@ func (pg *Page) updateOrderBook() {
 }
 
 func (pg *Page) listenerMessages() {
-	msgs := pg.DL.Dexc.MessageSource(pg.selectedMaket.host)
+	msgs := pg.Dexc.MessageSource(pg.selectedMaket.host)
 	for {
 		select {
 		case msg, ok := <-msgs:
@@ -50,7 +50,7 @@ func (pg *Page) listenerMessages() {
 
 // readNotifications reads from the Core notification channel.
 func (pg *Page) readNotifications() {
-	ch := pg.DL.NotificationFeed()
+	ch := pg.Dexc.NotificationFeed()
 	for {
 		select {
 		case n := <-ch:

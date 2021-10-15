@@ -66,7 +66,7 @@ func (md *addDexModal) Handle() {
 		md.isSending = true
 		go func() {
 			c := []byte(md.cert.Editor.Text())
-			ce, err := md.DL.GetDEXConfig(md.dexServerAddress.Editor.Text(), c)
+			ce, err := md.Dexc.GetDEXConfig(md.dexServerAddress.Editor.Text(), c)
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())

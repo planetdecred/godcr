@@ -180,7 +180,7 @@ func (miniTradeFormWdg *miniTradeFormWidget) handle() {
 				Sell:    miniTradeFormWdg.isSell,
 				TifNow:  false,
 			}
-			_, err := miniTradeFormWdg.DL.Trade(password, &form)
+			_, err := miniTradeFormWdg.Dexc.Trade(password, &form)
 			if err != nil {
 				miniTradeFormWdg.Toast.NotifyError(err.Error())
 				return

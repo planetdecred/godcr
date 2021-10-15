@@ -81,14 +81,14 @@ func (md *unlockWalletModal) Handle() {
 
 		md.isSending = true
 		go func() {
-			status := md.DL.WalletState(md.walletInfoWidget.coinID)
+			status := md.Dexc.WalletState(md.walletInfoWidget.coinID)
 			if status == nil {
 				md.isSending = false
 				md.Toast.NotifyError(fmt.Sprintf("No wallet for %d", md.walletInfoWidget.coinID))
 				return
 			}
 
-			err := md.DL.OpenWallet(md.walletInfoWidget.coinID, []byte(md.appPassword.Editor.Text()))
+			err := md.Dexc.OpenWallet(md.walletInfoWidget.coinID, []byte(md.appPassword.Editor.Text()))
 			if err != nil {
 				md.isSending = false
 				md.Toast.NotifyError(err.Error())

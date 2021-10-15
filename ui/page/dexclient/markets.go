@@ -42,7 +42,6 @@ type Page struct {
 	*load.Load
 	ctx              context.Context // page context
 	ctxCancel        context.CancelFunc
-	user             *core.User
 	miniTradeFormWdg *miniTradeFormWidget
 	tradeForm        *TradeFormWidget
 	initializeModal  bool
@@ -95,7 +94,6 @@ func init() {
 func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
 		Load:             l,
-		user:             new(core.User),
 		miniTradeFormWdg: newMiniTradeFormWidget(l),
 		tradeForm:        NewTradeFormWidget(l),
 		initializeModal:  false,
@@ -121,7 +119,7 @@ func (pg *Page) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.refreshUser()
 
-	if pg.user.Initialized && pg.DL.IsLoggedIn {
+	if pg.Dexc.Core.User().Initialized && pg.Dexc.IsLoggedIn {
 		go pg.listenerMessages()
 		go pg.readNotifications()
 		pg.updateOrderBook()
@@ -195,7 +193,7 @@ func (pg *Page) miniTradeLayout(gtx C) D {
 }
 
 func (pg *Page) registrationStatusLayout(gtx C) D {
-	dex := pg.user.Exchanges[pg.selectedMaket.host]
+	dex := pg.Dexc.Core.User().Exchanges[pg.selectedMaket.host]
 	if dex == nil || !dex.Connected {
 		return D{}
 	}
@@ -263,25 +261,25 @@ func (pg *Page) OnClose() {
 }
 
 func (pg *Page) handleModals() {
-	u := pg.user
+	u := pg.Dexc.Core.User()
 
 	// Must initialize to proceed.
 	if !u.Initialized {
 		md := newPasswordModal(pg.Load)
 		md.appInitiated = func() {
 			pg.refreshUser()
-			pg.DL.IsLoggedIn = true
+			pg.Dexc.IsLoggedIn = true
 		}
 		md.Show()
 		return
 	}
 
 	// Initialized client must be logged in.
-	if !pg.DL.IsLoggedIn {
+	if !pg.Dexc.IsLoggedIn {
 		md := newloginModal(pg.Load)
 		md.loggedIn = func(password []byte) {
 			pg.refreshUser()
-			pg.DL.IsLoggedIn = true
+			pg.Dexc.IsLoggedIn = true
 			if u.Assets[dexc.DefaultAssetID] != nil &&
 				u.Assets[dexc.DefaultAssetID].Wallet != nil {
 				pg.connectDex(pg.selectedMaket.host, password)
@@ -340,7 +338,8 @@ func (pg *Page) handleModals() {
 	}
 }
 
+// TODO: Investigate uses of this method and where appropriate,
+// do `pg.initializeModal = false` instead and remove this method.
 func (pg *Page) refreshUser() {
-	pg.user = pg.DL.Core.User()
 	pg.initializeModal = false
 }

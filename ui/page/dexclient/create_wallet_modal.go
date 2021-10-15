@@ -109,27 +109,16 @@ func (md *createWalletModal) Handle() {
 
 			coinID := md.walletInfoWidget.coinID
 			coinName := md.walletInfoWidget.coinName
-			has := md.DL.WalletState(coinID) != nil
+			has := md.Dexc.WalletState(coinID) != nil
 			if has {
 				md.Toast.NotifyError(fmt.Sprintf("already connected a %s wallet", coinName))
 				return
 			}
 
-			// Function to perform some last actions after the wallet
-			// creation completes successfully. For decred wallets, this
-			// function saves the connected wallet id to database so
-			// user won't need to reselect the wallet on restart.
-			var onWalletCreated func()
+			var selectedDcrWallet *dcrlibwallet.Wallet
 			if coinID == dcr.BipID {
-				selectedDcrWallet := md.Load.WL.MultiWallet.WalletWithID(md.sourceAccountSelector.SelectedAccount().WalletID)
-				err := md.DL.Dexc.RegisterDcrAssetDriver(selectedDcrWallet)
-				if err != nil {
-					md.Toast.NotifyError(err.Error())
-					return
-				}
-				onWalletCreated = func() {
-					md.WL.MultiWallet.SetIntConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey, selectedDcrWallet.ID)
-				}
+				selectedDcrWallet = md.Load.WL.MultiWallet.WalletWithID(md.sourceAccountSelector.SelectedAccount().WalletID)
+				md.Dexc.SetWalletForDcrAsset(selectedDcrWallet)
 			}
 
 			settings := make(map[string]string)
@@ -144,14 +133,17 @@ func (md *createWalletModal) Handle() {
 
 			appPass := []byte(md.appPassword.Editor.Text())
 			walletPass := []byte(md.walletPassword.Editor.Text())
-			err := md.DL.Dexc.AddWallet(coinID, settings, appPass, walletPass)
+			err := md.Dexc.AddWallet(coinID, settings, appPass, walletPass)
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
 			}
 
-			if onWalletCreated != nil {
-				onWalletCreated()
+			// Wallet successfully connected to the DEX client. For Decred
+			// wallets, save the connected wallet id to database so user
+			// won't need to reselect the wallet on restart.
+			if selectedDcrWallet != nil {
+				md.WL.MultiWallet.SetIntConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey, selectedDcrWallet.ID)
 			}
 			md.walletCreated()
 			md.Dismiss()

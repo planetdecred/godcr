@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 
-	"decred.org/dcrdex/client/core"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -81,6 +80,8 @@ type Load struct {
 	SelectedAccount *int
 	SelectedUTXO    map[int]map[int32]map[string]*wallet.UnspentOutput
 
+	Dexc *dexc.Dexc
+
 	ToggleSync       func()
 	RefreshWindow    func()
 	ShowModal        func(Modal)
@@ -90,8 +91,6 @@ type Load struct {
 	ChangeFragment   func(page Page)
 	PopFragment      func()
 	PopToFragment    func(pageID string)
-
-	DL *DexcLoad
 }
 
 func NewLoad() (*Load, error) {
@@ -119,16 +118,11 @@ func NewLoad() (*Load, error) {
 	if th == nil {
 		return nil, errors.New("unexpected error while loading theme")
 	}
-	dl := &DexcLoad{
-		Dexc: new(dexc.Dexc),
-		Core: new(core.Core),
-	}
 
 	l := &Load{
 		Theme:    th,
 		Icons:    icons,
 		WL:       wl,
-		DL:       dl,
 		Receiver: r,
 		Toast:    notification.NewToast(th),
 
