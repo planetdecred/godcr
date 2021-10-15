@@ -166,6 +166,111 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 	return &txStatus
 }
 
+func DurationAgo(timestamp int64) string {
+	//Convert timestamp to date in string format (yyyy:mm:dd hr:m:s +0000 UTC)
+	currentTimestamp := time.Now().UTC().String()
+	txnTimestamp := time.Unix(timestamp, 0).UTC().String()
+	//Split the date so we can sepparate into date and time for current time and time of txn
+	currentTimeSplit := strings.Split(currentTimestamp, " ")
+	txnTimeSplit := strings.Split(txnTimestamp, " ")
+	//Split current date and time, and  txn date and time then store in variables
+	currentDate := strings.Split(currentTimeSplit[0], "-")
+	currentTime := strings.Split(currentTimeSplit[1], ":")
+	txnDate := strings.Split(txnTimeSplit[0], "-")
+	txnTime := strings.Split(txnTimeSplit[1], ":")
+	var duration string
+
+	//Group duration into thresholds
+
+	//Yearly threshold
+	if currentDate[0] != txnDate[0] {
+		cy, _ := strconv.Atoi(currentDate[0])
+		ty, _ := strconv.Atoi(txnDate[0])
+		result := cy - ty
+		if result <= 1 {
+			duration = "1 year ago"
+			return duration
+		} else {
+			duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
+			return duration
+		}
+	} else if currentDate[0] == txnDate[0] {
+		//Monthly threshold
+		if currentDate[1] != txnDate[1] {
+			cm, _ := strconv.Atoi(currentDate[1])
+			tm, _ := strconv.Atoi(txnDate[1])
+			result := cm - tm
+			if result <= 1 {
+				duration = "1 month ago"
+				return duration
+			} else {
+				duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
+				return duration
+			}
+		} else if currentDate[1] == txnDate[1] {
+			//Weekly threshold
+			_, currentWeek := time.Now().UTC().ISOWeek()
+			_, txnWeek := time.Unix(timestamp, 0).UTC().ISOWeek()
+			if currentWeek != txnWeek {
+				result := currentWeek - txnWeek
+				if result <= 1 {
+					duration = "1 week ago"
+					return duration
+				} else {
+					duration = fmt.Sprintf("%s weeks ago", strconv.Itoa(result))
+					return duration
+				}
+			} else if currentWeek == txnWeek {
+				//Daily threshold
+				if currentDate[2] != txnDate[2] {
+					cd, _ := strconv.Atoi(currentDate[2])
+					td, _ := strconv.Atoi(txnDate[2])
+					result := cd - td
+					if result <= 1 {
+						duration = "1 day ago"
+						return duration
+					} else {
+						duration = fmt.Sprintf("%s days ago", strconv.Itoa(result))
+						return duration
+					}
+				} else if currentDate[2] == txnDate[2] {
+					//Hourly threshold
+					if currentTime[0] != txnTime[0] {
+						ch, _ := strconv.Atoi(currentTime[0])
+						th, _ := strconv.Atoi(txnTime[0])
+						result := ch - th
+						if result <= 1 {
+							duration = "1 hour ago"
+							return duration
+						} else {
+							duration = fmt.Sprintf("%s hours ago", strconv.Itoa(result))
+							return duration
+						}
+					} else if currentTime[0] == txnTime[0] {
+						//Minute threshold
+						if currentTime[1] != txnTime[1] {
+							cm, _ := strconv.Atoi(currentTime[1])
+							tm, _ := strconv.Atoi(txnTime[1])
+							result := cm - tm
+							if result <= 1 {
+								duration = "1 minute ago"
+								return duration
+							} else {
+								duration = fmt.Sprintf("%s minutes ago", strconv.Itoa(result))
+								return duration
+							}
+						} else if currentTime[1] == txnTime[1] {
+							duration = "Just now"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return duration
+}
+
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
 func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {
@@ -317,6 +422,12 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 									layout.Rigid(status.Layout),
+									layout.Flexed(1, func(gtx C) D {
+										return layout.E.Layout(gtx, func(gtx C) D {
+											daysAgo := l.Theme.Label(values.TextSize10, DurationAgo(row.Transaction.Timestamp))
+											return daysAgo.Layout(gtx)
+										})
+									}),
 									layout.Rigid(func(gtx C) D {
 										if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
 											daysToVoteOrRevoke := l.Theme.Label(values.TextSize14, fmt.Sprintf("%d days", row.Transaction.DaysToVoteOrRevoke))
@@ -356,12 +467,9 @@ func FormatDateOrTime(timestamp int64) string {
 	currentTime := time.Now().UTC()
 
 	if strconv.Itoa(currentTime.Year()) == strconv.Itoa(utcTime.Year()) && currentTime.Month().String() == utcTime.Month().String() {
-		timestampNow := currentTime.Unix()
-
 		if strconv.Itoa(currentTime.Day()) == strconv.Itoa(utcTime.Day()) {
 			if strconv.Itoa(currentTime.Hour()) == strconv.Itoa(utcTime.Hour()) {
-				minDiff := (timestampNow - timestamp) / 60
-				return fmt.Sprintf("%sm ago", strconv.FormatInt(minDiff, 10))
+				return TimeAgo(timestamp)
 			}
 
 			return TimeAgo(timestamp)
