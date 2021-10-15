@@ -47,7 +47,7 @@ type Icons struct {
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, ArrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, TicketIcon, TicketIconInactive, StakeyIcon,
-	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, ConcealBalanceIcon, RevealBalanceIcon *decredmaterial.Image
+	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2 *decredmaterial.Image
 
 	TicketPurchasedIcon,
 	TicketImmatureIcon,

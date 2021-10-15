@@ -6,7 +6,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"golang.org/x/exp/shiny/materialdesign/icons"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -62,8 +61,7 @@ type MainPage struct {
 	totalBalanceUSD string
 
 	hideBalance decredmaterial.IconButton
-	hideValue   bool
-	hiddenValue bool
+	isBalanceHidden bool
 }
 
 func NewMainPage(l *load.Load) *MainPage {
@@ -335,10 +333,10 @@ func (mp *MainPage) Handle() {
 		}
 	}
 
-	mp.hiddenValue = mp.WL.MultiWallet.ReadBoolConfigValueForKey("hide Balance", false)
+	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey("hide Balance", false)
 	if mp.hideBalance.Button.Clicked() {
-		mp.hideValue = !mp.hideValue
-		mp.WL.MultiWallet.SetBoolConfigValueForKey("hide Balance", mp.hideValue)
+		mp.isBalanceHidden = !mp.isBalanceHidden
+		mp.WL.MultiWallet.SetBoolConfigValueForKey("hide Balance", mp.isBalanceHidden)
 	}
 }
 
@@ -472,7 +470,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					}
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
-							return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
+							return mp.totalUSDBalance(gtx)
 						})
 					})
 				})
@@ -482,10 +480,19 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (mp *MainPage) hideMyBalance(gtx layout.Context) layout.Dimensions {
-	if mp.hiddenValue {
-		hiddenText := mp.Theme.Label(values.TextSize34.Scale(0.652), "************")
+func (mp *MainPage) totalUSDBalance(gtx layout.Context) layout.Dimensions {
+	if mp.isBalanceHidden {
+		hiddenText:= mp.Theme.Body2("$******")
 		return hiddenText.Layout(gtx)
+	}
+	return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
+}
+
+
+func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
+	if mp.isBalanceHidden {
+		hiddenBalanceText := mp.Theme.Label(values.TextSize20.Scale(0.8), "**********DCR")
+		return hiddenBalanceText.Layout(gtx)
 	}
 	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
 }
@@ -535,22 +542,22 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 											})
 									}),
 									layout.Rigid(func(gtx C) D {
-										return mp.hideMyBalance(gtx)
+										return mp.totalDCRBalance(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-										icon := decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibility))
-										if mp.hiddenValue {
-											icon = decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibilityOff))
+										return mp.LayoutUSDBalance(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										mp.hideBalance.Icon = mp.Icons.RevealIcon
+										if mp.isBalanceHidden {
+											mp.hideBalance.Icon = mp.Icons.ConcealIcon
 										}
-										mp.hideBalance.Icon = icon
 										return layout.Inset{Top: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
 											return layout.E.Layout(gtx, mp.hideBalance.Layout)
 										})
 
 									}),
-									layout.Rigid(func(gtx C) D {
-										return mp.LayoutUSDBalance(gtx)
-									}),
+									
 								)
 							})
 					})
