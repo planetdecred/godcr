@@ -58,7 +58,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) 
 				widgetFuncs = append(widgetFuncs, widgets...)
 			}
 
-			gtx.Constraints.Max.X = gtx.Px(unit.Dp(450))
+			gtx.Constraints.Max.X = gtx.Px(unit.Dp(380))
 			inset := layout.Inset{
 				Top:    unit.Dp(50),
 				Bottom: unit.Dp(50),
@@ -68,7 +68,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) 
 					Orientation: layout.Vertical,
 					Width:       WrapContent,
 					Height:      WrapContent,
-					Padding:     layout.UniformInset(unit.Dp(15)),
+					Padding:     layout.UniformInset(unit.Dp(16)),
 					Alignment:   layout.Middle,
 					Border: Border{
 						Radius: Radius(14),
