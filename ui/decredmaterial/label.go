@@ -44,7 +44,7 @@ func (t *Theme) Body2(txt string) Label {
 }
 
 func (t *Theme) Caption(txt string) Label {
-	return Label{material.Caption(t.Base, txt)}
+	return t.labelWithDefaultColor(Label{material.Caption(t.Base, txt)})
 }
 
 func (t *Theme) ErrorLabel(txt string) Label {
