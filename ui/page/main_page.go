@@ -173,6 +173,7 @@ func (mp *MainPage) OnResume() {
 	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
+	mp.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", false)
 
 	mp.setLanguageSetting()
 	mp.UpdateBalance()
@@ -339,6 +340,7 @@ func (mp *MainPage) OnClose() {
 	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
+	mp.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", false)
 }
 
 func (mp *MainPage) currentPageID() string {

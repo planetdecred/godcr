@@ -23,7 +23,7 @@ type HelpPage struct {
 func NewHelpPage(l *load.Load) *HelpPage {
 	pg := &HelpPage{
 		Load:          l,
-		documentation: l.Theme.NewClickable(false),
+		documentation: l.Theme.NewClickable(true),
 	}
 
 	pg.documentation.Radius = decredmaterial.Radius(14)

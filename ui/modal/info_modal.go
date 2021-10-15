@@ -37,6 +37,8 @@ type InfoModal struct {
 	negativeButtonClicked func()
 	btnNegative           decredmaterial.Button
 
+	checkbox decredmaterial.CheckBoxStyle
+
 	isCancelable bool
 
 	//TODO: neutral button
@@ -88,6 +90,11 @@ func (in *InfoModal) Icon(icon *widget.Icon) *InfoModal {
 	return in
 }
 
+func (in *InfoModal) CheckBox(checkbox decredmaterial.CheckBoxStyle) *InfoModal {
+	in.checkbox = checkbox
+	return in
+}
+
 func (in *InfoModal) Title(title string) *InfoModal {
 	in.dialogTitle = title
 	return in
@@ -133,6 +140,8 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 		customTemplate = privacyInfo(in.Theme)
 	case SetupMixerInfoTemplate:
 		customTemplate = setupMixerInfo(in.Theme)
+	case WalletBackupInfoTemplate:
+		customTemplate = backupInfo(in.Theme)
 	}
 
 	in.dialogTitle = title
@@ -166,6 +175,10 @@ func (in *InfoModal) Handle() {
 	if in.modal.BackdropClicked(in.isCancelable) {
 		in.Dismiss()
 	}
+
+	if in.checkbox.CheckBox != nil {
+		in.btnNegative.SetEnabled(in.checkbox.CheckBox.Value)
+	}
 }
 
 func (in *InfoModal) Layout(gtx layout.Context) D {
@@ -179,6 +192,22 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding50)
 				return in.dialogIcon.Layout(gtx, in.Theme.Color.DeepBlue)
 			})
+		})
+	}
+
+	checkbox := func(gtx C) D {
+		if in.checkbox.CheckBox == nil {
+			return layout.Dimensions{}
+		}
+
+		return layout.Inset{Top: values.MarginPaddingMinus5, Left: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
+			in.checkbox.TextSize = values.TextSize14
+			in.checkbox.Color = in.Theme.Color.Gray3
+			in.checkbox.IconColor = in.Theme.Color.Gray1
+			if in.checkbox.CheckBox.Value {
+				in.checkbox.IconColor = in.Theme.Color.Primary
+			}
+			return in.checkbox.Layout(gtx)
 		})
 	}
 
@@ -207,6 +236,10 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 		w = append(w, in.customTemplate...)
 	}
 
+	if in.checkbox.CheckBox != nil {
+		w = append(w, checkbox)
+	}
+
 	if in.negativeButtonText != "" || in.positiveButtonText != "" {
 		w = append(w, in.actionButtonsLayout())
 	}
@@ -224,7 +257,12 @@ func (in *InfoModal) titleLayout() layout.Widget {
 
 func (in *InfoModal) actionButtonsLayout() layout.Widget {
 	return func(gtx C) D {
-		return layout.E.Layout(gtx, func(gtx C) D {
+		alignment := layout.E
+		if in.checkbox.CheckBox != nil {
+			alignment = layout.Center
+		}
+
+		return alignment.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					if in.negativeButtonText == "" {
@@ -232,7 +270,7 @@ func (in *InfoModal) actionButtonsLayout() layout.Widget {
 					}
 
 					in.btnNegative.Text = in.negativeButtonText
-					return in.btnNegative.Layout(gtx)
+					return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, in.btnNegative.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					if in.positiveButtonText == "" {
