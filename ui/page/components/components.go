@@ -422,11 +422,24 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 									layout.Rigid(status.Layout),
-									layout.Flexed(1, func(gtx C) D {
-										return layout.E.Layout(gtx, func(gtx C) D {
-											daysAgo := l.Theme.Label(values.TextSize10, DurationAgo(row.Transaction.Timestamp))
-											return daysAgo.Layout(gtx)
-										})
+									layout.Rigid(func(gtx C) D {
+										currentTimestamp := time.Now().UTC().String()
+										txnTimestamp := time.Unix(row.Transaction.Timestamp, 0).UTC().String()
+										currentTimeSplit := strings.Split(currentTimestamp, " ")
+										txnTimeSplit := strings.Split(txnTimestamp, " ")
+										currentDate := strings.Split(currentTimeSplit[0], "-")
+										txnDate := strings.Split(txnTimeSplit[0], "-")
+
+										duration := l.Theme.Label(values.TextSize10, "")
+										currentDay, _ := strconv.Atoi(currentDate[2])
+										txnDay, _ := strconv.Atoi(txnDate[2])
+
+										if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
+											return D{}
+										} else {
+											duration.Text = DurationAgo(row.Transaction.Timestamp)
+											return duration.Layout(gtx)
+										}
 									}),
 									layout.Rigid(func(gtx C) D {
 										if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
