@@ -28,6 +28,7 @@ const (
 	TicketsNavID
 	ProposalsNavID
 	MoreNavID
+	HideBalanceConfigKey = "hide_Balance"
 )
 
 var (
@@ -60,7 +61,7 @@ type MainPage struct {
 	totalBalance    dcrutil.Amount
 	totalBalanceUSD string
 
-	hideBalance decredmaterial.IconButton
+	hideBalanceButton decredmaterial.IconButton
 	isBalanceHidden bool
 }
 
@@ -70,7 +71,12 @@ func NewMainPage(l *load.Load) *MainPage {
 		autoSync: true,
 	}
 
-	mp.hideBalance = mp.hideBalanceIcon()
+	//mp.hideBalanceButton = mp.hideBalanceIcon()
+	mp.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
+	mp.hideBalanceButton.Color = mp.Theme.Color.Gray3
+	mp.hideBalanceButton.Size = unit.Dp(19)
+	buttonInset := layout.UniformInset(values.MarginPadding4)
+	mp.hideBalanceButton.Inset = buttonInset
 
 	// init shared page functions
 	toggleSync := func() {
@@ -333,10 +339,10 @@ func (mp *MainPage) Handle() {
 		}
 	}
 
-	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey("hide Balance", false)
-	if mp.hideBalance.Button.Clicked() {
+	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(HideBalanceConfigKey, false)
+	if mp.hideBalanceButton.Button.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
-		mp.WL.MultiWallet.SetBoolConfigValueForKey("hide Balance", mp.isBalanceHidden)
+		mp.WL.MultiWallet.SetBoolConfigValueForKey(HideBalanceConfigKey, mp.isBalanceHidden)
 	}
 }
 
@@ -470,7 +476,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					}
 					return border.Layout(gtx, func(gtx C) D {
 						return padding.Layout(gtx, func(gtx C) D {
-							return mp.totalUSDBalance(gtx)
+							return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
 						})
 					})
 				})
@@ -480,31 +486,15 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 	)
 }
 
-func (mp *MainPage) totalUSDBalance(gtx layout.Context) layout.Dimensions {
-	if mp.isBalanceHidden {
-		hiddenText:= mp.Theme.Body2("$******")
-		return hiddenText.Layout(gtx)
-	}
-	return mp.Theme.Body2(mp.totalBalanceUSD).Layout(gtx)
-}
-
-
 func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
 	if mp.isBalanceHidden {
-		hiddenBalanceText := mp.Theme.Label(values.TextSize20.Scale(0.8), "**********DCR")
-		return hiddenBalanceText.Layout(gtx)
-	}
+		hiddenBalanceText := mp.Theme.Label(values.TextSize18.Scale(0.8), "**********DCR")
+		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return hiddenBalanceText.Layout(gtx)
+		})
+		
+		}
 	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
-}
-
-func (mp *MainPage) hideBalanceIcon() (decredmaterial.IconButton)  {
-	hideButton := mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
-	hideButton.Color = mp.Theme.Color.Gray3
-	hideButton.Size = unit.Dp(20)
-	buttonInset := layout.UniformInset(values.MarginPadding4)
-	hideButton.Inset = buttonInset
-
-	return hideButton
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
@@ -545,15 +535,18 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 										return mp.totalDCRBalance(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
+										if !mp.isBalanceHidden {
 										return mp.LayoutUSDBalance(gtx)
-									}),
-									layout.Rigid(func(gtx C) D {
-										mp.hideBalance.Icon = mp.Icons.RevealIcon
-										if mp.isBalanceHidden {
-											mp.hideBalance.Icon = mp.Icons.ConcealIcon
 										}
-										return layout.Inset{Top: values.MarginPadding1}.Layout(gtx, func(gtx C) D {
-											return layout.E.Layout(gtx, mp.hideBalance.Layout)
+										return layout.Dimensions{}
+										}),
+									layout.Rigid(func(gtx C) D {
+										mp.hideBalanceButton.Icon = mp.Icons.RevealIcon
+										if mp.isBalanceHidden {
+											mp.hideBalanceButton.Icon = mp.Icons.ConcealIcon
+										}
+										return layout.Inset{Top: values.MarginPadding1, Left: values.MarginPadding9}.Layout(gtx, func(gtx C) D {
+											return layout.E.Layout(gtx, mp.hideBalanceButton.Layout)
 										})
 
 									}),
