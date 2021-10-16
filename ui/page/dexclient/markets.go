@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
@@ -43,6 +44,8 @@ type Page struct {
 	tradeForm        *TradeFormWidget
 	initializeModal  bool
 	orderBook        *core.OrderBook
+	ordersWidget     *OrderBooksWidget
+	depthChart       *DepthChart
 	addBTCWallet     decredmaterial.Button
 	advancedTrade    decredmaterial.Button
 	selectedMaket    *selectedMaket
@@ -54,9 +57,9 @@ var mkt = &selectedMaket{
 	host:          testDexHost,
 	name:          "DCR-BTC",
 	marketBase:    "dcr",
-	marketBaseID:  42,
+	marketBaseID:  dcr.BipID,
 	marketQuote:   "btc",
-	marketQuoteID: 0,
+	marketQuoteID: btc.BipID,
 }
 
 func NewMarketPage(l *load.Load) *Page {
@@ -69,9 +72,12 @@ func NewMarketPage(l *load.Load) *Page {
 		orderBook:        new(core.OrderBook),
 
 		addBTCWallet:    l.Theme.Button("Add BTC wallet"),
-		advancedTrade:   l.Theme.Button("Details"),
+		advancedTrade:   l.Theme.Button("Advanced Mode"),
 		selectedMaket:   mkt,
 		isAdvancedTrade: false,
+		ordersWidget:    NewOrderBooksWidget(l),
+		depthChart:      NewDepthChart(nil, nil, l.Theme),
+		// userOrdersWidget: NewUserOrderBooksWidget(pg.theme),
 	}
 
 	return pg
@@ -96,7 +102,24 @@ func (pg *Page) Layout(gtx C) D {
 	dims := components.UniformPadding(gtx, func(gtx C) D {
 		if pg.isAdvancedTrade {
 			return pg.pageSections(gtx, func(gtx C) D {
-				return pg.tradeForm.Layout(gtx)
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Bottom: values.MarginPadding10,
+						}.Layout(gtx, pg.depthChart.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Flexed(1, func(gtx C) D {
+								return pg.tradeForm.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return pg.ordersWidget.Layout(gtx, pg.orderBook.Sells, pg.orderBook.Buys)
+							}),
+						)
+					}),
+				)
+
 			})
 		}
 		return pg.miniTradeLayout(gtx)
@@ -224,8 +247,7 @@ func (pg *Page) handleModals() {
 			pg.refreshUser()
 			pg.DL.IsLoggedIn = true
 			if u.Assets[dexc.DefaultAssetID] != nil &&
-				u.Assets[dexc.DefaultAssetID].Wallet != nil &&
-				u.Assets[dexc.DefaultAssetID].Wallet.Open {
+				u.Assets[dexc.DefaultAssetID].Wallet != nil {
 				pg.connectDex(pg.selectedMaket.host, password)
 			}
 		}

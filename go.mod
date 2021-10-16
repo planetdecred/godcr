@@ -3,6 +3,7 @@ module github.com/planetdecred/godcr
 go 1.16
 
 require (
+	decred.org/dcrdex v0.2.2
 	gioui.org v0.0.0-20211011183043-05f0f5c20f45
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
@@ -27,7 +28,7 @@ require (
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0 // indirect
-	golang.org/x/text v0.3.6
+	golang.org/x/text v0.3.7
 )
 
 replace (
