@@ -28,6 +28,7 @@ const (
 	TicketsNavID
 	ProposalsNavID
 	MoreNavID
+
 	HideBalanceConfigKey = "hide_Balance"
 )
 
@@ -71,12 +72,10 @@ func NewMainPage(l *load.Load) *MainPage {
 		autoSync: true,
 	}
 
-	//mp.hideBalanceButton = mp.hideBalanceIcon()
 	mp.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
 	mp.hideBalanceButton.Color = mp.Theme.Color.Gray3
 	mp.hideBalanceButton.Size = unit.Dp(19)
-	buttonInset := layout.UniformInset(values.MarginPadding4)
-	mp.hideBalanceButton.Inset = buttonInset
+	mp.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
 
 	// init shared page functions
 	toggleSync := func() {
