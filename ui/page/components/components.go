@@ -226,10 +226,9 @@ func DurationAgo(timestamp int64) string {
 					if result <= 1 {
 						duration = "1 day ago"
 						return duration
-					} else {
-						duration = fmt.Sprintf("%s days ago", strconv.Itoa(result))
-						return duration
 					}
+					duration = fmt.Sprintf("%s days ago", strconv.Itoa(result))
+					return duration
 				} else if currentDate[2] == txnDate[2] {
 					//Hourly threshold
 					if currentTime[0] != txnTime[0] {
@@ -239,10 +238,9 @@ func DurationAgo(timestamp int64) string {
 						if result <= 1 {
 							duration = "1 hour ago"
 							return duration
-						} else {
-							duration = fmt.Sprintf("%s hours ago", strconv.Itoa(result))
-							return duration
 						}
+						duration = fmt.Sprintf("%s hours ago", strconv.Itoa(result))
+						return duration
 					} else if currentTime[0] == txnTime[0] {
 						//Minute threshold
 						if currentTime[1] != txnTime[1] {
@@ -252,10 +250,9 @@ func DurationAgo(timestamp int64) string {
 							if result <= 1 {
 								duration = "1 minute ago"
 								return duration
-							} else {
-								duration = fmt.Sprintf("%s minutes ago", strconv.Itoa(result))
-								return duration
 							}
+							duration = fmt.Sprintf("%s minutes ago", strconv.Itoa(result))
+							return duration
 						} else if currentTime[1] == txnTime[1] {
 							duration = "Just now"
 						}
@@ -433,10 +430,9 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 
 										if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
 											return D{}
-										} else {
-											duration.Text = DurationAgo(row.Transaction.Timestamp)
-											return duration.Layout(gtx)
 										}
+										duration.Text = DurationAgo(row.Transaction.Timestamp)
+										return duration.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
 										if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
