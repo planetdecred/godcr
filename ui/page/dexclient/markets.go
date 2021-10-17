@@ -2,7 +2,10 @@ package dexclient
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
@@ -62,6 +65,33 @@ var mkt = &selectedMaket{
 	marketQuoteID: btc.BipID,
 }
 
+var buys []*core.MiniOrder
+var sells []*core.MiniOrder
+
+// TODO: this is for testing purposes only,
+// will remove when have real data available
+func init() {
+	{
+		jsonFile, err := os.Open("./ui/page/dexclient/orderbuys.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &buys)
+	}
+
+	{
+		jsonFile, err := os.Open("./ui/page/dexclient/ordersells.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer jsonFile.Close()
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteValue, &sells)
+	}
+}
+
 func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
 		Load:             l,
@@ -76,7 +106,7 @@ func NewMarketPage(l *load.Load) *Page {
 		selectedMaket:   mkt,
 		isAdvancedTrade: false,
 		ordersWidget:    NewOrderBooksWidget(l),
-		depthChart:      NewDepthChart(nil, nil, l.Theme),
+		depthChart:      NewDepthChart(buys, sells, l.Theme),
 		// userOrdersWidget: NewUserOrderBooksWidget(pg.theme),
 	}
 
@@ -99,63 +129,69 @@ func (pg *Page) OnResume() {
 }
 
 func (pg *Page) Layout(gtx C) D {
-	dims := components.UniformPadding(gtx, func(gtx C) D {
-		if pg.isAdvancedTrade {
-			return pg.pageSections(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Bottom: values.MarginPadding10,
-						}.Layout(gtx, pg.depthChart.Layout)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Flex{}.Layout(gtx,
-							layout.Flexed(1, func(gtx C) D {
-								return pg.tradeForm.Layout(gtx)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.ordersWidget.Layout(gtx, pg.orderBook.Sells, pg.orderBook.Buys)
-							}),
-						)
-					}),
-				)
+	if pg.isAdvancedTrade {
+		return pg.advancedTradeLayout(gtx)
+	}
+	return pg.miniTradeLayout(gtx)
+}
 
-			})
-		}
-		return pg.miniTradeLayout(gtx)
+func (pg *Page) advancedTradeLayout(gtx C) D {
+	return components.UniformPadding(gtx, func(gtx C) D {
+		return pg.pageSections(gtx, func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Bottom: values.MarginPadding10,
+					}.Layout(gtx, pg.depthChart.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Flexed(1, func(gtx C) D {
+							return pg.tradeForm.Layout(gtx)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return pg.ordersWidget.Layout(gtx, sells, buys)
+						}),
+					)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.advancedTrade.Layout(gtx)
+				}),
+			)
+		})
 	})
-
-	return dims
 }
 
 func (pg *Page) miniTradeLayout(gtx C) D {
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(pg.registrationStatusLayout),
-		layout.Rigid(func(gtx C) D {
-			return pg.pageSections(gtx, func(gtx C) D {
-				return layout.Inset{
-					Top:    values.MarginPadding20,
-					Bottom: values.MarginPadding20,
-				}.Layout(gtx, func(gtx C) D {
-					return pg.miniTradeFormWdg.layout(gtx)
+	return components.UniformPadding(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(pg.registrationStatusLayout),
+			layout.Rigid(func(gtx C) D {
+				return pg.pageSections(gtx, func(gtx C) D {
+					return layout.Inset{
+						Top:    values.MarginPadding20,
+						Bottom: values.MarginPadding20,
+					}.Layout(gtx, func(gtx C) D {
+						return pg.miniTradeFormWdg.layout(gtx)
+					})
 				})
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return pg.addBTCWallet.Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
-			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+			}),
+			layout.Rigid(func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return layout.E.Layout(gtx, func(gtx C) D {
-					return pg.advancedTrade.Layout(gtx)
+					return pg.addBTCWallet.Layout(gtx)
 				})
-			})
-		}),
-	)
+			}),
+			layout.Rigid(func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.E.Layout(gtx, func(gtx C) D {
+						return pg.advancedTrade.Layout(gtx)
+					})
+				})
+			}),
+		)
+	})
 }
 
 func (pg *Page) registrationStatusLayout(gtx C) D {

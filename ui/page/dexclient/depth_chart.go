@@ -8,6 +8,7 @@ import (
 	"decred.org/dcrdex/client/core"
 	"gioui.org/f32"
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/widget"
@@ -68,9 +69,6 @@ func NewDepthChart(buys, sells []*core.MiniOrder, theme *decredmaterial.Theme) *
 func (chart DepthChart) Layout(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	gtx.Constraints.Min.Y = gtx.Constraints.Max.Y / 3
-
-	// cut layout if go outside
-	clip.Rect{Max: gtx.Constraints.Max}.Add(gtx.Ops)
 	chart.handler()
 
 	return layout.Stack{}.Layout(gtx,
@@ -107,8 +105,11 @@ func (chart DepthChart) zoomButtonLayout(gtx C) D {
 }
 
 func (chart DepthChart) depthChartLayout(gtx C) D {
+	// cut layout if go outside
 	return layout.Flex{Spacing: layout.SpaceAround}.Layout(gtx,
 		layout.Flexed(.5, func(gtx C) D {
+			defer op.Save(gtx.Ops).Load()
+			clip.Rect{Max: gtx.Constraints.Max}.Add(gtx.Ops)
 			return layout.Stack{}.Layout(gtx,
 				layout.Stacked(func(gtx C) D {
 					return chart.filledLayout(gtx, chart.buys, false)
@@ -119,6 +120,8 @@ func (chart DepthChart) depthChartLayout(gtx C) D {
 			)
 		}),
 		layout.Flexed(.5, func(gtx C) D {
+			defer op.Save(gtx.Ops).Load()
+			clip.Rect{Max: gtx.Constraints.Max}.Add(gtx.Ops)
 			return layout.Stack{}.Layout(gtx,
 				layout.Stacked(func(gtx C) D {
 					return chart.filledLayout(gtx, chart.sells, true)

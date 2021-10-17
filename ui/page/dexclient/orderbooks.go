@@ -90,7 +90,9 @@ func (ordWdg *OrderBooksWidget) orderBooksLayout(gtx C, l *layout.List, orders [
 				return ordWdg.text.Layout(gtx)
 			}),
 			layout.Flexed(0.2, func(gtx C) D {
-				return ordWdg.th.Body1(fmt.Sprintf("%b", ord.Epoch)).Layout(gtx)
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					return ordWdg.th.Body1(fmt.Sprintf("%b", ord.Epoch)).Layout(gtx)
+				})
 			}),
 		)
 	})
