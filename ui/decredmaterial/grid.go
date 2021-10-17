@@ -35,7 +35,6 @@ type wrapData struct {
 }
 
 func (g GridWrap) Layout(gtx layout.Context, num int, el GridElement) layout.Dimensions {
-	defer op.Save(gtx.Ops).Load()
 	csMax := gtx.Constraints.Max
 	var mainSize, crossSize, mainPos, crossPos, base int
 	gtx.Constraints.Min = image.Point{}
@@ -149,7 +148,6 @@ func (g *Grid) Layout(gtx layout.Context, num int, el GridElement) layout.Dimens
 	}
 	csMax := gtx.Constraints.Max
 	return g.list.Layout(gtx, (num+g.Num-1)/g.Num, func(gtx layout.Context, idx int) layout.Dimensions {
-		defer op.Save(gtx.Ops).Load()
 		if g.Axis == layout.Horizontal {
 			gtx.Constraints.Max.Y = inf
 		} else {

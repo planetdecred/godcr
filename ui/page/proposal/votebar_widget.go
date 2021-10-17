@@ -183,7 +183,7 @@ func (v *VoteBar) requiredYesVotesIndicator(gtx C) D {
 			Y: -1,
 		},
 		Max: image.Point{
-			X: int(int(thumbLeftPos) + voteBarThumbWidth),
+			X: int(thumbLeftPos) + voteBarThumbWidth,
 			Y: 45,
 		},
 	}
