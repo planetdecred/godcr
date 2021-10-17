@@ -29,7 +29,7 @@ const (
 	ProposalsNavID
 	MoreNavID
 
-	HideBalanceConfigKey = "hide_Balance"
+	HideBalanceConfigKey = "hide_balance"
 )
 
 var (
