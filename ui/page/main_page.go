@@ -1,6 +1,7 @@
 package page
 
 import (
+	"image"
 	"strconv"
 
 	"gioui.org/layout"
@@ -37,6 +38,12 @@ var (
 	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
 )
 
+type HideBalanceItem struct {
+	hideBalanceButton decredmaterial.IconButton
+	tooltip           *decredmaterial.Tooltip
+	tooltipLabel      decredmaterial.Label
+}
+
 type NavHandler struct {
 	Clickable     *widget.Clickable
 	Image         *decredmaterial.Image
@@ -52,6 +59,8 @@ type MainPage struct {
 
 	autoSync bool
 
+	hideBalanceItem HideBalanceItem
+
 	currentPage   load.Page
 	pageBackStack []load.Page
 	sendPage      *send.Page // reuse value to keep data persistent onresume.
@@ -62,7 +71,6 @@ type MainPage struct {
 	totalBalance    dcrutil.Amount
 	totalBalanceUSD string
 
-	hideBalanceButton decredmaterial.IconButton
 	isBalanceHidden bool
 }
 
@@ -72,10 +80,11 @@ func NewMainPage(l *load.Load) *MainPage {
 		autoSync: true,
 	}
 
-	mp.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
-	mp.hideBalanceButton.Color = mp.Theme.Color.Gray3
-	mp.hideBalanceButton.Size = unit.Dp(19)
-	mp.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
+	mp.hideBalanceItem.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
+	mp.hideBalanceItem.hideBalanceButton.Color = mp.Theme.Color.Gray3
+	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
+	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
+	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
 
 	// init shared page functions
 	toggleSync := func() {
@@ -199,6 +208,15 @@ func (mp *MainPage) OnResume() {
 	}
 
 	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
+}
+
+func (mp *MainPage) layoutHideBalanceTooltip(gtx C, rect image.Rectangle, hideBalanceItem HideBalanceItem) {
+	inset := layout.Inset{Top: values.MarginPadding30, Left: values.MarginPadding12}
+	hideBalanceItem.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding70)
+		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding75)
+		return hideBalanceItem.tooltipLabel.Layout(gtx)
+	})
 }
 
 func (mp *MainPage) setLanguageSetting() {
@@ -339,7 +357,7 @@ func (mp *MainPage) Handle() {
 	}
 
 	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(HideBalanceConfigKey, false)
-	if mp.hideBalanceButton.Button.Clicked() {
+	if mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
 		mp.WL.MultiWallet.SetBoolConfigValueForKey(HideBalanceConfigKey, mp.isBalanceHidden)
 	}
@@ -491,8 +509,7 @@ func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
 		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 			return hiddenBalanceText.Layout(gtx)
 		})
-		
-		}
+	}
 	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
 }
 
@@ -535,21 +552,27 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 									}),
 									layout.Rigid(func(gtx C) D {
 										if !mp.isBalanceHidden {
-										return mp.LayoutUSDBalance(gtx)
+											return mp.LayoutUSDBalance(gtx)
 										}
 										return layout.Dimensions{}
-										}),
-									layout.Rigid(func(gtx C) D {
-										mp.hideBalanceButton.Icon = mp.Icons.RevealIcon
-										if mp.isBalanceHidden {
-											mp.hideBalanceButton.Icon = mp.Icons.ConcealIcon
-										}
-										return layout.Inset{Top: values.MarginPadding1, Left: values.MarginPadding9}.Layout(gtx, func(gtx C) D {
-											return layout.E.Layout(gtx, mp.hideBalanceButton.Layout)
-										})
-
 									}),
-									
+									layout.Rigid(func(gtx C) D {
+										mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
+										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.RevealIcon
+										if mp.isBalanceHidden {
+											mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Show Balance")
+											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.ConcealIcon
+										}
+										rect := image.Rectangle{
+											Min: gtx.Constraints.Min,
+											Max: gtx.Constraints.Max,
+										}
+										rect.Max.Y = 20
+										mp.layoutHideBalanceTooltip(gtx, rect, mp.hideBalanceItem)
+										return layout.Inset{Top: values.MarginPadding1, Left: values.MarginPadding9}.Layout(gtx, func(gtx C) D {
+											return layout.E.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
+										})
+									}),
 								)
 							})
 					})
