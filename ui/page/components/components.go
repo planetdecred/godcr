@@ -190,10 +190,9 @@ func DurationAgo(timestamp int64) string {
 		if result <= 1 {
 			duration = "1 year ago"
 			return duration
-		} else {
-			duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
-			return duration
 		}
+		duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
+		return duration
 	} else if currentDate[0] == txnDate[0] {
 		//Monthly threshold
 		if currentDate[1] != txnDate[1] {
@@ -203,10 +202,9 @@ func DurationAgo(timestamp int64) string {
 			if result <= 1 {
 				duration = "1 month ago"
 				return duration
-			} else {
-				duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
-				return duration
 			}
+			duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
+			return duration
 		} else if currentDate[1] == txnDate[1] {
 			//Weekly threshold
 			_, currentWeek := time.Now().UTC().ISOWeek()
@@ -216,10 +214,9 @@ func DurationAgo(timestamp int64) string {
 				if result <= 1 {
 					duration = "1 week ago"
 					return duration
-				} else {
-					duration = fmt.Sprintf("%s weeks ago", strconv.Itoa(result))
-					return duration
 				}
+				duration = fmt.Sprintf("%s weeks ago", strconv.Itoa(result))
+				return duration
 			} else if currentWeek == txnWeek {
 				//Daily threshold
 				if currentDate[2] != txnDate[2] {
