@@ -72,7 +72,7 @@ func (pg *LogPage) watchLogs() {
 
 		size := fi.Size()
 
-		var offset int64 = 0
+		var offset int64
 		if size > LogOffset*2 {
 			offset = size - LogOffset
 		}

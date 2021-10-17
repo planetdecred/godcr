@@ -678,7 +678,6 @@ func (pg *OverviewPage) Handle() {
 				pg.isBackupModalOpened = true
 			}
 		}
-		break
 	}
 
 	if pg.syncClickable.Clicked() {
