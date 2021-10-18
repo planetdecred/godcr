@@ -192,8 +192,19 @@ func DurationAgo(timestamp int64) string {
 	if currentDate[0] != txnDate[0] {
 		cy, _ := strconv.Atoi(currentDate[0])
 		ty, _ := strconv.Atoi(txnDate[0])
+		cm, _ := strconv.Atoi(currentDate[1])
+		tm, _ := strconv.Atoi(txnDate[1])
+
+		txnYearEnd := 12      //Last month of the transaction year
+		currentYearStart := 1 //First month of the current year
+
 		result := cy - ty
-		if result <= 1 {
+		numMonths := (cm - currentYearStart) + (txnYearEnd - tm)
+
+		if numMonths < 12 && result < 1 {
+			duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
+			return duration
+		} else if result == 1 {
 			duration = "1 year ago"
 			return duration
 		}
@@ -489,8 +500,8 @@ func FormatDateOrTime(timestamp int64) string {
 
 			return TimeAgo(timestamp)
 		} else if currentTime.Day()-1 == utcTime.Day() {
-			ans := "Yesterday"
-			return ans
+			yesterday := "Yesterday"
+			return yesterday
 		}
 	}
 
