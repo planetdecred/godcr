@@ -306,7 +306,7 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return components.UniformPadding(gtx, pg.layoutContent)
+			return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, pg.layoutContent)
 		}),
 	)
 }
@@ -326,7 +326,7 @@ func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
 	proposalItems := pg.proposalItems
 	pg.proposalMu.Unlock()
 	return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
-		return layout.Inset{}.Layout(gtx, func(gtx C) D {
+		return components.UniformHorizontalPadding(gtx, func(gtx C) D {
 			return layout.Inset{
 				Top:    values.MarginPadding2,
 				Bottom: values.MarginPadding2,

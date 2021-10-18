@@ -59,12 +59,12 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		redirectIcon:       l.Icons.RedirectIcon,
 		downloadIcon:       l.Icons.DownloadIcon,
 		//voteBar:            l.Theme.VoteBar(decredmaterial.NewIcon(l.Icons.ActionInfo), decredmaterial.NewIcon(l.Icons.ImageBrightness1)),
-		proposalItems:      make(map[string]proposalItemWidgets),
-		rejectedIcon:       l.Icons.NavigationCancel,
-		successIcon:        l.Icons.ActionCheckCircle,
-		timerIcon:          l.Icons.TimerIcon,
-		viewInPoliteiaBtn:  l.Theme.NewClickable(true),
-		voteBar:            NewVoteBar(l),
+		proposalItems:     make(map[string]proposalItemWidgets),
+		rejectedIcon:      l.Icons.NavigationCancel,
+		successIcon:       l.Icons.ActionCheckCircle,
+		timerIcon:         l.Icons.TimerIcon,
+		viewInPoliteiaBtn: l.Theme.NewClickable(true),
+		voteBar:           NewVoteBar(l),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)

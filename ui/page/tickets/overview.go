@@ -144,7 +144,7 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 	widgets := []layout.Widget{
 		func(ctx layout.Context) layout.Dimensions {
 			return components.UniformHorizontalPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, pg.ticketPriceSection)
+				return pg.ticketPriceSection(gtx)
 			})
 		},
 		func(ctx layout.Context) layout.Dimensions {
@@ -159,8 +159,10 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return material.List(pg.Theme.Base, pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
-		return widgets[i](gtx)
+	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return material.List(pg.Theme.Base, pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
+			return widgets[i](gtx)
+		})
 	})
 }
 

@@ -5,6 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"gioui.org/widget"
+	"gioui.org/widget/material"
+
 	"gioui.org/layout"
 	"gioui.org/text"
 	"github.com/planetdecred/dcrlibwallet"
@@ -33,6 +36,7 @@ type VerifySeedPage struct {
 	actionButton decredmaterial.Button
 	container    *layout.List
 	seedList     *layout.List
+	list         *widget.List
 }
 
 func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *VerifySeedPage {
@@ -44,6 +48,11 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 		actionButton: l.Theme.Button("Verify"),
 		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
+	}
+	pg.list = &widget.List{
+		List: layout.List{
+			Axis: layout.Vertical,
+		},
 	}
 
 	pg.actionButton.Font.Weight = text.Medium
@@ -198,26 +207,23 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 			promptToExit(pg.Load)
 		},
 		Body: func(gtx C) D {
-			wdg := []layout.Widget{
-				func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize16, "Select the correct words to verify.")
 					label.Color = pg.Theme.Color.Gray3
 					return label.Layout(gtx)
-				},
-				func(gtx C) D {
+				}),
+				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Bottom: values.MarginPadding96,
 					}.Layout(gtx, func(gtx C) D {
-						return pg.seedList.Layout(gtx, len(pg.multiSeedList), func(gtx C, index int) D {
-							return pg.seedListRow(gtx, index, pg.multiSeedList[index])
+						gtx.Constraints.Min.X = gtx.Constraints.Max.X
+						return material.List(pg.Theme.Base, pg.list).Layout(gtx, len(pg.multiSeedList), func(gtx C, i int) D {
+							return pg.seedListRow(gtx, i, pg.multiSeedList[i])
 						})
 					})
-				},
-			}
-
-			return pg.container.Layout(gtx, len(wdg), func(gtx C, index int) D {
-				return wdg[index](gtx)
-			})
+				}),
+			)
 		},
 	}
 

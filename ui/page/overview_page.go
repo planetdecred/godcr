@@ -3,9 +3,10 @@ package page
 import (
 	"context"
 	"fmt"
-	"gioui.org/widget"
 	"image/color"
 	"time"
+
+	"gioui.org/widget"
 
 	"gioui.org/layout"
 

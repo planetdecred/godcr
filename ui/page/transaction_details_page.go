@@ -85,7 +85,6 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
-
 	pg.dot = decredmaterial.NewIcon(l.Icons.ImageBrightness1)
 	pg.dot.Color = l.Theme.Color.Gray
 

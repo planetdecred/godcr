@@ -126,31 +126,35 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 							})
 						}
 
-						return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
-							var row = components.TransactionRow{
-								Transaction: wallTxs[index],
-								Index:       index,
-								ShowBadge:   false,
-							}
+						return layout.Inset{Right: values.MarginPaddingMinus24}.Layout(gtx, func(gtx C) D {
+							return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+								var row = components.TransactionRow{
+									Transaction: wallTxs[index],
+									Index:       index,
+									ShowBadge:   false,
+								}
 
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									return components.LayoutTransactionRow(gtx, pg.Load, row)
-								}),
-								layout.Rigid(func(gtx C) D {
-									// No divider for last row
-									if row.Index == len(wallTxs)-1 {
-										return layout.Dimensions{}
-									}
+								return layout.Inset{Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											return components.LayoutTransactionRow(gtx, pg.Load, row)
+										}),
+										layout.Rigid(func(gtx C) D {
+											// No divider for last row
+											if row.Index == len(wallTxs)-1 {
+												return layout.Dimensions{}
+											}
 
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
-									separator := pg.Theme.Separator()
-									return layout.E.Layout(gtx, func(gtx C) D {
-										// Show bottom divider for all rows except last
-										return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
-									})
-								}),
-							)
+											gtx.Constraints.Min.X = gtx.Constraints.Max.X
+											separator := pg.Theme.Separator()
+											return layout.E.Layout(gtx, func(gtx C) D {
+												// Show bottom divider for all rows except last
+												return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
+											})
+										}),
+									)
+								})
+							})
 						})
 					})
 				})
