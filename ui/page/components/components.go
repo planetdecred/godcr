@@ -201,11 +201,15 @@ func DurationAgo(timestamp int64) string {
 		result := cy - ty
 		numMonths := (cm - currentYearStart) + (txnYearEnd - tm)
 
-		if numMonths < 12 && result < 1 {
-			duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
-			return duration
-		} else if result == 1 {
+		if result == 1 && numMonths == 12 {
 			duration = "1 year ago"
+			return duration
+		} else if result > 1 && numMonths < 12 {
+			if numMonths == 1 {
+				duration = fmt.Sprintf("%s years %s month ago", strconv.Itoa(result), strconv.Itoa(numMonths))
+				return duration
+			}
+			duration = fmt.Sprintf("%s years %s months ago", strconv.Itoa(result), strconv.Itoa(numMonths))
 			return duration
 		}
 		duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
