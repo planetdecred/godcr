@@ -14,7 +14,8 @@ import (
 	"decred.org/dcrdex/client/asset"
 	_ "decred.org/dcrdex/client/asset/bch" // register bch asset
 	_ "decred.org/dcrdex/client/asset/btc" // register btc asset
-	"decred.org/dcrdex/client/asset/dcr"   // register dcr asset
+
+	// register dcr asset
 	_ "decred.org/dcrdex/client/asset/ltc" // register ltc asset
 	"decred.org/dcrdex/client/comms"
 	"decred.org/dcrdex/dex/msgjson"
@@ -177,28 +178,25 @@ func (d *Dexc) SetWalletForDcrAsset(wallet *dcrlibwallet.Wallet) {
 // NOTE: Before connecting a dcr wallet, first call *Dexc.SetWalletForDcrAsset
 // to configure the dcr ExchangeWallet to use a custom wallet instead of the
 // default rpc wallet.
-func (d *Dexc) AddWallet(assetID uint32, settings map[string]string, appPW, walletPW []byte) error {
+func (d *Dexc) AddWallet(assetID uint32, walletType string, settings map[string]string, appPW, walletPW []byte) error {
 	assetInfo, err := asset.Info(assetID)
 	if err != nil {
 		return fmt.Errorf("asset driver not registered for asset with BIP ID %d", assetID)
 	}
+	var walletDef *asset.WalletDefinition
+	for _, def := range assetInfo.AvailableWallets {
+		if def.Type == walletType {
+			walletDef = def
+		}
+	}
+	if walletDef == nil {
+		return fmt.Errorf("cannot add %s wallet of type %q", assetInfo.Name, walletType)
+	}
 
 	// Start building the wallet config with default values.
 	config := map[string]string{}
-	for _, option := range assetInfo.ConfigOpts {
+	for _, option := range walletDef.ConfigOpts {
 		config[strings.ToLower(option.Key)] = fmt.Sprintf("%v", option.DefaultValue)
-	}
-
-	// Attempt to load additional config values from the asset's default
-	// config file path. Not necessary for dcr wallets.
-	if assetID != dcr.BipID {
-		autoConfig, err := d.AutoWalletConfig(assetID)
-		if err != nil {
-			return err
-		}
-		for k, v := range autoConfig {
-			config[k] = v
-		}
 	}
 
 	// User-provided settings should override any previously
@@ -208,8 +206,9 @@ func (d *Dexc) AddWallet(assetID uint32, settings map[string]string, appPW, wall
 	}
 
 	return d.CreateWallet(appPW, walletPW, &core.WalletForm{
-		AssetID: dcr.BipID,
+		AssetID: assetID,
 		Config:  config,
+		Type:    walletType,
 	})
 }
 

@@ -32,7 +32,7 @@ require (
 )
 
 replace (
-	decred.org/dcrdex => github.com/itswisdomagain/dcrdex v0.0.0-20211018140804-883d93468bb7
-	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211018142016-24b182a24433
-	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211018142016-24b182a24433
+	decred.org/dcrdex => github.com/itswisdomagain/dcrdex v0.0.0-20211018161111-310547358af0
+	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211018161404-a7dba7431e04
+	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211018161404-a7dba7431e04
 )

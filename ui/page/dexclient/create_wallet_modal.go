@@ -9,6 +9,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/dcrlibwallet/dexdcr"
 	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -122,18 +123,21 @@ func (md *createWalletModal) Handle() {
 			}
 
 			settings := make(map[string]string)
+			var walletType string
+			appPass := []byte(md.appPassword.Editor.Text())
+			walletPass := []byte(md.walletPassword.Editor.Text())
+
 			switch coinID {
 			case dcr.BipID:
 				settings["account"] = md.sourceAccountSelector.SelectedAccount().Name
 				settings["password"] = md.walletPassword.Editor.Text()
+				walletType = dexdcr.WalletTypeDcrwObject
 			case btc.BipID:
-				settings["walletname"] = md.walletName.Editor.Text()
-				settings["rpcport"] = md.RPCPort.Editor.Text() // TODO: Request this from user in the CreateWalletModal form.
+				walletType = btc.WalletTypeSPV
+				walletPass = nil // Core doesn't accept wallet passwords for dex-managed spv wallets.
 			}
 
-			appPass := []byte(md.appPassword.Editor.Text())
-			walletPass := []byte(md.walletPassword.Editor.Text())
-			err := md.Dexc.AddWallet(coinID, settings, appPass, walletPass)
+			err := md.Dexc.AddWallet(coinID, walletType, settings, appPass, walletPass)
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
@@ -201,36 +205,36 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 					}
 
 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return md.walletName.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return md.RPCAddress.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return md.RPCPort.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return md.RPCUsername.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return md.RPCPassword.Layout(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return md.walletPassword.Layout(gtx)
-							})
-						}),
+						// layout.Rigid(func(gtx C) D {
+						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						// 		return md.walletName.Layout(gtx)
+						// 	})
+						// }),
+						// layout.Rigid(func(gtx C) D {
+						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						// 		return md.RPCAddress.Layout(gtx)
+						// 	})
+						// }),
+						// layout.Rigid(func(gtx C) D {
+						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						// 		return md.RPCPort.Layout(gtx)
+						// 	})
+						// }),
+						// layout.Rigid(func(gtx C) D {
+						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						// 		return md.RPCUsername.Layout(gtx)
+						// 	})
+						// }),
+						// layout.Rigid(func(gtx C) D {
+						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						// 		return md.RPCPassword.Layout(gtx)
+						// 	})
+						// }),
+						// layout.Rigid(func(gtx C) D {
+						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						// 		return md.walletPassword.Layout(gtx)
+						// 	})
+						// }),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
 								return md.appPassword.Layout(gtx)
