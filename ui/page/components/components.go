@@ -168,12 +168,17 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 
 func DurationAgo(timestamp int64) string {
 	//Convert timestamp to date in string format (yyyy:mm:dd hr:m:s +0000 UTC)
+
 	currentTimestamp := time.Now().UTC().String()
 	txnTimestamp := time.Unix(timestamp, 0).UTC().String()
+
 	//Split the date so we can sepparate into date and time for current time and time of txn
+
 	currentTimeSplit := strings.Split(currentTimestamp, " ")
 	txnTimeSplit := strings.Split(txnTimestamp, " ")
+
 	//Split current date and time, and  txn date and time then store in variables
+
 	currentDate := strings.Split(currentTimeSplit[0], "-")
 	currentTime := strings.Split(currentTimeSplit[1], ":")
 	txnDate := strings.Split(txnTimeSplit[0], "-")
@@ -183,6 +188,7 @@ func DurationAgo(timestamp int64) string {
 	//Group duration into thresholds
 
 	//Yearly threshold
+
 	if currentDate[0] != txnDate[0] {
 		cy, _ := strconv.Atoi(currentDate[0])
 		ty, _ := strconv.Atoi(txnDate[0])
@@ -195,6 +201,7 @@ func DurationAgo(timestamp int64) string {
 		return duration
 	} else if currentDate[0] == txnDate[0] {
 		//Monthly threshold
+
 		if currentDate[1] != txnDate[1] {
 			cm, _ := strconv.Atoi(currentDate[1])
 			tm, _ := strconv.Atoi(txnDate[1])
@@ -207,6 +214,7 @@ func DurationAgo(timestamp int64) string {
 			return duration
 		} else if currentDate[1] == txnDate[1] {
 			//Weekly threshold
+
 			_, currentWeek := time.Now().UTC().ISOWeek()
 			_, txnWeek := time.Unix(timestamp, 0).UTC().ISOWeek()
 			if currentWeek != txnWeek {
@@ -219,6 +227,7 @@ func DurationAgo(timestamp int64) string {
 				return duration
 			} else if currentWeek == txnWeek {
 				//Daily threshold
+
 				if currentDate[2] != txnDate[2] {
 					cd, _ := strconv.Atoi(currentDate[2])
 					td, _ := strconv.Atoi(txnDate[2])
@@ -231,6 +240,7 @@ func DurationAgo(timestamp int64) string {
 					return duration
 				} else if currentDate[2] == txnDate[2] {
 					//Hourly threshold
+
 					if currentTime[0] != txnTime[0] {
 						ch, _ := strconv.Atoi(currentTime[0])
 						th, _ := strconv.Atoi(txnTime[0])
@@ -243,6 +253,7 @@ func DurationAgo(timestamp int64) string {
 						return duration
 					} else if currentTime[0] == txnTime[0] {
 						//Minute threshold
+
 						if currentTime[1] != txnTime[1] {
 							cm, _ := strconv.Atoi(currentTime[1])
 							tm, _ := strconv.Atoi(txnTime[1])
