@@ -204,7 +204,7 @@ func DurationAgo(timestamp int64) string {
 		if result == 1 && numMonths == 12 {
 			duration = "1 year ago"
 			return duration
-		} else if result > 1 && numMonths < 12 {
+		} else if result >= 1 && numMonths < 12 {
 			if numMonths == 1 {
 				duration = fmt.Sprintf("%s years %s month ago", strconv.Itoa(result), strconv.Itoa(numMonths))
 				return duration
