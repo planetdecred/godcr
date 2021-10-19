@@ -57,7 +57,8 @@ type Restore struct {
 	selected        int
 	suggestionLimit int
 
-	seedClicked bool
+	seedClicked  bool
+	isLastEditor bool
 
 	seedEditors seedEditors
 	keyEvent    chan *key.Event
@@ -232,6 +233,10 @@ func (pg *Restore) onSuggestionSeedsClicked() {
 			if index != numberOfSeeds {
 				pg.seedEditors.editors[index+1].Edit.Editor.Focus()
 			}
+
+			if index == numberOfSeeds {
+				pg.isLastEditor = true
+			}
 		}
 	}
 }
@@ -266,9 +271,14 @@ func (pg *Restore) editorSeedsEventsHandler() {
 		}
 
 		if text == "" {
+			pg.isLastEditor = false
 			pg.openPopupIndex = -1
 		} else {
 			pg.openPopupIndex = i
+		}
+
+		if i != numberOfSeeds {
+			pg.isLastEditor = false
 		}
 	}
 
@@ -285,6 +295,7 @@ func (pg *Restore) editorSeedsEventsHandler() {
 			switch e.(type) {
 			case widget.ChangeEvent:
 				seedEvent(i, text)
+
 				pg.suggestions = pg.suggestionSeeds(text)
 				pg.seedMenu = pg.seedMenu[:len(pg.suggestions)]
 				for k, s := range pg.suggestions {
@@ -294,6 +305,11 @@ func (pg *Restore) editorSeedsEventsHandler() {
 				if i != numberOfSeeds {
 					pg.seedEditors.editors[i+1].Edit.Editor.Focus()
 					pg.selected = 0
+				}
+
+				if i == numberOfSeeds {
+					pg.selected = 0
+					pg.isLastEditor = true
 				}
 			}
 		}
@@ -327,7 +343,8 @@ func (pg *Restore) suggestionSeedEffect() {
 }
 
 func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) {
-	if pg.openPopupIndex != optionsSeedMenuIndex || pg.openPopupIndex != pg.seedEditors.focusIndex {
+	if pg.openPopupIndex != optionsSeedMenuIndex || pg.openPopupIndex != pg.seedEditors.focusIndex ||
+		pg.isLastEditor {
 		return
 	}
 
@@ -471,6 +488,7 @@ func (pg *Restore) Handle() {
 			if pg.seedEditors.focusIndex == -1 && len(pg.suggestions) == 1 {
 				return
 			}
+
 			pg.seedMenu[pg.selected].button.Click()
 		}
 	default:

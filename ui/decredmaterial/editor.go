@@ -63,6 +63,7 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 
 	e := t.Editor(editor, hint)
 	e.Bordered = false
+	e.SelectionColor = color.NRGBA{}
 	return RestoreEditor{
 		t:          t,
 		Edit:       e,
