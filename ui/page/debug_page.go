@@ -79,8 +79,7 @@ func (pg *DebugPage) debugItem(gtx C, i int) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 					ic := decredmaterial.NewIcon(pg.Icons.ChevronRight)
-					ic.Size = 22
-					return ic.Layout(gtx)
+					return ic.Layout(gtx, values.MarginPadding22)
 				})
 			})
 		}),

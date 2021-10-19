@@ -272,8 +272,7 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 								Right: m,
 								Top:   m,
 							}.Layout(gtx, func(gtx C) D {
-								pg.dot.Size = 2
-								return pg.dot.Layout(gtx)
+								return pg.dot.Layout(gtx, values.MarginPadding2)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {

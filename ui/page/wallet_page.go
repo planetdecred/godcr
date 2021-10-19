@@ -480,8 +480,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 											Right: values.MarginPadding10,
 											Left:  values.MarginPadding38,
 										}.Layout(gtx, func(gtx C) D {
-											pg.addAcctIcon.Size = 25
-											return pg.addAcctIcon.Layout(gtx)
+											return pg.addAcctIcon.Layout(gtx, values.MarginPadding25)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -782,8 +781,7 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							pg.backupAcctIcon.Size = 20
-							return pg.backupAcctIcon.Layout(gtx)
+							return pg.backupAcctIcon.Layout(gtx, values.MarginPadding20)
 						})
 					})
 				}),

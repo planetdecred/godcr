@@ -143,12 +143,10 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 							if pg.stateValidate == invalid {
 								ic := decredmaterial.NewIcon(pg.Icons.NavigationCancel)
-								ic.Size = 25
-								return ic.Layout(gtx)
+								return ic.Layout(gtx, values.MarginPadding25)
 							}
 							ic := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
-							ic.Size = 25
-							return ic.Layout(gtx)
+							return ic.Layout(gtx, values.MarginPadding25)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {

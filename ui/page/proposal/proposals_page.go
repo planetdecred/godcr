@@ -516,8 +516,7 @@ func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 									}
 									rect.Max.Y = 20
 									pg.layoutInfoTooltip(gtx, rect, item)
-									pg.infoIcon.Size = 20
-									return pg.infoIcon.Layout(gtx)
+									return pg.infoIcon.Layout(gtx, values.MarginPadding20)
 								})
 							}),
 						)
@@ -574,8 +573,7 @@ func (pg *ProposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 func (pg *ProposalsPage) layoutIsSyncedSection(gtx C) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			pg.updatedIcon.Size = 20
-			return pg.updatedIcon.Layout(gtx)
+			return pg.updatedIcon.Layout(gtx, values.MarginPadding20)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, pg.updatedLabel.Layout)

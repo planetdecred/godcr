@@ -108,8 +108,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 									}
 									return inset.Layout(gtx, func(gtx C) D {
 										ic := decredmaterial.NewIcon(v.Icons.DropDownIcon)
-										ic.Size = 20
-										return ic.Layout(gtx)
+										return ic.Layout(gtx, values.MarginPadding20)
 									})
 								}),
 							)
@@ -242,8 +241,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 								}
 								return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 									ic := decredmaterial.NewIcon(v.Icons.NavigationCheck)
-									ic.Size = 20
-									return ic.Layout(gtx)
+									return ic.Layout(gtx, values.MarginPadding20)
 								})
 							}),
 						)

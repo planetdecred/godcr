@@ -141,8 +141,7 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								pg.verifyMessageStatus.Size = 20
-								return pg.verifyMessageStatus.Layout(gtx)
+								return pg.verifyMessageStatus.Layout(gtx, values.MarginPadding20)
 							})
 						}),
 						layout.Rigid(pg.verifyMessage.Layout),

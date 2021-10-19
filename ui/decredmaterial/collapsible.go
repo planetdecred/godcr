@@ -3,6 +3,8 @@ package decredmaterial
 import (
 	"image/color"
 
+	"github.com/planetdecred/godcr/ui/values"
+
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -85,8 +87,7 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 								return header(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
-								icon.Size = 20
-								return icon.Layout(gtx)
+								return icon.Layout(gtx, values.MarginPadding20)
 							}),
 						)
 					}),

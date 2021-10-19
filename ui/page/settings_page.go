@@ -346,8 +346,7 @@ func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
-						row.icon.Size = 22
-						return row.icon.Layout(gtx)
+						return row.icon.Layout(gtx, values.MarginPadding22)
 					}),
 				)
 			})

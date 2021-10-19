@@ -204,11 +204,11 @@ func (v *VoteBar) Layout(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								yesLabel := v.Theme.Body1("Yes: ")
-								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes, v.yesColor)
+								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes)
 							}),
 							layout.Rigid(func(gtx C) D {
 								noLabel := v.Theme.Body1("No: ")
-								return v.layoutIconAndText(gtx, noLabel, v.noVotes, v.noColor)
+								return v.layoutIconAndText(gtx, noLabel, v.noVotes)
 							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
@@ -226,13 +226,12 @@ func (v *VoteBar) Layout(gtx C) D {
 	)
 }
 
-func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32, clr color.NRGBA) D {
+func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32) D {
 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-					v.legendIcon.Size = 10
-					return v.legendIcon.Layout(gtx)
+					return v.legendIcon.Layout(gtx, values.MarginPadding10)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -270,8 +269,7 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 			rect.Max.Y = 20
 			v.layoutInfoTooltip(gtx, rect)
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-				v.infoIcon.Size = 20
-				return v.infoIcon.Layout(gtx)
+				return v.infoIcon.Layout(gtx, values.MarginPadding20)
 			})
 		}),
 	)

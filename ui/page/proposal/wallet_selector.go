@@ -143,8 +143,7 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 									}
 									return inset.Layout(gtx, func(gtx C) D {
 										ic := decredmaterial.NewIcon(as.Icons.DropDownIcon)
-										ic.Size = 20
-										return ic.Layout(gtx)
+										return ic.Layout(gtx, values.MarginPadding20)
 									})
 								}),
 							)
@@ -321,8 +320,7 @@ func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *
 							return layout.E.Layout(gtx, func(gtx C) D {
 								return inset.Layout(gtx, func(gtx C) D {
 									ic := decredmaterial.NewIcon(asm.Icons.NavigationCheck)
-									ic.Size = 20
-									return ic.Layout(gtx)
+									return ic.Layout(gtx, values.MarginPadding20)
 								})
 							})
 						}

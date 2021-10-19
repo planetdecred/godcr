@@ -197,8 +197,7 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 					Right:  values.MarginPaddingMinus2,
 					Bottom: values.MarginPaddingMinus2,
 				}.Layout(gtx, func(gtx C) D {
-					icon.Size = 24
-					return icon.Layout(gtx)
+					return icon.Layout(gtx, values.MarginPadding24)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -266,8 +265,7 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 					if icon == nil {
 						return D{}
 					}
-					icon.Size = 20
-					return icon.Layout(gtx)
+					return icon.Layout(gtx, values.MarginPadding20)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, label.Layout)

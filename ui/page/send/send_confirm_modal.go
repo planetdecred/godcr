@@ -158,8 +158,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 							icon := decredmaterial.NewIcon(scm.Icons.NavigationArrowForward)
 							icon.Color = scm.Theme.Color.Gray3
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-								icon.Size = 15
-								return icon.Layout(gtx)
+								return icon.Layout(gtx, values.MarginPadding15)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -234,8 +233,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 					icon := decredmaterial.NewIcon(scm.Icons.ActionInfo)
 					icon.Color = scm.Theme.Color.Gray
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-						icon.Size = 20
-						return icon.Layout(gtx)
+						return icon.Layout(gtx, values.MarginPadding20)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {

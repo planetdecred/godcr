@@ -143,8 +143,7 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 					img.Color = tm.Theme.Color.Gray3
 					inset := layout.Inset{Right: values.MarginPadding4}
 					return inset.Layout(gtx, func(gtx C) D {
-						img.Size = 20
-						return img.Layout(gtx)
+						return img.Layout(gtx, values.MarginPadding20)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {

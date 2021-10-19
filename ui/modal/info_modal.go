@@ -188,8 +188,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
 				in.dialogIcon.Color = in.Theme.Color.DeepBlue
-				in.dialogIcon.Size = 50
-				return in.dialogIcon.Layout(gtx)
+				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
 			})
 		})
 	}

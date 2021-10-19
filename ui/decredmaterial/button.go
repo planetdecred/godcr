@@ -218,8 +218,7 @@ func (b TextAndIconButton) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{Left: textIconSpacer}.Layout(gtx, func(gtx C) D {
 					var d D
 					size := gtx.Px(unit.Dp(46)) - 2*gtx.Px(unit.Dp(16))
-					b.icon.Size = size
-					b.icon.Layout(gtx)
+					b.icon.Layout(gtx, unit.Dp(float32(size)))
 					d = layout.Dimensions{
 						Size: image.Point{X: size, Y: size},
 					}

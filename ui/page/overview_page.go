@@ -390,9 +390,8 @@ func (pg *OverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 		}),
 		layout.Rigid(func(gtx C) D {
 			pg.walletStatusIcon.Color = pg.Theme.Color.Gray
-			pg.walletStatusIcon.Size = 5
 			return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-				return pg.walletStatusIcon.Layout(gtx)
+				return pg.walletStatusIcon.Layout(gtx, values.MarginPadding5)
 			})
 		}),
 		layout.Rigid(pg.Theme.Body1(components.TimeAgo(pg.bestBlock.Timestamp)).Layout),
@@ -423,10 +422,8 @@ func (pg *OverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 	title.Color = pg.Theme.Color.Gray3
 	statusLabel := pg.Theme.Body1(values.String(values.StrOffline))
 	pg.walletStatusIcon.Color = pg.Theme.Color.Danger
-	pg.walletStatusIcon.Size = 14
 	if pg.isConnnected {
 		statusLabel.Text = values.String(values.StrOnline)
-		//clr = pg.Theme.Color.Success
 		pg.walletStatusIcon.Color = pg.Theme.Color.Success
 	}
 
@@ -434,7 +431,7 @@ func (pg *OverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Top: values.MarginPadding4, Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-					return pg.walletStatusIcon.Layout(gtx)
+					return pg.walletStatusIcon.Layout(gtx, values.MarginPadding14)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -476,8 +473,7 @@ func (pg *OverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.Inset
 
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 							pg.cachedIcon.Color = pg.Theme.Color.Gray
-							pg.cachedIcon.Size = 16
-							return pg.cachedIcon.Layout(gtx)
+							return pg.cachedIcon.Layout(gtx, values.MarginPadding16)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -509,8 +505,7 @@ func (pg *OverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions {
 		return i.Layout(gtx, pg.syncingIcon.Layout24dp)
 	}
 	return i.Layout(gtx, func(gtx C) D {
-		syncStatusIcon.Size = 24
-		return syncStatusIcon.Layout(gtx)
+		return syncStatusIcon.Layout(gtx, values.MarginPadding24)
 	})
 }
 

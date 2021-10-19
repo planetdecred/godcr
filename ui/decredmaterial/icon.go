@@ -6,13 +6,14 @@ import (
 	"image/color"
 	_ "image/png" //makes png images a decodable format
 
+	"gioui.org/unit"
+
 	"gioui.org/widget"
 )
 
 type Icon struct {
 	*widget.Icon
 	Color color.NRGBA
-	Size  int
 }
 
 // NewIcon returns a new Icon from IconVG data.
@@ -22,13 +23,11 @@ func NewIcon(icon *widget.Icon) *Icon {
 	}
 }
 
-func (icon *Icon) Layout(gtx C) D {
+func (icon *Icon) Layout(gtx C, iconSize unit.Value) D {
 	cl := color.NRGBA{A: 0xff}
 	if icon.Color != (color.NRGBA{}) {
 		cl = icon.Color
 	}
-	if icon.Size != 0 {
-		gtx.Constraints.Min.X = icon.Size
-	}
+	gtx.Constraints.Min.X = gtx.Px(iconSize)
 	return icon.Icon.Layout(gtx, cl)
 }

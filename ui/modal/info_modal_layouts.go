@@ -53,8 +53,7 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens)))
 					ic.Color = th.Color.Gray
-					ic.Size = 8
-					return ic.Layout(gtx)
+					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
 					text := th.Body1("When you turn on the mixer, your unmixed DCRs in this wallet (unmixed balance) will be gradually mixed.")
@@ -73,8 +72,7 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens)))
 					ic.Color = th.Color.Gray
-					ic.Size = 8
-					return ic.Layout(gtx)
+					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
 					text := th.Body1("Mixer will automatically stop when unmixed balance are fully mixed.")
