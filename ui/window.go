@@ -82,7 +82,7 @@ func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	} else {
 		netType = wal.Net
 	}
-	appWindow := app.NewWindow(app.Size(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
+	appWindow := app.NewWindow(app.MinSize(values.AppWidth, values.AppHeight), app.Title(values.StringF(values.StrAppTitle, netType)))
 	win.ops = &op.Ops{}
 
 	win.walletInfo = new(wallet.MultiWalletInfo)
