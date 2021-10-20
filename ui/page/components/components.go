@@ -192,28 +192,16 @@ func DurationAgo(timestamp int64) string {
 	if currentDate[0] != txnDate[0] {
 		cy, _ := strconv.Atoi(currentDate[0])
 		ty, _ := strconv.Atoi(txnDate[0])
-		cm, _ := strconv.Atoi(currentDate[1])
-		tm, _ := strconv.Atoi(txnDate[1])
-
-		txnYearEnd := 12      //Last month of the transaction year
-		currentYearStart := 1 //First month of the current year
 
 		result := cy - ty
-		numMonths := (cm - currentYearStart) + (txnYearEnd - tm)
 
-		if result == 1 && numMonths == 12 {
-			duration = "1 year ago"
-			return duration
-		} else if result >= 1 && numMonths < 12 {
-			if numMonths == 1 {
-				duration = fmt.Sprintf("%s years %s month ago", strconv.Itoa(result), strconv.Itoa(numMonths))
-				return duration
-			}
-			duration = fmt.Sprintf("%s years %s months ago", strconv.Itoa(result), strconv.Itoa(numMonths))
+		if result == 1 {
+			duration = "Last year"
 			return duration
 		}
 		duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
 		return duration
+
 	} else if currentDate[0] == txnDate[0] {
 		//Monthly threshold
 
@@ -222,7 +210,7 @@ func DurationAgo(timestamp int64) string {
 			tm, _ := strconv.Atoi(txnDate[1])
 			result := cm - tm
 			if result <= 1 {
-				duration = "1 month ago"
+				duration = "Last month"
 				return duration
 			}
 			duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
@@ -235,7 +223,7 @@ func DurationAgo(timestamp int64) string {
 			if currentWeek != txnWeek {
 				result := currentWeek - txnWeek
 				if result <= 1 {
-					duration = "1 week ago"
+					duration = "Last week"
 					return duration
 				}
 				duration = fmt.Sprintf("%s weeks ago", strconv.Itoa(result))
@@ -248,7 +236,7 @@ func DurationAgo(timestamp int64) string {
 					td, _ := strconv.Atoi(txnDate[2])
 					result := cd - td
 					if result <= 1 {
-						duration = "1 day ago"
+						duration = "Yesterday"
 						return duration
 					}
 					duration = fmt.Sprintf("%s days ago", strconv.Itoa(result))
@@ -261,7 +249,7 @@ func DurationAgo(timestamp int64) string {
 						th, _ := strconv.Atoi(txnTime[0])
 						result := ch - th
 						if result <= 1 {
-							duration = "1 hour ago"
+							duration = "Last hour"
 							return duration
 						}
 						duration = fmt.Sprintf("%s hours ago", strconv.Itoa(result))
