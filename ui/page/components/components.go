@@ -196,7 +196,7 @@ func DurationAgo(timestamp int64) string {
 		result := cy - ty
 
 		if result == 1 {
-			duration = "Last year"
+			duration = "1 year ago"
 			return duration
 		}
 		duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
@@ -210,7 +210,7 @@ func DurationAgo(timestamp int64) string {
 			tm, _ := strconv.Atoi(txnDate[1])
 			result := cm - tm
 			if result <= 1 {
-				duration = "Last month"
+				duration = "1 month ago"
 				return duration
 			}
 			duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
@@ -223,7 +223,7 @@ func DurationAgo(timestamp int64) string {
 			if currentWeek != txnWeek {
 				result := currentWeek - txnWeek
 				if result <= 1 {
-					duration = "Last week"
+					duration = "1 week ago"
 					return duration
 				}
 				duration = fmt.Sprintf("%s weeks ago", strconv.Itoa(result))
@@ -236,7 +236,7 @@ func DurationAgo(timestamp int64) string {
 					td, _ := strconv.Atoi(txnDate[2])
 					result := cd - td
 					if result <= 1 {
-						duration = "Yesterday"
+						duration = "1 day ago"
 						return duration
 					}
 					duration = fmt.Sprintf("%s days ago", strconv.Itoa(result))
