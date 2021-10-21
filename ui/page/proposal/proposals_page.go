@@ -286,12 +286,11 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 									layout.Rigid(func(gtx C) D {
 										if pg.showSyncedCompleted || pg.isSyncing {
 											return D{}
-										} else {
-											pg.lastUpdatedInfo = pg.Theme.Body2(components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp()))
-											return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-												return pg.lastUpdatedInfo.Layout(gtx)
-											})
 										}
+										pg.lastUpdatedInfo = pg.Theme.Body2(components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp()))
+										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+											return pg.lastUpdatedInfo.Layout(gtx)
+										})
 									}),
 								)
 							})
