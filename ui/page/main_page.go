@@ -28,12 +28,20 @@ const (
 	TicketsNavID
 	ProposalsNavID
 	MoreNavID
+
+	HideBalanceConfigKey = "hide_balance"
 )
 
 var (
 	NavDrawerWidth          = unit.Value{U: unit.UnitDp, V: 160}
 	NavDrawerMinimizedWidth = unit.Value{U: unit.UnitDp, V: 72}
 )
+
+type HideBalanceItem struct {
+	hideBalanceButton decredmaterial.IconButton
+	tooltip           *decredmaterial.Tooltip
+	tooltipLabel      decredmaterial.Label
+}
 
 type NavHandler struct {
 	Clickable     *widget.Clickable
@@ -50,6 +58,8 @@ type MainPage struct {
 
 	autoSync bool
 
+	hideBalanceItem HideBalanceItem
+
 	currentPage   load.Page
 	pageBackStack []load.Page
 	sendPage      *send.Page // reuse value to keep data persistent onresume.
@@ -59,14 +69,21 @@ type MainPage struct {
 	usdExchangeSet  bool
 	totalBalance    dcrutil.Amount
 	totalBalanceUSD string
+
+	isBalanceHidden bool
 }
 
 func NewMainPage(l *load.Load) *MainPage {
-
 	mp := &MainPage{
 		Load:     l,
 		autoSync: true,
 	}
+
+	mp.hideBalanceItem.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
+	mp.hideBalanceItem.hideBalanceButton.Color = mp.Theme.Color.Gray3
+	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
+	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
+	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
 
 	// init shared page functions
 	toggleSync := func() {
@@ -329,6 +346,12 @@ func (mp *MainPage) Handle() {
 			mp.changeFragment(pg)
 		}
 	}
+
+	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(HideBalanceConfigKey, false)
+	for mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
+		mp.isBalanceHidden = !mp.isBalanceHidden
+		mp.WL.MultiWallet.SetBoolConfigValueForKey(HideBalanceConfigKey, mp.isBalanceHidden)
+	}
 }
 
 func (mp *MainPage) OnClose() {
@@ -435,9 +458,30 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Stacked(func(gtx C) D {
+			// TODO: hidden balance tip hover layout
+			// if mp.hideBalanceItem.hideBalanceButton.Button.Hovered() {
+			// 	lm := values.MarginPadding280
+			// 	if mp.hideBalanceItem.tooltipLabel.Text == "Show Balance" {
+			// 		lm = values.MarginPadding168
+			// 	}
+
+			// 	return layout.Inset{Top: values.MarginPadding50, Left: lm}.Layout(gtx, func(gtx C) D {
+			// 		card := mp.Theme.Card()
+			// 		card.Color = mp.Theme.Color.Surface
+			// 		card.Border = true
+			// 		card.Radius = decredmaterial.Radius(5)
+			// 		card.BorderParam.CornerRadius = values.MarginPadding5
+			// 		return card.Layout(gtx, func(gtx C) D {
+			// 			return components.Container{
+			// 				Padding: layout.UniformInset(values.MarginPadding5),
+			// 			}.Layout(gtx, mp.hideBalanceItem.tooltipLabel.Layout)
+			// 		})
+			// 	})
+			// }
+
 			// global toasts. Stack toast on all pages and contents
 			//TODO: show toasts here
-			return layout.Dimensions{}
+			return D{}
 
 		}),
 	)
@@ -470,6 +514,16 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 			return D{}
 		}),
 	)
+}
+
+func (mp *MainPage) totalDCRBalance(gtx layout.Context) layout.Dimensions {
+	if mp.isBalanceHidden {
+		hiddenBalanceText := mp.Theme.Label(values.TextSize18.Scale(0.8), "**********DCR")
+		return layout.Inset{Bottom: values.MarginPadding0, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+			return hiddenBalanceText.Layout(gtx)
+		})
+	}
+	return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
 }
 
 func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
@@ -507,12 +561,25 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 											})
 									}),
 									layout.Rigid(func(gtx C) D {
-										return layout.Center.Layout(gtx, func(gtx C) D {
-											return components.LayoutBalance(gtx, mp.Load, mp.totalBalance.String())
-										})
+										return mp.totalDCRBalance(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-										return mp.LayoutUSDBalance(gtx)
+										if !mp.isBalanceHidden {
+											return mp.LayoutUSDBalance(gtx)
+										}
+										return layout.Dimensions{}
+									}),
+									layout.Rigid(func(gtx C) D {
+										mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
+										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.RevealIcon
+										if mp.isBalanceHidden {
+											mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
+											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.ConcealIcon
+										}
+										return layout.Inset{
+											Top:  values.MarginPadding1,
+											Left: values.MarginPadding9,
+										}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
 									}),
 								)
 							})
