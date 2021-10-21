@@ -456,26 +456,26 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Stacked(func(gtx C) D {
-			// hidden balance tip hover layout
-			if mp.hideBalanceItem.hideBalanceButton.Button.Hovered() {
-				lm := values.MarginPadding280
-				if mp.hideBalanceItem.tooltipLabel.Text == "Show Balance" {
-					lm = values.MarginPadding168
-				}
+			// TODO: hidden balance tip hover layout
+			// if mp.hideBalanceItem.hideBalanceButton.Button.Hovered() {
+			// 	lm := values.MarginPadding280
+			// 	if mp.hideBalanceItem.tooltipLabel.Text == "Show Balance" {
+			// 		lm = values.MarginPadding168
+			// 	}
 
-				return layout.Inset{Top: values.MarginPadding50, Left: lm}.Layout(gtx, func(gtx C) D {
-					card := mp.Theme.Card()
-					card.Color = mp.Theme.Color.Surface
-					card.Border = true
-					card.Radius = decredmaterial.Radius(5)
-					card.BorderParam.CornerRadius = values.MarginPadding5
-					return card.Layout(gtx, func(gtx C) D {
-						return components.Container{
-							Padding: layout.UniformInset(values.MarginPadding5),
-						}.Layout(gtx, mp.hideBalanceItem.tooltipLabel.Layout)
-					})
-				})
-			}
+			// 	return layout.Inset{Top: values.MarginPadding50, Left: lm}.Layout(gtx, func(gtx C) D {
+			// 		card := mp.Theme.Card()
+			// 		card.Color = mp.Theme.Color.Surface
+			// 		card.Border = true
+			// 		card.Radius = decredmaterial.Radius(5)
+			// 		card.BorderParam.CornerRadius = values.MarginPadding5
+			// 		return card.Layout(gtx, func(gtx C) D {
+			// 			return components.Container{
+			// 				Padding: layout.UniformInset(values.MarginPadding5),
+			// 			}.Layout(gtx, mp.hideBalanceItem.tooltipLabel.Layout)
+			// 		})
+			// 	})
+			// }
 
 			// global toasts. Stack toast on all pages and contents
 			//TODO: show toasts here
