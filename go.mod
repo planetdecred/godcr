@@ -3,6 +3,7 @@ module github.com/planetdecred/godcr
 go 1.16
 
 require (
+	decred.org/dcrdex v0.2.2
 	gioui.org v0.0.0-20211011183043-05f0f5c20f45
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
@@ -22,6 +23,7 @@ require (
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/planetdecred/dcrlibwallet v1.6.2-0.20211019025657-3c6b25766450
+	github.com/planetdecred/dcrlibwallet/dexdcr v0.0.0-00010101000000-000000000000
 	github.com/yeqown/go-qrcode v1.5.1
 	golang.org/x/exp v0.0.0-20210722180016-6781d3edade3
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
@@ -29,4 +31,8 @@ require (
 	golang.org/x/text v0.3.7
 )
 
-replace github.com/decred/dcrdata/txhelpers/v4 => github.com/decred/dcrdata/txhelpers/v4 v4.0.0-20200108145420-f82113e7e212
+replace (
+	decred.org/dcrdex => github.com/itswisdomagain/dcrdex v0.0.0-20211018161111-310547358af0
+	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211018161404-a7dba7431e04
+	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211018161404-a7dba7431e04
+)

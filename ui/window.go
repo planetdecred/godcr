@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"gioui.org/op"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
@@ -21,6 +23,7 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
+	appCtx     context.Context
 	ops        *op.Ops
 	invalidate chan struct{}
 
@@ -59,6 +62,8 @@ type Window struct {
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
+
+	dexc *dexc.Dexc
 }
 
 type (
@@ -74,7 +79,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
+func CreateWindow(appCtx context.Context, wal *wallet.Wallet, dc *dexc.Dexc) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == dcrlibwallet.Testnet3 {
@@ -96,11 +101,14 @@ func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win.invalidate = make(chan struct{}, 2)
 
 	win.wallet = wal
+
+	win.dexc = dc
+
 	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)
 
-	l, err := win.NewLoad()
+	l, err := win.NewLoad(appCtx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,12 +118,13 @@ func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	return win, appWindow, nil
 }
 
-func (win *Window) NewLoad() (*load.Load, error) {
+func (win *Window) NewLoad(appCtx context.Context) (*load.Load, error) {
 	l, err := load.NewLoad()
 	if err != nil {
 		return nil, err
 	}
 
+	l.AppCtx = appCtx
 	l.WL = &load.WalletLoad{
 		MultiWallet:     win.wallet.GetMultiWallet(),
 		Wallet:          win.wallet,
@@ -146,6 +155,8 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	l.DismissModal = win.dismissModal
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
+
+	l.Dexc = win.dexc
 
 	return l, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
@@ -11,6 +12,7 @@ import (
 	"gioui.org/app"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui"
 	_ "github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/wallet"
@@ -56,14 +58,25 @@ func main() {
 		return
 	}
 
+	appCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	shutdown := make(chan int)
 	go func() {
 		<-shutdown
+		cancel()
 		wal.Shutdown()
 		os.Exit(0)
 	}()
 
-	win, appWindow, err := ui.CreateWindow(wal)
+	dbPath := filepath.Join(cfg.HomeDir, cfg.Network, "dexc.db")
+	dc, err := dexc.NewDex(cfg.DebugLevel, dbPath, cfg.Network, logWriter{})
+	if err != nil {
+		fmt.Printf("error creating Dex: %s", err)
+		return
+	}
+
+	win, appWindow, err := ui.CreateWindow(appCtx, wal, dc)
 	if err != nil {
 		fmt.Printf("Could not initialize window: %s\ns", err)
 		return
