@@ -1,7 +1,6 @@
 package page
 
 import (
-	"image"
 	"strconv"
 
 	"gioui.org/layout"
@@ -210,15 +209,6 @@ func (mp *MainPage) OnResume() {
 	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 }
 
-func (mp *MainPage) layoutHideBalanceTooltip(gtx C, rect image.Rectangle, hideBalanceItem HideBalanceItem) {
-	inset := layout.Inset{Top: values.MarginPadding30, Left: values.MarginPadding12}
-	hideBalanceItem.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding70)
-		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding75)
-		return hideBalanceItem.tooltipLabel.Layout(gtx)
-	})
-}
-
 func (mp *MainPage) setLanguageSetting() {
 	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(languagePreferenceKey)
 	values.SetUserLanguage(langPre)
@@ -357,7 +347,7 @@ func (mp *MainPage) Handle() {
 	}
 
 	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(HideBalanceConfigKey, false)
-	if mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
+	for mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
 		mp.WL.MultiWallet.SetBoolConfigValueForKey(HideBalanceConfigKey, mp.isBalanceHidden)
 	}
@@ -466,9 +456,30 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Stacked(func(gtx C) D {
+			// hidden balance tip hover layout
+			if mp.hideBalanceItem.hideBalanceButton.Button.Hovered() {
+				lm := values.MarginPadding280
+				if mp.hideBalanceItem.tooltipLabel.Text == "Show Balance" {
+					lm = values.MarginPadding168
+				}
+
+				return layout.Inset{Top: values.MarginPadding50, Left: lm}.Layout(gtx, func(gtx C) D {
+					card := mp.Theme.Card()
+					card.Color = mp.Theme.Color.Surface
+					card.Border = true
+					card.Radius = decredmaterial.Radius(5)
+					card.BorderParam.CornerRadius = values.MarginPadding5
+					return card.Layout(gtx, func(gtx C) D {
+						return components.Container{
+							Padding: layout.UniformInset(values.MarginPadding5),
+						}.Layout(gtx, mp.hideBalanceItem.tooltipLabel.Layout)
+					})
+				})
+			}
+
 			// global toasts. Stack toast on all pages and contents
 			//TODO: show toasts here
-			return layout.Dimensions{}
+			return D{}
 
 		}),
 	)
@@ -560,18 +571,13 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 										mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Hide Balance")
 										mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.RevealIcon
 										if mp.isBalanceHidden {
-											mp.hideBalanceItem.tooltipLabel = mp.Theme.Caption("Show Balance")
+											mp.hideBalanceItem.tooltipLabel.Text = "Show Balance"
 											mp.hideBalanceItem.hideBalanceButton.Icon = mp.Icons.ConcealIcon
 										}
-										rect := image.Rectangle{
-											Min: gtx.Constraints.Min,
-											Max: gtx.Constraints.Max,
-										}
-										rect.Max.Y = 20
-										mp.layoutHideBalanceTooltip(gtx, rect, mp.hideBalanceItem)
-										return layout.Inset{Top: values.MarginPadding1, Left: values.MarginPadding9}.Layout(gtx, func(gtx C) D {
-											return layout.E.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
-										})
+										return layout.Inset{
+											Top:  values.MarginPadding1,
+											Left: values.MarginPadding9,
+										}.Layout(gtx, mp.hideBalanceItem.hideBalanceButton.Layout)
 									}),
 								)
 							})
