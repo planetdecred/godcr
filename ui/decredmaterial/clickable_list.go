@@ -3,32 +3,30 @@ package decredmaterial
 import (
 	"image/color"
 
-	"gioui.org/widget"
-	"gioui.org/widget/material"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
+	"gioui.org/widget"
 )
 
 type ClickableList struct {
 	layout.List
-	theme          *Theme
-	clickables     []*Clickable
-	ClickHighlight color.NRGBA
-	Radius         CornerRadius // this radius is used by the clickable
-	selectedItem   int
-	DividerHeight  unit.Value
-	list           *widget.List
-	HideScroll     bool
+	theme             *Theme
+	clickables        []*Clickable
+	ClickHighlight    color.NRGBA
+	Radius            CornerRadius // this radius is used by the clickable
+	selectedItem      int
+	DividerHeight     unit.Value
+	list              *widget.List
+	IsHiddenScrollBer bool
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 	click := &ClickableList{
-		theme:          t,
-		List:           layout.List{Axis: axis},
-		ClickHighlight: t.Color.SurfaceHighlight,
-		selectedItem:   -1,
-		HideScroll:     false,
+		theme:             t,
+		List:              layout.List{Axis: axis},
+		ClickHighlight:    t.Color.SurfaceHighlight,
+		selectedItem:      -1,
+		IsHiddenScrollBer: false,
 	}
 
 	click.list = &widget.List{
@@ -66,13 +64,13 @@ func (cl *ClickableList) handleClickables(count int) {
 
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
-	if cl.HideScroll {
+	if cl.IsHiddenScrollBer {
 		return cl.List.Layout(gtx, count, func(gtx layout.Context, i int) layout.Dimensions {
 			return cl.row(gtx, count, i, w)
 		})
 	}
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return material.List(cl.theme.Base, cl.list).Layout(gtx, count, func(gtx C, i int) D {
+	return cl.theme.List(cl.list).Layout(gtx, count, func(gtx C, i int) D {
 		return cl.row(gtx, count, i, w)
 	})
 }

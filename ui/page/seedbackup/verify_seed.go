@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"gioui.org/layout"
 	"gioui.org/text"
@@ -218,7 +217,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 						Bottom: values.MarginPadding96,
 					}.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						return material.List(pg.Theme.Base, pg.list).Layout(gtx, len(pg.multiSeedList), func(gtx C, i int) D {
+						return pg.Theme.List(pg.list).Layout(gtx, len(pg.multiSeedList), func(gtx C, i int) D {
 							return pg.seedListRow(gtx, i, pg.multiSeedList[i])
 						})
 					})

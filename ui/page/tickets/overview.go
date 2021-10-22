@@ -5,7 +5,6 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -160,7 +159,7 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 	}
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return material.List(pg.Theme.Base, pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
+		return pg.Theme.List(pg.list).Layout(gtx, len(widgets), func(gtx C, i int) D {
 			return widgets[i](gtx)
 		})
 	})

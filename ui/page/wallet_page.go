@@ -353,17 +353,11 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 					return dims
 				})
 			}),
-			//layout.Stacked(func(gtx C) D {
-			//	return pg.layoutAddWalletSection(gtx)
-			//}),
+			layout.Stacked(func(gtx C) D {
+				return pg.layoutAddWalletSection(gtx)
+			}),
 		)
 	}
-	layout.Stack{Alignment: layout.SE}.Layout(gtx,
-		layout.Stacked(func(gtx C) D {
-			return pg.layoutAddWalletSection(gtx)
-		}),
-	)
-	//pg.layoutAddWalletSection(gtx)
 
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {

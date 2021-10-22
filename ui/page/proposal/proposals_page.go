@@ -231,7 +231,7 @@ func (pg *ProposalsPage) OnClose() {
 
 func (pg *ProposalsPage) initLayoutWidgets() {
 	pg.categoryList = pg.Theme.NewClickableList(layout.Horizontal)
-	pg.categoryList.HideScroll = true
+	pg.categoryList.IsHiddenScrollBer = true
 	pg.itemCard = pg.Theme.Card()
 	pg.syncButton = new(widget.Clickable)
 
