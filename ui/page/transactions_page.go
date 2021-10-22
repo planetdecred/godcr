@@ -113,6 +113,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Top: values.MarginPadding60,
 				}.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 
 						// return "No transactions yet" text if there are no transactions

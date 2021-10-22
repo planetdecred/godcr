@@ -55,7 +55,8 @@ type WalletPage struct {
 
 	walletIcon               *decredmaterial.Image
 	walletAlertIcon          *decredmaterial.Image
-	container, walletsList   layout.List
+	container                *widget.List
+	walletsList              layout.List
 	watchWalletsList         *decredmaterial.ClickableList
 	iconButton               decredmaterial.IconButton
 	card                     decredmaterial.Card
@@ -77,9 +78,11 @@ type WalletPage struct {
 
 func NewWalletPage(l *load.Load) *WalletPage {
 	pg := &WalletPage{
-		Load:                     l,
-		multiWallet:              l.WL.MultiWallet,
-		container:                layout.List{Axis: layout.Vertical},
+		Load:        l,
+		multiWallet: l.WL.MultiWallet,
+		container: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 		walletsList:              layout.List{Axis: layout.Vertical},
 		watchWalletsList:         l.Theme.NewClickableList(layout.Vertical),
 		card:                     l.Theme.Card(),

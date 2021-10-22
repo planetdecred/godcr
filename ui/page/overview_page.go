@@ -6,9 +6,8 @@ import (
 	"image/color"
 	"time"
 
-	"gioui.org/widget"
-
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -34,7 +33,7 @@ type OverviewPage struct {
 	*load.Load
 	ctx              context.Context // page context
 	ctxCancel        context.CancelFunc
-	listContainer    *layout.List
+	listContainer    *widget.List
 	walletSyncList   *layout.List
 	transactionsList *decredmaterial.ClickableList
 
@@ -74,7 +73,9 @@ func NewOverviewPage(l *load.Load) *OverviewPage {
 		Load:       l,
 		allWallets: l.WL.SortedWalletList(),
 
-		listContainer:    &layout.List{Axis: layout.Vertical},
+		listContainer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 		walletSyncList:   &layout.List{Axis: layout.Vertical},
 		transactionsList: l.Theme.NewClickableList(layout.Vertical),
 		syncClickable:    l.Theme.NewClickable(true),

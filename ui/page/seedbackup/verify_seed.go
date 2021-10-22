@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"gioui.org/widget"
-
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -33,7 +33,6 @@ type VerifySeedPage struct {
 
 	backButton   decredmaterial.IconButton
 	actionButton decredmaterial.Button
-	container    *layout.List
 	seedList     *layout.List
 	list         *widget.List
 }
@@ -45,7 +44,6 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 		seed:   seed,
 
 		actionButton: l.Theme.Button("Verify"),
-		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
 	}
 	pg.list = &widget.List{
@@ -216,7 +214,6 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 					return layout.Inset{
 						Bottom: values.MarginPadding96,
 					}.Layout(gtx, func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return pg.Theme.List(pg.list).Layout(gtx, len(pg.multiSeedList), func(gtx C, i int) D {
 							return pg.seedListRow(gtx, i, pg.multiSeedList[i])
 						})

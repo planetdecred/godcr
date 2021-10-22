@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/planetdecred/godcr/ui/modal"
-	"github.com/planetdecred/godcr/ui/page/components"
-
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -25,6 +25,7 @@ type AcctDetailsPage struct {
 
 	theme                    *decredmaterial.Theme
 	acctDetailsPageContainer layout.List
+	list                     *widget.List
 	backButton               decredmaterial.IconButton
 	renameAccount            *decredmaterial.Clickable
 
@@ -45,9 +46,10 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		wallet:  l.WL.MultiWallet.WalletWithID(account.WalletID),
 		account: account,
 
-		theme: l.Theme,
-		acctDetailsPageContainer: layout.List{
-			Axis: layout.Vertical,
+		theme:                    l.Theme,
+		acctDetailsPageContainer: layout.List{Axis: layout.Vertical},
+		list: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
 		},
 		backButton:    l.Theme.PlainIconButton(l.Icons.NavigationArrowBack),
 		renameAccount: l.Theme.NewClickable(false),
@@ -110,11 +112,13 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
-				return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
-					return pg.theme.Card().Layout(gtx, func(gtx C) D {
-						return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-							return pg.acctDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-								return layout.Inset{}.Layout(gtx, widgets[i])
+				return pg.Theme.List(pg.list).Layout(gtx, 1, func(gtx C, i int) D {
+					return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+						return pg.theme.Card().Layout(gtx, func(gtx C) D {
+							return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+								return pg.acctDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
+									return layout.Inset{}.Layout(gtx, widgets[i])
+								})
 							})
 						})
 					})
@@ -134,9 +138,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 }
 
 func (pg *AcctDetailsPage) accountBalanceLayout(gtx layout.Context) layout.Dimensions {
-
 	return pg.pageSections(gtx, func(gtx C) D {
-
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
