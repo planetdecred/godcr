@@ -13,7 +13,7 @@ const dexLoginModalID = "dex_login_modal"
 type loginModal struct {
 	*load.Load
 	modal    *decredmaterial.Modal
-	loggedIn func([]byte)
+	loggedIn func()
 
 	submit                      decredmaterial.Button
 	appPassword                 decredmaterial.Editor
@@ -63,7 +63,7 @@ func (md *loginModal) Handle() {
 			return
 		}
 
-		md.loggedIn([]byte(md.appPassword.Editor.Text()))
+		md.loggedIn()
 		md.Dismiss()
 	}
 }

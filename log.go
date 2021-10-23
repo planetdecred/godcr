@@ -6,12 +6,15 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
+	"decred.org/dcrdex/dex"
 	"github.com/decred/slog"
 	"github.com/jrick/logrotate/rotator"
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui"
 	"github.com/planetdecred/godcr/ui/page"
 	"github.com/planetdecred/godcr/wallet"
@@ -51,6 +54,7 @@ var (
 	winLog    = backendLog.Logger("UI")
 	dlwlLog   = backendLog.Logger("DLWL")
 	pageLog   = backendLog.Logger("PAGE")
+	dexcLog   = backendLog.Logger("DEXC")
 )
 
 // Initialize package-global logger variables.
@@ -59,6 +63,7 @@ func init() {
 	ui.UseLogger(winLog)
 	dcrlibwallet.UseLogger(dlwlLog)
 	page.UseLogger(pageLog)
+	dexc.UseLogger(dexcLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -68,6 +73,7 @@ var subsystemLoggers = map[string]slog.Logger{
 	"UI":   winLog,
 	"GDCR": log,
 	"PAGE": pageLog,
+	"DEXC": dexcLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and
@@ -113,4 +119,17 @@ func setLogLevels(logLevel string) {
 	for subsystemID := range subsystemLoggers {
 		setLogLevel(subsystemID, logLevel)
 	}
+}
+
+// initLogging initializes the logging rotater to write logs to logFile and
+// create roll files in the same directory. initLogging must be called before
+// the package-global log rotator variables are used.
+func initLogging(lvl string, utc bool, w io.Writer) *dex.LoggerMaker {
+	lm, err := dex.NewLoggerMaker(w, lvl, utc)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to create custom logger: %v\n", err)
+		os.Exit(1)
+	}
+	log = lm.Logger("APP")
+	return lm
 }

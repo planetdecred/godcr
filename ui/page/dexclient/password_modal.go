@@ -16,7 +16,6 @@ type passwordModal struct {
 
 	createPassword                decredmaterial.Button
 	appPassword, appPasswordAgain decredmaterial.Editor
-	marketBaseID, marketQuoteID   uint32
 
 	isSending    bool
 	appInitiated func()

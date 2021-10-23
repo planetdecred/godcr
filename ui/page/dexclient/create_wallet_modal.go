@@ -26,11 +26,6 @@ type createWalletModal struct {
 	createNewWallet       decredmaterial.Button
 	walletPassword        decredmaterial.Editor
 	appPassword           decredmaterial.Editor
-	walletName            decredmaterial.Editor
-	RPCAddress            decredmaterial.Editor
-	RPCPort               decredmaterial.Editor
-	RPCUsername           decredmaterial.Editor
-	RPCPassword           decredmaterial.Editor
 	walletInfoWidget      *walletInfoWidget
 	isSending             bool
 	walletCreated         func()
@@ -44,11 +39,6 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget) *createWalle
 		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App Password"),
 		createNewWallet:  l.Theme.Button("Add"),
 		walletInfoWidget: wallInfo,
-		walletName:       l.Theme.Editor(new(widget.Editor), "Wallet Name"),
-		RPCAddress:       l.Theme.Editor(new(widget.Editor), "RPC Address"),
-		RPCPort:          l.Theme.Editor(new(widget.Editor), "RPC Port"),
-		RPCUsername:      l.Theme.Editor(new(widget.Editor), "RPC username"),
-		RPCPassword:      l.Theme.EditorPassword(new(widget.Editor), "RPC Password"),
 	}
 
 	md.createNewWallet.TextSize = values.TextSize12
@@ -57,7 +47,7 @@ func newCreateWalletModal(l *load.Load, wallInfo *walletInfoWidget) *createWalle
 	md.appPassword.Editor.SetText("")
 
 	md.sourceAccountSelector = components.NewAccountSelector(md.Load).
-		Title("Sellect DCR account to pay fee").
+		Title("Select DCR account to use with DEX").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {
 
 		}).
@@ -177,14 +167,10 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					if md.walletInfoWidget.coinID == dexc.DefaultAssetID {
-						return md.Load.Theme.Label(values.TextSize14, "Your Decred wallet is required to pay registration fees.").Layout(gtx)
-					}
-					return layout.Dimensions{}
+					return md.Load.Theme.Label(values.TextSize14, "Your wallet is required to pay registration fees.").Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					// TODO: will create select widget to select DCR wallet
-					if md.walletInfoWidget.coinID == dexc.DefaultAssetID {
+					if md.walletInfoWidget.coinID == dcr.BipID {
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
@@ -196,51 +182,14 @@ func (md *createWalletModal) Layout(gtx layout.Context) D {
 									return md.walletPassword.Layout(gtx)
 								})
 							}),
-							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-									return md.appPassword.Layout(gtx)
-								})
-							}),
 						)
 					}
-
-					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						// layout.Rigid(func(gtx C) D {
-						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						// 		return md.walletName.Layout(gtx)
-						// 	})
-						// }),
-						// layout.Rigid(func(gtx C) D {
-						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						// 		return md.RPCAddress.Layout(gtx)
-						// 	})
-						// }),
-						// layout.Rigid(func(gtx C) D {
-						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						// 		return md.RPCPort.Layout(gtx)
-						// 	})
-						// }),
-						// layout.Rigid(func(gtx C) D {
-						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						// 		return md.RPCUsername.Layout(gtx)
-						// 	})
-						// }),
-						// layout.Rigid(func(gtx C) D {
-						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						// 		return md.RPCPassword.Layout(gtx)
-						// 	})
-						// }),
-						// layout.Rigid(func(gtx C) D {
-						// 	return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-						// 		return md.walletPassword.Layout(gtx)
-						// 	})
-						// }),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-								return md.appPassword.Layout(gtx)
-							})
-						}),
-					)
+					return D{}
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						return md.appPassword.Layout(gtx)
+					})
 				}),
 			)
 		},

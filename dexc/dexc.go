@@ -3,7 +3,6 @@ package dexc
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -27,19 +26,13 @@ type Dexc struct {
 }
 
 const (
-	DefaultAsset            = "dcr"
-	DefaultAssetID   uint32 = 42
-	ConversionFactor        = 1e8
-
 	// ConnectedDcrWalletIDConfigKey is used as the key in a simple key-value
 	// database to store the ID of the dcr wallet that is connected to the DEX
 	// client, to facilitate reconnecting the wallet when godcr is restarted.
 	ConnectedDcrWalletIDConfigKey = "dex_dcr_wallet_id"
 )
 
-func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
-	logMaker := initLogging(debugLevel, true, w)
-	log = logMaker.Logger("DEXC")
+func NewDex(dbPath, net string, logMaker *dex.LoggerMaker) (*Dexc, error) {
 	if net == "testnet3" {
 		net = "testnet"
 	}
@@ -49,9 +42,8 @@ func NewDex(debugLevel string, dbPath, net string, w io.Writer) (*Dexc, error) {
 		return nil, err
 	}
 
-	// Prepare the Core.
 	coreConfig := &core.Config{
-		DBPath: dbPath, // global set in config.go
+		DBPath: dbPath,
 		Net:    n,
 		Logger: logMaker.Logger("CORE"),
 		// TorProxy:     TorProxy,

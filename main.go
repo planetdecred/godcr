@@ -70,15 +70,16 @@ func main() {
 	}()
 
 	dbPath := filepath.Join(cfg.HomeDir, cfg.Network, "dexc.db")
-	dc, err := dexc.NewDex(cfg.DebugLevel, dbPath, cfg.Network, logWriter{})
+	logMaker := initLogging(cfg.DebugLevel, true, logWriter{})
+	dexc, err := dexc.NewDex(dbPath, cfg.Network, logMaker)
 	if err != nil {
-		fmt.Printf("error creating Dex: %s", err)
+		log.Errorf("error creating Dex: %s", err)
 		return
 	}
 
-	win, appWindow, err := ui.CreateWindow(appCtx, wal, dc)
+	win, appWindow, err := ui.CreateWindow(appCtx, wal, dexc)
 	if err != nil {
-		fmt.Printf("Could not initialize window: %s\ns", err)
+		log.Errorf("Could not initialize window: %s\ns", err)
 		return
 	}
 

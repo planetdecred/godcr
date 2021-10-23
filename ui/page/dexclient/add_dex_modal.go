@@ -1,7 +1,8 @@
 package dexclient
 
 import (
-	"decred.org/dcrdex/client/core"
+	"strings"
+
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -11,6 +12,8 @@ import (
 
 const addDexModalID = "add_dex_modal"
 
+const testDexHost = "dex-test.ssgen.io:7232"
+
 type addDexModal struct {
 	*load.Load
 	modal            *decredmaterial.Modal
@@ -18,7 +21,14 @@ type addDexModal struct {
 	dexServerAddress decredmaterial.Editor
 	isSending        bool
 	cert             decredmaterial.Editor
-	created          func([]byte, *core.Exchange)
+	done             func()
+}
+
+type walletInfoWidget struct {
+	image    *decredmaterial.Image
+	coin     string
+	coinName string
+	coinID   uint32
 }
 
 func newAddDexModal(l *load.Load) *addDexModal {
@@ -32,6 +42,8 @@ func newAddDexModal(l *load.Load) *addDexModal {
 
 	md.addDexServer.TextSize = values.TextSize12
 	md.addDexServer.Background = l.Theme.Color.Primary
+
+	md.dexServerAddress.Editor.SetText(testDexHost) // TODO: Debug feature only, remove before merging.
 	md.dexServerAddress.Editor.SingleLine = true
 
 	return md
@@ -65,19 +77,60 @@ func (md *addDexModal) Handle() {
 
 		md.isSending = true
 		go func() {
-			c := []byte(md.cert.Editor.Text())
-			ce, err := md.Dexc.GetDEXConfig(md.dexServerAddress.Editor.Text(), c)
+			cert := []byte(md.cert.Editor.Text())
+			// TODO: Use DiscoverAccount instead of GetDEXConfig to enable account
+			// recovery without re-paying the fee. This is only relevant when the
+			// dex client supports restoring from seed. Requires a field for app
+			// password.
+			dex, err := md.Dexc.GetDEXConfig(md.dexServerAddress.Editor.Text(), cert)
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
 			}
 
-			md.created(c, ce)
+			completeRegistration := func() {
+				cfModal := newConfirmRegisterModal(md.Load, dex, cert)
+				cfModal.confirmed = func() {
+					md.done()
+				}
+				cfModal.Show()
+			}
+
+			// Ensure a wallet is connected that can be used to pay the fees.
+			// TODO: This automatically selects the dcr wallet if the DEX
+			// supports it for fee payment, otherwise picks a random wallet
+			// to use for fee payment. Should instead update the modal UI
+			// to show the options and let the user choose which wallet to
+			// set up and use for fee payment.
+			feeAssetName := "dcr"
+			feeAsset := dex.RegFees[feeAssetName]
+			if feeAsset == nil {
+				for feeAssetName, feeAsset = range dex.RegFees {
+					break
+				}
+			}
+
+			// Dismiss this modal before displaying a new one for adding a wallet
+			// or completing the registration.
 			md.Dismiss()
+
+			if md.Dexc.WalletState(feeAsset.ID) != nil {
+				completeRegistration()
+			} else {
+				newWalletModal := newCreateWalletModal(md.Load, &walletInfoWidget{
+					image:    coinImageBySymbol(&md.Load.Icons, feeAssetName),
+					coin:     feeAssetName,
+					coinName: feeAssetName,
+					coinID:   feeAsset.ID,
+				})
+				newWalletModal.walletCreated = func() {
+					completeRegistration()
+				}
+				newWalletModal.Show()
+			}
 		}()
 	}
-
 }
 
 func (md *addDexModal) Layout(gtx layout.Context) D {
@@ -105,4 +158,21 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 	}
 
 	return md.modal.Layout(gtx, w, 900)
+}
+
+// coinImageBySymbol returns image widget for supported asset coins.
+func coinImageBySymbol(icons *load.Icons, coinName string) *decredmaterial.Image {
+	m := map[string]*decredmaterial.Image{
+		"btc": icons.BTC,
+		"dcr": icons.DCR,
+		"bch": icons.BCH,
+		"ltc": icons.LTC,
+	}
+	coin, ok := m[strings.ToLower(coinName)]
+
+	if !ok {
+		return nil
+	}
+
+	return coin
 }

@@ -62,8 +62,6 @@ type Window struct {
 	sysDestroyWithSync    bool
 	walletAcctMixerStatus chan *wallet.AccountMixer
 	internalLog           chan string
-
-	dexc *dexc.Dexc
 }
 
 type (
@@ -79,7 +77,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(appCtx context.Context, wal *wallet.Wallet, dc *dexc.Dexc) (*Window, *app.Window, error) {
+func CreateWindow(appCtx context.Context, wal *wallet.Wallet, dexc *dexc.Dexc) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == dcrlibwallet.Testnet3 {
@@ -102,8 +100,6 @@ func CreateWindow(appCtx context.Context, wal *wallet.Wallet, dc *dexc.Dexc) (*W
 
 	win.wallet = wal
 
-	win.dexc = dc
-
 	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)
@@ -112,6 +108,8 @@ func CreateWindow(appCtx context.Context, wal *wallet.Wallet, dc *dexc.Dexc) (*W
 	if err != nil {
 		return nil, nil, err
 	}
+
+	l.Dexc = dexc
 
 	win.load = l
 
@@ -155,8 +153,6 @@ func (win *Window) NewLoad(appCtx context.Context) (*load.Load, error) {
 	l.DismissModal = win.dismissModal
 	l.PopWindowPage = win.popPage
 	l.ChangeWindowPage = win.changePage
-
-	l.Dexc = win.dexc
 
 	return l, nil
 }

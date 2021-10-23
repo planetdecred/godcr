@@ -4,11 +4,6 @@
 package dexc
 
 import (
-	"fmt"
-	"io"
-	"os"
-
-	"decred.org/dcrdex/dex"
 	"github.com/decred/slog"
 )
 
@@ -29,17 +24,4 @@ func DisableLog() {
 func UseLogger(logger slog.Logger) {
 	apiLog = logger
 	log = logger
-}
-
-// initLogging initializes the logging rotater to write logs to logFile and
-// create roll files in the same directory. initLogging must be called before
-// the package-global log rotator variables are used.
-func initLogging(lvl string, utc bool, w io.Writer) *dex.LoggerMaker {
-	lm, err := dex.NewLoggerMaker(w, lvl, utc)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create custom logger: %v\n", err)
-		os.Exit(1)
-	}
-	log = lm.Logger("APP")
-	return lm
 }
