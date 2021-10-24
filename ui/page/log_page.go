@@ -7,6 +7,7 @@ import (
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/nxadm/tail"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -28,7 +29,7 @@ type LogPage struct {
 	copyIcon   *decredmaterial.Image
 	backButton decredmaterial.IconButton
 
-	logList layout.List
+	logList *widget.List
 	fullLog string
 }
 
@@ -38,15 +39,20 @@ func (pg *LogPage) ID() string {
 
 func NewLogPage(l *load.Load) *LogPage {
 	pg := &LogPage{
-		Load:    l,
-		logList: layout.List{Axis: layout.Vertical, ScrollToEnd: true},
+		Load: l,
+		logList: &widget.List{
+			List: layout.List{
+				Axis:        layout.Vertical,
+				ScrollToEnd: true,
+			},
+		},
 		copyLog: l.Theme.NewClickable(true),
 	}
 
 	pg.copyIcon = pg.Icons.CopyIcon
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
-
+	pg.watchLogs()
 	return pg
 }
 
@@ -123,11 +129,11 @@ func (pg *LogPage) Layout(gtx C) D {
 				card := pg.Theme.Card()
 				card.Color = background
 
-				return card.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-					return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-						return pg.logList.Layout(gtx, 1, func(gtx C, index int) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
+				return pg.Theme.List(pg.logList).Layout(gtx, 1, func(gtx C, index int) D {
+					return card.Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 							return pg.Theme.Body1(pg.fullLog).Layout(gtx)
 						})
 					})

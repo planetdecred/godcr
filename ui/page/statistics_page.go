@@ -8,6 +8,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -20,11 +21,12 @@ const StatisticsPageID = "Statistics"
 
 type StatPage struct {
 	*load.Load
-	txs         *wallet.Transactions
-	l           layout.List
-	startupTime string
-	syncStatus  *wallet.SyncStatus
-	netType     string
+	txs           *wallet.Transactions
+	l             layout.List
+	scrollbarList *widget.List
+	startupTime   string
+	syncStatus    *wallet.SyncStatus
+	netType       string
 
 	backButton decredmaterial.IconButton
 }
@@ -33,8 +35,9 @@ func NewStatPage(l *load.Load) *StatPage {
 	pg := &StatPage{
 		Load: l,
 		txs:  l.WL.Transactions,
-		l: layout.List{
-			Axis: layout.Vertical,
+		l:    layout.List{Axis: layout.Vertical},
+		scrollbarList: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
 		},
 		netType: l.WL.Wallet.Net,
 	}
@@ -104,10 +107,12 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		item("Wallets", fmt.Sprintf("%d", len(pg.WL.Info.Wallets))),
 	}
 
-	return card.Layout(gtx, func(gtx C) D {
-		return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-			return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {
-				return items[i](gtx)
+	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
+		return card.Layout(gtx, func(gtx C) D {
+			return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+				return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {
+					return items[i](gtx)
+				})
 			})
 		})
 	})

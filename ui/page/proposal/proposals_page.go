@@ -50,6 +50,7 @@ type ProposalsPage struct {
 
 	multiWallet *dcrlibwallet.MultiWallet
 
+	//categoryList to be removed with new update to UI.
 	categoryList  *decredmaterial.ClickableList
 	proposalsList *decredmaterial.ClickableList
 
@@ -169,6 +170,7 @@ func (pg *ProposalsPage) loadProposals(category int) {
 }
 
 func (pg *ProposalsPage) Handle() {
+	//categoryList to be removed with new update to UI.
 	if clicked, selectedItem := pg.categoryList.ItemClicked(); clicked {
 		go pg.loadProposals(selectedItem)
 	}
@@ -230,6 +232,7 @@ func (pg *ProposalsPage) OnClose() {
 // - Layout
 
 func (pg *ProposalsPage) initLayoutWidgets() {
+	//categoryList to be removed with new update to UI.
 	pg.categoryList = pg.Theme.NewClickableList(layout.Horizontal)
 	pg.itemCard = pg.Theme.Card()
 	pg.syncButton = new(widget.Clickable)
@@ -388,6 +391,7 @@ func (pg *ProposalsPage) layoutTabs(gtx C) D {
 			Left:  values.MarginPadding12,
 			Right: values.MarginPadding12,
 		}.Layout(gtx, func(gtx C) D {
+			// categoryList to be removed with new update to UI.
 			return pg.categoryList.Layout(gtx, len(proposalCategoryTitles), func(gtx C, i int) D {
 				gtx.Constraints.Min.X = int(width)
 				return layout.Stack{Alignment: layout.S}.Layout(gtx,

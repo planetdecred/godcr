@@ -2,6 +2,7 @@ package page
 
 import (
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -29,15 +30,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.`
 
 type LicensePage struct {
 	*load.Load
-	pageContainer layout.List
+	pageContainer *widget.List
 
 	backButton decredmaterial.IconButton
 }
 
 func NewLicensePage(l *load.Load) *LicensePage {
 	pg := &LicensePage{
-		Load:          l,
-		pageContainer: layout.List{Axis: layout.Vertical},
+		Load: l,
+		pageContainer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
@@ -61,20 +64,14 @@ func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
-				content := []func(gtx C) D{
-					func(gtx C) D {
-						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-							return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
-								licenseText := pg.Theme.Body1(license)
-								licenseText.Color = pg.Theme.Color.Gray
-								return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
-							})
+				return pg.Theme.List(pg.pageContainer).Layout(gtx, 1, func(gtx C, i int) D {
+					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+						return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
+							licenseText := pg.Theme.Body1(license)
+							licenseText.Color = pg.Theme.Color.Gray
+							return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
 						})
-					},
-				}
-
-				return pg.pageContainer.Layout(gtx, len(content), func(gtx C, i int) D {
-					return layout.Inset{}.Layout(gtx, content[i])
+					})
 				})
 			},
 		}

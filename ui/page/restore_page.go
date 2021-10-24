@@ -38,8 +38,7 @@ type seedItemMenu struct {
 type Restore struct {
 	*load.Load
 
-	seedList         *layout.List
-	restoreContainer layout.List
+	seedList *layout.List
 
 	backButton      decredmaterial.IconButton
 	validateSeed    decredmaterial.Button
@@ -70,10 +69,6 @@ func NewCreateRestorePage(l *load.Load) *Restore {
 		Load: l,
 
 		seedList: &layout.List{Axis: layout.Vertical},
-		restoreContainer: layout.List{
-			Axis:      layout.Vertical,
-			Alignment: layout.Middle,
-		},
 
 		keyEvent: l.Receiver.KeyEvents,
 

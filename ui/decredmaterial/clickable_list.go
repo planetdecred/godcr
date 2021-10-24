@@ -21,8 +21,7 @@ type ClickableList struct {
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 	click := &ClickableList{
-		theme: t,
-		// List:              layout.List{Axis: axis},
+		theme:          t,
 		ClickHighlight: t.Color.SurfaceHighlight,
 		selectedItem:   -1,
 	}

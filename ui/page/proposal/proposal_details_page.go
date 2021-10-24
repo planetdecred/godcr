@@ -38,6 +38,7 @@ type proposalDetails struct {
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
+	scrollbarList      *widget.List
 	redirectIcon       *decredmaterial.Image
 	rejectedIcon       *widget.Icon
 	downloadIcon       *decredmaterial.Image
@@ -56,9 +57,11 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		proposal:           proposal,
 		descriptionCard:    l.Theme.Card(),
 		descriptionList:    &layout.List{Axis: layout.Vertical},
-		redirectIcon:       l.Icons.RedirectIcon,
-		downloadIcon:       l.Icons.DownloadIcon,
-		//voteBar:            l.Theme.VoteBar(decredmaterial.NewIcon(l.Icons.ActionInfo), decredmaterial.NewIcon(l.Icons.ImageBrightness1)),
+		scrollbarList: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
+		redirectIcon:      l.Icons.RedirectIcon,
+		downloadIcon:      l.Icons.DownloadIcon,
 		proposalItems:     make(map[string]proposalItemWidgets),
 		rejectedIcon:      l.Icons.NavigationCancel,
 		successIcon:       l.Icons.ActionCheckCircle,
@@ -379,11 +382,13 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 
 	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
 
-	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-			return pg.descriptionList.Layout(gtx, len(w), func(gtx C, i int) D {
-				return layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
+	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
+		return pg.descriptionCard.Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+			return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+				return pg.descriptionList.Layout(gtx, len(w), func(gtx C, i int) D {
+					return layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
+				})
 			})
 		})
 	})

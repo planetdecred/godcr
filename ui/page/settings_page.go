@@ -2,6 +2,7 @@ package page
 
 import (
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -31,7 +32,7 @@ type row struct {
 type SettingsPage struct {
 	*load.Load
 
-	pageContainer layout.List
+	pageContainer *widget.List
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
@@ -65,8 +66,8 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 	pg := &SettingsPage{
 		Load: l,
-		pageContainer: layout.List{
-			Axis: layout.Vertical,
+		pageContainer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
 		},
 		walletInfo: l.WL.Info,
 		wal:        l.WL.Wallet,
@@ -142,7 +143,7 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 					pg.connection(),
 				}
 
-				return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
 					return layout.Inset{}.Layout(gtx, pageContent[i])
 				})
 			},
