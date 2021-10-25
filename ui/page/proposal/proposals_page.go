@@ -322,8 +322,6 @@ func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
 			return layout.Inset{
 				Top:    values.MarginPadding2,
 				Bottom: values.MarginPadding2,
-				Left:   values.MarginPadding2,
-				Right:  values.MarginPadding2,
 			}.Layout(gtx, func(gtx C) D {
 				return pg.itemCard.Layout(gtx, func(gtx C) D {
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
