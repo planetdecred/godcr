@@ -153,7 +153,7 @@ func (pg *OverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 
 	return components.UniformPadding(gtx, func(gtx C) D {
 		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+			return pageContent[i](gtx)
 		})
 	})
 }
@@ -185,57 +185,59 @@ func (pg *OverviewPage) syncDetail(name, status, headersFetched, progress string
 
 // recentTransactionsSection lays out the list of recent transactions.
 func (pg *OverviewPage) recentTransactionsSection(gtx layout.Context) layout.Dimensions {
-	return pg.Theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		padding := values.MarginPadding15
-		return components.Container{Padding: layout.Inset{Top: padding}}.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					title := pg.Theme.Body2(values.String(values.StrRecentTransactions))
-					title.Color = pg.Theme.Color.Gray3
-					return pg.titleRow(gtx, title.Layout, pg.toTransactions.Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, pg.Theme.Separator().Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					if len(pg.transactions) == 0 {
-						message := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
-						message.Color = pg.Theme.Color.Gray2
-						return components.Container{Padding: layout.Inset{
-							Left:   values.MarginPadding18,
-							Bottom: values.MarginPadding16,
-							Top:    values.MarginPadding18,
-						}}.Layout(gtx, message.Layout)
-					}
-
-					return pg.transactionsList.Layout(gtx, len(pg.transactions), func(gtx C, i int) D {
-						var row = components.TransactionRow{
-							Transaction: pg.transactions[i],
-							Index:       i,
-							ShowBadge:   len(pg.allWallets) > 1,
+	return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+		return pg.Theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			padding := values.MarginPadding15
+			return components.Container{Padding: layout.Inset{Top: padding}}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						title := pg.Theme.Body2(values.String(values.StrRecentTransactions))
+						title.Color = pg.Theme.Color.Gray3
+						return pg.titleRow(gtx, title.Layout, pg.toTransactions.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, pg.Theme.Separator().Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						if len(pg.transactions) == 0 {
+							message := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
+							message.Color = pg.Theme.Color.Gray2
+							return components.Container{Padding: layout.Inset{
+								Left:   values.MarginPadding18,
+								Bottom: values.MarginPadding16,
+								Top:    values.MarginPadding18,
+							}}.Layout(gtx, message.Layout)
 						}
 
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return components.LayoutTransactionRow(gtx, pg.Load, row)
-							}),
-							layout.Rigid(func(gtx C) D {
-								// No divider for last row
-								if row.Index == len(pg.transactions)-1 {
-									return layout.Dimensions{}
-								}
+						return pg.transactionsList.Layout(gtx, len(pg.transactions), func(gtx C, i int) D {
+							var row = components.TransactionRow{
+								Transaction: pg.transactions[i],
+								Index:       i,
+								ShowBadge:   len(pg.allWallets) > 1,
+							}
 
-								gtx.Constraints.Min.X = gtx.Constraints.Max.X
-								separator := pg.Theme.Separator()
-								return layout.E.Layout(gtx, func(gtx C) D {
-									// Show bottom divider for all rows except last
-									return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
-								})
-							}),
-						)
-					})
-				}),
-			)
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									return components.LayoutTransactionRow(gtx, pg.Load, row)
+								}),
+								layout.Rigid(func(gtx C) D {
+									// No divider for last row
+									if row.Index == len(pg.transactions)-1 {
+										return layout.Dimensions{}
+									}
+
+									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									separator := pg.Theme.Separator()
+									return layout.E.Layout(gtx, func(gtx C) D {
+										// Show bottom divider for all rows except last
+										return layout.Inset{Left: values.MarginPadding56}.Layout(gtx, separator.Layout)
+									})
+								}),
+							)
+						})
+					}),
+				)
+			})
 		})
 	})
 }

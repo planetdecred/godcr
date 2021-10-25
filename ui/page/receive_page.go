@@ -67,8 +67,8 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.copy.HighlightColor = pg.Theme.Color.SurfaceHighlight
 	pg.copy.Color = pg.Theme.Color.Primary
 	pg.copy.Inset = layout.Inset{
-		Top:    values.MarginPadding19p5,
-		Bottom: values.MarginPadding19p5,
+		Top:    values.MarginPadding18p5,
+		Bottom: values.MarginPadding18p5,
 		Left:   values.MarginPadding16,
 		Right:  values.MarginPadding16,
 	}

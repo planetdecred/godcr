@@ -61,12 +61,20 @@ func (pg *LicensePage) Layout(gtx layout.Context) layout.Dimensions {
 				pg.PopFragment()
 			},
 			Body: func(gtx C) D {
-				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-					return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
-						licenseText := pg.Theme.Body1(license)
-						licenseText.Color = pg.Theme.Color.Gray
-						return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
-					})
+				content := []func(gtx C) D{
+					func(gtx C) D {
+						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding25).Layout(gtx, func(gtx C) D {
+								licenseText := pg.Theme.Body1(license)
+								licenseText.Color = pg.Theme.Color.Gray
+								return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, licenseText.Layout)
+							})
+						})
+					},
+				}
+
+				return pg.pageContainer.Layout(gtx, len(content), func(gtx C, i int) D {
+					return layout.Inset{}.Layout(gtx, content[i])
 				})
 			},
 		}
