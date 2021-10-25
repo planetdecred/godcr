@@ -113,7 +113,10 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 			},
 			Body: func(gtx C) D {
 				return pg.Theme.List(pg.list).Layout(gtx, 1, func(gtx C, i int) D {
-					return layout.Inset{Bottom: values.MarginPadding7}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{
+						Bottom: values.MarginPadding7,
+						Right:  values.MarginPadding10,
+					}.Layout(gtx, func(gtx C) D {
 						return pg.theme.Card().Layout(gtx, func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 								return pg.acctDetailsPageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {

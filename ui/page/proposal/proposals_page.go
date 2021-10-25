@@ -51,9 +51,9 @@ type ProposalsPage struct {
 	multiWallet *dcrlibwallet.MultiWallet
 
 	//categoryList to be removed with new update to UI.
-	categoryList  *decredmaterial.ClickableList
-	proposalsList *decredmaterial.ClickableList
-
+	categoryList   *decredmaterial.ClickableList
+	proposalsList  *decredmaterial.ClickableList
+	listContainer  *widget.List
 	tabCard        decredmaterial.Card
 	itemCard       decredmaterial.Card
 	syncCard       decredmaterial.Card
@@ -91,6 +91,9 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 		Load:                  l,
 		multiWallet:           l.WL.MultiWallet,
 		selectedCategoryIndex: -1,
+		listContainer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 	}
 
 	pg.initLayoutWidgets()
@@ -320,7 +323,12 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 	if len(proposalItems) == 0 {
 		return pg.layoutNoProposalsFound(gtx)
 	}
-	return pg.layoutProposalsList(gtx)
+
+	return components.UniformHorizontalPadding(gtx, func(gtx C) D {
+		return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
+			return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pg.layoutProposalsList)
+		})
+	})
 }
 
 func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
@@ -328,33 +336,31 @@ func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
 	proposalItems := pg.proposalItems
 	pg.proposalMu.Unlock()
 	return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
-		return components.UniformHorizontalPadding(gtx, func(gtx C) D {
-			return layout.Inset{
-				Top:    values.MarginPadding2,
-				Bottom: values.MarginPadding2,
-			}.Layout(gtx, func(gtx C) D {
-				return pg.itemCard.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-						item := proposalItems[i]
-						proposal := item.proposal
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return pg.layoutAuthorAndDate(gtx, item)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.layoutTitle(gtx, proposal)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
-									proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
-									proposal.Category == dcrlibwallet.ProposalCategoryRejected {
-									return pg.layoutProposalVoteBar(gtx, item)
-								}
-								return D{}
-							}),
-						)
-					})
+		return layout.Inset{
+			Top:    values.MarginPadding2,
+			Bottom: values.MarginPadding2,
+		}.Layout(gtx, func(gtx C) D {
+			return pg.itemCard.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+					item := proposalItems[i]
+					proposal := item.proposal
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.layoutAuthorAndDate(gtx, item)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return pg.layoutTitle(gtx, proposal)
+						}),
+						layout.Rigid(func(gtx C) D {
+							if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
+								proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
+								proposal.Category == dcrlibwallet.ProposalCategoryRejected {
+								return pg.layoutProposalVoteBar(gtx, item)
+							}
+							return D{}
+						}),
+					)
 				})
 			})
 		})

@@ -215,7 +215,9 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 						Bottom: values.MarginPadding96,
 					}.Layout(gtx, func(gtx C) D {
 						return pg.Theme.List(pg.list).Layout(gtx, len(pg.multiSeedList), func(gtx C, i int) D {
-							return pg.seedListRow(gtx, i, pg.multiSeedList[i])
+							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+								return pg.seedListRow(gtx, i, pg.multiSeedList[i])
+							})
 						})
 					})
 				}),

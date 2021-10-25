@@ -5,18 +5,16 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/unit"
-	"gioui.org/widget"
 )
 
 type ClickableList struct {
-	// layout.List
+	layout.List
 	theme          *Theme
 	clickables     []*Clickable
 	ClickHighlight color.NRGBA
 	Radius         CornerRadius // this radius is used by the clickable
 	selectedItem   int
 	DividerHeight  unit.Value
-	list           *widget.List
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
@@ -24,13 +22,11 @@ func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 		theme:          t,
 		ClickHighlight: t.Color.SurfaceHighlight,
 		selectedItem:   -1,
-	}
-
-	click.list = &widget.List{
 		List: layout.List{
 			Axis: axis,
 		},
 	}
+
 	return click
 }
 
@@ -61,7 +57,7 @@ func (cl *ClickableList) handleClickables(count int) {
 
 func (cl *ClickableList) Layout(gtx layout.Context, count int, w layout.ListElement) layout.Dimensions {
 	cl.handleClickables(count)
-	return cl.theme.List(cl.list).Layout(gtx, count, func(gtx C, i int) D {
+	return cl.List.Layout(gtx, count, func(gtx C, i int) D {
 		return cl.row(gtx, count, i, w)
 	})
 }

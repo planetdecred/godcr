@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gioui.org/layout"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -19,22 +20,25 @@ type TransactionsPage struct {
 	*load.Load
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
-	container layout.Flex
+	// container layout.Flex
 	separator decredmaterial.Line
 
 	orderDropDown   *decredmaterial.DropDown
 	txTypeDropDown  *decredmaterial.DropDown
 	walletDropDown  *decredmaterial.DropDown
 	transactionList *decredmaterial.ClickableList
-
-	transactions []dcrlibwallet.Transaction
-	wallets      []*dcrlibwallet.Wallet
+	container       *widget.List
+	transactions    []dcrlibwallet.Transaction
+	wallets         []*dcrlibwallet.Wallet
 }
 
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
-		Load:            l,
-		container:       layout.Flex{Axis: layout.Vertical},
+		Load: l,
+		// container:       layout.Flex{Axis: layout.Vertical},
+		container: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 		separator:       l.Theme.Separator(),
 		transactionList: l.Theme.NewClickableList(layout.Vertical),
 	}
@@ -113,29 +117,27 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Top: values.MarginPadding60,
 				}.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+					return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
+						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 
-						// return "No transactions yet" text if there are no transactions
-						if len(wallTxs) == 0 {
-							padding := values.MarginPadding16
-							gtx.Constraints.Min.X = gtx.Constraints.Max.X
-							txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
-							txt.Color = pg.Theme.Color.Gray2
-							return layout.Center.Layout(gtx, func(gtx C) D {
-								return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
-							})
-						}
-
-						return layout.Inset{Right: values.MarginPaddingMinus24}.Layout(gtx, func(gtx C) D {
-							return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
-								var row = components.TransactionRow{
-									Transaction: wallTxs[index],
-									Index:       index,
-									ShowBadge:   false,
+								// return "No transactions yet" text if there are no transactions
+								if len(wallTxs) == 0 {
+									padding := values.MarginPadding16
+									txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
+									txt.Color = pg.Theme.Color.Gray2
+									return layout.Center.Layout(gtx, func(gtx C) D {
+										return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
+									})
 								}
 
-								return layout.Inset{Right: values.MarginPadding24}.Layout(gtx, func(gtx C) D {
+								return pg.transactionList.Layout(gtx, len(wallTxs), func(gtx C, index int) D {
+									var row = components.TransactionRow{
+										Transaction: wallTxs[index],
+										Index:       index,
+										ShowBadge:   false,
+									}
+
 									return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											return components.LayoutTransactionRow(gtx, pg.Load, row)
@@ -172,6 +174,7 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 		)
 	}
 	return components.UniformPadding(gtx, container)
+
 }
 
 func (pg *TransactionsPage) Handle() {

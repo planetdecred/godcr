@@ -382,9 +382,8 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 
 	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
 
-	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
-		return pg.descriptionCard.Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
+		return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
 			return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 				return pg.descriptionList.Layout(gtx, len(w), func(gtx C, i int) D {
 					return layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])

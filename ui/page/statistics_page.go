@@ -108,10 +108,12 @@ func (pg *StatPage) layoutStats(gtx C) D {
 	}
 
 	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
-		return card.Layout(gtx, func(gtx C) D {
-			return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {
-					return items[i](gtx)
+		return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+			return card.Layout(gtx, func(gtx C) D {
+				return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {
+						return items[i](gtx)
+					})
 				})
 			})
 		})

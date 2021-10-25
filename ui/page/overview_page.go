@@ -151,13 +151,13 @@ func (pg *OverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			return pg.recentTransactionsSection(gtx)
 		},
 		func(gtx C) D {
-			return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, pg.syncStatusSection)
+			return pg.syncStatusSection(gtx)
 		},
 	}
 
 	return components.UniformPadding(gtx, func(gtx C) D {
-		return pg.listContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return pageContent[i](gtx)
+		return pg.Theme.List(pg.listContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pageContent[i])
 		})
 	})
 }

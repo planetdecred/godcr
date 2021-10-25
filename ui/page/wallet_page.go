@@ -348,12 +348,14 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					dims := pageContent[i](gtx)
-					if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
-						dims.Size.Y += 60
-					}
-					return dims
+				return pg.Theme.List(pg.container).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						dims := pageContent[i](gtx)
+						if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
+							dims.Size.Y += 60
+						}
+						return dims
+					})
 				})
 			}),
 			layout.Stacked(func(gtx C) D {
@@ -481,7 +483,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
-										txt := pg.Theme.H6(values.String(values.StrAddNewAccount))
+										txt := pg.Theme.Label(values.TextSize16, values.String(values.StrAddNewAccount))
 										txt.Color = pg.Theme.Color.Gray
 										return txt.Layout(gtx)
 									}),

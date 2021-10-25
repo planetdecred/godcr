@@ -144,7 +144,7 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 				}
 
 				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.Inset{}.Layout(gtx, pageContent[i])
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pageContent[i])
 				})
 			},
 		}
