@@ -415,47 +415,41 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 				status.Text = FormatDateOrTime(row.Transaction.Timestamp)
 			}
 			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-					return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-						layout.Rigid(status.Layout),
-						layout.Rigid(func(gtx C) D {
-							return decredmaterial.LinearLayout{
-								Width:       decredmaterial.WrapContent,
-								Height:      decredmaterial.MatchParent,
-								Orientation: layout.Horizontal,
-							}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-									currentTimestamp := time.Now().UTC().String()
-									txnTimestamp := time.Unix(row.Transaction.Timestamp, 0).UTC().String()
-									currentTimeSplit := strings.Split(currentTimestamp, " ")
-									txnTimeSplit := strings.Split(txnTimestamp, " ")
-									currentDate := strings.Split(currentTimeSplit[0], "-")
-									txnDate := strings.Split(txnTimeSplit[0], "-")
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(status.Layout),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								currentTimestamp := time.Now().UTC().String()
+								txnTimestamp := time.Unix(row.Transaction.Timestamp, 0).UTC().String()
+								currentTimeSplit := strings.Split(currentTimestamp, " ")
+								txnTimeSplit := strings.Split(txnTimestamp, " ")
+								currentDate := strings.Split(currentTimeSplit[0], "-")
+								txnDate := strings.Split(txnTimeSplit[0], "-")
 
-									duration := l.Theme.Label(values.TextSize14, "")
-									currentDay, _ := strconv.Atoi(currentDate[2])
-									txnDay, _ := strconv.Atoi(txnDate[2])
+								duration := l.Theme.Label(values.TextSize14, "")
+								currentDay, _ := strconv.Atoi(currentDate[2])
+								txnDay, _ := strconv.Atoi(txnDate[2])
 
-									if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
-										return D{}
-									}
-									duration.Text = DurationAgo(row.Transaction.Timestamp)
-									duration.Color = l.Theme.Color.InactiveGray
-									return duration.Layout(gtx)
-								}),
-								layout.Rigid(func(gtx C) D {
-									if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
-										daysToVoteOrRevoke := l.Theme.Label(values.TextSize14, fmt.Sprintf("%d days", row.Transaction.DaysToVoteOrRevoke))
-										daysToVoteOrRevoke.Color = l.Theme.Color.Gray
-										return daysToVoteOrRevoke.Layout(gtx)
-									}
-
+								if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
 									return D{}
-								}),
-							)
-						}),
-					)
-				})
+								}
+								duration.Text = DurationAgo(row.Transaction.Timestamp)
+								duration.Color = l.Theme.Color.InactiveGray
+								return duration.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
+									daysToVoteOrRevoke := l.Theme.Label(values.TextSize14, fmt.Sprintf("%d days", row.Transaction.DaysToVoteOrRevoke))
+									daysToVoteOrRevoke.Color = l.Theme.Color.Gray
+									return daysToVoteOrRevoke.Layout(gtx)
+								}
+
+								return D{}
+							}),
+						)
+					}),
+				)
 			})
 		}),
 		layout.Rigid(func(gtx C) D {
