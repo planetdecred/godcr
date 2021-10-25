@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -165,6 +166,129 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 	return &txStatus
 }
 
+func DurationAgo(timestamp int64) string {
+	//Convert timestamp to date in string format (yyyy:mm:dd hr:m:s +0000 UTC)
+
+	currentTimestamp := time.Now().UTC().String()
+	txnTimestamp := time.Unix(timestamp, 0).UTC().String()
+
+	//Split the date so we can sepparate into date and time for current time and time of txn
+
+	currentTimeSplit := strings.Split(currentTimestamp, " ")
+	txnTimeSplit := strings.Split(txnTimestamp, " ")
+
+	//Split current date and time, and  txn date and time then store in variables
+
+	currentDate := strings.Split(currentTimeSplit[0], "-")
+	currentTime := strings.Split(currentTimeSplit[1], ":")
+	txnDate := strings.Split(txnTimeSplit[0], "-")
+	txnTime := strings.Split(txnTimeSplit[1], ":")
+	var duration string
+
+	//Group duration into thresholds
+
+	//Yearly threshold
+
+	if currentDate[0] != txnDate[0] {
+		cy, _ := strconv.Atoi(currentDate[0])
+		ty, _ := strconv.Atoi(txnDate[0])
+
+		cm, _ := strconv.Atoi(currentDate[1])
+		tm, _ := strconv.Atoi(txnDate[1])
+
+		txnYearEnd := 13
+		currentYearStart := 1
+
+		result := cy - ty
+		numMonths := (txnYearEnd - tm) + (cm - currentYearStart)
+
+		if numMonths > 12 {
+			duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
+			return duration
+		} else if numMonths == 12 {
+			duration = "1 year ago"
+			return duration
+		}
+		duration = fmt.Sprintf("%s months ago", strconv.Itoa(numMonths))
+		return duration
+
+	} else if currentDate[0] == txnDate[0] {
+		//Monthly threshold
+
+		if currentDate[1] != txnDate[1] {
+			cm, _ := strconv.Atoi(currentDate[1])
+			tm, _ := strconv.Atoi(txnDate[1])
+			result := cm - tm
+			if result <= 1 {
+				duration = "1 month ago"
+				return duration
+			}
+			duration = fmt.Sprintf("%s months ago", strconv.Itoa(result))
+			return duration
+		} else if currentDate[1] == txnDate[1] {
+			//Weekly threshold
+
+			_, currentWeek := time.Now().UTC().ISOWeek()
+			_, txnWeek := time.Unix(timestamp, 0).UTC().ISOWeek()
+			if currentWeek != txnWeek {
+				result := currentWeek - txnWeek
+				if result <= 1 {
+					duration = "1 week ago"
+					return duration
+				}
+				duration = fmt.Sprintf("%s weeks ago", strconv.Itoa(result))
+				return duration
+			} else if currentWeek == txnWeek {
+				//Daily threshold
+
+				if currentDate[2] != txnDate[2] {
+					cd, _ := strconv.Atoi(currentDate[2])
+					td, _ := strconv.Atoi(txnDate[2])
+					result := cd - td
+					if result <= 1 {
+						duration = "1 day ago"
+						return duration
+					}
+					duration = fmt.Sprintf("%s days ago", strconv.Itoa(result))
+					return duration
+				} else if currentDate[2] == txnDate[2] {
+					//Hourly threshold
+
+					if currentTime[0] != txnTime[0] {
+						ch, _ := strconv.Atoi(currentTime[0])
+						th, _ := strconv.Atoi(txnTime[0])
+						result := ch - th
+						if result <= 1 {
+							duration = "Last hour"
+							return duration
+						}
+						duration = fmt.Sprintf("%s hours ago", strconv.Itoa(result))
+						return duration
+					} else if currentTime[0] == txnTime[0] {
+						//Minute threshold
+
+						if currentTime[1] != txnTime[1] {
+							cm, _ := strconv.Atoi(currentTime[1])
+							tm, _ := strconv.Atoi(txnTime[1])
+							result := cm - tm
+							if result <= 1 {
+								duration = "1 minute ago"
+								return duration
+							}
+							duration = fmt.Sprintf("%s minutes ago", strconv.Itoa(result))
+							return duration
+						} else if currentTime[1] == txnTime[1] {
+							duration = "Just now"
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return duration
+}
+
 // transactionRow is a single transaction row on the transactions and overview page. It lays out a transaction's
 // direction, balance, status.
 func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) layout.Dimensions {
@@ -181,38 +305,30 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 		Orientation: layout.Horizontal,
 		Width:       decredmaterial.MatchParent,
 		Height:      gtx.Px(values.MarginPadding56),
-		Direction:   layout.W,
+		Alignment:   layout.Middle,
 		Padding:     layout.Inset{Left: values.MarginPadding16, Right: values.MarginPadding16},
 	}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-			return layout.W.Layout(gtx, txStatus.Icon.Layout24dp)
-		}),
+		layout.Rigid(txStatus.Icon.Layout24dp),
 		layout.Rigid(func(gtx C) D {
 			return decredmaterial.LinearLayout{
 				Width:       decredmaterial.WrapContent,
 				Height:      decredmaterial.MatchParent,
 				Orientation: layout.Vertical,
 				Padding:     layout.Inset{Left: values.MarginPadding16},
-				Direction:   layout.W,
+				Direction:   layout.Center,
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							if row.Transaction.Type == dcrlibwallet.TxTypeRegular {
-								amount := dcrutil.Amount(row.Transaction.Amount).String()
-								if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
-									amount = "-" + amount
-								}
-								return LayoutBalance(gtx, l, amount)
-							}
+					if row.Transaction.Type == dcrlibwallet.TxTypeRegular {
+						amount := dcrutil.Amount(row.Transaction.Amount).String()
+						if row.Transaction.Direction == dcrlibwallet.TxDirectionSent {
+							amount = "-" + amount
+						}
+						return LayoutBalance(gtx, l, amount)
+					}
 
-							label := l.Theme.Label(values.TextSize18, txStatus.Title)
-							label.Color = l.Theme.Color.DeepBlue
-							return label.Layout(gtx)
-						}),
-					)
-
+					label := l.Theme.Label(values.TextSize18, txStatus.Title)
+					label.Color = l.Theme.Color.DeepBlue
+					return label.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return decredmaterial.LinearLayout{
@@ -243,10 +359,14 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							// mix denomination or ticket price
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
 								mixedDenom := dcrutil.Amount(row.Transaction.MixDenomination).String()
-								return l.Theme.Label(values.TextSize14, mixedDenom).Layout(gtx)
+								txt := l.Theme.Label(values.TextSize14, mixedDenom)
+								txt.Color = l.Theme.Color.Gray
+								return txt.Layout(gtx)
 							} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
 								ticketPrice := dcrutil.Amount(row.Transaction.Amount).String()
-								return l.Theme.Label(values.TextSize14, ticketPrice).Layout(gtx)
+								txt := l.Theme.Label(values.TextSize14, ticketPrice)
+								txt.Color = l.Theme.Color.Gray
+								return txt.Layout(gtx)
 							}
 							return layout.Dimensions{}
 						}),
@@ -297,46 +417,66 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return layout.Flex{
-				Axis:      layout.Horizontal,
-				Spacing:   layout.SpaceStart,
-				Alignment: layout.Middle,
-			}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx,
-						func(gtx C) D {
-							gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-							status := l.Theme.Body1("pending")
-							if TxConfirmations(l, row.Transaction) <= 1 {
-								status.Color = l.Theme.Color.Gray5
-							} else {
-								status.Color = l.Theme.Color.Gray4
-								status.Text = FormatDateOrTime(row.Transaction.Timestamp)
-							}
-							return layout.E.Layout(gtx, func(gtx C) D {
-								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-									layout.Rigid(status.Layout),
-									layout.Rigid(func(gtx C) D {
-										if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
-											daysToVoteOrRevoke := l.Theme.Label(values.TextSize14, fmt.Sprintf("%d days", row.Transaction.DaysToVoteOrRevoke))
-											daysToVoteOrRevoke.Color = l.Theme.Color.Gray
-											return daysToVoteOrRevoke.Layout(gtx)
-										}
+			status := l.Theme.Body1("pending")
+			if TxConfirmations(l, row.Transaction) <= 1 {
+				status.Color = l.Theme.Color.Gray5
+			} else {
+				status.Color = l.Theme.Color.Gray
+				status.Text = FormatDateOrTime(row.Transaction.Timestamp)
+			}
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
+					layout.Rigid(status.Layout),
+					layout.Rigid(func(gtx C) D {
+						return layout.Flex{Alignment: layout.End}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								if row.Transaction.Type == dcrlibwallet.TxTypeVote || row.Transaction.Type == dcrlibwallet.TxTypeRevocation {
+									var title string
+									if row.Transaction.Type == dcrlibwallet.TxTypeVote {
+										title = "vote"
+									} else {
+										title = "revoke"
+									}
 
-										return D{}
-									}),
-								)
-							})
-						})
-				}),
-				layout.Rigid(func(gtx C) D {
-					gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
-					statusIcon := l.Icons.ConfirmIcon
-					if TxConfirmations(l, row.Transaction) <= 1 {
-						statusIcon = l.Icons.PendingIcon
-					}
-					return layout.E.Layout(gtx, statusIcon.Layout12dp)
-				}))
+									return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+										return WalletLabel(gtx, l, fmt.Sprintf("%dd to %s", row.Transaction.DaysToVoteOrRevoke, title))
+									})
+								}
+
+								return D{}
+							}),
+							layout.Rigid(func(gtx C) D {
+								currentTimestamp := time.Now().UTC().String()
+								txnTimestamp := time.Unix(row.Transaction.Timestamp, 0).UTC().String()
+								currentTimeSplit := strings.Split(currentTimestamp, " ")
+								txnTimeSplit := strings.Split(txnTimestamp, " ")
+								currentDate := strings.Split(currentTimeSplit[0], "-")
+								txnDate := strings.Split(txnTimeSplit[0], "-")
+
+								currentDay, _ := strconv.Atoi(currentDate[2])
+								txnDay, _ := strconv.Atoi(txnDate[2])
+
+								if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
+									return D{}
+								}
+								duration := l.Theme.Label(values.TextSize14, DurationAgo(row.Transaction.Timestamp))
+								duration.Color = l.Theme.Color.InactiveGray
+								return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
+							}),
+						)
+					}),
+				)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			statusIcon := l.Icons.ConfirmIcon
+			if TxConfirmations(l, row.Transaction) <= 1 {
+				statusIcon = l.Icons.PendingIcon
+			}
+
+			return layout.Inset{Left: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+				return statusIcon.Layout12dp(gtx)
+			})
 		}),
 	)
 }
@@ -352,16 +492,28 @@ func TxConfirmations(l *load.Load, transaction dcrlibwallet.Transaction) int32 {
 
 func FormatDateOrTime(timestamp int64) string {
 	utcTime := time.Unix(timestamp, 0).UTC()
-	if time.Now().UTC().Sub(utcTime).Hours() < 168 {
-		return utcTime.Weekday().String()
+	currentTime := time.Now().UTC()
+
+	if strconv.Itoa(currentTime.Year()) == strconv.Itoa(utcTime.Year()) && currentTime.Month().String() == utcTime.Month().String() {
+		if strconv.Itoa(currentTime.Day()) == strconv.Itoa(utcTime.Day()) {
+			if strconv.Itoa(currentTime.Hour()) == strconv.Itoa(utcTime.Hour()) {
+				return TimeAgo(timestamp)
+			}
+
+			return TimeAgo(timestamp)
+		} else if currentTime.Day()-1 == utcTime.Day() {
+			yesterday := "Yesterday"
+			return yesterday
+		}
 	}
 
 	t := strings.Split(utcTime.Format(time.UnixDate), " ")
 	t2 := t[2]
+	year := strconv.Itoa(utcTime.Year())
 	if t[2] == "" {
 		t2 = t[3]
 	}
-	return fmt.Sprintf("%s %s", t[1], t2)
+	return fmt.Sprintf("%s %s, %s", t[1], t2, year)
 }
 
 // walletLabel displays the wallet which a transaction belongs to. It is only displayed on the overview page when there
