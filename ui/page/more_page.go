@@ -92,6 +92,7 @@ func (pg *MorePage) Handle() {
 		}
 	}
 }
+
 func (pg *MorePage) OnClose() {}
 
 func (pg *MorePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -123,8 +124,7 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
-					Left: values.MarginPadding15,
-					Top:  values.MarginPadding2,
+					Top: values.MarginPadding2,
 				}.Layout(gtx, func(gtx C) D {
 					page := pg.morePageListItems[i].page
 					if page == SecurityToolsPageID {

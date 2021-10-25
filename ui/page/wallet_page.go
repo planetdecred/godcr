@@ -4,7 +4,6 @@ import (
 	"image/color"
 	"sync"
 
-	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/unit"
@@ -58,7 +57,6 @@ type WalletPage struct {
 	walletAlertIcon          *decredmaterial.Image
 	container, walletsList   layout.List
 	watchWalletsList         *decredmaterial.ClickableList
-	toAcctDetails            []*gesture.Click
 	iconButton               decredmaterial.IconButton
 	card                     decredmaterial.Card
 	backdrop                 *widget.Clickable
@@ -119,8 +117,6 @@ func NewWalletPage(l *load.Load) *WalletPage {
 
 	pg.initializeFloatingMenu()
 	pg.watchOnlyWalletIcon = pg.Icons.WatchOnlyWalletIcon
-
-	pg.toAcctDetails = make([]*gesture.Click, 0)
 
 	return pg
 }
@@ -350,7 +346,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					dims := layout.UniformInset(values.MarginPadding5).Layout(gtx, pageContent[i])
+					dims := pageContent[i](gtx)
 					if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
 						dims.Size.Y += 60
 					}
@@ -707,7 +703,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 								return inset.Layout(gtx, func(gtx C) D {
 									return layout.Flex{}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
-											return pg.Theme.H6(account.Name).Layout(gtx)
+											return pg.Theme.Label(values.TextSize18, account.Name).Layout(gtx)
 										}),
 										layout.Flexed(1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
