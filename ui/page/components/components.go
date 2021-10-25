@@ -193,13 +193,23 @@ func DurationAgo(timestamp int64) string {
 		cy, _ := strconv.Atoi(currentDate[0])
 		ty, _ := strconv.Atoi(txnDate[0])
 
-		result := cy - ty
+		cm, _ := strconv.Atoi(currentDate[1])
+		tm, _ := strconv.Atoi(txnDate[1])
 
-		if result == 1 {
+		txnYearEnd := 13
+		currentYearStart := 1
+
+		result := cy - ty
+		numMonths := (txnYearEnd - tm) + (cm - currentYearStart)
+
+		if numMonths > 12 {
+			duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
+			return duration
+		} else if numMonths == 12 {
 			duration = "1 year ago"
 			return duration
 		}
-		duration = fmt.Sprintf("%s years ago", strconv.Itoa(result))
+		duration = fmt.Sprintf("%s months ago", strconv.Itoa(numMonths))
 		return duration
 
 	} else if currentDate[0] == txnDate[0] {
