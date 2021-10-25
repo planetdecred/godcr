@@ -438,7 +438,9 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 										title = "revoke"
 									}
 
-									return WalletLabel(gtx, l, fmt.Sprintf("%dd to %s", row.Transaction.DaysToVoteOrRevoke, title))
+									return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+										return WalletLabel(gtx, l, fmt.Sprintf("%dd to %s", row.Transaction.DaysToVoteOrRevoke, title))
+									})
 								}
 
 								return D{}
