@@ -133,8 +133,8 @@ func (md *createWalletModal) Handle() {
 				settings["password"] = md.walletPassword.Editor.Text()
 				walletType = dexdcr.WalletTypeDcrwObject
 			case btc.BipID:
-				walletType = btc.WalletTypeSPV
-				walletPass = nil // Core doesn't accept wallet passwords for dex-managed spv wallets.
+				walletType = "SPV" // decred.org/dcrdex/client/asset/btc.walletTypeSPV
+				walletPass = nil   // Core doesn't accept wallet passwords for dex-managed spv wallets.
 			}
 
 			err := md.Dexc.AddWallet(coinID, walletType, settings, appPass, walletPass)

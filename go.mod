@@ -3,7 +3,7 @@ module github.com/planetdecred/godcr
 go 1.16
 
 require (
-	decred.org/dcrdex v0.2.2
+	decred.org/dcrdex v0.0.0-20211025162648-1c508cb04d1c
 	gioui.org v0.0.0-20211011183043-05f0f5c20f45
 	github.com/JohannesKaufmann/html-to-markdown v1.2.1
 	github.com/PuerkitoBio/goquery v1.6.1
@@ -32,7 +32,6 @@ require (
 )
 
 replace (
-	decred.org/dcrdex => github.com/itswisdomagain/dcrdex v0.0.0-20211018161111-310547358af0
-	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211018161404-a7dba7431e04
-	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211018161404-a7dba7431e04
+	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211025163247-6f971cec95f7
+	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211025163247-6f971cec95f7
 )
