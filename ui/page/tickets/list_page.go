@@ -213,7 +213,6 @@ func (pg *ListPage) Layout(gtx C) D {
 }
 
 func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionItem) layout.Dimensions {
-	gtx.Constraints.Min = gtx.Constraints.Max
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
 		var ticket = tickets[index]
 

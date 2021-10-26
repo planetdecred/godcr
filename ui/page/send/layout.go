@@ -5,6 +5,7 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -17,9 +18,11 @@ type (
 )
 
 func (pg *Page) initLayoutWidgets() {
-	pg.pageContainer = layout.List{
-		Axis:      layout.Vertical,
-		Alignment: layout.Middle,
+	pg.pageContainer = &widget.List{
+		List: layout.List{
+			Axis:      layout.Vertical,
+			Alignment: layout.Middle,
+		},
 	}
 
 	pg.txFeeCollapsible = pg.Theme.Collapsible()
@@ -162,8 +165,8 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 								})
 							}),
 							layout.Rigid(func(gtx C) D {
-								return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-									return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+								return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+									return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 										return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
 									})
 								})

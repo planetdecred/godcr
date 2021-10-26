@@ -6,11 +6,6 @@ import (
 	"image/color"
 	"time"
 
-	"github.com/planetdecred/godcr/ui/assets"
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
-	"github.com/planetdecred/godcr/ui/page/components"
-
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -18,7 +13,11 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
+	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 	qrcode "github.com/yeqown/go-qrcode"
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -30,6 +29,7 @@ type ReceivePage struct {
 	*load.Load
 	multiWallet       *dcrlibwallet.MultiWallet
 	pageContainer     layout.List
+	scrollContainer   *widget.List
 	isNewAddr, isInfo bool
 	currentAddress    string
 	qrImage           *image.Image
@@ -52,6 +52,9 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		multiWallet: l.WL.MultiWallet,
 		pageContainer: layout.List{
 			Axis: layout.Vertical,
+		},
+		scrollContainer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
 		},
 		info:           l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           l.Theme.Button("Copy"),
@@ -205,9 +208,13 @@ func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-					return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-						return pageContent[i](gtx)
+				return pg.Theme.List(pg.scrollContainer).Layout(gtx, 1, func(gtx C, i int) D {
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+							return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
+								return pageContent[i](gtx)
+							})
+						})
 					})
 				})
 			}),

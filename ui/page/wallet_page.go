@@ -348,7 +348,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return pg.Theme.List(pg.container).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+				return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
 					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 						dims := pageContent[i](gtx)
 						if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
