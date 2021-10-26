@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
 package decredmaterial
-
+//
 import (
 	"image/color"
 
@@ -43,6 +43,8 @@ type Editor struct {
 	Bordered bool
 	//IsPassword if true, displays the show and hide button.
 	isPassword bool
+	//If ShowEditorIcon is true, displays the editor widget Icon of choice
+	showEditorIcon bool
 
 	requiredErrorText string
 
@@ -56,6 +58,7 @@ func (t *Theme) EditorPassword(editor *widget.Editor, hint string) Editor {
 	editor.Mask = '*'
 	e := t.Editor(editor, hint)
 	e.isPassword = true
+	e.showEditorIcon = false
 	return e
 }
 
@@ -70,6 +73,49 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		TitleLabel: t.Body2(title),
 		LineColor:  t.Color.Gray1,
 		height:     31,
+	}
+}
+//CREATES AN EDITOR WIDGET WITH DYNAMIC ICONS.
+func (t *Theme) NewEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool) Editor {
+	errorLabel := t.Caption("")
+	errorLabel.Color = t.Color.Danger
+
+	m := material.Editor(t.Base, editor, hint)
+	m.TextSize = t.TextSize
+	m.Color = t.Color.Text
+	m.Hint = hint
+	m.HintColor = t.Color.Hint
+
+	var m0 = unit.Dp(0)
+
+	return Editor{
+		t:               t,
+		EditorStyle:     m,
+		TitleLabel:      t.Body2(""),
+		IsTitleLabel:    true,
+		Bordered:        true,
+		LineColor:       t.Color.Gray1,
+		TitleLabelColor: t.Color.Gray3,
+		showEditorIcon: showEditorIcon,
+		
+
+		errorLabel:        errorLabel,
+		requiredErrorText: "Field is required",
+
+		m2: unit.Dp(2),
+		m5: unit.Dp(5),
+
+		showHidePassword: IconButton{
+			material.IconButtonStyle{
+				Icon:       MustIcon(widget.NewIcon(editorIcon)),
+				Size:       values.MarginPadding24,
+				Background: color.NRGBA{},
+				Color:      t.Color.Gray,
+				Inset:      layout.UniformInset(m0),
+				Button:     new(widget.Clickable),
+			},
+		},
+		CustomButton: t.Button(""),
 	}
 }
 
@@ -93,6 +139,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		Bordered:        true,
 		LineColor:       t.Color.Gray1,
 		TitleLabelColor: t.Color.Gray3,
+	
 
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
@@ -213,7 +260,20 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if e.isPassword {
+			if e.showEditorIcon{
+				inset := layout.Inset{
+					Top:  e.m2,
+					Left: e.m5,
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					// icon := MustIcon(widget.NewIcon(icons.ActionVisibilityOff))
+					// if e.Editor.Mask == '*' {
+					// 	icon = MustIcon(widget.NewIcon(icons.ActionVisibility))
+					// }
+					//e.showHidePassword.Icon = MustIcon(widget.NewIcon(icons.AVAVTimer))
+					return e.showHidePassword.Layout(gtx)
+				})
+			} else if e.isPassword {
 				inset := layout.Inset{
 					Top:  e.m2,
 					Left: e.m5,
