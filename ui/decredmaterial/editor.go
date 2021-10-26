@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense OR MIT
 
 package decredmaterial
+
 //
 import (
 	"image/color"
@@ -75,6 +76,7 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		height:     31,
 	}
 }
+
 //CREATES AN EDITOR WIDGET WITH DYNAMIC ICONS.
 func (t *Theme) NewEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool) Editor {
 	errorLabel := t.Caption("")
@@ -96,8 +98,7 @@ func (t *Theme) NewEditor(editor *widget.Editor, hint string, editorIcon []byte,
 		Bordered:        true,
 		LineColor:       t.Color.Gray1,
 		TitleLabelColor: t.Color.Gray3,
-		showEditorIcon: showEditorIcon,
-		
+		showEditorIcon:  showEditorIcon,
 
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
@@ -139,7 +140,6 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		Bordered:        true,
 		LineColor:       t.Color.Gray1,
 		TitleLabelColor: t.Color.Gray3,
-	
 
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
@@ -260,7 +260,7 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if e.showEditorIcon{
+			if e.showEditorIcon {
 				inset := layout.Inset{
 					Top:  e.m2,
 					Left: e.m5,

@@ -66,10 +66,10 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 
 	//cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	//cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
-	
+
 	//TEST RUN OF NEW EDITOR
 	showEditorIcon := true
-	editorIcon:= icons.AVArtTrack
+	editorIcon := icons.AVArtTrack
 	cm.walletName = l.Theme.NewEditor(new(widget.Editor), "Wallet Name", editorIcon, showEditorIcon)
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
 
