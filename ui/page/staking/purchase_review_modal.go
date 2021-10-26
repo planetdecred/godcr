@@ -1,4 +1,4 @@
-package tickets
+package staking
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ import (
 
 const reviewModalID = "ticket_review_modal"
 
-type ticketReviewModal struct {
+type stakeReviewModal struct {
 	*load.Load
 	account     *dcrlibwallet.Account
 	selectedVSP *wallet.VSPInfo
@@ -37,8 +37,8 @@ type ticketReviewModal struct {
 	ticketsPurchased func()
 }
 
-func newTicketReviewModal(l *load.Load, account *dcrlibwallet.Account, selectedVSP *wallet.VSPInfo) *ticketReviewModal {
-	m := &ticketReviewModal{
+func newStakeReviewModal(l *load.Load, account *dcrlibwallet.Account, selectedVSP *wallet.VSPInfo) *stakeReviewModal {
+	m := &stakeReviewModal{
 		Load:             l,
 		account:          account,
 		selectedVSP:      selectedVSP,
@@ -53,7 +53,7 @@ func newTicketReviewModal(l *load.Load, account *dcrlibwallet.Account, selectedV
 	return m
 }
 
-func (t *ticketReviewModal) Layout(gtx layout.Context) layout.Dimensions {
+func (t *stakeReviewModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
 			return t.Theme.Label(values.TextSize20, "Confirm to purchase tickets").Layout(gtx)
@@ -135,22 +135,22 @@ func (t *ticketReviewModal) Layout(gtx layout.Context) layout.Dimensions {
 	return t.modal.Layout(gtx, l, 850)
 }
 
-func (t *ticketReviewModal) ModalID() string {
+func (t *stakeReviewModal) ModalID() string {
 	return reviewModalID
 }
-func (t *ticketReviewModal) OnDismiss() {}
+func (t *stakeReviewModal) OnDismiss() {}
 
-func (t *ticketReviewModal) Show() {
+func (t *stakeReviewModal) Show() {
 	t.ShowModal(t)
 }
 
-func (t *ticketReviewModal) Dismiss() {
+func (t *stakeReviewModal) Dismiss() {
 	t.DismissModal(t)
 }
 
-func (t *ticketReviewModal) OnResume() {}
+func (t *stakeReviewModal) OnResume() {}
 
-func (t *ticketReviewModal) Handle() {
+func (t *stakeReviewModal) Handle() {
 	for t.cancelPurchase.Clicked() {
 		if !t.isLoading {
 			t.Dismiss()
@@ -162,7 +162,7 @@ func (t *ticketReviewModal) Handle() {
 	}
 }
 
-func (t *ticketReviewModal) purchaseTickets() {
+func (t *stakeReviewModal) purchaseTickets() {
 	if t.isLoading {
 		return
 	}
@@ -195,7 +195,7 @@ func (t *ticketReviewModal) purchaseTickets() {
 	}()
 }
 
-func (t *ticketReviewModal) TicketCount(tickets int64) *ticketReviewModal {
+func (t *stakeReviewModal) TicketCount(tickets int64) *stakeReviewModal {
 	t.ticketCount = tickets
 	if t.ticketCount > 1 {
 		t.purchase.Text = fmt.Sprintf("Purchase %d tickets", t.ticketCount)
@@ -203,17 +203,17 @@ func (t *ticketReviewModal) TicketCount(tickets int64) *ticketReviewModal {
 	return t
 }
 
-func (t *ticketReviewModal) TotalCost(total int64) *ticketReviewModal {
+func (t *stakeReviewModal) TotalCost(total int64) *stakeReviewModal {
 	t.totalCost = total
 	return t
 }
 
-func (t *ticketReviewModal) BalanceLessCost(remaining int64) *ticketReviewModal {
+func (t *stakeReviewModal) BalanceLessCost(remaining int64) *stakeReviewModal {
 	t.balanceLessCost = remaining
 	return t
 }
 
-func (t *ticketReviewModal) TicketPurchased(ticketsPurchased func()) *ticketReviewModal {
+func (t *stakeReviewModal) TicketPurchased(ticketsPurchased func()) *stakeReviewModal {
 	t.ticketsPurchased = ticketsPurchased
 	return t
 }

@@ -1,4 +1,4 @@
-package tickets
+package staking
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ type (
 	D = layout.Dimensions
 )
 
-const OverviewPageID = "Tickets"
+const OverviewPageID = "staking"
 
 type Page struct {
 	*load.Load
@@ -40,7 +40,7 @@ type Page struct {
 	list            *widget.List
 }
 
-func NewTicketPage(l *load.Load) *Page {
+func NewStakingPage(l *load.Load) *Page {
 	pg := &Page{
 		Load: l,
 
@@ -116,7 +116,7 @@ func (pg *Page) loadPageData() {
 			return
 		}
 
-		txItems, err := ticketsToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
+		txItems, err := stakeToTransactionItems(pg.Load, tickets, true, func(filter int32) bool {
 			switch filter {
 			case dcrlibwallet.TxFilterUnmined:
 				fallthrough
@@ -383,7 +383,7 @@ func (pg *Page) stakingRecordIconCount(icon *decredmaterial.Image, count int, st
 
 func (pg *Page) Handle() {
 	if pg.purchaseTicket.Clicked() {
-		newTicketPurchaseModal(pg.Load).
+		newStakingModal(pg.Load).
 			TicketPurchased(func() {
 				fmt.Println("Overview ticket pruchsased")
 				pg.loadPageData()

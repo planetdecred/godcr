@@ -1,4 +1,4 @@
-package tickets
+package staking
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ type transactionItem struct {
 	durationTooltip   *decredmaterial.Tooltip
 }
 
-type Ticket struct {
+type Stake struct {
 	Status     string
 	Fee        string
 	Amount     string
@@ -57,7 +57,7 @@ const (
 	StakingExpired  = "EXPIRED"
 )
 
-func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*transactionItem, error) {
+func stakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newestFirst bool, hasFilter func(int32) bool) ([]*transactionItem, error) {
 	tickets := make([]*transactionItem, 0)
 	multiWallet := l.WL.MultiWallet
 	for _, tx := range txs {
@@ -82,7 +82,7 @@ func ticketsToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, new
 		}
 
 		// This fixes a dcrlibwallet bug where live tickets transactions
-		// do not have updated data of ticket spender.
+		// do not have updated data of Stake spender.
 		if hasFilter(dcrlibwallet.TxFilterLive) && ticketSpender != nil {
 			continue
 		}
@@ -188,20 +188,20 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 	var title, mainDesc, subDesc string
 	switch tx.status.TicketStatus {
 	case dcrlibwallet.TicketStatusUnmined:
-		title = "This ticket is waiting in mempool to be included in a block."
+		title = "This Stake is waiting in mempool to be included in a block."
 	case dcrlibwallet.TicketStatusImmature:
-		title = fmt.Sprintf("This ticket will enter the ticket pool and become a live ticket after %d blocks (~%s).", maturity, maturityTime)
+		title = fmt.Sprintf("This Stake will enter the Stake pool and become a live Stake after %d blocks (~%s).", maturity, maturityTime)
 	case dcrlibwallet.TicketStatusLive:
 		title = "Waiting to be chosen to vote."
 		mainDesc = "The average vote time is 28 days, but can take up to 142 days."
-		subDesc = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original ticket price without a reward)."
+		subDesc = "There is a 0.5% chance of expiring before being chosen to vote (this expiration returns the original Stake price without a reward)."
 	case dcrlibwallet.TicketStatusVotedOrRevoked:
 		if tx.ticketSpender.Type == dcrlibwallet.TxTypeVote {
-			title = "Congratulations! This ticket has voted."
-			mainDesc = "The ticket price + reward will become spendable after %d blocks (~%s)."
+			title = "Congratulations! This Stake has voted."
+			mainDesc = "The Stake price + reward will become spendable after %d blocks (~%s)."
 		} else {
-			title = "This ticket has been revoked."
-			mainDesc = "The ticket price will become spendable after %d blocks (~%s)."
+			title = "This Stake has been revoked."
+			mainDesc = "The Stake price will become spendable after %d blocks (~%s)."
 		}
 
 		if tx.ticketSpender.Confirmations(l.WL.MultiWallet.GetBestBlock().Height) > maturity {
@@ -211,9 +211,9 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 			mainDesc = fmt.Sprintf(mainDesc, maturity, maturityTime)
 		}
 	case dcrlibwallet.TicketStatusExpired:
-		title = fmt.Sprintf("This ticket has not been chosen to vote within %d blocks, and thus expired.", l.WL.MultiWallet.TicketMaturity())
-		mainDesc = "Expired tickets will be revoked to return the original ticket price to you."
-		subDesc = "If a ticket is not revoked automatically, use the revoke button."
+		title = fmt.Sprintf("This Stake has not been chosen to vote within %d blocks, and thus expired.", l.WL.MultiWallet.TicketMaturity())
+		mainDesc = "Expired tickets will be revoked to return the original Stake price to you."
+		subDesc = "If a Stake is not revoked automatically, use the revoke button."
 	}
 
 	titleLabel := l.Theme.Label(values.MarginPadding14, title)
@@ -283,7 +283,7 @@ func toolTipContent(inset layout.Inset, body layout.Widget) layout.Widget {
 	}
 }
 
-// ticketCard layouts out ticket info with the shadow box, use for list horizontal or list grid
+// ticketCard layouts out Stake info with the shadow box, use for list horizontal or list grid
 func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalletName bool) layout.Dimensions {
 	wal := l.WL.MultiWallet.WalletWithID(tx.transaction.WalletID)
 	txStatus := tx.status
@@ -459,7 +459,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 								}
 							} else if txStatus.TicketStatus == dcrlibwallet.TicketStatusImmature ||
 								txStatus.TicketStatus == dcrlibwallet.TicketStatusLive {
-								tooltipTitle = "Ticket age"
+								tooltipTitle = "Stake age"
 							} else {
 								return D{}
 							}

@@ -1,4 +1,4 @@
-package tickets
+package staking
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const listPageID = "TicketsList"
+const listPageID = "StakingList"
 
 type txType int
 
@@ -143,7 +143,7 @@ func (pg *ListPage) fetchTickets() {
 		return
 	}
 
-	tickets, err := ticketsToTransactionItems(pg.Load, txs, newestFirst, func(filter int32) bool {
+	tickets, err := stakeToTransactionItems(pg.Load, txs, newestFirst, func(filter int32) bool {
 		switch filter {
 		case dcrlibwallet.TxFilterVoted:
 			return ticketTypeDropdown == Voted

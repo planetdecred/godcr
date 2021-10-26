@@ -1,4 +1,4 @@
-package tickets
+package staking
 
 import (
 	"strconv"
@@ -16,7 +16,7 @@ import (
 
 const purchaseModalID = "ticket_purchase_modal"
 
-type ticketPurchaseModal struct {
+type stakingModal struct {
 	*load.Load
 
 	balanceError     string
@@ -35,8 +35,8 @@ type ticketPurchaseModal struct {
 	vspSelector     *vspSelector
 }
 
-func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
-	tp := &ticketPurchaseModal{
+func newStakingModal(l *load.Load) *stakingModal {
+	tp := &stakingModal{
 		Load: l,
 
 		tickets:        l.Theme.Editor(new(widget.Editor), ""),
@@ -54,12 +54,12 @@ func newTicketPurchaseModal(l *load.Load) *ticketPurchaseModal {
 	return tp
 }
 
-func (tp *ticketPurchaseModal) TicketPurchased(ticketsPurchased func()) *ticketPurchaseModal {
+func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 	tp.ticketsPurchased = ticketsPurchased
 	return tp
 }
 
-func (tp *ticketPurchaseModal) OnResume() {
+func (tp *stakingModal) OnResume() {
 	tp.initializeAccountSelector()
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
 	if err != nil {
@@ -75,7 +75,7 @@ func (tp *ticketPurchaseModal) OnResume() {
 	}
 }
 
-func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
+func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -156,7 +156,7 @@ func (tp *ticketPurchaseModal) Layout(gtx layout.Context) layout.Dimensions {
 	return tp.modal.Layout(gtx, l, 850)
 }
 
-func (tp *ticketPurchaseModal) ticketCount() int64 {
+func (tp *stakingModal) ticketCount() int64 {
 	ticketCount, err := strconv.ParseInt(tp.tickets.Editor.Text(), 10, 64)
 	if err != nil {
 		return 0
@@ -165,7 +165,7 @@ func (tp *ticketPurchaseModal) ticketCount() int64 {
 	return ticketCount
 }
 
-func (tp *ticketPurchaseModal) canPurchase() bool {
+func (tp *stakingModal) canPurchase() bool {
 	tp.balanceError = ""
 	if tp.ticketCount() < 1 {
 		return false
@@ -186,19 +186,19 @@ func (tp *ticketPurchaseModal) canPurchase() bool {
 	return true
 }
 
-func (tp *ticketPurchaseModal) ModalID() string {
+func (tp *stakingModal) ModalID() string {
 	return purchaseModalID
 }
 
-func (tp *ticketPurchaseModal) Show() {
+func (tp *stakingModal) Show() {
 	tp.ShowModal(tp)
 }
 
-func (tp *ticketPurchaseModal) Dismiss() {
+func (tp *stakingModal) Dismiss() {
 	tp.DismissModal(tp)
 }
 
-func (tp *ticketPurchaseModal) initializeAccountSelector() {
+func (tp *stakingModal) initializeAccountSelector() {
 	tp.accountSelector = components.NewAccountSelector(tp.Load).
 		Title("Purchasing account").
 		AccountSelected(func(selectedAccount *dcrlibwallet.Account) {}).
@@ -217,9 +217,9 @@ func (tp *ticketPurchaseModal) initializeAccountSelector() {
 		})
 }
 
-func (tp *ticketPurchaseModal) OnDismiss() {}
+func (tp *stakingModal) OnDismiss() {}
 
-func (tp *ticketPurchaseModal) calculateTotals() {
+func (tp *stakingModal) calculateTotals() {
 	account := tp.accountSelector.SelectedAccount()
 	wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
 
@@ -237,7 +237,7 @@ func (tp *ticketPurchaseModal) calculateTotals() {
 	tp.balanceLessCost = account.Balance.Spendable - tp.totalCost
 }
 
-func (tp *ticketPurchaseModal) Handle() {
+func (tp *stakingModal) Handle() {
 	tp.reviewPurchase.SetEnabled(tp.canPurchase())
 
 	// reselect vsp if there's a delay in fetching the VSP List
@@ -263,7 +263,7 @@ func (tp *ticketPurchaseModal) Handle() {
 		selectedVSP := tp.vspSelector.SelectedVSP()
 		account := tp.accountSelector.SelectedAccount()
 
-		newTicketReviewModal(tp.Load, account, selectedVSP).
+		newStakeReviewModal(tp.Load, account, selectedVSP).
 			TicketCount(tp.ticketCount()).
 			TotalCost(tp.totalCost).
 			BalanceLessCost(tp.balanceLessCost).

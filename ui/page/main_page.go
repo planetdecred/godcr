@@ -15,7 +15,7 @@ import (
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/page/proposal"
 	"github.com/planetdecred/godcr/ui/page/send"
-	"github.com/planetdecred/godcr/ui/page/tickets"
+	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -25,7 +25,7 @@ const (
 	OverviewNavID = iota
 	TransactionsNavID
 	WalletsNavID
-	TicketsNavID
+	StakingNavID
 	ProposalsNavID
 	MoreNavID
 
@@ -160,8 +160,8 @@ func (mp *MainPage) initNavItems() {
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Icons.TicketIcon,
 				ImageInactive: mp.Icons.TicketIconInactive,
-				Title:         values.String(values.StrTickets),
-				PageID:        tickets.OverviewPageID,
+				Title:         values.String(values.StrStaking),
+				PageID:        staking.OverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -332,8 +332,8 @@ func (mp *MainPage) Handle() {
 				pg = NewTransactionsPage(mp.Load)
 			} else if i == WalletsNavID {
 				pg = NewWalletPage(mp.Load)
-			} else if i == TicketsNavID {
-				pg = tickets.NewTicketPage(mp.Load)
+			} else if i == StakingNavID {
+				pg = staking.NewStakingPage(mp.Load)
 			} else if i == ProposalsNavID {
 				pg = proposal.NewProposalsPage(mp.Load)
 			} else if i == MoreNavID {
