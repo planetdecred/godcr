@@ -11,7 +11,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"

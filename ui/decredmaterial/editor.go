@@ -79,7 +79,7 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 
 //CREATES AN EDITOR WIDGET WITH ICON OF CHOICE.
 func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool) Editor {
-	e:= t.Editor(editor, hint)
+	e := t.Editor(editor, hint)
 	e.showEditorIcon = showEditorIcon
 	e.editorIconButton.IconButtonStyle.Icon = MustIcon(widget.NewIcon(editorIcon))
 	return e
