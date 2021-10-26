@@ -7,6 +7,8 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -31,8 +33,8 @@ type VerifySeedPage struct {
 
 	backButton   decredmaterial.IconButton
 	actionButton decredmaterial.Button
-	container    *layout.List
 	seedList     *layout.List
+	list         *widget.List
 }
 
 func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *VerifySeedPage {
@@ -42,8 +44,12 @@ func NewVerifySeedPage(l *load.Load, wallet *dcrlibwallet.Wallet, seed string) *
 		seed:   seed,
 
 		actionButton: l.Theme.Button("Verify"),
-		container:    &layout.List{Axis: layout.Vertical},
 		seedList:     &layout.List{Axis: layout.Vertical},
+	}
+	pg.list = &widget.List{
+		List: layout.List{
+			Axis: layout.Vertical,
+		},
 	}
 
 	pg.actionButton.Font.Weight = text.Medium
@@ -198,26 +204,24 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 			promptToExit(pg.Load)
 		},
 		Body: func(gtx C) D {
-			wdg := []layout.Widget{
-				func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize16, "Select the correct words to verify.")
 					label.Color = pg.Theme.Color.Gray3
 					return label.Layout(gtx)
-				},
-				func(gtx C) D {
+				}),
+				layout.Rigid(func(gtx C) D {
 					return layout.Inset{
 						Bottom: values.MarginPadding96,
 					}.Layout(gtx, func(gtx C) D {
-						return pg.seedList.Layout(gtx, len(pg.multiSeedList), func(gtx C, index int) D {
-							return pg.seedListRow(gtx, index, pg.multiSeedList[index])
+						return pg.Theme.List(pg.list).Layout(gtx, len(pg.multiSeedList), func(gtx C, i int) D {
+							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+								return pg.seedListRow(gtx, i, pg.multiSeedList[i])
+							})
 						})
 					})
-				},
-			}
-
-			return pg.container.Layout(gtx, len(wdg), func(gtx C, index int) D {
-				return wdg[index](gtx)
-			})
+				}),
+			)
 		},
 	}
 

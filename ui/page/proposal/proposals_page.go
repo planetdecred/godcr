@@ -50,9 +50,10 @@ type ProposalsPage struct {
 
 	multiWallet *dcrlibwallet.MultiWallet
 
-	categoryList  *decredmaterial.ClickableList
-	proposalsList *decredmaterial.ClickableList
-
+	//categoryList to be removed with new update to UI.
+	categoryList   *decredmaterial.ClickableList
+	proposalsList  *decredmaterial.ClickableList
+	listContainer  *widget.List
 	tabCard        decredmaterial.Card
 	itemCard       decredmaterial.Card
 	syncCard       decredmaterial.Card
@@ -63,11 +64,12 @@ type ProposalsPage struct {
 	proposalCount         []int
 	selectedCategoryIndex int
 
-	updatedIcon   *widget.Icon
+	legendIcon    *decredmaterial.Icon
+	infoIcon      *decredmaterial.Icon
+	updatedIcon   *decredmaterial.Icon
 	syncButton    *widget.Clickable
 	startSyncIcon *decredmaterial.Image
 	timerIcon     *decredmaterial.Image
-	infoIcon      *widget.Icon
 
 	showSyncedCompleted bool
 	isSyncing           bool
@@ -89,6 +91,9 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 		Load:                  l,
 		multiWallet:           l.WL.MultiWallet,
 		selectedCategoryIndex: -1,
+		listContainer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 	}
 
 	pg.initLayoutWidgets()
@@ -168,6 +173,7 @@ func (pg *ProposalsPage) loadProposals(category int) {
 }
 
 func (pg *ProposalsPage) Handle() {
+	//categoryList to be removed with new update to UI.
 	if clicked, selectedItem := pg.categoryList.ItemClicked(); clicked {
 		go pg.loadProposals(selectedItem)
 	}
@@ -229,12 +235,19 @@ func (pg *ProposalsPage) OnClose() {
 // - Layout
 
 func (pg *ProposalsPage) initLayoutWidgets() {
+	//categoryList to be removed with new update to UI.
 	pg.categoryList = pg.Theme.NewClickableList(layout.Horizontal)
 	pg.itemCard = pg.Theme.Card()
 	pg.syncButton = new(widget.Clickable)
 
-	pg.updatedIcon = pg.Icons.NavigationCheck
-	pg.infoIcon = pg.Icons.ActionInfo
+	pg.infoIcon = decredmaterial.NewIcon(pg.Icons.ActionInfo)
+	pg.infoIcon.Color = pg.Theme.Color.Gray
+
+	pg.legendIcon = decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
+	pg.legendIcon.Color = pg.Theme.Color.InactiveGray
+
+	pg.updatedIcon = decredmaterial.NewIcon(pg.Icons.NavigationCheck)
+	pg.updatedIcon.Color = pg.Theme.Color.Success
 
 	pg.updatedLabel = pg.Theme.Body2("Updated")
 	pg.updatedLabel.Color = pg.Theme.Color.Success
@@ -298,7 +311,7 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 			)
 		}),
 		layout.Flexed(1, func(gtx C) D {
-			return components.UniformPadding(gtx, pg.layoutContent)
+			return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, pg.layoutContent)
 		}),
 	)
 }
@@ -310,7 +323,12 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 	if len(proposalItems) == 0 {
 		return pg.layoutNoProposalsFound(gtx)
 	}
-	return pg.layoutProposalsList(gtx)
+
+	return components.UniformHorizontalPadding(gtx, func(gtx C) D {
+		return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
+			return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pg.layoutProposalsList)
+		})
+	})
 }
 
 func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
@@ -318,33 +336,31 @@ func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
 	proposalItems := pg.proposalItems
 	pg.proposalMu.Unlock()
 	return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
-		return layout.Inset{}.Layout(gtx, func(gtx C) D {
-			return layout.Inset{
-				Top:    values.MarginPadding2,
-				Bottom: values.MarginPadding2,
-			}.Layout(gtx, func(gtx C) D {
-				return pg.itemCard.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Constraints.Max.X
-					return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-						item := proposalItems[i]
-						proposal := item.proposal
-						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								return pg.layoutAuthorAndDate(gtx, item)
-							}),
-							layout.Rigid(func(gtx C) D {
-								return pg.layoutTitle(gtx, proposal)
-							}),
-							layout.Rigid(func(gtx C) D {
-								if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
-									proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
-									proposal.Category == dcrlibwallet.ProposalCategoryRejected {
-									return pg.layoutProposalVoteBar(gtx, item)
-								}
-								return D{}
-							}),
-						)
-					})
+		return layout.Inset{
+			Top:    values.MarginPadding2,
+			Bottom: values.MarginPadding2,
+		}.Layout(gtx, func(gtx C) D {
+			return pg.itemCard.Layout(gtx, func(gtx C) D {
+				gtx.Constraints.Min.X = gtx.Constraints.Max.X
+				return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+					item := proposalItems[i]
+					proposal := item.proposal
+					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							return pg.layoutAuthorAndDate(gtx, item)
+						}),
+						layout.Rigid(func(gtx C) D {
+							return pg.layoutTitle(gtx, proposal)
+						}),
+						layout.Rigid(func(gtx C) D {
+							if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
+								proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
+								proposal.Category == dcrlibwallet.ProposalCategoryRejected {
+								return pg.layoutProposalVoteBar(gtx, item)
+							}
+							return D{}
+						}),
+					)
 				})
 			})
 		})
@@ -381,6 +397,7 @@ func (pg *ProposalsPage) layoutTabs(gtx C) D {
 			Left:  values.MarginPadding12,
 			Right: values.MarginPadding12,
 		}.Layout(gtx, func(gtx C) D {
+			// categoryList to be removed with new update to UI.
 			return pg.categoryList.Layout(gtx, len(proposalCategoryTitles), func(gtx C, i int) D {
 				gtx.Constraints.Min.X = int(width)
 				return layout.Stack{Alignment: layout.S}.Layout(gtx,
@@ -508,8 +525,7 @@ func (pg *ProposalsPage) layoutAuthorAndDate(gtx C, item proposalItem) D {
 									}
 									rect.Max.Y = 20
 									pg.layoutInfoTooltip(gtx, rect, item)
-									gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-									return pg.infoIcon.Layout(gtx, pg.Theme.Color.Gray)
+									return pg.infoIcon.Layout(gtx, values.MarginPadding20)
 								})
 							}),
 						)
@@ -566,8 +582,7 @@ func (pg *ProposalsPage) layoutProposalVoteBar(gtx C, item proposalItem) D {
 func (pg *ProposalsPage) layoutIsSyncedSection(gtx C) D {
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-			return pg.updatedIcon.Layout(gtx, pg.Theme.Color.Success)
+			return pg.updatedIcon.Layout(gtx, values.MarginPadding20)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, pg.updatedLabel.Layout)

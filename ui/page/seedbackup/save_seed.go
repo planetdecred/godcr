@@ -6,6 +6,8 @@ import (
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -26,27 +28,25 @@ type saveSeedRow struct {
 type SaveSeedPage struct {
 	*load.Load
 	wallet *dcrlibwallet.Wallet
-	seed   string
-	rows   []saveSeedRow
-
-	infoText string
 
 	backButton   decredmaterial.IconButton
 	actionButton decredmaterial.Button
-	container    *layout.List
-	seedList     *layout.List
+	seedList     *widget.List
+
+	infoText string
+	seed     string
+	rows     []saveSeedRow
 }
 
 func NewSaveSeedPage(l *load.Load, wallet *dcrlibwallet.Wallet) *SaveSeedPage {
 	pg := &SaveSeedPage{
-		Load:   l,
-		wallet: wallet,
-
-		infoText: "You will be asked to enter the seed word on the next screen.",
-
+		Load:         l,
+		wallet:       wallet,
+		infoText:     "You will be asked to enter the seed word on the next screen.",
 		actionButton: l.Theme.Button("I have written down all 33 words"),
-		container:    &layout.List{Axis: layout.Vertical},
-		seedList:     &layout.List{Axis: layout.Vertical},
+		seedList: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -125,13 +125,13 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 		},
 		Body: func(gtx C) D {
 
-			wdg := []layout.Widget{
-				func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize16, "Write down all 33 words in the correct order.")
 					label.Color = pg.Theme.Color.Gray3
 					return label.Layout(gtx)
-				},
-				func(gtx C) D {
+				}),
+				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, "Your 33-word seed word")
 					label.Color = pg.Theme.Color.Gray3
 
@@ -147,17 +147,13 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 					}.Layout(gtx,
 						layout.Rigid(label.Layout),
 						layout.Rigid(func(gtx C) D {
-							return pg.seedList.Layout(gtx, len(pg.rows), func(gtx C, index int) D {
+							return pg.Theme.List(pg.seedList).Layout(gtx, len(pg.rows), func(gtx C, index int) D {
 								return pg.seedRow(gtx, pg.rows[index])
 							})
 						}),
 					)
-				},
-			}
-
-			return pg.container.Layout(gtx, len(wdg), func(gtx C, index int) D {
-				return wdg[index](gtx)
-			})
+				}),
+			)
 		},
 	}
 

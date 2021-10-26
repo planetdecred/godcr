@@ -5,7 +5,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -25,7 +24,7 @@ type VerifyMessagePage struct {
 	verifyMessage          decredmaterial.Label
 	keyEvent               chan *key.Event
 
-	verifyMessageStatus *widget.Icon
+	verifyMessageStatus *decredmaterial.Icon
 
 	backButton     decredmaterial.IconButton
 	infoButton     decredmaterial.IconButton
@@ -142,8 +141,7 @@ func (pg *VerifyMessagePage) verifyMessageResponse() layout.Widget {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-								return pg.verifyMessageStatus.Layout(gtx, pg.verifyMessage.Color)
+								return pg.verifyMessageStatus.Layout(gtx, values.MarginPadding20)
 							})
 						}),
 						layout.Rigid(pg.verifyMessage.Layout),
@@ -173,11 +171,12 @@ func (pg *VerifyMessagePage) Handle() {
 			if err != nil || !valid {
 				pg.verifyMessage.Text = "Invalid signature or message"
 				pg.verifyMessage.Color = pg.Theme.Color.Danger
-				pg.verifyMessageStatus = pg.Icons.NavigationCancel
+				pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Icons.NavigationCancel)
 				return
 			}
 
-			pg.verifyMessageStatus = pg.Icons.ActionCheck
+			pg.verifyMessageStatus = decredmaterial.NewIcon(pg.Icons.ActionCheck)
+			pg.verifyMessageStatus.Color = pg.Theme.Color.Success
 			pg.verifyMessage.Text = "Valid signature"
 			pg.verifyMessage.Color = pg.Theme.Color.Success
 		}
