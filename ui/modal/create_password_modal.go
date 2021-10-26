@@ -10,7 +10,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"golang.org/x/exp/shiny/materialdesign/icons"
+
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -64,14 +64,14 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm.btnNegative.Font.Weight = text.Medium
 	cm.btnNegative.Margin = layout.Inset{Right: values.MarginPadding8}
 
-	//cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
-	//cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
-
-	//TEST RUN OF NEW EDITOR
-	showEditorIcon := true
-	editorIcon := icons.AVArtTrack
-	cm.walletName = l.Theme.NewEditor(new(widget.Editor), "Wallet Name", editorIcon, showEditorIcon)
+	cm.walletName = l.Theme.Editor(new(widget.Editor), "Wallet name")
 	cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
+
+	//PLEASE UNCOMMENT TO SEE AN EXAMPLE OF THE ICONEDITOR FUNCTION USED ON THE WALLET NAME EDITOR
+	// showEditorIcon := true
+	// editorIcon := icons.AVArtTrack
+	// cm.walletName = l.Theme.IconEditor(new(widget.Editor), "Wallet Name", editorIcon, showEditorIcon)
+	// cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
 
 	cm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
 	cm.passwordEditor.Editor.SingleLine, cm.passwordEditor.Editor.Submit = true, true

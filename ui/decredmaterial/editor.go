@@ -49,7 +49,7 @@ type Editor struct {
 
 	requiredErrorText string
 
-	showHidePassword IconButton
+	editorIconButton IconButton
 
 	m2 unit.Value
 	m5 unit.Value
@@ -77,47 +77,12 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 	}
 }
 
-//CREATES AN EDITOR WIDGET WITH DYNAMIC ICONS.
-func (t *Theme) NewEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool) Editor {
-	errorLabel := t.Caption("")
-	errorLabel.Color = t.Color.Danger
-
-	m := material.Editor(t.Base, editor, hint)
-	m.TextSize = t.TextSize
-	m.Color = t.Color.Text
-	m.Hint = hint
-	m.HintColor = t.Color.Hint
-
-	var m0 = unit.Dp(0)
-
-	return Editor{
-		t:               t,
-		EditorStyle:     m,
-		TitleLabel:      t.Body2(""),
-		IsTitleLabel:    true,
-		Bordered:        true,
-		LineColor:       t.Color.Gray1,
-		TitleLabelColor: t.Color.Gray3,
-		showEditorIcon:  showEditorIcon,
-
-		errorLabel:        errorLabel,
-		requiredErrorText: "Field is required",
-
-		m2: unit.Dp(2),
-		m5: unit.Dp(5),
-
-		showHidePassword: IconButton{
-			material.IconButtonStyle{
-				Icon:       MustIcon(widget.NewIcon(editorIcon)),
-				Size:       values.MarginPadding24,
-				Background: color.NRGBA{},
-				Color:      t.Color.Gray,
-				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
-			},
-		},
-		CustomButton: t.Button(""),
-	}
+//CREATES AN EDITOR WIDGET WITH ICON OF CHOICE.
+func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool) Editor {
+	e:= t.Editor(editor, hint)
+	e.showEditorIcon = showEditorIcon
+	e.editorIconButton.IconButtonStyle.Icon = MustIcon(widget.NewIcon(editorIcon))
+	return e
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -147,7 +112,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m2: unit.Dp(2),
 		m5: unit.Dp(5),
 
-		showHidePassword: IconButton{
+		editorIconButton: IconButton{
 			material.IconButtonStyle{
 				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 				Size:       values.MarginPadding24,
@@ -266,12 +231,7 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					Left: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					// icon := MustIcon(widget.NewIcon(icons.ActionVisibilityOff))
-					// if e.Editor.Mask == '*' {
-					// 	icon = MustIcon(widget.NewIcon(icons.ActionVisibility))
-					// }
-					//e.showHidePassword.Icon = MustIcon(widget.NewIcon(icons.AVAVTimer))
-					return e.showHidePassword.Layout(gtx)
+					return e.editorIconButton.Layout(gtx)
 				})
 			} else if e.isPassword {
 				inset := layout.Inset{
@@ -283,8 +243,8 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					if e.Editor.Mask == '*' {
 						icon = MustIcon(widget.NewIcon(icons.ActionVisibility))
 					}
-					e.showHidePassword.Icon = icon
-					return e.showHidePassword.Layout(gtx)
+					e.editorIconButton.Icon = icon
+					return e.editorIconButton.Layout(gtx)
 				})
 			}
 			return layout.Dimensions{}
@@ -307,7 +267,7 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 }
 
 func (e Editor) handleEvents() {
-	if e.showHidePassword.Button.Clicked() {
+	if e.editorIconButton.Button.Clicked() {
 		if e.Editor.Mask == '*' {
 			e.Editor.Mask = 0
 		} else if e.Editor.Mask == 0 {
