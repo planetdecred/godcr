@@ -3,7 +3,6 @@ package proposal
 import (
 	"context"
 	"fmt"
-	"image/color"
 	"time"
 
 	"gioui.org/font/gofont"
@@ -39,6 +38,7 @@ type proposalDetails struct {
 	descriptionCard    decredmaterial.Card
 	proposalItems      map[string]proposalItemWidgets
 	descriptionList    *layout.List
+	scrollbarList      *widget.List
 	redirectIcon       *decredmaterial.Image
 	rejectedIcon       *widget.Icon
 	downloadIcon       *decredmaterial.Image
@@ -57,14 +57,17 @@ func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 		proposal:           proposal,
 		descriptionCard:    l.Theme.Card(),
 		descriptionList:    &layout.List{Axis: layout.Vertical},
-		redirectIcon:       l.Icons.RedirectIcon,
-		downloadIcon:       l.Icons.DownloadIcon,
-		proposalItems:      make(map[string]proposalItemWidgets),
-		rejectedIcon:       l.Icons.NavigationCancel,
-		successIcon:        l.Icons.ActionCheckCircle,
-		timerIcon:          l.Icons.TimerIcon,
-		viewInPoliteiaBtn:  l.Theme.NewClickable(true),
-		voteBar:            NewVoteBar(l),
+		scrollbarList: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
+		redirectIcon:      l.Icons.RedirectIcon,
+		downloadIcon:      l.Icons.DownloadIcon,
+		proposalItems:     make(map[string]proposalItemWidgets),
+		rejectedIcon:      l.Icons.NavigationCancel,
+		successIcon:       l.Icons.ActionCheckCircle,
+		timerIcon:         l.Icons.TimerIcon,
+		viewInPoliteiaBtn: l.Theme.NewClickable(true),
+		voteBar:           NewVoteBar(l),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -190,14 +193,14 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 						return layout.Inset{Left: m, Right: m}.Layout(gtx, lbl.Layout)
 					})
 				}
-				icon := pg.successIcon
+				icon := decredmaterial.NewIcon(pg.successIcon)
+				icon.Color = pg.Theme.Color.Primary
 				return layout.Inset{
 					Left:   values.MarginPaddingMinus2,
 					Right:  values.MarginPaddingMinus2,
 					Bottom: values.MarginPaddingMinus2,
 				}.Layout(gtx, func(gtx C) D {
-					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-					return icon.Layout(gtx, pg.Theme.Color.Primary)
+					return icon.Layout(gtx, values.MarginPadding24)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -240,19 +243,17 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 
 func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 	var label decredmaterial.Label
-	var icon *widget.Icon
-	var iconColor color.NRGBA
-
+	var icon *decredmaterial.Icon
 	proposal := pg.proposal
 	switch proposal.Category {
 	case dcrlibwallet.ProposalCategoryApproved:
 		label = pg.Theme.Body2("Approved")
-		icon = pg.successIcon
-		iconColor = pg.Theme.Color.Success
+		icon = decredmaterial.NewIcon(pg.successIcon)
+		icon.Color = pg.Theme.Color.Success
 	case dcrlibwallet.ProposalCategoryRejected:
 		label = pg.Theme.Body2("Rejected")
-		icon = pg.rejectedIcon
-		iconColor = pg.Theme.Color.Danger
+		icon = decredmaterial.NewIcon(pg.rejectedIcon)
+		icon.Color = pg.Theme.Color.Danger
 	case dcrlibwallet.ProposalCategoryAbandoned:
 		label = pg.Theme.Body2("Abandoned")
 	case dcrlibwallet.ProposalCategoryActive:
@@ -267,8 +268,7 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 					if icon == nil {
 						return D{}
 					}
-					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-					return icon.Layout(gtx, iconColor)
+					return icon.Layout(gtx, values.MarginPadding20)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, label.Layout)
@@ -383,10 +383,11 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 	w = append(w, pg.layoutRedirect("View on Politeia", pg.redirectIcon, pg.viewInPoliteiaBtn))
 
 	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
-		gtx.Constraints.Min.X = gtx.Constraints.Max.X
-		return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-			return pg.descriptionList.Layout(gtx, len(w), func(gtx C, i int) D {
-				return layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
+		return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
+			return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+				return pg.descriptionList.Layout(gtx, len(w), func(gtx C, i int) D {
+					return layout.UniformInset(unit.Dp(0)).Layout(gtx, w[i])
+				})
 			})
 		})
 	})

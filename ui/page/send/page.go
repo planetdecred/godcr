@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"gioui.org/io/key"
-	"gioui.org/layout"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v3"
@@ -31,7 +30,7 @@ type moreItem struct {
 
 type Page struct {
 	*load.Load
-	pageContainer layout.List
+	pageContainer *widget.List
 
 	sourceAccountSelector *components.AccountSelector
 	sendDestination       *destination

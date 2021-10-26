@@ -55,7 +55,8 @@ type WalletPage struct {
 
 	walletIcon               *decredmaterial.Image
 	walletAlertIcon          *decredmaterial.Image
-	container, walletsList   layout.List
+	container                *widget.List
+	walletsList              layout.List
 	watchWalletsList         *decredmaterial.ClickableList
 	iconButton               decredmaterial.IconButton
 	card                     decredmaterial.Card
@@ -69,17 +70,19 @@ type WalletPage struct {
 	watchOnlyWalletIcon      *decredmaterial.Image
 	shadowBox                *decredmaterial.Shadow
 	separator                decredmaterial.Line
-	addAcctIcon              *widget.Icon
-	backupAcctIcon           *widget.Icon
+	addAcctIcon              *decredmaterial.Icon
+	backupAcctIcon           *decredmaterial.Icon
 
 	listLock sync.Mutex
 }
 
 func NewWalletPage(l *load.Load) *WalletPage {
 	pg := &WalletPage{
-		Load:                     l,
-		multiWallet:              l.WL.MultiWallet,
-		container:                layout.List{Axis: layout.Vertical},
+		Load:        l,
+		multiWallet: l.WL.MultiWallet,
+		container: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 		walletsList:              layout.List{Axis: layout.Vertical},
 		watchWalletsList:         l.Theme.NewClickableList(layout.Vertical),
 		card:                     l.Theme.Card(),
@@ -88,8 +91,8 @@ func NewWalletPage(l *load.Load) *WalletPage {
 		openPopupIndex:           -1,
 		shadowBox:                l.Theme.Shadow(),
 		separator:                l.Theme.Separator(),
-		addAcctIcon:              l.Icons.ContentAdd,
-		backupAcctIcon:           l.Icons.NavigationArrowForward,
+		addAcctIcon:              decredmaterial.NewIcon(l.Icons.ContentAdd),
+		backupAcctIcon:           decredmaterial.NewIcon(l.Icons.NavigationArrowForward),
 	}
 
 	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
@@ -345,12 +348,14 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
-				return pg.container.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					dims := pageContent[i](gtx)
-					if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
-						dims.Size.Y += 60
-					}
-					return dims
+				return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						dims := pageContent[i](gtx)
+						if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
+							dims.Size.Y += 60
+						}
+						return dims
+					})
 				})
 			}),
 			layout.Stacked(func(gtx C) D {
@@ -474,12 +479,11 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 											Right: values.MarginPadding10,
 											Left:  values.MarginPadding38,
 										}.Layout(gtx, func(gtx C) D {
-											gtx.Constraints.Min.X = gtx.Px(values.MarginPadding25)
-											return pg.addAcctIcon.Layout(gtx, pg.Theme.Color.Text)
+											return pg.addAcctIcon.Layout(gtx, values.MarginPadding25)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
-										txt := pg.Theme.H6(values.String(values.StrAddNewAccount))
+										txt := pg.Theme.Label(values.TextSize16, values.String(values.StrAddNewAccount))
 										txt.Color = pg.Theme.Color.Gray
 										return txt.Layout(gtx)
 									}),
@@ -776,8 +780,7 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
-							gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-							return pg.backupAcctIcon.Layout(gtx, textColor)
+							return pg.backupAcctIcon.Layout(gtx, values.MarginPadding20)
 						})
 					})
 				}),

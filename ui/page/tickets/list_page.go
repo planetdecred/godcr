@@ -2,10 +2,10 @@ package tickets
 
 import (
 	"context"
-	"image/color"
 
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
@@ -38,9 +38,7 @@ type ListPage struct {
 
 	tickets     []*transactionItem
 	ticketsList layout.List
-	isGridView  bool
-
-	toggleViewType *decredmaterial.Clickable
+	scrollBar   *widget.List
 
 	orderDropDown      *decredmaterial.DropDown
 	ticketTypeDropDown *decredmaterial.DropDown
@@ -52,10 +50,11 @@ type ListPage struct {
 
 func newListPage(l *load.Load) *ListPage {
 	pg := &ListPage{
-		Load:           l,
-		ticketsList:    layout.List{Axis: layout.Vertical},
-		toggleViewType: l.Theme.NewClickable(false),
-		isGridView:     true,
+		Load:        l,
+		ticketsList: layout.List{Axis: layout.Vertical},
+		scrollBar: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
+		},
 	}
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
 
@@ -174,25 +173,23 @@ func (pg *ListPage) Layout(gtx C) D {
 			Body: func(gtx C) D {
 				return layout.Stack{Alignment: layout.N}.Layout(gtx,
 					layout.Expanded(func(gtx C) D {
-
 						return layout.Inset{Top: values.MarginPadding60}.Layout(gtx, func(gtx C) D {
-							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-								tickets := pg.tickets
+							return pg.Theme.List(pg.scrollBar).Layout(gtx, 1, func(gtx C, index int) D {
+								return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+									tickets := pg.tickets
 
-								if len(tickets) == 0 {
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
+									if len(tickets) == 0 {
+										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-									txt := pg.Theme.Body1("No tickets yet")
-									txt.Color = pg.Theme.Color.Gray2
-									txt.Alignment = text.Middle
-									return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
-								}
-
-								return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-									if pg.isGridView {
-										return pg.ticketListGridLayout(gtx, tickets)
+										txt := pg.Theme.Body1("No tickets yet")
+										txt.Color = pg.Theme.Color.Gray2
+										txt.Alignment = text.Middle
+										return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
 									}
-									return pg.ticketListLayout(gtx, tickets)
+
+									return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+										return pg.ticketListLayout(gtx, tickets)
+									})
 								})
 							})
 						})
@@ -208,53 +205,6 @@ func (pg *ListPage) Layout(gtx C) D {
 					}),
 				)
 			},
-			ExtraItem: pg.toggleViewType,
-			Extra: func(gtx C) D {
-				wrap := pg.Theme.Card()
-				wrap.Color = pg.Theme.Color.Gray1
-				wrap.Radius = decredmaterial.Radius(8)
-				return wrap.Layout(gtx, func(gtx C) D {
-					insetIcon := layout.Inset{
-						Top:    values.MarginPadding4,
-						Bottom: values.MarginPadding4,
-						Left:   values.MarginPadding8,
-						Right:  values.MarginPadding8,
-					}
-					return layout.Inset{
-						Left:   values.MarginPadding2,
-						Right:  values.MarginPadding2,
-						Top:    values.MarginPadding3,
-						Bottom: values.MarginPadding3,
-					}.Layout(gtx, func(gtx C) D {
-						wrapIcon := pg.Theme.Card()
-						wrapIcon.Color = pg.Theme.Color.Surface
-						wrapIcon.Radius = decredmaterial.Radius(7)
-
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							layout.Rigid(func(gtx C) D {
-								if !pg.isGridView {
-									wrapIcon.Color = color.NRGBA{}
-								}
-								return wrapIcon.Layout(gtx, func(gtx C) D {
-									ic := pg.Icons.ListGridIcon
-									return insetIcon.Layout(gtx, ic.Layout16dp)
-								})
-							}),
-							layout.Rigid(func(gtx C) D {
-								if pg.isGridView {
-									wrapIcon.Color = color.NRGBA{}
-								} else {
-									wrapIcon.Color = pg.Theme.Color.Surface
-								}
-								return wrapIcon.Layout(gtx, func(gtx C) D {
-									ic := pg.Icons.List
-									return insetIcon.Layout(gtx, ic.Layout16dp)
-								})
-							}),
-						)
-					})
-				})
-			},
 		}
 		return page.Layout(gtx)
 	}
@@ -263,7 +213,6 @@ func (pg *ListPage) Layout(gtx C) D {
 }
 
 func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionItem) layout.Dimensions {
-	gtx.Constraints.Min = gtx.Constraints.Max
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
 		var ticket = tickets[index]
 
@@ -348,33 +297,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionI
 	})
 }
 
-func (pg *ListPage) ticketListGridLayout(gtx layout.Context, tickets []*transactionItem) layout.Dimensions {
-	// TODO: GridWrap's items not able to scroll vertically, will update when it fixed
-	return layout.Center.Layout(gtx, func(gtx C) D {
-		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-			gtx.Constraints.Min = gtx.Constraints.Max
-			return decredmaterial.GridLayout{
-				List:              &pg.ticketsList,
-				HorizontalSpacing: layout.SpaceBetween,
-				RowCount:          3,
-			}.Layout(gtx, len(tickets), func(gtx C, index int) D {
-				return layout.Inset{
-					Left:   values.MarginPadding4,
-					Right:  values.MarginPadding4,
-					Bottom: values.MarginPadding8,
-				}.Layout(gtx, func(gtx C) D {
-					return ticketCard(gtx, pg.Load, tickets[index], false)
-				})
-			})
-		})
-	})
-}
-
 func (pg *ListPage) Handle() {
-	if pg.toggleViewType.Clicked() {
-		pg.isGridView = !pg.isGridView
-	}
-
 	for pg.orderDropDown.Changed() {
 		pg.fetchTickets()
 	}

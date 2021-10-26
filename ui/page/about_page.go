@@ -2,8 +2,6 @@ package page
 
 import (
 	"gioui.org/layout"
-	"gioui.org/widget"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -26,7 +24,7 @@ type AboutPage struct {
 	license        decredmaterial.Label
 	licenseRow     *decredmaterial.Clickable
 
-	chevronRightIcon *widget.Icon
+	chevronRightIcon *decredmaterial.Icon
 
 	backButton decredmaterial.IconButton
 }
@@ -44,7 +42,7 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		networkValue:     l.Theme.Body1(l.WL.Wallet.Net),
 		license:          l.Theme.Body1("License"),
 		licenseRow:       l.Theme.NewClickable(true),
-		chevronRightIcon: l.Icons.ChevronRight,
+		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
 	}
 
 	pg.licenseRow.Radius = decredmaterial.CornerRadius{
@@ -121,8 +119,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return in.Layout(gtx, func(gtx C) D {
-								gtx.Constraints.Min.X = gtx.Px(values.MarginPadding20)
-								return pg.chevronRightIcon.Layout(gtx, pg.Theme.Color.Gray)
+								return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 							})
 						})
 					}),

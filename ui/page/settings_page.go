@@ -25,21 +25,21 @@ const (
 type row struct {
 	title     string
 	clickable *decredmaterial.Clickable
-	icon      *widget.Icon
+	icon      *decredmaterial.Icon
 	label     decredmaterial.Label
 }
 
 type SettingsPage struct {
 	*load.Load
 
-	pageContainer layout.List
+	pageContainer *widget.List
 	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
 	updateConnectToPeer *decredmaterial.Clickable
 	updateUserAgent     *decredmaterial.Clickable
 	changeStartupPass   *decredmaterial.Clickable
-	chevronRightIcon    *widget.Icon
+	chevronRightIcon    *decredmaterial.Icon
 	backButton          decredmaterial.IconButton
 	infoButton          decredmaterial.IconButton
 
@@ -66,8 +66,8 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 	pg := &SettingsPage{
 		Load: l,
-		pageContainer: layout.List{
-			Axis: layout.Vertical,
+		pageContainer: &widget.List{
+			List: layout.List{Axis: layout.Vertical},
 		},
 		walletInfo: l.WL.Info,
 		wal:        l.WL.Wallet,
@@ -78,7 +78,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		beepNewBlocks:    l.Theme.Switch(),
 		connectToPeer:    l.Theme.Switch(),
 		userAgent:        l.Theme.Switch(),
-		chevronRightIcon: chevronRightIcon,
+		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
 
 		errorReceiver: make(chan error),
 
@@ -143,8 +143,8 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 					pg.connection(),
 				}
 
-				return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.Inset{}.Layout(gtx, pageContent[i])
+				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pageContent[i])
 				})
 			},
 		}
@@ -347,8 +347,7 @@ func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
-						gtx.Constraints.Min.X = gtx.Px(values.MarginPadding22)
-						return row.icon.Layout(gtx, pg.Theme.Color.LightGray)
+						return row.icon.Layout(gtx, values.MarginPadding22)
 					}),
 				)
 			})

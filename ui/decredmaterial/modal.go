@@ -11,9 +11,10 @@ import (
 type Modal struct {
 	overlayColor color.NRGBA
 	background   color.NRGBA
-	list         *layout.List
+	list         *widget.List
 	button       *widget.Clickable
 	card         Card
+	scroll       ListStyle
 	isFloatTitle bool
 }
 
@@ -28,13 +29,19 @@ func (t *Theme) Modal() *Modal {
 	overlayColor.A = 200
 	background := t.Color.Surface
 
-	return &Modal{
+	m := &Modal{
 		overlayColor: overlayColor,
 		background:   background,
-		list:         &layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
-		button:       new(widget.Clickable),
-		card:         t.Card(),
+		list: &widget.List{
+			List: layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
+		},
+		button: new(widget.Clickable),
+		card:   t.Card(),
 	}
+
+	m.scroll = t.List(m.list)
+
+	return m
 }
 
 // Layout renders the modal widget to screen. The modal assumes the size of
@@ -84,7 +91,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) 
 						return D{}
 					}),
 					layout.Rigid(func(gtx C) D {
-						return m.list.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
+						return m.scroll.Layout(gtx, len(widgetFuncs), func(gtx C, i int) D {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
 							return layout.UniformInset(unit.Dp(10)).Layout(gtx, widgetFuncs[i])
 						})

@@ -7,8 +7,6 @@ import (
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
-
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -23,7 +21,7 @@ type InfoModal struct {
 	keyEvent        chan *key.Event
 	enterKeyPressed bool
 
-	dialogIcon *widget.Icon
+	dialogIcon *decredmaterial.Icon
 
 	dialogTitle    string
 	subtitle       string
@@ -85,7 +83,7 @@ func (in *InfoModal) SetCancelable(min bool) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) Icon(icon *widget.Icon) *InfoModal {
+func (in *InfoModal) Icon(icon *decredmaterial.Icon) *InfoModal {
 	in.dialogIcon = icon
 	return in
 }
@@ -189,8 +187,8 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Min.X = gtx.Px(values.MarginPadding50)
-				return in.dialogIcon.Layout(gtx, in.Theme.Color.DeepBlue)
+				in.dialogIcon.Color = in.Theme.Color.DeepBlue
+				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
 			})
 		})
 	}
