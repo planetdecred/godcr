@@ -94,6 +94,7 @@ func NewRestorePage(l *load.Load) *Restore {
 		pg.seedEditors.editors = append(pg.seedEditors.editors, l.Theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
 	}
 	pg.seedEditors.focusIndex = -1
+	pg.seedEditors.editors[0].Edit.Editor.Focus()
 
 	// init suggestion buttons
 	pg.initSeedMenu()
