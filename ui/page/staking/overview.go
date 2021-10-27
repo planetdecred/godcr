@@ -2,6 +2,7 @@ package staking
 
 import (
 	"fmt"
+	"image/color"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -27,7 +28,7 @@ type Page struct {
 	ticketPageContainer *layout.List
 	ticketsLive         *layout.List
 
-	purchaseTicket decredmaterial.Button
+	stakeBtn decredmaterial.Button
 
 	ticketPrice  string
 	totalRewards string
@@ -36,7 +37,7 @@ type Page struct {
 	toTickets           decredmaterial.TextAndIconButton
 
 	stakingOverview *dcrlibwallet.StakingOverview
-	liveTickets     []*transactionItem
+	liveStakes      []*transactionItem
 	list            *widget.List
 }
 
@@ -46,7 +47,7 @@ func NewStakingPage(l *load.Load) *Page {
 
 		ticketsLive:         &layout.List{Axis: layout.Horizontal},
 		ticketPageContainer: &layout.List{Axis: layout.Vertical},
-		purchaseTicket:      l.Theme.Button("Purchase"),
+		stakeBtn:            l.Theme.Button("Stake"),
 
 		autoPurchaseEnabled: l.Theme.Switch(),
 		toTickets:           l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
@@ -58,7 +59,7 @@ func NewStakingPage(l *load.Load) *Page {
 		},
 	}
 	pg.toTickets.Color = l.Theme.Color.Primary
-	pg.toTickets.BackgroundColor = l.Theme.Color.Surface
+	pg.toTickets.BackgroundColor = color.NRGBA{}
 
 	pg.stakingOverview = new(dcrlibwallet.StakingOverview)
 	return pg
@@ -133,7 +134,7 @@ func (pg *Page) loadPageData() {
 			return
 		}
 
-		pg.liveTickets = txItems
+		pg.liveStakes = txItems
 		pg.RefreshWindow()
 	}()
 }
@@ -143,12 +144,12 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 	widgets := []layout.Widget{
 		func(ctx layout.Context) layout.Dimensions {
 			return components.UniformHorizontalPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-				return pg.ticketPriceSection(gtx)
+				return pg.stakePriceSection(gtx)
 			})
 		},
 		func(ctx layout.Context) layout.Dimensions {
 			return components.UniformHorizontalPadding(gtx, func(gtx layout.Context) layout.Dimensions {
-				return pg.ticketsLiveSection(gtx)
+				return pg.stakeLiveSection(gtx)
 			})
 		},
 		func(ctx layout.Context) layout.Dimensions {
@@ -183,7 +184,7 @@ func (pg *Page) titleRow(gtx layout.Context, leftWidget, rightWidget func(C) D) 
 	)
 }
 
-func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
+func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -193,7 +194,7 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 					// leftWg := func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							title := pg.Theme.Label(values.TextSize14, "Ticket Price")
+							title := pg.Theme.Label(values.TextSize14, "Stake Price")
 							title.Color = pg.Theme.Color.Gray2
 							return title.Layout(gtx)
 						}),
@@ -222,7 +223,7 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Bottom: values.MarginPadding8,
 				}.Layout(gtx, func(gtx C) D {
-					ic := pg.Icons.TicketPurchasedIcon
+					ic := pg.Icons.NewStakeIcon
 					return layout.Center.Layout(gtx, ic.Layout48dp)
 				})
 			}),
@@ -235,32 +236,47 @@ func (pg *Page) ticketPriceSection(gtx layout.Context) layout.Dimensions {
 					})
 				})
 			}),
-			layout.Rigid(pg.purchaseTicket.Layout),
+			layout.Rigid(func(gtx C) D {
+				return layout.Center.Layout(gtx, func(gtx C) D {
+					gtx.Constraints.Min.X = gtx.Px(values.MarginPadding150)
+					return pg.stakeBtn.Layout(gtx)
+				})
+			}),
 		)
 	})
 }
 
-func (pg *Page) ticketsLiveSection(gtx layout.Context) layout.Dimensions {
+func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
-					title := pg.Theme.Label(values.TextSize14, "Live Tickets")
+					title := pg.Theme.Label(values.TextSize14, "Live Stakes")
 					title.Color = pg.Theme.Color.Gray
 					return pg.titleRow(gtx, title.Layout, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-							pg.stakingCountIcon(pg.Icons.TicketUnminedIcon, pg.stakingOverview.Unmined),
-							pg.stakingCountIcon(pg.Icons.TicketImmatureIcon, pg.stakingOverview.Immature),
-							pg.stakingCountIcon(pg.Icons.TicketLiveIcon, pg.stakingOverview.Live),
-							layout.Rigid(pg.toTickets.Layout),
+							pg.stakingCountIcon(pg.Icons.StakeUnminedIcon, pg.stakingOverview.Unmined),
+							pg.stakingCountIcon(pg.Icons.StakeImmatureIcon, pg.stakingOverview.Immature),
+							pg.stakingCountIcon(pg.Icons.StakeLiveIcon, pg.stakingOverview.Live),
+							layout.Rigid(func(gtx C) D {
+								if len(pg.liveStakes) > 0 {
+									return pg.toTickets.Layout(gtx)
+								}
+								return D{}
+							}),
 						)
 					})
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
+				if len(pg.liveStakes) == 0 {
+					noLiveStake := pg.Theme.Label(values.TextSize16, "No live Stakes yet.")
+					noLiveStake.Color = pg.Theme.Color.Gray2
+					return noLiveStake.Layout(gtx)
+				}
+				return pg.ticketsLive.Layout(gtx, len(pg.liveStakes), func(gtx C, index int) D {
 					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, pg.Load, pg.liveTickets[index], true)
+						return ticketCard(gtx, pg.Load, pg.liveStakes[index], true)
 					})
 				})
 			}),
@@ -299,17 +315,21 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 				}.Layout(gtx, func(gtx C) D {
 					title := pg.Theme.Label(values.TextSize14, "Staking Record")
 					title.Color = pg.Theme.Color.Gray2
-					return pg.titleRow(gtx, title.Layout, func(gtx C) D { return D{} })
+
+					if pg.stakingOverview.All == 0 {
+						return pg.titleRow(gtx, title.Layout, func(gtx C) D { return D{} })
+					}
+					return pg.titleRow(gtx, title.Layout, pg.toTickets.Layout)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
 				wdgs := []layout.Widget{
-					pg.stakingRecordIconCount(pg.Icons.TicketUnminedIcon, pg.stakingOverview.Unmined, "Unmined"),
-					pg.stakingRecordIconCount(pg.Icons.TicketImmatureIcon, pg.stakingOverview.Immature, "Immature"),
-					pg.stakingRecordIconCount(pg.Icons.TicketLiveIcon, pg.stakingOverview.Live, "Live"),
-					pg.stakingRecordIconCount(pg.Icons.TicketVotedIcon, pg.stakingOverview.Voted, "Voted"),
-					pg.stakingRecordIconCount(pg.Icons.TicketExpiredIcon, pg.stakingOverview.Expired, "Expired"),
-					pg.stakingRecordIconCount(pg.Icons.TicketRevokedIcon, pg.stakingOverview.Revoked, "Revoked"),
+					pg.stakingRecordIconCount(pg.Icons.StakeUnminedIcon, pg.stakingOverview.Unmined, "Unmined"),
+					pg.stakingRecordIconCount(pg.Icons.StakeImmatureIcon, pg.stakingOverview.Immature, "Immature"),
+					pg.stakingRecordIconCount(pg.Icons.StakeLiveIcon, pg.stakingOverview.Live, "Live"),
+					pg.stakingRecordIconCount(pg.Icons.StakeVotedIcon, pg.stakingOverview.Voted, "Voted"),
+					pg.stakingRecordIconCount(pg.Icons.StakeExpiredIcon, pg.stakingOverview.Expired, "Expired"),
+					pg.stakingRecordIconCount(pg.Icons.StakeRevokedIcon, pg.stakingOverview.Revoked, "Revoked"),
 				}
 
 				return decredmaterial.GridWrap{
@@ -382,7 +402,7 @@ func (pg *Page) stakingRecordIconCount(icon *decredmaterial.Image, count int, st
 }
 
 func (pg *Page) Handle() {
-	if pg.purchaseTicket.Clicked() {
+	if pg.stakeBtn.Clicked() {
 		newStakingModal(pg.Load).
 			TicketPurchased(func() {
 				fmt.Println("Overview ticket pruchsased")

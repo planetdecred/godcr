@@ -83,7 +83,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 					return layout.Center.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								ic := tp.Icons.TicketPurchasedIcon
+								ic := tp.Icons.NewStakeIcon
 								return ic.Layout48dp(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {

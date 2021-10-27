@@ -158,8 +158,8 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.TicketIcon,
-				ImageInactive: mp.Icons.TicketIconInactive,
+				Image:         mp.Icons.StakeIcon,
+				ImageInactive: mp.Icons.StakeIconInactive,
 				Title:         values.String(values.StrStaking),
 				PageID:        staking.OverviewPageID,
 			},
