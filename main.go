@@ -70,7 +70,7 @@ func main() {
 	}()
 
 	dbPath := filepath.Join(cfg.HomeDir, cfg.Network, "dexc.db")
-	logMaker := initLogging(cfg.DebugLevel, true, logWriter{})
+	logMaker := initDexLogging(cfg.DebugLevel, true, logWriter{})
 	dexc, err := dexc.NewDex(dbPath, cfg.Network, logMaker)
 	if err != nil {
 		log.Errorf("error creating Dex: %s", err)

@@ -121,10 +121,10 @@ func setLogLevels(logLevel string) {
 	}
 }
 
-// initLogging initializes the logging rotater to write logs to logFile and
-// create roll files in the same directory. initLogging must be called before
+// initDexLogging initializes the logging rotater to write logs to logFile and
+// create roll files in the same directory. initDexLogging must be called before
 // the package-global log rotator variables are used.
-func initLogging(lvl string, utc bool, w io.Writer) *dex.LoggerMaker {
+func initDexLogging(lvl string, utc bool, w io.Writer) *dex.LoggerMaker {
 	lm, err := dex.NewLoggerMaker(w, lvl, utc)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create custom logger: %v\n", err)

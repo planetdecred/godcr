@@ -24,9 +24,8 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const MainPageID = "Main"
-
 const (
+	MainPageID           = "Main"
 	HideBalanceConfigKey = "hide_balance"
 )
 

@@ -2,7 +2,6 @@ package dexclient
 
 import (
 	"fmt"
-	"strings"
 
 	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
@@ -88,7 +87,7 @@ func (md *createWalletModal) OnResume() {
 
 func (md *createWalletModal) Handle() {
 	if md.createNewWallet.Button.Clicked() {
-		if strings.Trim(md.appPassword.Editor.Text(), " ") == "" || md.isSending {
+		if md.appPassword.Editor.Text() == "" || md.isSending {
 			return
 		}
 

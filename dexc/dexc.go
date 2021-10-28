@@ -14,7 +14,7 @@ import (
 	"decred.org/dcrdex/dex"
 )
 
-// Dexc represents of the Decred exchange client.
+// Dexc represents the Decred Dex client.
 type Dexc struct {
 	*core.Core
 	ctx    context.Context
@@ -111,7 +111,7 @@ func (d *Dexc) Shutdown() bool {
 	return d.shutdown(false)
 }
 
-// Shutdown causes the dex client to shutdown regardless of whether or not there
+// ForceShutdown causes the dex client to shutdown regardless of whether or not there
 // are active orders. Dexc will need to be restarted before it can be used again.
 func (d *Dexc) ForceShutdown() {
 	d.shutdown(true)

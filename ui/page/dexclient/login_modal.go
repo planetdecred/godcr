@@ -15,9 +15,8 @@ type loginModal struct {
 	modal    *decredmaterial.Modal
 	loggedIn func()
 
-	submit                      decredmaterial.Button
-	appPassword                 decredmaterial.Editor
-	marketBaseID, marketQuoteID uint32
+	submit      decredmaterial.Button
+	appPassword decredmaterial.Editor
 }
 
 func newloginModal(l *load.Load) *loginModal {

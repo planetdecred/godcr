@@ -26,7 +26,6 @@ type addDexModal struct {
 
 type walletInfoWidget struct {
 	image    *decredmaterial.Image
-	coin     string
 	coinName string
 	coinID   uint32
 }
@@ -120,7 +119,6 @@ func (md *addDexModal) Handle() {
 			} else {
 				newWalletModal := newCreateWalletModal(md.Load, &walletInfoWidget{
 					image:    coinImageBySymbol(&md.Load.Icons, feeAssetName),
-					coin:     feeAssetName,
 					coinName: feeAssetName,
 					coinID:   feeAsset.ID,
 				})
