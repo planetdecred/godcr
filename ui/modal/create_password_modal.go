@@ -69,7 +69,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	//PLEASE UNCOMMENT TO SEE AN EXAMPLE OF THE ICONEDITOR FUNCTION USED ON THE WALLET NAME EDITOR
 	// showEditorIcon := true
 	// editorIcon := icons.AVArtTrack
-	// cm.walletName = l.Theme.IconEditor(new(widget.Editor), "Wallet Name", editorIcon, showEditorIcon)
+	// cm.walletName = l.Theme.IconEditor(new(widget.Editor), "Wallet Name", editorIcon, showEditorIcon, cm.walletNameEvent)
 	// cm.walletName.Editor.SingleLine, cm.walletName.Editor.Submit = true, true
 
 	cm.passwordEditor = l.Theme.EditorPassword(new(widget.Editor), "Spending password")
@@ -83,6 +83,15 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 
 	return cm
 }
+
+//PLEASE UNCOMMENT TO SEE AN EXAMPLE OF THE ICONEDITOR FUNCTION USED ON THE WALLET NAME EDITOR
+// func (cm *CreatePasswordModal) walletNameEvent() {
+// 	info:= NewInfoModal(cm.Load).
+// 			Title("Set up startup password").
+// 			Body("Startup password helps protect your wallet from unauthorized access.").
+// 			PositiveButton("Got it", func() {})
+// 		cm.ShowModal(info)
+// }
 
 func (cm *CreatePasswordModal) ModalID() string {
 	return cm.randomID

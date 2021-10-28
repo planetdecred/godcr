@@ -2,7 +2,6 @@
 
 package decredmaterial
 
-//
 import (
 	"image/color"
 
@@ -33,23 +32,26 @@ type Editor struct {
 	LineColor       color.NRGBA
 	TitleLabelColor color.NRGBA
 
-	//IsRequired if true, displays a required field text at the buttom of the editor.
+	// IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
-	//IsTitleLabel if true makes the title label visible.
+	// IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
-	//Bordered if true makes the adds a border around the editor.
+	// Bordered if true makes the adds a border around the editor.
 	HasCustomButton bool
 	CustomButton    Button
 
 	Bordered bool
-	//IsPassword if true, displays the show and hide button.
+	// isPassword if true, displays the show and hide button.
 	isPassword bool
-	//If ShowEditorIcon is true, displays the editor widget Icon of choice
+	// If showEditorIcon is true, displays the editor widget Icon of choice
 	showEditorIcon bool
 
 	requiredErrorText string
 
 	editorIconButton IconButton
+	showHidePassword IconButton
+
+	editorIconButtonEvent func()
 
 	m2 unit.Value
 	m5 unit.Value
@@ -77,11 +79,12 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 	}
 }
 
-//CREATES AN EDITOR WIDGET WITH ICON OF CHOICE.
-func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool) Editor {
+// IconEditor func creates an editor widget with icon of choice
+func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool, editorIconEvent func()) Editor {
 	e := t.Editor(editor, hint)
 	e.showEditorIcon = showEditorIcon
 	e.editorIconButton.IconButtonStyle.Icon = MustIcon(widget.NewIcon(editorIcon))
+	e.editorIconButtonEvent = editorIconEvent
 	return e
 }
 
@@ -113,6 +116,16 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m5: unit.Dp(5),
 
 		editorIconButton: IconButton{
+			material.IconButtonStyle{
+				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
+				Size:       values.MarginPadding24,
+				Background: color.NRGBA{},
+				Color:      t.Color.Gray,
+				Inset:      layout.UniformInset(m0),
+				Button:     new(widget.Clickable),
+			},
+		},
+		showHidePassword: IconButton{
 			material.IconButtonStyle{
 				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 				Size:       values.MarginPadding24,
@@ -243,8 +256,8 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					if e.Editor.Mask == '*' {
 						icon = MustIcon(widget.NewIcon(icons.ActionVisibility))
 					}
-					e.editorIconButton.Icon = icon
-					return e.editorIconButton.Layout(gtx)
+					e.showHidePassword.Icon = icon
+					return e.showHidePassword.Layout(gtx)
 				})
 			}
 			return layout.Dimensions{}
@@ -267,12 +280,16 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 }
 
 func (e Editor) handleEvents() {
-	if e.editorIconButton.Button.Clicked() {
+	if e.showHidePassword.Button.Clicked() {
 		if e.Editor.Mask == '*' {
 			e.Editor.Mask = 0
 		} else if e.Editor.Mask == 0 {
 			e.Editor.Mask = '*'
 		}
+	}
+
+	if e.editorIconButton.Button.Clicked() {
+		e.editorIconButtonEvent()
 	}
 
 	if e.errorLabel.Text != "" {
