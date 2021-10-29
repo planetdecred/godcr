@@ -32,21 +32,31 @@ type Editor struct {
 	LineColor       color.NRGBA
 	TitleLabelColor color.NRGBA
 
-	//IsRequired if true, displays a required field text at the buttom of the editor.
+	// IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
-	//IsTitleLabel if true makes the title label visible.
+	// IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
-	//Bordered if true makes the adds a border around the editor.
+
 	HasCustomButton bool
 	CustomButton    Button
 
+	// Bordered if true makes the adds a border around the editor.
 	Bordered bool
-	//IsPassword if true, displays the show and hide button.
+	// isPassword if true, displays the show and hide button.
 	isPassword bool
+	// If showEditorIcon is true, displays the editor widget Icon of choice
+	showEditorIcon bool
+
+	// isEditorButtonClickable passes a clickable icon button if true and regular icon if false
+	isEditorButtonClickable bool
 
 	requiredErrorText string
 
+	editorIcon       Icon
+	editorIconButton IconButton
 	showHidePassword IconButton
+
+	editorIconButtonEvent func()
 
 	m2 unit.Value
 	m5 unit.Value
@@ -56,6 +66,7 @@ func (t *Theme) EditorPassword(editor *widget.Editor, hint string) Editor {
 	editor.Mask = '*'
 	e := t.Editor(editor, hint)
 	e.isPassword = true
+	e.showEditorIcon = false
 	return e
 }
 
@@ -71,6 +82,18 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		LineColor:  t.Color.Gray1,
 		height:     31,
 	}
+}
+
+// IconEditor creates an editor widget with icon of choice
+func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool, clickableIcon bool, editorIconEvent func()) Editor {
+	e := t.Editor(editor, hint)
+	e.showEditorIcon = showEditorIcon
+	e.isEditorButtonClickable = clickableIcon
+	e.editorIcon.Icon = MustIcon(widget.NewIcon(editorIcon))
+	e.editorIcon.Color = t.Color.Gray
+	e.editorIconButton.IconButtonStyle.Icon = MustIcon(widget.NewIcon(editorIcon))
+	e.editorIconButtonEvent = editorIconEvent
+	return e
 }
 
 func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
@@ -100,9 +123,17 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m2: unit.Dp(2),
 		m5: unit.Dp(5),
 
+		editorIconButton: IconButton{
+			material.IconButtonStyle{
+				Size:       values.MarginPadding24,
+				Background: color.NRGBA{},
+				Color:      t.Color.Gray,
+				Inset:      layout.UniformInset(m0),
+				Button:     new(widget.Clickable),
+			},
+		},
 		showHidePassword: IconButton{
 			material.IconButtonStyle{
-				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
 				Color:      t.Color.Gray,
@@ -213,7 +244,18 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
-			if e.isPassword {
+			if e.showEditorIcon {
+				inset := layout.Inset{
+					Top:  e.m2,
+					Left: e.m5,
+				}
+				return inset.Layout(gtx, func(gtx C) D {
+					if e.isEditorButtonClickable {
+						return e.editorIconButton.Layout(gtx)
+					}
+					return e.editorIcon.Layout(gtx, unit.Dp(25))
+				})
+			} else if e.isPassword {
 				inset := layout.Inset{
 					Top:  e.m2,
 					Left: e.m5,
@@ -253,6 +295,10 @@ func (e Editor) handleEvents() {
 		} else if e.Editor.Mask == 0 {
 			e.Editor.Mask = '*'
 		}
+	}
+
+	if e.editorIconButton.Button.Clicked() {
+		e.editorIconButtonEvent()
 	}
 
 	if e.errorLabel.Text != "" {
