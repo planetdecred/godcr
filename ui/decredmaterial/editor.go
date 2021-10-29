@@ -255,10 +255,8 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 				return inset.Layout(gtx, func(gtx C) D {
 					if e.isEditorButtonClickable {
 						return e.editorIconButton.Layout(gtx)
-					} else {
-						return e.editorIcon.Layout(gtx, unit.Dp(25))
 					}
-
+					return e.editorIcon.Layout(gtx, unit.Dp(25))
 				})
 			} else if e.isPassword {
 				inset := layout.Inset{
