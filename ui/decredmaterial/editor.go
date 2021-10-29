@@ -89,7 +89,7 @@ func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte
 	e := t.Editor(editor, hint)
 	e.showEditorIcon = showEditorIcon
 	e.isEditorButtonClickable = clickableIcon
-	e.editorIcon = *NewIcon(MustIcon(widget.NewIcon(editorIcon)))
+	e.editorIcon.Icon = MustIcon(widget.NewIcon(editorIcon))
 	e.editorIcon.Color = t.Color.Gray
 	e.editorIconButton.IconButtonStyle.Icon = MustIcon(widget.NewIcon(editorIcon))
 	e.editorIconButtonEvent = editorIconEvent
@@ -123,10 +123,8 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m2: unit.Dp(2),
 		m5: unit.Dp(5),
 
-		editorIcon: *NewIcon(MustIcon(widget.NewIcon(icons.AVAVTimer))),
 		editorIconButton: IconButton{
 			material.IconButtonStyle{
-				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
 				Color:      t.Color.Gray,
@@ -136,7 +134,6 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		},
 		showHidePassword: IconButton{
 			material.IconButtonStyle{
-				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
 				Color:      t.Color.Gray,
