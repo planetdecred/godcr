@@ -3,7 +3,9 @@ package dexclient
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
+	"decred.org/dcrdex/client/asset"
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -16,23 +18,25 @@ const confirmRegisterModalID = "confirm_register_modal"
 
 type confirmRegisterModal struct {
 	*load.Load
-	modal       *decredmaterial.Modal
-	register    decredmaterial.Button
-	appPassword decredmaterial.Editor
-	isSending   bool
-	dex         *core.Exchange
-	cert        []byte
-	confirmed   func()
+	modal            *decredmaterial.Modal
+	register         decredmaterial.Button
+	appPassword      decredmaterial.Editor
+	isSending        bool
+	dex              *core.Exchange
+	cert             []byte
+	selectedFeeAsset string
+	confirmed        func()
 }
 
-func newConfirmRegisterModal(l *load.Load, dex *core.Exchange, cert []byte) *confirmRegisterModal {
+func newConfirmRegisterModal(l *load.Load, dex *core.Exchange, cert []byte, selectedFeeAsset string) *confirmRegisterModal {
 	md := &confirmRegisterModal{
-		Load:        l,
-		modal:       l.Theme.ModalFloatTitle(),
-		appPassword: l.Theme.EditorPassword(new(widget.Editor), "App password"),
-		register:    l.Theme.Button("Register"),
-		dex:         dex,
-		cert:        cert,
+		Load:             l,
+		modal:            l.Theme.ModalFloatTitle(),
+		appPassword:      l.Theme.EditorPassword(new(widget.Editor), "App password"),
+		register:         l.Theme.Button("Register"),
+		dex:              dex,
+		cert:             cert,
+		selectedFeeAsset: selectedFeeAsset,
 	}
 
 	md.register.TextSize = values.TextSize12
@@ -97,13 +101,18 @@ func (md *confirmRegisterModal) Layout(gtx layout.Context) D {
 			return md.Load.Theme.Label(values.TextSize20, "Confirm Registration").Layout(gtx)
 		},
 		func(gtx C) D {
-			amount := strconv.FormatFloat(float64(md.dex.Fee.Amt)/1e8, 'f', -1, 64)
-			txt := fmt.Sprintf("Enter your app password to confirm DEX registration. When you submit this form, %s DCR will be spent from your Decred wallet to pay registration fees.", amount)
+			feeAsset := md.dex.RegFees[md.selectedFeeAsset]
+			feeAmt := formatAmount(feeAsset.ID, md.selectedFeeAsset, feeAsset.Amt)
+			txt := fmt.Sprintf("Enter your app password to confirm DEX registration. When you submit this form, %s will be spent from your wallet to pay registration fees.", feeAmt)
 			return md.Load.Theme.Label(values.TextSize14, txt).Layout(gtx)
 		},
 		func(gtx C) D {
-			// lotSize := md.dex.Markets[md.dex.Host].LotSize
-			txt := fmt.Sprintf("The DCR lot size for this DEX is %d DCR. All trades are in multiples of this lot size. This is the minimum possible trade amount in DCR.", 1)
+			markets := make([]string, 0, len(md.dex.Markets))
+			for _, mkt := range md.dex.Markets {
+				lotSize := formatAmount(mkt.BaseID, mkt.BaseSymbol, mkt.LotSize)
+				markets = append(markets, fmt.Sprintf("Base: %s\tQuote: %s\tLot Size: %s", strings.ToUpper(mkt.BaseSymbol), strings.ToUpper(mkt.QuoteSymbol), lotSize))
+			}
+			txt := fmt.Sprintf("This DEX supports the following markets. All trades are in multiples of each market's lot size.\n\n%s", strings.Join(markets, "\n"))
 			return md.Load.Theme.Label(values.TextSize14, txt).Layout(gtx)
 		},
 		func(gtx C) D {
@@ -117,4 +126,15 @@ func (md *confirmRegisterModal) Layout(gtx layout.Context) D {
 	}
 
 	return md.modal.Layout(gtx, w, 900)
+}
+
+func formatAmount(assetID uint32, assetName string, amount uint64) string {
+	assetInfo, err := asset.Info(assetID)
+	if err != nil {
+		return fmt.Sprintf("%d [%s units]", amount, assetName)
+	} else {
+		unitInfo := assetInfo.UnitInfo
+		convertedLotSize := float64(amount) / float64(unitInfo.Conventional.ConversionFactor)
+		return fmt.Sprintf("%s %s", strconv.FormatFloat(convertedLotSize, 'f', -1, 64), unitInfo.Conventional.Unit)
+	}
 }

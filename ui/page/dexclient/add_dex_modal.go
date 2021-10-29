@@ -88,14 +88,6 @@ func (md *addDexModal) Handle() {
 				return
 			}
 
-			completeRegistration := func() {
-				cfModal := newConfirmRegisterModal(md.Load, dex, cert)
-				cfModal.confirmed = func() {
-					md.done()
-				}
-				cfModal.Show()
-			}
-
 			// Ensure a wallet is connected that can be used to pay the fees.
 			// TODO: This automatically selects the dcr wallet if the DEX
 			// supports it for fee payment, otherwise picks a random wallet
@@ -108,6 +100,14 @@ func (md *addDexModal) Handle() {
 				for feeAssetName, feeAsset = range dex.RegFees {
 					break
 				}
+			}
+
+			completeRegistration := func() {
+				cfModal := newConfirmRegisterModal(md.Load, dex, cert, feeAssetName)
+				cfModal.confirmed = func() {
+					md.done()
+				}
+				cfModal.Show()
 			}
 
 			// Dismiss this modal before displaying a new one for adding a wallet
