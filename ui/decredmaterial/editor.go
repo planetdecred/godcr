@@ -36,18 +36,23 @@ type Editor struct {
 	IsRequired bool
 	// IsTitleLabel if true makes the title label visible.
 	IsTitleLabel bool
-	// Bordered if true makes the adds a border around the editor.
+
 	HasCustomButton bool
 	CustomButton    Button
 
+	// Bordered if true makes the adds a border around the editor.
 	Bordered bool
 	// isPassword if true, displays the show and hide button.
 	isPassword bool
 	// If showEditorIcon is true, displays the editor widget Icon of choice
 	showEditorIcon bool
 
+	// isEditorButtonClickable passes a clickable icon button if true and regular icon if false
+	isEditorButtonClickable bool
+
 	requiredErrorText string
 
+	editorIcon       Icon
 	editorIconButton IconButton
 	showHidePassword IconButton
 
@@ -79,10 +84,13 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 	}
 }
 
-// IconEditor func creates an editor widget with icon of choice
-func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool, editorIconEvent func()) Editor {
+// IconEditor creates an editor widget with icon of choice
+func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool, clickableIcon bool, editorIconEvent func()) Editor {
 	e := t.Editor(editor, hint)
 	e.showEditorIcon = showEditorIcon
+	e.isEditorButtonClickable = clickableIcon
+	e.editorIcon = *NewIcon(MustIcon(widget.NewIcon(editorIcon)))
+	e.editorIcon.Color = t.Color.Gray
 	e.editorIconButton.IconButtonStyle.Icon = MustIcon(widget.NewIcon(editorIcon))
 	e.editorIconButtonEvent = editorIconEvent
 	return e
@@ -115,6 +123,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m2: unit.Dp(2),
 		m5: unit.Dp(5),
 
+		editorIcon: *NewIcon(MustIcon(widget.NewIcon(icons.AVAVTimer))),
 		editorIconButton: IconButton{
 			material.IconButtonStyle{
 				Icon:       MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
@@ -244,7 +253,12 @@ func (e Editor) editor(gtx layout.Context) layout.Dimensions {
 					Left: e.m5,
 				}
 				return inset.Layout(gtx, func(gtx C) D {
-					return e.editorIconButton.Layout(gtx)
+					if e.isEditorButtonClickable {
+						return e.editorIconButton.Layout(gtx)
+					} else {
+						return e.editorIcon.Layout(gtx, unit.Dp(25))
+					}
+
 				})
 			} else if e.isPassword {
 				inset := layout.Inset{
