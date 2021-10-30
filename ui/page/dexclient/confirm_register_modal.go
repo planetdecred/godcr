@@ -132,9 +132,8 @@ func formatAmount(assetID uint32, assetName string, amount uint64) string {
 	assetInfo, err := asset.Info(assetID)
 	if err != nil {
 		return fmt.Sprintf("%d [%s units]", amount, assetName)
-	} else {
-		unitInfo := assetInfo.UnitInfo
-		convertedLotSize := float64(amount) / float64(unitInfo.Conventional.ConversionFactor)
-		return fmt.Sprintf("%s %s", strconv.FormatFloat(convertedLotSize, 'f', -1, 64), unitInfo.Conventional.Unit)
 	}
+	unitInfo := assetInfo.UnitInfo
+	convertedLotSize := float64(amount) / float64(unitInfo.Conventional.ConversionFactor)
+	return fmt.Sprintf("%s %s", strconv.FormatFloat(convertedLotSize, 'f', -1, 64), unitInfo.Conventional.Unit)
 }
