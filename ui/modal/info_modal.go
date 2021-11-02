@@ -242,7 +242,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 		w = append(w, in.actionButtonsLayout())
 	}
 
-	return in.modal.Layout(gtx, w, 850)
+	return in.modal.Layout(gtx, w)
 }
 
 func (in *InfoModal) titleLayout() layout.Widget {

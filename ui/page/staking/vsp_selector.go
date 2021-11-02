@@ -7,13 +7,14 @@ import (
 	"gioui.org/gesture"
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/components"
-	"github.com/planetdecred/godcr/wallet"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 type vspSelector struct {
@@ -204,7 +205,10 @@ func (v *vspSelectorModal) OnDismiss() {}
 func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	return v.modal.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
-			return v.Theme.Label(values.TextSize20, v.dialogTitle).Layout(gtx)
+			return
+			title := v.Theme.Label(values.TextSize20, v.dialogTitle)
+			title.Font.Weight = text.Bold
+			title.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -255,7 +259,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 				layout.Rigid(v.addVSP.Layout),
 			)
 		},
-	}, 900)
+	})
 }
 
 func (v *vspSelectorModal) handlerSelectVSP(events []gesture.ClickEvent, info *wallet.VSPInfo) {

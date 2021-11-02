@@ -1,9 +1,11 @@
 package staking
 
 import (
+	"fmt"
 	"strconv"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v3"
@@ -24,13 +26,19 @@ type stakingModal struct {
 	totalCost        int64
 	balanceLessCost  int64
 	vspIsFetched     bool
+	isLoading        bool
 	ticketsPurchased func()
 
-	modal           decredmaterial.Modal
-	tickets         decredmaterial.Editor
-	rememberVSP     decredmaterial.CheckBoxStyle
-	cancelPurchase  decredmaterial.Button
-	reviewPurchase  decredmaterial.Button
+	modal          decredmaterial.Modal
+	cancelPurchase decredmaterial.Button
+	stakeBtn       decredmaterial.Button
+
+	increment decredmaterial.IconButton
+	decrement decredmaterial.IconButton
+
+	spendingPassword decredmaterial.Editor
+	tickets          decredmaterial.Editor
+
 	accountSelector *components.AccountSelector
 	vspSelector     *vspSelector
 }
@@ -39,18 +47,28 @@ func newStakingModal(l *load.Load) *stakingModal {
 	tp := &stakingModal{
 		Load: l,
 
-		tickets:        l.Theme.Editor(new(widget.Editor), ""),
-		rememberVSP:    l.Theme.CheckBox(new(widget.Bool), "Remember VSP"),
-		cancelPurchase: l.Theme.OutlineButton("Cancel"),
-		reviewPurchase: l.Theme.Button("Review purchase"),
-		modal:          *l.Theme.ModalFloatTitle(),
+		tickets:          l.Theme.Editor(new(widget.Editor), ""),
+		cancelPurchase:   l.Theme.OutlineButton("Cancel"),
+		stakeBtn:         l.Theme.Button("Stake"),
+		modal:            *l.Theme.ModalFloatTitle(),
+		increment:        l.Theme.PlainIconButton(l.Icons.ContentAdd),
+		decrement:        l.Theme.PlainIconButton(l.Icons.ContentRemove),
+		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 	}
 
-	tp.reviewPurchase.SetEnabled(false)
+	tp.tickets.Bordered = false
+	tp.tickets.Editor.Alignment = text.Middle
+	tp.tickets.Editor.SetText("1")
+
+	tp.increment.Color, tp.decrement.Color = l.Theme.Color.Text, l.Theme.Color.InactiveGray
+	tp.increment.Size, tp.decrement.Size = values.TextSize18, values.TextSize18
+
+	tp.modal.SetPadding(values.MarginPadding0)
+
+	tp.stakeBtn.SetEnabled(false)
 
 	tp.vspIsFetched = len((*l.WL.VspInfo).List) > 0
 
-	tp.tickets.Editor.SetText("1")
 	return tp
 }
 
@@ -68,17 +86,23 @@ func (tp *stakingModal) OnResume() {
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
 	tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
-
-	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.GetRememberVSP()) {
-		tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
-		tp.rememberVSP.CheckBox.Value = true
-	}
 }
 
 func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			return decredmaterial.LinearLayout{
+				Orientation: layout.Vertical,
+				Width:       decredmaterial.MatchParent,
+				Height:      decredmaterial.WrapContent,
+				Padding:     layout.UniformInset(values.MarginPadding16),
+				Border: decredmaterial.Border{
+					Radius: decredmaterial.TopRadius(14),
+				},
+				Direction:  layout.Center,
+				Alignment:  layout.Middle,
+				Background: tp.Theme.Color.LightGray,
+			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Center.Layout(gtx, func(gtx C) D {
 						return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
@@ -100,16 +124,43 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 							layout.Flexed(.5, func(gtx C) D {
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
-										tit := tp.Theme.Label(values.TextSize14, "Total")
-										tit.Color = tp.Theme.Color.Gray3
-										return tit.Layout(gtx)
+										totalLabel := tp.Theme.Label(values.TextSize14, "Total")
+										totalLabel.Color = tp.Theme.Color.Gray3
+										return totalLabel.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-										return tp.Theme.Label(values.TextSize16, dcrutil.Amount(int64(tp.ticketPrice)*tp.ticketCount()).String()).Layout(gtx)
+										costLabel := tp.Theme.Label(values.TextSize16, dcrutil.Amount(int64(tp.ticketPrice)*tp.ticketCount()).String())
+										costLabel.Color = tp.Theme.Color.Gray6
+										return costLabel.Layout(gtx)
 									}),
 								)
 							}),
-							layout.Flexed(.5, tp.tickets.Layout),
+							layout.Flexed(.5, func(gtx C) D {
+								return decredmaterial.LinearLayout{
+									Orientation: layout.Horizontal,
+									Width:       decredmaterial.WrapContent,
+									Height:      decredmaterial.WrapContent,
+									Border: decredmaterial.Border{
+										Radius: decredmaterial.Radius(10),
+										Color:  tp.Theme.Color.InactiveGray,
+										Width:  values.MarginPadding1,
+									},
+									Direction:  layout.E,
+									Alignment:  layout.Middle,
+									Background: tp.Theme.Color.Surface,
+								}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return tp.decrement.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										gtx.Constraints.Min.X, gtx.Constraints.Max.X = 100, 100
+										return tp.tickets.Layout(gtx)
+									}),
+									layout.Rigid(func(gtx C) D {
+										return tp.increment.Layout(gtx)
+									}),
+								)
+							}),
 						)
 					})
 				}),
@@ -117,9 +168,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					return tp.accountSelector.Layout(gtx)
-				}),
+				layout.Rigid(tp.accountSelector.Layout),
 				layout.Rigid(func(gtx C) D {
 					if tp.balanceError == "" {
 						return D{}
@@ -130,14 +179,15 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 					return label.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
-					return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{
+						Top:    values.MarginPadding16,
+						Bottom: values.MarginPadding16,
+					}.Layout(gtx, func(gtx C) D {
 						return tp.vspSelector.Layout(gtx)
 					})
 				}),
+				layout.Rigid(tp.spendingPassword.Layout),
 			)
-		},
-		func(gtx C) D {
-			return tp.rememberVSP.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
@@ -145,15 +195,13 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, tp.cancelPurchase.Layout)
 					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return tp.reviewPurchase.Layout(gtx)
-					}),
+					layout.Rigid(tp.stakeBtn.Layout),
 				)
 			})
 		},
 	}
 
-	return tp.modal.Layout(gtx, l, 850)
+	return tp.modal.Layout(gtx, l)
 }
 
 func (tp *stakingModal) ticketCount() int64 {
@@ -238,7 +286,7 @@ func (tp *stakingModal) calculateTotals() {
 }
 
 func (tp *stakingModal) Handle() {
-	tp.reviewPurchase.SetEnabled(tp.canPurchase())
+	tp.stakeBtn.SetEnabled(tp.canPurchase())
 
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
@@ -249,28 +297,76 @@ func (tp *stakingModal) Handle() {
 	}
 
 	if tp.cancelPurchase.Clicked() {
+		if tp.isLoading {
+			return
+		}
+
 		tp.Dismiss()
 	}
 
-	if tp.canPurchase() && tp.reviewPurchase.Clicked() {
+	if tp.canPurchase() && tp.stakeBtn.Clicked() {
+		tp.purchaseTickets()
+	}
 
-		if tp.vspSelector.Changed() && tp.rememberVSP.CheckBox.Value {
-			tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)
-		} else if !tp.rememberVSP.CheckBox.Value {
-			tp.WL.RememberVSP("")
+	// increment the ticket value
+	if tp.increment.Button.Clicked() {
+		tp.decrement.Color = tp.Theme.Color.Text
+		value, err := strconv.Atoi(tp.tickets.Editor.Text())
+		if err != nil {
+			return
 		}
+		value++
+		tp.tickets.Editor.SetText(fmt.Sprintf("%d", value))
+	}
+
+	// decrement the ticket value
+	if tp.decrement.Button.Clicked() {
+		value, err := strconv.Atoi(tp.tickets.Editor.Text())
+		if err != nil {
+			return
+		}
+		value--
+		if value < 1 {
+			tp.decrement.Color = tp.Theme.Color.InactiveGray
+			return
+		}
+		tp.tickets.Editor.SetText(fmt.Sprintf("%d", value))
+	}
+}
+
+func (tp *stakingModal) purchaseTickets() {
+
+	if tp.isLoading {
+		return
+	}
+
+	tp.isLoading = true
+	go func() {
+		password := []byte(tp.spendingPassword.Editor.Text())
+
+		account := tp.accountSelector.SelectedAccount()
+		wal := tp.WL.MultiWallet.WalletWithID(account.WalletID)
 
 		selectedVSP := tp.vspSelector.SelectedVSP()
-		account := tp.accountSelector.SelectedAccount()
 
-		newStakeReviewModal(tp.Load, account, selectedVSP).
-			TicketCount(tp.ticketCount()).
-			TotalCost(tp.totalCost).
-			BalanceLessCost(tp.balanceLessCost).
-			TicketPurchased(func() {
-				tp.Dismiss()
-				tp.ticketsPurchased()
-			}).
-			Show()
-	}
+		defer func() {
+			tp.isLoading = false
+		}()
+
+		vsp, err := tp.WL.MultiWallet.NewVSPClient(selectedVSP.Host, account.WalletID, uint32(account.Number))
+		if err != nil {
+			tp.Toast.NotifyError(err.Error())
+			return
+		}
+
+		err = vsp.PurchaseTickets(int32(tp.ticketCount()), wal.GetBestBlock()+256, password)
+		if err != nil {
+			tp.Toast.NotifyError(err.Error())
+			return
+		}
+
+		tp.ticketsPurchased()
+		tp.Dismiss()
+		tp.Toast.Notify(fmt.Sprintf("%v ticket(s) purchased successfully", tp.ticketCount()))
+	}()
 }

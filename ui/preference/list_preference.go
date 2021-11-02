@@ -145,7 +145,7 @@ func (lp *ListPreference) printModal(gtx layout.Context) layout.Dimensions {
 
 	lp.optionsRadioGroup.Value = lp.currentValue
 
-	return lp.modal.Layout(gtx, w, 1050)
+	return lp.modal.Layout(gtx, w)
 }
 
 func (lp *ListPreference) layoutItems() []layout.FlexChild {
