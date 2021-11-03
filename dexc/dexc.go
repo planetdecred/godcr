@@ -46,8 +46,6 @@ func NewDex(dbPath, net string, logMaker *dex.LoggerMaker) (*Dexc, error) {
 		DBPath: dbPath,
 		Net:    n,
 		Logger: logMaker.Logger("CORE"),
-		// TorProxy:     TorProxy,
-		// TorIsolation: TorIsolation,
 	}
 	clientCore, err := core.New(coreConfig)
 	if err != nil {

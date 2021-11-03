@@ -84,5 +84,5 @@ func (md *loginModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return md.modal.Layout(gtx, w, 900)
+	return md.modal.Layout(gtx, w)
 }

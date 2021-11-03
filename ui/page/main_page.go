@@ -330,7 +330,7 @@ func (mp *MainPage) Handle() {
 			switch item.PageID {
 			case overview.OverviewPageID:
 				pg = overview.NewOverviewPage(mp.Load)
-			case transaction.TransactionDetailsPageID:
+			case transaction.TransactionsPageID:
 				pg = transaction.NewTransactionsPage(mp.Load)
 			case wallets.WalletPageID:
 				pg = wallets.NewWalletPage(mp.Load)

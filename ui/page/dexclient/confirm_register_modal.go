@@ -92,7 +92,6 @@ func (md *confirmRegisterModal) Handle() {
 			md.Dismiss()
 		}()
 	}
-
 }
 
 func (md *confirmRegisterModal) Layout(gtx layout.Context) D {
@@ -125,7 +124,7 @@ func (md *confirmRegisterModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return md.modal.Layout(gtx, w, 900)
+	return md.modal.Layout(gtx, w)
 }
 
 func formatAmount(assetID uint32, assetName string, amount uint64) string {

@@ -53,10 +53,7 @@ func (pg *Page) ID() string {
 
 func (pg *Page) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-
-	if pg.Dexc.Core.User().Initialized && pg.Dexc.IsLoggedIn {
-		go pg.readNotifications()
-	}
+	go pg.readNotifications()
 }
 
 func (pg *Page) Layout(gtx C) D {

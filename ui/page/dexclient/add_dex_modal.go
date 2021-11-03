@@ -42,7 +42,7 @@ func newAddDexModal(l *load.Load) *addDexModal {
 	md.addDexServer.TextSize = values.TextSize12
 	md.addDexServer.Background = l.Theme.Color.Primary
 
-	md.dexServerAddress.Editor.SetText(testDexHost) // TODO: Debug feature only, remove before merging.
+	md.dexServerAddress.Editor.SetText(testDexHost)
 	md.dexServerAddress.Editor.SingleLine = true
 
 	return md
@@ -155,7 +155,7 @@ func (md *addDexModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return md.modal.Layout(gtx, w, 900)
+	return md.modal.Layout(gtx, w)
 }
 
 // coinImageBySymbol returns image widget for supported asset coins.
