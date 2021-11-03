@@ -276,9 +276,8 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 					return noLiveStake.Layout(gtx)
 				}
 				return pg.ticketsLive.Layout(gtx, len(pg.liveStakes), func(gtx C, index int) D {
-					return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-						return ticketCard(gtx, pg.Load, pg.liveStakes[index], true)
-					})
+					// pg.liveStakes[index].purchaseTime
+					return ticketListLayout(gtx, pg.Load, pg.liveStakes[index], index)
 				})
 			}),
 		)
@@ -413,8 +412,7 @@ func (pg *Page) Handle() {
 					Icon(successIcon).
 					Title("Ticket(s) Confirmed").
 					SetContentAlignment(align, align).
-					PositiveButton("Back to staking", func() {
-					})
+					PositiveButton("Back to staking", func() {})
 				pg.ShowModal(info)
 				pg.loadPageData()
 			}).Show()

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"gioui.org/gesture"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -128,7 +127,7 @@ func stakeToTransactionItems(l *load.Load, txs []dcrlibwallet.Transaction, newes
 			progress:      progress,
 			showProgress:  showProgress,
 			showTime:      showTime,
-			purchaseTime:  time.Unix(tx.Timestamp, 0).Format("Jan 2"),
+			purchaseTime:  time.Unix(tx.Timestamp, 0).Format("Jan 2, 2006 15:04:05 PM"),
 			ticketAge:     ticketAge,
 
 			statusTooltip:     l.Theme.Tooltip(),
@@ -491,20 +490,91 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 	)
 }
 
+func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int) layout.Dimensions {
+	return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
+				return layout.Stack{Alignment: layout.S}.Layout(gtx,
+					layout.Stacked(func(gtx C) D {
+						wrapIcon := l.Theme.Card()
+						wrapIcon.Color = ticket.status.Background
+						wrapIcon.Radius = decredmaterial.Radius(8)
+						dims := wrapIcon.Layout(gtx, func(gtx C) D {
+							return layout.UniformInset(values.MarginPadding10).Layout(gtx, ticket.status.Icon.Layout24dp)
+						})
+						return dims
+					}),
+					layout.Expanded(func(gtx C) D {
+						if !ticket.showProgress {
+							return D{}
+						}
+						p := l.Theme.ProgressBar(int(ticket.progress))
+						p.Width = values.MarginPadding44
+						p.Height = values.MarginPadding4
+						p.Direction = layout.SW
+						p.Radius = decredmaterial.BottomRadius(8)
+						p.Color = ticket.status.ProgressBarColor
+						p.TrackColor = ticket.status.ProgressTrackColor
+						return p.Layout2(gtx)
+					}),
+				)
+			})
+		}),
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					if i == 0 {
+						return D{}
+					}
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					separator := l.Theme.Separator()
+					separator.Width = gtx.Constraints.Max.X
+					return layout.E.Layout(gtx, separator.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{
+						Top:    values.MarginPadding6,
+						Bottom: values.MarginPadding10,
+					}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+
+								dtime := l.Theme.Label(values.TextSize14, ticket.purchaseTime)
+								dtime.Color = l.Theme.Color.Gray2
+								return components.EndToEndRow(gtx, func(gtx C) D {
+									return components.LayoutBalance(gtx, l, dcrutil.Amount(ticket.transaction.Amount).String())
+								}, dtime.Layout)
+							}),
+							layout.Rigid(func(gtx C) D {
+								left := func(gtx C) D {
+									txt := l.Theme.Label(values.TextSize14, ticket.status.Title)
+									txt.Color = ticket.status.Color
+									return txt.Layout(gtx)
+								}
+
+								right := func(gtx C) D {
+									if ticket.ticketAge == "" {
+										return D{}
+									}
+
+									txt := l.Theme.Label(values.TextSize14, ticket.ticketAge)
+									txt.Color = l.Theme.Color.Gray2
+									return txt.Layout(gtx)
+								}
+								return components.EndToEndRow(gtx, left, right)
+							}),
+						)
+					})
+				}),
+			)
+		}),
+	)
+}
+
 // todo: cleanup
 func createOrderDropDown(th *decredmaterial.Theme) *decredmaterial.DropDown {
 	return th.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
 		{Text: values.String(values.StrOldest)}}, 1)
-}
-
-// todo: cleanup
-// createClickGestures returns a slice of click gestures
-func createClickGestures(count int) []*gesture.Click {
-	var gestures = make([]*gesture.Click, count)
-	for i := 0; i < count; i++ {
-		gestures[i] = &gesture.Click{}
-	}
-	return gestures
 }
 
 func maturityTimeFormat(maturityTimeMinutes int) string {
