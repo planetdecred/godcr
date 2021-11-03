@@ -29,7 +29,7 @@ type transactionWdg struct {
 	copyTextButtons []decredmaterial.Button
 }
 
-type TransactionDetailsPage struct {
+type TxDetailsPage struct {
 	*load.Load
 
 	list *widget.List
@@ -58,8 +58,8 @@ type TransactionDetailsPage struct {
 	txDestinationAddress string
 }
 
-func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TransactionDetailsPage {
-	pg := &TransactionDetailsPage{
+func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transaction) *TxDetailsPage {
+	pg := &TxDetailsPage{
 		Load: l,
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
@@ -119,11 +119,11 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 	return pg
 }
 
-func (pg *TransactionDetailsPage) ID() string {
+func (pg *TxDetailsPage) ID() string {
 	return TransactionDetailsPageID
 }
 
-func (pg *TransactionDetailsPage) OnResume() {
+func (pg *TxDetailsPage) OnResume() {
 	if pg.transaction.TicketSpentHash != "" {
 		pg.ticketSpent, _ = pg.wallet.GetTransactionRaw(pg.transaction.TicketSpentHash)
 	}
@@ -133,7 +133,7 @@ func (pg *TransactionDetailsPage) OnResume() {
 	}
 }
 
-func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
+func (pg *TxDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	if pg.gtx == nil {
 		pg.gtx = &gtx
 	}
@@ -199,7 +199,7 @@ func (pg *TransactionDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 	return components.UniformPadding(gtx, body)
 }
 
-func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {
+func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,
@@ -291,7 +291,7 @@ func (pg *TransactionDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout
 	)
 }
 
-func (pg *TransactionDetailsPage) maturityProgressBar(gtx C) D {
+func (pg *TxDetailsPage) maturityProgressBar(gtx C) D {
 	return decredmaterial.LinearLayout{
 		Width:       decredmaterial.MatchParent,
 		Height:      decredmaterial.WrapContent,
@@ -333,7 +333,7 @@ func (pg *TransactionDetailsPage) maturityProgressBar(gtx C) D {
 	)
 }
 
-func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
+func (pg *TxDetailsPage) ticketDetails(gtx C) D {
 	if !pg.wallet.TxMatchesFilter(pg.transaction, dcrlibwallet.TxFilterStaking) ||
 		pg.transaction.Type == dcrlibwallet.TxTypeRevocation {
 		return D{}
@@ -411,7 +411,7 @@ func (pg *TransactionDetailsPage) ticketDetails(gtx C) D {
 	)
 }
 
-func (pg *TransactionDetailsPage) associatedTicket(gtx C) D {
+func (pg *TxDetailsPage) associatedTicket(gtx C) D {
 	if pg.transaction.Type != dcrlibwallet.TxTypeVote && pg.transaction.Type != dcrlibwallet.TxTypeRevocation {
 		return D{}
 	}
@@ -446,7 +446,7 @@ func (pg *TransactionDetailsPage) associatedTicket(gtx C) D {
 }
 
 //TODO: do this at startup
-func (pg *TransactionDetailsPage) txConfirmations() int32 {
+func (pg *TxDetailsPage) txConfirmations() int32 {
 	transaction := pg.transaction
 	if transaction.BlockHeight != -1 {
 		return (pg.WL.MultiWallet.WalletWithID(transaction.WalletID).GetBestBlock() - transaction.BlockHeight) + 1
@@ -455,7 +455,7 @@ func (pg *TransactionDetailsPage) txConfirmations() int32 {
 	return 0
 }
 
-func (pg *TransactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
+func (pg *TxDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
 	m := values.MarginPadding12
 	return decredmaterial.LinearLayout{
@@ -514,7 +514,7 @@ func (pg *TransactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 	)
 }
 
-func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, value string, showWalletBadge bool, clickable *widget.Clickable) layout.Dimensions {
+func (pg *TxDetailsPage) txnInfoSection(gtx layout.Context, label, value string, showWalletBadge bool, clickable *widget.Clickable) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -558,7 +558,7 @@ func (pg *TransactionDetailsPage) txnInfoSection(gtx layout.Context, label, valu
 	)
 }
 
-func (pg *TransactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
+func (pg *TxDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
 
 	collapsibleHeader := func(gtx C) D {
@@ -578,7 +578,7 @@ func (pg *TransactionDetailsPage) txnInputs(gtx layout.Context) layout.Dimension
 	})
 }
 
-func (pg *TransactionDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensions {
+func (pg *TxDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensions {
 	transaction := pg.transaction
 
 	collapsibleHeader := func(gtx C) D {
@@ -599,7 +599,7 @@ func (pg *TransactionDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensio
 	})
 }
 
-func (pg *TransactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int32, address string, i int) layout.Dimensions {
+func (pg *TxDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int32, address string, i int) layout.Dimensions {
 
 	accountName := "external"
 	walletName := ""
@@ -656,7 +656,7 @@ func (pg *TransactionDetailsPage) txnIORow(gtx layout.Context, amount int64, acc
 	})
 }
 
-func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions {
+func (pg *TxDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return pg.pageSections(gtx, func(gtx C) D {
 		return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
@@ -669,11 +669,11 @@ func (pg *TransactionDetailsPage) viewTxn(gtx layout.Context) layout.Dimensions 
 	})
 }
 
-func (pg *TransactionDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+func (pg *TxDetailsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
 }
 
-func (pg *TransactionDetailsPage) Handle() {
+func (pg *TxDetailsPage) Handle() {
 	gtx := pg.gtx
 	if pg.toDcrdata.Clicked() {
 		components.GoToURL(pg.WL.Wallet.GetBlockExplorerURL(pg.transaction.Hash))
@@ -703,7 +703,7 @@ func (pg *TransactionDetailsPage) Handle() {
 	}
 }
 
-func (pg *TransactionDetailsPage) OnClose() {}
+func (pg *TxDetailsPage) OnClose() {}
 
 func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transactionWdg {
 
