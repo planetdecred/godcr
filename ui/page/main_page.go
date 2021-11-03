@@ -315,6 +315,10 @@ func (mp *MainPage) Handle() {
 				pg = NewReceivePage(mp.Load)
 			}
 
+			if pg.ID() == mp.currentPageID() {
+				continue
+			}
+
 			mp.ChangeFragment(pg)
 		}
 	}
