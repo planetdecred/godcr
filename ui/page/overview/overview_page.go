@@ -1,4 +1,4 @@
-package page
+package overview
 
 import (
 	"context"
@@ -14,11 +14,18 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	tPage "github.com/planetdecred/godcr/ui/page/transaction"
+	wPage "github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
 
 const OverviewPageID = "Overview"
+
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
 
 // walletSyncDetails contains sync data for each wallet when a sync
 // is in progress.
@@ -137,7 +144,7 @@ func (pg *OverviewPage) OnResume() {
 func (pg *OverviewPage) loadTransactions() {
 	transactions, err := pg.WL.MultiWallet.GetTransactionsRaw(0, 5, dcrlibwallet.TxFilterAll, true)
 	if err != nil {
-		log.Error("Error getting transactions:", err)
+		// log.Error("Error getting transactions:", err)
 		return
 	}
 
@@ -174,7 +181,7 @@ func (pg *OverviewPage) showBackupInfo() {
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton("Backup now", func() {
 			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)
-			pg.ChangeFragment(NewWalletPage(pg.Load))
+			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 		}).Show()
 }
 
@@ -694,11 +701,11 @@ func (pg *OverviewPage) Handle() {
 	}
 
 	if pg.toTransactions.Button.Clicked() {
-		pg.ChangeFragment(NewTransactionsPage(pg.Load))
+		pg.ChangeFragment(tPage.NewTransactionsPage(pg.Load))
 	}
 
 	if clicked, selectedItem := pg.transactionsList.ItemClicked(); clicked {
-		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
+		pg.ChangeFragment(tPage.NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
 
 	if pg.toggleSyncDetails.Clicked() {

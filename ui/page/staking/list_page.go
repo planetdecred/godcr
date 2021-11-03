@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
+	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
@@ -36,7 +37,7 @@ type ListPage struct {
 	ctxCancel context.CancelFunc
 
 	tickets     []*transactionItem
-	ticketsList layout.List
+	ticketsList *decredmaterial.ClickableList
 	scrollBar   *widget.List
 
 	orderDropDown      *decredmaterial.DropDown
@@ -50,7 +51,7 @@ type ListPage struct {
 func newListPage(l *load.Load) *ListPage {
 	pg := &ListPage{
 		Load:        l,
-		ticketsList: layout.List{Axis: layout.Vertical},
+		ticketsList: l.Theme.NewClickableList(layout.Vertical),
 		scrollBar: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -230,6 +231,10 @@ func (pg *ListPage) Handle() {
 
 	for pg.ticketTypeDropDown.Changed() {
 		pg.fetchTickets()
+	}
+
+	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked {
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.tickets[selectedItem].transaction))
 	}
 }
 

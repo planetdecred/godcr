@@ -656,3 +656,12 @@ func CreateOrderDropDown(l *load.Load) *decredmaterial.DropDown {
 	return l.Theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
 		{Text: values.String(values.StrOldest)}}, 1)
 }
+
+func TranslateErr(err error) string {
+	switch err.Error() {
+	case dcrlibwallet.ErrInvalidPassphrase:
+		return values.String(values.StrInvalidPassphrase)
+	}
+
+	return err.Error()
+}

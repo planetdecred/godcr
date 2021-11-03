@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -27,7 +28,7 @@ type Page struct {
 	*load.Load
 
 	ticketPageContainer *layout.List
-	ticketsLive         *layout.List
+	ticketsLive         *decredmaterial.ClickableList
 
 	stakeBtn decredmaterial.Button
 
@@ -46,7 +47,7 @@ func NewStakingPage(l *load.Load) *Page {
 	pg := &Page{
 		Load: l,
 
-		ticketsLive:         &layout.List{Axis: layout.Vertical},
+		ticketsLive:         l.Theme.NewClickableList(layout.Vertical),
 		ticketPageContainer: &layout.List{Axis: layout.Vertical},
 		stakeBtn:            l.Theme.Button("Stake"),
 
@@ -419,6 +420,10 @@ func (pg *Page) Handle() {
 
 	if pg.toTickets.Button.Clicked() {
 		pg.ChangeFragment(newListPage(pg.Load))
+	}
+
+	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveStakes[selectedItem].transaction))
 	}
 }
 

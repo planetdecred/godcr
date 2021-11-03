@@ -1,4 +1,4 @@
-package page
+package transaction
 
 import (
 	"context"
@@ -15,6 +15,11 @@ import (
 )
 
 const TransactionsPageID = "Transactions"
+
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
 
 type TransactionsPage struct {
 	*load.Load
@@ -101,7 +106,7 @@ func (pg *TransactionsPage) loadTransactions() {
 
 	wallTxs, err := selectedWallet.GetTransactionsRaw(0, 0, txFilter, newestFirst) //TODO
 	if err != nil {
-		log.Error("Error loading transactions:", err)
+		// log.Error("Error loading transactions:", err)
 	} else {
 		pg.transactions = wallTxs
 	}

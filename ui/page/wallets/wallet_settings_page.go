@@ -1,4 +1,4 @@
-package page
+package wallets
 
 import (
 	"gioui.org/layout"

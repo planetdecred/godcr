@@ -1,4 +1,4 @@
-package page
+package wallets
 
 import (
 	"fmt"
@@ -64,7 +64,7 @@ type Restore struct {
 }
 
 // Loading lays out the loading widget with a faded background
-func NewCreateRestorePage(l *load.Load) *Restore {
+func NewRestorePage(l *load.Load) *Restore {
 	pg := &Restore{
 		Load: l,
 
@@ -429,7 +429,7 @@ func (pg *Restore) Handle() {
 				go func() {
 					_, err := pg.WL.MultiWallet.RestoreWallet(walletName, pg.seedPhrase, password, dcrlibwallet.PassphraseTypePass)
 					if err != nil {
-						m.SetError(translateErr(err))
+						m.SetError(components.TranslateErr(err))
 						m.SetLoading(false)
 						return
 					}
@@ -443,7 +443,7 @@ func (pg *Restore) Handle() {
 						pg.PopWindowPage()
 					} else {
 						pg.WL.Wallet.SetupListeners()
-						pg.ChangeWindowPage(NewMainPage(pg.Load), false)
+						pg.ChangeWindowPage(NewWalletPage(pg.Load), false)
 					}
 
 				}()

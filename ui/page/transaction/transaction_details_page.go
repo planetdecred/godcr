@@ -1,13 +1,9 @@
-package page
+package transaction
 
 import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/modal"
-	"github.com/planetdecred/godcr/ui/page/components"
 
 	"gioui.org/io/clipboard"
 	"gioui.org/layout"
@@ -16,6 +12,9 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
+	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -98,7 +97,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 			if input.AccountNumber != -1 {
 				accountName, err := pg.wallet.AccountName(input.AccountNumber)
 				if err != nil {
-					log.Error(err)
+					// log.Error(err)
 				} else {
 					pg.txSourceAccount = accountName
 				}
@@ -496,7 +495,20 @@ func (pg *TransactionDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimens
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: m}.Layout(gtx, func(gtx C) D {
-				return pg.txnInfoSection(gtx, values.String(values.StrTransactionID), transaction.Hash, false, pg.hashClickable)
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						t := pg.Theme.Label(values.TextSize14, values.String(values.StrTransactionID))
+						t.Color = pg.Theme.Color.Gray
+						return t.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						btn := pg.Theme.OutlineButton(transaction.Hash)
+						btn.TextSize = values.MarginPadding14
+						btn.SetClickable(pg.hashClickable)
+						btn.Inset = layout.UniformInset(values.MarginPadding0)
+						return btn.Layout(gtx)
+					}),
+				)
 			})
 		}),
 	)
