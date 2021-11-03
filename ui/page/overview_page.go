@@ -166,6 +166,7 @@ func (pg *OverviewPage) showBackupInfo() {
 	modal.NewInfoModal(pg.Load).
 		SetupWithTemplate(modal.WalletBackupInfoTemplate).
 		SetCancelable(false).
+		SetContentAlignment(layout.W, layout.Center).
 		CheckBox(pg.checkBox).
 		NegativeButton("Backup later", func() {
 			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)

@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -405,7 +406,16 @@ func (pg *Page) Handle() {
 	if pg.stakeBtn.Clicked() {
 		newStakingModal(pg.Load).
 			TicketPurchased(func() {
-				fmt.Println("Overview ticket pruchsased")
+				align := layout.Center
+				successIcon := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
+				successIcon.Color = pg.Theme.Color.Success
+				info := modal.NewInfoModal(pg.Load).
+					Icon(successIcon).
+					Title("Ticket(s) Confirmed").
+					SetContentAlignment(align, align).
+					PositiveButton("Back to staking", func() {
+					})
+				pg.ShowModal(info)
 				pg.loadPageData()
 			}).Show()
 	}

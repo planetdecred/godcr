@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 
 	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
@@ -38,6 +40,7 @@ type stakingModal struct {
 
 	spendingPassword decredmaterial.Editor
 	tickets          decredmaterial.Editor
+	materialLoader   material.LoaderStyle
 
 	accountSelector *components.AccountSelector
 	vspSelector     *vspSelector
@@ -54,6 +57,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 		increment:        l.Theme.PlainIconButton(l.Icons.ContentAdd),
 		decrement:        l.Theme.PlainIconButton(l.Icons.ContentRemove),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
+		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 	}
 
 	tp.tickets.Bordered = false
@@ -178,8 +182,8 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 						return D{}
 					}
 
-					label := tp.Theme.Body1(tp.balanceError)
-					label.Color = tp.Theme.Color.Orange
+					label := tp.Theme.Caption(tp.balanceError)
+					label.Color = tp.Theme.Color.Danger
 					return label.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -197,12 +201,23 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
+						if tp.isLoading {
+							return D{}
+						}
 						return layout.Inset{
 							Right:  values.MarginPadding4,
 							Bottom: values.MarginPadding15,
 						}.Layout(gtx, tp.cancelPurchase.Layout)
 					}),
-					layout.Rigid(tp.stakeBtn.Layout),
+					layout.Rigid(func(gtx C) D {
+						if tp.isLoading {
+							return layout.Inset{
+								Top:    values.MarginPadding10,
+								Bottom: values.MarginPadding15,
+							}.Layout(gtx, tp.materialLoader.Layout)
+						}
+						return tp.stakeBtn.Layout(gtx)
+					}),
 				)
 			})
 		},
@@ -227,6 +242,10 @@ func (tp *stakingModal) canPurchase() bool {
 	}
 
 	if tp.vspSelector.selectedVSP == nil {
+		return false
+	}
+
+	if tp.spendingPassword.Editor.Text() == "" {
 		return false
 	}
 
@@ -297,6 +316,11 @@ func (tp *stakingModal) Handle() {
 
 	if tp.vspSelector.Changed() {
 		tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)
+	}
+
+	_, isChanged := decredmaterial.HandleEditorEvents(tp.spendingPassword.Editor)
+	if isChanged {
+		tp.spendingPassword.SetError("")
 	}
 
 	// reselect vsp if there's a delay in fetching the VSP List
@@ -382,6 +406,5 @@ func (tp *stakingModal) purchaseTickets() {
 
 		tp.ticketsPurchased()
 		tp.Dismiss()
-		tp.Toast.Notify(fmt.Sprintf("%v ticket(s) purchased successfully", tp.ticketCount()))
 	}()
 }

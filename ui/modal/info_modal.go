@@ -37,9 +37,9 @@ type InfoModal struct {
 
 	checkbox decredmaterial.CheckBoxStyle
 
-	isCancelable bool
+	titleAlignment, btnAlignment layout.Direction
 
-	//TODO: neutral button
+	isCancelable bool
 }
 
 func NewInfoModal(l *load.Load) *InfoModal {
@@ -80,6 +80,12 @@ func (in *InfoModal) OnDismiss() {
 
 func (in *InfoModal) SetCancelable(min bool) *InfoModal {
 	in.isCancelable = min
+	return in
+}
+
+func (in *InfoModal) SetContentAlignment(title, btn layout.Direction) *InfoModal {
+	in.titleAlignment = title
+	in.btnAlignment = btn
 	return in
 }
 
@@ -187,7 +193,6 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 		return layout.Inset{Top: values.MarginPadding10, Bottom: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
 			return layout.Center.Layout(gtx, func(gtx C) D {
-				in.dialogIcon.Color = in.Theme.Color.DeepBlue
 				return in.dialogIcon.Layout(gtx, values.MarginPadding50)
 			})
 		})
@@ -249,18 +254,18 @@ func (in *InfoModal) titleLayout() layout.Widget {
 	return func(gtx C) D {
 		t := in.Theme.H6(in.dialogTitle)
 		t.Font.Weight = text.Bold
-		return t.Layout(gtx)
+		return in.titleAlignment.Layout(gtx, t.Layout)
 	}
 }
 
 func (in *InfoModal) actionButtonsLayout() layout.Widget {
 	return func(gtx C) D {
-		alignment := layout.E
-		if in.checkbox.CheckBox != nil {
-			alignment = layout.Center
-		}
+		// alignment := layout.E
+		// if in.checkbox.CheckBox != nil {
+		// 	alignment = layout.Center
+		// }
 
-		return alignment.Layout(gtx, func(gtx C) D {
+		return in.btnAlignment.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					if in.negativeButtonText == "" {
