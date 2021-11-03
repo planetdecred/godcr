@@ -46,7 +46,7 @@ func NewStakingPage(l *load.Load) *Page {
 	pg := &Page{
 		Load: l,
 
-		ticketsLive:         &layout.List{Axis: layout.Horizontal},
+		ticketsLive:         &layout.List{Axis: layout.Vertical},
 		ticketPageContainer: &layout.List{Axis: layout.Vertical},
 		stakeBtn:            l.Theme.Button("Stake"),
 
@@ -276,8 +276,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 					return noLiveStake.Layout(gtx)
 				}
 				return pg.ticketsLive.Layout(gtx, len(pg.liveStakes), func(gtx C, index int) D {
-					// pg.liveStakes[index].purchaseTime
-					return ticketListLayout(gtx, pg.Load, pg.liveStakes[index], index)
+					return ticketListLayout(gtx, pg.Load, pg.liveStakes[index], index, true)
 				})
 			}),
 		)

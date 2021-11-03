@@ -215,7 +215,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionI
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
 		var ticket = tickets[index]
 
-		return ticketListLayout(gtx, pg.Load, ticket, index)
+		return ticketListLayout(gtx, pg.Load, ticket, index, false)
 	})
 }
 
