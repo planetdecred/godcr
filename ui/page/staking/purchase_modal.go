@@ -86,6 +86,10 @@ func (tp *stakingModal) OnResume() {
 
 	tp.vspSelector = newVSPSelector(tp.Load).title("Select a vsp")
 	tp.ticketPrice = dcrutil.Amount(tp.WL.TicketPrice())
+
+	if tp.vspIsFetched && components.StringNotEmpty(tp.WL.GetRememberVSP()) {
+		tp.vspSelector.selectVSP(tp.WL.GetRememberVSP())
+	}
 }
 
 func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
@@ -193,7 +197,10 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, tp.cancelPurchase.Layout)
+						return layout.Inset{
+							Right:  values.MarginPadding4,
+							Bottom: values.MarginPadding15,
+						}.Layout(gtx, tp.cancelPurchase.Layout)
 					}),
 					layout.Rigid(tp.stakeBtn.Layout),
 				)
@@ -288,6 +295,10 @@ func (tp *stakingModal) calculateTotals() {
 func (tp *stakingModal) Handle() {
 	tp.stakeBtn.SetEnabled(tp.canPurchase())
 
+	if tp.vspSelector.Changed() {
+		tp.WL.RememberVSP(tp.vspSelector.selectedVSP.Host)
+	}
+
 	// reselect vsp if there's a delay in fetching the VSP List
 	if !tp.vspIsFetched && len((*tp.WL.VspInfo).List) > 0 {
 		if tp.WL.GetRememberVSP() != "" {
@@ -361,7 +372,11 @@ func (tp *stakingModal) purchaseTickets() {
 
 		err = vsp.PurchaseTickets(int32(tp.ticketCount()), wal.GetBestBlock()+256, password)
 		if err != nil {
-			tp.Toast.NotifyError(err.Error())
+			if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
+				tp.spendingPassword.SetError("Invalid password")
+			} else {
+				tp.Toast.NotifyError(err.Error())
+			}
 			return
 		}
 

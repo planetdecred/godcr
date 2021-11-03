@@ -20,7 +20,6 @@ type TransactionsPage struct {
 	*load.Load
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
-	// container layout.Flex
 	separator decredmaterial.Line
 
 	orderDropDown   *decredmaterial.DropDown
@@ -35,7 +34,6 @@ type TransactionsPage struct {
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
 		Load: l,
-		// container:       layout.Flex{Axis: layout.Vertical},
 		container: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},

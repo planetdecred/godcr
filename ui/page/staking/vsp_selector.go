@@ -2,10 +2,7 @@ package staking
 
 import (
 	"fmt"
-	"image"
 
-	"gioui.org/gesture"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget"
@@ -132,9 +129,8 @@ type vspSelectorModal struct {
 	inputVSP decredmaterial.Editor
 	addVSP   decredmaterial.Button
 
-	vspHosts    *layout.List
-	selectVSP   []*gesture.Click
 	selectedVSP *wallet.VSPInfo
+	vspList     *decredmaterial.ClickableList
 
 	vspSelectedCallback func(*wallet.VSPInfo)
 }
@@ -145,8 +141,8 @@ func newVSPSelectorModal(l *load.Load) *vspSelectorModal {
 
 		inputVSP: l.Theme.Editor(new(widget.Editor), "Add a new VSP..."),
 		addVSP:   l.Theme.Button("Save"),
-		vspHosts: &layout.List{Axis: layout.Vertical},
 		modal:    *l.Theme.ModalFloatTitle(),
+		vspList:  l.Theme.NewClickableList(layout.Vertical),
 	}
 
 	v.addVSP.SetEnabled(false)
@@ -183,9 +179,14 @@ func (v *vspSelectorModal) Handle() {
 		}()
 	}
 
-	vspList := v.WL.VspInfo.List
-	if len(vspList) != len(v.selectVSP) {
-		v.selectVSP = createClickGestures(len(vspList))
+	if v.modal.BackdropClicked(true) {
+		v.Dismiss()
+	}
+
+	if clicked, selectedItem := v.vspList.ItemClicked(); clicked {
+		v.selectedVSP = v.WL.VspInfo.List[selectedItem]
+		v.vspSelectedCallback(v.WL.VspInfo.List[selectedItem])
+		v.Dismiss()
 	}
 }
 
@@ -205,10 +206,9 @@ func (v *vspSelectorModal) OnDismiss() {}
 func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	return v.modal.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
-			return
 			title := v.Theme.Label(values.TextSize20, v.dialogTitle)
 			title.Font.Weight = text.Bold
-			title.Layout(gtx)
+			return title.Layout(gtx)
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -217,18 +217,11 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 					txt.Color = v.Theme.Color.Gray2
 					txtFee := v.Theme.Label(values.TextSize14, "Fee")
 					txtFee.Color = v.Theme.Color.Gray2
-					return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-						return components.EndToEndRow(gtx, txt.Layout, txtFee.Layout)
-					})
+					return components.EndToEndRow(gtx, txt.Layout, txtFee.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
 					listVSP := v.WL.VspInfo.List
-					return v.vspHosts.Layout(gtx, len(listVSP), func(gtx C, i int) D {
-						click := v.selectVSP[i]
-						pointer.Rect(image.Rectangle{Max: gtx.Constraints.Max}).Push(gtx.Ops).Pop()
-						click.Add(gtx.Ops)
-						v.handlerSelectVSP(click.Events(gtx), listVSP[i])
-
+					return v.vspList.Layout(gtx, len(listVSP), func(gtx C, i int) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Flexed(0.8, func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
@@ -239,14 +232,10 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								if v.selectedVSP != nil || v.selectedVSP != listVSP[i] {
-									return layout.Inset{Right: values.MarginPadding40}.Layout(gtx, func(gtx C) D {
-										return layout.Dimensions{}
-									})
+									return layout.Dimensions{}
 								}
-								return layout.Inset{Left: values.MarginPadding20}.Layout(gtx, func(gtx C) D {
-									ic := decredmaterial.NewIcon(v.Icons.NavigationCheck)
-									return ic.Layout(gtx, values.MarginPadding20)
-								})
+								ic := decredmaterial.NewIcon(v.Icons.NavigationCheck)
+								return ic.Layout(gtx, values.MarginPadding20)
 							}),
 						)
 					})
@@ -260,16 +249,6 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 			)
 		},
 	})
-}
-
-func (v *vspSelectorModal) handlerSelectVSP(events []gesture.ClickEvent, info *wallet.VSPInfo) {
-	for _, e := range events {
-		if e.Type == gesture.TypeClick {
-			v.selectedVSP = info
-			v.vspSelectedCallback(info)
-			v.Dismiss()
-		}
-	}
 }
 
 func (v *vspSelectorModal) editorsNotEmpty(editors ...*widget.Editor) bool {
