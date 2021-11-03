@@ -144,7 +144,6 @@ func (pg *AppOverviewPage) OnResume() {
 func (pg *AppOverviewPage) loadTransactions() {
 	transactions, err := pg.WL.MultiWallet.GetTransactionsRaw(0, 5, dcrlibwallet.TxFilterAll, true)
 	if err != nil {
-		// log.Error("Error getting transactions:", err)
 		return
 	}
 

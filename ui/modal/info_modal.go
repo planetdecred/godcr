@@ -260,11 +260,6 @@ func (in *InfoModal) titleLayout() layout.Widget {
 
 func (in *InfoModal) actionButtonsLayout() layout.Widget {
 	return func(gtx C) D {
-		// alignment := layout.E
-		// if in.checkbox.CheckBox != nil {
-		// 	alignment = layout.Center
-		// }
-
 		return in.btnAlignment.Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
