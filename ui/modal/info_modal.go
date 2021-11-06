@@ -51,6 +51,7 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		btnNegative:  l.Theme.OutlineButton("No"),
 		keyEvent:     l.Receiver.KeyEvents,
 		isCancelable: true,
+		btnAlignment: layout.E,
 	}
 
 	in.btnPositve.Font.Weight = text.Medium

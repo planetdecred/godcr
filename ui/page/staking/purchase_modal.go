@@ -18,7 +18,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-const purchaseModalID = "ticket_purchase_modal"
+const stakingModalID = "staking_modal"
 
 type stakingModal struct {
 	*load.Load
@@ -261,7 +261,7 @@ func (tp *stakingModal) canPurchase() bool {
 }
 
 func (tp *stakingModal) ModalID() string {
-	return purchaseModalID
+	return stakingModalID
 }
 
 func (tp *stakingModal) Show() {
@@ -336,6 +336,13 @@ func (tp *stakingModal) Handle() {
 			return
 		}
 
+		tp.Dismiss()
+	}
+
+	if tp.modal.BackdropClicked(true) {
+		if tp.isLoading {
+			return
+		}
 		tp.Dismiss()
 	}
 

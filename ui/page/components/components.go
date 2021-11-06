@@ -120,13 +120,13 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 		if tx.Type == dcrlibwallet.TxTypeTicketPurchase {
 			if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterUnmined) {
 				txStatus.Title = "Unmined"
-				txStatus.Icon = l.Icons.StakeUnminedIcon
+				txStatus.Icon = l.Icons.TicketUnminedIcon
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusUnmined
 				txStatus.Color = l.Theme.Color.LightBlue6
 				txStatus.Background = l.Theme.Color.LightBlue
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterImmature) {
 				txStatus.Title = "Immature"
-				txStatus.Icon = l.Icons.StakeImmatureIcon
+				txStatus.Icon = l.Icons.TicketImmatureIcon
 				txStatus.Color = l.Theme.Color.LightBlue6
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusImmature
 				txStatus.ProgressBarColor = l.Theme.Color.LightBlue5
@@ -135,7 +135,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 			} else if ticketSpender != nil {
 				if ticketSpender.Type == dcrlibwallet.TxTypeVote {
 					txStatus.Title = "Voted"
-					txStatus.Icon = l.Icons.StakeVotedIcon
+					txStatus.Icon = l.Icons.TicketVotedIcon
 					txStatus.Color = l.Theme.Color.Turquoise700
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
 					txStatus.ProgressBarColor = l.Theme.Color.Turquoise300
@@ -143,7 +143,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 					txStatus.Background = l.Theme.Color.Success2
 				} else {
 					txStatus.Title = "Revoked"
-					txStatus.Icon = l.Icons.StakeRevokedIcon
+					txStatus.Icon = l.Icons.TicketRevokedIcon
 					txStatus.Color = l.Theme.Color.Orange
 					txStatus.TicketStatus = dcrlibwallet.TicketStatusVotedOrRevoked
 					txStatus.ProgressBarColor = l.Theme.Color.Danger
@@ -152,7 +152,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				}
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterLive) {
 				txStatus.Title = "Live"
-				txStatus.Icon = l.Icons.StakeLiveIcon
+				txStatus.Icon = l.Icons.TicketLiveIcon
 				txStatus.Color = l.Theme.Color.Primary
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusLive
 				txStatus.ProgressBarColor = l.Theme.Color.Primary
@@ -160,7 +160,7 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 				txStatus.Background = l.Theme.Color.Primary50
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
 				txStatus.Title = "Expired"
-				txStatus.Icon = l.Icons.StakeExpiredIcon
+				txStatus.Icon = l.Icons.TicketExpiredIcon
 				txStatus.Color = l.Theme.Color.Gray
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
 				txStatus.Background = l.Theme.Color.LightGray
@@ -172,10 +172,10 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 			}
 		} else if tx.Type == dcrlibwallet.TxTypeVote {
 			txStatus.Title = "Vote"
-			txStatus.Icon = l.Icons.StakeVotedIcon
+			txStatus.Icon = l.Icons.TicketVotedIcon
 		} else if tx.Type == dcrlibwallet.TxTypeRevocation {
 			txStatus.Title = "Revocation"
-			txStatus.Icon = l.Icons.StakeRevokedIcon
+			txStatus.Icon = l.Icons.TicketRevokedIcon
 		}
 	}
 

@@ -50,13 +50,13 @@ type Icons struct {
 	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2 *decredmaterial.Image
 
 	NewStakeIcon,
-	StakeImmatureIcon,
-	StakeLiveIcon,
-	StakeVotedIcon,
-	StakeMissedIcon,
-	StakeExpiredIcon,
-	StakeRevokedIcon,
-	StakeUnminedIcon *decredmaterial.Image
+	TicketImmatureIcon,
+	TicketLiveIcon,
+	TicketVotedIcon,
+	TicketMissedIcon,
+	TicketExpiredIcon,
+	TicketRevokedIcon,
+	TicketUnminedIcon *decredmaterial.Image
 }
 
 type Load struct {
@@ -202,13 +202,13 @@ func loadIcons() Icons {
 		StakeIconInactive:        decredmaterial.NewImage(decredIcons["stake_inactive"]),
 		StakeyIcon:               decredmaterial.NewImage(decredIcons["stakey"]),
 		NewStakeIcon:             decredmaterial.NewImage(decredIcons["stake_purchased"]),
-		StakeImmatureIcon:        decredmaterial.NewImage(decredIcons["stake_immature"]),
-		StakeUnminedIcon:         decredmaterial.NewImage(decredIcons["stake_unmined"]),
-		StakeLiveIcon:            decredmaterial.NewImage(decredIcons["stake_live"]),
-		StakeVotedIcon:           decredmaterial.NewImage(decredIcons["stake_voted"]),
-		StakeMissedIcon:          decredmaterial.NewImage(decredIcons["stake_missed"]),
-		StakeExpiredIcon:         decredmaterial.NewImage(decredIcons["stake_expired"]),
-		StakeRevokedIcon:         decredmaterial.NewImage(decredIcons["stake_revoked"]),
+		TicketImmatureIcon:       decredmaterial.NewImage(decredIcons["ticket_immature"]),
+		TicketUnminedIcon:        decredmaterial.NewImage(decredIcons["ticket_unmined"]),
+		TicketLiveIcon:           decredmaterial.NewImage(decredIcons["ticket_live"]),
+		TicketVotedIcon:          decredmaterial.NewImage(decredIcons["ticket_voted"]),
+		TicketMissedIcon:         decredmaterial.NewImage(decredIcons["ticket_missed"]),
+		TicketExpiredIcon:        decredmaterial.NewImage(decredIcons["ticket_expired"]),
+		TicketRevokedIcon:        decredmaterial.NewImage(decredIcons["ticket_revoked"]),
 		List:                     decredmaterial.NewImage(decredIcons["list"]),
 		ListGridIcon:             decredmaterial.NewImage(decredIcons["list_grid"]),
 		DecredSymbolIcon:         decredmaterial.NewImage(decredIcons["decred_symbol"]),
