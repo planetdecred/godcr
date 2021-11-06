@@ -21,6 +21,7 @@ type WalletSettingsPage struct {
 
 	chevronRightIcon *decredmaterial.Icon
 	backButton       decredmaterial.IconButton
+	infoButton       decredmaterial.IconButton
 }
 
 func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettingsPage {
@@ -38,7 +39,7 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 	pg.rescan.Radius = decredmaterial.Radius(14)
 	pg.deleteWallet.Radius = decredmaterial.Radius(14)
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
 }
@@ -82,57 +83,45 @@ func (pg *WalletSettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 
 func (pg *WalletSettingsPage) changePassphrase() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrSpendingPassword), pg.changePass, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrChangeSpendingPass))),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-					})
-				}),
-			)
-		})
+		return pg.pageSections(gtx, values.String(values.StrGeneral),
+			pg.bottomSectionLabel(pg.changePass, values.String(values.StrSpendingPassword)))
 	}
 }
 
 func (pg *WalletSettingsPage) debug() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrDebug), pg.rescan, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRescanBlockchain))),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-					})
-				}),
-			)
-		})
+		return pg.pageSections(gtx, values.String(values.StrDebug),
+			pg.bottomSectionLabel(pg.rescan, values.String(values.StrRescanBlockchain)))
 	}
 }
 
 func (pg *WalletSettingsPage) dangerZone() layout.Widget {
 	return func(gtx C) D {
-		return pg.pageSections(gtx, values.String(values.StrDangerZone), pg.deleteWallet, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(pg.bottomSectionLabel(values.String(values.StrRemoveWallet))),
-				layout.Flexed(1, func(gtx C) D {
-					return layout.E.Layout(gtx, func(gtx C) D {
-						return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
-					})
-				}),
-			)
-		})
+		return pg.pageSections(gtx, values.String(values.StrDangerZone),
+			pg.bottomSectionLabel(pg.deleteWallet, values.String(values.StrRemoveWallet)))
 	}
 }
 
-func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, clickable *decredmaterial.Clickable, body layout.Widget) layout.Dimensions {
+func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, body layout.Widget) layout.Dimensions {
 	dims := func(gtx layout.Context, title string, body layout.Widget) D {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := pg.Theme.Body2(title)
-					txt.Color = pg.Theme.Color.Gray
-					return txt.Layout(gtx)
+					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							txt := pg.Theme.Body2(title)
+							txt.Color = pg.Theme.Color.Gray
+							return txt.Layout(gtx)
+						}),
+						layout.Flexed(1, func(gtx C) D {
+							if title == values.String(values.StrGeneral) {
+								pg.infoButton.Inset = layout.UniformInset(values.MarginPadding0)
+								pg.infoButton.Size = values.MarginPadding20
+								return layout.E.Layout(gtx, pg.infoButton.Layout)
+							}
+							return D{}
+						}),
+					)
 				}),
 				layout.Rigid(body),
 			)
@@ -141,19 +130,29 @@ func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, cli
 
 	return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-			if clickable == nil {
-				return dims(gtx, title, body)
-			}
-			return clickable.Layout(gtx, func(gtx C) D {
-				return dims(gtx, title, body)
-			})
+			return dims(gtx, title, body)
 		})
 	})
 }
 
-func (pg *WalletSettingsPage) bottomSectionLabel(title string) layout.Widget {
+func (pg *WalletSettingsPage) bottomSectionLabel(clickable *decredmaterial.Clickable, title string) layout.Widget {
 	return func(gtx C) D {
-		return pg.Theme.Body1(title).Layout(gtx)
+		return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+			return clickable.Layout(gtx, func(gtx C) D {
+				textLabel := pg.Theme.Body1(title)
+				if title == values.String(values.StrRemoveWallet) {
+					textLabel.Color = pg.Theme.Color.Danger
+				}
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(textLabel.Layout),
+					layout.Flexed(1, func(gtx C) D {
+						return layout.E.Layout(gtx, func(gtx C) D {
+							return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
+						})
+					}),
+				)
+			})
+		})
 	}
 }
 
@@ -254,6 +253,14 @@ func (pg *WalletSettingsPage) Handle() {
 
 			}).Show()
 		break
+	}
+
+	if pg.infoButton.Button.Clicked() {
+		info := modal.NewInfoModal(pg.Load).
+			Title("Spending password").
+			Body("A spending password helps secure your wallet transactions.").
+			PositiveButton("Got it", func() {})
+		pg.ShowModal(info)
 	}
 }
 
