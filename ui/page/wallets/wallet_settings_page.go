@@ -35,9 +35,9 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
 	}
 
-	pg.changePass.Radius = decredmaterial.Radius(14)
-	pg.rescan.Radius = decredmaterial.Radius(14)
-	pg.deleteWallet.Radius = decredmaterial.Radius(14)
+	// pg.changePass.Radius = decredmaterial.Radius(14)
+	// pg.rescan.Radius = decredmaterial.Radius(14)
+	// pg.deleteWallet.Radius = decredmaterial.Radius(14)
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
@@ -137,12 +137,15 @@ func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, bod
 
 func (pg *WalletSettingsPage) bottomSectionLabel(clickable *decredmaterial.Clickable, title string) layout.Widget {
 	return func(gtx C) D {
-		return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-			return clickable.Layout(gtx, func(gtx C) D {
-				textLabel := pg.Theme.Body1(title)
-				if title == values.String(values.StrRemoveWallet) {
-					textLabel.Color = pg.Theme.Color.Danger
-				}
+		return clickable.Layout(gtx, func(gtx C) D {
+			textLabel := pg.Theme.Body1(title)
+			if title == values.String(values.StrRemoveWallet) {
+				textLabel.Color = pg.Theme.Color.Danger
+			}
+			return layout.Inset{
+				Top:    values.MarginPadding15,
+				Bottom: values.MarginPadding4,
+			}.Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(textLabel.Layout),
 					layout.Flexed(1, func(gtx C) D {
