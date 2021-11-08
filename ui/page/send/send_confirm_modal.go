@@ -271,7 +271,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return scm.modal.Layout(gtx, w, 900)
+	return scm.modal.Layout(gtx, w)
 }
 
 func (scm *sendConfirmModal) contentRow(gtx layout.Context, leftValue, rightValue, walletName string) layout.Dimensions {

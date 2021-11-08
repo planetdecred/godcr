@@ -203,5 +203,5 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 	w = append(w, editor)
 	w = append(w, actionButtons)
 
-	return pm.modal.Layout(gtx, w, 850)
+	return pm.modal.Layout(gtx, w)
 }

@@ -81,7 +81,7 @@ func (p *Password) Layout(gtx layout.Context, confirm func([]byte), cancel func(
 			})
 		},
 	}
-	return p.modal.Layout(gtx, widgets, 1350)
+	return p.modal.Layout(gtx, widgets)
 }
 
 func (p *Password) WithError(e string) {

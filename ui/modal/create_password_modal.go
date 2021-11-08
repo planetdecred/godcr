@@ -315,5 +315,5 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return cm.modal.Layout(gtx, w, 850)
+	return cm.modal.Layout(gtx, w)
 }

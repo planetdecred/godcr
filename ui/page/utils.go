@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"gioui.org/gesture"
 	"gioui.org/widget"
+
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/values"
@@ -51,15 +51,6 @@ func getLockedWallets(wallets []*dcrlibwallet.Wallet) []*dcrlibwallet.Wallet {
 	}
 
 	return walletsLocked
-}
-
-// createClickGestures returns a slice of click gestures
-func createClickGestures(count int) []*gesture.Click {
-	var gestures = make([]*gesture.Click, count)
-	for i := 0; i < count; i++ {
-		gestures[i] = &gesture.Click{}
-	}
-	return gestures
 }
 
 // showBadge loops through a slice of recent transactions and checks if there are transaction from different wallets.

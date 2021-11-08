@@ -1,4 +1,4 @@
-package page
+package wallets
 
 import (
 	"image/color"
@@ -21,6 +21,11 @@ import (
 )
 
 const WalletPageID = components.WalletsPageID
+
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
 
 type walletListItem struct {
 	wal      *dcrlibwallet.Wallet
@@ -198,7 +203,7 @@ func (pg *WalletPage) initializeFloatingMenu() {
 			text:   values.String(values.StrImportExistingWallet),
 			button: new(widget.Clickable),
 			action: func(l *load.Load) {
-				l.ChangeWindowPage(NewCreateRestorePage(pg.Load), true)
+				l.ChangeWindowPage(NewRestorePage(pg.Load), true)
 			},
 		},
 		{
@@ -256,7 +261,7 @@ func (pg *WalletPage) getWalletMenu(wal *dcrlibwallet.Wallet) []menuItem {
 		{
 			text:   values.String(values.StrSettings),
 			button: new(widget.Clickable),
-			id:     SettingsPageID,
+			id:     WalletSettingsPageID,
 		},
 	}
 }
@@ -266,7 +271,7 @@ func (pg *WalletPage) getWatchOnlyWalletMenu(wal *dcrlibwallet.Wallet) []menuIte
 		{
 			text:   values.String(values.StrSettings),
 			button: new(widget.Clickable),
-			id:     SettingsPageID,
+			id:     WalletSettingsPageID,
 		},
 		{
 			text:   values.String(values.StrRename),
@@ -711,7 +716,7 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 										}),
 										layout.Flexed(1, func(gtx C) D {
 											return layout.E.Layout(gtx, func(gtx C) D {
-												totalBal := dcrutil.Amount(account.Balance.Spendable).String()
+												totalBal := dcrutil.Amount(account.TotalBalance).String()
 												return components.LayoutBalance(gtx, pg.Load, totalBal)
 											})
 										}),
@@ -936,7 +941,7 @@ func (pg *WalletPage) Handle() {
 					pg.ChangeFragment(NewSignMessagePage(pg.Load, listItem.wal))
 				case PrivacyPageID:
 					pg.ChangeFragment(NewPrivacyPage(pg.Load, listItem.wal))
-				case SettingsPageID:
+				case WalletSettingsPageID:
 					pg.ChangeFragment(NewWalletSettingsPage(pg.Load, listItem.wal))
 				default:
 					menu.action(pg.Load)

@@ -1,4 +1,4 @@
-package page
+package transaction
 
 import (
 	"context"
@@ -16,11 +16,15 @@ import (
 
 const TransactionsPageID = "Transactions"
 
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
 type TransactionsPage struct {
 	*load.Load
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
-	// container layout.Flex
 	separator decredmaterial.Line
 
 	orderDropDown   *decredmaterial.DropDown
@@ -35,7 +39,6 @@ type TransactionsPage struct {
 func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg := &TransactionsPage{
 		Load: l,
-		// container:       layout.Flex{Axis: layout.Vertical},
 		container: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -103,7 +106,7 @@ func (pg *TransactionsPage) loadTransactions() {
 
 	wallTxs, err := selectedWallet.GetTransactionsRaw(0, 0, txFilter, newestFirst) //TODO
 	if err != nil {
-		log.Error("Error loading transactions:", err)
+		// log.Error("Error loading transactions:", err)
 	} else {
 		pg.transactions = wallTxs
 	}

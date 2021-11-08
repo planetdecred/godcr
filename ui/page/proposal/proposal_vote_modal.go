@@ -387,7 +387,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 		},
 	}
 
-	return vm.modal.Layout(gtx, w, 850)
+	return vm.modal.Layout(gtx, w)
 }
 
 func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidgets) D {

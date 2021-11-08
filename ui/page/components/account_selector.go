@@ -386,7 +386,7 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 		},
 	}
 
-	return asm.modal.Layout(gtx, w, 850)
+	return asm.modal.Layout(gtx, w)
 }
 
 func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account *selectorAccount) layout.Dimensions {

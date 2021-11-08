@@ -13,9 +13,12 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/overview"
 	"github.com/planetdecred/godcr/ui/page/proposal"
 	"github.com/planetdecred/godcr/ui/page/send"
-	"github.com/planetdecred/godcr/ui/page/tickets"
+	"github.com/planetdecred/godcr/ui/page/staking"
+	"github.com/planetdecred/godcr/ui/page/transaction"
+	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -25,7 +28,7 @@ const (
 	OverviewNavID = iota
 	TransactionsNavID
 	WalletsNavID
-	TicketsNavID
+	StakingNavID
 	ProposalsNavID
 	MoreNavID
 
@@ -140,28 +143,28 @@ func (mp *MainPage) initNavItems() {
 				Image:         mp.Icons.OverviewIcon,
 				ImageInactive: mp.Icons.OverviewIconInactive,
 				Title:         values.String(values.StrOverview),
-				PageID:        OverviewPageID,
+				PageID:        overview.OverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Icons.TransactionsIcon,
 				ImageInactive: mp.Icons.TransactionsIconInactive,
 				Title:         values.String(values.StrTransactions),
-				PageID:        TransactionsPageID,
+				PageID:        transaction.TransactionsPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
 				Image:         mp.Icons.WalletIcon,
 				ImageInactive: mp.Icons.WalletIconInactive,
 				Title:         values.String(values.StrWallets),
-				PageID:        WalletPageID,
+				PageID:        wallets.WalletPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.TicketIcon,
-				ImageInactive: mp.Icons.TicketIconInactive,
-				Title:         values.String(values.StrTickets),
-				PageID:        tickets.OverviewPageID,
+				Image:         mp.Icons.StakeIcon,
+				ImageInactive: mp.Icons.StakeIconInactive,
+				Title:         values.String(values.StrStaking),
+				PageID:        staking.OverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -198,7 +201,7 @@ func (mp *MainPage) OnResume() {
 	if mp.currentPage != nil {
 		mp.currentPage.OnResume()
 	} else {
-		mp.ChangeFragment(NewOverviewPage(mp.Load))
+		mp.ChangeFragment(overview.NewOverviewPage(mp.Load))
 	}
 
 	if mp.autoSync {
@@ -327,13 +330,13 @@ func (mp *MainPage) Handle() {
 		for item.Clickable.Clicked() {
 			var pg load.Page
 			if i == OverviewNavID {
-				pg = NewOverviewPage(mp.Load)
+				pg = overview.NewOverviewPage(mp.Load)
 			} else if i == TransactionsNavID {
-				pg = NewTransactionsPage(mp.Load)
+				pg = transaction.NewTransactionsPage(mp.Load)
 			} else if i == WalletsNavID {
-				pg = NewWalletPage(mp.Load)
-			} else if i == TicketsNavID {
-				pg = tickets.NewTicketPage(mp.Load)
+				pg = wallets.NewWalletPage(mp.Load)
+			} else if i == StakingNavID {
+				pg = staking.NewStakingPage(mp.Load)
 			} else if i == ProposalsNavID {
 				pg = proposal.NewProposalsPage(mp.Load)
 			} else if i == MoreNavID {
