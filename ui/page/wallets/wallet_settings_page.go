@@ -35,10 +35,6 @@ func NewWalletSettingsPage(l *load.Load, wal *dcrlibwallet.Wallet) *WalletSettin
 		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
 	}
 
-	// pg.changePass.Radius = decredmaterial.Radius(14)
-	// pg.rescan.Radius = decredmaterial.Radius(14)
-	// pg.deleteWallet.Radius = decredmaterial.Radius(14)
-
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
