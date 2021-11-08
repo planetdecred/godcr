@@ -1,9 +1,7 @@
 package decredmaterial
 
 import (
-	"image"
 	"image/color"
-	"math"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
@@ -14,40 +12,25 @@ import (
 )
 
 type Shadow struct {
-	radius  float32
 	surface color.NRGBA
-
-	ambientColor  color.NRGBA
-	penumbraColor color.NRGBA
-	umbraColor    color.NRGBA
 }
 
 const (
-	shadowElevation = 3
+	shadowElevation = 5
+	shadowRadius    = 8
 )
 
 func (t *Theme) Shadow() *Shadow {
 	return &Shadow{
-		radius:        4,
-		surface:       t.Color.Surface,
-		ambientColor:  color.NRGBA{A: 0x1},
-		penumbraColor: color.NRGBA{A: 0x5},
-		umbraColor:    color.NRGBA{A: 0x10},
+		surface: t.Color.Surface,
 	}
-}
-
-func (t *Theme) TransparentShadow(radius float32) *Shadow {
-	s := t.Shadow()
-	s.surface = color.NRGBA{}
-	s.radius = radius
-	return s
 }
 
 func (s *Shadow) Layout(gtx C, w layout.Widget) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			s.layout(gtx)
-			surface := clip.UniformRRect(f32.Rectangle{Max: layout.FPt(gtx.Constraints.Min)}, s.radius)
+			s.layoutShadow(gtx)
+			surface := clip.UniformRRect(f32.Rectangle{Max: layout.FPt(gtx.Constraints.Min)}, shadowRadius)
 			paint.FillShape(gtx.Ops, s.surface, surface.Op(gtx.Ops))
 			return D{Size: gtx.Constraints.Min}
 		}),
@@ -55,27 +38,19 @@ func (s *Shadow) Layout(gtx C, w layout.Widget) D {
 	)
 }
 
-func (s *Shadow) layout(gtx C) D {
+func (s *Shadow) layoutShadow(gtx C) D {
 	sz := gtx.Constraints.Min
-	rr := float32(gtx.Px(unit.Dp(shadowElevation)))
+	offset := pxf(gtx.Metric, unit.Dp(shadowElevation))
+	shadowSize := float32(gtx.Px(unit.Dp(shadowElevation)))
+	rect := f32.Rect(0, 0, float32(sz.X), float32(sz.Y))
 
-	r := f32.Rect(0, 0, float32(sz.X), float32(sz.Y))
-	s.layoutShadow(gtx, r, rr)
+	// shadow layers arranged from the biggest to the smallest
+	gradientBox(gtx.Ops, rect, shadowSize, offset/0.8, color.NRGBA{A: 0x5})
+	gradientBox(gtx.Ops, rect, shadowSize, offset, color.NRGBA{A: 0x10})
+	gradientBox(gtx.Ops, rect, shadowSize, offset/1.5, color.NRGBA{A: 0x15})
+	gradientBox(gtx.Ops, rect, shadowSize, offset/2.5, color.NRGBA{A: 0x20})
 
 	return layout.Dimensions{Size: sz}
-}
-
-func (s *Shadow) layoutShadow(gtx layout.Context, r f32.Rectangle, rr float32) {
-	offset := pxf(gtx.Metric, unit.Dp(shadowElevation))
-
-	ambient := r
-	gradientBox(gtx.Ops, ambient, rr, offset/2, s.ambientColor)
-
-	penumbra := r.Add(f32.Pt(0, offset/2))
-	gradientBox(gtx.Ops, penumbra, rr, offset, s.penumbraColor)
-
-	umbra := outset(penumbra, -offset/2)
-	gradientBox(gtx.Ops, umbra, rr/4, offset/2, s.umbraColor)
 }
 
 func gradientBox(ops *op.Ops, r f32.Rectangle, rr, spread float32, col color.NRGBA) {
@@ -83,19 +58,6 @@ func gradientBox(ops *op.Ops, r f32.Rectangle, rr, spread float32, col color.NRG
 		Rect: outset(r, spread),
 		SE:   rr + spread, SW: rr + spread, NW: rr + spread, NE: rr + spread,
 	}.Op(ops))
-}
-
-func round(r f32.Rectangle) f32.Rectangle {
-	return f32.Rectangle{
-		Min: f32.Point{
-			X: float32(math.Round(float64(r.Min.X))),
-			Y: float32(math.Round(float64(r.Min.Y))),
-		},
-		Max: f32.Point{
-			X: float32(math.Round(float64(r.Max.X))),
-			Y: float32(math.Round(float64(r.Max.Y))),
-		},
-	}
 }
 
 func outset(r f32.Rectangle, rr float32) f32.Rectangle {
@@ -126,8 +88,3 @@ func pxf(c unit.Metric, v unit.Value) float32 {
 		panic("unknown unit")
 	}
 }
-
-func topLeft(r image.Rectangle) image.Point     { return r.Min }
-func topRight(r image.Rectangle) image.Point    { return image.Point{X: r.Max.X, Y: r.Min.Y} }
-func bottomRight(r image.Rectangle) image.Point { return r.Max }
-func bottomLeft(r image.Rectangle) image.Point  { return image.Point{X: r.Min.X, Y: r.Max.Y} }
