@@ -796,11 +796,12 @@ func (pg *WalletPage) layoutAddWalletMenu(gtx layout.Context) layout.Dimensions 
 	}
 
 	return inset.Layout(gtx, func(gtx C) D {
-		pg.optionsMenuCard.Border = true
-		return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
-			return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
-				return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
-					return layout.UniformInset(unit.Dp(10)).Layout(gtx, pg.Theme.Body2(pg.addWalletMenu[i].text).Layout)
+		return pg.Theme.Shadow().Layout(gtx, func(gtx C) D {
+			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
+				return (&layout.List{Axis: layout.Vertical}).Layout(gtx, len(pg.addWalletMenu), func(gtx C, i int) D {
+					return material.Clickable(gtx, pg.addWalletMenu[i].button, func(gtx C) D {
+						return layout.UniformInset(unit.Dp(10)).Layout(gtx, pg.Theme.Body2(pg.addWalletMenu[i].text).Layout)
+					})
 				})
 			})
 		})

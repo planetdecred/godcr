@@ -113,7 +113,6 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 			Width:       decredmaterial.MatchParent,
 			Height:      decredmaterial.WrapContent,
 			Background:  pg.Theme.Color.Surface,
-			Shadow:      pg.Theme.TransparentShadow(14),
 			Clickable:   pg.morePageListItems[i].clickable,
 			Direction:   layout.W,
 			Border:      decredmaterial.Border{Radius: radius},
