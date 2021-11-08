@@ -375,12 +375,12 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							// mix denomination or ticket price
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
 								mixedDenom := dcrutil.Amount(row.Transaction.MixDenomination).String()
-								txt := l.Theme.Label(values.TextSize14, mixedDenom)
+								txt := l.Theme.Label(values.TextSize12, mixedDenom)
 								txt.Color = l.Theme.Color.Gray
 								return txt.Layout(gtx)
 							} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
 								ticketPrice := dcrutil.Amount(row.Transaction.Amount).String()
-								txt := l.Theme.Label(values.TextSize14, ticketPrice)
+								txt := l.Theme.Label(values.TextSize12, ticketPrice)
 								txt.Color = l.Theme.Color.Gray
 								return txt.Layout(gtx)
 							}
@@ -389,7 +389,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						layout.Rigid(func(gtx C) D {
 							// Mixed outputs count
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed && row.Transaction.MixCount > 1 {
-								label := l.Theme.Label(values.TextSize14, fmt.Sprintf("x%d", row.Transaction.MixCount))
+								label := l.Theme.Label(values.TextSize12, fmt.Sprintf("x%d", row.Transaction.MixCount))
 								label.Color = l.Theme.Color.Gray
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, label.Layout)
 							}
@@ -422,7 +422,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 									}.Layout(gtx, ic.Layout16dp)
 								}),
 								layout.Rigid(func(gtx C) D {
-									label := l.Theme.Label(values.TextSize14, dcrutil.Amount(row.Transaction.VoteReward).String())
+									label := l.Theme.Label(values.TextSize12, dcrutil.Amount(row.Transaction.VoteReward).String())
 									label.Color = l.Theme.Color.Turquoise800
 									return label.Layout(gtx)
 								}),
@@ -475,7 +475,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 								if currentDate[0] == txnDate[0] && currentDate[1] == txnDate[1] && currentDay-txnDay < 1 {
 									return D{}
 								}
-								duration := l.Theme.Label(values.TextSize14, DurationAgo(row.Transaction.Timestamp))
+								duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
 								duration.Color = l.Theme.Color.InactiveGray
 								return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
 							}),
