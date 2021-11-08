@@ -3,12 +3,12 @@ package decredmaterial
 import (
 	"image/color"
 
-	"github.com/planetdecred/godcr/ui/values"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type Collapsible struct {
@@ -102,6 +102,10 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 			}),
 		)
 	})
+}
+
+func (c *Collapsible) IsExpanded() bool {
+	return c.isExpanded
 }
 
 func (c *CollapsibleWithOption) Layout(gtx layout.Context, header, body func(C) D, more func(C)) layout.Dimensions {

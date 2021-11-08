@@ -16,6 +16,7 @@ type Modal struct {
 	card         Card
 	scroll       ListStyle
 	isFloatTitle bool
+	padding      unit.Value
 }
 
 func (t *Theme) ModalFloatTitle() *Modal {
@@ -35,8 +36,9 @@ func (t *Theme) Modal() *Modal {
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
 		},
-		button: new(widget.Clickable),
-		card:   t.Card(),
+		button:  new(widget.Clickable),
+		card:    t.Card(),
+		padding: unit.Dp(16),
 	}
 
 	m.scroll = t.List(m.list)
@@ -46,7 +48,7 @@ func (t *Theme) Modal() *Modal {
 
 // Layout renders the modal widget to screen. The modal assumes the size of
 // its content plus padding.
-func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) layout.Dimensions {
+func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget) layout.Dimensions {
 	dims := layout.Stack{Alignment: layout.Center}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -75,7 +77,7 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) 
 					Orientation: layout.Vertical,
 					Width:       WrapContent,
 					Height:      WrapContent,
-					Padding:     layout.UniformInset(unit.Dp(16)),
+					Padding:     layout.UniformInset(m.padding),
 					Alignment:   layout.Middle,
 					Border: Border{
 						Radius: Radius(14),
@@ -86,6 +88,9 @@ func (m *Modal) Layout(gtx layout.Context, widgets []layout.Widget, margin int) 
 					layout.Rigid(func(gtx C) D {
 						if m.isFloatTitle && len(widgets) > 0 {
 							gtx.Constraints.Min.X = gtx.Constraints.Max.X
+							if m.padding == unit.Dp(0) {
+								return layout.UniformInset(m.padding).Layout(gtx, title)
+							}
 							return layout.UniformInset(unit.Dp(10)).Layout(gtx, title)
 						}
 						return D{}
@@ -110,4 +115,8 @@ func (m *Modal) BackdropClicked(minimizable bool) bool {
 	}
 
 	return false
+}
+
+func (m *Modal) SetPadding(padding unit.Value) {
+	m.padding = padding
 }

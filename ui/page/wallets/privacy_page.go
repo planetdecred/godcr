@@ -1,4 +1,4 @@
-package page
+package wallets
 
 import (
 	"fmt"
@@ -52,7 +52,12 @@ func (pg *PrivacyPage) ID() string {
 
 func (pg *PrivacyPage) OnResume() {
 	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
-	pg.allowUnspendUnmixedAcct.Disabled()
+
+	if pg.wallet.AccountMixerConfigIsSet() {
+		pg.allowUnspendUnmixedAcct.SetChecked(false)
+	} else {
+		pg.allowUnspendUnmixedAcct.SetChecked(true)
+	}
 }
 
 func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
@@ -68,7 +73,7 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 			},
 			InfoTemplate: modal.PrivacyInfoTemplate,
 			Body: func(gtx layout.Context) layout.Dimensions {
-				if pg.wallet.AccountMixerConfigIsSet() {
+				if pg.wallet.MixedAccountNumber() > 0 && pg.wallet.UnmixedAccountNumber() > 0 {
 					widgets := []func(gtx C) D{
 						func(gtx C) D {
 							return pg.mixerInfoLayout(gtx)
@@ -312,7 +317,7 @@ func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 			return pg.dangerZoneCollapsible.Layout(gtx,
 				func(gtx C) D {
 					txt := pg.Theme.Label(values.MarginPadding15, "Danger Zone")
-					txt.Color = pg.Theme.Color.Gray
+					txt.Color = pg.Theme.Color.Danger
 					return txt.Layout(gtx)
 				},
 				func(gtx C) D {
@@ -345,6 +350,29 @@ func (pg *PrivacyPage) Handle() {
 		} else {
 			go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
 		}
+	}
+
+	if pg.allowUnspendUnmixedAcct.Changed() {
+		if pg.allowUnspendUnmixedAcct.IsChecked() {
+			modal.NewInfoModal(pg.Load).
+				Title("Warning: Danger alert!").
+				Body("Are you sure you want to allow spending from unmixed accounts?").
+				NegativeButton(values.String(values.StrCancel), func() {
+					pg.allowUnspendUnmixedAcct.SetChecked(false)
+				}).
+				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
+				PositiveButton("Allow", func() {
+					pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
+				}).
+				Show()
+		} else {
+			pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
+		}
+	}
+
+	if pg.dangerZoneCollapsible.IsExpanded() {
+		pg.pageContainer.ScrollToEnd = true
+		pg.RefreshWindow()
 	}
 }
 

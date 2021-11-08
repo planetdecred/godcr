@@ -178,5 +178,5 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 		w = append(w, tm.actionButtonsLayout())
 	}
 
-	return tm.modal.Layout(gtx, w, 850)
+	return tm.modal.Layout(gtx, w)
 }

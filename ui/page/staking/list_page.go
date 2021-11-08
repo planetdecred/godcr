@@ -1,4 +1,4 @@
-package tickets
+package staking
 
 import (
 	"context"
@@ -7,16 +7,16 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
-	"github.com/decred/dcrd/dcrutil"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
+	tpage "github.com/planetdecred/godcr/ui/page/transaction"
 	"github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const listPageID = "TicketsList"
+const listPageID = "StakingList"
 
 type txType int
 
@@ -37,7 +37,7 @@ type ListPage struct {
 	ctxCancel context.CancelFunc
 
 	tickets     []*transactionItem
-	ticketsList layout.List
+	ticketsList *decredmaterial.ClickableList
 	scrollBar   *widget.List
 
 	orderDropDown      *decredmaterial.DropDown
@@ -51,7 +51,7 @@ type ListPage struct {
 func newListPage(l *load.Load) *ListPage {
 	pg := &ListPage{
 		Load:        l,
-		ticketsList: layout.List{Axis: layout.Vertical},
+		ticketsList: l.Theme.NewClickableList(layout.Vertical),
 		scrollBar: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -143,7 +143,7 @@ func (pg *ListPage) fetchTickets() {
 		return
 	}
 
-	tickets, err := ticketsToTransactionItems(pg.Load, txs, newestFirst, func(filter int32) bool {
+	tickets, err := stakeToTransactionItems(pg.Load, txs, newestFirst, func(filter int32) bool {
 		switch filter {
 		case dcrlibwallet.TxFilterVoted:
 			return ticketTypeDropdown == Voted
@@ -216,84 +216,7 @@ func (pg *ListPage) ticketListLayout(gtx layout.Context, tickets []*transactionI
 	return pg.ticketsList.Layout(gtx, len(tickets), func(gtx C, index int) D {
 		var ticket = tickets[index]
 
-		return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Inset{Right: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-					return layout.Stack{Alignment: layout.S}.Layout(gtx,
-						layout.Stacked(func(gtx C) D {
-							wrapIcon := pg.Theme.Card()
-							wrapIcon.Color = ticket.status.Background
-							wrapIcon.Radius = decredmaterial.Radius(8)
-							dims := wrapIcon.Layout(gtx, func(gtx C) D {
-								return layout.UniformInset(values.MarginPadding10).Layout(gtx, ticket.status.Icon.Layout24dp)
-							})
-							return dims
-						}),
-						layout.Expanded(func(gtx C) D {
-							if !ticket.showProgress {
-								return D{}
-							}
-							p := pg.Theme.ProgressBar(int(ticket.progress))
-							p.Width = values.MarginPadding44
-							p.Height = values.MarginPadding4
-							p.Direction = layout.SW
-							p.Radius = decredmaterial.BottomRadius(8)
-							p.Color = ticket.status.ProgressBarColor
-							p.TrackColor = ticket.status.ProgressTrackColor
-							return p.Layout2(gtx)
-						}),
-					)
-				})
-			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						if index == 0 {
-							return D{}
-						}
-						gtx.Constraints.Min.X = gtx.Constraints.Max.X
-						separator := pg.Theme.Separator()
-						separator.Width = gtx.Constraints.Max.X
-						return layout.E.Layout(gtx, separator.Layout)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return layout.Inset{
-							Top:    values.MarginPadding6,
-							Bottom: values.MarginPadding10,
-						}.Layout(gtx, func(gtx C) D {
-							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-								layout.Rigid(func(gtx C) D {
-
-									dtime := pg.Theme.Label(values.TextSize14, ticket.purchaseTime)
-									dtime.Color = pg.Theme.Color.Gray2
-									return components.EndToEndRow(gtx, func(gtx C) D {
-										return components.LayoutBalance(gtx, pg.Load, dcrutil.Amount(ticket.transaction.Amount).String())
-									}, dtime.Layout)
-								}),
-								layout.Rigid(func(gtx C) D {
-									l := func(gtx C) layout.Dimensions {
-										txt := pg.Theme.Label(values.MarginPadding14, ticket.status.Title)
-										txt.Color = ticket.status.Color
-										return txt.Layout(gtx)
-									}
-									r := func(gtx C) layout.Dimensions {
-
-										if ticket.ticketAge == "" {
-											return D{}
-										}
-
-										txt := pg.Theme.Label(values.TextSize14, ticket.ticketAge)
-										txt.Color = pg.Theme.Color.Gray2
-										return txt.Layout(gtx)
-									}
-									return components.EndToEndRow(gtx, l, r)
-								}),
-							)
-						})
-					}),
-				)
-			}),
-		)
+		return ticketListLayout(gtx, pg.Load, ticket, index, false)
 	})
 }
 
@@ -308,6 +231,10 @@ func (pg *ListPage) Handle() {
 
 	for pg.ticketTypeDropDown.Changed() {
 		pg.fetchTickets()
+	}
+
+	if clicked, selectedItem := pg.ticketsList.ItemClicked(); clicked {
+		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.tickets[selectedItem].transaction))
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -138,7 +139,7 @@ func (sp *startPage) Handle() {
 	}
 
 	for sp.restoreButton.Clicked() {
-		sp.ChangeWindowPage(NewCreateRestorePage(sp.Load), true)
+		sp.ChangeWindowPage(wallets.NewRestorePage(sp.Load), true)
 	}
 }
 

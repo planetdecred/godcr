@@ -1,4 +1,4 @@
-package page
+package wallets
 
 import (
 	"fmt"
