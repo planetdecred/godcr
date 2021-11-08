@@ -30,8 +30,8 @@ func (s *Shadow) Layout(gtx C, w layout.Widget) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			s.layoutShadow(gtx)
-			surface := clip.UniformRRect(f32.Rectangle{Max: layout.FPt(gtx.Constraints.Min)}, shadowRadius)
-			paint.FillShape(gtx.Ops, s.surface, surface.Op(gtx.Ops))
+			defer clip.UniformRRect(f32.Rectangle{Max: layout.FPt(gtx.Constraints.Min)}, shadowRadius).Push(gtx.Ops).Pop()
+			paint.PaintOp{}.Add(gtx.Ops)
 			return D{Size: gtx.Constraints.Min}
 		}),
 		layout.Stacked(w),

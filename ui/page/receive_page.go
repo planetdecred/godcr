@@ -78,8 +78,8 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.more.Color = pg.Theme.Color.Gray3
 	pg.more.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.newAddr.Inset = layout.Inset{
-		Top:    values.MarginPadding20,
-		Bottom: values.MarginPadding20,
+		Top:    values.MarginPadding12,
+		Bottom: values.MarginPadding12,
 		Left:   values.MarginPadding16,
 		Right:  values.MarginPadding16,
 	}
@@ -275,7 +275,7 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 					if pg.isNewAddr {
 						m := op.Record(gtx.Ops)
 						layout.Inset{Top: values.MarginPadding30, Left: unit.Dp(-152)}.Layout(gtx, func(gtx C) D {
-							return pg.newAddr.Layout(gtx)
+							return pg.Theme.Shadow().Layout(gtx, pg.newAddr.Layout)
 						})
 						op.Defer(gtx.Ops, m.Stop())
 					}
