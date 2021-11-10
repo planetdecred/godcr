@@ -17,9 +17,10 @@ import (
 const SettingsPageID = "Settings"
 
 const (
-	DefaultExchangeValue = "none"
-
-	languagePreferenceKey = "app_language"
+	DefaultExchangeValue   = "none"
+	languagePreferenceKey  = "app_language"
+	darkModeKey            = "isDarkModeOn"
+	fetchProposalConfigKey = "fetch_proposals"
 )
 
 type row struct {
@@ -49,6 +50,7 @@ type SettingsPage struct {
 	beepNewBlocks    *decredmaterial.Switch
 	connectToPeer    *decredmaterial.Switch
 	userAgent        *decredmaterial.Switch
+	governance       *decredmaterial.Switch
 
 	peerLabel, agentLabel decredmaterial.Label
 
@@ -78,6 +80,8 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		beepNewBlocks:    l.Theme.Switch(),
 		connectToPeer:    l.Theme.Switch(),
 		userAgent:        l.Theme.Switch(),
+		governance:       l.Theme.Switch(),
+
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
 
 		errorReceiver: make(chan error),
@@ -171,6 +175,9 @@ func (pg *SettingsPage) general() layout.Widget {
 				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrUnconfirmedFunds), pg.spendUnconfirmed)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return pg.subSectionSwitch(gtx, "Governance", pg.governance)
 				}),
 				layout.Rigid(pg.lineSeparator()),
 				layout.Rigid(func(gtx C) D {
@@ -402,6 +409,19 @@ func (pg *SettingsPage) Handle() {
 		pg.wal.SaveConfigValueForKey(dcrlibwallet.SpendUnconfirmedConfigKey, pg.spendUnconfirmed.IsChecked())
 	}
 
+	if pg.governance.Changed() {
+		if !pg.governance.IsChecked() {
+			if pg.WL.MultiWallet.Politeia.IsSyncing() {
+				go pg.WL.MultiWallet.Politeia.StopSync()
+			}
+			pg.wal.SaveConfigValueForKey(fetchProposalConfigKey, pg.governance.IsChecked())
+			pg.WL.MultiWallet.Politeia.ClearSavedProposals()
+		} else {
+			go pg.WL.MultiWallet.Politeia.Sync()
+			pg.WL.Wallet.SaveConfigValueForKey(fetchProposalConfigKey, pg.governance.IsChecked())
+		}
+	}
+
 	if pg.beepNewBlocks.Changed() {
 		pg.wal.SaveConfigValueForKey(dcrlibwallet.BeepNewBlocksConfigKey, pg.beepNewBlocks.IsChecked())
 	}
@@ -627,6 +647,12 @@ func (pg *SettingsPage) updateSettingOptions() {
 	if pg.agentValue != "" {
 		pg.agentLabel.Text = pg.agentValue
 		pg.userAgent.SetChecked(true)
+	}
+
+	governanceSet := pg.wal.ReadBoolConfigValueForKey(fetchProposalConfigKey)
+	pg.governance.SetChecked(false)
+	if governanceSet {
+		pg.governance.SetChecked(true)
 	}
 }
 

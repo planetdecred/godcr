@@ -112,8 +112,6 @@ func (pg *ProposalsPage) ID() string {
 
 func (pg *ProposalsPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.WL.Wallet.SaveConfigValueForKey(fetchProposalConfigKey, false)
-
 	pg.listenForSyncNotifications()
 
 	pg.proposalMu.Lock()
@@ -201,6 +199,12 @@ func (pg *ProposalsPage) Handle() {
 		time.AfterFunc(time.Second*3, func() {
 			pg.showSyncedCompleted = false
 		})
+	}
+
+	for pg.fetchProposals.Clicked() {
+		go pg.WL.MultiWallet.Politeia.Sync()
+		pg.WL.Wallet.SaveConfigValueForKey(fetchProposalConfigKey, true)
+		pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 	}
 }
 
