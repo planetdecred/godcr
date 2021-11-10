@@ -168,10 +168,10 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.ProposalIconActive,
-				ImageInactive: mp.Icons.ProposalIconInactive,
-				Title:         values.String(values.StrProposal),
-				PageID:        proposal.ProposalsPageID,
+				Image:         mp.Icons.GovernanceActiveIcon,
+				ImageInactive: mp.Icons.GovernanceInactiveIcon,
+				Title:         "Governance",
+				PageID:        proposal.GovernancePageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -207,7 +207,7 @@ func (mp *MainPage) OnResume() {
 	if mp.autoSync {
 		mp.autoSync = false
 		mp.StartSyncing()
-		go mp.WL.MultiWallet.Politeia.Sync()
+		// go mp.WL.MultiWallet.Politeia.Sync()
 	}
 
 	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)

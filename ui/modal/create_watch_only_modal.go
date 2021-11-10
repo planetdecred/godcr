@@ -158,7 +158,7 @@ func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
 			t := cm.Theme.H6(values.String(values.StrImportWatchingOnlyWallet))
-			t.Font.Weight = text.Bold
+			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {

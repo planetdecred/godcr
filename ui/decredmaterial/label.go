@@ -54,7 +54,7 @@ func (t *Theme) ErrorLabel(txt string) Label {
 }
 
 func (t *Theme) Label(size unit.Value, txt string) Label {
-	return Label{material.Label(t.Base, size, txt)}
+	return t.labelWithDefaultColor(Label{material.Label(t.Base, size, txt)})
 }
 
 func (t *Theme) labelWithDefaultColor(l Label) Label {

@@ -340,7 +340,7 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 	w := []layout.Widget{
 		func(gtx C) D {
 			lbl := pg.Theme.H5(proposal.Name)
-			lbl.Font.Weight = text.Bold
+			lbl.Font.Weight = text.SemiBold
 			return lbl.Layout(gtx)
 		},
 		pg.lineSeparator(layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16}),
@@ -402,9 +402,7 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Imag
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							txt := pg.Theme.Body1(text)
-							txt.Color = pg.Theme.Color.DeepBlue
-							return txt.Layout(gtx)
+							return pg.Theme.Body1(text).Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{}.Layout(gtx, func(gtx C) D {

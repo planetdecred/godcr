@@ -34,7 +34,7 @@ func newInputVoteOptions(l *load.Load, label string) *inputVoteOptionsWidgets {
 	}
 	i.max.Background = l.Theme.Color.Surface
 	i.max.Color = l.Theme.Color.Gray2
-	i.max.Font.Weight = text.Bold
+	i.max.Font.Weight = text.SemiBold
 
 	i.increment.Color, i.decrement.Color = l.Theme.Color.Text, l.Theme.Color.Text
 	i.increment.Size, i.decrement.Size = values.TextSize18, values.TextSize18

@@ -254,7 +254,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 func (in *InfoModal) titleLayout() layout.Widget {
 	return func(gtx C) D {
 		t := in.Theme.H6(in.dialogTitle)
-		t.Font.Weight = text.Bold
+		t.Font.Weight = text.SemiBold
 		return in.titleAlignment.Layout(gtx, t.Layout)
 	}
 }

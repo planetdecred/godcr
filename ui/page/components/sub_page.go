@@ -64,11 +64,8 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 			}.Layout(gtx, sp.BackButton.Layout)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			title := sp.Load.Theme.Label(values.TextSize20, sp.Title)
-			title.Color = sp.Load.Theme.Color.DeepBlue
-
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(title.Layout),
+				layout.Rigid(sp.Load.Theme.Label(values.TextSize20, sp.Title).Layout),
 				layout.Rigid(func(gtx C) D {
 					if !StringNotEmpty(sp.SubTitle) {
 						return D{}
@@ -105,9 +102,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 							if sp.ExtraText != "" {
 								return layout.Inset{Right: values.MarginPadding10, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
-									text := sp.Theme.Caption(sp.ExtraText)
-									text.Color = sp.Theme.Color.DeepBlue
-									return text.Layout(gtx)
+									return sp.Theme.Caption(sp.ExtraText).Layout(gtx)
 								})
 							}
 							return layout.Dimensions{}

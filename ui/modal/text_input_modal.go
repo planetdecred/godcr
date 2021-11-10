@@ -155,7 +155,7 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := tm.Theme.Label(values.MarginPadding16, "cannot")
-							txt.Font.Weight = text.Bold
+							txt.Font.Weight = text.SemiBold
 							txt.Color = tm.Theme.Color.Gray4
 							inset := layout.Inset{Right: values.MarginPadding2, Left: values.MarginPadding2}
 							return inset.Layout(gtx, txt.Layout)

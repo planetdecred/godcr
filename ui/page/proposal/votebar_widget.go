@@ -235,7 +235,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				lbl.Font.Weight = text.Bold
+				lbl.Font.Weight = text.SemiBold
 				return lbl.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {

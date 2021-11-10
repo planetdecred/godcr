@@ -218,7 +218,6 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 	}
 
 	titleLabel := l.Theme.Label(values.MarginPadding14, title)
-	titleLabel.Color = l.Theme.Color.DeepBlue
 
 	mainDescLabel := l.Theme.Label(values.MarginPadding14, mainDesc)
 	mainDescLabel.Color = l.Theme.Color.Gray
@@ -269,7 +268,6 @@ func titleDescTooltip(gtx C, l *load.Load, title string, desc string) layout.Dim
 	titleLabel.Color = l.Theme.Color.Gray
 
 	descLabel := l.Theme.Label(values.MarginPadding14, desc)
-	descLabel.Color = l.Theme.Color.DeepBlue
 
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(titleLabel.Layout),
