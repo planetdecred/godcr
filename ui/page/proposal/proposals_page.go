@@ -32,10 +32,7 @@ type (
 	D = layout.Dimensions
 )
 
-const (
-	GovernancePageID       = "Proposals"
-	fetchProposalConfigKey = "fetch_proposals"
-)
+const GovernancePageID = "Proposals"
 
 type proposalItem struct {
 	proposal     dcrlibwallet.Proposal
@@ -203,7 +200,7 @@ func (pg *ProposalsPage) Handle() {
 
 	for pg.fetchProposals.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
-		pg.WL.Wallet.SaveConfigValueForKey(fetchProposalConfigKey, true)
+		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
 		pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 	}
 }
@@ -279,7 +276,7 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 
 func (pg *ProposalsPage) Layout(gtx C) D {
 
-	if pg.WL.Wallet.ReadBoolConfigValueForKey(fetchProposalConfigKey) {
+	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		border := widget.Border{Color: pg.Theme.Color.Gray1, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
 		borderLayout := func(gtx layout.Context, body layout.Widget) layout.Dimensions {
 			return border.Layout(gtx, body)

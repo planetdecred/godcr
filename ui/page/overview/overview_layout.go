@@ -133,17 +133,17 @@ func (pg *AppOverviewPage) showBackupInfo() {
 		SetContentAlignment(layout.W, layout.Center).
 		CheckBox(pg.checkBox).
 		NegativeButton("Backup later", func() {
-			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)
+			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
 		}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton("Backup now", func() {
-			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)
+			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
 			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 		}).Show()
 }
 
 func (pg *AppOverviewPage) Handle() {
-	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey("seedBackupNotification")
+	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
 	for _, wal := range pg.allWallets {
 		if len(wal.EncryptedSeed) > 0 {
 			if !backupLater && !pg.isBackupModalOpened {

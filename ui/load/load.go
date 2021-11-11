@@ -125,7 +125,7 @@ func NewLoad() (*Load, error) {
 }
 
 func (l *Load) RefreshTheme() {
-	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey("isDarkModeOn", false)
+	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	if isDarkModeOn != l.Theme.DarkMode {
 		l.Theme.SwitchDarkMode(isDarkModeOn)
 	}

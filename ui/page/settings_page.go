@@ -16,12 +16,7 @@ import (
 
 const SettingsPageID = "Settings"
 
-const (
-	DefaultExchangeValue   = "none"
-	languagePreferenceKey  = "app_language"
-	darkModeKey            = "isDarkModeOn"
-	fetchProposalConfigKey = "fetch_proposals"
-)
+const DefaultExchangeValue = "none"
 
 type row struct {
 	title     string
@@ -51,6 +46,7 @@ type SettingsPage struct {
 	connectToPeer    *decredmaterial.Switch
 	userAgent        *decredmaterial.Switch
 	governance       *decredmaterial.Switch
+	autoSync         *decredmaterial.Switch
 
 	peerLabel, agentLabel decredmaterial.Label
 
@@ -81,6 +77,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		connectToPeer:    l.Theme.Switch(),
 		userAgent:        l.Theme.Switch(),
 		governance:       l.Theme.Switch(),
+		autoSync:         l.Theme.Switch(),
 
 		chevronRightIcon: decredmaterial.NewIcon(chevronRightIcon),
 
@@ -94,10 +91,10 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	languagePreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
-		languagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
+		load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
 		Title(values.StrLanguage).
 		UpdateValues(func() {
-			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey))
+			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
 		})
 	pg.languagePreference = languagePreference
 
@@ -195,7 +192,7 @@ func (pg *SettingsPage) general() layout.Widget {
 						title:     values.String(values.StrLanguage),
 						clickable: pg.languagePreference.Clickable(),
 						icon:      pg.chevronRightIcon,
-						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(languagePreferenceKey)),
+						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey)),
 					}
 					return pg.clickableRow(gtx, languageRow)
 				}),
@@ -239,6 +236,9 @@ func (pg *SettingsPage) connection() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrConnection), func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.subSectionSwitch(gtx, "Auto sync", pg.autoSync)
+				}),
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
 				}),
@@ -401,7 +401,7 @@ func (pg *SettingsPage) Handle() {
 	pg.currencyPreference.Handle()
 
 	if pg.isDarkModeOn.Changed() {
-		pg.wal.SaveConfigValueForKey("isDarkModeOn", pg.isDarkModeOn.IsChecked())
+		pg.wal.SaveConfigValueForKey(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
 		pg.RefreshTheme()
 	}
 
@@ -412,7 +412,7 @@ func (pg *SettingsPage) Handle() {
 	if pg.governance.Changed() {
 		if pg.governance.IsChecked() {
 			go pg.WL.MultiWallet.Politeia.Sync()
-			pg.WL.Wallet.SaveConfigValueForKey(fetchProposalConfigKey, pg.governance.IsChecked())
+			pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, pg.governance.IsChecked())
 			pg.Toast.Notify("Proposals fetching enabled. Check Governance page")
 		} else {
 			info := modal.NewInfoModal(pg.Load).
@@ -424,7 +424,7 @@ func (pg *SettingsPage) Handle() {
 					if pg.WL.MultiWallet.Politeia.IsSyncing() {
 						go pg.WL.MultiWallet.Politeia.StopSync()
 					}
-					pg.wal.SaveConfigValueForKey(fetchProposalConfigKey, !pg.governance.IsChecked())
+					pg.wal.SaveConfigValueForKey(load.FetchProposalConfigKey, !pg.governance.IsChecked())
 					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
 					pg.Toast.Notify("Proposals fetching Disabled.")
 				})
@@ -574,6 +574,10 @@ func (pg *SettingsPage) Handle() {
 		pg.showWarningModalDialog(title, msg, userAgentKey)
 	}
 
+	if pg.autoSync.Changed() {
+		pg.WL.Wallet.SaveConfigValueForKey(load.AutoSyncConfigKey, pg.autoSync.IsChecked())
+	}
+
 	select {
 	case err := <-pg.errorReceiver:
 		if err.Error() == dcrlibwallet.ErrInvalidPassphrase {
@@ -627,7 +631,7 @@ func (pg *SettingsPage) updateSettingOptions() {
 		pg.isStartupPassword = true
 	}
 
-	isDarkModeOn := pg.wal.ReadBoolConfigValueForKey("isDarkModeOn")
+	isDarkModeOn := pg.wal.ReadBoolConfigValueForKey(load.DarkModeConfigKey)
 	pg.isDarkModeOn.SetChecked(false)
 	if isDarkModeOn {
 		pg.isDarkModeOn.SetChecked(isDarkModeOn)
@@ -659,10 +663,16 @@ func (pg *SettingsPage) updateSettingOptions() {
 		pg.userAgent.SetChecked(true)
 	}
 
-	governanceSet := pg.wal.ReadBoolConfigValueForKey(fetchProposalConfigKey)
+	governanceSet := pg.wal.ReadBoolConfigValueForKey(load.FetchProposalConfigKey)
 	pg.governance.SetChecked(false)
 	if governanceSet {
-		pg.governance.SetChecked(true)
+		pg.governance.SetChecked(governanceSet)
+	}
+
+	autoSync := pg.wal.ReadBoolConfigValueForKey(load.AutoSyncConfigKey)
+	pg.autoSync.SetChecked(false)
+	if autoSync {
+		pg.autoSync.SetChecked(autoSync)
 	}
 }
 
