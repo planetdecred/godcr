@@ -1,4 +1,4 @@
-package proposal
+package governance
 
 import (
 	"context"

@@ -13,8 +13,8 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/overview"
-	"github.com/planetdecred/godcr/ui/page/proposal"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
@@ -166,7 +166,7 @@ func (mp *MainPage) initNavItems() {
 				Image:         mp.Icons.GovernanceActiveIcon,
 				ImageInactive: mp.Icons.GovernanceInactiveIcon,
 				Title:         "Governance",
-				PageID:        proposal.GovernancePageID,
+				PageID:        governance.GovernancePageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -332,7 +332,7 @@ func (mp *MainPage) Handle() {
 			} else if i == StakingNavID {
 				pg = staking.NewStakingPage(mp.Load)
 			} else if i == ProposalsNavID {
-				pg = proposal.NewProposalsPage(mp.Load)
+				pg = governance.NewGovernancePage(mp.Load)
 			} else if i == MoreNavID {
 				pg = NewMorePage(mp.Load)
 			} else {

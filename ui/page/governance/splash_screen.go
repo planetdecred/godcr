@@ -1,4 +1,4 @@
-package proposal
+package governance
 
 import (
 	"gioui.org/layout"
@@ -9,7 +9,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-func (pg *ProposalsPage) splashScreenLayout(gtx layout.Context) layout.Dimensions {
+func (pg *GovernancePage) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Vertical,
 		Width:       decredmaterial.MatchParent,
@@ -26,7 +26,7 @@ func (pg *ProposalsPage) splashScreenLayout(gtx layout.Context) layout.Dimension
 						return pg.Icons.GovernanceActiveIcon.LayoutSize(gtx, values.MarginPadding150)
 					}),
 					layout.Rigid(func(gtx C) D {
-						txt := pg.Theme.Label(values.MarginPadding24, "Governance")
+						txt := pg.Theme.Label(values.MarginPadding24, "How does Governance Work?")
 						txt.Font.Weight = text.SemiBold
 
 						return layout.Inset{

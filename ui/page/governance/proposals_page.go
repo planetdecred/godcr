@@ -1,4 +1,4 @@
-package proposal
+package governance
 
 import (
 	"context"
@@ -27,19 +27,7 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-type (
-	C = layout.Context
-	D = layout.Dimensions
-)
-
-const GovernancePageID = "Proposals"
-
-type proposalItem struct {
-	proposal     dcrlibwallet.Proposal
-	tooltip      *decredmaterial.Tooltip
-	tooltipLabel decredmaterial.Label
-	voteBar      *VoteBar
-}
+const ProposalsListPageID = "ProposalsList"
 
 type ProposalsPage struct {
 	*load.Load
@@ -276,56 +264,52 @@ func (pg *ProposalsPage) initLayoutWidgets() {
 
 func (pg *ProposalsPage) Layout(gtx C) D {
 
-	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
-		border := widget.Border{Color: pg.Theme.Color.Gray1, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
-		borderLayout := func(gtx layout.Context, body layout.Widget) layout.Dimensions {
-			return border.Layout(gtx, body)
-		}
-
-		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				return layout.Flex{}.Layout(gtx,
-					layout.Flexed(1, func(gtx C) D {
-						return borderLayout(gtx, pg.layoutTabs)
-					}),
-					layout.Rigid(func(gtx C) D {
-						return borderLayout(gtx, func(gtx C) D {
-							return pg.syncCard.Layout(gtx, func(gtx C) D {
-								m := values.MarginPadding12
-								if pg.showSyncedCompleted || pg.isSyncing {
-									m = values.MarginPadding14
-								}
-								return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
-									return layout.Flex{}.Layout(gtx,
-										layout.Rigid(func(gtx C) D {
-											return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
-												return layout.Center.Layout(gtx, pg.layoutSyncSection)
-											})
-										}),
-										layout.Rigid(func(gtx C) D {
-											if pg.showSyncedCompleted || pg.isSyncing {
-												return D{}
-											}
-											lastUpdatedInfo := pg.Theme.Body2(components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp()))
-											lastUpdatedInfo.Color = pg.Theme.Color.Text
-											return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-												return lastUpdatedInfo.Layout(gtx)
-											})
-										}),
-									)
-								})
-							})
-						})
-					}),
-				)
-			}),
-			layout.Flexed(1, func(gtx C) D {
-				return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, pg.layoutContent)
-			}),
-		)
+	border := widget.Border{Color: pg.Theme.Color.Gray1, CornerRadius: values.MarginPadding0, Width: values.MarginPadding1}
+	borderLayout := func(gtx layout.Context, body layout.Widget) layout.Dimensions {
+		return border.Layout(gtx, body)
 	}
 
-	return components.UniformPadding(gtx, pg.splashScreenLayout)
+	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Flexed(1, func(gtx C) D {
+					return borderLayout(gtx, pg.layoutTabs)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return borderLayout(gtx, func(gtx C) D {
+						return pg.syncCard.Layout(gtx, func(gtx C) D {
+							m := values.MarginPadding12
+							if pg.showSyncedCompleted || pg.isSyncing {
+								m = values.MarginPadding14
+							}
+							return layout.UniformInset(m).Layout(gtx, func(gtx C) D {
+								return layout.Flex{}.Layout(gtx,
+									layout.Rigid(func(gtx C) D {
+										return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
+											return layout.Center.Layout(gtx, pg.layoutSyncSection)
+										})
+									}),
+									layout.Rigid(func(gtx C) D {
+										if pg.showSyncedCompleted || pg.isSyncing {
+											return D{}
+										}
+										lastUpdatedInfo := pg.Theme.Body2(components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp()))
+										lastUpdatedInfo.Color = pg.Theme.Color.Text
+										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
+											return lastUpdatedInfo.Layout(gtx)
+										})
+									}),
+								)
+							})
+						})
+					})
+				}),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, pg.layoutContent)
+		}),
+	)
 }
 
 func (pg *ProposalsPage) layoutContent(gtx C) D {
