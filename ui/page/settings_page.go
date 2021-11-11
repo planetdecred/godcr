@@ -390,7 +390,7 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 		Body(msg).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-		PositiveButton("remove", func() {
+		PositiveButton("Remove", func() {
 			pg.WL.MultiWallet.DeleteUserConfigValueForKey(key)
 		})
 	pg.ShowModal(info)
@@ -410,15 +410,25 @@ func (pg *SettingsPage) Handle() {
 	}
 
 	if pg.governance.Changed() {
-		if !pg.governance.IsChecked() {
-			if pg.WL.MultiWallet.Politeia.IsSyncing() {
-				go pg.WL.MultiWallet.Politeia.StopSync()
-			}
-			pg.wal.SaveConfigValueForKey(fetchProposalConfigKey, pg.governance.IsChecked())
-			pg.WL.MultiWallet.Politeia.ClearSavedProposals()
-		} else {
+		if pg.governance.IsChecked() {
 			go pg.WL.MultiWallet.Politeia.Sync()
 			pg.WL.Wallet.SaveConfigValueForKey(fetchProposalConfigKey, pg.governance.IsChecked())
+			pg.Toast.Notify("Proposals fetching enabled. Check Governance page")
+		} else {
+			info := modal.NewInfoModal(pg.Load).
+				Title("Governance").
+				Body("Are you sure you want to disable governance? This will clear all available proposals").
+				NegativeButton(values.String(values.StrCancel), func() {}).
+				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
+				PositiveButton("Disable", func() {
+					if pg.WL.MultiWallet.Politeia.IsSyncing() {
+						go pg.WL.MultiWallet.Politeia.StopSync()
+					}
+					pg.wal.SaveConfigValueForKey(fetchProposalConfigKey, !pg.governance.IsChecked())
+					pg.WL.MultiWallet.Politeia.ClearSavedProposals()
+					pg.Toast.Notify("Proposals fetching Disabled.")
+				})
+			pg.ShowModal(info)
 		}
 	}
 
