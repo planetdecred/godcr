@@ -2,14 +2,13 @@ package dexclient
 
 import (
 	"fmt"
+	"strconv"
 
 	"decred.org/dcrdex/client/asset/btc"
 	"decred.org/dcrdex/client/asset/dcr"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/dcrlibwallet/dexdcr"
-	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -99,16 +98,9 @@ func (md *createWalletModal) Handle() {
 
 			coinID := md.walletInfoWidget.coinID
 			coinName := md.walletInfoWidget.coinName
-			has := md.Dexc.WalletState(coinID) != nil
-			if has {
+			if md.Dexc().HasWallet(int32(coinID)) {
 				md.Toast.NotifyError(fmt.Sprintf("already connected a %s wallet", coinName))
 				return
-			}
-
-			var selectedDcrWallet *dcrlibwallet.Wallet
-			if coinID == dcr.BipID {
-				selectedDcrWallet = md.Load.WL.MultiWallet.WalletWithID(md.sourceAccountSelector.SelectedAccount().WalletID)
-				md.Dexc.SetWalletForDcrAsset(selectedDcrWallet)
 			}
 
 			settings := make(map[string]string)
@@ -118,26 +110,22 @@ func (md *createWalletModal) Handle() {
 
 			switch coinID {
 			case dcr.BipID:
-				settings["account"] = md.sourceAccountSelector.SelectedAccount().Name
+				selectedAccount := md.sourceAccountSelector.SelectedAccount()
+				settings[dcrlibwallet.DexDcrWalletIDConfigKey] = strconv.Itoa(selectedAccount.WalletID)
+				settings["account"] = selectedAccount.Name
 				settings["password"] = md.walletPassword.Editor.Text()
-				walletType = dexdcr.WalletTypeDcrwObject
+				walletType = dcrlibwallet.CustomDexDcrWalletType
 			case btc.BipID:
 				walletType = "SPV" // decred.org/dcrdex/client/asset/btc.walletTypeSPV
 				walletPass = nil   // Core doesn't accept wallet passwords for dex-managed spv wallets.
 			}
 
-			err := md.Dexc.AddWallet(coinID, walletType, settings, appPass, walletPass)
+			err := md.Dexc().AddWallet(coinID, walletType, settings, appPass, walletPass)
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
 				return
 			}
 
-			// Wallet successfully connected to the DEX client. For Decred
-			// wallets, save the connected wallet id to database so user
-			// won't need to reselect the wallet on restart.
-			if selectedDcrWallet != nil {
-				md.WL.MultiWallet.SetIntConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey, selectedDcrWallet.ID)
-			}
 			md.walletCreated()
 			md.Dismiss()
 		}()

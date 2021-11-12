@@ -12,7 +12,6 @@ import (
 	"gioui.org/op"
 
 	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page"
@@ -77,7 +76,7 @@ type WriteClipboard struct {
 // Should never be called more than once as it calls
 // app.NewWindow() which does not support being called more
 // than once.
-func CreateWindow(appCtx context.Context, wal *wallet.Wallet, dexc *dexc.Dexc) (*Window, *app.Window, error) {
+func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
 	if wal.Net == dcrlibwallet.Testnet3 {
@@ -104,25 +103,22 @@ func CreateWindow(appCtx context.Context, wal *wallet.Wallet, dexc *dexc.Dexc) (
 
 	win.keyEvents = make(chan *key.Event)
 
-	l, err := win.NewLoad(appCtx)
+	l, err := win.NewLoad()
 	if err != nil {
 		return nil, nil, err
 	}
-
-	l.Dexc = dexc
 
 	win.load = l
 
 	return win, appWindow, nil
 }
 
-func (win *Window) NewLoad(appCtx context.Context) (*load.Load, error) {
+func (win *Window) NewLoad() (*load.Load, error) {
 	l, err := load.NewLoad()
 	if err != nil {
 		return nil, err
 	}
 
-	l.AppCtx = appCtx
 	l.WL = &load.WalletLoad{
 		MultiWallet:     win.wallet.GetMultiWallet(),
 		Wallet:          win.wallet,

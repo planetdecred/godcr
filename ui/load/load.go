@@ -17,7 +17,6 @@ import (
 	"gioui.org/widget"
 
 	"github.com/planetdecred/dcrlibwallet"
-	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/assets"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/notification"
@@ -83,8 +82,6 @@ type Load struct {
 	SelectedUTXO    map[int]map[int32]map[string]*wallet.UnspentOutput
 	EnableKeyEvent  bool
 
-	Dexc *dexc.Dexc
-
 	ToggleSync       func()
 	RefreshWindow    func()
 	ShowModal        func(Modal)
@@ -141,6 +138,9 @@ func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
 	l.RefreshWindow()
+}
+func (l *Load) Dexc() *dcrlibwallet.DexClient {
+	return l.WL.MultiWallet.DexClient()
 }
 
 func loadIcons() Icons {

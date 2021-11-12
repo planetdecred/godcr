@@ -74,13 +74,11 @@ func (md *confirmRegisterModal) Handle() {
 
 		md.isSending = true
 		go func() {
-			form := &core.RegisterForm{
-				AppPass: []byte(md.appPassword.Editor.Text()),
-				Addr:    md.dex.Host,
-				Fee:     md.dex.Fee.Amt,
-				Cert:    md.cert,
-			}
-			_, err := md.Dexc.Register(form)
+			_, err := md.Dexc().RegisterWithDEXServer(md.dex.Host,
+				md.cert,
+				int64(md.dex.Fee.Amt),
+				int32(md.dex.Fee.ID),
+				[]byte(md.appPassword.Editor.Text()))
 
 			md.isSending = false
 			if err != nil {

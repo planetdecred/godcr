@@ -66,11 +66,7 @@ func (md *passwordModal) Handle() {
 
 		md.isSending = true
 		go func() {
-			// TODO: Generate and save a 64-byte seed and pass it to InitializeClient
-			// to enable dex restores if the dex db becomes corrupted. Alternatively,
-			// passing nil will cause dex to generate a random seed which can be saved
-			// for later dex restoration efforts.
-			err := md.Dexc.InitializeClient([]byte(md.appPassword.Editor.Text()), nil)
+			err := md.Dexc().InitializeWithPassword([]byte(md.appPassword.Editor.Text()))
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())

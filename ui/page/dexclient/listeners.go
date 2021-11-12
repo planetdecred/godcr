@@ -6,7 +6,7 @@ import (
 
 // readNotifications reads from the Core notification channel.
 func (pg *Page) readNotifications() {
-	ch := pg.Dexc.NotificationFeed()
+	ch := pg.Dexc().Core().NotificationFeed()
 	for {
 		select {
 		case n := <-ch:

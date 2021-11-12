@@ -77,11 +77,7 @@ func (md *addDexModal) Handle() {
 		md.isSending = true
 		go func() {
 			cert := []byte(md.cert.Editor.Text())
-			// TODO: Use DiscoverAccount instead of GetDEXConfig to enable account
-			// recovery without re-paying the fee. This is only relevant when the
-			// dex client supports restoring from seed. Requires a field for app
-			// password.
-			dex, err := md.Dexc.GetDEXConfig(md.dexServerAddress.Editor.Text(), cert)
+			dex, err := md.Dexc().DEXServerInfo(md.dexServerAddress.Editor.Text(), cert)
 			md.isSending = false
 			if err != nil {
 				md.Toast.NotifyError(err.Error())
@@ -114,7 +110,7 @@ func (md *addDexModal) Handle() {
 			// or completing the registration.
 			md.Dismiss()
 
-			if md.Dexc.WalletState(feeAsset.ID) != nil {
+			if md.Dexc().HasWallet(int32(feeAsset.ID)) {
 				completeRegistration()
 			} else {
 				newWalletModal := newCreateWalletModal(md.Load, &walletInfoWidget{

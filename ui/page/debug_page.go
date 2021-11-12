@@ -3,7 +3,6 @@ package page
 import (
 	"gioui.org/layout"
 
-	"github.com/planetdecred/godcr/dexc"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -142,18 +141,13 @@ func (pg *DebugPage) Layout(gtx C) D {
 }
 
 func (pg *DebugPage) resetDexData() {
-	// Show confirm modal and delete dexc db and dex-related settings in the
-	// multiwallet db.
+	// Show confirm modal before resetting dex client data.
 	confirmModal := modal.NewInfoModal(pg.Load).
 		Title("Confirm DEX Client Reset").
-		Body("You might need to restart godcr before you can use the DEX again. Proceed?").
+		Body("You may need to restart godcr before you can use the DEX again. Proceed?").
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton("Reset DEX Client", func() {
-			// TODO: Dexc.Reset will fail if there are active orders. Since this is a
-			// debug feature, consider allowing dex shutdown even if there are active orders.
-			if pg.Dexc.Reset() {
-				// Dexc reset complete, perform other cleanup here.
-				pg.WL.MultiWallet.DeleteUserConfigValueForKey(dexc.ConnectedDcrWalletIDConfigKey)
+			if pg.Dexc().Reset() {
 				pg.Toast.Notify("DEX client data reset complete.")
 			} else {
 				pg.Toast.NotifyError("DEX client data reset failed. Check the logs.")

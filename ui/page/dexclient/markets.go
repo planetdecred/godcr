@@ -65,7 +65,7 @@ func (pg *Page) dex() *core.Exchange {
 	// picks the first DEX in the map, if one has been previously
 	// connected. This is okay because there's only one DEX that
 	// can be connected for now.
-	for _, dex := range pg.Dexc.Core.User().Exchanges {
+	for _, dex := range pg.Dexc().DEXServers() {
 		return dex
 	}
 	return nil
@@ -73,7 +73,7 @@ func (pg *Page) dex() *core.Exchange {
 
 func (pg *Page) registrationStatusLayout(gtx C) D {
 	dex := pg.dex()
-	if dex == nil || !dex.Connected || dex.PendingFee == nil { // TODO: We should probably show the status even if !dex.Connected but dex.PendingFee is set.
+	if dex == nil || dex.PendingFee == nil {
 		return D{}
 	}
 	reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
@@ -105,26 +105,22 @@ func (pg *Page) OnClose() {
 }
 
 func (pg *Page) handleModals() {
-	u := pg.Dexc.Core.User()
-
 	switch {
-	case !u.Initialized: // Must initialize to proceed.
+	case !pg.Dexc().Initialized(): // Must initialize to proceed.
 		md := newPasswordModal(pg.Load)
 		md.appInitiated = func() {
 			pg.initializeModal = false
-			pg.Dexc.IsLoggedIn = true
 		}
 		md.Show()
 
-	case !pg.Dexc.IsLoggedIn: // Initialized client must be logged in.
+	case !pg.Dexc().IsLoggedIn(): // Initialized client must log in.
 		md := newloginModal(pg.Load)
 		md.loggedIn = func() {
 			pg.initializeModal = false
-			pg.Dexc.IsLoggedIn = true
 		}
 		md.Show()
 
-	case len(u.Exchanges) == 0: // Connect a DEX to proceed. May require adding a wallet to pay the fee.
+	case len(pg.Dexc().DEXServers()) == 0: // Connect a DEX to proceed. May require adding a wallet to pay the fee.
 		md := newAddDexModal(pg.Load)
 		md.done = func() {
 			pg.initializeModal = false
