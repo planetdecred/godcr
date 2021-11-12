@@ -50,7 +50,7 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		btnPositve:   l.Theme.OutlineButton("Yes"),
 		btnNegative:  l.Theme.OutlineButton("No"),
 		keyEvent:     l.Receiver.KeyEvents,
-		isCancelable: false,
+		isCancelable: true,
 		btnAlignment: layout.E,
 	}
 
@@ -178,6 +178,7 @@ func (in *InfoModal) Handle() {
 	}
 
 	if in.modal.BackdropClicked(in.isCancelable) {
+		in.negativeButtonClicked()
 		in.Dismiss()
 	}
 
