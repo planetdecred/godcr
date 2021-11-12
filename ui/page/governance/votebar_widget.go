@@ -59,6 +59,7 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		infoIcon:      decredmaterial.NewIcon(l.Icons.ActionInfo),
 		legendIcon:    decredmaterial.NewIcon(l.Icons.ImageBrightness1),
 	}
+	vb.infoIcon.Color = l.Theme.Color.Gray
 
 	return vb
 }

@@ -25,43 +25,25 @@ const GovernancePageID = "Governance"
 type GovernancePage struct {
 	*load.Load
 
-	ctx            context.Context // page context
-	ctxCancel      context.CancelFunc
-	proposalMu     sync.Mutex
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
 	fetchProposals decredmaterial.Button
-
-	multiWallet *dcrlibwallet.MultiWallet
-
-	//categoryList to be removed with new update to UI.
-	categoryList   *decredmaterial.ClickableList
+	toProposals    decredmaterial.TextAndIconButton
 	proposalsList  *decredmaterial.ClickableList
 	listContainer  *widget.List
-	tabCard        decredmaterial.Card
-	itemCard       decredmaterial.Card
-	syncCard       decredmaterial.Card
-	updatedLabel   decredmaterial.Label
-	lastSyncedTime string
 
-	proposalItems         []*proposalItem
-	proposalCount         []int
-	selectedCategoryIndex int
+	proposalItems []*proposalItem
+	proposalMu    sync.Mutex
 
-	legendIcon    *decredmaterial.Icon
-	infoIcon      *decredmaterial.Icon
-	updatedIcon   *decredmaterial.Icon
-	syncButton    *widget.Clickable
-	startSyncIcon *decredmaterial.Image
-	timerIcon     *decredmaterial.Image
-	toProposals   decredmaterial.TextAndIconButton
-
+	lastSyncedTime      string
 	showSyncedCompleted bool
 	isSyncing           bool
 }
 
 func NewGovernancePage(l *load.Load) *GovernancePage {
 	pg := &GovernancePage{
-		Load:        l,
-		multiWallet: l.WL.MultiWallet,
+		Load: l,
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
@@ -72,36 +54,7 @@ func NewGovernancePage(l *load.Load) *GovernancePage {
 	pg.toProposals.Color = pg.Theme.Color.Primary
 	pg.toProposals.BackgroundColor = pg.Theme.Color.Surface
 
-	//categoryList to be removed with new update to UI.
-	pg.categoryList = pg.Theme.NewClickableList(layout.Horizontal)
-	pg.itemCard = pg.Theme.Card()
-	pg.syncButton = new(widget.Clickable)
-
-	pg.infoIcon = decredmaterial.NewIcon(pg.Icons.ActionInfo)
-	pg.infoIcon.Color = pg.Theme.Color.Gray
-
-	pg.legendIcon = decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
-	pg.legendIcon.Color = pg.Theme.Color.InactiveGray
-
-	pg.updatedIcon = decredmaterial.NewIcon(pg.Icons.NavigationCheck)
-	pg.updatedIcon.Color = pg.Theme.Color.Success
-
-	pg.updatedLabel = pg.Theme.Body2("Updated")
-	pg.updatedLabel.Color = pg.Theme.Color.Success
-
-	radius := decredmaterial.Radius(0)
-	pg.tabCard = pg.Theme.Card()
-	pg.tabCard.Radius = radius
-
-	pg.syncCard = pg.Theme.Card()
-	pg.syncCard.Radius = radius
-
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
-	pg.proposalsList.DividerHeight = values.MarginPadding8
-
-	pg.timerIcon = pg.Icons.TimerIcon
-
-	pg.startSyncIcon = pg.Icons.Restore
 
 	return pg
 }
@@ -114,38 +67,12 @@ func (pg *GovernancePage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	// pg.listenForSyncNotifications()
 
-	proposalItems := loadProposals(dcrlibwallet.ProposalCategoryAll, pg.Load)
+	proposalItems := loadProposals(dcrlibwallet.ProposalCategoryAll, true, pg.Load)
 	pg.proposalMu.Lock()
 	pg.proposalItems = proposalItems
 	pg.proposalMu.Unlock()
 
-	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
-}
-
-func (pg *GovernancePage) topNavLayout(gtx layout.Context) layout.Dimensions {
-	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					txt := pg.Theme.Label(values.TextSize20, GovernancePageID)
-					txt.Font.Weight = text.SemiBold
-					return txt.Layout(gtx)
-				}),
-			)
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, func(gtx C) D {
-				return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
-					layout.Rigid(func(gtx C) D {
-						txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance")
-						txt.Font.Weight = text.SemiBold
-						return txt.Layout(gtx)
-					}),
-					layout.Rigid(pg.Theme.Label(values.TextSize14, "636,765 DCR").Layout), // Todo get available treasury balance
-				)
-			})
-		}),
-	)
+	pg.isSyncing = pg.WL.MultiWallet.Politeia.IsSyncing()
 }
 
 func (pg *GovernancePage) Layout(gtx C) D {
@@ -154,7 +81,20 @@ func (pg *GovernancePage) Layout(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-						return pg.topNavLayout(gtx)
+						body := func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical, Alignment: layout.End}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									txt := pg.Theme.Label(values.TextSize14, "Available Treasury Balance")
+									txt.Font.Weight = text.SemiBold
+									return txt.Layout(gtx)
+								}),
+								layout.Rigid(func(gtx C) D {
+									// Todo get available treasury balance
+									return components.LayoutBalanceSize(gtx, pg.Load, "678,678.687654 DCR", values.TextSize14)
+								}),
+							)
+						}
+						return topNavLayout(gtx, pg.Load, "Governance", body)
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -182,19 +122,13 @@ func (pg *GovernancePage) Layout(gtx C) D {
 									layout.Rigid(pg.Theme.Separator().Layout),
 									layout.Rigid(func(gtx C) D {
 										return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
-											return layout.Inset{
-												Top:    values.MarginPadding2,
-												Bottom: values.MarginPadding2,
-											}.Layout(gtx, func(gtx C) D {
-												return proposalsList(gtx, pg.Load, proposalItems[i])
-											})
+											return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+												layout.Rigid(func(gtx C) D {
+													return proposalsList(gtx, pg.Load, proposalItems[i])
+												}),
+												layout.Rigid(pg.Theme.Separator().Layout),
+											)
 										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										if i == len(proposalItems) {
-											return D{}
-										}
-										return pg.Theme.Separator().Layout(gtx)
 									}),
 								)
 							})
@@ -211,40 +145,22 @@ func (pg *GovernancePage) Handle() {
 	for pg.fetchProposals.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
-		pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
+		pg.isSyncing = pg.WL.MultiWallet.Politeia.IsSyncing()
+	}
+
+	for pg.toProposals.Button.Clicked() {
+		pg.ChangeFragment(NewProposalsPage(pg.Load))
+	}
+
+	if clicked, selectedItem := pg.proposalsList.ItemClicked(); clicked {
+		pg.proposalMu.Lock()
+		selectedProposal := pg.proposalItems[selectedItem].proposal
+		pg.proposalMu.Unlock()
+
+		pg.ChangeFragment(newProposalDetailsPage(pg.Load, &selectedProposal))
 	}
 }
 
 func (pg *GovernancePage) OnClose() {
 	pg.ctxCancel()
 }
-
-// func (pg *GovernancePage) listenForSyncNotifications() {
-// 	go func() {
-// 		for {
-// 			var notification interface{}
-
-// 			select {
-// 			case notification = <-pg.Receiver.NotificationsUpdate:
-// 			case <-pg.ctx.Done():
-// 				return
-// 			}
-
-// 			switch n := notification.(type) {
-// 			case wallet.Proposal:
-// 				if n.ProposalStatus == wallet.Synced {
-// 					pg.isSyncing = false
-// 					pg.showSyncedCompleted = true
-
-// 					pg.proposalMu.Lock()
-// 					selectedCategory := pg.selectedCategoryIndex
-// 					pg.proposalMu.Unlock()
-// 					if selectedCategory != -1 {
-// 						pg.countProposals()
-// 						pg.loadProposals(selectedCategory)
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}()
-// }

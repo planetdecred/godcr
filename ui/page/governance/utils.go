@@ -22,6 +22,23 @@ type proposalItem struct {
 	voteBar      *VoteBar
 }
 
+func topNavLayout(gtx C, l *load.Load, title string, content layout.Widget) layout.Dimensions {
+	return layout.Flex{}.Layout(gtx,
+		layout.Rigid(func(gtx C) D {
+			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					txt := l.Theme.Label(values.TextSize20, GovernancePageID)
+					txt.Font.Weight = text.SemiBold
+					return txt.Layout(gtx)
+				}),
+			)
+		}),
+		layout.Flexed(1, func(gtx C) D {
+			return layout.E.Layout(gtx, content)
+		}),
+	)
+}
+
 func proposalsList(gtx C, l *load.Load, prop *proposalItem) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
@@ -102,10 +119,27 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *proposalItem) D {
 					return layout.Inset{Top: values.MarginPaddingMinus22}.Layout(gtx, dotLabel.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
-					if item.proposal.Category == dcrlibwallet.ProposalCategoryPre {
-						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(stateLabel.Layout),
-							layout.Rigid(func(gtx C) D {
+					return layout.Flex{}.Layout(gtx,
+						layout.Rigid(func(gtx C) D {
+							if item.proposal.Category == dcrlibwallet.ProposalCategoryPre {
+								return layout.Inset{
+									Right: values.MarginPadding4,
+								}.Layout(gtx, stateLabel.Layout)
+							}
+							return D{}
+						}),
+						layout.Rigid(func(gtx C) D {
+							if item.proposal.Category == dcrlibwallet.ProposalCategoryActive {
+								return layout.Inset{
+									Right: values.MarginPadding4,
+									Top:   values.MarginPadding3,
+								}.Layout(gtx, l.Icons.TimerIcon.Layout12dp)
+							}
+							return D{}
+						}),
+						layout.Rigid(timeAgoLabel.Layout),
+						layout.Rigid(func(gtx C) D {
+							if item.proposal.Category == dcrlibwallet.ProposalCategoryPre {
 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 									rect := image.Rectangle{
 										Min: gtx.Constraints.Min,
@@ -118,21 +152,9 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *proposalItem) D {
 									infoIcon.Color = l.Theme.Color.Gray
 									return infoIcon.Layout(gtx, values.MarginPadding20)
 								})
-							}),
-						)
-					}
-
-					return layout.Flex{}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							if item.proposal.Category == dcrlibwallet.ProposalCategoryActive {
-								return layout.Inset{
-									Right: values.MarginPadding4,
-									Top:   values.MarginPadding3,
-								}.Layout(gtx, l.Icons.TimerIcon.Layout12dp)
 							}
 							return D{}
 						}),
-						layout.Rigid(timeAgoLabel.Layout),
 					)
 				}),
 			)
@@ -175,10 +197,10 @@ func layoutNoProposalsFound(gtx C, l *load.Load) D {
 	return layout.Center.Layout(gtx, l.Theme.Body1("No proposals yet").Layout)
 }
 
-func loadProposals(category int32, l *load.Load) []*proposalItem {
+func loadProposals(category int32, newestFirst bool, l *load.Load) []*proposalItem {
 	proposalItems := make([]*proposalItem, 0)
 
-	proposals, err := l.WL.MultiWallet.Politeia.GetProposalsRaw(category, 0, 0, true)
+	proposals, err := l.WL.MultiWallet.Politeia.GetProposalsRaw(category, 0, 0, newestFirst)
 	if err == nil {
 		for i := 0; i < len(proposals); i++ {
 			proposal := proposals[i]

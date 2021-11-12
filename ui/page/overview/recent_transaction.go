@@ -72,7 +72,6 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 										return layout.Dimensions{}
 									}
 
-									gtx.Constraints.Min.X = gtx.Constraints.Max.X
 									separator := pg.Theme.Separator()
 									return layout.E.Layout(gtx, func(gtx C) D {
 										// Show bottom divider for all rows except last
