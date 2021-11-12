@@ -45,7 +45,7 @@ func NewPasswordModal(l *load.Load) *PasswordModal {
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.Button("Confirm"),
 		btnNegative:  l.Theme.OutlineButton("Cancel"),
-		isCancelable: true,
+		isCancelable: false,
 	}
 
 	pm.btnPositve.Font.Weight = text.Medium

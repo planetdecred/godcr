@@ -54,7 +54,7 @@ func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button("Confirm"),
 		btnNegative:      l.Theme.OutlineButton("Cancel"),
-		isCancelable:     true,
+		isCancelable:     false,
 		keyEvent:         l.Receiver.KeyEvents,
 	}
 

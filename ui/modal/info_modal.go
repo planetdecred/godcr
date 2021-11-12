@@ -50,7 +50,7 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		btnPositve:   l.Theme.OutlineButton("Yes"),
 		btnNegative:  l.Theme.OutlineButton("No"),
 		keyEvent:     l.Receiver.KeyEvents,
-		isCancelable: true,
+		isCancelable: false,
 		btnAlignment: layout.E,
 	}
 
