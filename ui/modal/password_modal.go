@@ -154,8 +154,8 @@ func (pm *PasswordModal) Handle() {
 	}
 
 	if pm.modal.BackdropClicked(pm.isCancelable) {
-		pm.negativeButtonClicked()
 		if !pm.isLoading {
+			pm.negativeButtonClicked()
 			pm.Dismiss()
 		}
 	}
