@@ -86,6 +86,16 @@ func (d *DropDown) Len() int {
 	return len(d.items)
 }
 
+func DisplayOneDropdown(dropdowns ...*DropDown) {
+	if dropdowns[0].isOpen {
+		dropdowns[1].isOpen, dropdowns[2].isOpen = false, false
+	} else if dropdowns[1].isOpen {
+		dropdowns[0].isOpen, dropdowns[2].isOpen = false, false
+	} else if dropdowns[2].isOpen {
+		dropdowns[0].isOpen, dropdowns[1].isOpen = false, false
+	}
+}
+
 func (d *DropDown) handleEvents() {
 	if d.isOpen {
 		for i := range d.items {
