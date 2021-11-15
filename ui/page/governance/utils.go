@@ -192,9 +192,13 @@ func layoutInfoTooltip(gtx C, rect image.Rectangle, item proposalItem) {
 	})
 }
 
-func layoutNoProposalsFound(gtx C, l *load.Load) D {
+func layoutNoProposalsFound(gtx C, l *load.Load, syncing bool) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	return layout.Center.Layout(gtx, l.Theme.Body1("No proposals yet").Layout)
+	text := l.Theme.Body1("No proposals yet")
+	if syncing {
+		text = l.Theme.Body1("Fetching proposals...")
+	}
+	return layout.Center.Layout(gtx, text.Layout)
 }
 
 func loadProposals(category int32, newestFirst bool, l *load.Load) []*proposalItem {
@@ -227,88 +231,3 @@ func loadProposals(category int32, newestFirst bool, l *load.Load) []*proposalIt
 	}
 	return proposalItems
 }
-
-// func (pg *ProposalsPage) layoutSyncSection(gtx C) D {
-// 	if l.showSyncedCompleted {
-// 		return l.layoutIsSyncedSection(gtx)
-// 	} else if l.multiWallet.Politeia.IsSyncing() {
-// 		return l.layoutIsSyncingSection(gtx)
-// 	}
-// 	return l.layoutStartSyncSection(gtx)
-// }
-
-// func (pg *ProposalsPage) layoutTabs(gtx C) D {
-// 	width := float32(gtx.Constraints.Max.X-20) / float32(len(proposalCategoryTitles))
-// 	l.proposalMu.Lock()
-// 	selectedCategory := l.selectedCategoryIndex
-// 	l.proposalMu.Unlock()
-
-// 	return l.tabCard.Layout(gtx, func(gtx C) D {
-// 		return layout.Inset{
-// 			Left:  values.MarginPadding12,
-// 			Right: values.MarginPadding12,
-// 		}.Layout(gtx, func(gtx C) D {
-// 			// categoryList to be removed with new update to UI.
-// 			return l.categoryList.Layout(gtx, len(proposalCategoryTitles), func(gtx C, i int) D {
-// 				gtx.Constraints.Min.X = int(width)
-// 				return layout.Stack{Alignment: layout.S}.Layout(gtx,
-// 					layout.Stacked(func(gtx C) D {
-// 						return layout.UniformInset(values.MarginPadding14).Layout(gtx, func(gtx C) D {
-// 							return layout.Center.Layout(gtx, func(gtx C) D {
-// 								return layout.Flex{}.Layout(gtx,
-// 									layout.Rigid(func(gtx C) D {
-// 										lbl := l.Theme.Body1(proposalCategoryTitles[i])
-// 										lbl.Color = l.Theme.Color.Gray
-// 										if selectedCategory == i {
-// 											lbl.Color = l.Theme.Color.Primary
-// 										}
-// 										return lbl.Layout(gtx)
-// 									}),
-// 									layout.Rigid(func(gtx C) D {
-// 										return layout.Inset{Left: values.MarginPadding4, Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
-// 											c := l.Theme.Card()
-// 											c.Color = l.Theme.Color.LightGray
-// 											c.Radius = decredmaterial.Radius(8.5)
-// 											lbl := l.Theme.Body2(strconv.Itoa(l.proposalCount[i]))
-// 											lbl.Color = l.Theme.Color.Gray
-// 											if selectedCategory == i {
-// 												c.Color = l.Theme.Color.Primary
-// 												lbl.Color = l.Theme.Color.Surface
-// 											}
-// 											return c.Layout(gtx, func(gtx C) D {
-// 												return layout.Inset{
-// 													Left:  values.MarginPadding5,
-// 													Right: values.MarginPadding5,
-// 												}.Layout(gtx, lbl.Layout)
-// 											})
-// 										})
-// 									}),
-// 								)
-// 							})
-// 						})
-// 					}),
-// 					layout.Stacked(func(gtx C) D {
-// 						if selectedCategory != i {
-// 							return D{}
-// 						}
-// 						tabHeight := gtx.Px(unit.Dp(2))
-// 						tabRect := image.Rect(0, 0, int(width), tabHeight)
-// 						paint.FillShape(gtx.Ops, l.Theme.Color.Primary, clip.Rect(tabRect).Op())
-// 						return layout.Dimensions{
-// 							Size: image.Point{X: int(width), Y: tabHeight},
-// 						}
-// 					}),
-// 				)
-// 			})
-// 		})
-// 	})
-// }
-
-// func (pg *ProposalsPage) layoutInfoTooltip(gtx C, rect image.Rectangle, item proposalItem) {
-// 	inset := layout.Inset{Top: values.MarginPadding20, Left: values.MarginPaddingMinus195}
-// 	item.tooltip.Layout(gtx, rect, inset, func(gtx C) D {
-// 		gtx.Constraints.Min.X = gtx.Px(values.MarginPadding195)
-// 		gtx.Constraints.Max.X = gtx.Px(values.MarginPadding195)
-// 		return item.tooltipLabel.Layout(gtx)
-// 	})
-// }

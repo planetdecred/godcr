@@ -2,20 +2,11 @@ package governance
 
 import (
 	"context"
-	// "image"
-	// "image/color"
-	// "strconv"
-	// "strings"
 	"sync"
-	"time"
-	// "fmt"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
-	// "gioui.org/op/clip"
-	// "gioui.org/op/paint"
 	"gioui.org/text"
-	// "gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 
@@ -24,63 +15,46 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
-	// "github.com/planetdecred/godcr/wallet"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 const ProposalsListPageID = "ProposalsList"
 
-type ProposalsPage struct {
+type ProposalsListPage struct {
 	*load.Load
 
 	ctx        context.Context // page context
 	ctxCancel  context.CancelFunc
 	proposalMu sync.Mutex
 
-	multiWallet *dcrlibwallet.MultiWallet
-
+	multiWallet      *dcrlibwallet.MultiWallet
+	listContainer    *widget.List
 	orderDropDown    *decredmaterial.DropDown
 	categoryDropDown *decredmaterial.DropDown
+	proposalsList    *decredmaterial.ClickableList
+	syncButton       *widget.Clickable
+	backButton       decredmaterial.IconButton
+	searchEditor     decredmaterial.Editor
 
-	//categoryList to be removed with new update to UI.
-	categoryList   *decredmaterial.ClickableList
-	proposalsList  *decredmaterial.ClickableList
-	listContainer  *widget.List
-	tabCard        decredmaterial.Card
-	itemCard       decredmaterial.Card
-	syncCard       decredmaterial.Card
-	updatedLabel   decredmaterial.Label
-	lastSyncedTime string
+	proposalItems []*proposalItem
 
-	searchEditor decredmaterial.Editor
-
-	proposalItems         []*proposalItem
-	proposalCount         []int
-	selectedCategoryIndex int
-
-	legendIcon    *decredmaterial.Icon
-	infoIcon      *decredmaterial.Icon
-	updatedIcon   *decredmaterial.Icon
-	syncButton    *widget.Clickable
-	startSyncIcon *decredmaterial.Image
-	timerIcon     *decredmaterial.Image
-
-	backButton decredmaterial.IconButton
-
-	showSyncedCompleted bool
-	isSyncing           bool
+	syncCompleted bool
 }
 
-func NewProposalsPage(l *load.Load) *ProposalsPage {
-	pg := &ProposalsPage{
-		Load:                  l,
-		multiWallet:           l.WL.MultiWallet,
-		selectedCategoryIndex: -1,
+func NewProposalsPage(l *load.Load) *ProposalsListPage {
+	pg := &ProposalsListPage{
+		Load:        l,
+		multiWallet: l.WL.MultiWallet,
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
 	}
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
+
+	pg.syncButton = new(widget.Clickable)
+
+	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
 
@@ -100,23 +74,19 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 		},
 	}, 1)
 
-	pg.initLayoutWidgets()
 	return pg
 }
 
-func (pg *ProposalsPage) ID() string {
+func (pg *ProposalsListPage) ID() string {
 	return ProposalsOverviewPageID
 }
 
-func (pg *ProposalsPage) OnResume() {
+func (pg *ProposalsListPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	// pg.listenForSyncNotifications()
 	pg.fetchProposals()
-
-	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 }
 
-func (pg *ProposalsPage) fetchProposals() {
+func (pg *ProposalsListPage) fetchProposals() {
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 
 	proposalFilter := dcrlibwallet.ProposalCategoryAll
@@ -134,7 +104,7 @@ func (pg *ProposalsPage) fetchProposals() {
 	pg.proposalMu.Unlock()
 }
 
-func (pg *ProposalsPage) Handle() {
+func (pg *ProposalsListPage) Handle() {
 	if pg.backButton.Button.Clicked() {
 		pg.PopFragment()
 	}
@@ -160,86 +130,23 @@ func (pg *ProposalsPage) Handle() {
 	}
 
 	for pg.syncButton.Clicked() {
-		pg.isSyncing = true
 		go pg.multiWallet.Politeia.Sync()
 	}
 
-	if pg.showSyncedCompleted {
-		time.AfterFunc(time.Second*3, func() {
-			pg.showSyncedCompleted = false
-		})
+	if pg.syncCompleted {
+		pg.syncCompleted = false
+		pg.fetchProposals()
+		pg.RefreshWindow()
 	}
 }
 
-// func (pg *ProposalsPage) listenForSyncNotifications() {
-// 	go func() {
-// 		for {
-// 			var notification interface{}
-
-// 			select {
-// 			case notification = <-pg.Receiver.NotificationsUpdate:
-// 			case <-pg.ctx.Done():
-// 				return
-// 			}
-
-// 			switch n := notification.(type) {
-// 			case wallet.Proposal:
-// 				if n.ProposalStatus == wallet.Synced {
-// 					pg.isSyncing = false
-// 					pg.showSyncedCompleted = true
-
-// 					pg.proposalMu.Lock()
-// 					selectedCategory := pg.selectedCategoryIndex
-// 					pg.proposalMu.Unlock()
-// 					if selectedCategory != -1 {
-// 						pg.loadProposals(selectedCategory)
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}()
-// }
-
-func (pg *ProposalsPage) OnClose() {
+func (pg *ProposalsListPage) OnClose() {
 	pg.ctxCancel()
 }
 
 // - Layout
 
-func (pg *ProposalsPage) initLayoutWidgets() {
-	//categoryList to be removed with new update to UI.
-	pg.categoryList = pg.Theme.NewClickableList(layout.Horizontal)
-	pg.itemCard = pg.Theme.Card()
-	pg.syncButton = new(widget.Clickable)
-
-	pg.infoIcon = decredmaterial.NewIcon(pg.Icons.ActionInfo)
-	pg.infoIcon.Color = pg.Theme.Color.Gray
-
-	pg.legendIcon = decredmaterial.NewIcon(pg.Icons.ImageBrightness1)
-	pg.legendIcon.Color = pg.Theme.Color.InactiveGray
-
-	pg.updatedIcon = decredmaterial.NewIcon(pg.Icons.NavigationCheck)
-	pg.updatedIcon.Color = pg.Theme.Color.Success
-
-	pg.updatedLabel = pg.Theme.Body2("Updated")
-	pg.updatedLabel.Color = pg.Theme.Color.Success
-
-	radius := decredmaterial.Radius(0)
-	pg.tabCard = pg.Theme.Card()
-	pg.tabCard.Radius = radius
-
-	pg.syncCard = pg.Theme.Card()
-	pg.syncCard.Radius = radius
-
-	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
-	pg.proposalsList.DividerHeight = values.MarginPadding8
-
-	pg.timerIcon = pg.Icons.TimerIcon
-
-	pg.startSyncIcon = pg.Icons.Restore
-}
-
-func (pg *ProposalsPage) Layout(gtx C) D {
+func (pg *ProposalsListPage) Layout(gtx C) D {
 	return components.UniformPadding(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -264,14 +171,20 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 									}),
 									layout.Rigid(func(gtx C) D {
 										var text string
-										if pg.isSyncing {
+										if pg.multiWallet.Politeia.IsSyncing() {
 											text = "Syncing..."
+										} else if pg.syncCompleted {
+											text = "Updated"
 										} else {
 											text = components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
 										}
 
 										lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
 										lastUpdatedInfo.Color = pg.Theme.Color.Gray
+										if pg.syncCompleted {
+											lastUpdatedInfo.Color = pg.Theme.Color.Success
+										}
+
 										return layout.Inset{Top: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 											return lastUpdatedInfo.Layout(gtx)
 										})
@@ -327,7 +240,7 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 	})
 }
 
-func (pg *ProposalsPage) layoutContent(gtx C) D {
+func (pg *ProposalsListPage) layoutContent(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			pg.proposalMu.Lock()
@@ -335,7 +248,7 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 			pg.proposalMu.Unlock()
 
 			if len(proposalItems) == 0 {
-				return layoutNoProposalsFound(gtx, pg.Load)
+				return layoutNoProposalsFound(gtx, pg.Load, pg.multiWallet.Politeia.IsSyncing())
 			}
 
 			// group 'In discussion' and 'Active' proposals into under review
@@ -372,50 +285,15 @@ func (pg *ProposalsPage) layoutContent(gtx C) D {
 	)
 }
 
-func (pg *ProposalsPage) layoutSyncSection(gtx C) D {
+func (pg *ProposalsListPage) layoutSyncSection(gtx C) D {
 	if pg.multiWallet.Politeia.IsSyncing() {
 		return pg.layoutIsSyncingSection(gtx)
+	} else {
+		return pg.layoutStartSyncSection(gtx)
 	}
-	return pg.layoutStartSyncSection(gtx)
 }
 
-// func (pg *ProposalsPage) layoutProposalsList(gtx C) D {
-// 	pg.proposalMu.Lock()
-// 	proposalItems := pg.proposalItems
-// 	pg.proposalMu.Unlock()
-// 	return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
-// 		return layout.Inset{
-// 			Top:    values.MarginPadding2,
-// 			Bottom: values.MarginPadding2,
-// 		}.Layout(gtx, func(gtx C) D {
-// 			return pg.itemCard.Layout(gtx, func(gtx C) D {
-// 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
-// 				return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-// 					item := proposalItems[i]
-// 					proposal := item.proposal
-// 					return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-// 						layout.Rigid(func(gtx C) D {
-// 							return pg.layoutAuthorAndDate(gtx, item)
-// 						}),
-// 						layout.Rigid(func(gtx C) D {
-// 							return pg.layoutTitle(gtx, proposal)
-// 						}),
-// 						layout.Rigid(func(gtx C) D {
-// 							if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
-// 								proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
-// 								proposal.Category == dcrlibwallet.ProposalCategoryRejected {
-// 								return pg.layoutProposalVoteBar(gtx, item)
-// 							}
-// 							return D{}
-// 						}),
-// 					)
-// 				})
-// 			})
-// 		})
-// 	})
-// }
-
-func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
+func (pg *ProposalsListPage) layoutIsSyncingSection(gtx C) D {
 	th := material.NewTheme(gofont.Collection())
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding24)
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -424,8 +302,30 @@ func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 	return loader.Layout(gtx)
 }
 
-func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
+func (pg *ProposalsListPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
-		return pg.startSyncIcon.Layout24dp(gtx)
+		return pg.Icons.Restore.Layout24dp(gtx)
 	})
+}
+
+func (pg *ProposalsListPage) listenForSyncNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					pg.syncCompleted = true
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
 }

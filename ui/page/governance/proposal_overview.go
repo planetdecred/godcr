@@ -13,6 +13,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 )
 
 type (
@@ -35,10 +36,7 @@ type ProposalsOverviewPage struct {
 
 	proposalItems []*proposalItem
 	proposalMu    sync.Mutex
-
-	lastSyncedTime      string
-	showSyncedCompleted bool
-	isSyncing           bool
+	syncCompleted bool
 }
 
 func NewProposalsOverviewPage(l *load.Load) *ProposalsOverviewPage {
@@ -65,14 +63,12 @@ func (pg *ProposalsOverviewPage) ID() string {
 
 func (pg *ProposalsOverviewPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	// pg.listenForSyncNotifications()
+	pg.listenForSyncNotifications()
 
 	proposalItems := loadProposals(dcrlibwallet.ProposalCategoryAll, true, pg.Load)
 	pg.proposalMu.Lock()
 	pg.proposalItems = proposalItems
 	pg.proposalMu.Unlock()
-
-	pg.isSyncing = pg.WL.MultiWallet.Politeia.IsSyncing()
 }
 
 func (pg *ProposalsOverviewPage) Layout(gtx C) D {
@@ -102,7 +98,7 @@ func (pg *ProposalsOverviewPage) Layout(gtx C) D {
 					proposalItems := pg.proposalItems
 					pg.proposalMu.Unlock()
 					if len(proposalItems) == 0 {
-						return layoutNoProposalsFound(gtx, pg.Load)
+						return layoutNoProposalsFound(gtx, pg.Load, pg.WL.MultiWallet.Politeia.IsSyncing())
 					}
 
 					return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
@@ -145,7 +141,6 @@ func (pg *ProposalsOverviewPage) Handle() {
 	for pg.fetchProposals.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
-		pg.isSyncing = pg.WL.MultiWallet.Politeia.IsSyncing()
 	}
 
 	for pg.toProposals.Button.Clicked() {
@@ -159,6 +154,37 @@ func (pg *ProposalsOverviewPage) Handle() {
 
 		pg.ChangeFragment(newProposalDetailsPage(pg.Load, &selectedProposal))
 	}
+
+	if pg.syncCompleted {
+		pg.syncCompleted = false
+		proposalItems := loadProposals(dcrlibwallet.ProposalCategoryAll, true, pg.Load)
+		pg.proposalMu.Lock()
+		pg.proposalItems = proposalItems
+		pg.proposalMu.Unlock()
+		pg.RefreshWindow()
+	}
+}
+
+func (pg *ProposalsOverviewPage) listenForSyncNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					pg.syncCompleted = true
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
 }
 
 func (pg *ProposalsOverviewPage) OnClose() {
