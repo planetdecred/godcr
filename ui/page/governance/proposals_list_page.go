@@ -288,9 +288,8 @@ func (pg *ProposalsListPage) layoutContent(gtx C) D {
 func (pg *ProposalsListPage) layoutSyncSection(gtx C) D {
 	if pg.multiWallet.Politeia.IsSyncing() {
 		return pg.layoutIsSyncingSection(gtx)
-	} else {
-		return pg.layoutStartSyncSection(gtx)
 	}
+	return pg.layoutStartSyncSection(gtx)
 }
 
 func (pg *ProposalsListPage) layoutIsSyncingSection(gtx C) D {
