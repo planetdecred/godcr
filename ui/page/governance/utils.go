@@ -27,7 +27,7 @@ func topNavLayout(gtx C, l *load.Load, title string, content layout.Widget) layo
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					txt := l.Theme.Label(values.TextSize20, GovernancePageID)
+					txt := l.Theme.Label(values.TextSize20, title)
 					txt.Font.Weight = text.SemiBold
 					return txt.Layout(gtx)
 				}),
@@ -54,7 +54,7 @@ func proposalsList(gtx C, l *load.Load, prop *proposalItem) D {
 				if proposal.Category == dcrlibwallet.ProposalCategoryActive ||
 					proposal.Category == dcrlibwallet.ProposalCategoryApproved ||
 					proposal.Category == dcrlibwallet.ProposalCategoryRejected {
-					return layoutProposalVoteBar(gtx, l, prop)
+					return layoutProposalVoteBar(gtx, prop)
 				}
 				return D{}
 			}),
@@ -168,7 +168,7 @@ func layoutTitle(gtx C, l *load.Load, proposal dcrlibwallet.Proposal) D {
 	return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, lbl.Layout)
 }
 
-func layoutProposalVoteBar(gtx C, l *load.Load, item *proposalItem) D {
+func layoutProposalVoteBar(gtx C, item *proposalItem) D {
 	proposal := item.proposal
 	yes := float32(proposal.YesVotes)
 	no := float32(proposal.NoVotes)

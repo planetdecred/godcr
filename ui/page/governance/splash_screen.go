@@ -9,7 +9,7 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-func (pg *GovernancePage) splashScreenLayout(gtx layout.Context) layout.Dimensions {
+func (pg *ProposalsOverviewPage) splashScreenLayout(gtx layout.Context) layout.Dimensions {
 	return decredmaterial.LinearLayout{
 		Orientation: layout.Vertical,
 		Width:       decredmaterial.MatchParent,

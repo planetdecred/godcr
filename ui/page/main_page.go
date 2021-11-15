@@ -166,7 +166,7 @@ func (mp *MainPage) initNavItems() {
 				Image:         mp.Icons.GovernanceActiveIcon,
 				ImageInactive: mp.Icons.GovernanceInactiveIcon,
 				Title:         "Governance",
-				PageID:        governance.GovernancePageID,
+				PageID:        governance.ProposalsOverviewPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -332,7 +332,7 @@ func (mp *MainPage) Handle() {
 			} else if i == StakingNavID {
 				pg = staking.NewStakingPage(mp.Load)
 			} else if i == ProposalsNavID {
-				pg = governance.NewGovernancePage(mp.Load)
+				pg = governance.NewProposalsOverviewPage(mp.Load)
 			} else if i == MoreNavID {
 				pg = NewMorePage(mp.Load)
 			} else {

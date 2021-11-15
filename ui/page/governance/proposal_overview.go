@@ -20,9 +20,9 @@ type (
 	D = layout.Dimensions
 )
 
-const GovernancePageID = "Governance"
+const ProposalsOverviewPageID = "Governance"
 
-type GovernancePage struct {
+type ProposalsOverviewPage struct {
 	*load.Load
 
 	ctx       context.Context // page context
@@ -41,8 +41,8 @@ type GovernancePage struct {
 	isSyncing           bool
 }
 
-func NewGovernancePage(l *load.Load) *GovernancePage {
-	pg := &GovernancePage{
+func NewProposalsOverviewPage(l *load.Load) *ProposalsOverviewPage {
+	pg := &ProposalsOverviewPage{
 		Load: l,
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
@@ -59,11 +59,11 @@ func NewGovernancePage(l *load.Load) *GovernancePage {
 	return pg
 }
 
-func (pg *GovernancePage) ID() string {
-	return GovernancePageID
+func (pg *ProposalsOverviewPage) ID() string {
+	return ProposalsOverviewPageID
 }
 
-func (pg *GovernancePage) OnResume() {
+func (pg *ProposalsOverviewPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	// pg.listenForSyncNotifications()
 
@@ -75,7 +75,7 @@ func (pg *GovernancePage) OnResume() {
 	pg.isSyncing = pg.WL.MultiWallet.Politeia.IsSyncing()
 }
 
-func (pg *GovernancePage) Layout(gtx C) D {
+func (pg *ProposalsOverviewPage) Layout(gtx C) D {
 	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 		return components.UniformPadding(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -141,7 +141,7 @@ func (pg *GovernancePage) Layout(gtx C) D {
 	return components.UniformPadding(gtx, pg.splashScreenLayout)
 }
 
-func (pg *GovernancePage) Handle() {
+func (pg *ProposalsOverviewPage) Handle() {
 	for pg.fetchProposals.Clicked() {
 		go pg.WL.MultiWallet.Politeia.Sync()
 		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
@@ -161,6 +161,6 @@ func (pg *GovernancePage) Handle() {
 	}
 }
 
-func (pg *GovernancePage) OnClose() {
+func (pg *ProposalsOverviewPage) OnClose() {
 	pg.ctxCancel()
 }
