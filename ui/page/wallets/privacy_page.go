@@ -348,7 +348,16 @@ func (pg *PrivacyPage) Handle() {
 		if pg.toggleMixer.IsChecked() {
 			go pg.showModalPasswordStartAccountMixer()
 		} else {
-			go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
+			pg.toggleMixer.SetChecked(true)
+			info := modal.NewInfoModal(pg.Load).
+				Title("Cancel mixer?").
+				Body("Are you sure you want to cancel mixer action?").
+				NegativeButton("No", func() {}).
+				PositiveButton("Yes", func() {
+					pg.toggleMixer.SetChecked(false)
+					go pg.WL.MultiWallet.StopAccountMixer(pg.wallet.ID)
+				})
+			pg.ShowModal(info)
 		}
 	}
 
@@ -426,7 +435,9 @@ func (pg *PrivacyPage) showModalSetupMixerAcct() {
 func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 	modal.NewPasswordModal(pg.Load).
 		Title("Confirm to mix account").
-		NegativeButton("Cancel", func() {}).
+		NegativeButton("Cancel", func() {
+			pg.toggleMixer.SetChecked(false)
+		}).
 		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
 				err := pg.WL.MultiWallet.StartAccountMixer(pg.wallet.ID, password)
