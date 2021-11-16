@@ -99,8 +99,22 @@ func (pg *ProposalsListPage) fetchProposals() {
 		proposalFilter = dcrlibwallet.ProposalCategoryAbandoned
 	}
 
+	proposalItems := loadProposals(proposalFilter, newestFirst, pg.Load)
+
+	// group 'In discussion' and 'Active' proposals into under review
+	listItems := make([]*proposalItem, 0)
+	for _, item := range proposalItems {
+		if item.proposal.Category == dcrlibwallet.ProposalCategoryPre ||
+			item.proposal.Category == dcrlibwallet.ProposalCategoryActive {
+			listItems = append(listItems, item)
+		}
+	}
+
 	pg.proposalMu.Lock()
-	pg.proposalItems = loadProposals(proposalFilter, newestFirst, pg.Load)
+	pg.proposalItems = proposalItems
+	if proposalFilter == dcrlibwallet.ProposalCategoryAll {
+		pg.proposalItems = listItems
+	}
 	pg.proposalMu.Unlock()
 }
 
@@ -251,27 +265,13 @@ func (pg *ProposalsListPage) layoutContent(gtx C) D {
 				return layoutNoProposalsFound(gtx, pg.Load, pg.multiWallet.Politeia.IsSyncing())
 			}
 
-			// group 'In discussion' and 'Active' proposals into under review
-			listItems := make([]*proposalItem, 0)
-			for _, item := range proposalItems {
-				if item.proposal.Category == dcrlibwallet.ProposalCategoryPre ||
-					item.proposal.Category == dcrlibwallet.ProposalCategoryActive {
-					listItems = append(listItems, item)
-				}
-			}
-
-			prop := proposalItems
-			if int32(pg.categoryDropDown.SelectedIndex()+1) == dcrlibwallet.ProposalCategoryAll {
-				prop = listItems
-			}
-
 			return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
 				return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.Card().Layout(gtx, func(gtx C) D {
-						return pg.proposalsList.Layout(gtx, len(prop), func(gtx C, i int) D {
+						return pg.proposalsList.Layout(gtx, len(proposalItems), func(gtx C, i int) D {
 							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 								layout.Rigid(func(gtx C) D {
-									return proposalsList(gtx, pg.Load, prop[i])
+									return proposalsList(gtx, pg.Load, proposalItems[i])
 								}),
 								layout.Rigid(func(gtx C) D {
 									return pg.Theme.Separator().Layout(gtx)
