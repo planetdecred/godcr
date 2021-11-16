@@ -281,3 +281,16 @@ func ResliceDropdown(dropdowns []*DropDown, indexToRemove int) []*DropDown {
 	dropdowns[indexToRemove] = dropdowns[len(dropdowns)-1]
 	return dropdowns[:len(dropdowns)-1]
 }
+
+//Display one dropdown at a time
+func DisplayOneDropdown(dropdowns ...*DropDown) {
+	var menus []*DropDown
+	for i, menu := range dropdowns {
+		if menu.isOpen {
+			menus = ResliceDropdown(dropdowns, i)
+		}
+		for _, newMenus := range menus {
+			newMenus.isOpen = false
+		}
+	}
+}

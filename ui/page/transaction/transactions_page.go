@@ -196,8 +196,7 @@ func (pg *TransactionsPage) Handle() {
 	if clicked, selectedItem := pg.transactionList.ItemClicked(); clicked {
 		pg.ChangeFragment(NewTransactionDetailsPage(pg.Load, &pg.transactions[selectedItem]))
 	}
-
-	decredmaterial.DisplayOneDropdown(pg.orderDropDown, pg.txTypeDropDown, pg.walletDropDown)
+	decredmaterial.DisplayOneDropdown(pg.txTypeDropDown, pg.orderDropDown, pg.walletDropDown)
 }
 
 func (pg *TransactionsPage) listenForTxNotifications() {

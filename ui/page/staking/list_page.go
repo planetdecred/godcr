@@ -237,7 +237,7 @@ func (pg *ListPage) Handle() {
 		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.tickets[selectedItem].transaction))
 	}
 
-	decredmaterial.DisplayOneDropdown(pg.orderDropDown, pg.ticketTypeDropDown, pg.walletDropDown)
+	decredmaterial.DisplayOneDropdown(pg.ticketTypeDropDown, pg.orderDropDown, pg.walletDropDown)
 }
 
 func (pg *ListPage) OnClose() {
