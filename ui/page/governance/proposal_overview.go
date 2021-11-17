@@ -30,9 +30,11 @@ type ProposalsOverviewPage struct {
 	ctxCancel context.CancelFunc
 
 	fetchProposals decredmaterial.Button
-	toProposals    decredmaterial.TextAndIconButton
-	proposalsList  *decredmaterial.ClickableList
-	listContainer  *widget.List
+	infoButton     decredmaterial.IconButton
+
+	toProposals   decredmaterial.TextAndIconButton
+	proposalsList *decredmaterial.ClickableList
+	listContainer *widget.List
 
 	proposalItems []*proposalItem
 	proposalMu    sync.Mutex
@@ -45,7 +47,6 @@ func NewProposalsOverviewPage(l *load.Load) *ProposalsOverviewPage {
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		fetchProposals: l.Theme.Button("Fetch proposals"),
 	}
 
 	pg.toProposals = pg.Theme.TextAndIconButton(values.String(values.StrSeeAll), pg.Icons.NavigationArrowForward)
@@ -54,6 +55,7 @@ func NewProposalsOverviewPage(l *load.Load) *ProposalsOverviewPage {
 
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
 
+	pg.initializeWidget()
 	return pg
 }
 
@@ -162,6 +164,10 @@ func (pg *ProposalsOverviewPage) Handle() {
 		pg.proposalItems = proposalItems
 		pg.proposalMu.Unlock()
 		pg.RefreshWindow()
+	}
+
+	if pg.infoButton.Button.Clicked() {
+		pg.showInfoModal()
 	}
 }
 

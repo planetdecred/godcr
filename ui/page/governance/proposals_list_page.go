@@ -3,6 +3,7 @@ package governance
 import (
 	"context"
 	"sync"
+	"time"
 
 	"gioui.org/font/gofont"
 	"gioui.org/layout"
@@ -39,6 +40,7 @@ type ProposalsListPage struct {
 	proposalItems []*proposalItem
 
 	syncCompleted bool
+	isSyncing     bool
 }
 
 func NewProposalsPage(l *load.Load) *ProposalsListPage {
@@ -83,7 +85,9 @@ func (pg *ProposalsListPage) ID() string {
 
 func (pg *ProposalsListPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+	pg.listenForSyncNotifications()
 	pg.fetchProposals()
+	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 }
 
 func (pg *ProposalsListPage) fetchProposals() {
@@ -145,12 +149,13 @@ func (pg *ProposalsListPage) Handle() {
 
 	for pg.syncButton.Clicked() {
 		go pg.multiWallet.Politeia.Sync()
+		pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 	}
 
 	if pg.syncCompleted {
-		pg.syncCompleted = false
-		pg.fetchProposals()
-		pg.RefreshWindow()
+		time.AfterFunc(time.Second*3, func() {
+			pg.syncCompleted = false
+		})
 	}
 }
 
@@ -185,7 +190,7 @@ func (pg *ProposalsListPage) Layout(gtx C) D {
 									}),
 									layout.Rigid(func(gtx C) D {
 										var text string
-										if pg.multiWallet.Politeia.IsSyncing() {
+										if pg.isSyncing {
 											text = "Syncing..."
 										} else if pg.syncCompleted {
 											text = "Updated"
@@ -262,7 +267,7 @@ func (pg *ProposalsListPage) layoutContent(gtx C) D {
 			pg.proposalMu.Unlock()
 
 			if len(proposalItems) == 0 {
-				return layoutNoProposalsFound(gtx, pg.Load, pg.multiWallet.Politeia.IsSyncing())
+				return layoutNoProposalsFound(gtx, pg.Load, pg.isSyncing)
 			}
 
 			return pg.Theme.List(pg.listContainer).Layout(gtx, 1, func(gtx C, i int) D {
@@ -286,7 +291,7 @@ func (pg *ProposalsListPage) layoutContent(gtx C) D {
 }
 
 func (pg *ProposalsListPage) layoutSyncSection(gtx C) D {
-	if pg.multiWallet.Politeia.IsSyncing() {
+	if pg.isSyncing {
 		return pg.layoutIsSyncingSection(gtx)
 	}
 	return pg.layoutStartSyncSection(gtx)
@@ -322,6 +327,7 @@ func (pg *ProposalsListPage) listenForSyncNotifications() {
 			case wallet.Proposal:
 				if n.ProposalStatus == wallet.Synced {
 					pg.syncCompleted = true
+					pg.fetchProposals()
 					pg.RefreshWindow()
 				}
 			}
