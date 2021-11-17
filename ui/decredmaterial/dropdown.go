@@ -86,18 +86,6 @@ func (d *DropDown) Len() int {
 	return len(d.items)
 }
 
-/*display only one dropdown at a time
-func DisplayOneDropdown(dropdowns ...*DropDown) {
-	if dropdowns[0].isOpen {
-		dropdowns[1].isOpen, dropdowns[2].isOpen = false, false
-	} else if dropdowns[1].isOpen {
-		dropdowns[0].isOpen, dropdowns[2].isOpen = false, false
-	} else if dropdowns[2].isOpen {
-		dropdowns[0].isOpen, dropdowns[1].isOpen = false, false
-	}
-}
-*/
-
 func (d *DropDown) handleEvents() {
 	if d.isOpen {
 		for i := range d.items {
@@ -276,13 +264,13 @@ func (d *DropDown) drawLayout(gtx C, body layout.Widget) D {
 	return d.linearLayout.Layout2(gtx, body)
 }
 
-//Reslice the dropdowns
+// Reslice the dropdowns
 func ResliceDropdown(dropdowns []*DropDown, indexToRemove int) []*DropDown {
 	dropdowns[indexToRemove] = dropdowns[len(dropdowns)-1]
 	return dropdowns[:len(dropdowns)-1]
 }
 
-//Display one dropdown at a time
+// Display one dropdown at a time
 func DisplayOneDropdown(dropdowns ...*DropDown) {
 	var menus []*DropDown
 	for i, menu := range dropdowns {
