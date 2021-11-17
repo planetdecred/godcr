@@ -1,4 +1,4 @@
-package governance
+package components
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
-	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -78,7 +77,7 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 	stateLabel := l.Theme.Body2(fmt.Sprintf("%v /2", proposal.VoteStatus))
 	stateLabel.Color = grayCol
 
-	timeAgoLabel := l.Theme.Body2(components.TimeAgo(proposal.Timestamp))
+	timeAgoLabel := l.Theme.Body2(TimeAgo(proposal.Timestamp))
 	timeAgoLabel.Color = grayCol
 
 	var categoryLabel decredmaterial.Label

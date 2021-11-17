@@ -19,9 +19,14 @@ import (
 	"github.com/planetdecred/godcr/wallet"
 )
 
-const ProposalsListPageID = "ProposalsList"
+const ProposalsPageID = "Proposals"
 
-type ProposalsListPage struct {
+type (
+	C = layout.Context
+	D = layout.Dimensions
+)
+
+type ProposalsPage struct {
 	*load.Load
 
 	ctx        context.Context // page context
@@ -34,17 +39,20 @@ type ProposalsListPage struct {
 	categoryDropDown *decredmaterial.DropDown
 	proposalsList    *decredmaterial.ClickableList
 	syncButton       *widget.Clickable
-	backButton       decredmaterial.IconButton
 	searchEditor     decredmaterial.Editor
+	fetchProposalsBtn decredmaterial.Button
 
-	proposalItems []*proposalItem
+	backButton       decredmaterial.IconButton
+	infoButton       decredmaterial.IconButton
+
+	proposalItems []*ProposalItem
 
 	syncCompleted bool
 	isSyncing     bool
 }
 
-func NewProposalsPage(l *load.Load) *ProposalsListPage {
-	pg := &ProposalsListPage{
+func NewProposalsPage(l *load.Load) *ProposalsPage {
+	pg := &ProposalsPage{
 		Load:        l,
 		multiWallet: l.WL.MultiWallet,
 		listContainer: &widget.List{
@@ -58,7 +66,7 @@ func NewProposalsPage(l *load.Load) *ProposalsListPage {
 
 	pg.proposalsList = pg.Theme.NewClickableList(layout.Vertical)
 
-	pg.backButton, _ = components.SubpageHeaderButtons(l)
+	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	pg.orderDropDown = components.CreateOrderDropDown(l)
 	pg.categoryDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
@@ -76,21 +84,23 @@ func NewProposalsPage(l *load.Load) *ProposalsListPage {
 		},
 	}, 1)
 
+	pg.initializeWidget()
+
 	return pg
 }
 
-func (pg *ProposalsListPage) ID() string {
-	return ProposalsOverviewPageID
+func (pg *ProposalsPage) ID() string {
+	return ProposalsPageID
 }
 
-func (pg *ProposalsListPage) OnResume() {
+func (pg *ProposalsPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 	pg.fetchProposals()
 	pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
 }
 
-func (pg *ProposalsListPage) fetchProposals() {
+func (pg *ProposalsPage) fetchProposals() {
 	newestFirst := pg.orderDropDown.SelectedIndex() == 0
 
 	proposalFilter := dcrlibwallet.ProposalCategoryAll
@@ -106,7 +116,7 @@ func (pg *ProposalsListPage) fetchProposals() {
 	proposalItems := loadProposals(proposalFilter, newestFirst, pg.Load)
 
 	// group 'In discussion' and 'Active' proposals into under review
-	listItems := make([]*proposalItem, 0)
+	listItems := make([]*ProposalItem, 0)
 	for _, item := range proposalItems {
 		if item.proposal.Category == dcrlibwallet.ProposalCategoryPre ||
 			item.proposal.Category == dcrlibwallet.ProposalCategoryActive {
@@ -122,8 +132,17 @@ func (pg *ProposalsListPage) fetchProposals() {
 	pg.proposalMu.Unlock()
 }
 
-func (pg *ProposalsListPage) Handle() {
-	if pg.backButton.Button.Clicked() {
+func (pg *ProposalsPage) Handle() {
+	for pg.fetchProposalsBtn.Clicked() {
+		go pg.WL.MultiWallet.Politeia.Sync()
+		pg.WL.Wallet.SaveConfigValueForKey(load.FetchProposalConfigKey, true)
+	}
+
+	for pg.infoButton.Button.Clicked() {
+		pg.showInfoModal()
+	}
+
+	for pg.backButton.Button.Clicked() {
 		pg.PopFragment()
 	}
 
@@ -159,13 +178,14 @@ func (pg *ProposalsListPage) Handle() {
 	}
 }
 
-func (pg *ProposalsListPage) OnClose() {
+func (pg *ProposalsPage) OnClose() {
 	pg.ctxCancel()
 }
 
 // - Layout
 
-func (pg *ProposalsListPage) Layout(gtx C) D {
+func (pg *ProposalsPage) Layout(gtx C) D {
+	if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
 	return components.UniformPadding(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
@@ -257,9 +277,11 @@ func (pg *ProposalsListPage) Layout(gtx C) D {
 			}),
 		)
 	})
+	}
+	return components.UniformPadding(gtx, pg.splashScreenLayout)
 }
 
-func (pg *ProposalsListPage) layoutContent(gtx C) D {
+func (pg *ProposalsPage) layoutContent(gtx C) D {
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			pg.proposalMu.Lock()
@@ -290,14 +312,14 @@ func (pg *ProposalsListPage) layoutContent(gtx C) D {
 	)
 }
 
-func (pg *ProposalsListPage) layoutSyncSection(gtx C) D {
+func (pg *ProposalsPage) layoutSyncSection(gtx C) D {
 	if pg.isSyncing {
 		return pg.layoutIsSyncingSection(gtx)
 	}
 	return pg.layoutStartSyncSection(gtx)
 }
 
-func (pg *ProposalsListPage) layoutIsSyncingSection(gtx C) D {
+func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 	th := material.NewTheme(gofont.Collection())
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding24)
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -306,13 +328,13 @@ func (pg *ProposalsListPage) layoutIsSyncingSection(gtx C) D {
 	return loader.Layout(gtx)
 }
 
-func (pg *ProposalsListPage) layoutStartSyncSection(gtx C) D {
+func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 	return material.Clickable(gtx, pg.syncButton, func(gtx C) D {
 		return pg.Icons.Restore.Layout24dp(gtx)
 	})
 }
 
-func (pg *ProposalsListPage) listenForSyncNotifications() {
+func (pg *ProposalsPage) listenForSyncNotifications() {
 	go func() {
 		for {
 			var notification interface{}
