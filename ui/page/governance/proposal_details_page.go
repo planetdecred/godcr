@@ -49,7 +49,7 @@ type proposalDetails struct {
 	viewInPoliteiaBtn  *decredmaterial.Clickable
 }
 
-func newProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *proposalDetails {
+func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *proposalDetails {
 	pg := &proposalDetails{
 		Load: l,
 

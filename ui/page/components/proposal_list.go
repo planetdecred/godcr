@@ -15,33 +15,16 @@ import (
 )
 
 type ProposalItem struct {
-	proposal     dcrlibwallet.Proposal
+	Proposal     dcrlibwallet.Proposal
 	tooltip      *decredmaterial.Tooltip
 	tooltipLabel decredmaterial.Label
 	voteBar      *VoteBar
 }
 
-func topNavLayout(gtx C, l *load.Load, title string, content layout.Widget) layout.Dimensions {
-	return layout.Flex{}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					txt := l.Theme.Label(values.TextSize20, title)
-					txt.Font.Weight = text.SemiBold
-					return txt.Layout(gtx)
-				}),
-			)
-		}),
-		layout.Flexed(1, func(gtx C) D {
-			return layout.E.Layout(gtx, content)
-		}),
-	)
-}
-
-func proposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
+func ProposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
-		proposal := prop.proposal
+		proposal := prop.Proposal
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layoutAuthorAndDate(gtx, l, prop)
@@ -62,7 +45,7 @@ func proposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
 }
 
 func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
-	proposal := item.proposal
+	proposal := item.Proposal
 	grayCol := l.Theme.Color.Gray
 
 	nameLabel := l.Theme.Body2(proposal.Username)
@@ -120,7 +103,7 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 				layout.Rigid(func(gtx C) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
-							if item.proposal.Category == dcrlibwallet.ProposalCategoryPre {
+							if item.Proposal.Category == dcrlibwallet.ProposalCategoryPre {
 								return layout.Inset{
 									Right: values.MarginPadding4,
 								}.Layout(gtx, stateLabel.Layout)
@@ -128,7 +111,7 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 							return D{}
 						}),
 						layout.Rigid(func(gtx C) D {
-							if item.proposal.Category == dcrlibwallet.ProposalCategoryActive {
+							if item.Proposal.Category == dcrlibwallet.ProposalCategoryActive {
 								return layout.Inset{
 									Right: values.MarginPadding4,
 									Top:   values.MarginPadding3,
@@ -138,7 +121,7 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 						}),
 						layout.Rigid(timeAgoLabel.Layout),
 						layout.Rigid(func(gtx C) D {
-							if item.proposal.Category == dcrlibwallet.ProposalCategoryPre {
+							if item.Proposal.Category == dcrlibwallet.ProposalCategoryPre {
 								return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 									rect := image.Rectangle{
 										Min: gtx.Constraints.Min,
@@ -168,7 +151,7 @@ func layoutTitle(gtx C, l *load.Load, proposal dcrlibwallet.Proposal) D {
 }
 
 func layoutProposalVoteBar(gtx C, item *ProposalItem) D {
-	proposal := item.proposal
+	proposal := item.Proposal
 	yes := float32(proposal.YesVotes)
 	no := float32(proposal.NoVotes)
 	quorumPercent := float32(proposal.QuorumPercentage)
@@ -191,16 +174,33 @@ func layoutInfoTooltip(gtx C, rect image.Rectangle, item ProposalItem) {
 	})
 }
 
-func layoutNoProposalsFound(gtx C, l *load.Load, syncing bool) D {
+func LayoutNoProposalsFound(gtx C, l *load.Load, syncing bool, category int32) D {
+	var selectedCategory string
+	switch category {
+	case dcrlibwallet.ProposalCategoryApproved:
+		selectedCategory = "approved"
+	case dcrlibwallet.ProposalCategoryRejected:
+		selectedCategory = "rejected"
+	case dcrlibwallet.ProposalCategoryAbandoned:
+		selectedCategory = "abandoned"
+	default:
+		selectedCategory = "under review"
+	}
+
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	text := l.Theme.Body1("No proposals yet")
+	text := l.Theme.Body1(fmt.Sprintf("No %s proposals yet ", selectedCategory))
 	if syncing {
 		text = l.Theme.Body1("Fetching proposals...")
 	}
-	return layout.Center.Layout(gtx, text.Layout)
+	return layout.Center.Layout(gtx, func(gtx C) D {
+		return layout.Inset{
+			Top:    values.MarginPadding10,
+			Bottom: values.MarginPadding10,
+		}.Layout(gtx, text.Layout)
+	})
 }
 
-func loadProposals(category int32, newestFirst bool, l *load.Load) []*ProposalItem {
+func LoadProposals(category int32, newestFirst bool, l *load.Load) []*ProposalItem {
 	proposalItems := make([]*ProposalItem, 0)
 
 	proposals, err := l.WL.MultiWallet.Politeia.GetProposalsRaw(category, 0, 0, newestFirst)
@@ -208,7 +208,7 @@ func loadProposals(category int32, newestFirst bool, l *load.Load) []*ProposalIt
 		for i := 0; i < len(proposals); i++ {
 			proposal := proposals[i]
 			item := &ProposalItem{
-				proposal: proposals[i],
+				Proposal: proposals[i],
 				voteBar:  NewVoteBar(l),
 			}
 
