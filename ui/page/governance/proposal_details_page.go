@@ -28,7 +28,7 @@ type proposalItemWidgets struct {
 	clickables map[string]*widget.Clickable
 }
 
-type proposalDetails struct {
+type ProposalDetails struct {
 	*load.Load
 	ctx                context.Context // page context
 	ctxCancel          context.CancelFunc
@@ -49,8 +49,8 @@ type proposalDetails struct {
 	viewInPoliteiaBtn  *decredmaterial.Clickable
 }
 
-func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *proposalDetails {
-	pg := &proposalDetails{
+func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *ProposalDetails {
+	pg := &ProposalDetails{
 		Load: l,
 
 		loadingDescription: false,
@@ -86,16 +86,16 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *prop
 	return pg
 }
 
-func (pg *proposalDetails) ID() string {
+func (pg *ProposalDetails) ID() string {
 	return ProposalDetailsPageID
 }
 
-func (pg *proposalDetails) OnResume() {
+func (pg *ProposalDetails) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 }
 
-func (pg *proposalDetails) Handle() {
+func (pg *ProposalDetails) Handle() {
 	for token := range pg.proposalItems {
 		for location, clickable := range pg.proposalItems[token].clickables {
 			if clickable.Clicked() {
@@ -118,7 +118,7 @@ func (pg *proposalDetails) Handle() {
 	}
 }
 
-func (pg *proposalDetails) listenForSyncNotifications() {
+func (pg *ProposalDetails) listenForSyncNotifications() {
 	go func() {
 		for {
 			var notification interface{}
@@ -142,13 +142,13 @@ func (pg *proposalDetails) listenForSyncNotifications() {
 		}
 	}()
 }
-func (pg *proposalDetails) OnClose() {
+func (pg *ProposalDetails) OnClose() {
 	pg.ctxCancel()
 }
 
 // - Layout
 
-func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
+func (pg *ProposalDetails) layoutProposalVoteBar(gtx C) D {
 	proposal := pg.proposal
 
 	yes := float32(proposal.YesVotes)
@@ -164,12 +164,12 @@ func (pg *proposalDetails) layoutProposalVoteBar(gtx C) D {
 		Layout(gtx)
 }
 
-func (pg *proposalDetails) layoutProposalVoteAction(gtx C) D {
+func (pg *ProposalDetails) layoutProposalVoteAction(gtx C) D {
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	return pg.vote.Layout(gtx)
 }
 
-func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
+func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 	stateText1 := "Waiting for author to authorize voting"
 	stateText2 := "Waiting for admin to trigger the start of voting"
 
@@ -241,7 +241,7 @@ func (pg *proposalDetails) layoutInDiscussionState(gtx C) D {
 	)
 }
 
-func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
+func (pg *ProposalDetails) layoutNormalTitle(gtx C) D {
 	var label decredmaterial.Label
 	var icon *decredmaterial.Icon
 	proposal := pg.proposal
@@ -305,7 +305,7 @@ func (pg *proposalDetails) layoutNormalTitle(gtx C) D {
 	)
 }
 
-func (pg *proposalDetails) layoutTitle(gtx C) D {
+func (pg *ProposalDetails) layoutTitle(gtx C) D {
 	proposal := pg.proposal
 
 	return pg.descriptionCard.Layout(gtx, func(gtx C) D {
@@ -318,7 +318,7 @@ func (pg *proposalDetails) layoutTitle(gtx C) D {
 	})
 }
 
-func (pg *proposalDetails) layoutDescription(gtx C) D {
+func (pg *ProposalDetails) layoutDescription(gtx C) D {
 	grayCol := pg.Theme.Color.Gray
 	proposal := pg.proposal
 
@@ -393,7 +393,7 @@ func (pg *proposalDetails) layoutDescription(gtx C) D {
 	})
 }
 
-func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Image, btn *decredmaterial.Clickable) layout.Widget {
+func (pg *ProposalDetails) layoutRedirect(text string, icon *decredmaterial.Image, btn *decredmaterial.Clickable) layout.Widget {
 	return func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(pg.lineSeparator(layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12})),
@@ -416,13 +416,13 @@ func (pg *proposalDetails) layoutRedirect(text string, icon *decredmaterial.Imag
 	}
 }
 
-func (pg *proposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
+func (pg *ProposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 	return func(gtx C) D {
 		return inset.Layout(gtx, pg.Theme.Separator().Layout)
 	}
 }
 
-func (pg *proposalDetails) Layout(gtx C) D {
+func (pg *ProposalDetails) Layout(gtx C) D {
 	proposal := pg.proposal
 	_, ok := pg.proposalItems[proposal.Token]
 	if !ok && !pg.loadingDescription {

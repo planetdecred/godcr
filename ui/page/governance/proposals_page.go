@@ -176,18 +176,19 @@ func (pg *ProposalsPage) Handle() {
 		go pg.multiWallet.Politeia.Sync()
 		pg.isSyncing = true
 
-		// check after 1min if sync does not start, set isSyncing to false and cancel sync
-		time.AfterFunc(time.Second*60, func() {
-			if !pg.multiWallet.Politeia.IsSyncing() {
-				pg.isSyncing = false
-				go pg.multiWallet.Politeia.StopSync()
-			}
-		})
+		//Todo: check after 1min if sync does not start, set isSyncing to false and cancel sync
+		// go time.AfterFunc(time.Second*60, func() {
+		// 	if !pg.multiWallet.Politeia.IsSyncing() {
+		// 		pg.isSyncing = false
+		// 		go pg.multiWallet.Politeia.StopSync()
+		// 	}
+		// })
 	}
 
 	if pg.syncCompleted {
 		time.AfterFunc(time.Second*3, func() {
 			pg.syncCompleted = false
+			pg.RefreshWindow()
 		})
 	}
 }
@@ -378,7 +379,7 @@ func (pg *ProposalsPage) listenForSyncNotifications() {
 			case wallet.Proposal:
 				if n.ProposalStatus == wallet.Synced {
 					pg.syncCompleted = true
-					pg.isSyncing = pg.multiWallet.Politeia.IsSyncing()
+					pg.isSyncing = false
 
 					pg.fetchProposals()
 					pg.RefreshWindow()
