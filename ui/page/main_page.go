@@ -201,7 +201,9 @@ func (mp *MainPage) OnResume() {
 
 	if mp.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey) {
 		mp.StartSyncing()
-		go mp.WL.MultiWallet.Politeia.Sync()
+		if mp.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
+			go mp.WL.MultiWallet.Politeia.Sync()
+		}
 	}
 
 	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)

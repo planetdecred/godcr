@@ -215,7 +215,7 @@ func loadIcons() Icons {
 		ListGridIcon:             decredmaterial.NewImage(decredIcons["list_grid"]),
 		DecredSymbolIcon:         decredmaterial.NewImage(decredIcons["decred_symbol"]),
 		DecredSymbol2:            decredmaterial.NewImage(decredIcons["ic_decred02"]),
-		GovernanceActiveIcon:     decredmaterial.NewImage(decredIcons["governance_a"]),
+		GovernanceActiveIcon:     decredmaterial.NewImage(decredIcons["governance_active"]),
 		GovernanceInactiveIcon:   decredmaterial.NewImage(decredIcons["governance_inactive"]),
 	}
 	return ic
