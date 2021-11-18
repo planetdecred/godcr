@@ -1,8 +1,9 @@
 package overview
 
 import (
-	"gioui.org/layout"
 	"time"
+
+	"gioui.org/layout"
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -25,7 +26,7 @@ func (pg *AppOverviewPage) loadRecentProposals() {
 	listItems := make([]*components.ProposalItem, 0)
 	for _, item := range proposalItems {
 		utcTime := time.Unix(item.Proposal.Timestamp, 0).UTC()
-		if time.Now().UTC().Sub(utcTime).Hours() <= 24*7 {
+		if time.Now().UTC().Sub(utcTime).Hours() <= 24*8 {
 			listItems = append(listItems, item)
 		}
 	}

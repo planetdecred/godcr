@@ -38,7 +38,24 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 				layout.Rigid(func(gtx C) D {
 					title := pg.Theme.Body2(values.String(values.StrRecentTransactions))
 					title.Color = pg.Theme.Color.Gray3
-					return pg.titleRow(gtx, title.Layout, pg.toTransactions.Layout)
+
+					gtx.Constraints.Min.X = gtx.Constraints.Max.X
+					titlePadding := values.MarginPadding15
+					return components.Container{Padding: layout.Inset{
+						Left:   titlePadding,
+						Right:  titlePadding,
+						Bottom: titlePadding,
+					}}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+							layout.Rigid(title.Layout),
+							layout.Rigid(func(gtx C) D {
+								if len(pg.transactions) > 0 {
+									return pg.toTransactions.Layout(gtx)
+								}
+								return D{}
+							}),
+						)
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, pg.Theme.Separator().Layout)

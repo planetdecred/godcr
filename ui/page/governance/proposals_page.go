@@ -177,12 +177,6 @@ func (pg *ProposalsPage) Handle() {
 		pg.isSyncing = true
 
 		//Todo: check after 1min if sync does not start, set isSyncing to false and cancel sync
-		// go time.AfterFunc(time.Second*60, func() {
-		// 	if !pg.multiWallet.Politeia.IsSyncing() {
-		// 		pg.isSyncing = false
-		// 		go pg.multiWallet.Politeia.StopSync()
-		// 	}
-		// })
 	}
 
 	if pg.syncCompleted {
@@ -230,7 +224,7 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 											} else if pg.syncCompleted {
 												text = "Updated"
 											} else {
-												text = components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
+												text = "Upated " + components.TimeAgo(pg.multiWallet.Politeia.GetLastSyncedTimeStamp())
 											}
 
 											lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
@@ -297,10 +291,10 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 							})
 						}),
 						layout.Expanded(func(gtx C) D {
-							return pg.categoryDropDown.Layout(gtx, 45, true)
+							return pg.orderDropDown.Layout(gtx, 45, true)
 						}),
 						layout.Expanded(func(gtx C) D {
-							return pg.orderDropDown.Layout(gtx, pg.categoryDropDown.Width+39, true)
+							return pg.categoryDropDown.Layout(gtx, pg.orderDropDown.Width+41, true)
 						}),
 					)
 				}),
