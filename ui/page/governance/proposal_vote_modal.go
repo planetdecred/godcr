@@ -1,4 +1,4 @@
-package proposal
+package governance
 
 import (
 	"context"
@@ -227,7 +227,7 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
 			t := vm.Theme.H6("Vote")
-			t.Font.Weight = text.Bold
+			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {
@@ -288,7 +288,6 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 													label := vm.Theme.Body2(fmt.Sprintf("Yes: %d", voteDetails.YesVotes))
-													label.Color = vm.Theme.Color.DeepBlue
 													return label.Layout(gtx)
 												})
 											}),
@@ -330,7 +329,6 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 											layout.Rigid(func(gtx C) D {
 												return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 													label := vm.Theme.Body2(fmt.Sprintf("No: %d", voteDetails.NoVotes))
-													label.Color = vm.Theme.Color.DeepBlue
 													return label.Layout(gtx)
 												})
 											}),
@@ -421,9 +419,7 @@ func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 						}),
 						layout.Rigid(func(gtx C) D {
 							return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-								label := vm.Theme.Body2(wdg.label)
-								label.Color = vm.Theme.Color.DeepBlue
-								return label.Layout(gtx)
+								return vm.Theme.Body2(wdg.label).Layout(gtx)
 							})
 						}),
 					)

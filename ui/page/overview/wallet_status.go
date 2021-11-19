@@ -112,26 +112,6 @@ func (pg *AppOverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensio
 	})
 }
 
-func (pg AppOverviewPage) titleRow(gtx layout.Context, leftWidget, rightWidget func(C) D) layout.Dimensions {
-	gtx.Constraints.Min.X = gtx.Constraints.Max.X
-	titlePadding := values.MarginPadding15
-	return components.Container{Padding: layout.Inset{
-		Left:   titlePadding,
-		Right:  titlePadding,
-		Bottom: titlePadding,
-	}}.Layout(gtx, func(gtx C) D {
-		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
-			layout.Rigid(leftWidget),
-			layout.Rigid(func(gtx C) D {
-				if len(pg.transactions) > 0 {
-					return rightWidget(gtx)
-				}
-				return D{}
-			}),
-		)
-	})
-}
-
 // syncBoxTitleRow lays out widgets in the title row inside the sync status box.
 func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 	title := pg.Theme.Body2(values.String(values.StrWalletStatus))
@@ -153,7 +133,24 @@ func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions
 			layout.Rigid(statusLabel.Layout),
 		)
 	}
-	return pg.titleRow(gtx, title.Layout, syncStatus)
+
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	titlePadding := values.MarginPadding15
+	return components.Container{Padding: layout.Inset{
+		Left:   titlePadding,
+		Right:  titlePadding,
+		Bottom: titlePadding,
+	}}.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}.Layout(gtx,
+			layout.Rigid(title.Layout),
+			layout.Rigid(func(gtx C) D {
+				if len(pg.transactions) > 0 {
+					return syncStatus(gtx)
+				}
+				return D{}
+			}),
+		)
+	})
 }
 
 func (pg *AppOverviewPage) syncStatusIcon(gtx layout.Context) layout.Dimensions {

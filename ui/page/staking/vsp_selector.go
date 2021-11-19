@@ -97,7 +97,6 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 										return layout.Dimensions{}
 									}
 									txt := v.Theme.Label(values.TextSize16, fmt.Sprintf("%v%%", v.selectedVSP.Info.FeePercentage))
-									txt.Color = v.Theme.Color.DeepBlue
 									return txt.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {
@@ -207,7 +206,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 	return v.modal.Layout(gtx, []layout.Widget{
 		func(gtx C) D {
 			title := v.Theme.Label(values.TextSize20, v.dialogTitle)
-			title.Font.Weight = text.Bold
+			title.Font.Weight = text.SemiBold
 			return title.Layout(gtx)
 		},
 		func(gtx C) D {

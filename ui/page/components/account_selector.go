@@ -158,9 +158,7 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						txt := as.Theme.Body1(as.totalBalance)
-						txt.Color = as.Theme.Color.DeepBlue
-						return txt.Layout(gtx)
+						return as.Theme.Body1(as.totalBalance).Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
 						inset := layout.Inset{
@@ -353,7 +351,7 @@ func (asm *AccountSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 		func(gtx C) D {
 			title := asm.Theme.H6(asm.dialogTitle)
 			title.Color = asm.Theme.Color.Text
-			title.Font.Weight = text.Bold
+			title.Font.Weight = text.SemiBold
 			return title.Layout(gtx)
 		},
 		func(gtx C) D {
@@ -464,8 +462,7 @@ func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dime
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txt := asm.Theme.Body2(title)
-							txt.Color = asm.Theme.Color.DeepBlue
-							txt.Font.Weight = text.Bold
+							txt.Font.Weight = text.SemiBold
 							return txt.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {

@@ -278,6 +278,9 @@ func (p *HTMLProvider) render(lbl decredmaterial.Label) {
 			Axis:      layout.Horizontal,
 			Alignment: layout.Start,
 		}.Layout(gtx, len(labels), func(gtx C, i int) D {
+			if strings.Trim(labels[i].Text, " ") == "" {
+				return D{}
+			}
 			return labels[i].Layout(gtx)
 		})
 	}

@@ -245,7 +245,7 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 	w := []layout.Widget{
 		func(gtx C) D {
 			t := cm.Theme.H6(cm.dialogTitle)
-			t.Font.Weight = text.Bold
+			t.Font.Weight = text.SemiBold
 			return t.Layout(gtx)
 		},
 		func(gtx C) D {

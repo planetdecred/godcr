@@ -87,7 +87,6 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 	pg.newAddr.Background = pg.Theme.Color.Surface
 	pg.newAddr.HighlightColor = pg.Theme.Color.SurfaceHighlight
 
-	pg.receiveAddress.Color = pg.Theme.Color.DeepBlue
 	pg.receiveAddress.MaxLines = 1
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)

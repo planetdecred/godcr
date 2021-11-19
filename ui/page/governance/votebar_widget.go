@@ -1,4 +1,4 @@
-package proposal
+package governance
 
 import (
 	"fmt"
@@ -59,6 +59,7 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		infoIcon:      decredmaterial.NewIcon(l.Icons.ActionInfo),
 		legendIcon:    decredmaterial.NewIcon(l.Icons.ImageBrightness1),
 	}
+	vb.infoIcon.Color = l.Theme.Color.Gray
 
 	return vb
 }
@@ -235,7 +236,7 @@ func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
-				lbl.Font.Weight = text.Bold
+				lbl.Font.Weight = text.SemiBold
 				return lbl.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {
