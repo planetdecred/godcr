@@ -2,6 +2,7 @@ package overview
 
 import (
 	"context"
+	"sync"
 
 	"gioui.org/layout"
 	"gioui.org/widget"
@@ -11,6 +12,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	gPage "github.com/planetdecred/godcr/ui/page/governance"
 	tPage "github.com/planetdecred/godcr/ui/page/transaction"
 	wPage "github.com/planetdecred/godcr/ui/page/wallets"
 	"github.com/planetdecred/godcr/ui/values"
@@ -38,21 +40,30 @@ type AppOverviewPage struct {
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	allWallets   []*dcrlibwallet.Wallet
-	transactions []dcrlibwallet.Transaction
+	allWallets    []*dcrlibwallet.Wallet
+	transactions  []dcrlibwallet.Transaction
+	proposalItems []*components.ProposalItem
+	proposalMu    sync.Mutex
+
 	bestBlock    *dcrlibwallet.BlockInfo
 	rescanUpdate *wallet.RescanUpdate
 
-	listContainer  *widget.List
-	walletSyncList *layout.List
+	scrollContainer        *widget.List
+	proposalsListContainer *widget.List
+	walletSyncList         *layout.List
+	listContainer          *layout.List
 
-	syncClickable                *decredmaterial.Clickable
-	transactionsList             *decredmaterial.ClickableList
+	syncClickable    *decredmaterial.Clickable
+	transactionsList *decredmaterial.ClickableList
+	proposalsList    *decredmaterial.ClickableList
+
 	syncingIcon                  *decredmaterial.Image
 	walletStatusIcon, cachedIcon *decredmaterial.Icon
 	syncedIcon, notSyncedIcon    *decredmaterial.Icon
 
-	toTransactions    decredmaterial.TextAndIconButton
+	toTransactions decredmaterial.TextAndIconButton
+	toProposals    decredmaterial.TextAndIconButton
+
 	sync              decredmaterial.Label
 	toggleSyncDetails decredmaterial.Button
 	checkBox          decredmaterial.CheckBoxStyle
@@ -63,6 +74,7 @@ type AppOverviewPage struct {
 	isBackupModalOpened   bool
 	rescanningBlocks      bool
 	syncDetailsVisibility bool
+	syncCompleted         bool
 
 	remainingSyncTime    string
 	headersToFetchOrScan int32
@@ -77,7 +89,8 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 		Load:       l,
 		allWallets: l.WL.SortedWalletList(),
 
-		listContainer: &widget.List{
+		listContainer: &layout.List{Axis: layout.Vertical},
+		scrollContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
 		checkBox:  l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
@@ -87,6 +100,7 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 	pg.initRecentTxWidgets()
 	pg.initWalletStatusWidgets()
 	pg.initSyncDetailsWidgets()
+	pg.initializeProposalsWidget()
 
 	return pg
 }
@@ -106,6 +120,7 @@ func (pg *AppOverviewPage) OnResume() {
 
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
+	pg.loadRecentProposals()
 }
 
 // Layout lays out the entire content for overview pg.
@@ -115,13 +130,27 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			return pg.recentTransactionsSection(gtx)
 		},
 		func(gtx C) D {
+			if pg.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
+				return pg.recentProposalsSection(gtx)
+			}
+			return D{}
+		},
+		func(gtx C) D {
 			return pg.syncStatusSection(gtx)
 		},
 	}
 
 	return components.UniformPadding(gtx, func(gtx C) D {
-		return pg.Theme.List(pg.listContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-			return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, pageContent[i])
+		return pg.Theme.List(pg.scrollContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
+			m := values.MarginPadding5
+			if i == len(pageContent) {
+				// remove padding after the last item
+				m = values.MarginPadding0
+			}
+			return layout.Inset{
+				Right:  values.MarginPadding2,
+				Bottom: m,
+			}.Layout(gtx, pageContent[i])
 		})
 	})
 }
@@ -133,17 +162,17 @@ func (pg *AppOverviewPage) showBackupInfo() {
 		SetContentAlignment(layout.W, layout.Center).
 		CheckBox(pg.checkBox).
 		NegativeButton("Backup later", func() {
-			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)
+			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
 		}).
 		PositiveButtonStyle(pg.Load.Theme.Color.Primary, pg.Load.Theme.Color.InvText).
 		PositiveButton("Backup now", func() {
-			pg.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", true)
+			pg.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, true)
 			pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 		}).Show()
 }
 
 func (pg *AppOverviewPage) Handle() {
-	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey("seedBackupNotification")
+	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
 	for _, wal := range pg.allWallets {
 		if len(wal.EncryptedSeed) > 0 {
 			if !backupLater && !pg.isBackupModalOpened {
@@ -177,6 +206,24 @@ func (pg *AppOverviewPage) Handle() {
 			pg.toggleSyncDetails.Text = values.String(values.StrShowDetails)
 		}
 	}
+
+	for pg.toProposals.Button.Clicked() {
+		pg.ChangeFragment(gPage.NewProposalsPage(pg.Load))
+	}
+
+	if clicked, selectedItem := pg.proposalsList.ItemClicked(); clicked {
+		pg.proposalMu.Lock()
+		selectedProposal := pg.proposalItems[selectedItem].Proposal
+		pg.proposalMu.Unlock()
+
+		pg.ChangeFragment(gPage.NewProposalDetailsPage(pg.Load, &selectedProposal))
+	}
+
+	if pg.syncCompleted {
+		pg.syncCompleted = false
+		pg.loadRecentProposals()
+		pg.RefreshWindow()
+	}
 }
 
 func (pg *AppOverviewPage) listenForSyncNotifications() {
@@ -193,6 +240,11 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 			switch n := notification.(type) {
 			case wallet.NewTransaction:
 				pg.loadTransactions()
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					pg.syncCompleted = true
+					pg.RefreshWindow()
+				}
 			case wallet.RescanUpdate:
 				pg.rescanningBlocks = n.Stage != wallet.RescanEnded
 				pg.rescanUpdate = &n

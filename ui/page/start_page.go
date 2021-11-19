@@ -44,11 +44,7 @@ func NewStartPage(l *load.Load) load.Page {
 		restoreButton: l.Theme.Button("Restore an existing wallet"),
 	}
 
-	sp.networkType.Color = l.Theme.Color.DeepBlue
 	sp.networkType.Font.Weight = text.Medium
-
-	sp.loadStatus.Color = l.Theme.Color.DeepBlue
-	sp.welcomeText.Color = l.Theme.Color.DeepBlue
 
 	return sp
 }

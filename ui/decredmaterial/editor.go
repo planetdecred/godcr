@@ -5,14 +5,13 @@ package decredmaterial
 import (
 	"image/color"
 
-	"github.com/planetdecred/godcr/ui/values"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-
 	"golang.org/x/exp/shiny/materialdesign/icons"
+
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type RestoreEditor struct {
@@ -52,11 +51,11 @@ type Editor struct {
 
 	requiredErrorText string
 
-	editorIcon       Icon
+	editorIcon       *Icon
 	editorIconButton IconButton
 	showHidePassword IconButton
 
-	editorIconButtonEvent func()
+	EditorIconButtonEvent func()
 
 	m2 unit.Value
 	m5 unit.Value
@@ -85,14 +84,13 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 }
 
 // IconEditor creates an editor widget with icon of choice
-func (t *Theme) IconEditor(editor *widget.Editor, hint string, editorIcon []byte, showEditorIcon bool, clickableIcon bool, editorIconEvent func()) Editor {
+func (t *Theme) IconEditor(editor *widget.Editor, hint string, icon *widget.Icon, clickableIcon bool) Editor {
 	e := t.Editor(editor, hint)
-	e.showEditorIcon = showEditorIcon
+	e.showEditorIcon = true
 	e.isEditorButtonClickable = clickableIcon
-	e.editorIcon.Icon = MustIcon(widget.NewIcon(editorIcon))
+	e.editorIcon = NewIcon(icon)
 	e.editorIcon.Color = t.Color.Gray
-	e.editorIconButton.IconButtonStyle.Icon = MustIcon(widget.NewIcon(editorIcon))
-	e.editorIconButtonEvent = editorIconEvent
+	e.editorIconButton.IconButtonStyle.Icon = icon
 	return e
 }
 
@@ -298,7 +296,7 @@ func (e Editor) handleEvents() {
 	}
 
 	if e.editorIconButton.Button.Clicked() {
-		e.editorIconButtonEvent()
+		e.EditorIconButtonEvent()
 	}
 
 	if e.errorLabel.Text != "" {

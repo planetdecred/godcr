@@ -342,9 +342,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 						return LayoutBalance(gtx, l, amount)
 					}
 
-					label := l.Theme.Label(values.TextSize18, txStatus.Title)
-					label.Color = l.Theme.Color.DeepBlue
-					return label.Layout(gtx)
+					return l.Theme.Label(values.TextSize18, txStatus.Title).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					return decredmaterial.LinearLayout{

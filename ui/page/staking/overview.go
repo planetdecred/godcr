@@ -296,7 +296,6 @@ func (pg *Page) stakingCountIcon(icon *decredmaterial.Image, count int) layout.F
 				layout.Rigid(func(gtx C) D {
 					return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 						label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("%d", count))
-						label.Color = pg.Theme.Color.DeepBlue
 						return label.Layout(gtx)
 					})
 				}),
@@ -384,7 +383,6 @@ func (pg *Page) ticketRecordIconCount(icon *decredmaterial.Image, count int, sta
 						return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								label := pg.Theme.Label(values.TextSize16, fmt.Sprintf("%d", count))
-								label.Color = pg.Theme.Color.DeepBlue
 								return label.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {

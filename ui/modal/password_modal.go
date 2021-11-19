@@ -163,7 +163,7 @@ func (pm *PasswordModal) Handle() {
 func (pm *PasswordModal) Layout(gtx layout.Context) D {
 	title := func(gtx C) D {
 		t := pm.Theme.H6(pm.dialogTitle)
-		t.Font.Weight = text.Bold
+		t.Font.Weight = text.SemiBold
 		return t.Layout(gtx)
 	}
 

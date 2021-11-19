@@ -315,9 +315,6 @@ func (pg *TxDetailsPage) maturityProgressBar(gtx C) D {
 			progress.Width = values.MarginPadding80
 			progress.Radius = decredmaterial.Radius(values.MarginPadding8.V)
 
-			timeLeft := pg.Theme.Label(values.TextSize16, "18 hours")
-			timeLeft.Color = pg.Theme.Color.DeepBlue
-
 			return layout.E.Layout(gtx, func(gtx C) D {
 				return layout.Flex{
 					Alignment: layout.Middle,
@@ -326,7 +323,7 @@ func (pg *TxDetailsPage) maturityProgressBar(gtx C) D {
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Left: values.MarginPadding6, Right: values.MarginPadding6}.Layout(gtx, progress.Layout)
 					}),
-					layout.Rigid(timeLeft.Layout),
+					layout.Rigid(pg.Theme.Label(values.TextSize16, "18 hours").Layout),
 				)
 			})
 		}),
@@ -428,9 +425,7 @@ func (pg *TxDetailsPage) associatedTicket(gtx C) D {
 					Padding:     layout.Inset{Left: values.MarginPadding16, Top: values.MarginPadding12, Right: values.MarginPadding16, Bottom: values.MarginPadding12},
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						label := pg.Theme.Label(values.TextSize16, "View associated ticket")
-						label.Color = pg.Theme.Color.DeepBlue
-						return label.Layout(gtx)
+						return pg.Theme.Label(values.TextSize16, "View associated ticket").Layout(gtx)
 					}),
 					layout.Flexed(1, func(gtx C) D {
 						icon := pg.Icons.Next

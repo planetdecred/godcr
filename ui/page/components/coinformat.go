@@ -39,14 +39,10 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			label := l.Theme.Label(mainTextSize, mainText)
-			label.Color = l.Theme.Color.DeepBlue
-			return label.Layout(gtx)
+			return l.Theme.Label(mainTextSize, mainText).Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			label := l.Theme.Label(subTextSize, subText)
-			label.Color = l.Theme.Color.DeepBlue
-			return label.Layout(gtx)
+			return l.Theme.Label(subTextSize, subText).Layout(gtx)
 		}),
 	)
 }

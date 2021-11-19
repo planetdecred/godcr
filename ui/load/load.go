@@ -37,7 +37,8 @@ type Receiver struct {
 type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
-	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon *widget.Icon
+	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
+	SearchIcon *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -47,7 +48,7 @@ type Icons struct {
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, ArrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon,
-	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2 *decredmaterial.Image
+	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon *decredmaterial.Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -125,7 +126,7 @@ func NewLoad() (*Load, error) {
 }
 
 func (l *Load) RefreshTheme() {
-	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey("isDarkModeOn", false)
+	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	if isDarkModeOn != l.Theme.DarkMode {
 		l.Theme.SwitchDarkMode(isDarkModeOn)
 	}
@@ -153,6 +154,7 @@ func loadIcons() Icons {
 		ContentRemove:          decredmaterial.MustIcon(widget.NewIcon(icons.ContentRemove)),
 		ConcealIcon:            decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibility)),
 		RevealIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
+		SearchIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionSearch)),
 
 		OverviewIcon:             decredmaterial.NewImage(decredIcons["overview"]),
 		OverviewIconInactive:     decredmaterial.NewImage(decredIcons["overview_inactive"]),
@@ -213,6 +215,8 @@ func loadIcons() Icons {
 		ListGridIcon:             decredmaterial.NewImage(decredIcons["list_grid"]),
 		DecredSymbolIcon:         decredmaterial.NewImage(decredIcons["decred_symbol"]),
 		DecredSymbol2:            decredmaterial.NewImage(decredIcons["ic_decred02"]),
+		GovernanceActiveIcon:     decredmaterial.NewImage(decredIcons["governance_active"]),
+		GovernanceInactiveIcon:   decredmaterial.NewImage(decredIcons["governance_inactive"]),
 	}
 	return ic
 }

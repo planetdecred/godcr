@@ -201,7 +201,7 @@ func (pg *ListPage) Layout(gtx C) D {
 						return pg.orderDropDown.Layout(gtx, 0, true)
 					}),
 					layout.Expanded(func(gtx C) D {
-						return pg.ticketTypeDropDown.Layout(gtx, pg.orderDropDown.Width, true)
+						return pg.ticketTypeDropDown.Layout(gtx, pg.orderDropDown.Width-4, true)
 					}),
 				)
 			},

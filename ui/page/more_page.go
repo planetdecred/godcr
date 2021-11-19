@@ -123,7 +123,8 @@ func (pg *MorePage) layoutMoreItems(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{
-					Top: values.MarginPadding2,
+					Top:  values.MarginPadding2,
+					Left: values.MarginPadding18,
 				}.Layout(gtx, func(gtx C) D {
 					page := pg.morePageListItems[i].page
 					if page == SecurityToolsPageID {

@@ -13,8 +13,8 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/page/governance"
 	"github.com/planetdecred/godcr/ui/page/overview"
-	"github.com/planetdecred/godcr/ui/page/proposal"
 	"github.com/planetdecred/godcr/ui/page/send"
 	"github.com/planetdecred/godcr/ui/page/staking"
 	"github.com/planetdecred/godcr/ui/page/transaction"
@@ -31,8 +31,6 @@ const (
 	StakingNavID
 	ProposalsNavID
 	MoreNavID
-
-	HideBalanceConfigKey = "hide_balance"
 )
 
 var (
@@ -59,8 +57,6 @@ type MainPage struct {
 	appBarNav components.NavDrawer
 	drawerNav components.NavDrawer
 
-	autoSync bool
-
 	hideBalanceItem HideBalanceItem
 
 	currentPage   load.Page
@@ -78,8 +74,7 @@ type MainPage struct {
 
 func NewMainPage(l *load.Load) *MainPage {
 	mp := &MainPage{
-		Load:     l,
-		autoSync: true,
+		Load: l,
 	}
 
 	mp.hideBalanceItem.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
@@ -168,10 +163,10 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.ProposalIconActive,
-				ImageInactive: mp.Icons.ProposalIconInactive,
-				Title:         values.String(values.StrProposal),
-				PageID:        proposal.ProposalsPageID,
+				Image:         mp.Icons.GovernanceActiveIcon,
+				ImageInactive: mp.Icons.GovernanceInactiveIcon,
+				Title:         "Governance",
+				PageID:        governance.ProposalsPageID,
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
@@ -193,7 +188,7 @@ func (mp *MainPage) OnResume() {
 	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.AddSyncProgressListener(mp, MainPageID)
 	mp.WL.MultiWallet.SetBlocksRescanProgressListener(mp)
-	mp.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", false)
+	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 
 	mp.setLanguageSetting()
 	mp.UpdateBalance()
@@ -204,17 +199,18 @@ func (mp *MainPage) OnResume() {
 		mp.ChangeFragment(overview.NewOverviewPage(mp.Load))
 	}
 
-	if mp.autoSync {
-		mp.autoSync = false
+	if mp.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey) {
 		mp.StartSyncing()
-		go mp.WL.MultiWallet.Politeia.Sync()
+		if mp.WL.Wallet.ReadBoolConfigValueForKey(load.FetchProposalConfigKey) {
+			go mp.WL.MultiWallet.Politeia.Sync()
+		}
 	}
 
 	load.GetUSDExchangeValue(&mp.dcrUsdtBittrex)
 }
 
 func (mp *MainPage) setLanguageSetting() {
-	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(languagePreferenceKey)
+	langPre := mp.WL.Wallet.ReadStringConfigValueForKey(load.LanguagePreferenceKey)
 	values.SetUserLanguage(langPre)
 }
 
@@ -338,7 +334,7 @@ func (mp *MainPage) Handle() {
 			} else if i == StakingNavID {
 				pg = staking.NewStakingPage(mp.Load)
 			} else if i == ProposalsNavID {
-				pg = proposal.NewProposalsPage(mp.Load)
+				pg = governance.NewProposalsPage(mp.Load)
 			} else if i == MoreNavID {
 				pg = NewMorePage(mp.Load)
 			} else {
@@ -354,10 +350,10 @@ func (mp *MainPage) Handle() {
 		}
 	}
 
-	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(HideBalanceConfigKey, false)
+	mp.isBalanceHidden = mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.HideBalanceConfigKey, false)
 	for mp.hideBalanceItem.hideBalanceButton.Button.Clicked() {
 		mp.isBalanceHidden = !mp.isBalanceHidden
-		mp.WL.MultiWallet.SetBoolConfigValueForKey(HideBalanceConfigKey, mp.isBalanceHidden)
+		mp.WL.MultiWallet.SetBoolConfigValueForKey(load.HideBalanceConfigKey, mp.isBalanceHidden)
 	}
 }
 
@@ -370,7 +366,7 @@ func (mp *MainPage) OnClose() {
 	mp.WL.MultiWallet.Politeia.RemoveNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveTxAndBlockNotificationListener(MainPageID)
 	mp.WL.MultiWallet.RemoveSyncProgressListener(MainPageID)
-	mp.WL.Wallet.SaveConfigValueForKey("seedBackupNotification", false)
+	mp.WL.Wallet.SaveConfigValueForKey(load.SeedBackupNotificationConfigKey, false)
 }
 
 func (mp *MainPage) currentPageID() string {

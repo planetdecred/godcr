@@ -177,7 +177,7 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 				Right: unit.Dp(5),
 				Left:  unit.Dp(5),
 			}.Layout(gtx, func(gtx C) D {
-				lbl := d.theme.Body1(item.Text)
+				lbl := d.theme.Body2(item.Text)
 				if !d.isOpen && len(item.Text) > 9 {
 					lbl.Text = item.Text[:9] + "..."
 				}
