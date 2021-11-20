@@ -104,7 +104,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 			}
 		}
 	}
-
+	//
 	//	find destination address
 	if transaction.Direction == dcrlibwallet.TxDirectionSent {
 		for _, output := range transaction.Outputs {
