@@ -165,8 +165,8 @@ func (mp *MainPage) initNavItems() {
 			},
 			{
 				Clickable:     mp.Theme.NewClickable(true),
-				Image:         mp.Icons.DexLogo,
-				ImageInactive: mp.Icons.DexLogo,
+				Image:         mp.Icons.DexIcon,
+				ImageInactive: mp.Icons.DexIconInactive,
 				Title:         values.String(values.StrDex),
 				PageID:        dexclient.MarketPageID,
 			},
