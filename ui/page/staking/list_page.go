@@ -59,6 +59,8 @@ func newListPage(l *load.Load) *ListPage {
 	pg.backButton, _ = components.SubpageHeaderButtons(pg.Load)
 
 	pg.orderDropDown = createOrderDropDown(l.Theme)
+	pg.wallets = pg.WL.SortedWalletList()
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.ticketTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -78,8 +80,6 @@ func (pg *ListPage) ID() string {
 
 func (pg *ListPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-	pg.wallets = pg.WL.SortedWalletList()
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.listenForTxNotifications()
 	pg.fetchTickets()
 }
