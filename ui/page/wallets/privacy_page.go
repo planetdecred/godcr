@@ -370,8 +370,9 @@ func (pg *PrivacyPage) Handle() {
 	}
 
 	if pg.mixerCompleted {
-		pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
+		pg.toggleMixer.SetChecked(false)
 		pg.mixerCompleted = false
+		pg.RefreshWindow()
 	}
 
 	if pg.allowUnspendUnmixedAcct.Changed() {
