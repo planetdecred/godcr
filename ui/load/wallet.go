@@ -31,7 +31,7 @@ type WalletLoad struct {
 
 	SelectedWallet  *int
 	SelectedAccount *int
-} //
+}
 
 func (wl *WalletLoad) SortedWalletList() []*dcrlibwallet.Wallet {
 	wallets := wl.MultiWallet.AllWallets()
