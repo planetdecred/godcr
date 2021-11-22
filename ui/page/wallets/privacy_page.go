@@ -1,6 +1,7 @@
 package wallets
 
 import (
+	"context"
 	"fmt"
 
 	"gioui.org/layout"
@@ -14,6 +15,7 @@ import (
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
+	"github.com/planetdecred/godcr/wallet"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
@@ -21,6 +23,10 @@ const PrivacyPageID = "Privacy"
 
 type PrivacyPage struct {
 	*load.Load
+
+	ctx       context.Context // page context
+	ctxCancel context.CancelFunc
+
 	wallet                *dcrlibwallet.Wallet
 	pageContainer         layout.List
 	toPrivacySetup        decredmaterial.Button
@@ -30,6 +36,8 @@ type PrivacyPage struct {
 	infoButton              decredmaterial.IconButton
 	toggleMixer             *decredmaterial.Switch
 	allowUnspendUnmixedAcct *decredmaterial.Switch
+
+	mixerCompleted bool
 }
 
 func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
@@ -51,6 +59,9 @@ func (pg *PrivacyPage) ID() string {
 }
 
 func (pg *PrivacyPage) OnResume() {
+	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
+
+	pg.listenForMixerNotifications()
 	pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
 
 	if pg.wallet.AccountMixerConfigIsSet() {
@@ -78,17 +89,19 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 						func(gtx C) D {
 							return pg.mixerInfoLayout(gtx)
 						},
-						pg.gutter,
 						func(gtx C) D {
 							return pg.mixerSettingsLayout(gtx)
 						},
-						pg.gutter,
 						func(gtx C) D {
 							return pg.dangerZoneLayout(gtx)
 						},
 					}
 					return pg.pageContainer.Layout(gtx, len(widgets), func(gtx C, i int) D {
-						return widgets[i](gtx)
+						m := values.MarginPadding10
+						if i == len(widgets) {
+							m = values.MarginPadding0
+						}
+						return layout.Inset{Bottom: m}.Layout(gtx, widgets[i])
 					})
 				}
 				return pg.privacyIntroLayout(gtx)
@@ -192,28 +205,29 @@ func (pg *PrivacyPage) mixerInfoLayout(gtx layout.Context) layout.Dimensions {
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							ic := pg.Icons.Mixer
-							return ic.Layout24dp(gtx)
-						}),
-						layout.Flexed(1, func(gtx C) D {
-							return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-								return pg.mixerInfoStatusTextLayout(gtx)
-							})
-						}),
-						layout.Rigid(pg.toggleMixer.Layout),
-					)
+					return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								ic := pg.Icons.Mixer
+								return ic.Layout24dp(gtx)
+							}),
+							layout.Flexed(1, func(gtx C) D {
+								return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+									return pg.mixerInfoStatusTextLayout(gtx)
+								})
+							}),
+							layout.Rigid(pg.toggleMixer.Layout),
+						)
+					})
 				}),
-				layout.Rigid(pg.gutter),
 				layout.Rigid(func(gtx C) D {
 					content := pg.Theme.Card()
 					content.Color = pg.Theme.Color.LightGray
 					return content.Layout(gtx, func(gtx C) D {
 						gtx.Constraints.Min.X = gtx.Constraints.Max.X
 						return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
-							var mixedBalance = "0.00"
-							var unmixedBalance = "0.00"
+							mixedBalance := "0.00"
+							unmixedBalance := "0.00"
 							accounts, _ := pg.wallet.GetAccountsRaw()
 							for _, acct := range accounts.Acc {
 								if acct.Number == pg.wallet.MixedAccountNumber() {
@@ -333,12 +347,6 @@ func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *PrivacyPage) gutter(gtx layout.Context) layout.Dimensions {
-	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-		return layout.Dimensions{}
-	})
-}
-
 func (pg *PrivacyPage) Handle() {
 	if pg.toPrivacySetup.Clicked() {
 		go pg.showModalSetupMixerInfo()
@@ -359,6 +367,11 @@ func (pg *PrivacyPage) Handle() {
 				})
 			pg.ShowModal(info)
 		}
+	}
+
+	if pg.mixerCompleted {
+		pg.toggleMixer.SetChecked(pg.wallet.IsAccountMixerActive())
+		pg.mixerCompleted = false
 	}
 
 	if pg.allowUnspendUnmixedAcct.Changed() {
@@ -447,11 +460,38 @@ func (pg *PrivacyPage) showModalPasswordStartAccountMixer() {
 					return
 				}
 				pm.Dismiss()
-				pg.Toast.Notify("Start Successfully")
 			}()
 
 			return false
 		}).Show()
+}
+
+func (pg *PrivacyPage) listenForMixerNotifications() {
+	go func() {
+		for {
+			var notification interface{}
+
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
+
+			switch n := notification.(type) {
+			case wallet.AccountMixer:
+				if n.RunStatus == wallet.MixerStarted {
+					pg.Toast.Notify("Mixer start Successfully")
+					pg.RefreshWindow()
+				}
+
+				if n.RunStatus == wallet.MixerEnded {
+					pg.Toast.Notify("Mixer completed Successfully")
+					pg.mixerCompleted = true
+					pg.RefreshWindow()
+				}
+			}
+		}
+	}()
 }
 
 func (pg *PrivacyPage) OnClose() {}
