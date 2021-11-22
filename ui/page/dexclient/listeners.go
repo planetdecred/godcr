@@ -1,8 +1,6 @@
 package dexclient
 
-import (
-	"decred.org/dcrdex/client/core"
-)
+import "decred.org/dcrdex/client/core"
 
 // readNotifications reads from the Core notification channel.
 func (pg *Page) readNotifications() {
