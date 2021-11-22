@@ -49,6 +49,8 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 	pg.transactionList.Radius = decredmaterial.Radius(values.MarginPadding14.V)
 
 	pg.orderDropDown = components.CreateOrderDropDown(l)
+	pg.wallets = pg.WL.SortedWalletList()
+	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
@@ -79,9 +81,6 @@ func (pg *TransactionsPage) ID() string {
 
 func (pg *TransactionsPage) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
-
-	pg.wallets = pg.WL.SortedWalletList()
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
 	pg.listenForTxNotifications()
 	pg.loadTransactions()
 }
