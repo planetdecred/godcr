@@ -39,8 +39,19 @@ func (mp *MainPage) OnTransactionConfirmed(walletID int, hash string, blockHeigh
 }
 
 // Account mixer
-func (mp *MainPage) OnAccountMixerStarted(walletID int) {}
-func (mp *MainPage) OnAccountMixerEnded(walletID int)   {}
+func (mp *MainPage) OnAccountMixerStarted(walletID int) {
+	mp.UpdateNotification(wallet.AccountMixer{
+		WalletID:  walletID,
+		RunStatus: wallet.MixerStarted,
+	})
+}
+
+func (mp *MainPage) OnAccountMixerEnded(walletID int) {
+	mp.UpdateNotification(wallet.AccountMixer{
+		WalletID:  walletID,
+		RunStatus: wallet.MixerEnded,
+	})
+}
 
 // Politeia notifications
 func (mp *MainPage) OnProposalsSynced() {
