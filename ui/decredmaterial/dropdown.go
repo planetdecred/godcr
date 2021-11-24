@@ -268,19 +268,42 @@ func (d *DropDown) drawLayout(gtx C, body layout.Widget) D {
 
 // Reslice the dropdowns
 func ResliceDropdown(dropdowns []*DropDown, indexToRemove int) []*DropDown {
-	dropdowns[indexToRemove] = dropdowns[len(dropdowns)-1]
-	return dropdowns[:len(dropdowns)-1]
+	//dropdowns[indexToRemove] = dropdowns[len(dropdowns)-1]
+	return append(dropdowns[:indexToRemove], dropdowns[indexToRemove+1:]...)
 }
 
 // Display one dropdown at a time
 func DisplayOneDropdown(dropdowns ...*DropDown) {
 	var menus []*DropDown
 	for i, menu := range dropdowns {
-		if menu.isOpen {
+		if menu.clickable.Clicked() {
+			menu.isOpen = true
 			menus = ResliceDropdown(dropdowns, i)
-		}
-		for _, newMenus := range menus {
-			newMenus.isOpen = false
+			for _, menusToClose := range menus {
+				menusToClose.isOpen = false
+			}
 		}
 	}
 }
+
+//Test function for dropdown Bug
+/*
+func Test(dropdowns ...*DropDown) {
+	if dropdowns[0].clickable.Clicked() {
+		dropdowns[0].isOpen = true
+		dropdowns[1].isOpen = false
+		dropdowns[2].isOpen = false
+		fmt.Println("Level 1: ", dropdowns[1].isOpen, dropdowns[2].isOpen)
+	} else if dropdowns[1].clickable.Clicked() {
+		dropdowns[1].isOpen = true
+		dropdowns[0].isOpen = false
+		dropdowns[2].isOpen = false
+		fmt.Println("Level 2: ", dropdowns[0].isOpen, dropdowns[2].isOpen)
+	} else if dropdowns[2].clickable.Clicked() {
+		dropdowns[2].isOpen = true
+		dropdowns[0].isOpen = false
+		dropdowns[1].isOpen = false
+		fmt.Println("Level 3: ", dropdowns[0].isOpen, dropdowns[1].isOpen)
+	}
+}
+*/
