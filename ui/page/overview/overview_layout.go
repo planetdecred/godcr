@@ -5,8 +5,10 @@ import (
 	"sync"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -40,7 +42,9 @@ type AppOverviewPage struct {
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
 
-	allWallets    []*dcrlibwallet.Wallet
+	allWallets   []*dcrlibwallet.Wallet
+	mixerWallets []*dcrlibwallet.Wallet
+
 	transactions  []dcrlibwallet.Transaction
 	proposalItems []*components.ProposalItem
 	proposalMu    sync.Mutex
@@ -52,6 +56,7 @@ type AppOverviewPage struct {
 	proposalsListContainer *widget.List
 	walletSyncList         *layout.List
 	listContainer          *layout.List
+	listMixer              *layout.List
 
 	syncClickable    *decredmaterial.Clickable
 	transactionsList *decredmaterial.ClickableList
@@ -63,6 +68,7 @@ type AppOverviewPage struct {
 
 	toTransactions decredmaterial.TextAndIconButton
 	toProposals    decredmaterial.TextAndIconButton
+	toMixer        decredmaterial.IconButton
 
 	sync              decredmaterial.Label
 	toggleSyncDetails decredmaterial.Button
@@ -90,12 +96,18 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 		allWallets: l.WL.SortedWalletList(),
 
 		listContainer: &layout.List{Axis: layout.Vertical},
+		listMixer:     &layout.List{Axis: layout.Vertical},
 		scrollContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
 		checkBox:  l.Theme.CheckBox(new(widget.Bool), "I am aware of the risk"),
 		bestBlock: l.WL.MultiWallet.GetBestBlock(),
 	}
+
+	pg.toMixer = l.Theme.PlainIconButton(l.Icons.NavigationArrowForward)
+	pg.toMixer.Color = l.Theme.Color.Gray3
+	pg.toMixer.Size = values.MarginPadding24
+	pg.toMixer.Inset = layout.UniformInset(values.MarginPadding4)
 
 	pg.initRecentTxWidgets()
 	pg.initWalletStatusWidgets()
@@ -118,6 +130,7 @@ func (pg *AppOverviewPage) OnResume() {
 	pg.connectedPeers = pg.WL.MultiWallet.ConnectedPeers()
 	pg.bestBlock = pg.WL.MultiWallet.GetBestBlock()
 
+	pg.getMixerWallets()
 	pg.loadTransactions()
 	pg.listenForSyncNotifications()
 	pg.loadRecentProposals()
@@ -126,6 +139,48 @@ func (pg *AppOverviewPage) OnResume() {
 // Layout lays out the entire content for overview pg.
 func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
+		func(gtx C) D {
+			if len(pg.mixerWallets) == 0 {
+				return D{}
+			}
+
+			return components.MixerInfoLayout(gtx, pg.Load, true, pg.toMixer.Layout, func(gtx C) D {
+				return pg.listMixer.Layout(gtx, len(pg.mixerWallets), func(gtx C, i int) D {
+					return layout.Inset{Bottom: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+						accounts, _ := pg.mixerWallets[i].GetAccountsRaw()
+						var unmixedBalance string
+						for _, acct := range accounts.Acc {
+							if acct.Number == pg.mixerWallets[i].UnmixedAccountNumber() {
+								unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+							}
+						}
+
+						return components.MixerInfoContentWrapper(gtx, pg.Load, func(gtx C) D {
+							return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+								layout.Rigid(func(gtx C) D {
+									txt := pg.Theme.Label(values.TextSize14, pg.mixerWallets[i].Name)
+									txt.Font.Weight = text.Medium
+
+									return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
+								}),
+								layout.Rigid(func(gtx C) D {
+									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+										layout.Rigid(func(gtx C) D {
+											t := pg.Theme.Label(values.TextSize14, "Unmixed balance")
+											t.Color = pg.Theme.Color.Gray
+											return t.Layout(gtx)
+										}),
+										layout.Rigid(func(gtx C) D {
+											return components.LayoutBalanceSize(gtx, pg.Load, unmixedBalance, values.TextSize20)
+										}),
+									)
+								}),
+							)
+						})
+					})
+				})
+			})
+		},
 		func(gtx C) D {
 			return pg.recentTransactionsSection(gtx)
 		},
@@ -180,6 +235,13 @@ func (pg *AppOverviewPage) Handle() {
 				pg.isBackupModalOpened = true
 			}
 		}
+	}
+
+	if pg.toMixer.Button.Clicked() {
+		if len(pg.mixerWallets) == 1 {
+			pg.ChangeFragment(wPage.NewPrivacyPage(pg.Load, pg.mixerWallets[0]))
+		}
+		pg.ChangeFragment(wPage.NewWalletPage(pg.Load))
 	}
 
 	if pg.syncClickable.Clicked() {
@@ -287,6 +349,18 @@ func (pg *AppOverviewPage) listenForSyncNotifications() {
 			pg.RefreshWindow()
 		}
 	}()
+}
+
+func (pg *AppOverviewPage) getMixerWallets() {
+	wallets := make([]*dcrlibwallet.Wallet, 0)
+
+	for _, wal := range pg.allWallets {
+		if wal.IsAccountMixerActive() {
+			wallets = append(wallets, wal)
+		}
+	}
+
+	pg.mixerWallets = wallets
 }
 
 func (pg *AppOverviewPage) OnClose() {
