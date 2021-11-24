@@ -8,6 +8,7 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 
+	"github.com/decred/dcrd/dcrutil/v3"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -86,7 +87,51 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 				if pg.wallet.MixedAccountNumber() > 0 && pg.wallet.UnmixedAccountNumber() > 0 {
 					widgets := []func(gtx C) D{
 						func(gtx C) D {
-							return components.MixerInfoLayout(gtx, pg.Load, pg.wallet, false, pg.toggleMixer.Layout)
+							return components.MixerInfoLayout(gtx, pg.Load, pg.wallet.IsAccountMixerActive(),
+								pg.toggleMixer.Layout, func(gtx C) D {
+									mixedBalance := "0.00"
+									unmixedBalance := "0.00"
+									accounts, _ := pg.wallet.GetAccountsRaw()
+									for _, acct := range accounts.Acc {
+										if acct.Number == pg.wallet.MixedAccountNumber() {
+											mixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+										} else if acct.Number == pg.wallet.UnmixedAccountNumber() {
+											unmixedBalance = dcrutil.Amount(acct.TotalBalance).String()
+										}
+									}
+
+									return components.MixerInfoContentWrapper(gtx, pg.Load, func(gtx C) D {
+										return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+											layout.Rigid(func(gtx C) D {
+												return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+													layout.Rigid(func(gtx C) D {
+														txt := pg.Theme.Label(values.TextSize14, "Unmixed balance")
+														txt.Color = pg.Theme.Color.Gray
+														return txt.Layout(gtx)
+													}),
+													layout.Rigid(func(gtx C) D {
+														return components.LayoutBalance(gtx, pg.Load, unmixedBalance)
+													}),
+												)
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Center.Layout(gtx, pg.Icons.ArrowDownIcon.Layout24dp)
+											}),
+											layout.Rigid(func(gtx C) D {
+												return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
+													layout.Rigid(func(gtx C) D {
+														t := pg.Theme.Label(values.TextSize14, "Mixed balance")
+														t.Color = pg.Theme.Color.Gray
+														return t.Layout(gtx)
+													}),
+													layout.Rigid(func(gtx C) D {
+														return components.LayoutBalance(gtx, pg.Load, mixedBalance)
+													}),
+												)
+											}),
+										)
+									})
+								})
 						},
 						func(gtx C) D {
 							return pg.mixerSettingsLayout(gtx)
@@ -359,7 +404,6 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 				}
 
 				if n.RunStatus == wallet.MixerEnded {
-					pg.Toast.Notify("Mixer completed Successfully")
 					pg.mixerCompleted = true
 					pg.RefreshWindow()
 				}
