@@ -12,9 +12,10 @@ import (
 var MaxWidth = unit.Dp(800)
 
 type DropDown struct {
-	theme          *Theme
-	items          []DropDownItem
-	isOpen         bool
+	theme  *Theme
+	items  []DropDownItem
+	isOpen bool
+	//backdrop       *widget.Clickable
 	revs           bool
 	selectedIndex  int
 	color          color.NRGBA
@@ -48,6 +49,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
 		clickable:      t.NewClickable(true),
+		//backdrop:       new(widget.Clickable),
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
@@ -268,7 +270,6 @@ func (d *DropDown) drawLayout(gtx C, body layout.Widget) D {
 
 // Reslice the dropdowns
 func ResliceDropdown(dropdowns []*DropDown, indexToRemove int) []*DropDown {
-	//dropdowns[indexToRemove] = dropdowns[len(dropdowns)-1]
 	return append(dropdowns[:indexToRemove], dropdowns[indexToRemove+1:]...)
 }
 
@@ -285,25 +286,3 @@ func DisplayOneDropdown(dropdowns ...*DropDown) {
 		}
 	}
 }
-
-//Test function for dropdown Bug
-/*
-func Test(dropdowns ...*DropDown) {
-	if dropdowns[0].clickable.Clicked() {
-		dropdowns[0].isOpen = true
-		dropdowns[1].isOpen = false
-		dropdowns[2].isOpen = false
-		fmt.Println("Level 1: ", dropdowns[1].isOpen, dropdowns[2].isOpen)
-	} else if dropdowns[1].clickable.Clicked() {
-		dropdowns[1].isOpen = true
-		dropdowns[0].isOpen = false
-		dropdowns[2].isOpen = false
-		fmt.Println("Level 2: ", dropdowns[0].isOpen, dropdowns[2].isOpen)
-	} else if dropdowns[2].clickable.Clicked() {
-		dropdowns[2].isOpen = true
-		dropdowns[0].isOpen = false
-		dropdowns[1].isOpen = false
-		fmt.Println("Level 3: ", dropdowns[0].isOpen, dropdowns[1].isOpen)
-	}
-}
-*/
