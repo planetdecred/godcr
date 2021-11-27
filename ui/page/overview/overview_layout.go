@@ -167,7 +167,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											t := pg.Theme.Label(values.TextSize14, "Unmixed balance")
-											t.Color = pg.Theme.Color.Gray
+											t.Color = pg.Theme.Color.GrayText2
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {

@@ -253,7 +253,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 					title := pg.Theme.Label(values.TextSize14, "Live Tickets")
-					title.Color = pg.Theme.Color.Gray
+					title.Color = pg.Theme.Color.GrayText2
 					return pg.titleRow(gtx, title.Layout, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							pg.stakingCountIcon(pg.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined),
@@ -387,7 +387,7 @@ func (pg *Page) ticketRecordIconCount(icon *decredmaterial.Image, count int, sta
 							}),
 							layout.Rigid(func(gtx C) D {
 								txt := pg.Theme.Label(values.TextSize12, status)
-								txt.Color = pg.Theme.Color.Gray
+								txt.Color = pg.Theme.Color.GrayText2
 								return txt.Layout(gtx)
 							}),
 						)

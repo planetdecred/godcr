@@ -217,7 +217,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 	subtitle := func(gtx C) D {
 		text := in.Theme.Body1(in.subtitle)
-		text.Color = in.Theme.Color.Gray
+		text.Color = in.Theme.Color.GrayText2
 		return text.Layout(gtx)
 	}
 

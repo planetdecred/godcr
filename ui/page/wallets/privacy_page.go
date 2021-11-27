@@ -106,7 +106,7 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 												return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 													layout.Rigid(func(gtx C) D {
 														txt := pg.Theme.Label(values.TextSize14, "Unmixed balance")
-														txt.Color = pg.Theme.Color.Gray
+														txt.Color = pg.Theme.Color.GrayText2
 														return txt.Layout(gtx)
 													}),
 													layout.Rigid(func(gtx C) D {
@@ -121,7 +121,7 @@ func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 												return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 													layout.Rigid(func(gtx C) D {
 														t := pg.Theme.Label(values.TextSize14, "Mixed balance")
-														t.Color = pg.Theme.Color.Gray
+														t.Color = pg.Theme.Color.GrayText2
 														return t.Layout(gtx)
 													}),
 													layout.Rigid(func(gtx C) D {

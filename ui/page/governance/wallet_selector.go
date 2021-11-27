@@ -300,10 +300,10 @@ func (asm *WalletSelectorModal) walletAccountLayout(gtx layout.Context, wallet *
 							}),
 							layout.Rigid(func(gtx C) D {
 								spendable := asm.Theme.Label(values.TextSize14, values.String(values.StrLabelSpendable))
-								spendable.Color = asm.Theme.Color.Gray
+								spendable.Color = asm.Theme.Color.GrayText2
 								//TODO
 								spendableBal := asm.Theme.Label(values.TextSize14, walletSpendableBalance.String())
-								spendableBal.Color = asm.Theme.Color.Gray
+								spendableBal.Color = asm.Theme.Color.GrayText2
 								return components.EndToEndRow(gtx, spendable.Layout, spendableBal.Layout)
 							}),
 						)

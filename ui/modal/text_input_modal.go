@@ -92,7 +92,7 @@ func (tm *TextInputModal) Handle() {
 		tm.btnPositve.Background = tm.Theme.Color.Primary
 		tm.isEnabled = true
 	} else {
-		tm.btnPositve.Background = tm.Theme.Color.InactiveGray
+		tm.btnPositve.Background = tm.Theme.Color.Gray3
 		tm.isEnabled = false
 	}
 

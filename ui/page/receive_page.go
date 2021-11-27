@@ -265,7 +265,7 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2("Your Address")
-			txt.Color = pg.Theme.Color.Gray
+			txt.Color = pg.Theme.Color.GrayText2
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -288,7 +288,7 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 	card := decredmaterial.Card{
-		Color: pg.Theme.Color.LightGray,
+		Color: pg.Theme.Color.Gray4,
 	}
 
 	return layout.Inset{Top: values.MarginPadding14, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {

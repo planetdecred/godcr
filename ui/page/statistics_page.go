@@ -76,7 +76,7 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		return func(gtx C) D {
 			l := pg.Theme.Body2(t)
 			r := pg.Theme.Body2(v)
-			r.Color = pg.Theme.Color.Gray
+			r.Color = pg.Theme.Color.GrayText2
 			return inset.Layout(gtx, func(gtx C) D {
 				return components.EndToEndRow(gtx, l.Layout, r.Layout)
 			})

@@ -181,7 +181,7 @@ func (pg *AppOverviewPage) syncDormantContent(gtx layout.Context, uniform layout
 					return pg.connectionPeer(gtx)
 				}
 				latestBlockTitleLabel := pg.Theme.Body1(values.String(values.StrNoConnectedPeer))
-				latestBlockTitleLabel.Color = pg.Theme.Color.Gray
+				latestBlockTitleLabel.Color = pg.Theme.Color.GrayText2
 				return latestBlockTitleLabel.Layout(gtx)
 			}),
 		)
@@ -192,7 +192,7 @@ func (pg *AppOverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			latestBlockTitleLabel := pg.Theme.Body1(values.String(values.StrLastBlockHeight))
-			latestBlockTitleLabel.Color = pg.Theme.Color.Gray
+			latestBlockTitleLabel.Color = pg.Theme.Color.GrayText2
 			return latestBlockTitleLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -202,7 +202,7 @@ func (pg *AppOverviewPage) blockInfoRow(gtx layout.Context) layout.Dimensions {
 			}.Layout(gtx, pg.Theme.Body1(fmt.Sprintf("%d", pg.bestBlock.Height)).Layout)
 		}),
 		layout.Rigid(func(gtx C) D {
-			pg.walletStatusIcon.Color = pg.Theme.Color.Gray
+			pg.walletStatusIcon.Color = pg.Theme.Color.Gray1
 			return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 				return pg.walletStatusIcon.Layout(gtx, values.MarginPadding5)
 			})

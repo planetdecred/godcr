@@ -89,7 +89,7 @@ func (t *Theme) IconEditor(editor *widget.Editor, hint string, icon *widget.Icon
 	e.showEditorIcon = true
 	e.isEditorButtonClickable = clickableIcon
 	e.editorIcon = NewIcon(icon)
-	e.editorIcon.Color = t.Color.Gray
+	e.editorIcon.Color = t.Color.Gray1
 	e.editorIconButton.IconButtonStyle.Icon = icon
 	return e
 }
@@ -102,7 +102,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	m.TextSize = t.TextSize
 	m.Color = t.Color.Text
 	m.Hint = hint
-	m.HintColor = t.Color.Hint
+	m.HintColor = t.Color.GrayText3
 
 	var m0 = unit.Dp(0)
 
@@ -125,7 +125,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 			material.IconButtonStyle{
 				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
-				Color:      t.Color.Gray,
+				Color:      t.Color.Gray1,
 				Inset:      layout.UniformInset(m0),
 				Button:     new(widget.Clickable),
 			},
@@ -134,7 +134,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 			material.IconButtonStyle{
 				Size:       values.MarginPadding24,
 				Background: color.NRGBA{},
-				Color:      t.Color.Gray,
+				Color:      t.Color.Gray1,
 				Inset:      layout.UniformInset(m0),
 				Button:     new(widget.Clickable),
 			},

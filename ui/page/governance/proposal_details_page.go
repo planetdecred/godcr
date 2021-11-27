@@ -185,8 +185,8 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 					lbl := pg.Theme.Body1(fmt.Sprint(val))
 					lbl.Color = pg.Theme.Color.Surface
 					if proposal.VoteStatus < val {
-						c.Color = pg.Theme.Color.LightGray
-						lbl.Color = pg.Theme.Color.Hint
+						c.Color = pg.Theme.Color.Gray4
+						lbl.Color = pg.Theme.Color.GrayText3
 					}
 					return c.Layout(gtx, func(gtx C) D {
 						m := values.MarginPadding6
@@ -208,9 +208,9 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 				txt := info + "..."
 				if proposal.VoteStatus != val {
 					txt = info
-					col = pg.Theme.Color.Hint
+					col = pg.Theme.Color.GrayText3
 					if proposal.VoteStatus > 1 {
-						col = pg.Theme.Color.DeepBlue
+						col = pg.Theme.Color.Text
 					}
 				}
 				lbl := pg.Theme.Body1(txt)
@@ -319,7 +319,7 @@ func (pg *ProposalDetails) layoutTitle(gtx C) D {
 }
 
 func (pg *ProposalDetails) layoutDescription(gtx C) D {
-	grayCol := pg.Theme.Color.Gray
+	grayCol := pg.Theme.Color.GrayText2
 	proposal := pg.proposal
 
 	dotLabel := pg.Theme.H4(" . ")

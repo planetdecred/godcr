@@ -110,10 +110,10 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 	pg.currencyPreference = currencyPreference
 
 	pg.peerLabel = l.Theme.Body1("")
-	pg.peerLabel.Color = l.Theme.Color.Gray
+	pg.peerLabel.Color = l.Theme.Color.GrayText2
 
 	pg.agentLabel = l.Theme.Body1("")
-	pg.agentLabel.Color = l.Theme.Color.Gray
+	pg.agentLabel.Color = l.Theme.Color.GrayText2
 	return pg
 }
 
@@ -272,7 +272,7 @@ func (pg *SettingsPage) agent() layout.Widget {
 								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
 								layout.Rigid(func(gtx C) D {
 									txt := pg.Theme.Body2("For HTTP request")
-									txt.Color = pg.Theme.Color.Gray
+									txt.Color = pg.Theme.Color.GrayText2
 									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 										return txt.Layout(gtx)
 									})
@@ -311,7 +311,7 @@ func (pg *SettingsPage) mainSection(gtx layout.Context, title string, body layou
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								txt := pg.Theme.Body2(title)
-								txt.Color = pg.Theme.Color.Gray
+								txt.Color = pg.Theme.Color.GrayText2
 								return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
 							}),
 							layout.Flexed(1, func(gtx C) D {

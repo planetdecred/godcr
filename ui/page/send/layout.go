@@ -301,7 +301,7 @@ func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 
 	collapsibleBody := func(gtx C) D {
 		card := pg.Theme.Card()
-		card.Color = pg.Theme.Color.LightGray
+		card.Color = pg.Theme.Color.Gray4
 		inset := layout.Inset{
 			Top: values.MarginPadding10,
 		}
@@ -382,7 +382,7 @@ func (pg *Page) contentRow(gtx layout.Context, leftValue, rightValue string) lay
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2(leftValue)
-			txt.Color = pg.Theme.Color.Gray
+			txt.Color = pg.Theme.Color.GrayText2
 			return txt.Layout(gtx)
 		}),
 		layout.Flexed(1, func(gtx C) D {

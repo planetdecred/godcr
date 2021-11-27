@@ -136,7 +136,7 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 			}
 			return inset.Layout(gtx, func(gtx C) D {
 				return decredmaterial.Card{
-					Color: as.Theme.Color.LightGray,
+					Color: as.Theme.Color.Gray4,
 				}.Layout(gtx, func(gtx C) D {
 					m2 := values.MarginPadding2
 					m4 := values.MarginPadding4
@@ -148,7 +148,7 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						text := as.Theme.Caption(as.selectedWalletName)
-						text.Color = as.Theme.Color.Gray
+						text.Color = as.Theme.Color.GrayText2
 						return text.Layout(gtx)
 					})
 				})
@@ -416,9 +416,9 @@ func (asm *AccountSelectorModal) walletAccountLayout(gtx layout.Context, account
 				}),
 				layout.Rigid(func(gtx C) D {
 					spendable := asm.Theme.Label(values.TextSize14, values.String(values.StrLabelSpendable))
-					spendable.Color = asm.Theme.Color.Gray
+					spendable.Color = asm.Theme.Color.GrayText2
 					spendableBal := asm.Theme.Label(values.TextSize14, dcrutil.Amount(account.Balance.Spendable).String())
-					spendableBal.Color = asm.Theme.Color.Gray
+					spendableBal.Color = asm.Theme.Color.GrayText2
 					return EndToEndRow(gtx, spendable.Layout, spendableBal.Layout)
 				}),
 			)
@@ -467,14 +467,14 @@ func (asm *AccountSelectorModal) walletInfoPopup(gtx layout.Context) layout.Dime
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := asm.Theme.Body2("Tx direction")
-							txt.Color = asm.Theme.Color.Gray
+							txt.Color = asm.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
 					)
 				}),
 				layout.Rigid(func(gtx C) D {
 					txt := asm.Theme.Body2(desc)
-					txt.Color = asm.Theme.Color.Gray
+					txt.Color = asm.Theme.Color.GrayText2
 					return txt.Layout(gtx)
 				}),
 			)

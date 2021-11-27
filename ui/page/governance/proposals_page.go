@@ -228,7 +228,7 @@ func (pg *ProposalsPage) Layout(gtx C) D {
 											}
 
 											lastUpdatedInfo := pg.Theme.Label(values.TextSize10, text)
-											lastUpdatedInfo.Color = pg.Theme.Color.Gray
+											lastUpdatedInfo.Color = pg.Theme.Color.GrayText2
 											if pg.syncCompleted {
 												lastUpdatedInfo.Color = pg.Theme.Color.Success
 											}
@@ -348,7 +348,7 @@ func (pg *ProposalsPage) layoutIsSyncingSection(gtx C) D {
 	gtx.Constraints.Max.X = gtx.Px(values.MarginPadding24)
 	gtx.Constraints.Min.X = gtx.Constraints.Max.X
 	loader := material.Loader(th)
-	loader.Color = pg.Theme.Color.Gray
+	loader.Color = pg.Theme.Color.Gray1
 	return loader.Layout(gtx)
 }
 

@@ -17,6 +17,7 @@ import (
 
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/assets"
+	// "github.com/planetdecred/godcr/ui/values"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/notification"
 	"github.com/planetdecred/godcr/wallet"
@@ -70,6 +71,8 @@ type Load struct {
 
 	Icons Icons
 
+	// Color values.Color
+
 	Toast *notification.Toast
 
 	SelectedWallet  *int
@@ -108,13 +111,18 @@ func NewLoad() (*Load, error) {
 	}
 
 	icons := loadIcons()
+
+	// isDarkMode := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
+	// color := values.ThemeColors(false)
+
 	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
 	if th == nil {
 		return nil, errors.New("unexpected error while loading theme")
 	}
 	l := &Load{
-		Theme:    th,
-		Icons:    icons,
+		Theme: th,
+		Icons: icons,
+		// Color: values.ThemeColors(false),
 		WL:       wl,
 		Receiver: r,
 		Toast:    notification.NewToast(th),
@@ -128,7 +136,7 @@ func NewLoad() (*Load, error) {
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
 	if isDarkModeOn != l.Theme.DarkMode {
-		l.Theme.SwitchDarkMode(isDarkModeOn)
+		// l.Theme.SwitchDarkMode(isDarkModeOn)
 	}
 }
 

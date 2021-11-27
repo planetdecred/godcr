@@ -17,18 +17,9 @@ import (
 
 	"gioui.org/widget/material"
 
+	"github.com/planetdecred/godcr/ui/values"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 	"golang.org/x/image/draw"
-)
-
-var (
-	// decred primary colors
-
-	keyblue  = rgb(0x2970ff)
-	darkblue = rgb(0x091440)
-
-	// decred complemetary colors
-	green = rgb(0x41bf53)
 )
 
 type (
@@ -39,52 +30,8 @@ type (
 type Theme struct {
 	Shaper text.Shaper
 	Base   *material.Theme
-	Color  struct {
-		Primary          color.NRGBA
-		Primary50        color.NRGBA
-		PrimaryHighlight color.NRGBA
-		Secondary        color.NRGBA
-		Text             color.NRGBA
-		Hint             color.NRGBA
-		Overlay          color.NRGBA
-		InvText          color.NRGBA
-		Success          color.NRGBA
-		Success2         color.NRGBA
-		Danger           color.NRGBA
-		Background       color.NRGBA
-		Surface          color.NRGBA
-		SurfaceHighlight color.NRGBA
-		Gray             color.NRGBA
-		Black            color.NRGBA
-		DeepBlue         color.NRGBA
-		LightBlue        color.NRGBA
-		LightBlue2       color.NRGBA
-		LightBlue3       color.NRGBA
-		LightBlue4       color.NRGBA
-		LightBlue5       color.NRGBA
-		LightBlue6       color.NRGBA
-		BlueProgressTint color.NRGBA
-		LightGray        color.NRGBA
-		InactiveGray     color.NRGBA
-		ActiveGray       color.NRGBA
-		Gray1            color.NRGBA
-		Gray2            color.NRGBA
-		Gray3            color.NRGBA
-		Orange           color.NRGBA
-		Orange2          color.NRGBA
-		Orange3          color.NRGBA
-		OrangeRipple     color.NRGBA
-		Gray4            color.NRGBA
-		Gray5            color.NRGBA
-		Gray6            color.NRGBA
-		Green50          color.NRGBA
-		Green500         color.NRGBA
-		Turquoise100     color.NRGBA
-		Turquoise300     color.NRGBA
-		Turquoise700     color.NRGBA
-		Turquoise800     color.NRGBA
-		Yellow           color.NRGBA
-	}
+	Color  *values.Color
+
 	Icon struct {
 		ContentCreate *widget.Icon
 		ContentAdd    *widget.Icon
@@ -107,110 +54,16 @@ type Theme struct {
 	DarkMode bool
 }
 
-func (t *Theme) setColorMode(darkMode bool) {
-	if darkMode {
-		t.DarkMode = true
-		t.Color.Primary = rgb(0x57B6FF)
-		t.Color.Primary50 = rgb(0xE3F2FF)
-		t.Color.PrimaryHighlight = rgb(0x1B41B3)
-		t.Color.Text = argb(0x99FFFFFF)
-		t.Color.Hint = rgb(0x8997A5)
-		t.Color.InvText = rgb(0xffffff)
-		t.Color.Overlay = rgb(0x000000)
-		t.Color.Surface = rgb(0x252525)
-		t.Color.SurfaceHighlight = rgb(0x3D3D3D)
-		t.Color.Success = green
-		t.Color.Success2 = rgb(0xE1F8EF)
-		t.Color.Danger = rgb(0xed6d47)
-		t.Color.Gray = argb(0x99FFFFFF)
-		t.Color.Gray1 = rgb(0x1E1E1E)
-		t.Color.Gray2 = rgb(0x8997a5)
-		t.Color.Gray3 = argb(0xDEFFFFFF)
-		t.Color.Gray4 = argb(0x99FFFFFF)
-		t.Color.Gray5 = argb(0x61FFFFFF)
-		t.Color.Gray6 = argb(0xCCFFFFFF)
-		t.Color.Green50 = rgb(0xE8F7EA)
-		t.Color.Green500 = rgb(0x41BE53)
-		t.Color.LightGray = rgb(0x121212)
-		t.Color.ActiveGray = rgb(0x363636)
-		t.Color.DeepBlue = argb(0xDEFFFFFF)
-		t.Color.InactiveGray = rgb(0xc4cbd2)
-		t.Color.Black = rgb(0x000000)
-		t.Color.Background = argb(0x22444444)
-		t.Color.LightBlue = rgb(0xe4f6ff)
-		t.Color.LightBlue2 = rgb(0x75D8FF)
-		t.Color.LightBlue3 = rgb(0xBCE8FF)
-		t.Color.LightBlue4 = rgb(0xBBDEFF)
-		t.Color.LightBlue5 = rgb(0x70CBFF)
-		t.Color.LightBlue6 = rgb(0x4B91D8)
-		t.Color.BlueProgressTint = rgb(0x73d7ff)
-		t.Color.Orange = rgb(0xD34A21)
-		t.Color.Orange2 = rgb(0xF8E8E7)
-		t.Color.Orange3 = rgb(0xF8CABC)
-		t.Color.OrangeRipple = rgb(0xD32F2F)
-		t.Color.Turquoise100 = rgb(0xB6EED7)
-		t.Color.Turquoise300 = rgb(0x2DD8A3)
-		t.Color.Turquoise700 = rgb(0x00A05F)
-		t.Color.Turquoise800 = rgb(0x008F52)
-		t.Color.Yellow = rgb(0xffc84e)
-		t.TextSize = unit.Sp(16)
-	} else {
-		t.DarkMode = false
-		t.Color.Primary = keyblue
-		t.Color.Primary50 = rgb(0xE3F2FF)
-		t.Color.PrimaryHighlight = rgb(0x1B41B3)
-		t.Color.Text = darkblue
-		t.Color.Hint = rgb(0x8997A5)
-		t.Color.InvText = rgb(0xffffff)
-		t.Color.Overlay = rgb(0x000000)
-		t.Color.Surface = rgb(0xffffff)
-		t.Color.SurfaceHighlight = rgb(0xE6EAED)
-		t.Color.Success = green
-		t.Color.Success2 = rgb(0xE1F8EF)
-		t.Color.Danger = rgb(0xed6d47)
-		t.Color.Gray = rgb(0x596D81)
-		t.Color.Gray1 = rgb(0xe6eaed)
-		t.Color.Gray2 = rgb(0x8997a5)
-		t.Color.Gray3 = rgb(0x3d5873)
-		t.Color.Gray4 = rgb(0x3d5873)
-		t.Color.Gray5 = rgb(0x3d5873)
-		t.Color.Gray6 = rgb(0x091440)
-		t.Color.Green50 = rgb(0xE8F7EA)
-		t.Color.Green500 = rgb(0x41BE53)
-		t.Color.LightGray = rgb(0xf3f5f6)
-		t.Color.ActiveGray = rgb(0xf3f5f6)
-		t.Color.DeepBlue = rgb(0x091440)
-		t.Color.InactiveGray = rgb(0xc4cbd2)
-		t.Color.Black = rgb(0x000000)
-		t.Color.Background = argb(0x22444444)
-		t.Color.LightBlue = rgb(0xe4f6ff)
-		t.Color.LightBlue2 = rgb(0x75D8FF)
-		t.Color.LightBlue3 = rgb(0xBCE8FF)
-		t.Color.LightBlue4 = rgb(0xBBDEFF)
-		t.Color.LightBlue5 = rgb(0x70CBFF)
-		t.Color.LightBlue6 = rgb(0x4B91D8)
-		t.Color.BlueProgressTint = rgb(0x73d7ff)
-		t.Color.Orange = rgb(0xD34A21)
-		t.Color.Orange2 = rgb(0xF8E8E7)
-		t.Color.Orange3 = rgb(0xF8CABC)
-		t.Color.OrangeRipple = rgb(0xD32F2F)
-		t.Color.Turquoise100 = rgb(0xB6EED7)
-		t.Color.Turquoise300 = rgb(0x2DD8A3)
-		t.Color.Turquoise700 = rgb(0x00A05F)
-		t.Color.Turquoise800 = rgb(0x008F52)
-		t.Color.Yellow = rgb(0xffc84e)
-		t.TextSize = unit.Sp(16)
-	}
-}
-
 func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image, isDarkModeOn bool) *Theme {
 	t := &Theme{
 		Shaper:   text.NewCache(fontCollection),
 		Base:     material.NewTheme(fontCollection),
 		DarkMode: false,
 	}
+	t.Color = values.NewThemeColor(true)
+	// t.setColorMode(isDarkModeOn)
 
-	t.setColorMode(isDarkModeOn)
+	// decredmaterial.NewThemeColor(true)
 
 	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
 	t.checkBoxUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
@@ -227,16 +80,16 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	return t
 }
 
-func (t *Theme) SwitchDarkMode(isDarkModeOn bool) {
-	t.setColorMode(isDarkModeOn)
-}
+// func (t *Theme) SwitchDarkMode(isDarkModeOn bool) {
+// 	t.setColorMode(isDarkModeOn)
+// }
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
 	layout.Stack{
 		Alignment: layout.N,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return fill(gtx, t.Color.LightGray)
+			return fill(gtx, t.Color.Gray4)
 		}),
 		layout.Stacked(w),
 	)

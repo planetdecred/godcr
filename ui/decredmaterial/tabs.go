@@ -159,7 +159,7 @@ func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position)
 			return indicatorDirection(tabPosition).Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return line(gtx, tabWidth, tabHeight, keyblue)
+						return line(gtx, tabWidth, tabHeight, color.NRGBA{})
 					},
 					))
 			})

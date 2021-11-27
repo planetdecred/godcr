@@ -51,9 +51,9 @@ func NewAboutPage(l *load.Load) *AboutPage {
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.versionValue.Color = pg.Theme.Color.Gray
-	pg.buildDateValue.Color = pg.Theme.Color.Gray
-	pg.networkValue.Color = pg.Theme.Color.Gray
+	pg.versionValue.Color = pg.Theme.Color.GrayText2
+	pg.buildDateValue.Color = pg.Theme.Color.GrayText2
+	pg.networkValue.Color = pg.Theme.Color.GrayText2
 
 	return pg
 }

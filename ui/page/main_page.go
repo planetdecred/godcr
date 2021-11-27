@@ -499,7 +499,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
 				}
-				border := widget.Border{Color: mp.Theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				border := widget.Border{Color: mp.Theme.Color.Gray2, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
 				return inset.Layout(gtx, func(gtx C) D {
 					padding := layout.Inset{
 						Top:    values.MarginPadding3,

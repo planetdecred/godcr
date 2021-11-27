@@ -54,7 +54,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 
 				background := nd.Theme.Color.Surface
 				if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
-					background = nd.Theme.Color.ActiveGray
+					background = nd.Theme.Color.Gray4
 				}
 				return decredmaterial.LinearLayout{
 					Orientation: nd.axis,
@@ -111,7 +111,7 @@ func (nd *NavDrawer) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 			return list.Layout(gtx, len(nd.AppBarNavItems), func(gtx C, i int) D {
 				background := nd.Theme.Color.Surface
 				if nd.AppBarNavItems[i].PageID == nd.CurrentPage {
-					background = nd.Theme.Color.ActiveGray
+					background = nd.Theme.Color.Gray4
 				}
 				return decredmaterial.LinearLayout{
 					Width:       decredmaterial.WrapContent,

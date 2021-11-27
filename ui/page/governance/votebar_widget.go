@@ -59,7 +59,7 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		infoIcon:      decredmaterial.NewIcon(l.Icons.ActionInfo),
 		legendIcon:    decredmaterial.NewIcon(l.Icons.ImageBrightness1),
 	}
-	vb.infoIcon.Color = l.Theme.Color.Gray
+	vb.infoIcon.Color = l.Theme.Color.Gray1
 
 	return vb
 }
@@ -188,7 +188,7 @@ func (v *VoteBar) requiredYesVotesIndicator(gtx C) D {
 		},
 	}
 	defer clip.Rect(rect).Push(gtx.Ops).Pop()
-	paint.Fill(gtx.Ops, v.Theme.Color.InactiveGray)
+	paint.Fill(gtx.Ops, v.Theme.Color.Gray3)
 	v.votesIndicatorTooltip(gtx, rect, thumbLeftPos)
 
 	return D{
@@ -257,7 +257,7 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 	quorumRequirement := (v.requiredPercentage / 100) * v.eligibleVotes
 
 	requirement := v.Theme.Body2(fmt.Sprintf("/%d votes", int(quorumRequirement)))
-	requirement.Color = v.Theme.Color.Gray
+	requirement.Color = v.Theme.Color.GrayText2
 
 	dims := layout.Flex{}.Layout(gtx,
 		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d", int(v.totalVotes))).Layout),
@@ -280,7 +280,7 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
 	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
-	col := v.Theme.Color.Gray
+	col := v.Theme.Color.GrayText2
 
 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))

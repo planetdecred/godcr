@@ -72,7 +72,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 					}
 
 					sub := sp.Load.Theme.Label(values.TextSize14, sp.SubTitle)
-					sub.Color = sp.Load.Theme.Color.Gray
+					sub.Color = sp.Load.Theme.Color.GrayText2
 					return sub.Layout(gtx)
 				}),
 			)
@@ -85,7 +85,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 					}.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 							walletText := sp.Theme.Caption(sp.WalletName)
-							walletText.Color = sp.Theme.Color.Gray
+							walletText.Color = sp.Theme.Color.GrayText2
 							return walletText.Layout(gtx)
 						})
 					})

@@ -64,7 +64,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 	tp.tickets.Editor.Alignment = text.Middle
 	tp.tickets.Editor.SetText("1")
 
-	tp.increment.Color, tp.decrement.Color = l.Theme.Color.Text, l.Theme.Color.InactiveGray
+	tp.increment.Color, tp.decrement.Color = l.Theme.Color.DeepBlue, l.Theme.Color.Gray3
 	tp.increment.Size, tp.decrement.Size = values.TextSize18, values.TextSize18
 
 	tp.modal.SetPadding(values.MarginPadding0)
@@ -109,7 +109,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 				},
 				Direction:  layout.Center,
 				Alignment:  layout.Middle,
-				Background: tp.Theme.Color.LightGray,
+				Background: tp.Theme.Color.Gray4,
 			}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return layout.Center.Layout(gtx, func(gtx C) D {
@@ -138,7 +138,6 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 									}),
 									layout.Rigid(func(gtx C) D {
 										costLabel := tp.Theme.Label(values.TextSize16, dcrutil.Amount(int64(tp.ticketPrice)*tp.ticketCount()).String())
-										costLabel.Color = tp.Theme.Color.Gray6
 										return costLabel.Layout(gtx)
 									}),
 								)
@@ -150,7 +149,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 									Height:      decredmaterial.WrapContent,
 									Border: decredmaterial.Border{
 										Radius: decredmaterial.Radius(10),
-										Color:  tp.Theme.Color.InactiveGray,
+										Color:  tp.Theme.Color.Gray3,
 										Width:  values.MarginPadding1,
 									},
 									Direction:  layout.E,
@@ -369,7 +368,7 @@ func (tp *stakingModal) Handle() {
 		}
 		value--
 		if value < 1 {
-			tp.decrement.Color = tp.Theme.Color.InactiveGray
+			tp.decrement.Color = tp.Theme.Color.Gray3
 			return
 		}
 		tp.tickets.Editor.SetText(fmt.Sprintf("%d", value))

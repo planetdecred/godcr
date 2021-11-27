@@ -54,7 +54,7 @@ func (t *Theme) Button(txt string) Button {
 		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),
 		clickable:          clickable,
-		disabledBackground: t.Color.InactiveGray,
+		disabledBackground: t.Color.Gray3,
 		disabledTextColor:  t.Color.Surface,
 		HighlightColor:     t.Color.PrimaryHighlight,
 		isEnabled:          true,
@@ -67,7 +67,7 @@ func (t *Theme) OutlineButton(txt string) Button {
 	btn.HighlightColor = t.Color.SurfaceHighlight
 	btn.Color = t.Color.Primary
 	btn.disabledBackground = color.NRGBA{}
-	btn.disabledTextColor = t.Color.InactiveGray
+	btn.disabledTextColor = t.Color.Gray3
 
 	return btn
 }

@@ -102,16 +102,16 @@ func NewWalletPage(l *load.Load) *WalletPage {
 
 	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
 
-	pg.separator.Color = l.Theme.Color.Gray1
+	pg.separator.Color = l.Theme.Color.Gray2
 
 	pg.watchOnlyWalletLabel = pg.Theme.Body1(values.String(values.StrWatchOnlyWallets))
-	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.Gray
+	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.GrayText2
 
 	pg.iconButton = decredmaterial.IconButton{
 		IconButtonStyle: material.IconButtonStyle{
 			Size:       unit.Dp(25),
 			Background: color.NRGBA{},
-			Color:      pg.Theme.Color.Text,
+			Color:      pg.Theme.Color.Gray1,
 			Inset:      layout.UniformInset(unit.Dp(0)),
 		},
 	}
@@ -489,7 +489,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 									}),
 									layout.Rigid(func(gtx C) D {
 										txt := pg.Theme.Label(values.TextSize16, values.String(values.StrAddNewAccount))
-										txt.Color = pg.Theme.Color.Gray
+										txt.Color = pg.Theme.Color.GrayText2
 										return txt.Layout(gtx)
 									}),
 								)
@@ -649,7 +649,7 @@ func (pg *WalletPage) layoutCollapsibleHeader(gtx layout.Context, listItem *wall
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				balanceLabel := pg.Theme.Body1(listItem.totalBalance)
-				balanceLabel.Color = pg.Theme.Color.Gray
+				balanceLabel.Color = pg.Theme.Color.GrayText2
 				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
 			})
 		}),
@@ -729,11 +729,11 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 								}
 								return inset.Layout(gtx, func(gtx C) D {
 									spendableLabel := pg.Theme.Body2(values.String(values.StrLabelSpendable))
-									spendableLabel.Color = pg.Theme.Color.Gray
+									spendableLabel.Color = pg.Theme.Color.GrayText2
 
 									spendableBal := dcrutil.Amount(account.Balance.Spendable).String()
 									spendableBalLabel := pg.Theme.Body2(spendableBal)
-									spendableBalLabel.Color = pg.Theme.Color.Gray
+									spendableBalLabel.Color = pg.Theme.Color.GrayText2
 									return pg.tableLayout(gtx, spendableLabel, spendableBalLabel)
 								})
 							}),

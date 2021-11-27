@@ -160,7 +160,7 @@ func (cm *CreatePasswordModal) Handle() {
 		cm.btnPositve.Background = cm.Theme.Color.Primary
 		cm.isEnabled = true
 	} else {
-		cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+		cm.btnPositve.Background = cm.Theme.Color.Gray3
 		cm.isEnabled = false
 	}
 

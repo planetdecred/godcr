@@ -231,7 +231,7 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 		Alignment: layout.N,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return decredmaterial.Fill(gtx, win.load.Theme.Color.LightGray)
+			return decredmaterial.Fill(gtx, win.load.Theme.Color.Gray4)
 		}),
 		layout.Stacked(func(gtx C) D {
 			page.Handle()

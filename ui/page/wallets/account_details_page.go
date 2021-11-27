@@ -214,7 +214,7 @@ func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, bal
 			}),
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(balType)
-				txt.Color = pg.theme.Color.Gray
+				txt.Color = pg.theme.Color.GrayText2
 				return txt.Layout(gtx)
 			}),
 		)
@@ -255,7 +255,7 @@ func (pg *AcctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightTex
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					leftTextLabel := pg.theme.Label(values.TextSize14, leftText)
-					leftTextLabel.Color = pg.theme.Color.Gray
+					leftTextLabel.Color = pg.theme.Color.GrayText2
 					return leftTextLabel.Layout(gtx)
 				}),
 			)
