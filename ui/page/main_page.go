@@ -78,7 +78,7 @@ func NewMainPage(l *load.Load) *MainPage {
 	}
 
 	mp.hideBalanceItem.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
-	mp.hideBalanceItem.hideBalanceButton.Color = mp.Theme.Color.Gray3
+	mp.hideBalanceItem.hideBalanceButton.Color = mp.Theme.Color.Gray1
 	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
 	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()

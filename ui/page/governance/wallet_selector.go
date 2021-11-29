@@ -108,7 +108,7 @@ func (as *WalletSelector) Layout(gtx layout.Context) layout.Dimensions {
 	as.Handle()
 
 	border := widget.Border{
-		Color:        as.Theme.Color.Gray1,
+		Color:        as.Theme.Color.Gray2,
 		CornerRadius: values.MarginPadding8,
 		Width:        values.MarginPadding2,
 	}

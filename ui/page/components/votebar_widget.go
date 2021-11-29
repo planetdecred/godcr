@@ -143,7 +143,7 @@ func (v *VoteBar) votebarLayout(gtx C) D {
 
 	return layout.Stack{Alignment: layout.W}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			return progressScale(progressBarWidth, v.Theme.Color.Gray1, 1)
+			return progressScale(progressBarWidth, v.Theme.Color.Gray2, 1)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{}.Layout(gtx,

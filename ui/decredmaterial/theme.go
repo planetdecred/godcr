@@ -61,8 +61,6 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 		DarkMode: false,
 	}
 	t.Color = values.NewThemeColor(isDarkModeOn)
-	// t.setColorMode(isDarkModeOn)
-
 	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
 	t.checkBoxUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
 	t.radioCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))

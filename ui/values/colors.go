@@ -32,6 +32,7 @@ type Color struct {
 	Gray2            color.NRGBA
 	Gray3            color.NRGBA
 	Gray4            color.NRGBA
+	Gray5            color.NRGBA
 	Green50          color.NRGBA
 	Green500         color.NRGBA
 	Orange           color.NRGBA
@@ -74,6 +75,7 @@ func (c *Color) darkThemeColors() {
 	c.Gray2 = rgb(0x3D3D3D)
 	c.Gray3 = rgb(0x8997a5)
 	c.Gray4 = rgb(0x121212)
+	c.Gray5 = rgb(0x363636)
 	c.Surface = rgb(0x252525)
 }
 
@@ -107,6 +109,7 @@ func (c *Color) defualtThemeColors() *Color {
 	c.Gray2 = rgb(0xe6eaed) // light 0xe6eaed
 	c.Gray3 = rgb(0xc4cbd2) // InactiveGray #C4CBD2
 	c.Gray4 = rgb(0xf3f5f6) //active n light gray combined f3f5f6
+	c.Gray5 = rgb(0xf3f5f6)
 	c.Green50 = rgb(0xE8F7EA)
 	c.Green500 = rgb(0x41BE53)
 	c.Orange = rgb(0xD34A21)

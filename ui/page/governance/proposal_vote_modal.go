@@ -50,7 +50,7 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 		cancelBtn:      l.Theme.OutlineButton("Cancel"),
 	}
 
-	vm.voteBtn.Background = l.Theme.Color.Gray1
+	vm.voteBtn.Background = l.Theme.Color.Gray3
 	vm.voteBtn.Color = l.Theme.Color.Surface
 
 	vm.yesVote = newInputVoteOptions(vm.Load, "Yes")
@@ -456,7 +456,7 @@ func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 								}),
 								layout.Flexed(0.02, func(gtx C) D {
 									line := vm.Theme.Line(height, gtx.Px(values.MarginPadding2))
-									line.Color = vm.Theme.Color.Gray1
+									line.Color = vm.Theme.Color.Gray2
 									return line.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {

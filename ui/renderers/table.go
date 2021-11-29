@@ -111,7 +111,7 @@ func (t *table) layoutRow(gtx C, r row) D {
 	var maxHeight int
 	width := float64(gtx.Constraints.Max.X) / float64(len(r.cells))
 	line := t.theme.SeparatorVertical(0, 1)
-	line.Color = t.theme.Color.Gray1
+	line.Color = t.theme.Color.Gray2
 
 	return (&layout.List{Axis: layout.Horizontal}).Layout(gtx, len(r.cells), func(gtx C, i int) D {
 		gtx.Constraints.Min.X = int(width)
@@ -146,7 +146,7 @@ func (t *table) render() layout.Widget {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.Stack{}.Layout(gtx,
 				layout.Expanded(func(gtx C) D {
-					border := widget.Border{Color: t.theme.Color.Gray1, CornerRadius: unit.Dp(0), Width: unit.Dp(1)}
+					border := widget.Border{Color: t.theme.Color.Gray2, CornerRadius: unit.Dp(0), Width: unit.Dp(1)}
 					return border.Layout(gtx, func(gtx C) D {
 						return decredmaterial.Fill(gtx, bgCol)
 					})

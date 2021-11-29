@@ -59,7 +59,7 @@ func (t *Theme) Card() Card {
 		HoverColor: t.Color.Gray4,
 		Radius:     Radius(defaultRadius),
 		BorderParam: widget.Border{
-			Color:        t.Color.Gray1,
+			Color:        t.Color.Gray2,
 			Width:        unit.Dp(1),
 			CornerRadius: unit.Dp(defaultRadius),
 		},

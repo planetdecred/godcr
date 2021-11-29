@@ -105,7 +105,7 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 	}
 
 	pg.toMixer = l.Theme.PlainIconButton(l.Icons.NavigationArrowForward)
-	pg.toMixer.Color = l.Theme.Color.Gray3
+	pg.toMixer.Color = l.Theme.Color.Gray1
 	pg.toMixer.Size = values.MarginPadding24
 	pg.toMixer.Inset = layout.UniformInset(values.MarginPadding4)
 

@@ -262,7 +262,7 @@ func (pg *VerifySeedPage) seedListRow(gtx C, index int, multiSeed shuffledSeedWo
 }
 
 func (pg *VerifySeedPage) seedButton(gtx C, index int, multiSeed shuffledSeedWords) D {
-	borderColor := pg.Theme.Color.Gray1
+	borderColor := pg.Theme.Color.Gray2
 	textColor := pg.Theme.Color.GrayText2
 	if index == multiSeed.selectedIndex {
 		borderColor = pg.Theme.Color.Primary

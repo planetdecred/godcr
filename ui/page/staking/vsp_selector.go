@@ -72,7 +72,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 	v.handle()
 
 	border := widget.Border{
-		Color:        v.Theme.Color.Gray1,
+		Color:        v.Theme.Color.Gray2,
 		CornerRadius: values.MarginPadding8,
 		Width:        values.MarginPadding2,
 	}

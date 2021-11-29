@@ -156,7 +156,7 @@ func (scm *sendConfirmModal) Layout(gtx layout.Context) D {
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							icon := decredmaterial.NewIcon(scm.Icons.NavigationArrowForward)
-							icon.Color = scm.Theme.Color.Gray3
+							icon.Color = scm.Theme.Color.Gray1
 							return layout.Inset{Right: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 								return icon.Layout(gtx, values.MarginPadding15)
 							})

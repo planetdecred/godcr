@@ -70,7 +70,7 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.In
 					Clickable: pg.syncClickable,
 					Direction: layout.Center,
 					Alignment: layout.Middle,
-					Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray1, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+					Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
 					Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {

@@ -77,7 +77,7 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		t:          t,
 		Edit:       e,
 		TitleLabel: t.Body2(title),
-		LineColor:  t.Color.Gray1,
+		LineColor:  t.Color.Gray2,
 		height:     31,
 	}
 }
@@ -111,7 +111,7 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		TitleLabel:   t.Body2(""),
 		IsTitleLabel: true,
 		Bordered:     true,
-		LineColor:    t.Color.Gray1,
+		LineColor:    t.Color.Gray2,
 
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
@@ -300,13 +300,13 @@ func (e Editor) handleEvents() {
 	if e.errorLabel.Text != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.Gray1
+		e.LineColor = e.t.Color.Gray2
 	}
 
 	if e.requiredErrorText != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.Gray1
+		e.LineColor = e.t.Color.Gray2
 	}
 }
 
@@ -315,7 +315,7 @@ func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
 	if re.Edit.Editor.Focused() {
 		re.TitleLabel.Color, re.LineColor, l.Color = re.t.Color.Primary, re.t.Color.Primary, re.t.Color.Primary
 	} else {
-		l.Color = re.t.Color.Gray1
+		l.Color = re.t.Color.Gray2
 	}
 	border := widget.Border{Color: re.LineColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
 	return border.Layout(gtx, func(gtx C) D {

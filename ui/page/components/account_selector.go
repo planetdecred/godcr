@@ -114,7 +114,7 @@ func (as *AccountSelector) Layout(gtx layout.Context) layout.Dimensions {
 		Width:     decredmaterial.MatchParent,
 		Height:    decredmaterial.WrapContent,
 		Padding:   layout.UniformInset(values.MarginPadding12),
-		Border:    decredmaterial.Border{Width: values.MarginPadding2, Color: as.Theme.Color.Gray1, Radius: decredmaterial.Radius(8)},
+		Border:    decredmaterial.Border{Width: values.MarginPadding2, Color: as.Theme.Color.Gray2, Radius: decredmaterial.Radius(8)},
 		Clickable: as.openSelectorDialog,
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
@@ -216,7 +216,7 @@ func newAccountSelectorModal(l *load.Load, currentSelectedAccount *dcrlibwallet.
 	}
 
 	asm.walletInfoButton = l.Theme.PlainIconButton(asm.Icons.ActionInfo)
-	asm.walletInfoButton.Color = asm.Theme.Color.Gray3
+	asm.walletInfoButton.Color = asm.Theme.Color.Gray1
 	asm.walletInfoButton.Size = values.MarginPadding15
 	asm.walletInfoButton.Inset = layout.UniformInset(values.MarginPadding0)
 

@@ -61,7 +61,7 @@ func NewListPreference(wallet *wallet.Wallet, l *load.Load, preferenceKey, defau
 	}
 
 	lp.cancelButton = l.Theme.PlainIconButton(l.Icons.ContentClear)
-	lp.cancelButton.Color = l.Theme.Color.Gray3
+	lp.cancelButton.Color = l.Theme.Color.Gray1
 	lp.cancelButton.Size = values.MarginPadding24
 	lp.cancelButton.Inset = layout.UniformInset(values.MarginPadding4)
 

@@ -38,7 +38,7 @@ func (t *Theme) Collapsible() *Collapsible {
 		card:            t.Card(),
 		expandedIcon:    NewIcon(t.chevronUpIcon),
 		collapsedIcon:   NewIcon(t.chevronDownIcon),
-		iconColor:       t.Color.Gray3,
+		iconColor:       t.Color.Gray1,
 	}
 	c.card.Color = c.BackgroundColor
 	return c

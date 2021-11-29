@@ -64,7 +64,7 @@ func newStakingModal(l *load.Load) *stakingModal {
 	tp.tickets.Editor.Alignment = text.Middle
 	tp.tickets.Editor.SetText("1")
 
-	tp.increment.Color, tp.decrement.Color = l.Theme.Color.DeepBlue, l.Theme.Color.Gray3
+	tp.increment.Color, tp.decrement.Color = l.Theme.Color.DeepBlue, l.Theme.Color.Gray2
 	tp.increment.Size, tp.decrement.Size = values.TextSize18, values.TextSize18
 
 	tp.modal.SetPadding(values.MarginPadding0)
@@ -368,7 +368,7 @@ func (tp *stakingModal) Handle() {
 		}
 		value--
 		if value < 1 {
-			tp.decrement.Color = tp.Theme.Color.Gray3
+			tp.decrement.Color = tp.Theme.Color.Gray2
 			return
 		}
 		tp.tickets.Editor.SetText(fmt.Sprintf("%d", value))

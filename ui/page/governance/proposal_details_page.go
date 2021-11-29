@@ -231,7 +231,7 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 			if proposal.VoteStatus > 1 {
 				line.Color = pg.Theme.Color.Primary
 			} else {
-				line.Color = pg.Theme.Color.Gray1
+				line.Color = pg.Theme.Color.Gray2
 			}
 			return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, line.Layout)
 		}),

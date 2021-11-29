@@ -140,7 +140,7 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					img := decredmaterial.NewIcon(tm.Icons.ActionInfo)
-					img.Color = tm.Theme.Color.Gray3
+					img.Color = tm.Theme.Color.Gray1
 					inset := layout.Inset{Right: values.MarginPadding4}
 					return inset.Layout(gtx, func(gtx C) D {
 						return img.Layout(gtx, values.MarginPadding20)

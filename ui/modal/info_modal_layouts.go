@@ -110,7 +110,7 @@ func backupInfo(th *decredmaterial.Theme) []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			txt := th.Label(values.TextSize16, textGray)
-			txt.Color = th.Color.Gray1
+			txt.Color = th.Color.GrayText1
 			return txt.Layout(gtx)
 		},
 		func(gtx C) D {
