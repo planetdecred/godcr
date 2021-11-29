@@ -73,7 +73,7 @@ func (c *Color) darkThemeColors() {
 	c.Gray1 = argb(0x99FFFFFF)
 	c.Gray2 = rgb(0x3D3D3D)
 	c.Gray3 = rgb(0x8997a5)
-	c.Gray4 = argb(0x121212)
+	c.Gray4 = rgb(0x121212)
 	c.Surface = rgb(0x252525)
 }
 

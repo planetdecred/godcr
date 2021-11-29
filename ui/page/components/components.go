@@ -474,7 +474,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 									return D{}
 								}
 								duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
-								duration.Color = l.Theme.Color.Gray3
+								duration.Color = l.Theme.Color.GrayText4
 								return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
 							}),
 						)

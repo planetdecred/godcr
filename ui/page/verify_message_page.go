@@ -197,7 +197,7 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 }
 
 func (pg *VerifyMessagePage) updateButtonColors() {
-	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Gray2, pg.Theme.Color.Gray2
+	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.GrayText4, pg.Theme.Color.Gray2
 	pg.isEnabled = false
 
 	if pg.addressIsValid && components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {

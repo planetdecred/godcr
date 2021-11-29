@@ -175,11 +175,11 @@ func (sa *sendAmount) handle() {
 	sa.dcrAmountEditor.SetError(sa.amountErrorText)
 
 	if sa.amountErrorText != "" {
-		sa.dcrAmountEditor.LineColor, sa.dcrAmountEditor.TitleLabelColor = sa.Theme.Color.Danger, sa.Theme.Color.Danger
-		sa.usdAmountEditor.LineColor, sa.usdAmountEditor.TitleLabelColor = sa.Theme.Color.Danger, sa.Theme.Color.Danger
+		sa.dcrAmountEditor.LineColor = sa.Theme.Color.Danger
+		sa.usdAmountEditor.LineColor = sa.Theme.Color.Danger
 	} else {
-		sa.dcrAmountEditor.LineColor, sa.dcrAmountEditor.TitleLabelColor = sa.Theme.Color.Gray1, sa.Theme.Color.Gray3
-		sa.usdAmountEditor.LineColor, sa.usdAmountEditor.TitleLabelColor = sa.Theme.Color.Gray1, sa.Theme.Color.Gray3
+		sa.dcrAmountEditor.LineColor = sa.Theme.Color.Gray1
+		sa.usdAmountEditor.LineColor = sa.Theme.Color.Gray1
 	}
 
 	if sa.sendMax {

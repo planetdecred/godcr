@@ -133,7 +133,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 								return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										totalLabel := tp.Theme.Label(values.TextSize14, "Total")
-										totalLabel.Color = tp.Theme.Color.Gray3
+										totalLabel.Color = tp.Theme.Color.GrayText1
 										return totalLabel.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {

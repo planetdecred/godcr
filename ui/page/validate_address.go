@@ -266,7 +266,7 @@ func (pg *ValidateAddressPage) validateAddress() {
 func (pg *ValidateAddressPage) updateButtonColors() {
 	if !components.StringNotEmpty(pg.addressEditor.Editor.Text()) {
 		pg.validateBtn.Background = pg.Theme.Color.Gray2
-		pg.clearBtn.Color = pg.Theme.Color.Gray2
+		pg.clearBtn.Color = pg.Theme.Color.GrayText4
 		pg.isEnabled = false
 	} else {
 		pg.validateBtn.Background = pg.Theme.Color.Primary

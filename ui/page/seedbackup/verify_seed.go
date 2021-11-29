@@ -207,7 +207,7 @@ func (pg *VerifySeedPage) Layout(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize16, "Select the correct words to verify.")
-					label.Color = pg.Theme.Color.Gray3
+					label.Color = pg.Theme.Color.GrayText1
 					return label.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -263,7 +263,7 @@ func (pg *VerifySeedPage) seedListRow(gtx C, index int, multiSeed shuffledSeedWo
 
 func (pg *VerifySeedPage) seedButton(gtx C, index int, multiSeed shuffledSeedWords) D {
 	borderColor := pg.Theme.Color.Gray1
-	textColor := pg.Theme.Color.Gray2
+	textColor := pg.Theme.Color.GrayText2
 	if index == multiSeed.selectedIndex {
 		borderColor = pg.Theme.Color.Primary
 		textColor = pg.Theme.Color.Primary

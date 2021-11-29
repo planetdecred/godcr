@@ -196,7 +196,7 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							title := pg.Theme.Label(values.TextSize14, "Ticket Price")
-							title.Color = pg.Theme.Color.Gray2
+							title.Color = pg.Theme.Color.GrayText2
 							return title.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -211,7 +211,7 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 						layout.Rigid(func(gtx C) D {
 							secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
 							txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
-							txt.Color = pg.Theme.Color.Gray2
+							txt.Color = pg.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
 					)
@@ -272,7 +272,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				if len(pg.liveTickets) == 0 {
 					noLiveStake := pg.Theme.Label(values.TextSize16, "No live tickets yet.")
-					noLiveStake.Color = pg.Theme.Color.Gray2
+					noLiveStake.Color = pg.Theme.Color.GrayText3
 					return noLiveStake.Layout(gtx)
 				}
 				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
@@ -312,7 +312,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 					Bottom: values.MarginPadding14,
 				}.Layout(gtx, func(gtx C) D {
 					title := pg.Theme.Label(values.TextSize14, "Ticket Record")
-					title.Color = pg.Theme.Color.Gray2
+					title.Color = pg.Theme.Color.GrayText2
 
 					if pg.ticketOverview.All == 0 {
 						return pg.titleRow(gtx, title.Layout, func(gtx C) D { return D{} })

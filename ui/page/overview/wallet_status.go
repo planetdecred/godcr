@@ -115,7 +115,7 @@ func (pg *AppOverviewPage) syncStatusSection(gtx layout.Context) layout.Dimensio
 // syncBoxTitleRow lays out widgets in the title row inside the sync status box.
 func (pg *AppOverviewPage) syncBoxTitleRow(gtx layout.Context) layout.Dimensions {
 	title := pg.Theme.Body2(values.String(values.StrWalletStatus))
-	title.Color = pg.Theme.Color.Gray3
+	title.Color = pg.Theme.Color.GrayText1
 	statusLabel := pg.Theme.Body1(values.String(values.StrOffline))
 	pg.walletStatusIcon.Color = pg.Theme.Color.Danger
 	if pg.isConnnected {

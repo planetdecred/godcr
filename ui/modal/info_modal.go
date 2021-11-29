@@ -206,8 +206,8 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 		return layout.Inset{Top: values.MarginPaddingMinus5, Left: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
 			in.checkbox.TextSize = values.TextSize14
-			in.checkbox.Color = in.Theme.Color.Gray3
-			in.checkbox.IconColor = in.Theme.Color.Gray1
+			in.checkbox.Color = in.Theme.Color.GrayText1
+			in.checkbox.IconColor = in.Theme.Color.Gray2
 			if in.checkbox.CheckBox.Value {
 				in.checkbox.IconColor = in.Theme.Color.Primary
 			}

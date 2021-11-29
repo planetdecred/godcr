@@ -79,7 +79,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 						return layout.Inset{
 							Left: nd.leftInset,
 						}.Layout(gtx, func(gtx C) D {
-							textColor := nd.Theme.Color.Gray4
+							textColor := nd.Theme.Color.GrayText1
 							if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
 								textColor = nd.Theme.Color.DeepBlue
 							}

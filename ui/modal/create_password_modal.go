@@ -272,14 +272,14 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 							layout.Rigid(func(gtx C) D {
 								if cm.showWalletWarnInfo {
 									txt := cm.Theme.Label(values.MarginPadding12, "This spending password is for the new wallet only")
-									txt.Color = cm.Theme.Color.Gray4
+									txt.Color = cm.Theme.Color.GrayText1
 									return txt.Layout(gtx)
 								}
 								return layout.Dimensions{}
 							}),
 							layout.Rigid(func(gtx C) D {
 								txt := cm.Theme.Label(values.MarginPadding12, strconv.Itoa(cm.passwordEditor.Editor.Len()))
-								txt.Color = cm.Theme.Color.Gray4
+								txt.Color = cm.Theme.Color.GrayText1
 								return layout.E.Layout(gtx, txt.Layout)
 							}),
 						)

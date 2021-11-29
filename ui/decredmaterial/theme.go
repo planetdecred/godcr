@@ -60,10 +60,8 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 		Base:     material.NewTheme(fontCollection),
 		DarkMode: false,
 	}
-	t.Color = values.NewThemeColor(true)
+	t.Color = values.NewThemeColor(isDarkModeOn)
 	// t.setColorMode(isDarkModeOn)
-
-	// decredmaterial.NewThemeColor(true)
 
 	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
 	t.checkBoxUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
@@ -80,9 +78,9 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	return t
 }
 
-// func (t *Theme) SwitchDarkMode(isDarkModeOn bool) {
-// 	t.setColorMode(isDarkModeOn)
-// }
+func (t *Theme) SwitchDarkMode(isDarkModeOn bool) {
+	t.Color = values.NewThemeColor(isDarkModeOn)
+}
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
 	layout.Stack{
