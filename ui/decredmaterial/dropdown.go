@@ -15,13 +15,13 @@ type DropDown struct {
 	theme          *Theme
 	items          []DropDownItem
 	isOpen         bool
+	backdrop       *widget.Clickable
 	revs           bool
 	selectedIndex  int
 	color          color.NRGBA
 	background     color.NRGBA
 	dropdownIcon   *widget.Icon
 	navigationIcon *widget.Icon
-	backdrop       *widget.Clickable
 	clickable      *Clickable
 
 	group            uint
@@ -48,8 +48,8 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		background:     t.Color.Surface,
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
-		backdrop:       new(widget.Clickable),
 		clickable:      t.NewClickable(true),
+		backdrop:       new(widget.Clickable),
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
@@ -262,4 +262,23 @@ func (d *DropDown) drawLayout(gtx C, body layout.Widget) D {
 	}
 
 	return d.linearLayout.Layout2(gtx, body)
+}
+
+// Reslice the dropdowns
+func ResliceDropdown(dropdowns []*DropDown, indexToRemove int) []*DropDown {
+	return append(dropdowns[:indexToRemove], dropdowns[indexToRemove+1:]...)
+}
+
+// Display one dropdown at a time
+func DisplayOneDropdown(dropdowns ...*DropDown) {
+	var menus []*DropDown
+	for i, menu := range dropdowns {
+		if menu.clickable.Clicked() {
+			menu.isOpen = true
+			menus = ResliceDropdown(dropdowns, i)
+			for _, menusToClose := range menus {
+				menusToClose.isOpen = false
+			}
+		}
+	}
 }

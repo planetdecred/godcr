@@ -185,6 +185,8 @@ func (pg *ProposalsPage) Handle() {
 			pg.RefreshWindow()
 		})
 	}
+
+	decredmaterial.DisplayOneDropdown(pg.orderDropDown, pg.categoryDropDown)
 }
 
 func (pg *ProposalsPage) OnClose() {
