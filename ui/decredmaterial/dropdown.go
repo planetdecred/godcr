@@ -12,10 +12,10 @@ import (
 var MaxWidth = unit.Dp(800)
 
 type DropDown struct {
-	theme  *Theme
-	items  []DropDownItem
-	isOpen bool
-	//backdrop       *widget.Clickable
+	theme          *Theme
+	items          []DropDownItem
+	isOpen         bool
+	backdrop       *widget.Clickable
 	revs           bool
 	selectedIndex  int
 	color          color.NRGBA
@@ -49,7 +49,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
 		clickable:      t.NewClickable(true),
-		//backdrop:       new(widget.Clickable),
+		backdrop:       new(widget.Clickable),
 
 		group:            group,
 		closeAllDropdown: t.closeAllDropdownMenus,
@@ -102,11 +102,9 @@ func (d *DropDown) handleEvents() {
 		}
 	}
 
-	/*
-		for d.backdrop.Clicked() {
-			d.closeAllDropdown(d.group)
-		}
-	*/
+	for d.backdrop.Clicked() {
+		d.closeAllDropdown(d.group)
+	}
 }
 
 func (d *DropDown) Changed() bool {
@@ -207,12 +205,10 @@ func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 
 	if d.isOpen {
 		return layout.Stack{Alignment: alig}.Layout(gtx,
-			/*
-				layout.Expanded(func(gtx C) D {
-					gtx.Constraints.Min = gtx.Constraints.Max
-					return d.backdrop.Layout(gtx)
-				}),
-			*/
+			layout.Expanded(func(gtx C) D {
+				gtx.Constraints.Min = gtx.Constraints.Max
+				return d.backdrop.Layout(gtx)
+			}),
 			layout.Stacked(func(gtx C) D {
 				return layout.Inset{
 					Left:  unit.Dp(float32(iLeft)),
