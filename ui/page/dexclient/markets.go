@@ -7,7 +7,10 @@ import (
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
 
+	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
+	"github.com/planetdecred/godcr/ui/modal"
+	"github.com/planetdecred/godcr/ui/page/components"
 	"github.com/planetdecred/godcr/ui/values"
 )
 
@@ -22,6 +25,10 @@ type Page struct {
 	*load.Load
 	ctx       context.Context // page context
 	ctxCancel context.CancelFunc
+
+	addDexWidget *addDexWidget
+	login        decredmaterial.Button
+	initialize   decredmaterial.Button
 }
 
 // TODO: Add collapsible button to select a market.
@@ -36,7 +43,10 @@ func (pg *Page) dexMarket(mktName string) *core.Market {
 
 func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
-		Load: l,
+		Load:         l,
+		addDexWidget: newAddDexWidget(l),
+		login:        l.Theme.Button("Login"),
+		initialize:   l.Theme.Button("Start using now"),
 	}
 
 	return pg
@@ -47,7 +57,47 @@ func (pg *Page) ID() string {
 }
 
 func (pg *Page) Layout(gtx C) D {
-	return pg.registrationStatusLayout(gtx)
+	var body func(gtx C) D
+	switch {
+	case !pg.Dexc().Initialized() || !pg.Dexc().IsLoggedIn():
+		body = func(gtx C) D {
+			return pg.pageSections(gtx, pg.welcomeLayout)
+		}
+	case len(pg.Dexc().DEXServers()) == 0: // Connect a DEX to proceed. May require adding a wallet to pay the fee.
+		body = func(gtx C) D {
+			return pg.pageSections(gtx, pg.addDexWidget.layout)
+		}
+	default:
+		body = func(gtx C) D {
+			return pg.pageSections(gtx, pg.registrationStatusLayout)
+		}
+	}
+
+	return components.UniformPadding(gtx, body)
+}
+
+func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
+	return pg.Theme.Card().Layout(gtx, func(gtx C) D {
+		gtx.Constraints.Min.X = gtx.Constraints.Max.X
+		return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
+	})
+}
+
+func (pg *Page) welcomeLayout(gtx C) D {
+	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+			layout.Rigid(func(gtx C) D {
+				description := "Trade crypto peer-to-peer.\nNo trading fees. No KYC."
+				return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
+			}),
+			layout.Rigid(func(gtx C) D {
+				if !pg.Dexc().Initialized() {
+					return pg.initialize.Layout(gtx)
+				}
+				return pg.login.Layout(gtx)
+			}),
+		)
+	})
 }
 
 func (pg *Page) dex() *core.Exchange {
@@ -66,6 +116,7 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 	if dex == nil || dex.PendingFee == nil {
 		return pg.Theme.Label(values.TextSize14, "Ready to trade").Layout(gtx)
 	}
+
 	reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
 	return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
 		layout.Rigid(pg.Theme.Label(values.TextSize14, "Waiting for confirmations...").Layout),
@@ -85,17 +136,51 @@ func (pg *Page) OnResume() {
 	go pg.readNotifications()
 }
 
-func (pg *Page) Handle() {
-	switch {
-	case !pg.Dexc().Initialized(): // Must initialize to proceed.
-		pg.ChangeFragment(NewDexPasswordPage(pg.Load))
-	case !pg.Dexc().IsLoggedIn(): // Initialized client must log in.
-		pg.ChangeFragment(NewDexLoginPage(pg.Load))
-	case len(pg.Dexc().DEXServers()) == 0: // Connect a DEX to proceed. May require adding a wallet to pay the fee.
-		pg.ChangeFragment(NewAddDexPage(pg.Load))
-	}
-}
-
 func (pg *Page) OnClose() {
 	pg.ctxCancel()
+}
+
+func (pg *Page) Handle() {
+	if pg.login.Button.Clicked() {
+		modal.NewPasswordModal(pg.Load).
+			Title("Login").
+			Hint("App password").
+			NegativeButton(values.String(values.StrCancel), func() {}).
+			PositiveButton("Login", func(password string, pm *modal.PasswordModal) bool {
+				go func() {
+					err := pg.Dexc().Login([]byte(password))
+					if err != nil {
+						pm.SetError(err.Error())
+						pm.SetLoading(false)
+						return
+					}
+					pm.Dismiss()
+				}()
+				return false
+			}).Show()
+	}
+
+	if pg.initialize.Button.Clicked() {
+		modal.NewCreatePasswordModal(pg.Load).
+			Title("Set App Password").
+			SetDescription("Set your app password. This password will protect your DEX account keys and connected wallets.").
+			EnableName(false).
+			PasswordHint("Password").
+			ConfirmPasswordHint("Confirm password").
+			PasswordCreated(func(walletName, password string, m *modal.CreatePasswordModal) bool {
+				go func() {
+					err := pg.Dexc().InitializeWithPassword([]byte(password))
+					if err != nil {
+						m.SetError(err.Error())
+						m.SetLoading(false)
+						return
+					}
+					pg.Toast.Notify("App password created")
+					m.Dismiss()
+				}()
+				return false
+			}).Show()
+	}
+
+	pg.addDexWidget.handle()
 }
