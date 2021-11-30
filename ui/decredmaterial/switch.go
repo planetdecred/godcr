@@ -43,7 +43,7 @@ func (t *Theme) Switch() *Switch {
 	sw := &Switch{
 		clk: new(widget.Clickable),
 	}
-	sw.active, sw.inactive, sw.thumbColor = t.Color.Primary, t.Color.Gray2, t.Color.Surface
+	sw.active, sw.inactive, sw.thumbColor = t.Color.Primary, t.Color.Gray3, t.Color.White
 	return sw
 }
 

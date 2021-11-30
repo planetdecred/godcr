@@ -216,7 +216,7 @@ func (mp *MainPage) setLanguageSetting() {
 
 func (mp *MainPage) UpdateBalance() {
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	mp.usdExchangeSet = currencyExchangeValue == components.USDExchangeValue
+	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
 
 	totalBalance, err := mp.CalculateTotalWalletsBalance()
 	if err == nil {

@@ -45,7 +45,7 @@ type InfoModal struct {
 func NewInfoModal(l *load.Load) *InfoModal {
 	in := &InfoModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
+		randomID:     fmt.Sprintf("%s-%d", Info, decredmaterial.GenerateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.OutlineButton("Yes"),
 		btnNegative:  l.Theme.OutlineButton("No"),

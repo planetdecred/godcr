@@ -49,7 +49,7 @@ type CreatePasswordModal struct {
 func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm := &CreatePasswordModal{
 		Load:             l,
-		randomID:         fmt.Sprintf("%s-%d", CreateWallet, generateRandomNumber()),
+		randomID:         fmt.Sprintf("%s-%d", CreateWallet, decredmaterial.GenerateRandomNumber()),
 		modal:            *l.Theme.ModalFloatTitle(),
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button("Confirm"),

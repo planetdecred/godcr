@@ -24,10 +24,9 @@ import (
 )
 
 const (
-	Uint32Size       = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-	MaxInt32         = 1<<(Uint32Size-1) - 1
-	USDExchangeValue = "USD (Bittrex)"
-	WalletsPageID    = "Wallets"
+	Uint32Size    = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
+	MaxInt32      = 1<<(Uint32Size-1) - 1
+	WalletsPageID = "Wallets"
 )
 
 var MaxWidth = unit.Dp(800)

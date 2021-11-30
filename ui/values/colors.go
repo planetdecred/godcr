@@ -48,9 +48,10 @@ type Color struct {
 	Turquoise700     color.NRGBA
 	Turquoise800     color.NRGBA
 	Yellow           color.NRGBA
+	White            color.NRGBA
 }
 
-func NewThemeColor(darkMode bool) *Color {
+func SetThemeColor(darkMode bool) *Color {
 	c := &Color{}
 	c.defualtThemeColors()
 	if darkMode {
@@ -124,6 +125,7 @@ func (c *Color) defualtThemeColors() *Color {
 	c.Turquoise700 = rgb(0x00A05F)
 	c.Turquoise800 = rgb(0x008F52)
 	c.Yellow = rgb(0xffc84e)
+	c.White = rgb(0xffffff)
 
 	return c
 }

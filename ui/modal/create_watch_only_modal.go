@@ -42,7 +42,7 @@ type CreateWatchOnlyModal struct {
 func NewCreateWatchOnlyModal(l *load.Load) *CreateWatchOnlyModal {
 	cm := &CreateWatchOnlyModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, generateRandomNumber()),
+		randomID:     fmt.Sprintf("%s-%d", CreateWatchOnly, decredmaterial.GenerateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.Button(values.String(values.StrImport)),
 		btnNegative:  l.Theme.OutlineButton(values.String(values.StrCancel)),

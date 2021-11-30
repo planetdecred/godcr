@@ -33,7 +33,7 @@ func NewTextInputModal(l *load.Load) *TextInputModal {
 		isCancelable: true,
 	}
 
-	tm.randomID = fmt.Sprintf("%s-%d", TextInput, generateRandomNumber())
+	tm.randomID = fmt.Sprintf("%s-%d", TextInput, decredmaterial.GenerateRandomNumber())
 
 	tm.textInput = l.Theme.Editor(new(widget.Editor), "Hint")
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true

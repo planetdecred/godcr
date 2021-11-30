@@ -16,8 +16,6 @@ import (
 
 const SettingsPageID = "Settings"
 
-const DefaultExchangeValue = "none"
-
 type row struct {
 	title     string
 	clickable *decredmaterial.Clickable
@@ -35,9 +33,12 @@ type SettingsPage struct {
 	updateConnectToPeer *decredmaterial.Clickable
 	updateUserAgent     *decredmaterial.Clickable
 	changeStartupPass   *decredmaterial.Clickable
-	chevronRightIcon    *decredmaterial.Icon
-	backButton          decredmaterial.IconButton
-	infoButton          decredmaterial.IconButton
+	language            *decredmaterial.Clickable
+	currency            *decredmaterial.Clickable
+
+	chevronRightIcon *decredmaterial.Icon
+	backButton       decredmaterial.IconButton
+	infoButton       decredmaterial.IconButton
 
 	isDarkModeOn     *decredmaterial.Switch
 	spendUnconfirmed *decredmaterial.Switch
@@ -54,9 +55,6 @@ type SettingsPage struct {
 	peerAddr          string
 	agentValue        string
 	errorReceiver     chan error
-
-	currencyPreference *preference.ListPreference
-	languagePreference *preference.ListPreference
 }
 
 func NewSettingsPage(l *load.Load) *SettingsPage {
@@ -86,28 +84,11 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		updateConnectToPeer: l.Theme.NewClickable(false),
 		updateUserAgent:     l.Theme.NewClickable(false),
 		changeStartupPass:   l.Theme.NewClickable(false),
+		language:            l.Theme.NewClickable(false),
+		currency:            l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
-
-	languagePreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
-		load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
-		Title(values.StrLanguage).
-		UpdateValues(func() {
-			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
-		})
-	pg.languagePreference = languagePreference
-
-	currencyMap := make(map[string]string)
-	currencyMap[DefaultExchangeValue] = values.StrNone
-	currencyMap[components.USDExchangeValue] = values.StrUsdBittrex
-
-	currencyPreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
-		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue,
-		currencyMap).
-		Title(values.StrCurrencyConversion).
-		UpdateValues(func() {})
-	pg.currencyPreference = currencyPreference
 
 	pg.peerLabel = l.Theme.Body1("")
 	pg.peerLabel.Color = l.Theme.Color.GrayText2
@@ -152,14 +133,6 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 		return sp.Layout(gtx)
 	}
 
-	if pg.currencyPreference.IsShowing {
-		return pg.currencyPreference.Layout(gtx, components.UniformPadding(gtx, body))
-	}
-
-	if pg.languagePreference.IsShowing {
-		return pg.languagePreference.Layout(gtx, components.UniformPadding(gtx, body))
-	}
-
 	return components.UniformPadding(gtx, body)
 }
 
@@ -180,7 +153,7 @@ func (pg *SettingsPage) general() layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					currencyConversionRow := row{
 						title:     values.String(values.StrCurrencyConversion),
-						clickable: pg.currencyPreference.Clickable(),
+						clickable: pg.currency,
 						icon:      pg.chevronRightIcon,
 						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
@@ -190,7 +163,7 @@ func (pg *SettingsPage) general() layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					languageRow := row{
 						title:     values.String(values.StrLanguage),
-						clickable: pg.languagePreference.Clickable(),
+						clickable: pg.language,
 						icon:      pg.chevronRightIcon,
 						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey)),
 					}
@@ -353,7 +326,9 @@ func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
-						return row.icon.Layout(gtx, values.MarginPadding22)
+						ic := row.icon
+						ic.Color = pg.Theme.Color.Gray3
+						return ic.Layout(gtx, values.MarginPadding22)
 					}),
 				)
 			})
@@ -397,13 +372,30 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 }
 
 func (pg *SettingsPage) Handle() {
-	pg.languagePreference.Handle()
-	pg.currencyPreference.Handle()
+
+	for pg.language.Clicked() {
+		preference.NewListPreference(pg.WL.Wallet, pg.Load,
+			load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
+			Title(values.StrLanguage).
+			UpdateValues(func() {
+				values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
+			}).Show()
+		break
+	}
+
+	for pg.currency.Clicked() {
+		preference.NewListPreference(pg.WL.Wallet, pg.Load,
+			dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue,
+			values.ArrExchangeCurrencies).
+			Title(values.StrCurrencyConversion).
+			UpdateValues(func() {}).
+			Show()
+		break
+	}
 
 	if pg.isDarkModeOn.Changed() {
 		pg.wal.SaveConfigValueForKey(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())
 		pg.RefreshTheme()
-		pg.RefreshWindow()
 	}
 
 	if pg.spendUnconfirmed.Changed() {

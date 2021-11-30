@@ -41,7 +41,7 @@ type PasswordModal struct {
 func NewPasswordModal(l *load.Load) *PasswordModal {
 	pm := &PasswordModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Password, generateRandomNumber()),
+		randomID:     fmt.Sprintf("%s-%d", Password, decredmaterial.GenerateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.Button("Confirm"),
 		btnNegative:  l.Theme.OutlineButton("Cancel"),
