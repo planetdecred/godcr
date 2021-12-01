@@ -104,8 +104,7 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 		bestBlock: l.WL.MultiWallet.GetBestBlock(),
 	}
 
-	pg.toMixer = l.Theme.PlainIconButton(l.Icons.NavigationArrowForward)
-	pg.toMixer.Color = l.Theme.Color.Gray1
+	pg.toMixer = l.Theme.IconButton(l.Icons.NavigationArrowForward)
 	pg.toMixer.Size = values.MarginPadding24
 	pg.toMixer.Inset = layout.UniformInset(values.MarginPadding4)
 

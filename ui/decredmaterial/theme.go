@@ -31,6 +31,7 @@ type Theme struct {
 	Shaper text.Shaper
 	Base   *material.Theme
 	Color  *values.Color
+	Styles *values.WidgetStyles
 
 	Icon struct {
 		ContentCreate *widget.Icon
@@ -58,9 +59,11 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t := &Theme{
 		Shaper:   text.NewCache(fontCollection),
 		Base:     material.NewTheme(fontCollection),
-		DarkMode: false,
+		DarkMode: isDarkModeOn,
+		Color:    &values.Color{},
+		Styles:   values.DefaultWidgetStyles(),
 	}
-	t.Color = values.SetThemeColor(isDarkModeOn)
+	t.SwitchDarkMode(isDarkModeOn)
 	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
 	t.checkBoxUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
 	t.radioCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))
@@ -77,7 +80,25 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 }
 
 func (t *Theme) SwitchDarkMode(isDarkModeOn bool) {
-	t.Color = values.SetThemeColor(isDarkModeOn)
+	t.Color.DefualtThemeColors()
+	if isDarkModeOn {
+		t.Color.DarkThemeColors() // override defaults with dark themed colors
+	}
+	t.UpdateStyles()
+}
+
+// UpdateStyles update the style definition for different widgets. This should
+// be done whenever the base theme changes to ensure that the style definitions
+// use the values for the latest theme.
+func (t *Theme) UpdateStyles() {
+	// update switch style colors
+	t.Styles.SwitchStyle.ActiveColor = t.Color.Primary
+	t.Styles.SwitchStyle.InactiveColor = t.Color.Gray3
+	t.Styles.SwitchStyle.ThumbColor = t.Color.White
+
+	// update icon button style colors
+	t.Styles.IconButtonColorStyle.Background = color.NRGBA{}
+	t.Styles.IconButtonColorStyle.Foreground = t.Color.Gray1
 }
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {

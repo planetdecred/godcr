@@ -14,16 +14,15 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 type Switch struct {
-	active     color.NRGBA
-	inactive   color.NRGBA
-	thumbColor color.NRGBA
-	disabled   bool
-	value      bool
-	changed    bool
-	clk        *widget.Clickable
+	style    *values.SwitchStyle
+	disabled bool
+	value    bool
+	changed  bool
+	clk      *widget.Clickable
 }
 
 type SwitchItem struct {
@@ -40,11 +39,10 @@ type SwitchButtonText struct {
 }
 
 func (t *Theme) Switch() *Switch {
-	sw := &Switch{
-		clk: new(widget.Clickable),
+	return &Switch{
+		clk:   new(widget.Clickable),
+		style: t.Styles.SwitchStyle,
 	}
-	sw.active, sw.inactive, sw.thumbColor = t.Color.Primary, t.Color.Gray3, t.Color.White
-	return sw
 }
 
 func (t *Theme) SwitchButtonText(i []SwitchItem) *SwitchButtonText {
@@ -83,9 +81,14 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 		Y: float32(trackHeight),
 	}}
 
-	col := s.inactive
+	activeColor, inactiveColor, thumbColor := s.style.ActiveColor, s.style.InactiveColor, s.style.ThumbColor
+	if s.disabled {
+		activeColor, inactiveColor, thumbColor = Disabled(activeColor), Disabled(inactiveColor), Disabled(thumbColor)
+	}
+
+	col := inactiveColor
 	if s.IsChecked() {
-		col = s.active
+		col = activeColor
 	}
 
 	trackColor := col
@@ -114,7 +117,7 @@ func (s *Switch) Layout(gtx layout.Context) layout.Dimensions {
 		}.Op(gtx.Ops))
 
 	// Draw thumb.
-	paint.FillShape(gtx.Ops, s.thumbColor,
+	paint.FillShape(gtx.Ops, thumbColor,
 		clip.Circle{
 			Center: f32.Point{X: thumbRadius, Y: thumbRadius},
 			Radius: thumbRadius,
@@ -152,18 +155,8 @@ func (s *Switch) SetChecked(value bool) {
 	s.value = value
 }
 
-func (s *Switch) SetThumbColor(color color.NRGBA) {
-	s.thumbColor = color
-}
-
-func (s *Switch) SetTrackColor(activeColor, inactiveColor color.NRGBA) {
-	s.inactive, s.active = inactiveColor, activeColor
-}
-
-func (s *Switch) Disabled() {
-	s.disabled = true
-	s.SetTrackColor(Disabled(s.active), Disabled(s.inactive))
-	s.SetThumbColor(Disabled(s.thumbColor))
+func (s *Switch) SetEnabled(value bool) {
+	s.disabled = value
 }
 
 func (s *Switch) handleClickEvent() {

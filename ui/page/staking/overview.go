@@ -77,7 +77,7 @@ func (pg *Page) OnResume() {
 
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
-	pg.autoPurchaseEnabled.Disabled()
+	pg.autoPurchaseEnabled.SetEnabled(false)
 }
 
 func (pg *Page) loadPageData() {

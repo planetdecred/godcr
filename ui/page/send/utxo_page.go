@@ -84,7 +84,7 @@ func (pg *UTXOPage) Handle() {
 			}
 			icoBtn := pg.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ContentContentCopy)))
 			icoBtn.Inset, icoBtn.Size = layout.UniformInset(values.MarginPadding5), values.MarginPadding20
-			icoBtn.Background = pg.Theme.Color.Gray4
+			icoBtn.ChangeColorStyle(&values.ColorStyle{Background: pg.Theme.Color.Gray4}) // TODO: Set foreground color too?
 			pg.copyButtons[i] = icoBtn
 		}
 		pg.calculateAmountAndFeeUTXO()

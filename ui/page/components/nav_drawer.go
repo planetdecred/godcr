@@ -94,10 +94,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Flexed(1, func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := nd.activeDrawerBtn
-				btn.Color = nd.Theme.Color.Gray1
-
-				return btn.Layout(gtx)
+				return nd.activeDrawerBtn.Layout(gtx)
 			})
 		}),
 	)

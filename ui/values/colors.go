@@ -51,16 +51,7 @@ type Color struct {
 	White            color.NRGBA
 }
 
-func SetThemeColor(darkMode bool) *Color {
-	c := &Color{}
-	c.defualtThemeColors()
-	if darkMode {
-		c.darkThemeColors()
-	}
-	return c
-}
-
-func (c *Color) darkThemeColors() {
+func (c *Color) DarkThemeColors() {
 	c.Primary = rgb(0x57B6FF)
 
 	// text colors
@@ -80,7 +71,7 @@ func (c *Color) darkThemeColors() {
 	c.Surface = rgb(0x252525)
 }
 
-func (c *Color) defualtThemeColors() *Color {
+func (c *Color) DefualtThemeColors() *Color {
 	c.Primary = rgb(0x2970ff)
 	c.Primary50 = rgb(0xE3F2FF)
 	c.PrimaryHighlight = rgb(0x1B41B3)

@@ -77,8 +77,7 @@ func NewMainPage(l *load.Load) *MainPage {
 		Load: l,
 	}
 
-	mp.hideBalanceItem.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
-	mp.hideBalanceItem.hideBalanceButton.Color = mp.Theme.Color.Gray1
+	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Icons.ConcealIcon)
 	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
 	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
@@ -176,8 +175,8 @@ func (mp *MainPage) initNavItems() {
 				PageID:        MorePageID,
 			},
 		},
-		MinimizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowBack),
-		MaximizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowForward),
+		MinimizeNavDrawerButton: mp.Theme.IconButton(mp.Icons.NavigationArrowBack),
+		MaximizeNavDrawerButton: mp.Theme.IconButton(mp.Icons.NavigationArrowForward),
 	}
 }
 

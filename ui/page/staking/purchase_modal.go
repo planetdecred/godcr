@@ -54,8 +54,8 @@ func newStakingModal(l *load.Load) *stakingModal {
 		cancelPurchase:   l.Theme.OutlineButton("Cancel"),
 		stakeBtn:         l.Theme.Button("Stake"),
 		modal:            *l.Theme.ModalFloatTitle(),
-		increment:        l.Theme.PlainIconButton(l.Icons.ContentAdd),
-		decrement:        l.Theme.PlainIconButton(l.Icons.ContentRemove),
+		increment:        l.Theme.IconButton(l.Icons.ContentAdd),
+		decrement:        l.Theme.IconButton(l.Icons.ContentRemove),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 	}
@@ -64,7 +64,8 @@ func newStakingModal(l *load.Load) *stakingModal {
 	tp.tickets.Editor.Alignment = text.Middle
 	tp.tickets.Editor.SetText("1")
 
-	tp.increment.Color, tp.decrement.Color = l.Theme.Color.DeepBlue, l.Theme.Color.Gray2
+	tp.increment.ChangeColorStyle(&values.ColorStyle{Foreground: tp.Theme.Color.DeepBlue})
+	tp.decrement.ChangeColorStyle(&values.ColorStyle{Foreground: tp.Theme.Color.Gray2})
 	tp.increment.Size, tp.decrement.Size = values.TextSize18, values.TextSize18
 
 	tp.modal.SetPadding(values.MarginPadding0)
@@ -351,7 +352,7 @@ func (tp *stakingModal) Handle() {
 
 	// increment the ticket value
 	if tp.increment.Button.Clicked() {
-		tp.decrement.Color = tp.Theme.Color.Text
+		tp.decrement.ChangeColorStyle(&values.ColorStyle{Foreground: tp.Theme.Color.Text})
 		value, err := strconv.Atoi(tp.tickets.Editor.Text())
 		if err != nil {
 			return
@@ -368,7 +369,7 @@ func (tp *stakingModal) Handle() {
 		}
 		value--
 		if value < 1 {
-			tp.decrement.Color = tp.Theme.Color.Gray2
+			tp.decrement.ChangeColorStyle(&values.ColorStyle{Foreground: tp.Theme.Color.Gray2})
 			return
 		}
 		tp.tickets.Editor.SetText(fmt.Sprintf("%d", value))

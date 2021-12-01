@@ -108,13 +108,12 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.GrayText2
 
 	pg.iconButton = decredmaterial.IconButton{
-		IconButtonStyle: material.IconButtonStyle{
-			Size:       unit.Dp(25),
-			Background: color.NRGBA{},
-			Color:      pg.Theme.Color.Gray1,
-			Inset:      layout.UniformInset(unit.Dp(0)),
+		IconButtonStyle: decredmaterial.IconButtonStyle{
+			Size:  unit.Dp(25),
+			Inset: layout.UniformInset(unit.Dp(0)),
 		},
 	}
+	pg.iconButton.ChangeColorStyle(pg.Theme.Styles.IconButtonColorStyle)
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
@@ -164,15 +163,17 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 
 		if wal.IsWatchingOnlyWallet() {
 			moreBtn := decredmaterial.IconButton{
-				IconButtonStyle: material.IconButtonStyle{
-					Button:     new(widget.Clickable),
-					Icon:       pg.Icons.NavigationMore,
-					Size:       values.MarginPadding25,
-					Background: color.NRGBA{},
-					Color:      pg.Theme.Color.Text,
-					Inset:      layout.UniformInset(values.MarginPadding0),
+				IconButtonStyle: decredmaterial.IconButtonStyle{
+					Button: new(widget.Clickable),
+					Icon:   pg.Icons.NavigationMore,
+					Size:   values.MarginPadding25,
+					Inset:  layout.UniformInset(values.MarginPadding0),
 				},
 			}
+			moreBtn.ChangeColorStyle(&values.ColorStyle{
+				Background: color.NRGBA{},
+				Foreground: pg.Theme.Color.Text,
+			})
 			listItem.moreButton = moreBtn
 		} else {
 			listItem.addAcctClickable = pg.Theme.NewClickable(true)

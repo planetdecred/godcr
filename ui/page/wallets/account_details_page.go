@@ -51,7 +51,7 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		backButton:    l.Theme.PlainIconButton(l.Icons.NavigationArrowBack),
+		backButton:    l.Theme.IconButton(l.Icons.NavigationArrowBack),
 		renameAccount: l.Theme.NewClickable(false),
 	}
 

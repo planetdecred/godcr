@@ -58,7 +58,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		},
 		info:           l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           l.Theme.Button("Copy"),
-		more:           l.Theme.PlainIconButton(l.Icons.NavMoreIcon),
+		more:           l.Theme.IconButton(l.Icons.NavMoreIcon),
 		newAddr:        l.Theme.Button("Generate new address"),
 		receiveAddress: l.Theme.Label(values.TextSize20, ""),
 		card:           l.Theme.Card(),
@@ -75,7 +75,6 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		Left:   values.MarginPadding16,
 		Right:  values.MarginPadding16,
 	}
-	pg.more.Color = pg.Theme.Color.Gray1
 	pg.more.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.newAddr.Inset = layout.Inset{
 		Top:    values.MarginPadding12,

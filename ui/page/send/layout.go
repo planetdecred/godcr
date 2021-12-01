@@ -35,8 +35,7 @@ func (pg *Page) initLayoutWidgets() {
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.moreOption = pg.Theme.PlainIconButton(pg.Icons.NavMoreIcon)
-	pg.moreOption.Color = pg.Theme.Color.Gray1
+	pg.moreOption = pg.Theme.IconButton(pg.Icons.NavMoreIcon)
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.retryExchange = pg.Theme.Button("Retry")

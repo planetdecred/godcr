@@ -28,10 +28,8 @@ type SubPage struct {
 }
 
 func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmaterial.IconButton) {
-	backButton := l.Theme.PlainIconButton(l.Icons.NavigationArrowBack)
-	infoButton := l.Theme.PlainIconButton(l.Icons.ActionInfo)
-
-	backButton.Color, infoButton.Color = l.Theme.Color.Gray1, l.Theme.Color.Gray1
+	backButton := l.Theme.IconButton(l.Icons.NavigationArrowBack)
+	infoButton := l.Theme.IconButton(l.Icons.ActionInfo)
 
 	m24 := values.MarginPadding24
 	backButton.Size, infoButton.Size = m24, m24

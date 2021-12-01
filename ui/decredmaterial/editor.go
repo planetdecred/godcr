@@ -120,22 +120,20 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m5: unit.Dp(5),
 
 		editorIconButton: IconButton{
-			material.IconButtonStyle{
-				Size:       values.MarginPadding24,
-				Background: color.NRGBA{},
-				Color:      t.Color.Gray1,
-				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
+			IconButtonStyle{
+				Size:   values.MarginPadding24,
+				Inset:  layout.UniformInset(m0),
+				Button: new(widget.Clickable),
 			},
+			t.Styles.IconButtonColorStyle, // automatically changes on theme change, to use fixed colors, pass a &values.ColorStyle{} instead.
 		},
 		showHidePassword: IconButton{
-			material.IconButtonStyle{
-				Size:       values.MarginPadding24,
-				Background: color.NRGBA{},
-				Color:      t.Color.Gray1,
-				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
+			IconButtonStyle{
+				Size:   values.MarginPadding24,
+				Inset:  layout.UniformInset(m0),
+				Button: new(widget.Clickable),
 			},
+			t.Styles.IconButtonColorStyle,
 		},
 		CustomButton: t.Button(""),
 	}

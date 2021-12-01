@@ -6,7 +6,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -52,13 +51,15 @@ func (t *Theme) CollapsibleWithOption() *CollapsibleWithOption {
 		expandedIcon:    t.collapseIcon,
 		collapsedIcon:   t.expandIcon,
 		moreIconButton: IconButton{
-			IconButtonStyle: material.IconButtonStyle{
-				Button:     new(widget.Clickable),
-				Icon:       t.navMoreIcon,
-				Size:       unit.Dp(25),
+			IconButtonStyle{
+				Button: new(widget.Clickable),
+				Icon:   t.navMoreIcon,
+				Size:   unit.Dp(25),
+				Inset:  layout.UniformInset(unit.Dp(0)),
+			},
+			&values.ColorStyle{
 				Background: color.NRGBA{},
-				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(unit.Dp(0)),
+				Foreground: t.Color.Text,
 			},
 		},
 	}
