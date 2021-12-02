@@ -33,12 +33,14 @@ type walletInfoWidget struct {
 	coinID   uint32
 }
 
-func newDexCreateWalletWidget(l *load.Load) *dexCreateWalletWidget {
+func newDexCreateWalletWidget(l *load.Load, walInfoWdg *walletInfoWidget, walletCreated func()) *dexCreateWalletWidget {
 	dcw := &dexCreateWalletWidget{
 		Load:            l,
 		walletPassword:  l.Theme.EditorPassword(new(widget.Editor), "Wallet Password"),
 		appPassword:     l.Theme.EditorPassword(new(widget.Editor), "App Password"),
 		createNewWallet: l.Theme.Button("Add"),
+		walletInfoWdg:   walInfoWdg,
+		walletCreated:   walletCreated,
 	}
 
 	dcw.createNewWallet.TextSize = values.TextSize12

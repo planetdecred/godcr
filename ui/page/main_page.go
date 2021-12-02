@@ -25,8 +25,7 @@ import (
 )
 
 const (
-	MainPageID           = "Main"
-	HideBalanceConfigKey = "hide_balance"
+	MainPageID = "Main"
 )
 
 var (

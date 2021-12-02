@@ -9,6 +9,7 @@ import (
 	"decred.org/dcrdex/client/core"
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
@@ -25,7 +26,6 @@ type addDexWidget struct {
 	isSending        bool
 	cert             decredmaterial.Editor
 	createWalletWdg  *dexCreateWalletWidget
-	showCreateWallet bool
 }
 
 func newAddDexWidget(l *load.Load) *addDexWidget {
@@ -34,14 +34,15 @@ func newAddDexWidget(l *load.Load) *addDexWidget {
 		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
 		addDexServer:     l.Theme.Button("Submit"),
 		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
-		createWalletWdg:  newDexCreateWalletWidget(l),
 	}
 
 	dwg.addDexServer.TextSize = values.TextSize12
 	dwg.addDexServer.Background = l.Theme.Color.Primary
 
-	dwg.dexServerAddress.Editor.SetText(testDexHost)
 	dwg.dexServerAddress.Editor.SingleLine = true
+	if l.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
+		dwg.dexServerAddress.Editor.SetText(testDexHost)
+	}
 
 	return dwg
 }
@@ -81,26 +82,23 @@ func (dwg *addDexWidget) handle() {
 				return
 			}
 
-			dwg.createWalletWdg.walletInfoWdg = &walletInfoWidget{
-				image:    components.CoinImageBySymbol(&dwg.Load.Icons, feeAssetName),
-				coinName: feeAssetName,
-				coinID:   feeAsset.ID,
-			}
-			dwg.createWalletWdg.walletCreated = func() {
-				dwg.showCreateWallet = false
-				dwg.completeRegistration(dex, feeAssetName, cert)
-			}
-			dwg.showCreateWallet = true
+			dwg.createWalletWdg = newDexCreateWalletWidget(dwg.Load,
+				&walletInfoWidget{
+					image:    components.CoinImageBySymbol(&dwg.Load.Icons, feeAssetName),
+					coinName: feeAssetName,
+					coinID:   feeAsset.ID,
+				},
+				func() { dwg.completeRegistration(dex, feeAssetName, cert) })
 		}()
 	}
 
-	if dwg.showCreateWallet {
+	if dwg.createWalletWdg != nil {
 		dwg.createWalletWdg.handle()
 	}
 }
 
 func (dwg *addDexWidget) layout(gtx layout.Context) D {
-	if dwg.showCreateWallet {
+	if dwg.createWalletWdg != nil {
 		return dwg.createWalletWdg.layout(gtx)
 	}
 
@@ -153,6 +151,7 @@ func (dwg *addDexWidget) completeRegistration(dex *core.Exchange, feeAssetName s
 					return
 				}
 				pm.Dismiss()
+				pm.ChangeFragment(NewMarketPage(pm.Load))
 			}()
 
 			return false

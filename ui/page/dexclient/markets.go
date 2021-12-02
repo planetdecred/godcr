@@ -43,10 +43,9 @@ func (pg *Page) dexMarket(mktName string) *core.Market {
 
 func NewMarketPage(l *load.Load) *Page {
 	pg := &Page{
-		Load:         l,
-		addDexWidget: newAddDexWidget(l),
-		login:        l.Theme.Button("Login"),
-		initialize:   l.Theme.Button("Start using now"),
+		Load:       l,
+		login:      l.Theme.Button("Login"),
+		initialize: l.Theme.Button("Start using now"),
 	}
 
 	return pg
@@ -63,7 +62,7 @@ func (pg *Page) Layout(gtx C) D {
 		body = func(gtx C) D {
 			return pg.pageSections(gtx, pg.welcomeLayout)
 		}
-	case len(pg.Dexc().DEXServers()) == 0: // Connect a DEX to proceed. May require adding a wallet to pay the fee.
+	case pg.addDexWidget != nil:
 		body = func(gtx C) D {
 			return pg.pageSections(gtx, pg.addDexWidget.layout)
 		}
@@ -114,7 +113,8 @@ func (pg *Page) dex() *core.Exchange {
 func (pg *Page) registrationStatusLayout(gtx C) D {
 	dex := pg.dex()
 	if dex == nil || dex.PendingFee == nil {
-		return pg.Theme.Label(values.TextSize14, "Ready to trade").Layout(gtx)
+		// TODO: render another UI by dex and wallet status
+		return D{}
 	}
 
 	reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
@@ -134,6 +134,10 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 func (pg *Page) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
+
+	if len(pg.Dexc().DEXServers()) == 0 { // Connect a DEX to proceed. May require adding a wallet to pay the fee.
+		pg.addDexWidget = newAddDexWidget(pg.Load)
+	}
 }
 
 func (pg *Page) OnClose() {
@@ -182,5 +186,7 @@ func (pg *Page) Handle() {
 			}).Show()
 	}
 
-	pg.addDexWidget.handle()
+	if pg.addDexWidget != nil {
+		pg.addDexWidget.handle()
+	}
 }

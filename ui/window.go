@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -22,7 +21,6 @@ import (
 // Window represents the app window (and UI in general). There should only be one.
 // Window uses an internal state of booleans to determine what the window is currently displaying.
 type Window struct {
-	appCtx     context.Context
 	ops        *op.Ops
 	invalidate chan struct{}
 
@@ -98,7 +96,6 @@ func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win.invalidate = make(chan struct{}, 2)
 
 	win.wallet = wal
-
 	win.states.loading = false
 
 	win.keyEvents = make(chan *key.Event)

@@ -6,7 +6,6 @@
 package load
 
 import (
-	"context"
 	"errors"
 
 	"golang.org/x/exp/shiny/materialdesign/icons"
@@ -67,7 +66,6 @@ type Icons struct {
 type Load struct {
 	Theme *decredmaterial.Theme
 
-	AppCtx   context.Context
 	WL       *WalletLoad
 	Receiver *Receiver
 	Printer  *message.Printer
