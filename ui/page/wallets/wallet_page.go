@@ -179,7 +179,7 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 			listItem.addAcctClickable = pg.Theme.NewClickable(true)
 
 			backupClickable := pg.Theme.NewClickable(false)
-			backupClickable.Color = pg.Theme.Color.OrangeRipple
+			backupClickable.ChangeStyle(&values.ClickableStyle{Color: pg.Theme.Color.OrangeRipple})
 			backupClickable.Radius = decredmaterial.CornerRadius{BottomRight: 14, BottomLeft: 14}
 			listItem.backupAcctClickable = backupClickable
 

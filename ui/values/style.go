@@ -19,17 +19,28 @@ type ColorStyle struct {
 	Foreground color.NRGBA
 }
 
+// ClickableStyle defines display properties that may be used to style a
+// Clickable widget.
+type ClickableStyle struct {
+	Color      color.NRGBA
+	HoverColor color.NRGBA
+}
+
 // WidgetStyles is a collection of various widget styles.
 type WidgetStyles struct {
-	SwitchStyle          *SwitchStyle
-	IconButtonColorStyle *ColorStyle
+	SwitchStyle            *SwitchStyle
+	IconButtonColorStyle   *ColorStyle
+	ClickableStyle         *ClickableStyle
+	DropdownClickableStyle *ClickableStyle
 }
 
 // DefaultWidgetStyles returns a new collection of widget styles with default
 // values.
 func DefaultWidgetStyles() *WidgetStyles {
 	return &WidgetStyles{
-		SwitchStyle:          &SwitchStyle{},
-		IconButtonColorStyle: &ColorStyle{},
+		SwitchStyle:            &SwitchStyle{},
+		IconButtonColorStyle:   &ColorStyle{},
+		ClickableStyle:         &ClickableStyle{},
+		DropdownClickableStyle: &ClickableStyle{},
 	}
 }

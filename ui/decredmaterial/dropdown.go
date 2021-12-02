@@ -62,7 +62,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		shadow:  t.Shadow(),
 	}
 
-	d.clickable.HoverColor = Hovered(t.Color.Gray3)
+	d.clickable.ChangeStyle(t.Styles.DropdownClickableStyle)
 	d.clickable.Radius = Radius(8)
 
 	for i := range items {

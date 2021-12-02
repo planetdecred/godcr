@@ -99,6 +99,13 @@ func (t *Theme) UpdateStyles() {
 	// update icon button style colors
 	t.Styles.IconButtonColorStyle.Background = color.NRGBA{}
 	t.Styles.IconButtonColorStyle.Foreground = t.Color.Gray1
+
+	// update clickable colors
+	t.Styles.ClickableStyle.Color = t.Color.SurfaceHighlight
+	t.Styles.ClickableStyle.HoverColor = t.Color.Gray5
+	// dropdown clickable colors
+	t.Styles.DropdownClickableStyle.Color = t.Color.SurfaceHighlight
+	t.Styles.DropdownClickableStyle.HoverColor = Hovered(t.Color.Gray3)
 }
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {
