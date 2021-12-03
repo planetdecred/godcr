@@ -557,6 +557,10 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 								}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										img := mp.Icons.Logo
+										if mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+											img = mp.Icons.LogoDarkMode
+										}
+
 										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
 											func(gtx C) D {
 												return img.Layout24dp(gtx)

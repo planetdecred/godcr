@@ -48,7 +48,8 @@ type Icons struct {
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, ArrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon,
-	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon *decredmaterial.Image
+	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon,
+	LogoDarkMode, TimerDarkMode *decredmaterial.Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -217,6 +218,8 @@ func loadIcons() Icons {
 		DecredSymbol2:            decredmaterial.NewImage(decredIcons["ic_decred02"]),
 		GovernanceActiveIcon:     decredmaterial.NewImage(decredIcons["governance_active"]),
 		GovernanceInactiveIcon:   decredmaterial.NewImage(decredIcons["governance_inactive"]),
+		LogoDarkMode:             decredmaterial.NewImage(decredIcons["logo_darkmode"]),
+		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
 	}
 	return ic
 }

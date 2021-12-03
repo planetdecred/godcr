@@ -128,7 +128,7 @@ func (pg *LogPage) Layout(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				gtx.Constraints.Min.Y = gtx.Constraints.Max.Y
 				return pg.Theme.List(pg.logList).Layout(gtx, 1, func(gtx C, index int) D {
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 								return pg.Theme.Body1(pg.fullLog).Layout(gtx)

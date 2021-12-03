@@ -19,14 +19,11 @@ const StartPageID = "start_page"
 type startPage struct {
 	*load.Load
 
-	loading bool
-
 	decredSymbol  *decredmaterial.Image
-	networkType   decredmaterial.Label
-	loadStatus    decredmaterial.Label
-	welcomeText   decredmaterial.Label
 	createButton  decredmaterial.Button
 	restoreButton decredmaterial.Button
+
+	loading bool
 }
 
 func NewStartPage(l *load.Load) load.Page {
@@ -35,16 +32,10 @@ func NewStartPage(l *load.Load) load.Page {
 
 		loading: true,
 
-		decredSymbol: l.Icons.DecredSymbolIcon,
-		networkType:  l.Theme.Label(values.TextSize20, "testnet"),
-		loadStatus:   l.Theme.Label(values.TextSize20, "Loading"),
-		welcomeText:  l.Theme.Label(values.TextSize24, "Welcome to Decred Wallet, a secure & open-source mobile wallet."),
-
+		decredSymbol:  l.Icons.DecredSymbolIcon,
 		createButton:  l.Theme.Button("Create a new wallet"),
 		restoreButton: l.Theme.Button("Restore an existing wallet"),
 	}
-
-	sp.networkType.Font.Weight = text.Medium
 
 	return sp
 }
@@ -61,8 +52,6 @@ func (sp *startPage) OnResume() {
 	sp.RefreshTheme()
 
 	if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
-		sp.loadStatus.Text = "Opening wallets"
-
 		if sp.WL.MultiWallet.IsStartupSecuritySet() {
 			sp.unlock()
 		} else {
@@ -178,14 +167,26 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 					})
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return sp.networkType.Layout(gtx)
+					netType := sp.WL.Wallet.Net
+					if sp.WL.Wallet.Net == "testnet3" {
+						netType = "Testnet"
+					}
+					nType := sp.Theme.Label(values.TextSize20, netType)
+					nType.Font.Weight = text.Medium
+					return nType.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					if sp.loading {
-						return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, sp.loadStatus.Layout)
+						loadStatus := sp.Theme.Label(values.TextSize20, "Loading")
+						if sp.WL.MultiWallet.LoadedWalletsCount() > 0 {
+							loadStatus.Text = "Opening wallets"
+						}
+
+						return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, loadStatus.Layout)
 					}
 
-					return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, sp.welcomeText.Layout)
+					welcomeText := sp.Theme.Label(values.TextSize24, "Welcome to Decred Wallet, a secure & open-source mobile wallet.")
+					return layout.Inset{Top: values.MarginPadding24}.Layout(gtx, welcomeText.Layout)
 				}),
 			)
 		}),

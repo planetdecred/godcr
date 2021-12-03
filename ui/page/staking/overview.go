@@ -205,6 +205,9 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 								Right: values.MarginPadding4,
 							}.Layout(gtx, func(gtx C) D {
 								ic := pg.Icons.TimerIcon
+								if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+									ic = pg.Icons.TimerDarkMode
+								}
 								return ic.Layout12dp(gtx)
 							})
 						}),

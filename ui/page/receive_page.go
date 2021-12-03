@@ -207,7 +207,7 @@ func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				return pg.Theme.List(pg.scrollContainer).Layout(gtx, 1, func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 							return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
 								return pageContent[i](gtx)
