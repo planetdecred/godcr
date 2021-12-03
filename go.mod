@@ -30,7 +30,4 @@ require (
 	golang.org/x/text v0.3.7
 )
 
-replace (
-	github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211112050550-d0810081daec
-	github.com/planetdecred/dcrlibwallet/dexdcr => github.com/itswisdomagain/dcrlibwallet/dexdcr v0.0.0-20211112050550-d0810081daec
-)
+replace github.com/planetdecred/dcrlibwallet => github.com/itswisdomagain/dcrlibwallet v1.0.0-rc1.0.20211203085346-c04212c93a13
