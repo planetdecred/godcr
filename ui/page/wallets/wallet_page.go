@@ -485,6 +485,7 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 											Right: values.MarginPadding10,
 											Left:  values.MarginPadding38,
 										}.Layout(gtx, func(gtx C) D {
+											pg.addAcctIcon.Color = pg.Theme.Color.Gray1
 											return pg.addAcctIcon.Layout(gtx, values.MarginPadding25)
 										})
 									}),

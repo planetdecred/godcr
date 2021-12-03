@@ -125,6 +125,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return in.Layout(gtx, func(gtx C) D {
+								pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
 								return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 							})
 						})

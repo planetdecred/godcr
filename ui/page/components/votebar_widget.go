@@ -204,11 +204,11 @@ func (v *VoteBar) Layout(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								yesLabel := v.Theme.Body1("Yes: ")
-								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes)
+								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes, v.yesColor)
 							}),
 							layout.Rigid(func(gtx C) D {
 								noLabel := v.Theme.Body1("No: ")
-								return v.layoutIconAndText(gtx, noLabel, v.noVotes)
+								return v.layoutIconAndText(gtx, noLabel, v.noVotes, v.noColor)
 							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
@@ -226,11 +226,12 @@ func (v *VoteBar) Layout(gtx C) D {
 	)
 }
 
-func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32) D {
+func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32, col color.NRGBA) D {
 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+					v.legendIcon.Color = col
 					return v.legendIcon.Layout(gtx, values.MarginPadding10)
 				})
 			}),

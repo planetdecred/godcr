@@ -32,7 +32,7 @@ type ProposalDetails struct {
 	*load.Load
 	ctx                context.Context // page context
 	ctxCancel          context.CancelFunc
-	voteBar            *VoteBar
+	voteBar            *components.VoteBar
 	loadingDescription bool
 	proposal           *dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
@@ -42,7 +42,6 @@ type ProposalDetails struct {
 	redirectIcon       *decredmaterial.Image
 	rejectedIcon       *widget.Icon
 	downloadIcon       *decredmaterial.Image
-	timerIcon          *decredmaterial.Image
 	successIcon        *widget.Icon
 	vote               decredmaterial.Button
 	backButton         decredmaterial.IconButton
@@ -65,9 +64,8 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 		proposalItems:     make(map[string]proposalItemWidgets),
 		rejectedIcon:      l.Icons.NavigationCancel,
 		successIcon:       l.Icons.ActionCheckCircle,
-		timerIcon:         l.Icons.TimerIcon,
 		viewInPoliteiaBtn: l.Theme.NewClickable(true),
-		voteBar:           NewVoteBar(l),
+		voteBar:           components.NewVoteBar(l),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -278,10 +276,14 @@ func (pg *ProposalDetails) layoutNormalTitle(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								if proposal.Category == dcrlibwallet.ProposalCategoryActive {
+									ic := pg.Icons.TimerIcon
+									if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+										ic = pg.Icons.TimerDarkMode
+									}
 									return layout.Inset{
 										Right: values.MarginPadding4,
 										Top:   values.MarginPadding3,
-									}.Layout(gtx, pg.timerIcon.Layout12dp)
+									}.Layout(gtx, ic.Layout12dp)
 								}
 								return D{}
 							}),

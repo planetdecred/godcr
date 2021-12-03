@@ -105,6 +105,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 									}
 									return inset.Layout(gtx, func(gtx C) D {
 										ic := decredmaterial.NewIcon(v.Icons.DropDownIcon)
+										ic.Color = v.Theme.Color.Gray1
 										return ic.Layout(gtx, values.MarginPadding20)
 									})
 								}),
