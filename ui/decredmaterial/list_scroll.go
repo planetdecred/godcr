@@ -21,7 +21,9 @@ func (t *Theme) Scrollbar(state *widget.Scrollbar) ScrollbarStyle {
 }
 
 func (t *Theme) List(state *widget.List) ListStyle {
-	return ListStyle{material.List(t.Base, state)}
+	list := ListStyle{material.List(t.Base, state)}
+	list.Indicator.Color = t.Color.Gray3
+	return list
 }
 
 // layout the scroll track and indicator.

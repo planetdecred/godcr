@@ -144,7 +144,7 @@ func (lp *ListPreferenceModal) layoutItems() []layout.FlexChild {
 
 	items := make([]layout.FlexChild, 0)
 	for _, k := range lp.itemKeys {
-		radioItem := layout.Rigid(lp.Theme.RadioButton(lp.optionsRadioGroup, k, values.String(lp.items[k]), lp.Theme.Color.DeepBlue).Layout)
+		radioItem := layout.Rigid(lp.Theme.RadioButton(lp.optionsRadioGroup, k, values.String(lp.items[k]), lp.Theme.Color.DeepBlue, lp.Theme.Color.Primary).Layout)
 
 		items = append(items, radioItem)
 	}

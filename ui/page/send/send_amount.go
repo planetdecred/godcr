@@ -178,8 +178,8 @@ func (sa *sendAmount) handle() {
 		sa.dcrAmountEditor.LineColor = sa.Theme.Color.Danger
 		sa.usdAmountEditor.LineColor = sa.Theme.Color.Danger
 	} else {
-		sa.dcrAmountEditor.LineColor = sa.Theme.Color.Gray1
-		sa.usdAmountEditor.LineColor = sa.Theme.Color.Gray1
+		sa.dcrAmountEditor.LineColor = sa.Theme.Color.Gray2
+		sa.usdAmountEditor.LineColor = sa.Theme.Color.Gray2
 	}
 
 	if sa.sendMax {

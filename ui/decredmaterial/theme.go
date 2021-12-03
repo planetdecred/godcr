@@ -62,6 +62,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 		DarkMode: isDarkModeOn,
 		Color:    &values.Color{},
 		Styles:   values.DefaultWidgetStyles(),
+		TextSize: values.TextSize16,
 	}
 	t.SwitchDarkMode(isDarkModeOn)
 	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
@@ -103,6 +104,7 @@ func (t *Theme) UpdateStyles() {
 	// update clickable colors
 	t.Styles.ClickableStyle.Color = t.Color.SurfaceHighlight
 	t.Styles.ClickableStyle.HoverColor = t.Color.Gray5
+
 	// dropdown clickable colors
 	t.Styles.DropdownClickableStyle.Color = t.Color.SurfaceHighlight
 	t.Styles.DropdownClickableStyle.HoverColor = Hovered(t.Color.Gray3)

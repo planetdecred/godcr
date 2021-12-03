@@ -132,6 +132,7 @@ func (d *DropDown) layoutActiveIcon(gtx layout.Context, index int) D {
 
 	return layout.E.Layout(gtx, func(gtx C) D {
 		if icon != nil {
+			icon.Color = d.theme.Color.Gray1
 			return icon.Layout(gtx, values.MarginPadding20)
 		}
 		return layout.Dimensions{}
