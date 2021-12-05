@@ -94,6 +94,15 @@ func (pg *Page) Layout(gtx C) D {
 		}
 	default:
 		body = func(gtx C) D {
+			dex := pg.dex()
+			if !dex.Connected {
+				return D{}
+			}
+
+			if dex.PendingFee == nil && pg.miniTradeFormWdg != nil {
+				return pg.pageSections(gtx, pg.miniTradeFormWdg.layout)
+			}
+
 			return pg.pageSections(gtx, pg.registrationStatusLayout)
 		}
 	}
@@ -154,6 +163,8 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 			t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
 			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
 		}),
+		// Todo: this for test purposes, will remove later
+		layout.Rigid(pg.addWallet.Layout),
 	)
 }
 
@@ -242,6 +253,18 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.addDex.Button.Clicked() {
 		newAddDexModal(pg.Load).Show()
+	}
+
+	if pg.miniTradeFormWdg != nil {
+		pg.miniTradeFormWdg.handle()
+	}
+
+	dex := pg.dex()
+	if dex != nil &&
+		dex.Connected &&
+		dex.PendingFee == nil &&
+		pg.miniTradeFormWdg == nil {
+		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load)
 	}
 }
 
