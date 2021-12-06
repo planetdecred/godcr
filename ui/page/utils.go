@@ -5,11 +5,9 @@ package page
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
-	"time"
 
 	"gioui.org/widget"
 
@@ -35,10 +33,6 @@ func EditorsNotEmpty(editors ...*widget.Editor) bool {
 		}
 	}
 	return true
-}
-
-func GenerateRandomNumber() int {
-	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 }
 
 // getLockWallet returns a list of locked wallets
