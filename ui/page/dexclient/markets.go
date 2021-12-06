@@ -23,12 +23,11 @@ const MarketPageID = "Markets"
 
 type Page struct {
 	*load.Load
-	ctx       context.Context // page context
-	ctxCancel context.CancelFunc
-
-	addDexWidget *addDexWidget
-	login        decredmaterial.Button
-	initialize   decredmaterial.Button
+	ctx        context.Context
+	ctxCancel  context.CancelFunc
+	login      decredmaterial.Button
+	initialize decredmaterial.Button
+	addDex     decredmaterial.Button
 }
 
 // TODO: Add collapsible button to select a market.
@@ -46,6 +45,7 @@ func NewMarketPage(l *load.Load) *Page {
 		Load:       l,
 		login:      l.Theme.Button("Login"),
 		initialize: l.Theme.Button("Start using now"),
+		addDex:     l.Theme.Button("Add a dex"),
 	}
 
 	return pg
@@ -57,14 +57,25 @@ func (pg *Page) ID() string {
 
 func (pg *Page) Layout(gtx C) D {
 	var body func(gtx C) D
+
 	switch {
-	case !pg.Dexc().Initialized() || !pg.Dexc().IsLoggedIn():
+	case !pg.Dexc().Initialized():
 		body = func(gtx C) D {
-			return pg.pageSections(gtx, pg.welcomeLayout)
+			return pg.pageSections(gtx, func(gtx C) D {
+				return pg.welcomeLayout(gtx, pg.initialize)
+			})
 		}
-	case pg.addDexWidget != nil:
+	case !pg.Dexc().IsLoggedIn():
 		body = func(gtx C) D {
-			return pg.pageSections(gtx, pg.addDexWidget.layout)
+			return pg.pageSections(gtx, func(gtx C) D {
+				return pg.welcomeLayout(gtx, pg.login)
+			})
+		}
+	case len(pg.Dexc().DEXServers()) == 0:
+		body = func(gtx C) D {
+			return pg.pageSections(gtx, func(gtx C) D {
+				return pg.welcomeLayout(gtx, pg.addDex)
+			})
 		}
 	default:
 		body = func(gtx C) D {
@@ -82,19 +93,14 @@ func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dime
 	})
 }
 
-func (pg *Page) welcomeLayout(gtx C) D {
+func (pg *Page) welcomeLayout(gtx C, button decredmaterial.Button) D {
 	return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				description := "Trade crypto peer-to-peer.\nNo trading fees. No KYC."
 				return layout.Center.Layout(gtx, pg.Theme.H5(description).Layout)
 			}),
-			layout.Rigid(func(gtx C) D {
-				if !pg.Dexc().Initialized() {
-					return pg.initialize.Layout(gtx)
-				}
-				return pg.login.Layout(gtx)
-			}),
+			layout.Rigid(button.Layout),
 		)
 	})
 }
@@ -112,8 +118,13 @@ func (pg *Page) dex() *core.Exchange {
 
 func (pg *Page) registrationStatusLayout(gtx C) D {
 	dex := pg.dex()
-	if dex == nil || dex.PendingFee == nil {
-		// TODO: render another UI by dex and wallet status
+	if !dex.Connected {
+		// TODO: render error or UI to connect to dex
+		return D{}
+	}
+
+	if dex.PendingFee == nil {
+		// TODO: render trade UI
 		return D{}
 	}
 
@@ -134,10 +145,6 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 func (pg *Page) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
-
-	if len(pg.Dexc().DEXServers()) == 0 { // Connect a DEX to proceed. May require adding a wallet to pay the fee.
-		pg.addDexWidget = newAddDexWidget(pg.Load)
-	}
 }
 
 func (pg *Page) OnClose() {
@@ -159,6 +166,10 @@ func (pg *Page) Handle() {
 						return
 					}
 					pm.Dismiss()
+					// Check if there is no dex registered, show modal to register one
+					if len(pg.Dexc().DEXServers()) == 0 {
+						newAddDexModal(pg.Load).Show()
+					}
 				}()
 				return false
 			}).Show()
@@ -180,13 +191,33 @@ func (pg *Page) Handle() {
 						return
 					}
 					pg.Toast.Notify("App password created")
+
 					m.Dismiss()
+					// Check if there is no dex registered, show modal to register one
+					if len(pg.Dexc().DEXServers()) == 0 {
+						newAddDexModal(pg.Load).Show()
+					}
 				}()
 				return false
 			}).Show()
 	}
 
-	if pg.addDexWidget != nil {
-		pg.addDexWidget.handle()
+	if pg.addDex.Button.Clicked() {
+		newAddDexModal(pg.Load).Show()
+	}
+}
+
+// readNotifications reads from the Core notification channel.
+func (pg *Page) readNotifications() {
+	ch := pg.Dexc().Core().NotificationFeed()
+	for {
+		select {
+		case n := <-ch:
+			if n.Type() == core.NoteTypeFeePayment {
+				pg.RefreshWindow()
+			}
+		case <-pg.ctx.Done():
+			return
+		}
 	}
 }

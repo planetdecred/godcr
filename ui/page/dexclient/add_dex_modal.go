@@ -7,8 +7,10 @@ import (
 
 	"decred.org/dcrdex/client/asset"
 	"decred.org/dcrdex/client/core"
+	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/widget"
+	"gioui.org/widget/material"
 	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
@@ -17,49 +19,77 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+const addDexModalID = "add_dex_modal"
+
 const testDexHost = "dex-test.ssgen.io:7232"
 
-type addDexWidget struct {
+type addDexModal struct {
 	*load.Load
+	modal            *decredmaterial.Modal
 	addDexServer     decredmaterial.Button
 	dexServerAddress decredmaterial.Editor
 	isSending        bool
 	cert             decredmaterial.Editor
-	createWalletWdg  *dexCreateWalletWidget
+	cancel           decredmaterial.Button
+	materialLoader   material.LoaderStyle
 }
 
-func newAddDexWidget(l *load.Load) *addDexWidget {
-	dwg := &addDexWidget{
+func newAddDexModal(l *load.Load) *addDexModal {
+	md := &addDexModal{
 		Load:             l,
+		modal:            l.Theme.ModalFloatTitle(),
 		dexServerAddress: l.Theme.Editor(new(widget.Editor), "DEX Address"),
-		addDexServer:     l.Theme.Button("Submit"),
 		cert:             l.Theme.Editor(new(widget.Editor), "Cert content"),
+		addDexServer:     l.Theme.Button("Submit"),
+		cancel:           l.Theme.OutlineButton("Cancel"),
+		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
 	}
 
-	dwg.addDexServer.TextSize = values.TextSize12
-	dwg.addDexServer.Background = l.Theme.Color.Primary
-
-	dwg.dexServerAddress.Editor.SingleLine = true
+	md.dexServerAddress.Editor.SingleLine = true
 	if l.WL.MultiWallet.NetType() == dcrlibwallet.Testnet3 {
-		dwg.dexServerAddress.Editor.SetText(testDexHost)
+		md.dexServerAddress.Editor.SetText(testDexHost)
 	}
 
-	return dwg
+	return md
 }
 
-func (dwg *addDexWidget) handle() {
-	if dwg.addDexServer.Button.Clicked() {
-		if dwg.dexServerAddress.Editor.Text() == "" || dwg.isSending {
+func (md *addDexModal) ModalID() string {
+	return addDexModalID
+}
+
+func (md *addDexModal) Show() {
+	md.ShowModal(md)
+}
+
+func (md *addDexModal) Dismiss() {
+	md.DismissModal(md)
+}
+
+func (md *addDexModal) OnDismiss() {
+	md.dexServerAddress.Editor.SetText("")
+}
+
+func (md *addDexModal) OnResume() {
+	md.dexServerAddress.Editor.Focus()
+}
+
+func (md *addDexModal) Handle() {
+	if md.cancel.Button.Clicked() && !md.isSending {
+		md.Dismiss()
+	}
+
+	if md.addDexServer.Button.Clicked() {
+		if md.dexServerAddress.Editor.Text() == "" || md.isSending {
 			return
 		}
 
-		dwg.isSending = true
+		md.isSending = true
 		go func() {
-			cert := []byte(dwg.cert.Editor.Text())
-			dex, err := dwg.Dexc().DEXServerInfo(dwg.dexServerAddress.Editor.Text(), cert)
-			dwg.isSending = false
+			cert := []byte(md.cert.Editor.Text())
+			dex, err := md.Dexc().DEXServerInfo(md.dexServerAddress.Editor.Text(), cert)
+			md.isSending = false
 			if err != nil {
-				dwg.Toast.NotifyError(err.Error())
+				md.Toast.NotifyError(err.Error())
 				return
 			}
 
@@ -77,70 +107,85 @@ func (dwg *addDexWidget) handle() {
 				}
 			}
 
-			if dwg.Dexc().HasWallet(int32(feeAsset.ID)) {
-				dwg.completeRegistration(dex, feeAssetName, cert)
+			// Dismiss this modal before displaying a new one for adding a wallet
+			// or completing the registration.
+			md.Dismiss()
+			if md.Dexc().HasWallet(int32(feeAsset.ID)) {
+				md.completeRegistration(dex, feeAssetName, cert)
 				return
 			}
 
-			dwg.createWalletWdg = newDexCreateWalletWidget(dwg.Load,
+			newCreateWalletModal(md.Load,
 				&walletInfoWidget{
-					image:    components.CoinImageBySymbol(&dwg.Load.Icons, feeAssetName),
+					image:    components.CoinImageBySymbol(&md.Load.Icons, feeAssetName),
 					coinName: feeAssetName,
 					coinID:   feeAsset.ID,
 				},
-				func() { dwg.completeRegistration(dex, feeAssetName, cert) })
+				func() {
+					md.completeRegistration(dex, feeAssetName, cert)
+				}).Show()
 		}()
 	}
-
-	if dwg.createWalletWdg != nil {
-		dwg.createWalletWdg.handle()
-	}
 }
 
-func (dwg *addDexWidget) layout(gtx layout.Context) D {
-	if dwg.createWalletWdg != nil {
-		return dwg.createWalletWdg.layout(gtx)
+func (md *addDexModal) Layout(gtx layout.Context) D {
+	w := []layout.Widget{
+		func(gtx C) D {
+			return md.Load.Theme.Label(values.TextSize20, "Add a dex").Layout(gtx)
+		},
+		func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return md.dexServerAddress.Layout(gtx)
+					})
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
+						gtx.Constraints.Max.Y = 350
+						return md.cert.Layout(gtx)
+					})
+				}),
+			)
+		},
+		func(gtx C) D {
+			return layout.E.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						if md.isSending {
+							return D{}
+						}
+						return layout.Inset{
+							Right:  values.MarginPadding4,
+							Bottom: values.MarginPadding15,
+						}.Layout(gtx, md.cancel.Layout)
+					}),
+					layout.Rigid(func(gtx C) D {
+						if md.isSending {
+							return layout.Inset{
+								Top:    values.MarginPadding10,
+								Bottom: values.MarginPadding15,
+							}.Layout(gtx, md.materialLoader.Layout)
+						}
+						return md.addDexServer.Layout(gtx)
+					}),
+				)
+			})
+		},
 	}
 
-	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
-				return dwg.Load.Theme.Label(values.TextSize20, "Add a dex").Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-				return dwg.dexServerAddress.Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-				gtx.Constraints.Max.Y = 400
-				return dwg.cert.Layout(gtx)
-			})
-		}),
-		layout.Rigid(func(gtx C) D {
-			return layout.Inset{Top: values.MarginPadding15}.Layout(gtx, func(gtx C) D {
-				if dwg.isSending {
-					dwg.addDexServer.Background = dwg.Theme.Color.Hint
-				} else {
-					dwg.addDexServer.Background = dwg.Theme.Color.Primary
-				}
-				return dwg.addDexServer.Layout(gtx)
-			})
-		}),
-	)
+	return md.modal.Layout(gtx, w)
 }
 
-func (dwg *addDexWidget) completeRegistration(dex *core.Exchange, feeAssetName string, cert []byte) {
-	modal.NewPasswordModal(dwg.Load).
+func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName string, cert []byte) {
+	modal.NewPasswordModal(md.Load).
 		Title("Confirm Registration").
 		Hint("App password").
 		Description(confirmRegisterModalDesc(dex, feeAssetName)).
 		NegativeButton(values.String(values.StrCancel), func() {}).
 		PositiveButton("Register", func(password string, pm *modal.PasswordModal) bool {
 			go func() {
-				_, err := dwg.Dexc().RegisterWithDEXServer(dex.Host,
+				_, err := md.Dexc().RegisterWithDEXServer(dex.Host,
 					cert,
 					int64(dex.Fee.Amt),
 					int32(dex.Fee.ID),
@@ -151,7 +196,6 @@ func (dwg *addDexWidget) completeRegistration(dex *core.Exchange, feeAssetName s
 					return
 				}
 				pm.Dismiss()
-				pm.ChangeFragment(NewMarketPage(pm.Load))
 			}()
 
 			return false
