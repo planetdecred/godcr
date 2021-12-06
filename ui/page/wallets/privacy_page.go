@@ -312,7 +312,6 @@ func (pg *PrivacyPage) Handle() {
 	}
 
 	if pg.dangerZoneCollapsible.IsExpanded() {
-		pg.pageContainer.ScrollToEnd = true
 		pg.RefreshWindow()
 	}
 }
