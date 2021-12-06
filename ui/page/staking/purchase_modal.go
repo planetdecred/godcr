@@ -29,6 +29,7 @@ type stakingModal struct {
 	balanceLessCost  int64
 	vspIsFetched     bool
 	isLoading        bool
+	autoPurchase     bool
 	ticketsPurchased func()
 
 	modal          decredmaterial.Modal
@@ -42,11 +43,13 @@ type stakingModal struct {
 	tickets          decredmaterial.Editor
 	materialLoader   material.LoaderStyle
 
+	balToMaintainEditor decredmaterial.Editor
+
 	accountSelector *components.AccountSelector
 	vspSelector     *vspSelector
 }
 
-func newStakingModal(l *load.Load) *stakingModal {
+func newStakingModal(l *load.Load, autoPurchase bool) *stakingModal {
 	tp := &stakingModal{
 		Load: l,
 
@@ -58,7 +61,12 @@ func newStakingModal(l *load.Load) *stakingModal {
 		decrement:        l.Theme.IconButton(l.Icons.ContentRemove),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
+		autoPurchase:     autoPurchase,
 	}
+
+	tp.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
+	tp.balToMaintainEditor.Editor.SetText("")
+	tp.balToMaintainEditor.Editor.SingleLine = true
 
 	tp.tickets.Bordered = false
 	tp.tickets.Editor.Alignment = text.Middle
@@ -82,6 +90,11 @@ func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 	return tp
 }
 
+func (tp *stakingModal) SetButtonText(title string) *stakingModal {
+	tp.stakeBtn.Text = title
+	return tp
+}
+
 func (tp *stakingModal) OnResume() {
 	tp.initializeAccountSelector()
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
@@ -100,6 +113,12 @@ func (tp *stakingModal) OnResume() {
 func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
+			if tp.autoPurchase {
+				t := tp.Theme.H6("Turn on auto ticket buyer")
+				t.Font.Weight = text.SemiBold
+				return layout.UniformInset(values.MarginPadding16).Layout(gtx, t.Layout)
+			}
+
 			return decredmaterial.LinearLayout{
 				Orientation: layout.Vertical,
 				Width:       decredmaterial.MatchParent,
@@ -176,7 +195,24 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 		},
 		func(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(tp.accountSelector.Layout),
+				layout.Rigid(func(gtx C) D {
+					mt := values.MarginPadding0
+					mb := values.MarginPadding0
+					if tp.autoPurchase {
+						mt = values.MarginPadding8
+						mb = values.MarginPadding16
+					}
+					return layout.Inset{
+						Top:    mt,
+						Bottom: mb,
+					}.Layout(gtx, tp.accountSelector.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					if tp.autoPurchase {
+						return tp.balToMaintainEditor.Layout(gtx)
+					}
+					return D{}
+				}),
 				layout.Rigid(func(gtx C) D {
 					if tp.balanceError == "" {
 						return D{}

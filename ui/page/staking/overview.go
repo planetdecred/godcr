@@ -35,8 +35,8 @@ type Page struct {
 	ticketPrice  string
 	totalRewards string
 
-	autoPurchaseEnabled *decredmaterial.Switch
-	toTickets           decredmaterial.TextAndIconButton
+	autoPurchase *decredmaterial.Switch
+	toTickets    decredmaterial.TextAndIconButton
 
 	ticketOverview *dcrlibwallet.StakingOverview
 	liveTickets    []*transactionItem
@@ -51,8 +51,8 @@ func NewStakingPage(l *load.Load) *Page {
 		ticketPageContainer: &layout.List{Axis: layout.Vertical},
 		stakeBtn:            l.Theme.Button("Stake"),
 
-		autoPurchaseEnabled: l.Theme.Switch(),
-		toTickets:           l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
+		autoPurchase: l.Theme.Switch(),
+		toTickets:    l.Theme.TextAndIconButton("See All", l.Icons.NavigationArrowForward),
 	}
 
 	pg.list = &widget.List{
@@ -81,10 +81,7 @@ func (pg *Page) ID() string {
 func (pg *Page) OnNavigatedTo() {
 
 	pg.loadPageData() // starts go routines to refresh the display which is just about to be displayed, ok?
-
 	go pg.WL.GetVSPList()
-	// TODO: automatic ticket purchase functionality
-	pg.autoPurchaseEnabled.SetEnabled(false)
 }
 
 func (pg *Page) loadPageData() {
@@ -194,7 +191,7 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 				return layout.Inset{
 					Bottom: values.MarginPadding11,
 				}.Layout(gtx, func(gtx C) D {
-					// leftWg := func(gtx C) D {
+					leftWg := func(gtx C) D {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							title := pg.Theme.Label(values.TextSize14, "Ticket Price")
@@ -220,9 +217,21 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 							return txt.Layout(gtx)
 						}),
 					)
-					// }
-					//TODO: auto ticket purchase.
-					// return pg.titleRow(gtx, leftWg, pg.autoPurchaseEnabled.Layout)-
+					}
+
+					rightWg := func(gtx C) D {
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								title := pg.Theme.Label(values.TextSize14, "Auto Purchase")
+								title.Color = pg.Theme.Color.Gray2
+								return layout.Inset{
+									Right: values.MarginPadding4,
+								}.Layout(gtx, title.Layout)
+							}),
+							layout.Rigid(pg.autoPurchase.Layout),
+						)
+					}
+					return pg.titleRow(gtx, leftWg, rightWg)
 				})
 			}),
 			layout.Rigid(func(gtx C) D {
@@ -424,7 +433,7 @@ func (pg *Page) ticketRecordIconCount(icon *decredmaterial.Image, count int, sta
 // Part of the load.Page interface.
 func (pg *Page) HandleUserInteractions() {
 	if pg.stakeBtn.Clicked() {
-		newStakingModal(pg.Load).
+		newStakingModal(pg.Load, false).
 			TicketPurchased(func() {
 				align := layout.Center
 				successIcon := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
@@ -446,6 +455,15 @@ func (pg *Page) HandleUserInteractions() {
 	if clicked, selectedItem := pg.ticketsLive.ItemClicked(); clicked {
 		pg.ChangeFragment(tpage.NewTransactionDetailsPage(pg.Load, pg.liveTickets[selectedItem].transaction))
 	}
+
+	if pg.autoPurchase.Changed() {
+		newStakingModal(pg.Load, true).
+			SetButtonText("Turn on").
+			TicketPurchased(func() {
+				fmt.Println("auto Purchase clicked")
+			}).Show()
+	}
+
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from
