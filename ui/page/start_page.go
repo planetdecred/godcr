@@ -168,7 +168,7 @@ func (sp *startPage) loadingSection(gtx layout.Context) layout.Dimensions {
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					netType := sp.WL.Wallet.Net
-					if sp.WL.Wallet.Net == "testnet3" {
+					if sp.WL.Wallet.Net == dcrlibwallet.Testnet3 {
 						netType = "Testnet"
 					}
 					nType := sp.Theme.Label(values.TextSize20, netType)

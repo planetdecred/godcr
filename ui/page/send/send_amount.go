@@ -53,6 +53,7 @@ func newSendAmount(l *load.Load) *sendAmount {
 	sa.usdAmountEditor.HasCustomButton = true
 	sa.usdAmountEditor.Editor.SingleLine = true
 	sa.usdAmountEditor.CustomButton.Background = l.Theme.Color.Gray1
+	sa.usdAmountEditor.CustomButton.Color = l.Theme.Color.Surface
 	sa.usdAmountEditor.CustomButton.Inset = layout.UniformInset(values.MarginPadding2)
 	sa.usdAmountEditor.CustomButton.Text = "Max"
 	sa.usdAmountEditor.CustomButton.CornerRadius = values.MarginPadding0

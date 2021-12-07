@@ -348,23 +348,37 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 					Padding:     layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16},
 					Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
 					Direction:   layout.Center,
+					Alignment:   layout.Middle,
 					Orientation: layout.Vertical,
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 							txt := pg.Theme.Label(values.TextSize14, "Rewards Earned")
-							txt.Color = pg.Theme.Color.Success
+							txt.Color = pg.Theme.Color.Turquoise700
 							return txt.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								ic := pg.Icons.StakeyIcon
-								return ic.Layout24dp(gtx)
+								return layout.Inset{Right: values.MarginPadding6}.Layout(gtx, ic.Layout24dp)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return components.LayoutBalance(gtx, pg.Load, pg.totalRewards)
+								award := pg.Theme.Color.Text
+								noAward := pg.Theme.Color.GrayText3
+								if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+									award = pg.Theme.Color.Gray3
+									noAward = pg.Theme.Color.Gray3
+								}
+
+								if pg.totalRewards == "0 DCR" {
+									txt := pg.Theme.Label(values.TextSize16, "Stakey sees no rewards")
+									txt.Color = noAward
+									return txt.Layout(gtx)
+								}
+
+								return components.LayoutBalanceColor(gtx, pg.Load, pg.totalRewards, award)
 							}),
 						)
 					}),

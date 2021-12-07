@@ -787,6 +787,7 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
+							pg.backupAcctIcon.Color = pg.Theme.Color.White
 							return pg.backupAcctIcon.Layout(gtx, values.MarginPadding20)
 						})
 					})

@@ -235,7 +235,7 @@ func (pg *PrivacyPage) mixerSettingsLayout(gtx layout.Context) layout.Dimensions
 }
 
 func (pg *PrivacyPage) shufflePortForCurrentNet() string {
-	if pg.WL.Wallet.Net == "testnet3" {
+	if pg.WL.Wallet.Net == dcrlibwallet.Testnet3 {
 		return dcrlibwallet.TestnetShufflePort
 	}
 

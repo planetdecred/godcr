@@ -64,7 +64,7 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 		Styles:   values.DefaultWidgetStyles(),
 		TextSize: values.TextSize16,
 	}
-	t.SwitchDarkMode(isDarkModeOn)
+	t.SwitchDarkMode(isDarkModeOn, decredIcons)
 	t.checkBoxCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBox))
 	t.checkBoxUncheckedIcon = MustIcon(widget.NewIcon(icons.ToggleCheckBoxOutlineBlank))
 	t.radioCheckedIcon = MustIcon(widget.NewIcon(icons.ToggleRadioButtonChecked))
@@ -75,23 +75,29 @@ func NewTheme(fontCollection []text.FontFace, decredIcons map[string]image.Image
 	t.navigationCheckIcon = MustIcon(widget.NewIcon(icons.NavigationCheck))
 	t.dropDownIcon = MustIcon(widget.NewIcon(icons.NavigationArrowDropDown))
 
-	t.expandIcon = NewImage(decredIcons["expand_icon"])
-	t.collapseIcon = NewImage(decredIcons["collapse_icon"])
 	return t
 }
 
-func (t *Theme) SwitchDarkMode(isDarkModeOn bool) {
+func (t *Theme) SwitchDarkMode(isDarkModeOn bool, decredIcons map[string]image.Image) {
 	t.Color.DefualtThemeColors()
+	expandIcon := "expand_icon"
+	collapseIcon := "collapse_icon"
 	if isDarkModeOn {
 		t.Color.DarkThemeColors() // override defaults with dark themed colors
+		expandIcon = "expand_dm"
+		collapseIcon = "collapse_dm"
 	}
-	t.UpdateStyles()
+
+	t.expandIcon = NewImage(decredIcons[expandIcon])
+	t.collapseIcon = NewImage(decredIcons[collapseIcon])
+
+	t.updateStyles(isDarkModeOn)
 }
 
 // UpdateStyles update the style definition for different widgets. This should
 // be done whenever the base theme changes to ensure that the style definitions
 // use the values for the latest theme.
-func (t *Theme) UpdateStyles() {
+func (t *Theme) updateStyles(isDarkModeOn bool) {
 	// update switch style colors
 	t.Styles.SwitchStyle.ActiveColor = t.Color.Primary
 	t.Styles.SwitchStyle.InactiveColor = t.Color.Gray3
@@ -107,7 +113,11 @@ func (t *Theme) UpdateStyles() {
 
 	// dropdown clickable colors
 	t.Styles.DropdownClickableStyle.Color = t.Color.SurfaceHighlight
-	t.Styles.DropdownClickableStyle.HoverColor = Hovered(t.Color.Gray3)
+	col := t.Color.Gray3
+	if isDarkModeOn {
+		col = t.Color.Gray5
+	}
+	t.Styles.DropdownClickableStyle.HoverColor = Hovered(col)
 }
 
 func (t *Theme) Background(gtx layout.Context, w layout.Widget) {

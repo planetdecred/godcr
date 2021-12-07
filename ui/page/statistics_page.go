@@ -10,6 +10,7 @@ import (
 	"gioui.org/op"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -42,7 +43,7 @@ func NewStatPage(l *load.Load) *StatPage {
 		netType: l.WL.Wallet.Net,
 	}
 	pg.syncStatus = l.WL.SyncStatus
-	if pg.netType == "testnet3" {
+	if pg.netType == dcrlibwallet.Testnet3 {
 		pg.netType = "Testnet"
 	} else {
 		pg.netType = strings.Title(pg.netType)

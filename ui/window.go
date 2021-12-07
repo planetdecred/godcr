@@ -77,7 +77,7 @@ type WriteClipboard struct {
 func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
-	if wal.Net == "testnet3" {
+	if wal.Net == dcrlibwallet.Testnet3 {
 		netType = "testnet"
 	} else {
 		netType = wal.Net

@@ -90,11 +90,11 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	pg.peerLabel = l.Theme.Body1("")
-	pg.peerLabel.Color = l.Theme.Color.GrayText2
+	// pg.peerLabel = l.Theme.Body1("")
+	// pg.peerLabel.Color = l.Theme.Color.GrayText2
 
-	pg.agentLabel = l.Theme.Body1("")
-	pg.agentLabel.Color = l.Theme.Color.GrayText2
+	// pg.agentLabel = l.Theme.Body1("")
+	// pg.agentLabel.Color = l.Theme.Color.GrayText2
 	return pg
 }
 
@@ -216,11 +216,13 @@ func (pg *SettingsPage) connection() layout.Widget {
 					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
 				}),
 				layout.Rigid(func(gtx C) D {
+					peerLabel := pg.Theme.Body1(pg.peerAddr)
+					peerLabel.Color = pg.Theme.Color.GrayText2
 					peerAddrRow := row{
 						title:     values.String(values.StrChangeSpecificPeer),
 						clickable: pg.updateConnectToPeer,
 						icon:      pg.chevronRightIcon,
-						label:     pg.peerLabel,
+						label:     peerLabel,
 					}
 					return pg.conditionalDisplay(gtx, pg.peerAddr != "", func(gtx C) D {
 						return pg.clickableRow(gtx, peerAddrRow)
@@ -261,12 +263,14 @@ func (pg *SettingsPage) agent() layout.Widget {
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
+				agentLabel := pg.Theme.Body1(pg.agentValue)
+				agentLabel.Color = pg.Theme.Color.GrayText2
 				return pg.conditionalDisplay(gtx, pg.agentValue != "", func(gtx C) D {
 					userAgentRow := row{
 						title:     values.String(values.StrUserAgentDialogTitle),
 						clickable: pg.updateUserAgent,
 						icon:      pg.chevronRightIcon,
-						label:     pg.agentLabel,
+						label:     agentLabel,
 					}
 					return pg.clickableRow(gtx, userAgentRow)
 				})

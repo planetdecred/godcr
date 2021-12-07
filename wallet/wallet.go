@@ -149,7 +149,7 @@ func (wal *Wallet) wallets() ([]dcrlibwallet.Wallet, error) {
 
 func (wal *Wallet) hdPrefix() string {
 	switch wal.Net {
-	case "testnet3": // should use a constant
+	case dcrlibwallet.Testnet3:
 		return dcrlibwallet.TestnetHDPath
 	case "mainnet":
 		return dcrlibwallet.MainnetHDPath
@@ -169,7 +169,7 @@ func (wal *Wallet) Shutdown() {
 // return the block explorer URL with respect to the network
 func (wal *Wallet) GetBlockExplorerURL(txnHash string) string {
 	switch wal.Net {
-	case "testnet3": // should use a constant
+	case dcrlibwallet.Testnet3:
 		return "https://testnet.dcrdata.org/tx/" + txnHash
 	case "mainnet":
 		return "https://explorer.dcrdata.org/tx/" + txnHash
