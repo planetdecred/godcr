@@ -120,12 +120,12 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 	dex := pg.dex()
 	if !dex.Connected {
 		// TODO: render error or UI to connect to dex
-		return D{}
+		return pg.Theme.Label(values.TextSize14, fmt.Sprintf("%s not connected yet", dex.Host)).Layout(gtx)
 	}
 
 	if dex.PendingFee == nil {
 		// TODO: render trade UI
-		return D{}
+		return pg.Theme.Label(values.TextSize14, "Registration fee payment successful!").Layout(gtx)
 	}
 
 	reqConfirms, currentConfs := dex.Fee.Confs, dex.PendingFee.Confs
