@@ -77,7 +77,7 @@ type WriteClipboard struct {
 func CreateWindow(wal *wallet.Wallet) (*Window, *app.Window, error) {
 	win := new(Window)
 	var netType string
-	if wal.Net == "testnet3" {
+	if wal.Net == dcrlibwallet.Testnet3 {
 		netType = "testnet"
 	} else {
 		netType = wal.Net
@@ -231,7 +231,7 @@ func (win *Window) layoutPage(gtx C, page load.Page) {
 		Alignment: layout.N,
 	}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
-			return decredmaterial.Fill(gtx, win.load.Theme.Color.LightGray)
+			return decredmaterial.Fill(gtx, win.load.Theme.Color.Gray4)
 		}),
 		layout.Stacked(func(gtx C) D {
 			page.Handle()

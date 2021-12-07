@@ -32,7 +32,7 @@ type ProposalDetails struct {
 	*load.Load
 	ctx                context.Context // page context
 	ctxCancel          context.CancelFunc
-	voteBar            *VoteBar
+	voteBar            *components.VoteBar
 	loadingDescription bool
 	proposal           *dcrlibwallet.Proposal
 	descriptionCard    decredmaterial.Card
@@ -42,7 +42,6 @@ type ProposalDetails struct {
 	redirectIcon       *decredmaterial.Image
 	rejectedIcon       *widget.Icon
 	downloadIcon       *decredmaterial.Image
-	timerIcon          *decredmaterial.Image
 	successIcon        *widget.Icon
 	vote               decredmaterial.Button
 	backButton         decredmaterial.IconButton
@@ -65,9 +64,8 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 		proposalItems:     make(map[string]proposalItemWidgets),
 		rejectedIcon:      l.Icons.NavigationCancel,
 		successIcon:       l.Icons.ActionCheckCircle,
-		timerIcon:         l.Icons.TimerIcon,
 		viewInPoliteiaBtn: l.Theme.NewClickable(true),
-		voteBar:           NewVoteBar(l),
+		voteBar:           components.NewVoteBar(l),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -185,8 +183,8 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 					lbl := pg.Theme.Body1(fmt.Sprint(val))
 					lbl.Color = pg.Theme.Color.Surface
 					if proposal.VoteStatus < val {
-						c.Color = pg.Theme.Color.LightGray
-						lbl.Color = pg.Theme.Color.Hint
+						c.Color = pg.Theme.Color.Gray4
+						lbl.Color = pg.Theme.Color.GrayText3
 					}
 					return c.Layout(gtx, func(gtx C) D {
 						m := values.MarginPadding6
@@ -208,9 +206,9 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 				txt := info + "..."
 				if proposal.VoteStatus != val {
 					txt = info
-					col = pg.Theme.Color.Hint
+					col = pg.Theme.Color.GrayText3
 					if proposal.VoteStatus > 1 {
-						col = pg.Theme.Color.DeepBlue
+						col = pg.Theme.Color.Text
 					}
 				}
 				lbl := pg.Theme.Body1(txt)
@@ -231,7 +229,7 @@ func (pg *ProposalDetails) layoutInDiscussionState(gtx C) D {
 			if proposal.VoteStatus > 1 {
 				line.Color = pg.Theme.Color.Primary
 			} else {
-				line.Color = pg.Theme.Color.Gray1
+				line.Color = pg.Theme.Color.Gray2
 			}
 			return layout.Inset{Left: values.MarginPadding8}.Layout(gtx, line.Layout)
 		}),
@@ -278,10 +276,14 @@ func (pg *ProposalDetails) layoutNormalTitle(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								if proposal.Category == dcrlibwallet.ProposalCategoryActive {
+									ic := pg.Icons.TimerIcon
+									if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+										ic = pg.Icons.TimerDarkMode
+									}
 									return layout.Inset{
 										Right: values.MarginPadding4,
 										Top:   values.MarginPadding3,
-									}.Layout(gtx, pg.timerIcon.Layout12dp)
+									}.Layout(gtx, ic.Layout12dp)
 								}
 								return D{}
 							}),
@@ -319,7 +321,7 @@ func (pg *ProposalDetails) layoutTitle(gtx C) D {
 }
 
 func (pg *ProposalDetails) layoutDescription(gtx C) D {
-	grayCol := pg.Theme.Color.Gray
+	grayCol := pg.Theme.Color.GrayText2
 	proposal := pg.proposal
 
 	dotLabel := pg.Theme.H4(" . ")

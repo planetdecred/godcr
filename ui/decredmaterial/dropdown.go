@@ -44,7 +44,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		isOpen:         false,
 		selectedIndex:  0,
 		items:          make([]DropDownItem, 0),
-		color:          t.Color.Gray1,
+		color:          t.Color.Gray2,
 		background:     t.Color.Surface,
 		dropdownIcon:   t.dropDownIcon,
 		navigationIcon: t.navigationCheckIcon,
@@ -62,7 +62,7 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		shadow:  t.Shadow(),
 	}
 
-	d.clickable.HoverColor = Hovered(t.Color.InactiveGray)
+	d.clickable.ChangeStyle(t.Styles.DropdownClickableStyle)
 	d.clickable.Radius = Radius(8)
 
 	for i := range items {
@@ -132,6 +132,7 @@ func (d *DropDown) layoutActiveIcon(gtx layout.Context, index int) D {
 
 	return layout.E.Layout(gtx, func(gtx C) D {
 		if icon != nil {
+			icon.Color = d.theme.Color.Gray1
 			return icon.Layout(gtx, values.MarginPadding20)
 		}
 		return layout.Dimensions{}

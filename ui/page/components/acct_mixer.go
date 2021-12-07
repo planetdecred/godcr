@@ -10,7 +10,7 @@ import (
 func mixerInfoStatusTextLayout(gtx C, l *load.Load, mixerActive bool) D {
 	txt := l.Theme.H6("Mixer")
 	subtxt := l.Theme.Body2("Ready to mix")
-	subtxt.Color = l.Theme.Color.Gray
+	subtxt.Color = l.Theme.Color.GrayText2
 	iconVisibility := false
 
 	if mixerActive {
@@ -63,7 +63,7 @@ func MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget
 				layout.Rigid(func(gtx C) D {
 					if mixerActive {
 						txt := l.Theme.Body2("The mixer will automatically stop when unmixed balance are fully mixed.")
-						txt.Color = l.Theme.Color.Gray
+						txt.Color = l.Theme.Color.GrayText2
 						return txt.Layout(gtx)
 					}
 					return D{}
@@ -75,7 +75,7 @@ func MixerInfoLayout(gtx C, l *load.Load, mixerActive bool, button layout.Widget
 
 func MixerInfoContentWrapper(gtx C, l *load.Load, content layout.Widget) D {
 	card := l.Theme.Card()
-	card.Color = l.Theme.Color.LightGray
+	card.Color = l.Theme.Color.Gray4
 	return card.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		return layout.UniformInset(values.MarginPadding15).Layout(gtx, content)

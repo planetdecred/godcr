@@ -54,7 +54,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 
 				background := nd.Theme.Color.Surface
 				if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
-					background = nd.Theme.Color.ActiveGray
+					background = nd.Theme.Color.Gray5
 				}
 				return decredmaterial.LinearLayout{
 					Orientation: nd.axis,
@@ -79,7 +79,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 						return layout.Inset{
 							Left: nd.leftInset,
 						}.Layout(gtx, func(gtx C) D {
-							textColor := nd.Theme.Color.Gray4
+							textColor := nd.Theme.Color.GrayText1
 							if nd.DrawerNavItems[i].PageID == nd.CurrentPage {
 								textColor = nd.Theme.Color.DeepBlue
 							}
@@ -94,10 +94,7 @@ func (nd *NavDrawer) LayoutNavDrawer(gtx layout.Context) layout.Dimensions {
 		layout.Flexed(1, func(gtx C) D {
 			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return layout.SE.Layout(gtx, func(gtx C) D {
-				btn := nd.activeDrawerBtn
-				btn.Color = nd.Theme.Color.Gray3
-
-				return btn.Layout(gtx)
+				return nd.activeDrawerBtn.Layout(gtx)
 			})
 		}),
 	)
@@ -111,7 +108,7 @@ func (nd *NavDrawer) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 			return list.Layout(gtx, len(nd.AppBarNavItems), func(gtx C, i int) D {
 				background := nd.Theme.Color.Surface
 				if nd.AppBarNavItems[i].PageID == nd.CurrentPage {
-					background = nd.Theme.Color.ActiveGray
+					background = nd.Theme.Color.Gray5
 				}
 				return decredmaterial.LinearLayout{
 					Width:       decredmaterial.WrapContent,

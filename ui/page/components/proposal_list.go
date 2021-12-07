@@ -46,7 +46,7 @@ func ProposalsList(gtx C, l *load.Load, prop *ProposalItem) D {
 
 func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 	proposal := item.Proposal
-	grayCol := l.Theme.Color.Gray
+	grayCol := l.Theme.Color.GrayText2
 
 	nameLabel := l.Theme.Body2(proposal.Username)
 	nameLabel.Color = grayCol
@@ -112,10 +112,14 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 						}),
 						layout.Rigid(func(gtx C) D {
 							if item.Proposal.Category == dcrlibwallet.ProposalCategoryActive {
+								ic := l.Icons.TimerIcon
+								if l.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+									ic = l.Icons.TimerDarkMode
+								}
 								return layout.Inset{
 									Right: values.MarginPadding4,
 									Top:   values.MarginPadding3,
-								}.Layout(gtx, l.Icons.TimerIcon.Layout12dp)
+								}.Layout(gtx, ic.Layout12dp)
 							}
 							return D{}
 						}),
@@ -131,7 +135,7 @@ func layoutAuthorAndDate(gtx C, l *load.Load, item *ProposalItem) D {
 									layoutInfoTooltip(gtx, rect, *item)
 
 									infoIcon := decredmaterial.NewIcon(l.Icons.ActionInfo)
-									infoIcon.Color = l.Theme.Color.Gray
+									infoIcon.Color = l.Theme.Color.GrayText2
 									return infoIcon.Layout(gtx, values.MarginPadding20)
 								})
 							}
@@ -214,7 +218,7 @@ func LoadProposals(category int32, newestFirst bool, l *load.Load) []*ProposalIt
 
 			if proposal.Category == dcrlibwallet.ProposalCategoryPre {
 				tooltipLabel := l.Theme.Caption("")
-				tooltipLabel.Color = l.Theme.Color.Gray
+				tooltipLabel.Color = l.Theme.Color.GrayText2
 				if proposal.VoteStatus == 1 {
 					tooltipLabel.Text = "Waiting for author to authorize voting"
 				} else if proposal.VoteStatus == 2 {

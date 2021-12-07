@@ -2,6 +2,8 @@ package page
 
 import (
 	"gioui.org/layout"
+
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -39,7 +41,6 @@ func NewAboutPage(l *load.Load) *AboutPage {
 		buildDate:        l.Theme.Body1("Build date"),
 		buildDateValue:   l.Theme.Body1(l.WL.Wallet.BuildDate().Format("2006-01-02 15:04:05")),
 		network:          l.Theme.Body1("Network"),
-		networkValue:     l.Theme.Body1(l.WL.Wallet.Net),
 		license:          l.Theme.Body1("License"),
 		licenseRow:       l.Theme.NewClickable(true),
 		chevronRightIcon: decredmaterial.NewIcon(l.Icons.ChevronRight),
@@ -51,9 +52,16 @@ func NewAboutPage(l *load.Load) *AboutPage {
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
-	pg.versionValue.Color = pg.Theme.Color.Gray
-	pg.buildDateValue.Color = pg.Theme.Color.Gray
-	pg.networkValue.Color = pg.Theme.Color.Gray
+	col := pg.Theme.Color.GrayText2
+	pg.versionValue.Color = col
+	pg.buildDateValue.Color = col
+
+	netType := pg.WL.Wallet.Net
+	if pg.WL.Wallet.Net == dcrlibwallet.Testnet3 {
+		netType = "Testnet"
+	}
+	pg.networkValue = l.Theme.Body1(netType)
+	pg.networkValue.Color = col
 
 	return pg
 }
@@ -119,6 +127,7 @@ func (pg *AboutPage) layoutRows(gtx layout.Context) layout.Dimensions {
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
 							return in.Layout(gtx, func(gtx C) D {
+								pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
 								return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 							})
 						})

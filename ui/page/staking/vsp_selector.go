@@ -72,7 +72,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 	v.handle()
 
 	border := widget.Border{
-		Color:        v.Theme.Color.Gray1,
+		Color:        v.Theme.Color.Gray2,
 		CornerRadius: values.MarginPadding8,
 		Width:        values.MarginPadding2,
 	}
@@ -84,7 +84,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 					layout.Rigid(func(gtx C) D {
 						if v.selectedVSP == nil {
 							txt := v.Theme.Label(values.TextSize16, "Select VSP...")
-							txt.Color = v.Theme.Color.Gray2
+							txt.Color = v.Theme.Color.GrayText3
 							return txt.Layout(gtx)
 						}
 						return v.Theme.Label(values.TextSize16, v.selectedVSP.Host).Layout(gtx)
@@ -105,6 +105,7 @@ func (v *vspSelector) Layout(gtx layout.Context) layout.Dimensions {
 									}
 									return inset.Layout(gtx, func(gtx C) D {
 										ic := decredmaterial.NewIcon(v.Icons.DropDownIcon)
+										ic.Color = v.Theme.Color.Gray1
 										return ic.Layout(gtx, values.MarginPadding20)
 									})
 								}),
@@ -213,9 +214,9 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					txt := v.Theme.Label(values.TextSize14, "Address")
-					txt.Color = v.Theme.Color.Gray2
+					txt.Color = v.Theme.Color.GrayText2
 					txtFee := v.Theme.Label(values.TextSize14, "Fee")
-					txtFee.Color = v.Theme.Color.Gray2
+					txtFee.Color = v.Theme.Color.GrayText2
 					return components.EndToEndRow(gtx, txt.Layout, txtFee.Layout)
 				}),
 				layout.Rigid(func(gtx C) D {
@@ -225,7 +226,7 @@ func (v *vspSelectorModal) Layout(gtx layout.Context) layout.Dimensions {
 							layout.Flexed(0.8, func(gtx C) D {
 								return layout.Inset{Top: values.MarginPadding12, Bottom: values.MarginPadding12}.Layout(gtx, func(gtx C) D {
 									txt := v.Theme.Label(values.TextSize14, fmt.Sprintf("%v", listVSP[i].Info.FeePercentage)+"%")
-									txt.Color = v.Theme.Color.Gray2
+									txt.Color = v.Theme.Color.GrayText1
 									return components.EndToEndRow(gtx, v.Theme.Label(values.TextSize16, listVSP[i].Host).Layout, txt.Layout)
 								})
 							}),

@@ -58,7 +58,7 @@ func NewVoteBar(l *load.Load) *VoteBar {
 		infoIcon:      decredmaterial.NewIcon(l.Icons.ActionInfo),
 		legendIcon:    decredmaterial.NewIcon(l.Icons.ImageBrightness1),
 	}
-	vb.infoIcon.Color = l.Theme.Color.Gray
+	vb.infoIcon.Color = l.Theme.Color.Gray1
 
 	return vb
 }
@@ -143,7 +143,7 @@ func (v *VoteBar) votebarLayout(gtx C) D {
 
 	return layout.Stack{Alignment: layout.W}.Layout(gtx,
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-			return progressScale(progressBarWidth, v.Theme.Color.Gray1, 1)
+			return progressScale(progressBarWidth, v.Theme.Color.Gray2, 1)
 		}),
 		layout.Stacked(func(gtx layout.Context) layout.Dimensions {
 			return layout.Flex{}.Layout(gtx,
@@ -187,7 +187,7 @@ func (v *VoteBar) requiredYesVotesIndicator(gtx C) D {
 		},
 	}
 	defer clip.Rect(rect).Push(gtx.Ops).Pop()
-	paint.Fill(gtx.Ops, v.Theme.Color.InactiveGray)
+	paint.Fill(gtx.Ops, v.Theme.Color.Gray3)
 	v.votesIndicatorTooltip(gtx, rect, thumbLeftPos)
 
 	return D{
@@ -204,11 +204,11 @@ func (v *VoteBar) Layout(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								yesLabel := v.Theme.Body1("Yes: ")
-								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes)
+								return v.layoutIconAndText(gtx, yesLabel, v.yesVotes, v.yesColor)
 							}),
 							layout.Rigid(func(gtx C) D {
 								noLabel := v.Theme.Body1("No: ")
-								return v.layoutIconAndText(gtx, noLabel, v.noVotes)
+								return v.layoutIconAndText(gtx, noLabel, v.noVotes, v.noColor)
 							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, func(gtx C) D {
@@ -226,11 +226,12 @@ func (v *VoteBar) Layout(gtx C) D {
 	)
 }
 
-func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32) D {
+func (v *VoteBar) layoutIconAndText(gtx C, lbl decredmaterial.Label, count float32, col color.NRGBA) D {
 	return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Right: values.MarginPadding5, Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
+					v.legendIcon.Color = col
 					return v.legendIcon.Layout(gtx, values.MarginPadding10)
 				})
 			}),
@@ -256,7 +257,7 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 	quorumRequirement := (v.requiredPercentage / 100) * v.eligibleVotes
 
 	requirement := v.Theme.Body2(fmt.Sprintf("/%d votes", int(quorumRequirement)))
-	requirement.Color = v.Theme.Color.Gray
+	requirement.Color = v.Theme.Color.GrayText2
 
 	dims := layout.Flex{}.Layout(gtx,
 		layout.Rigid(v.Theme.Body2(fmt.Sprintf("%d", int(v.totalVotes))).Layout),
@@ -279,7 +280,7 @@ func (v *VoteBar) layoutInfo(gtx C) D {
 
 func (v *VoteBar) layoutInfoTooltip(gtx C, rect image.Rectangle) {
 	inset := layout.Inset{Top: unit.Dp(20), Left: unit.Dp(-180)}
-	col := v.Theme.Color.Gray
+	col := v.Theme.Color.GrayText2
 
 	v.quorumTooltip.Layout(gtx, rect, inset, func(gtx C) D {
 		gtx.Constraints.Max.X = gtx.Px(unit.Dp(180))

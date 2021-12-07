@@ -3,6 +3,8 @@ package decredmaterial
 import (
 	"image/color"
 	"math"
+	"math/rand"
+	"time"
 
 	"gioui.org/f32"
 	"gioui.org/layout"
@@ -110,4 +112,8 @@ func drawInk(gtx layout.Context, c widget.Press, highlightColor color.NRGBA) {
 	})).Push(gtx.Ops).Pop()
 	defer clip.UniformRRect(f32.Rectangle{Max: f32.Pt(size, size)}, rr).Push(gtx.Ops).Pop()
 	paint.PaintOp{}.Add(gtx.Ops)
+}
+
+func GenerateRandomNumber() int {
+	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
 }

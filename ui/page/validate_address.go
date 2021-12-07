@@ -98,7 +98,7 @@ func (pg *ValidateAddressPage) addressSection() layout.Widget {
 func (pg *ValidateAddressPage) description() layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		desc := pg.Theme.Caption("Enter an address to validate:")
-		desc.Color = pg.Theme.Color.Gray
+		desc.Color = pg.Theme.Color.GrayText2
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
 }
@@ -174,7 +174,7 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 										}
 										txt := pg.Theme.Body1(text)
 										txt.TextSize = values.TextSize14
-										txt.Color = pg.Theme.Color.Gray
+										txt.Color = pg.Theme.Color.GrayText2
 										return txt.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
@@ -182,11 +182,11 @@ func (pg *ValidateAddressPage) showDisplayResult() layout.Widget {
 											if components.StringNotEmpty(pg.walletName) {
 												return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 													return decredmaterial.Card{
-														Color: pg.Theme.Color.LightGray,
+														Color: pg.Theme.Color.Gray4,
 													}.Layout(gtx, func(gtx C) D {
 														return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 															walletText := pg.Theme.Caption(pg.walletName)
-															walletText.Color = pg.Theme.Color.Gray
+															walletText.Color = pg.Theme.Color.GrayText2
 															return walletText.Layout(gtx)
 														})
 													})
@@ -265,8 +265,8 @@ func (pg *ValidateAddressPage) validateAddress() {
 
 func (pg *ValidateAddressPage) updateButtonColors() {
 	if !components.StringNotEmpty(pg.addressEditor.Editor.Text()) {
-		pg.validateBtn.Background = pg.Theme.Color.Hint
-		pg.clearBtn.Color = pg.Theme.Color.Hint
+		pg.validateBtn.Background = pg.Theme.Color.Gray2
+		pg.clearBtn.Color = pg.Theme.Color.GrayText4
 		pg.isEnabled = false
 	} else {
 		pg.validateBtn.Background = pg.Theme.Color.Primary
@@ -276,7 +276,7 @@ func (pg *ValidateAddressPage) updateButtonColors() {
 }
 
 func (pg *ValidateAddressPage) clearInputs() {
-	pg.validateBtn.Background = pg.Theme.Color.Hint
+	pg.validateBtn.Background = pg.Theme.Color.Gray2
 	pg.addressEditor.Editor.SetText("")
 }
 

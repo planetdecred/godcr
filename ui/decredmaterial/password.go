@@ -90,7 +90,7 @@ func (p *Password) WithError(e string) {
 }
 
 func (p *Password) updateColors() {
-	p.confirmButton.Background = p.theme.Color.Hint
+	p.confirmButton.Background = p.theme.Color.Gray3
 
 	if p.passwordEditor.Editor.Len() > 0 {
 		p.confirmButton.Background = p.theme.Color.Primary

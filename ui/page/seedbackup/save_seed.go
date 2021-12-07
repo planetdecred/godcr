@@ -128,12 +128,12 @@ func (pg *SaveSeedPage) Layout(gtx C) D {
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize16, "Write down all 33 words in the correct order.")
-					label.Color = pg.Theme.Color.Gray3
+					label.Color = pg.Theme.Color.GrayText1
 					return label.Layout(gtx)
 				}),
 				layout.Rigid(func(gtx C) D {
 					label := pg.Theme.Label(values.TextSize14, "Your 33-word seed word")
-					label.Color = pg.Theme.Color.Gray3
+					label.Color = pg.Theme.Color.GrayText1
 
 					return decredmaterial.LinearLayout{
 						Width:       decredmaterial.MatchParent,
@@ -190,7 +190,7 @@ func seedItem(theme *decredmaterial.Theme, gtx C, width, index int, word string)
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			indexLabel := theme.Label(values.TextSize16, fmt.Sprint(index))
-			indexLabel.Color = theme.Color.Gray3
+			indexLabel.Color = theme.Color.GrayText1
 			indexLabel.Font.Weight = text.Medium
 			return decredmaterial.LinearLayout{
 				Width:     gtx.Px(values.MarginPadding30),
@@ -202,7 +202,7 @@ func seedItem(theme *decredmaterial.Theme, gtx C, width, index int, word string)
 		}),
 		layout.Rigid(func(gtx C) D {
 			seedWord := theme.Label(values.TextSize16, word)
-			seedWord.Color = theme.Color.Gray3
+			seedWord.Color = theme.Color.GrayText1
 			seedWord.Font.Weight = text.Medium
 			return seedWord.Layout(gtx)
 		}),

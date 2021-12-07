@@ -106,7 +106,7 @@ func (pg *WalletSettingsPage) pageSections(gtx layout.Context, title string, bod
 					return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txt := pg.Theme.Body2(title)
-							txt.Color = pg.Theme.Color.Gray
+							txt.Color = pg.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
 						layout.Flexed(1, func(gtx C) D {
@@ -146,6 +146,7 @@ func (pg *WalletSettingsPage) bottomSectionLabel(clickable *decredmaterial.Click
 					layout.Rigid(textLabel.Layout),
 					layout.Flexed(1, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
+							pg.chevronRightIcon.Color = pg.Theme.Color.Gray1
 							return pg.chevronRightIcon.Layout(gtx, values.MarginPadding20)
 						})
 					}),

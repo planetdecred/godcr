@@ -49,7 +49,7 @@ type CreatePasswordModal struct {
 func NewCreatePasswordModal(l *load.Load) *CreatePasswordModal {
 	cm := &CreatePasswordModal{
 		Load:             l,
-		randomID:         fmt.Sprintf("%s-%d", CreateWallet, generateRandomNumber()),
+		randomID:         fmt.Sprintf("%s-%d", CreateWallet, decredmaterial.GenerateRandomNumber()),
 		modal:            *l.Theme.ModalFloatTitle(),
 		passwordStrength: l.Theme.ProgressBar(0),
 		btnPositve:       l.Theme.Button("Confirm"),
@@ -160,7 +160,7 @@ func (cm *CreatePasswordModal) Handle() {
 		cm.btnPositve.Background = cm.Theme.Color.Primary
 		cm.isEnabled = true
 	} else {
-		cm.btnPositve.Background = cm.Theme.Color.InactiveGray
+		cm.btnPositve.Background = cm.Theme.Color.Gray3
 		cm.isEnabled = false
 	}
 
@@ -272,14 +272,14 @@ func (cm *CreatePasswordModal) Layout(gtx layout.Context) D {
 							layout.Rigid(func(gtx C) D {
 								if cm.showWalletWarnInfo {
 									txt := cm.Theme.Label(values.MarginPadding12, "This spending password is for the new wallet only")
-									txt.Color = cm.Theme.Color.Gray4
+									txt.Color = cm.Theme.Color.GrayText1
 									return txt.Layout(gtx)
 								}
 								return layout.Dimensions{}
 							}),
 							layout.Rigid(func(gtx C) D {
 								txt := cm.Theme.Label(values.MarginPadding12, strconv.Itoa(cm.passwordEditor.Editor.Len()))
-								txt.Color = cm.Theme.Color.Gray4
+								txt.Color = cm.Theme.Color.GrayText1
 								return layout.E.Layout(gtx, txt.Layout)
 							}),
 						)

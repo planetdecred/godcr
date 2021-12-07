@@ -34,8 +34,19 @@ type ButtonLayout struct {
 	material.ButtonLayoutStyle
 }
 
+// IconButtonStyle is similar to material.IconButtonStyle but excluding
+// the color fields. This ensures that the IconButton colors are only
+// set using the IconButton.colorStyle field.
+type IconButtonStyle struct {
+	Icon   *widget.Icon
+	Size   unit.Value
+	Inset  layout.Inset
+	Button *widget.Clickable
+}
+
 type IconButton struct {
-	material.IconButtonStyle
+	IconButtonStyle
+	colorStyle *values.ColorStyle
 }
 
 func (t *Theme) Button(txt string) Button {
@@ -54,7 +65,7 @@ func (t *Theme) Button(txt string) Button {
 		ButtonStyle:        buttonStyle,
 		label:              t.Label(values.TextSize16, txt),
 		clickable:          clickable,
-		disabledBackground: t.Color.InactiveGray,
+		disabledBackground: t.Color.Gray3,
 		disabledTextColor:  t.Color.Surface,
 		HighlightColor:     t.Color.PrimaryHighlight,
 		isEnabled:          true,
@@ -67,7 +78,7 @@ func (t *Theme) OutlineButton(txt string) Button {
 	btn.HighlightColor = t.Color.SurfaceHighlight
 	btn.Color = t.Color.Primary
 	btn.disabledBackground = color.NRGBA{}
-	btn.disabledTextColor = t.Color.InactiveGray
+	btn.disabledTextColor = t.Color.Gray3
 
 	return btn
 }
@@ -84,13 +95,15 @@ func (t *Theme) ButtonLayout() ButtonLayout {
 }
 
 func (t *Theme) IconButton(icon *widget.Icon) IconButton {
-	return IconButton{material.IconButton(t.Base, new(widget.Clickable), icon)}
-}
-
-func (t *Theme) PlainIconButton(icon *widget.Icon) IconButton {
-	btn := IconButton{material.IconButton(t.Base, new(widget.Clickable), icon)}
-	btn.Background = color.NRGBA{}
-	return btn
+	return IconButton{
+		IconButtonStyle{
+			Icon:   icon,
+			Button: new(widget.Clickable),
+			Size:   unit.Dp(24),
+			Inset:  layout.UniformInset(unit.Dp(12)),
+		},
+		t.Styles.IconButtonColorStyle,
+	}
 }
 
 func (b *Button) SetClickable(clickable *widget.Clickable) {
@@ -181,8 +194,21 @@ func (bl ButtonLayout) Layout(gtx layout.Context, w layout.Widget) layout.Dimens
 	return bl.ButtonLayoutStyle.Layout(gtx, w)
 }
 
+// TODO: Test to ensure this works!
+func (ib IconButton) ChangeColorStyle(colorStyle *values.ColorStyle) {
+	ib.colorStyle = colorStyle
+}
+
 func (ib IconButton) Layout(gtx layout.Context) layout.Dimensions {
-	return ib.IconButtonStyle.Layout(gtx)
+	ibs := material.IconButtonStyle{
+		Background: ib.colorStyle.Background,
+		Color:      ib.colorStyle.Foreground,
+		Icon:       ib.Icon,
+		Size:       ib.Size,
+		Inset:      ib.Inset,
+		Button:     ib.Button,
+	}
+	return ibs.Layout(gtx)
 }
 
 type TextAndIconButton struct {

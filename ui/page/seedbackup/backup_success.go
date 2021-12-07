@@ -71,7 +71,7 @@ func (pg *BackupSuccessPage) Layout(gtx C) D {
 					}),
 					layout.Rigid(func(gtx C) D {
 						label := pg.Theme.Label(values.TextSize16, "Be sure to store your seed word backup in a secure location.")
-						label.Color = pg.Theme.Color.Gray3
+						label.Color = pg.Theme.Color.GrayText1
 
 						return layout.Inset{Top: values.MarginPadding16}.Layout(gtx, label.Layout)
 					}),

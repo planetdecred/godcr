@@ -35,8 +35,7 @@ func (pg *Page) initLayoutWidgets() {
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.backButton.Icon = pg.Icons.ContentClear
 
-	pg.moreOption = pg.Theme.PlainIconButton(pg.Icons.NavMoreIcon)
-	pg.moreOption.Color = pg.Theme.Color.Gray3
+	pg.moreOption = pg.Theme.IconButton(pg.Icons.NavMoreIcon)
 	pg.moreOption.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.retryExchange = pg.Theme.Button("Retry")
@@ -166,7 +165,7 @@ func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 							}),
 							layout.Rigid(func(gtx C) D {
 								return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-									return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+									return layout.Inset{Bottom: values.MarginPadding16, Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 										return layout.Inset{Bottom: values.MarginPadding4, Top: values.MarginPadding4}.Layout(gtx, pageContent[i])
 									})
 								})
@@ -301,7 +300,7 @@ func (pg *Page) feeSection(gtx layout.Context) layout.Dimensions {
 
 	collapsibleBody := func(gtx C) D {
 		card := pg.Theme.Card()
-		card.Color = pg.Theme.Color.LightGray
+		card.Color = pg.Theme.Color.Gray4
 		inset := layout.Inset{
 			Top: values.MarginPadding10,
 		}
@@ -382,7 +381,7 @@ func (pg *Page) contentRow(gtx layout.Context, leftValue, rightValue string) lay
 	return layout.Flex{}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2(leftValue)
-			txt.Color = pg.Theme.Color.Gray
+			txt.Color = pg.Theme.Color.GrayText2
 			return txt.Layout(gtx)
 		}),
 		layout.Flexed(1, func(gtx C) D {

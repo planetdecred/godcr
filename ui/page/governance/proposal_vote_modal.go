@@ -50,7 +50,7 @@ func newVoteModal(l *load.Load, proposal *dcrlibwallet.Proposal) *voteModal {
 		cancelBtn:      l.Theme.OutlineButton("Cancel"),
 	}
 
-	vm.voteBtn.Background = l.Theme.Color.Gray1
+	vm.voteBtn.Background = l.Theme.Color.Gray3
 	vm.voteBtn.Color = l.Theme.Color.Surface
 
 	vm.yesVote = newInputVoteOptions(vm.Load, "Yes")
@@ -390,8 +390,8 @@ func (vm *voteModal) Layout(gtx layout.Context) D {
 
 func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidgets) D {
 	wrap := vm.Theme.Card()
-	wrap.Color = vm.Theme.Color.LightGray
-	dotColor := vm.Theme.Color.InactiveGray
+	wrap.Color = vm.Theme.Color.Gray4
+	dotColor := vm.Theme.Color.Gray3
 	if wdg.voteCount() > 0 {
 		wrap.Color = wdg.activeBg
 		dotColor = wdg.dotColor
@@ -426,7 +426,7 @@ func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 				}),
 				layout.Flexed(.6, func(gtx C) D {
 					border := widget.Border{
-						Color:        vm.Theme.Color.Gray1,
+						Color:        vm.Theme.Color.Gray2,
 						CornerRadius: values.MarginPadding8,
 						Width:        values.MarginPadding2,
 					}
@@ -456,7 +456,7 @@ func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 								}),
 								layout.Flexed(0.02, func(gtx C) D {
 									line := vm.Theme.Line(height, gtx.Px(values.MarginPadding2))
-									line.Color = vm.Theme.Color.Gray1
+									line.Color = vm.Theme.Color.Gray2
 									return line.Layout(gtx)
 								}),
 								layout.Rigid(func(gtx C) D {

@@ -159,7 +159,7 @@ func (t *TabItem) Layout(gtx layout.Context, selected int, tabPosition Position)
 			return indicatorDirection(tabPosition).Layout(gtx, func(gtx C) D {
 				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
-						return line(gtx, tabWidth, tabHeight, keyblue)
+						return line(gtx, tabWidth, tabHeight, color.NRGBA{})
 					},
 					))
 			})
@@ -216,9 +216,8 @@ func (t *Tabs) scrollButton(right bool, button *widget.Clickable) layout.FlexChi
 		if (t.Position == Top || t.Position == Bottom) && show {
 			t.iconButton.Icon = icon
 			t.iconButton.Size = unit.Dp(20)
-			t.iconButton.Color = rgb(0xbbbbbb)
-			t.iconButton.Background = color.NRGBA{}
 			t.iconButton.Button = button
+			t.iconButton.ChangeColorStyle(&values.ColorStyle{Background: color.NRGBA{}, Foreground: rgb(0xbbbbbb)})
 			return t.iconButton.Layout(gtx)
 		}
 		return layout.Dimensions{}

@@ -33,7 +33,7 @@ func NewTextInputModal(l *load.Load) *TextInputModal {
 		isCancelable: true,
 	}
 
-	tm.randomID = fmt.Sprintf("%s-%d", TextInput, generateRandomNumber())
+	tm.randomID = fmt.Sprintf("%s-%d", TextInput, decredmaterial.GenerateRandomNumber())
 
 	tm.textInput = l.Theme.Editor(new(widget.Editor), "Hint")
 	tm.textInput.Editor.SingleLine, tm.textInput.Editor.Submit = true, true
@@ -92,7 +92,7 @@ func (tm *TextInputModal) Handle() {
 		tm.btnPositve.Background = tm.Theme.Color.Primary
 		tm.isEnabled = true
 	} else {
-		tm.btnPositve.Background = tm.Theme.Color.InactiveGray
+		tm.btnPositve.Background = tm.Theme.Color.Gray3
 		tm.isEnabled = false
 	}
 
@@ -140,7 +140,7 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					img := decredmaterial.NewIcon(tm.Icons.ActionInfo)
-					img.Color = tm.Theme.Color.Gray3
+					img.Color = tm.Theme.Color.Gray1
 					inset := layout.Inset{Right: values.MarginPadding4}
 					return inset.Layout(gtx, func(gtx C) D {
 						return img.Layout(gtx, values.MarginPadding20)
@@ -150,19 +150,19 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 					return layout.Flex{}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txt := tm.Theme.Label(values.MarginPadding16, "Accounts")
-							txt.Color = tm.Theme.Color.Gray4
+							txt.Color = tm.Theme.Color.GrayText1
 							return txt.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := tm.Theme.Label(values.MarginPadding16, "cannot")
 							txt.Font.Weight = text.SemiBold
-							txt.Color = tm.Theme.Color.Gray4
+							txt.Color = tm.Theme.Color.GrayText1
 							inset := layout.Inset{Right: values.MarginPadding2, Left: values.MarginPadding2}
 							return inset.Layout(gtx, txt.Layout)
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := tm.Theme.Label(values.MarginPadding16, "be deleted once created")
-							txt.Color = tm.Theme.Color.Gray4
+							txt.Color = tm.Theme.Color.GrayText1
 							return txt.Layout(gtx)
 						}),
 					)

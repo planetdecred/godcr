@@ -99,7 +99,7 @@ func renderBlockQuote(lbl decredmaterial.Label, theme *decredmaterial.Theme) lay
 		return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 			layout.Flexed(1, func(gtx C) D {
 				l := theme.SeparatorVertical(dims.Size.Y, 10)
-				l.Color = theme.Color.Gray
+				l.Color = theme.Color.Gray2
 				return l.Layout(gtx)
 			}),
 			layout.Rigid(func(gtx C) D {

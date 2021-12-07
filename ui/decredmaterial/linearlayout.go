@@ -64,12 +64,12 @@ func (ll LinearLayout) Layout(gtx C, children ...layout.FlexChild) D {
 						}
 
 						if ll.Clickable.Hoverable && ll.Clickable.button.Hovered() {
-							background = ll.Clickable.HoverColor
+							background = ll.Clickable.style.HoverColor
 						}
 						fill(gtx, background)
 
 						for _, c := range ll.Clickable.button.History() {
-							drawInk(gtx, c, ll.Clickable.Color)
+							drawInk(gtx, c, ll.Clickable.style.Color)
 						}
 
 						return ll.Clickable.button.Layout(gtx)

@@ -47,7 +47,11 @@ func (pg *AppOverviewPage) recentProposalsSection(gtx C) D {
 				layout.Rigid(func(gtx C) D {
 					return layout.UniformInset(values.MarginPadding16).Layout(gtx, func(gtx C) D {
 						return layout.Flex{}.Layout(gtx,
-							layout.Rigid(pg.Theme.Label(values.TextSize14, "Recent Proposals").Layout),
+							layout.Rigid(func(gtx C) D {
+								title := pg.Theme.Label(values.TextSize14, "Recent Proposals")
+								title.Color = pg.Theme.Color.GrayText1
+								return title.Layout(gtx)
+							}),
 							layout.Flexed(1, func(gtx C) D {
 								return layout.E.Layout(gtx, pg.toProposals.Layout)
 							}),

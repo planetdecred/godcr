@@ -102,19 +102,18 @@ func NewWalletPage(l *load.Load) *WalletPage {
 
 	pg.openAddWalletPopupButton.Radius = decredmaterial.Radius(24)
 
-	pg.separator.Color = l.Theme.Color.Gray1
+	pg.separator.Color = l.Theme.Color.Gray2
 
 	pg.watchOnlyWalletLabel = pg.Theme.Body1(values.String(values.StrWatchOnlyWallets))
-	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.Gray
+	pg.watchOnlyWalletLabel.Color = pg.Theme.Color.GrayText2
 
 	pg.iconButton = decredmaterial.IconButton{
-		IconButtonStyle: material.IconButtonStyle{
-			Size:       unit.Dp(25),
-			Background: color.NRGBA{},
-			Color:      pg.Theme.Color.Text,
-			Inset:      layout.UniformInset(unit.Dp(0)),
+		IconButtonStyle: decredmaterial.IconButtonStyle{
+			Size:  unit.Dp(25),
+			Inset: layout.UniformInset(unit.Dp(0)),
 		},
 	}
+	pg.iconButton.ChangeColorStyle(pg.Theme.Styles.IconButtonColorStyle)
 
 	pg.optionsMenuCard = decredmaterial.Card{Color: pg.Theme.Color.Surface}
 	pg.optionsMenuCard.Radius = decredmaterial.Radius(5)
@@ -164,21 +163,23 @@ func (pg *WalletPage) loadWalletAndAccounts() {
 
 		if wal.IsWatchingOnlyWallet() {
 			moreBtn := decredmaterial.IconButton{
-				IconButtonStyle: material.IconButtonStyle{
-					Button:     new(widget.Clickable),
-					Icon:       pg.Icons.NavigationMore,
-					Size:       values.MarginPadding25,
-					Background: color.NRGBA{},
-					Color:      pg.Theme.Color.Text,
-					Inset:      layout.UniformInset(values.MarginPadding0),
+				IconButtonStyle: decredmaterial.IconButtonStyle{
+					Button: new(widget.Clickable),
+					Icon:   pg.Icons.NavigationMore,
+					Size:   values.MarginPadding25,
+					Inset:  layout.UniformInset(values.MarginPadding0),
 				},
 			}
+			moreBtn.ChangeColorStyle(&values.ColorStyle{
+				Background: color.NRGBA{},
+				Foreground: pg.Theme.Color.Text,
+			})
 			listItem.moreButton = moreBtn
 		} else {
 			listItem.addAcctClickable = pg.Theme.NewClickable(true)
 
 			backupClickable := pg.Theme.NewClickable(false)
-			backupClickable.Color = pg.Theme.Color.OrangeRipple
+			backupClickable.ChangeStyle(&values.ClickableStyle{Color: pg.Theme.Color.OrangeRipple})
 			backupClickable.Radius = decredmaterial.CornerRadius{BottomRight: 14, BottomLeft: 14}
 			listItem.backupAcctClickable = backupClickable
 
@@ -354,7 +355,7 @@ func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 		return layout.Stack{Alignment: layout.SE}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						dims := pageContent[i](gtx)
 						if pg.isAddWalletMenuOpen || pg.openPopupIndex != -1 {
 							dims.Size.Y += 60
@@ -484,12 +485,13 @@ func (pg *WalletPage) walletSection(gtx layout.Context) layout.Dimensions {
 											Right: values.MarginPadding10,
 											Left:  values.MarginPadding38,
 										}.Layout(gtx, func(gtx C) D {
+											pg.addAcctIcon.Color = pg.Theme.Color.Gray1
 											return pg.addAcctIcon.Layout(gtx, values.MarginPadding25)
 										})
 									}),
 									layout.Rigid(func(gtx C) D {
 										txt := pg.Theme.Label(values.TextSize16, values.String(values.StrAddNewAccount))
-										txt.Color = pg.Theme.Color.Gray
+										txt.Color = pg.Theme.Color.GrayText2
 										return txt.Layout(gtx)
 									}),
 								)
@@ -649,7 +651,7 @@ func (pg *WalletPage) layoutCollapsibleHeader(gtx layout.Context, listItem *wall
 		layout.Flexed(1, func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {
 				balanceLabel := pg.Theme.Body1(listItem.totalBalance)
-				balanceLabel.Color = pg.Theme.Color.Gray
+				balanceLabel.Color = pg.Theme.Color.GrayText2
 				return layout.Inset{Right: values.MarginPadding5}.Layout(gtx, balanceLabel.Layout)
 			})
 		}),
@@ -729,11 +731,11 @@ func (pg *WalletPage) walletAccountsLayout(gtx layout.Context, account *dcrlibwa
 								}
 								return inset.Layout(gtx, func(gtx C) D {
 									spendableLabel := pg.Theme.Body2(values.String(values.StrLabelSpendable))
-									spendableLabel.Color = pg.Theme.Color.Gray
+									spendableLabel.Color = pg.Theme.Color.GrayText2
 
 									spendableBal := dcrutil.Amount(account.Balance.Spendable).String()
 									spendableBalLabel := pg.Theme.Body2(spendableBal)
-									spendableBalLabel.Color = pg.Theme.Color.Gray
+									spendableBalLabel.Color = pg.Theme.Color.GrayText2
 									return pg.tableLayout(gtx, spendableLabel, spendableBalLabel)
 								})
 							}),
@@ -785,6 +787,7 @@ func (pg *WalletPage) backupSeedNotification(gtx layout.Context, listItem *walle
 					}
 					return inset.Layout(gtx, func(gtx C) D {
 						return layout.E.Layout(gtx, func(gtx C) D {
+							pg.backupAcctIcon.Color = pg.Theme.Color.White
 							return pg.backupAcctIcon.Layout(gtx, values.MarginPadding20)
 						})
 					})

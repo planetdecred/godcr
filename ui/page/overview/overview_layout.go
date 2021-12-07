@@ -104,8 +104,7 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 		bestBlock: l.WL.MultiWallet.GetBestBlock(),
 	}
 
-	pg.toMixer = l.Theme.PlainIconButton(l.Icons.NavigationArrowForward)
-	pg.toMixer.Color = l.Theme.Color.Gray3
+	pg.toMixer = l.Theme.IconButton(l.Icons.NavigationArrowForward)
 	pg.toMixer.Size = values.MarginPadding24
 	pg.toMixer.Inset = layout.UniformInset(values.MarginPadding4)
 
@@ -167,7 +166,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 									return layout.Flex{Spacing: layout.SpaceBetween, Alignment: layout.Middle}.Layout(gtx,
 										layout.Rigid(func(gtx C) D {
 											t := pg.Theme.Label(values.TextSize14, "Unmixed balance")
-											t.Color = pg.Theme.Color.Gray
+											t.Color = pg.Theme.Color.GrayText2
 											return t.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {

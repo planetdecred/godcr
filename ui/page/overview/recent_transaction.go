@@ -37,7 +37,7 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					title := pg.Theme.Body2(values.String(values.StrRecentTransactions))
-					title.Color = pg.Theme.Color.Gray3
+					title.Color = pg.Theme.Color.GrayText1
 
 					gtx.Constraints.Min.X = gtx.Constraints.Max.X
 					titlePadding := values.MarginPadding15
@@ -63,7 +63,7 @@ func (pg *AppOverviewPage) recentTransactionsSection(gtx layout.Context) layout.
 				layout.Rigid(func(gtx C) D {
 					if len(pg.transactions) == 0 {
 						message := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
-						message.Color = pg.Theme.Color.Gray2
+						message.Color = pg.Theme.Color.GrayText3
 						return components.Container{Padding: layout.Inset{
 							Left:   values.MarginPadding18,
 							Bottom: values.MarginPadding16,

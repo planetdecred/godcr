@@ -58,7 +58,7 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		},
 		info:           l.Theme.IconButton(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo))),
 		copy:           l.Theme.Button("Copy"),
-		more:           l.Theme.PlainIconButton(l.Icons.NavMoreIcon),
+		more:           l.Theme.IconButton(l.Icons.NavMoreIcon),
 		newAddr:        l.Theme.Button("Generate new address"),
 		receiveAddress: l.Theme.Label(values.TextSize20, ""),
 		card:           l.Theme.Card(),
@@ -75,7 +75,6 @@ func NewReceivePage(l *load.Load) *ReceivePage {
 		Left:   values.MarginPadding16,
 		Right:  values.MarginPadding16,
 	}
-	pg.more.Color = pg.Theme.Color.Gray3
 	pg.more.Inset = layout.UniformInset(values.MarginPadding0)
 	pg.newAddr.Inset = layout.Inset{
 		Top:    values.MarginPadding12,
@@ -208,7 +207,7 @@ func (pg *ReceivePage) Layout(gtx layout.Context) layout.Dimensions {
 			}),
 			layout.Rigid(func(gtx C) D {
 				return pg.Theme.List(pg.scrollContainer).Layout(gtx, 1, func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 						return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 							return pg.pageContainer.Layout(gtx, len(pageContent), func(gtx C, i int) D {
 								return pageContent[i](gtx)
@@ -265,7 +264,7 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			txt := pg.Theme.Body2("Your Address")
-			txt.Color = pg.Theme.Color.Gray
+			txt.Color = pg.Theme.Color.GrayText2
 			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -288,7 +287,7 @@ func (pg *ReceivePage) titleLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *ReceivePage) addressLayout(gtx layout.Context) layout.Dimensions {
 	card := decredmaterial.Card{
-		Color: pg.Theme.Color.LightGray,
+		Color: pg.Theme.Color.Gray4,
 	}
 
 	return layout.Inset{Top: values.MarginPadding14, Bottom: values.MarginPadding16}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {

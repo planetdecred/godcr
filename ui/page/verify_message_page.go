@@ -109,7 +109,7 @@ func (pg *VerifyMessagePage) inputRow(editor decredmaterial.Editor) layout.Widge
 func (pg *VerifyMessagePage) description() layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		desc := pg.Theme.Caption("Enter the address, signature, and message to verify:")
-		desc.Color = pg.Theme.Color.Gray
+		desc.Color = pg.Theme.Color.GrayText2
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
 }
@@ -197,7 +197,7 @@ func (pg *VerifyMessagePage) validateAllInputs() bool {
 }
 
 func (pg *VerifyMessagePage) updateButtonColors() {
-	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.Hint, pg.Theme.Color.Hint
+	pg.clearBtn.Color, pg.verifyButton.Background = pg.Theme.Color.GrayText4, pg.Theme.Color.Gray2
 	pg.isEnabled = false
 
 	if pg.addressIsValid && components.StringNotEmpty(pg.messageEditor.Editor.Text(), pg.signatureEditor.Editor.Text()) {

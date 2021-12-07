@@ -28,11 +28,10 @@ func (t *Theme) ModalFloatTitle() *Modal {
 func (t *Theme) Modal() *Modal {
 	overlayColor := t.Color.Black
 	overlayColor.A = 200
-	background := t.Color.Surface
 
 	m := &Modal{
 		overlayColor: overlayColor,
-		background:   background,
+		background:   t.Color.Surface,
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical, Alignment: layout.Middle},
 		},

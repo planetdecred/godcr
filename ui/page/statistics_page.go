@@ -10,6 +10,7 @@ import (
 	"gioui.org/op"
 	"gioui.org/widget"
 
+	"github.com/planetdecred/dcrlibwallet"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/page/components"
@@ -42,7 +43,7 @@ func NewStatPage(l *load.Load) *StatPage {
 		netType: l.WL.Wallet.Net,
 	}
 	pg.syncStatus = l.WL.SyncStatus
-	if pg.netType == "testnet3" {
+	if pg.netType == dcrlibwallet.Testnet3 {
 		pg.netType = "Testnet"
 	} else {
 		pg.netType = strings.Title(pg.netType)
@@ -76,7 +77,7 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		return func(gtx C) D {
 			l := pg.Theme.Body2(t)
 			r := pg.Theme.Body2(v)
-			r.Color = pg.Theme.Color.Gray
+			r.Color = pg.Theme.Color.GrayText2
 			return inset.Layout(gtx, func(gtx C) D {
 				return components.EndToEndRow(gtx, l.Layout, r.Layout)
 			})
@@ -108,7 +109,7 @@ func (pg *StatPage) layoutStats(gtx C) D {
 	}
 
 	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {
-		return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 			return card.Layout(gtx, func(gtx C) D {
 				return layout.Inset{Left: values.MarginPadding16}.Layout(gtx, func(gtx C) D {
 					return pg.l.Layout(gtx, len(items), func(gtx C, i int) D {

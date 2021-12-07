@@ -220,9 +220,9 @@ func ticketStatusTooltip(gtx C, l *load.Load, tx *transactionItem) layout.Dimens
 	titleLabel := l.Theme.Label(values.MarginPadding14, title)
 
 	mainDescLabel := l.Theme.Label(values.MarginPadding14, mainDesc)
-	mainDescLabel.Color = l.Theme.Color.Gray
+	mainDescLabel.Color = l.Theme.Color.GrayText2
 	subDescLabel := l.Theme.Label(values.MarginPadding14, subDesc)
-	subDescLabel.Color = l.Theme.Color.Gray
+	subDescLabel.Color = l.Theme.Color.GrayText2
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
@@ -265,7 +265,7 @@ func ticketCardTooltip(gtx C, rectLayout layout.Dimensions, tooltip *decredmater
 
 func titleDescTooltip(gtx C, l *load.Load, title string, desc string) layout.Dimensions {
 	titleLabel := l.Theme.Label(values.MarginPadding14, title)
-	titleLabel.Color = l.Theme.Color.Gray
+	titleLabel.Color = l.Theme.Color.GrayText2
 
 	descLabel := l.Theme.Label(values.MarginPadding14, desc)
 
@@ -413,7 +413,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 									Right: values.MarginPadding4,
 								}.Layout(gtx, func(gtx C) D {
 									txt := l.Theme.Label(values.MarginPadding14, "•")
-									txt.Color = l.Theme.Color.Gray
+									txt.Color = l.Theme.Color.GrayText2
 
 									return txt.Layout(gtx)
 								})
@@ -424,7 +424,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 								}
 
 								txt := l.Theme.Label(values.TextSize14, wal.Name)
-								txt.Color = l.Theme.Color.Gray
+								txt.Color = l.Theme.Color.GrayText2
 								txtLayout := txt.Layout(gtx)
 								ticketCardTooltip(gtx, txtLayout, tx.walletNameTooltip, values.MarginPadding0, func(gtx C) D {
 									return titleDescTooltip(gtx, l, "Wallet name", txt.Text)
@@ -436,7 +436,7 @@ func ticketCard(gtx layout.Context, l *load.Load, tx *transactionItem, showWalle
 				}),
 				layout.Rigid(func(gtx C) D {
 					txt := l.Theme.Label(values.TextSize14, time.Unix(tx.transaction.Timestamp, 0).Format("Jan 2"))
-					txt.Color = l.Theme.Color.Gray2
+					txt.Color = l.Theme.Color.GrayText3
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							txtLayout := txt.Layout(gtx)
@@ -540,7 +540,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 							layout.Rigid(func(gtx C) D {
 
 								dtime := l.Theme.Label(values.TextSize14, ticket.purchaseTime)
-								dtime.Color = l.Theme.Color.Gray2
+								dtime.Color = l.Theme.Color.GrayText3
 
 								return components.EndToEndRow(gtx, func(gtx C) D {
 									return components.LayoutBalance(gtx, l, dcrutil.Amount(ticket.transaction.Amount).String())
@@ -575,7 +575,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 												Right: values.MarginPadding4,
 											}.Layout(gtx, func(gtx C) D {
 												txt := l.Theme.Label(values.MarginPadding14, "•")
-												txt.Color = l.Theme.Color.Gray
+												txt.Color = l.Theme.Color.GrayText2
 
 												return txt.Layout(gtx)
 											})
@@ -586,7 +586,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 											}
 
 											txt := l.Theme.Label(values.TextSize14, wal.Name)
-											txt.Color = l.Theme.Color.Gray
+											txt.Color = l.Theme.Color.GrayText2
 											txtLayout := txt.Layout(gtx)
 											ticketCardTooltip(gtx, txtLayout, ticket.walletNameTooltip, values.MarginPadding0, func(gtx C) D {
 												return titleDescTooltip(gtx, l, "Wallet name", txt.Text)
@@ -623,7 +623,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 															Right: values.MarginPadding4,
 														}.Layout(gtx, func(gtx C) D {
 															txt := l.Theme.Label(values.MarginPadding14, "•")
-															txt.Color = l.Theme.Color.Gray
+															txt.Color = l.Theme.Color.GrayText2
 															return txt.Layout(gtx)
 														})
 													}),
@@ -651,7 +651,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 											}
 
 											txt := l.Theme.Label(values.TextSize14, ticket.ticketAge)
-											txt.Color = l.Theme.Color.Gray2
+											txt.Color = l.Theme.Color.GrayText3
 											txtLayout := txt.Layout(gtx)
 											ticketCardTooltip(gtx, txtLayout, ticket.daysBehindTooltip, values.MarginPaddingMinus75, func(gtx C) D {
 												return titleDescTooltip(gtx, l, tooltipTitle, ticket.ticketAge)
