@@ -43,7 +43,7 @@ func (t *Theme) Line(height, width int) Line {
 
 func (t *Theme) Separator() Line {
 	l := t.Line(1, 0)
-	l.Color = t.Color.Gray1
+	l.Color = t.Color.Gray2
 	return l
 }
 

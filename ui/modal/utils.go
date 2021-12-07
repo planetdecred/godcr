@@ -1,9 +1,6 @@
 package modal
 
 import (
-	"math/rand"
-	"time"
-
 	"gioui.org/layout"
 	"gioui.org/widget"
 
@@ -25,10 +22,6 @@ func editorsNotEmpty(editors ...*widget.Editor) bool {
 	return true
 }
 
-func generateRandomNumber() int {
-	return rand.New(rand.NewSource(time.Now().UnixNano())).Int()
-}
-
 func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmaterial.Theme, editors ...*widget.Editor) {
 	password := editors[0]
 	strength := dcrlibwallet.ShannonEntropy(password.Text()) / 4.0
@@ -43,5 +36,4 @@ func computePasswordStrength(pb *decredmaterial.ProgressBarStyle, th *decredmate
 	case pb.Progress > 0.50:
 		pb.Color = th.Color.Success
 	}
-
 }

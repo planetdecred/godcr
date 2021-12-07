@@ -88,7 +88,7 @@ func NewTransactionDetailsPage(l *load.Load, transaction *dcrlibwallet.Transacti
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(pg.Load)
 	pg.dot = decredmaterial.NewIcon(l.Icons.ImageBrightness1)
-	pg.dot.Color = l.Theme.Color.Gray
+	pg.dot.Color = l.Theme.Color.Gray1
 
 	// find source account
 	if transaction.Direction == dcrlibwallet.TxDirectionSent ||
@@ -228,7 +228,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 							if pg.transaction.Type == dcrlibwallet.TxTypeMixed && pg.transaction.MixCount > 1 {
 
 								label := pg.Theme.H5(fmt.Sprintf("x%d", pg.transaction.MixCount))
-								label.Color = pg.Theme.Color.Gray
+								label.Color = pg.Theme.Color.GrayText2
 								return layout.Inset{
 									Left: values.MarginPadding8,
 								}.Layout(gtx, label.Layout)
@@ -243,7 +243,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 						Top:    m,
 						Bottom: m,
 					}.Layout(gtx, func(gtx C) D {
-						pg.txnWidgets.time.Color = pg.Theme.Color.Gray
+						pg.txnWidgets.time.Color = pg.Theme.Color.Gray1
 						return pg.txnWidgets.time.Layout(gtx)
 					})
 				}),
@@ -264,7 +264,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 								txt.Color = pg.Theme.Color.Success
 							} else {
 								txt.Text = strings.Title("pending")
-								txt.Color = pg.Theme.Color.Gray
+								txt.Color = pg.Theme.Color.GrayText2
 							}
 							return txt.Layout(gtx)
 						}),
@@ -280,7 +280,7 @@ func (pg *TxDetailsPage) txnBalanceAndStatus(gtx layout.Context) layout.Dimensio
 						}),
 						layout.Rigid(func(gtx C) D {
 							txt := pg.Theme.Body1(values.StringF(values.StrNConfirmations, pg.txConfirmations()))
-							txt.Color = pg.Theme.Color.Gray
+							txt.Color = pg.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
 					)
@@ -299,13 +299,13 @@ func (pg *TxDetailsPage) maturityProgressBar(gtx C) D {
 	}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			t := pg.Theme.Label(values.TextSize14, "Maturity")
-			t.Color = pg.Theme.Color.Gray
+			t.Color = pg.Theme.Color.GrayText2
 			return t.Layout(gtx)
 		}),
 		layout.Flexed(1, func(gtx C) D {
 
 			percentageLabel := pg.Theme.Label(values.TextSize14, "25%")
-			percentageLabel.Color = pg.Theme.Color.Gray
+			percentageLabel.Color = pg.Theme.Color.GrayText2
 
 			progress := pg.Theme.ProgressBar(40)
 			progress.Color = pg.Theme.Color.LightBlue
@@ -492,7 +492,7 @@ func (pg *TxDetailsPage) txnTypeAndID(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						t := pg.Theme.Label(values.TextSize14, values.String(values.StrTransactionID))
-						t.Color = pg.Theme.Color.Gray
+						t.Color = pg.Theme.Color.GrayText2
 						return t.Layout(gtx)
 					}),
 					layout.Rigid(func(gtx C) D {
@@ -513,7 +513,7 @@ func (pg *TxDetailsPage) txnInfoSection(gtx layout.Context, label, value string,
 	return layout.Flex{Spacing: layout.SpaceBetween}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			t := pg.Theme.Label(values.TextSize14, label)
-			t.Color = pg.Theme.Color.Gray
+			t.Color = pg.Theme.Color.GrayText2
 			return t.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -522,11 +522,11 @@ func (pg *TxDetailsPage) txnInfoSection(gtx layout.Context, label, value string,
 					if showWalletBadge {
 						card := pg.Theme.Card()
 						card.Radius = decredmaterial.Radius(0)
-						card.Color = pg.Theme.Color.LightGray
+						card.Color = pg.Theme.Color.Gray4
 						return card.Layout(gtx, func(gtx C) D {
 							return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 								txt := pg.Theme.Body2(pg.wallet.Name)
-								txt.Color = pg.Theme.Color.Gray
+								txt.Color = pg.Theme.Color.GrayText2
 								return txt.Layout(gtx)
 							})
 						})
@@ -557,7 +557,7 @@ func (pg *TxDetailsPage) txnInputs(gtx layout.Context) layout.Dimensions {
 
 	collapsibleHeader := func(gtx C) D {
 		t := pg.Theme.Body1(values.StringF(values.StrXInputsConsumed, len(transaction.Inputs)))
-		t.Color = pg.Theme.Color.Gray
+		t.Color = pg.Theme.Color.GrayText2
 		return t.Layout(gtx)
 	}
 
@@ -577,7 +577,7 @@ func (pg *TxDetailsPage) txnOutputs(gtx layout.Context) layout.Dimensions {
 
 	collapsibleHeader := func(gtx C) D {
 		t := pg.Theme.Body1(values.StringF(values.StrXOutputCreated, len(transaction.Outputs)))
-		t.Color = pg.Theme.Color.Gray
+		t.Color = pg.Theme.Color.GrayText2
 		return t.Layout(gtx)
 	}
 
@@ -610,7 +610,7 @@ func (pg *TxDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int3
 
 	return layout.Inset{Top: values.MarginPadding8}.Layout(gtx, func(gtx C) D {
 		card := pg.Theme.Card()
-		card.Color = pg.Theme.Color.LightGray
+		card.Color = pg.Theme.Color.Gray4
 		return card.Layout(gtx, func(gtx C) D {
 			return layout.UniformInset(values.MarginPadding15).Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
@@ -628,11 +628,11 @@ func (pg *TxDetailsPage) txnIORow(gtx layout.Context, amount int64, acctNum int3
 							layout.Rigid(func(gtx C) D {
 								card := pg.Theme.Card()
 								card.Radius = decredmaterial.Radius(0)
-								card.Color = pg.Theme.Color.LightGray
+								card.Color = pg.Theme.Color.Gray4
 								return card.Layout(gtx, func(gtx C) D {
 									return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 										txt := pg.Theme.Body2(walletName)
-										txt.Color = pg.Theme.Color.Gray
+										txt.Color = pg.Theme.Color.GrayText2
 										return txt.Layout(gtx)
 									})
 								})
@@ -714,7 +714,7 @@ func initTxnWidgets(l *load.Load, transaction *dcrlibwallet.Transaction) transac
 		txn.confirmationIcons = l.Icons.ConfirmIcon
 	} else {
 		txn.status.Text = "pending"
-		txn.status.Color = l.Theme.Color.Gray
+		txn.status.Color = l.Theme.Color.GrayText2
 		txn.confirmationIcons = l.Icons.PendingIcon
 	}
 

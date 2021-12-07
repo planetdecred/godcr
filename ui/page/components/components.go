@@ -24,10 +24,9 @@ import (
 )
 
 const (
-	Uint32Size       = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
-	MaxInt32         = 1<<(Uint32Size-1) - 1
-	USDExchangeValue = "USD (Bittrex)"
-	WalletsPageID    = "Wallets"
+	Uint32Size    = 32 << (^uint32(0) >> 32 & 1) // 32 or 64
+	MaxInt32      = 1<<(Uint32Size-1) - 1
+	WalletsPageID = "Wallets"
 )
 
 var MaxWidth = unit.Dp(800)
@@ -161,13 +160,13 @@ func TransactionTitleIcon(l *load.Load, wal *dcrlibwallet.Wallet, tx *dcrlibwall
 			} else if wal.TxMatchesFilter(tx, dcrlibwallet.TxFilterExpired) {
 				txStatus.Title = "Expired"
 				txStatus.Icon = l.Icons.TicketExpiredIcon
-				txStatus.Color = l.Theme.Color.Gray
+				txStatus.Color = l.Theme.Color.GrayText2
 				txStatus.TicketStatus = dcrlibwallet.TicketStatusExpired
-				txStatus.Background = l.Theme.Color.LightGray
+				txStatus.Background = l.Theme.Color.Gray4
 			} else {
 				txStatus.Title = "Purchased"
 				txStatus.Icon = l.Icons.NewStakeIcon
-				txStatus.Color = l.Theme.Color.DeepBlue
+				txStatus.Color = l.Theme.Color.Text
 				txStatus.Background = l.Theme.Color.LightBlue
 			}
 		} else if tx.Type == dcrlibwallet.TxTypeVote {
@@ -374,12 +373,12 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed {
 								mixedDenom := dcrutil.Amount(row.Transaction.MixDenomination).String()
 								txt := l.Theme.Label(values.TextSize12, mixedDenom)
-								txt.Color = l.Theme.Color.Gray
+								txt.Color = l.Theme.Color.GrayText2
 								return txt.Layout(gtx)
 							} else if wal.TxMatchesFilter(&row.Transaction, dcrlibwallet.TxFilterStaking) {
 								ticketPrice := dcrutil.Amount(row.Transaction.Amount).String()
 								txt := l.Theme.Label(values.TextSize12, ticketPrice)
-								txt.Color = l.Theme.Color.Gray
+								txt.Color = l.Theme.Color.GrayText2
 								return txt.Layout(gtx)
 							}
 							return layout.Dimensions{}
@@ -388,7 +387,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 							// Mixed outputs count
 							if row.Transaction.Type == dcrlibwallet.TxTypeMixed && row.Transaction.MixCount > 1 {
 								label := l.Theme.Label(values.TextSize12, fmt.Sprintf("x%d", row.Transaction.MixCount))
-								label.Color = l.Theme.Color.Gray
+								label.Color = l.Theme.Color.GrayText2
 								return layout.Inset{Left: values.MarginPadding4}.Layout(gtx, label.Layout)
 							}
 							return layout.Dimensions{}
@@ -433,9 +432,9 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 		layout.Flexed(1, func(gtx C) D {
 			status := l.Theme.Body1("pending")
 			if TxConfirmations(l, row.Transaction) <= 1 {
-				status.Color = l.Theme.Color.Gray5
+				status.Color = l.Theme.Color.GrayText1
 			} else {
-				status.Color = l.Theme.Color.Gray
+				status.Color = l.Theme.Color.GrayText2
 				status.Text = FormatDateOrTime(row.Transaction.Timestamp)
 			}
 			return layout.E.Layout(gtx, func(gtx C) D {
@@ -474,7 +473,7 @@ func LayoutTransactionRow(gtx layout.Context, l *load.Load, row TransactionRow) 
 									return D{}
 								}
 								duration := l.Theme.Label(values.TextSize12, DurationAgo(row.Transaction.Timestamp))
-								duration.Color = l.Theme.Color.InactiveGray
+								duration.Color = l.Theme.Color.GrayText4
 								return layout.Inset{Left: values.MarginPadding2}.Layout(gtx, duration.Layout)
 							}),
 						)
@@ -534,7 +533,7 @@ func FormatDateOrTime(timestamp int64) string {
 //// are transactions from multiple wallets
 func WalletLabel(gtx layout.Context, l *load.Load, walletName string) D {
 	return decredmaterial.Card{
-		Color: l.Theme.Color.LightGray,
+		Color: l.Theme.Color.Gray4,
 	}.Layout(gtx, func(gtx C) D {
 		return Container{
 			layout.Inset{
@@ -542,7 +541,7 @@ func WalletLabel(gtx layout.Context, l *load.Load, walletName string) D {
 				Right: values.MarginPadding4,
 			}}.Layout(gtx, func(gtx C) D {
 			name := l.Theme.Label(values.TextSize12, walletName)
-			name.Color = l.Theme.Color.Gray
+			name.Color = l.Theme.Color.GrayText2
 			return name.Layout(gtx)
 		})
 	})

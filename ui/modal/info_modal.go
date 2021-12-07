@@ -45,7 +45,7 @@ type InfoModal struct {
 func NewInfoModal(l *load.Load) *InfoModal {
 	in := &InfoModal{
 		Load:         l,
-		randomID:     fmt.Sprintf("%s-%d", Info, generateRandomNumber()),
+		randomID:     fmt.Sprintf("%s-%d", Info, decredmaterial.GenerateRandomNumber()),
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.OutlineButton("Yes"),
 		btnNegative:  l.Theme.OutlineButton("No"),
@@ -206,8 +206,8 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 		return layout.Inset{Top: values.MarginPaddingMinus5, Left: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
 			in.checkbox.TextSize = values.TextSize14
-			in.checkbox.Color = in.Theme.Color.Gray3
-			in.checkbox.IconColor = in.Theme.Color.Gray1
+			in.checkbox.Color = in.Theme.Color.GrayText1
+			in.checkbox.IconColor = in.Theme.Color.Gray2
 			if in.checkbox.CheckBox.Value {
 				in.checkbox.IconColor = in.Theme.Color.Primary
 			}
@@ -217,7 +217,7 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 	subtitle := func(gtx C) D {
 		text := in.Theme.Body1(in.subtitle)
-		text.Color = in.Theme.Color.Gray
+		text.Color = in.Theme.Color.GrayText2
 		return text.Layout(gtx)
 	}
 

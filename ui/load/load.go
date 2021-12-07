@@ -48,7 +48,8 @@ type Icons struct {
 	AboutIcon, DebugIcon, VerifyMessageIcon, LocationPinIcon, AlertGray, ArrowDownIcon,
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon,
-	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon *decredmaterial.Image
+	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon,
+	LogoDarkMode, TimerDarkMode *decredmaterial.Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -108,6 +109,7 @@ func NewLoad() (*Load, error) {
 	}
 
 	icons := loadIcons()
+
 	th := decredmaterial.NewTheme(assets.FontCollection(), assets.DecredIcons, false)
 	if th == nil {
 		return nil, errors.New("unexpected error while loading theme")
@@ -127,9 +129,8 @@ func NewLoad() (*Load, error) {
 
 func (l *Load) RefreshTheme() {
 	isDarkModeOn := l.WL.MultiWallet.ReadBoolConfigValueForKey(DarkModeConfigKey, false)
-	if isDarkModeOn != l.Theme.DarkMode {
-		l.Theme.SwitchDarkMode(isDarkModeOn)
-	}
+	l.Theme.SwitchDarkMode(isDarkModeOn, assets.DecredIcons)
+	l.RefreshWindow()
 }
 
 func loadIcons() Icons {
@@ -217,6 +218,8 @@ func loadIcons() Icons {
 		DecredSymbol2:            decredmaterial.NewImage(decredIcons["ic_decred02"]),
 		GovernanceActiveIcon:     decredmaterial.NewImage(decredIcons["governance_active"]),
 		GovernanceInactiveIcon:   decredmaterial.NewImage(decredIcons["governance_inactive"]),
+		LogoDarkMode:             decredmaterial.NewImage(decredIcons["logo_darkmode"]),
+		TimerDarkMode:            decredmaterial.NewImage(decredIcons["timer_dm"]),
 	}
 	return ic
 }

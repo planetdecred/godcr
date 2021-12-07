@@ -16,8 +16,6 @@ import (
 
 const SettingsPageID = "Settings"
 
-const DefaultExchangeValue = "none"
-
 type row struct {
 	title     string
 	clickable *decredmaterial.Clickable
@@ -35,9 +33,12 @@ type SettingsPage struct {
 	updateConnectToPeer *decredmaterial.Clickable
 	updateUserAgent     *decredmaterial.Clickable
 	changeStartupPass   *decredmaterial.Clickable
-	chevronRightIcon    *decredmaterial.Icon
-	backButton          decredmaterial.IconButton
-	infoButton          decredmaterial.IconButton
+	language            *decredmaterial.Clickable
+	currency            *decredmaterial.Clickable
+
+	chevronRightIcon *decredmaterial.Icon
+	backButton       decredmaterial.IconButton
+	infoButton       decredmaterial.IconButton
 
 	isDarkModeOn     *decredmaterial.Switch
 	spendUnconfirmed *decredmaterial.Switch
@@ -54,9 +55,6 @@ type SettingsPage struct {
 	peerAddr          string
 	agentValue        string
 	errorReceiver     chan error
-
-	currencyPreference *preference.ListPreference
-	languagePreference *preference.ListPreference
 }
 
 func NewSettingsPage(l *load.Load) *SettingsPage {
@@ -86,34 +84,17 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		updateConnectToPeer: l.Theme.NewClickable(false),
 		updateUserAgent:     l.Theme.NewClickable(false),
 		changeStartupPass:   l.Theme.NewClickable(false),
+		language:            l.Theme.NewClickable(false),
+		currency:            l.Theme.NewClickable(false),
 	}
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	languagePreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
-		load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
-		Title(values.StrLanguage).
-		UpdateValues(func() {
-			values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
-		})
-	pg.languagePreference = languagePreference
+	// pg.peerLabel = l.Theme.Body1("")
+	// pg.peerLabel.Color = l.Theme.Color.GrayText2
 
-	currencyMap := make(map[string]string)
-	currencyMap[DefaultExchangeValue] = values.StrNone
-	currencyMap[components.USDExchangeValue] = values.StrUsdBittrex
-
-	currencyPreference := preference.NewListPreference(pg.WL.Wallet, pg.Load,
-		dcrlibwallet.CurrencyConversionConfigKey, DefaultExchangeValue,
-		currencyMap).
-		Title(values.StrCurrencyConversion).
-		UpdateValues(func() {})
-	pg.currencyPreference = currencyPreference
-
-	pg.peerLabel = l.Theme.Body1("")
-	pg.peerLabel.Color = l.Theme.Color.Gray
-
-	pg.agentLabel = l.Theme.Body1("")
-	pg.agentLabel.Color = l.Theme.Color.Gray
+	// pg.agentLabel = l.Theme.Body1("")
+	// pg.agentLabel.Color = l.Theme.Color.GrayText2
 	return pg
 }
 
@@ -145,19 +126,11 @@ func (pg *SettingsPage) Layout(gtx layout.Context) layout.Dimensions {
 				}
 
 				return pg.Theme.List(pg.pageContainer).Layout(gtx, len(pageContent), func(gtx C, i int) D {
-					return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, pageContent[i])
+					return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, pageContent[i])
 				})
 			},
 		}
 		return sp.Layout(gtx)
-	}
-
-	if pg.currencyPreference.IsShowing {
-		return pg.currencyPreference.Layout(gtx, components.UniformPadding(gtx, body))
-	}
-
-	if pg.languagePreference.IsShowing {
-		return pg.languagePreference.Layout(gtx, components.UniformPadding(gtx, body))
 	}
 
 	return components.UniformPadding(gtx, body)
@@ -180,7 +153,7 @@ func (pg *SettingsPage) general() layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					currencyConversionRow := row{
 						title:     values.String(values.StrCurrencyConversion),
-						clickable: pg.currencyPreference.Clickable(),
+						clickable: pg.currency,
 						icon:      pg.chevronRightIcon,
 						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)),
 					}
@@ -190,7 +163,7 @@ func (pg *SettingsPage) general() layout.Widget {
 				layout.Rigid(func(gtx C) D {
 					languageRow := row{
 						title:     values.String(values.StrLanguage),
-						clickable: pg.languagePreference.Clickable(),
+						clickable: pg.language,
 						icon:      pg.chevronRightIcon,
 						label:     pg.Theme.Body2(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey)),
 					}
@@ -243,11 +216,13 @@ func (pg *SettingsPage) connection() layout.Widget {
 					return pg.subSectionSwitch(gtx, values.String(values.StrConnectToSpecificPeer), pg.connectToPeer)
 				}),
 				layout.Rigid(func(gtx C) D {
+					peerLabel := pg.Theme.Body1(pg.peerAddr)
+					peerLabel.Color = pg.Theme.Color.GrayText2
 					peerAddrRow := row{
 						title:     values.String(values.StrChangeSpecificPeer),
 						clickable: pg.updateConnectToPeer,
 						icon:      pg.chevronRightIcon,
-						label:     pg.peerLabel,
+						label:     peerLabel,
 					}
 					return pg.conditionalDisplay(gtx, pg.peerAddr != "", func(gtx C) D {
 						return pg.clickableRow(gtx, peerAddrRow)
@@ -272,7 +247,7 @@ func (pg *SettingsPage) agent() layout.Widget {
 								layout.Rigid(pg.subSectionLabel(values.String(values.StrCustomUserAgent))),
 								layout.Rigid(func(gtx C) D {
 									txt := pg.Theme.Body2("For HTTP request")
-									txt.Color = pg.Theme.Color.Gray
+									txt.Color = pg.Theme.Color.GrayText2
 									return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
 										return txt.Layout(gtx)
 									})
@@ -288,12 +263,14 @@ func (pg *SettingsPage) agent() layout.Widget {
 				)
 			}),
 			layout.Rigid(func(gtx C) D {
+				agentLabel := pg.Theme.Body1(pg.agentValue)
+				agentLabel.Color = pg.Theme.Color.GrayText2
 				return pg.conditionalDisplay(gtx, pg.agentValue != "", func(gtx C) D {
 					userAgentRow := row{
 						title:     values.String(values.StrUserAgentDialogTitle),
 						clickable: pg.updateUserAgent,
 						icon:      pg.chevronRightIcon,
-						label:     pg.agentLabel,
+						label:     agentLabel,
 					}
 					return pg.clickableRow(gtx, userAgentRow)
 				})
@@ -311,7 +288,7 @@ func (pg *SettingsPage) mainSection(gtx layout.Context, title string, body layou
 						return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								txt := pg.Theme.Body2(title)
-								txt.Color = pg.Theme.Color.Gray
+								txt.Color = pg.Theme.Color.GrayText2
 								return layout.Inset{Bottom: values.MarginPadding10}.Layout(gtx, txt.Layout)
 							}),
 							layout.Flexed(1, func(gtx C) D {
@@ -353,7 +330,9 @@ func (pg *SettingsPage) clickableRow(gtx layout.Context, row row) layout.Dimensi
 				return layout.Flex{}.Layout(gtx,
 					layout.Rigid(row.label.Layout),
 					layout.Rigid(func(gtx C) D {
-						return row.icon.Layout(gtx, values.MarginPadding22)
+						ic := row.icon
+						ic.Color = pg.Theme.Color.Gray3
+						return ic.Layout(gtx, values.MarginPadding22)
 					}),
 				)
 			})
@@ -397,8 +376,26 @@ func (pg *SettingsPage) showWarningModalDialog(title, msg, key string) {
 }
 
 func (pg *SettingsPage) Handle() {
-	pg.languagePreference.Handle()
-	pg.currencyPreference.Handle()
+
+	for pg.language.Clicked() {
+		preference.NewListPreference(pg.WL.Wallet, pg.Load,
+			load.LanguagePreferenceKey, values.DefaultLangauge, values.ArrLanguages).
+			Title(values.StrLanguage).
+			UpdateValues(func() {
+				values.SetUserLanguage(pg.wal.ReadStringConfigValueForKey(load.LanguagePreferenceKey))
+			}).Show()
+		break
+	}
+
+	for pg.currency.Clicked() {
+		preference.NewListPreference(pg.WL.Wallet, pg.Load,
+			dcrlibwallet.CurrencyConversionConfigKey, values.DefaultExchangeValue,
+			values.ArrExchangeCurrencies).
+			Title(values.StrCurrencyConversion).
+			UpdateValues(func() {}).
+			Show()
+		break
+	}
 
 	if pg.isDarkModeOn.Changed() {
 		pg.wal.SaveConfigValueForKey(load.DarkModeConfigKey, pg.isDarkModeOn.IsChecked())

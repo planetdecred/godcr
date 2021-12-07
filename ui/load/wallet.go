@@ -99,7 +99,7 @@ func (wl *WalletLoad) SpendableWalletBalance(walletID int) (dcrutil.Amount, erro
 
 func (wl *WalletLoad) HDPrefix() string {
 	switch wl.Wallet.Net {
-	case "testnet3": // should use a constant
+	case dcrlibwallet.Testnet3:
 		return dcrlibwallet.TestnetHDPath
 	case "mainnet":
 		return dcrlibwallet.MainnetHDPath

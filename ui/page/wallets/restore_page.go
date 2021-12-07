@@ -319,7 +319,7 @@ func (pg *Restore) editorSeedsEventsHandler() {
 func (pg *Restore) initSeedMenu() {
 	for i := 0; i < pg.suggestionLimit; i++ {
 		btn := pg.Theme.Button("")
-		btn.Background, btn.Color = color.NRGBA{}, pg.Theme.Color.DeepBlue
+		btn.Background, btn.Color = color.NRGBA{}, pg.Theme.Color.Text
 		pg.seedMenu = append(pg.seedMenu, seedItemMenu{
 			text:   "",
 			button: btn,
@@ -330,7 +330,7 @@ func (pg *Restore) initSeedMenu() {
 func (pg *Restore) suggestionSeedEffect() {
 	for k := range pg.suggestions {
 		if pg.selected == k || pg.seedMenu[k].button.Hovered() {
-			pg.seedMenu[k].button.Background = pg.Theme.Color.LightGray
+			pg.seedMenu[k].button.Background = pg.Theme.Color.Gray4
 		} else {
 			pg.seedMenu[k].button.Background = color.NRGBA{}
 		}
@@ -350,7 +350,7 @@ func (pg *Restore) layoutSeedMenu(gtx layout.Context, optionsSeedMenuIndex int) 
 
 	m := op.Record(gtx.Ops)
 	inset.Layout(gtx, func(gtx C) D {
-		border := widget.Border{Color: pg.Theme.Color.LightGray, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
+		border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding5, Width: values.MarginPadding2}
 		return border.Layout(gtx, func(gtx C) D {
 			return pg.optionsMenuCard.Layout(gtx, func(gtx C) D {
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X

@@ -120,14 +120,14 @@ func (pg *TransactionsPage) Layout(gtx layout.Context) layout.Dimensions {
 					Top: values.MarginPadding60,
 				}.Layout(gtx, func(gtx C) D {
 					return pg.Theme.List(pg.container).Layout(gtx, 1, func(gtx C, i int) D {
-						return layout.Inset{Right: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return layout.Inset{Right: values.MarginPadding2}.Layout(gtx, func(gtx C) D {
 							return pg.Theme.Card().Layout(gtx, func(gtx C) D {
 
 								// return "No transactions yet" text if there are no transactions
 								if len(wallTxs) == 0 {
 									padding := values.MarginPadding16
 									txt := pg.Theme.Body1(values.String(values.StrNoTransactionsYet))
-									txt.Color = pg.Theme.Color.Gray2
+									txt.Color = pg.Theme.Color.GrayText3
 									return layout.Center.Layout(gtx, func(gtx C) D {
 										return layout.Inset{Top: padding, Bottom: padding}.Layout(gtx, txt.Layout)
 									})

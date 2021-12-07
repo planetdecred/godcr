@@ -51,7 +51,7 @@ func NewAcctDetailsPage(l *load.Load, account *dcrlibwallet.Account) *AcctDetail
 		list: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		backButton:    l.Theme.PlainIconButton(l.Icons.NavigationArrowBack),
+		backButton:    l.Theme.IconButton(l.Icons.NavigationArrowBack),
 		renameAccount: l.Theme.NewClickable(false),
 	}
 
@@ -115,7 +115,7 @@ func (pg *AcctDetailsPage) Layout(gtx layout.Context) layout.Dimensions {
 				return pg.Theme.List(pg.list).Layout(gtx, 1, func(gtx C, i int) D {
 					return layout.Inset{
 						Bottom: values.MarginPadding7,
-						Right:  values.MarginPadding10,
+						Right:  values.MarginPadding2,
 					}.Layout(gtx, func(gtx C) D {
 						return pg.theme.Card().Layout(gtx, func(gtx C) D {
 							return layout.Inset{Top: values.MarginPadding5}.Layout(gtx, func(gtx C) D {
@@ -214,7 +214,7 @@ func (pg *AcctDetailsPage) acctBalLayout(gtx layout.Context, balType string, bal
 			}),
 			layout.Rigid(func(gtx C) D {
 				txt := pg.theme.Body2(balType)
-				txt.Color = pg.theme.Color.Gray
+				txt.Color = pg.theme.Color.GrayText2
 				return txt.Layout(gtx)
 			}),
 		)
@@ -255,7 +255,7 @@ func (pg *AcctDetailsPage) acctInfoLayout(gtx layout.Context, leftText, rightTex
 			return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					leftTextLabel := pg.theme.Label(values.TextSize14, leftText)
-					leftTextLabel.Color = pg.theme.Color.Gray
+					leftTextLabel.Color = pg.theme.Color.GrayText2
 					return leftTextLabel.Layout(gtx)
 				}),
 			)

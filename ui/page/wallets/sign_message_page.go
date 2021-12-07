@@ -75,7 +75,7 @@ func NewSignMessagePage(l *load.Load, wallet *dcrlibwallet.Wallet) *SignMessageP
 		keyEvent:           l.Receiver.KeyEvents,
 	}
 
-	pg.signedMessageLabel.Color = l.Theme.Color.Gray
+	pg.signedMessageLabel.Color = l.Theme.Color.GrayText2
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
 	return pg
@@ -128,7 +128,7 @@ func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
 func (pg *SignMessagePage) description() layout.Widget {
 	return func(gtx C) D {
 		desc := pg.Theme.Caption("Enter an address and message to sign:")
-		desc.Color = pg.Theme.Color.Gray
+		desc.Color = pg.Theme.Color.GrayText2
 		return layout.Inset{Bottom: values.MarginPadding20}.Layout(gtx, desc.Layout)
 	}
 }
@@ -172,9 +172,9 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 			layout.Rigid(func(gtx C) D {
 				return layout.Stack{}.Layout(gtx,
 					layout.Stacked(func(gtx C) D {
-						border := widget.Border{Color: pg.Theme.Color.LightGray, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
+						border := widget.Border{Color: pg.Theme.Color.Gray4, CornerRadius: values.MarginPadding10, Width: values.MarginPadding2}
 						wrapper := pg.Theme.Card()
-						wrapper.Color = pg.Theme.Color.LightGray
+						wrapper.Color = pg.Theme.Color.Gray4
 						return border.Layout(gtx, func(gtx C) D {
 							return wrapper.Layout(gtx, func(gtx C) D {
 								return layout.UniformInset(values.MarginPadding10).Layout(gtx, func(gtx C) D {
@@ -199,7 +199,7 @@ func (pg *SignMessagePage) drawResult() layout.Widget {
 						}.Layout(gtx, func(gtx C) D {
 							return pg.Theme.Card().Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 								label := pg.Theme.Body1("Signature")
-								label.Color = pg.Theme.Color.Gray
+								label.Color = pg.Theme.Color.GrayText2
 								return label.Layout(gtx)
 							})
 						})

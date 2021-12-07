@@ -14,6 +14,7 @@ import (
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/modal"
 	"github.com/planetdecred/godcr/ui/page/components"
+	"github.com/planetdecred/godcr/ui/values"
 )
 
 const (
@@ -145,7 +146,7 @@ func (pg *Page) OnResume() {
 	pg.sendDestination.destinationAddressEditor.Editor.Focus()
 
 	currencyExchangeValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if currencyExchangeValue == components.USDExchangeValue {
+	if currencyExchangeValue == values.USDExchangeValue {
 		pg.usdExchangeSet = true
 		pg.fetchExchangeValue()
 	} else {
@@ -346,7 +347,7 @@ func (pg *Page) Handle() {
 	}
 
 	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if currencyValue == components.USDExchangeValue {
+	if currencyValue == values.USDExchangeValue {
 		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
 	} else {
 		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)

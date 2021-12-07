@@ -28,10 +28,8 @@ type SubPage struct {
 }
 
 func SubpageHeaderButtons(l *load.Load) (decredmaterial.IconButton, decredmaterial.IconButton) {
-	backButton := l.Theme.PlainIconButton(l.Icons.NavigationArrowBack)
-	infoButton := l.Theme.PlainIconButton(l.Icons.ActionInfo)
-
-	backButton.Color, infoButton.Color = l.Theme.Color.Gray3, l.Theme.Color.Gray3
+	backButton := l.Theme.IconButton(l.Icons.NavigationArrowBack)
+	infoButton := l.Theme.IconButton(l.Icons.ActionInfo)
 
 	m24 := values.MarginPadding24
 	backButton.Size, infoButton.Size = m24, m24
@@ -72,7 +70,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 					}
 
 					sub := sp.Load.Theme.Label(values.TextSize14, sp.SubTitle)
-					sub.Color = sp.Load.Theme.Color.Gray
+					sub.Color = sp.Load.Theme.Color.GrayText2
 					return sub.Layout(gtx)
 				}),
 			)
@@ -85,7 +83,7 @@ func (sp *SubPage) Header(gtx layout.Context) layout.Dimensions {
 					}.Layout(gtx, func(gtx C) D {
 						return layout.UniformInset(values.MarginPadding2).Layout(gtx, func(gtx C) D {
 							walletText := sp.Theme.Caption(sp.WalletName)
-							walletText.Color = sp.Theme.Color.Gray
+							walletText.Color = sp.Theme.Color.GrayText2
 							return walletText.Layout(gtx)
 						})
 					})

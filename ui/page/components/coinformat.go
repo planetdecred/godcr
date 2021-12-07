@@ -1,6 +1,7 @@
 package components
 
 import (
+	"image/color"
 	"regexp"
 	"strings"
 
@@ -18,7 +19,7 @@ var (
 	noDecimal                 = regexp.MustCompile(`([0-9]{1,3},*)+`)
 )
 
-func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Value, scale float32) D {
+func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Value, scale float32, col color.NRGBA) D {
 
 	startIndex := 0
 
@@ -39,10 +40,14 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 
 	return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Baseline}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
-			return l.Theme.Label(mainTextSize, mainText).Layout(gtx)
+			txt := l.Theme.Label(mainTextSize, mainText)
+			txt.Color = col
+			return txt.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			return l.Theme.Label(subTextSize, subText).Layout(gtx)
+			txt := l.Theme.Label(subTextSize, subText)
+			txt.Color = col
+			return txt.Layout(gtx)
 		}),
 	)
 }
@@ -50,13 +55,17 @@ func formatBalance(gtx layout.Context, l *load.Load, amount string, mainTextSize
 // LayoutBalance aligns the main and sub DCR balances horizontally, putting the sub
 // balance at the baseline of the row.
 func LayoutBalance(gtx layout.Context, l *load.Load, amount string) layout.Dimensions {
-	return formatBalance(gtx, l, amount, values.TextSize20, defaultScale)
+	return formatBalance(gtx, l, amount, values.TextSize20, defaultScale, l.Theme.Color.Text)
 }
 
 func LayoutBalanceSize(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Value) layout.Dimensions {
-	return formatBalance(gtx, l, amount, mainTextSize, defaultScale)
+	return formatBalance(gtx, l, amount, mainTextSize, defaultScale, l.Theme.Color.Text)
 }
 
 func LayoutBalanceSizeScale(gtx layout.Context, l *load.Load, amount string, mainTextSize unit.Value, scale float32) layout.Dimensions {
-	return formatBalance(gtx, l, amount, mainTextSize, scale)
+	return formatBalance(gtx, l, amount, mainTextSize, scale, l.Theme.Color.Text)
+}
+
+func LayoutBalanceColor(gtx layout.Context, l *load.Load, amount string, color color.NRGBA) layout.Dimensions {
+	return formatBalance(gtx, l, amount, values.TextSize20, defaultScale, color)
 }

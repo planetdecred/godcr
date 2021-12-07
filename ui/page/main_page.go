@@ -77,8 +77,7 @@ func NewMainPage(l *load.Load) *MainPage {
 		Load: l,
 	}
 
-	mp.hideBalanceItem.hideBalanceButton = mp.Theme.PlainIconButton(mp.Icons.ConcealIcon)
-	mp.hideBalanceItem.hideBalanceButton.Color = mp.Theme.Color.Gray3
+	mp.hideBalanceItem.hideBalanceButton = mp.Theme.IconButton(mp.Icons.ConcealIcon)
 	mp.hideBalanceItem.hideBalanceButton.Size = unit.Dp(19)
 	mp.hideBalanceItem.hideBalanceButton.Inset = layout.UniformInset(values.MarginPadding4)
 	mp.hideBalanceItem.tooltip = mp.Theme.Tooltip()
@@ -176,8 +175,8 @@ func (mp *MainPage) initNavItems() {
 				PageID:        MorePageID,
 			},
 		},
-		MinimizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowBack),
-		MaximizeNavDrawerButton: mp.Theme.PlainIconButton(mp.Icons.NavigationArrowForward),
+		MinimizeNavDrawerButton: mp.Theme.IconButton(mp.Icons.NavigationArrowBack),
+		MaximizeNavDrawerButton: mp.Theme.IconButton(mp.Icons.NavigationArrowForward),
 	}
 }
 
@@ -216,7 +215,7 @@ func (mp *MainPage) setLanguageSetting() {
 
 func (mp *MainPage) UpdateBalance() {
 	currencyExchangeValue := mp.WL.Wallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	mp.usdExchangeSet = currencyExchangeValue == components.USDExchangeValue
+	mp.usdExchangeSet = currencyExchangeValue == values.USDExchangeValue
 
 	totalBalance, err := mp.CalculateTotalWalletsBalance()
 	if err == nil {
@@ -499,7 +498,7 @@ func (mp *MainPage) LayoutUSDBalance(gtx layout.Context) layout.Dimensions {
 					Top:  values.MarginPadding3,
 					Left: values.MarginPadding8,
 				}
-				border := widget.Border{Color: mp.Theme.Color.Gray, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
+				border := widget.Border{Color: mp.Theme.Color.Gray2, CornerRadius: unit.Dp(8), Width: unit.Dp(0.5)}
 				return inset.Layout(gtx, func(gtx C) D {
 					padding := layout.Inset{
 						Top:    values.MarginPadding3,
@@ -558,6 +557,10 @@ func (mp *MainPage) LayoutTopBar(gtx layout.Context) layout.Dimensions {
 								}.Layout(gtx,
 									layout.Rigid(func(gtx C) D {
 										img := mp.Icons.Logo
+										if mp.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+											img = mp.Icons.LogoDarkMode
+										}
+
 										return layout.Inset{Right: values.MarginPadding16}.Layout(gtx,
 											func(gtx C) D {
 												return img.Layout24dp(gtx)

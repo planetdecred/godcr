@@ -52,12 +52,12 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens)))
-					ic.Color = th.Color.Gray
+					ic.Color = th.Color.Gray1
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
 					text := th.Body1("When you turn on the mixer, your unmixed DCRs in this wallet (unmixed balance) will be gradually mixed.")
-					text.Color = th.Color.Gray
+					text.Color = th.Color.GrayText2
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
 				}),
 			)
@@ -71,12 +71,12 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ImageLens)))
-					ic.Color = th.Color.Gray
+					ic.Color = th.Color.Gray1
 					return ic.Layout(gtx, values.MarginPadding8)
 				}),
 				layout.Rigid(func(gtx C) D {
 					text := th.Body1("Mixer will automatically stop when unmixed balance are fully mixed.")
-					text.Color = th.Color.Gray
+					text.Color = th.Color.GrayText2
 					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, text.Layout)
 				}),
 			)
@@ -85,7 +85,7 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := `<span style="text-color: gray">
+	text := `<span style="text-color: grayText2">
 				Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.
 				<b>This action cannot be undone.</b>
 			</span>`
@@ -96,7 +96,7 @@ func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func transactionDetailsInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := `<span style="text-color: gray">Tap on <span style="text-color: primary">blue text</span> to copy the item</span>`
+	text := `<span style="text-color: grayText2">Tap on <span style="text-color: primary">blue text</span> to copy the item</span>`
 
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
@@ -110,7 +110,7 @@ func backupInfo(th *decredmaterial.Theme) []layout.Widget {
 	return []layout.Widget{
 		func(gtx C) D {
 			txt := th.Label(values.TextSize16, textGray)
-			txt.Color = th.Color.Gray3
+			txt.Color = th.Color.GrayText1
 			return txt.Layout(gtx)
 		},
 		func(gtx C) D {

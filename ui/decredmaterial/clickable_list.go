@@ -1,27 +1,23 @@
 package decredmaterial
 
 import (
-	"image/color"
-
 	"gioui.org/layout"
 	"gioui.org/unit"
 )
 
 type ClickableList struct {
 	layout.List
-	theme          *Theme
-	clickables     []*Clickable
-	ClickHighlight color.NRGBA
-	Radius         CornerRadius // this radius is used by the clickable
-	selectedItem   int
-	DividerHeight  unit.Value
+	theme         *Theme
+	clickables    []*Clickable
+	Radius        CornerRadius // this radius is used by the clickable
+	selectedItem  int
+	DividerHeight unit.Value
 }
 
 func (t *Theme) NewClickableList(axis layout.Axis) *ClickableList {
 	click := &ClickableList{
-		theme:          t,
-		ClickHighlight: t.Color.SurfaceHighlight,
-		selectedItem:   -1,
+		theme:        t,
+		selectedItem: -1,
 		List: layout.List{
 			Axis: axis,
 		},
@@ -43,7 +39,6 @@ func (cl *ClickableList) handleClickables(count int) {
 		cl.clickables = make([]*Clickable, count)
 		for i := 0; i < count; i++ {
 			clickable := cl.theme.NewClickable(true)
-			clickable.Color = cl.ClickHighlight
 			cl.clickables[i] = clickable
 		}
 	}

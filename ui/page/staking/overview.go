@@ -77,7 +77,7 @@ func (pg *Page) OnResume() {
 
 	go pg.WL.GetVSPList()
 	// TODO: automatic ticket purchase functionality
-	pg.autoPurchaseEnabled.Disabled()
+	pg.autoPurchaseEnabled.SetEnabled(false)
 }
 
 func (pg *Page) loadPageData() {
@@ -196,7 +196,7 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 						layout.Rigid(func(gtx C) D {
 							title := pg.Theme.Label(values.TextSize14, "Ticket Price")
-							title.Color = pg.Theme.Color.Gray2
+							title.Color = pg.Theme.Color.GrayText2
 							return title.Layout(gtx)
 						}),
 						layout.Rigid(func(gtx C) D {
@@ -205,13 +205,16 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 								Right: values.MarginPadding4,
 							}.Layout(gtx, func(gtx C) D {
 								ic := pg.Icons.TimerIcon
+								if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+									ic = pg.Icons.TimerDarkMode
+								}
 								return ic.Layout12dp(gtx)
 							})
 						}),
 						layout.Rigid(func(gtx C) D {
 							secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
 							txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
-							txt.Color = pg.Theme.Color.Gray2
+							txt.Color = pg.Theme.Color.GrayText2
 							return txt.Layout(gtx)
 						}),
 					)
@@ -253,7 +256,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				return layout.Inset{Bottom: values.MarginPadding14}.Layout(gtx, func(gtx C) D {
 					title := pg.Theme.Label(values.TextSize14, "Live Tickets")
-					title.Color = pg.Theme.Color.Gray
+					title.Color = pg.Theme.Color.GrayText2
 					return pg.titleRow(gtx, title.Layout, func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							pg.stakingCountIcon(pg.Icons.TicketUnminedIcon, pg.ticketOverview.Unmined),
@@ -272,7 +275,7 @@ func (pg *Page) stakeLiveSection(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx C) D {
 				if len(pg.liveTickets) == 0 {
 					noLiveStake := pg.Theme.Label(values.TextSize16, "No live tickets yet.")
-					noLiveStake.Color = pg.Theme.Color.Gray2
+					noLiveStake.Color = pg.Theme.Color.GrayText3
 					return noLiveStake.Layout(gtx)
 				}
 				return pg.ticketsLive.Layout(gtx, len(pg.liveTickets), func(gtx C, index int) D {
@@ -312,7 +315,7 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 					Bottom: values.MarginPadding14,
 				}.Layout(gtx, func(gtx C) D {
 					title := pg.Theme.Label(values.TextSize14, "Ticket Record")
-					title.Color = pg.Theme.Color.Gray2
+					title.Color = pg.Theme.Color.GrayText2
 
 					if pg.ticketOverview.All == 0 {
 						return pg.titleRow(gtx, title.Layout, func(gtx C) D { return D{} })
@@ -345,23 +348,37 @@ func (pg *Page) stakingRecordSection(gtx C) D {
 					Padding:     layout.Inset{Top: values.MarginPadding16, Bottom: values.MarginPadding16},
 					Border:      decredmaterial.Border{Radius: decredmaterial.Radius(8)},
 					Direction:   layout.Center,
+					Alignment:   layout.Middle,
 					Orientation: layout.Vertical,
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
 						return layout.Inset{Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 							txt := pg.Theme.Label(values.TextSize14, "Rewards Earned")
-							txt.Color = pg.Theme.Color.Success
+							txt.Color = pg.Theme.Color.Turquoise700
 							return txt.Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+						return layout.Flex{}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
 								ic := pg.Icons.StakeyIcon
-								return ic.Layout24dp(gtx)
+								return layout.Inset{Right: values.MarginPadding6}.Layout(gtx, ic.Layout24dp)
 							}),
 							layout.Rigid(func(gtx C) D {
-								return components.LayoutBalance(gtx, pg.Load, pg.totalRewards)
+								award := pg.Theme.Color.Text
+								noAward := pg.Theme.Color.GrayText3
+								if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+									award = pg.Theme.Color.Gray3
+									noAward = pg.Theme.Color.Gray3
+								}
+
+								if pg.totalRewards == "0 DCR" {
+									txt := pg.Theme.Label(values.TextSize16, "Stakey sees no rewards")
+									txt.Color = noAward
+									return txt.Layout(gtx)
+								}
+
+								return components.LayoutBalanceColor(gtx, pg.Load, pg.totalRewards, award)
 							}),
 						)
 					}),
@@ -387,7 +404,7 @@ func (pg *Page) ticketRecordIconCount(icon *decredmaterial.Image, count int, sta
 							}),
 							layout.Rigid(func(gtx C) D {
 								txt := pg.Theme.Label(values.TextSize12, status)
-								txt.Color = pg.Theme.Color.Gray
+								txt.Color = pg.Theme.Color.GrayText2
 								return txt.Layout(gtx)
 							}),
 						)

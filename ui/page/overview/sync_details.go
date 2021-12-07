@@ -35,7 +35,7 @@ func (pg *AppOverviewPage) connectionPeer(gtx layout.Context) layout.Dimensions 
 	return layout.Flex{Axis: layout.Horizontal}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			connectedPeersInfoLabel := pg.Theme.Body1(values.String(values.StrConnectedTo))
-			connectedPeersInfoLabel.Color = pg.Theme.Color.Gray
+			connectedPeersInfoLabel.Color = pg.Theme.Color.GrayText2
 			return connectedPeersInfoLabel.Layout(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
@@ -43,7 +43,7 @@ func (pg *AppOverviewPage) connectionPeer(gtx layout.Context) layout.Dimensions 
 		}),
 		layout.Rigid(func(gtx C) D {
 			peersLabel := pg.Theme.Body1("peers")
-			peersLabel.Color = pg.Theme.Color.Gray
+			peersLabel.Color = pg.Theme.Color.GrayText2
 			return peersLabel.Layout(gtx)
 		}),
 	)
@@ -70,7 +70,7 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.In
 					Clickable: pg.syncClickable,
 					Direction: layout.Center,
 					Alignment: layout.Middle,
-					Border:    decredmaterial.Border{Color: pg.Theme.Color.Hint, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
+					Border:    decredmaterial.Border{Color: pg.Theme.Color.Gray2, Width: values.MarginPadding1, Radius: decredmaterial.Radius(10)},
 					Padding:   layout.Inset{Top: values.MarginPadding3, Bottom: values.MarginPadding3, Left: values.MarginPadding8, Right: values.MarginPadding8},
 				}.Layout(gtx,
 					layout.Rigid(func(gtx C) D {
@@ -79,7 +79,7 @@ func (pg *AppOverviewPage) syncStatusTextRow(gtx layout.Context, inset layout.In
 						}
 
 						return layout.Inset{Right: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
-							pg.cachedIcon.Color = pg.Theme.Color.Gray
+							pg.cachedIcon.Color = pg.Theme.Color.Gray1
 							return pg.cachedIcon.Layout(gtx, values.MarginPadding16)
 						})
 					}),
@@ -112,7 +112,7 @@ func (pg *AppOverviewPage) progressBarRow(gtx layout.Context, inset layout.Inset
 		p.Height = values.MarginPadding8
 		p.Radius = decredmaterial.Radius(values.MarginPadding4.V)
 		p.Color = pg.Theme.Color.Success
-		p.TrackColor = pg.Theme.Color.Gray1
+		p.TrackColor = pg.Theme.Color.Gray2
 		return p.Layout(gtx)
 	})
 }
@@ -141,7 +141,7 @@ func (pg *AppOverviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset)
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 			layout.Rigid(func(gtx C) D {
 				completedSteps := pg.Theme.Body2(values.StringF(values.StrSyncSteps, pg.syncStep))
-				completedSteps.Color = pg.Theme.Color.Gray
+				completedSteps.Color = pg.Theme.Color.GrayText2
 				headersFetched := pg.Theme.Body1(values.StringF(values.StrFetchingBlockHeaders, pg.headerFetchProgress))
 				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return components.EndToEndRow(gtx, completedSteps.Layout, headersFetched.Layout)
@@ -149,7 +149,7 @@ func (pg *AppOverviewPage) walletSyncRow(gtx layout.Context, inset layout.Inset)
 			}),
 			layout.Rigid(func(gtx C) D {
 				connectedPeersTitleLabel := pg.Theme.Body2(values.String(values.StrConnectedPeersCount))
-				connectedPeersTitleLabel.Color = pg.Theme.Color.Gray
+				connectedPeersTitleLabel.Color = pg.Theme.Color.GrayText2
 				connectedPeersLabel := pg.Theme.Body1(fmt.Sprintf("%d", pg.connectedPeers))
 				return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return components.EndToEndRow(gtx, connectedPeersTitleLabel.Layout, connectedPeersLabel.Layout)
@@ -190,7 +190,7 @@ func (pg *AppOverviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset,
 	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		card := pg.Theme.Card()
-		card.Color = pg.Theme.Color.LightGray
+		card.Color = pg.Theme.Color.Gray4
 		return card.Layout(gtx, func(gtx C) D {
 			return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -201,14 +201,14 @@ func (pg *AppOverviewPage) walletSyncBox(gtx layout.Context, inset layout.Inset,
 					}),
 					layout.Rigid(func(gtx C) D {
 						headersFetchedTitleLabel := pg.Theme.Body2(values.String(values.StrBlockHeaderFetched))
-						headersFetchedTitleLabel.Color = pg.Theme.Color.Gray
+						headersFetchedTitleLabel.Color = pg.Theme.Color.GrayText2
 						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 							return components.EndToEndRow(gtx, headersFetchedTitleLabel.Layout, details.blockHeaderFetched.Layout)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
 						progressTitleLabel := pg.Theme.Body2(values.String(values.StrSyncingProgress))
-						progressTitleLabel.Color = pg.Theme.Color.Gray
+						progressTitleLabel.Color = pg.Theme.Color.GrayText2
 						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 							return components.EndToEndRow(gtx, progressTitleLabel.Layout, details.syncingProgress.Layout)
 						})
@@ -228,7 +228,7 @@ func (pg *AppOverviewPage) rescanDetailsLayout(gtx layout.Context, inset layout.
 	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 		card := pg.Theme.Card()
-		card.Color = pg.Theme.Color.LightGray
+		card.Color = pg.Theme.Color.Gray4
 		return card.Layout(gtx, func(gtx C) D {
 			return components.Container{Padding: layout.UniformInset(values.MarginPadding16)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
@@ -239,7 +239,7 @@ func (pg *AppOverviewPage) rescanDetailsLayout(gtx layout.Context, inset layout.
 					}),
 					layout.Rigid(func(gtx C) D {
 						headersFetchedTitleLabel := pg.Theme.Body2("Blocks scanned")
-						headersFetchedTitleLabel.Color = pg.Theme.Color.Gray
+						headersFetchedTitleLabel.Color = pg.Theme.Color.GrayText2
 
 						blocksScannedLabel := pg.Theme.Body1(fmt.Sprint(rescanUpdate.ProgressReport.CurrentRescanHeight))
 						return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -248,7 +248,7 @@ func (pg *AppOverviewPage) rescanDetailsLayout(gtx layout.Context, inset layout.
 					}),
 					layout.Rigid(func(gtx C) D {
 						progressTitleLabel := pg.Theme.Body2(values.String(values.StrSyncingProgress))
-						progressTitleLabel.Color = pg.Theme.Color.Gray
+						progressTitleLabel.Color = pg.Theme.Color.GrayText2
 
 						rescanProgress := fmt.Sprintf("%d blocks left", rescanUpdate.ProgressReport.TotalHeadersToScan-rescanUpdate.ProgressReport.CurrentRescanHeight)
 						blocksScannedLabel := pg.Theme.Body1(rescanProgress)

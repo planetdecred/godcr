@@ -26,10 +26,9 @@ type Editor struct {
 	t *Theme
 	material.EditorStyle
 
-	TitleLabel      Label
-	errorLabel      Label
-	LineColor       color.NRGBA
-	TitleLabelColor color.NRGBA
+	TitleLabel Label
+	errorLabel Label
+	LineColor  color.NRGBA
 
 	// IsRequired if true, displays a required field text at the buttom of the editor.
 	IsRequired bool
@@ -78,7 +77,7 @@ func (t *Theme) RestoreEditor(editor *widget.Editor, hint string, title string) 
 		t:          t,
 		Edit:       e,
 		TitleLabel: t.Body2(title),
-		LineColor:  t.Color.Gray1,
+		LineColor:  t.Color.Gray2,
 		height:     31,
 	}
 }
@@ -89,7 +88,7 @@ func (t *Theme) IconEditor(editor *widget.Editor, hint string, icon *widget.Icon
 	e.showEditorIcon = true
 	e.isEditorButtonClickable = clickableIcon
 	e.editorIcon = NewIcon(icon)
-	e.editorIcon.Color = t.Color.Gray
+	e.editorIcon.Color = t.Color.Gray1
 	e.editorIconButton.IconButtonStyle.Icon = icon
 	return e
 }
@@ -102,18 +101,17 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 	m.TextSize = t.TextSize
 	m.Color = t.Color.Text
 	m.Hint = hint
-	m.HintColor = t.Color.Hint
+	m.HintColor = t.Color.GrayText3
 
 	var m0 = unit.Dp(0)
 
 	return Editor{
-		t:               t,
-		EditorStyle:     m,
-		TitleLabel:      t.Body2(""),
-		IsTitleLabel:    true,
-		Bordered:        true,
-		LineColor:       t.Color.Gray1,
-		TitleLabelColor: t.Color.Gray3,
+		t:            t,
+		EditorStyle:  m,
+		TitleLabel:   t.Body2(""),
+		IsTitleLabel: true,
+		Bordered:     true,
+		LineColor:    t.Color.Gray2,
 
 		errorLabel:        errorLabel,
 		requiredErrorText: "Field is required",
@@ -122,22 +120,20 @@ func (t *Theme) Editor(editor *widget.Editor, hint string) Editor {
 		m5: unit.Dp(5),
 
 		editorIconButton: IconButton{
-			material.IconButtonStyle{
-				Size:       values.MarginPadding24,
-				Background: color.NRGBA{},
-				Color:      t.Color.Gray,
-				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
+			IconButtonStyle{
+				Size:   values.MarginPadding24,
+				Inset:  layout.UniformInset(m0),
+				Button: new(widget.Clickable),
 			},
+			t.Styles.IconButtonColorStyle, // automatically changes on theme change, to use fixed colors, pass a &values.ColorStyle{} instead.
 		},
 		showHidePassword: IconButton{
-			material.IconButtonStyle{
-				Size:       values.MarginPadding24,
-				Background: color.NRGBA{},
-				Color:      t.Color.Gray,
-				Inset:      layout.UniformInset(m0),
-				Button:     new(widget.Clickable),
+			IconButtonStyle{
+				Size:   values.MarginPadding24,
+				Inset:  layout.UniformInset(m0),
+				Button: new(widget.Clickable),
 			},
+			t.Styles.IconButtonColorStyle,
 		},
 		CustomButton: t.Button(""),
 	}
@@ -302,13 +298,13 @@ func (e Editor) handleEvents() {
 	if e.errorLabel.Text != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.Gray1
+		e.LineColor = e.t.Color.Gray2
 	}
 
 	if e.requiredErrorText != "" {
 		e.LineColor = e.t.Color.Danger
 	} else {
-		e.LineColor = e.t.Color.Gray1
+		e.LineColor = e.t.Color.Gray2
 	}
 }
 
@@ -317,7 +313,7 @@ func (re RestoreEditor) Layout(gtx layout.Context) layout.Dimensions {
 	if re.Edit.Editor.Focused() {
 		re.TitleLabel.Color, re.LineColor, l.Color = re.t.Color.Primary, re.t.Color.Primary, re.t.Color.Primary
 	} else {
-		l.Color = re.t.Color.Gray1
+		l.Color = re.t.Color.Gray2
 	}
 	border := widget.Border{Color: re.LineColor, CornerRadius: values.MarginPadding8, Width: values.MarginPadding2}
 	return border.Layout(gtx, func(gtx C) D {

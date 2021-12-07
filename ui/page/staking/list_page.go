@@ -182,7 +182,7 @@ func (pg *ListPage) Layout(gtx C) D {
 										gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
 										txt := pg.Theme.Body1("No tickets yet")
-										txt.Color = pg.Theme.Color.Gray2
+										txt.Color = pg.Theme.Color.GrayText3
 										txt.Alignment = text.Middle
 										return layout.Inset{Top: values.MarginPadding15, Bottom: values.MarginPadding16}.Layout(gtx, txt.Layout)
 									}

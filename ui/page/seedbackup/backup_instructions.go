@@ -144,7 +144,7 @@ func container(gtx C, theme decredmaterial.Theme, body layout.Widget, infoText s
 							return D{}
 						}
 						label := theme.Label(values.TextSize14, infoText)
-						label.Color = theme.Color.Gray3
+						label.Color = theme.Color.GrayText1
 						return layout.Inset{Bottom: values.MarginPadding16}.Layout(gtx, label.Layout)
 					}),
 					layout.Rigid(func(gtx C) D {

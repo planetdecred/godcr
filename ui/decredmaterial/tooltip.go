@@ -27,7 +27,6 @@ func (t *Theme) Tooltip() *Tooltip {
 func (t *Tooltip) layout(gtx C, pos layout.Inset, wdgt layout.Widget) D {
 
 	border := Border{
-		Color:  t.theme.Color.Gray1,
 		Width:  values.MarginPadding1,
 		Radius: Radius(8),
 	}

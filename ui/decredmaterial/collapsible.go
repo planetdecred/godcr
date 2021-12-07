@@ -6,7 +6,6 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
-	"gioui.org/widget/material"
 
 	"github.com/planetdecred/godcr/ui/values"
 )
@@ -38,7 +37,7 @@ func (t *Theme) Collapsible() *Collapsible {
 		card:            t.Card(),
 		expandedIcon:    NewIcon(t.chevronUpIcon),
 		collapsedIcon:   NewIcon(t.chevronDownIcon),
-		iconColor:       t.Color.Gray3,
+		iconColor:       t.Color.Gray1,
 	}
 	c.card.Color = c.BackgroundColor
 	return c
@@ -52,13 +51,15 @@ func (t *Theme) CollapsibleWithOption() *CollapsibleWithOption {
 		expandedIcon:    t.collapseIcon,
 		collapsedIcon:   t.expandIcon,
 		moreIconButton: IconButton{
-			IconButtonStyle: material.IconButtonStyle{
-				Button:     new(widget.Clickable),
-				Icon:       t.navMoreIcon,
-				Size:       unit.Dp(25),
+			IconButtonStyle{
+				Button: new(widget.Clickable),
+				Icon:   t.navMoreIcon,
+				Size:   unit.Dp(25),
+				Inset:  layout.UniformInset(unit.Dp(0)),
+			},
+			&values.ColorStyle{
 				Background: color.NRGBA{},
-				Color:      t.Color.Text,
-				Inset:      layout.UniformInset(unit.Dp(0)),
+				Foreground: t.Color.Text,
 			},
 		},
 	}
@@ -75,6 +76,8 @@ func (c *Collapsible) Layout(gtx layout.Context, header, body func(C) D) layout.
 	if c.isExpanded {
 		icon = c.expandedIcon
 	}
+
+	icon.Color = c.iconColor
 
 	return c.card.Layout(gtx, func(gtx C) D {
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
