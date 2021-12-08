@@ -152,6 +152,7 @@ func (pg *Page) OnResume() {
 	} else {
 		pg.usdExchangeSet = false
 	}
+	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *Page) fetchExchangeValue() {
@@ -346,17 +347,15 @@ func (pg *Page) Handle() {
 		}
 	}
 
-	/*
-		currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-		if currencyValue == values.USDExchangeValue {
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
-		} else {
-			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
-		}
-	*/
+	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if currencyValue == values.USDExchangeValue {
+		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
+	} else {
+		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+	}
 
 }
 
 func (pg *Page) OnClose() {
-
+	pg.Load.EnableKeyEvent = false
 }

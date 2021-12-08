@@ -109,7 +109,9 @@ func (pg *Restore) ID() string {
 	return CreateRestorePageID
 }
 
-func (pg *Restore) OnResume() {}
+func (pg *Restore) OnResume() {
+	pg.Load.EnableKeyEvent = true
+}
 
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
@@ -509,4 +511,6 @@ func (pg *Restore) Handle() {
 
 }
 
-func (pg *Restore) OnClose() {}
+func (pg *Restore) OnClose() {
+	pg.Load.EnableKeyEvent = false
+}

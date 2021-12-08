@@ -88,9 +88,12 @@ func (cm *CreatePasswordModal) OnResume() {
 	} else {
 		cm.passwordEditor.Editor.Focus()
 	}
+	cm.Load.EnableKeyEvent = true
 }
 
-func (cm *CreatePasswordModal) OnDismiss() {}
+func (cm *CreatePasswordModal) OnDismiss() {
+	cm.Load.EnableKeyEvent = false
+}
 
 func (cm *CreatePasswordModal) Show() {
 	cm.ShowModal(cm)
@@ -215,14 +218,11 @@ func (cm *CreatePasswordModal) Handle() {
 	}
 
 	computePasswordStrength(&cm.passwordStrength, cm.Theme, cm.passwordEditor.Editor)
-	/*
+	if cm.walletNameEnabled {
 		decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
-		if cm.walletNameEnabled {
-			decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
-		} else {
-			decredmaterial.SwitchEditors(cm.keyEvent, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
-		}
-	*/
+	} else {
+		decredmaterial.SwitchEditors(cm.keyEvent, cm.passwordEditor.Editor, cm.confirmPasswordEditor.Editor)
+	}
 
 }
 
