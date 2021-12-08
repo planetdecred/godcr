@@ -151,7 +151,7 @@ func (cm *CreateWatchOnlyModal) Handle() {
 			cm.Dismiss()
 		}
 	}
-	decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.extendedPubKey.Editor)
+	//decredmaterial.SwitchEditors(cm.keyEvent, cm.walletName.Editor, cm.extendedPubKey.Editor)
 }
 
 func (cm *CreateWatchOnlyModal) Layout(gtx layout.Context) D {
