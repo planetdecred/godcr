@@ -87,6 +87,7 @@ func (pg *SignMessagePage) ID() string {
 
 func (pg *SignMessagePage) OnResume() {
 	pg.addressEditor.Editor.Focus()
+	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -334,4 +335,6 @@ func (pg *SignMessagePage) clearForm() {
 	pg.errorLabel.Text = ""
 }
 
-func (pg *SignMessagePage) OnClose() {}
+func (pg *SignMessagePage) OnClose() {
+	pg.Load.EnableKeyEvent = false
+}

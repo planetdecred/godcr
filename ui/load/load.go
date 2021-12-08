@@ -76,6 +76,7 @@ type Load struct {
 	SelectedWallet  *int
 	SelectedAccount *int
 	SelectedUTXO    map[int]map[int32]map[string]*wallet.UnspentOutput
+	EnableKeyEvent  bool
 
 	ToggleSync       func()
 	RefreshWindow    func()
@@ -121,7 +122,8 @@ func NewLoad() (*Load, error) {
 		Receiver: r,
 		Toast:    notification.NewToast(th),
 
-		Printer: message.NewPrinter(language.English),
+		Printer:        message.NewPrinter(language.English),
+		EnableKeyEvent: false,
 	}
 
 	return l, nil
