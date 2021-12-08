@@ -73,10 +73,11 @@ func (in *InfoModal) Dismiss() {
 }
 
 func (in *InfoModal) OnResume() {
+	in.Load.EnableKeyEvent = true
 }
 
 func (in *InfoModal) OnDismiss() {
-
+	in.Load.EnableKeyEvent = false
 }
 
 func (in *InfoModal) SetCancelable(min bool) *InfoModal {
@@ -156,7 +157,6 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 }
 
 func (in *InfoModal) handleEnterKeypress() {
-	// Todo enter button for info modals.
 	select {
 	case event := <-in.keyEvent:
 		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press && in.customTemplate != nil {

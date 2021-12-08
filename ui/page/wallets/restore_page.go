@@ -94,12 +94,14 @@ func NewRestorePage(l *load.Load) *Restore {
 		pg.seedEditors.editors = append(pg.seedEditors.editors, l.Theme.RestoreEditor(widgetEditor, "", fmt.Sprintf("%d", i+1)))
 	}
 	pg.seedEditors.focusIndex = -1
+	pg.seedEditors.editors[0].Edit.Editor.Focus()
 
 	// init suggestion buttons
 	pg.initSeedMenu()
 
 	// set suggestions
 	pg.allSuggestions = dcrlibwallet.PGPWordList()
+	pg.Load.EnableKeyEvent = true
 
 	return pg
 }
@@ -108,7 +110,8 @@ func (pg *Restore) ID() string {
 	return CreateRestorePageID
 }
 
-func (pg *Restore) OnResume() {}
+func (pg *Restore) OnResume() {
+}
 
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
@@ -411,6 +414,18 @@ func (pg *Restore) resetSeeds() {
 	}
 }
 
+func switchSeedEditors(editors []decredmaterial.RestoreEditor) {
+	for i := 0; i < len(editors); i++ {
+		if editors[i].Edit.Editor.Focused() {
+			if i == len(editors)-1 {
+				editors[0].Edit.Editor.Focus()
+			} else {
+				editors[i+1].Edit.Editor.Focus()
+			}
+		}
+	}
+}
+
 func (pg *Restore) Handle() {
 	for pg.backButton.Button.Clicked() {
 		pg.PopWindowPage()
@@ -459,13 +474,14 @@ func (pg *Restore) Handle() {
 	// handle key events
 	select {
 	case evt := <-pg.keyEvent:
-		if evt.Name == key.NameTab {
+		if evt.Name == key.NameTab && evt.State == key.Press {
 			if len(pg.suggestions) == 1 {
 				focus := pg.seedEditors.focusIndex
 				pg.seedEditors.editors[focus].Edit.Editor.SetText(pg.suggestions[0])
 				pg.seedClicked = true
 				pg.seedEditors.editors[focus].Edit.Editor.MoveCaret(len(pg.suggestions[0]), -1)
 			}
+			switchSeedEditors(pg.seedEditors.editors)
 		}
 		if evt.Name == key.NameUpArrow && pg.openPopupIndex != -1 && evt.State == key.Press {
 			pg.selected--
@@ -492,6 +508,9 @@ func (pg *Restore) Handle() {
 	pg.editorSeedsEventsHandler()
 	pg.onSuggestionSeedsClicked()
 	pg.suggestionSeedEffect()
+
 }
 
-func (pg *Restore) OnClose() {}
+func (pg *Restore) OnClose() {
+	pg.Load.EnableKeyEvent = false
+}

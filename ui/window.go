@@ -366,7 +366,9 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				evt.Frame(gtx.Ops)
 			case key.Event:
 				go func() {
-					win.keyEvents <- &evt
+					if win.load.EnableKeyEvent {
+						win.keyEvents <- &evt
+					}
 				}()
 			case nil:
 				// Ignore

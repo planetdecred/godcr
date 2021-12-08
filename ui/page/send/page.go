@@ -152,6 +152,7 @@ func (pg *Page) OnResume() {
 	} else {
 		pg.usdExchangeSet = false
 	}
+	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *Page) fetchExchangeValue() {
@@ -356,5 +357,5 @@ func (pg *Page) Handle() {
 }
 
 func (pg *Page) OnClose() {
-
+	pg.Load.EnableKeyEvent = false
 }

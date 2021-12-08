@@ -23,6 +23,7 @@ type VerifyMessagePage struct {
 	clearBtn, verifyButton decredmaterial.Button
 	verifyMessage          decredmaterial.Label
 	keyEvent               chan *key.Event
+	EnableEditorSwitch     bool
 
 	verifyMessageStatus *decredmaterial.Icon
 
@@ -34,9 +35,10 @@ type VerifyMessagePage struct {
 
 func NewVerifyMessagePage(l *load.Load) *VerifyMessagePage {
 	pg := &VerifyMessagePage{
-		Load:          l,
-		verifyMessage: l.Theme.Body1(""),
-		keyEvent:      l.Receiver.KeyEvents,
+		Load:               l,
+		verifyMessage:      l.Theme.Body1(""),
+		keyEvent:           l.Receiver.KeyEvents,
+		EnableEditorSwitch: false,
 	}
 
 	pg.addressEditor = l.Theme.Editor(new(widget.Editor), "Address")
@@ -67,6 +69,7 @@ func (pg *VerifyMessagePage) ID() string {
 
 func (pg *VerifyMessagePage) OnResume() {
 	pg.addressEditor.Editor.Focus()
+	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *VerifyMessagePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -241,4 +244,6 @@ func (pg *VerifyMessagePage) validateAddress() bool {
 	return valid
 }
 
-func (pg *VerifyMessagePage) OnClose() {}
+func (pg *VerifyMessagePage) OnClose() {
+	pg.Load.EnableKeyEvent = false
+}

@@ -73,10 +73,11 @@ func (cm *CreateWatchOnlyModal) ModalID() string {
 
 func (cm *CreateWatchOnlyModal) OnResume() {
 	cm.walletName.Editor.Focus()
+	cm.Load.EnableKeyEvent = true
 }
 
 func (cm *CreateWatchOnlyModal) OnDismiss() {
-
+	cm.Load.EnableKeyEvent = false
 }
 
 func (cm *CreateWatchOnlyModal) Show() {
