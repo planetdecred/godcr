@@ -101,6 +101,7 @@ func NewRestorePage(l *load.Load) *Restore {
 
 	// set suggestions
 	pg.allSuggestions = dcrlibwallet.PGPWordList()
+	pg.Load.EnableKeyEvent = true
 
 	return pg
 }
@@ -110,7 +111,6 @@ func (pg *Restore) ID() string {
 }
 
 func (pg *Restore) OnResume() {
-	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
