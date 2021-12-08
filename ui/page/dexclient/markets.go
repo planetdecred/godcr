@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"decred.org/dcrdex/client/core"
+	"decred.org/dcrdex/client/db"
 	"gioui.org/layout"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -23,11 +24,13 @@ const MarketPageID = "Markets"
 
 type Page struct {
 	*load.Load
-	ctx        context.Context
-	ctxCancel  context.CancelFunc
-	login      decredmaterial.Button
-	initialize decredmaterial.Button
-	addDex     decredmaterial.Button
+	ctx                     context.Context
+	ctxCancel               context.CancelFunc
+	login                   decredmaterial.Button
+	initialize              decredmaterial.Button
+	addDex                  decredmaterial.Button
+	sync                    decredmaterial.Button
+	isConnectedToDcrNetwork bool
 }
 
 // TODO: Add collapsible button to select a market.
@@ -46,6 +49,7 @@ func NewMarketPage(l *load.Load) *Page {
 		login:      l.Theme.Button("Login"),
 		initialize: l.Theme.Button("Start using now"),
 		addDex:     l.Theme.Button("Add a dex"),
+		sync:       l.Theme.Button("Start sync to continue"),
 	}
 
 	return pg
@@ -59,6 +63,12 @@ func (pg *Page) Layout(gtx C) D {
 	var body func(gtx C) D
 
 	switch {
+	case !pg.isConnectedToDcrNetwork:
+		body = func(gtx C) D {
+			return pg.pageSections(gtx, func(gtx C) D {
+				return pg.welcomeLayout(gtx, pg.sync)
+			})
+		}
 	case !pg.Dexc().Initialized():
 		body = func(gtx C) D {
 			return pg.pageSections(gtx, func(gtx C) D {
@@ -145,6 +155,7 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 func (pg *Page) OnResume() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
+	pg.isConnectedToDcrNetwork = pg.WL.MultiWallet.IsConnectedToDecredNetwork()
 }
 
 func (pg *Page) OnClose() {
@@ -152,6 +163,14 @@ func (pg *Page) OnClose() {
 }
 
 func (pg *Page) Handle() {
+	if pg.sync.Button.Clicked() {
+		err := pg.WL.MultiWallet.SpvSync()
+		pg.isConnectedToDcrNetwork = err == nil
+		if err != nil {
+			pg.Toast.NotifyError(err.Error())
+		}
+	}
+
 	if pg.login.Button.Clicked() {
 		modal.NewPasswordModal(pg.Load).
 			Title("Login").
@@ -216,6 +235,11 @@ func (pg *Page) readNotifications() {
 			if n.Type() == core.NoteTypeFeePayment {
 				pg.RefreshWindow()
 			}
+
+			if n.Severity() > db.Success {
+				pg.Toast.NotifyError(n.Details())
+			}
+
 		case <-pg.ctx.Done():
 			return
 		}

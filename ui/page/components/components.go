@@ -671,10 +671,6 @@ func CoinImageBySymbol(icons *load.Icons, coinName string) *decredmaterial.Image
 		return icons.BTC
 	case "dcr":
 		return icons.DCR
-	case "bch":
-		return icons.BCH
-	case "ltc":
-		return icons.LTC
 	}
 	return nil
 }
