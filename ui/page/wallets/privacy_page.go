@@ -19,7 +19,10 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const PrivacyPageID = "Privacy"
+const (
+	PrivacyPageID = "Privacy"
+	Passphrase    = "I understand the risks"
+)
 
 type PrivacyPage struct {
 	*load.Load
@@ -37,6 +40,9 @@ type PrivacyPage struct {
 	toggleMixer             *decredmaterial.Switch
 	allowUnspendUnmixedAcct *decredmaterial.Switch
 
+	textEditor decredmaterial.Editor
+	tm         *modal.InfoModal
+
 	mixerCompleted bool
 }
 
@@ -49,8 +55,11 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
 		toPrivacySetup:          l.Theme.Button("Set up mixer for this wallet"),
 		dangerZoneCollapsible:   l.Theme.Collapsible(),
+		textEditor:              l.Theme.Editor(new(widget.Editor), ""),
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+	pg.textEditor.Editor.SingleLine = true
+
 	return pg
 }
 
@@ -265,6 +274,17 @@ func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
+func (pg *PrivacyPage) confirmInputText(editor widget.Editor, passPhrase string, tm *modal.InfoModal) bool {
+	if editor.Text() == passPhrase {
+		pg.textEditor.SetError("")
+		pg.DismissModal(tm)
+		return true
+	} else {
+		pg.textEditor.SetError("Please insert correct passphrase")
+		return false
+	}
+}
+
 func (pg *PrivacyPage) Handle() {
 	if pg.toPrivacySetup.Clicked() {
 		go pg.showModalSetupMixerInfo()
@@ -319,11 +339,13 @@ func (pg *PrivacyPage) Handle() {
 		} else {
 			pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 		}
+
+		if pg.dangerZoneCollapsible.IsExpanded() {
+			pg.pageContainer.ScrollToEnd = true
+			pg.RefreshWindow()
+		}
 	}
 
-	if pg.dangerZoneCollapsible.IsExpanded() {
-		pg.RefreshWindow()
-	}
 }
 
 func (pg *PrivacyPage) showModalSetupMixerInfo() {
