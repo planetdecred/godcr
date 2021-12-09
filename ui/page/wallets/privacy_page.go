@@ -276,11 +276,9 @@ func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 
 func (pg *PrivacyPage) confirmInputText(editor widget.Editor, passPhrase string, tm *modal.InfoModal) bool {
 	if editor.Text() == passPhrase {
-		pg.textEditor.SetError("")
 		pg.DismissModal(tm)
 		return true
 	} else {
-		pg.textEditor.SetError("Please insert correct passphrase")
 		return false
 	}
 }
