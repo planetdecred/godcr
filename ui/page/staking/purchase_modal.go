@@ -29,7 +29,6 @@ type stakingModal struct {
 	balanceLessCost  int64
 	vspIsFetched     bool
 	isLoading        bool
-	autoPurchase     bool
 	ticketsPurchased func()
 
 	modal          decredmaterial.Modal
@@ -49,7 +48,7 @@ type stakingModal struct {
 	vspSelector     *vspSelector
 }
 
-func newStakingModal(l *load.Load, autoPurchase bool) *stakingModal {
+func newStakingModal(l *load.Load) *stakingModal {
 	tp := &stakingModal{
 		Load: l,
 
@@ -61,7 +60,6 @@ func newStakingModal(l *load.Load, autoPurchase bool) *stakingModal {
 		decrement:        l.Theme.IconButton(l.Icons.ContentRemove),
 		spendingPassword: l.Theme.EditorPassword(new(widget.Editor), "Spending password"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
-		autoPurchase:     autoPurchase,
 	}
 
 	tp.balToMaintainEditor = l.Theme.Editor(new(widget.Editor), "Balance to maintain (DCR)")
@@ -90,11 +88,6 @@ func (tp *stakingModal) TicketPurchased(ticketsPurchased func()) *stakingModal {
 	return tp
 }
 
-func (tp *stakingModal) SetButtonText(title string) *stakingModal {
-	tp.stakeBtn.Text = title
-	return tp
-}
-
 func (tp *stakingModal) OnResume() {
 	tp.initializeAccountSelector()
 	err := tp.accountSelector.SelectFirstWalletValidAccount()
@@ -113,17 +106,16 @@ func (tp *stakingModal) OnResume() {
 func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 	l := []layout.Widget{
 		func(gtx C) D {
-			if tp.autoPurchase {
-				t := tp.Theme.H6("Turn on auto ticket buyer")
-				t.Font.Weight = text.SemiBold
-				return layout.UniformInset(values.MarginPadding16).Layout(gtx, t.Layout)
-			}
-
 			return decredmaterial.LinearLayout{
 				Orientation: layout.Vertical,
 				Width:       decredmaterial.MatchParent,
 				Height:      decredmaterial.WrapContent,
-				Padding:     layout.UniformInset(values.MarginPadding16),
+				Padding: layout.Inset{
+					Top:    values.MarginPadding24,
+					Right:  values.MarginPadding24,
+					Left:   values.MarginPadding24,
+					Bottom: values.MarginPadding12,
+				},
 				Border: decredmaterial.Border{
 					Radius: decredmaterial.TopRadius(14),
 				},
@@ -194,44 +186,36 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 			)
 		},
 		func(gtx C) D {
-			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					mt := values.MarginPadding0
-					mb := values.MarginPadding0
-					if tp.autoPurchase {
-						mt = values.MarginPadding8
-						mb = values.MarginPadding16
-					}
-					return layout.Inset{
-						Top:    mt,
-						Bottom: mb,
-					}.Layout(gtx, tp.accountSelector.Layout)
-				}),
-				layout.Rigid(func(gtx C) D {
-					if tp.autoPurchase {
-						return tp.balToMaintainEditor.Layout(gtx)
-					}
-					return D{}
-				}),
-				layout.Rigid(func(gtx C) D {
-					if tp.balanceError == "" {
-						return D{}
-					}
+			return layout.Inset{
+				Top:    values.MarginPadding2,
+				Right:  values.MarginPadding14,
+				Left:   values.MarginPadding14,
+				Bottom: values.MarginPadding14,
+			}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(tp.accountSelector.Layout),
+					layout.Rigid(func(gtx C) D {
+						if tp.balanceError == "" {
+							return D{}
+						}
 
-					label := tp.Theme.Caption(tp.balanceError)
-					label.Color = tp.Theme.Color.Danger
-					return label.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Inset{
-						Top:    values.MarginPadding16,
-						Bottom: values.MarginPadding16,
-					}.Layout(gtx, func(gtx C) D {
-						return tp.vspSelector.Layout(gtx)
-					})
-				}),
-				layout.Rigid(tp.spendingPassword.Layout),
-			)
+						label := tp.Theme.Caption(tp.balanceError)
+						label.Color = tp.Theme.Color.Danger
+						return label.Layout(gtx)
+					}),
+					layout.Rigid(func(gtx C) D {
+						return layout.Inset{
+							Top:    values.MarginPadding16,
+							Bottom: values.MarginPadding16,
+						}.Layout(gtx, func(gtx C) D {
+							return tp.vspSelector.Layout(gtx)
+						})
+					}),
+					layout.Rigid(func(gtx C) D {
+						return tp.spendingPassword.Layout(gtx)
+					}),
+				)
+			})
 		},
 		func(gtx C) D {
 			return layout.E.Layout(gtx, func(gtx C) D {

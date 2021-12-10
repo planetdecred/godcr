@@ -35,8 +35,9 @@ type Page struct {
 	ticketPrice  string
 	totalRewards string
 
-	autoPurchase *decredmaterial.Switch
-	toTickets    decredmaterial.TextAndIconButton
+	autoPurchase         *decredmaterial.Switch
+	toTickets            decredmaterial.TextAndIconButton
+	autoPurchaseSettings decredmaterial.IconButton
 
 	ticketOverview *dcrlibwallet.StakingOverview
 	liveTickets    []*transactionItem
@@ -62,6 +63,11 @@ func NewStakingPage(l *load.Load) *Page {
 	}
 	pg.toTickets.Color = l.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = color.NRGBA{}
+
+	pg.autoPurchaseSettings = l.Theme.PlainIconButton(l.Icons.GearIcon)
+	pg.autoPurchaseSettings.Color = l.Theme.Color.Primary
+	pg.autoPurchaseSettings.Size = values.MarginPadding24
+	pg.autoPurchaseSettings.Inset = layout.UniformInset(values.MarginPadding0)
 
 	pg.ticketOverview = new(dcrlibwallet.StakingOverview)
 	return pg
@@ -222,9 +228,18 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 					rightWg := func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
+								// ic := pg.Icons.GearActiveIcon
+								// if pg.autoPurchase.IsChecked{
+								// 	// i
+								// }
+								// title.Color = pg.Theme.Color.Gray2
+								return pg.autoPurchaseSettings.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
 								title := pg.Theme.Label(values.TextSize14, "Auto Purchase")
 								title.Color = pg.Theme.Color.Gray2
 								return layout.Inset{
+									Left:  values.MarginPadding4,
 									Right: values.MarginPadding4,
 								}.Layout(gtx, title.Layout)
 							}),
@@ -433,7 +448,7 @@ func (pg *Page) ticketRecordIconCount(icon *decredmaterial.Image, count int, sta
 // Part of the load.Page interface.
 func (pg *Page) HandleUserInteractions() {
 	if pg.stakeBtn.Clicked() {
-		newStakingModal(pg.Load, false).
+		newStakingModal(pg.Load).
 			TicketPurchased(func() {
 				align := layout.Center
 				successIcon := decredmaterial.NewIcon(pg.Icons.ActionCheckCircle)
@@ -457,11 +472,27 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.autoPurchase.Changed() {
-		newStakingModal(pg.Load, true).
-			SetButtonText("Turn on").
-			TicketPurchased(func() {
-				fmt.Println("auto Purchase clicked")
-			}).Show()
+		if pg.autoPurchase.IsChecked() {
+			newTicketBuyerModal(pg.Load).
+				CancelSave(func() {
+					pg.autoPurchase.SetChecked(false)
+				}).
+				SettingsSaved(func() {
+					pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+				}).
+				Show()
+		}
+	}
+
+	if pg.autoPurchaseSettings.Button.Clicked() {
+		newTicketBuyerModal(pg.Load).
+			SettingsSaved(func() {
+				pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+			}).
+			CancelSave(func() {
+				pg.autoPurchase.SetChecked(false)
+			}).
+			Show()
 	}
 
 }

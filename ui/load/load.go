@@ -35,7 +35,7 @@ type Icons struct {
 	ContentAdd, NavigationCheck, NavigationMore, ActionCheckCircle, ActionInfo, NavigationArrowBack,
 	NavigationArrowForward, ActionCheck, ChevronRight, NavigationCancel, NavMoreIcon,
 	ImageBrightness1, ContentClear, DropDownIcon, Cached, ContentRemove, ConcealIcon, RevealIcon,
-	SearchIcon *widget.Icon
+	SearchIcon, GearIcon *widget.Icon
 
 	OverviewIcon, OverviewIconInactive, WalletIcon, WalletIconInactive,
 	ReceiveIcon, Transferred, TransactionsIcon, TransactionsIconInactive, SendIcon, MoreIcon, MoreIconInactive,
@@ -46,7 +46,7 @@ type Icons struct {
 	WatchOnlyWalletIcon, CurrencySwapIcon, SyncingIcon, ProposalIconActive, ProposalIconInactive,
 	Restore, DocumentationIcon, DownloadIcon, TimerIcon, StakeIcon, StakeIconInactive, StakeyIcon,
 	List, ListGridIcon, DecredSymbolIcon, DecredSymbol2, GovernanceActiveIcon, GovernanceInactiveIcon,
-	LogoDarkMode, TimerDarkMode, Rebroadcast *decredmaterial.Image
+	LogoDarkMode, TimerDarkMode, Rebroadcast, GearActiveIcon, GearInactiveIcon *decredmaterial.Image
 
 	NewStakeIcon,
 	TicketImmatureIcon,
@@ -153,6 +153,7 @@ func loadIcons() Icons {
 		ConcealIcon:            decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibility)),
 		RevealIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionVisibilityOff)),
 		SearchIcon:             decredmaterial.MustIcon(widget.NewIcon(icons.ActionSearch)),
+		GearIcon:               decredmaterial.MustIcon(widget.NewIcon(icons.ActionSettings)),
 
 		OverviewIcon:             decredmaterial.NewImage(decredIcons["overview"]),
 		OverviewIconInactive:     decredmaterial.NewImage(decredIcons["overview_inactive"]),
