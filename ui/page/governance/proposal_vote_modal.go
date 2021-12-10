@@ -444,7 +444,7 @@ func (vm *voteModal) inputOptions(gtx layout.Context, wdg *inputVoteOptionsWidge
 											return wdg.decrement.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
-											gtx.Constraints.Min.X, gtx.Constraints.Max.X = 40, 40
+											gtx.Constraints.Min.X, gtx.Constraints.Max.X = 30, 30
 											return wdg.input.Layout(gtx)
 										}),
 										layout.Rigid(func(gtx C) D {
