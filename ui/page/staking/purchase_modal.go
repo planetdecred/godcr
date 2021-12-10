@@ -161,7 +161,7 @@ func (tp *stakingModal) Layout(gtx layout.Context) layout.Dimensions {
 										return tp.decrement.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
-										gtx.Constraints.Min.X, gtx.Constraints.Max.X = 100, 100
+										gtx.Constraints.Min.X, gtx.Constraints.Max.X = 90, 90
 										return tp.tickets.Layout(gtx)
 									}),
 									layout.Rigid(func(gtx C) D {
