@@ -5,6 +5,7 @@ import (
 	"image/color"
 
 	"gioui.org/layout"
+	"gioui.org/text"
 	"gioui.org/widget"
 
 	"github.com/decred/dcrd/dcrutil/v4"
@@ -64,8 +65,8 @@ func NewStakingPage(l *load.Load) *Page {
 	pg.toTickets.Color = l.Theme.Color.Primary
 	pg.toTickets.BackgroundColor = color.NRGBA{}
 
-	pg.autoPurchaseSettings = l.Theme.PlainIconButton(l.Icons.GearIcon)
-	pg.autoPurchaseSettings.Color = l.Theme.Color.Primary
+	pg.autoPurchaseSettings = l.Theme.IconButton(l.Icons.GearIcon)
+	pg.autoPurchaseSettings.ChangeColorStyle(&values.ColorStyle{Foreground: l.Theme.Color.Primary})
 	pg.autoPurchaseSettings.Size = values.MarginPadding24
 	pg.autoPurchaseSettings.Inset = layout.UniformInset(values.MarginPadding0)
 
@@ -198,46 +199,41 @@ func (pg *Page) stakePriceSection(gtx layout.Context) layout.Dimensions {
 					Bottom: values.MarginPadding11,
 				}.Layout(gtx, func(gtx C) D {
 					leftWg := func(gtx C) D {
-					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							title := pg.Theme.Label(values.TextSize14, "Ticket Price")
-							title.Color = pg.Theme.Color.GrayText2
-							return title.Layout(gtx)
-						}),
-						layout.Rigid(func(gtx C) D {
-							return layout.Inset{
-								Left:  values.MarginPadding8,
-								Right: values.MarginPadding4,
-							}.Layout(gtx, func(gtx C) D {
-								ic := pg.Icons.TimerIcon
-								if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
-									ic = pg.Icons.TimerDarkMode
-								}
-								return ic.Layout12dp(gtx)
-							})
-						}),
-						layout.Rigid(func(gtx C) D {
-							secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
-							txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
-							txt.Color = pg.Theme.Color.GrayText2
-							return txt.Layout(gtx)
-						}),
-					)
+						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								title := pg.Theme.Label(values.TextSize14, "Ticket Price")
+								title.Color = pg.Theme.Color.GrayText2
+								return title.Layout(gtx)
+							}),
+							layout.Rigid(func(gtx C) D {
+								return layout.Inset{
+									Left:  values.MarginPadding8,
+									Right: values.MarginPadding4,
+								}.Layout(gtx, func(gtx C) D {
+									ic := pg.Icons.TimerIcon
+									if pg.WL.MultiWallet.ReadBoolConfigValueForKey(load.DarkModeConfigKey, false) {
+										ic = pg.Icons.TimerDarkMode
+									}
+									return ic.Layout12dp(gtx)
+								})
+							}),
+							layout.Rigid(func(gtx C) D {
+								secs, _ := pg.WL.MultiWallet.NextTicketPriceRemaining()
+								txt := pg.Theme.Label(values.TextSize14, nextTicketRemaining(int(secs)))
+								txt.Color = pg.Theme.Color.GrayText2
+								return txt.Layout(gtx)
+							}),
+						)
 					}
 
 					rightWg := func(gtx C) D {
 						return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 							layout.Rigid(func(gtx C) D {
-								// ic := pg.Icons.GearActiveIcon
-								// if pg.autoPurchase.IsChecked{
-								// 	// i
-								// }
-								// title.Color = pg.Theme.Color.Gray2
 								return pg.autoPurchaseSettings.Layout(gtx)
 							}),
 							layout.Rigid(func(gtx C) D {
 								title := pg.Theme.Label(values.TextSize14, "Auto Purchase")
-								title.Color = pg.Theme.Color.Gray2
+								title.Color = pg.Theme.Color.GrayText2
 								return layout.Inset{
 									Left:  values.MarginPadding4,
 									Right: values.MarginPadding4,
@@ -473,14 +469,15 @@ func (pg *Page) HandleUserInteractions() {
 
 	if pg.autoPurchase.Changed() {
 		if pg.autoPurchase.IsChecked() {
-			newTicketBuyerModal(pg.Load).
-				CancelSave(func() {
-					pg.autoPurchase.SetChecked(false)
-				}).
-				SettingsSaved(func() {
-					pg.Toast.Notify("Auto ticket purchase setting saved successfully")
-				}).
-				Show()
+			pg.startTicketBuyerPasswordModal()
+			// newTicketBuyerModal(pg.Load).
+			// 	CancelSave(func() {
+			// 		pg.autoPurchase.SetChecked(false)
+			// 	}).
+			// 	SettingsSaved(func() {
+			// 		pg.Toast.Notify("Auto ticket purchase setting saved successfully")
+			// 	}).
+			// 	Show()
 		}
 	}
 
@@ -495,6 +492,64 @@ func (pg *Page) HandleUserInteractions() {
 			Show()
 	}
 
+}
+
+func (pg *Page) startTicketBuyerPasswordModal() {
+	modal.NewPasswordModal(pg.Load).
+		Title("Confirm Automatic Ticket Purchase").
+		SetCancelable(false).
+		ExtraLayout(func(gtx C) D {
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					b2m := "0.000000 DCR"
+					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("Balance to maintain: %s", b2m))
+					return label.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					vsp := "vsp.dcr.farm"
+					label := pg.Theme.Label(values.TextSize14, fmt.Sprintf("VSP: %s", vsp))
+					return layout.Inset{Bottom: values.MarginPadding12}.Layout(gtx, label.Layout)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return decredmaterial.LinearLayout{
+						Width:      decredmaterial.MatchParent,
+						Height:     decredmaterial.WrapContent,
+						Background: pg.Theme.Color.LightBlue,
+						Padding: layout.Inset{
+							Top:    values.MarginPadding12,
+							Bottom: values.MarginPadding12,
+						},
+						Border:    decredmaterial.Border{Radius: decredmaterial.Radius(8)},
+						Direction: layout.Center,
+						Alignment: layout.Middle,
+					}.Layout2(gtx, func(gtx C) D {
+						return layout.Inset{Bottom: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+							msg := "Godcr must remain running, for tickets to be automatically purchased"
+							txt := pg.Theme.Label(values.TextSize14, msg)
+							txt.Alignment = text.Middle
+							txt.Color = pg.Theme.Color.GrayText3
+							return txt.Layout(gtx)
+						})
+					})
+				}),
+			)
+		}).
+		NegativeButton("Cancel", func() {
+			pg.autoPurchase.SetChecked(false)
+		}).
+		PositiveButton("Confirm", func(password string, pm *modal.PasswordModal) bool {
+			// go func() {
+			// 	err := pg.WL.MultiWallet.StartAccountMixer(pg.wallet.ID, password)
+			// 	if err != nil {
+			// 		pm.SetError(err.Error())
+			// 		pm.SetLoading(false)
+			// 		return
+			// 	}
+			pm.Dismiss()
+			// }()
+
+			return false
+		}).Show()
 }
 
 // OnNavigatedFrom is called when the page is about to be removed from

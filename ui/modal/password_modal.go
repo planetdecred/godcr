@@ -28,6 +28,8 @@ type PasswordModal struct {
 	isLoading    bool
 	isCancelable bool
 
+	extraLayout layout.Widget
+
 	materialLoader material.LoaderStyle
 
 	positiveButtonText    string
@@ -90,6 +92,11 @@ func (pm *PasswordModal) Title(title string) *PasswordModal {
 
 func (pm *PasswordModal) Description(description string) *PasswordModal {
 	pm.description = description
+	return pm
+}
+
+func (pm *PasswordModal) ExtraLayout(layout layout.Widget) *PasswordModal {
+	pm.extraLayout = layout
 	return pm
 }
 
@@ -211,7 +218,13 @@ func (pm *PasswordModal) Layout(gtx layout.Context) D {
 	var w []layout.Widget
 
 	w = append(w, title)
+
 	w = append(w, description)
+
+	if pm.extraLayout != nil {
+		w = append(w, pm.extraLayout)
+	}
+
 	w = append(w, editor)
 	w = append(w, actionButtons)
 

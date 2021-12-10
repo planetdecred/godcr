@@ -192,6 +192,7 @@ func (tb *ticketBuyerModal) Handle() {
 	}
 
 	if tb.modal.BackdropClicked(true) {
+		tb.cancelFunc()
 		tb.Dismiss()
 	}
 
