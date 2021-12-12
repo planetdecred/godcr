@@ -148,9 +148,6 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 		customTemplate = setupMixerInfo(in.Theme)
 	case WalletBackupInfoTemplate:
 		customTemplate = backupInfo(in.Theme)
-	case AllowUnmixedSpendingTemplate:
-		title = "Confirm to allow spending from unmixed accounts"
-		customTemplate = allowUnspendUnmixedAcct(in.Theme)
 	}
 
 	in.dialogTitle = title
@@ -171,15 +168,14 @@ func (in *InfoModal) handleEnterKeypress() {
 
 func (in *InfoModal) Handle() {
 
-
 	for in.btnPositve.Clicked() {
-			in.DismissModal(in)
-			in.positiveButtonClicked()
+		in.DismissModal(in)
+		in.positiveButtonClicked()
 	}
 
 	for in.btnNegative.Clicked() {
-			in.DismissModal(in)
-			in.negativeButtonClicked()
+		in.DismissModal(in)
+		in.negativeButtonClicked()
 	}
 
 	if in.modal.BackdropClicked(in.isCancelable) {

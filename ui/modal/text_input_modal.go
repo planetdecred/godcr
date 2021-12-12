@@ -27,7 +27,7 @@ type TextInputModal struct {
 	callback  func(string, *TextInputModal) bool
 
 	positiveButtonColor color.NRGBA
-	textCustomTemplate []layout.Widget
+	textCustomTemplate  []layout.Widget
 }
 
 func NewTextInputModal(l *load.Load) *TextInputModal {
@@ -90,9 +90,9 @@ func (tm *TextInputModal) SetCancelable(min bool) *TextInputModal {
 	return tm
 }
 
-func(tm *TextInputModal) SetTextWithTemplate() *TextInputModal {
-tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Theme)
-return tm
+func (tm *TextInputModal) SetTextWithTemplate() *TextInputModal {
+	tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Theme)
+	return tm
 }
 
 func (tm *TextInputModal) Handle() {

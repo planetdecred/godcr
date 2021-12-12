@@ -37,9 +37,6 @@ type PrivacyPage struct {
 	toggleMixer             *decredmaterial.Switch
 	allowUnspendUnmixedAcct *decredmaterial.Switch
 
-	textEditor decredmaterial.Editor
-	tm         *modal.InfoModal
-
 	mixerCompleted bool
 }
 
@@ -310,27 +307,27 @@ func (pg *PrivacyPage) Handle() {
 
 	if pg.allowUnspendUnmixedAcct.Changed() {
 		if pg.allowUnspendUnmixedAcct.IsChecked() {
-			textModal:= modal.NewTextInputModal(pg.Load).
-			SetTextWithTemplate(). 
-			Hint(""). 
-			PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText). 
-			PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
-				if textInput != "I understand the risks" {
-					pg.Toast.NotifyError("Please enter correct passphrase", 10)
-					tim.IsLoading = false
-				} else {
-					pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
-					tim.Dismiss()
-				}
-				return tim.IsLoading
-			})
+			textModal := modal.NewTextInputModal(pg.Load).
+				SetTextWithTemplate().
+				Hint("").
+				PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText).
+				PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
+					if textInput != "I understand the risks" {
+						pg.Toast.NotifyError("Please enter correct passphrase", 10)
+						tim.IsLoading = false
+					} else {
+						pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
+						tim.Dismiss()
+					}
+					return tim.IsLoading
+				})
 
 			textModal.Title("Confirm to allow spending from unmixed accounts").
-			NegativeButton("Cancel", func() {
-				pg.allowUnspendUnmixedAcct.SetChecked(false)
-			})
+				NegativeButton("Cancel", func() {
+					pg.allowUnspendUnmixedAcct.SetChecked(false)
+				})
 			textModal.Show()
-			
+
 		} else {
 			pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 		}
