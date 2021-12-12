@@ -100,14 +100,42 @@ func (pg *Page) Layout(gtx C) D {
 			}
 
 			if dex.PendingFee == nil && pg.miniTradeFormWdg != nil {
-				return pg.pageSections(gtx, pg.miniTradeFormWdg.layout)
+				return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						return pg.pageSections(gtx, pg.miniTradeFormWdg.layout)
+					}),
+					layout.Rigid(pg.settingsLayout),
+				)
 			}
 
-			return pg.pageSections(gtx, pg.registrationStatusLayout)
+			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.pageSections(gtx, pg.registrationStatusLayout)
+				}),
+				layout.Rigid(pg.settingsLayout),
+			)
 		}
 	}
 
 	return components.UniformPadding(gtx, body)
+}
+
+func (pg *Page) settingsLayout(gtx C) D {
+	gtx.Constraints.Min.X = gtx.Constraints.Max.X
+	return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+		return layout.E.Layout(gtx, func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return pg.ordersHistory.Layout(gtx)
+				}),
+				layout.Rigid(func(gtx C) D {
+					return layout.Inset{Left: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
+						return pg.toWallets.Layout(gtx)
+					})
+				}),
+			)
+		})
+	})
 }
 
 func (pg *Page) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
@@ -163,8 +191,6 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 			t := fmt.Sprintf("%d/%d", currentConfs, reqConfirms)
 			return pg.Theme.Label(values.TextSize14, t).Layout(gtx)
 		}),
-		// Todo: this for test purposes, will remove later
-		layout.Rigid(pg.addWallet.Layout),
 	)
 }
 

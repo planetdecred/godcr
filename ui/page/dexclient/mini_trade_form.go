@@ -96,20 +96,17 @@ func (miniTradeFormWdg *miniTradeFormWidget) layout(gtx C) D {
 }
 
 func (miniTradeFormWdg *miniTradeFormWidget) changeDirection() {
+	miniTradeFormWdg.orderedAmount.Editor.SetText("0")
+	miniTradeFormWdg.invoicedAmount.Editor.SetText("0")
+
 	if miniTradeFormWdg.isSell {
-		miniTradeFormWdg.invoicedAmount.Editor.SetText("0")
 		miniTradeFormWdg.invoicedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketBase)
 		miniTradeFormWdg.invoicedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Primary
-
-		miniTradeFormWdg.orderedAmount.Editor.SetText("0")
 		miniTradeFormWdg.orderedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketQuote)
 		miniTradeFormWdg.orderedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Success
 	} else {
-		miniTradeFormWdg.invoicedAmount.Editor.SetText("0")
 		miniTradeFormWdg.invoicedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketQuote)
 		miniTradeFormWdg.invoicedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Success
-
-		miniTradeFormWdg.orderedAmount.Editor.SetText("0")
 		miniTradeFormWdg.orderedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketBase)
 		miniTradeFormWdg.orderedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Primary
 	}
