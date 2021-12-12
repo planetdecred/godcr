@@ -170,27 +170,32 @@ func (miniTradeFormWdg *miniTradeFormWidget) handle() {
 
 	if miniTradeFormWdg.submit.Button.Clicked() {
 		var qty uint64
+		var unitInfo dex.UnitInfo
+		assetsMap := miniTradeFormWdg.Dexc().Core().SupportedAssets()
+
 		if miniTradeFormWdg.isSell {
+			unitInfo = assetsMap[mkt.marketBaseID].Info.UnitInfo
 			v, err := strconv.ParseUint(miniTradeFormWdg.invoicedAmount.Editor.Text(), 10, 64)
 			if err != nil {
 				miniTradeFormWdg.Toast.NotifyError(err.Error())
 				return
 			}
-			qty = v * dcr.WalletInfo.UnitInfo.Conventional.ConversionFactor
+			qty = v * unitInfo.Conventional.ConversionFactor
 		} else {
+			unitInfo = assetsMap[mkt.marketBaseID].Info.UnitInfo
 			v, err := strconv.ParseFloat(miniTradeFormWdg.invoicedAmount.Editor.Text(), 64)
 			if err != nil {
 				miniTradeFormWdg.Toast.NotifyError(err.Error())
 				return
 			}
-			qty = uint64(v * float64(btc.WalletInfo.UnitInfo.Conventional.ConversionFactor))
+			qty = uint64(v * float64(unitInfo.Conventional.ConversionFactor))
 		}
-
 		modal.NewPasswordModal(miniTradeFormWdg.Load).
 			Title("App password").
 			Hint("Authorize this order with your app password.").
+			Description("IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours.").
 			NegativeButton(values.String(values.StrCancel), func() {}).
-			PositiveButton("Login", func(password string, pm *modal.PasswordModal) bool {
+			PositiveButton("Ok", func(password string, pm *modal.PasswordModal) bool {
 				go func() {
 					form := dcrlibwallet.FreshOrder{
 						BaseAssetID:  miniTradeFormWdg.mkt.marketBaseID,

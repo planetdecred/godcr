@@ -123,7 +123,7 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 								if asset.Wallet != nil {
 									unitInfo := asset.Info.UnitInfo
 									amount := float64(asset.Wallet.Balance.Available) / float64(unitInfo.Conventional.ConversionFactor)
-									t = fmt.Sprintf("%s", strconv.FormatFloat(amount, 'f', -1, 64))
+									t = strconv.FormatFloat(amount, 'f', -1, 64)
 								} else {
 									t = "0.00000000"
 								}
@@ -184,7 +184,7 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 								return border.Layout(gtx, func(gtx C) D {
 									return b.Layout(gtx, func(gtx C) D {
 										return inset.Layout(gtx, func(gtx C) D {
-											return pg.Theme.Label(values.MarginPadding10, label).Layout(gtx)
+											return pg.Theme.Label(values.MarginPadding12, label).Layout(gtx)
 										})
 									})
 								})
@@ -213,10 +213,6 @@ func (pg *DexWalletsPage) assetRowLayout(gtx C, assetW *assetWidget) D {
 			})
 		})
 	})
-}
-
-func (pg *DexWalletsPage) pageSections(gtx layout.Context, body layout.Widget) layout.Dimensions {
-	return layout.UniformInset(values.MarginPadding16).Layout(gtx, body)
 }
 
 func (pg *DexWalletsPage) initAssetWidgets() []*assetWidget {
