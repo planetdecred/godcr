@@ -3,6 +3,7 @@ package modal
 import (
 	"gioui.org/layout"
 	"gioui.org/text"
+	"gioui.org/unit"
 	"gioui.org/widget"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -118,6 +119,33 @@ func backupInfo(th *decredmaterial.Theme) []layout.Widget {
 			txt.Color = th.Color.Danger
 			txt.Font.Weight = text.Medium
 			return layout.Inset{Top: values.MarginPaddingMinus15}.Layout(gtx, txt.Layout)
+		},
+	}
+}
+
+func allowUnspendUnmixedAcct(th *decredmaterial.Theme) []layout.Widget {
+	return []layout.Widget{
+		func(gtx C) D {
+			return layout.Flex{}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ContentReport)))
+					ic.Color = th.Color.Gray
+					return ic.Layout(gtx, unit.Dp(18))
+				}),
+				layout.Rigid(func(gtx C) D {
+					text := th.Body1("Spendings from unmixed accounts could potentially be traced back to you")
+					text.Color = th.Color.Gray
+					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, text.Layout)
+				}),
+			)
+		},
+
+		func(gtx C) D {
+			text := `<span style="text-color: gray">
+					Please type "<span style="text-color: black"> <span style="font-weight: bold">I understand the risks</span> </span>
+					" to allow spending from unmixed accounts.
+			</span>`
+			return renderers.RenderHTML(text, th).Layout(gtx)
 		},
 	}
 }

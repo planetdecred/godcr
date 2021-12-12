@@ -25,8 +25,11 @@ type TextInputModal struct {
 
 	textInput decredmaterial.Editor
 	callback  func(string, *TextInputModal) bool
-}
 
+	positiveButtonColor color.NRGBA
+	textCustomTemplate []layout.Widget
+}
+///
 func NewTextInputModal(l *load.Load) *TextInputModal {
 	tm := &TextInputModal{
 		InfoModal:    NewInfoModal(l),
@@ -70,7 +73,7 @@ func (tm *TextInputModal) PositiveButton(text string, callback func(string, *Tex
 }
 
 func (tm *TextInputModal) PositiveButtonStyle(background, text color.NRGBA) *TextInputModal {
-	tm.btnPositve.Background, tm.btnPositve.Color = background, text
+	tm.positiveButtonColor, tm.btnPositve.Color = background, text
 	return tm
 }
 
@@ -87,9 +90,14 @@ func (tm *TextInputModal) SetCancelable(min bool) *TextInputModal {
 	return tm
 }
 
+func(tm *TextInputModal) SetTextWithTemplate() *TextInputModal {
+tm.textCustomTemplate = allowUnspendUnmixedAcct(tm.Theme)
+return tm
+}
+
 func (tm *TextInputModal) Handle() {
 	if editorsNotEmpty(tm.textInput.Editor) {
-		tm.btnPositve.Background = tm.Theme.Color.Primary
+		tm.btnPositve.Background = tm.positiveButtonColor
 		tm.isEnabled = true
 	} else {
 		tm.btnPositve.Background = tm.Theme.Color.Gray3
@@ -170,6 +178,10 @@ func (tm *TextInputModal) Layout(gtx layout.Context) D {
 			)
 		}
 		w = append(w, l)
+	}
+
+	if tm.textCustomTemplate != nil {
+		w = append(w, tm.textCustomTemplate...)
 	}
 
 	w = append(w, tm.textInput.Layout)

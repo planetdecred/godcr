@@ -295,17 +295,27 @@ func (pg *PrivacyPage) Handle() {
 
 	if pg.allowUnspendUnmixedAcct.Changed() {
 		if pg.allowUnspendUnmixedAcct.IsChecked() {
-			modal.NewInfoModal(pg.Load).
-				Title("Warning: Danger alert!").
-				Body("Are you sure you want to allow spending from unmixed accounts?").
-				NegativeButton(values.String(values.StrCancel), func() {
-					pg.allowUnspendUnmixedAcct.SetChecked(false)
-				}).
-				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-				PositiveButton("Allow", func() {
+			textModal:= modal.NewTextInputModal(pg.Load).
+			SetTextWithTemplate(). 
+			Hint(""). 
+			PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText). 
+			PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
+				if textInput != "I understand the risks" {
+					pg.Toast.NotifyError("Please enter correct passphrase", 10)
+					tim.IsLoading = false
+				} else {
 					pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
-				}).
-				Show()
+					tim.Dismiss()
+				}
+				return tim.IsLoading
+			})
+
+			textModal.Title("Confirm to allow spending from unmixed accounts").
+			NegativeButton("Cancel", func() {
+				pg.allowUnspendUnmixedAcct.SetChecked(false)
+			})
+			textModal.Show()
+			
 		} else {
 			pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 		}
