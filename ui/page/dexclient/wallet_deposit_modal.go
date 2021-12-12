@@ -115,7 +115,7 @@ func (md *depositModal) Layout(gtx layout.Context) D {
 					})
 				}),
 				layout.Rigid(func(gtx C) D {
-					return md.Load.Theme.Label(values.TextSize20, fmt.Sprintf("%s", md.walletInfoWidget.coinName)).Layout(gtx)
+					return md.Load.Theme.Label(values.TextSize20, md.walletInfoWidget.coinName).Layout(gtx)
 				}),
 			)
 		},
