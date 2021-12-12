@@ -29,7 +29,7 @@ type TextInputModal struct {
 	positiveButtonColor color.NRGBA
 	textCustomTemplate []layout.Widget
 }
-///
+
 func NewTextInputModal(l *load.Load) *TextInputModal {
 	tm := &TextInputModal{
 		InfoModal:    NewInfoModal(l),

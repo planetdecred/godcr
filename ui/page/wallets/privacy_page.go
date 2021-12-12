@@ -19,10 +19,7 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-const (
-	PrivacyPageID = "Privacy"
-	Passphrase    = "I understand the risks"
-)
+const PrivacyPageID = "Privacy"
 
 type PrivacyPage struct {
 	*load.Load

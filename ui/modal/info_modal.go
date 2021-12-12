@@ -7,7 +7,6 @@ import (
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/text"
-	"gioui.org/widget"
 	"github.com/planetdecred/godcr/ui/decredmaterial"
 	"github.com/planetdecred/godcr/ui/load"
 	"github.com/planetdecred/godcr/ui/values"
@@ -38,10 +37,6 @@ type InfoModal struct {
 
 	checkbox decredmaterial.CheckBoxStyle
 
-	textInputEditor decredmaterial.Editor
-	showEditor      bool
-	isEnabled       bool
-
 	titleAlignment, btnAlignment layout.Direction
 
 	isCancelable bool
@@ -61,9 +56,6 @@ func NewInfoModal(l *load.Load) *InfoModal {
 
 	in.btnPositve.Font.Weight = text.Medium
 	in.btnNegative.Font.Weight = text.Medium
-
-	in.textInputEditor = l.Theme.Editor(new(widget.Editor), "")
-	in.textInputEditor.Editor.SingleLine, in.textInputEditor.Editor.Submit = true, true
 
 	return in
 }
@@ -86,16 +78,6 @@ func (in *InfoModal) OnResume() {
 
 func (in *InfoModal) OnDismiss() {
 	in.Load.EnableKeyEvent = false
-}
-
-func (in *InfoModal) ShowTextEditor(showTextEditor bool) *InfoModal {
-	in.showEditor = showTextEditor
-	return in
-}
-
-func (in *InfoModal) TextInputEditor(editor decredmaterial.Editor) *InfoModal {
-	in.textInputEditor = editor
-	return in
 }
 
 func (in *InfoModal) SetCancelable(min bool) *InfoModal {
@@ -188,32 +170,16 @@ func (in *InfoModal) handleEnterKeypress() {
 }
 
 func (in *InfoModal) Handle() {
-	if in.showEditor {
-		if editorsNotEmpty(in.textInputEditor.Editor) {
-			in.btnPositve.Background = in.Theme.Color.Danger
-			in.isEnabled = true
-		} else {
-			in.btnPositve.Background = in.Theme.Color.InactiveGray
-			in.isEnabled = false
-		}
-	}
+
 
 	for in.btnPositve.Clicked() {
-		if !in.showEditor {
 			in.DismissModal(in)
 			in.positiveButtonClicked()
-		} else {
-			in.positiveButtonClicked()
-		}
 	}
 
 	for in.btnNegative.Clicked() {
-		if !in.showEditor && !editorsNotEmpty(in.textInputEditor.Editor) {
 			in.DismissModal(in)
 			in.negativeButtonClicked()
-		} else {
-			in.negativeButtonClicked()
-		}
 	}
 
 	if in.modal.BackdropClicked(in.isCancelable) {
@@ -254,19 +220,6 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 		})
 	}
 
-	textEditor := func(gtx C) D {
-		if !in.showEditor {
-			return layout.Dimensions{}
-		}
-
-		return layout.Inset{Top: values.MarginPaddingMinus5, Left: values.MarginPaddingMinus5}.Layout(gtx, func(gtx C) D {
-			in.textInputEditor.TextSize = values.TextSize14
-			in.textInputEditor.EditorStyle.Color = in.Theme.Color.Black
-			in.textInputEditor.EditorStyle.Font.Weight = text.Weight(in.Theme.TextSize.U)
-			return in.textInputEditor.Layout(gtx)
-		})
-	}
-
 	subtitle := func(gtx C) D {
 		text := in.Theme.Body1(in.subtitle)
 		text.Color = in.Theme.Color.GrayText2
@@ -290,10 +243,6 @@ func (in *InfoModal) Layout(gtx layout.Context) D {
 
 	if in.customTemplate != nil {
 		w = append(w, in.customTemplate...)
-	}
-
-	if in.showEditor {
-		w = append(w, textEditor)
 	}
 
 	if in.checkbox.CheckBox != nil {
