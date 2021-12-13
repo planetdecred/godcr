@@ -197,6 +197,7 @@ func LayoutNoProposalsFound(gtx C, l *load.Load, syncing bool, category int32) D
 	if syncing {
 		text = l.Theme.Body1("Fetching proposals...")
 	}
+
 	return layout.Center.Layout(gtx, func(gtx C) D {
 		return layout.Inset{
 			Top:    values.MarginPadding10,

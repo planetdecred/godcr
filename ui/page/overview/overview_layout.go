@@ -178,6 +178,7 @@ func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 			})
 		},
 		func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 			return pg.recentTransactionsSection(gtx)
 		},
 		func(gtx C) D {
