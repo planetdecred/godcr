@@ -49,10 +49,8 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 		allowUnspendUnmixedAcct: l.Theme.Switch(),
 		toPrivacySetup:          l.Theme.Button("Set up mixer for this wallet"),
 		dangerZoneCollapsible:   l.Theme.Collapsible(),
-		textEditor:              l.Theme.Editor(new(widget.Editor), ""),
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
-	pg.textEditor.Editor.SingleLine = true
 
 	return pg
 }
@@ -333,7 +331,6 @@ func (pg *PrivacyPage) Handle() {
 		}
 
 		if pg.dangerZoneCollapsible.IsExpanded() {
-			pg.pageContainer.ScrollToEnd = true
 			pg.RefreshWindow()
 		}
 	}

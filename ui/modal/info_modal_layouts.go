@@ -86,33 +86,6 @@ func privacyInfo(th *decredmaterial.Theme) []layout.Widget {
 	}
 }
 
-func allowUnspendUnmixedAcct(th *decredmaterial.Theme) []layout.Widget {
-	return []layout.Widget{
-		func(gtx C) D {
-			return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
-				layout.Rigid(func(gtx C) D {
-					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ContentReport)))
-					ic.Color = th.Color.Gray
-					return ic.Layout(gtx, values.MarginPadding12)
-				}),
-				layout.Rigid(func(gtx C) D {
-					text := th.Body1("Spendings from unmixed accounts could potentially be traced back to you.")
-					text.Color = th.Color.Gray
-					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, text.Layout)
-				}),
-			)
-		},
-
-		func(gtx C) D {
-			text := `<span style="text-color: gray">
-					Please type "<span style="text-color: black"> <span style="font-weight: bold">I understand the risks</span> </span>
-					" to allow spending from unmixed accounts.
-			</span>`
-			return renderers.RenderHTML(text, th).Layout(gtx)
-		},
-	}
-}
-
 func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
 	text := `<span style="text-color: grayText2">
 				Two dedicated accounts (“mixed” & “unmixed”) will be created in order to use the mixer.
@@ -157,12 +130,12 @@ func allowUnspendUnmixedAcct(th *decredmaterial.Theme) []layout.Widget {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ContentReport)))
-					ic.Color = th.Color.Gray
+					ic.Color = th.Color.Gray1
 					return ic.Layout(gtx, unit.Dp(18))
 				}),
 				layout.Rigid(func(gtx C) D {
 					text := th.Body1("Spendings from unmixed accounts could potentially be traced back to you")
-					text.Color = th.Color.Gray
+					text.Color = th.Color.Gray1
 					return layout.Inset{Left: values.MarginPadding5}.Layout(gtx, text.Layout)
 				}),
 			)
