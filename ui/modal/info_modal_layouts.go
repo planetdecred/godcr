@@ -96,7 +96,7 @@ func setupMixerInfo(th *decredmaterial.Theme) []layout.Widget {
 }
 
 func transactionDetailsInfo(th *decredmaterial.Theme) []layout.Widget {
-	text := `<span style="text-color: grayText2">Tap on <span style="text-color: primary">blue text</span> to copy the item</span>`
+	text := `<span style="text-color: grayText2">Tap on <span style="text-color: primary">blue text </span> to copy the item</span>`
 
 	return []layout.Widget{
 		renderers.RenderHTML(text, th).Layout,
