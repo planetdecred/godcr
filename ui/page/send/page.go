@@ -152,7 +152,6 @@ func (pg *Page) OnResume() {
 	} else {
 		pg.usdExchangeSet = false
 	}
-	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *Page) fetchExchangeValue() {
@@ -299,6 +298,7 @@ func (pg *Page) resetFields() {
 }
 
 func (pg *Page) Handle() {
+	pg.Load.EnableKeyEvent = true
 
 	pg.sendDestination.handle()
 	pg.amount.handle()

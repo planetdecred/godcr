@@ -87,7 +87,6 @@ func (pg *SignMessagePage) ID() string {
 
 func (pg *SignMessagePage) OnResume() {
 	pg.addressEditor.Editor.Focus()
-	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *SignMessagePage) Layout(gtx layout.Context) layout.Dimensions {
@@ -230,6 +229,7 @@ func (pg *SignMessagePage) updateButtonColors() {
 func (pg *SignMessagePage) Handle() {
 	gtx := pg.gtx
 	pg.updateButtonColors()
+	pg.Load.EnableKeyEvent = true
 
 	isSubmit, isChanged := decredmaterial.HandleEditorEvents(pg.addressEditor.Editor, pg.messageEditor.Editor)
 	if isChanged {
