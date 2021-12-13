@@ -266,15 +266,6 @@ func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *PrivacyPage) confirmInputText(editor widget.Editor, passPhrase string, tm *modal.InfoModal) bool {
-	if editor.Text() == passPhrase {
-		pg.DismissModal(tm)
-		return true
-	} else {
-		return false
-	}
-}
-
 func (pg *PrivacyPage) Handle() {
 	if pg.toPrivacySetup.Clicked() {
 		go pg.showModalSetupMixerInfo()
