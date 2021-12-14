@@ -181,7 +181,7 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 			return item.Icon.Layout24dp(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Max.X = gtx.Px(unit.Dp(110))
+			gtx.Constraints.Max.X = gtx.Px(unit.Dp(115))
 			if d.revs {
 				gtx.Constraints.Max.X = gtx.Px(unit.Dp(100))
 			}
@@ -191,8 +191,8 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 				Left:  unit.Dp(5),
 			}.Layout(gtx, func(gtx C) D {
 				lbl := d.theme.Body2(item.Text)
-				if !d.isOpen && len(item.Text) > 9 {
-					lbl.Text = item.Text[:9] + "..."
+				if !d.isOpen && len(item.Text) > 14 {
+					lbl.Text = item.Text[:14] + "..."
 				}
 				return lbl.Layout(gtx)
 			})
