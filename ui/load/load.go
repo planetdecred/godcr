@@ -30,6 +30,7 @@ type Receiver struct {
 	InternalLog         chan string
 	NotificationsUpdate chan interface{}
 	KeyEvents           chan *key.Event
+	InfoModalEvents     chan *key.Event
 	AcctMixerStatus     chan *wallet.AccountMixer
 	SyncedProposal      chan *wallet.Proposal
 }
@@ -73,10 +74,11 @@ type Load struct {
 
 	Toast *notification.Toast
 
-	SelectedWallet  *int
-	SelectedAccount *int
-	SelectedUTXO    map[int]map[int32]map[string]*wallet.UnspentOutput
-	EnableKeyEvent  bool
+	SelectedWallet            *int
+	SelectedAccount           *int
+	SelectedUTXO              map[int]map[int32]map[string]*wallet.UnspentOutput
+	EnableKeyEvent            bool
+	EnableKeyEventOnInfoModal bool
 
 	ToggleSync       func()
 	RefreshWindow    func()
@@ -122,8 +124,9 @@ func NewLoad() (*Load, error) {
 		Receiver: r,
 		Toast:    notification.NewToast(th),
 
-		Printer:        message.NewPrinter(language.English),
-		EnableKeyEvent: false,
+		Printer:                   message.NewPrinter(language.English),
+		EnableKeyEvent:            false,
+		EnableKeyEventOnInfoModal: false,
 	}
 
 	return l, nil

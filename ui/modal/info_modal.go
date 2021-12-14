@@ -49,7 +49,7 @@ func NewInfoModal(l *load.Load) *InfoModal {
 		modal:        *l.Theme.ModalFloatTitle(),
 		btnPositve:   l.Theme.OutlineButton("Yes"),
 		btnNegative:  l.Theme.OutlineButton("No"),
-		keyEvent:     l.Receiver.KeyEvents,
+		keyEvent:     l.Receiver.InfoModalEvents,
 		isCancelable: true,
 		btnAlignment: layout.E,
 	}
@@ -73,11 +73,11 @@ func (in *InfoModal) Dismiss() {
 }
 
 func (in *InfoModal) OnResume() {
-	in.Load.EnableKeyEvent = true
+	in.Load.EnableKeyEventOnInfoModal = true
 }
 
 func (in *InfoModal) OnDismiss() {
-	in.Load.EnableKeyEvent = false
+	in.Load.EnableKeyEventOnInfoModal = false
 }
 
 func (in *InfoModal) SetCancelable(min bool) *InfoModal {
@@ -156,21 +156,26 @@ func (in *InfoModal) SetupWithTemplate(template string) *InfoModal {
 	return in
 }
 
-func (in *InfoModal) handleEnterKeypress() {
+func HandleEnterKeypress(evt chan *key.Event) bool {
+	var IsEnterPressed bool
 	select {
-	case event := <-in.keyEvent:
-		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press && in.customTemplate != nil {
-			in.enterKeyPressed = true
+	case event := <-evt:
+		if (event.Name == key.NameReturn || event.Name == key.NameEnter) && event.State == key.Press {
+			IsEnterPressed = true
 		}
 	default:
 	}
+	return IsEnterPressed
 }
 
 func (in *InfoModal) Handle() {
-
 	for in.btnPositve.Clicked() {
 		in.DismissModal(in)
 		in.positiveButtonClicked()
+	}
+
+	if HandleEnterKeypress(in.keyEvent) {
+		in.DismissModal(in)
 	}
 
 	for in.btnNegative.Clicked() {
@@ -180,6 +185,7 @@ func (in *InfoModal) Handle() {
 
 	if in.modal.BackdropClicked(in.isCancelable) {
 		in.Dismiss()
+		in.RefreshWindow()
 	}
 
 	if in.checkbox.CheckBox != nil {
