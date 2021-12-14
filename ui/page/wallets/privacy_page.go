@@ -297,12 +297,12 @@ func (pg *PrivacyPage) Handle() {
 	if pg.allowUnspendUnmixedAcct.Changed() {
 		if pg.allowUnspendUnmixedAcct.IsChecked() {
 			textModal := modal.NewTextInputModal(pg.Load).
-				SetTextWithTemplate().
+				SetTextWithTemplate(modal.AllowUnmixedSpendingTemplate).
 				Hint("").
 				PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText).
 				PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
 					if textInput != "I understand the risks" {
-						pg.Toast.NotifyError("Please enter correct passphrase", 10)
+						tim.SetError("confirmation text is incorrect")
 						tim.IsLoading = false
 					} else {
 						pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)

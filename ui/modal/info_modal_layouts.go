@@ -129,9 +129,11 @@ func allowUnspendUnmixedAcct(th *decredmaterial.Theme) []layout.Widget {
 		func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
-					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ContentReport)))
+					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo)))
 					ic.Color = th.Color.Gray1
-					return ic.Layout(gtx, unit.Dp(18))
+					return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
+						return ic.Layout(gtx, unit.Dp(18))
+					})
 				}),
 				layout.Rigid(func(gtx C) D {
 					text := th.Body1("Spendings from unmixed accounts could potentially be traced back to you")
