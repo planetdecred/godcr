@@ -167,6 +167,7 @@ func (in *InfoModal) handleEnterKeypress() {
 }
 
 func (in *InfoModal) Handle() {
+
 	for in.btnPositve.Clicked() {
 		in.DismissModal(in)
 		in.positiveButtonClicked()
