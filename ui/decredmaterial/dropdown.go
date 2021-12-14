@@ -9,6 +9,10 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
+const (
+	DropdownBasePos uint = 0
+)
+
 var MaxWidth = unit.Dp(800)
 
 type DropDown struct {
@@ -16,6 +20,7 @@ type DropDown struct {
 	items          []DropDownItem
 	isOpen         bool
 	backdrop       *widget.Clickable
+	Position       uint
 	revs           bool
 	selectedIndex  int
 	color          color.NRGBA
@@ -24,12 +29,13 @@ type DropDown struct {
 	navigationIcon *widget.Icon
 	clickable      *Clickable
 
-	group            uint
-	closeAllDropdown func(group uint)
-	Width            int
-	linearLayout     *LinearLayout
-	padding          layout.Inset
-	shadow           *Shadow
+	group               uint
+	closeAllDropdown    func(group uint)
+	isOpenDropdownGroup func(group uint) bool
+	Width               int
+	linearLayout        *LinearLayout
+	padding             layout.Inset
+	shadow              *Shadow
 }
 
 type DropDownItem struct {
@@ -38,10 +44,15 @@ type DropDownItem struct {
 	clickable *Clickable
 }
 
-func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
+// DropDown returns a dropdown component. {pos} parameter signifies the position
+// of the dropdown in a dropdown group on the UI, the first dropdown should be assigned
+// pos 0, next 1..etc. incorrectly assigned Dropdown pos will result in inconsistent
+// dropdown backdrop.
+func (t *Theme) DropDown(items []DropDownItem, group uint, pos uint) *DropDown {
 	d := &DropDown{
 		theme:          t,
 		isOpen:         false,
+		Position:       pos,
 		selectedIndex:  0,
 		items:          make([]DropDownItem, 0),
 		color:          t.Color.Gray2,
@@ -51,8 +62,9 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		clickable:      t.NewClickable(true),
 		backdrop:       new(widget.Clickable),
 
-		group:            group,
-		closeAllDropdown: t.closeAllDropdownMenus,
+		group:               group,
+		closeAllDropdown:    t.closeAllDropdownMenus,
+		isOpenDropdownGroup: t.isOpenDropdownGroup,
 		linearLayout: &LinearLayout{
 			Width:  WrapContent,
 			Height: WrapContent,
@@ -169,7 +181,7 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 			return item.Icon.Layout24dp(gtx)
 		}),
 		layout.Rigid(func(gtx C) D {
-			gtx.Constraints.Max.X = gtx.Px(unit.Dp(110))
+			gtx.Constraints.Max.X = gtx.Px(unit.Dp(115))
 			if d.revs {
 				gtx.Constraints.Max.X = gtx.Px(unit.Dp(100))
 			}
@@ -179,8 +191,8 @@ func (d *DropDown) layoutOption(gtx layout.Context, itemIndex int) D {
 				Left:  unit.Dp(5),
 			}.Layout(gtx, func(gtx C) D {
 				lbl := d.theme.Body2(item.Text)
-				if !d.isOpen && len(item.Text) > 9 {
-					lbl.Text = item.Text[:9] + "..."
+				if !d.isOpen && len(item.Text) > 14 {
+					lbl.Text = item.Text[:14] + "..."
 				}
 				return lbl.Layout(gtx)
 			})
@@ -204,41 +216,70 @@ func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 		iRight = dropPos
 	}
 
-	if d.isOpen {
+	if d.Position == DropdownBasePos && d.isOpenDropdownGroup(d.group) {
+		if d.isOpen {
+			return layout.Stack{Alignment: alig}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					gtx.Constraints.Min = gtx.Constraints.Max
+					return d.backdrop.Layout(gtx)
+				}),
+				layout.Stacked(func(gtx C) D {
+					return d.openedLayout(gtx, iLeft, iRight)
+				}),
+			)
+		}
+
 		return layout.Stack{Alignment: alig}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				gtx.Constraints.Min = gtx.Constraints.Max
 				return d.backdrop.Layout(gtx)
 			}),
 			layout.Stacked(func(gtx C) D {
-				return layout.Inset{
-					Left:  unit.Dp(float32(iLeft)),
-					Right: unit.Dp(float32(iRight)),
-				}.Layout(gtx, func(gtx C) D {
-					return d.dropDownItemMenu(gtx)
-				})
+				return d.closedLayout(gtx, iLeft, iRight)
+			}),
+		)
+
+	} else if d.isOpen {
+		return layout.Stack{Alignment: alig}.Layout(gtx,
+			layout.Stacked(func(gtx C) D {
+				return d.openedLayout(gtx, iLeft, iRight)
 			}),
 		)
 	}
 
 	return layout.Stack{Alignment: alig}.Layout(gtx,
 		layout.Stacked(func(gtx C) D {
-			return layout.Inset{
-				Left:  unit.Dp(float32(iLeft)),
-				Right: unit.Dp(float32(iRight)),
-			}.Layout(gtx, func(gtx C) D {
-				return d.drawLayout(gtx, func(gtx C) D {
-					lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-						layout.Rigid(func(gtx C) D {
-							return d.layoutOption(gtx, d.selectedIndex)
-						}))
-					w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
-					d.Width = w + 10
-					return lay
-				})
-			})
+			return d.closedLayout(gtx, iLeft, iRight)
 		}),
 	)
+}
+
+// openedLayout computes dropdown layout when dropdown is opened.
+func (d *DropDown) openedLayout(gtx C, iLeft int, iRight int) D {
+	return layout.Inset{
+		Left:  unit.Dp(float32(iLeft)),
+		Right: unit.Dp(float32(iRight)),
+	}.Layout(gtx, func(gtx C) D {
+		return d.dropDownItemMenu(gtx)
+	})
+}
+
+// closedLayout computes dropdown layout when dropdown is closed.
+func (d *DropDown) closedLayout(gtx C, iLeft int, iRight int) D {
+	return layout.Inset{
+		Left:  unit.Dp(float32(iLeft)),
+		Right: unit.Dp(float32(iRight)),
+	}.Layout(gtx, func(gtx C) D {
+		return d.drawLayout(gtx, func(gtx C) D {
+			lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(func(gtx C) D {
+					return d.layoutOption(gtx, d.selectedIndex)
+				}))
+			w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
+			d.Width = w + 10
+			return lay
+		})
+	})
 }
 
 func (d *DropDown) dropDownItemMenu(gtx C) D {
