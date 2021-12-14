@@ -673,7 +673,7 @@ func ticketListLayout(gtx C, l *load.Load, ticket *transactionItem, i int, showW
 // todo: cleanup
 func createOrderDropDown(th *decredmaterial.Theme) *decredmaterial.DropDown {
 	return th.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
-		{Text: values.String(values.StrOldest)}}, 1)
+		{Text: values.String(values.StrOldest)}}, values.StakingDropdownGroup, 1)
 }
 
 func maturityTimeFormat(maturityTimeMinutes int) string {

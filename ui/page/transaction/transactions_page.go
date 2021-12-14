@@ -48,9 +48,9 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 
 	pg.transactionList.Radius = decredmaterial.Radius(values.MarginPadding14.V)
 
-	pg.orderDropDown = components.CreateOrderDropDown(l)
+	pg.orderDropDown = components.CreateOrderDropDown(l, values.TxDropdownGroup, 1)
 	pg.wallets = pg.WL.SortedWalletList()
-	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+	pg.walletDropDown = components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, values.TxDropdownGroup, 0)
 	pg.txTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: values.String(values.StrAll),
@@ -70,7 +70,7 @@ func NewTransactionsPage(l *load.Load) *TransactionsPage {
 		{
 			Text: values.String(values.StrStaking),
 		},
-	}, 1)
+	}, values.TxDropdownGroup, 2)
 
 	return pg
 }

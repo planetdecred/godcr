@@ -73,7 +73,9 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
 
-	pg.orderDropDown = components.CreateOrderDropDown(l)
+	// orderDropDown is the first dropdown when page is laid out. Its
+	// position should be 0 for consistent backdrop.
+	pg.orderDropDown = components.CreateOrderDropDown(l, values.ProposalDropdownGroup, 0)
 	pg.categoryDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{
 			Text: "Under Review",
@@ -87,7 +89,7 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 		{
 			Text: "Abandoned",
 		},
-	}, 1)
+	}, values.ProposalDropdownGroup, 1)
 
 	pg.initializeWidget()
 
