@@ -41,6 +41,10 @@ type DropDownItem struct {
 	clickable *Clickable
 }
 
+// DropDown returns a dropdown component. {pos} parameter signifies the position
+// of the dropdown in a dropdown group on the UI, the first dropdown should be assigned
+// pos 0, next 1..etc. incorrectly assigned Dropdown pos will result in inconsistent
+// dropdown backdrop.
 func (t *Theme) DropDown(items []DropDownItem, group uint, pos uint) *DropDown {
 	d := &DropDown{
 		theme:          t,

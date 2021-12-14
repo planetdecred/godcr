@@ -60,7 +60,7 @@ func newListPage(l *load.Load) *ListPage {
 
 	pg.orderDropDown = createOrderDropDown(l.Theme)
 	pg.wallets = pg.WL.SortedWalletList()
-	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets)
+	components.CreateOrUpdateWalletDropDown(pg.Load, &pg.walletDropDown, pg.wallets, 0) // first in the set during layout pos 0
 	pg.ticketTypeDropDown = l.Theme.DropDown([]decredmaterial.DropDownItem{
 		{Text: "All"},
 		{Text: "Unmined"},
@@ -69,7 +69,7 @@ func newListPage(l *load.Load) *ListPage {
 		{Text: "Voted"},
 		{Text: "Expired"},
 		{Text: "Revoked"},
-	}, 1)
+	}, 1, 2)
 
 	return pg
 }
