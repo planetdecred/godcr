@@ -152,6 +152,7 @@ func (pg *Page) OnResume() {
 	} else {
 		pg.usdExchangeSet = false
 	}
+	pg.Load.EnableKeyEvent = true
 }
 
 func (pg *Page) fetchExchangeValue() {
@@ -298,8 +299,6 @@ func (pg *Page) resetFields() {
 }
 
 func (pg *Page) Handle() {
-	pg.Load.EnableKeyEvent = true
-
 	pg.sendDestination.handle()
 	pg.amount.handle()
 
@@ -347,13 +346,13 @@ func (pg *Page) Handle() {
 		}
 	}
 
-	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
-	if currencyValue == values.USDExchangeValue {
-		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
+	if pg.sendDestination.accountSwitch.SelectedOption() == "My account" && !(pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()) {
+		pg.amount.dcrAmountEditor.Editor.Focus()
+	} else if pg.sendDestination.accountSwitch.SelectedOption() == "My account" && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()) {
+		decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
 	} else {
-		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
 	}
-
 }
 
 func (pg *Page) OnClose() {
