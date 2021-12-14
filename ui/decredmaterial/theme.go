@@ -228,7 +228,6 @@ func (t *Theme) isOpenDropdownGroup(group uint) bool {
 		if dropDown.group == group {
 			if dropDown.isOpen {
 				return true
-				break
 			}
 		}
 	}
