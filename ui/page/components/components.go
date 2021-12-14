@@ -635,7 +635,7 @@ func TimeFormat(secs int, long bool) string {
 
 // createOrUpdateWalletDropDown check for len of wallets to create dropDown,
 // also update the list when create, update, delete a wallet.
-func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet) *decredmaterial.DropDown {
+func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, wallets []*dcrlibwallet.Wallet, pos uint) *decredmaterial.DropDown {
 	var walletDropDownItems []decredmaterial.DropDownItem
 	walletIcon := l.Icons.WalletIcon
 	walletIcon.Scale = 1
@@ -646,13 +646,13 @@ func CreateOrUpdateWalletDropDown(l *load.Load, dwn **decredmaterial.DropDown, w
 		}
 		walletDropDownItems = append(walletDropDownItems, item)
 	}
-	*dwn = l.Theme.DropDown(walletDropDownItems, 1)
+	*dwn = l.Theme.DropDown(walletDropDownItems, 1, pos)
 	return *dwn
 }
 
-func CreateOrderDropDown(l *load.Load) *decredmaterial.DropDown {
+func CreateOrderDropDown(l *load.Load, pos uint) *decredmaterial.DropDown {
 	return l.Theme.DropDown([]decredmaterial.DropDownItem{{Text: values.String(values.StrNewest)},
-		{Text: values.String(values.StrOldest)}}, 1)
+		{Text: values.String(values.StrOldest)}}, 1, pos)
 }
 
 func TranslateErr(err error) string {
