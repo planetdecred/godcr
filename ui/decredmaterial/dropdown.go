@@ -10,12 +10,14 @@ import (
 )
 
 var MaxWidth = unit.Dp(800)
+var DropdownBasePos uint = 0
 
 type DropDown struct {
 	theme          *Theme
 	items          []DropDownItem
 	isOpen         bool
 	backdrop       *widget.Clickable
+	Position       uint
 	revs           bool
 	selectedIndex  int
 	color          color.NRGBA
@@ -24,12 +26,13 @@ type DropDown struct {
 	navigationIcon *widget.Icon
 	clickable      *Clickable
 
-	group            uint
-	closeAllDropdown func(group uint)
-	Width            int
-	linearLayout     *LinearLayout
-	padding          layout.Inset
-	shadow           *Shadow
+	group               uint
+	closeAllDropdown    func(group uint)
+	isOpenDropdownGroup func(group uint) bool
+	Width               int
+	linearLayout        *LinearLayout
+	padding             layout.Inset
+	shadow              *Shadow
 }
 
 type DropDownItem struct {
@@ -38,10 +41,11 @@ type DropDownItem struct {
 	clickable *Clickable
 }
 
-func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
+func (t *Theme) DropDown(items []DropDownItem, group uint, pos uint) *DropDown {
 	d := &DropDown{
 		theme:          t,
 		isOpen:         false,
+		Position:       pos,
 		selectedIndex:  0,
 		items:          make([]DropDownItem, 0),
 		color:          t.Color.Gray2,
@@ -51,8 +55,9 @@ func (t *Theme) DropDown(items []DropDownItem, group uint) *DropDown {
 		clickable:      t.NewClickable(true),
 		backdrop:       new(widget.Clickable),
 
-		group:            group,
-		closeAllDropdown: t.closeAllDropdownMenus,
+		group:               group,
+		closeAllDropdown:    t.closeAllDropdownMenus,
+		isOpenDropdownGroup: t.isOpenDropdownGroup,
 		linearLayout: &LinearLayout{
 			Width:  WrapContent,
 			Height: WrapContent,
@@ -204,12 +209,49 @@ func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 		iRight = dropPos
 	}
 
-	if d.isOpen {
+	if d.Position == DropdownBasePos && d.isOpenDropdownGroup(d.group) {
+		if d.isOpen {
+			return layout.Stack{Alignment: alig}.Layout(gtx,
+				layout.Expanded(func(gtx C) D {
+					gtx.Constraints.Min = gtx.Constraints.Max
+					return d.backdrop.Layout(gtx)
+				}),
+				layout.Stacked(func(gtx C) D {
+					return layout.Inset{
+						Left:  unit.Dp(float32(iLeft)),
+						Right: unit.Dp(float32(iRight)),
+					}.Layout(gtx, func(gtx C) D {
+						return d.dropDownItemMenu(gtx)
+					})
+				}),
+			)
+		}
+
 		return layout.Stack{Alignment: alig}.Layout(gtx,
 			layout.Expanded(func(gtx C) D {
 				gtx.Constraints.Min = gtx.Constraints.Max
 				return d.backdrop.Layout(gtx)
 			}),
+			layout.Stacked(func(gtx C) D {
+				return layout.Inset{
+					Left:  unit.Dp(float32(iLeft)),
+					Right: unit.Dp(float32(iRight)),
+				}.Layout(gtx, func(gtx C) D {
+					return d.drawLayout(gtx, func(gtx C) D {
+						lay := layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+							layout.Rigid(func(gtx C) D {
+								return d.layoutOption(gtx, d.selectedIndex)
+							}))
+						w := (lay.Size.X * 800) / gtx.Px(MaxWidth)
+						d.Width = w + 10
+						return lay
+					})
+				})
+			}),
+		)
+
+	} else if d.isOpen {
+		return layout.Stack{Alignment: alig}.Layout(gtx,
 			layout.Stacked(func(gtx C) D {
 				return layout.Inset{
 					Left:  unit.Dp(float32(iLeft)),
