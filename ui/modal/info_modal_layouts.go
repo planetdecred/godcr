@@ -130,7 +130,7 @@ func allowUnspendUnmixedAcct(th *decredmaterial.Theme) []layout.Widget {
 			return layout.Flex{}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					ic := decredmaterial.NewIcon(decredmaterial.MustIcon(widget.NewIcon(icons.ActionInfo)))
-					ic.Color = th.Color.Gray1
+					ic.Color = th.Color.GrayText1
 					return layout.Inset{Top: values.MarginPadding4}.Layout(gtx, func(gtx C) D {
 						return ic.Layout(gtx, unit.Dp(18))
 					})
@@ -144,8 +144,8 @@ func allowUnspendUnmixedAcct(th *decredmaterial.Theme) []layout.Widget {
 		},
 
 		func(gtx C) D {
-			text := `<span style="text-color: gray">
-					Please type "<span style="text-color: black"> <span style="font-weight: bold">I understand the risks</span> </span>
+			text := `<span style="text-color: grayText1">
+					Please type "<span style="font-weight: bold">I understand the risks</span>
 					" to allow spending from unmixed accounts.
 			</span>`
 			return renderers.RenderHTML(text, th).Layout(gtx)
