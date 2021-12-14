@@ -51,6 +51,7 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 		dangerZoneCollapsible:   l.Theme.Collapsible(),
 	}
 	pg.backButton, pg.infoButton = components.SubpageHeaderButtons(l)
+
 	return pg
 }
 
@@ -295,25 +296,36 @@ func (pg *PrivacyPage) Handle() {
 
 	if pg.allowUnspendUnmixedAcct.Changed() {
 		if pg.allowUnspendUnmixedAcct.IsChecked() {
-			modal.NewInfoModal(pg.Load).
-				Title("Warning: Danger alert!").
-				Body("Are you sure you want to allow spending from unmixed accounts?").
-				NegativeButton(values.String(values.StrCancel), func() {
+			textModal := modal.NewTextInputModal(pg.Load).
+				SetTextWithTemplate(modal.AllowUnmixedSpendingTemplate).
+				Hint("").
+				PositiveButtonStyle(pg.Load.Theme.Color.Danger, pg.Load.Theme.Color.InvText).
+				PositiveButton("Confirm", func(textInput string, tim *modal.TextInputModal) bool {
+					if textInput != "I understand the risks" {
+						tim.SetError("confirmation text is incorrect")
+						tim.IsLoading = false
+					} else {
+						pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
+						tim.Dismiss()
+					}
+					return tim.IsLoading
+				})
+
+			textModal.Title("Confirm to allow spending from unmixed accounts").
+				NegativeButton("Cancel", func() {
 					pg.allowUnspendUnmixedAcct.SetChecked(false)
-				}).
-				PositiveButtonStyle(pg.Theme.Color.Surface, pg.Theme.Color.Danger).
-				PositiveButton("Allow", func() {
-					pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, false)
-				}).
-				Show()
+				})
+			textModal.Show()
+
 		} else {
 			pg.wallet.SetBoolConfigValueForKey(dcrlibwallet.AccountMixerConfigSet, true)
 		}
+
+		if pg.dangerZoneCollapsible.IsExpanded() {
+			pg.RefreshWindow()
+		}
 	}
 
-	if pg.dangerZoneCollapsible.IsExpanded() {
-		pg.RefreshWindow()
-	}
 }
 
 func (pg *PrivacyPage) showModalSetupMixerInfo() {
