@@ -221,8 +221,8 @@ func (t *Theme) closeAllDropdownMenus(group uint) {
 	}
 }
 
-// isOpenDropdownGroup interate over Dropdowns registered as a member
-// {group}, returns true if any of the drop down state is open.
+// isOpenDropdownGroup iterate over Dropdowns registered as a member
+// of {group}, returns true if any of the drop down state is open.
 func (t *Theme) isOpenDropdownGroup(group uint) bool {
 	for _, dropDown := range t.dropDownMenus {
 		if dropDown.group == group {

@@ -254,7 +254,7 @@ func (d *DropDown) Layout(gtx C, dropPos int, reversePos bool) D {
 	)
 }
 
-// openeLayout computes dropdown layout when dropdown is opened.
+// openedLayout computes dropdown layout when dropdown is opened.
 func (d *DropDown) openedLayout(gtx C, iLeft int, iRight int) D {
 	return layout.Inset{
 		Left:  unit.Dp(float32(iLeft)),
