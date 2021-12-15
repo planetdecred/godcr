@@ -176,6 +176,7 @@ func (in *InfoModal) Handle() {
 
 	if HandleEnterKeypress(in.keyEvent) {
 		in.DismissModal(in)
+		in.RefreshWindow()
 	}
 
 	for in.btnNegative.Clicked() {
@@ -185,7 +186,6 @@ func (in *InfoModal) Handle() {
 
 	if in.modal.BackdropClicked(in.isCancelable) {
 		in.Dismiss()
-		in.RefreshWindow()
 	}
 
 	if in.checkbox.CheckBox != nil {

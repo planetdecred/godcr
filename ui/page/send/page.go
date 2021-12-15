@@ -346,12 +346,21 @@ func (pg *Page) Handle() {
 		}
 	}
 
-	if pg.sendDestination.accountSwitch.SelectedOption() == "My account" && !(pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()) {
-		pg.amount.dcrAmountEditor.Editor.Focus()
-	} else if pg.sendDestination.accountSwitch.SelectedOption() == "My account" && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()) {
-		decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+	currencyValue := pg.WL.MultiWallet.ReadStringConfigValueForKey(dcrlibwallet.CurrencyConversionConfigKey)
+	if currencyValue != values.USDExchangeValue {
+		if pg.sendDestination.accountSwitch.SelectedOption() == "Address" {
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+		} else if pg.sendDestination.accountSwitch.SelectedOption() == "My account" && !pg.amount.dcrAmountEditor.Editor.Focused() {
+			pg.amount.dcrAmountEditor.Editor.Focus()
+		}
 	} else {
-		decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
+		if pg.sendDestination.accountSwitch.SelectedOption() == "My account" && !(pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()) {
+			pg.amount.dcrAmountEditor.Editor.Focus()
+		} else if pg.sendDestination.accountSwitch.SelectedOption() == "My account" && (pg.amount.dcrAmountEditor.Editor.Focused() || pg.amount.usdAmountEditor.Editor.Focused()) {
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.amount.usdAmountEditor.Editor, pg.amount.dcrAmountEditor.Editor)
+		} else {
+			decredmaterial.SwitchEditors(pg.keyEvent, pg.sendDestination.destinationAddressEditor.Editor, pg.amount.dcrAmountEditor.Editor, pg.amount.usdAmountEditor.Editor)
+		}
 	}
 }
 
