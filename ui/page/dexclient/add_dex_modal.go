@@ -32,9 +32,15 @@ type addDexModal struct {
 	cert             decredmaterial.Editor
 	cancel           decredmaterial.Button
 	materialLoader   material.LoaderStyle
+	dexRegisted      chan *dexRegisted
 }
 
-func newAddDexModal(l *load.Load) *addDexModal {
+type dexRegisted struct {
+	password []byte
+	dex      *core.Exchange
+}
+
+func newAddDexModal(l *load.Load, nd chan *dexRegisted) *addDexModal {
 	md := &addDexModal{
 		Load:             l,
 		modal:            l.Theme.ModalFloatTitle(),
@@ -43,6 +49,7 @@ func newAddDexModal(l *load.Load) *addDexModal {
 		addDexServer:     l.Theme.Button("Submit"),
 		cancel:           l.Theme.OutlineButton("Cancel"),
 		materialLoader:   material.Loader(material.NewTheme(gofont.Collection())),
+		dexRegisted:      nd,
 	}
 
 	md.dexServerAddress.Editor.SingleLine = true
@@ -197,6 +204,10 @@ func (md *addDexModal) completeRegistration(dex *core.Exchange, feeAssetName str
 					pm.SetError(err.Error())
 					pm.SetLoading(false)
 					return
+				}
+				md.dexRegisted <- &dexRegisted{
+					password: []byte(password),
+					dex:      dex,
 				}
 				pm.Dismiss()
 			}()

@@ -5,10 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"decred.org/dcrdex/client/asset/btc"
-	"decred.org/dcrdex/client/asset/dcr"
+	"decred.org/dcrdex/client/asset"
 	"decred.org/dcrdex/client/core"
-	"decred.org/dcrdex/dex"
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"github.com/planetdecred/dcrlibwallet"
@@ -18,179 +16,162 @@ import (
 	"github.com/planetdecred/godcr/ui/values"
 )
 
-type selectedMaket struct {
-	host          string
-	name          string
-	marketBase    string
-	marketQuote   string
-	marketBaseID  uint32
-	marketQuoteID uint32
-}
-
-// Only support DCR-BTC right now
-// TODO: will add colapsible to select trading pairs
-var mkt = &selectedMaket{
-	host:          testDexHost,
-	name:          "DCR-BTC",
-	marketBase:    dex.BipIDSymbol(dcr.BipID),
-	marketBaseID:  dcr.BipID,
-	marketQuote:   dex.BipIDSymbol(btc.BipID),
-	marketQuoteID: btc.BipID,
-}
-
 type miniTradeFormWidget struct {
 	*load.Load
 	isSell                        bool
 	submit                        decredmaterial.Button
 	direction                     decredmaterial.IconButton
 	invoicedAmount, orderedAmount decredmaterial.Editor
-	orderBook                     *core.OrderBook
-	mkt                           *selectedMaket
+	mkt                           *core.Market
 }
 
-func newMiniTradeFormWidget(l *load.Load) *miniTradeFormWidget {
-	miniTradeFormWdg := &miniTradeFormWidget{
+func newMiniTradeFormWidget(l *load.Load, dex *core.Exchange, mkt *core.Market) *miniTradeFormWidget {
+	m := &miniTradeFormWidget{
 		Load:           l,
 		submit:         l.Theme.Button("OK"),
 		invoicedAmount: l.Theme.Editor(new(widget.Editor), "I have"),
 		orderedAmount:  l.Theme.Editor(new(widget.Editor), "I get"),
 		direction:      l.Theme.IconButton(l.Icons.ActionSwapHoriz),
-		orderBook:      new(core.OrderBook),
 		isSell:         true,
 		mkt:            mkt,
 	}
 
-	miniTradeFormWdg.direction.Size = values.MarginPadding20
-	miniTradeFormWdg.direction.ChangeColorStyle(&values.ColorStyle{Background: color.NRGBA{}})
+	m.direction.Size = values.MarginPadding20
+	m.direction.ChangeColorStyle(&values.ColorStyle{Background: color.NRGBA{}})
 
-	miniTradeFormWdg.invoicedAmount.Editor.SingleLine = true
-	miniTradeFormWdg.invoicedAmount.HasCustomButton = true
-	miniTradeFormWdg.invoicedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
+	m.invoicedAmount.Editor.SingleLine = true
+	m.invoicedAmount.HasCustomButton = true
+	m.invoicedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
 
-	miniTradeFormWdg.orderedAmount.Editor.SingleLine = true
-	miniTradeFormWdg.orderedAmount.HasCustomButton = true
-	miniTradeFormWdg.orderedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
-	miniTradeFormWdg.changeDirection()
+	m.orderedAmount.Editor.SingleLine = true
+	m.orderedAmount.HasCustomButton = true
+	m.orderedAmount.CustomButton.Inset = layout.UniformInset(values.MarginPadding6)
+	m.changeDirection()
 
-	miniTradeFormWdg.submit.TextSize = values.TextSize12
-	miniTradeFormWdg.submit.Background = l.Theme.Color.Primary
+	m.submit.TextSize = values.TextSize12
+	m.submit.Background = l.Theme.Color.Primary
 
-	return miniTradeFormWdg
+	return m
 }
 
-func (miniTradeFormWdg *miniTradeFormWidget) layout(gtx C) D {
+func (m *miniTradeFormWidget) layout(gtx C) D {
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 		layout.Rigid(func(gtx C) D {
 			return layout.Flex{}.Layout(gtx,
-				layout.Flexed(.5, miniTradeFormWdg.invoicedAmount.Layout),
-				layout.Rigid(miniTradeFormWdg.direction.Layout),
-				layout.Flexed(.5, miniTradeFormWdg.orderedAmount.Layout),
+				layout.Flexed(.5, m.invoicedAmount.Layout),
+				layout.Rigid(m.direction.Layout),
+				layout.Flexed(.5, m.orderedAmount.Layout),
 			)
 		}),
 		layout.Rigid(func(gtx C) D {
 			return layout.Inset{Top: values.MarginPadding10}.Layout(gtx, func(gtx C) D {
-				return miniTradeFormWdg.submit.Layout(gtx)
+				return m.submit.Layout(gtx)
 			})
 		}),
 	)
 }
 
-func (miniTradeFormWdg *miniTradeFormWidget) changeDirection() {
-	miniTradeFormWdg.orderedAmount.Editor.SetText("0")
-	miniTradeFormWdg.invoicedAmount.Editor.SetText("0")
+func (m *miniTradeFormWidget) changeDirection() {
+	m.orderedAmount.Editor.SetText("0")
+	m.invoicedAmount.Editor.SetText("0")
 
-	if miniTradeFormWdg.isSell {
-		miniTradeFormWdg.invoicedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketBase)
-		miniTradeFormWdg.invoicedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Primary
-		miniTradeFormWdg.orderedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketQuote)
-		miniTradeFormWdg.orderedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Success
+	if m.isSell {
+		m.invoicedAmount.CustomButton.Text = strings.ToUpper(m.mkt.BaseSymbol)
+		m.invoicedAmount.CustomButton.Background = m.Theme.Color.Primary
+		m.orderedAmount.CustomButton.Text = strings.ToUpper(m.mkt.QuoteSymbol)
+		m.orderedAmount.CustomButton.Background = m.Theme.Color.Success
 	} else {
-		miniTradeFormWdg.invoicedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketQuote)
-		miniTradeFormWdg.invoicedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Success
-		miniTradeFormWdg.orderedAmount.CustomButton.Text = strings.ToUpper(miniTradeFormWdg.mkt.marketBase)
-		miniTradeFormWdg.orderedAmount.CustomButton.Background = miniTradeFormWdg.Theme.Color.Primary
+		m.invoicedAmount.CustomButton.Text = strings.ToUpper(m.mkt.QuoteSymbol)
+		m.invoicedAmount.CustomButton.Background = m.Theme.Color.Success
+		m.orderedAmount.CustomButton.Text = strings.ToUpper(m.mkt.BaseSymbol)
+		m.orderedAmount.CustomButton.Background = m.Theme.Color.Primary
 	}
 }
 
-func (miniTradeFormWdg *miniTradeFormWidget) handle() {
-	if miniTradeFormWdg.direction.Button.Clicked() {
-		miniTradeFormWdg.isSell = !miniTradeFormWdg.isSell
-		miniTradeFormWdg.changeDirection()
+func (m miniTradeFormWidget) suggestValue(ord *core.OrderBook, amount string, isSell, invoicedChange bool) string {
+	var rate float64
+	bitSize := 64
+	if m.isSell {
+		_, rate = minMaxRateOrderBook(ord.Buys)
+	} else {
+		rate, _ = minMaxRateOrderBook(ord.Sells)
 	}
-	ord := miniTradeFormWdg.orderBook
+
+	qty, err := strconv.ParseFloat(amount, bitSize)
+	if err != nil || rate <= 0 {
+		return ""
+	}
+
+	if invoicedChange {
+		if isSell {
+			return strconv.FormatFloat(rate*qty, 'f', -1, bitSize)
+		}
+		return strconv.FormatFloat(qty/rate, 'f', -1, bitSize)
+	}
+
+	if isSell {
+		return strconv.FormatFloat(qty/rate, 'f', -1, bitSize)
+	}
+	return strconv.FormatFloat(rate*qty, 'f', -1, bitSize)
+}
+
+func (m *miniTradeFormWidget) handle(ord *core.OrderBook, host string) {
+	if m.direction.Button.Clicked() {
+		m.isSell = !m.isSell
+		m.changeDirection()
+	}
+
 	if ord != nil {
-		var rate float64
-
-		bitSize := 64
-
-		if miniTradeFormWdg.isSell {
-			_, rate = minMaxRateOrderBook(ord.Buys)
-		} else {
-			rate, _ = minMaxRateOrderBook(ord.Sells)
-		}
-
-		for _, evt := range miniTradeFormWdg.invoicedAmount.Editor.Events() {
-			if miniTradeFormWdg.invoicedAmount.Editor.Focused() {
+		for _, evt := range m.invoicedAmount.Editor.Events() {
+			if m.invoicedAmount.Editor.Focused() {
 				switch evt.(type) {
 				case widget.ChangeEvent:
-					qty, err := strconv.ParseFloat(miniTradeFormWdg.invoicedAmount.Editor.Text(), bitSize)
-					if err != nil || rate <= 0 {
-						return
-					}
-					var value string
-					if miniTradeFormWdg.isSell {
-						value = strconv.FormatFloat(rate*qty, 'f', -1, bitSize)
-					} else {
-						value = strconv.FormatFloat(qty/rate, 'f', -1, bitSize)
-					}
-					miniTradeFormWdg.orderedAmount.Editor.SetText(value)
+					value := m.suggestValue(ord, m.invoicedAmount.Editor.Text(), m.isSell, true)
+					m.orderedAmount.Editor.SetText(value)
 				}
 			}
 		}
 
-		for _, evt := range miniTradeFormWdg.orderedAmount.Editor.Events() {
-			if miniTradeFormWdg.orderedAmount.Editor.Focused() {
+		for _, evt := range m.orderedAmount.Editor.Events() {
+			if m.orderedAmount.Editor.Focused() {
 				switch evt.(type) {
 				case widget.ChangeEvent:
-					qty, err := strconv.ParseFloat(miniTradeFormWdg.orderedAmount.Editor.Text(), bitSize)
-					if err != nil || rate <= 0 {
-						return
-					}
-					var value string
-					if miniTradeFormWdg.isSell {
-						value = strconv.FormatFloat(qty/rate, 'f', -1, bitSize)
-					} else {
-						value = strconv.FormatFloat(rate*qty, 'f', -1, bitSize)
-					}
-					miniTradeFormWdg.invoicedAmount.Editor.SetText(value)
+					value := m.suggestValue(ord, m.orderedAmount.Editor.Text(), m.isSell, false)
+					m.invoicedAmount.Editor.SetText(value)
 				}
 			}
 		}
 	}
 
-	if miniTradeFormWdg.submit.Button.Clicked() {
+	if m.submit.Button.Clicked() {
 		var qty uint64
-		var unitInfo dex.UnitInfo
-		assetsMap := miniTradeFormWdg.Dexc().Core().SupportedAssets()
-
-		if miniTradeFormWdg.isSell {
-			unitInfo = assetsMap[mkt.marketBaseID].Info.UnitInfo
-			v, err := strconv.ParseUint(miniTradeFormWdg.invoicedAmount.Editor.Text(), 10, 64)
+		if m.isSell {
+			assetInfo, err := asset.Info(m.mkt.BaseID)
 			if err != nil {
-				miniTradeFormWdg.Toast.NotifyError(err.Error())
+				m.Toast.NotifyError(err.Error())
 				return
 			}
-			qty = v * unitInfo.Conventional.ConversionFactor
+			v, err := strconv.ParseUint(m.invoicedAmount.Editor.Text(), 10, 64)
+			if err != nil {
+				m.Toast.NotifyError(err.Error())
+				return
+			}
+			qty = v * assetInfo.UnitInfo.Conventional.ConversionFactor
 		} else {
-			unitInfo = assetsMap[mkt.marketBaseID].Info.UnitInfo
-			v, err := strconv.ParseFloat(miniTradeFormWdg.invoicedAmount.Editor.Text(), 64)
+			assetInfo, err := asset.Info(m.mkt.QuoteID)
 			if err != nil {
-				miniTradeFormWdg.Toast.NotifyError(err.Error())
+				m.Toast.NotifyError(err.Error())
 				return
 			}
-			qty = uint64(v * float64(unitInfo.Conventional.ConversionFactor))
+			v, err := strconv.ParseFloat(m.invoicedAmount.Editor.Text(), 64)
+			if err != nil {
+				m.Toast.NotifyError(err.Error())
+				return
+			}
+			qty = uint64(v * float64(assetInfo.UnitInfo.Conventional.ConversionFactor))
 		}
-		modal.NewPasswordModal(miniTradeFormWdg.Load).
+
+		modal.NewPasswordModal(m.Load).
 			Title("App password").
 			Hint("Authorize this order with your app password.").
 			Description("IMPORTANT: Trades take time to settle, and you cannot turn off the DEX client software, or the BTC or DCR blockchain and/or wallet software, until settlement is complete. Settlement can complete as quickly as a few minutes or take as long as a few hours.").
@@ -198,39 +179,25 @@ func (miniTradeFormWdg *miniTradeFormWidget) handle() {
 			PositiveButton("Ok", func(password string, pm *modal.PasswordModal) bool {
 				go func() {
 					form := dcrlibwallet.FreshOrder{
-						BaseAssetID:  miniTradeFormWdg.mkt.marketBaseID,
-						QuoteAssetID: miniTradeFormWdg.mkt.marketQuoteID,
+						BaseAssetID:  m.mkt.BaseID,
+						QuoteAssetID: m.mkt.QuoteID,
 						Qty:          qty,
 						IsLimit:      false,
-						Sell:         miniTradeFormWdg.isSell,
+						Sell:         m.isSell,
 						TifNow:       false,
 					}
-					_, err := miniTradeFormWdg.Dexc().PlaceOrderWithServer(miniTradeFormWdg.mkt.host, &form, []byte(password))
+					_, err := m.Dexc().PlaceOrderWithServer(host, &form, []byte(password))
 					if err != nil {
 						pm.SetError(err.Error())
 						pm.SetLoading(false)
 						return
 					}
+					m.orderedAmount.Editor.SetText("0")
+					m.invoicedAmount.Editor.SetText("0")
+					m.Toast.Notify("Successfully!")
 					pm.Dismiss()
 				}()
 				return false
 			}).Show()
 	}
-}
-
-func minMaxRateOrderBook(orders []*core.MiniOrder) (float64, float64) {
-	if len(orders) == 0 {
-		return 0, 0
-	}
-	var max = orders[0].Rate
-	var min = orders[0].Rate
-	for _, value := range orders {
-		if max < value.Rate {
-			max = value.Rate
-		}
-		if min > value.Rate {
-			min = value.Rate
-		}
-	}
-	return min, max
 }
