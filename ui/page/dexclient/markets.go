@@ -306,7 +306,7 @@ func (pg *Page) HandleUserInteractions() {
 		dex.PendingFee == nil &&
 		pg.miniTradeFormWdg == nil {
 		mkt := pg.dexMarket(dex, marketIDSelected)
-		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, dex, mkt)
+		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, mkt)
 	}
 }
 

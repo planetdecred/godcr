@@ -25,7 +25,7 @@ type miniTradeFormWidget struct {
 	mkt                           *core.Market
 }
 
-func newMiniTradeFormWidget(l *load.Load, dex *core.Exchange, mkt *core.Market) *miniTradeFormWidget {
+func newMiniTradeFormWidget(l *load.Load, mkt *core.Market) *miniTradeFormWidget {
 	m := &miniTradeFormWidget{
 		Load:           l,
 		submit:         l.Theme.Button("OK"),
