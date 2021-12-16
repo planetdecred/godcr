@@ -2,10 +2,12 @@ package dexclient
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"decred.org/dcrdex/client/core"
 	"decred.org/dcrdex/client/db"
+	"decred.org/dcrdex/dex/msgjson"
 	"gioui.org/layout"
 
 	"github.com/planetdecred/godcr/ui/decredmaterial"
@@ -32,10 +34,12 @@ type Page struct {
 	sync       decredmaterial.Button
 }
 
+var marketIDSelected = "dcr_btc"
+
 // TODO: Add collapsible button to select a market.
-// Use mktName="DCR-BTC" in the meantime.
-func (pg *Page) dexMarket(mktName string) *core.Market {
-	dex := pg.dex()
+// Use mktName=marketIDSelected in the meantime.
+
+func (pg *Page) dexMarket(dex *core.Exchange, mktName string) *core.Market {
 	if dex == nil {
 		return nil
 	}
@@ -241,10 +245,19 @@ func (pg *Page) HandleUserInteractions() {
 						return
 					}
 					pm.Dismiss()
+
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load).Show()
+						newAddDexModal(pg.Load, pg.dexRegisted).Show()
 					}
+
+					mkt := pg.dexMarket(dex, marketIDSelected)
+					pg.Load.CreateDexConnection(dex.Host, []byte(password))
+					pg.Load.SubscribeMarket(dex.Host, mkt.BaseID, mkt.QuoteID)
+					go pg.listenerMessages(dex.Host)
+					// TODO: will remove SyncBook
+					pg.Dexc().Core().SyncBook(dex.Host, mkt.BaseID, mkt.QuoteID)
+					pg.getOrderBook(dex.Host, mkt.BaseID, mkt.QuoteID)
 				}()
 				return false
 			}).Show()
@@ -270,7 +283,7 @@ func (pg *Page) HandleUserInteractions() {
 					m.Dismiss()
 					// Check if there is no dex registered, show modal to register one
 					if len(pg.Dexc().DEXServers()) == 0 {
-						newAddDexModal(pg.Load).Show()
+						newAddDexModal(pg.Load, pg.dexRegisted).Show()
 					}
 				}()
 				return false
@@ -278,19 +291,46 @@ func (pg *Page) HandleUserInteractions() {
 	}
 
 	if pg.addDex.Button.Clicked() {
-		newAddDexModal(pg.Load).Show()
+		newAddDexModal(pg.Load, pg.dexRegisted).Show()
 	}
 
 	if pg.miniTradeFormWdg != nil {
-		pg.miniTradeFormWdg.handle()
+		pg.miniTradeFormWdg.handle(pg.orderBook, dex.Host)
 	}
 
-	dex := pg.dex()
 	if dex != nil &&
+		pg.Dexc().IsLoggedIn() &&
 		dex.Connected &&
 		dex.PendingFee == nil &&
 		pg.miniTradeFormWdg == nil {
-		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load)
+		mkt := pg.dexMarket(dex, marketIDSelected)
+		pg.miniTradeFormWdg = newMiniTradeFormWidget(pg.Load, dex, mkt)
+	}
+}
+
+func (pg *Page) getOrderBook(host string, baseID, quoteID uint32) {
+	orderBoook, err := pg.Dexc().Core().Book(host, baseID, quoteID)
+	if err != nil {
+		return
+	}
+
+	pg.orderBook = orderBoook
+}
+
+func (pg *Page) onDexRegisted() {
+	for {
+		select {
+		case n := <-pg.dexRegisted:
+			nd := n.dex
+			mkt := pg.dexMarket(nd, marketIDSelected)
+			pg.Load.CreateDexConnection(nd.Host, n.password)
+			pg.Load.SubscribeMarket(nd.Host, mkt.BaseID, mkt.QuoteID)
+			go pg.listenerMessages(nd.Host)
+			pg.Dexc().Core().SyncBook(nd.Host, mkt.BaseID, mkt.QuoteID)
+			pg.getOrderBook(nd.Host, mkt.BaseID, mkt.QuoteID)
+		case <-pg.ctx.Done():
+			return
+		}
 	}
 }
 
@@ -312,4 +352,51 @@ func (pg *Page) readNotifications() {
 			return
 		}
 	}
+}
+
+func (pg *Page) listenerMessages(host string) {
+	msgs := pg.Load.MessageSource(host)
+	for {
+		select {
+		case msg, ok := <-msgs:
+			if !ok {
+				return
+			}
+			fmt.Println("[INFO]", msg.Route, msg.Type)
+			if msg.Type == msgjson.Notification {
+				pg.handlerNtfnMessages(msg)
+			}
+
+		case <-pg.ctx.Done():
+			return
+		}
+	}
+}
+
+func (pg *Page) handlerNtfnMessages(msg *msgjson.Message) {
+	switch msg.Route {
+	case msgjson.BookOrderRoute:
+		note := new(msgjson.BookOrderNote)
+		if err := json.Unmarshal(msg.Payload, &note); err != nil {
+			fmt.Println("[ERROR]", err)
+			break
+		}
+		if ord, err := minifyOrder(note.OrderID, &note.TradeNote, 0, note.MarketID); err == nil {
+			if ord.Sell {
+				pg.orderBook.Sells = append(pg.orderBook.Sells, ord)
+			} else {
+				pg.orderBook.Buys = append(pg.orderBook.Buys, ord)
+			}
+		}
+
+	case msgjson.UnbookOrderRoute:
+		note := new(msgjson.UnbookOrderNote)
+		if err := json.Unmarshal(msg.Payload, &note); err != nil {
+			fmt.Println("[ERROR]", err)
+		} else {
+			pg.orderBook.Sells, pg.orderBook.Buys = removeOrder(note.OrderID, pg.orderBook.Sells, pg.orderBook.Buys)
+		}
+	}
+
+	pg.RefreshWindow()
 }
