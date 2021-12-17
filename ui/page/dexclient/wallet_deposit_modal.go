@@ -17,7 +17,7 @@ import (
 	"github.com/yeqown/go-qrcode"
 )
 
-const depositeModalID = "deposit_modal"
+const depositeModalID = "dex_deposit_modal"
 
 type depositModal struct {
 	*load.Load
