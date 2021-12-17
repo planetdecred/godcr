@@ -443,7 +443,7 @@ func (pg *SettingsPage) Handle() {
 	}
 
 	if pg.proposalNotification.Changed() {
-		pg.wal.SaveConfigValueForKey("proposalnotificationkey", pg.proposalNotification.IsChecked())
+		pg.wal.SaveConfigValueForKey(load.ProposalNotificationConfigKey, pg.proposalNotification.IsChecked())
 		if pg.proposalNotification.IsChecked() {
 			pg.Toast.Notify("Proposal notification enabled")
 		} else {
