@@ -261,15 +261,13 @@ func (pg *WalletSettingsPage) HandleUserInteractions() {
 								return
 							}
 
-							pg.RefreshWindow()
 							if pg.WL.MultiWallet.LoadedWalletsCount() > 0 {
 								pg.Toast.Notify("Wallet removed")
 								pg.PopFragment()
 							} else {
-								pg.WL.Wallet.ClearListeners()
-								pg.Load.Receiver.AllWalletsDeleted <- struct{}{}
+								pg.Load.ReloadApp()
 							}
-							pm.Dismiss()
+							pm.Dismiss() // calls RefreshWindow.
 						}()
 						return false
 					}).Show()

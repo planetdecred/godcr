@@ -26,7 +26,6 @@ type StatPage struct {
 	l             layout.List
 	scrollbarList *widget.List
 	startupTime   string
-	syncStatus    *wallet.SyncStatus
 	netType       string
 
 	backButton decredmaterial.IconButton
@@ -42,7 +41,6 @@ func NewStatPage(l *load.Load) *StatPage {
 		},
 		netType: l.WL.Wallet.Net,
 	}
-	pg.syncStatus = l.WL.SyncStatus
 	if pg.netType == dcrlibwallet.Testnet3 {
 		pg.netType = "Testnet"
 	} else {
@@ -91,20 +89,24 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		}
 	}
 
+	bestBlock := pg.WL.MultiWallet.GetBestBlock()
+	bestBlockTime := time.Unix(bestBlock.Timestamp, 0)
+	secondsSinceBestBlock := int64(time.Since(bestBlockTime).Seconds())
+
 	items := []layout.Widget{
 		item("Build", pg.netType+", "+time.Now().Format("2006-01-02")),
 		pg.Theme.Separator().Layout,
-		item("Peers connected", strconv.Itoa(int(pg.syncStatus.ConnectedPeers))),
+		item("Peers connected", strconv.Itoa(int(pg.WL.MultiWallet.ConnectedPeers()))),
 		pg.Theme.Separator().Layout,
 		item("Uptime", pg.startupTime),
 		pg.Theme.Separator().Layout,
 		item("Network", pg.netType),
 		pg.Theme.Separator().Layout,
-		item("Best block", fmt.Sprintf("%d", pg.WL.Info.BestBlockHeight)),
+		item("Best block", fmt.Sprintf("%d", bestBlock.Height)),
 		pg.Theme.Separator().Layout,
-		item("Best block timestamp", time.Unix(pg.WL.Info.BestBlockTime, 0).Format("2006-01-02 03:04:05 -0700")),
+		item("Best block timestamp", bestBlockTime.Format("2006-01-02 03:04:05 -0700")),
 		pg.Theme.Separator().Layout,
-		item("Best block age", pg.WL.Info.LastSyncTime),
+		item("Best block age", wallet.SecondsToDays(secondsSinceBestBlock)),
 		pg.Theme.Separator().Layout,
 		item("Wallet data directory", pg.WL.WalletDirectory()),
 		pg.Theme.Separator().Layout,
@@ -112,7 +114,7 @@ func (pg *StatPage) layoutStats(gtx C) D {
 		pg.Theme.Separator().Layout,
 		item("Transactions", fmt.Sprintf("%d", (*pg.txs).Total)),
 		pg.Theme.Separator().Layout,
-		item("Wallets", fmt.Sprintf("%d", len(pg.WL.Info.Wallets))),
+		item("Wallets", fmt.Sprintf("%d", pg.WL.MultiWallet.LoadedWalletsCount())),
 	}
 
 	return pg.Theme.List(pg.scrollbarList).Layout(gtx, 1, func(gtx C, i int) D {

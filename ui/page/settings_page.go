@@ -27,7 +27,6 @@ type SettingsPage struct {
 	*load.Load
 
 	pageContainer *widget.List
-	walletInfo    *wallet.MultiWalletInfo
 	wal           *wallet.Wallet
 
 	updateConnectToPeer *decredmaterial.Clickable
@@ -67,8 +66,7 @@ func NewSettingsPage(l *load.Load) *SettingsPage {
 		pageContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		walletInfo: l.WL.Info,
-		wal:        l.WL.Wallet,
+		wal: l.WL.Wallet,
 
 		isDarkModeOn:            l.Theme.Switch(),
 		spendUnconfirmed:        l.Theme.Switch(),

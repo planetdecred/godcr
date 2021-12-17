@@ -37,6 +37,7 @@ type seedItemMenu struct {
 
 type Restore struct {
 	*load.Load
+	restoreComplete func()
 
 	seedList *layout.List
 
@@ -63,10 +64,10 @@ type Restore struct {
 	keyEvent    chan *key.Event
 }
 
-// Loading lays out the loading widget with a faded background
-func NewRestorePage(l *load.Load) *Restore {
+func NewRestorePage(l *load.Load, onRestoreComplete func()) *Restore {
 	pg := &Restore{
-		Load: l,
+		Load:            l,
+		restoreComplete: onRestoreComplete,
 
 		seedList: &layout.List{Axis: layout.Vertical},
 
@@ -471,15 +472,13 @@ func (pg *Restore) HandleUserInteractions() {
 					pg.Toast.Notify("Wallet restored")
 					pg.resetSeeds()
 					m.Dismiss()
-					// Go back to wallets page if there's more than one wallet
-					// or launch main page.
-					if pg.WL.MultiWallet.LoadedWalletsCount() > 1 {
+					// Close this page and return to the previous page (most likely wallets page)
+					// if there's no restoreComplete callback function.
+					if pg.restoreComplete == nil {
 						pg.PopWindowPage()
 					} else {
-						pg.WL.Wallet.SetupListeners()
-						pg.Load.Receiver.WalletRestored <- struct{}{}
+						pg.restoreComplete()
 					}
-
 				}()
 				return false
 			}).Show()

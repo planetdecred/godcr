@@ -100,13 +100,8 @@ func (sp *startPage) openWallets(password string) error {
 		return err
 	}
 
-	sp.proceedToMainPage()
-	return nil
-}
-
-func (sp *startPage) proceedToMainPage() {
-	sp.WL.Wallet.SetupListeners()
 	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+	return nil
 }
 
 // HandleUserInteractions is called just before Layout() to determine
@@ -128,14 +123,17 @@ func (sp *startPage) HandleUserInteractions() {
 					}
 					m.Dismiss()
 
-					sp.proceedToMainPage()
+					sp.ChangeWindowPage(NewMainPage(sp.Load), false)
 				}()
 				return false
 			}).Show()
 	}
 
 	for sp.restoreButton.Clicked() {
-		sp.ChangeWindowPage(wallets.NewRestorePage(sp.Load), true)
+		afterRestore := func() {
+			sp.ChangeWindowPage(NewMainPage(sp.Load), false)
+		}
+		sp.ChangeWindowPage(wallets.NewRestorePage(sp.Load, afterRestore), true)
 	}
 }
 

@@ -211,7 +211,9 @@ func (pg *WalletPage) initializeFloatingMenu() {
 			text:   values.String(values.StrImportExistingWallet),
 			button: new(widget.Clickable),
 			action: func(l *load.Load) {
-				l.ChangeWindowPage(NewRestorePage(pg.Load), true)
+				// The second nil parameter to NewRestorePage will cause the
+				// restore page to pop back to this one after restore completes.
+				l.ChangeWindowPage(NewRestorePage(pg.Load, nil), true)
 			},
 		},
 		{
@@ -895,8 +897,6 @@ func (pg *WalletPage) HandleUserInteractions() {
 	pg.listLock.Unlock()
 
 	for index, listItem := range listItems {
-		*pg.SelectedWallet = index
-
 		if ok, selectedItem := listItem.accountsList.ItemClicked(); ok {
 			pg.ChangeFragment(NewAcctDetailsPage(pg.Load, listItem.accounts[selectedItem]))
 		}
