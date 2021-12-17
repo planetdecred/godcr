@@ -40,11 +40,18 @@ func NewStartPage(l *load.Load) load.Page {
 	return sp
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (sp *startPage) ID() string {
 	return StartPageID
 }
 
-func (sp *startPage) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (sp *startPage) WillAppear() {
 	sp.WL.MultiWallet = sp.WL.Wallet.GetMultiWallet()
 
 	// refresh theme now that config is available
@@ -102,7 +109,12 @@ func (sp *startPage) proceedToMainPage() {
 	sp.ChangeWindowPage(NewMainPage(sp.Load), false)
 }
 
-func (sp *startPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (sp *startPage) HandleUserInteractions() {
 	for sp.createButton.Clicked() {
 		modal.NewCreatePasswordModal(sp.Load).
 			Title("Create new wallet").
@@ -127,8 +139,18 @@ func (sp *startPage) Handle() {
 	}
 }
 
-func (sp *startPage) OnClose() {}
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (sp *startPage) WillDisappear() {}
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (sp *startPage) Layout(gtx layout.Context) layout.Dimensions {
 	gtx.Constraints.Min = gtx.Constraints.Max // use maximum height & width
 	return layout.Stack{Alignment: layout.N}.Layout(gtx,

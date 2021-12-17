@@ -116,11 +116,18 @@ func NewOverviewPage(l *load.Load) *AppOverviewPage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *AppOverviewPage) ID() string {
 	return OverviewPageID
 }
 
-func (pg *AppOverviewPage) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *AppOverviewPage) WillAppear() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.walletSyncing = pg.WL.MultiWallet.IsSyncing()
@@ -135,6 +142,9 @@ func (pg *AppOverviewPage) OnResume() {
 	pg.loadRecentProposals()
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 // Layout lays out the entire content for overview pg.
 func (pg *AppOverviewPage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
@@ -225,7 +235,12 @@ func (pg *AppOverviewPage) showBackupInfo() {
 		}).Show()
 }
 
-func (pg *AppOverviewPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *AppOverviewPage) HandleUserInteractions() {
 	backupLater := pg.WL.Wallet.ReadBoolConfigValueForKey(load.SeedBackupNotificationConfigKey)
 	for _, wal := range pg.allWallets {
 		if len(wal.EncryptedSeed) > 0 {
@@ -373,6 +388,13 @@ func (pg *AppOverviewPage) getMixerWallets() {
 	pg.mixerWallets = wallets
 }
 
-func (pg *AppOverviewPage) OnClose() {
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (pg *AppOverviewPage) WillDisappear() {
 	pg.ctxCancel()
 }

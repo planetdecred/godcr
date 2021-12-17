@@ -137,6 +137,9 @@ func (pg *Page) layoutOptionsMenu(gtx layout.Context) {
 	op.Defer(gtx.Ops, m.Stop())
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *Page) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
 		func(gtx C) D {

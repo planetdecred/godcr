@@ -59,17 +59,30 @@ func NewBackupInstructionsPage(l *load.Load, wallet *dcrlibwallet.Wallet) *Backu
 	return bi
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *BackupInstructionsPage) ID() string {
 	return BackupInstructionsPageID
 }
 
-func (pg *BackupInstructionsPage) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *BackupInstructionsPage) WillAppear() {
 
 }
 
-func (pg *BackupInstructionsPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *BackupInstructionsPage) HandleUserInteractions() {
 	for pg.viewSeedBtn.Clicked() {
 		if pg.verifyCheckBoxes() {
+			// TODO: Will repeat the paint cycle, just queue the next fragment to be displayed
 			pg.ChangeFragment(NewSaveSeedPage(pg.Load, pg.wallet))
 		}
 	}
@@ -85,10 +98,19 @@ func promptToExit(load *load.Load) {
 		}).
 		Show()
 }
-func (pg *BackupInstructionsPage) OnClose() {}
 
-// - Layout
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (pg *BackupInstructionsPage) WillDisappear() {}
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *BackupInstructionsPage) Layout(gtx layout.Context) layout.Dimensions {
 	sp := components.SubPage{
 		Load:       pg.Load,

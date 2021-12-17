@@ -60,12 +60,11 @@ type MainPage struct {
 	receivePage   *ReceivePage // pointer to receive page. to avoid duplication.
 
 	// page state variables
-	dcrUsdtBittrex  load.DCRUSDTBittrex
 	usdExchangeSet  bool
+	dcrUsdtBittrex  load.DCRUSDTBittrex
+	isBalanceHidden bool
 	totalBalance    dcrutil.Amount
 	totalBalanceUSD string
-
-	isBalanceHidden bool
 }
 
 func NewMainPage(l *load.Load) *MainPage {
@@ -86,6 +85,7 @@ func NewMainPage(l *load.Load) *MainPage {
 			mp.StartSyncing()
 		}
 	}
+	// evaluate these
 	l.ToggleSync = toggleSync
 	l.ChangeFragment = mp.changeFragment
 	l.PopFragment = mp.popFragment
@@ -95,11 +95,12 @@ func NewMainPage(l *load.Load) *MainPage {
 
 	mp.drawerNav.DrawerToggled(false)
 
-	mp.OnResume()
-
 	return mp
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (mp *MainPage) ID() string {
 	return MainPageID
 }
@@ -183,8 +184,12 @@ func (mp *MainPage) initNavItems() {
 	}
 }
 
-func (mp *MainPage) OnResume() {
-	// register for notifications
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (mp *MainPage) WillAppear() {
+	// register for notifications, unregister when the page disappears
 	mp.WL.MultiWallet.AddAccountMixerNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.Politeia.AddNotificationListener(mp, MainPageID)
 	mp.WL.MultiWallet.AddTxAndBlockNotificationListener(mp, MainPageID)
@@ -195,11 +200,10 @@ func (mp *MainPage) OnResume() {
 	mp.setLanguageSetting()
 	mp.UpdateBalance()
 
-	if mp.currentPage != nil {
-		mp.currentPage.OnResume()
-	} else {
-		mp.ChangeFragment(overview.NewOverviewPage(mp.Load))
+	if mp.currentPage == nil {
+		mp.currentPage = overview.NewOverviewPage(mp.Load)
 	}
+	mp.currentPage.WillAppear()
 
 	if mp.WL.Wallet.ReadBoolConfigValueForKey(load.AutoSyncConfigKey) {
 		mp.StartSyncing()
@@ -295,7 +299,15 @@ func (mp *MainPage) UnlockWalletForSyncing(wal *dcrlibwallet.Wallet) {
 		}).Show()
 }
 
-func (mp *MainPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (mp *MainPage) HandleUserInteractions() {
+	if mp.currentPage != nil {
+		mp.currentPage.HandleUserInteractions()
+	}
 
 	mp.drawerNav.CurrentPage = mp.currentPageID()
 	mp.appBarNav.CurrentPage = mp.currentPageID()
@@ -315,7 +327,6 @@ func (mp *MainPage) Handle() {
 				if mp.sendPage == nil {
 					mp.sendPage = send.NewSendPage(mp.Load)
 				}
-
 				pg = mp.sendPage
 			} else {
 				if mp.receivePage == nil {
@@ -373,9 +384,16 @@ func (mp *MainPage) Handle() {
 	}
 }
 
-func (mp *MainPage) OnClose() {
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (mp *MainPage) WillDisappear() {
 	if mp.currentPage != nil {
-		mp.currentPage.OnClose()
+		mp.currentPage.WillDisappear()
 	}
 
 	mp.WL.MultiWallet.RemoveAccountMixerNotificationListener(MainPageID)
@@ -412,11 +430,11 @@ func (mp *MainPage) changeFragment(page load.Page) {
 	}
 
 	if mp.currentPage != nil {
-		mp.currentPage.OnClose()
+		mp.currentPage.WillDisappear() // TODO: Unload unless it is possible that this page will be revisited.
 		mp.pageBackStack = append(mp.pageBackStack, mp.currentPage)
 	}
 
-	page.OnResume()
+	page.WillAppear()
 	mp.currentPage = page
 }
 
@@ -427,17 +445,19 @@ func (mp *MainPage) popFragment() {
 		previousPage := mp.pageBackStack[len(mp.pageBackStack)-1]
 		mp.pageBackStack = mp.pageBackStack[:len(mp.pageBackStack)-1]
 
-		mp.currentPage.OnClose()
-		previousPage.OnResume()
+		mp.currentPage.WillDisappear()
+		previousPage.WillAppear()
 		mp.currentPage = previousPage
 	}
 }
 
+// revisit
 func (mp *MainPage) popToFragment(pageID string) {
 
 	// close current page and all pages before `pageID`
+	// TODO: What if currentPage.ID() == pageID?
 	if mp.currentPage != nil {
-		mp.currentPage.OnClose()
+		mp.currentPage.WillDisappear()
 	}
 
 	for i := len(mp.pageBackStack) - 1; i >= 0; i-- {
@@ -446,7 +466,7 @@ func (mp *MainPage) popToFragment(pageID string) {
 			mp.pageBackStack, closedPages = mp.pageBackStack[:i+1], mp.pageBackStack[i+1:]
 
 			for j := len(closedPages) - 1; j >= 0; j-- {
-				closedPages[j].OnClose()
+				closedPages[j].WillDisappear()
 			}
 			break
 		}
@@ -462,11 +482,10 @@ func (mp *MainPage) popToFragment(pageID string) {
 	}
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
-	if mp.currentPage != nil {
-		mp.currentPage.Handle()
-	}
-
 	return layout.Stack{}.Layout(gtx,
 		layout.Expanded(func(gtx C) D {
 			return decredmaterial.LinearLayout{
@@ -486,7 +505,6 @@ func (mp *MainPage) Layout(gtx layout.Context) layout.Dimensions {
 							if mp.currentPage == nil {
 								return layout.Dimensions{}
 							}
-
 							return mp.currentPage.Layout(gtx)
 						}),
 					)

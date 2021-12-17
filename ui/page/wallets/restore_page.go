@@ -106,15 +106,24 @@ func NewRestorePage(l *load.Load) *Restore {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *Restore) ID() string {
 	return CreateRestorePageID
 }
 
-func (pg *Restore) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *Restore) WillAppear() {
 	pg.Load.SubscribeKeyEvent(pg.keyEvent, pg.ID())
-
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *Restore) Layout(gtx layout.Context) layout.Dimensions {
 	body := func(gtx C) D {
 		sp := components.SubPage{
@@ -428,7 +437,12 @@ func switchSeedEditors(editors []decredmaterial.RestoreEditor) {
 	}
 }
 
-func (pg *Restore) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *Restore) HandleUserInteractions() {
 	for pg.backButton.Button.Clicked() {
 		pg.PopWindowPage()
 	}
@@ -516,6 +530,13 @@ func (pg *Restore) Handle() {
 
 }
 
-func (pg *Restore) OnClose() {
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (pg *Restore) WillDisappear() {
 	pg.Load.UnsubscribeKeyEvent(pg.ID())
 }

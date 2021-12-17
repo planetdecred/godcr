@@ -155,42 +155,36 @@ func (win *Window) NewLoad() (*load.Load, error) {
 	return l, nil
 }
 
-func (win *Window) Start() {
-	if win.currentPage == nil {
-		sp := page.NewStartPage(win.load)
-		sp.OnResume()
-		win.currentPage = sp
-	}
-}
-
 func (win *Window) changePage(page load.Page, keepBackStack bool) {
 	if win.currentPage != nil && keepBackStack {
-		win.currentPage.OnClose()
+		win.currentPage.WillDisappear() // TODO: Unload() if not keeping in backstack.
 		win.pageBackStack = append(win.pageBackStack, win.currentPage)
 	}
 
 	win.currentPage = page
-	win.refreshWindow()
+	win.currentPage.WillAppear() // callers shouldn't need to trigger WillAppear(), page is changing, WillAppear naturally should be triggered here
+	win.refreshWindow()          // TODO: Ensure no caller of this method also triggers refreshWindow!
 }
 
 // popPage goes back to the previous page
 // returns true if page was popped.
 func (win *Window) popPage() bool {
-	if len(win.pageBackStack) > 0 {
-		// get and remove last page
-		previousPage := win.pageBackStack[len(win.pageBackStack)-1]
-		win.pageBackStack = win.pageBackStack[:len(win.pageBackStack)-1]
-
-		win.currentPage.OnClose()
-
-		previousPage.OnResume()
-		win.currentPage = previousPage
-		win.refreshWindow()
-
-		return true
+	if len(win.pageBackStack) == 0 {
+		return false
 	}
 
-	return false
+	// get and remove last page
+	previousPageIndex := len(win.pageBackStack) - 1
+	previousPage := win.pageBackStack[previousPageIndex]
+	win.pageBackStack = win.pageBackStack[:previousPageIndex]
+
+	// close the current page and display the previous page
+	win.currentPage.WillDisappear() // Use Unload() for page that's being closed.
+	previousPage.WillAppear()
+	win.currentPage = previousPage
+	win.refreshWindow() // TODO: Ensure no caller of this method also triggers refreshWindow!
+
+	return true
 }
 
 func (win *Window) refreshWindow() {
@@ -231,42 +225,6 @@ func (win *Window) unloaded(w *app.Window) {
 	}
 }
 
-func (win *Window) layoutPage(gtx C, page load.Page) {
-	layout.Stack{
-		Alignment: layout.N,
-	}.Layout(gtx,
-		layout.Expanded(func(gtx C) D {
-			return decredmaterial.Fill(gtx, win.load.Theme.Color.Gray4)
-		}),
-		layout.Stacked(func(gtx C) D {
-			page.Handle()
-			return page.Layout(gtx)
-		}),
-		layout.Stacked(func(gtx C) D {
-			modals := win.modals
-
-			if len(modals) > 0 {
-				modalLayouts := make([]layout.StackChild, 0)
-				for _, modal := range modals {
-					modal.Handle()
-					widget := modal.Layout(gtx)
-					l := layout.Stacked(func(gtx layout.Context) layout.Dimensions {
-						return widget
-					})
-					modalLayouts = append(modalLayouts, l)
-				}
-
-				return layout.Stack{Alignment: layout.Center}.Layout(gtx, modalLayouts...)
-			}
-
-			return layout.Dimensions{}
-		}),
-		layout.Stacked(func(gtx C) D {
-			return win.load.Toast.Layout(gtx)
-		}),
-	)
-}
-
 // SubscribeKeyEvent subscribes pages for key events.
 func (win *Window) SubscribeKeyEvent(eventChan chan *key.Event, pageID string) {
 	win.keyEvents[pageID] = eventChan
@@ -294,7 +252,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				log.Error("Wallet Error: " + err)
 				if err == dcrlibwallet.ErrWalletDatabaseInUse {
 					close(shutdown)
-					win.unloaded(w)
+					win.unloaded(w) // This method starts an infite loop. Check.
 					return
 				}
 				win.err = err
@@ -355,6 +313,7 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				}()
 			}
 			op.InvalidateOp{}.Add(win.ops)
+
 		case e := <-w.Events():
 			switch evt := e.(type) {
 
@@ -368,11 +327,11 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 							return
 						}
 					}
-					win.Start()
 				}
 			case system.DestroyEvent:
 				if win.currentPage != nil {
-					win.currentPage.OnClose()
+					win.currentPage.WillDisappear()
+					win.currentPage = nil
 				}
 				if win.walletInfo.Syncing || win.walletInfo.Synced {
 					win.sysDestroyWithSync = true
@@ -380,18 +339,12 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 				} else {
 					close(shutdown)
 				}
+
 			case system.FrameEvent:
-				gtx := layout.NewContext(win.ops, evt)
 				ts := int64(time.Since(time.Unix(win.walletInfo.BestBlockTime, 0)).Seconds())
-				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts)
+				win.walletInfo.LastSyncTime = wallet.SecondsToDays(ts) // TODO: Investigate
+				win.displayWindow(evt)
 
-				if win.currentPage != nil {
-					win.layoutPage(gtx, win.currentPage)
-				} else {
-					win.Start()
-				}
-
-				evt.Frame(gtx.Ops)
 			case key.Event:
 				go func() {
 					for _, c := range win.keyEvents {
@@ -407,11 +360,77 @@ func (win *Window) Loop(w *app.Window, shutdown chan int) {
 			win.changePage(page.NewMainPage(win.load), false)
 		case <-win.load.Receiver.AllWalletsDeleted:
 			if win.currentPage != nil {
-				win.currentPage.OnClose()
+				win.currentPage.WillDisappear()
 			}
 
 			win.currentPage = nil
-			win.Start()
 		}
 	}
+}
+
+// displayWindow is called when a FrameEvent is received by the active window.
+// Since user actions such as button clicks also trigger FrameEvents, this
+// method first checks for pending user actions before displaying the UI
+// elements. This ensures that the proper interface is displayed to the user
+// based on their last performed action where applicable.
+func (win *Window) displayWindow(evt system.FrameEvent) {
+	// Set up the StartPage the first time a FrameEvent is received.
+	if win.currentPage == nil {
+		win.currentPage = page.NewStartPage(win.load)
+		win.currentPage.WillAppear()
+	}
+
+	// A FrameEvent may be generated because of a user interaction
+	// with the current page such as a button click. First handle
+	// any such user interaction before rendering the page.
+	win.currentPage.HandleUserInteractions()
+	for _, modal := range win.modals {
+		modal.Handle() // TODO: Just the top-most modal should do.
+	}
+
+	// Draw the window's UI components into an op.Ops.
+	gtx := layout.NewContext(win.ops, evt)
+	win.drawWindowUI(gtx)
+
+	// Render the window's UI components on screen.
+	evt.Frame(gtx.Ops)
+}
+
+// layout draws the window UI components into the provided graphical context,
+// preparing the context for rendering on screen
+func (win *Window) drawWindowUI(gtx C) {
+	// Create a base view holder to hold all the following UI components
+	// one on top the other. Components that do not take up the entire
+	// window will be aligned to the top of the window.
+	viewsHolder := layout.Stack{Alignment: layout.N}
+
+	background := layout.Expanded(func(gtx C) D {
+		return decredmaterial.Fill(gtx, win.load.Theme.Color.Gray4)
+	})
+
+	modals := layout.Stacked(func(gtx C) D {
+		modals := win.modals
+		if len(modals) == 0 {
+			return layout.Dimensions{}
+		}
+
+		modalLayouts := make([]layout.StackChild, 0)
+		for _, modal := range modals {
+			widget := modal.Layout(gtx)
+			l := layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+				return widget
+			})
+			modalLayouts = append(modalLayouts, l)
+		}
+
+		return layout.Stack{Alignment: layout.Center}.Layout(gtx, modalLayouts...)
+	})
+
+	viewsHolder.Layout(
+		gtx,
+		background,
+		layout.Stacked(win.currentPage.Layout),
+		modals,
+		layout.Stacked(win.load.Toast.Layout),
+	)
 }

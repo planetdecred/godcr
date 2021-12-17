@@ -84,16 +84,28 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *ProposalDetails) ID() string {
 	return ProposalDetailsPageID
 }
 
-func (pg *ProposalDetails) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *ProposalDetails) WillAppear() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	pg.listenForSyncNotifications()
 }
 
-func (pg *ProposalDetails) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *ProposalDetails) HandleUserInteractions() {
 	for token := range pg.proposalItems {
 		for location, clickable := range pg.proposalItems[token].clickables {
 			if clickable.Clicked() {
@@ -142,7 +154,14 @@ func (pg *ProposalDetails) listenForSyncNotifications() {
 	}()
 }
 
-func (pg *ProposalDetails) OnClose() {
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (pg *ProposalDetails) WillDisappear() {
 	pg.ctxCancel()
 }
 
@@ -426,6 +445,9 @@ func (pg *ProposalDetails) lineSeparator(inset layout.Inset) layout.Widget {
 	}
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *ProposalDetails) Layout(gtx C) D {
 	proposal := pg.proposal
 	_, ok := pg.proposalItems[proposal.Token]

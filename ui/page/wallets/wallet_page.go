@@ -128,11 +128,18 @@ func NewWalletPage(l *load.Load) *WalletPage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *WalletPage) ID() string {
 	return WalletPageID
 }
 
-func (pg *WalletPage) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *WalletPage) WillAppear() {
 	pg.loadWalletAndAccounts()
 }
 
@@ -340,6 +347,9 @@ func (pg *WalletPage) showImportWatchOnlyWalletModal(l *load.Load) {
 		}).Show()
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 // Layout lays out the widgets for the main wallets pg.
 func (pg *WalletPage) Layout(gtx layout.Context) layout.Dimensions {
 	pageContent := []func(gtx C) D{
@@ -861,7 +871,12 @@ func (pg *WalletPage) openPopup(index int) {
 	pg.openPopupIndex = index
 }
 
-func (pg *WalletPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *WalletPage) HandleUserInteractions() {
 	for pg.backdrop.Clicked() {
 		pg.closePopups()
 	}
@@ -967,6 +982,13 @@ func (pg *WalletPage) Handle() {
 	}
 }
 
-func (pg *WalletPage) OnClose() {
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (pg *WalletPage) WillDisappear() {
 	pg.closePopups()
 }

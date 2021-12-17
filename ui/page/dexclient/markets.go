@@ -54,10 +54,16 @@ func NewMarketPage(l *load.Load) *Page {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *Page) ID() string {
 	return MarketPageID
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *Page) Layout(gtx C) D {
 	var body func(gtx C) D
 
@@ -151,16 +157,32 @@ func (pg *Page) registrationStatusLayout(gtx C) D {
 	)
 }
 
-func (pg *Page) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *Page) WillAppear() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 	go pg.readNotifications()
 }
 
-func (pg *Page) OnClose() {
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (pg *Page) WillDisappear() {
 	pg.ctxCancel()
 }
 
-func (pg *Page) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *Page) HandleUserInteractions() {
 	if pg.sync.Button.Clicked() {
 		err := pg.WL.MultiWallet.SpvSync()
 		if err != nil {

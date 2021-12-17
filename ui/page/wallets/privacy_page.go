@@ -55,11 +55,18 @@ func NewPrivacyPage(l *load.Load, wallet *dcrlibwallet.Wallet) *PrivacyPage {
 	return pg
 }
 
+// ID is a unique string that identifies the page and may be used
+// to differentiate this page from other pages.
+// Part of the load.Page interface.
 func (pg *PrivacyPage) ID() string {
 	return PrivacyPageID
 }
 
-func (pg *PrivacyPage) OnResume() {
+// WillAppear is called when the page is about to displayed and may
+// be used to initialize page features that are only relevant when
+// the page is displayed.
+// Part of the load.Page interface.
+func (pg *PrivacyPage) WillAppear() {
 	pg.ctx, pg.ctxCancel = context.WithCancel(context.TODO())
 
 	pg.listenForMixerNotifications()
@@ -72,6 +79,9 @@ func (pg *PrivacyPage) OnResume() {
 	}
 }
 
+// Layout draws the page UI components into the provided layout context
+// to be eventually drawn on screen.
+// Part of the load.Page interface.
 func (pg *PrivacyPage) Layout(gtx layout.Context) layout.Dimensions {
 	d := func(gtx C) D {
 		sp := components.SubPage{
@@ -266,7 +276,12 @@ func (pg *PrivacyPage) dangerZoneLayout(gtx layout.Context) layout.Dimensions {
 	})
 }
 
-func (pg *PrivacyPage) Handle() {
+// HandleUserInteractions is called just before Layout() to determine
+// if any user interaction recently occurred on the page and may be
+// used to update the page's UI components shortly before they are
+// displayed.
+// Part of the load.Page interface.
+func (pg *PrivacyPage) HandleUserInteractions() {
 	if pg.toPrivacySetup.Clicked() {
 		go pg.showModalSetupMixerInfo()
 	}
@@ -423,4 +438,11 @@ func (pg *PrivacyPage) listenForMixerNotifications() {
 	}()
 }
 
-func (pg *PrivacyPage) OnClose() {}
+// WillDisappear is called when the page is about to be removed from
+// the displayed window. This method should ideally be used to disable
+// features that are irrelevant when the page is NOT displayed.
+// NOTE: The page may be re-displayed on the app's window, in which case
+// WillAppear() will be called again. This method should not destroy UI
+// components unless they'll be recreated in the WillAppear() method.
+// Part of the load.Page interface.
+func (pg *PrivacyPage) WillDisappear() {}
