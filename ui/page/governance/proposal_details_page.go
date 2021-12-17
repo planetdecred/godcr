@@ -30,23 +30,22 @@ type proposalItemWidgets struct {
 
 type ProposalDetails struct {
 	*load.Load
-	ctx                  context.Context // page context
-	ctxCancel            context.CancelFunc
-	voteBar              *components.VoteBar
-	loadingDescription   bool
-	proposal             *dcrlibwallet.Proposal
-	descriptionCard      decredmaterial.Card
-	proposalItems        map[string]proposalItemWidgets
-	descriptionList      *layout.List
-	scrollbarList        *widget.List
-	redirectIcon         *decredmaterial.Image
-	rejectedIcon         *widget.Icon
-	downloadIcon         *decredmaterial.Image
-	successIcon          *widget.Icon
-	vote                 decredmaterial.Button
-	backButton           decredmaterial.IconButton
-	viewInPoliteiaBtn    *decredmaterial.Clickable
-	proposalNotification bool
+	ctx                context.Context // page context
+	ctxCancel          context.CancelFunc
+	voteBar            *components.VoteBar
+	loadingDescription bool
+	proposal           *dcrlibwallet.Proposal
+	descriptionCard    decredmaterial.Card
+	proposalItems      map[string]proposalItemWidgets
+	descriptionList    *layout.List
+	scrollbarList      *widget.List
+	redirectIcon       *decredmaterial.Image
+	rejectedIcon       *widget.Icon
+	downloadIcon       *decredmaterial.Image
+	successIcon        *widget.Icon
+	vote               decredmaterial.Button
+	backButton         decredmaterial.IconButton
+	viewInPoliteiaBtn  *decredmaterial.Clickable
 }
 
 func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *ProposalDetails {
@@ -60,14 +59,13 @@ func NewProposalDetailsPage(l *load.Load, proposal *dcrlibwallet.Proposal) *Prop
 		scrollbarList: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		redirectIcon:         l.Icons.RedirectIcon,
-		downloadIcon:         l.Icons.DownloadIcon,
-		proposalItems:        make(map[string]proposalItemWidgets),
-		rejectedIcon:         l.Icons.NavigationCancel,
-		successIcon:          l.Icons.ActionCheckCircle,
-		viewInPoliteiaBtn:    l.Theme.NewClickable(true),
-		voteBar:              components.NewVoteBar(l),
-		proposalNotification: l.WL.Wallet.ReadBoolConfigValueForKey("proposalnotificationkey"),
+		redirectIcon:      l.Icons.RedirectIcon,
+		downloadIcon:      l.Icons.DownloadIcon,
+		proposalItems:     make(map[string]proposalItemWidgets),
+		rejectedIcon:      l.Icons.NavigationCancel,
+		successIcon:       l.Icons.ActionCheckCircle,
+		viewInPoliteiaBtn: l.Theme.NewClickable(true),
+		voteBar:           components.NewVoteBar(l),
 	}
 
 	pg.backButton, _ = components.SubpageHeaderButtons(l)
@@ -120,31 +118,30 @@ func (pg *ProposalDetails) Handle() {
 
 func (pg *ProposalDetails) listenForSyncNotifications() {
 
-	if pg.proposalNotification {
-		go func() {
-			for {
-				var notification interface{}
+	go func() {
+		for {
+			var notification interface{}
 
-				select {
-				case notification = <-pg.Receiver.NotificationsUpdate:
-				case <-pg.ctx.Done():
-					return
-				}
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
 
-				switch n := notification.(type) {
-				case wallet.Proposal:
-					if n.ProposalStatus == wallet.Synced {
-						proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
-						if err == nil {
-							pg.proposal = proposal
-							pg.RefreshWindow()
-						}
+			switch n := notification.(type) {
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					proposal, err := pg.WL.MultiWallet.Politeia.GetProposalRaw(pg.proposal.Token)
+					if err == nil {
+						pg.proposal = proposal
+						pg.RefreshWindow()
 					}
 				}
 			}
-		}()
-	}
+		}
+	}()
 }
+
 func (pg *ProposalDetails) OnClose() {
 	pg.ctxCancel()
 }

@@ -179,7 +179,6 @@ func (pg *SettingsPage) general() layout.Widget {
 func (pg *SettingsPage) notification() layout.Widget {
 	return func(gtx C) D {
 		return pg.mainSection(gtx, values.String(values.StrNotifications), func(gtx C) D {
-			//return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
 			return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(func(gtx C) D {
 					return pg.subSectionSwitch(gtx, values.String(values.StrBeepForNewBlocks), pg.beepNewBlocks)
@@ -446,9 +445,9 @@ func (pg *SettingsPage) Handle() {
 	if pg.proposalNotification.Changed() {
 		pg.wal.SaveConfigValueForKey("proposalnotificationkey", pg.proposalNotification.IsChecked())
 		if pg.proposalNotification.IsChecked() {
-			pg.Toast.Notify("Proposal notification on", 5)
+			pg.Toast.Notify("Proposal notification enabled")
 		} else {
-			pg.Toast.Notify("Proposal notification off", 5)
+			pg.Toast.Notify("Proposal notification disabled")
 		}
 	}
 

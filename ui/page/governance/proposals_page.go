@@ -51,8 +51,6 @@ type ProposalsPage struct {
 
 	syncCompleted bool
 	isSyncing     bool
-
-	proposalNotification bool
 }
 
 func NewProposalsPage(l *load.Load) *ProposalsPage {
@@ -62,7 +60,6 @@ func NewProposalsPage(l *load.Load) *ProposalsPage {
 		listContainer: &widget.List{
 			List: layout.List{Axis: layout.Vertical},
 		},
-		proposalNotification: l.WL.Wallet.ReadBoolConfigValueForKey("proposalnotificationkey"),
 	}
 	pg.searchEditor = l.Theme.IconEditor(new(widget.Editor), "Search", l.Icons.SearchIcon, true)
 	pg.searchEditor.Editor.SingleLine, pg.searchEditor.Editor.Submit, pg.searchEditor.Bordered = true, true, false
@@ -367,29 +364,26 @@ func (pg *ProposalsPage) layoutStartSyncSection(gtx C) D {
 
 func (pg *ProposalsPage) listenForSyncNotifications() {
 
-	if pg.proposalNotification {
-		go func() {
-			for {
-				var notification interface{}
+	go func() {
+		for {
+			var notification interface{}
 
-				select {
-				case notification = <-pg.Receiver.NotificationsUpdate:
-				case <-pg.ctx.Done():
-					return
-				}
+			select {
+			case notification = <-pg.Receiver.NotificationsUpdate:
+			case <-pg.ctx.Done():
+				return
+			}
 
-				switch n := notification.(type) {
-				case wallet.Proposal:
-					if n.ProposalStatus == wallet.Synced {
-						pg.syncCompleted = true
-						pg.isSyncing = false
+			switch n := notification.(type) {
+			case wallet.Proposal:
+				if n.ProposalStatus == wallet.Synced {
+					pg.syncCompleted = true
+					pg.isSyncing = false
 
-						pg.fetchProposals()
-						pg.RefreshWindow()
-					}
+					pg.fetchProposals()
+					pg.RefreshWindow()
 				}
 			}
-		}()
-	}
-
+		}
+	}()
 }
